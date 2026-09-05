@@ -1762,7 +1762,7 @@ actor ProvenanceSQLiteRepository {
         return query.int(at: 0)
     }
 
-    private func event(
+    func event(
         from query: ProvenanceSQLiteStatement,
         id: String,
         offset: Int32 = 0

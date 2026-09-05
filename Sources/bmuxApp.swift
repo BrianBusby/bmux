@@ -51,10 +51,8 @@ struct bmuxApp: App {
     /// injected into AppDelegate and the auth-consuming services.
     private let authComposition: MacAuthComposition
 
-    /// Observe-only work provenance runtime. Constructed at launch and retained
-    /// by the app composition root so workspace lifecycle can append durable
-    /// repository/worktree observations.
-    private let workProvenanceRuntime: WorkProvenanceRuntime
+    /// Explicit owner for background runtime service startup and teardown.
+    private let appRuntimeServices: BmuxAppRuntimeServices
 
     @StateObject private var tabManager: TabManager
     @StateObject private var notificationStore = TerminalNotificationStore.shared
@@ -102,7 +100,8 @@ struct bmuxApp: App {
         let appRuntimeComposition = BmuxAppRuntimeComposition(
             configFileURL: configFileURL,
             secretBaseDirectory: secretBaseDirectory,
-            bundleIdentifier: Bundle.main.bundleIdentifier
+            bundleIdentifier: Bundle.main.bundleIdentifier,
+            runtimeConfiguration: .currentProcess()
         )
 
         // Lift any plaintext socket-control password out of `bmux.json` into the
@@ -188,10 +187,11 @@ struct bmuxApp: App {
         )
         KeyboardShortcutSettings.settingsFileStore.applyDeferredManagedDefaultSideEffects()
         StartupBreadcrumbLog.append("app.init.keyboardShortcuts.sideEffectsApplied")
-        let workProvenanceRuntime = WorkProvenanceRuntime.live(
-            linearAuthorizationProvider: appRuntimeComposition.linearAuthorizationProvider(catalog: settingsCatalog)
+        let workProvenanceRuntime = appRuntimeComposition.makeWorkProvenanceRuntime(catalog: settingsCatalog)
+        let appRuntimeServices = appRuntimeComposition.makeRuntimeServices(
+            workProvenanceRuntime: workProvenanceRuntime
         )
-        self.workProvenanceRuntime = workProvenanceRuntime
+        self.appRuntimeServices = appRuntimeServices
         var provenanceFields = [
             "enabled": workProvenanceRuntime.isEnabled ? "1" : "0"
         ]
@@ -206,7 +206,7 @@ struct bmuxApp: App {
         let tabManager = TabManager()
         tabManager.workProvenanceRuntime = workProvenanceRuntime
         _tabManager = StateObject(wrappedValue: tabManager)
-        if WorkProvenanceRuntime.shouldStartInCurrentProcess() { workProvenanceRuntime.start(tabManager: tabManager) }
+        appRuntimeServices.start(tabManager: tabManager)
         StartupBreadcrumbLog.append("app.init.tabManager.complete")
         // Migrate legacy and old-format socket mode values to the new enum.
         if let stored = defaults.string(forKey: SocketControlSettings.appStorageKey) {
@@ -241,7 +241,7 @@ struct bmuxApp: App {
             sidebarState: sidebarState,
             settingsRuntime: settingsRuntime,
             auth: authComposition,
-            workProvenanceRuntime: workProvenanceRuntime
+            appRuntimeServices: appRuntimeServices
         )
         StartupBreadcrumbLog.append("app.init.delegate.configured")
     }

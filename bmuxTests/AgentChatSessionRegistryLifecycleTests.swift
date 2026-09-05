@@ -576,7 +576,28 @@ struct AgentChatSessionRegistryLifecycleTests {
     }
 
     @MainActor
-    @Test func startupBackfillsCodexTranscriptPromptsFromHookStoreSessions() async throws {
+    @Test func endedCodexPromptEvidenceSeedSkipsHistoricalTranscriptBackfill() async throws {
+        let home = try temporaryHomeDirectory(), sessionID = "24ec0052-450c-4914-b1dd-2ee80d4bc84b"
+        let transcriptURL = home.appendingPathComponent(".codex/sessions/2026/08/21", isDirectory: true).appendingPathComponent("rollout-2026-08-21T10-00-00-\(sessionID).jsonl")
+        try FileManager.default.createDirectory(at: transcriptURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try ##"{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"Historical prompt must not be startup PE evidence."}]}}"##
+            .appending("\n")
+            .write(to: transcriptURL, atomically: true, encoding: .utf8)
+        let record = AgentChatSessionRecord(sessionID: sessionID, agentKind: .codex, workspaceID: UUID().uuidString, surfaceID: UUID().uuidString, workingDirectory: "/Users/example/project", transcriptPath: transcriptURL.path, state: .ended, lastActivityAt: Date(timeIntervalSince1970: 140), title: nil, pid: nil)
+        var recorded = [(record: AgentChatSessionRecord, messages: [ChatMessage])]()
+
+        await AgentChatTranscriptPromptEvidenceSeeder.seed(
+            records: [record],
+            resolver: AgentChatTranscriptResolver(homeDirectory: home, environment: [:]),
+            tokenOptimizationMode: .balanced,
+            recordPrompts: { recorded.append(($0, $1)) }
+        ).value
+
+        #expect(recorded.isEmpty)
+    }
+
+    @MainActor
+    @Test func startupBackfillsLiveCodexTranscriptPromptsFromHookStoreSessions() async throws {
         let home = try temporaryHomeDirectory(), sessionID = "24ec0052-450c-4914-b1dd-2ee80d4bc84b", workspaceID = UUID().uuidString, surfaceID = UUID().uuidString
         let transcriptURL = home.appendingPathComponent(".codex/sessions/2026/08/21", isDirectory: true).appendingPathComponent("rollout-2026-08-21T10-00-00-\(sessionID).jsonl")
         try FileManager.default.createDirectory(at: transcriptURL.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -587,11 +608,13 @@ struct AgentChatSessionRegistryLifecycleTests {
         ].joined(separator: "\n").appending("\n").write(to: transcriptURL, atomically: true, encoding: .utf8)
         let hookDir = home.appendingPathComponent(".bmuxterm", isDirectory: true)
         try FileManager.default.createDirectory(at: hookDir, withIntermediateDirectories: true)
-        try #"{"sessions":{"\#(sessionID)":{"workspaceId":"\#(workspaceID)","surfaceId":"\#(surfaceID)","cwd":"/Users/example/project","transcriptPath":"\#(transcriptURL.path)","updatedAt":140}}}"#.write(to: hookDir.appendingPathComponent("codex-hook-sessions.json"), atomically: true, encoding: .utf8)
+        let livePID = Int(ProcessInfo.processInfo.processIdentifier)
+        try #"{"sessions":{"\#(sessionID)":{"workspaceId":"\#(workspaceID)","surfaceId":"\#(surfaceID)","cwd":"/Users/example/project","transcriptPath":"\#(transcriptURL.path)","pid":\#(livePID),"updatedAt":140}}}"#.write(to: hookDir.appendingPathComponent("codex-hook-sessions.json"), atomically: true, encoding: .utf8)
         var recorded = [(record: AgentChatSessionRecord, messages: [ChatMessage])]()
         let service = AgentChatTranscriptService(registry: AgentChatSessionRegistry(hookStore: AgentChatHookSessionStore(homeDirectory: home)), resolver: AgentChatTranscriptResolver(homeDirectory: home, environment: [:]), recordTranscriptUserPrompts: { recorded.append(($0, $1)) })
-        service.start()
-        for _ in 0..<100 where recorded.isEmpty { try await Task.sleep(nanoseconds: 10_000_000) }
+        let startupTask = service.start()
+        await startupTask.value
+        await service.waitForPromptEvidenceTasks()
         let captured = try #require(recorded.first)
         let texts = captured.messages.compactMap { message -> String? in guard case .prose(let prose) = message.kind else { return nil }; return prose.text }
         #expect((captured.record.sessionID, captured.record.workspaceID, captured.record.surfaceID, texts) == (sessionID, workspaceID, surfaceID, ["[Image #1] Fix the PE session tab link"]))
@@ -615,7 +638,7 @@ struct AgentChatSessionRegistryLifecycleTests {
             sessionId: sessionID, hookEventName: .userPromptSubmit, source: "codex",
             workspaceId: workspaceID, surfaceId: surfaceID, transcriptPath: transcriptURL.path, cwd: "/Users/example/project"
         ))
-        for _ in 0..<100 where recorded.isEmpty { try await Task.sleep(nanoseconds: 10_000_000) }
+        await service.waitForPromptEvidenceTasks()
         let captured = try #require(recorded.first)
         let texts = captured.messages.compactMap { message -> String? in guard case .prose(let prose) = message.kind else { return nil }; return prose.text }
         #expect((captured.record.sessionID, captured.record.workspaceID, captured.record.surfaceID, texts) == (sessionID, workspaceID, surfaceID, ["[Image #1] Fix the PE session tab link"]))

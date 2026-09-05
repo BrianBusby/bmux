@@ -7,17 +7,19 @@ struct AgentChatTranscriptPromptEvidenceSeeder {
         let messages: [ChatMessage]
     }
 
+    @discardableResult
     static func seed(
         records: [AgentChatSessionRecord],
         resolver: AgentChatTranscriptResolver,
         tokenOptimizationMode: TokenOptimizationMode,
         recordPrompts: @escaping @MainActor (AgentChatSessionRecord, [ChatMessage]) -> Void
-    ) {
+    ) -> Task<Void, Never> {
         Task {
             let seeds = await Task.detached(priority: .utility) {
                 let backfill = CodexTranscriptPromptBackfill(tokenOptimizationMode: tokenOptimizationMode)
                 return records.compactMap { record -> Seed? in
                     guard record.agentKind == .codex,
+                          record.state != .ended,
                           let path = resolver.transcriptPath(for: record) else {
                         return nil
                     }
@@ -33,12 +35,13 @@ struct AgentChatTranscriptPromptEvidenceSeeder {
         }
     }
 
+    @discardableResult
     static func seed(
         record: AgentChatSessionRecord,
         resolver: AgentChatTranscriptResolver,
         tokenOptimizationMode: TokenOptimizationMode,
         recordPrompts: @escaping @MainActor (AgentChatSessionRecord, [ChatMessage]) -> Void
-    ) {
+    ) -> Task<Void, Never> {
         seed(
             records: [record],
             resolver: resolver,

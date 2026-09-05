@@ -48,6 +48,8 @@ flowchart TD
 bmux owns live interaction, local runtime behavior, provider acquisition,
 provider-specific adapters, session lifecycle, terminal/native/web surfaces,
 capture policy, optimistic presentation, UI routing, and user-facing fallbacks.
+App runtime composition in bmux owns production/test service capability selection,
+startup, readiness, and teardown for migrated background services.
 
 Provenance Engine owns accepted evidence contracts, local durable storage,
 rebuildable factual projections, semantic inference contracts and records,

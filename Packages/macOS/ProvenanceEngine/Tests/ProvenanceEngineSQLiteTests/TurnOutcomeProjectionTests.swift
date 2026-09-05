@@ -287,6 +287,28 @@ struct TurnOutcomeProjectionTests {
     }
 
     @Test
+    func turnOutcomeEvidenceIgnoresMalformedRowsFromUnrelatedSessions() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let fixture = TurnOutcomeFixture(suffix: "scoped-evidence")
+        try await Self.seed(fixture.normalEvents, into: repository)
+        let payload = ["{", #""codingAgentPrompt""#, ":"].joined()
+        try ProvenanceSQLiteDatabase(url: url).execute("""
+        INSERT INTO provenance_events (id, schema_version, event_type, timestamp_seconds, repository_id, worktree_id, session_id, contribution_id, source, confidence, payload_json, evidence_origin, evidence_scope_json)
+        VALUES ('event-malformed-unrelated-session', 1, '\(ProvenanceEventType.codingAgentPromptSubmitted.rawValue)', 1840000099, NULL, NULL, 'unrelated-session', NULL, '\(ProvenanceSource.observed.rawValue)', '\(ProvenanceConfidence.high.rawValue)', '\(payload)', NULL, NULL)
+        """)
+        let outcome = try #require(
+            try await repository.turnOutcome(ProvenanceTurnOutcomeRequest(turnID: fixture.turnCompleted.id)).outcome
+        )
+
+        #expect(outcome.objective?.evidence.map(\.eventID) == ["event-prompt-scoped-evidence"])
+        #expect(outcome.commandsCompleted.allSatisfy { command in
+            command.evidence.allSatisfy { $0.eventID != "event-malformed-unrelated-session" }
+        })
+    }
+
+    @Test
     func unsupportedProseDoesNotInventDecisionBlockerOrResumePoint() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }

@@ -15,6 +15,36 @@ or caveat changes. Shared milestone, gate, ownership, roadmap, and policy
 changes belong in root `project/project-state.yaml`. The old
 `project/shared-project-source.yaml` pointer is obsolete.
 
+Process Integrity is now the primary active frontier. The current slice is
+`deterministic_app_runtime_composition`, owned by bmux, with active work in
+`/Users/brianbusby/repos/.bmux-worktrees/process-integrity-runtime-composition`
+on branch `process-integrity-runtime-composition`. The audit and migration rules
+for this slice live in
+[`docs/process-integrity/runtime-composition-audit.md`](../process-integrity/runtime-composition-audit.md).
+
+This slice migrates WorkProvenanceRuntime construction/startup and agent-chat PE
+execution telemetry projection startup behind `BmuxAppRuntimeComposition` and
+`BmuxAppRuntimeServices`. Default app-host tests must not open production PE
+storage; PE tests opt in with explicit runtime capabilities and isolated storage.
+The retained compatibility behavior is `BMUX_ENABLE_PROVENANCE_RUNTIME_IN_XCTEST=1`
+plus `BMUX_PROVENANCE_HOME`, now interpreted only by the runtime composition
+configuration.
+
+Production PE prompt evidence appends are part of this slice's readiness surface:
+turn-outcome evidence acquisition is scoped to the affected `session_id`, not the
+entire local event ledger. Agent-chat startup prompt seeding now skips ended
+historical Codex records while preserving live startup backfill and the live
+`UserPromptSubmit` repair path; broad historical prompt backfill belongs to an
+explicit import or future maintenance capability. Dogfood also identified
+workspace-display SQLite file-watcher churn on shared stores as a deferred
+runtime-composition follow-up; do not fold that into this PR unless it becomes
+the blocking startup/readiness failure.
+Final dogfood also found that another active tagged Debug app can hold the
+shared production PE SQLite store and force this slice's writes into retry; the
+validated build 535 dogfood used an isolated `BMUX_PROVENANCE_HOME` while still
+running production composition (`xctest=0`). Treat multi-app shared-store writer
+policy as a separate follow-up, not part of this PR.
+
 ## Read Order
 
 1. `AGENTS.md`

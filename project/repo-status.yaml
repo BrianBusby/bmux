@@ -3,12 +3,12 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id: workspace_coding_agent_session_linkage_hardening
-    title: Workspace Coding-Agent Session Linkage Hardening
+    id: deterministic_app_runtime_composition
+    title: Deterministic App Runtime Composition and App-Host Test Isolation
     state: open
-    owner: shared
-    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/harden-pe-session-readiness
-    active_branch: harden-pe-session-readiness
+    owner: bmux
+    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/process-integrity-runtime-composition
+    active_branch: process-integrity-runtime-composition
     active_agent: codex
   state: active
 
@@ -92,6 +92,9 @@ local_capabilities:
   richer_session_work_view: planned
   normal_coding_agent_evidence_ingestion: implemented
   workspace_coding_agent_session_linkage_hardening: under_observation
+  app_runtime_composition_boundary: under_observation
+  app_host_test_runtime_isolation: under_observation
+  work_provenance_runtime_lifecycle_state: under_observation
   remote_mobile_planning_reconciliation: planned
   remote_local_session_host_contract: planned
   remote_session_protocol_loopback: planned

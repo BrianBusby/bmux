@@ -680,6 +680,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     weak var tabManager: TabManager?
     weak var notificationStore: TerminalNotificationStore?
     weak var sidebarState: SidebarState?
+    var appRuntimeServices: BmuxAppRuntimeServices?
     var workProvenanceRuntime: WorkProvenanceRuntime?
 
     /// Notification jump/open navigation, extracted into `BmuxNotifications`.
@@ -2043,6 +2044,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         TerminalController.shared.stop()
         GhosttyApp.terminalPasteboard.cleanupAllOwnedTemporaryImageFiles()
         VSCodeServeWebController.shared.stop()
+        appRuntimeServices?.stop()
         BrowserProfileStore.shared.flushPendingSaves()
         ghosttyCrashBreadcrumbTask?.cancel()
         ghosttyCrashBreadcrumbTask = nil
@@ -2070,16 +2072,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     func configure(
-        tabManager: TabManager,
-        notificationStore: TerminalNotificationStore,
-        sidebarState: SidebarState,
-        settingsRuntime: SettingsRuntime,
-        auth: MacAuthComposition,
-        workProvenanceRuntime: WorkProvenanceRuntime
+        tabManager: TabManager, notificationStore: TerminalNotificationStore,
+        sidebarState: SidebarState, settingsRuntime: SettingsRuntime,
+        auth: MacAuthComposition, appRuntimeServices: BmuxAppRuntimeServices
     ) {
         self.tabManager = tabManager
-        self.workProvenanceRuntime = workProvenanceRuntime
-        tabManager.workProvenanceRuntime = workProvenanceRuntime
+        self.appRuntimeServices = appRuntimeServices
+        self.workProvenanceRuntime = appRuntimeServices.workProvenanceRuntime
+        tabManager.workProvenanceRuntime = appRuntimeServices.workProvenanceRuntime
         self.settingsRuntime = settingsRuntime
         self.notificationStore = notificationStore
         self.sidebarState = sidebarState
@@ -2096,7 +2096,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         // entry). No-op on Release / when the flag is off.
         MacPairedMacBackupPublisher.shared.configure(auth: auth.coordinator)
         TerminalController.shared.attachAuth(coordinator: auth.coordinator, browserSignIn: auth.browserSignIn)
-        agentChatTranscriptService.recordSessionLifecycleChanges(with: workProvenanceRuntime)
+        agentChatTranscriptService.recordSessionLifecycleChanges(with: appRuntimeServices.workProvenanceRuntime)
         TerminalController.shared.agentChatTranscriptService = agentChatTranscriptService
         auth.start()
         ensureMobileWorkspaceListObserver(for: tabManager)

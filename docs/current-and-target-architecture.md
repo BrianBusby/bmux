@@ -186,18 +186,21 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 ### Current Active Work
 
 - Active gate: Engineering Observation Period (`engineering_observation_period`) - active
-- Primary capability frontier: Richer Session Understanding (`richer_session_understanding`)
-- Active implementation slice: Workspace Coding-Agent Session Linkage Hardening (`workspace_coding_agent_session_linkage_hardening`) - open
+- Primary capability frontier: Process Integrity (`process_integrity`)
+- Active implementation slice: Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) - open
 - Bmux repository state: active
 
 ### Current Roadmap Lanes
 
 - Bmux and Provenance Engine (`bmux_provenance_platform`) - project; status: active; owner: Provenance Engine
+- Process Integrity (`process_integrity`) - program; status: active; owner: Bmux
+- App Runtime Composition and Test Isolation (`app_runtime_composition_and_test_isolation`) - phase; status: active; owner: Bmux
+- App Runtime Composition Migration (`app_runtime_composition_migration`) - milestone; status: active; owner: Bmux
+- Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) - slice; status: active; owner: Bmux
 - Project Truth Governance (`project_truth_governance`) - program; status: active; owner: Provenance Engine
 - Canonical Project Truth State (`canonical_project_truth_state`) - phase; status: active; owner: Provenance Engine
 - Project Truth Manifest and CI (`project_truth_manifest_and_ci`) - milestone; status: active; owner: Provenance Engine
 - Richer Session Understanding (`richer_session_understanding`) - program; status: active; owner: Provenance Engine
-- Workspace Coding-Agent Session Linkage Hardening (`workspace_coding_agent_session_linkage_hardening`) - slice; status: active; owner: Provenance Engine
 - Semantic Understanding (`semantic_understanding`) - phase; status: active; owner: Provenance Engine
 - Semantic SessionWorkModel Projection (`semantic_session_work_model_projection`) - milestone; status: active; owner: Provenance Engine
 - Three-view Coding Session Experience (`three_view_coding_session_experience`) - phase; status: active; owner: Bmux
@@ -303,6 +306,9 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Gated / Blocked Downstream Work
 
+- Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - maturity: gated; status: planned; selection: planned; owner: Bmux
+  - Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) is not dependency-satisfying
+  - Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) has maturity active; requires validated for gate `runtime_composition_validated`: Additional background services should migrate only after the first PE-backed production/test composition path is validated.
 - React Terminal live interaction productization (`react_terminal_productization`) - maturity: captured; status: planned; selection: planned; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - maturity: gated; status: planned; selection: planned; owner: Bmux

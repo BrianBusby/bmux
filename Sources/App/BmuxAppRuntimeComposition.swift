@@ -6,14 +6,17 @@ struct BmuxAppRuntimeComposition {
     private let jsonConfigStore: JSONConfigStore
     private let secretStore: SecretFileStore
     private let keychainStore: KeychainSecretStore
+    private let runtimeConfiguration: BmuxAppRuntimeConfiguration
 
     init(
         configFileURL: URL,
         secretBaseDirectory: URL,
-        bundleIdentifier: String?
+        bundleIdentifier: String?,
+        runtimeConfiguration: BmuxAppRuntimeConfiguration
     ) {
         self.jsonConfigStore = JSONConfigStore(fileURL: configFileURL)
         self.secretStore = SecretFileStore(baseDirectory: secretBaseDirectory)
+        self.runtimeConfiguration = runtimeConfiguration
         self.keychainStore = KeychainSecretStore(
             service: KeychainSecretStore.serviceName(bundleIdentifier: bundleIdentifier)
         )
@@ -54,5 +57,28 @@ struct BmuxAppRuntimeComposition {
                 catalog: catalog
             ),
         ])
+    }
+
+    @MainActor
+    func makeWorkProvenanceRuntime(catalog: SettingCatalog) -> WorkProvenanceRuntime {
+        let requiresWorkProvenanceStorage = runtimeConfiguration.enables(.workProvenanceObservation)
+            || runtimeConfiguration.enables(.agentChatExecutionTelemetryProjection)
+        guard requiresWorkProvenanceStorage else {
+            return WorkProvenanceRuntime.disabledByComposition()
+        }
+        return WorkProvenanceRuntime.live(
+            homeDirectory: runtimeConfiguration.workProvenanceHomeDirectory,
+            linearAuthorizationProvider: linearAuthorizationProvider(catalog: catalog)
+        )
+    }
+
+    @MainActor
+    func makeRuntimeServices(
+        workProvenanceRuntime: WorkProvenanceRuntime
+    ) -> BmuxAppRuntimeServices {
+        BmuxAppRuntimeServices(
+            configuration: runtimeConfiguration,
+            workProvenanceRuntime: workProvenanceRuntime
+        )
     }
 }

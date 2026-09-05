@@ -31,6 +31,7 @@ final class AgentChatTranscriptService {
     private var recordTranscriptUserPrompts: @MainActor (AgentChatSessionRecord, [ChatMessage]) -> Void
     private let recordTaskWorkspaceDirectory: @MainActor (AgentChatSessionRecord, String) -> Void
     private let now: () -> Date
+    private var promptEvidenceTasks: [UUID: Task<Void, Never>] = [:]
     /// Drives the live agent-prose streaming preview.
     private var proseStreamer: AgentChatProseStreamer!
     /// Sessions whose transcript could not be resolved; skipped until an
@@ -177,7 +178,8 @@ final class AgentChatTranscriptService {
     /// Seeds the session registry from the on-disk hook stores. Call once at
     /// app startup. Hook events stay authoritative for state and transcripts;
     /// observe-floor scans later add live agent presence even before hooks fire.
-    func start() {
+    @discardableResult
+    func start() -> Task<Void, Never> {
         Self.liveInstance = self
         // Apply resume re-binds buffered before the service was wired. The seed
         // only creates records that don't already exist, so an intent applied
@@ -197,15 +199,27 @@ final class AgentChatTranscriptService {
         // Seeding reads+parses the hook-store JSON off the main actor; kick it
         // off and return. Live hook events also populate the registry, and the
         // seed converges within milliseconds.
-        Task { @MainActor [weak self] in
+        return Task { @MainActor [weak self] in
             guard let self else { return }
             await self.registry.seedFromHookStores()
-            AgentChatTranscriptPromptEvidenceSeeder.seed(
+            self.trackPromptEvidenceTask(AgentChatTranscriptPromptEvidenceSeeder.seed(
                 records: self.registry.sessions(workspaceID: nil),
                 resolver: self.resolver,
                 tokenOptimizationMode: self.tokenOptimizationModeProvider(),
                 recordPrompts: { [weak self] record, messages in self?.recordTranscriptUserPrompts(record, messages) }
-            )
+            ))
+        }
+    }
+
+    func waitForPromptEvidenceTasks() async {
+        while !promptEvidenceTasks.isEmpty {
+            let pending = promptEvidenceTasks
+            for task in pending.values {
+                await task.value
+            }
+            for id in pending.keys {
+                promptEvidenceTasks[id] = nil
+            }
         }
     }
 
@@ -466,17 +480,26 @@ final class AgentChatTranscriptService {
             return
         }
         guard let tailer = ensureTailer(for: record) else { return }
-        Task { @MainActor [weak self] in
+        trackPromptEvidenceTask(Task { @MainActor [weak self] in
             await tailer.start()
             guard let self else { return }
-            AgentChatTranscriptPromptEvidenceSeeder.seed(
+            await AgentChatTranscriptPromptEvidenceSeeder.seed(
                 record: record,
                 resolver: resolver,
                 tokenOptimizationMode: tokenOptimizationModeProvider(),
                 recordPrompts: { [weak self] record, messages in
                     self?.recordTranscriptUserPrompts(record, messages)
                 }
-            )
+            ).value
+        })
+    }
+
+    private func trackPromptEvidenceTask(_ task: Task<Void, Never>) {
+        let id = UUID()
+        promptEvidenceTasks[id] = task
+        Task { @MainActor [weak self] in
+            await task.value
+            self?.promptEvidenceTasks[id] = nil
         }
     }
 

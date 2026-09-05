@@ -204,6 +204,9 @@ jobs:
       - name: Validate canonical workspace mutation guard
         run: ./scripts/check-canonical-workspace-mutations.sh
 
+      - name: Validate app runtime composition boundary
+        run: ./scripts/check-app-runtime-composition-boundary.sh
+
       - name: Validate pbxproj test-wiring lint
         run: ./tests/test_ci_pbxproj_test_wiring.sh
 

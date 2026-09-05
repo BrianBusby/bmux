@@ -70,9 +70,23 @@ The canonical default store is owned by Provenance Engine: `~/.local/state/prove
 
 The previous bmux-local database remains at `~/.local/state/bmux/work-provenance/bmux-work-provenance.sqlite`. That legacy file is not deleted, archived, or opened as the default V1 store. In the local cutover validation it contained the old bmux schema, `PRAGMA user_version = 3`, and no useful event/session/worktree rows.
 
-For tests and development, `BMUX_PROVENANCE_HOME` overrides the home directory used by bmux default-path resolution. Explicit CLI `--database <path>` is supported for provenance CLI fixture/debug use and applies only to that CLI invocation.
+`BmuxAppRuntimeComposition` is the bmux app source of truth for constructing the live `WorkProvenanceRuntime`. `BmuxAppRuntimeServices` is the source of truth for starting and stopping Work Provenance observation and agent-chat execution telemetry projection. Production app configuration enables those capabilities by default. XCTest hosts disable them by default so constructing the app host cannot open the production PE database.
 
-Startup breadcrumbs include the effective V1 database path in `app.init.workProvenance.created`. Producer failures are logged instead of being silently discarded.
+Tests that need PE opt into `BmuxAppRuntimeConfiguration.test(...)` with an isolated temporary home directory. For compatibility, `BMUX_ENABLE_PROVENANCE_RUNTIME_IN_XCTEST=1` still enables the same PE runtime capabilities in an XCTest host, and `BMUX_PROVENANCE_HOME` still overrides the home directory used by bmux default-path resolution. Remove the environment opt-in only after CI and local app-host PE tests have moved to explicit runtime configuration.
+
+Explicit CLI `--database <path>` is supported for provenance CLI fixture/debug use and applies only to that CLI invocation.
+
+Startup breadcrumbs include the effective V1 database path in `app.init.workProvenance.created`. Producer failures are logged instead of being silently discarded. `WorkProvenanceRuntime` exposes lifecycle state for `notStarted`, `starting`, `ready`, `degraded`, `stopping`, `stopped`, and `failed`, plus deterministic task-settling and shutdown hooks for production-path tests.
+
+Production prompt evidence appends must keep readiness bounded to the affected session. Turn-outcome evidence references are resolved from `provenance_events.session_id` using the existing session index; appending one transcript or hook prompt must not decode unrelated ledger history from the shared local PE store.
+
+Agent-chat startup may seed prompt evidence for non-ended Codex hook-store
+records so a still-running session discovered after app launch can converge.
+Ended historical hook-store records are not transcript prompt producers during
+production startup. Use `bmux provenance import codex-transcripts` for explicit
+historical ingestion, or introduce a separately composed maintenance capability
+with its own readiness and bounds if startup-time historical prompt backfill
+becomes product requirements again.
 
 ## Current State Reads
 

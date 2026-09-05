@@ -22,17 +22,22 @@ final class WorkProvenanceRuntime {
     private var displayMetadataObservationTask: Task<Void, Never>?
     private var activationObservationTask: Task<Void, Never>?
     private var executionTelemetryProjectionService: ExecutionTelemetryProvenanceProjectionService?
+    private var backgroundTasksByID: [UUID: Task<Void, Never>] = [:]
 
-    /// Effective V1 database path when the runtime starts successfully.
+    private(set) var lifecycleState: WorkProvenanceRuntimeLifecycleState
     let effectiveDatabaseURL: URL?
-
-    /// Startup failure retained for diagnostics when provenance is disabled.
     let startupErrorDescription: String?
-
-    /// Whether the runtime has a usable provenance store.
     let isEnabled: Bool
 
-    /// Creates a provenance runtime.
+    var hasActiveLifecycleWork: Bool {
+        directoryObservationTask != nil || titleObservationTask != nil ||
+            displayMetadataObservationTask != nil || activationObservationTask != nil ||
+            executionTelemetryProjectionService != nil || !backgroundTasksByID.isEmpty
+    }
+
+    private var acceptsLifecycleProducerWork: Bool { lifecycleState != .stopping && lifecycleState != .stopped }
+    private var acceptsObservationProducerWork: Bool { lifecycleState == .starting || lifecycleState == .ready }
+
     init(
         observationService: WorkProvenanceObservationService?,
         workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore? = nil,
@@ -43,7 +48,8 @@ final class WorkProvenanceRuntime {
         sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder? = nil,
         codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder? = nil,
         effectiveDatabaseURL: URL? = nil,
-        startupErrorDescription: String? = nil
+        startupErrorDescription: String? = nil,
+        initialLifecycleState: WorkProvenanceRuntimeLifecycleState = .notStarted
     ) {
         self.observationService = observationService
         self.workspaceDisplayCurrentStateStore = workspaceDisplayCurrentStateStore
@@ -68,6 +74,7 @@ final class WorkProvenanceRuntime {
         self.effectiveDatabaseURL = effectiveDatabaseURL
         self.startupErrorDescription = startupErrorDescription
         self.isEnabled = observationService != nil
+        self.lifecycleState = initialLifecycleState
     }
 
     deinit {
@@ -75,6 +82,7 @@ final class WorkProvenanceRuntime {
         titleObservationTask?.cancel()
         displayMetadataObservationTask?.cancel()
         activationObservationTask?.cancel()
+        backgroundTasksByID.values.forEach { $0.cancel() }
     }
 
     /// Creates the standard runtime backed by the per-user bmux state directory.
@@ -122,18 +130,62 @@ final class WorkProvenanceRuntime {
         }
     }
 
+    static func disabledByComposition() -> WorkProvenanceRuntime {
+        WorkProvenanceRuntime(observationService: nil, initialLifecycleState: .stopped)
+    }
+
     /// Starts observing workspace list and current-directory changes.
-    func start(tabManager: TabManager) {
-        guard let observationService else { return }
-        self.tabManager = tabManager
-        Task {
-            await observationService.pruneExpiredObservedHistory()
+    @discardableResult
+    func start(tabManager: TabManager) -> WorkProvenanceRuntimeLifecycleState {
+        switch lifecycleState {
+        case .ready, .starting:
+            return lifecycleState
+        case .stopped where startupErrorDescription == nil && observationService == nil:
+            return lifecycleState
+        default:
+            break
         }
+        guard let observationService else {
+            if let startupErrorDescription {
+                lifecycleState = .failed(reason: startupErrorDescription)
+            } else {
+                lifecycleState = .degraded(reason: "Work provenance observation is disabled by app runtime composition")
+            }
+            return lifecycleState
+        }
+        lifecycleState = .starting
+        self.tabManager = tabManager
+        trackBackgroundTask(Task {
+            await observationService.pruneExpiredObservedHistory()
+        })
         observeWorkspaces(tabManager.tabs)
         startDirectoryObservationIfNeeded()
         startDisplayObservationIfNeeded()
         startActivationObservationIfNeeded()
         startWorkspaceDisplayCurrentStateSubscriptionIfNeeded()
+        lifecycleState = .ready
+        return lifecycleState
+    }
+
+    func stop() {
+        guard lifecycleState != .stopped else { return }
+        lifecycleState = .stopping
+        directoryObservationTask?.cancel()
+        directoryObservationTask = nil
+        titleObservationTask?.cancel()
+        titleObservationTask = nil
+        displayMetadataObservationTask?.cancel()
+        displayMetadataObservationTask = nil
+        activationObservationTask?.cancel()
+        activationObservationTask = nil
+        workspaceDisplayCurrentStateSubscription?.stop()
+        workspaceDisplayCurrentStateStore?.cancelRefreshes()
+        executionTelemetryProjectionService?.stop()
+        executionTelemetryProjectionService = nil
+        backgroundTasksByID.values.forEach { $0.cancel() }
+        backgroundTasksByID.removeAll()
+        tabManager = nil
+        lifecycleState = .stopped
     }
 
     /// Starts projecting eligible live execution telemetry facts into provenance.
@@ -141,7 +193,7 @@ final class WorkProvenanceRuntime {
         agentChatURL: URL,
         sidecarStatusHandler: @escaping (ExecutionTelemetryProjectionSidecarStatus) -> Void = { _ in }
     ) {
-        guard let sessionLifecycleRecorder else { return }
+        guard acceptsLifecycleProducerWork, let sessionLifecycleRecorder else { return }
         guard executionTelemetryProjectionService?.agentChatURL != agentChatURL else {
             executionTelemetryProjectionService?.updateSidecarStatusHandler(sidecarStatusHandler)
             executionTelemetryProjectionService?.start()
@@ -163,14 +215,37 @@ final class WorkProvenanceRuntime {
         StartupBreadcrumbLog.append("workProvenance.runtime.observeWorkspaces", fields: [
             "count": "\(workspaces.count)"
         ])
+        guard acceptsObservationProducerWork else { return }
         guard let observationService else { return }
         let snapshots = workspaces.map(WorkProvenanceWorkspaceSnapshot.init(workspace:))
         let stableWorkspaceIDs = snapshots.map(\.stableWorkspaceID)
-        Task {
+        trackBackgroundTask(Task { [weak self] in
             await observationService.observeWorkspaceSnapshots(snapshots)
             await MainActor.run {
-                self.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: stableWorkspaceIDs)
+                self?.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: stableWorkspaceIDs)
             }
+        })
+    }
+
+    func waitForBackgroundTasks() async {
+        while true {
+            let tasksByID = backgroundTasksByID
+            guard !tasksByID.isEmpty else { return }
+            for task in tasksByID.values {
+                await task.value
+            }
+            for id in tasksByID.keys {
+                backgroundTasksByID[id] = nil
+            }
+        }
+    }
+
+    private func trackBackgroundTask(_ task: Task<Void, Never>) {
+        let id = UUID()
+        backgroundTasksByID[id] = task
+        Task { @MainActor [weak self] in
+            await task.value
+            self?.backgroundTasksByID[id] = nil
         }
     }
 
@@ -186,21 +261,21 @@ final class WorkProvenanceRuntime {
 
     /// Persists an observed agent session lifecycle change.
     func recordSessionLifecycleChange(_ change: AgentSessionLifecycleChange, timestamp: Date) {
-        guard let sessionLifecycleRecorder else { return }
-        Task {
+        guard acceptsLifecycleProducerWork, let sessionLifecycleRecorder else { return }
+        trackBackgroundTask(Task {
             await sessionLifecycleRecorder.record(change, timestamp: timestamp)
-        }
+        })
     }
 
     /// Persists hook-observed prompt evidence when sidecar telemetry has not linked the workspace yet.
     func recordHookUserPromptSubmit(record: AgentChatSessionRecord, event: WorkstreamEvent) {
-        guard let codingAgentEvidenceRecorder,
+        guard acceptsLifecycleProducerWork, let codingAgentEvidenceRecorder,
               let workspace = workspace(forRuntimeOrStableWorkspaceID: record.workspaceID ?? event.workspaceId) else {
             return
         }
         let stableWorkspaceID = workspace.stableId
         let fallbackPromptText = workspace.latestSubmittedMessage
-        Task { [weak self] in
+        trackBackgroundTask(Task { [weak self] in
             do {
                 try await codingAgentEvidenceRecorder.recordHookUserPromptSubmit(
                     record: record,
@@ -217,14 +292,14 @@ final class WorkProvenanceRuntime {
                     "error": String(describing: error)
                 ])
             }
-        }
+        })
     }
 
     /// Persists transcript-observed prompt evidence when sidecar telemetry did not project it.
     func recordTranscriptUserPrompts(record: AgentChatSessionRecord, messages: [ChatMessage]) {
-        guard let codingAgentEvidenceRecorder, !messages.isEmpty else { return }
+        guard acceptsLifecycleProducerWork, let codingAgentEvidenceRecorder, !messages.isEmpty else { return }
         let stableWorkspaceID = workspace(forRuntimeOrStableWorkspaceID: record.workspaceID)?.stableId
-        Task { [weak self] in
+        trackBackgroundTask(Task { [weak self] in
             do {
                 try await codingAgentEvidenceRecorder.recordTranscriptUserPrompts(
                     record: record,
@@ -242,7 +317,7 @@ final class WorkProvenanceRuntime {
                     "error": String(describing: error)
                 ])
             }
-        }
+        })
     }
 
     private func startDirectoryObservationIfNeeded() {
@@ -325,6 +400,7 @@ final class WorkProvenanceRuntime {
     }
 
     private func refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: [UUID]) {
+        guard acceptsObservationProducerWork else { return }
         workspaceDisplayCurrentStateStore?.refresh(
             stableWorkspaceIDs: stableWorkspaceIDs,
             notify: { [weak self] stableWorkspaceID in
@@ -418,7 +494,4 @@ final class WorkProvenanceRuntime {
         )
     }
 
-    private static var isRunningUnderXCTest: Bool {
-        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-    }
 }

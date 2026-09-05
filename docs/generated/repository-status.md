@@ -13,9 +13,9 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Workspace Coding-Agent Session Linkage Hardening (`workspace_coding_agent_session_linkage_hardening`)
+- Active slice: Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`)
 - Slice state: open
-- Owner: shared
+- Owner: bmux
 - Repository state: active
 
 ## Release
@@ -27,6 +27,8 @@ Repository: `BrianBusby/bmux`
 
 | Capability | State |
 | --- | --- |
+| App Host Test Runtime Isolation | under observation |
+| App Runtime Composition Boundary | under observation |
 | Bmux Cross Session Context Assembly Experiment | planned |
 | Bmux Proactive Cross Session Awareness | implemented |
 | Factual Agent Session View | implemented |
@@ -94,6 +96,7 @@ Repository: `BrianBusby/bmux`
 | Richer Session Work View | planned |
 | Session Work Model Consumer | planned |
 | Three View Session Navigation | planned |
+| Work Provenance Runtime Lifecycle State | under observation |
 | Workspace Coding Agent Session Linkage Hardening | under observation |
 | Workspace Display Current State Diagnostic | implemented |
 | Workspace Display Durable Context | implemented |
