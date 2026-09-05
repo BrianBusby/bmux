@@ -176,7 +176,11 @@
 		A5001001 /* bmuxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001011 /* bmuxApp.swift */; };
 		C9A2B00000000000000000B3 /* BmuxAppKitSupportUI in Frameworks */ = {isa = PBXBuildFile; productRef = C9A2B00000000000000000B2 /* BmuxAppKitSupportUI */; };
 		C9A2B00000000000000000C3 /* BmuxAppKitSupportUI in Frameworks */ = {isa = PBXBuildFile; productRef = C9A2B00000000000000000C2 /* BmuxAppKitSupportUI */; };
+		CE0E08020000000000000001 /* BmuxAppRuntimeCapability.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E08020000000000000002 /* BmuxAppRuntimeCapability.swift */; };
 		CE0E03110000000000000001 /* BmuxAppRuntimeComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03110000000000000002 /* BmuxAppRuntimeComposition.swift */; };
+		CE0E08040000000000000001 /* BmuxAppRuntimeConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E08040000000000000002 /* BmuxAppRuntimeConfiguration.swift */; };
+		CE0E08030000000000000001 /* BmuxAppRuntimeProcessKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E08030000000000000002 /* BmuxAppRuntimeProcessKind.swift */; };
+		CE0E08050000000000000001 /* BmuxAppRuntimeServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E08050000000000000002 /* BmuxAppRuntimeServices.swift */; };
 		5EDB6027B346C46521A93C74 /* BMUXAuthCore in Frameworks */ = {isa = PBXBuildFile; productRef = 29813FE5A6CBC1019289A251 /* BMUXAuthCore */; };
 		53750003A0B1C2D3E4F50003 /* BmuxAuthRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 53750002A0B1C2D3E4F50002 /* BmuxAuthRuntime */; };
 		D7032A060000000000000001 /* BmuxBrowser in Frameworks */ = {isa = PBXBuildFile; productRef = D7032A060000000000000002 /* BmuxBrowser */; };
@@ -1600,8 +1604,8 @@
 		C0DE70120000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */; };
 		CE0D10140000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */; };
 		CE0E010B0000000000000001 /* WorkProvenanceRuntime+AgentSessionAssociation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E010B0000000000000002 /* WorkProvenanceRuntime+AgentSessionAssociation.swift */; };
-		CE0E010C0000000000000001 /* WorkProvenanceRuntime+XCTestGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E010C0000000000000002 /* WorkProvenanceRuntime+XCTestGate.swift */; };
 		756EB108F5337A59A8668D7C /* WorkProvenanceRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */; };
+		CE0E08060000000000000001 /* WorkProvenanceRuntimeLifecycleState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E08060000000000000002 /* WorkProvenanceRuntimeLifecycleState.swift */; };
 		CE0B00040000000000000001 /* WorkProvenanceSessionLifecycleRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00040000000000000002 /* WorkProvenanceSessionLifecycleRecorder.swift */; };
 		A801809D8020AD996B4C0997 /* WorkProvenanceSessionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 447E35CF777CC9B4432D5BFA /* WorkProvenanceSessionRecord.swift */; };
 		CE0D10170000000000000001 /* WorkProvenanceSessionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 447E35CF777CC9B4432D5BFA /* WorkProvenanceSessionRecord.swift */; };
@@ -1982,7 +1986,11 @@
 		E3309A08 /* bmuxApp+EqualizeSplitsMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "bmuxApp+EqualizeSplitsMenu.swift"; sourceTree = "<group>"; };
 		C4160A010000000000000002 /* bmuxApp+HistoryMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "bmuxApp+HistoryMenu.swift"; sourceTree = "<group>"; };
 		A5001011 /* bmuxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = bmuxApp.swift; sourceTree = "<group>"; };
+		CE0E08020000000000000002 /* BmuxAppRuntimeCapability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BmuxAppRuntimeCapability.swift; sourceTree = "<group>"; };
 		CE0E03110000000000000002 /* BmuxAppRuntimeComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BmuxAppRuntimeComposition.swift; sourceTree = "<group>"; };
+		CE0E08040000000000000002 /* BmuxAppRuntimeConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BmuxAppRuntimeConfiguration.swift; sourceTree = "<group>"; };
+		CE0E08030000000000000002 /* BmuxAppRuntimeProcessKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BmuxAppRuntimeProcessKind.swift; sourceTree = "<group>"; };
+		CE0E08050000000000000002 /* BmuxAppRuntimeServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BmuxAppRuntimeServices.swift; sourceTree = "<group>"; };
 		61AD48A9E6C3F1BE2B547FFE /* BMUXCLI+AgentHookCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AgentHookCatalog.swift"; sourceTree = "<group>"; };
 		B9000062A1B2C3D4E5F60719 /* BMUXCLI+AgentHookDefinitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AgentHookDefinitions.swift"; sourceTree = "<group>"; };
 		5257257034CA4729B1211170 /* BMUXCLI+AgentHookPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+AgentHookPayload.swift"; sourceTree = "<group>"; };
@@ -3301,8 +3309,8 @@
 		CE0E03040000000000000002 /* WorkProvenancePullRequestOwnerResolving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePullRequestOwnerResolving.swift; sourceTree = "<group>"; };
 		C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRetentionPolicy.swift; sourceTree = "<group>"; };
 		CE0E010B0000000000000002 /* WorkProvenanceRuntime+AgentSessionAssociation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkProvenanceRuntime+AgentSessionAssociation.swift"; sourceTree = "<group>"; };
-		CE0E010C0000000000000002 /* WorkProvenanceRuntime+XCTestGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkProvenanceRuntime+XCTestGate.swift"; sourceTree = "<group>"; };
 		B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRuntime.swift; sourceTree = "<group>"; };
+		CE0E08060000000000000002 /* WorkProvenanceRuntimeLifecycleState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRuntimeLifecycleState.swift; sourceTree = "<group>"; };
 		CE0B00040000000000000002 /* WorkProvenanceSessionLifecycleRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSessionLifecycleRecorder.swift; sourceTree = "<group>"; };
 		447E35CF777CC9B4432D5BFA /* WorkProvenanceSessionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSessionRecord.swift; sourceTree = "<group>"; };
 		CE0B00020000000000000002 /* WorkProvenanceSessionRelationshipRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSessionRelationshipRecord.swift; sourceTree = "<group>"; };
@@ -3731,6 +3739,10 @@
 				A11EAD000000000000000001 /* WorkspaceAppearanceResolution.swift */,
 				A5001011 /* bmuxApp.swift */,
 				CE0E03110000000000000002 /* BmuxAppRuntimeComposition.swift */,
+				CE0E08020000000000000002 /* BmuxAppRuntimeCapability.swift */,
+				CE0E08030000000000000002 /* BmuxAppRuntimeProcessKind.swift */,
+				CE0E08040000000000000002 /* BmuxAppRuntimeConfiguration.swift */,
+				CE0E08050000000000000002 /* BmuxAppRuntimeServices.swift */,
 				CA5CADF00000000000000001 /* CanvasDebugMenuButtons.swift */,
 				C46790000000000000000004 /* CLIForwardingLaunchRouter.swift */,
 				C46790000000000000000006 /* RosettaNativeRelaunch.swift */,
@@ -5232,8 +5244,8 @@
 					CE0E00040000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+Support.swift */,
 					CE0E010A0000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+SessionAssociation.swift */,
 					CE0E010B0000000000000002 /* WorkProvenanceRuntime+AgentSessionAssociation.swift */,
-					CE0E010C0000000000000002 /* WorkProvenanceRuntime+XCTestGate.swift */,
 					B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */,
+					CE0E08060000000000000002 /* WorkProvenanceRuntimeLifecycleState.swift */,
 				CE0E01090000000000000002 /* WorkspaceCodingAgentSessionAssociationStore.swift */,
 				CE0E03100000000000000002 /* WorkProvenanceSettingsLinearAuthorizationProvider.swift */,
 				CE2F01040000000000000002 /* AgentSessionFactualProjectionReadResult.swift */,
@@ -5810,7 +5822,11 @@
 				E3309A07 /* bmuxApp+EqualizeSplitsMenu.swift in Sources */,
 				C4160A010000000000000001 /* bmuxApp+HistoryMenu.swift in Sources */,
 				A5001001 /* bmuxApp.swift in Sources */,
+				CE0E08020000000000000001 /* BmuxAppRuntimeCapability.swift in Sources */,
 				CE0E03110000000000000001 /* BmuxAppRuntimeComposition.swift in Sources */,
+				CE0E08040000000000000001 /* BmuxAppRuntimeConfiguration.swift in Sources */,
+				CE0E08030000000000000001 /* BmuxAppRuntimeProcessKind.swift in Sources */,
+				CE0E08050000000000000001 /* BmuxAppRuntimeServices.swift in Sources */,
 				A72C9F4179B54DF38E99A021 /* BmuxCLIPathInstaller.swift in Sources */,
 				A5001650 /* BmuxConfig.swift in Sources */,
 				A5FB1209 /* BmuxConfigActionDefinition.swift in Sources */,
@@ -6661,8 +6677,8 @@
 					CE0E03040000000000000001 /* WorkProvenancePullRequestOwnerResolving.swift in Sources */,
 					C0DE70120000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */,
 					CE0E010B0000000000000001 /* WorkProvenanceRuntime+AgentSessionAssociation.swift in Sources */,
-					CE0E010C0000000000000001 /* WorkProvenanceRuntime+XCTestGate.swift in Sources */,
 					756EB108F5337A59A8668D7C /* WorkProvenanceRuntime.swift in Sources */,
+					CE0E08060000000000000001 /* WorkProvenanceRuntimeLifecycleState.swift in Sources */,
 				CE0B00040000000000000001 /* WorkProvenanceSessionLifecycleRecorder.swift in Sources */,
 				A801809D8020AD996B4C0997 /* WorkProvenanceSessionRecord.swift in Sources */,
 				CE0B00020000000000000001 /* WorkProvenanceSessionRelationshipRecord.swift in Sources */,

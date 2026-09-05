@@ -63,7 +63,7 @@ final class PromptSessionLinkProductionLifecycleTests: XCTestCase {
             receivedAt: try Self.isoDate("2026-08-21T10:00:01Z")
         ))
         try Self.assertAvailable(
-            await Self.waitForFactualProjection(runtime: runtime, stableWorkspaceID: workspace.stableId),
+            await Self.factualProjectionAfterSettling(runtime: runtime, stableWorkspaceID: workspace.stableId),
             sessionID: hookFirstSessionID
         )
 
@@ -84,7 +84,7 @@ final class PromptSessionLinkProductionLifecycleTests: XCTestCase {
         )
         XCTAssertEqual(hookFirstTranscriptImport.fileReport.prompts, 1)
         try Self.assertAvailable(
-            await Self.waitForFactualProjection(runtime: runtime, stableWorkspaceID: workspace.stableId),
+            await Self.factualProjectionAfterSettling(runtime: runtime, stableWorkspaceID: workspace.stableId),
             sessionID: hookFirstSessionID
         )
         let hookFirstAssociationResponse = try await client.workspaceCodingAgentSessionAssociation(
@@ -140,7 +140,7 @@ final class PromptSessionLinkProductionLifecycleTests: XCTestCase {
         )
         XCTAssertEqual(completedPrompt.fileReport.prompts, 1)
         try Self.assertAvailable(
-            await Self.waitForFactualProjection(runtime: runtime, stableWorkspaceID: otherWorkspace.stableId),
+            await Self.factualProjectionAfterSettling(runtime: runtime, stableWorkspaceID: otherWorkspace.stableId),
             sessionID: currentSessionID
         )
 
@@ -149,7 +149,7 @@ final class PromptSessionLinkProductionLifecycleTests: XCTestCase {
         XCTAssertGreaterThan(replay.duplicateEvents, 0)
         let restartedRuntime = Self.runtime(client: client, gitInspector: gitInspector)
         try Self.assertAvailable(
-            await Self.waitForFactualProjection(runtime: restartedRuntime, stableWorkspaceID: otherWorkspace.stableId),
+            await Self.factualProjectionAfterSettling(runtime: restartedRuntime, stableWorkspaceID: otherWorkspace.stableId),
             sessionID: currentSessionID
         )
 
@@ -160,8 +160,9 @@ final class PromptSessionLinkProductionLifecycleTests: XCTestCase {
             workspaceID: otherWorkspace.id.uuidString,
             workingDirectory: repositoryRoot
         )
+        await runtime.waitForBackgroundTasks()
         try Self.assertAvailable(
-            await Self.waitForFactualProjection(runtime: restartedRuntime, stableWorkspaceID: otherWorkspace.stableId),
+            await restartedRuntime.agentSessionFactualProjection(stableWorkspaceID: otherWorkspace.stableId),
             sessionID: currentSessionID
         )
 
@@ -179,31 +180,22 @@ final class PromptSessionLinkProductionLifecycleTests: XCTestCase {
         let staleImport = try await importer.importLiveTranscriptAppend(at: staleURL, state: &staleState)
         XCTAssertEqual(staleImport.fileReport.prompts, 1)
         try Self.assertAvailable(
-            await Self.waitForFactualProjection(runtime: restartedRuntime, stableWorkspaceID: otherWorkspace.stableId),
+            await Self.factualProjectionAfterSettling(runtime: restartedRuntime, stableWorkspaceID: otherWorkspace.stableId),
             sessionID: currentSessionID
         )
         try Self.assertAvailable(
-            await Self.waitForFactualProjection(runtime: restartedRuntime, stableWorkspaceID: workspace.stableId),
+            await Self.factualProjectionAfterSettling(runtime: restartedRuntime, stableWorkspaceID: workspace.stableId),
             sessionID: hookFirstSessionID
         )
     }
 
     @MainActor
-    private static func waitForFactualProjection(
+    private static func factualProjectionAfterSettling(
         runtime: WorkProvenanceRuntime,
-        stableWorkspaceID: UUID,
-        timeout: TimeInterval = 1
+        stableWorkspaceID: UUID
     ) async -> AgentSessionFactualProjectionReadResult {
-        let deadline = Date().addingTimeInterval(timeout)
-        var latest = await runtime.agentSessionFactualProjection(stableWorkspaceID: stableWorkspaceID)
-        while Date() < deadline {
-            if case .available = latest {
-                return latest
-            }
-            try? await Task.sleep(nanoseconds: 50_000_000)
-            latest = await runtime.agentSessionFactualProjection(stableWorkspaceID: stableWorkspaceID)
-        }
-        return latest
+        await runtime.waitForBackgroundTasks()
+        return await runtime.agentSessionFactualProjection(stableWorkspaceID: stableWorkspaceID)
     }
 
     @MainActor

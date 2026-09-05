@@ -15,13 +15,13 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Current Capability Frontier
 
-- Primary Capability Frontier: Richer Session Understanding (`richer_session_understanding`)
+- Primary Capability Frontier: Process Integrity (`process_integrity`)
 - Active or selected slices in the frontier:
-  - Workspace Coding-Agent Session Linkage Hardening (`workspace_coding_agent_session_linkage_hardening`) - maturity: unspecified; status: active; selection: current; owner: Provenance Engine
+  - Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Active Implementation
 
-- Workspace Coding-Agent Session Linkage Hardening (`workspace_coding_agent_session_linkage_hardening`) - maturity: unspecified; status: active; selection: current; owner: Provenance Engine
+- Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Selected Next
 
@@ -33,6 +33,9 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Gated / Blocked Downstream Work
 
+- Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - maturity: gated; status: planned; selection: planned; owner: Bmux
+  - Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) is not dependency-satisfying
+  - Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) has maturity active; requires validated for gate `runtime_composition_validated`: Additional background services should migrate only after the first PE-backed production/test composition path is validated.
 - React Terminal live interaction productization (`react_terminal_productization`) - maturity: captured; status: planned; selection: planned; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - maturity: gated; status: planned; selection: planned; owner: Bmux
@@ -102,6 +105,35 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 - **Bmux and Provenance Engine** (`bmux_provenance_platform`) - project; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: platform; layer: platform; execution: current / Shared; parallelism: safe
   Rationale: Canonical monorepo roadmap root for Provenance Engine-owned evidence/current-state work and bmux-owned observation/presentation work.
+  - **Process Integrity** (`process_integrity`) - program; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: platform; layer: platform; execution: current / Bmux; parallelism: serial
+    Expected contract domains: `project_truth_reconciliation`, `app_runtime_composition`, `app_host_test_isolation`
+    Likely conflict domains: `active_work_selection`, `app_startup_lifecycle`
+    Rationale: Tracks cross-cutting process-integrity slices that define a single owner, lifecycle, validation path, and completion step for failure classes that individual feature fixes exposed but should not keep repairing locally.
+    - **App Runtime Composition and Test Isolation** (`app_runtime_composition_and_test_isolation`) - phase; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: platform; layer: platform; execution: current / Bmux; parallelism: serial
+      Depends on: `workspace_coding_agent_session_linkage_hardening`
+      Expected contract domains: `production_runtime_startup`, `explicit_test_runtime_capabilities`, `service_readiness_and_teardown`
+      Expected code areas: `Sources/bmuxApp.swift`, `Sources/AppDelegate*.swift`, `Sources/App/BmuxAppRuntime*.swift`, `Sources/WorkProvenance/*.swift`, `bmuxTests/*RuntimeCompositionTests.swift`
+      Rationale: Gives background app services explicit construction, startup, readiness, failure, and teardown ownership so production starts them deliberately and app-host tests activate only requested capabilities.
+      - **App Runtime Composition Migration** (`app_runtime_composition_migration`) - milestone; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: platform; layer: platform; execution: current / Bmux; parallelism: serial
+        Depends on: `workspace_coding_agent_session_linkage_hardening`
+        Rationale: Milestone for migrating app background service lifecycle ownership from scattered app-host side effects into explicit production/test runtime composition.
+        - **Deterministic App Runtime Composition and App-Host Test Isolation** (`deterministic_app_runtime_composition`) - slice; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: platform; layer: platform; execution: current / Bmux; parallelism: serial; delivery: open; acceptance: proposed; maturity: active
+          Depends on: `workspace_coding_agent_session_linkage_hardening`
+          Enables: `app_runtime_service_lifecycle_migration`
+          Expected contract domains: `app_runtime_service_construction`, `production_startup_lifecycle`, `app_host_test_runtime_capabilities`, `work_provenance_runtime_readiness`, `deterministic_teardown`
+          Expected code areas: `Sources/bmuxApp.swift`, `Sources/AppDelegate*.swift`, `Sources/App/BmuxAppRuntime*.swift`, `Sources/WorkProvenance/*.swift`, `bmuxTests/AppRuntimeCompositionTests.swift`, `bmuxTests/PromptSessionLinkProductionLifecycleTests.swift`
+          Likely conflict domains: `app_startup`, `work_provenance_runtime_startup`, `agent_chat_telemetry_projection`, `app_host_test_bootstrap`
+          Contract dependencies: `workspace_coding_agent_session_association`, `factual_session_projection`
+          Worktree required: true
+          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/process-integrity-runtime-composition`; branch: `process-integrity-runtime-composition`; agent: `codex`
+          Rationale: Move WorkProvenanceRuntime construction/startup and related agent-chat PE projection startup behind one app-runtime composition owner so production starts PE deliberately, default app-host tests cannot open the production PE database, opted-in tests use isolated storage, and migrated services expose deterministic readiness/failure/teardown.
+          Acceptance criteria: App runtime composition is the only production source path that constructs the live WorkProvenanceRuntime.; BmuxAppRuntimeServices is the only production source path that starts PE workspace observation and agent-chat execution telemetry projection.; Default app-host XCTest composition disables PE without opening the production PE database.; Tests can opt into PE with a temporary home directory and observe ready, failed, and stopped lifecycle states without sleeps or timing assertions.; Runtime shutdown cancels migrated observation work and releases owned lifecycle tasks.; A source guard prevents migrated app entrypoints from bypassing the composition boundary.; Existing Session-tab production lifecycle coverage still reaches PE readiness through deterministic task completion.
+        - **Background Service Lifecycle Migration** (`app_runtime_service_lifecycle_migration`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: gated
+          Depends on: `deterministic_app_runtime_composition`
+          Expected contract domains: `browser_lifecycle`, `sidebar_git_observation`, `remote_session_presence`, `push_registration`, `notification_runtime_services`
+          Likely conflict domains: `app_delegate_startup`, `app_host_test_side_effects`, `global_singletons`
+          Gate `runtime_composition_validated`: requires `deterministic_app_runtime_composition` maturity validated; reason: Additional background services should migrate only after the first PE-backed production/test composition path is validated.
+          Rationale: Follow-up Process Integrity slice to migrate the next background service family exposed by app-host side effects into explicit construction, readiness, and teardown ownership.
   - **V1 Foundation and Bmux Adoption** (`v1_foundation_and_adoption`) - program; status: accepted; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: v1 adoption; layer: platform; execution: complete / Shared; parallelism: serial
     Rationale: Records the accepted V1 package and first bmux adoption path without expanding the legacy flat milestone list.
     - **V1 Baseline** (`v1_baseline`) - phase; status: accepted; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: v1 adoption; layer: evidence store; execution: complete / Shared; parallelism: serial
@@ -262,8 +294,11 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Evidence: BrianBusby/bmux@69c1cf02314e
           Acceptance reason: Engineering Observation Period dogfood of PR
           Acceptance criteria: A long-running ordinary Codex CLI turn continues ingesting appended JSONL records while the turn is active.; Accepted live transcript evidence advances PE factual session projection revisions and factual reads.; Visible Codex commentary/progress summaries are imported only when they are completed provider-visible summary units, never from hidden reasoning content.; Provider/model/effort fields remain distinct and use authoritative Codex transcript/runtime sources.; Hook and transcript observations converge on one factual session/thread/turn without duplicate logical turns.; Historical transcript import remains idempotent after live ingestion.; An open Session surface refreshes revisioned factual state without requiring the tab to be reopened.
-        - **Workspace Coding-Agent Session Linkage Hardening** (`workspace_coding_agent_session_linkage_hardening`) - slice; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: current / Shared; parallelism: serial; delivery: open; acceptance: proposed
+        - **Workspace Coding-Agent Session Linkage Hardening** (`workspace_coding_agent_session_linkage_hardening`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Shared; parallelism: serial; delivery: merged; acceptance: under observation; maturity: validated
+          Evidence: BrianBusby/bmux@8a0163fe1b72, BrianBusby/bmux@c07b9f8bd852, BrianBusby/bmux#95 by [BrianBusby](https://github.com/BrianBusby), BrianBusby/bmux#96 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Harden the factual workspace to coding-agent session association below semantic inference so Session and Smart Session reads no longer depend on workspace display metadata as their only identity bridge.
+          Acceptance reason: PR
+          Acceptance criteria: Session identity is resolved through the durable PE workspace/session association read path rather than display metadata alone.; Hook-first, transcript-first, replay, restart, resume, and multiple concurrent sessions preserve deterministic workspace/session association.; User-facing Session readiness distinguishes unsupported, awaiting first prompt, association pending, projection pending, failure, and available states.
       - **Factual Session Projection Read Contract** (`factual_session_projection_read_contract`) - milestone; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial
         Depends on: `richer_session_observable_evidence`
         - **Factual session projection foundation** (`factual_session_projection_foundation`) - slice; status: implemented; owner: Provenance Engine; repositories: Provenance Engine; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial; delivery: open; acceptance: implemented; mirrors: `richer_session_work_model`; maturity: validated
@@ -709,7 +744,7 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 
 | Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Workspace Coding-Agent Session Linkage Hardening (`workspace_coding_agent_session_linkage_hardening`) | serial | None | None | None | None | None | single active assignment |
+| Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) | serial | /Users/brianbusby/repos/.bmux-worktrees/process-integrity-runtime-composition | process-integrity-runtime-composition | codex | `agent_chat_telemetry_projection`, `app_host_test_bootstrap`, `app_startup`, `work_provenance_runtime_startup` | `factual_session_projection`, `workspace_coding_agent_session_association` | single active assignment |
 
 ### Dependency-Ready Preflight
 

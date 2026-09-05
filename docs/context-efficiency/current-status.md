@@ -15,6 +15,21 @@ or caveat changes. Shared milestone, gate, ownership, roadmap, and policy
 changes belong in root `project/project-state.yaml`. The old
 `project/shared-project-source.yaml` pointer is obsolete.
 
+Process Integrity is now the primary active frontier. The current slice is
+`deterministic_app_runtime_composition`, owned by bmux, with active work in
+`/Users/brianbusby/repos/.bmux-worktrees/process-integrity-runtime-composition`
+on branch `process-integrity-runtime-composition`. The audit and migration rules
+for this slice live in
+[`docs/process-integrity/runtime-composition-audit.md`](../process-integrity/runtime-composition-audit.md).
+
+This slice migrates WorkProvenanceRuntime construction/startup and agent-chat PE
+execution telemetry projection startup behind `BmuxAppRuntimeComposition` and
+`BmuxAppRuntimeServices`. Default app-host tests must not open production PE
+storage; PE tests opt in with explicit runtime capabilities and isolated storage.
+The retained compatibility behavior is `BMUX_ENABLE_PROVENANCE_RUNTIME_IN_XCTEST=1`
+plus `BMUX_PROVENANCE_HOME`, now interpreted only by the runtime composition
+configuration.
+
 ## Read Order
 
 1. `AGENTS.md`

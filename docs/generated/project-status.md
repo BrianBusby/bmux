@@ -19,13 +19,13 @@ Regenerate with: ./scripts/project-docs generate
 
 ### Current Capability Frontier
 
-- Primary Capability Frontier: Richer Session Understanding (`richer_session_understanding`)
+- Primary Capability Frontier: Process Integrity (`process_integrity`)
 - Active or selected slices in the frontier:
-  - Workspace Coding-Agent Session Linkage Hardening (`workspace_coding_agent_session_linkage_hardening`) - maturity: unspecified; status: active; selection: current; owner: Provenance Engine
+  - Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Active Implementation
 
-- Workspace Coding-Agent Session Linkage Hardening (`workspace_coding_agent_session_linkage_hardening`) - maturity: unspecified; status: active; selection: current; owner: Provenance Engine
+- Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Selected Next
 
@@ -37,6 +37,9 @@ Regenerate with: ./scripts/project-docs generate
 
 ### Gated / Blocked Downstream Work
 
+- Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - maturity: gated; status: planned; selection: planned; owner: Bmux
+  - Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) is not dependency-satisfying
+  - Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`) has maturity active; requires validated for gate `runtime_composition_validated`: Additional background services should migrate only after the first PE-backed production/test composition path is validated.
 - React Terminal live interaction productization (`react_terminal_productization`) - maturity: captured; status: planned; selection: planned; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - maturity: gated; status: planned; selection: planned; owner: Bmux

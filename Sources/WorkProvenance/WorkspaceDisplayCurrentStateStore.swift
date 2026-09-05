@@ -86,4 +86,9 @@ final class WorkspaceDisplayCurrentStateStore {
             }
         }
     }
+
+    func cancelRefreshes() {
+        refreshTasksByStableWorkspaceID.values.forEach { $0.cancel() }
+        refreshTasksByStableWorkspaceID.removeAll()
+    }
 }

@@ -11,6 +11,8 @@ Regenerate with: ./scripts/project-docs generate
 
 | Responsibility | Owner |
 | --- | --- |
+| App Host Test Runtime Isolation | Bmux |
+| App Runtime Composition | Bmux |
 | Automatic Context Assembly Policy | Bmux |
 | Bounded provenance queries | Provenance Engine |
 | Capture policy | Bmux |

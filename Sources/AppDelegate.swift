@@ -680,6 +680,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     weak var tabManager: TabManager?
     weak var notificationStore: TerminalNotificationStore?
     weak var sidebarState: SidebarState?
+    var appRuntimeServices: BmuxAppRuntimeServices?
     var workProvenanceRuntime: WorkProvenanceRuntime?
 
     /// Notification jump/open navigation, extracted into `BmuxNotifications`.
@@ -2043,6 +2044,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         TerminalController.shared.stop()
         GhosttyApp.terminalPasteboard.cleanupAllOwnedTemporaryImageFiles()
         VSCodeServeWebController.shared.stop()
+        appRuntimeServices?.stop()
         BrowserProfileStore.shared.flushPendingSaves()
         ghosttyCrashBreadcrumbTask?.cancel()
         ghosttyCrashBreadcrumbTask = nil
@@ -2075,9 +2077,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         sidebarState: SidebarState,
         settingsRuntime: SettingsRuntime,
         auth: MacAuthComposition,
-        workProvenanceRuntime: WorkProvenanceRuntime
+        appRuntimeServices: BmuxAppRuntimeServices
     ) {
+        let workProvenanceRuntime = appRuntimeServices.workProvenanceRuntime
         self.tabManager = tabManager
+        self.appRuntimeServices = appRuntimeServices
         self.workProvenanceRuntime = workProvenanceRuntime
         tabManager.workProvenanceRuntime = workProvenanceRuntime
         self.settingsRuntime = settingsRuntime

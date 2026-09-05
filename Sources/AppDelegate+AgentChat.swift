@@ -37,8 +37,7 @@ extension AppDelegate {
         agentChat: BmuxAgentChatConfiguration,
         globalConfigPath: String? = nil
     ) {
-        guard !Self.detectRunningUnderXCTest(ProcessInfo.processInfo.environment) else { return }
-        workProvenanceRuntime?.startExecutionTelemetryProjection(
+        appRuntimeServices?.startAgentChatExecutionTelemetryProjection(
             agentChatURL: agentChat.url,
             sidecarStatusHandler: { [weak self] status in
                 self?.handleAgentChatProjectionSidecarStatus(
