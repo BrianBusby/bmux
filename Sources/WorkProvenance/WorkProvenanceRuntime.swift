@@ -26,13 +26,10 @@ final class WorkProvenanceRuntime {
 
     private(set) var lifecycleState: WorkProvenanceRuntimeLifecycleState
 
-    /// Effective V1 database path when the runtime starts successfully.
     let effectiveDatabaseURL: URL?
 
-    /// Startup failure retained for diagnostics when provenance is disabled.
     let startupErrorDescription: String?
 
-    /// Whether the runtime has a usable provenance store.
     let isEnabled: Bool
 
     var hasActiveLifecycleWork: Bool {
@@ -44,7 +41,6 @@ final class WorkProvenanceRuntime {
             !backgroundTasksByID.isEmpty
     }
 
-    /// Creates a provenance runtime.
     init(
         observationService: WorkProvenanceObservationService?,
         workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore? = nil,
@@ -138,10 +134,7 @@ final class WorkProvenanceRuntime {
     }
 
     static func disabledByComposition() -> WorkProvenanceRuntime {
-        WorkProvenanceRuntime(
-            observationService: nil,
-            initialLifecycleState: .stopped
-        )
+        WorkProvenanceRuntime(observationService: nil, initialLifecycleState: .stopped)
     }
 
     /// Starts observing workspace list and current-directory changes.

@@ -54,10 +54,6 @@ struct bmuxApp: App {
     /// Explicit owner for background runtime service startup and teardown.
     private let appRuntimeServices: BmuxAppRuntimeServices
 
-    /// Observe-only work provenance runtime. Constructed by the runtime
-    /// composition boundary so process capabilities stay centralized.
-    private let workProvenanceRuntime: WorkProvenanceRuntime
-
     @StateObject private var tabManager: TabManager
     @StateObject private var notificationStore = TerminalNotificationStore.shared
     @StateObject var closedItemHistoryStore = ClosedItemHistoryStore.shared
@@ -192,7 +188,6 @@ struct bmuxApp: App {
         KeyboardShortcutSettings.settingsFileStore.applyDeferredManagedDefaultSideEffects()
         StartupBreadcrumbLog.append("app.init.keyboardShortcuts.sideEffectsApplied")
         let workProvenanceRuntime = appRuntimeComposition.makeWorkProvenanceRuntime(catalog: settingsCatalog)
-        self.workProvenanceRuntime = workProvenanceRuntime
         let appRuntimeServices = appRuntimeComposition.makeRuntimeServices(
             workProvenanceRuntime: workProvenanceRuntime
         )

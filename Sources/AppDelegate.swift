@@ -2072,18 +2072,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     func configure(
-        tabManager: TabManager,
-        notificationStore: TerminalNotificationStore,
-        sidebarState: SidebarState,
-        settingsRuntime: SettingsRuntime,
-        auth: MacAuthComposition,
-        appRuntimeServices: BmuxAppRuntimeServices
+        tabManager: TabManager, notificationStore: TerminalNotificationStore,
+        sidebarState: SidebarState, settingsRuntime: SettingsRuntime,
+        auth: MacAuthComposition, appRuntimeServices: BmuxAppRuntimeServices
     ) {
-        let workProvenanceRuntime = appRuntimeServices.workProvenanceRuntime
         self.tabManager = tabManager
         self.appRuntimeServices = appRuntimeServices
-        self.workProvenanceRuntime = workProvenanceRuntime
-        tabManager.workProvenanceRuntime = workProvenanceRuntime
+        self.workProvenanceRuntime = appRuntimeServices.workProvenanceRuntime
+        tabManager.workProvenanceRuntime = appRuntimeServices.workProvenanceRuntime
         self.settingsRuntime = settingsRuntime
         self.notificationStore = notificationStore
         self.sidebarState = sidebarState
@@ -2100,7 +2096,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         // entry). No-op on Release / when the flag is off.
         MacPairedMacBackupPublisher.shared.configure(auth: auth.coordinator)
         TerminalController.shared.attachAuth(coordinator: auth.coordinator, browserSignIn: auth.browserSignIn)
-        agentChatTranscriptService.recordSessionLifecycleChanges(with: workProvenanceRuntime)
+        agentChatTranscriptService.recordSessionLifecycleChanges(with: appRuntimeServices.workProvenanceRuntime)
         TerminalController.shared.agentChatTranscriptService = agentChatTranscriptService
         auth.start()
         ensureMobileWorkspaceListObserver(for: tabManager)
