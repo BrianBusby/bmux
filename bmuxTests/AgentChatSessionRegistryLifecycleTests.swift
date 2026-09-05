@@ -615,7 +615,7 @@ struct AgentChatSessionRegistryLifecycleTests {
     }
 
     @MainActor
-    @Test func startupBackfillsCodexTranscriptPromptsFromHookStoreSessions() async throws {
+    @Test func startupBackfillsLiveCodexTranscriptPromptsFromHookStoreSessions() async throws {
         let home = try temporaryHomeDirectory(), sessionID = "24ec0052-450c-4914-b1dd-2ee80d4bc84b", workspaceID = UUID().uuidString, surfaceID = UUID().uuidString
         let transcriptURL = home.appendingPathComponent(".codex/sessions/2026/08/21", isDirectory: true).appendingPathComponent("rollout-2026-08-21T10-00-00-\(sessionID).jsonl")
         try FileManager.default.createDirectory(at: transcriptURL.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -626,7 +626,8 @@ struct AgentChatSessionRegistryLifecycleTests {
         ].joined(separator: "\n").appending("\n").write(to: transcriptURL, atomically: true, encoding: .utf8)
         let hookDir = home.appendingPathComponent(".bmuxterm", isDirectory: true)
         try FileManager.default.createDirectory(at: hookDir, withIntermediateDirectories: true)
-        try #"{"sessions":{"\#(sessionID)":{"workspaceId":"\#(workspaceID)","surfaceId":"\#(surfaceID)","cwd":"/Users/example/project","transcriptPath":"\#(transcriptURL.path)","updatedAt":140}}}"#.write(to: hookDir.appendingPathComponent("codex-hook-sessions.json"), atomically: true, encoding: .utf8)
+        let livePID = Int(ProcessInfo.processInfo.processIdentifier)
+        try #"{"sessions":{"\#(sessionID)":{"workspaceId":"\#(workspaceID)","surfaceId":"\#(surfaceID)","cwd":"/Users/example/project","transcriptPath":"\#(transcriptURL.path)","pid":\#(livePID),"updatedAt":140}}}"#.write(to: hookDir.appendingPathComponent("codex-hook-sessions.json"), atomically: true, encoding: .utf8)
         var recorded = [(record: AgentChatSessionRecord, messages: [ChatMessage])]()
         let service = AgentChatTranscriptService(registry: AgentChatSessionRegistry(hookStore: AgentChatHookSessionStore(homeDirectory: home)), resolver: AgentChatTranscriptResolver(homeDirectory: home, environment: [:]), recordTranscriptUserPrompts: { recorded.append(($0, $1)) })
         let startupTask = service.start()

@@ -13,7 +13,7 @@ entrypoints. It is not a file inventory.
 | React Terminal surface | `agent-chat` | `agent-chat/src/App.tsx`, `agent-chat/src/components/Chat.tsx`, `agent-chat/server.ts`, `agent-chat/adapters/codex.ts`, `agent-chat/adapters/claude.ts`, `agent-chat/adapters/acp.ts`, `agent-chat/adapters/pi.ts` |
 | Provider-normalized telemetry | `agent-chat` and shared package | `agent-chat/executionTelemetryTypes.ts`, `agent-chat/executionTelemetryFanout.ts`, `agent-chat/executionTelemetryLiveProjection.ts`, `Packages/Shared/BmuxAgentChat/Sources/BmuxAgentChat/Wire` |
 | PE runtime bridge and app runtime composition | root macOS app | `Sources/App/BmuxAppRuntimeComposition.swift`, `Sources/App/BmuxAppRuntimeConfiguration.swift`, `Sources/App/BmuxAppRuntimeServices.swift`, `Sources/WorkProvenance/WorkProvenanceRuntime.swift`, `Sources/AppDelegate+AgentChat.swift` |
-| Coding-agent evidence production | root macOS app | `Sources/WorkProvenance/WorkProvenanceCodingAgentEvidenceRecorder.swift`, `Sources/WorkProvenance/WorkProvenanceCodingAgentEvidenceRecorder+Recording.swift`, `Sources/WorkProvenance/ExecutionTelemetryProvenanceProjectionService.swift` |
+| Coding-agent evidence production | root macOS app | `Sources/WorkProvenance/WorkProvenanceCodingAgentEvidenceRecorder.swift`, `Sources/WorkProvenance/WorkProvenanceCodingAgentEvidenceRecorder+Recording.swift`, `Sources/WorkProvenance/ExecutionTelemetryProvenanceProjectionService.swift`, `Sources/Mobile/AgentChat/AgentChatTranscriptPromptEvidenceSeeder.swift` |
 | Workspace Current State consumer | root macOS app | `Sources/WorkProvenance/WorkspaceDisplayCurrentStateStore.swift`, `Sources/WorkProvenance/WorkspaceDisplayCurrentStateSubscription.swift`, `Sources/WorkProvenance/WorkspaceDisplayCurrentStateSnapshot.swift`, `Sources/Sidebar/SidebarWorkspaceSnapshotBuilder.swift` |
 | Provenance CLI/debug paths | CLI | `CLI/BMUXCLI+Provenance.swift`, `CLI/CLIProvenanceSessionTree.swift` |
 
@@ -51,4 +51,3 @@ Useful future CI guards would check that `Packages/macOS/ProvenanceEngine/Source
 never imports bmux app modules, SwiftUI, AppKit, `agent-chat`, or `Sources/`
 implementation files, and that bmux production code imports only PE public
 products rather than `ProvenanceEngineSQLite`.
-

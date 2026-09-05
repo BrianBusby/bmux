@@ -80,6 +80,14 @@ Startup breadcrumbs include the effective V1 database path in `app.init.workProv
 
 Production prompt evidence appends must keep readiness bounded to the affected session. Turn-outcome evidence references are resolved from `provenance_events.session_id` using the existing session index; appending one transcript or hook prompt must not decode unrelated ledger history from the shared local PE store.
 
+Agent-chat startup may seed prompt evidence for non-ended Codex hook-store
+records so a still-running session discovered after app launch can converge.
+Ended historical hook-store records are not transcript prompt producers during
+production startup. Use `bmux provenance import codex-transcripts` for explicit
+historical ingestion, or introduce a separately composed maintenance capability
+with its own readiness and bounds if startup-time historical prompt backfill
+becomes product requirements again.
+
 ## Current State Reads
 
 bmux treats Provenance Engine Current State as authoritative present-tense provenance.

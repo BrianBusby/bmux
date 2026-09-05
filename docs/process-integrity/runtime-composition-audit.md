@@ -106,6 +106,17 @@ evidence contract and scopes turn-outcome evidence reads to the affected
 `session_id`, using the existing `provenance_events_session_index`; unrelated
 ledger history is no longer decoded for one active session append.
 
+Dogfood also exposed that `AgentChatTranscriptService.start()` seeded Codex
+prompt evidence from every hook-store record, including ended historical
+sessions. That startup behavior is now bounded to non-ended Codex records. The
+retained compatibility behavior is live startup backfill for an actually-live
+hook-store session plus per-hook live Codex prompt evidence even when no mobile
+chat subscriber is attached. Ended hook-store records remain available for
+history/listability, but they do not parse transcript history or append durable
+PE prompt evidence during production startup. Historical transcript ingestion
+remains explicit through `bmux provenance import codex-transcripts` or a future
+separately composed maintenance capability.
+
 ## Guardrail
 
 `scripts/check-app-runtime-composition-boundary.sh` fails if production app source
@@ -138,3 +149,9 @@ shared production PE store and rescan candidate watch paths on the main actor.
 That was not the sampled source of the blocking PE append, so this PR records it
 as a follow-up instead of changing watcher semantics alongside the composition
 boundary.
+
+Broad all-history Codex prompt backfill is also deferred. If product needs
+startup-time historical prompt ingestion again, it should be introduced as an
+explicit runtime capability with its own readiness, storage bounds, progress,
+and teardown contract rather than piggybacking on the live agent-chat projection
+startup.

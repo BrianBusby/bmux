@@ -32,10 +32,13 @@ configuration.
 
 Production PE prompt evidence appends are part of this slice's readiness surface:
 turn-outcome evidence acquisition is scoped to the affected `session_id`, not the
-entire local event ledger. Dogfood also identified workspace-display SQLite
-file-watcher churn on shared stores as a deferred runtime-composition follow-up;
-do not fold that into this PR unless it becomes the blocking startup/readiness
-failure.
+entire local event ledger. Agent-chat startup prompt seeding now skips ended
+historical Codex records while preserving live startup backfill and the live
+`UserPromptSubmit` repair path; broad historical prompt backfill belongs to an
+explicit import or future maintenance capability. Dogfood also identified
+workspace-display SQLite file-watcher churn on shared stores as a deferred
+runtime-composition follow-up; do not fold that into this PR unless it becomes
+the blocking startup/readiness failure.
 
 ## Read Order
 

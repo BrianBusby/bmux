@@ -19,6 +19,7 @@ struct AgentChatTranscriptPromptEvidenceSeeder {
                 let backfill = CodexTranscriptPromptBackfill(tokenOptimizationMode: tokenOptimizationMode)
                 return records.compactMap { record -> Seed? in
                     guard record.agentKind == .codex,
+                          record.state != .ended,
                           let path = resolver.transcriptPath(for: record) else {
                         return nil
                     }
