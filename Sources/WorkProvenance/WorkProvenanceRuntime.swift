@@ -25,11 +25,8 @@ final class WorkProvenanceRuntime {
     private var backgroundTasksByID: [UUID: Task<Void, Never>] = [:]
 
     private(set) var lifecycleState: WorkProvenanceRuntimeLifecycleState
-
     let effectiveDatabaseURL: URL?
-
     let startupErrorDescription: String?
-
     let isEnabled: Bool
 
     var hasActiveLifecycleWork: Bool {
