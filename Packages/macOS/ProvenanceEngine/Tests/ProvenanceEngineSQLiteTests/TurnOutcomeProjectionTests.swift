@@ -287,6 +287,28 @@ struct TurnOutcomeProjectionTests {
     }
 
     @Test
+    func turnOutcomeEvidenceIgnoresMalformedRowsFromUnrelatedSessions() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let fixture = TurnOutcomeFixture(suffix: "scoped-evidence")
+        try await Self.seed(fixture.normalEvents, into: repository)
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        try Self.insertMalformedUnrelatedSessionEvent(into: database)
+
+        let outcome = try #require(
+            try await repository.turnOutcome(ProvenanceTurnOutcomeRequest(turnID: fixture.turnCompleted.id)).outcome
+        )
+
+        #expect(outcome.objective?.evidence.map(\.eventID) == ["event-prompt-scoped-evidence"])
+        #expect(outcome.commandsCompleted.allSatisfy { command in
+            command.evidence.allSatisfy { reference in
+                reference.eventID != "event-malformed-unrelated-session"
+            }
+        })
+    }
+
+    @Test
     func unsupportedProseDoesNotInventDecisionBlockerOrResumePoint() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
@@ -347,6 +369,43 @@ struct TurnOutcomeProjectionTests {
 
     private static func append(_ event: ProvenanceEvent, into repository: ProvenanceSQLiteRepository) async throws {
         try await repository.appendEvent(event)
+    }
+
+    private static func insertMalformedUnrelatedSessionEvent(into database: ProvenanceSQLiteDatabase) throws {
+        let insert = try database.prepare(
+            """
+            INSERT INTO provenance_events (
+                id,
+                schema_version,
+                event_type,
+                timestamp_seconds,
+                repository_id,
+                worktree_id,
+                session_id,
+                contribution_id,
+                source,
+                confidence,
+                payload_json,
+                evidence_origin,
+                evidence_scope_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """
+        )
+        defer { insert.finalize() }
+        try insert.bind("event-malformed-unrelated-session", at: 1)
+        try insert.bind(1, at: 2)
+        try insert.bind(ProvenanceEventType.codingAgentPromptSubmitted.rawValue, at: 3)
+        try insert.bind(Date(timeIntervalSince1970: 1_840_000_099).timeIntervalSince1970, at: 4)
+        try insert.bind(nil as String?, at: 5)
+        try insert.bind(nil as String?, at: 6)
+        try insert.bind("unrelated-session", at: 7)
+        try insert.bind(nil as String?, at: 8)
+        try insert.bind(ProvenanceSource.observed.rawValue, at: 9)
+        try insert.bind(ProvenanceConfidence.high.rawValue, at: 10)
+        try insert.bind("{\"codingAgentPrompt\":", at: 11)
+        try insert.bind(nil as String?, at: 12)
+        try insert.bind(nil as String?, at: 13)
+        _ = try insert.step()
     }
 
     private static func temporaryDatabaseURL() -> URL {
