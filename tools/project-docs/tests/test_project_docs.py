@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import os
 import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -84,6 +85,115 @@ class ProjectDocsTests(unittest.TestCase):
         shared = project_docs.load_yaml(SHARED)
         local = project_docs.load_yaml(LOCAL)
         return shared, local
+
+    def workflow_step(self, workflow_path: Path, job_name: str, step_name: str):
+        workflow = project_docs.load_yaml(workflow_path)
+        for step in workflow["jobs"][job_name]["steps"]:
+            if step.get("name") == step_name:
+                return workflow, step
+        self.fail(f"{workflow_path}: missing {job_name!r} step {step_name!r}")
+
+    def run_reconcile_writer_workflow_step(self, *, existing_pr: bool) -> list[str]:
+        workflow, step = self.workflow_step(
+            PROJECT_TRUTH_RECONCILE_WORKFLOW,
+            "reconcile",
+            "Open or update reconciliation PR",
+        )
+        self.assertEqual("write", workflow["permissions"]["actions"])
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            bin_dir = root / "bin"
+            bin_dir.mkdir()
+            scripts_dir = root / "scripts"
+            scripts_dir.mkdir()
+            command_log = root / "commands.log"
+
+            project_docs_stub = scripts_dir / "project-docs"
+            project_docs_stub.write_text(
+                """#!/usr/bin/env bash
+set -euo pipefail
+printf './scripts/project-docs %s\\n' "$*" >> "$COMMAND_LOG"
+if [[ "${1:-}" == "reconcile" && "${2:-}" == "--apply" ]]; then
+  echo "safe reconciliation changes"
+  exit 1
+fi
+exit 0
+""",
+                encoding="utf-8",
+            )
+            project_docs_stub.chmod(0o755)
+
+            git_stub = bin_dir / "git"
+            git_stub.write_text(
+                """#!/usr/bin/env bash
+set -euo pipefail
+printf 'git %s\\n' "$*" >> "$COMMAND_LOG"
+case "${1:-}" in
+  rev-parse)
+    if [[ "${2:-}" == "HEAD" || "${2:-}" == "origin/main" ]]; then
+      echo "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      exit 0
+    fi
+    ;;
+  diff)
+    if [[ "${2:-}" == "--quiet" ]]; then
+      exit 1
+    fi
+    exit 0
+    ;;
+  fetch|config|checkout|add|commit|push)
+    exit 0
+    ;;
+esac
+echo "unexpected git invocation: $*" >&2
+exit 2
+""",
+                encoding="utf-8",
+            )
+            git_stub.chmod(0o755)
+
+            gh_stub = bin_dir / "gh"
+            gh_stub.write_text(
+                """#!/usr/bin/env bash
+set -euo pipefail
+printf 'gh %s\\n' "$*" >> "$COMMAND_LOG"
+case "${1:-}:${2:-}" in
+  pr:list)
+    if [[ "${FAKE_EXISTING_PR:-}" == "1" ]]; then
+      echo "123"
+    fi
+    ;;
+  pr:create|pr:edit|workflow:run)
+    ;;
+  *)
+    echo "unexpected gh invocation: $*" >&2
+    exit 2
+    ;;
+esac
+""",
+                encoding="utf-8",
+            )
+            gh_stub.chmod(0o755)
+
+            env = os.environ.copy()
+            env["COMMAND_LOG"] = str(command_log)
+            env["FAKE_EXISTING_PR"] = "1" if existing_pr else "0"
+            env["GITHUB_TOKEN"] = "fake-token"
+            env["PATH"] = f"{bin_dir}{os.pathsep}{env['PATH']}"
+            env["RECONCILIATION_BRANCH"] = "project-truth/post-merge-reconciliation"
+
+            subprocess.run(
+                ["bash"],
+                input=step["run"],
+                cwd=root,
+                env=env,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
+            return command_log.read_text(encoding="utf-8").splitlines()
 
     def roadmap_node(self, shared, node_id: str):
         return next(node for node in shared["roadmap"]["nodes"] if node["id"] == node_id)
@@ -1148,16 +1258,31 @@ class ProjectDocsTests(unittest.TestCase):
         self.assertIn("./scripts/project-docs check", text)
         self.assertIn("./scripts/project-docs ci", text)
 
-    def test_project_truth_reconcile_workflow_uses_bounded_writer(self):
-        text = PROJECT_TRUTH_RECONCILE_WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("contents: write", text)
-        self.assertIn("pull-requests: write", text)
-        self.assertIn("RECONCILIATION_BRANCH: project-truth/post-merge-reconciliation", text)
-        self.assertIn("./scripts/project-docs reconcile --check", text)
-        self.assertIn("./scripts/project-docs reconcile --apply", text)
-        self.assertIn("git push --force-with-lease origin \"HEAD:$RECONCILIATION_BRANCH\"", text)
-        self.assertIn("gh pr list --head \"$RECONCILIATION_BRANCH\" --state open", text)
-        self.assertNotIn("git push origin main", text)
+    def test_project_truth_reconcile_workflow_dispatches_required_checks_after_bot_pr_write(self):
+        branch = "project-truth/post-merge-reconciliation"
+        expected_dispatches = [
+            f"gh workflow run ci.yml --ref {branch}",
+            f"gh workflow run project-truth.yml --ref {branch}",
+            f"gh workflow run perf-activation.yml --ref {branch} -f ref={branch}",
+        ]
+        cases = (
+            (
+                False,
+                f"gh pr create --base main --head {branch} --title Reconcile Project Truth delivery state --body-file /tmp/project-truth-reconcile-pr.md",
+            ),
+            (
+                True,
+                "gh pr edit 123 --title Reconcile Project Truth delivery state --body-file /tmp/project-truth-reconcile-pr.md",
+            ),
+        )
+
+        for existing_pr, expected_pr_command in cases:
+            with self.subTest(existing_pr=existing_pr):
+                commands = self.run_reconcile_writer_workflow_step(existing_pr=existing_pr)
+                self.assertIn(expected_pr_command, commands)
+                dispatches = [command for command in commands if command.startswith("gh workflow run ")]
+                self.assertEqual(expected_dispatches, dispatches)
+                self.assertLess(commands.index(expected_pr_command), commands.index(expected_dispatches[0]))
 
 
 if __name__ == "__main__":

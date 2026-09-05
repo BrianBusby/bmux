@@ -7,6 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
   pull-requests: write
   issues: read
@@ -107,3 +108,9 @@ jobs:
           else
             gh pr create --base main --head "$RECONCILIATION_BRANCH" --title "Reconcile Project Truth delivery state" --body-file /tmp/project-truth-reconcile-pr.md
           fi
+
+          # Pushes made with GITHUB_TOKEN do not emit pull_request workflow runs;
+          # workflow_dispatch is the supported exception for bot-authored updates.
+          gh workflow run ci.yml --ref "$RECONCILIATION_BRANCH"
+          gh workflow run project-truth.yml --ref "$RECONCILIATION_BRANCH"
+          gh workflow run perf-activation.yml --ref "$RECONCILIATION_BRANCH" -f "ref=$RECONCILIATION_BRANCH"
