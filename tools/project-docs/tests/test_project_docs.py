@@ -1240,6 +1240,49 @@ esac
         self.assertEqual([], target_changes)
         self.assertTrue(any(decision.name == "closed_unmerged_pr" for decision in plan.decisions))
 
+    def test_reconcile_respects_explicit_closed_unmerged_decision(self):
+        shared, local = self.load_valid()
+        self.clear_current_work(shared, local)
+        node = self.roadmap_node(shared, "deterministic_app_runtime_composition")
+        node["status"] = "deferred"
+        node["capability_maturity"] = "gated"
+        node["execution"]["assignment"] = "deferred"
+        node["delivery_status"] = "closed"
+        node["acceptance_status"] = "rejected"
+        node["evidence"] = {
+            "commits": [],
+            "pull_requests": [
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 97,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                }
+            ],
+        }
+        provider = self.fake_provider_for_current_manifests()
+        provider.pull_requests[("BrianBusby/bmux", 97)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=False,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=97,
+            merged_at=None,
+            merge_commit_sha=None,
+        )
+
+        plan = project_docs.reconciliation_plan(shared, [local], provider)
+
+        target_decisions = [
+            decision
+            for decision in plan.decisions
+            if decision.node_id == "deterministic_app_runtime_composition" and decision.name == "closed_unmerged_pr"
+        ]
+        self.assertEqual([], target_decisions)
+
     def test_reconcile_distinguishes_github_rate_limit(self):
         shared, local = self.load_valid()
         self.make_runtime_slice_stale(shared, local)
@@ -1251,6 +1294,20 @@ esac
         plan = project_docs.reconciliation_plan(shared, [local], provider)
 
         self.assertTrue(any(issue.name == "rate_limit" for issue in plan.issues))
+
+    def test_reconcile_check_distinguishes_malformed_state_exit_code(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            shutil.copytree(ROOT / "project", repo / "project")
+            shared_path = repo / "project/project-state.yaml"
+            shared = project_docs.load_yaml(shared_path)
+            shared["roadmap"]["nodes"][0]["status"] = "not-a-status"
+            shared_path.write_text(project_docs.yaml.safe_dump(shared, sort_keys=False), encoding="utf-8")
+
+            self.assertEqual(
+                3,
+                project_docs.main(["reconcile", "--check", "--repo-root", str(repo)]),
+            )
 
     def test_project_truth_workflow_runs_canonical_ci_gate(self):
         text = PROJECT_TRUTH_WORKFLOW.read_text(encoding="utf-8")

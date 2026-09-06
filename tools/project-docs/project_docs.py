@@ -1569,6 +1569,14 @@ def reconcile_merged_pull_request(
             queue_clear_repo_active_slice(plan, repo_status, node)
 
 
+def closed_unmerged_delivery_decision_recorded(node: dict[str, Any]) -> bool:
+    return (
+        node.get("delivery_status") in ("closed", "superseded")
+        or node.get("acceptance_status") in ("rejected", "superseded")
+        or node.get("status") == "superseded"
+    )
+
+
 def reconcile_pull_request_state(
     plan: ReconciliationPlan,
     shared: dict[str, Any],
@@ -1587,7 +1595,7 @@ def reconcile_pull_request_state(
     if discovered_from_active_branch and state.state == "open" and state.number is not None:
         queue_pull_request_evidence(plan, node, path, repository, state)
         return
-    if state.state == "closed":
+    if state.state == "closed" and not closed_unmerged_delivery_decision_recorded(node):
         add_node_decision(
             plan,
             node,
@@ -3177,7 +3185,10 @@ def github_provider_from_environment() -> GitHubRestEvidenceProvider:
 def command_reconcile(args: argparse.Namespace) -> None:
     if not args.reconcile_check and not args.reconcile_apply:
         raise ProjectDocsError("reconcile requires --check or --apply")
-    context = load_inputs(Path(args.repo_root), args.shared_state)
+    try:
+        context = load_inputs(Path(args.repo_root), args.shared_state)
+    except ProjectDocsError as exc:
+        raise ProjectDocsError(str(exc), exit_code=3) from exc
     repo_statuses = [context["repo_status"]]
     plan = reconciliation_plan(context["shared"], repo_statuses, github_provider_from_environment())
     sys.stdout.write(format_reconciliation_plan(plan, include_apply_hint=args.reconcile_check))
