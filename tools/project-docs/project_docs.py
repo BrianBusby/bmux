@@ -1811,6 +1811,7 @@ def reconcile_pull_request_state(
     recorded_closed_pr_has_later_merged_pr: bool = False,
     recorded_delivery_has_unresolved_later_closed_pr: bool = False,
     completion_must_match_active_branch: bool = False,
+    defer_active_branch_completion: bool = False,
     recorded_completion_pr_key: tuple[str, int | None] | None = None,
 ) -> None:
     if state.merged:
@@ -1824,6 +1825,9 @@ def reconcile_pull_request_state(
             and not discovered_from_active_branch
             and not pull_request_matches_active_branch(node, repository, state)
         ):
+            queue_verified_merged_pull_request_evidence(plan, provider, node, path, repository, state)
+            return
+        if completion_must_match_active_branch and defer_active_branch_completion and not discovered_from_active_branch:
             queue_verified_merged_pull_request_evidence(plan, provider, node, path, repository, state)
             return
         reconcile_merged_pull_request(plan, shared, repo_statuses, provider, node, path, repository, state)
@@ -2122,6 +2126,7 @@ def reconciliation_plan(
             node_has_active_delivery_assignment(node)
             and node.get("execution", {}).get("active_branch")
         )
+        defer_active_branch_completion = completion_must_match_active_branch and discover_active_branches
         for repository, state in recorded_pull_requests:
             reconcile_pull_request_state(
                 plan,
@@ -2141,6 +2146,7 @@ def reconciliation_plan(
                 ),
                 recorded_delivery_has_unresolved_later_closed_pr=recorded_delivery_has_unresolved_later_closed_pr,
                 completion_must_match_active_branch=completion_must_match_active_branch,
+                defer_active_branch_completion=defer_active_branch_completion,
                 recorded_completion_pr_key=recorded_completion_pr_key,
             )
 
@@ -2157,8 +2163,6 @@ def reconciliation_plan(
                         and pull_request_matches_active_branch(node, repository, state)
                     ]
                 )
-                if len(recorded_active_branch_states) == 1:
-                    continue
                 if len(recorded_active_branch_states) > 1:
                     numbers = ", ".join(str(item.number) for item in recorded_active_branch_states)
                     add_node_decision(
@@ -2169,7 +2173,9 @@ def reconciliation_plan(
                         f"active branch `{branch}` matched multiple recorded PRs ({numbers}); record the current delivery PR explicitly",
                     )
                     continue
-                owner = repository_owner(repository)
+                owner = recorded_active_branch_states[0].head_owner_login if recorded_active_branch_states else None
+                if not owner:
+                    owner = repository_owner(repository)
                 states = github_call(
                     plan,
                     "pull requests for active branch",
@@ -2178,6 +2184,8 @@ def reconciliation_plan(
                 )
                 if states is PROVIDER_ERROR:
                     continue
+                if not states and len(recorded_active_branch_states) == 1:
+                    states = recorded_active_branch_states
                 states = unambiguous_branch_pull_request_states(states)
                 if not states:
                     add_node_decision(
