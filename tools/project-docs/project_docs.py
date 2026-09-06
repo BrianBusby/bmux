@@ -1278,7 +1278,14 @@ def github_evidence_issues(
     for milestone_index, milestone in enumerate(shared.get("milestones", [])):
         milestone_path = f"project/project-state.yaml:milestones[{milestone_index}]({milestone.get('id')})"
         evidence = milestone.get("evidence", {})
-        check_evidence(milestone_path, evidence, milestone.get("delivery_status"), "milestone")
+        check_evidence(
+            milestone_path,
+            evidence,
+            milestone.get("delivery_status"),
+            "milestone",
+            acceptance=milestone.get("acceptance_status"),
+            status=milestone.get("status"),
+        )
 
     for node_index, node in enumerate(roadmap_nodes(shared)):
         evidence = node.get("evidence")
@@ -1737,10 +1744,13 @@ def reconcile_milestone_pull_request_state(
     *,
     recorded_delivery_has_open_pr: bool = False,
     recorded_delivery_has_mixed_open_pr_states: bool = False,
+    recorded_closed_pr_has_later_merged_pr: bool = False,
+    recorded_delivery_has_unresolved_later_closed_pr: bool = False,
+    related_decision_evidence_paths: tuple[str, ...] = (),
     record_completed_at: bool = True,
 ) -> None:
     if state.merged:
-        if recorded_delivery_has_open_pr:
+        if recorded_delivery_has_open_pr or recorded_delivery_has_unresolved_later_closed_pr:
             queue_verified_merged_pull_request_evidence(plan, provider, milestone, path, repository, state)
             return
         if not queue_verified_merged_pull_request_evidence(plan, provider, milestone, path, repository, state):
@@ -1786,16 +1796,22 @@ def reconcile_milestone_pull_request_state(
             return
         queue_open_pull_request_delivery_state(plan, milestone, path, state)
         return
-    if state.state == "closed" and closed_unmerged_delivery_decision_recorded(milestone):
+    if state.state == "closed" and (
+        recorded_closed_pr_has_later_merged_pr or closed_unmerged_delivery_decision_recorded(milestone)
+    ):
         return
     if state.state == "closed":
+        evidence_path = pull_request_issue_path(path, repository, state.number)
         add_node_decision(
             plan,
             milestone,
             path,
             "closed_unmerged_pr",
             f"{repository}#{state.number or '<unknown>'} is closed without merge; explicitly supersede, replace, reopen, or abandon the milestone",
-            evidence_path=pull_request_issue_path(path, repository, state.number),
+            evidence_path=evidence_path,
+            evidence_paths=tuple(
+                path for path in related_decision_evidence_paths if path and path != evidence_path
+            ),
         )
 
 
@@ -2164,13 +2180,37 @@ def reconciliation_plan(
         recorded_merged_pull_requests = [
             (repository, state) for repository, state in recorded_pull_requests if state.merged
         ]
+        recorded_merged_pr_states = [state for _repository, state in recorded_merged_pull_requests]
+        recorded_closed_unmerged_pull_requests = [
+            (repository, state)
+            for repository, state in recorded_pull_requests
+            if state.state == "closed" and not state.merged
+        ]
+        recorded_delivery_has_unresolved_later_closed_pr = (
+            not closed_unmerged_delivery_decision_recorded(milestone)
+            and any(
+                closed_pr_follows_merged_pr(state, recorded_merged_pr_states)
+                and not merged_pr_follows_closed_pr(state, recorded_merged_pr_states)
+                for _repository, state in recorded_closed_unmerged_pull_requests
+            )
+        )
+        recorded_unresolved_history_evidence_paths = ()
+        if recorded_delivery_has_unresolved_later_closed_pr:
+            recorded_unresolved_history_evidence_paths = tuple(
+                evidence_path
+                for evidence_path in (
+                    pull_request_issue_path(path, repository, state.number)
+                    for repository, state in recorded_merged_pull_requests + recorded_closed_unmerged_pull_requests
+                )
+                if evidence_path is not None
+            )
         recorded_delivery_has_open_pr = bool(recorded_open_pull_requests)
         recorded_delivery_has_mixed_open_pr_states = (
             any(not state.draft for _repository, state in recorded_open_pull_requests)
             and any(state.draft for _repository, state in recorded_open_pull_requests)
         )
         completion_pr_key = None
-        if recorded_merged_pull_requests and not recorded_delivery_has_open_pr:
+        if recorded_merged_pull_requests and not recorded_delivery_has_open_pr and not recorded_delivery_has_unresolved_later_closed_pr:
             completion_repository, completion_state = max(
                 recorded_merged_pull_requests,
                 key=lambda item: (item[1].merged_at or "", item[0], item[1].number or -1),
@@ -2207,6 +2247,12 @@ def reconciliation_plan(
                 state,
                 recorded_delivery_has_open_pr=recorded_delivery_has_open_pr,
                 recorded_delivery_has_mixed_open_pr_states=recorded_delivery_has_mixed_open_pr_states,
+                recorded_closed_pr_has_later_merged_pr=merged_pr_follows_closed_pr(
+                    state,
+                    recorded_merged_pr_states,
+                ),
+                recorded_delivery_has_unresolved_later_closed_pr=recorded_delivery_has_unresolved_later_closed_pr,
+                related_decision_evidence_paths=recorded_unresolved_history_evidence_paths,
                 record_completed_at=completion_pr_key is None or completion_pr_key == (repository, state.number),
             )
 
@@ -2377,19 +2423,32 @@ def reconciliation_plan(
                         f"active branch `{branch}` matched multiple recorded PRs ({numbers}); record the current delivery PR explicitly",
                     )
                     continue
-                owner = recorded_active_branch_states[0].head_owner_login if recorded_active_branch_states else None
-                if not owner:
-                    owner = repository_owner(repository)
-                states = github_call(
-                    plan,
-                    "pull requests for active branch",
-                    f"{path}.execution.active_branch[{repository}:{owner}:{branch}]",
-                    lambda repository=repository, owner=owner, branch=branch: provider.pull_requests_for_head(repository, owner, branch),
-                )
-                if states is PROVIDER_ERROR:
+                owners = [repository_owner(repository)]
+                for state in recorded_active_branch_states:
+                    if state.head_owner_login and state.head_owner_login not in owners:
+                        owners.append(state.head_owner_login)
+                states = []
+                provider_failed = False
+                for owner in owners:
+                    owner_states = github_call(
+                        plan,
+                        "pull requests for active branch",
+                        f"{path}.execution.active_branch[{repository}:{owner}:{branch}]",
+                        lambda repository=repository, owner=owner, branch=branch: provider.pull_requests_for_head(repository, owner, branch),
+                    )
+                    if owner_states is PROVIDER_ERROR:
+                        provider_failed = True
+                        continue
+                    states.extend(owner_states)
+                if provider_failed and not states:
                     continue
                 if not states and len(recorded_active_branch_states) == 1:
                     states = recorded_active_branch_states
+                state_by_number = {state.number: state for state in states if state.number is not None}
+                states = sorted(
+                    list(state_by_number.values()) + [state for state in states if state.number is None],
+                    key=lambda item: item.number or 0,
+                )
                 states = unambiguous_branch_pull_request_states(states)
                 if not states:
                     add_node_decision(

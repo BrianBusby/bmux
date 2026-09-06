@@ -1001,7 +1001,15 @@ esac
     def test_reconcile_merges_top_level_milestone_delivery_pr(self):
         shared, local = self.load_valid()
         milestone = shared["milestones"][2]
-        pr = milestone["evidence"]["pull_requests"][0]
+        pr = {
+            "repository": "BrianBusby/bmux",
+            "number": 101,
+            "owner": {
+                "login": "BrianBusby",
+                "profile_url": "https://github.com/BrianBusby",
+            },
+        }
+        milestone["evidence"]["pull_requests"] = [pr]
         milestone["delivery_status"] = "open"
         milestone["acceptance_status"] = "under_observation"
         milestone.pop("completed_at", None)
@@ -1042,30 +1050,30 @@ esac
         milestone.pop("completed_at", None)
         milestone["evidence"]["commits"] = []
         milestone["evidence"]["pull_requests"] = [
-            {"repository": "BrianBusby/bmux", "number": 12},
-            {"repository": "BrianBusby/bmux", "number": 13},
+            {"repository": "BrianBusby/bmux", "number": 101},
+            {"repository": "BrianBusby/bmux", "number": 102},
         ]
         provider = self.fake_provider_for_current_manifests()
         first_sha = "e" * 40
         second_sha = "f" * 40
-        provider.pull_requests[("BrianBusby/bmux", 12)] = project_docs.PullRequestEvidence(
+        provider.pull_requests[("BrianBusby/bmux", 101)] = project_docs.PullRequestEvidence(
             state="closed",
             draft=False,
             merged=True,
             owner_login="BrianBusby",
             owner_url="https://github.com/BrianBusby",
-            number=12,
+            number=101,
             merged_at="2026-09-05T17:38:46Z",
             closed_at="2026-09-05T17:38:46Z",
             merge_commit_sha=first_sha,
         )
-        provider.pull_requests[("BrianBusby/bmux", 13)] = project_docs.PullRequestEvidence(
+        provider.pull_requests[("BrianBusby/bmux", 102)] = project_docs.PullRequestEvidence(
             state="closed",
             draft=False,
             merged=True,
             owner_login="BrianBusby",
             owner_url="https://github.com/BrianBusby",
-            number=13,
+            number=102,
             merged_at="2026-09-06T14:00:00Z",
             closed_at="2026-09-06T14:00:00Z",
             merge_commit_sha=second_sha,
@@ -1090,29 +1098,29 @@ esac
         milestone.pop("completed_at", None)
         milestone["evidence"]["commits"] = []
         milestone["evidence"]["pull_requests"] = [
-            {"repository": "BrianBusby/bmux", "number": 12},
-            {"repository": "BrianBusby/bmux", "number": 13},
+            {"repository": "BrianBusby/bmux", "number": 101},
+            {"repository": "BrianBusby/bmux", "number": 102},
         ]
         provider = self.fake_provider_for_current_manifests()
         merge_sha = "e" * 40
-        provider.pull_requests[("BrianBusby/bmux", 12)] = project_docs.PullRequestEvidence(
+        provider.pull_requests[("BrianBusby/bmux", 101)] = project_docs.PullRequestEvidence(
             state="closed",
             draft=False,
             merged=True,
             owner_login="BrianBusby",
             owner_url="https://github.com/BrianBusby",
-            number=12,
+            number=101,
             merged_at="2026-09-05T17:38:46Z",
             closed_at="2026-09-05T17:38:46Z",
             merge_commit_sha=merge_sha,
         )
-        provider.pull_requests[("BrianBusby/bmux", 13)] = project_docs.PullRequestEvidence(
+        provider.pull_requests[("BrianBusby/bmux", 102)] = project_docs.PullRequestEvidence(
             state="closed",
             draft=False,
             merged=False,
             owner_login="BrianBusby",
             owner_url="https://github.com/BrianBusby",
-            number=13,
+            number=102,
             closed_at="2026-09-06T14:00:00Z",
         )
         provider.commits.add(("BrianBusby/bmux", merge_sha))
@@ -1133,28 +1141,28 @@ esac
         milestone["delivery_status"] = "merged"
         milestone["acceptance_status"] = "rejected"
         milestone["evidence"]["pull_requests"] = [
-            {"repository": "BrianBusby/bmux", "number": 12},
-            {"repository": "BrianBusby/bmux", "number": 13},
+            {"repository": "BrianBusby/bmux", "number": 101},
+            {"repository": "BrianBusby/bmux", "number": 102},
         ]
         provider = self.fake_provider_for_current_manifests()
-        provider.pull_requests[("BrianBusby/bmux", 12)] = project_docs.PullRequestEvidence(
+        provider.pull_requests[("BrianBusby/bmux", 101)] = project_docs.PullRequestEvidence(
             state="closed",
             draft=False,
             merged=True,
             owner_login="BrianBusby",
             owner_url="https://github.com/BrianBusby",
-            number=12,
+            number=101,
             merged_at="2026-09-05T17:38:46Z",
             closed_at="2026-09-05T17:38:46Z",
             merge_commit_sha="e" * 40,
         )
-        provider.pull_requests[("BrianBusby/bmux", 13)] = project_docs.PullRequestEvidence(
+        provider.pull_requests[("BrianBusby/bmux", 102)] = project_docs.PullRequestEvidence(
             state="closed",
             draft=False,
             merged=False,
             owner_login="BrianBusby",
             owner_url="https://github.com/BrianBusby",
-            number=13,
+            number=102,
             closed_at="2026-09-06T14:00:00Z",
         )
 
@@ -1163,7 +1171,7 @@ esac
         self.assertFalse(
             any(
                 issue.name == "pr_merged_state_mismatch"
-                and issue.path.endswith(".evidence.pull_requests[BrianBusby/bmux#13]")
+                and issue.path.endswith(".evidence.pull_requests[BrianBusby/bmux#102]")
                 for issue in issues
             )
         )
