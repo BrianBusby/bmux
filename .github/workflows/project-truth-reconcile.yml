@@ -70,7 +70,7 @@ jobs:
           git diff --check
           ./scripts/project-docs validate
           ./scripts/project-docs check
-          ./scripts/project-docs ci
+          ./scripts/project-docs ci --allow-reconciliation-decisions
 
           git fetch origin main
           current_main="$(git rev-parse origin/main)"

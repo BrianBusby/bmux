@@ -77,7 +77,11 @@ generator, and validates the result in a temporary copy before writing back. A
 second apply against unchanged GitHub state should produce no diff.
 
 Post-merge automation may open or update a single bounded reconciliation PR from
-these safe changes. If automation fails, maintainers recover by running check and
-apply locally, reviewing the generated diff, and opening the reconciliation PR
-manually. Closed-unmerged, superseded, replaced, abandoned, or still-observed
-work remains explicit Project Truth planning state.
+these safe changes. The writer validates the safe diff with
+`./scripts/project-docs ci --allow-reconciliation-decisions` so unrelated
+explicit planning decisions do not prevent the reviewable PR from being created;
+ordinary PR CI still runs without that allowance. If automation fails,
+maintainers recover by running check and apply locally, reviewing the generated
+diff, and opening the reconciliation PR manually. Closed-unmerged, superseded,
+replaced, abandoned, or still-observed work remains explicit Project Truth
+planning state.

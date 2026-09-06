@@ -1218,6 +1218,49 @@ esac
         recorded_pr = next(pr for pr in node["evidence"]["pull_requests"] if pr["number"] == 97)
         self.assertNotIn("merge_commit_sha", recorded_pr)
 
+    def test_reconcile_merged_pr_advances_proposed_delivery_to_merged(self):
+        shared, local = self.load_valid()
+        self.make_runtime_slice_stale(shared, local)
+        self.roadmap_node(shared, "deterministic_app_runtime_composition")["delivery_status"] = "proposed"
+
+        plan = project_docs.reconciliation_plan(shared, [local], self.runtime_merge_provider())
+        reconciled_shared, reconciled_repo_statuses = project_docs.apply_reconciliation_plan(shared, [local], plan)
+        node = self.roadmap_node(reconciled_shared, "deterministic_app_runtime_composition")
+
+        self.assertEqual("implemented", node["status"])
+        self.assertEqual("merged", node["delivery_status"])
+        project_docs.semantic_validate(reconciled_shared, reconciled_repo_statuses[0], LOCAL)
+
+    def test_reconcile_open_pr_advances_proposed_delivery_to_open_or_draft(self):
+        for draft, expected_status in ((False, "open"), (True, "draft")):
+            with self.subTest(draft=draft):
+                shared, local = self.load_valid()
+                self.make_runtime_slice_stale(shared, local)
+                self.roadmap_node(shared, "deterministic_app_runtime_composition")["delivery_status"] = "proposed"
+                provider = self.fake_provider_for_current_manifests()
+                open_pr = project_docs.PullRequestEvidence(
+                    state="open",
+                    draft=draft,
+                    merged=False,
+                    owner_login="BrianBusby",
+                    owner_url="https://github.com/BrianBusby",
+                    number=97,
+                    merge_commit_sha="d" * 40,
+                    head_ref="process-integrity-runtime-composition",
+                    head_owner_login="BrianBusby",
+                )
+                provider.pull_requests_by_head[("BrianBusby/bmux", "BrianBusby", "process-integrity-runtime-composition")] = [open_pr]
+
+                plan = project_docs.reconciliation_plan(shared, [local], provider)
+                reconciled_shared, _ = project_docs.apply_reconciliation_plan(shared, [local], plan)
+                node = self.roadmap_node(reconciled_shared, "deterministic_app_runtime_composition")
+
+                self.assertEqual(expected_status, node["delivery_status"])
+                self.assertEqual("active", node["status"])
+                self.assertEqual("current", node["execution"]["assignment"])
+                recorded_pr = next(pr for pr in node["evidence"]["pull_requests"] if pr["number"] == 97)
+                self.assertNotIn("merge_commit_sha", recorded_pr)
+
     def test_reconcile_reports_closed_unmerged_pr_as_decision(self):
         shared, local = self.load_valid()
         self.make_runtime_slice_stale(shared, local)
@@ -1309,6 +1352,78 @@ esac
                 project_docs.main(["reconcile", "--check", "--repo-root", str(repo)]),
             )
 
+    def test_reconciliation_ci_issues_can_allow_explicit_decisions_after_apply(self):
+        decision = project_docs.ReconciliationDecision(
+            name="closed_unmerged_pr",
+            path="project/project-state.yaml:roadmap.nodes[0](slice)",
+            message="requires explicit planning decision",
+            node_id="slice",
+        )
+        change = project_docs.ReconciliationChange(
+            name="mark_delivery_merged",
+            path="project/project-state.yaml:roadmap.nodes[1](other).delivery_status",
+            message="mark delivery merged",
+            node_id="other",
+        )
+
+        decision_only = project_docs.ReconciliationPlan([], [decision], [], {}, {})
+        self.assertTrue(project_docs.reconciliation_ci_issues(decision_only))
+        self.assertEqual([], project_docs.reconciliation_ci_issues(decision_only, allow_decisions=True))
+
+        mixed = project_docs.ReconciliationPlan([change], [decision], [], {}, {})
+        allowed_issues = project_docs.reconciliation_ci_issues(mixed, allow_decisions=True)
+        self.assertEqual(["mark_delivery_merged"], [issue.name for issue in allowed_issues])
+
+    def test_allow_reconciliation_decisions_filters_only_related_pr_state_mismatches(self):
+        shared, local = self.load_valid()
+        self.clear_current_work(shared, local)
+        node = self.roadmap_node(shared, "deterministic_app_runtime_composition")
+        node["status"] = "active"
+        node["capability_maturity"] = "active"
+        node["execution"]["assignment"] = "current"
+        node["delivery_status"] = "open"
+        node["acceptance_status"] = "proposed"
+        node["evidence"] = {
+            "commits": [],
+            "pull_requests": [
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 97,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                }
+            ],
+        }
+        provider = self.fake_provider_for_current_manifests()
+        provider.pull_requests[("BrianBusby/bmux", 97)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=False,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=97,
+            merged_at=None,
+            merge_commit_sha=None,
+        )
+
+        plan = project_docs.reconciliation_plan(shared, [local], provider, discover_active_branches=False)
+        github_issues = project_docs.github_evidence_issues(shared, [local], provider)
+        unrelated_missing = project_docs.ValidationIssue(
+            "github",
+            "missing_pr",
+            "project/project-state.yaml:roadmap.nodes[0](other).evidence.pull_requests[BrianBusby/bmux#1]",
+            "missing",
+        )
+
+        filtered = project_docs.filter_allowed_reconciliation_decision_issues(github_issues + [unrelated_missing], plan)
+
+        self.assertTrue(any(decision.name == "closed_unmerged_pr" for decision in plan.decisions))
+        self.assertTrue(any(issue.name == "pr_open_state_mismatch" for issue in github_issues))
+        self.assertFalse(any(issue.name == "pr_open_state_mismatch" for issue in filtered))
+        self.assertIn(unrelated_missing, filtered)
+
     def test_project_truth_workflow_runs_canonical_ci_gate(self):
         text = PROJECT_TRUTH_WORKFLOW.read_text(encoding="utf-8")
         self.assertIn("contents: read", text)
@@ -1348,6 +1463,7 @@ esac
                 self.assertIn(f"git ls-remote --heads origin {branch}", commands)
                 self.assertIn(expected_push_command, commands)
                 self.assertIn(expected_pr_command, commands)
+                self.assertIn("./scripts/project-docs ci --allow-reconciliation-decisions", commands)
                 dispatches = [command for command in commands if command.startswith("gh workflow run ")]
                 self.assertEqual(expected_dispatches, dispatches)
                 self.assertLess(commands.index(expected_pr_command), commands.index(expected_dispatches[0]))

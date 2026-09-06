@@ -1265,6 +1265,7 @@ def github_evidence_issues(
 
 ACTIVE_EXECUTION_METADATA_KEYS = ("active_worktree", "active_branch", "active_agent", "active_session")
 GITHUB_UNAVAILABLE_ISSUES = ("auth", "rate_limit", "network")
+DECISION_BACKED_PR_STATE_ISSUES = ("pr_open_state_mismatch", "pr_draft_state_mismatch", "pr_closed_state_mismatch")
 
 
 def repository_slug_for_key(shared: dict[str, Any], key: str) -> str | None:
@@ -1520,7 +1521,7 @@ def reconcile_merged_pull_request(
     queue_merge_commit_evidence(plan, node, path, repository, state.merge_commit_sha)
 
     delivery_status = node.get("delivery_status")
-    if delivery_status in ("open", "draft"):
+    if delivery_status in ("proposed", "open", "draft"):
         set_node_update_field(plan, node, f"{path}.delivery_status", "delivery_status", delivery_status, "merged", "mark_delivery_merged", "delivery_status")
 
     execution = node.get("execution", {})
@@ -1594,6 +1595,19 @@ def reconcile_pull_request_state(
         return
     if discovered_from_active_branch and state.state == "open" and state.number is not None:
         queue_pull_request_evidence(plan, node, path, repository, state)
+        delivery_status = node.get("delivery_status")
+        if delivery_status == "proposed":
+            target_delivery_status = "draft" if state.draft else "open"
+            set_node_update_field(
+                plan,
+                node,
+                f"{path}.delivery_status",
+                "delivery_status",
+                delivery_status,
+                target_delivery_status,
+                "mark_delivery_open",
+                "delivery_status",
+            )
         return
     if state.state == "closed" and not closed_unmerged_delivery_decision_recorded(node):
         add_node_decision(
@@ -1867,7 +1881,7 @@ def reconciliation_plan(
     return plan
 
 
-def reconciliation_ci_issues(plan: ReconciliationPlan) -> list[ValidationIssue]:
+def reconciliation_ci_issues(plan: ReconciliationPlan, *, allow_decisions: bool = False) -> list[ValidationIssue]:
     issues = list(plan.issues)
     for change in plan.changes:
         issues.append(
@@ -1878,16 +1892,33 @@ def reconciliation_ci_issues(plan: ReconciliationPlan) -> list[ValidationIssue]:
                 f"Project Truth needs post-merge reconciliation for `{change.node_id}`. Run ./scripts/project-docs reconcile --apply. {change.message}",
             )
         )
-    for decision in plan.decisions:
-        issues.append(
-            ValidationIssue(
-                "reconcile",
-                decision.name,
-                decision.path,
-                f"Project Truth needs an explicit planning decision for `{decision.node_id}`. {decision.message}",
+    if not allow_decisions:
+        for decision in plan.decisions:
+            issues.append(
+                ValidationIssue(
+                    "reconcile",
+                    decision.name,
+                    decision.path,
+                    f"Project Truth needs an explicit planning decision for `{decision.node_id}`. {decision.message}",
+                )
             )
-        )
     return issues
+
+
+def filter_allowed_reconciliation_decision_issues(issues: list[ValidationIssue], plan: ReconciliationPlan) -> list[ValidationIssue]:
+    decision_paths = tuple(
+        f"{decision.path.replace('] (', '](')}."
+        for decision in plan.decisions
+        if decision.name == "closed_unmerged_pr"
+    )
+    if not decision_paths:
+        return issues
+    filtered: list[ValidationIssue] = []
+    for issue in issues:
+        if issue.category == "github" and issue.name in DECISION_BACKED_PR_STATE_ISSUES and issue.path.startswith(decision_paths):
+            continue
+        filtered.append(issue)
+    return filtered
 
 
 def format_reconciliation_plan(plan: ReconciliationPlan, *, include_apply_hint: bool = True) -> str:
@@ -3225,9 +3256,12 @@ def command_ci(args: argparse.Namespace) -> None:
 
     if not args.skip_github:
         provider = github_provider_from_environment()
-        issues.extend(github_evidence_issues(context["shared"], repo_statuses, provider))
         plan = reconciliation_plan(context["shared"], repo_statuses, provider, discover_active_branches=False)
-        issues.extend(reconciliation_ci_issues(plan))
+        github_issues = github_evidence_issues(context["shared"], repo_statuses, provider)
+        if args.allow_reconciliation_decisions:
+            github_issues = filter_allowed_reconciliation_decision_issues(github_issues, plan)
+        issues.extend(github_issues)
+        issues.extend(reconciliation_ci_issues(plan, allow_decisions=args.allow_reconciliation_decisions))
 
     raise_issues(issues)
 
@@ -3239,6 +3273,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--shared-state", default=None)
     parser.add_argument("--require-generated", action="store_true")
     parser.add_argument("--skip-github", action="store_true", help="Skip live GitHub evidence verification. Do not use in CI.")
+    parser.add_argument(
+        "--allow-reconciliation-decisions",
+        action="store_true",
+        help="Allow explicit planning decisions while still failing on reconciliation issues and safe changes.",
+    )
     reconcile_group = parser.add_mutually_exclusive_group()
     reconcile_group.add_argument("--check", dest="reconcile_check", action="store_true", help="Check post-merge reconciliation without writing files.")
     reconcile_group.add_argument("--apply", dest="reconcile_apply", action="store_true", help="Apply safe post-merge reconciliation changes and regenerate docs.")
