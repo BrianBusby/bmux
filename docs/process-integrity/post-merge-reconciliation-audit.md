@@ -54,7 +54,7 @@ The selected boundary is `./scripts/project-docs reconcile --check|--apply` in t
 
 ## CI And Automation
 
-Project Truth CI remains read-only. It now fails when recorded evidence implies a safe reconciliation change is required and tells maintainers to run `./scripts/project-docs reconcile --apply`. A separate post-merge workflow runs on `main`, applies safe reconciliation on a dedicated branch, verifies `main` did not advance during the run, opens or updates one bounded reconciliation PR, and dispatches the normal PR validation workflows for that branch. It requires `actions: write`, `contents: write`, and `pull-requests: write`; it does not bypass branch protection or push directly to `main`.
+Project Truth CI remains read-only. It now fails when recorded evidence implies a safe reconciliation change is required and tells maintainers to run `./scripts/project-docs reconcile --apply`. A separate post-merge workflow runs on `main`, applies safe reconciliation on a dedicated branch, verifies `main` did not advance during the run, pushes with an explicit remote-branch lease expectation, opens or updates one bounded reconciliation PR, and dispatches the normal PR validation workflows for that branch. It requires `actions: write`, `contents: write`, and `pull-requests: write`; it does not bypass branch protection or push directly to `main`.
 
 ## Transitional Mechanisms
 

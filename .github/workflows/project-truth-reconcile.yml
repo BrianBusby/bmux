@@ -84,7 +84,13 @@ jobs:
           git checkout -B "$RECONCILIATION_BRANCH"
           git add project/project-state.yaml project/repo-status.yaml docs/generated docs/current-and-target-architecture.md
           git commit -m "Reconcile Project Truth delivery state"
-          git push --force-with-lease origin "HEAD:$RECONCILIATION_BRANCH"
+
+          remote_reconciliation_sha="$(git ls-remote --heads origin "$RECONCILIATION_BRANCH" | awk '{print $1}')"
+          if [[ -n "$remote_reconciliation_sha" ]]; then
+            git push --force-with-lease="refs/heads/$RECONCILIATION_BRANCH:$remote_reconciliation_sha" origin "HEAD:$RECONCILIATION_BRANCH"
+          else
+            git push --force-with-lease="refs/heads/$RECONCILIATION_BRANCH:" origin "HEAD:$RECONCILIATION_BRANCH"
+          fi
 
           cat > /tmp/project-truth-reconcile-pr.md <<'BODY'
           ## Summary

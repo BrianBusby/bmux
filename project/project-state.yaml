@@ -318,7 +318,7 @@ roadmap:
           - Merged PR evidence records merge timestamp and merge commit identity after GitHub verification.
           - Active branch/worktree assignments for completed delivery are cleared without selecting the next priority automatically.
           - Capability-frontier candidates whose declared gates are now satisfied become ready but remain unselected until a human chooses them.
-          - CI detects stale recorded delivery evidence and post-merge automation opens or updates one bounded reconciliation PR, then dispatches normal validation workflows for that branch.
+          - CI detects stale recorded delivery evidence and post-merge automation opens or updates one bounded reconciliation PR with explicit remote-branch lease protection, then dispatches normal validation workflows for that branch.
 
       evidence:
         commits: []

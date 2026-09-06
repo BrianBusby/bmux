@@ -142,6 +142,12 @@ case "${1:-}" in
     fi
     exit 0
     ;;
+  ls-remote)
+    if [[ "${FAKE_EXISTING_RECONCILIATION_BRANCH:-}" == "1" ]]; then
+      printf 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\trefs/heads/project-truth/post-merge-reconciliation\n'
+    fi
+    exit 0
+    ;;
   fetch|config|checkout|add|commit|push)
     exit 0
     ;;
@@ -179,6 +185,7 @@ esac
             env = os.environ.copy()
             env["COMMAND_LOG"] = str(command_log)
             env["FAKE_EXISTING_PR"] = "1" if existing_pr else "0"
+            env["FAKE_EXISTING_RECONCILIATION_BRANCH"] = "1" if existing_pr else "0"
             env["GITHUB_TOKEN"] = "fake-token"
             env["PATH"] = f"{bin_dir}{os.pathsep}{env['PATH']}"
             env["RECONCILIATION_BRANCH"] = "project-truth/post-merge-reconciliation"
@@ -1269,16 +1276,20 @@ esac
             (
                 False,
                 f"gh pr create --base main --head {branch} --title Reconcile Project Truth delivery state --body-file /tmp/project-truth-reconcile-pr.md",
+                f"git push --force-with-lease=refs/heads/{branch}: origin HEAD:{branch}",
             ),
             (
                 True,
                 "gh pr edit 123 --title Reconcile Project Truth delivery state --body-file /tmp/project-truth-reconcile-pr.md",
+                f"git push --force-with-lease=refs/heads/{branch}:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb origin HEAD:{branch}",
             ),
         )
 
-        for existing_pr, expected_pr_command in cases:
+        for existing_pr, expected_pr_command, expected_push_command in cases:
             with self.subTest(existing_pr=existing_pr):
                 commands = self.run_reconcile_writer_workflow_step(existing_pr=existing_pr)
+                self.assertIn(f"git ls-remote --heads origin {branch}", commands)
+                self.assertIn(expected_push_command, commands)
                 self.assertIn(expected_pr_command, commands)
                 dispatches = [command for command in commands if command.startswith("gh workflow run ")]
                 self.assertEqual(expected_dispatches, dispatches)
