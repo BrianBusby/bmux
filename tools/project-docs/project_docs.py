@@ -1599,11 +1599,16 @@ def pull_request_matches_active_branch(
     branch = node.get("execution", {}).get("active_branch")
     if not branch:
         return True
-    if state.head_ref != branch:
-        return False
-    if state.head_owner_login is not None and state.head_owner_login != repository_owner(repository):
-        return False
-    return True
+    return state.head_ref == branch
+
+
+def unambiguous_branch_pull_request_states(states: list[PullRequestEvidence]) -> list[PullRequestEvidence]:
+    if len(states) <= 1:
+        return states
+    open_states = [state for state in states if state.state == "open" and not state.merged]
+    if len(open_states) == 1:
+        return open_states
+    return states
 
 
 def queue_active_delivery_completion(
@@ -2144,6 +2149,26 @@ def reconciliation_plan(
             branch = execution.get("active_branch")
             repository = preferred_repository_for_node(shared, repo_statuses, node)
             if branch and repository:
+                recorded_active_branch_states = unambiguous_branch_pull_request_states(
+                    [
+                        state
+                        for recorded_repository, state in recorded_pull_requests
+                        if recorded_repository == repository
+                        and pull_request_matches_active_branch(node, repository, state)
+                    ]
+                )
+                if len(recorded_active_branch_states) == 1:
+                    continue
+                if len(recorded_active_branch_states) > 1:
+                    numbers = ", ".join(str(item.number) for item in recorded_active_branch_states)
+                    add_node_decision(
+                        plan,
+                        node,
+                        path,
+                        "active_branch_multiple_prs",
+                        f"active branch `{branch}` matched multiple recorded PRs ({numbers}); record the current delivery PR explicitly",
+                    )
+                    continue
                 owner = repository_owner(repository)
                 states = github_call(
                     plan,
@@ -2153,6 +2178,7 @@ def reconciliation_plan(
                 )
                 if states is PROVIDER_ERROR:
                     continue
+                states = unambiguous_branch_pull_request_states(states)
                 if not states:
                     add_node_decision(
                         plan,
