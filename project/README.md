@@ -73,8 +73,9 @@ Run `./scripts/project-docs reconcile --apply` after reviewing check output. It
 updates only `project/project-state.yaml` and `project/repo-status.yaml`, records
 verified merge evidence, clears completed active-work metadata when safe,
 advances newly ready candidates, regenerates generated docs through the existing
-generator, and validates the result in a temporary copy before writing back. A
-second apply against unchanged GitHub state should produce no diff.
+generator, validates the result in a temporary copy before writing back, and
+stages destination-side replacements with rollback on failed writes. A second
+apply against unchanged GitHub state should produce no diff.
 
 Post-merge automation may open or update a single bounded reconciliation PR from
 these safe changes. The writer validates the safe diff with

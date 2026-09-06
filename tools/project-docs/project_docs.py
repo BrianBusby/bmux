@@ -1185,16 +1185,23 @@ def github_evidence_issues(
             exists = call("commit", path, lambda commit=commit: provider.commit_exists(commit["repository"], commit["sha"]))
             if exists is False:
                 add("missing_commit", path, "commit does not exist in the declared repository")
+        pull_request_states: list[tuple[dict[str, Any], str, PullRequestEvidence | None | object]] = []
         for pr in evidence.get("pull_requests", []):
             path = f"{base_path}.evidence.pull_requests[{pr['repository']}#{pr['number']}]"
             state = call("pull request", path, lambda pr=pr: provider.pull_request(pr["repository"], pr["number"]))
+            pull_request_states.append((pr, path, state))
             if state is PROVIDER_ERROR:
                 continue
             if state is None:
                 add("missing_pr", path, "pull request does not exist in the declared repository")
                 continue
+        has_merged_pr = any(isinstance(state, PullRequestEvidence) and state.merged for _pr, _path, state in pull_request_states)
+        for pr, path, state in pull_request_states:
+            if state is PROVIDER_ERROR or state is None:
+                continue
             if delivery == "merged" and not state.merged:
-                add("pr_merged_state_mismatch", path, f"{subject} declares merged delivery but pull request is not merged")
+                if not has_merged_pr:
+                    add("pr_merged_state_mismatch", path, f"{subject} declares merged delivery but pull request is not merged")
             elif delivery == "open" and (state.state != "open" or state.draft):
                 add("pr_open_state_mismatch", path, f"{subject} declares open delivery but pull request is not an open non-draft PR")
             elif delivery == "draft" and (state.state != "open" or not state.draft):
@@ -1613,6 +1620,7 @@ def reconcile_pull_request_state(
     state: PullRequestEvidence,
     *,
     discovered_from_active_branch: bool,
+    recorded_delivery_has_merged_pr: bool = False,
 ) -> None:
     if state.merged:
         reconcile_merged_pull_request(plan, shared, repo_statuses, provider, node, path, repository, state)
@@ -1622,7 +1630,9 @@ def reconcile_pull_request_state(
             queue_pull_request_evidence(plan, node, path, repository, state)
         queue_open_pull_request_delivery_state(plan, node, path, state)
         return
-    if state.state == "closed" and not closed_unmerged_delivery_decision_recorded(node):
+    if state.state == "closed" and (recorded_delivery_has_merged_pr or closed_unmerged_delivery_decision_recorded(node)):
+        return
+    if state.state == "closed":
         add_node_decision(
             plan,
             node,
@@ -1790,6 +1800,7 @@ def reconciliation_plan(
         path = roadmap_node_path(index, node)
         evidence = node.get("evidence")
 
+        recorded_pull_requests: list[tuple[str, PullRequestEvidence]] = []
         for pr in evidence_pull_requests(evidence):
             repository = pr["repository"]
             number = pr["number"]
@@ -1824,6 +1835,10 @@ def reconciliation_plan(
                     head_ref=state.head_ref,
                     head_owner_login=state.head_owner_login,
                 )
+            recorded_pull_requests.append((repository, state))
+
+        recorded_delivery_has_merged_pr = any(state.merged for _repository, state in recorded_pull_requests)
+        for repository, state in recorded_pull_requests:
             reconcile_pull_request_state(
                 plan,
                 shared,
@@ -1834,6 +1849,7 @@ def reconciliation_plan(
                 repository,
                 state,
                 discovered_from_active_branch=False,
+                recorded_delivery_has_merged_pr=recorded_delivery_has_merged_pr,
             )
 
         if discover_active_branches and is_active_implementation_slice(node):
@@ -2012,6 +2028,53 @@ def copy_project_docs_inputs(repo_root: Path, tmp_repo: Path) -> None:
             shutil.copy2(source, destination)
 
 
+def temporary_sibling(destination: Path, suffix: str) -> Path:
+    fd, path = tempfile.mkstemp(prefix=f".{destination.name}.", suffix=suffix, dir=destination.parent)
+    os.close(fd)
+    return Path(path)
+
+
+def replace_files_transactionally(replacements: list[tuple[Path, Path]]) -> None:
+    staged: list[tuple[Path, Path]] = []
+    replaced: list[tuple[Path, Path | None]] = []
+    try:
+        for source, destination in replacements:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            staged_path = temporary_sibling(destination, ".project-reconcile.tmp")
+            staged.append((staged_path, destination))
+            shutil.copy2(source, staged_path)
+
+        for staged_path, destination in staged:
+            backup_path: Path | None = None
+            if destination.exists():
+                backup_path = temporary_sibling(destination, ".project-reconcile.bak")
+                backup_path.unlink()
+                os.replace(destination, backup_path)
+            try:
+                os.replace(staged_path, destination)
+            except BaseException:
+                if backup_path is not None and backup_path.exists() and not destination.exists():
+                    os.replace(backup_path, destination)
+                raise
+            replaced.append((destination, backup_path))
+    except BaseException:
+        for destination, backup_path in reversed(replaced):
+            if backup_path is not None and backup_path.exists():
+                if destination.exists():
+                    destination.unlink()
+                os.replace(backup_path, destination)
+            elif destination.exists():
+                destination.unlink()
+        for staged_path, _destination in staged:
+            if staged_path.exists():
+                staged_path.unlink()
+        raise
+
+    for _destination, backup_path in replaced:
+        if backup_path is not None and backup_path.exists():
+            backup_path.unlink()
+
+
 def write_reconciled_files_atomically(context: dict[str, Any], plan: ReconciliationPlan) -> None:
     repo_root = context["repo_root"]
     shared_doc = load_round_trip_yaml(context["shared_path"])
@@ -2030,12 +2093,15 @@ def write_reconciled_files_atomically(context: dict[str, Any], plan: Reconciliat
         check_generated(tmp_context)
         check_authored_generated_blocks(tmp_context)
 
-        shutil.copy2(tmp_repo / "project" / "project-state.yaml", context["shared_path"])
-        shutil.copy2(tmp_repo / "project" / "repo-status.yaml", context["repo_status_path"])
+        replacements = [
+            (tmp_repo / "project" / "project-state.yaml", context["shared_path"]),
+            (tmp_repo / "project" / "repo-status.yaml", context["repo_status_path"]),
+        ]
         for filename in GENERATED_FILES:
-            shutil.copy2(tmp_repo / "docs" / "generated" / filename, repo_root / "docs" / "generated" / filename)
+            replacements.append((tmp_repo / "docs" / "generated" / filename, repo_root / "docs" / "generated" / filename))
         for relative in AUTHORED_GENERATED_DOCS:
-            shutil.copy2(tmp_repo / relative, repo_root / relative)
+            replacements.append((tmp_repo / relative, repo_root / relative))
+        replace_files_transactionally(replacements)
 
 
 def titleize(value: str) -> str:

@@ -1302,6 +1302,69 @@ esac
 
                 self.assertEqual(expected_status, self.roadmap_node(reconciled_shared, "deterministic_app_runtime_composition")["delivery_status"])
 
+    def test_reconcile_closed_pr_is_resolved_by_recorded_merged_replacement(self):
+        shared, local = self.load_valid()
+        self.clear_current_work(shared, local)
+        node = self.roadmap_node(shared, "deterministic_app_runtime_composition")
+        node["status"] = "active"
+        node["capability_maturity"] = "active"
+        node["execution"]["assignment"] = "current"
+        node["delivery_status"] = "open"
+        node["acceptance_status"] = "proposed"
+        node["evidence"] = {
+            "commits": [],
+            "pull_requests": [
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 96,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                },
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 97,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                },
+            ],
+        }
+        merge_sha = "c" * 40
+        provider = self.fake_provider_for_current_manifests()
+        provider.pull_requests[("BrianBusby/bmux", 96)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=False,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=96,
+        )
+        provider.pull_requests[("BrianBusby/bmux", 97)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=True,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=97,
+            merged_at="2026-09-05T17:38:46Z",
+            merge_commit_sha=merge_sha,
+        )
+        provider.commits.add(("BrianBusby/bmux", merge_sha))
+        provider.reachable_commits.add(("BrianBusby/bmux", merge_sha))
+
+        plan = project_docs.reconciliation_plan(shared, [local], provider, discover_active_branches=False)
+        reconciled_shared, _ = project_docs.apply_reconciliation_plan(shared, [local], plan)
+        second = project_docs.reconciliation_plan(reconciled_shared, [local], provider, discover_active_branches=False)
+        github_issues = project_docs.github_evidence_issues(reconciled_shared, [local], provider)
+
+        self.assertFalse(any(decision.name == "closed_unmerged_pr" for decision in plan.decisions))
+        self.assertEqual("merged", self.roadmap_node(reconciled_shared, "deterministic_app_runtime_composition")["delivery_status"])
+        self.assertFalse(any(decision.name == "closed_unmerged_pr" for decision in second.decisions))
+        self.assertFalse(any(issue.name == "pr_merged_state_mismatch" for issue in github_issues))
+
     def test_reconcile_reports_closed_unmerged_pr_as_decision(self):
         shared, local = self.load_valid()
         self.make_runtime_slice_stale(shared, local)
@@ -1464,6 +1527,68 @@ esac
         self.assertTrue(any(issue.name == "pr_open_state_mismatch" for issue in github_issues))
         self.assertFalse(any(issue.name == "pr_open_state_mismatch" for issue in filtered))
         self.assertIn(unrelated_missing, filtered)
+
+    def test_replace_files_transactionally_leaves_destinations_unchanged_when_staging_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source_one = root / "source-one"
+            source_two = root / "source-two"
+            destination_one = root / "destination-one"
+            destination_two = root / "destination-two"
+            source_one.write_text("new one", encoding="utf-8")
+            source_two.write_text("new two", encoding="utf-8")
+            destination_one.write_text("old one", encoding="utf-8")
+            destination_two.write_text("old two", encoding="utf-8")
+            real_copy2 = project_docs.shutil.copy2
+
+            def failing_copy2(source, destination):
+                if Path(source) == source_two:
+                    raise OSError("disk full")
+                return real_copy2(source, destination)
+
+            project_docs.shutil.copy2 = failing_copy2
+            try:
+                with self.assertRaises(OSError):
+                    project_docs.replace_files_transactionally(
+                        [(source_one, destination_one), (source_two, destination_two)]
+                    )
+            finally:
+                project_docs.shutil.copy2 = real_copy2
+
+            self.assertEqual("old one", destination_one.read_text(encoding="utf-8"))
+            self.assertEqual("old two", destination_two.read_text(encoding="utf-8"))
+            self.assertFalse(any(path.name.startswith(".destination-") for path in root.iterdir()))
+
+    def test_replace_files_transactionally_rolls_back_after_replace_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source_one = root / "source-one"
+            source_two = root / "source-two"
+            destination_one = root / "destination-one"
+            destination_two = root / "destination-two"
+            source_one.write_text("new one", encoding="utf-8")
+            source_two.write_text("new two", encoding="utf-8")
+            destination_one.write_text("old one", encoding="utf-8")
+            destination_two.write_text("old two", encoding="utf-8")
+            real_replace = project_docs.os.replace
+
+            def failing_replace(source, destination):
+                if Path(destination) == destination_two and str(source).endswith(".project-reconcile.tmp"):
+                    raise OSError("replace failed")
+                return real_replace(source, destination)
+
+            project_docs.os.replace = failing_replace
+            try:
+                with self.assertRaises(OSError):
+                    project_docs.replace_files_transactionally(
+                        [(source_one, destination_one), (source_two, destination_two)]
+                    )
+            finally:
+                project_docs.os.replace = real_replace
+
+            self.assertEqual("old one", destination_one.read_text(encoding="utf-8"))
+            self.assertEqual("old two", destination_two.read_text(encoding="utf-8"))
+            self.assertFalse(any(path.name.startswith(".destination-") for path in root.iterdir()))
 
     def test_project_truth_workflow_runs_canonical_ci_gate(self):
         text = PROJECT_TRUTH_WORKFLOW.read_text(encoding="utf-8")

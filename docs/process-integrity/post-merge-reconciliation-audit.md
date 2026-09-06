@@ -44,13 +44,13 @@ For that reason, reconciliation can move `delivery_status` to `merged`, record m
 
 ## Edge Cases
 
-Closed-unmerged PRs are reported as explicit planning decisions. Superseded or replaced PRs are reconciled only when Project Truth already records the replacement relationship through current delivery evidence. Observation remains separate from implementation: a slice can have merged delivery and remain `under_observation`, but repo-local active implementation should not keep pointing at it. Multiple independent merged slices are applied in deterministic manifest order and then the capability frontier is recalculated from the resulting graph.
+Closed-unmerged PRs are reported as explicit planning decisions unless Project Truth already records an explicit closed/superseded/rejected decision or another recorded PR on the same slice represents the merged replacement delivery. Superseded or replaced PRs are reconciled only through Project Truth evidence for the current delivery. Observation remains separate from implementation: a slice can have merged delivery and remain `under_observation`, but repo-local active implementation should not keep pointing at it. Multiple independent merged slices are applied in deterministic manifest order and then the capability frontier is recalculated from the resulting graph.
 
 Generated documentation could previously be fresh relative to manifests while stale relative to GitHub reality, because CI validated declared evidence but did not discover that an active branch had already merged. The new reconciliation command closes that gap without creating a second source of truth.
 
 ## Selected Boundary
 
-The selected boundary is `./scripts/project-docs reconcile --check|--apply` in the existing Project Docs tool. Check mode is read-only and reports safe mechanical changes, human decisions, and evidence/provider failures separately. Apply mode updates canonical manifests, regenerates derived docs, validates in a temporary repository copy, and then copies the validated files back atomically.
+The selected boundary is `./scripts/project-docs reconcile --check|--apply` in the existing Project Docs tool. Check mode is read-only and reports safe mechanical changes, human decisions, and evidence/provider failures separately. Apply mode updates canonical manifests, regenerates derived docs, validates in a temporary repository copy, stages destination-side replacements, and rolls back failed writes so canonical and generated state do not mix old and new outputs.
 
 ## CI And Automation
 

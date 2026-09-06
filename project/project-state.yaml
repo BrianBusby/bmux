@@ -314,7 +314,7 @@ roadmap:
       acceptance:
         criteria:
           - Reconciliation check mode is read-only, actionable, and exits nonzero when safe changes or explicit decisions remain.
-          - Reconciliation apply mode updates only canonical manifests and generated docs, validates in a temporary copy, and is idempotent on a second run.
+          - Reconciliation apply mode updates only canonical manifests and generated docs, validates in a temporary copy, stages destination-side replacements with rollback, and is idempotent on a second run.
           - Merged PR evidence records merge timestamp and merge commit identity after GitHub verification.
           - Active branch/worktree assignments for completed delivery are cleared without selecting the next priority automatically.
           - Capability-frontier candidates whose declared gates are now satisfied become ready but remain unselected until a human chooses them.
