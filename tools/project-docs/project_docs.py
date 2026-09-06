@@ -111,6 +111,7 @@ class PullRequestEvidence:
     owner_url: str | None = None
     number: int | None = None
     merged_at: str | None = None
+    closed_at: str | None = None
     merge_commit_sha: str | None = None
     head_ref: str | None = None
     head_owner_login: str | None = None
@@ -320,6 +321,7 @@ class GitHubRestEvidenceProvider:
             owner_url=str(user.get("html_url")) if user.get("html_url") else None,
             number=int(data["number"]) if data.get("number") else None,
             merged_at=str(data.get("merged_at")) if data.get("merged_at") else None,
+            closed_at=str(data.get("closed_at")) if data.get("closed_at") else None,
             merge_commit_sha=str(data.get("merge_commit_sha")) if data.get("merge_commit_sha") else None,
             head_ref=str(head.get("ref")) if isinstance(head, dict) and head.get("ref") else None,
             head_owner_login=str(head_user.get("login")) if isinstance(head_user, dict) and head_user.get("login") else None,
@@ -1198,6 +1200,7 @@ def github_evidence_issues(
                 add("missing_pr", path, "pull request does not exist in the declared repository")
                 continue
         has_merged_pr = any(isinstance(state, PullRequestEvidence) and state.merged for _pr, _path, state in pull_request_states)
+        merged_states = [state for _pr, _path, state in pull_request_states if isinstance(state, PullRequestEvidence) and state.merged]
         has_open_pr = any(
             isinstance(state, PullRequestEvidence)
             and state.state == "open"
@@ -1216,7 +1219,7 @@ def github_evidence_issues(
             if state is PROVIDER_ERROR or state is None:
                 continue
             if delivery == "merged" and not state.merged:
-                if not (has_merged_pr and state.state == "closed"):
+                if not (has_merged_pr and merged_pr_follows_closed_pr(state, merged_states)):
                     add("pr_merged_state_mismatch", path, f"{subject} declares merged delivery but pull request is not merged")
             elif delivery == "open" and (state.state != "open" or state.draft):
                 if not (state.merged and has_open_pr):
@@ -1232,9 +1235,9 @@ def github_evidence_issues(
                     add("pr_owner_login_mismatch", path, "declared pull request owner login does not match GitHub")
                 if state.owner_url != declared_owner.get("profile_url"):
                     add("pr_owner_url_mismatch", path, "declared pull request owner profile URL does not match GitHub")
-            if pr.get("merged_at") and state.merged_at and pr.get("merged_at") != state.merged_at:
+            if pr.get("merged_at") and pr.get("merged_at") != state.merged_at:
                 add("pr_merged_at_mismatch", path, "declared pull request merged_at does not match GitHub")
-            if pr.get("merge_commit_sha") and state.merge_commit_sha and pr.get("merge_commit_sha") != state.merge_commit_sha:
+            if pr.get("merge_commit_sha") and (not state.merged or pr.get("merge_commit_sha") != state.merge_commit_sha):
                 add("pr_merge_commit_mismatch", path, "declared pull request merge_commit_sha does not match GitHub")
 
     for milestone_index, milestone in enumerate(shared.get("milestones", [])):
@@ -1352,6 +1355,12 @@ def merge_date(merged_at: str | None) -> str | None:
         return None
     match = re.match(r"^(\d{4}-\d{2}-\d{2})T", merged_at)
     return match.group(1) if match else None
+
+
+def merged_pr_follows_closed_pr(closed_state: PullRequestEvidence, merged_states: list[PullRequestEvidence]) -> bool:
+    if closed_state.merged or closed_state.state != "closed" or not closed_state.closed_at:
+        return False
+    return any(state.merged_at and state.merged_at > closed_state.closed_at for state in merged_states)
 
 
 def evidence_commits(evidence: dict[str, Any] | None) -> list[dict[str, Any]]:
@@ -1675,9 +1684,9 @@ def reconcile_pull_request_state(
     state: PullRequestEvidence,
     *,
     discovered_from_active_branch: bool,
-    recorded_delivery_has_merged_pr: bool = False,
     recorded_delivery_has_open_pr: bool = False,
     recorded_delivery_has_mixed_open_pr_states: bool = False,
+    recorded_closed_pr_has_later_merged_pr: bool = False,
     recorded_completion_pr_key: tuple[str, int | None] | None = None,
 ) -> None:
     if state.merged:
@@ -1706,7 +1715,9 @@ def reconcile_pull_request_state(
             queue_pull_request_evidence(plan, node, path, repository, state)
         queue_open_pull_request_delivery_state(plan, node, path, state)
         return
-    if state.state == "closed" and (recorded_delivery_has_merged_pr or closed_unmerged_delivery_decision_recorded(node)):
+    if state.state == "closed" and (
+        recorded_closed_pr_has_later_merged_pr or closed_unmerged_delivery_decision_recorded(node)
+    ):
         return
     if state.state == "closed":
         add_node_decision(
@@ -1908,13 +1919,13 @@ def reconciliation_plan(
                     owner_url=state.owner_url,
                     number=number,
                     merged_at=state.merged_at,
+                    closed_at=state.closed_at,
                     merge_commit_sha=state.merge_commit_sha,
                     head_ref=state.head_ref,
                     head_owner_login=state.head_owner_login,
                 )
             recorded_pull_requests.append((repository, state))
 
-        recorded_delivery_has_merged_pr = any(state.merged for _repository, state in recorded_pull_requests)
         recorded_open_pull_requests = [
             (repository, state)
             for repository, state in recorded_pull_requests
@@ -1928,6 +1939,7 @@ def reconciliation_plan(
         recorded_merged_pull_requests = [
             (repository, state) for repository, state in recorded_pull_requests if state.merged
         ]
+        recorded_merged_pr_states = [state for _repository, state in recorded_merged_pull_requests]
         recorded_completion_pr_key = None
         if recorded_merged_pull_requests and not recorded_delivery_has_open_pr:
             completion_repository, completion_state = max(
@@ -1967,9 +1979,12 @@ def reconciliation_plan(
                 repository,
                 state,
                 discovered_from_active_branch=False,
-                recorded_delivery_has_merged_pr=recorded_delivery_has_merged_pr,
                 recorded_delivery_has_open_pr=recorded_delivery_has_open_pr,
                 recorded_delivery_has_mixed_open_pr_states=recorded_delivery_has_mixed_open_pr_states,
+                recorded_closed_pr_has_later_merged_pr=merged_pr_follows_closed_pr(
+                    state,
+                    recorded_merged_pr_states,
+                ),
                 recorded_completion_pr_key=recorded_completion_pr_key,
             )
 
