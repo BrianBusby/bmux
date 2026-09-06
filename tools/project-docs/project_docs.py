@@ -1197,16 +1197,32 @@ def github_evidence_issues(
                 add("missing_pr", path, "pull request does not exist in the declared repository")
                 continue
         has_merged_pr = any(isinstance(state, PullRequestEvidence) and state.merged for _pr, _path, state in pull_request_states)
+        has_open_pr = any(
+            isinstance(state, PullRequestEvidence)
+            and state.state == "open"
+            and not state.draft
+            and not state.merged
+            for _pr, _path, state in pull_request_states
+        )
+        has_draft_pr = any(
+            isinstance(state, PullRequestEvidence)
+            and state.state == "open"
+            and state.draft
+            and not state.merged
+            for _pr, _path, state in pull_request_states
+        )
         for pr, path, state in pull_request_states:
             if state is PROVIDER_ERROR or state is None:
                 continue
             if delivery == "merged" and not state.merged:
-                if not has_merged_pr:
+                if not (has_merged_pr and state.state == "closed"):
                     add("pr_merged_state_mismatch", path, f"{subject} declares merged delivery but pull request is not merged")
             elif delivery == "open" and (state.state != "open" or state.draft):
-                add("pr_open_state_mismatch", path, f"{subject} declares open delivery but pull request is not an open non-draft PR")
+                if not (state.merged and has_open_pr):
+                    add("pr_open_state_mismatch", path, f"{subject} declares open delivery but pull request is not an open non-draft PR")
             elif delivery == "draft" and (state.state != "open" or not state.draft):
-                add("pr_draft_state_mismatch", path, f"{subject} declares draft delivery but pull request is not an open draft PR")
+                if not (state.merged and has_draft_pr):
+                    add("pr_draft_state_mismatch", path, f"{subject} declares draft delivery but pull request is not an open draft PR")
             elif delivery == "closed" and (state.state != "closed" or state.merged):
                 add("pr_closed_state_mismatch", path, f"{subject} declares closed delivery but pull request is merged or still open")
             declared_owner = pr.get("owner")
@@ -1522,31 +1538,8 @@ def reconcile_merged_pull_request(
     repository: str,
     state: PullRequestEvidence,
 ) -> None:
-    if state.number is None:
-        plan.issues.append(ValidationIssue("reconcile", "missing_pr_number", path, "GitHub PR response did not include a number"))
+    if not queue_verified_merged_pull_request_evidence(plan, provider, node, path, repository, state):
         return
-    if state.merge_commit_sha:
-        reachable = github_call(
-            plan,
-            "merge commit reachability",
-            f"{path}.evidence.pull_requests[{repository}#{state.number}]",
-            lambda: provider.commit_reachable_from_default_branch(repository, state.merge_commit_sha or ""),
-        )
-        if reachable is PROVIDER_ERROR:
-            return
-        if reachable is False:
-            plan.issues.append(
-                ValidationIssue(
-                    "github",
-                    "merge_commit_not_reachable",
-                    f"{path}.evidence.pull_requests[{repository}#{state.number}]",
-                    "PR merge commit is not reachable from the repository default branch",
-                )
-            )
-            return
-
-    queue_pull_request_evidence(plan, node, path, repository, state)
-    queue_merge_commit_evidence(plan, node, path, repository, state.merge_commit_sha)
 
     delivery_status = node.get("delivery_status")
     if delivery_status in ("proposed", "open", "draft"):
@@ -1600,6 +1593,42 @@ def reconcile_merged_pull_request(
             queue_clear_repo_active_slice(plan, repo_status, node)
 
 
+def queue_verified_merged_pull_request_evidence(
+    plan: ReconciliationPlan,
+    provider: GitHubEvidenceProvider,
+    node: dict[str, Any],
+    path: str,
+    repository: str,
+    state: PullRequestEvidence,
+) -> bool:
+    if state.number is None:
+        plan.issues.append(ValidationIssue("reconcile", "missing_pr_number", path, "GitHub PR response did not include a number"))
+        return False
+    if state.merge_commit_sha:
+        reachable = github_call(
+            plan,
+            "merge commit reachability",
+            f"{path}.evidence.pull_requests[{repository}#{state.number}]",
+            lambda: provider.commit_reachable_from_default_branch(repository, state.merge_commit_sha or ""),
+        )
+        if reachable is PROVIDER_ERROR:
+            return False
+        if reachable is False:
+            plan.issues.append(
+                ValidationIssue(
+                    "github",
+                    "merge_commit_not_reachable",
+                    f"{path}.evidence.pull_requests[{repository}#{state.number}]",
+                    "PR merge commit is not reachable from the repository default branch",
+                )
+            )
+            return False
+
+    queue_pull_request_evidence(plan, node, path, repository, state)
+    queue_merge_commit_evidence(plan, node, path, repository, state.merge_commit_sha)
+    return True
+
+
 def closed_unmerged_delivery_decision_recorded(node: dict[str, Any]) -> bool:
     return (
         node.get("delivery_status") in ("closed", "superseded")
@@ -1644,11 +1673,25 @@ def reconcile_pull_request_state(
     *,
     discovered_from_active_branch: bool,
     recorded_delivery_has_merged_pr: bool = False,
+    recorded_delivery_has_open_pr: bool = False,
 ) -> None:
     if state.merged:
+        if recorded_delivery_has_open_pr:
+            queue_verified_merged_pull_request_evidence(plan, provider, node, path, repository, state)
+            return
         reconcile_merged_pull_request(plan, shared, repo_statuses, provider, node, path, repository, state)
         return
     if state.state == "open" and state.number is not None:
+        if node.get("delivery_status") == "merged":
+            plan.issues.append(
+                ValidationIssue(
+                    "reconcile",
+                    "open_pr_after_merged_delivery",
+                    pull_request_issue_path(path, repository, state.number) or path,
+                    "recorded pull request is still open but the slice declares merged delivery; close, supersede, or move the slice back to active delivery explicitly",
+                )
+            )
+            return
         if discovered_from_active_branch:
             queue_pull_request_evidence(plan, node, path, repository, state)
         queue_open_pull_request_delivery_state(plan, node, path, state)
@@ -1862,6 +1905,9 @@ def reconciliation_plan(
             recorded_pull_requests.append((repository, state))
 
         recorded_delivery_has_merged_pr = any(state.merged for _repository, state in recorded_pull_requests)
+        recorded_delivery_has_open_pr = any(
+            state.state == "open" and not state.merged for _repository, state in recorded_pull_requests
+        )
         for repository, state in recorded_pull_requests:
             reconcile_pull_request_state(
                 plan,
@@ -1874,6 +1920,7 @@ def reconciliation_plan(
                 state,
                 discovered_from_active_branch=False,
                 recorded_delivery_has_merged_pr=recorded_delivery_has_merged_pr,
+                recorded_delivery_has_open_pr=recorded_delivery_has_open_pr,
             )
 
         if discover_active_branches and is_active_implementation_slice(node):

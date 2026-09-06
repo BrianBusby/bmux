@@ -1386,6 +1386,158 @@ esac
         self.assertFalse(any(decision.name == "closed_unmerged_pr" for decision in second.decisions))
         self.assertFalse(any(issue.name == "pr_merged_state_mismatch" for issue in github_issues))
 
+    def test_reconcile_keeps_slice_active_when_recorded_pr_remains_open(self):
+        shared, local = self.load_valid()
+        self.clear_current_work(shared, local)
+        node = self.roadmap_node(shared, "deterministic_app_runtime_composition")
+        node["status"] = "active"
+        node["capability_maturity"] = "active"
+        node["execution"]["assignment"] = "current"
+        node["execution"]["active_worktree"] = "/worktrees/runtime"
+        node["execution"]["active_branch"] = "runtime"
+        node["execution"]["active_agent"] = "codex"
+        node["delivery_status"] = "open"
+        node["acceptance_status"] = "proposed"
+        node["evidence"] = {
+            "commits": [],
+            "pull_requests": [
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 96,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                },
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 97,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                },
+            ],
+        }
+        local["current_work"]["active_slice"] = {
+            "id": "deterministic_app_runtime_composition",
+            "title": "Deterministic App Runtime Composition and App-Host Test Isolation",
+            "state": "open",
+            "owner": "bmux",
+            "active_worktree": "/worktrees/runtime",
+            "active_branch": "runtime",
+            "active_agent": "codex",
+        }
+        local["current_work"]["state"] = "active"
+        provider = self.fake_provider_for_current_manifests()
+        merge_sha = "c" * 40
+        provider.pull_requests[("BrianBusby/bmux", 96)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=True,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=96,
+            merged_at="2026-09-05T17:38:46Z",
+            merge_commit_sha=merge_sha,
+        )
+        provider.pull_requests[("BrianBusby/bmux", 97)] = project_docs.PullRequestEvidence(
+            state="open",
+            draft=False,
+            merged=False,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=97,
+        )
+        provider.commits.add(("BrianBusby/bmux", merge_sha))
+        provider.reachable_commits.add(("BrianBusby/bmux", merge_sha))
+
+        plan = project_docs.reconciliation_plan(shared, [local], provider, discover_active_branches=False)
+        reconciled_shared, reconciled_repo_statuses = project_docs.apply_reconciliation_plan(shared, [local], plan)
+        reconciled = self.roadmap_node(reconciled_shared, "deterministic_app_runtime_composition")
+
+        self.assertFalse(any(change.name == "mark_delivery_merged" for change in plan.changes))
+        self.assertFalse(any(change.name == "complete_active_implementation" for change in plan.changes))
+        self.assertEqual("active", reconciled["status"])
+        self.assertEqual("open", reconciled["delivery_status"])
+        self.assertEqual("current", reconciled["execution"]["assignment"])
+        self.assertEqual(
+            "deterministic_app_runtime_composition",
+            reconciled_repo_statuses[0]["current_work"]["active_slice"]["id"],
+        )
+        self.assertTrue(any(commit["sha"] == merge_sha for commit in reconciled["evidence"]["commits"]))
+        self.assertTrue(
+            any(
+                pr["number"] == 96 and pr["merge_commit_sha"] == merge_sha
+                for pr in reconciled["evidence"]["pull_requests"]
+            )
+        )
+
+    def test_reconcile_reports_merged_delivery_with_open_recorded_pr(self):
+        shared, local = self.load_valid()
+        self.clear_current_work(shared, local)
+        node = self.roadmap_node(shared, "deterministic_app_runtime_composition")
+        node["status"] = "implemented"
+        node["capability_maturity"] = "validated"
+        node["execution"]["assignment"] = "complete"
+        node["delivery_status"] = "merged"
+        node["acceptance_status"] = "implemented"
+        node["completed_at"] = "2026-09-05"
+        node["evidence"] = {
+            "commits": [],
+            "pull_requests": [
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 96,
+                    "merged_at": "2026-09-05T17:38:46Z",
+                    "merge_commit_sha": "c" * 40,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                },
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 97,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                },
+            ],
+        }
+        provider = self.fake_provider_for_current_manifests()
+        provider.pull_requests[("BrianBusby/bmux", 96)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=True,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=96,
+            merged_at="2026-09-05T17:38:46Z",
+            merge_commit_sha="c" * 40,
+        )
+        provider.pull_requests[("BrianBusby/bmux", 97)] = project_docs.PullRequestEvidence(
+            state="open",
+            draft=False,
+            merged=False,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=97,
+        )
+
+        plan = project_docs.reconciliation_plan(shared, [local], provider, discover_active_branches=False)
+        github_issues = project_docs.github_evidence_issues(shared, [local], provider)
+
+        self.assertTrue(any(issue.name == "open_pr_after_merged_delivery" for issue in plan.issues))
+        self.assertTrue(
+            any(
+                issue.name == "pr_merged_state_mismatch"
+                and issue.path.endswith(".evidence.pull_requests[BrianBusby/bmux#97]")
+                for issue in github_issues
+            )
+        )
+
     def test_reconcile_reports_closed_unmerged_pr_as_decision(self):
         shared, local = self.load_valid()
         self.make_runtime_slice_stale(shared, local)
