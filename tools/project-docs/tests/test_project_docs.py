@@ -1415,7 +1415,7 @@ esac
         }
         merge_sha = "d" * 40
         provider = self.fake_provider_for_current_manifests()
-        provider.pull_requests[("BrianBusby/bmux", 97)] = project_docs.PullRequestEvidence(
+        fork_state = project_docs.PullRequestEvidence(
             state="closed",
             draft=False,
             merged=True,
@@ -1428,6 +1428,8 @@ esac
             head_ref="process-integrity-runtime-composition",
             head_owner_login="external-contributor",
         )
+        provider.pull_requests[("BrianBusby/bmux", 97)] = fork_state
+        provider.pull_requests_by_head[("BrianBusby/bmux", "external-contributor", "process-integrity-runtime-composition")] = [fork_state]
         provider.commits.add(("BrianBusby/bmux", merge_sha))
         provider.reachable_commits.add(("BrianBusby/bmux", merge_sha))
 
@@ -1499,6 +1501,67 @@ esac
         self.assertEqual("implemented", reconciled["status"])
         self.assertEqual("merged", reconciled["delivery_status"])
         self.assertEqual("2026-09-05", reconciled["completed_at"])
+        self.assertTrue(any(pr["number"] == 97 for pr in reconciled["evidence"]["pull_requests"]))
+
+    def test_recorded_reused_active_branch_merge_waits_for_new_open_pr(self):
+        shared, local = self.load_valid()
+        node = self.make_runtime_slice_stale(shared, local)
+        node["evidence"] = {
+            "commits": [],
+            "pull_requests": [
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 96,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                }
+            ],
+        }
+        provider = self.fake_provider_for_current_manifests()
+        merge_sha = "c" * 40
+        historical_state = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=True,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=96,
+            merged_at="2026-09-03T12:00:00Z",
+            closed_at="2026-09-03T12:00:00Z",
+            merge_commit_sha=merge_sha,
+            head_ref="process-integrity-runtime-composition",
+            head_owner_login="BrianBusby",
+        )
+        current_state = project_docs.PullRequestEvidence(
+            state="open",
+            draft=False,
+            merged=False,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=97,
+            head_ref="process-integrity-runtime-composition",
+            head_owner_login="BrianBusby",
+        )
+        provider.pull_requests[("BrianBusby/bmux", 96)] = historical_state
+        provider.pull_requests_by_head[("BrianBusby/bmux", "BrianBusby", "process-integrity-runtime-composition")] = [
+            historical_state,
+            current_state,
+        ]
+        provider.commits.add(("BrianBusby/bmux", merge_sha))
+        provider.reachable_commits.add(("BrianBusby/bmux", merge_sha))
+
+        plan = project_docs.reconciliation_plan(shared, [local], provider)
+        reconciled_shared, reconciled_repo_statuses = project_docs.apply_reconciliation_plan(shared, [local], plan)
+        reconciled = self.roadmap_node(reconciled_shared, "deterministic_app_runtime_composition")
+
+        self.assertFalse(any(change.name == "complete_active_implementation" for change in plan.changes))
+        self.assertFalse(any(change.name == "clear_active_assignment" for change in plan.changes))
+        self.assertEqual("active", reconciled["status"])
+        self.assertEqual("current", reconciled["execution"]["assignment"])
+        self.assertEqual("open", reconciled["delivery_status"])
+        self.assertEqual("deterministic_app_runtime_composition", reconciled_repo_statuses[0]["current_work"]["active_slice"]["id"])
         self.assertTrue(any(pr["number"] == 97 for pr in reconciled["evidence"]["pull_requests"]))
 
     def test_active_branch_discovery_uses_unique_open_pr_when_branch_is_reused(self):
