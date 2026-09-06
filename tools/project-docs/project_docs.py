@@ -131,6 +131,7 @@ class ReconciliationDecision:
     message: str
     node_id: str | None = None
     evidence_path: str | None = None
+    evidence_paths: tuple[str, ...] = ()
 
 
 @dataclass
@@ -1402,6 +1403,7 @@ def add_node_decision(
     message: str,
     *,
     evidence_path: str | None = None,
+    evidence_paths: tuple[str, ...] = (),
 ) -> None:
     plan.decisions.append(
         ReconciliationDecision(
@@ -1410,6 +1412,7 @@ def add_node_decision(
             message=message,
             node_id=node.get("id"),
             evidence_path=evidence_path,
+            evidence_paths=evidence_paths,
         )
     )
 
@@ -1674,9 +1677,13 @@ def reconcile_pull_request_state(
     discovered_from_active_branch: bool,
     recorded_delivery_has_merged_pr: bool = False,
     recorded_delivery_has_open_pr: bool = False,
+    recorded_delivery_has_mixed_open_pr_states: bool = False,
+    recorded_completion_pr_key: tuple[str, int | None] | None = None,
 ) -> None:
     if state.merged:
-        if recorded_delivery_has_open_pr:
+        if recorded_delivery_has_open_pr or (
+            recorded_completion_pr_key is not None and (repository, state.number) != recorded_completion_pr_key
+        ):
             queue_verified_merged_pull_request_evidence(plan, provider, node, path, repository, state)
             return
         reconcile_merged_pull_request(plan, shared, repo_statuses, provider, node, path, repository, state)
@@ -1688,9 +1695,12 @@ def reconcile_pull_request_state(
                     "reconcile",
                     "open_pr_after_merged_delivery",
                     pull_request_issue_path(path, repository, state.number) or path,
-                    "recorded pull request is still open but the slice declares merged delivery; close, supersede, or move the slice back to active delivery explicitly",
+                    "recorded pull request is still open but the slice declares merged delivery; "
+                    "close, supersede, or move the slice back to active delivery explicitly",
                 )
             )
+            return
+        if recorded_delivery_has_mixed_open_pr_states:
             return
         if discovered_from_active_branch:
             queue_pull_request_evidence(plan, node, path, repository, state)
@@ -1905,9 +1915,47 @@ def reconciliation_plan(
             recorded_pull_requests.append((repository, state))
 
         recorded_delivery_has_merged_pr = any(state.merged for _repository, state in recorded_pull_requests)
-        recorded_delivery_has_open_pr = any(
-            state.state == "open" and not state.merged for _repository, state in recorded_pull_requests
+        recorded_open_pull_requests = [
+            (repository, state)
+            for repository, state in recorded_pull_requests
+            if state.state == "open" and not state.merged
+        ]
+        recorded_delivery_has_open_pr = bool(recorded_open_pull_requests)
+        recorded_delivery_has_mixed_open_pr_states = (
+            any(not state.draft for _repository, state in recorded_open_pull_requests)
+            and any(state.draft for _repository, state in recorded_open_pull_requests)
         )
+        recorded_merged_pull_requests = [
+            (repository, state) for repository, state in recorded_pull_requests if state.merged
+        ]
+        recorded_completion_pr_key = None
+        if recorded_merged_pull_requests and not recorded_delivery_has_open_pr:
+            completion_repository, completion_state = max(
+                recorded_merged_pull_requests,
+                key=lambda item: (item[1].merged_at or "", item[0], item[1].number or -1),
+            )
+            recorded_completion_pr_key = (completion_repository, completion_state.number)
+        if recorded_delivery_has_mixed_open_pr_states and node.get("delivery_status") != "merged":
+            evidence_paths = tuple(
+                path
+                for path in (
+                    pull_request_issue_path(path, repository, state.number)
+                    for repository, state in recorded_open_pull_requests
+                )
+                if path is not None
+            )
+            numbers = ", ".join(
+                f"{repository}#{state.number}" for repository, state in recorded_open_pull_requests
+            )
+            add_node_decision(
+                plan,
+                node,
+                path,
+                "mixed_open_and_draft_prs",
+                f"recorded pull requests include both draft and ready-for-review state ({numbers}); "
+                "select the active delivery state explicitly",
+                evidence_paths=evidence_paths,
+            )
         for repository, state in recorded_pull_requests:
             reconcile_pull_request_state(
                 plan,
@@ -1921,6 +1969,8 @@ def reconciliation_plan(
                 discovered_from_active_branch=False,
                 recorded_delivery_has_merged_pr=recorded_delivery_has_merged_pr,
                 recorded_delivery_has_open_pr=recorded_delivery_has_open_pr,
+                recorded_delivery_has_mixed_open_pr_states=recorded_delivery_has_mixed_open_pr_states,
+                recorded_completion_pr_key=recorded_completion_pr_key,
             )
 
         if discover_active_branches and is_active_implementation_slice(node):
@@ -2007,9 +2057,11 @@ def reconciliation_ci_issues(plan: ReconciliationPlan, *, allow_decisions: bool 
 
 def filter_allowed_reconciliation_decision_issues(issues: list[ValidationIssue], plan: ReconciliationPlan) -> list[ValidationIssue]:
     decision_evidence_paths = frozenset(
-        decision.evidence_path
+        path
         for decision in plan.decisions
-        if decision.name == "closed_unmerged_pr" and decision.evidence_path
+        if decision.name in ("closed_unmerged_pr", "mixed_open_and_draft_prs")
+        for path in ((decision.evidence_path,) if decision.evidence_path else ())
+        + decision.evidence_paths
     )
     if not decision_evidence_paths:
         return issues
