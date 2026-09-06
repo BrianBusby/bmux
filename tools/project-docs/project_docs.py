@@ -1591,6 +1591,21 @@ def node_can_record_merged_delivery(node: dict[str, Any]) -> bool:
     return node_has_active_delivery_assignment(node) or node.get("status") in ("implemented", "accepted") or execution.get("assignment") == "complete"
 
 
+def pull_request_matches_active_branch(
+    node: dict[str, Any],
+    repository: str,
+    state: PullRequestEvidence,
+) -> bool:
+    branch = node.get("execution", {}).get("active_branch")
+    if not branch:
+        return True
+    if state.head_ref != branch:
+        return False
+    if state.head_owner_login is not None and state.head_owner_login != repository_owner(repository):
+        return False
+    return True
+
+
 def queue_active_delivery_completion(
     plan: ReconciliationPlan,
     repo_statuses: list[dict[str, Any]],
@@ -1790,11 +1805,19 @@ def reconcile_pull_request_state(
     recorded_delivery_has_mixed_open_pr_states: bool = False,
     recorded_closed_pr_has_later_merged_pr: bool = False,
     recorded_delivery_has_unresolved_later_closed_pr: bool = False,
+    completion_must_match_active_branch: bool = False,
     recorded_completion_pr_key: tuple[str, int | None] | None = None,
 ) -> None:
     if state.merged:
         if recorded_delivery_has_open_pr or recorded_delivery_has_unresolved_later_closed_pr or (
             recorded_completion_pr_key is not None and (repository, state.number) != recorded_completion_pr_key
+        ):
+            queue_verified_merged_pull_request_evidence(plan, provider, node, path, repository, state)
+            return
+        if (
+            completion_must_match_active_branch
+            and not discovered_from_active_branch
+            and not pull_request_matches_active_branch(node, repository, state)
         ):
             queue_verified_merged_pull_request_evidence(plan, provider, node, path, repository, state)
             return
@@ -2090,6 +2113,10 @@ def reconciliation_plan(
                 "select the active delivery state explicitly",
                 evidence_paths=evidence_paths,
             )
+        completion_must_match_active_branch = bool(
+            node_has_active_delivery_assignment(node)
+            and node.get("execution", {}).get("active_branch")
+        )
         for repository, state in recorded_pull_requests:
             reconcile_pull_request_state(
                 plan,
@@ -2108,6 +2135,7 @@ def reconciliation_plan(
                     recorded_merged_pr_states,
                 ),
                 recorded_delivery_has_unresolved_later_closed_pr=recorded_delivery_has_unresolved_later_closed_pr,
+                completion_must_match_active_branch=completion_must_match_active_branch,
                 recorded_completion_pr_key=recorded_completion_pr_key,
             )
 
@@ -2160,7 +2188,6 @@ def reconciliation_plan(
                             recorded_merged_pr_states,
                         ),
                         recorded_delivery_has_unresolved_later_closed_pr=recorded_delivery_has_unresolved_later_closed_pr,
-                        recorded_completion_pr_key=recorded_completion_pr_key,
                     )
 
         reconcile_commit_only_delivery(plan, repo_statuses, provider, node, path)
