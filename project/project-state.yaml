@@ -65,7 +65,9 @@ milestones:
           owner:
             login: BrianBusby
             profile_url: https://github.com/BrianBusby
-
+          merged_at: '2026-07-29T16:12:06Z'
+          merge_commit_sha: c32ed93989c8ed8531d9b573bb34b36149461475
+    completed_at: '2026-07-29'
   - id: claude_lifecycle_telemetry
     title: Claude lifecycle telemetry migration
     owner: bmux
@@ -83,6 +85,8 @@ milestones:
           owner:
             login: BrianBusby
             profile_url: https://github.com/BrianBusby
+          merged_at: '2026-07-31T07:08:06Z'
+          merge_commit_sha: 3f49c5d5abbe3a4ed2cc8edfb8b81b003ceb0ed9
     completed_at: 2026-07-31
 
   - id: workspace_display_durable_context
@@ -116,12 +120,16 @@ milestones:
           sha: a0f8c1fa2d0e93b6c0fc8593b4a76a9c52dcf0ee
         - repository: BrianBusby/bmux
           sha: 45b7188ea62d343bca433dee5cb0897e5427adc2
+        - repository: BrianBusby/bmux
+          sha: c11d54c3f8e3f3ab112fbdabae164f589cdc8d69
       pull_requests:
         - repository: BrianBusby/bmux
           number: 48
           owner:
             login: BrianBusby
             profile_url: https://github.com/BrianBusby
+          merged_at: '2026-08-15T21:37:18Z'
+          merge_commit_sha: c11d54c3f8e3f3ab112fbdabae164f589cdc8d69
     completed_at: 2026-08-15
     acceptance_reason: First below-semantic-layer evidence foundation and factual session projection snapshot/read contract implemented; semantic SessionWorkModel inference, milestones, and architecture projection remain gated.
 
