@@ -1261,6 +1261,47 @@ esac
                 recorded_pr = next(pr for pr in node["evidence"]["pull_requests"] if pr["number"] == 97)
                 self.assertNotIn("merge_commit_sha", recorded_pr)
 
+    def test_reconcile_recorded_open_pr_syncs_draft_delivery_state(self):
+        for initial_status, draft, expected_status in (("open", True, "draft"), ("draft", False, "open")):
+            with self.subTest(initial_status=initial_status, draft=draft):
+                shared, local = self.load_valid()
+                self.clear_current_work(shared, local)
+                node = self.roadmap_node(shared, "deterministic_app_runtime_composition")
+                node["status"] = "active"
+                node["capability_maturity"] = "active"
+                node["execution"]["assignment"] = "current"
+                node["delivery_status"] = initial_status
+                node["acceptance_status"] = "proposed"
+                node["evidence"] = {
+                    "commits": [],
+                    "pull_requests": [
+                        {
+                            "repository": "BrianBusby/bmux",
+                            "number": 97,
+                            "owner": {
+                                "login": "BrianBusby",
+                                "profile_url": "https://github.com/BrianBusby",
+                            },
+                        }
+                    ],
+                }
+                provider = self.fake_provider_for_current_manifests()
+                provider.pull_requests[("BrianBusby/bmux", 97)] = project_docs.PullRequestEvidence(
+                    state="open",
+                    draft=draft,
+                    merged=False,
+                    owner_login="BrianBusby",
+                    owner_url="https://github.com/BrianBusby",
+                    number=97,
+                    merged_at=None,
+                    merge_commit_sha=None,
+                )
+
+                plan = project_docs.reconciliation_plan(shared, [local], provider, discover_active_branches=False)
+                reconciled_shared, _ = project_docs.apply_reconciliation_plan(shared, [local], plan)
+
+                self.assertEqual(expected_status, self.roadmap_node(reconciled_shared, "deterministic_app_runtime_composition")["delivery_status"])
+
     def test_reconcile_reports_closed_unmerged_pr_as_decision(self):
         shared, local = self.load_valid()
         self.make_runtime_slice_stale(shared, local)

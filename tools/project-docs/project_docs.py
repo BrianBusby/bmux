@@ -1578,6 +1578,30 @@ def closed_unmerged_delivery_decision_recorded(node: dict[str, Any]) -> bool:
     )
 
 
+def queue_open_pull_request_delivery_state(
+    plan: ReconciliationPlan,
+    node: dict[str, Any],
+    path: str,
+    state: PullRequestEvidence,
+) -> None:
+    delivery_status = node.get("delivery_status")
+    if delivery_status not in ("proposed", "open", "draft"):
+        return
+    target_delivery_status = "draft" if state.draft else "open"
+    if delivery_status == target_delivery_status:
+        return
+    set_node_update_field(
+        plan,
+        node,
+        f"{path}.delivery_status",
+        "delivery_status",
+        delivery_status,
+        target_delivery_status,
+        "mark_delivery_draft" if target_delivery_status == "draft" else "mark_delivery_open",
+        "delivery_status",
+    )
+
+
 def reconcile_pull_request_state(
     plan: ReconciliationPlan,
     shared: dict[str, Any],
@@ -1593,21 +1617,10 @@ def reconcile_pull_request_state(
     if state.merged:
         reconcile_merged_pull_request(plan, shared, repo_statuses, provider, node, path, repository, state)
         return
-    if discovered_from_active_branch and state.state == "open" and state.number is not None:
-        queue_pull_request_evidence(plan, node, path, repository, state)
-        delivery_status = node.get("delivery_status")
-        if delivery_status == "proposed":
-            target_delivery_status = "draft" if state.draft else "open"
-            set_node_update_field(
-                plan,
-                node,
-                f"{path}.delivery_status",
-                "delivery_status",
-                delivery_status,
-                target_delivery_status,
-                "mark_delivery_open",
-                "delivery_status",
-            )
+    if state.state == "open" and state.number is not None:
+        if discovered_from_active_branch:
+            queue_pull_request_evidence(plan, node, path, repository, state)
+        queue_open_pull_request_delivery_state(plan, node, path, state)
         return
     if state.state == "closed" and not closed_unmerged_delivery_decision_recorded(node):
         add_node_decision(
