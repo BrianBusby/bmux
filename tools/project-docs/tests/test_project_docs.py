@@ -1168,6 +1168,27 @@ esac
         second = project_docs.reconciliation_plan(reconciled_shared, reconciled_repo_statuses, provider)
         self.assertEqual([], second.changes)
 
+    def test_reconcile_clears_stale_assignment_without_downgrading_accepted_status(self):
+        shared, local = self.load_valid()
+        self.make_runtime_slice_stale(shared, local)
+        node = self.roadmap_node(shared, "deterministic_app_runtime_composition")
+        node["status"] = "accepted"
+        node["capability_maturity"] = "complete"
+        node["acceptance_status"] = "accepted"
+        node["accepted_at"] = "2026-09-06"
+
+        plan = project_docs.reconciliation_plan(shared, [local], self.runtime_merge_provider())
+        reconciled_shared, reconciled_repo_statuses = project_docs.apply_reconciliation_plan(shared, [local], plan)
+        reconciled = self.roadmap_node(reconciled_shared, "deterministic_app_runtime_composition")
+
+        self.assertEqual("accepted", reconciled["status"])
+        self.assertEqual("accepted", reconciled["acceptance_status"])
+        self.assertEqual("complete", reconciled["execution"]["assignment"])
+        self.assertEqual("merged", reconciled["delivery_status"])
+        self.assertNotIn("active_branch", reconciled["execution"])
+        self.assertIsNone(reconciled_repo_statuses[0]["current_work"]["active_slice"]["id"])
+        project_docs.semantic_validate(reconciled_shared, reconciled_repo_statuses[0], LOCAL)
+
     def test_reconcile_advances_gated_ready_candidate_without_selecting_it(self):
         shared, local = self.load_valid()
         self.make_runtime_slice_stale(shared, local)
@@ -1485,7 +1506,7 @@ esac
         node["status"] = "active"
         node["capability_maturity"] = "active"
         node["execution"]["assignment"] = "current"
-        node["delivery_status"] = "open"
+        node["delivery_status"] = "draft"
         node["acceptance_status"] = "proposed"
         node["evidence"] = {
             "commits": [],
@@ -1497,7 +1518,15 @@ esac
                         "login": "BrianBusby",
                         "profile_url": "https://github.com/BrianBusby",
                     },
-                }
+                },
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 98,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                },
             ],
         }
         provider = self.fake_provider_for_current_manifests()
@@ -1508,6 +1537,16 @@ esac
             owner_login="BrianBusby",
             owner_url="https://github.com/BrianBusby",
             number=97,
+            merged_at=None,
+            merge_commit_sha=None,
+        )
+        provider.pull_requests[("BrianBusby/bmux", 98)] = project_docs.PullRequestEvidence(
+            state="open",
+            draft=False,
+            merged=False,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=98,
             merged_at=None,
             merge_commit_sha=None,
         )
@@ -1523,9 +1562,36 @@ esac
 
         filtered = project_docs.filter_allowed_reconciliation_decision_issues(github_issues + [unrelated_missing], plan)
 
-        self.assertTrue(any(decision.name == "closed_unmerged_pr" for decision in plan.decisions))
-        self.assertTrue(any(issue.name == "pr_open_state_mismatch" for issue in github_issues))
-        self.assertFalse(any(issue.name == "pr_open_state_mismatch" for issue in filtered))
+        closed_decision = next(decision for decision in plan.decisions if decision.name == "closed_unmerged_pr")
+        self.assertTrue(closed_decision.evidence_path.endswith(".evidence.pull_requests[BrianBusby/bmux#97]"))
+        self.assertTrue(
+            any(
+                issue.name == "pr_draft_state_mismatch"
+                and issue.path.endswith(".evidence.pull_requests[BrianBusby/bmux#97]")
+                for issue in github_issues
+            )
+        )
+        self.assertTrue(
+            any(
+                issue.name == "pr_draft_state_mismatch"
+                and issue.path.endswith(".evidence.pull_requests[BrianBusby/bmux#98]")
+                for issue in github_issues
+            )
+        )
+        self.assertFalse(
+            any(
+                issue.name == "pr_draft_state_mismatch"
+                and issue.path.endswith(".evidence.pull_requests[BrianBusby/bmux#97]")
+                for issue in filtered
+            )
+        )
+        self.assertTrue(
+            any(
+                issue.name == "pr_draft_state_mismatch"
+                and issue.path.endswith(".evidence.pull_requests[BrianBusby/bmux#98]")
+                for issue in filtered
+            )
+        )
         self.assertIn(unrelated_missing, filtered)
 
     def test_replace_files_transactionally_leaves_destinations_unchanged_when_staging_fails(self):

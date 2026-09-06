@@ -130,6 +130,7 @@ class ReconciliationDecision:
     path: str
     message: str
     node_id: str | None = None
+    evidence_path: str | None = None
 
 
 @dataclass
@@ -1275,6 +1276,16 @@ GITHUB_UNAVAILABLE_ISSUES = ("auth", "rate_limit", "network")
 DECISION_BACKED_PR_STATE_ISSUES = ("pr_open_state_mismatch", "pr_draft_state_mismatch", "pr_closed_state_mismatch")
 
 
+def github_evidence_node_path(path: str) -> str:
+    return path.replace("] (", "](")
+
+
+def pull_request_issue_path(path: str, repository: str, number: int | None) -> str | None:
+    if number is None:
+        return None
+    return f"{github_evidence_node_path(path)}.evidence.pull_requests[{repository}#{number}]"
+
+
 def repository_slug_for_key(shared: dict[str, Any], key: str) -> str | None:
     repository = shared.get("repositories", {}).get(key)
     if not isinstance(repository, dict):
@@ -1373,8 +1384,18 @@ def add_node_decision(
     path: str,
     name: str,
     message: str,
+    *,
+    evidence_path: str | None = None,
 ) -> None:
-    plan.decisions.append(ReconciliationDecision(name=name, path=path, message=message, node_id=node.get("id")))
+    plan.decisions.append(
+        ReconciliationDecision(
+            name=name,
+            path=path,
+            message=message,
+            node_id=node.get("id"),
+            evidence_path=evidence_path,
+        )
+    )
 
 
 def set_node_update_field(
@@ -1532,8 +1553,10 @@ def reconcile_merged_pull_request(
         set_node_update_field(plan, node, f"{path}.delivery_status", "delivery_status", delivery_status, "merged", "mark_delivery_merged", "delivery_status")
 
     execution = node.get("execution", {})
-    if node.get("status") == "active" or execution.get("assignment") == "current":
-        set_node_update_field(plan, node, f"{path}.status", "status", node.get("status"), "implemented", "complete_active_implementation", "status")
+    node_status = node.get("status")
+    if node_status == "active" or execution.get("assignment") == "current":
+        if node_status == "active":
+            set_node_update_field(plan, node, f"{path}.status", "status", node_status, "implemented", "complete_active_implementation", "status")
         set_node_update_field(
             plan,
             node,
@@ -1639,6 +1662,7 @@ def reconcile_pull_request_state(
             path,
             "closed_unmerged_pr",
             f"{repository}#{state.number or '<unknown>'} is closed without merge; explicitly supersede, replace, reopen, or abandon the slice",
+            evidence_path=pull_request_issue_path(path, repository, state.number),
         )
 
 
@@ -1935,16 +1959,16 @@ def reconciliation_ci_issues(plan: ReconciliationPlan, *, allow_decisions: bool 
 
 
 def filter_allowed_reconciliation_decision_issues(issues: list[ValidationIssue], plan: ReconciliationPlan) -> list[ValidationIssue]:
-    decision_paths = tuple(
-        f"{decision.path.replace('] (', '](')}."
+    decision_evidence_paths = frozenset(
+        decision.evidence_path
         for decision in plan.decisions
-        if decision.name == "closed_unmerged_pr"
+        if decision.name == "closed_unmerged_pr" and decision.evidence_path
     )
-    if not decision_paths:
+    if not decision_evidence_paths:
         return issues
     filtered: list[ValidationIssue] = []
     for issue in issues:
-        if issue.category == "github" and issue.name in DECISION_BACKED_PR_STATE_ISSUES and issue.path.startswith(decision_paths):
+        if issue.category == "github" and issue.name in DECISION_BACKED_PR_STATE_ISSUES and issue.path in decision_evidence_paths:
             continue
         filtered.append(issue)
     return filtered
