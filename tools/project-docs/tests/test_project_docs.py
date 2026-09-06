@@ -1034,6 +1034,54 @@ esac
         self.assertEqual("2026-09-05", reconciled["completed_at"])
         self.assertEqual(merge_sha, reconciled_pr["merge_commit_sha"])
 
+    def test_reconcile_milestone_completion_uses_latest_merged_pr(self):
+        shared, local = self.load_valid()
+        milestone = shared["milestones"][2]
+        milestone["delivery_status"] = "open"
+        milestone["acceptance_status"] = "under_observation"
+        milestone.pop("completed_at", None)
+        milestone["evidence"]["commits"] = []
+        milestone["evidence"]["pull_requests"] = [
+            {"repository": "BrianBusby/bmux", "number": 12},
+            {"repository": "BrianBusby/bmux", "number": 13},
+        ]
+        provider = self.fake_provider_for_current_manifests()
+        first_sha = "e" * 40
+        second_sha = "f" * 40
+        provider.pull_requests[("BrianBusby/bmux", 12)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=True,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=12,
+            merged_at="2026-09-05T17:38:46Z",
+            closed_at="2026-09-05T17:38:46Z",
+            merge_commit_sha=first_sha,
+        )
+        provider.pull_requests[("BrianBusby/bmux", 13)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=True,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=13,
+            merged_at="2026-09-06T14:00:00Z",
+            closed_at="2026-09-06T14:00:00Z",
+            merge_commit_sha=second_sha,
+        )
+        for sha in (first_sha, second_sha):
+            provider.commits.add(("BrianBusby/bmux", sha))
+            provider.reachable_commits.add(("BrianBusby/bmux", sha))
+
+        plan = project_docs.reconciliation_plan(shared, [local], provider, discover_active_branches=False)
+        reconciled_shared, _ = project_docs.apply_reconciliation_plan(shared, [local], plan)
+        reconciled = reconciled_shared["milestones"][2]
+
+        self.assertFalse(any(issue.name == "conflicting_safe_changes" for issue in plan.issues))
+        self.assertEqual("merged", reconciled["delivery_status"])
+        self.assertEqual("2026-09-06", reconciled["completed_at"])
+
     def test_missing_issue_and_tag_fail_github_verification(self):
         shared, local = self.load_valid()
         provider = self.fake_provider_for_current_manifests()
@@ -1726,6 +1774,85 @@ esac
         self.assertEqual("open", reconciled["delivery_status"])
         self.assertEqual("deterministic_app_runtime_composition", reconciled_repo_statuses[0]["current_work"]["active_slice"]["id"])
 
+    def test_active_branch_replacement_merge_resolves_recorded_closed_history(self):
+        shared, local = self.load_valid()
+        node = self.make_runtime_slice_stale(shared, local)
+        node["evidence"] = {
+            "commits": [],
+            "pull_requests": [
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 96,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                },
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 97,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                },
+            ],
+        }
+        old_sha = "c" * 40
+        new_sha = "d" * 40
+        provider = self.fake_provider_for_current_manifests()
+        provider.pull_requests[("BrianBusby/bmux", 96)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=True,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=96,
+            merged_at="2026-09-03T12:00:00Z",
+            closed_at="2026-09-03T12:00:00Z",
+            merge_commit_sha=old_sha,
+            head_ref="previous-process-integrity-branch",
+            head_owner_login="BrianBusby",
+        )
+        provider.pull_requests[("BrianBusby/bmux", 97)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=False,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=97,
+            closed_at="2026-09-04T12:00:00Z",
+        )
+        replacement_state = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=True,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=98,
+            merged_at="2026-09-05T17:38:46Z",
+            closed_at="2026-09-05T17:38:46Z",
+            merge_commit_sha=new_sha,
+            head_ref="process-integrity-runtime-composition",
+            head_owner_login="BrianBusby",
+        )
+        provider.pull_requests_by_head[("BrianBusby/bmux", "BrianBusby", "process-integrity-runtime-composition")] = [replacement_state]
+        for sha in (old_sha, new_sha):
+            provider.commits.add(("BrianBusby/bmux", sha))
+            provider.reachable_commits.add(("BrianBusby/bmux", sha))
+
+        plan = project_docs.reconciliation_plan(shared, [local], provider)
+        reconciled_shared, reconciled_repo_statuses = project_docs.apply_reconciliation_plan(shared, [local], plan)
+        reconciled = self.roadmap_node(reconciled_shared, "deterministic_app_runtime_composition")
+
+        self.assertFalse(any(decision.name == "closed_unmerged_pr" for decision in plan.decisions))
+        self.assertEqual("implemented", reconciled["status"])
+        self.assertEqual("merged", reconciled["delivery_status"])
+        self.assertEqual("2026-09-05", reconciled["completed_at"])
+        self.assertEqual("complete", reconciled["execution"]["assignment"])
+        self.assertIsNone(reconciled_repo_statuses[0]["current_work"]["active_slice"]["id"])
+        self.assertTrue(any(pr["number"] == 98 for pr in reconciled["evidence"]["pull_requests"]))
+
     def test_merged_pr_for_unselected_planned_slice_requires_decision(self):
         shared, local = self.load_valid()
         self.clear_current_work(shared, local)
@@ -1810,6 +1937,30 @@ esac
         self.assertEqual("complete", reconciled["execution"]["assignment"])
         self.assertNotIn("active_branch", reconciled["execution"])
         self.assertIsNone(reconciled_repo_statuses[0]["current_work"]["active_slice"]["id"])
+
+    def test_reconciliation_keeps_mirrored_milestone_and_roadmap_updates_separate(self):
+        shared, local = self.load_valid()
+        node = self.roadmap_node(shared, "execution_telemetry_foundation")
+        node["status"] = "implemented"
+        node["execution"]["assignment"] = "complete"
+        node["delivery_status"] = "open"
+        node["evidence"] = {
+            "commits": [{"repository": "BrianBusby/bmux", "sha": "f" * 40}],
+            "pull_requests": [],
+        }
+        provider = self.fake_provider_for_current_manifests()
+        provider.commits.add(("BrianBusby/bmux", "f" * 40))
+        provider.reachable_commits.add(("BrianBusby/bmux", "f" * 40))
+
+        plan = project_docs.reconciliation_plan(shared, [local], provider, discover_active_branches=False)
+        reconciled_shared, _ = project_docs.apply_reconciliation_plan(shared, [local], plan)
+        reconciled_node = self.roadmap_node(reconciled_shared, "execution_telemetry_foundation")
+        reconciled_milestone = next(milestone for milestone in reconciled_shared["milestones"] if milestone["id"] == "execution_telemetry_foundation")
+
+        self.assertEqual("merged", reconciled_node["delivery_status"])
+        self.assertEqual("merged", reconciled_milestone["delivery_status"])
+        self.assertNotIn("status", reconciled_milestone)
+        self.assertNotIn("execution", reconciled_milestone)
 
     def test_reconcile_apply_reconciles_current_runtime_slice_and_is_idempotent(self):
         shared, local = self.load_valid()
