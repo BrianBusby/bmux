@@ -1581,6 +1581,79 @@ def queue_clear_repo_active_slice(
     )
 
 
+def node_has_active_delivery_assignment(node: dict[str, Any]) -> bool:
+    execution = node.get("execution", {})
+    return node.get("status") == "active" or execution.get("assignment") == "current"
+
+
+def node_can_record_merged_delivery(node: dict[str, Any]) -> bool:
+    execution = node.get("execution", {})
+    return node_has_active_delivery_assignment(node) or node.get("status") in ("implemented", "accepted") or execution.get("assignment") == "complete"
+
+
+def queue_active_delivery_completion(
+    plan: ReconciliationPlan,
+    repo_statuses: list[dict[str, Any]],
+    node: dict[str, Any],
+    path: str,
+) -> bool:
+    if not node_has_active_delivery_assignment(node):
+        return False
+
+    execution = node.get("execution", {})
+    node_status = node.get("status")
+    if node_status == "active":
+        set_node_update_field(
+            plan,
+            node,
+            f"{path}.status",
+            "status",
+            node_status,
+            "implemented",
+            "complete_active_implementation",
+            "status",
+        )
+    set_node_update_field(
+        plan,
+        node,
+        f"{path}.execution.assignment",
+        "execution_assignment",
+        execution.get("assignment"),
+        "complete",
+        "complete_execution_assignment",
+        "execution.assignment",
+    )
+    update = update_for_node(plan, node["id"])
+    if any(execution.get(key) for key in ACTIVE_EXECUTION_METADATA_KEYS):
+        update.clear_active_metadata = True
+        add_node_change(plan, node, f"{path}.execution", "clear_active_assignment", "remove active worktree, branch, agent, and session metadata")
+    if node.get("acceptance_status") == "proposed":
+        set_node_update_field(
+            plan,
+            node,
+            f"{path}.acceptance_status",
+            "acceptance_status",
+            node.get("acceptance_status"),
+            "implemented",
+            "mark_implementation_recorded",
+            "acceptance_status",
+        )
+    if node.get("capability_maturity") in ("active", "ready"):
+        set_node_update_field(
+            plan,
+            node,
+            f"{path}.capability_maturity",
+            "capability_maturity",
+            node.get("capability_maturity"),
+            "validated",
+            "mark_capability_validated",
+            "capability_maturity",
+        )
+    for repo_status in repo_statuses:
+        queue_clear_repo_active_slice(plan, repo_status, node)
+    return True
+
+
 def github_call(plan: ReconciliationPlan, name: str, path: str, fn):
     try:
         return fn()
@@ -1604,54 +1677,22 @@ def reconcile_merged_pull_request(
 
     delivery_status = node.get("delivery_status")
     if delivery_status in ("proposed", "open", "draft"):
+        if not node_can_record_merged_delivery(node):
+            add_node_decision(
+                plan,
+                node,
+                path,
+                "merged_pr_for_unselected_slice",
+                f"{repository}#{state.number or '<unknown>'} is merged but the slice is not selected, active, or already marked complete; explicitly select, complete, supersede, or reject the slice",
+                evidence_path=pull_request_issue_path(path, repository, state.number),
+            )
+            return
         set_node_update_field(plan, node, f"{path}.delivery_status", "delivery_status", delivery_status, "merged", "mark_delivery_merged", "delivery_status")
 
-    execution = node.get("execution", {})
-    node_status = node.get("status")
-    if node_status == "active" or execution.get("assignment") == "current":
-        if node_status == "active":
-            set_node_update_field(plan, node, f"{path}.status", "status", node_status, "implemented", "complete_active_implementation", "status")
-        set_node_update_field(
-            plan,
-            node,
-            f"{path}.execution.assignment",
-            "execution_assignment",
-            execution.get("assignment"),
-            "complete",
-            "complete_execution_assignment",
-            "execution.assignment",
-        )
-        update = update_for_node(plan, node["id"])
-        if any(execution.get(key) for key in ACTIVE_EXECUTION_METADATA_KEYS):
-            update.clear_active_metadata = True
-            add_node_change(plan, node, f"{path}.execution", "clear_active_assignment", "remove active worktree, branch, agent, and session metadata")
-        if node.get("acceptance_status") == "proposed":
-            set_node_update_field(
-                plan,
-                node,
-                f"{path}.acceptance_status",
-                "acceptance_status",
-                node.get("acceptance_status"),
-                "implemented",
-                "mark_implementation_recorded",
-                "acceptance_status",
-            )
-        if node.get("capability_maturity") in ("active", "ready"):
-            set_node_update_field(
-                plan,
-                node,
-                f"{path}.capability_maturity",
-                "capability_maturity",
-                node.get("capability_maturity"),
-                "validated",
-                "mark_capability_validated",
-                "capability_maturity",
-            )
+    if queue_active_delivery_completion(plan, repo_statuses, node, path):
         completed_at = merge_date(state.merged_at)
         if completed_at and not node.get("completed_at"):
             set_node_update_field(plan, node, f"{path}.completed_at", "completed_at", node.get("completed_at"), completed_at, "record_completed_at", "completed_at")
-        for repo_status in repo_statuses:
-            queue_clear_repo_active_slice(plan, repo_status, node)
 
 
 def queue_verified_merged_pull_request_evidence(
@@ -1748,10 +1789,11 @@ def reconcile_pull_request_state(
     recorded_delivery_has_open_pr: bool = False,
     recorded_delivery_has_mixed_open_pr_states: bool = False,
     recorded_closed_pr_has_later_merged_pr: bool = False,
+    recorded_delivery_has_unresolved_later_closed_pr: bool = False,
     recorded_completion_pr_key: tuple[str, int | None] | None = None,
 ) -> None:
     if state.merged:
-        if recorded_delivery_has_open_pr or (
+        if recorded_delivery_has_open_pr or recorded_delivery_has_unresolved_later_closed_pr or (
             recorded_completion_pr_key is not None and (repository, state.number) != recorded_completion_pr_key
         ):
             queue_verified_merged_pull_request_evidence(plan, provider, node, path, repository, state)
@@ -1793,6 +1835,7 @@ def reconcile_pull_request_state(
 
 def reconcile_commit_only_delivery(
     plan: ReconciliationPlan,
+    repo_statuses: list[dict[str, Any]],
     provider: GitHubEvidenceProvider,
     node: dict[str, Any],
     path: str,
@@ -1837,6 +1880,7 @@ def reconcile_commit_only_delivery(
         "mark_commit_delivery_merged",
         "delivery_status",
     )
+    queue_active_delivery_completion(plan, repo_statuses, node, path)
 
 
 def apply_reconciliation_updates_in_place(
@@ -2001,8 +2045,25 @@ def reconciliation_plan(
             (repository, state) for repository, state in recorded_pull_requests if state.merged
         ]
         recorded_merged_pr_states = [state for _repository, state in recorded_merged_pull_requests]
+        recorded_closed_unmerged_pull_requests = [
+            (repository, state)
+            for repository, state in recorded_pull_requests
+            if state.state == "closed" and not state.merged
+        ]
+        recorded_delivery_has_unresolved_later_closed_pr = (
+            not closed_unmerged_delivery_decision_recorded(node)
+            and any(
+                closed_pr_follows_merged_pr(state, recorded_merged_pr_states)
+                and not merged_pr_follows_closed_pr(state, recorded_merged_pr_states)
+                for _repository, state in recorded_closed_unmerged_pull_requests
+            )
+        )
         recorded_completion_pr_key = None
-        if recorded_merged_pull_requests and not recorded_delivery_has_open_pr:
+        if (
+            recorded_merged_pull_requests
+            and not recorded_delivery_has_open_pr
+            and not recorded_delivery_has_unresolved_later_closed_pr
+        ):
             completion_repository, completion_state = max(
                 recorded_merged_pull_requests,
                 key=lambda item: (item[1].merged_at or "", item[0], item[1].number or -1),
@@ -2046,6 +2107,7 @@ def reconciliation_plan(
                     state,
                     recorded_merged_pr_states,
                 ),
+                recorded_delivery_has_unresolved_later_closed_pr=recorded_delivery_has_unresolved_later_closed_pr,
                 recorded_completion_pr_key=recorded_completion_pr_key,
             )
 
@@ -2097,10 +2159,11 @@ def reconciliation_plan(
                             states[0],
                             recorded_merged_pr_states,
                         ),
+                        recorded_delivery_has_unresolved_later_closed_pr=recorded_delivery_has_unresolved_later_closed_pr,
                         recorded_completion_pr_key=recorded_completion_pr_key,
                     )
 
-        reconcile_commit_only_delivery(plan, provider, node, path)
+        reconcile_commit_only_delivery(plan, repo_statuses, provider, node, path)
 
     while True:
         preview_shared, preview_repo_statuses = apply_reconciliation_plan(shared, repo_statuses, plan)
@@ -2142,7 +2205,7 @@ def filter_allowed_reconciliation_decision_issues(issues: list[ValidationIssue],
     decision_evidence_paths = frozenset(
         path
         for decision in plan.decisions
-        if decision.name in ("closed_unmerged_pr", "mixed_open_and_draft_prs")
+        if decision.name in ("closed_unmerged_pr", "merged_pr_for_unselected_slice", "mixed_open_and_draft_prs")
         for path in ((decision.evidence_path,) if decision.evidence_path else ())
         + decision.evidence_paths
     )
