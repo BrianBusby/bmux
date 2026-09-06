@@ -1304,6 +1304,53 @@ esac
         self.assertTrue(any(change.node_id == "deterministic_app_runtime_composition" for change in plan.changes))
         self.assertEqual([], plan.decisions)
 
+    def test_active_branch_discovery_preserves_recorded_open_sibling_pr(self):
+        shared, local = self.load_valid()
+        node = self.make_runtime_slice_stale(shared, local)
+        node["evidence"] = {
+            "commits": [],
+            "pull_requests": [
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 96,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                },
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 97,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                },
+            ],
+        }
+        provider = self.runtime_merge_provider()
+        provider.pull_requests[("BrianBusby/bmux", 96)] = project_docs.PullRequestEvidence(
+            state="open",
+            draft=False,
+            merged=False,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=96,
+            head_ref="process-integrity-runtime-composition-followup",
+            head_owner_login="BrianBusby",
+        )
+
+        plan = project_docs.reconciliation_plan(shared, [local], provider)
+        reconciled_shared, reconciled_repo_statuses = project_docs.apply_reconciliation_plan(shared, [local], plan)
+        reconciled = self.roadmap_node(reconciled_shared, "deterministic_app_runtime_composition")
+
+        self.assertFalse(any(change.name == "complete_active_implementation" for change in plan.changes))
+        self.assertFalse(any(change.name == "clear_active_assignment" for change in plan.changes))
+        self.assertEqual("active", reconciled["status"])
+        self.assertEqual("current", reconciled["execution"]["assignment"])
+        self.assertEqual("open", reconciled["delivery_status"])
+        self.assertEqual("deterministic_app_runtime_composition", reconciled_repo_statuses[0]["current_work"]["active_slice"]["id"])
+
     def test_reconcile_apply_reconciles_current_runtime_slice_and_is_idempotent(self):
         shared, local = self.load_valid()
         self.make_runtime_slice_stale(shared, local)

@@ -2091,6 +2091,13 @@ def reconciliation_plan(
                         repository,
                         states[0],
                         discovered_from_active_branch=True,
+                        recorded_delivery_has_open_pr=recorded_delivery_has_open_pr,
+                        recorded_delivery_has_mixed_open_pr_states=recorded_delivery_has_mixed_open_pr_states,
+                        recorded_closed_pr_has_later_merged_pr=merged_pr_follows_closed_pr(
+                            states[0],
+                            recorded_merged_pr_states,
+                        ),
+                        recorded_completion_pr_key=recorded_completion_pr_key,
                     )
 
         reconcile_commit_only_delivery(plan, provider, node, path)
