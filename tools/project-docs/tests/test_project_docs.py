@@ -851,6 +851,132 @@ esac
         self.assertTrue(any(issue.name == "pr_merged_at_mismatch" for issue in issues))
         self.assertTrue(any(issue.name == "pr_merge_commit_mismatch" for issue in issues))
 
+    def test_closed_decision_allows_historical_merged_pr_before_closed_followup(self):
+        shared, local = self.load_valid()
+        node = self.roadmap_node(shared, "deterministic_app_runtime_composition")
+        node["status"] = "deferred"
+        node["delivery_status"] = "closed"
+        node["acceptance_status"] = "rejected"
+        node["completed_at"] = "2026-09-03"
+        node["evidence"] = {
+            "commits": [],
+            "pull_requests": [
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 96,
+                    "merged_at": "2026-09-03T12:00:00Z",
+                    "merge_commit_sha": "c" * 40,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                },
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 97,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                },
+            ],
+        }
+        provider = self.fake_provider_for_current_manifests()
+        provider.pull_requests[("BrianBusby/bmux", 96)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=True,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=96,
+            merged_at="2026-09-03T12:00:00Z",
+            closed_at="2026-09-03T12:00:00Z",
+            merge_commit_sha="c" * 40,
+        )
+        provider.pull_requests[("BrianBusby/bmux", 97)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=False,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=97,
+            closed_at="2026-09-05T17:38:46Z",
+        )
+
+        issues = project_docs.github_evidence_issues(shared, [local], provider)
+
+        self.assertFalse(
+            any(
+                issue.name == "pr_closed_state_mismatch"
+                and issue.path.endswith(".evidence.pull_requests[BrianBusby/bmux#96]")
+                for issue in issues
+            )
+        )
+
+    def test_rejected_followup_allows_closed_pr_after_merged_delivery(self):
+        shared, local = self.load_valid()
+        node = self.roadmap_node(shared, "deterministic_app_runtime_composition")
+        node["status"] = "implemented"
+        node["capability_maturity"] = "validated"
+        node["execution"]["assignment"] = "complete"
+        node["delivery_status"] = "merged"
+        node["acceptance_status"] = "rejected"
+        node["completed_at"] = "2026-09-03"
+        node["evidence"] = {
+            "commits": [],
+            "pull_requests": [
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 96,
+                    "merged_at": "2026-09-03T12:00:00Z",
+                    "merge_commit_sha": "c" * 40,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                },
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 97,
+                    "owner": {
+                        "login": "BrianBusby",
+                        "profile_url": "https://github.com/BrianBusby",
+                    },
+                },
+            ],
+        }
+        provider = self.fake_provider_for_current_manifests()
+        provider.pull_requests[("BrianBusby/bmux", 96)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=True,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=96,
+            merged_at="2026-09-03T12:00:00Z",
+            closed_at="2026-09-03T12:00:00Z",
+            merge_commit_sha="c" * 40,
+        )
+        provider.pull_requests[("BrianBusby/bmux", 97)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=False,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=97,
+            closed_at="2026-09-05T17:38:46Z",
+        )
+
+        issues = project_docs.github_evidence_issues(shared, [local], provider)
+
+        self.assertFalse(
+            any(
+                issue.name == "pr_merged_state_mismatch"
+                and issue.path.endswith(".evidence.pull_requests[BrianBusby/bmux#97]")
+                for issue in issues
+            )
+        )
+
     def test_draft_open_and_closed_pr_mismatches_are_distinct(self):
         shared, local = self.load_valid()
         provider = self.fake_provider_for_current_manifests()

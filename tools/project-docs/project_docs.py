@@ -1183,7 +1183,15 @@ def github_evidence_issues(
             if exists is False:
                 add("missing_repository", repository, "repository does not exist or is not visible")
 
-    def check_evidence(base_path: str, evidence: dict[str, Any], delivery: str | None, subject: str) -> None:
+    def check_evidence(
+        base_path: str,
+        evidence: dict[str, Any],
+        delivery: str | None,
+        subject: str,
+        *,
+        acceptance: str | None = None,
+        status: str | None = None,
+    ) -> None:
         for commit in evidence.get("commits", []):
             path = f"{base_path}.evidence.commits[{commit['repository']}@{commit['sha']}]"
             exists = call("commit", path, lambda commit=commit: provider.commit_exists(commit["repository"], commit["sha"]))
@@ -1201,6 +1209,14 @@ def github_evidence_issues(
                 continue
         has_merged_pr = any(isinstance(state, PullRequestEvidence) and state.merged for _pr, _path, state in pull_request_states)
         merged_states = [state for _pr, _path, state in pull_request_states if isinstance(state, PullRequestEvidence) and state.merged]
+        closed_unmerged_states = [
+            state
+            for _pr, _path, state in pull_request_states
+            if isinstance(state, PullRequestEvidence)
+            and state.state == "closed"
+            and not state.merged
+        ]
+        has_terminal_closed_decision = closed_unmerged_status_recorded(delivery, acceptance, status)
         has_open_pr = any(
             isinstance(state, PullRequestEvidence)
             and state.state == "open"
@@ -1219,7 +1235,16 @@ def github_evidence_issues(
             if state is PROVIDER_ERROR or state is None:
                 continue
             if delivery == "merged" and not state.merged:
-                if not (has_merged_pr and merged_pr_follows_closed_pr(state, merged_states)):
+                if not (
+                    has_merged_pr
+                    and (
+                        merged_pr_follows_closed_pr(state, merged_states)
+                        or (
+                            has_terminal_closed_decision
+                            and closed_pr_follows_merged_pr(state, merged_states)
+                        )
+                    )
+                ):
                     add("pr_merged_state_mismatch", path, f"{subject} declares merged delivery but pull request is not merged")
             elif delivery == "open" and (state.state != "open" or state.draft):
                 if not (state.merged and has_open_pr):
@@ -1228,7 +1253,12 @@ def github_evidence_issues(
                 if not (state.merged and has_draft_pr):
                     add("pr_draft_state_mismatch", path, f"{subject} declares draft delivery but pull request is not an open draft PR")
             elif delivery == "closed" and (state.state != "closed" or state.merged):
-                add("pr_closed_state_mismatch", path, f"{subject} declares closed delivery but pull request is merged or still open")
+                if not (
+                    has_terminal_closed_decision
+                    and state.merged
+                    and merged_pr_has_later_closed_pr(state, closed_unmerged_states)
+                ):
+                    add("pr_closed_state_mismatch", path, f"{subject} declares closed delivery but pull request is merged or still open")
             declared_owner = pr.get("owner")
             if declared_owner:
                 if state.owner_login != declared_owner.get("login"):
@@ -1250,7 +1280,14 @@ def github_evidence_issues(
         if not evidence:
             continue
         node_path = f"project/project-state.yaml:roadmap.nodes[{node_index}]({node.get('id')})"
-        check_evidence(node_path, evidence, node.get("delivery_status"), "roadmap node")
+        check_evidence(
+            node_path,
+            evidence,
+            node.get("delivery_status"),
+            "roadmap node",
+            acceptance=node.get("acceptance_status"),
+            status=node.get("status"),
+        )
 
     for caveat_index, caveat in enumerate(shared.get("caveats", [])):
         issue = caveat.get("issue")
@@ -1361,6 +1398,18 @@ def merged_pr_follows_closed_pr(closed_state: PullRequestEvidence, merged_states
     if closed_state.merged or closed_state.state != "closed" or not closed_state.closed_at:
         return False
     return any(state.merged_at and state.merged_at > closed_state.closed_at for state in merged_states)
+
+
+def closed_pr_follows_merged_pr(closed_state: PullRequestEvidence, merged_states: list[PullRequestEvidence]) -> bool:
+    if closed_state.merged or closed_state.state != "closed" or not closed_state.closed_at:
+        return False
+    return any(state.merged_at and state.merged_at < closed_state.closed_at for state in merged_states)
+
+
+def merged_pr_has_later_closed_pr(merged_state: PullRequestEvidence, closed_states: list[PullRequestEvidence]) -> bool:
+    if not merged_state.merged or not merged_state.merged_at:
+        return False
+    return any(state.closed_at and state.closed_at > merged_state.merged_at for state in closed_states)
 
 
 def evidence_commits(evidence: dict[str, Any] | None) -> list[dict[str, Any]]:
@@ -1642,10 +1691,22 @@ def queue_verified_merged_pull_request_evidence(
 
 
 def closed_unmerged_delivery_decision_recorded(node: dict[str, Any]) -> bool:
+    return closed_unmerged_status_recorded(
+        node.get("delivery_status"),
+        node.get("acceptance_status"),
+        node.get("status"),
+    )
+
+
+def closed_unmerged_status_recorded(
+    delivery_status: str | None,
+    acceptance_status: str | None,
+    status: str | None,
+) -> bool:
     return (
-        node.get("delivery_status") in ("closed", "superseded")
-        or node.get("acceptance_status") in ("rejected", "superseded")
-        or node.get("status") == "superseded"
+        delivery_status in ("closed", "superseded")
+        or acceptance_status in ("rejected", "superseded")
+        or status == "superseded"
     )
 
 
