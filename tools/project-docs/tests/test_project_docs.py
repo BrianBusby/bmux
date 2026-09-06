@@ -1082,6 +1082,92 @@ esac
         self.assertEqual("merged", reconciled["delivery_status"])
         self.assertEqual("2026-09-06", reconciled["completed_at"])
 
+    def test_reconcile_milestone_defers_completion_after_later_closed_pr(self):
+        shared, local = self.load_valid()
+        milestone = shared["milestones"][2]
+        milestone["delivery_status"] = "open"
+        milestone["acceptance_status"] = "under_observation"
+        milestone.pop("completed_at", None)
+        milestone["evidence"]["commits"] = []
+        milestone["evidence"]["pull_requests"] = [
+            {"repository": "BrianBusby/bmux", "number": 12},
+            {"repository": "BrianBusby/bmux", "number": 13},
+        ]
+        provider = self.fake_provider_for_current_manifests()
+        merge_sha = "e" * 40
+        provider.pull_requests[("BrianBusby/bmux", 12)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=True,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=12,
+            merged_at="2026-09-05T17:38:46Z",
+            closed_at="2026-09-05T17:38:46Z",
+            merge_commit_sha=merge_sha,
+        )
+        provider.pull_requests[("BrianBusby/bmux", 13)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=False,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=13,
+            closed_at="2026-09-06T14:00:00Z",
+        )
+        provider.commits.add(("BrianBusby/bmux", merge_sha))
+        provider.reachable_commits.add(("BrianBusby/bmux", merge_sha))
+
+        plan = project_docs.reconciliation_plan(shared, [local], provider, discover_active_branches=False)
+        reconciled_shared, _ = project_docs.apply_reconciliation_plan(shared, [local], plan)
+        reconciled = reconciled_shared["milestones"][2]
+
+        self.assertTrue(any(decision.name == "closed_unmerged_pr" and decision.node_id == milestone["id"] for decision in plan.decisions))
+        self.assertFalse(any(change.name == "mark_delivery_merged" and change.node_id == milestone["id"] for change in plan.changes))
+        self.assertEqual("open", reconciled["delivery_status"])
+        self.assertNotIn("completed_at", reconciled)
+
+    def test_milestone_terminal_acceptance_allows_closed_followup_validation(self):
+        shared, local = self.load_valid()
+        milestone = shared["milestones"][2]
+        milestone["delivery_status"] = "merged"
+        milestone["acceptance_status"] = "rejected"
+        milestone["evidence"]["pull_requests"] = [
+            {"repository": "BrianBusby/bmux", "number": 12},
+            {"repository": "BrianBusby/bmux", "number": 13},
+        ]
+        provider = self.fake_provider_for_current_manifests()
+        provider.pull_requests[("BrianBusby/bmux", 12)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=True,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=12,
+            merged_at="2026-09-05T17:38:46Z",
+            closed_at="2026-09-05T17:38:46Z",
+            merge_commit_sha="e" * 40,
+        )
+        provider.pull_requests[("BrianBusby/bmux", 13)] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=False,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=13,
+            closed_at="2026-09-06T14:00:00Z",
+        )
+
+        issues = project_docs.github_evidence_issues(shared, [local], provider)
+
+        self.assertFalse(
+            any(
+                issue.name == "pr_merged_state_mismatch"
+                and issue.path.endswith(".evidence.pull_requests[BrianBusby/bmux#13]")
+                for issue in issues
+            )
+        )
+
     def test_missing_issue_and_tag_fail_github_verification(self):
         shared, local = self.load_valid()
         provider = self.fake_provider_for_current_manifests()
@@ -1644,6 +1730,63 @@ esac
         self.assertFalse(any(change.name == "clear_active_assignment" for change in plan.changes))
         self.assertEqual("active", reconciled["status"])
         self.assertEqual("current", reconciled["execution"]["assignment"])
+        self.assertEqual("open", reconciled["delivery_status"])
+        self.assertEqual("deterministic_app_runtime_composition", reconciled_repo_statuses[0]["current_work"]["active_slice"]["id"])
+        self.assertTrue(any(pr["number"] == 97 for pr in reconciled["evidence"]["pull_requests"]))
+
+    def test_active_branch_discovery_checks_base_owner_when_recorded_owner_is_historical(self):
+        shared, local = self.load_valid()
+        node = self.make_runtime_slice_stale(shared, local)
+        node["evidence"] = {
+            "commits": [],
+            "pull_requests": [
+                {
+                    "repository": "BrianBusby/bmux",
+                    "number": 96,
+                    "owner": {
+                        "login": "external-contributor",
+                        "profile_url": "https://github.com/external-contributor",
+                    },
+                }
+            ],
+        }
+        provider = self.fake_provider_for_current_manifests()
+        merge_sha = "c" * 40
+        historical_state = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=True,
+            owner_login="external-contributor",
+            owner_url="https://github.com/external-contributor",
+            number=96,
+            merged_at="2026-09-03T12:00:00Z",
+            closed_at="2026-09-03T12:00:00Z",
+            merge_commit_sha=merge_sha,
+            head_ref="process-integrity-runtime-composition",
+            head_owner_login="external-contributor",
+        )
+        current_state = project_docs.PullRequestEvidence(
+            state="open",
+            draft=False,
+            merged=False,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=97,
+            head_ref="process-integrity-runtime-composition",
+            head_owner_login="BrianBusby",
+        )
+        provider.pull_requests[("BrianBusby/bmux", 96)] = historical_state
+        provider.pull_requests_by_head[("BrianBusby/bmux", "external-contributor", "process-integrity-runtime-composition")] = [historical_state]
+        provider.pull_requests_by_head[("BrianBusby/bmux", "BrianBusby", "process-integrity-runtime-composition")] = [current_state]
+        provider.commits.add(("BrianBusby/bmux", merge_sha))
+        provider.reachable_commits.add(("BrianBusby/bmux", merge_sha))
+
+        plan = project_docs.reconciliation_plan(shared, [local], provider)
+        reconciled_shared, reconciled_repo_statuses = project_docs.apply_reconciliation_plan(shared, [local], plan)
+        reconciled = self.roadmap_node(reconciled_shared, "deterministic_app_runtime_composition")
+
+        self.assertFalse(any(change.name == "complete_active_implementation" for change in plan.changes))
+        self.assertEqual("active", reconciled["status"])
         self.assertEqual("open", reconciled["delivery_status"])
         self.assertEqual("deterministic_app_runtime_composition", reconciled_repo_statuses[0]["current_work"]["active_slice"]["id"])
         self.assertTrue(any(pr["number"] == 97 for pr in reconciled["evidence"]["pull_requests"]))
