@@ -998,6 +998,42 @@ esac
         issues = project_docs.github_evidence_issues(shared, [local], provider)
         self.assertTrue(any(issue.name == "pr_closed_state_mismatch" for issue in issues))
 
+    def test_reconcile_merges_top_level_milestone_delivery_pr(self):
+        shared, local = self.load_valid()
+        milestone = shared["milestones"][2]
+        pr = milestone["evidence"]["pull_requests"][0]
+        milestone["delivery_status"] = "open"
+        milestone["acceptance_status"] = "under_observation"
+        milestone.pop("completed_at", None)
+        pr.pop("merged_at", None)
+        pr.pop("merge_commit_sha", None)
+        merge_sha = "e" * 40
+        provider = self.fake_provider_for_current_manifests()
+        provider.pull_requests[(pr["repository"], pr["number"])] = project_docs.PullRequestEvidence(
+            state="closed",
+            draft=False,
+            merged=True,
+            owner_login="BrianBusby",
+            owner_url="https://github.com/BrianBusby",
+            number=pr["number"],
+            merged_at="2026-09-05T17:38:46Z",
+            closed_at="2026-09-05T17:38:46Z",
+            merge_commit_sha=merge_sha,
+        )
+        provider.commits.add((pr["repository"], merge_sha))
+        provider.reachable_commits.add((pr["repository"], merge_sha))
+
+        plan = project_docs.reconciliation_plan(shared, [local], provider, discover_active_branches=False)
+        reconciled_shared, _ = project_docs.apply_reconciliation_plan(shared, [local], plan)
+        reconciled = reconciled_shared["milestones"][2]
+        reconciled_pr = reconciled["evidence"]["pull_requests"][0]
+
+        self.assertTrue(any(change.name == "mark_delivery_merged" and change.node_id == milestone["id"] for change in plan.changes))
+        self.assertEqual("merged", reconciled["delivery_status"])
+        self.assertEqual("under_observation", reconciled["acceptance_status"])
+        self.assertEqual("2026-09-05", reconciled["completed_at"])
+        self.assertEqual(merge_sha, reconciled_pr["merge_commit_sha"])
+
     def test_missing_issue_and_tag_fail_github_verification(self):
         shared, local = self.load_valid()
         provider = self.fake_provider_for_current_manifests()
@@ -1657,6 +1693,8 @@ esac
         provider.reachable_commits.add(("BrianBusby/bmux", merge_sha))
 
         plan = project_docs.reconciliation_plan(shared, [local], provider, discover_active_branches=False)
+        github_issues = project_docs.github_evidence_issues(shared, [local], provider)
+        filtered = project_docs.filter_allowed_reconciliation_decision_issues(github_issues, plan)
         reconciled_shared, reconciled_repo_statuses = project_docs.apply_reconciliation_plan(shared, [local], plan)
         reconciled = self.roadmap_node(reconciled_shared, "deterministic_app_runtime_composition")
 
@@ -1665,6 +1703,20 @@ esac
                 decision.name == "closed_unmerged_pr"
                 and decision.node_id == "deterministic_app_runtime_composition"
                 for decision in plan.decisions
+            )
+        )
+        self.assertTrue(
+            any(
+                issue.name == "pr_open_state_mismatch"
+                and issue.path.endswith(".evidence.pull_requests[BrianBusby/bmux#96]")
+                for issue in github_issues
+            )
+        )
+        self.assertFalse(
+            any(
+                issue.name == "pr_open_state_mismatch"
+                and issue.path.endswith(".evidence.pull_requests[BrianBusby/bmux#96]")
+                for issue in filtered
             )
         )
         self.assertFalse(any(change.name == "complete_active_implementation" for change in plan.changes))
