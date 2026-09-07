@@ -244,16 +244,21 @@ own who invokes that reconciliation path.
 Phone notification forwarding is deferred because `PhonePushClient.configure`
 only stores auth and does not start a background listener, route observer, path
 monitor, or loop. A later push-registration/notification runtime slice should
-own its send lifecycle and any APNs/device-token registration separately.
+own its send lifecycle and any APNs/device-token registration separately. That
+future work is now captured as
+`app_runtime_notification_push_lifecycle_migration` and remains gated behind the
+sidebar Git/PR lifecycle migration.
 
-Browser/DevTools lifecycle, sidebar Git/PR observation, remote session SSH
-presence, menu-bar runtime services, Dock identity, and push registration remain
-separate Process Integrity candidates. They should not be folded into this PR.
+Browser/DevTools lifecycle is now the selected next Process Integrity slice:
+`app_runtime_browser_devtools_lifecycle_migration`. Sidebar Git/PR observation,
+notification/push lifecycle, menu-bar presentation lifecycle, and residual
+app-host service ownership are separate downstream Project Truth nodes. They
+should not be folded into the completed mobile-host/presence PR or into each
+other merely because they are background services.
 
-The recommended next Process Integrity slice after this one is whichever
-app-host side-effect family remains highest-friction after mobile host/presence,
-with browser/DevTools ownership and sidebar Git/PR observation still the leading
-candidates from the PR #97 audit.
+Remote session SSH presence and Dock identity remain outside the completed
+mobile-host/presence slice. They should be classified by the residual app-host
+audit unless a future Project Truth slice captures them more narrowly first.
 
 ## Unrelated Findings
 

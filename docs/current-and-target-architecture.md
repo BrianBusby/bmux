@@ -295,13 +295,14 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Dependency-Ready Work
 
+- Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) - selection: selected next; owner: Bmux; depends on: `app_runtime_service_lifecycle_migration`. Rationale: Browser and DevTools lifecycle ownership is the next safest and highest-value Process Integrity slice because the current source still starts BrowserSystemProxyWatcher and browser/inspector teardown paths through AppDelegate, window, and panel entrypoints while the service family remains cohesive enough for one explicit runtime owner.
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - selection: planned; owner: Bmux; depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`. Rationale: Consume the PE SessionWorkModel for completed-turn summaries, current-turn state, plan/progress, blockers, approach changes, validations, and richer session-level synthesis once those contracts exist.
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - selection: planned; owner: Bmux; depends on: `agent_accessible_cross_session_retrieval`. Rationale: Measure whether bounded explainable cross-session context improves outcomes before making automatic context assembly a product behavior.
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - selection: planned; owner: Provenance Engine; depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`.
 
 ### Selected Next Work
 
-- None.
+- Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) - dependency status: ready; owner: Bmux; depends on: `app_runtime_service_lifecycle_migration`. Rationale: Browser and DevTools lifecycle ownership is the next safest and highest-value Process Integrity slice because the current source still starts BrowserSystemProxyWatcher and browser/inspector teardown paths through AppDelegate, window, and panel entrypoints while the service family remains cohesive enough for one explicit runtime owner.
 
 ### Dependency-Ready But Not Selected
 
@@ -311,6 +312,40 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Gated / Blocked Downstream Work
 
+- Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) - maturity: gated; status: planned; selection: planned; owner: Bmux
+  - Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) is not dependency-satisfying
+  - Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) has maturity ready; requires validated for gate `browser_runtime_validated`: Sidebar Git and PR observation should migrate after browser runtime ownership removes adjacent AppDelegate and panel startup churn.
+- Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) - maturity: gated; status: planned; selection: planned; owner: Bmux
+  - Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) is not dependency-satisfying
+  - Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) has maturity gated; requires validated for gate `sidebar_git_pr_runtime_validated`: Notification and push lifecycle work should wait until the higher-churn sidebar observation family has a single owner.
+- Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) - maturity: gated; status: planned; selection: planned; owner: Bmux
+  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) is not dependency-satisfying
+  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) has maturity gated; requires validated for gate `notification_push_runtime_validated`: Menu-bar presentation lifecycle should migrate after notification ownership clarifies AppDelegate startup and delegate responsibilities.
+- Residual App-Host Background Service Audit (`app_runtime_residual_app_host_service_audit`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
+  - Architecture or product direction is captured, but the slice is not implementation-ready.
+  - Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) is not dependency-satisfying
+  - Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) is not dependency-satisfying
+  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) is not dependency-satisfying
+  - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) is not dependency-satisfying
+- Workspace Display File-Watcher Churn Policy (`workspace_display_file_watcher_churn_policy`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
+- Local PE SQLite Multi-Writer Policy (`pe_shared_sqlite_writer_policy`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
+  - Architecture or product direction is captured, but the slice is not implementation-ready.
+- Historical Codex Transcript Import Startup Boundary Guard (`codex_historical_import_startup_boundary_guard`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
+- Config Workspace-Launch Canonicalization (`config_workspace_launch_canonicalization`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
+- Swift Package Test Determinism Burn-Down (`test_determinism_swift_package_burndown`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
+- Swift App and Runtime Test Determinism Burn-Down (`test_determinism_swift_app_runtime_burndown`) - maturity: gated; status: planned; selection: planned; owner: Bmux
+  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) is not dependency-satisfying
+  - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) is not dependency-satisfying
+  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) has maturity gated; requires validated for gate `notification_push_runtime_validated`: Notification and mobile-host authorization test determinism should be fixed against the migrated runtime owner.
+  - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) has maturity gated; requires validated for gate `menu_bar_runtime_validated`: Menu-bar duration assertions should be replaced after menu-bar lifecycle ownership is explicit.
+- Python Socket and Tmux Compatibility Test Determinism Burn-Down (`test_determinism_python_socket_tmux_burndown`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
+- UI Test Determinism Burn-Down (`test_determinism_ui_burndown`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
+  - Architecture or product direction is captured, but the slice is not implementation-ready.
+- Legacy Bmux-Local Provenance Caller Inventory and Retirement Plan (`legacy_bmux_provenance_caller_inventory`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
+- Legacy Bmux-Local Provenance Storage Cleanup (`legacy_bmux_provenance_storage_cleanup`) - maturity: gated; status: deferred; selection: deferred; owner: Bmux
+  - Legacy Bmux-Local Provenance Caller Inventory and Retirement Plan (`legacy_bmux_provenance_caller_inventory`) is not dependency-satisfying
+  - Legacy Bmux-Local Provenance Caller Inventory and Retirement Plan (`legacy_bmux_provenance_caller_inventory`) has maturity ready; requires validated for gate `legacy_inventory_validated`: Cleanup must wait for an explicit caller inventory PE replacement map and rollback/data-preservation decision.
+- Monorepo Migration Ledger Disposition Closure (`monorepo_migration_ledger_disposition_closure`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
 - React Terminal live interaction productization (`react_terminal_productization`) - maturity: captured; status: planned; selection: planned; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - maturity: captured; status: planned; selection: planned; owner: Bmux
@@ -373,6 +408,13 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 ### Open Caveats
 
 - Broad legacy bmux-local storage migration (`broad_legacy_storage_migration`) - owner: Bmux; status: open
+- Residual app-runtime lifecycle ownership outside BmuxAppRuntimeServices (`residual_app_runtime_lifecycle_ownership`) - owner: Bmux; status: open
+- Workspace Display file-watcher SQLite churn (`workspace_display_file_watcher_churn`) - owner: Bmux; status: open
+- Local PE SQLite multi-writer policy (`pe_shared_sqlite_multi_writer_policy`) - owner: Bmux; status: open
+- Historical Codex transcript import startup boundary (`codex_historical_import_startup_boundary`) - owner: Bmux; status: monitoring
+- Test determinism allowlist debt (`test_determinism_allowlist_debt`) - owner: Bmux; status: open
+- Config workspace-launch mutation-path bypass (`config_workspace_launch_mutation_bypass`) - owner: Bmux; status: open
+- Monorepo migration ledger pending dispositions (`monorepo_migration_ledger_pending_dispositions`) - owner: Bmux; status: open
 - Observability trace API boundary (`observability_trace_api`) - owner: Provenance Engine; status: open
 - GitHub Actions runner reliability (`github_actions_runner_reliability`) - owner: Bmux; status: open; issue: BrianBusby/bmux#8
 <!-- END GENERATED: current-target-architecture-status -->

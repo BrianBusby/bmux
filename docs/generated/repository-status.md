@@ -26,13 +26,21 @@ Repository: `BrianBusby/bmux`
 | Capability | State |
 | --- | --- |
 | App Host Test Runtime Isolation | under observation |
+| App Runtime Browser Devtools Lifecycle | planned |
 | App Runtime Composition Boundary | under observation |
+| App Runtime Menu Bar Presentation Lifecycle | planned |
+| App Runtime Notification Push Lifecycle | planned |
+| App Runtime Sidebar Git Pr Lifecycle | planned |
 | Bmux Cross Session Context Assembly Experiment | planned |
 | Bmux Proactive Cross Session Awareness | implemented |
+| Codex Historical Import Startup Boundary Guard | planned |
 | Factual Agent Session View | implemented |
 | Knowledge Compiler Cross Session Bridge | planned |
+| Legacy Bmux Provenance Retirement | planned |
+| Monorepo Migration Ledger Closure | planned |
 | Native Provider Session View | implemented |
 | Normal Coding Agent Evidence Ingestion | implemented |
+| Pe Shared Sqlite Writer Policy | planned |
 | Provenance Engine Agent Accessible Cross Session Retrieval | implemented |
 | Provenance Engine Blocker Approach Change Semantics | implemented |
 | Provenance Engine Coding Agent Assistant Outputs | implemented |
@@ -93,16 +101,19 @@ Repository: `BrianBusby/bmux`
 | Richer Session Evidence Foundation | implemented |
 | Richer Session Work View | planned |
 | Session Work Model Consumer | planned |
+| Test Determinism Allowlist Burndown | planned |
 | Three View Session Navigation | planned |
 | Work Provenance Runtime Lifecycle State | under observation |
 | Workspace Coding Agent Session Linkage Hardening | under observation |
 | Workspace Display Current State Diagnostic | implemented |
 | Workspace Display Durable Context | implemented |
+| Workspace Display File Watcher Churn Policy | planned |
 | Workspace Display Projection | implemented |
 | Workspace Display Prompt Resource Discovery | implemented |
 | Workspace Display Tab Projection | implemented |
 | Workspace Display Ticket Link Facts | implemented |
 | Workspace Display Ticket Title Sidebar | implemented |
+| Workspace Launch Canonical Mutation Path | planned |
 
 ## Execution Telemetry
 
@@ -128,6 +139,13 @@ Repository: `BrianBusby/bmux`
 | Caveat | Status |
 | --- | --- |
 | `broad_legacy_storage_migration` | open |
+| `residual_app_runtime_lifecycle_ownership` | open |
+| `workspace_display_file_watcher_churn` | open |
+| `pe_shared_sqlite_multi_writer_policy` | open |
+| `codex_historical_import_startup_boundary` | monitoring |
+| `test_determinism_allowlist_debt` | open |
+| `config_workspace_launch_mutation_bypass` | open |
+| `monorepo_migration_ledger_pending_dispositions` | open |
 | `github_actions_runner_reliability` | open |
 | `non_default_agent_chat_url_dogfood` | open |
 | `sidecar_disappearance_lifecycle_policy` | open |
