@@ -49,6 +49,42 @@ check_pattern \
   'Sources/App/BmuxAppRuntimeServices.swift starts PE telemetry projection' \
   'Sources/App/BmuxAppRuntimeServices.swift'
 
+check_pattern \
+  'MobileHostService\.shared\.configure\(auth:' \
+  'Sources/App/MobileHostRuntimeService.swift configures the mobile host listener' \
+  'Sources/App/MobileHostRuntimeService.swift' \
+  'Sources/App/MobileHostRuntimeServiceDependencies.swift'
+
+check_pattern \
+  'MobileHostService\.shared\.(start|syncToSettings)\(' \
+  'Sources/App/MobileHostRuntimeService.swift starts or syncs the mobile host listener' \
+  'Sources/App/MobileHostRuntimeService.swift' \
+  'Sources/App/MobileHostRuntimeServiceDependencies.swift'
+
+check_pattern \
+  'MobileHostService\.shared\.stop\(' \
+  'Sources/App/MobileHostRuntimeService.swift stops the mobile host listener' \
+  'Sources/App/MobileHostRuntimeService.swift' \
+  'Sources/App/MobileHostRuntimeServiceDependencies.swift'
+
+check_pattern \
+  'PresenceHeartbeatClient\.shared\.(configure|start|syncToSettings|stop|appWillTerminate)\(' \
+  'Sources/App/MobileHostRuntimeService.swift owns presence heartbeat lifecycle' \
+  'Sources/App/MobileHostRuntimeService.swift' \
+  'Sources/App/MobileHostRuntimeServiceDependencies.swift'
+
+check_pattern \
+  '(DeviceRegistryClient|MacPairedMacBackupPublisher)\.shared\.(configure|start|stop)\(' \
+  'Sources/App/MobileHostRuntimeService.swift owns route publication lifecycle' \
+  'Sources/App/MobileHostRuntimeService.swift' \
+  'Sources/App/MobileHostRuntimeServiceDependencies.swift'
+
+check_pattern \
+  'MobileTerminalRenderObserver\.shared\.(start|stop)\(' \
+  'Sources/App/MobileHostRuntimeService.swift owns mobile render observation lifecycle' \
+  'Sources/App/MobileHostRuntimeService.swift' \
+  'Sources/App/MobileHostRuntimeServiceDependencies.swift'
+
 if (( ${#violations[@]} > 0 )); then
   {
     echo "check-app-runtime-composition-boundary: migrated runtime services must start through the app runtime composition boundary."

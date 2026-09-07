@@ -20,11 +20,12 @@ Regenerate with: ./scripts/project-docs generate
 ### Current Capability Frontier
 
 - Primary Capability Frontier: Process Integrity (`process_integrity`)
-- Active or selected slices in the frontier: none
+- Active or selected slices in the frontier:
+  - Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Active Implementation
 
-- None.
+- Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Selected Next
 
@@ -32,7 +33,6 @@ Regenerate with: ./scripts/project-docs generate
 
 ### Ready Candidates
 
-- Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - maturity: ready; status: planned; selection: planned; owner: Bmux
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - maturity: ready; status: planned; selection: planned; owner: Bmux
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - maturity: ready; status: planned; selection: planned; owner: Bmux
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - maturity: ready; status: planned; selection: planned; owner: Provenance Engine

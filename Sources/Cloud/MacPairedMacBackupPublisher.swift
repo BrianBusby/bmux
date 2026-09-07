@@ -61,15 +61,34 @@ final class MacPairedMacBackupPublisher {
         #endif
     }
 
-    /// Inject auth and start observing routes. Call once at the composition root,
-    /// alongside ``PresenceHeartbeatClient``. No-op on Release / when disabled.
+    /// Compatibility wrapper for older composition-root callers.
+    ///
+    /// Removal condition: delete after all production startup goes through
+    /// `MobileHostRuntimeService.start(...)` and no tests call this directly.
     func configure(auth: AuthCoordinator) {
-        guard Self.isEnabled() else { return }
+        start(auth: auth)
+    }
+
+    /// Inject auth and start observing routes. Call from the mobile-host runtime
+    /// owner. No-op on Release or when disabled.
+    func start(auth: AuthCoordinator) {
+        guard Self.isEnabled() else {
+            stop()
+            return
+        }
         self.auth = auth
         // The iOS-pairing listener defaults ON in DEBUG builds (see
         // MobileCatalogSection.iOSPairingHost), so an attach route comes up
         // without a manual Settings toggle; we just observe and publish it.
         startObserving()
+    }
+
+    /// Stop route observation and clear per-run dedupe state.
+    func stop() {
+        observeTask?.cancel()
+        observeTask = nil
+        auth = nil
+        lastPublishedRoutes = []
     }
 
     private func startObserving() {
