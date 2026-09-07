@@ -1,6 +1,5 @@
 import Foundation
 
-@MainActor
 struct BrowserDevToolsRuntimeEventHandlers {
     var addressBarFocused: @MainActor (_ panelId: UUID) -> Void
     var addressBarBlurred: @MainActor (_ panelId: UUID, _ wasTracked: Bool) -> Void
