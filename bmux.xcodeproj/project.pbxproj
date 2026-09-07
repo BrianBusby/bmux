@@ -386,6 +386,12 @@
 		B1F0C0060000000000000001 /* BrowserDeveloperToolsDockControlNormalizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0C0060000000000000002 /* BrowserDeveloperToolsDockControlNormalizerTests.swift */; };
 		B1F0C0070000000000000001 /* BrowserDeveloperToolsLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0C0070000000000000002 /* BrowserDeveloperToolsLifecycleTests.swift */; };
 		B1F0D1030000000000000001 /* BrowserDeveloperToolsTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0D1030000000000000002 /* BrowserDeveloperToolsTestSupport.swift */; };
+		CE0E0A060000000000000001 /* BrowserDevToolsRuntimeCompositionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0A060000000000000002 /* BrowserDevToolsRuntimeCompositionTests.swift */; };
+		CE0E0A050000000000000001 /* BrowserDevToolsRuntimeEventHandlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0A050000000000000002 /* BrowserDevToolsRuntimeEventHandlers.swift */; };
+		CE0E0A010000000000000001 /* BrowserDevToolsRuntimeLifecycleState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0A010000000000000002 /* BrowserDevToolsRuntimeLifecycleState.swift */; };
+		CE0E0A020000000000000001 /* BrowserDevToolsRuntimeOperationResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0A020000000000000002 /* BrowserDevToolsRuntimeOperationResult.swift */; };
+		CE0E0A030000000000000001 /* BrowserDevToolsRuntimeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0A030000000000000002 /* BrowserDevToolsRuntimeService.swift */; };
+		CE0E0A040000000000000001 /* BrowserDevToolsRuntimeServiceDependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0A040000000000000002 /* BrowserDevToolsRuntimeServiceDependencies.swift */; };
 		C42660030000000000000001 /* BrowserDownloadDelegate+PDFPreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C42660030000000000000002 /* BrowserDownloadDelegate+PDFPreviewData.swift */; };
 		C59240010000000000000001 /* BrowserDownloadFilenameResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C59240010000000000000002 /* BrowserDownloadFilenameResolver.swift */; };
 		C59240010000000000000003 /* BrowserDownloadFilenameResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C59240010000000000000004 /* BrowserDownloadFilenameResolverTests.swift */; };
@@ -2150,6 +2156,12 @@
 		B1F0C0060000000000000002 /* BrowserDeveloperToolsDockControlNormalizerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserDeveloperToolsDockControlNormalizerTests.swift; sourceTree = "<group>"; };
 		B1F0C0070000000000000002 /* BrowserDeveloperToolsLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserDeveloperToolsLifecycleTests.swift; sourceTree = "<group>"; };
 		B1F0D1030000000000000002 /* BrowserDeveloperToolsTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserDeveloperToolsTestSupport.swift; sourceTree = "<group>"; };
+		CE0E0A060000000000000002 /* BrowserDevToolsRuntimeCompositionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserDevToolsRuntimeCompositionTests.swift; sourceTree = "<group>"; };
+		CE0E0A050000000000000002 /* BrowserDevToolsRuntimeEventHandlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BrowserDevToolsRuntimeEventHandlers.swift; sourceTree = "<group>"; };
+		CE0E0A010000000000000002 /* BrowserDevToolsRuntimeLifecycleState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BrowserDevToolsRuntimeLifecycleState.swift; sourceTree = "<group>"; };
+		CE0E0A020000000000000002 /* BrowserDevToolsRuntimeOperationResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BrowserDevToolsRuntimeOperationResult.swift; sourceTree = "<group>"; };
+		CE0E0A030000000000000002 /* BrowserDevToolsRuntimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BrowserDevToolsRuntimeService.swift; sourceTree = "<group>"; };
+		CE0E0A040000000000000002 /* BrowserDevToolsRuntimeServiceDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BrowserDevToolsRuntimeServiceDependencies.swift; sourceTree = "<group>"; };
 		C42660030000000000000002 /* BrowserDownloadDelegate+PDFPreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/BrowserDownloadDelegate+PDFPreviewData.swift"; sourceTree = "<group>"; };
 		C59240010000000000000002 /* BrowserDownloadFilenameResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserDownloadFilenameResolver.swift; sourceTree = "<group>"; };
 		C59240010000000000000004 /* BrowserDownloadFilenameResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserDownloadFilenameResolverTests.swift; sourceTree = "<group>"; };
@@ -3753,6 +3765,11 @@
 				CE0E08030000000000000002 /* BmuxAppRuntimeProcessKind.swift */,
 				CE0E08040000000000000002 /* BmuxAppRuntimeConfiguration.swift */,
 				CE0E08050000000000000002 /* BmuxAppRuntimeServices.swift */,
+				CE0E0A050000000000000002 /* BrowserDevToolsRuntimeEventHandlers.swift */,
+				CE0E0A010000000000000002 /* BrowserDevToolsRuntimeLifecycleState.swift */,
+				CE0E0A020000000000000002 /* BrowserDevToolsRuntimeOperationResult.swift */,
+				CE0E0A030000000000000002 /* BrowserDevToolsRuntimeService.swift */,
+				CE0E0A040000000000000002 /* BrowserDevToolsRuntimeServiceDependencies.swift */,
 				CE0E09010000000000000002 /* MobileHostRuntimeLifecycleState.swift */,
 				CE0E09020000000000000002 /* MobileHostRuntimeOperationResult.swift */,
 				CE0E09030000000000000002 /* MobileHostRuntimeService.swift */,
@@ -4816,9 +4833,10 @@
 				C7A51D100000000000000001 /* AgentChatSessionRegistryObservationReviewRegressionTests.swift */,
 				C7A51D000000000000000001 /* AgentChatSessionRegistryObservationTests.swift */,
 					CE0B00050000000000000002 /* SessionProvenanceTests.swift */,
-					CE0E08010000000000000002 /* AppRuntimeCompositionTests.swift */,
-					CE0E09050000000000000002 /* MobileHostRuntimeCompositionTests.swift */,
-					CE0E06200000000000000002 /* PromptSessionLinkProductionLifecycleTests.swift */,
+						CE0E08010000000000000002 /* AppRuntimeCompositionTests.swift */,
+						CE0E09050000000000000002 /* MobileHostRuntimeCompositionTests.swift */,
+						CE0E0A060000000000000002 /* BrowserDevToolsRuntimeCompositionTests.swift */,
+						CE0E06200000000000000002 /* PromptSessionLinkProductionLifecycleTests.swift */,
 					CE0E06100000000000000002 /* PromptSessionLinkProjectionTests.swift */,
 				D3610B010000000000000002 /* AgentSessionAutoResumeSettingsTests.swift */,
 				D3610B020000000000000002 /* AgentSessionAutoResumeSwiftTests.swift */,
@@ -5839,10 +5857,10 @@
 				A5001001 /* bmuxApp.swift in Sources */,
 				CE0E08020000000000000001 /* BmuxAppRuntimeCapability.swift in Sources */,
 				CE0E03110000000000000001 /* BmuxAppRuntimeComposition.swift in Sources */,
-				CE0E08040000000000000001 /* BmuxAppRuntimeConfiguration.swift in Sources */,
-				CE0E08030000000000000001 /* BmuxAppRuntimeProcessKind.swift in Sources */,
-				CE0E08050000000000000001 /* BmuxAppRuntimeServices.swift in Sources */,
-				A72C9F4179B54DF38E99A021 /* BmuxCLIPathInstaller.swift in Sources */,
+					CE0E08040000000000000001 /* BmuxAppRuntimeConfiguration.swift in Sources */,
+					CE0E08030000000000000001 /* BmuxAppRuntimeProcessKind.swift in Sources */,
+					CE0E08050000000000000001 /* BmuxAppRuntimeServices.swift in Sources */,
+					A72C9F4179B54DF38E99A021 /* BmuxCLIPathInstaller.swift in Sources */,
 				A5001650 /* BmuxConfig.swift in Sources */,
 				A5FB1209 /* BmuxConfigActionDefinition.swift in Sources */,
 				A5FB1201 /* BmuxConfigActionSaver.swift in Sources */,
@@ -5899,6 +5917,11 @@
 				D7032A020000000000000001 /* BrowserClientCertificateAuthenticationController.swift in Sources */,
 				D7032A050000000000000001 /* BrowserClientCertificateCredentialPicker.swift in Sources */,
 				B1F0C0050000000000000001 /* BrowserDeveloperToolsDockControlNormalizer.swift in Sources */,
+					CE0E0A050000000000000001 /* BrowserDevToolsRuntimeEventHandlers.swift in Sources */,
+					CE0E0A010000000000000001 /* BrowserDevToolsRuntimeLifecycleState.swift in Sources */,
+					CE0E0A020000000000000001 /* BrowserDevToolsRuntimeOperationResult.swift in Sources */,
+					CE0E0A030000000000000001 /* BrowserDevToolsRuntimeService.swift in Sources */,
+					CE0E0A040000000000000001 /* BrowserDevToolsRuntimeServiceDependencies.swift in Sources */,
 				C42660030000000000000001 /* BrowserDownloadDelegate+PDFPreviewData.swift in Sources */,
 				C59240010000000000000001 /* BrowserDownloadFilenameResolver.swift in Sources */,
 				C67540020000000000000001 /* BrowserDownloadHTTPStatusDecision.swift in Sources */,
@@ -7067,6 +7090,7 @@
 					B1F0C0060000000000000001 /* BrowserDeveloperToolsDockControlNormalizerTests.swift in Sources */,
 				B1F0C0070000000000000001 /* BrowserDeveloperToolsLifecycleTests.swift in Sources */,
 					B1F0D1030000000000000001 /* BrowserDeveloperToolsTestSupport.swift in Sources */,
+					CE0E0A060000000000000001 /* BrowserDevToolsRuntimeCompositionTests.swift in Sources */,
 				C59240010000000000000003 /* BrowserDownloadFilenameResolverTests.swift in Sources */,
 				A5008381 /* BrowserFindJavaScriptTests.swift in Sources */,
 				B6585001B6585001B6585001 /* BrowserHiddenWebViewDiscardMemoryPressureTests.swift in Sources */,
@@ -7092,8 +7116,8 @@
 				C0DE35530000000000000101 /* BundledCLILinkageTests.swift in Sources */,
 				C4A570030000000000000001 /* CanvasShortcutContextTests.swift in Sources */,
 				F3000000A1B2C3D4E5F60718 /* CJKIMEInputTests.swift in Sources */,
-				D3571002A1B2C3D4E5F60718 /* CJKIMEMarkedSelectionTests.swift in Sources */,
-				A5D41232A1B2C3D4E5F60718 /* ClaudeBackgroundWorkNotifyTests.swift in Sources */,
+					D3571002A1B2C3D4E5F60718 /* CJKIMEMarkedSelectionTests.swift in Sources */,
+					A5D41232A1B2C3D4E5F60718 /* ClaudeBackgroundWorkNotifyTests.swift in Sources */,
 				C13519000000000000000007 /* ClaudeConfigDirectoryPathTests.swift in Sources */,
 				C7A534000000000000000002 /* ClaudeHookFeedTelemetrySwiftTests.swift in Sources */,
 				A5D41220A1B2C3D4E5F60718 /* ClaudeHookSurfaceResolutionSwiftTests.swift in Sources */,

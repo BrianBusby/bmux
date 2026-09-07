@@ -174,3 +174,7 @@ it does not imply remote hosting or a multi-user database.
 The captured backlog is summarized in
 `docs/process-integrity/remaining-patch-audit-backlog.md`; generated Project
 Truth status remains canonical.
+
+## Browser/DevTools Follow-On Slice
+
+The follow-on slice `app_runtime_browser_devtools_lifecycle_migration` is documented in `docs/process-integrity/browser-devtools-lifecycle-audit.md`. It extends the same composition model to app-scoped Browser/DevTools services: system proxy observation, browser address/focus observers, app-level inspector teardown, prewarmed WebView drain, and browser profile save drain. Per-panel WebViews, profiles, navigation, popups, and panel-local DevTools sessions remain owned by their window or panel lifetimes.

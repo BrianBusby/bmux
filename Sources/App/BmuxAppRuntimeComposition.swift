@@ -8,18 +8,21 @@ struct BmuxAppRuntimeComposition {
     private let keychainStore: KeychainSecretStore
     private let runtimeConfiguration: BmuxAppRuntimeConfiguration
     private let mobileHostRuntimeDependencies: MobileHostRuntimeServiceDependencies?
+    private let browserDevToolsRuntimeDependencies: BrowserDevToolsRuntimeServiceDependencies?
 
     init(
         configFileURL: URL,
         secretBaseDirectory: URL,
         bundleIdentifier: String?,
         runtimeConfiguration: BmuxAppRuntimeConfiguration,
-        mobileHostRuntimeDependencies: MobileHostRuntimeServiceDependencies? = nil
+        mobileHostRuntimeDependencies: MobileHostRuntimeServiceDependencies? = nil,
+        browserDevToolsRuntimeDependencies: BrowserDevToolsRuntimeServiceDependencies? = nil
     ) {
         self.jsonConfigStore = JSONConfigStore(fileURL: configFileURL)
         self.secretStore = SecretFileStore(baseDirectory: secretBaseDirectory)
         self.runtimeConfiguration = runtimeConfiguration
         self.mobileHostRuntimeDependencies = mobileHostRuntimeDependencies
+        self.browserDevToolsRuntimeDependencies = browserDevToolsRuntimeDependencies
         self.keychainStore = KeychainSecretStore(
             service: KeychainSecretStore.serviceName(bundleIdentifier: bundleIdentifier)
         )
@@ -83,10 +86,15 @@ struct BmuxAppRuntimeComposition {
             isCapabilityEnabled: runtimeConfiguration.enables(.mobileHostAndPresence),
             dependencies: mobileHostRuntimeDependencies ?? .production()
         )
+        let browserDevToolsRuntimeService = BrowserDevToolsRuntimeService(
+            isCapabilityEnabled: runtimeConfiguration.enables(.browserAndDevTools),
+            dependencies: browserDevToolsRuntimeDependencies ?? .production()
+        )
         return BmuxAppRuntimeServices(
             configuration: runtimeConfiguration,
             workProvenanceRuntime: workProvenanceRuntime,
-            mobileHostRuntimeService: mobileHostRuntimeService
+            mobileHostRuntimeService: mobileHostRuntimeService,
+            browserDevToolsRuntimeService: browserDevToolsRuntimeService
         )
     }
 }

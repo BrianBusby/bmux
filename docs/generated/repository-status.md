@@ -13,8 +13,10 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: none selected
-- Repository state: none selected
+- Active slice: Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`)
+- Slice state: open
+- Owner: bmux
+- Repository state: active
 
 ## Release
 
@@ -26,7 +28,7 @@ Repository: `BrianBusby/bmux`
 | Capability | State |
 | --- | --- |
 | App Host Test Runtime Isolation | under observation |
-| App Runtime Browser Devtools Lifecycle | planned |
+| App Runtime Browser Devtools Lifecycle | under observation |
 | App Runtime Composition Boundary | under observation |
 | App Runtime Menu Bar Presentation Lifecycle | planned |
 | App Runtime Notification Push Lifecycle | planned |

@@ -586,7 +586,7 @@ roadmap:
       kind: slice
       title: Browser and DevTools Lifecycle Migration
       parent: app_runtime_composition_migration
-      status: planned
+      status: active
       owner: bmux
       repositories:
         - bmux
@@ -598,7 +598,7 @@ roadmap:
           - app_runtime_composition
           - browser_lifecycle
           - devtools_lifecycle
-      capability_maturity: ready
+      capability_maturity: active
       depends_on:
         - app_runtime_service_lifecycle_migration
       enables:
@@ -636,9 +636,12 @@ roadmap:
           - app_host_test_runtime_isolation
         worktree_required: true
       execution:
-        assignment: selected_next
+        assignment: current
         assigned_to: bmux
-      delivery_status: proposed
+        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-browser-devtools-lifecycle
+        active_branch: app-runtime-browser-devtools-lifecycle
+        active_agent: codex
+      delivery_status: open
       acceptance_status: proposed
       rationale: Browser and DevTools lifecycle ownership is the next safest and highest-value Process Integrity slice because the current source still starts BrowserSystemProxyWatcher and browser/inspector teardown paths through AppDelegate, window, and panel entrypoints while the service family remains cohesive enough for one explicit runtime owner.
       acceptance:
