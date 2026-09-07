@@ -24,6 +24,9 @@ final class DeviceRegistryClient {
     private let session: URLSession = .shared
     private var auth: AuthCoordinator?
     private var observeTask: Task<Void, Never>?
+    private var registrationTail: Task<Void, Never>?
+    private var registrationQueueSequence: UInt64 = 0
+    private var registrationGeneration: UInt64 = 0
     /// The scope (team + tag + routes) most recently registered, used to skip
     /// redundant POSTs. Keyed on the full scope rather than routes alone so an
     /// account/team switch with unchanged routes still re-registers in the newly
@@ -51,6 +54,9 @@ final class DeviceRegistryClient {
     /// from the mobile-host runtime owner.
     func start(auth: AuthCoordinator) {
         self.auth = auth
+        if observeTask == nil {
+            registrationGeneration &+= 1
+        }
         startObserving()
     }
 
@@ -62,15 +68,13 @@ final class DeviceRegistryClient {
         observeTask = nil
         auth = nil
         lastRegistration = nil
+        registrationGeneration &+= 1
         guard let finalRoutes, let finalAuth else { return }
-        Task { @MainActor [weak self] in
-            await self?.registerIfRoutesChanged(
-                routes: finalRoutes,
-                auth: finalAuth,
-                previousRegistration: previousRegistration,
-                recordsSuccess: false
-            )
-        }
+        enqueueFinalRegistration(
+            routes: finalRoutes,
+            auth: finalAuth,
+            previousRegistration: previousRegistration
+        )
     }
 
     /// Whether a registration with `current` scope differs from what was last
@@ -99,27 +103,67 @@ final class DeviceRegistryClient {
     }
 
     private func startObserving() {
-        observeTask?.cancel()
+        guard observeTask == nil else { return }
         // Registration is currently driven only by host-route changes. The dedup
         // key includes the team, so a team switch *does* re-register once the
         // next status tick arrives, but a mid-session team switch with otherwise
         // unchanged routes is not registered in the new team until then. Known
         // limitation; an explicit auth/team-change trigger is a follow-up.
+        let generation = registrationGeneration
         observeTask = Task { @MainActor [weak self] in
             for await status in MobileHostService.shared.statusUpdates() {
                 if Task.isCancelled { break }
-                await self?.registerIfRoutesChanged(routes: status.routes)
+                self?.enqueueCurrentRegistration(routes: status.routes, generation: generation)
             }
         }
     }
 
-    private func registerIfRoutesChanged(routes: [CmxAttachRoute]) async {
+    private func enqueueCurrentRegistration(routes: [CmxAttachRoute], generation: UInt64) {
+        enqueueRegistration { [weak self, routes, generation] in
+            await self?.registerIfRoutesChanged(routes: routes, generation: generation)
+        }
+    }
+
+    private func enqueueFinalRegistration(
+        routes: [CmxAttachRoute],
+        auth: AuthCoordinator,
+        previousRegistration: Registration?
+    ) {
+        enqueueRegistration { [weak self, routes, auth, previousRegistration] in
+            await self?.registerIfRoutesChanged(
+                routes: routes,
+                auth: auth,
+                previousRegistration: previousRegistration,
+                recordsSuccess: false,
+                forcesRegistration: true,
+                generation: nil
+            )
+        }
+    }
+
+    private func enqueueRegistration(_ operation: @escaping @MainActor @Sendable () async -> Void) {
+        let previous = registrationTail
+        registrationQueueSequence &+= 1
+        let sequence = registrationQueueSequence
+        registrationTail = Task { @MainActor [weak self] in
+            await previous?.value
+            if Task.isCancelled { return }
+            await operation()
+            if self?.registrationQueueSequence == sequence {
+                self?.registrationTail = nil
+            }
+        }
+    }
+
+    private func registerIfRoutesChanged(routes: [CmxAttachRoute], generation: UInt64) async {
         guard let auth else { return }
         await registerIfRoutesChanged(
             routes: routes,
             auth: auth,
             previousRegistration: lastRegistration,
-            recordsSuccess: true
+            recordsSuccess: true,
+            forcesRegistration: false,
+            generation: generation
         )
     }
 
@@ -127,7 +171,9 @@ final class DeviceRegistryClient {
         routes: [CmxAttachRoute],
         auth: AuthCoordinator,
         previousRegistration: Registration?,
-        recordsSuccess: Bool
+        recordsSuccess: Bool,
+        forcesRegistration: Bool,
+        generation: UInt64?
     ) async {
         // Await tokens FIRST: this both gates on "signed in" and waits for launch
         // auth bootstrap. `resolvedTeamID` is derived from `availableTeams`, which
@@ -148,7 +194,9 @@ final class DeviceRegistryClient {
         let teamID = auth.resolvedTeamID
         let tag = Self.buildTag()
         let registration = Registration(teamID: teamID, tag: tag, routes: routes)
-        guard Self.shouldReRegister(previous: previousRegistration, current: registration) else { return }
+        guard forcesRegistration || Self.shouldReRegister(previous: previousRegistration, current: registration) else {
+            return
+        }
 
         guard var comps = URLComponents(url: AuthEnvironment.vmAPIBaseURL, resolvingAgainstBaseURL: false) else {
             return
@@ -183,7 +231,7 @@ final class DeviceRegistryClient {
                 if (200...299).contains(http.statusCode) {
                     // Only remember the scope once the server accepted it, so a
                     // transient failure retries on the next status tick.
-                    if recordsSuccess {
+                    if recordsSuccess, generation == registrationGeneration {
                         lastRegistration = registration
                     }
                 } else {
@@ -203,4 +251,25 @@ final class DeviceRegistryClient {
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return (tag?.isEmpty == false) ? tag! : "default"
     }
+
+    #if DEBUG
+    func debugResetForTesting() {
+        observeTask?.cancel()
+        observeTask = nil
+        auth = nil
+        lastRegistration = nil
+        registrationTail?.cancel()
+        registrationTail = nil
+        registrationQueueSequence &+= 1
+        registrationGeneration = 0
+    }
+
+    func debugEnqueueRegistrationForTesting(_ operation: @escaping @MainActor @Sendable () async -> Void) {
+        enqueueRegistration(operation)
+    }
+
+    func debugWaitForRegistrationQueueForTesting() async {
+        await registrationTail?.value
+    }
+    #endif
 }

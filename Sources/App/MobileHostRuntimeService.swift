@@ -12,6 +12,7 @@ final class MobileHostRuntimeService {
     private var auth: AuthCoordinator?
     private var didStart = false
     private var didConfigureHost = false
+    private var didStartPresence = false
     private var didStartRoutePublication = false
     private var didStartRenderObserver = false
     private var latestPublicationResult: MobileHostRuntimeOperationResult = .ready
@@ -77,11 +78,7 @@ final class MobileHostRuntimeService {
         if isHostEnabled {
             reconcileEnabledSettingWork(for: status, syncsPresenceSettings: true)
         } else {
-            stopEnabledSettingWork(
-                sendsPresenceGoodbye: true,
-                finalRoutes: status.routes,
-                resetsHostConfiguration: true
-            )
+            stopHostSideWorkKeepingExplicitPresenceIfNeeded(finalRoutes: status.routes)
             latestPublicationResult = .disabled(reason: "disabled by settings")
         }
         updateLifecycleState(from: status)
@@ -100,15 +97,14 @@ final class MobileHostRuntimeService {
             return
         }
 
+        latestPublicationResult = .ready
         startRenderObserverIfNeeded()
         if let auth {
             configureHostIfNeeded()
+            startPresenceIfNeeded(auth: auth)
             startRoutePublicationIfNeeded(auth: auth)
             if syncsPresenceSettings {
-                latestPublicationResult = mergePublicationResults(
-                    latestPublicationResult,
-                    dependencies.syncPresenceToSettings()
-                )
+                syncPresenceToSettings()
             }
         } else {
             latestPublicationResult = .degraded(reason: "waiting for authentication")
@@ -146,6 +142,7 @@ final class MobileHostRuntimeService {
             || settingsObserver != nil
             || hostStatusObservationTask != nil
             || !workspaceListObservers.isEmpty
+            || didStartPresence
             || didStartRoutePublication
             || didStartRenderObserver
     }
@@ -166,13 +163,43 @@ final class MobileHostRuntimeService {
 
     private func startRoutePublicationIfNeeded(auth: AuthCoordinator) {
         if !didStartRoutePublication {
-            latestPublicationResult = startRoutePublication(auth: auth)
+            latestPublicationResult = mergePublicationResults(
+                latestPublicationResult,
+                startRoutePublication(auth: auth)
+            )
             didStartRoutePublication = true
         }
     }
 
+    private func startPresenceIfNeeded(auth: AuthCoordinator) {
+        guard dependencies.isPresenceEnabled() else {
+            stopPresenceIfNeeded(sendsGoodbye: true)
+            latestPublicationResult = mergePublicationResults(
+                latestPublicationResult,
+                .disabled(reason: "presence disabled by settings")
+            )
+            return
+        }
+
+        if !didStartPresence {
+            latestPublicationResult = mergePublicationResults(
+                latestPublicationResult,
+                dependencies.startPresence(auth)
+            )
+            didStartPresence = true
+        }
+    }
+
+    private func syncPresenceToSettings() {
+        guard didStartPresence else { return }
+        latestPublicationResult = mergePublicationResults(
+            latestPublicationResult,
+            dependencies.syncPresenceToSettings()
+        )
+    }
+
     private func startRoutePublication(auth: AuthCoordinator) -> MobileHostRuntimeOperationResult {
-        var result = dependencies.startPresence(auth)
+        var result = MobileHostRuntimeOperationResult.ready
         result = mergePublicationResults(result, dependencies.startDeviceRegistry(auth))
         result = mergePublicationResults(result, dependencies.startPairedMacBackup(auth))
         return result
@@ -190,12 +217,37 @@ final class MobileHostRuntimeService {
         if didStartRoutePublication {
             dependencies.stopPairedMacBackup()
             dependencies.stopDeviceRegistry(finalRoutes)
-            dependencies.stopPresence(sendsPresenceGoodbye)
         }
         didStartRoutePublication = false
+        stopPresenceIfNeeded(sendsGoodbye: sendsPresenceGoodbye)
         if resetsHostConfiguration {
             didConfigureHost = false
         }
+    }
+
+    private func stopHostSideWorkKeepingExplicitPresenceIfNeeded(finalRoutes: [CmxAttachRoute]) {
+        if didStartRenderObserver {
+            dependencies.stopRenderObserver()
+            didStartRenderObserver = false
+        }
+        if didStartRoutePublication {
+            dependencies.stopPairedMacBackup()
+            dependencies.stopDeviceRegistry(finalRoutes)
+            didStartRoutePublication = false
+        }
+        if let auth, dependencies.isPresenceEnabled() {
+            startPresenceIfNeeded(auth: auth)
+            syncPresenceToSettings()
+        } else {
+            stopPresenceIfNeeded(sendsGoodbye: true)
+        }
+        didConfigureHost = false
+    }
+
+    private func stopPresenceIfNeeded(sendsGoodbye: Bool) {
+        guard didStartPresence else { return }
+        dependencies.stopPresence(sendsGoodbye)
+        didStartPresence = false
     }
 
     private func installSettingsObserver() {

@@ -5,6 +5,7 @@ import Foundation
 @MainActor
 struct MobileHostRuntimeServiceDependencies {
     var isHostEnabled: () -> Bool
+    var isPresenceEnabled: () -> Bool
     var configureHost: (AuthCoordinator) -> Void
     var syncHostToSettings: () -> MobileHostServiceStatus
     var stopHost: () -> MobileHostServiceStatus
@@ -24,6 +25,7 @@ struct MobileHostRuntimeServiceDependencies {
     static func production() -> MobileHostRuntimeServiceDependencies {
         MobileHostRuntimeServiceDependencies(
             isHostEnabled: { MobileHostService.isListeningEnabled },
+            isPresenceEnabled: { PresenceSettings.isEnabled() },
             configureHost: { auth in MobileHostService.shared.configure(auth: auth) },
             syncHostToSettings: {
                 MobileHostService.shared.syncToSettings()

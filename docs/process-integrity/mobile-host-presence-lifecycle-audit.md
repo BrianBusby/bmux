@@ -226,14 +226,18 @@ publication state, but must not mark a healthy local listener as failed.
 Shutdown must cancel settings observation, route observation, heartbeat loops,
 workspace-list observers, render observers, path monitoring, listener sockets,
 active connections, event subscriptions, and presence goodbye work owned by this
-capability. Repeated start, sync, and stop calls must be idempotent.
+capability. Device-registry route clearing is serialized with any restarted route
+publication so a stale empty or non-empty update cannot overtake the current
+lifecycle. Repeated start, sync, and stop calls must be idempotent.
 
 Settings changes now reconcile through the runtime owner. Setting disable calls
 the host service's sync path so the listener/path monitor/connections stop, then
-stops presence, registry, paired-Mac backup, and render observation. Setting
-re-enable starts exactly one clean side-work lifecycle. Port-change rebinds
-remain domain behavior inside `MobileHostService.syncToSettings()`; the runtime
-continues to own who invokes that reconciliation path.
+stops registry, paired-Mac backup, and render observation. Presence also stops
+unless the presence setting is explicitly enabled, in which case the runtime keeps
+the heartbeat lifecycle alive with the host's current route set. Setting re-enable
+starts exactly one clean side-work lifecycle. Port-change rebinds remain domain
+behavior inside `MobileHostService.syncToSettings()`; the runtime continues to
+own who invokes that reconciliation path.
 
 ## Deferred Services
 

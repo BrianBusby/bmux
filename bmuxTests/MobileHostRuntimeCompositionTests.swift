@@ -30,11 +30,7 @@ struct MobileHostRuntimeCompositionTests {
             harness: harness
         )
 
-        services.startMobileHostAndPresence(
-            auth: Self.authCoordinator(named: "default-disabled"),
-            tabManager: TabManager(),
-            notificationStore: nil
-        )
+        Self.start(services, named: "default-disabled", tabManager: TabManager())
 
         #expect(!configuration.enables(BmuxAppRuntimeCapability.mobileHostAndPresence))
         #expect(services.mobileHostLifecycleState == MobileHostRuntimeLifecycleState.disabled(reason: "disabled by composition"))
@@ -69,16 +65,8 @@ struct MobileHostRuntimeCompositionTests {
         let services = Self.runtimeServices(homeDirectory: homeDirectory, harness: harness)
         let tabManager = TabManager()
 
-        services.startMobileHostAndPresence(
-            auth: Self.authCoordinator(named: "opt-in"),
-            tabManager: tabManager,
-            notificationStore: nil
-        )
-        services.startMobileHostAndPresence(
-            auth: Self.authCoordinator(named: "opt-in-second"),
-            tabManager: tabManager,
-            notificationStore: nil
-        )
+        Self.start(services, named: "opt-in", tabManager: tabManager)
+        Self.start(services, named: "opt-in-second", tabManager: tabManager)
 
         #expect(services.mobileHostLifecycleState == MobileHostRuntimeLifecycleState.ready)
         #expect(services.startCount(for: BmuxAppRuntimeCapability.mobileHostAndPresence) == 1)
@@ -166,11 +154,7 @@ struct MobileHostRuntimeCompositionTests {
         ))
         let services = Self.runtimeServices(homeDirectory: homeDirectory, harness: harness)
 
-        services.startMobileHostAndPresence(
-            auth: Self.authCoordinator(named: "settings-reenable"),
-            tabManager: TabManager(),
-            notificationStore: nil
-        )
+        Self.start(services, named: "settings-reenable", tabManager: TabManager())
         harness.isHostEnabled = false
         harness.status = Self.status(isRunning: false, port: nil)
         services.syncMobileHostAndPresenceToSettings()
@@ -213,6 +197,44 @@ struct MobileHostRuntimeCompositionTests {
     }
 
     @Test
+    func explicitPresenceOptInSurvivesHostDisable() throws {
+        let homeDirectory = try Self.temporaryDirectory(named: "presence-explicit-host-disabled")
+        let harness = MobileHostRuntimeTestHarness(status: Self.status(
+            isRunning: true,
+            routes: [try Self.route(id: "initial")]
+        ))
+        let services = Self.runtimeServices(homeDirectory: homeDirectory, harness: harness)
+
+        Self.start(services, named: "presence-explicit-host-disabled")
+        harness.isHostEnabled = false
+        harness.isPresenceEnabled = true
+        harness.status = Self.status(isRunning: false, port: nil)
+        harness.events.removeAll()
+
+        services.syncMobileHostAndPresenceToSettings()
+
+        #expect(services.mobileHostLifecycleState == MobileHostRuntimeLifecycleState.disabled(reason: "disabled by settings"))
+        #expect(harness.stopRenderObserverCount == 1)
+        #expect(harness.stopDeviceRegistryCount == 1)
+        #expect(harness.stopPairedMacBackupCount == 1)
+        #expect(harness.stopPresenceCount == 0)
+        #expect(harness.syncPresenceCount == 2)
+        #expect(harness.events == [
+            "syncHostToSettings",
+            "stopRenderObserver",
+            "stopPairedMacBackup",
+            "stopDeviceRegistry(0)",
+            "syncPresenceToSettings",
+        ])
+
+        services.stop()
+
+        #expect(harness.stopPresenceCount == 1)
+        #expect(harness.stopPresenceGoodbyeValues == [false])
+        #expect(!services.mobileHostRuntimeService.hasActiveLifecycleWork)
+    }
+
+    @Test
     func authenticationAvailabilityStartsPublicationWithoutDuplicatingListenerLifecycle() throws {
         let homeDirectory = try Self.temporaryDirectory(named: "auth-late")
         let harness = MobileHostRuntimeTestHarness()
@@ -230,16 +252,8 @@ struct MobileHostRuntimeCompositionTests {
         #expect(harness.startRenderObserverCount == 1)
 
         harness.events.removeAll()
-        services.startMobileHostAndPresence(
-            auth: Self.authCoordinator(named: "auth-late"),
-            tabManager: Optional<TabManager>.none,
-            notificationStore: Optional<TerminalNotificationStore>.none
-        )
-        services.startMobileHostAndPresence(
-            auth: Self.authCoordinator(named: "auth-late-second"),
-            tabManager: Optional<TabManager>.none,
-            notificationStore: Optional<TerminalNotificationStore>.none
-        )
+        Self.start(services, named: "auth-late")
+        Self.start(services, named: "auth-late-second")
 
         #expect(services.mobileHostLifecycleState == MobileHostRuntimeLifecycleState.ready)
         #expect(services.startCount(for: BmuxAppRuntimeCapability.mobileHostAndPresence) == 1)
@@ -274,11 +288,7 @@ struct MobileHostRuntimeCompositionTests {
             harness: harness
         )
 
-        services.startMobileHostAndPresence(
-            auth: Self.authCoordinator(named: "production-path"),
-            tabManager: TabManager(),
-            notificationStore: nil
-        )
+        Self.start(services, named: "production-path", tabManager: TabManager())
 
         #expect(configuration.enables(BmuxAppRuntimeCapability.mobileHostAndPresence))
         #expect(services.mobileHostLifecycleState == MobileHostRuntimeLifecycleState.ready)
@@ -307,12 +317,16 @@ struct MobileHostRuntimeCompositionTests {
     ) throws -> (services: BmuxAppRuntimeServices, harness: MobileHostRuntimeTestHarness) {
         let homeDirectory = try temporaryDirectory(named: name)
         let services = runtimeServices(homeDirectory: homeDirectory, harness: harness)
-        services.startMobileHostAndPresence(
-            auth: authCoordinator(named: name),
-            tabManager: Optional<TabManager>.none,
-            notificationStore: Optional<TerminalNotificationStore>.none
-        )
+        start(services, named: name)
         return (services, harness)
+    }
+
+    private static func start(
+        _ services: BmuxAppRuntimeServices,
+        named name: String,
+        tabManager: TabManager? = nil
+    ) {
+        services.startMobileHostAndPresence(auth: authCoordinator(named: name), tabManager: tabManager, notificationStore: nil)
     }
 
     private static func runtimeServices(
@@ -374,6 +388,7 @@ struct MobileHostRuntimeCompositionTests {
     @MainActor
     private final class MobileHostRuntimeTestHarness {
         var isHostEnabled: Bool
+        var isPresenceEnabled: Bool?
         var status: MobileHostServiceStatus
         var startPresenceResult: MobileHostRuntimeOperationResult
         var configureHostCount = 0
@@ -410,6 +425,7 @@ struct MobileHostRuntimeCompositionTests {
         func dependencies() -> MobileHostRuntimeServiceDependencies {
             MobileHostRuntimeServiceDependencies(
                 isHostEnabled: { self.isHostEnabled },
+                isPresenceEnabled: { self.isPresenceEnabled ?? self.isHostEnabled },
                 configureHost: { _ in
                     self.configureHostCount += 1
                     self.events.append("configureHost")

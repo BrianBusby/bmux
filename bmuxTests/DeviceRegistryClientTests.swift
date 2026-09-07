@@ -13,7 +13,8 @@ import BMUXMobileCore
 /// POST when only the connection set changed, register the off-state once when
 /// routes clear, and re-register after an account/team switch even when the
 /// routes are unchanged.
-@Suite struct DeviceRegistryClientTests {
+@MainActor
+@Suite(.serialized) struct DeviceRegistryClientTests {
     private func route(host: String, port: Int, id: String = "r") throws -> CmxAttachRoute {
         try CmxAttachRoute(
             id: id,
@@ -74,5 +75,47 @@ import BMUXMobileCore
         let previous = reg(team: "team-a", routes: [])
         let current = reg(team: "team-a", routes: [])
         #expect(DeviceRegistryClient.shouldReRegister(previous: previous, current: current) == false)
+    }
+
+    @Test func registrationQueueSerializesFinalClearBeforeRestartPublication() async {
+        let client = DeviceRegistryClient.shared
+        client.debugResetForTesting()
+        defer { client.debugResetForTesting() }
+
+        var events: [String] = []
+        var startedContinuation: AsyncStream<Void>.Continuation?
+        let started = AsyncStream<Void> { continuation in
+            startedContinuation = continuation
+        }
+        var releaseFinal: CheckedContinuation<Void, Never>?
+
+        client.debugEnqueueRegistrationForTesting {
+            events.append("final-empty-start")
+            startedContinuation?.yield(())
+            await withCheckedContinuation { continuation in
+                releaseFinal = continuation
+            }
+            events.append("final-empty-end")
+        }
+
+        var startedIterator = started.makeAsyncIterator()
+        _ = await startedIterator.next()
+
+        client.debugEnqueueRegistrationForTesting {
+            events.append("restart-routes")
+        }
+
+        await Task.yield()
+        #expect(events == ["final-empty-start"])
+
+        releaseFinal?.resume()
+        startedContinuation?.finish()
+        await client.debugWaitForRegistrationQueueForTesting()
+
+        #expect(events == [
+            "final-empty-start",
+            "final-empty-end",
+            "restart-routes",
+        ])
     }
 }
