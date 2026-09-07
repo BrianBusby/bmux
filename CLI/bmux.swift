@@ -31009,7 +31009,14 @@ export default BMUXSessionRestore;
                     break
                 }
             }
+            var didSendPromptSubmitFeedTelemetry = false
+            func sendPromptSubmitFeedTelemetry() {
+                guard !didSendPromptSubmitFeedTelemetry else { return }
+                didSendPromptSubmitFeedTelemetry = true
+                sendAgentFeedTelemetryUnlessSuppressed(workspaceId: workspaceId, surfaceId: surfaceId)
+            }
             func stopStaleCodexPromptSubmit(restoreVisibleState: Bool = false) {
+                sendPromptSubmitFeedTelemetry()
                 if restoreVisibleState {
                     restoreCodexPromptVisibleStateFromStore()
                 }
@@ -31096,7 +31103,7 @@ export default BMUXSessionRestore;
                 stopStaleCodexPromptSubmit()
                 return
             }
-            sendAgentFeedTelemetryUnlessSuppressed(workspaceId: workspaceId, surfaceId: surfaceId)
+            sendPromptSubmitFeedTelemetry()
             if !sessionId.isEmpty, !suppressVisibleMutations {
                 let acceptedRunningUpdate: Bool
                 if def.name == "codex" {
