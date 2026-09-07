@@ -1,3 +1,4 @@
+import BMUXMobileCore
 import BmuxAuthRuntime
 import Foundation
 
@@ -70,14 +71,17 @@ final class MobileHostRuntimeService {
         let isHostEnabled = dependencies.isHostEnabled()
         if isHostEnabled {
             configureHostIfNeeded()
-        } else {
-            stopEnabledSettingWork(sendsPresenceGoodbye: true, resetsHostConfiguration: true)
         }
         let status = dependencies.syncHostToSettings()
         latestHostStatus = status
         if isHostEnabled {
             reconcileEnabledSettingWork(for: status, syncsPresenceSettings: true)
         } else {
+            stopEnabledSettingWork(
+                sendsPresenceGoodbye: true,
+                finalRoutes: status.routes,
+                resetsHostConfiguration: true
+            )
             latestPublicationResult = .disabled(reason: "disabled by settings")
         }
         updateLifecycleState(from: status)
@@ -88,7 +92,11 @@ final class MobileHostRuntimeService {
         syncsPresenceSettings: Bool
     ) {
         guard status.isRunning else {
-            stopEnabledSettingWork(sendsPresenceGoodbye: false, resetsHostConfiguration: false)
+            stopEnabledSettingWork(
+                sendsPresenceGoodbye: false,
+                finalRoutes: status.routes,
+                resetsHostConfiguration: false
+            )
             return
         }
 
@@ -170,14 +178,18 @@ final class MobileHostRuntimeService {
         return result
     }
 
-    private func stopEnabledSettingWork(sendsPresenceGoodbye: Bool, resetsHostConfiguration: Bool) {
+    private func stopEnabledSettingWork(
+        sendsPresenceGoodbye: Bool,
+        finalRoutes: [CmxAttachRoute],
+        resetsHostConfiguration: Bool
+    ) {
         if didStartRenderObserver {
             dependencies.stopRenderObserver()
             didStartRenderObserver = false
         }
         if didStartRoutePublication {
             dependencies.stopPairedMacBackup()
-            dependencies.stopDeviceRegistry()
+            dependencies.stopDeviceRegistry(finalRoutes)
             dependencies.stopPresence(sendsPresenceGoodbye)
         }
         didStartRoutePublication = false
@@ -259,8 +271,12 @@ final class MobileHostRuntimeService {
         hostStatusObservationTask?.cancel()
         hostStatusObservationTask = nil
         workspaceListObservers.removeAll()
-        stopEnabledSettingWork(sendsPresenceGoodbye: sendsPresenceGoodbye, resetsHostConfiguration: true)
         latestHostStatus = dependencies.stopHost()
+        stopEnabledSettingWork(
+            sendsPresenceGoodbye: sendsPresenceGoodbye,
+            finalRoutes: latestHostStatus?.routes ?? [],
+            resetsHostConfiguration: true
+        )
         auth = nil
         didStart = false
         latestPublicationResult = .ready

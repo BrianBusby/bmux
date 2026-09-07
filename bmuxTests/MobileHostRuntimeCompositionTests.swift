@@ -1,3 +1,4 @@
+import BMUXMobileCore
 import BmuxAuthRuntime
 import BmuxSettings
 import Foundation
@@ -159,7 +160,10 @@ struct MobileHostRuntimeCompositionTests {
     @Test
     func settingsDisableAndReEnableOwnSideWork() throws {
         let homeDirectory = try Self.temporaryDirectory(named: "settings-reenable")
-        let harness = MobileHostRuntimeTestHarness()
+        let harness = MobileHostRuntimeTestHarness(status: Self.status(
+            isRunning: true,
+            routes: [try Self.route(id: "initial")]
+        ))
         let services = Self.runtimeServices(homeDirectory: homeDirectory, harness: harness)
 
         services.startMobileHostAndPresence(
@@ -174,8 +178,16 @@ struct MobileHostRuntimeCompositionTests {
         #expect(services.mobileHostLifecycleState == MobileHostRuntimeLifecycleState.disabled(reason: "disabled by settings"))
         #expect(harness.stopPresenceCount == 1)
         #expect(harness.stopDeviceRegistryCount == 1)
+        #expect(harness.stopDeviceRegistryRouteCounts == [0])
         #expect(harness.stopPairedMacBackupCount == 1)
         #expect(harness.stopRenderObserverCount == 1)
+        #expect(harness.events.suffix(5) == [
+            "syncHostToSettings",
+            "stopRenderObserver",
+            "stopPairedMacBackup",
+            "stopDeviceRegistry(0)",
+            "stopPresence",
+        ])
 
         harness.isHostEnabled = true
         harness.status = Self.status(isRunning: true)
@@ -194,6 +206,7 @@ struct MobileHostRuntimeCompositionTests {
         #expect(harness.stopHostCount == 1)
         #expect(harness.stopPresenceCount == 2)
         #expect(harness.stopDeviceRegistryCount == 2)
+        #expect(harness.stopDeviceRegistryRouteCounts == [0, 0])
         #expect(harness.stopPairedMacBackupCount == 2)
         #expect(harness.stopRenderObserverCount == 2)
         #expect(harness.stopPresenceGoodbyeValues == [true, false])
@@ -332,16 +345,25 @@ struct MobileHostRuntimeCompositionTests {
         port: Int? = 58465,
         configuredPort: Int = 58465,
         usesEphemeralFallback: Bool = false,
-        lastErrorDescription: String? = nil
+        lastErrorDescription: String? = nil,
+        routes: [CmxAttachRoute] = []
     ) -> MobileHostServiceStatus {
         MobileHostServiceStatus(
             isRunning: isRunning,
             port: port,
             configuredPort: configuredPort,
             usesEphemeralFallback: usesEphemeralFallback,
-            routes: [],
+            routes: routes,
             activeConnectionCount: 0,
             lastErrorDescription: lastErrorDescription
+        )
+    }
+
+    private static func route(id: String = "route") throws -> CmxAttachRoute {
+        try CmxAttachRoute(
+            id: id,
+            kind: .debugLoopback,
+            endpoint: .hostPort(host: "127.0.0.1", port: 58465)
         )
     }
 
@@ -363,6 +385,7 @@ struct MobileHostRuntimeCompositionTests {
         var stopPresenceGoodbyeValues: [Bool] = []
         var startDeviceRegistryCount = 0
         var stopDeviceRegistryCount = 0
+        var stopDeviceRegistryRouteCounts: [Int] = []
         var startPairedMacBackupCount = 0
         var stopPairedMacBackupCount = 0
         var startRenderObserverCount = 0
@@ -427,9 +450,10 @@ struct MobileHostRuntimeCompositionTests {
                     self.events.append("startDeviceRegistry")
                     return MobileHostRuntimeOperationResult.ready
                 },
-                stopDeviceRegistry: {
+                stopDeviceRegistry: { finalRoutes in
                     self.stopDeviceRegistryCount += 1
-                    self.events.append("stopDeviceRegistry")
+                    self.stopDeviceRegistryRouteCounts.append(finalRoutes.count)
+                    self.events.append("stopDeviceRegistry(\(finalRoutes.count))")
                 },
                 startPairedMacBackup: { _ in
                     self.startPairedMacBackupCount += 1

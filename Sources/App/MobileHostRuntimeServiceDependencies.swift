@@ -1,3 +1,4 @@
+import BMUXMobileCore
 import BmuxAuthRuntime
 import Foundation
 
@@ -13,7 +14,7 @@ struct MobileHostRuntimeServiceDependencies {
     var syncPresenceToSettings: () -> MobileHostRuntimeOperationResult
     var stopPresence: (_ sendsGoodbye: Bool) -> Void
     var startDeviceRegistry: (AuthCoordinator) -> MobileHostRuntimeOperationResult
-    var stopDeviceRegistry: () -> Void
+    var stopDeviceRegistry: (_ finalRoutes: [CmxAttachRoute]) -> Void
     var startPairedMacBackup: (AuthCoordinator) -> MobileHostRuntimeOperationResult
     var stopPairedMacBackup: () -> Void
     var startRenderObserver: () -> Void
@@ -49,8 +50,8 @@ struct MobileHostRuntimeServiceDependencies {
                 DeviceRegistryClient.shared.start(auth: auth)
                 return .ready
             },
-            stopDeviceRegistry: {
-                DeviceRegistryClient.shared.stop()
+            stopDeviceRegistry: { finalRoutes in
+                DeviceRegistryClient.shared.stop(publishingFinalRoutes: finalRoutes)
             },
             startPairedMacBackup: { auth in
                 MacPairedMacBackupPublisher.shared.start(auth: auth)

@@ -55,11 +55,22 @@ final class DeviceRegistryClient {
     }
 
     /// Stop route observation and clear per-run dedupe state.
-    func stop() {
+    func stop(publishingFinalRoutes finalRoutes: [CmxAttachRoute]? = nil) {
+        let finalAuth = auth
+        let previousRegistration = lastRegistration
         observeTask?.cancel()
         observeTask = nil
         auth = nil
         lastRegistration = nil
+        guard let finalRoutes, let finalAuth else { return }
+        Task { @MainActor [weak self] in
+            await self?.registerIfRoutesChanged(
+                routes: finalRoutes,
+                auth: finalAuth,
+                previousRegistration: previousRegistration,
+                recordsSuccess: false
+            )
+        }
     }
 
     /// Whether a registration with `current` scope differs from what was last
@@ -104,6 +115,20 @@ final class DeviceRegistryClient {
 
     private func registerIfRoutesChanged(routes: [CmxAttachRoute]) async {
         guard let auth else { return }
+        await registerIfRoutesChanged(
+            routes: routes,
+            auth: auth,
+            previousRegistration: lastRegistration,
+            recordsSuccess: true
+        )
+    }
+
+    private func registerIfRoutesChanged(
+        routes: [CmxAttachRoute],
+        auth: AuthCoordinator,
+        previousRegistration: Registration?,
+        recordsSuccess: Bool
+    ) async {
         // Await tokens FIRST: this both gates on "signed in" and waits for launch
         // auth bootstrap. `resolvedTeamID` is derived from `availableTeams`, which
         // is empty until bootstrap completes, so reading the team before this
@@ -123,7 +148,7 @@ final class DeviceRegistryClient {
         let teamID = auth.resolvedTeamID
         let tag = Self.buildTag()
         let registration = Registration(teamID: teamID, tag: tag, routes: routes)
-        guard Self.shouldReRegister(previous: lastRegistration, current: registration) else { return }
+        guard Self.shouldReRegister(previous: previousRegistration, current: registration) else { return }
 
         guard var comps = URLComponents(url: AuthEnvironment.vmAPIBaseURL, resolvingAgainstBaseURL: false) else {
             return
@@ -158,7 +183,9 @@ final class DeviceRegistryClient {
                 if (200...299).contains(http.statusCode) {
                     // Only remember the scope once the server accepted it, so a
                     // transient failure retries on the next status tick.
-                    lastRegistration = registration
+                    if recordsSuccess {
+                        lastRegistration = registration
+                    }
                 } else {
                     NSLog("bmux.deviceRegistry register failed status=%d", http.statusCode)
                 }
