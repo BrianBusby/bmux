@@ -120,6 +120,58 @@ route-driven device registry, paired-Mac backup, and presence evaluation.
 `MobileHostService` remains the listener/RPC domain owner, but it must no longer
 be a second production startup owner.
 
+## Implemented Boundary
+
+This slice adds `mobileHostAndPresence` to the existing runtime-capability model.
+Production composition enables it; default XCTest composition leaves it disabled.
+`BmuxAppRuntimeComposition` constructs `MobileHostRuntimeService`, and
+`BmuxAppRuntimeServices` is the only migrated app path allowed to start, sync,
+attach workspace observers, and stop the service family.
+
+`MobileHostRuntimeService` owns the composition-level lifecycle:
+
+- installs and removes the mobile-host settings observer;
+- observes host status updates for deterministic readiness state;
+- configures the listener service once auth is available;
+- starts the setting-enabled side work exactly once: render observation,
+  presence heartbeat evaluation, device-registry route publication, and
+  paired-Mac backup route publication;
+- stops setting-enabled side work immediately when the mobile-host setting is
+  disabled while keeping the settings observer alive for re-enable;
+- re-enables the side work through the same sync path when settings/auth permit;
+- detaches per-`TabManager` workspace-list observers when windows release them;
+- stops owned side work, host listener, path monitoring, active connections, and
+  observers on shutdown or app termination.
+
+The runtime does not expose or require a new service locator. Production
+singleton access is isolated to `MobileHostRuntimeServiceDependencies.production()`
+so tests can inject listener/status/presence behavior without touching real
+sockets, route monitors, `URLSession.shared`, device identity state, or user
+settings.
+
+## Readiness Semantics
+
+The runtime-level state is separate from `MobileHostServiceStatus` and projects
+the selected capability into the states consumers and tests need:
+
+- disabled by composition;
+- disabled by settings;
+- not started;
+- starting;
+- ready/listening;
+- degraded with a bounded reason;
+- failed with a bounded reason;
+- stopping;
+- stopped.
+
+Preferred-port failure followed by an ephemeral bind is represented as
+degraded-but-listening. Presence, device-registry, or paired-Mac backup failure
+degrades the publication path without marking the local listener failed. A
+listener bind failure marks the mobile-host runtime failed. Auth absence while
+the host setting is enabled is degraded as waiting for authentication; a later
+auth-bearing start call arms the publication path without duplicating the
+listener lifecycle.
+
 ## Production And Test Rules
 
 Production composition enables the mobile-host capability. Existing user settings
@@ -144,11 +196,20 @@ than sleeping for incidental timing.
 event emission, authorization, attach-ticket creation, or mobile RPC handling.
 Compatibility access may forward pairing/settings activation requests to the
 composition-owned runtime service while UI and settings callers are migrated.
+`MobilePairingModel` still receives a `MobileHostService` handle for pairing
+status, ticket creation, and first-use readiness; that path is retained as
+product compatibility and must not be used by app construction.
 
 Retained singleton access must not construct a second listener lifecycle owner.
 Removal condition: delete startup-capable singleton access once pairing,
 settings, terminal control, notification, and mobile event consumers all receive
 a runtime-owned protocol or handle instead of reaching for `.shared`.
+
+`PresenceHeartbeatClient.configure(auth:)`, `DeviceRegistryClient.configure(auth:)`,
+and `MacPairedMacBackupPublisher.configure(auth:)` remain as compatibility
+wrappers around `start(auth:)`. Removal condition: delete these wrappers after
+no app startup or tests call the old configure names and consumers receive their
+auth/lifecycle dependency from runtime composition.
 
 The DEBUG XCTest route shim in `MobileHostService.start()` is transitional.
 Removal condition: delete it after existing mobile RPC tests opt into
@@ -167,6 +228,13 @@ workspace-list observers, render observers, path monitoring, listener sockets,
 active connections, event subscriptions, and presence goodbye work owned by this
 capability. Repeated start, sync, and stop calls must be idempotent.
 
+Settings changes now reconcile through the runtime owner. Setting disable calls
+the host service's sync path so the listener/path monitor/connections stop, then
+stops presence, registry, paired-Mac backup, and render observation. Setting
+re-enable starts exactly one clean side-work lifecycle. Port-change rebinds
+remain domain behavior inside `MobileHostService.syncToSettings()`; the runtime
+continues to own who invokes that reconciliation path.
+
 ## Deferred Services
 
 Phone notification forwarding is deferred because `PhonePushClient.configure`
@@ -182,3 +250,15 @@ The recommended next Process Integrity slice after this one is whichever
 app-host side-effect family remains highest-friction after mobile host/presence,
 with browser/DevTools ownership and sidebar Git/PR observation still the leading
 candidates from the PR #97 audit.
+
+## Unrelated Findings
+
+During validation, the Session provenance app-host regression
+`SessionProvenanceTests.testHookPromptSubmitRecordsFactualSessionAndWorkspaceDisplayLink`
+still expected the literal workspace id `runtime-workspace`. Current `main`
+records the stable workspace UUID in
+`WorkProvenanceCodingAgentEvidenceRecorder+Support.swift`, and the same focused
+test fails when run alone against this branch. The mobile-host lifecycle PR does
+not change that Session provenance path; reconcile the stale test expectation in
+a separate provenance/session follow-up if that test is still intended to be
+part of the required suite.

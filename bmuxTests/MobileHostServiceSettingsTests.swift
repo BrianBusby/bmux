@@ -9,12 +9,13 @@ import Testing
 #endif
 
 struct MobileHostServiceSettingsTests {
-    @Test func mobileHostListenerDefaultsOffUntilIOSPairingIsEnabled() throws {
+    @Test func mobileHostListenerUsesCatalogDefaultAndExplicitToggleWins() throws {
         let suiteName = "MobileHostServiceSettingsTests.\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defer { defaults.removePersistentDomain(forName: suiteName) }
 
-        #expect(!MobileHostService.isListeningEnabled(defaults: defaults))
+        let expectedDefault = SettingCatalog().mobile.iOSPairingHost.defaultValue
+        #expect(MobileHostService.isListeningEnabled(defaults: defaults) == expectedDefault)
 
         defaults.set(true, forKey: MobileHostService.listeningEnabledDefaultsKey)
         #expect(MobileHostService.isListeningEnabled(defaults: defaults))

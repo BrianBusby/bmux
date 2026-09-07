@@ -900,6 +900,11 @@
 		DE71CE000000000000000008 /* MobileHostNetworkPathMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE71CE000000000000000007 /* MobileHostNetworkPathMonitor.swift */; };
 		DE71CE000000000000000006 /* MobileHostNetworkPathRefreshTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE71CE000000000000000005 /* MobileHostNetworkPathRefreshTests.swift */; };
 		4E673EDE464BF3AB80E94C1D /* MobileHostRPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47BDC06F004C02A52B05E4A0 /* MobileHostRPC.swift */; };
+		CE0E09050000000000000001 /* MobileHostRuntimeCompositionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E09050000000000000002 /* MobileHostRuntimeCompositionTests.swift */; };
+		CE0E09010000000000000001 /* MobileHostRuntimeLifecycleState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E09010000000000000002 /* MobileHostRuntimeLifecycleState.swift */; };
+		CE0E09020000000000000001 /* MobileHostRuntimeOperationResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E09020000000000000002 /* MobileHostRuntimeOperationResult.swift */; };
+		CE0E09030000000000000001 /* MobileHostRuntimeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E09030000000000000002 /* MobileHostRuntimeService.swift */; };
+		CE0E09040000000000000001 /* MobileHostRuntimeServiceDependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E09040000000000000002 /* MobileHostRuntimeServiceDependencies.swift */; };
 		C7A50B000000000000000014 /* MobileHostService+Capabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A50B000000000000000013 /* MobileHostService+Capabilities.swift */; };
 		C0DE00000000000000000C8D /* MobileHostService+TicketAuthorization.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000C8C /* MobileHostService+TicketAuthorization.swift */; };
 		F67FBC88671C40AC3A3284CE /* MobileHostService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ACA497A6831165EA879C642 /* MobileHostService.swift */; };
@@ -2647,6 +2652,11 @@
 		DE71CE000000000000000007 /* MobileHostNetworkPathMonitor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileHostNetworkPathMonitor.swift; sourceTree = "<group>"; };
 		DE71CE000000000000000005 /* MobileHostNetworkPathRefreshTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileHostNetworkPathRefreshTests.swift; sourceTree = "<group>"; };
 		47BDC06F004C02A52B05E4A0 /* MobileHostRPC.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileHostRPC.swift; sourceTree = "<group>"; };
+		CE0E09050000000000000002 /* MobileHostRuntimeCompositionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileHostRuntimeCompositionTests.swift; sourceTree = "<group>"; };
+		CE0E09010000000000000002 /* MobileHostRuntimeLifecycleState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MobileHostRuntimeLifecycleState.swift; sourceTree = "<group>"; };
+		CE0E09020000000000000002 /* MobileHostRuntimeOperationResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MobileHostRuntimeOperationResult.swift; sourceTree = "<group>"; };
+		CE0E09030000000000000002 /* MobileHostRuntimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MobileHostRuntimeService.swift; sourceTree = "<group>"; };
+		CE0E09040000000000000002 /* MobileHostRuntimeServiceDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MobileHostRuntimeServiceDependencies.swift; sourceTree = "<group>"; };
 		C7A50B000000000000000013 /* MobileHostService+Capabilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MobileHostService+Capabilities.swift"; sourceTree = "<group>"; };
 		C0DE00000000000000000C8C /* MobileHostService+TicketAuthorization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MobileHostService+TicketAuthorization.swift"; sourceTree = "<group>"; };
 		7ACA497A6831165EA879C642 /* MobileHostService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileHostService.swift; sourceTree = "<group>"; };
@@ -3743,6 +3753,10 @@
 				CE0E08030000000000000002 /* BmuxAppRuntimeProcessKind.swift */,
 				CE0E08040000000000000002 /* BmuxAppRuntimeConfiguration.swift */,
 				CE0E08050000000000000002 /* BmuxAppRuntimeServices.swift */,
+				CE0E09010000000000000002 /* MobileHostRuntimeLifecycleState.swift */,
+				CE0E09020000000000000002 /* MobileHostRuntimeOperationResult.swift */,
+				CE0E09030000000000000002 /* MobileHostRuntimeService.swift */,
+				CE0E09040000000000000002 /* MobileHostRuntimeServiceDependencies.swift */,
 				CA5CADF00000000000000001 /* CanvasDebugMenuButtons.swift */,
 				C46790000000000000000004 /* CLIForwardingLaunchRouter.swift */,
 				C46790000000000000000006 /* RosettaNativeRelaunch.swift */,
@@ -4803,6 +4817,7 @@
 				C7A51D000000000000000001 /* AgentChatSessionRegistryObservationTests.swift */,
 					CE0B00050000000000000002 /* SessionProvenanceTests.swift */,
 					CE0E08010000000000000002 /* AppRuntimeCompositionTests.swift */,
+					CE0E09050000000000000002 /* MobileHostRuntimeCompositionTests.swift */,
 					CE0E06200000000000000002 /* PromptSessionLinkProductionLifecycleTests.swift */,
 					CE0E06100000000000000002 /* PromptSessionLinkProjectionTests.swift */,
 				D3610B010000000000000002 /* AgentSessionAutoResumeSettingsTests.swift */,
@@ -6201,6 +6216,10 @@
 				C7A50B000000000000000016 /* MobileHostBuildIdentity.swift in Sources */,
 				DE71CE000000000000000008 /* MobileHostNetworkPathMonitor.swift in Sources */,
 				4E673EDE464BF3AB80E94C1D /* MobileHostRPC.swift in Sources */,
+				CE0E09010000000000000001 /* MobileHostRuntimeLifecycleState.swift in Sources */,
+				CE0E09020000000000000001 /* MobileHostRuntimeOperationResult.swift in Sources */,
+				CE0E09030000000000000001 /* MobileHostRuntimeService.swift in Sources */,
+				CE0E09040000000000000001 /* MobileHostRuntimeServiceDependencies.swift in Sources */,
 				C7A50B000000000000000014 /* MobileHostService+Capabilities.swift in Sources */,
 				C0DE00000000000000000C8D /* MobileHostService+TicketAuthorization.swift in Sources */,
 				F67FBC88671C40AC3A3284CE /* MobileHostService.swift in Sources */,
@@ -7197,6 +7216,7 @@
 				6AA2F2E8BEB19ED6B8E125DB /* MobileHostAuthorizationTests.swift in Sources */,
 				B8B056D80000000000000001 /* MobileHostIdentityTests.swift in Sources */,
 				DE71CE000000000000000006 /* MobileHostNetworkPathRefreshTests.swift in Sources */,
+				CE0E09050000000000000001 /* MobileHostRuntimeCompositionTests.swift in Sources */,
 				C0DE10510000000000000001 /* MobileHostServiceSettingsTests.swift in Sources */,
 				4C1A7E10B2D34F56A8C90013 /* MobileHostStatusVerificationLimiterTests.swift in Sources */,
 				C0DE73840000000000000001 /* MobileHostWorkspaceTicketAuthorizationTests.swift in Sources */,

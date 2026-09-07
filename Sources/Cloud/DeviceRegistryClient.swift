@@ -39,11 +39,27 @@ final class DeviceRegistryClient {
 
     private init() {}
 
-    /// Inject the auth dependency and begin observing host-route changes. Call
-    /// once at the composition root (after `auth` is constructed).
+    /// Compatibility wrapper for older composition-root callers.
+    ///
+    /// Removal condition: delete after all production startup goes through
+    /// `MobileHostRuntimeService.start(...)` and no tests call this directly.
     func configure(auth: AuthCoordinator) {
+        start(auth: auth)
+    }
+
+    /// Inject the auth dependency and begin observing host-route changes. Call
+    /// from the mobile-host runtime owner.
+    func start(auth: AuthCoordinator) {
         self.auth = auth
         startObserving()
+    }
+
+    /// Stop route observation and clear per-run dedupe state.
+    func stop() {
+        observeTask?.cancel()
+        observeTask = nil
+        auth = nil
+        lastRegistration = nil
     }
 
     /// Whether a registration with `current` scope differs from what was last

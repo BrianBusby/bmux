@@ -30,7 +30,6 @@ final class PresenceHeartbeatClient {
     private var auth: AuthCoordinator?
     private var loopTask: Task<Void, Never>?
     private var routesObserveTask: Task<Void, Never>?
-    private var defaultsObserver: NSObjectProtocol?
     /// Cadence between heartbeats; server-owned, seeded with the service default.
     private var intervalMs: Int = 15_000
     /// The attach routes most recently advertised by ``MobileHostService``,
@@ -40,25 +39,25 @@ final class PresenceHeartbeatClient {
 
     private init() {}
 
-    /// Inject the auth dependency and start (or arm) the heartbeat loop. Call
-    /// once at the composition root, alongside ``DeviceRegistryClient``.
+    /// Compatibility wrapper for older composition-root callers.
+    ///
+    /// Removal condition: delete after all production startup goes through
+    /// `MobileHostRuntimeService.start(...)` and no tests call this directly.
     func configure(auth: AuthCoordinator) {
+        start(auth: auth)
+    }
+
+    /// Inject the auth dependency and start (or arm) the heartbeat loop. Call
+    /// from the mobile-host runtime owner.
+    func start(auth: AuthCoordinator) {
         self.auth = auth
         startObservingRoutes()
-        if defaultsObserver == nil {
-            // Re-evaluate when the flag or URL flips, so enabling presence in a
-            // running app starts the loop without a relaunch (and disabling
-            // stops it and says goodbye).
-            defaultsObserver = NotificationCenter.default.addObserver(
-                forName: UserDefaults.didChangeNotification,
-                object: UserDefaults.standard,
-                queue: .main
-            ) { _ in
-                MainActor.assumeIsolated {
-                    PresenceHeartbeatClient.shared.evaluate()
-                }
-            }
-        }
+        evaluate()
+    }
+
+    /// Reconcile the heartbeat loop with current settings. The runtime owner
+    /// calls this from its single mobile-host settings observation path.
+    func syncToSettings() {
         evaluate()
     }
 
@@ -68,9 +67,25 @@ final class PresenceHeartbeatClient {
     /// every unclean path, the goodbye only makes clean quits flip offline
     /// immediately instead of within 45s.
     func appWillTerminate() {
-        guard loopTask != nil else { return }
+        stop(sendsGoodbye: true)
+    }
+
+    /// Stop all heartbeat-owned background work.
+    func stop(sendsGoodbye: Bool) {
+        let shouldSendGoodbye = sendsGoodbye && loopTask != nil
         stopLoop()
-        Task { await self.sendHeartbeat(stopping: true) }
+        routesObserveTask?.cancel()
+        routesObserveTask = nil
+        if shouldSendGoodbye {
+            Task { @MainActor [weak self] in
+                await self?.sendHeartbeat(stopping: true)
+                self?.auth = nil
+                self?.currentRoutes = []
+            }
+        } else {
+            auth = nil
+            currentRoutes = []
+        }
     }
 
     // MARK: - Routes

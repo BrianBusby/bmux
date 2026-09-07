@@ -523,7 +523,19 @@ roadmap:
         active_agent: codex
       delivery_status: open
       acceptance_status: proposed
-      rationale: Follow-up Process Integrity slice to migrate the next background service family exposed by app-host side effects into explicit construction, readiness, and teardown ownership.
+      rationale: Follow-up Process Integrity slice to migrate the macOS mobile-host listener, network-path monitoring, route publication, presence heartbeat, device registry route publication, paired-Mac backup route publication, and directly coupled mobile event observers behind the app-runtime composition boundary.
+      acceptance:
+        criteria:
+          - BmuxAppRuntimeConfiguration exposes an explicit mobile-host/presence capability that production enables and default XCTest composition disables.
+          - AppDelegate and migrated app startup/termination paths can only start, sync, or stop the selected service family through BmuxAppRuntimeServices.
+          - Focused tests can opt into mobile-host/presence with injected dependencies and no real listener bind, path monitor, route publication, presence heartbeat, device registry, or paired-Mac backup traffic.
+          - Mobile-host lifecycle state distinguishes disabled-by-composition, disabled-by-settings, starting, ready/listening, degraded, failed, stopping, and stopped states.
+          - Preferred-port fallback is degraded-but-listening, while presence or route-publication failure degrades publication without failing a healthy local listener.
+          - Settings enable, disable, re-enable, and auth-availability changes reconcile through one runtime owner without duplicate listeners, observers, monitors, or presence loops.
+          - Shutdown cancels composition-owned settings/status observers, workspace-list observers, render observation, route publication, presence heartbeat, device registry publication, paired-Mac backup publication, listener/path monitoring, and active mobile-host connections.
+          - Retained singleton compatibility access cannot become a second lifecycle owner, and removal conditions are documented.
+          - A runtime-composition boundary guard rejects migrated direct startup/configuration/termination calls outside the declared runtime owner.
+          - Production-path coverage exercises production configuration through app runtime composition into mobile-host readiness, route publication evaluation, and deterministic shutdown.
 
     - id: v1_foundation_and_adoption
       kind: program

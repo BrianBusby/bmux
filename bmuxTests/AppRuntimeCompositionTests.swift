@@ -105,6 +105,7 @@ struct AppRuntimeCompositionTests {
 
         #expect(configuration.processKind == BmuxAppRuntimeProcessKind.xctestHost)
         #expect(configuration.enables(BmuxAppRuntimeCapability.workProvenanceObservation))
+        #expect(!configuration.enables(BmuxAppRuntimeCapability.mobileHostAndPresence))
         #expect(runtime.effectiveDatabaseURL == databaseURL)
         #expect(runtime.effectiveDatabaseURL?.path.hasPrefix(homeDirectory.path) == true)
 
@@ -142,6 +143,7 @@ struct AppRuntimeCompositionTests {
 
         #expect(configuration.enables(BmuxAppRuntimeCapability.agentChatExecutionTelemetryProjection))
         #expect(!configuration.enables(BmuxAppRuntimeCapability.workProvenanceObservation))
+        #expect(!configuration.enables(BmuxAppRuntimeCapability.mobileHostAndPresence))
         #expect(runtime.effectiveDatabaseURL == databaseURL)
 
         services.start(tabManager: TabManager())
@@ -265,4 +267,5 @@ struct AppRuntimeCompositionTests {
     private static func agentChatURL() -> URL {
         URL(string: "http://127.0.0.1:9")!
     }
+
 }

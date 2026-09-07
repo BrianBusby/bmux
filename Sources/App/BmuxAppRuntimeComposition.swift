@@ -7,16 +7,19 @@ struct BmuxAppRuntimeComposition {
     private let secretStore: SecretFileStore
     private let keychainStore: KeychainSecretStore
     private let runtimeConfiguration: BmuxAppRuntimeConfiguration
+    private let mobileHostRuntimeDependencies: MobileHostRuntimeServiceDependencies?
 
     init(
         configFileURL: URL,
         secretBaseDirectory: URL,
         bundleIdentifier: String?,
-        runtimeConfiguration: BmuxAppRuntimeConfiguration
+        runtimeConfiguration: BmuxAppRuntimeConfiguration,
+        mobileHostRuntimeDependencies: MobileHostRuntimeServiceDependencies? = nil
     ) {
         self.jsonConfigStore = JSONConfigStore(fileURL: configFileURL)
         self.secretStore = SecretFileStore(baseDirectory: secretBaseDirectory)
         self.runtimeConfiguration = runtimeConfiguration
+        self.mobileHostRuntimeDependencies = mobileHostRuntimeDependencies
         self.keychainStore = KeychainSecretStore(
             service: KeychainSecretStore.serviceName(bundleIdentifier: bundleIdentifier)
         )
@@ -76,9 +79,14 @@ struct BmuxAppRuntimeComposition {
     func makeRuntimeServices(
         workProvenanceRuntime: WorkProvenanceRuntime
     ) -> BmuxAppRuntimeServices {
-        BmuxAppRuntimeServices(
+        let mobileHostRuntimeService = MobileHostRuntimeService(
+            isCapabilityEnabled: runtimeConfiguration.enables(.mobileHostAndPresence),
+            dependencies: mobileHostRuntimeDependencies ?? .production()
+        )
+        return BmuxAppRuntimeServices(
             configuration: runtimeConfiguration,
-            workProvenanceRuntime: workProvenanceRuntime
+            workProvenanceRuntime: workProvenanceRuntime,
+            mobileHostRuntimeService: mobileHostRuntimeService
         )
     }
 }
