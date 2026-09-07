@@ -16,12 +16,11 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 ### Current Capability Frontier
 
 - Primary Capability Frontier: Process Integrity (`process_integrity`)
-- Active or selected slices in the frontier:
-  - Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - maturity: active; status: active; selection: current; owner: Bmux
+- Active or selected slices in the frontier: none
 
 ### Active Implementation
 
-- Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - maturity: active; status: active; selection: current; owner: Bmux
+- None.
 
 ### Selected Next
 
@@ -142,12 +141,12 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Evidence: BrianBusby/bmux@2a08fa2ce324, BrianBusby/bmux#97 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Move WorkProvenanceRuntime construction/startup and related agent-chat PE projection startup behind one app-runtime composition owner so production starts PE deliberately, default app-host tests cannot open the production PE database, opted-in tests use isolated storage, and migrated services expose deterministic readiness/failure/teardown.
           Acceptance criteria: App runtime composition is the only production source path that constructs the live WorkProvenanceRuntime.; BmuxAppRuntimeServices is the only production source path that starts PE workspace observation and agent-chat execution telemetry projection.; Default app-host XCTest composition disables PE without opening the production PE database.; Tests can opt into PE with a temporary home directory and observe ready, failed, and stopped lifecycle states without sleeps or timing assertions.; Runtime shutdown cancels migrated observation work and releases owned lifecycle tasks.; A source guard prevents migrated app entrypoints from bypassing the composition boundary.; Existing Session-tab production lifecycle coverage still reaches PE readiness through deterministic task completion.; Production PE prompt evidence appends scope turn-outcome evidence acquisition to the affected session instead of scanning unrelated ledger history.; Agent-chat startup prompt seeding skips ended historical Codex hook-store records while preserving non-ended live startup backfill and live UserPromptSubmit prompt evidence.
-        - **Background Service Lifecycle Migration** (`app_runtime_service_lifecycle_migration`) - slice; status: active; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: current / Bmux; parallelism: serial; delivery: open; acceptance: proposed; maturity: active
+        - **Background Service Lifecycle Migration** (`app_runtime_service_lifecycle_migration`) - slice; status: implemented; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: complete / Bmux; parallelism: serial; delivery: merged; acceptance: implemented; maturity: validated
           Depends on: `deterministic_app_runtime_composition`
           Expected contract domains: `browser_lifecycle`, `sidebar_git_observation`, `remote_session_presence`, `push_registration`, `notification_runtime_services`
           Likely conflict domains: `app_delegate_startup`, `app_host_test_side_effects`, `global_singletons`
-          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/app-runtime-mobile-host-presence-lifecycle`; branch: `app-runtime-mobile-host-presence-lifecycle`; agent: `codex`
           Gate `runtime_composition_validated`: requires `deterministic_app_runtime_composition` maturity validated; reason: Additional background services should migrate only after the first PE-backed production/test composition path is validated.
+          Evidence: BrianBusby/bmux@206c515d2fe5, BrianBusby/bmux#100 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Follow-up Process Integrity slice to migrate the macOS mobile-host listener, network-path monitoring, route publication, presence heartbeat, device registry route publication, paired-Mac backup route publication, and directly coupled mobile event observers behind the app-runtime composition boundary.
           Acceptance criteria: BmuxAppRuntimeConfiguration exposes an explicit mobile-host/presence capability that production enables and default XCTest composition disables.; AppDelegate and migrated app startup/termination paths can only start, sync, or stop the selected service family through BmuxAppRuntimeServices.; Focused tests can opt into mobile-host/presence with injected dependencies and no real listener bind, path monitor, route publication, presence heartbeat, device registry, or paired-Mac backup traffic.; Mobile-host lifecycle state distinguishes disabled-by-composition, disabled-by-settings, starting, ready/listening, degraded, failed, stopping, and stopped states.; Preferred-port fallback is degraded-but-listening, while presence or route-publication failure degrades publication without failing a healthy local listener.; Settings enable, disable, re-enable, and auth-availability changes reconcile through one runtime owner without duplicate listeners, observers, monitors, or presence loops.; Shutdown cancels composition-owned settings/status observers, workspace-list observers, render observation, route publication, presence heartbeat, device registry publication, paired-Mac backup publication, listener/path monitoring, and active mobile-host connections.; Retained singleton compatibility access cannot become a second lifecycle owner, and removal conditions are documented.; A runtime-composition boundary guard rejects migrated direct startup/configuration/termination calls outside the declared runtime owner.; Production-path coverage exercises production configuration through app runtime composition into mobile-host readiness, route publication evaluation, and deterministic shutdown.
   - **V1 Foundation and Bmux Adoption** (`v1_foundation_and_adoption`) - program; status: accepted; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: v1 adoption; layer: platform; execution: complete / Shared; parallelism: serial
@@ -758,9 +757,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.
 
-| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) | serial | /Users/brianbusby/repos/.bmux-worktrees/app-runtime-mobile-host-presence-lifecycle | app-runtime-mobile-host-presence-lifecycle | codex | `app_delegate_startup`, `app_host_test_side_effects`, `global_singletons` | None | single active assignment |
+- Active implementation assignments: none selected.
 
 ### Dependency-Ready Preflight
 
