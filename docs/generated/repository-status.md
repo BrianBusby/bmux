@@ -13,7 +13,7 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Deterministic App Runtime Composition and App-Host Test Isolation (`deterministic_app_runtime_composition`)
+- Active slice: Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement (`post_merge_project_truth_reconciliation`)
 - Slice state: open
 - Owner: bmux
 - Repository state: active

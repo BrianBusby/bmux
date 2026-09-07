@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import difflib
 import http.client
 import json
@@ -13,7 +14,7 @@ import tempfile
 import urllib.error
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -108,6 +109,64 @@ class PullRequestEvidence:
     merged: bool
     owner_login: str | None = None
     owner_url: str | None = None
+    number: int | None = None
+    merged_at: str | None = None
+    closed_at: str | None = None
+    merge_commit_sha: str | None = None
+    head_ref: str | None = None
+    head_owner_login: str | None = None
+
+
+@dataclass(frozen=True)
+class ReconciliationChange:
+    name: str
+    path: str
+    message: str
+    node_id: str | None = None
+
+
+@dataclass(frozen=True)
+class ReconciliationDecision:
+    name: str
+    path: str
+    message: str
+    node_id: str | None = None
+    evidence_path: str | None = None
+    evidence_paths: tuple[str, ...] = ()
+
+
+@dataclass
+class NodeReconciliationUpdate:
+    node_id: str
+    target_kind: str = "roadmap"
+    status: str | None = None
+    delivery_status: str | None = None
+    acceptance_status: str | None = None
+    capability_maturity: str | None = None
+    completed_at: str | None = None
+    execution_assignment: str | None = None
+    clear_active_metadata: bool = False
+    add_commits: list[dict[str, Any]] = field(default_factory=list)
+    upsert_pull_requests: list[dict[str, Any]] = field(default_factory=list)
+
+
+@dataclass
+class RepoStatusReconciliationUpdate:
+    repository: str
+    clear_active_slice_id: str | None = None
+
+
+@dataclass
+class ReconciliationPlan:
+    changes: list[ReconciliationChange]
+    decisions: list[ReconciliationDecision]
+    issues: list[ValidationIssue]
+    node_updates: dict[tuple[str, str], NodeReconciliationUpdate]
+    repo_status_updates: dict[str, RepoStatusReconciliationUpdate]
+
+    @property
+    def clean(self) -> bool:
+        return not self.changes and not self.decisions and not self.issues
 
 
 @dataclass(frozen=True)
@@ -167,14 +226,19 @@ class GitHubProviderError(Exception):
 class GitHubEvidenceProvider(Protocol):
     def repository_exists(self, repository: str) -> bool: ...
     def commit_exists(self, repository: str, sha: str) -> bool: ...
+    def commit_reachable_from_default_branch(self, repository: str, sha: str) -> bool: ...
     def pull_request(self, repository: str, number: int) -> PullRequestEvidence | None: ...
+    def pull_requests_for_head(self, repository: str, owner: str, branch: str) -> list[PullRequestEvidence]: ...
     def issue(self, repository: str, number: int) -> IssueEvidence | None: ...
     def tag(self, repository: str, tag: str) -> TagEvidence | None: ...
     def release_exists(self, repository: str, tag: str) -> bool: ...
 
 
 class ProjectDocsError(Exception):
-    pass
+    def __init__(self, message: str, exit_code: int = 1):
+        super().__init__(message)
+        self.message = message
+        self.exit_code = exit_code
 
 
 class NoTimestampSafeLoader(yaml.SafeLoader):
@@ -193,6 +257,7 @@ class GitHubRestEvidenceProvider:
     def __init__(self, token: str | None = None, api_url: str | None = None):
         self.token = token
         self.api_url = (api_url or "https://api.github.com").rstrip("/")
+        self._default_branch_cache: dict[str, str | None] = {}
 
     def _get(self, path: str) -> Any | None:
         request = urllib.request.Request(f"{self.api_url}{path}")
@@ -209,6 +274,8 @@ class GitHubRestEvidenceProvider:
             body = exc.read().decode("utf-8", errors="replace")
             if exc.code == 404:
                 return None
+            if exc.code == 429:
+                raise GitHubProviderError("rate_limit", f"GitHub API rate limit hit for {path}") from exc
             if exc.code in (401, 403):
                 remaining = exc.headers.get("X-RateLimit-Remaining")
                 lowered = body.lower()
@@ -222,20 +289,65 @@ class GitHubRestEvidenceProvider:
     def repository_exists(self, repository: str) -> bool:
         return self._get(f"/repos/{quote_slug(repository)}") is not None
 
+    def default_branch(self, repository: str) -> str | None:
+        if repository in self._default_branch_cache:
+            return self._default_branch_cache[repository]
+        data = self._get(f"/repos/{quote_slug(repository)}")
+        branch = str(data.get("default_branch", "")) if isinstance(data, dict) else ""
+        self._default_branch_cache[repository] = branch or None
+        return self._default_branch_cache[repository]
+
     def commit_exists(self, repository: str, sha: str) -> bool:
         return self._get(f"/repos/{quote_slug(repository)}/commits/{urllib.parse.quote(sha)}") is not None
 
-    def pull_request(self, repository: str, number: int) -> PullRequestEvidence | None:
-        data = self._get(f"/repos/{quote_slug(repository)}/pulls/{number}")
-        if data is None:
-            return None
+    def commit_reachable_from_default_branch(self, repository: str, sha: str) -> bool:
+        branch = self.default_branch(repository)
+        if not branch:
+            return False
+        basehead = urllib.parse.quote(f"{sha}...{branch}", safe=".")
+        data = self._get(f"/repos/{quote_slug(repository)}/compare/{basehead}")
+        if not isinstance(data, dict):
+            return False
+        return data.get("status") in ("ahead", "identical")
+
+    def _pull_request_evidence_from_data(self, data: dict[str, Any]) -> PullRequestEvidence:
         user = data.get("user", {}) if isinstance(data, dict) else {}
+        head = data.get("head", {}) if isinstance(data, dict) else {}
+        head_user = head.get("user", {}) if isinstance(head, dict) else {}
         return PullRequestEvidence(
             state=str(data.get("state", "")),
             draft=bool(data.get("draft")),
             merged=bool(data.get("merged_at")),
             owner_login=str(user.get("login")) if user.get("login") else None,
             owner_url=str(user.get("html_url")) if user.get("html_url") else None,
+            number=int(data["number"]) if data.get("number") else None,
+            merged_at=str(data.get("merged_at")) if data.get("merged_at") else None,
+            closed_at=str(data.get("closed_at")) if data.get("closed_at") else None,
+            merge_commit_sha=str(data.get("merge_commit_sha")) if data.get("merge_commit_sha") else None,
+            head_ref=str(head.get("ref")) if isinstance(head, dict) and head.get("ref") else None,
+            head_owner_login=str(head_user.get("login")) if isinstance(head_user, dict) and head_user.get("login") else None,
+        )
+
+    def pull_request(self, repository: str, number: int) -> PullRequestEvidence | None:
+        data = self._get(f"/repos/{quote_slug(repository)}/pulls/{number}")
+        if data is None:
+            return None
+        return self._pull_request_evidence_from_data(data)
+
+    def pull_requests_for_head(self, repository: str, owner: str, branch: str) -> list[PullRequestEvidence]:
+        query = urllib.parse.urlencode(
+            {
+                "state": "all",
+                "head": f"{owner}:{branch}",
+                "per_page": "20",
+            }
+        )
+        data = self._get(f"/repos/{quote_slug(repository)}/pulls?{query}")
+        if not isinstance(data, list):
+            return []
+        return sorted(
+            [self._pull_request_evidence_from_data(item) for item in data if isinstance(item, dict)],
+            key=lambda item: item.number or 0,
         )
 
     def issue(self, repository: str, number: int) -> IssueEvidence | None:
@@ -350,6 +462,10 @@ def roadmap_nodes(shared: dict[str, Any]) -> list[dict[str, Any]]:
 
 def roadmap_node_path(index: int, node: dict[str, Any]) -> str:
     return f"project/project-state.yaml:roadmap.nodes[{index}] ({node.get('id')})"
+
+
+def milestone_path(index: int, milestone: dict[str, Any]) -> str:
+    return f"project/project-state.yaml:milestones[{index}] ({milestone.get('id')})"
 
 
 def repository_key_for_slug(shared: dict[str, Any], slug: str) -> str | None:
@@ -1072,46 +1188,118 @@ def github_evidence_issues(
             if exists is False:
                 add("missing_repository", repository, "repository does not exist or is not visible")
 
-    def check_evidence(base_path: str, evidence: dict[str, Any], delivery: str | None, subject: str) -> None:
+    def check_evidence(
+        base_path: str,
+        evidence: dict[str, Any],
+        delivery: str | None,
+        subject: str,
+        *,
+        acceptance: str | None = None,
+        status: str | None = None,
+    ) -> None:
         for commit in evidence.get("commits", []):
             path = f"{base_path}.evidence.commits[{commit['repository']}@{commit['sha']}]"
             exists = call("commit", path, lambda commit=commit: provider.commit_exists(commit["repository"], commit["sha"]))
             if exists is False:
                 add("missing_commit", path, "commit does not exist in the declared repository")
+        pull_request_states: list[tuple[dict[str, Any], str, PullRequestEvidence | None | object]] = []
         for pr in evidence.get("pull_requests", []):
             path = f"{base_path}.evidence.pull_requests[{pr['repository']}#{pr['number']}]"
             state = call("pull request", path, lambda pr=pr: provider.pull_request(pr["repository"], pr["number"]))
+            pull_request_states.append((pr, path, state))
             if state is PROVIDER_ERROR:
                 continue
             if state is None:
                 add("missing_pr", path, "pull request does not exist in the declared repository")
                 continue
+        has_merged_pr = any(isinstance(state, PullRequestEvidence) and state.merged for _pr, _path, state in pull_request_states)
+        merged_states = [state for _pr, _path, state in pull_request_states if isinstance(state, PullRequestEvidence) and state.merged]
+        closed_unmerged_states = [
+            state
+            for _pr, _path, state in pull_request_states
+            if isinstance(state, PullRequestEvidence)
+            and state.state == "closed"
+            and not state.merged
+        ]
+        has_terminal_closed_decision = closed_unmerged_status_recorded(delivery, acceptance, status)
+        has_open_pr = any(
+            isinstance(state, PullRequestEvidence)
+            and state.state == "open"
+            and not state.draft
+            and not state.merged
+            for _pr, _path, state in pull_request_states
+        )
+        has_draft_pr = any(
+            isinstance(state, PullRequestEvidence)
+            and state.state == "open"
+            and state.draft
+            and not state.merged
+            for _pr, _path, state in pull_request_states
+        )
+        for pr, path, state in pull_request_states:
+            if state is PROVIDER_ERROR or state is None:
+                continue
             if delivery == "merged" and not state.merged:
-                add("pr_merged_state_mismatch", path, f"{subject} declares merged delivery but pull request is not merged")
+                if not (
+                    has_merged_pr
+                    and (
+                        merged_pr_follows_closed_pr(state, merged_states)
+                        or (
+                            has_terminal_closed_decision
+                            and closed_pr_follows_merged_pr(state, merged_states)
+                        )
+                    )
+                ):
+                    add("pr_merged_state_mismatch", path, f"{subject} declares merged delivery but pull request is not merged")
             elif delivery == "open" and (state.state != "open" or state.draft):
-                add("pr_open_state_mismatch", path, f"{subject} declares open delivery but pull request is not an open non-draft PR")
+                if not (state.merged and has_open_pr):
+                    add("pr_open_state_mismatch", path, f"{subject} declares open delivery but pull request is not an open non-draft PR")
             elif delivery == "draft" and (state.state != "open" or not state.draft):
-                add("pr_draft_state_mismatch", path, f"{subject} declares draft delivery but pull request is not an open draft PR")
+                if not (state.merged and has_draft_pr):
+                    add("pr_draft_state_mismatch", path, f"{subject} declares draft delivery but pull request is not an open draft PR")
             elif delivery == "closed" and (state.state != "closed" or state.merged):
-                add("pr_closed_state_mismatch", path, f"{subject} declares closed delivery but pull request is merged or still open")
+                if not (
+                    has_terminal_closed_decision
+                    and state.merged
+                    and merged_pr_has_later_closed_pr(state, closed_unmerged_states)
+                ):
+                    add("pr_closed_state_mismatch", path, f"{subject} declares closed delivery but pull request is merged or still open")
             declared_owner = pr.get("owner")
             if declared_owner:
                 if state.owner_login != declared_owner.get("login"):
                     add("pr_owner_login_mismatch", path, "declared pull request owner login does not match GitHub")
                 if state.owner_url != declared_owner.get("profile_url"):
                     add("pr_owner_url_mismatch", path, "declared pull request owner profile URL does not match GitHub")
+            if pr.get("merged_at") and pr.get("merged_at") != state.merged_at:
+                add("pr_merged_at_mismatch", path, "declared pull request merged_at does not match GitHub")
+            if pr.get("merge_commit_sha") and (not state.merged or pr.get("merge_commit_sha") != state.merge_commit_sha):
+                add("pr_merge_commit_mismatch", path, "declared pull request merge_commit_sha does not match GitHub")
 
     for milestone_index, milestone in enumerate(shared.get("milestones", [])):
         milestone_path = f"project/project-state.yaml:milestones[{milestone_index}]({milestone.get('id')})"
         evidence = milestone.get("evidence", {})
-        check_evidence(milestone_path, evidence, milestone.get("delivery_status"), "milestone")
+        check_evidence(
+            milestone_path,
+            evidence,
+            milestone.get("delivery_status"),
+            "milestone",
+            acceptance=milestone.get("acceptance_status"),
+            status=milestone.get("status"),
+        )
 
     for node_index, node in enumerate(roadmap_nodes(shared)):
         evidence = node.get("evidence")
         if not evidence:
             continue
         node_path = f"project/project-state.yaml:roadmap.nodes[{node_index}]({node.get('id')})"
-        check_evidence(node_path, evidence, node.get("delivery_status"), "roadmap node")
+        check_evidence(
+            node_path,
+            evidence,
+            node.get("delivery_status"),
+            "roadmap node",
+            acceptance=node.get("acceptance_status"),
+            status=node.get("status"),
+        )
 
     for caveat_index, caveat in enumerate(shared.get("caveats", [])):
         issue = caveat.get("issue")
@@ -1150,6 +1338,1405 @@ def github_evidence_issues(
                 add("missing_release", path, "release_status requires a GitHub Release for the latest tag")
 
     return issues
+
+
+ACTIVE_EXECUTION_METADATA_KEYS = ("active_worktree", "active_branch", "active_agent", "active_session")
+GITHUB_UNAVAILABLE_ISSUES = ("auth", "rate_limit", "network")
+DECISION_BACKED_PR_STATE_ISSUES = ("pr_open_state_mismatch", "pr_draft_state_mismatch", "pr_closed_state_mismatch")
+
+
+def github_evidence_node_path(path: str) -> str:
+    return path.replace("] (", "](")
+
+
+def pull_request_issue_path(path: str, repository: str, number: int | None) -> str | None:
+    if number is None:
+        return None
+    return f"{github_evidence_node_path(path)}.evidence.pull_requests[{repository}#{number}]"
+
+
+def repository_slug_for_key(shared: dict[str, Any], key: str) -> str | None:
+    repository = shared.get("repositories", {}).get(key)
+    if not isinstance(repository, dict):
+        return None
+    slug = repository.get("slug")
+    return str(slug) if slug else None
+
+
+def preferred_repository_for_node(
+    shared: dict[str, Any],
+    repo_statuses: list[dict[str, Any]],
+    node: dict[str, Any],
+) -> str | None:
+    preferred_status = repo_statuses[0] if repo_statuses else {}
+    preferred_slug = preferred_status.get("repository")
+    if preferred_slug:
+        preferred_key = repository_key_for_slug(shared, str(preferred_slug))
+        if preferred_key in node.get("repositories", []):
+            return str(preferred_slug)
+    for key in node.get("repositories", []):
+        slug = repository_slug_for_key(shared, str(key))
+        if slug:
+            return slug
+    return str(preferred_slug) if preferred_slug else None
+
+
+def repository_owner(repository: str) -> str:
+    return repository.split("/", 1)[0]
+
+
+def pr_manifest_entry(repository: str, state: PullRequestEvidence) -> dict[str, Any]:
+    if state.number is None:
+        raise ProjectDocsError("cannot record pull request evidence without a PR number")
+    entry: dict[str, Any] = {"repository": repository, "number": state.number}
+    if state.merged:
+        if state.merged_at:
+            entry["merged_at"] = state.merged_at
+        if state.merge_commit_sha:
+            entry["merge_commit_sha"] = state.merge_commit_sha
+    if state.owner_login and state.owner_url:
+        entry["owner"] = {"login": state.owner_login, "profile_url": state.owner_url}
+    return entry
+
+
+def merge_date(merged_at: str | None) -> str | None:
+    if not merged_at:
+        return None
+    match = re.match(r"^(\d{4}-\d{2}-\d{2})T", merged_at)
+    return match.group(1) if match else None
+
+
+def merged_pr_follows_closed_pr(closed_state: PullRequestEvidence, merged_states: list[PullRequestEvidence]) -> bool:
+    if closed_state.merged or closed_state.state != "closed" or not closed_state.closed_at:
+        return False
+    return any(state.merged_at and state.merged_at > closed_state.closed_at for state in merged_states)
+
+
+def closed_pr_follows_merged_pr(closed_state: PullRequestEvidence, merged_states: list[PullRequestEvidence]) -> bool:
+    if closed_state.merged or closed_state.state != "closed" or not closed_state.closed_at:
+        return False
+    return any(state.merged_at and state.merged_at < closed_state.closed_at for state in merged_states)
+
+
+def merged_pr_has_later_closed_pr(merged_state: PullRequestEvidence, closed_states: list[PullRequestEvidence]) -> bool:
+    if not merged_state.merged or not merged_state.merged_at:
+        return False
+    return any(state.closed_at and state.closed_at > merged_state.merged_at for state in closed_states)
+
+
+def evidence_commits(evidence: dict[str, Any] | None) -> list[dict[str, Any]]:
+    return evidence.get("commits", []) if isinstance(evidence, dict) else []
+
+
+def evidence_pull_requests(evidence: dict[str, Any] | None) -> list[dict[str, Any]]:
+    return evidence.get("pull_requests", []) if isinstance(evidence, dict) else []
+
+
+def pull_request_is_recorded(node: dict[str, Any], repository: str, number: int | None) -> bool:
+    if number is None:
+        return False
+    for pr in evidence_pull_requests(node.get("evidence")):
+        if pr.get("repository") == repository and pr.get("number") == number:
+            return True
+    return False
+
+
+def merge_commit_recorded(node: dict[str, Any], repository: str, sha: str | None) -> bool:
+    if not sha:
+        return True
+    return any(commit.get("repository") == repository and commit.get("sha") == sha for commit in evidence_commits(node.get("evidence")))
+
+
+def reconciliation_target_kind(node: dict[str, Any]) -> str:
+    return "roadmap" if node.get("kind") else "milestone"
+
+
+def update_for_node(plan: ReconciliationPlan, node: dict[str, Any]) -> NodeReconciliationUpdate:
+    node_id = node["id"]
+    target_kind = reconciliation_target_kind(node)
+    key = (target_kind, node_id)
+    update = plan.node_updates.get(key)
+    if update is None:
+        update = NodeReconciliationUpdate(node_id=node_id, target_kind=target_kind)
+        plan.node_updates[key] = update
+    return update
+
+
+def add_node_change(
+    plan: ReconciliationPlan,
+    node: dict[str, Any],
+    path: str,
+    name: str,
+    message: str,
+) -> None:
+    plan.changes.append(ReconciliationChange(name=name, path=path, message=message, node_id=node.get("id")))
+
+
+def add_node_decision(
+    plan: ReconciliationPlan,
+    node: dict[str, Any],
+    path: str,
+    name: str,
+    message: str,
+    *,
+    evidence_path: str | None = None,
+    evidence_paths: tuple[str, ...] = (),
+) -> None:
+    plan.decisions.append(
+        ReconciliationDecision(
+            name=name,
+            path=path,
+            message=message,
+            node_id=node.get("id"),
+            evidence_path=evidence_path,
+            evidence_paths=evidence_paths,
+        )
+    )
+
+
+def set_node_update_field(
+    plan: ReconciliationPlan,
+    node: dict[str, Any],
+    path: str,
+    update_field: str,
+    current: Any,
+    new: Any,
+    name: str,
+    label: str,
+) -> None:
+    if current == new:
+        return
+    update = update_for_node(plan, node)
+    existing = getattr(update, update_field)
+    if existing == new:
+        return
+    if existing is not None and existing != new:
+        plan.issues.append(
+            ValidationIssue(
+                "reconcile",
+                "conflicting_safe_changes",
+                path,
+                f"cannot set {label} to both {existing!r} and {new!r}",
+            )
+        )
+        return
+    setattr(update, update_field, new)
+    add_node_change(plan, node, path, name, f"set {label} from {status_label(current)} to {status_label(new)}")
+
+
+def queue_pull_request_evidence(
+    plan: ReconciliationPlan,
+    node: dict[str, Any],
+    path: str,
+    repository: str,
+    state: PullRequestEvidence,
+) -> None:
+    if state.number is None:
+        plan.issues.append(ValidationIssue("reconcile", "missing_pr_number", path, "GitHub PR response did not include a number"))
+        return
+    entry = pr_manifest_entry(repository, state)
+    evidence = node.get("evidence")
+    changed = not pull_request_is_recorded(node, repository, state.number)
+    for pr in evidence_pull_requests(evidence):
+        if pr.get("repository") == repository and pr.get("number") == state.number:
+            for key, value in entry.items():
+                if key not in pr or pr.get(key) != value:
+                    changed = True
+            break
+    if not changed:
+        return
+    update = update_for_node(plan, node)
+    if any(item.get("repository") == repository and item.get("number") == state.number for item in update.upsert_pull_requests):
+        return
+    update.upsert_pull_requests.append(entry)
+    add_node_change(
+        plan,
+        node,
+        path,
+        "record_pull_request_evidence",
+        f"record {repository}#{state.number} PR evidence and verified merge metadata when available",
+    )
+
+
+def queue_merge_commit_evidence(
+    plan: ReconciliationPlan,
+    node: dict[str, Any],
+    path: str,
+    repository: str,
+    sha: str | None,
+) -> None:
+    if not sha or merge_commit_recorded(node, repository, sha):
+        return
+    update = update_for_node(plan, node)
+    if any(item.get("repository") == repository and item.get("sha") == sha for item in update.add_commits):
+        return
+    update.add_commits.append({"repository": repository, "sha": sha})
+    add_node_change(plan, node, path, "record_merge_commit", f"record merge commit {repository}@{sha[:12]}")
+
+
+def queue_clear_repo_active_slice(
+    plan: ReconciliationPlan,
+    repo_status: dict[str, Any],
+    node: dict[str, Any],
+) -> None:
+    active_slice = repo_status.get("current_work", {}).get("active_slice")
+    if not isinstance(active_slice, dict) or active_slice.get("id") != node.get("id"):
+        return
+    repository = repo_status.get("repository", "<unknown>")
+    update = plan.repo_status_updates.get(repository)
+    if update is None:
+        update = RepoStatusReconciliationUpdate(repository=repository)
+        plan.repo_status_updates[repository] = update
+    if update.clear_active_slice_id == node.get("id"):
+        return
+    update.clear_active_slice_id = node.get("id")
+    plan.changes.append(
+        ReconciliationChange(
+            name="clear_repo_active_slice",
+            path="project/repo-status.yaml:current_work.active_slice",
+            message=f"clear repo-local active slice for completed delivery `{node.get('id')}`",
+            node_id=node.get("id"),
+        )
+    )
+
+
+def node_has_active_delivery_assignment(node: dict[str, Any]) -> bool:
+    execution = node.get("execution", {})
+    return node.get("status") == "active" or execution.get("assignment") == "current"
+
+
+def node_can_record_merged_delivery(node: dict[str, Any]) -> bool:
+    execution = node.get("execution", {})
+    return node_has_active_delivery_assignment(node) or node.get("status") in ("implemented", "accepted") or execution.get("assignment") == "complete"
+
+
+def pull_request_matches_active_branch(
+    node: dict[str, Any],
+    repository: str,
+    state: PullRequestEvidence,
+) -> bool:
+    branch = node.get("execution", {}).get("active_branch")
+    if not branch:
+        return True
+    return state.head_ref == branch
+
+
+def unambiguous_branch_pull_request_states(states: list[PullRequestEvidence]) -> list[PullRequestEvidence]:
+    if len(states) <= 1:
+        return states
+    open_states = [state for state in states if state.state == "open" and not state.merged]
+    if len(open_states) == 1:
+        return open_states
+    return states
+
+
+def queue_active_delivery_completion(
+    plan: ReconciliationPlan,
+    repo_statuses: list[dict[str, Any]],
+    node: dict[str, Any],
+    path: str,
+) -> bool:
+    if not node_has_active_delivery_assignment(node):
+        return False
+
+    execution = node.get("execution", {})
+    node_status = node.get("status")
+    if node_status == "active":
+        set_node_update_field(
+            plan,
+            node,
+            f"{path}.status",
+            "status",
+            node_status,
+            "implemented",
+            "complete_active_implementation",
+            "status",
+        )
+    set_node_update_field(
+        plan,
+        node,
+        f"{path}.execution.assignment",
+        "execution_assignment",
+        execution.get("assignment"),
+        "complete",
+        "complete_execution_assignment",
+        "execution.assignment",
+    )
+    update = update_for_node(plan, node)
+    if any(execution.get(key) for key in ACTIVE_EXECUTION_METADATA_KEYS):
+        update.clear_active_metadata = True
+        add_node_change(plan, node, f"{path}.execution", "clear_active_assignment", "remove active worktree, branch, agent, and session metadata")
+    if node.get("acceptance_status") == "proposed":
+        set_node_update_field(
+            plan,
+            node,
+            f"{path}.acceptance_status",
+            "acceptance_status",
+            node.get("acceptance_status"),
+            "implemented",
+            "mark_implementation_recorded",
+            "acceptance_status",
+        )
+    if node.get("capability_maturity") in ("active", "ready"):
+        set_node_update_field(
+            plan,
+            node,
+            f"{path}.capability_maturity",
+            "capability_maturity",
+            node.get("capability_maturity"),
+            "validated",
+            "mark_capability_validated",
+            "capability_maturity",
+        )
+    for repo_status in repo_statuses:
+        queue_clear_repo_active_slice(plan, repo_status, node)
+    return True
+
+
+def github_call(plan: ReconciliationPlan, name: str, path: str, fn):
+    try:
+        return fn()
+    except GitHubProviderError as exc:
+        plan.issues.append(ValidationIssue("github", exc.kind, path, f"{name}: {exc.message}"))
+        return PROVIDER_ERROR
+
+
+def reconcile_merged_pull_request(
+    plan: ReconciliationPlan,
+    shared: dict[str, Any],
+    repo_statuses: list[dict[str, Any]],
+    provider: GitHubEvidenceProvider,
+    node: dict[str, Any],
+    path: str,
+    repository: str,
+    state: PullRequestEvidence,
+) -> None:
+    if not queue_verified_merged_pull_request_evidence(plan, provider, node, path, repository, state):
+        return
+
+    delivery_status = node.get("delivery_status")
+    if delivery_status in ("proposed", "open", "draft"):
+        if not node_can_record_merged_delivery(node):
+            add_node_decision(
+                plan,
+                node,
+                path,
+                "merged_pr_for_unselected_slice",
+                f"{repository}#{state.number or '<unknown>'} is merged but the slice is not selected, active, or already marked complete; explicitly select, complete, supersede, or reject the slice",
+                evidence_path=pull_request_issue_path(path, repository, state.number),
+            )
+            return
+        set_node_update_field(plan, node, f"{path}.delivery_status", "delivery_status", delivery_status, "merged", "mark_delivery_merged", "delivery_status")
+
+    if queue_active_delivery_completion(plan, repo_statuses, node, path):
+        completed_at = merge_date(state.merged_at)
+        if completed_at and not node.get("completed_at"):
+            set_node_update_field(plan, node, f"{path}.completed_at", "completed_at", node.get("completed_at"), completed_at, "record_completed_at", "completed_at")
+
+
+def reconcile_milestone_pull_request_state(
+    plan: ReconciliationPlan,
+    provider: GitHubEvidenceProvider,
+    milestone: dict[str, Any],
+    path: str,
+    repository: str,
+    state: PullRequestEvidence,
+    *,
+    recorded_delivery_has_open_pr: bool = False,
+    recorded_delivery_has_mixed_open_pr_states: bool = False,
+    recorded_closed_pr_has_later_merged_pr: bool = False,
+    recorded_delivery_has_unresolved_later_closed_pr: bool = False,
+    related_decision_evidence_paths: tuple[str, ...] = (),
+    record_completed_at: bool = True,
+) -> None:
+    if state.merged:
+        if recorded_delivery_has_open_pr or recorded_delivery_has_unresolved_later_closed_pr:
+            queue_verified_merged_pull_request_evidence(plan, provider, milestone, path, repository, state)
+            return
+        if not queue_verified_merged_pull_request_evidence(plan, provider, milestone, path, repository, state):
+            return
+        delivery_status = milestone.get("delivery_status")
+        if delivery_status in ("proposed", "open", "draft"):
+            set_node_update_field(
+                plan,
+                milestone,
+                f"{path}.delivery_status",
+                "delivery_status",
+                delivery_status,
+                "merged",
+                "mark_delivery_merged",
+                "delivery_status",
+            )
+        completed_at = merge_date(state.merged_at)
+        if record_completed_at and completed_at and not milestone.get("completed_at"):
+            set_node_update_field(
+                plan,
+                milestone,
+                f"{path}.completed_at",
+                "completed_at",
+                milestone.get("completed_at"),
+                completed_at,
+                "record_completed_at",
+                "completed_at",
+            )
+        return
+    if state.state == "open" and state.number is not None:
+        if milestone.get("delivery_status") == "merged":
+            plan.issues.append(
+                ValidationIssue(
+                    "reconcile",
+                    "open_pr_after_merged_delivery",
+                    pull_request_issue_path(path, repository, state.number) or path,
+                    "recorded pull request is still open but the milestone declares merged delivery; "
+                    "close, supersede, or move the milestone back to active delivery explicitly",
+                )
+            )
+            return
+        if recorded_delivery_has_mixed_open_pr_states:
+            return
+        queue_open_pull_request_delivery_state(plan, milestone, path, state)
+        return
+    if state.state == "closed" and (
+        recorded_closed_pr_has_later_merged_pr or closed_unmerged_delivery_decision_recorded(milestone)
+    ):
+        return
+    if state.state == "closed":
+        evidence_path = pull_request_issue_path(path, repository, state.number)
+        add_node_decision(
+            plan,
+            milestone,
+            path,
+            "closed_unmerged_pr",
+            f"{repository}#{state.number or '<unknown>'} is closed without merge; explicitly supersede, replace, reopen, or abandon the milestone",
+            evidence_path=evidence_path,
+            evidence_paths=tuple(
+                path for path in related_decision_evidence_paths if path and path != evidence_path
+            ),
+        )
+
+
+def queue_verified_merged_pull_request_evidence(
+    plan: ReconciliationPlan,
+    provider: GitHubEvidenceProvider,
+    node: dict[str, Any],
+    path: str,
+    repository: str,
+    state: PullRequestEvidence,
+) -> bool:
+    if state.number is None:
+        plan.issues.append(ValidationIssue("reconcile", "missing_pr_number", path, "GitHub PR response did not include a number"))
+        return False
+    if state.merge_commit_sha:
+        reachable = github_call(
+            plan,
+            "merge commit reachability",
+            f"{path}.evidence.pull_requests[{repository}#{state.number}]",
+            lambda: provider.commit_reachable_from_default_branch(repository, state.merge_commit_sha or ""),
+        )
+        if reachable is PROVIDER_ERROR:
+            return False
+        if reachable is False:
+            plan.issues.append(
+                ValidationIssue(
+                    "github",
+                    "merge_commit_not_reachable",
+                    f"{path}.evidence.pull_requests[{repository}#{state.number}]",
+                    "PR merge commit is not reachable from the repository default branch",
+                )
+            )
+            return False
+
+    queue_pull_request_evidence(plan, node, path, repository, state)
+    queue_merge_commit_evidence(plan, node, path, repository, state.merge_commit_sha)
+    return True
+
+
+def closed_unmerged_delivery_decision_recorded(node: dict[str, Any]) -> bool:
+    return closed_unmerged_status_recorded(
+        node.get("delivery_status"),
+        node.get("acceptance_status"),
+        node.get("status"),
+    )
+
+
+def closed_unmerged_status_recorded(
+    delivery_status: str | None,
+    acceptance_status: str | None,
+    status: str | None,
+) -> bool:
+    return (
+        delivery_status in ("closed", "superseded")
+        or acceptance_status in ("rejected", "superseded")
+        or status == "superseded"
+    )
+
+
+def queue_open_pull_request_delivery_state(
+    plan: ReconciliationPlan,
+    node: dict[str, Any],
+    path: str,
+    state: PullRequestEvidence,
+) -> None:
+    delivery_status = node.get("delivery_status")
+    if delivery_status not in ("proposed", "open", "draft"):
+        return
+    target_delivery_status = "draft" if state.draft else "open"
+    if delivery_status == target_delivery_status:
+        return
+    set_node_update_field(
+        plan,
+        node,
+        f"{path}.delivery_status",
+        "delivery_status",
+        delivery_status,
+        target_delivery_status,
+        "mark_delivery_draft" if target_delivery_status == "draft" else "mark_delivery_open",
+        "delivery_status",
+    )
+
+
+def reconcile_pull_request_state(
+    plan: ReconciliationPlan,
+    shared: dict[str, Any],
+    repo_statuses: list[dict[str, Any]],
+    provider: GitHubEvidenceProvider,
+    node: dict[str, Any],
+    path: str,
+    repository: str,
+    state: PullRequestEvidence,
+    *,
+    discovered_from_active_branch: bool,
+    recorded_delivery_has_open_pr: bool = False,
+    recorded_delivery_has_mixed_open_pr_states: bool = False,
+    recorded_closed_pr_has_later_merged_pr: bool = False,
+    recorded_delivery_has_unresolved_later_closed_pr: bool = False,
+    completion_must_match_active_branch: bool = False,
+    defer_active_branch_completion: bool = False,
+    recorded_completion_pr_key: tuple[str, int | None] | None = None,
+    related_decision_evidence_paths: tuple[str, ...] = (),
+    defer_closed_unmerged_decision: bool = False,
+) -> None:
+    if state.merged:
+        if recorded_delivery_has_open_pr or recorded_delivery_has_unresolved_later_closed_pr or (
+            recorded_completion_pr_key is not None and (repository, state.number) != recorded_completion_pr_key
+        ):
+            queue_verified_merged_pull_request_evidence(plan, provider, node, path, repository, state)
+            return
+        if (
+            completion_must_match_active_branch
+            and not discovered_from_active_branch
+            and not pull_request_matches_active_branch(node, repository, state)
+        ):
+            queue_verified_merged_pull_request_evidence(plan, provider, node, path, repository, state)
+            return
+        if completion_must_match_active_branch and defer_active_branch_completion and not discovered_from_active_branch:
+            queue_verified_merged_pull_request_evidence(plan, provider, node, path, repository, state)
+            return
+        reconcile_merged_pull_request(plan, shared, repo_statuses, provider, node, path, repository, state)
+        return
+    if state.state == "open" and state.number is not None:
+        if node.get("delivery_status") == "merged":
+            plan.issues.append(
+                ValidationIssue(
+                    "reconcile",
+                    "open_pr_after_merged_delivery",
+                    pull_request_issue_path(path, repository, state.number) or path,
+                    "recorded pull request is still open but the slice declares merged delivery; "
+                    "close, supersede, or move the slice back to active delivery explicitly",
+                )
+            )
+            return
+        if recorded_delivery_has_mixed_open_pr_states:
+            return
+        if discovered_from_active_branch:
+            queue_pull_request_evidence(plan, node, path, repository, state)
+        queue_open_pull_request_delivery_state(plan, node, path, state)
+        return
+    if state.state == "closed" and (
+        recorded_closed_pr_has_later_merged_pr or closed_unmerged_delivery_decision_recorded(node)
+    ):
+        return
+    if state.state == "closed" and defer_closed_unmerged_decision:
+        return
+    if state.state == "closed":
+        evidence_path = pull_request_issue_path(path, repository, state.number)
+        add_node_decision(
+            plan,
+            node,
+            path,
+            "closed_unmerged_pr",
+            f"{repository}#{state.number or '<unknown>'} is closed without merge; explicitly supersede, replace, reopen, or abandon the slice",
+            evidence_path=evidence_path,
+            evidence_paths=tuple(
+                path for path in related_decision_evidence_paths if path and path != evidence_path
+            ),
+        )
+
+
+def reconcile_commit_only_delivery(
+    plan: ReconciliationPlan,
+    repo_statuses: list[dict[str, Any]],
+    provider: GitHubEvidenceProvider,
+    node: dict[str, Any],
+    path: str,
+) -> None:
+    if node.get("delivery_status") not in ("open", "draft"):
+        return
+    if node.get("status") != "implemented" and node.get("execution", {}).get("assignment") != "complete":
+        return
+    evidence = node.get("evidence")
+    if evidence_pull_requests(evidence):
+        return
+    commits = evidence_commits(evidence)
+    if not commits:
+        return
+    for commit in commits:
+        repository = commit["repository"]
+        sha = commit["sha"]
+        reachable = github_call(
+            plan,
+            "commit reachability",
+            f"{path}.evidence.commits[{repository}@{sha}]",
+            lambda repository=repository, sha=sha: provider.commit_reachable_from_default_branch(repository, sha),
+        )
+        if reachable is PROVIDER_ERROR:
+            return
+        if reachable is False:
+            add_node_decision(
+                plan,
+                node,
+                path,
+                "commit_not_reachable",
+                f"commit {repository}@{sha[:12]} is not reachable from the repository default branch; keep open or record replacement/supersession explicitly",
+            )
+            return
+    set_node_update_field(
+        plan,
+        node,
+        f"{path}.delivery_status",
+        "delivery_status",
+        node.get("delivery_status"),
+        "merged",
+        "mark_commit_delivery_merged",
+        "delivery_status",
+    )
+    queue_active_delivery_completion(plan, repo_statuses, node, path)
+
+
+def apply_reconciliation_updates_in_place(
+    shared: dict[str, Any],
+    repo_statuses: list[dict[str, Any]],
+    plan: ReconciliationPlan,
+) -> None:
+    target_by_key = {
+        **{("roadmap", node["id"]): node for node in roadmap_nodes(shared)},
+        **{("milestone", milestone["id"]): milestone for milestone in shared.get("milestones", [])},
+    }
+    for update in plan.node_updates.values():
+        node = target_by_key.get((update.target_kind, update.node_id))
+        if not node:
+            continue
+        for field_name in ("status", "delivery_status", "acceptance_status", "capability_maturity", "completed_at"):
+            value = getattr(update, field_name)
+            if value is not None:
+                node[field_name] = value
+        if update.execution_assignment is not None or update.clear_active_metadata:
+            execution = node.setdefault("execution", {})
+            if update.execution_assignment is not None:
+                execution["assignment"] = update.execution_assignment
+            if update.clear_active_metadata:
+                for key in ACTIVE_EXECUTION_METADATA_KEYS:
+                    execution.pop(key, None)
+        if update.add_commits or update.upsert_pull_requests:
+            evidence = node.setdefault("evidence", {"commits": [], "pull_requests": []})
+            commits = evidence.setdefault("commits", [])
+            for commit in update.add_commits:
+                if not any(existing.get("repository") == commit["repository"] and existing.get("sha") == commit["sha"] for existing in commits):
+                    commits.append(copy.deepcopy(commit))
+            pull_requests = evidence.setdefault("pull_requests", [])
+            for entry in update.upsert_pull_requests:
+                existing = next(
+                    (
+                        item
+                        for item in pull_requests
+                        if item.get("repository") == entry["repository"] and item.get("number") == entry["number"]
+                    ),
+                    None,
+                )
+                if existing is None:
+                    pull_requests.append(copy.deepcopy(entry))
+                else:
+                    for key, value in entry.items():
+                        existing[key] = copy.deepcopy(value)
+
+    for repo_status in repo_statuses:
+        repository = repo_status.get("repository")
+        update = plan.repo_status_updates.get(repository)
+        if not update or not update.clear_active_slice_id:
+            continue
+        current_work = repo_status.setdefault("current_work", {})
+        current_work["active_slice"] = {"id": None, "title": None, "state": "none_selected"}
+        current_work["state"] = "none_selected"
+
+
+def apply_reconciliation_plan(
+    shared: dict[str, Any],
+    repo_statuses: list[dict[str, Any]],
+    plan: ReconciliationPlan,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    reconciled_shared = copy.deepcopy(shared)
+    reconciled_repo_statuses = copy.deepcopy(repo_statuses)
+    apply_reconciliation_updates_in_place(reconciled_shared, reconciled_repo_statuses, plan)
+    return reconciled_shared, reconciled_repo_statuses
+
+
+def queue_ready_candidate_advancement(plan: ReconciliationPlan, shared: dict[str, Any]) -> bool:
+    changed = False
+    node_by_id = {node["id"]: node for node in roadmap_nodes(shared)}
+    for index, node in enumerate(roadmap_nodes(shared)):
+        if node.get("kind") != "slice":
+            continue
+        if node.get("capability_maturity") != "gated":
+            continue
+        if node.get("status") not in ("planned", "active"):
+            continue
+        assignment = node.get("execution", {}).get("assignment")
+        if assignment not in ("planned", "unassigned", SELECTED_NEXT_ASSIGNMENT):
+            continue
+        readiness = dependency_readiness(node, node_by_id)
+        if not readiness.ready:
+            continue
+        path = roadmap_node_path(index, node)
+        set_node_update_field(
+            plan,
+            node,
+            f"{path}.capability_maturity",
+            "capability_maturity",
+            node.get("capability_maturity"),
+            "ready",
+            "advance_ready_candidate",
+            "capability_maturity",
+        )
+        changed = True
+    return changed
+
+
+def reconciliation_plan(
+    shared: dict[str, Any],
+    repo_statuses: list[dict[str, Any]],
+    provider: GitHubEvidenceProvider,
+    *,
+    discover_active_branches: bool = True,
+) -> ReconciliationPlan:
+    plan = ReconciliationPlan(changes=[], decisions=[], issues=[], node_updates={}, repo_status_updates={})
+    nodes = roadmap_nodes(shared)
+
+    for index, milestone in enumerate(shared.get("milestones", [])):
+        path = milestone_path(index, milestone)
+        evidence = milestone.get("evidence")
+        recorded_pull_requests: list[tuple[str, PullRequestEvidence]] = []
+        for pr in evidence_pull_requests(evidence):
+            repository = pr["repository"]
+            number = pr["number"]
+            state = github_call(
+                plan,
+                "pull request",
+                f"{path}.evidence.pull_requests[{repository}#{number}]",
+                lambda repository=repository, number=number: provider.pull_request(repository, number),
+            )
+            if state is PROVIDER_ERROR:
+                continue
+            if state is None:
+                plan.issues.append(
+                    ValidationIssue(
+                        "github",
+                        "missing_pr",
+                        f"{path}.evidence.pull_requests[{repository}#{number}]",
+                        "pull request does not exist in the declared repository",
+                    )
+                )
+                continue
+            if state.number is None:
+                state = PullRequestEvidence(
+                    state=state.state,
+                    draft=state.draft,
+                    merged=state.merged,
+                    owner_login=state.owner_login,
+                    owner_url=state.owner_url,
+                    number=number,
+                    merged_at=state.merged_at,
+                    closed_at=state.closed_at,
+                    merge_commit_sha=state.merge_commit_sha,
+                    head_ref=state.head_ref,
+                    head_owner_login=state.head_owner_login,
+                )
+            recorded_pull_requests.append((repository, state))
+
+        recorded_open_pull_requests = [
+            (repository, state)
+            for repository, state in recorded_pull_requests
+            if state.state == "open" and not state.merged
+        ]
+        recorded_merged_pull_requests = [
+            (repository, state) for repository, state in recorded_pull_requests if state.merged
+        ]
+        recorded_merged_pr_states = [state for _repository, state in recorded_merged_pull_requests]
+        recorded_closed_unmerged_pull_requests = [
+            (repository, state)
+            for repository, state in recorded_pull_requests
+            if state.state == "closed" and not state.merged
+        ]
+        recorded_delivery_has_unresolved_later_closed_pr = (
+            not closed_unmerged_delivery_decision_recorded(milestone)
+            and any(
+                closed_pr_follows_merged_pr(state, recorded_merged_pr_states)
+                and not merged_pr_follows_closed_pr(state, recorded_merged_pr_states)
+                for _repository, state in recorded_closed_unmerged_pull_requests
+            )
+        )
+        recorded_unresolved_history_evidence_paths = ()
+        if recorded_delivery_has_unresolved_later_closed_pr:
+            recorded_unresolved_history_evidence_paths = tuple(
+                evidence_path
+                for evidence_path in (
+                    pull_request_issue_path(path, repository, state.number)
+                    for repository, state in recorded_merged_pull_requests + recorded_closed_unmerged_pull_requests
+                )
+                if evidence_path is not None
+            )
+        recorded_delivery_has_open_pr = bool(recorded_open_pull_requests)
+        recorded_delivery_has_mixed_open_pr_states = (
+            any(not state.draft for _repository, state in recorded_open_pull_requests)
+            and any(state.draft for _repository, state in recorded_open_pull_requests)
+        )
+        completion_pr_key = None
+        if recorded_merged_pull_requests and not recorded_delivery_has_open_pr and not recorded_delivery_has_unresolved_later_closed_pr:
+            completion_repository, completion_state = max(
+                recorded_merged_pull_requests,
+                key=lambda item: (item[1].merged_at or "", item[0], item[1].number or -1),
+            )
+            completion_pr_key = (completion_repository, completion_state.number)
+        if recorded_delivery_has_mixed_open_pr_states and milestone.get("delivery_status") != "merged":
+            evidence_paths = tuple(
+                evidence_path
+                for evidence_path in (
+                    pull_request_issue_path(path, repository, state.number)
+                    for repository, state in recorded_open_pull_requests
+                )
+                if evidence_path is not None
+            )
+            numbers = ", ".join(
+                f"{repository}#{state.number}" for repository, state in recorded_open_pull_requests
+            )
+            add_node_decision(
+                plan,
+                milestone,
+                path,
+                "mixed_open_and_draft_prs",
+                f"recorded pull requests include both draft and ready-for-review state ({numbers}); "
+                "select the active delivery state explicitly",
+                evidence_paths=evidence_paths,
+            )
+        for repository, state in recorded_pull_requests:
+            reconcile_milestone_pull_request_state(
+                plan,
+                provider,
+                milestone,
+                path,
+                repository,
+                state,
+                recorded_delivery_has_open_pr=recorded_delivery_has_open_pr,
+                recorded_delivery_has_mixed_open_pr_states=recorded_delivery_has_mixed_open_pr_states,
+                recorded_closed_pr_has_later_merged_pr=merged_pr_follows_closed_pr(
+                    state,
+                    recorded_merged_pr_states,
+                ),
+                recorded_delivery_has_unresolved_later_closed_pr=recorded_delivery_has_unresolved_later_closed_pr,
+                related_decision_evidence_paths=recorded_unresolved_history_evidence_paths,
+                record_completed_at=completion_pr_key is None or completion_pr_key == (repository, state.number),
+            )
+
+    for index, node in enumerate(nodes):
+        if node.get("kind") != "slice":
+            continue
+        path = roadmap_node_path(index, node)
+        evidence = node.get("evidence")
+
+        recorded_pull_requests: list[tuple[str, PullRequestEvidence]] = []
+        for pr in evidence_pull_requests(evidence):
+            repository = pr["repository"]
+            number = pr["number"]
+            state = github_call(
+                plan,
+                "pull request",
+                f"{path}.evidence.pull_requests[{repository}#{number}]",
+                lambda repository=repository, number=number: provider.pull_request(repository, number),
+            )
+            if state is PROVIDER_ERROR:
+                continue
+            if state is None:
+                plan.issues.append(
+                    ValidationIssue(
+                        "github",
+                        "missing_pr",
+                        f"{path}.evidence.pull_requests[{repository}#{number}]",
+                        "pull request does not exist in the declared repository",
+                    )
+                )
+                continue
+            if state.number is None:
+                state = PullRequestEvidence(
+                    state=state.state,
+                    draft=state.draft,
+                    merged=state.merged,
+                    owner_login=state.owner_login,
+                    owner_url=state.owner_url,
+                    number=number,
+                    merged_at=state.merged_at,
+                    closed_at=state.closed_at,
+                    merge_commit_sha=state.merge_commit_sha,
+                    head_ref=state.head_ref,
+                    head_owner_login=state.head_owner_login,
+                )
+            recorded_pull_requests.append((repository, state))
+
+        recorded_open_pull_requests = [
+            (repository, state)
+            for repository, state in recorded_pull_requests
+            if state.state == "open" and not state.merged
+        ]
+        recorded_delivery_has_open_pr = bool(recorded_open_pull_requests)
+        recorded_delivery_has_mixed_open_pr_states = (
+            any(not state.draft for _repository, state in recorded_open_pull_requests)
+            and any(state.draft for _repository, state in recorded_open_pull_requests)
+        )
+        recorded_merged_pull_requests = [
+            (repository, state) for repository, state in recorded_pull_requests if state.merged
+        ]
+        recorded_merged_pr_states = [state for _repository, state in recorded_merged_pull_requests]
+        recorded_closed_unmerged_pull_requests = [
+            (repository, state)
+            for repository, state in recorded_pull_requests
+            if state.state == "closed" and not state.merged
+        ]
+        recorded_delivery_has_unresolved_later_closed_pr = (
+            not closed_unmerged_delivery_decision_recorded(node)
+            and any(
+                closed_pr_follows_merged_pr(state, recorded_merged_pr_states)
+                and not merged_pr_follows_closed_pr(state, recorded_merged_pr_states)
+                for _repository, state in recorded_closed_unmerged_pull_requests
+            )
+        )
+        recorded_unresolved_history_evidence_paths = ()
+        if recorded_delivery_has_unresolved_later_closed_pr:
+            recorded_unresolved_history_evidence_paths = tuple(
+                evidence_path
+                for evidence_path in (
+                    pull_request_issue_path(path, repository, state.number)
+                    for repository, state in recorded_merged_pull_requests + recorded_closed_unmerged_pull_requests
+                )
+                if evidence_path is not None
+            )
+        recorded_completion_pr_key = None
+        if (
+            recorded_merged_pull_requests
+            and not recorded_delivery_has_open_pr
+            and not recorded_delivery_has_unresolved_later_closed_pr
+        ):
+            completion_repository, completion_state = max(
+                recorded_merged_pull_requests,
+                key=lambda item: (item[1].merged_at or "", item[0], item[1].number or -1),
+            )
+            recorded_completion_pr_key = (completion_repository, completion_state.number)
+        if recorded_delivery_has_mixed_open_pr_states and node.get("delivery_status") != "merged":
+            evidence_paths = tuple(
+                path
+                for path in (
+                    pull_request_issue_path(path, repository, state.number)
+                    for repository, state in recorded_open_pull_requests
+                )
+                if path is not None
+            )
+            numbers = ", ".join(
+                f"{repository}#{state.number}" for repository, state in recorded_open_pull_requests
+            )
+            add_node_decision(
+                plan,
+                node,
+                path,
+                "mixed_open_and_draft_prs",
+                f"recorded pull requests include both draft and ready-for-review state ({numbers}); "
+                "select the active delivery state explicitly",
+                evidence_paths=evidence_paths,
+            )
+        completion_must_match_active_branch = bool(
+            node_has_active_delivery_assignment(node)
+            and node.get("execution", {}).get("active_branch")
+        )
+        defer_active_branch_completion = completion_must_match_active_branch and discover_active_branches
+        for repository, state in recorded_pull_requests:
+            reconcile_pull_request_state(
+                plan,
+                shared,
+                repo_statuses,
+                provider,
+                node,
+                path,
+                repository,
+                state,
+                discovered_from_active_branch=False,
+                recorded_delivery_has_open_pr=recorded_delivery_has_open_pr,
+                recorded_delivery_has_mixed_open_pr_states=recorded_delivery_has_mixed_open_pr_states,
+                recorded_closed_pr_has_later_merged_pr=merged_pr_follows_closed_pr(
+                    state,
+                    recorded_merged_pr_states,
+                ),
+                recorded_delivery_has_unresolved_later_closed_pr=recorded_delivery_has_unresolved_later_closed_pr,
+                completion_must_match_active_branch=completion_must_match_active_branch,
+                defer_active_branch_completion=defer_active_branch_completion,
+                recorded_completion_pr_key=recorded_completion_pr_key,
+                related_decision_evidence_paths=recorded_unresolved_history_evidence_paths,
+                defer_closed_unmerged_decision=defer_active_branch_completion,
+            )
+
+        effective_merged_pr_states = list(recorded_merged_pr_states)
+        if discover_active_branches and is_active_implementation_slice(node):
+            execution = node.get("execution", {})
+            branch = execution.get("active_branch")
+            repository = preferred_repository_for_node(shared, repo_statuses, node)
+            if branch and repository:
+                recorded_active_branch_states = unambiguous_branch_pull_request_states(
+                    [
+                        state
+                        for recorded_repository, state in recorded_pull_requests
+                        if recorded_repository == repository
+                        and pull_request_matches_active_branch(node, repository, state)
+                    ]
+                )
+                if len(recorded_active_branch_states) > 1:
+                    numbers = ", ".join(str(item.number) for item in recorded_active_branch_states)
+                    add_node_decision(
+                        plan,
+                        node,
+                        path,
+                        "active_branch_multiple_prs",
+                        f"active branch `{branch}` matched multiple recorded PRs ({numbers}); record the current delivery PR explicitly",
+                    )
+                    continue
+                owners = [repository_owner(repository)]
+                for state in recorded_active_branch_states:
+                    if state.head_owner_login and state.head_owner_login not in owners:
+                        owners.append(state.head_owner_login)
+                states = []
+                provider_failed = False
+                for owner in owners:
+                    owner_states = github_call(
+                        plan,
+                        "pull requests for active branch",
+                        f"{path}.execution.active_branch[{repository}:{owner}:{branch}]",
+                        lambda repository=repository, owner=owner, branch=branch: provider.pull_requests_for_head(repository, owner, branch),
+                    )
+                    if owner_states is PROVIDER_ERROR:
+                        provider_failed = True
+                        continue
+                    states.extend(owner_states)
+                if provider_failed and not states:
+                    continue
+                if not states and len(recorded_active_branch_states) == 1:
+                    states = recorded_active_branch_states
+                state_by_number = {state.number: state for state in states if state.number is not None}
+                states = sorted(
+                    list(state_by_number.values()) + [state for state in states if state.number is None],
+                    key=lambda item: item.number or 0,
+                )
+                states = unambiguous_branch_pull_request_states(states)
+                if not states:
+                    add_node_decision(
+                        plan,
+                        node,
+                        path,
+                        "active_branch_pr_not_found",
+                        f"active branch `{branch}` has no discoverable PR in {repository}; record PR evidence or explicitly keep the implementation active",
+                    )
+                elif len(states) > 1:
+                    numbers = ", ".join(str(item.number) for item in states)
+                    add_node_decision(
+                        plan,
+                        node,
+                        path,
+                        "active_branch_multiple_prs",
+                        f"active branch `{branch}` matched multiple PRs ({numbers}); record the current delivery PR explicitly",
+                    )
+                else:
+                    active_state = states[0]
+                    active_related_evidence_paths = recorded_unresolved_history_evidence_paths
+                    if active_state.merged:
+                        effective_merged_pr_states = recorded_merged_pr_states + [active_state]
+                        active_evidence_path = pull_request_issue_path(path, repository, active_state.number)
+                        if active_evidence_path:
+                            active_related_evidence_paths = tuple(
+                                dict.fromkeys((*recorded_unresolved_history_evidence_paths, active_evidence_path))
+                            )
+                    active_delivery_has_unresolved_later_closed_pr = (
+                        not closed_unmerged_delivery_decision_recorded(node)
+                        and any(
+                            not merged_pr_follows_closed_pr(closed_state, effective_merged_pr_states)
+                            for _closed_repository, closed_state in recorded_closed_unmerged_pull_requests
+                        )
+                    )
+                    reconcile_pull_request_state(
+                        plan,
+                        shared,
+                        repo_statuses,
+                        provider,
+                        node,
+                        path,
+                        repository,
+                        active_state,
+                        discovered_from_active_branch=True,
+                        recorded_delivery_has_open_pr=recorded_delivery_has_open_pr,
+                        recorded_delivery_has_mixed_open_pr_states=recorded_delivery_has_mixed_open_pr_states,
+                        recorded_closed_pr_has_later_merged_pr=merged_pr_follows_closed_pr(
+                            active_state,
+                            recorded_merged_pr_states,
+                        ),
+                        recorded_delivery_has_unresolved_later_closed_pr=active_delivery_has_unresolved_later_closed_pr,
+                        related_decision_evidence_paths=active_related_evidence_paths,
+                    )
+
+        if defer_active_branch_completion and recorded_closed_unmerged_pull_requests:
+            related_evidence_paths = tuple(
+                evidence_path
+                for evidence_path in (
+                    pull_request_issue_path(path, repository, state.number)
+                    for repository, state in recorded_merged_pull_requests + recorded_closed_unmerged_pull_requests
+                )
+                if evidence_path is not None
+            )
+            for repository, state in recorded_closed_unmerged_pull_requests:
+                if closed_unmerged_delivery_decision_recorded(node) or merged_pr_follows_closed_pr(state, effective_merged_pr_states):
+                    continue
+                evidence_path = pull_request_issue_path(path, repository, state.number)
+                add_node_decision(
+                    plan,
+                    node,
+                    path,
+                    "closed_unmerged_pr",
+                    f"{repository}#{state.number or '<unknown>'} is closed without merge; explicitly supersede, replace, reopen, or abandon the slice",
+                    evidence_path=evidence_path,
+                    evidence_paths=tuple(
+                        path for path in related_evidence_paths if path and path != evidence_path
+                    ),
+                )
+
+        reconcile_commit_only_delivery(plan, repo_statuses, provider, node, path)
+
+    while True:
+        preview_shared, preview_repo_statuses = apply_reconciliation_plan(shared, repo_statuses, plan)
+        before = len(plan.changes)
+        queue_ready_candidate_advancement(plan, preview_shared)
+        if len(plan.changes) == before:
+            break
+        shared = preview_shared
+        repo_statuses = preview_repo_statuses
+
+    return plan
+
+
+def reconciliation_ci_issues(plan: ReconciliationPlan, *, allow_decisions: bool = False) -> list[ValidationIssue]:
+    issues = list(plan.issues)
+    for change in plan.changes:
+        issues.append(
+            ValidationIssue(
+                "reconcile",
+                change.name,
+                change.path,
+                f"Project Truth needs post-merge reconciliation for `{change.node_id}`. Run ./scripts/project-docs reconcile --apply. {change.message}",
+            )
+        )
+    if not allow_decisions:
+        for decision in plan.decisions:
+            issues.append(
+                ValidationIssue(
+                    "reconcile",
+                    decision.name,
+                    decision.path,
+                    f"Project Truth needs an explicit planning decision for `{decision.node_id}`. {decision.message}",
+                )
+            )
+    return issues
+
+
+def filter_allowed_reconciliation_decision_issues(issues: list[ValidationIssue], plan: ReconciliationPlan) -> list[ValidationIssue]:
+    decision_evidence_paths = frozenset(
+        path
+        for decision in plan.decisions
+        if decision.name in ("closed_unmerged_pr", "merged_pr_for_unselected_slice", "mixed_open_and_draft_prs")
+        for path in ((decision.evidence_path,) if decision.evidence_path else ())
+        + decision.evidence_paths
+    )
+    if not decision_evidence_paths:
+        return issues
+    filtered: list[ValidationIssue] = []
+    for issue in issues:
+        if issue.category == "github" and issue.name in DECISION_BACKED_PR_STATE_ISSUES and issue.path in decision_evidence_paths:
+            continue
+        filtered.append(issue)
+    return filtered
+
+
+def format_reconciliation_plan(plan: ReconciliationPlan, *, include_apply_hint: bool = True) -> str:
+    lines: list[str] = []
+    if plan.clean:
+        return "Project Truth reconciliation is clean.\n"
+    if plan.changes:
+        lines.extend(["Safe mechanical changes:", ""])
+        for change in sorted(plan.changes, key=lambda item: (item.path, item.name, item.message)):
+            lines.append(f"- [{change.name}] {change.path}: {change.message}")
+        lines.append("")
+    if plan.decisions:
+        lines.extend(["Human decisions required:", ""])
+        for decision in sorted(plan.decisions, key=lambda item: (item.path, item.name, item.message)):
+            lines.append(f"- [{decision.name}] {decision.path}: {decision.message}")
+        lines.append("")
+    if plan.issues:
+        lines.extend(["Evidence or state failures:", ""])
+        for issue in sorted(plan.issues, key=lambda item: item.sort_key()):
+            lines.append(f"- {issue.format()}")
+        lines.append("")
+    if plan.changes and include_apply_hint:
+        lines.append("Apply safe changes with: ./scripts/project-docs reconcile --apply")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def reconciliation_exit_code(plan: ReconciliationPlan) -> int:
+    if any(issue.name in GITHUB_UNAVAILABLE_ISSUES for issue in plan.issues):
+        return 2
+    if plan.issues:
+        return 3
+    if plan.changes or plan.decisions:
+        return 1
+    return 0
+
+
+def round_trip_yaml():
+    try:
+        from ruamel.yaml import YAML
+    except ImportError as exc:
+        raise ProjectDocsError(
+            "reconcile --apply requires ruamel.yaml; install pinned Project Truth dependencies with "
+            "python3 -m pip install -r tools/project-docs/requirements.txt",
+            exit_code=3,
+        ) from exc
+    yaml_rt = YAML()
+    yaml_rt.preserve_quotes = True
+    yaml_rt.width = 4096
+    yaml_rt.indent(mapping=2, sequence=4, offset=2)
+    return yaml_rt
+
+
+def load_round_trip_yaml(path: Path) -> Any:
+    yaml_rt = round_trip_yaml()
+    with path.open("r", encoding="utf-8") as handle:
+        return yaml_rt.load(handle)
+
+
+def write_round_trip_yaml(path: Path, document: Any) -> None:
+    yaml_rt = round_trip_yaml()
+    with path.open("w", encoding="utf-8") as handle:
+        yaml_rt.dump(document, handle)
+
+
+def copy_project_docs_inputs(repo_root: Path, tmp_repo: Path) -> None:
+    shutil.copytree(repo_root / "project", tmp_repo / "project")
+    generated_root = tmp_repo / "docs" / "generated"
+    generated_root.mkdir(parents=True, exist_ok=True)
+    for filename in GENERATED_FILES:
+        source = repo_root / "docs" / "generated" / filename
+        if source.exists():
+            shutil.copy2(source, generated_root / filename)
+    for relative in AUTHORED_GENERATED_DOCS:
+        source = repo_root / relative
+        if source.exists():
+            destination = tmp_repo / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, destination)
+
+
+def temporary_sibling(destination: Path, suffix: str) -> Path:
+    fd, path = tempfile.mkstemp(prefix=f".{destination.name}.", suffix=suffix, dir=destination.parent)
+    os.close(fd)
+    return Path(path)
+
+
+def replace_files_transactionally(replacements: list[tuple[Path, Path]]) -> None:
+    staged: list[tuple[Path, Path]] = []
+    replaced: list[tuple[Path, Path | None]] = []
+    try:
+        for source, destination in replacements:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            staged_path = temporary_sibling(destination, ".project-reconcile.tmp")
+            staged.append((staged_path, destination))
+            shutil.copy2(source, staged_path)
+
+        for staged_path, destination in staged:
+            backup_path: Path | None = None
+            if destination.exists():
+                backup_path = temporary_sibling(destination, ".project-reconcile.bak")
+                backup_path.unlink()
+                os.replace(destination, backup_path)
+            try:
+                os.replace(staged_path, destination)
+            except BaseException:
+                if backup_path is not None and backup_path.exists() and not destination.exists():
+                    os.replace(backup_path, destination)
+                raise
+            replaced.append((destination, backup_path))
+    except BaseException:
+        for destination, backup_path in reversed(replaced):
+            if backup_path is not None and backup_path.exists():
+                if destination.exists():
+                    destination.unlink()
+                os.replace(backup_path, destination)
+            elif destination.exists():
+                destination.unlink()
+        for staged_path, _destination in staged:
+            if staged_path.exists():
+                staged_path.unlink()
+        raise
+
+    for _destination, backup_path in replaced:
+        if backup_path is not None and backup_path.exists():
+            backup_path.unlink()
+
+
+def write_reconciled_files_atomically(context: dict[str, Any], plan: ReconciliationPlan) -> None:
+    repo_root = context["repo_root"]
+    shared_doc = load_round_trip_yaml(context["shared_path"])
+    repo_status_doc = load_round_trip_yaml(context["repo_status_path"])
+    apply_reconciliation_updates_in_place(shared_doc, [repo_status_doc], plan)
+
+    with tempfile.TemporaryDirectory(prefix="project-reconcile-") as tmp:
+        tmp_repo = Path(tmp)
+        copy_project_docs_inputs(repo_root, tmp_repo)
+        write_round_trip_yaml(tmp_repo / "project" / "project-state.yaml", shared_doc)
+        write_round_trip_yaml(tmp_repo / "project" / "repo-status.yaml", repo_status_doc)
+
+        tmp_context = load_inputs(tmp_repo)
+        write_generated(tmp_context)
+        write_authored_generated_blocks(tmp_context)
+        check_generated(tmp_context)
+        check_authored_generated_blocks(tmp_context)
+
+        replacements = [
+            (tmp_repo / "project" / "project-state.yaml", context["shared_path"]),
+            (tmp_repo / "project" / "repo-status.yaml", context["repo_status_path"]),
+        ]
+        for filename in GENERATED_FILES:
+            replacements.append((tmp_repo / "docs" / "generated" / filename, repo_root / "docs" / "generated" / filename))
+        for relative in AUTHORED_GENERATED_DOCS:
+            replacements.append((tmp_repo / relative, repo_root / relative))
+        replace_files_transactionally(replacements)
 
 
 def titleize(value: str) -> str:
@@ -2335,6 +3922,39 @@ def command_next(args: argparse.Namespace) -> None:
     sys.stdout.write(render_next_work_text(context))
 
 
+def github_provider_from_environment() -> GitHubRestEvidenceProvider:
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    return GitHubRestEvidenceProvider(token=token, api_url=os.environ.get("GITHUB_API_URL"))
+
+
+def command_reconcile(args: argparse.Namespace) -> None:
+    if not args.reconcile_check and not args.reconcile_apply:
+        raise ProjectDocsError("reconcile requires --check or --apply")
+    try:
+        context = load_inputs(Path(args.repo_root), args.shared_state)
+    except ProjectDocsError as exc:
+        raise ProjectDocsError(str(exc), exit_code=3) from exc
+    repo_statuses = [context["repo_status"]]
+    plan = reconciliation_plan(context["shared"], repo_statuses, github_provider_from_environment())
+    sys.stdout.write(format_reconciliation_plan(plan, include_apply_hint=args.reconcile_check))
+
+    exit_code = reconciliation_exit_code(plan)
+    if args.reconcile_check:
+        if exit_code != 0:
+            raise ProjectDocsError("post-merge reconciliation is required", exit_code=exit_code)
+        return
+
+    if plan.issues:
+        raise ProjectDocsError("cannot apply reconciliation while evidence or state failures remain", exit_code=exit_code)
+    if not plan.changes:
+        if plan.decisions:
+            raise ProjectDocsError("no safe changes apply; explicit planning decisions remain", exit_code=exit_code)
+        return
+    write_reconciled_files_atomically(context, plan)
+    if plan.decisions:
+        raise ProjectDocsError("safe reconciliation changes were applied; explicit planning decisions remain", exit_code=exit_code)
+
+
 def command_ci(args: argparse.Namespace) -> None:
     context = load_inputs(Path(args.repo_root), args.shared_state)
     repo_statuses = [context["repo_status"]]
@@ -2349,20 +3969,32 @@ def command_ci(args: argparse.Namespace) -> None:
     issues.extend(authored_doc_drift_issues(context["repo_root"]))
 
     if not args.skip_github:
-        token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
-        provider = GitHubRestEvidenceProvider(token=token, api_url=os.environ.get("GITHUB_API_URL"))
-        issues.extend(github_evidence_issues(context["shared"], repo_statuses, provider))
+        provider = github_provider_from_environment()
+        plan = reconciliation_plan(context["shared"], repo_statuses, provider, discover_active_branches=False)
+        github_issues = github_evidence_issues(context["shared"], repo_statuses, provider)
+        if args.allow_reconciliation_decisions:
+            github_issues = filter_allowed_reconciliation_decision_issues(github_issues, plan)
+        issues.extend(github_issues)
+        issues.extend(reconciliation_ci_issues(plan, allow_decisions=args.allow_reconciliation_decisions))
 
     raise_issues(issues)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Validate and render project truth documentation.")
-    parser.add_argument("command", choices=("validate", "generate", "check", "next", "ci"))
+    parser.add_argument("command", choices=("validate", "generate", "check", "next", "ci", "reconcile"))
     parser.add_argument("--repo-root", default=os.getcwd())
     parser.add_argument("--shared-state", default=None)
     parser.add_argument("--require-generated", action="store_true")
     parser.add_argument("--skip-github", action="store_true", help="Skip live GitHub evidence verification. Do not use in CI.")
+    parser.add_argument(
+        "--allow-reconciliation-decisions",
+        action="store_true",
+        help="Allow explicit planning decisions while still failing on reconciliation issues and safe changes.",
+    )
+    reconcile_group = parser.add_mutually_exclusive_group()
+    reconcile_group.add_argument("--check", dest="reconcile_check", action="store_true", help="Check post-merge reconciliation without writing files.")
+    reconcile_group.add_argument("--apply", dest="reconcile_apply", action="store_true", help="Apply safe post-merge reconciliation changes and regenerate docs.")
     args = parser.parse_args(argv)
 
     try:
@@ -2376,10 +4008,12 @@ def main(argv: list[str] | None = None) -> int:
             command_next(args)
         elif args.command == "ci":
             command_ci(args)
+        elif args.command == "reconcile":
+            command_reconcile(args)
         return 0
     except ProjectDocsError as exc:
         sys.stderr.write(f"project-docs: {exc}\n")
-        return 1
+        return exc.exit_code
 
 
 if __name__ == "__main__":
