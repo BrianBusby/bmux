@@ -483,7 +483,7 @@ roadmap:
       kind: slice
       title: Background Service Lifecycle Migration
       parent: app_runtime_composition_migration
-      status: active
+      status: implemented
       owner: bmux
       repositories:
         - bmux
@@ -494,7 +494,7 @@ roadmap:
           - process_integrity
           - app_runtime_composition
           - deferred_service_migration
-      capability_maturity: active
+      capability_maturity: validated
       depends_on:
         - deterministic_app_runtime_composition
       gates:
@@ -516,13 +516,10 @@ roadmap:
           - app_host_test_side_effects
           - global_singletons
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: bmux
-        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-mobile-host-presence-lifecycle
-        active_branch: app-runtime-mobile-host-presence-lifecycle
-        active_agent: codex
-      delivery_status: open
-      acceptance_status: proposed
+      delivery_status: merged
+      acceptance_status: implemented
       rationale: Follow-up Process Integrity slice to migrate the macOS mobile-host listener, network-path monitoring, route publication, presence heartbeat, device registry route publication, paired-Mac backup route publication, and directly coupled mobile event observers behind the app-runtime composition boundary.
       acceptance:
         criteria:
@@ -537,6 +534,19 @@ roadmap:
           - A runtime-composition boundary guard rejects migrated direct startup/configuration/termination calls outside the declared runtime owner.
           - Production-path coverage exercises production configuration through app runtime composition into mobile-host readiness, route publication evaluation, and deterministic shutdown.
 
+      completed_at: '2026-09-07'
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 206c515d2fe59c4fde1e3f165762afb23c474e18
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 100
+            merged_at: '2026-09-07T06:03:39Z'
+            merge_commit_sha: 206c515d2fe59c4fde1e3f165762afb23c474e18
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
     - id: v1_foundation_and_adoption
       kind: program
       title: V1 Foundation and Bmux Adoption

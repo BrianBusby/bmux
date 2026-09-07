@@ -20,12 +20,11 @@ Regenerate with: ./scripts/project-docs generate
 ### Current Capability Frontier
 
 - Primary Capability Frontier: Process Integrity (`process_integrity`)
-- Active or selected slices in the frontier:
-  - Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - maturity: active; status: active; selection: current; owner: Bmux
+- Active or selected slices in the frontier: none
 
 ### Active Implementation
 
-- Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - maturity: active; status: active; selection: current; owner: Bmux
+- None.
 
 ### Selected Next
 
