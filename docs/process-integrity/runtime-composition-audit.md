@@ -135,13 +135,13 @@ runtime instances, and service-internal implementation remains allowed.
 
 ## Deferred Services
 
-The first follow-up candidate is a second Process Integrity slice that migrates
-one of the app-host side-effect families still started implicitly by
-`AppDelegate.configure(...)`. The best next candidate is remote/mobile-host and
-presence startup, because the app-runtime composition tests still show app-host
-logs from listener/mobile-host startup even when PE is disabled. Browser/DevTools
-ownership and sidebar Git/PR observation are also candidates, but they should be
-migrated in separate focused PRs with their own production-path tests.
+The first follow-up candidate was remote/mobile-host and presence startup,
+because app-runtime composition tests still showed app-host logs from
+listener/mobile-host startup even when PE was disabled. That follow-up is now
+tracked in `docs/process-integrity/mobile-host-presence-lifecycle-audit.md` and
+the `mobileHostAndPresence` runtime capability. Browser/DevTools ownership and
+sidebar Git/PR observation remain candidates, but they should be migrated in
+separate focused PRs with their own production-path tests.
 
 The workspace-display Current State file watcher also remains deferred. Dogfood
 sampling showed it can receive frequent SQLite `-wal`/`-shm` change events from a

@@ -3,10 +3,14 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id:
-    title:
-    state: none_selected
-  state: none_selected
+    id: app_runtime_service_lifecycle_migration
+    title: Background Service Lifecycle Migration
+    state: open
+    owner: bmux
+    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-mobile-host-presence-lifecycle
+    active_branch: app-runtime-mobile-host-presence-lifecycle
+    active_agent: codex
+  state: active
 
 execution_telemetry:
   provider_neutral_contract: implemented

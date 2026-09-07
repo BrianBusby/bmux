@@ -799,9 +799,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     // `FocusedNotificationResolving`).
     /// The auth graph, injected once via `configure(...)` at app startup.
     private(set) var auth: MacAuthComposition?
-    /// Strongly-held observers for every active TabManager. Each observer owns
-    /// Combine subscriptions that publish workspace.updated to mobile clients.
-    private var mobileWorkspaceListObservers: [ObjectIdentifier: MobileWorkspaceListObserver] = [:]
     private let agentChatTranscriptService = AgentChatTranscriptService()
     let pushToTalkVoiceInputController = PushToTalkVoiceInputController()
     /// The app's settings dependency container, handed over by `bmuxApp` via
@@ -820,7 +817,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     private var shortcutMonitor: Any?
     private var shortcutDefaultsObserver: NSObjectProtocol?
     private var menuBarVisibilityObserver: NSObjectProtocol?
-    private var mobileHostSettingsObserver: NSObjectProtocol?
     private var reloadConfigurationMenuItemRefreshScheduled = false
     /// Orchestrates per-window bmux config-store reloads + window-title refresh.
     /// Holds `self` weakly through the environment seam to avoid a retain cycle.
@@ -2033,14 +2029,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         sentryStopMemoryContextRefresh()
         // Plain quit detaches local ssh clients; explicit close already killed marked sessions.
         remoteTmuxController.detachAll()
-        // Best-effort presence goodbye; unclean exits are covered by the
-        // service's missed-heartbeat timeout.
-        PresenceHeartbeatClient.shared.appWillTerminate()
+        // Best-effort mobile/presence teardown; unclean exits are covered by
+        // the presence service's missed-heartbeat timeout.
+        appRuntimeServices?.stopMobileHostAndPresenceForAppTermination()
         closeAllWebInspectorsBeforeAppTeardown()
         stopSessionAutosaveTimer()
         CloudVMActionLauncher.shared.terminateAll()
         BmuxSSHURLProcessLauncher.shared.terminateAll()
-        MobileHostService.shared.stop()
         TerminalController.shared.stop()
         GhosttyApp.terminalPasteboard.cleanupAllOwnedTemporaryImageFiles()
         VSCodeServeWebController.shared.stop()
@@ -2088,21 +2083,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         RemotesClient.bootstrap(auth: auth.coordinator)
         AIAccountsClient.bootstrap(auth: auth.coordinator)
         PhonePushClient.shared.configure(auth: auth.coordinator)
-        MobileHostService.shared.configure(auth: auth.coordinator)
-        DeviceRegistryClient.shared.configure(auth: auth.coordinator)
-        PresenceHeartbeatClient.shared.configure(auth: auth.coordinator)
-        // DEV-only: auto-publish this Mac's attach route to the signed-in user's
-        // pairedMacs backup so a fresh dev iOS build restores it (no manual host
-        // entry). No-op on Release / when the flag is off.
-        MacPairedMacBackupPublisher.shared.configure(auth: auth.coordinator)
+        appRuntimeServices.startMobileHostAndPresence(
+            auth: auth.coordinator,
+            tabManager: tabManager,
+            notificationStore: notificationStore
+        )
         TerminalController.shared.attachAuth(coordinator: auth.coordinator, browserSignIn: auth.browserSignIn)
         agentChatTranscriptService.recordSessionLifecycleChanges(with: appRuntimeServices.workProvenanceRuntime)
         TerminalController.shared.agentChatTranscriptService = agentChatTranscriptService
         auth.start()
-        ensureMobileWorkspaceListObserver(for: tabManager)
-        MobileTerminalRenderObserver.shared.start()
         agentChatTranscriptService.start()
-        installMobileHostSettingsObserver()
         scheduleGhosttyCrashBreadcrumbIfNeeded(notificationStore: notificationStore)
         startPaneMemoryGuardrailIfNeeded()
         disableSuddenTerminationIfNeeded()
@@ -4583,17 +4573,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     func ensureMobileWorkspaceListObserver(for tabManager: TabManager) {
-        let id = ObjectIdentifier(tabManager)
-        if mobileWorkspaceListObservers[id] == nil {
-            mobileWorkspaceListObservers[id] = MobileWorkspaceListObserver(tabManager: tabManager, notificationStore: notificationStore)
-        }
+        appRuntimeServices?.attachMobileHostWorkspaceListObserver(
+            tabManager: tabManager,
+            notificationStore: notificationStore
+        )
     }
 
     private func removeMobileWorkspaceListObserverIfUnused(for tabManager: TabManager) {
-        guard !mainWindowContexts.values.contains(where: { $0.tabManager === tabManager }) else {
-            return
-        }
-        mobileWorkspaceListObservers.removeValue(forKey: ObjectIdentifier(tabManager))
+        appRuntimeServices?.removeMobileHostWorkspaceListObserverIfUnused(
+            tabManager: tabManager,
+            isStillUsed: mainWindowContexts.values.contains(where: { $0.tabManager === tabManager })
+        )
     }
 
     /// Register a terminal window with the AppDelegate so menu commands and socket control
@@ -7223,7 +7213,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
                 tabManager: manager,
                 source: "bootstrapInitialMainWindow.\(debugSource)"
             )
-            MobileHostService.shared.start()
+            appRuntimeServices?.syncMobileHostAndPresenceToSettings()
         }
         guard !didBootstrapInitialMainWindow else { return windowId }
 
@@ -9692,23 +9682,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         MenuBarOnlySettings.normalizeLegacyStoredPreference(defaults: defaults)
         syncActivationPolicy(defaults: defaults)
         syncMenuBarExtraVisibility(defaults: defaults)
-    }
-
-    private func installMobileHostSettingsObserver() {
-        guard mobileHostSettingsObserver == nil else { return }
-        mobileHostSettingsObserver = NotificationCenter.default.addObserver(
-            forName: UserDefaults.didChangeNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.syncMobileHostService()
-            }
-        }
-    }
-
-    private func syncMobileHostService() {
-        MobileHostService.shared.syncToSettings()
     }
 
     private func syncActivationPolicy(defaults: UserDefaults = .standard) {

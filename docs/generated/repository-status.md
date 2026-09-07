@@ -13,8 +13,10 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: none selected
-- Repository state: none selected
+- Active slice: Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`)
+- Slice state: open
+- Owner: bmux
+- Repository state: active
 
 ## Release
 

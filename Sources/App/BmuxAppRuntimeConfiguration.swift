@@ -20,6 +20,9 @@ struct BmuxAppRuntimeConfiguration: Sendable {
             enabledCapabilities.insert(.workProvenanceObservation)
             enabledCapabilities.insert(.agentChatExecutionTelemetryProjection)
         }
+        if processKind == .productionApp {
+            enabledCapabilities.insert(.mobileHostAndPresence)
+        }
         return BmuxAppRuntimeConfiguration(
             processKind: processKind,
             enabledCapabilities: enabledCapabilities,

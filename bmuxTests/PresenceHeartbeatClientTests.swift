@@ -1,4 +1,5 @@
 import BMUXMobileCore
+import BmuxAuthRuntime
 import Foundation
 import Testing
 
@@ -13,7 +14,9 @@ import Testing
 /// (absent means "unchanged" on the wire, which this client never wants), so
 /// the presence DO can push fresh port/IP routes to subscribed phones the
 /// moment they change.
-@Suite struct PresenceHeartbeatClientTests {
+@MainActor
+@Suite(.serialized)
+struct PresenceHeartbeatClientTests {
     private func route(host: String, port: Int, id: String = "r") throws -> CmxAttachRoute {
         try CmxAttachRoute(
             id: id,
@@ -86,5 +89,42 @@ import Testing
             stopping: true
         )
         #expect(JSONSerialization.isValidJSONObject(body))
+    }
+
+    @Test func asyncGoodbyeDoesNotClearRestartedHeartbeatState() async throws {
+        #if DEBUG
+        let client = PresenceHeartbeatClient.shared
+        client.debugResetForTesting()
+        client.debugSetSuppressRouteObservationForTesting(true)
+        UserDefaults.standard.set(true, forKey: PresenceSettings.enabledKey)
+        defer {
+            client.debugResetForTesting()
+            UserDefaults.standard.removeObject(forKey: PresenceSettings.enabledKey)
+        }
+
+        let completion = AsyncStream<Void> { continuation in
+            client.debugGoodbyeCompletionForTesting = {
+                continuation.yield(())
+                continuation.finish()
+            }
+        }
+        var completionIterator = completion.makeAsyncIterator()
+
+        client.start(auth: Self.authCoordinator(named: "goodbye-first"))
+        client.debugSetRoutesForTesting([try route(host: "127.0.0.1", port: 58465, id: "old")])
+        client.stop(sendsGoodbye: true)
+        client.start(auth: Self.authCoordinator(named: "goodbye-second"))
+        client.debugSetRoutesForTesting([try route(host: "127.0.0.1", port: 58466, id: "new")])
+
+        _ = await completionIterator.next()
+
+        #expect(client.debugHasAuthForTesting)
+        #expect(client.debugCurrentRouteCountForTesting == 1)
+        #endif
+    }
+
+    private static func authCoordinator(named name: String) -> AuthCoordinator {
+        let defaults = UserDefaults(suiteName: "bmux-presence-heartbeat-tests-\(name)-\(UUID().uuidString)")!
+        return MacAuthComposition(environment: [:], defaults: defaults).coordinator
     }
 }

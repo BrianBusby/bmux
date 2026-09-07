@@ -30,7 +30,6 @@ final class PresenceHeartbeatClient {
     private var auth: AuthCoordinator?
     private var loopTask: Task<Void, Never>?
     private var routesObserveTask: Task<Void, Never>?
-    private var defaultsObserver: NSObjectProtocol?
     /// Cadence between heartbeats; server-owned, seeded with the service default.
     private var intervalMs: Int = 15_000
     /// The attach routes most recently advertised by ``MobileHostService``,
@@ -38,27 +37,32 @@ final class PresenceHeartbeatClient {
     /// set the device registry stores (DO = live cache, registry = truth).
     private var currentRoutes: [CmxAttachRoute] = []
 
+    #if DEBUG
+    var debugGoodbyeCompletionForTesting: (() -> Void)?
+    private var debugSuppressRouteObservationForTesting = false
+    #endif
+
     private init() {}
 
-    /// Inject the auth dependency and start (or arm) the heartbeat loop. Call
-    /// once at the composition root, alongside ``DeviceRegistryClient``.
+    /// Compatibility wrapper for older composition-root callers.
+    ///
+    /// Removal condition: delete after all production startup goes through
+    /// `MobileHostRuntimeService.start(...)` and no tests call this directly.
     func configure(auth: AuthCoordinator) {
+        start(auth: auth)
+    }
+
+    /// Inject the auth dependency and start (or arm) the heartbeat loop. Call
+    /// from the mobile-host runtime owner.
+    func start(auth: AuthCoordinator) {
         self.auth = auth
         startObservingRoutes()
-        if defaultsObserver == nil {
-            // Re-evaluate when the flag or URL flips, so enabling presence in a
-            // running app starts the loop without a relaunch (and disabling
-            // stops it and says goodbye).
-            defaultsObserver = NotificationCenter.default.addObserver(
-                forName: UserDefaults.didChangeNotification,
-                object: UserDefaults.standard,
-                queue: .main
-            ) { _ in
-                MainActor.assumeIsolated {
-                    PresenceHeartbeatClient.shared.evaluate()
-                }
-            }
-        }
+        evaluate()
+    }
+
+    /// Reconcile the heartbeat loop with current settings. The runtime owner
+    /// calls this from its single mobile-host settings observation path.
+    func syncToSettings() {
         evaluate()
     }
 
@@ -68,9 +72,31 @@ final class PresenceHeartbeatClient {
     /// every unclean path, the goodbye only makes clean quits flip offline
     /// immediately instead of within 45s.
     func appWillTerminate() {
-        guard loopTask != nil else { return }
+        stop(sendsGoodbye: true)
+    }
+
+    /// Stop all heartbeat-owned background work.
+    func stop(sendsGoodbye: Bool) {
+        let goodbyeAuth = auth
+        let goodbyeRoutes = currentRoutes
+        let shouldSendGoodbye = sendsGoodbye && loopTask != nil
         stopLoop()
-        Task { await self.sendHeartbeat(stopping: true) }
+        routesObserveTask?.cancel()
+        routesObserveTask = nil
+        auth = nil
+        currentRoutes = []
+        if shouldSendGoodbye {
+            Task { @MainActor [weak self, goodbyeAuth, goodbyeRoutes] in
+                await self?.sendHeartbeat(
+                    stopping: true,
+                    auth: goodbyeAuth,
+                    routes: goodbyeRoutes
+                )
+                #if DEBUG
+                self?.debugGoodbyeCompletionForTesting?()
+                #endif
+            }
+        }
     }
 
     // MARK: - Routes
@@ -82,6 +108,9 @@ final class PresenceHeartbeatClient {
     /// receive the fresh port/IP within a round trip instead of waiting out
     /// the 15s cadence.
     private func startObservingRoutes() {
+        #if DEBUG
+        guard !debugSuppressRouteObservationForTesting else { return }
+        #endif
         guard routesObserveTask == nil else { return }
         routesObserveTask = Task { @MainActor [weak self] in
             for await status in MobileHostService.shared.statusUpdates() {
@@ -135,10 +164,21 @@ final class PresenceHeartbeatClient {
         if shouldRun && loopTask == nil {
             startLoop()
         } else if !shouldRun, loopTask != nil {
+            let goodbyeAuth = auth
+            let goodbyeRoutes = currentRoutes
             stopLoop()
             // Flag turned off while running: announce the disappearance instead
             // of leaving the instance to time out.
-            Task { await self.sendHeartbeat(stopping: true) }
+            Task { @MainActor [weak self, goodbyeAuth, goodbyeRoutes] in
+                await self?.sendHeartbeat(
+                    stopping: true,
+                    auth: goodbyeAuth,
+                    routes: goodbyeRoutes
+                )
+                #if DEBUG
+                self?.debugGoodbyeCompletionForTesting?()
+                #endif
+            }
         }
     }
 
@@ -165,6 +205,14 @@ final class PresenceHeartbeatClient {
     // MARK: - Heartbeat
 
     private func sendHeartbeat(stopping: Bool) async {
+        await sendHeartbeat(stopping: stopping, auth: auth, routes: currentRoutes)
+    }
+
+    private func sendHeartbeat(
+        stopping: Bool,
+        auth: AuthCoordinator?,
+        routes: [CmxAttachRoute]
+    ) async {
         guard let auth, let baseURL = Self.resolvedServiceURL() else { return }
         // Await tokens first, mirroring DeviceRegistryClient: gates on "signed
         // in" and on launch auth bootstrap so the team header resolves from a
@@ -187,7 +235,7 @@ final class PresenceHeartbeatClient {
             tag: Self.buildTag(),
             bundleID: Bundle.main.bundleIdentifier,
             displayName: MobileHostIdentity.displayName(),
-            routes: currentRoutes,
+            routes: routes,
             stopping: stopping
         )
 
@@ -259,4 +307,33 @@ final class PresenceHeartbeatClient {
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return (tag?.isEmpty == false) ? tag! : "default"
     }
+
+    #if DEBUG
+    func debugResetForTesting() {
+        stopLoop()
+        routesObserveTask?.cancel()
+        routesObserveTask = nil
+        auth = nil
+        currentRoutes = []
+        intervalMs = 15_000
+        debugGoodbyeCompletionForTesting = nil
+        debugSuppressRouteObservationForTesting = false
+    }
+
+    func debugSetSuppressRouteObservationForTesting(_ isSuppressed: Bool) {
+        debugSuppressRouteObservationForTesting = isSuppressed
+    }
+
+    func debugSetRoutesForTesting(_ routes: [CmxAttachRoute]) {
+        currentRoutes = routes
+    }
+
+    var debugHasAuthForTesting: Bool {
+        auth != nil
+    }
+
+    var debugCurrentRouteCountForTesting: Int {
+        currentRoutes.count
+    }
+    #endif
 }
