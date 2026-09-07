@@ -60,6 +60,22 @@ Project Truth CI remains read-only. It now fails when recorded evidence implies 
 
 Historical commit-only delivery records are reconciled by default-branch commit reachability when they already declare implementation complete. This compatibility path should be removed once all delivered Project Truth slices record pull request evidence or an explicit direct-to-main delivery policy. Existing commit-only accepted history may remain as archival evidence and is not automatically assigned merge timestamps.
 
+## Observed Reconciliation Deliveries
+
+PR #99 reconciled PR #98 by recording the merge commit and timestamp for the
+post-merge reconciliation implementation, clearing stale active work, and
+regenerating Project Truth docs from the manifest. PR #101 then repeated the
+same pattern for PR #100 after the mobile-host/presence lifecycle migration
+merged. Together they show the reconciliation loop can carry both Project Truth
+tooling changes and app-runtime implementation slices back into canonical
+delivery state without inventing acceptance or next-priority decisions.
+
 ## Next Candidate
 
-After this slice, the next Process Integrity candidate exposed by the reconciled frontier is `app_runtime_service_lifecycle_migration`, the follow-up migration of additional background service families behind deterministic runtime composition.
+After PR #101, no implementation slice is active. The remaining patched-area
+audit work is now captured in Project Truth, and the selected next Process
+Integrity candidate is `app_runtime_browser_devtools_lifecycle_migration`.
+Browser/DevTools is the safest next runtime lifecycle slice because the current
+source still starts and tears down Browser/DevTools services through AppDelegate,
+window, and panel paths, while the mobile-host/presence service family is
+already implemented and validated.

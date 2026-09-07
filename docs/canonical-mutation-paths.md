@@ -228,6 +228,7 @@ classified as follows.
 ## Remaining Workstream
 
 The only known remaining category-D migration target is config workspace launch.
+Project Truth now captures it as `config_workspace_launch_canonicalization`.
 Do not broaden that slice into unrelated workspace creation cleanup unless the
 final config-launch audit identifies another tightly-coupled adapter bypass.
 

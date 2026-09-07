@@ -135,31 +135,42 @@ runtime instances, and service-internal implementation remains allowed.
 
 ## Deferred Services
 
-The first follow-up candidate was remote/mobile-host and presence startup,
-because app-runtime composition tests still showed app-host logs from
-listener/mobile-host startup even when PE was disabled. That follow-up is now
-tracked in `docs/process-integrity/mobile-host-presence-lifecycle-audit.md` and
-the `mobileHostAndPresence` runtime capability. Browser/DevTools ownership and
-sidebar Git/PR observation remain candidates, but they should be migrated in
-separate focused PRs with their own production-path tests.
+The first follow-up candidate was remote/mobile-host and presence startup. That
+slice is now complete and validated by PR #100, with reconciliation captured by
+PR #101. The historical Project Truth node id remains
+`app_runtime_service_lifecycle_migration`, but its title and acceptance boundary
+now describe the delivered mobile-host/presence service family explicitly.
+
+The remaining service families are now canonical Project Truth backlog, not
+loose audit notes. `app_runtime_browser_devtools_lifecycle_migration` is the
+selected next slice because BrowserSystemProxyWatcher and Browser/DevTools
+teardown still run through AppDelegate, window, and panel paths. Sidebar Git/PR
+observation, notification/push lifecycle, menu-bar presentation lifecycle, and a
+final residual app-host audit are captured as separate downstream slices so they
+do not get bundled only because they are background services.
 
 The workspace-display Current State file watcher also remains deferred. Dogfood
 sampling showed it can receive frequent SQLite `-wal`/`-shm` change events from a
 shared production PE store and rescan candidate watch paths on the main actor.
-That was not the sampled source of the blocking PE append, so this PR records it
-as a follow-up instead of changing watcher semantics alongside the composition
-boundary.
+That was not the sampled source of the blocking PE append in PR #97, so Project
+Truth captures it separately as `workspace_display_file_watcher_churn_policy`.
 
 Broad all-history Codex prompt backfill is also deferred. If product needs
 startup-time historical prompt ingestion again, it should be introduced as an
 explicit runtime capability with its own readiness, storage bounds, progress,
 and teardown contract rather than piggybacking on the live agent-chat projection
-startup.
+startup. Project Truth captures the guard as
+`codex_historical_import_startup_boundary_guard`.
 
 Cross-process write contention on the shared production PE SQLite store remains
 outside this PR. Final dogfood first hit `database is locked` retries because an
 unrelated tagged Debug app (`bmux DEV pe-session-hook-main`) was actively writing
 to the same production store. The validated dogfood path relaunched this PR's
 tagged app with an isolated `BMUX_PROVENANCE_HOME`, preserving production runtime
-composition while removing the external writer. A durable multi-app writer
-policy, if needed, should be a separate Process Integrity slice.
+composition while removing the external writer. Project Truth now captures this
+as `pe_shared_sqlite_writer_policy`, a local single-user SQLite policy decision;
+it does not imply remote hosting or a multi-user database.
+
+The captured backlog is summarized in
+`docs/process-integrity/remaining-patch-audit-backlog.md`; generated Project
+Truth status remains canonical.

@@ -91,6 +91,17 @@ local_capabilities:
   app_runtime_composition_boundary: under_observation
   app_host_test_runtime_isolation: under_observation
   work_provenance_runtime_lifecycle_state: under_observation
+  app_runtime_browser_devtools_lifecycle: planned
+  app_runtime_sidebar_git_pr_lifecycle: planned
+  app_runtime_notification_push_lifecycle: planned
+  app_runtime_menu_bar_presentation_lifecycle: planned
+  workspace_display_file_watcher_churn_policy: planned
+  pe_shared_sqlite_writer_policy: planned
+  codex_historical_import_startup_boundary_guard: planned
+  workspace_launch_canonical_mutation_path: planned
+  test_determinism_allowlist_burndown: planned
+  legacy_bmux_provenance_retirement: planned
+  monorepo_migration_ledger_closure: planned
   remote_mobile_planning_reconciliation: planned
   remote_local_session_host_contract: planned
   remote_session_protocol_loopback: planned
@@ -115,6 +126,20 @@ component_releases:
 
 local_caveats:
   - id: broad_legacy_storage_migration
+    status: open
+  - id: residual_app_runtime_lifecycle_ownership
+    status: open
+  - id: workspace_display_file_watcher_churn
+    status: open
+  - id: pe_shared_sqlite_multi_writer_policy
+    status: open
+  - id: codex_historical_import_startup_boundary
+    status: monitoring
+  - id: test_determinism_allowlist_debt
+    status: open
+  - id: config_workspace_launch_mutation_bypass
+    status: open
+  - id: monorepo_migration_ledger_pending_dispositions
     status: open
   - id: github_actions_runner_reliability
     status: open

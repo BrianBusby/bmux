@@ -43,6 +43,10 @@ they are historical records tied to an older workstream.
 
 ## Planning And Migration Records
 
+- [process-integrity/remaining-patch-audit-backlog.md](process-integrity/remaining-patch-audit-backlog.md)
+- [process-integrity/runtime-composition-audit.md](process-integrity/runtime-composition-audit.md)
+- [process-integrity/mobile-host-presence-lifecycle-audit.md](process-integrity/mobile-host-presence-lifecycle-audit.md)
+- [process-integrity/post-merge-reconciliation-audit.md](process-integrity/post-merge-reconciliation-audit.md)
 - [planning/cross-session-work-awareness.md](planning/cross-session-work-awareness.md)
 - [planning/monorepo-migration-ledger.md](planning/monorepo-migration-ledger.md)
 - [handoffs/latest.md](handoffs/latest.md)

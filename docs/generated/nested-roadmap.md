@@ -16,7 +16,8 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 ### Current Capability Frontier
 
 - Primary Capability Frontier: Process Integrity (`process_integrity`)
-- Active or selected slices in the frontier: none
+- Active or selected slices in the frontier:
+  - Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) - maturity: ready; status: planned; selection: selected next; owner: Bmux
 
 ### Active Implementation
 
@@ -24,7 +25,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Selected Next
 
-- None.
+- Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) - maturity: ready; status: planned; selection: selected next; owner: Bmux; dependency status: ready
 
 ### Ready Candidates
 
@@ -34,6 +35,40 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Gated / Blocked Downstream Work
 
+- Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) - maturity: gated; status: planned; selection: planned; owner: Bmux
+  - Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) is not dependency-satisfying
+  - Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) has maturity ready; requires validated for gate `browser_runtime_validated`: Sidebar Git and PR observation should migrate after browser runtime ownership removes adjacent AppDelegate and panel startup churn.
+- Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) - maturity: gated; status: planned; selection: planned; owner: Bmux
+  - Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) is not dependency-satisfying
+  - Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) has maturity gated; requires validated for gate `sidebar_git_pr_runtime_validated`: Notification and push lifecycle work should wait until the higher-churn sidebar observation family has a single owner.
+- Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) - maturity: gated; status: planned; selection: planned; owner: Bmux
+  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) is not dependency-satisfying
+  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) has maturity gated; requires validated for gate `notification_push_runtime_validated`: Menu-bar presentation lifecycle should migrate after notification ownership clarifies AppDelegate startup and delegate responsibilities.
+- Residual App-Host Background Service Audit (`app_runtime_residual_app_host_service_audit`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
+  - Architecture or product direction is captured, but the slice is not implementation-ready.
+  - Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) is not dependency-satisfying
+  - Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) is not dependency-satisfying
+  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) is not dependency-satisfying
+  - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) is not dependency-satisfying
+- Workspace Display File-Watcher Churn Policy (`workspace_display_file_watcher_churn_policy`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
+- Local PE SQLite Multi-Writer Policy (`pe_shared_sqlite_writer_policy`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
+  - Architecture or product direction is captured, but the slice is not implementation-ready.
+- Historical Codex Transcript Import Startup Boundary Guard (`codex_historical_import_startup_boundary_guard`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
+- Config Workspace-Launch Canonicalization (`config_workspace_launch_canonicalization`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
+- Swift Package Test Determinism Burn-Down (`test_determinism_swift_package_burndown`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
+- Swift App and Runtime Test Determinism Burn-Down (`test_determinism_swift_app_runtime_burndown`) - maturity: gated; status: planned; selection: planned; owner: Bmux
+  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) is not dependency-satisfying
+  - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) is not dependency-satisfying
+  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) has maturity gated; requires validated for gate `notification_push_runtime_validated`: Notification and mobile-host authorization test determinism should be fixed against the migrated runtime owner.
+  - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) has maturity gated; requires validated for gate `menu_bar_runtime_validated`: Menu-bar duration assertions should be replaced after menu-bar lifecycle ownership is explicit.
+- Python Socket and Tmux Compatibility Test Determinism Burn-Down (`test_determinism_python_socket_tmux_burndown`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
+- UI Test Determinism Burn-Down (`test_determinism_ui_burndown`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
+  - Architecture or product direction is captured, but the slice is not implementation-ready.
+- Legacy Bmux-Local Provenance Caller Inventory and Retirement Plan (`legacy_bmux_provenance_caller_inventory`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
+- Legacy Bmux-Local Provenance Storage Cleanup (`legacy_bmux_provenance_storage_cleanup`) - maturity: gated; status: deferred; selection: deferred; owner: Bmux
+  - Legacy Bmux-Local Provenance Caller Inventory and Retirement Plan (`legacy_bmux_provenance_caller_inventory`) is not dependency-satisfying
+  - Legacy Bmux-Local Provenance Caller Inventory and Retirement Plan (`legacy_bmux_provenance_caller_inventory`) has maturity ready; requires validated for gate `legacy_inventory_validated`: Cleanup must wait for an explicit caller inventory PE replacement map and rollback/data-preservation decision.
+- Monorepo Migration Ledger Disposition Closure (`monorepo_migration_ledger_disposition_closure`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
 - React Terminal live interaction productization (`react_terminal_productization`) - maturity: captured; status: planned; selection: planned; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - maturity: captured; status: planned; selection: planned; owner: Bmux
@@ -98,8 +133,8 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 - **Bmux and Provenance Engine** (`bmux_provenance_platform`) - project; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: platform; layer: platform; execution: current / Shared; parallelism: safe
   Rationale: Canonical monorepo roadmap root for Provenance Engine-owned evidence/current-state work and bmux-owned observation/presentation work.
   - **Process Integrity** (`process_integrity`) - program; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: platform; layer: platform; execution: current / Bmux; parallelism: serial
-    Expected contract domains: `project_truth_reconciliation`, `app_runtime_composition`, `app_host_test_isolation`
-    Likely conflict domains: `active_work_selection`, `app_startup_lifecycle`
+    Expected contract domains: `project_truth_reconciliation`, `app_runtime_composition`, `app_host_test_isolation`, `provenance_runtime_policy`, `legacy_provenance_retirement`, `deterministic_test_burndown`, `canonical_workspace_mutations`, `monorepo_migration_ledger_closure`
+    Likely conflict domains: `active_work_selection`, `app_startup_lifecycle`, `project_truth_manifest`, `generated_project_truth_docs`
     Rationale: Tracks cross-cutting process-integrity slices that define a single owner, lifecycle, validation path, and completion step for failure classes that individual feature fixes exposed but should not keep repairing locally.
     - **Project Truth Delivery Lifecycle** (`project_truth_delivery_lifecycle`) - phase; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: project truth; layer: cross repository workflow; execution: current / Bmux; parallelism: serial
       Depends on: `project_truth_capability_frontier_governance`
@@ -119,7 +154,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `project_truth_manifest`, `project_docs_generation`, `github_evidence_validation`, `github_actions_project_truth`
           Contract dependencies: `project_truth_generated_docs`, `project_docs_validation`, `github_evidence_validation`
           Worktree required: true
-          Evidence: BrianBusby/bmux@176e0f0e2758, BrianBusby/bmux#98 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@176e0f0e2758, BrianBusby/bmux@c01dd4b3caf6, BrianBusby/bmux@3cae52c200c6, BrianBusby/bmux#98 by [BrianBusby](https://github.com/BrianBusby), BrianBusby/bmux#99 by [BrianBusby](https://github.com/BrianBusby), BrianBusby/bmux#101 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Add a canonical reconcile check/apply command that reads Project Truth and GitHub evidence, applies only mechanically justified delivery transitions, clears stale active work, advances ready candidates, regenerates docs atomically, and reports remaining human planning decisions.
           Acceptance criteria: Reconciliation check mode is read-only, actionable, and exits nonzero when safe changes or explicit decisions remain.; Reconciliation apply mode updates only canonical manifests and generated docs, validates in a temporary copy, stages destination-side replacements with rollback, and is idempotent on a second run.; Merged PR evidence records merge timestamp and merge commit identity after GitHub verification.; Active branch/worktree assignments for completed delivery are cleared without selecting the next priority automatically.; Capability-frontier candidates whose declared gates are now satisfied become ready but remain unselected until a human chooses them.; CI detects stale recorded delivery evidence and post-merge automation opens or updates one bounded reconciliation PR with explicit remote-branch lease protection, validates safe diffs without discarding unrelated explicit decisions, then dispatches normal validation workflows for that branch.
     - **App Runtime Composition and Test Isolation** (`app_runtime_composition_and_test_isolation`) - phase; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: platform; layer: platform; execution: current / Bmux; parallelism: serial
@@ -129,7 +164,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
       Rationale: Gives background app services explicit construction, startup, readiness, failure, and teardown ownership so production starts them deliberately and app-host tests activate only requested capabilities.
       - **App Runtime Composition Migration** (`app_runtime_composition_migration`) - milestone; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: platform; layer: platform; execution: current / Bmux; parallelism: serial
         Depends on: `workspace_coding_agent_session_linkage_hardening`
-        Rationale: Milestone for migrating app background service lifecycle ownership from scattered app-host side effects into explicit production/test runtime composition.
+        Rationale: Milestone for migrating app background service lifecycle ownership from scattered app-host side effects into explicit production/test runtime composition and for sequencing remaining service families by ownership boundary.
         - **Deterministic App Runtime Composition and App-Host Test Isolation** (`deterministic_app_runtime_composition`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: platform; layer: platform; execution: complete / Bmux; parallelism: serial; delivery: merged; acceptance: implemented; maturity: validated
           Depends on: `workspace_coding_agent_session_linkage_hardening`
           Enables: `app_runtime_service_lifecycle_migration`
@@ -141,14 +176,190 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Evidence: BrianBusby/bmux@2a08fa2ce324, BrianBusby/bmux#97 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Move WorkProvenanceRuntime construction/startup and related agent-chat PE projection startup behind one app-runtime composition owner so production starts PE deliberately, default app-host tests cannot open the production PE database, opted-in tests use isolated storage, and migrated services expose deterministic readiness/failure/teardown.
           Acceptance criteria: App runtime composition is the only production source path that constructs the live WorkProvenanceRuntime.; BmuxAppRuntimeServices is the only production source path that starts PE workspace observation and agent-chat execution telemetry projection.; Default app-host XCTest composition disables PE without opening the production PE database.; Tests can opt into PE with a temporary home directory and observe ready, failed, and stopped lifecycle states without sleeps or timing assertions.; Runtime shutdown cancels migrated observation work and releases owned lifecycle tasks.; A source guard prevents migrated app entrypoints from bypassing the composition boundary.; Existing Session-tab production lifecycle coverage still reaches PE readiness through deterministic task completion.; Production PE prompt evidence appends scope turn-outcome evidence acquisition to the affected session instead of scanning unrelated ledger history.; Agent-chat startup prompt seeding skips ended historical Codex hook-store records while preserving non-ended live startup backfill and live UserPromptSubmit prompt evidence.
-        - **Background Service Lifecycle Migration** (`app_runtime_service_lifecycle_migration`) - slice; status: implemented; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: complete / Bmux; parallelism: serial; delivery: merged; acceptance: implemented; maturity: validated
+        - **Mobile Host and Presence Lifecycle Migration** (`app_runtime_service_lifecycle_migration`) - slice; status: implemented; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: complete / Bmux; parallelism: serial; delivery: merged; acceptance: implemented; maturity: validated
           Depends on: `deterministic_app_runtime_composition`
-          Expected contract domains: `browser_lifecycle`, `sidebar_git_observation`, `remote_session_presence`, `push_registration`, `notification_runtime_services`
+          Enables: `app_runtime_browser_devtools_lifecycle_migration`
+          Expected contract domains: `mobile_host_listener`, `network_path_monitor`, `mobile_route_publication`, `presence_heartbeat`, `mobile_event_observers`
+          Expected code areas: `Sources/AppDelegate*.swift`, `Sources/App/BmuxAppRuntime*.swift`, `Sources/Mobile`, `Sources/Cloud`, `bmuxTests/*Mobile*Tests.swift`, `bmuxTests/AppRuntimeCompositionTests.swift`
           Likely conflict domains: `app_delegate_startup`, `app_host_test_side_effects`, `global_singletons`
           Gate `runtime_composition_validated`: requires `deterministic_app_runtime_composition` maturity validated; reason: Additional background services should migrate only after the first PE-backed production/test composition path is validated.
           Evidence: BrianBusby/bmux@206c515d2fe5, BrianBusby/bmux#100 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Follow-up Process Integrity slice to migrate the macOS mobile-host listener, network-path monitoring, route publication, presence heartbeat, device registry route publication, paired-Mac backup route publication, and directly coupled mobile event observers behind the app-runtime composition boundary.
           Acceptance criteria: BmuxAppRuntimeConfiguration exposes an explicit mobile-host/presence capability that production enables and default XCTest composition disables.; AppDelegate and migrated app startup/termination paths can only start, sync, or stop the selected service family through BmuxAppRuntimeServices.; Focused tests can opt into mobile-host/presence with injected dependencies and no real listener bind, path monitor, route publication, presence heartbeat, device registry, or paired-Mac backup traffic.; Mobile-host lifecycle state distinguishes disabled-by-composition, disabled-by-settings, starting, ready/listening, degraded, failed, stopping, and stopped states.; Preferred-port fallback is degraded-but-listening, while presence or route-publication failure degrades publication without failing a healthy local listener.; Settings enable, disable, re-enable, and auth-availability changes reconcile through one runtime owner without duplicate listeners, observers, monitors, or presence loops.; Shutdown cancels composition-owned settings/status observers, workspace-list observers, render observation, route publication, presence heartbeat, device registry publication, paired-Mac backup publication, listener/path monitoring, and active mobile-host connections.; Retained singleton compatibility access cannot become a second lifecycle owner, and removal conditions are documented.; A runtime-composition boundary guard rejects migrated direct startup/configuration/termination calls outside the declared runtime owner.; Production-path coverage exercises production configuration through app runtime composition into mobile-host readiness, route publication evaluation, and deterministic shutdown.
+        - **Browser and DevTools Lifecycle Migration** (`app_runtime_browser_devtools_lifecycle_migration`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: selected next / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: ready
+          Depends on: `app_runtime_service_lifecycle_migration`
+          Enables: `app_runtime_sidebar_git_pr_lifecycle_migration`
+          Expected contract domains: `browser_system_proxy_observation`, `browser_profile_and_webview_lifecycle`, `devtools_inspector_lifecycle`, `browser_focus_and_address_observers`, `production_startup_readiness_shutdown`
+          Expected code areas: `Sources/AppDelegate*.swift`, `Sources/App/BmuxAppRuntime*.swift`, `Sources/Panels/BrowserSystemProxyWatcher.swift`, `Sources/Panels/*Browser*.swift`, `Sources/KeyboardShortcutContext.swift`, `Packages/macOS/BmuxBrowser`, `bmuxTests/*Browser*Tests.swift`, `Packages/macOS/BmuxBrowser/Tests`
+          Likely conflict domains: `app_delegate_startup`, `browser_singletons`, `webview_inspector_teardown`, `app_host_test_side_effects`
+          Contract dependencies: `app_runtime_composition_boundary`, `app_host_test_runtime_isolation`
+          Worktree required: true
+          Gate `mobile_presence_runtime_validated`: requires `app_runtime_service_lifecycle_migration` maturity validated; reason: Browser and DevTools ownership should migrate only after the first non-PE service family proved the runtime composition pattern.
+          Rationale: Browser and DevTools lifecycle ownership is the next safest and highest-value Process Integrity slice because the current source still starts BrowserSystemProxyWatcher and browser/inspector teardown paths through AppDelegate, window, and panel entrypoints while the service family remains cohesive enough for one explicit runtime owner.
+          Acceptance criteria: Browser lifecycle configuration is explicit.; Runtime services own browser startup readiness failure and shutdown.; Test dependencies are isolated.; AppDelegate window panel and shortcut paths cannot become second owners.; Shutdown cancels proxy watchers focus observers inspectors and browser tasks.; Production-path coverage exercises readiness and teardown.; A source guard rejects migrated Browser and DevTools bypasses.
+        - **Sidebar Git and Pull-Request Observation Lifecycle Migration** (`app_runtime_sidebar_git_pr_lifecycle_migration`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: gated
+          Depends on: `app_runtime_browser_devtools_lifecycle_migration`
+          Enables: `app_runtime_notification_push_lifecycle_migration`
+          Expected contract domains: `sidebar_git_metadata_observation`, `pull_request_observation`, `custom_sidebar_pr_state`, `sidebar_socket_and_workspace_display_consistency`, `production_startup_readiness_shutdown`
+          Expected code areas: `Sources/App/BmuxAppRuntime*.swift`, `Sources/BmuxGit`, `Sources/BmuxSidebar`, `Sources/TabManager+SidebarGitHosting.swift`, `Sources/Workspace+CustomSidebarPullRequests.swift`, `Sources/WorkProvenance/WorkProvenanceObservationService.swift`, `Packages/macOS/BmuxControlSocket`, `bmuxTests/*Sidebar*Tests.swift`, `bmuxTests/*PullRequest*Tests.swift`
+          Likely conflict domains: `sidebar_git_cache`, `pull_request_refresh`, `workspace_display_observation`, `custom_sidebar_lifecycle`
+          Contract dependencies: `app_runtime_composition_boundary`, `browser_runtime_lifecycle`
+          Worktree required: true
+          Gate `browser_runtime_validated`: requires `app_runtime_browser_devtools_lifecycle_migration` maturity validated; reason: Sidebar Git and PR observation should migrate after browser runtime ownership removes adjacent AppDelegate and panel startup churn.
+          Rationale: Sidebar Git and PR observation remains a separate lifecycle family from Browser and DevTools because it owns GitHub CLI/git process observation, sidebar row refresh state, and custom-sidebar PR surfaces rather than webview or inspector resources.
+          Acceptance criteria: One runtime owner starts reconciles and stops sidebar Git and PR observation.; Git GitHub CLI PR and workspace-display dependencies are injected or isolated.; Sidebar custom-sidebar socket and workspace-display consumers read the same state.; Lifecycle state exposes readiness degraded failure cancellation and stopped behavior.; Shutdown cancels Git and PR observation tasks row refresh work and publication.; A source guard rejects migrated Git and PR observation bypasses.; Production-path coverage exercises runtime composition and teardown.
+        - **Notification and Push-Registration Lifecycle Migration** (`app_runtime_notification_push_lifecycle_migration`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: gated
+          Depends on: `app_runtime_sidebar_git_pr_lifecycle_migration`
+          Enables: `app_runtime_menu_bar_presentation_lifecycle_migration`
+          Expected contract domains: `user_notification_configuration`, `phone_push_client_auth_and_send`, `push_registration`, `notification_delivery_teardown`
+          Expected code areas: `Sources/AppDelegate*.swift`, `Sources/App/BmuxAppRuntime*.swift`, `Sources/Cloud/PhonePushClient.swift`, `Sources/Notifications`, `bmuxTests/NotificationAndMenuBarTests.swift`, `bmuxTests/MobileHostAuthorizationTests.swift`
+          Likely conflict domains: `app_delegate_startup`, `user_notifications_delegate`, `phone_push_client_singleton`, `mobile_host_presence`
+          Contract dependencies: `app_runtime_composition_boundary`, `mobile_host_presence_lifecycle`
+          Worktree required: true
+          Gate `sidebar_git_pr_runtime_validated`: requires `app_runtime_sidebar_git_pr_lifecycle_migration` maturity validated; reason: Notification and push lifecycle work should wait until the higher-churn sidebar observation family has a single owner.
+          Rationale: PhonePushClient configuration and notification setup remain app-host background services but are coupled to notification delivery and push registration rather than to the already migrated mobile-host listener and presence loop.
+          Acceptance criteria: One runtime owner configures notifications push registration and PhonePushClient lifecycle.; Production and XCTest configuration explicitly enables or disables the capability.; Tests inject notification auth network and registration dependencies.; Lifecycle state distinguishes disabled ready degraded failed stopping and stopped behavior.; Shutdown cancels push sends dismissal drain observers and registration tasks.; Retained singleton access cannot become a second lifecycle owner.; Production-path coverage exercises readiness and deterministic teardown.; A source guard rejects migrated notification and push bypasses.
+        - **Menu-Bar and Presentation Preference Lifecycle Migration** (`app_runtime_menu_bar_presentation_lifecycle_migration`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: gated
+          Depends on: `app_runtime_notification_push_lifecycle_migration`
+          Expected contract domains: `menu_bar_extra_visibility`, `activation_policy_sync`, `presentation_user_defaults_observation`, `production_startup_readiness_shutdown`
+          Expected code areas: `Sources/AppDelegate*.swift`, `Sources/App/BmuxAppRuntime*.swift`, `Sources/MenuBar`, `Sources/Settings`, `bmuxTests/NotificationAndMenuBarTests.swift`
+          Likely conflict domains: `app_delegate_startup`, `user_defaults_observation`, `activation_policy`, `menu_bar_state`
+          Contract dependencies: `app_runtime_composition_boundary`
+          Gate `notification_push_runtime_validated`: requires `app_runtime_notification_push_lifecycle_migration` maturity validated; reason: Menu-bar presentation lifecycle should migrate after notification ownership clarifies AppDelegate startup and delegate responsibilities.
+          Rationale: Menu-bar visibility activation policy and presentation preference observation are a distinct AppDelegate-owned service family and should not be bundled into notification or browser lifecycle work.
+          Acceptance criteria: One runtime owner manages menu-bar visibility activation policy and preferences.; Production and test configuration explicitly selects the capability.; Tests inject UserDefaults menu-bar and activation-policy dependencies.; Startup and settings changes reconcile through deterministic lifecycle state.; Observer teardown is complete.; AppDelegate and settings entrypoints call the runtime owner.; Production-path coverage verifies startup settings reconciliation and shutdown.; A source guard rejects migrated menu-bar and presentation bypasses.
+        - **Residual App-Host Background Service Audit** (`app_runtime_residual_app_host_service_audit`) - slice; status: deferred; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: deferred / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: captured
+          Depends on: `app_runtime_browser_devtools_lifecycle_migration`, `app_runtime_sidebar_git_pr_lifecycle_migration`, `app_runtime_notification_push_lifecycle_migration`, `app_runtime_menu_bar_presentation_lifecycle_migration`
+          Expected contract domains: `updater_lifecycle`, `global_search_lifecycle`, `hotkey_lifecycle`, `feature_flag_lifecycle`, `renderer_realization_lifecycle`, `hibernation_lifecycle`, `session_snapshot_lifecycle`
+          Expected code areas: `Sources/AppDelegate*.swift`, `Sources/App/BmuxAppRuntime*.swift`, `Sources/GlobalSearch*`, `Sources/SystemWideHotkey*`, `Sources/AgentHibernation*`, `Sources/RendererRealization*`, `Sources/Session*`
+          Likely conflict domains: `app_delegate_startup`, `global_singletons`, `app_host_test_side_effects`
+          Execution notes: Requires a fresh post-migration audit after the named Browser sidebar notification push and menu-bar families move behind runtime composition.
+          Rationale: Remaining AppDelegate-started background services may still include production startup readiness failure or shutdown behavior outside BmuxAppRuntimeServices, but their boundaries should be redrawn only after the currently identified high-risk service families are migrated.
+          Acceptance criteria: Inventory all remaining production startup readiness failure observer and shutdown behavior outside BmuxAppRuntimeServices.; Classify each remaining service as already owned migrate next retain with owner or outside the runtime-services boundary.; Any selected migration must require configuration lifecycle state test isolation teardown production coverage and a source guard.
+    - **Provenance Runtime Policy Follow-Ups** (`provenance_runtime_policy_followups`) - phase; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: evidence store; execution: planned / Bmux; parallelism: conditional
+      Depends on: `deterministic_app_runtime_composition`
+      Expected contract domains: `local_pe_store_runtime_policy`, `workspace_display_file_watcher_policy`, `transcript_import_boundary`
+      Likely conflict domains: `work_provenance_runtime`, `provenance_engine_sqlite_store`, `project_truth_manifest`
+      Rationale: Captures narrower runtime findings discovered during the patched-area audit without turning them into remote hosted or multi-user database work.
+      - **Provenance Runtime Follow-Up Hardening** (`provenance_runtime_followup_hardening`) - milestone; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: evidence store; execution: planned / Bmux; parallelism: conditional
+        Depends on: `deterministic_app_runtime_composition`
+        Rationale: Groups follow-ups where the PE runtime is already composed but local watcher import and store policy still need explicit bounds.
+        - **Workspace Display File-Watcher Churn Policy** (`workspace_display_file_watcher_churn_policy`) - slice; status: deferred; owner: Bmux; repositories: Bmux, Provenance Engine; concept: workspace display; layer: deterministic current state; execution: deferred / Bmux; parallelism: conditional; delivery: proposed; acceptance: proposed; maturity: ready
+          Depends on: `deterministic_app_runtime_composition`
+          Expected contract domains: `workspace_display_current_state_subscription`, `sqlite_wal_shm_event_coalescing`, `main_actor_work_bounds`
+          Expected code areas: `Sources/WorkProvenance/WorkspaceDisplayCurrentStateFileWatcher.swift`, `Sources/WorkProvenance/WorkspaceDisplayCurrentStateSubscription.swift`, `Sources/WorkProvenance/WorkspaceDisplayCurrentStateStore.swift`, `bmuxTests/*WorkspaceDisplay*Tests.swift`
+          Likely conflict domains: `workspace_display_current_state`, `work_provenance_runtime_observation`
+          Execution notes: Deferred behind higher-risk lifecycle ownership because the issue is bounded and currently mitigated by runtime composition.
+          Rationale: The workspace-display Current State file watcher can receive repeated SQLite WAL and SHM changes and rescan candidate paths on the main actor; the cleanup is local watcher policy, not a remote or multi-user database redesign.
+          Acceptance criteria: Distinguish parent-directory discovery from database WAL and SHM churn events.; Coalesce repeated SQLite companion-file changes without losing required current-state refreshes.; Bound or move path scanning work so WAL and SHM activity cannot monopolize the main actor.; Preserve deterministic subscription teardown and workspace-display refresh semantics.; Replace sleeps or timing guesses in focused coverage with observable watcher events or controllable scheduling.
+        - **Local PE SQLite Multi-Writer Policy** (`pe_shared_sqlite_writer_policy`) - slice; status: deferred; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: evidence store; execution: deferred / Bmux; parallelism: conditional; delivery: proposed; acceptance: proposed; maturity: captured
+          Depends on: `deterministic_app_runtime_composition`
+          Expected contract domains: `local_sqlite_writer_policy`, `tagged_debug_app_store_isolation`, `cli_and_hook_store_access`, `contention_diagnostics`
+          Expected code areas: `Sources/WorkProvenance/WorkProvenanceStorageLocation.swift`, `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite`, `CLI`, `scripts`, `bmuxTests`, `Packages/macOS/ProvenanceEngine/Tests`
+          Likely conflict domains: `provenance_engine_sqlite_store`, `work_provenance_runtime_observation`, `tagged_debug_runtime`
+          Execution notes: Requires a design decision about local single-user SQLite ownership across production app tagged Debug app hooks and CLI before implementation.
+          Rationale: Dogfood showed multiple local app instances can contend for the shared production PE SQLite database. The captured cleanup is an explicit local writer policy and diagnostics decision; it does not imply remote hosting or a multi-user database unless a future Project Truth node chooses that product direction.
+          Acceptance criteria: Inventory production app tagged Debug app hook CLI and test access to the local PE SQLite store.; Decide and document one local writer or isolation policy including tagged Debug store behavior.; Preserve existing single-user local PE behavior unless a separate Project Truth decision changes the storage model.; Add diagnostics that make contention source and selected store path visible.; Add deterministic contention coverage without relying on elapsed-duration assertions.
+        - **Historical Codex Transcript Import Startup Boundary Guard** (`codex_historical_import_startup_boundary_guard`) - slice; status: deferred; owner: Bmux; repositories: Bmux, Provenance Engine; concept: execution telemetry; layer: evidence adapters; execution: deferred / Bmux; parallelism: conditional; delivery: proposed; acceptance: proposed; maturity: ready
+          Depends on: `deterministic_app_runtime_composition`
+          Expected contract domains: `explicit_transcript_import`, `live_startup_backfill`, `agent_chat_prompt_evidence`
+          Expected code areas: `CLI/BMUXCLI+ProvenanceImport.swift`, `Sources/Mobile/AgentChat/AgentChatTranscriptPromptEvidenceSeeder.swift`, `Sources/Mobile/AgentChat/AgentChatTranscriptService.swift`, `Sources/App/BmuxAppRuntime*.swift`, `bmuxTests/*AgentChat*Tests.swift`, `bmuxTests/*Prompt*Tests.swift`
+          Likely conflict domains: `agent_chat_telemetry_projection`, `codex_prompt_evidence`, `work_provenance_runtime_startup`
+          Execution notes: Ready as a narrow guard slice, but deferred because current startup behavior already excludes ended historical records.
+          Rationale: Historical Codex transcript import must remain an explicit bounded CLI or maintenance operation rather than quietly returning as an app-startup side effect.
+          Acceptance criteria: App startup cannot invoke all-history Codex transcript import or parse ended historical transcript files.; The explicit bmux provenance import codex-transcripts operation remains available bounded and testable.; Live startup backfill for non-ended hook-store sessions and live prompt evidence remains preserved.; A source or behavior guard prevents future app-startup paths from reintroducing broad historical import.; Focused coverage proves historical import stays explicit while live prompt evidence still records through the production path.
+    - **Workspace Mutation Path Integrity** (`workspace_mutation_path_integrity`) - phase; status: planned; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: planned / Bmux; parallelism: serial
+      Expected contract domains: `canonical_workspace_actions`, `config_workspace_launch`, `mutation_path_guards`
+      Likely conflict domains: `workspace_creation`, `workspace_title_color_mutation`, `project_truth_manifest`
+      Rationale: Tracks remaining known bypasses of canonical workspace mutation paths after the shared mutation-path audits.
+      - **Config Workspace Launch Canonicalization** (`config_workspace_launch_canonicalization_milestone`) - milestone; status: planned; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: planned / Bmux; parallelism: serial
+        Rationale: Bounded milestone for eliminating the documented category-D config-launch workspace mutation bypass without expanding into unrelated workspace cleanup.
+        - **Config Workspace-Launch Canonicalization** (`config_workspace_launch_canonicalization`) - slice; status: deferred; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: deferred / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: ready
+          Expected contract domains: `config_workspace_creation`, `canonical_workspace_action_path`, `workspace_identity_title_color_focus`, `mutation_path_guard`
+          Expected code areas: `Sources/BmuxConfigExecutor+WorkspaceLaunch.swift`, `Sources/WorkspaceActions`, `Sources/TabManager*.swift`, `scripts/check-canonical-workspace-mutations.sh`, `docs/canonical-mutation-paths.md`, `bmuxTests/*Workspace*Tests.swift`, `bmuxTests/*Config*Tests.swift`
+          Likely conflict domains: `workspace_creation`, `workspace_title_mutation`, `workspace_color_mutation`, `workspace_restoration`
+          Execution notes: Implementation-ready but intentionally ordered after the remaining uncontrolled production lifecycle owners.
+          Rationale: Sources/BmuxConfigExecutor+WorkspaceLaunch.swift remains the known category-D bypass for config-launched workspace creation retitling and recoloring. The cleanup should route that adapter through the canonical workspace action path only.
+          Acceptance criteria: Config-launched workspace creation title color focus and restoration behavior matches normal workspace actions.; Regression coverage verifies workspace identity title color focus and relevant restoration behavior.; docs/canonical-mutation-paths.md no longer lists config launch as a category-D bypass.; scripts/check-canonical-workspace-mutations.sh is extended if needed to prevent a repeat bypass.; The slice does not broaden into unrelated workspace mutation cleanup unless inspection proves another adapter bypass is inseparable.
+    - **Test Determinism Integrity** (`test_determinism_integrity`) - phase; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: platform; layer: platform; execution: planned / Bmux; parallelism: conditional
+      Expected contract domains: `deterministic_test_readiness`, `controllable_clocks`, `observable_events`, `allowlist_burndown`
+      Likely conflict domains: `test_infrastructure`, `app_runtime_tests`, `socket_tests`, `ui_tests`
+      Rationale: Captures the grandfathered nondeterministic-test allowlist as deliberate debt that must be burned down through real deterministic behavior, not by deleting suppressions.
+      - **Test Determinism Allowlist Burn-Down** (`test_determinism_allowlist_burndown`) - milestone; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: platform; layer: platform; execution: planned / Bmux; parallelism: conditional
+        Rationale: Burn down .github/test-determinism-allowlist.txt from twenty grandfathered findings to zero through reviewable subsystem slices.
+        Acceptance criteria: The allowlist reaches zero entries only after each underlying nondeterminism is corrected.; Sleep-then-assert tests use observable readiness events deterministic polling injected scheduling or controllable clocks.; Elapsed-duration assertions are replaced with behavior-level readiness timeout contracts or clock-injected assertions.; Removing an allowlist line without fixing its underlying nondeterminism does not count as completion.
+        - **Swift Package Test Determinism Burn-Down** (`test_determinism_swift_package_burndown`) - slice; status: deferred; owner: Bmux; repositories: Bmux, Provenance Engine; concept: platform; layer: platform; execution: deferred / Bmux; parallelism: conditional; delivery: proposed; acceptance: proposed; maturity: ready
+          Expected contract domains: `swift_package_sleep_then_assert`, `swift_package_elapsed_duration_assertions`, `package_test_schedulers`
+          Expected code areas: `Packages/Shared/BmuxAuthRuntime/Tests/BmuxAuthRuntimeTests/HostBrowserSignInFlowTests.swift`, `Packages/macOS/BmuxBrowser/Tests/BmuxBrowserTests/Omnibar/BrowserOmnibarPageFocusRepositoryTests.swift`, `Packages/macOS/BmuxControlSocket/Tests/BmuxControlSocketTests/SocketTransportIOTests.swift`, `Packages/macOS/BmuxFoundation/Tests/BmuxFoundationTests/Process/CommandRunnerTests.swift`, `Packages/macOS/BmuxSettings/Tests/BmuxSettingsTests/UserDefaultsSettingsStoreTests.swift`, `.github/test-determinism-allowlist.txt`
+          Likely conflict domains: `package_test_helpers`, `browser_package_tests`, `command_runner_tests`
+          Execution notes: Implementation-ready as an isolated package-test slice, but lower priority than production lifecycle ownership.
+          Rationale: Five grandfathered package-test findings are isolated from app-host lifecycle migration and can be burned down through package-local deterministic readiness or clock seams.
+          Acceptance criteria: Replace package-level sleeps and elapsed-duration assertions with observable readiness controllable clocks events or deterministic polling contracts.; Keep package tests behavior-level and avoid source-text or metadata-only assertions.; Remove only the allowlist lines whose underlying nondeterminism is fixed in this slice.; Run the affected package tests and the test-determinism guard.
+        - **Swift App and Runtime Test Determinism Burn-Down** (`test_determinism_swift_app_runtime_burndown`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: planned / Bmux; parallelism: conditional; delivery: proposed; acceptance: proposed; maturity: gated
+          Depends on: `app_runtime_notification_push_lifecycle_migration`, `app_runtime_menu_bar_presentation_lifecycle_migration`
+          Expected contract domains: `app_host_runtime_readiness`, `swift_app_sleep_then_assert`, `swift_app_elapsed_duration_assertions`, `injected_scheduling`
+          Expected code areas: `bmuxTests/BMUXOpenCommandTests.swift`, `bmuxTests/FileExplorerStoreTests.swift`, `bmuxTests/MobileHostAuthorizationTests.swift`, `bmuxTests/NotificationAndMenuBarTests.swift`, `bmuxTests/OmnibarAndToolsTests.swift`, `bmuxTests/RovoDevSessionIndexTests.swift`, `bmuxTests/TabManagerSessionSnapshotTests.swift`, `.github/test-determinism-allowlist.txt`
+          Likely conflict domains: `app_runtime_tests`, `mobile_host_presence_tests`, `notification_menu_tests`
+          Gate `notification_push_runtime_validated`: requires `app_runtime_notification_push_lifecycle_migration` maturity validated; reason: Notification and mobile-host authorization test determinism should be fixed against the migrated runtime owner.
+          Gate `menu_bar_runtime_validated`: requires `app_runtime_menu_bar_presentation_lifecycle_migration` maturity validated; reason: Menu-bar duration assertions should be replaced after menu-bar lifecycle ownership is explicit.
+          Rationale: App and runtime determinism should follow lifecycle ownership migrations so tests target explicit readiness and teardown contracts instead of old scattered startup side effects.
+          Acceptance criteria: Replace app/runtime sleeps and elapsed-duration assertions with runtime state events controllable clocks deterministic polling or injected scheduling.; Remove only corrected allowlist entries from .github/test-determinism-allowlist.txt.; Run affected bmuxTests the app/unit test target needed by the touched area and the test-determinism guard.
+        - **Python Socket and Tmux Compatibility Test Determinism Burn-Down** (`test_determinism_python_socket_tmux_burndown`) - slice; status: deferred; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: deferred / Bmux; parallelism: conditional; delivery: proposed; acceptance: proposed; maturity: ready
+          Expected contract domains: `socket_readiness`, `tmux_compatibility_readiness`, `python_polling_contracts`
+          Expected code areas: `tests/test_multi_workspace_focus.py`, `tests_v2/test_browser_api_extended_families.py`, `tests_v2/test_pane_break_swap_preserve_focus.py`, `tests_v2/test_surface_list_custom_titles.py`, `tests_v2/test_tmux_compat_geometry.py`, `tests_v2/test_tmux_compat_matrix.py`, `tests_v2/test_v1_panel_creation_preserves_focus.py`, `.github/test-determinism-allowlist.txt`
+          Likely conflict domains: `python_socket_harness`, `tmux_compatibility_tests`, `app_focus_tests`
+          Execution notes: Implementation-ready as a harness/test slice but intentionally ordered after the higher-risk runtime ownership work.
+          Rationale: Seven grandfathered Python and tmux compatibility findings can be burned down together because they share socket readiness focus preservation and polling harness behavior.
+          Acceptance criteria: Replace Python sleep-then-assert behavior with explicit socket/app readiness deterministic polling contracts or observable events.; Preserve tmux compatibility semantics while removing time guesses.; Remove only corrected allowlist lines and run the affected Python suites plus the test-determinism guard.
+        - **UI Test Determinism Burn-Down** (`test_determinism_ui_burndown`) - slice; status: deferred; owner: Bmux; repositories: Bmux; concept: platform; layer: consumer presentation; execution: deferred / Bmux; parallelism: conditional; delivery: proposed; acceptance: proposed; maturity: captured
+          Expected contract domains: `ui_readiness`, `sidebar_ui_observation`, `xcuitest_wait_contracts`
+          Expected code areas: `bmuxUITests/FeedSidebarUITests.swift`, `.github/test-determinism-allowlist.txt`
+          Likely conflict domains: `ui_test_harness`, `feed_sidebar_ui`
+          Execution notes: Needs a UI-harness design pass before implementation because XCUITest readiness contracts differ from unit and socket tests.
+          Rationale: The remaining UI-test allowlist entry should be fixed through an explicit XCUITest readiness contract instead of being combined with unit or Python harness cleanup.
+          Acceptance criteria: Identify the Feed sidebar observable UI readiness condition that replaces the sleep.; Add deterministic XCUITest waiting or app-side testing hooks without weakening the user-facing behavior under test.; Remove the UI allowlist entry only after the nondeterminism is fixed and focused UI verification passes.
+    - **Legacy Bmux-Local Provenance Retirement** (`legacy_bmux_provenance_retirement`) - phase; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: evidence adapters; execution: planned / Bmux; parallelism: serial
+      Depends on: `deterministic_app_runtime_composition`
+      Expected contract domains: `legacy_bmux_local_provenance`, `pe_sdk_replacement_contracts`, `data_preservation_policy`
+      Likely conflict domains: `work_provenance_runtime`, `provenance_engine_sqlite_store`, `project_truth_manifest`
+      Rationale: Captures retirement of transitional bmux-local provenance storage and duplicate readers after PE adoption without deleting code or data in this planning slice.
+      - **Legacy Bmux-Local Provenance Storage Retirement** (`legacy_bmux_provenance_storage_retirement_milestone`) - milestone; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: evidence adapters; execution: planned / Bmux; parallelism: serial
+        Depends on: `deterministic_app_runtime_composition`
+        Rationale: Split into inventory/decision and cleanup so legacy data preservation and retained behavior are explicit before deletion.
+        - **Legacy Bmux-Local Provenance Caller Inventory and Retirement Plan** (`legacy_bmux_provenance_caller_inventory`) - slice; status: deferred; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: evidence adapters; execution: deferred / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: ready
+          Depends on: `deterministic_app_runtime_composition`
+          Enables: `legacy_bmux_provenance_storage_cleanup`
+          Expected contract domains: `work_provenance_store_callers`, `legacy_client_callers`, `local_sqlite_helpers`, `pe_sdk_replacement_contracts`, `rollback_data_preservation_decision`
+          Expected code areas: `Sources/WorkProvenance/WorkProvenanceStore.swift`, `Sources/WorkProvenance/BmuxLegacyProvenanceClient.swift`, `Sources/WorkProvenance/WorkProvenanceStore+BmuxLegacyProvenanceClient.swift`, `Sources/WorkProvenance/WorkProvenanceSQLiteDatabase.swift`, `Sources/WorkProvenance/ProvenanceObservabilityStore.swift`, `CLI/CLIProvenanceObservabilitySQLiteReader.swift`, `docs/provenance-integration.md`, `docs/context-efficiency/integration/provenance-engine-adoption.md`, `bmuxTests/*Provenance*Tests.swift`
+          Likely conflict domains: `work_provenance_runtime`, `pe_sdk_contracts`, `observability_sqlite_readers`
+          Execution notes: Ready as an inventory and decision slice, but ordered after lifecycle and mutation-path risk reduction.
+          Rationale: Transitional surfaces such as WorkProvenanceStore BmuxLegacyProvenanceClient local SQLite helpers and duplicate observability readers remain in the repository. A bounded inventory slice should make every remaining production and test caller explicit before any deletion.
+          Acceptance criteria: Inventory every production CLI test and documentation caller of legacy provenance storage clients helpers duplicate reads and observability paths.; Classify each caller as migrate retain temporarily delete or preserve as archival/recovery behavior.; Identify the PE SDK or contract replacement for each retained behavior that should migrate.; Confirm whether any current production capability still depends on the legacy database.; Decide where schema compatibility is required for real retained data and where it is obsolete.; Define a guard that prevents new consumer behavior from being added to the legacy path.; Record an explicit rollback and data-preservation decision before any deletion.
+        - **Legacy Bmux-Local Provenance Storage Cleanup** (`legacy_bmux_provenance_storage_cleanup`) - slice; status: deferred; owner: Bmux; repositories: Bmux, Provenance Engine; concept: evidence and factual state; layer: evidence adapters; execution: deferred / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: gated
+          Depends on: `legacy_bmux_provenance_caller_inventory`
+          Expected contract domains: `legacy_storage_deletion`, `pe_sdk_replacement`, `duplicate_source_of_truth_removal`, `data_preservation_guard`
+          Expected code areas: `Sources/WorkProvenance`, `CLI`, `docs/provenance-integration.md`, `docs/context-efficiency`, `bmuxTests`, `Packages/macOS/ProvenanceEngine`
+          Likely conflict domains: `work_provenance_runtime`, `provenance_engine_sqlite_store`, `observability_sqlite_readers`
+          Gate `legacy_inventory_validated`: requires `legacy_bmux_provenance_caller_inventory` maturity validated; reason: Cleanup must wait for an explicit caller inventory PE replacement map and rollback/data-preservation decision.
+          Rationale: Actual legacy cleanup is intentionally gated behind the inventory slice so no retained data or production behavior is deleted without a recorded decision.
+          Acceptance criteria: Migrate or delete only callers classified by the validated inventory.; Confirm no current production capability depends on the legacy database before removing storage paths.; Preserve schema compatibility only where retained data requires it.; Remove duplicate sources of truth obsolete readers adapters documentation and tests.; Add or activate the guard preventing new legacy consumer behavior.; Do not delete user data without the explicit preservation/rollback decision recorded by the inventory slice.
+    - **Monorepo Migration Ledger Closure** (`monorepo_migration_ledger_closure`) - phase; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: project truth; layer: cross repository workflow; execution: planned / Bmux; parallelism: conditional
+      Depends on: `monorepo_repository_consolidation`
+      Expected contract domains: `migration_ledger_dispositions`, `open_pr_reconciliation`, `local_worktree_preservation`
+      Expected code areas: `docs/planning/monorepo-migration-ledger.md`, `project/project-state.yaml`, `docs/generated`
+      Likely conflict domains: `migration_planning_docs`, `project_truth_manifest`
+      Rationale: The monorepo migration ledger still records pending PR and local-worktree dispositions that need explicit evidence-based closure.
+      - **Monorepo Migration Disposition Closure** (`monorepo_migration_disposition_closure`) - milestone; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: project truth; layer: cross repository workflow; execution: planned / Bmux; parallelism: conditional
+        Depends on: `monorepo_repository_consolidation`
+        Rationale: Ensure historical migration leftovers are classified as preserved recreated superseded closed or archival rather than remaining ambiguous pending state.
+        - **Monorepo Migration Ledger Disposition Closure** (`monorepo_migration_ledger_disposition_closure`) - slice; status: deferred; owner: Bmux; repositories: Bmux, Provenance Engine; concept: project truth; layer: cross repository workflow; execution: deferred / Bmux; parallelism: conditional; delivery: proposed; acceptance: proposed; maturity: ready
+          Depends on: `monorepo_repository_consolidation`
+          Expected contract domains: `open_pull_request_disposition`, `local_worktree_disposition`, `supersession_evidence`, `archival_recovery_references`
+          Expected code areas: `docs/planning/monorepo-migration-ledger.md`, `project/project-state.yaml`, `docs/generated`
+          Likely conflict domains: `open_pr_branches`, `local_worktrees`, `migration_planning_docs`
+          Execution notes: Evidence-ready, but deferred until higher-risk runtime and mutation-path cleanup has a clear owner.
+          Rationale: Each pending PR and local worktree disposition in docs/planning/monorepo-migration-ledger.md should be resolved by evidence, without deleting local worktrees branches repositories or user changes as part of the planning capture.
+          Acceptance criteria: Inspect each ledger PR and local-worktree entry against current GitHub and local repository state.; Rebase and preserve entries still useful recreate entries as current monorepo slices when part remains relevant close entries as superseded with a pointer to replacing work or preserve entries as archival/recovery references.; Update Project Truth and generated docs for any recreated superseded or newly selected work.; Do not delete local worktrees branches repositories or user changes in the closure slice.; The final ledger contains no ambiguous pending entries.
   - **V1 Foundation and Bmux Adoption** (`v1_foundation_and_adoption`) - program; status: accepted; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: v1 adoption; layer: platform; execution: complete / Shared; parallelism: serial
     Rationale: Records the accepted V1 package and first bmux adoption path without expanding the legacy flat milestone list.
     - **V1 Baseline** (`v1_baseline`) - phase; status: accepted; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: v1 adoption; layer: evidence store; execution: complete / Shared; parallelism: serial
@@ -763,19 +974,21 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 
 | Slice | Selection | Dependency status | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) | selected next | ready | serial | true | `app_delegate_startup`, `browser_singletons`, `webview_inspector_teardown`, `app_host_test_side_effects` | `app_runtime_composition_boundary`, `app_host_test_runtime_isolation` | `browser_system_proxy_observation`, `browser_profile_and_webview_lifecycle`, `devtools_inspector_lifecycle`, `browser_focus_and_address_observers`, `production_startup_readiness_shutdown` | `Sources/AppDelegate*.swift`, `Sources/App/BmuxAppRuntime*.swift`, `Sources/Panels/BrowserSystemProxyWatcher.swift`, `Sources/Panels/*Browser*.swift`, `Sources/KeyboardShortcutContext.swift`, `Packages/macOS/BmuxBrowser`, `bmuxTests/*Browser*Tests.swift`, `Packages/macOS/BmuxBrowser/Tests` |
 | React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) | planned | ready | serial | true | `session_work_model_projection`, `react_session_presentation`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `blocker_approach_change_semantics`, `semantic_explanation_provenance` | `React Smart Session surface`, `bmux SessionWorkModel client`, `Sources/WorkProvenance`, `Sources/ProvenanceEngineContracts` |
 | Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) | planned | ready | serial | true | `prompt_context_assembly`, `retrieval_contracts`, `privacy_policy` | `cross_session_agent_query`, `context_effectiveness_metrics` | `context_assembly_policy`, `cross_session_effectiveness_metrics`, `bounded_context_pack` | `bmux context assembly`, `bmux agent launch/session orchestration`, `evaluation fixtures` |
 | Milestone-to-code relationships (`milestone_to_code_relationships`) | planned | ready | serial | true | `milestone_relationships`, `file_change_attribution` | `milestone_semantics`, `richer_coding_agent_evidence` | `milestone_code_relationships`, `file_change_attribution` | `Sources/ProvenanceEngineCore`, `Sources/ProvenanceEngineContracts`, `Tests/ProvenanceEngineTests` |
 
 ## Dependency-Ready Work
 
+- Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) - selection: selected next; depends on: `app_runtime_service_lifecycle_migration`
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - selection: planned; depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - selection: planned; depends on: `agent_accessible_cross_session_retrieval`
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - selection: planned; depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`
 
 ## Selected Next Work
 
-None.
+- Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) - dependency status: ready; depends on: `app_runtime_service_lifecycle_migration`
 
 ## Dependency-Ready But Not Selected
 
@@ -785,6 +998,17 @@ None.
 
 ## Deferred Or Blocked Work
 
+- Residual App-Host Background Service Audit (`app_runtime_residual_app_host_service_audit`) - status: deferred; depends on: `app_runtime_browser_devtools_lifecycle_migration`, `app_runtime_sidebar_git_pr_lifecycle_migration`, `app_runtime_notification_push_lifecycle_migration`, `app_runtime_menu_bar_presentation_lifecycle_migration`
+- Workspace Display File-Watcher Churn Policy (`workspace_display_file_watcher_churn_policy`) - status: deferred; depends on: `deterministic_app_runtime_composition`
+- Local PE SQLite Multi-Writer Policy (`pe_shared_sqlite_writer_policy`) - status: deferred; depends on: `deterministic_app_runtime_composition`
+- Historical Codex Transcript Import Startup Boundary Guard (`codex_historical_import_startup_boundary_guard`) - status: deferred; depends on: `deterministic_app_runtime_composition`
+- Config Workspace-Launch Canonicalization (`config_workspace_launch_canonicalization`) - status: deferred; depends on: None
+- Swift Package Test Determinism Burn-Down (`test_determinism_swift_package_burndown`) - status: deferred; depends on: None
+- Python Socket and Tmux Compatibility Test Determinism Burn-Down (`test_determinism_python_socket_tmux_burndown`) - status: deferred; depends on: None
+- UI Test Determinism Burn-Down (`test_determinism_ui_burndown`) - status: deferred; depends on: None
+- Legacy Bmux-Local Provenance Caller Inventory and Retirement Plan (`legacy_bmux_provenance_caller_inventory`) - status: deferred; depends on: `deterministic_app_runtime_composition`
+- Legacy Bmux-Local Provenance Storage Cleanup (`legacy_bmux_provenance_storage_cleanup`) - status: deferred; depends on: `legacy_bmux_provenance_caller_inventory`
+- Monorepo Migration Ledger Disposition Closure (`monorepo_migration_ledger_disposition_closure`) - status: deferred; depends on: `monorepo_repository_consolidation`
 - Cross-Session Awareness Knowledge Bridge (`cross_session_awareness_knowledge_bridge`) - status: deferred; depends on: `agent_accessible_cross_session_retrieval`, `knowledge_compiler_outcomes`
 - Cross-Session Knowledge Compiler Bridge (`cross_session_knowledge_bridge_milestone`) - status: deferred; depends on: `agent_accessible_cross_session_retrieval`, `knowledge_compiler_outcomes`
 - Knowledge Compiler cross-session bridge (`knowledge_compiler_cross_session_bridge`) - status: deferred; depends on: `agent_accessible_cross_session_retrieval`, `knowledge_compiler_outcomes`

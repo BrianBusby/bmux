@@ -58,8 +58,12 @@ before bmux should pursue them.
 
 ## Near-Term Planned Work
 
-- Run an observation period against the accepted runtime cutover.
-- Remove or retire legacy WorkProvenance storage and client support after replacement contracts or obsolescence decisions.
+- Use generated Project Truth to select from the remaining Process Integrity
+  backlog captured in `docs/process-integrity/remaining-patch-audit-backlog.md`,
+  starting with Browser and DevTools lifecycle ownership.
+- Remove or retire legacy WorkProvenance storage and client support only after
+  the Project Truth inventory slice records replacement contracts,
+  obsolescence, schema compatibility, and rollback/data-preservation decisions.
 - Decide whether lifecycle observability traces need a public engine API or should remain bmux-local diagnostics.
 - Continue the richer coding-agent evidence and `SessionWorkModel` sequence with
   PE: bmux should keep provider acquisition, live interaction, approvals,

@@ -15,35 +15,26 @@ or caveat changes. Shared milestone, gate, ownership, roadmap, and policy
 changes belong in root `project/project-state.yaml`. The old
 `project/shared-project-source.yaml` pointer is obsolete.
 
-Process Integrity is now the primary active frontier. The current slice is
-`deterministic_app_runtime_composition`, owned by bmux, with active work in
-`/Users/brianbusby/repos/.bmux-worktrees/process-integrity-runtime-composition`
-on branch `process-integrity-runtime-composition`. The audit and migration rules
-for this slice live in
-[`docs/process-integrity/runtime-composition-audit.md`](../process-integrity/runtime-composition-audit.md).
+Process Integrity is the primary active frontier. Repo-local `current_work` is
+`none_selected` after PR #101 reconciled the mobile-host/presence lifecycle
+migration. The completed and validated Process Integrity slices remain:
+`deterministic_app_runtime_composition` from PR #97,
+`post_merge_project_truth_reconciliation` from PR #98, and
+`app_runtime_service_lifecycle_migration` from PR #100. PR #99 and PR #101 are
+historical evidence that the post-merge reconciliation loop works.
 
-This slice migrates WorkProvenanceRuntime construction/startup and agent-chat PE
-execution telemetry projection startup behind `BmuxAppRuntimeComposition` and
-`BmuxAppRuntimeServices`. Default app-host tests must not open production PE
-storage; PE tests opt in with explicit runtime capabilities and isolated storage.
-The retained compatibility behavior is `BMUX_ENABLE_PROVENANCE_RUNTIME_IN_XCTEST=1`
-plus `BMUX_PROVENANCE_HOME`, now interpreted only by the runtime composition
-configuration.
+The remaining patched-area audit backlog is now represented in Project Truth.
+The selected next Process Integrity slice is
+`app_runtime_browser_devtools_lifecycle_migration`; no implementation branch is
+active. The planning snapshot and grouping rationale live in
+[`docs/process-integrity/remaining-patch-audit-backlog.md`](../process-integrity/remaining-patch-audit-backlog.md),
+with detailed historical context in the runtime composition and mobile-host
+audit documents.
 
-Production PE prompt evidence appends are part of this slice's readiness surface:
-turn-outcome evidence acquisition is scoped to the affected `session_id`, not the
-entire local event ledger. Agent-chat startup prompt seeding now skips ended
-historical Codex records while preserving live startup backfill and the live
-`UserPromptSubmit` repair path; broad historical prompt backfill belongs to an
-explicit import or future maintenance capability. Dogfood also identified
-workspace-display SQLite file-watcher churn on shared stores as a deferred
-runtime-composition follow-up; do not fold that into this PR unless it becomes
-the blocking startup/readiness failure.
-Final dogfood also found that another active tagged Debug app can hold the
-shared production PE SQLite store and force this slice's writes into retry; the
-validated build 535 dogfood used an isolated `BMUX_PROVENANCE_HOME` while still
-running production composition (`xctest=0`). Treat multi-app shared-store writer
-policy as a separate follow-up, not part of this PR.
+Do not treat this planning state as authorization to implement cleanup inline.
+Runtime lifecycle, workspace mutation, deterministic-test, legacy provenance,
+monorepo-ledger, and PE runtime-policy work should be selected as future slices
+according to the generated Project Truth frontier.
 
 ## Read Order
 
@@ -52,17 +43,18 @@ policy as a separate follow-up, not part of this PR.
 3. `docs/generated/project-status.md`
 4. `docs/generated/ownership-boundary.md`
 5. `docs/generated/repository-status.md`
-6. `docs/architecture/README.md`
-7. `docs/architecture/system-overview.md`
-8. `docs/architecture/implementation-map.md`
-9. `docs/product/coding-session-views.md`
-10. `docs/planning/monorepo-migration-ledger.md`
-11. `docs/roadmap.md`
-12. `docs/provenance-integration.md`
-13. `docs/context-efficiency/roadmap.md`
-14. `docs/context-efficiency/milestones.md`
-15. `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
-16. Relevant bmux skills for Swift/package/build/test/localization work.
+6. `docs/process-integrity/remaining-patch-audit-backlog.md`
+7. `docs/architecture/README.md`
+8. `docs/architecture/system-overview.md`
+9. `docs/architecture/implementation-map.md`
+10. `docs/product/coding-session-views.md`
+11. `docs/planning/monorepo-migration-ledger.md`
+12. `docs/roadmap.md`
+13. `docs/provenance-integration.md`
+14. `docs/context-efficiency/roadmap.md`
+15. `docs/context-efficiency/milestones.md`
+16. `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
+17. Relevant bmux skills for Swift/package/build/test/localization work.
 
 ## Current Boundary
 
