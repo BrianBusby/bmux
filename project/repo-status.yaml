@@ -3,14 +3,10 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id: post_merge_project_truth_reconciliation
-    title: Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement
-    state: open
-    owner: bmux
-    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/process-integrity-post-merge-reconciliation
-    active_branch: process-integrity-post-merge-reconciliation
-    active_agent: codex
-  state: active
+    id:
+    title:
+    state: none_selected
+  state: none_selected
 
 execution_telemetry:
   provider_neutral_contract: implemented

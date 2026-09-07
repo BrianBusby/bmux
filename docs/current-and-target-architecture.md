@@ -187,8 +187,8 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 - Active gate: Engineering Observation Period (`engineering_observation_period`) - active
 - Primary capability frontier: Process Integrity (`process_integrity`)
-- Active implementation slice: Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement (`post_merge_project_truth_reconciliation`) - open
-- Bmux repository state: active
+- Active implementation slice: none selected
+- Bmux repository state: none selected
 
 ### Current Roadmap Lanes
 
@@ -196,7 +196,6 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Process Integrity (`process_integrity`) - program; status: active; owner: Bmux
 - Project Truth Delivery Lifecycle (`project_truth_delivery_lifecycle`) - phase; status: active; owner: Bmux
 - Post-Merge Project Truth Reconciliation (`post_merge_project_truth_reconciliation_milestone`) - milestone; status: active; owner: Bmux
-- Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement (`post_merge_project_truth_reconciliation`) - slice; status: active; owner: Bmux
 - App Runtime Composition and Test Isolation (`app_runtime_composition_and_test_isolation`) - phase; status: active; owner: Bmux
 - App Runtime Composition Migration (`app_runtime_composition_migration`) - milestone; status: active; owner: Bmux
 - Project Truth Governance (`project_truth_governance`) - program; status: active; owner: Provenance Engine

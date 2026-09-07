@@ -262,7 +262,7 @@ roadmap:
       kind: slice
       title: Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement
       parent: post_merge_project_truth_reconciliation_milestone
-      status: active
+      status: implemented
       owner: bmux
       repositories:
         - bmux
@@ -275,7 +275,7 @@ roadmap:
           - project_truth_reconciliation
           - post_merge_delivery
           - capability_frontier
-      capability_maturity: active
+      capability_maturity: validated
       depends_on:
         - project_truth_capability_frontier_governance
       enables:
@@ -311,13 +311,10 @@ roadmap:
           - github_evidence_validation
         worktree_required: true
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: bmux
-        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/process-integrity-post-merge-reconciliation
-        active_branch: process-integrity-post-merge-reconciliation
-        active_agent: codex
-      delivery_status: open
-      acceptance_status: proposed
+      delivery_status: merged
+      acceptance_status: implemented
       rationale: Add a canonical reconcile check/apply command that reads Project Truth and GitHub evidence, applies only mechanically justified delivery transitions, clears stale active work, advances ready candidates, regenerates docs atomically, and reports remaining human planning decisions.
       acceptance:
         criteria:
@@ -329,13 +326,18 @@ roadmap:
           - CI detects stale recorded delivery evidence and post-merge automation opens or updates one bounded reconciliation PR with explicit remote-branch lease protection, validates safe diffs without discarding unrelated explicit decisions, then dispatches normal validation workflows for that branch.
 
       evidence:
-        commits: []
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 176e0f0e275846ef5ca2e57fe57a3ac13d5d9f03
         pull_requests:
           - repository: BrianBusby/bmux
             number: 98
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-09-07T01:02:35Z'
+            merge_commit_sha: 176e0f0e275846ef5ca2e57fe57a3ac13d5d9f03
+      completed_at: '2026-09-07'
     - id: app_runtime_composition_and_test_isolation
       kind: phase
       title: App Runtime Composition and Test Isolation

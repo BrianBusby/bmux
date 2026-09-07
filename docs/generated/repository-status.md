@@ -13,10 +13,8 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement (`post_merge_project_truth_reconciliation`)
-- Slice state: open
-- Owner: bmux
-- Repository state: active
+- Active slice: none selected
+- Repository state: none selected
 
 ## Release
 

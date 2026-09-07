@@ -16,12 +16,11 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 ### Current Capability Frontier
 
 - Primary Capability Frontier: Process Integrity (`process_integrity`)
-- Active or selected slices in the frontier:
-  - Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement (`post_merge_project_truth_reconciliation`) - maturity: active; status: active; selection: current; owner: Bmux
+- Active or selected slices in the frontier: none
 
 ### Active Implementation
 
-- Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement (`post_merge_project_truth_reconciliation`) - maturity: active; status: active; selection: current; owner: Bmux
+- None.
 
 ### Selected Next
 
@@ -113,7 +112,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
       - **Post-Merge Project Truth Reconciliation** (`post_merge_project_truth_reconciliation_milestone`) - milestone; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: project truth; layer: cross repository workflow; execution: current / Bmux; parallelism: serial
         Depends on: `project_truth_capability_frontier_governance`
         Rationale: Milestone for making post-merge reconciliation a canonical Project Truth tool and reviewable repository automation path rather than a sequence of one-off delivery metadata repair PRs.
-        - **Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement** (`post_merge_project_truth_reconciliation`) - slice; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: project truth; layer: cross repository workflow; execution: current / Bmux; parallelism: serial; delivery: open; acceptance: proposed; maturity: active
+        - **Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement** (`post_merge_project_truth_reconciliation`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: project truth; layer: cross repository workflow; execution: complete / Bmux; parallelism: serial; delivery: merged; acceptance: implemented; maturity: validated
           Depends on: `project_truth_capability_frontier_governance`
           Enables: `app_runtime_service_lifecycle_migration`
           Expected contract domains: `post_merge_delivery_reconciliation`, `github_merge_evidence`, `active_work_state`, `capability_frontier_recalculation`, `reconciliation_pr_deduplication`
@@ -121,8 +120,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `project_truth_manifest`, `project_docs_generation`, `github_evidence_validation`, `github_actions_project_truth`
           Contract dependencies: `project_truth_generated_docs`, `project_docs_validation`, `github_evidence_validation`
           Worktree required: true
-          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/process-integrity-post-merge-reconciliation`; branch: `process-integrity-post-merge-reconciliation`; agent: `codex`
-          Evidence: BrianBusby/bmux#98 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@176e0f0e2758, BrianBusby/bmux#98 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Add a canonical reconcile check/apply command that reads Project Truth and GitHub evidence, applies only mechanically justified delivery transitions, clears stale active work, advances ready candidates, regenerates docs atomically, and reports remaining human planning decisions.
           Acceptance criteria: Reconciliation check mode is read-only, actionable, and exits nonzero when safe changes or explicit decisions remain.; Reconciliation apply mode updates only canonical manifests and generated docs, validates in a temporary copy, stages destination-side replacements with rollback, and is idempotent on a second run.; Merged PR evidence records merge timestamp and merge commit identity after GitHub verification.; Active branch/worktree assignments for completed delivery are cleared without selecting the next priority automatically.; Capability-frontier candidates whose declared gates are now satisfied become ready but remain unselected until a human chooses them.; CI detects stale recorded delivery evidence and post-merge automation opens or updates one bounded reconciliation PR with explicit remote-branch lease protection, validates safe diffs without discarding unrelated explicit decisions, then dispatches normal validation workflows for that branch.
     - **App Runtime Composition and Test Isolation** (`app_runtime_composition_and_test_isolation`) - phase; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: platform; layer: platform; execution: current / Bmux; parallelism: serial
@@ -758,9 +756,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.
 
-| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement (`post_merge_project_truth_reconciliation`) | serial | /Users/brianbusby/repos/.bmux-worktrees/process-integrity-post-merge-reconciliation | process-integrity-post-merge-reconciliation | codex | `github_actions_project_truth`, `github_evidence_validation`, `project_docs_generation`, `project_truth_manifest` | `github_evidence_validation`, `project_docs_validation`, `project_truth_generated_docs` | single active assignment |
+- Active implementation assignments: none selected.
 
 ### Dependency-Ready Preflight
 
