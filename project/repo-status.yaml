@@ -3,14 +3,10 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id: app_runtime_browser_devtools_lifecycle_migration
-    title: Browser and DevTools Lifecycle Migration
-    state: implemented
-    owner: bmux
-    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-browser-devtools-lifecycle
-    active_branch: app-runtime-browser-devtools-lifecycle
-    active_agent: codex
-  state: active
+    id:
+    title:
+    state: none_selected
+  state: none_selected
 
 execution_telemetry:
   provider_neutral_contract: implemented

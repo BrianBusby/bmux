@@ -586,7 +586,7 @@ roadmap:
       kind: slice
       title: Browser and DevTools Lifecycle Migration
       parent: app_runtime_composition_migration
-      status: active
+      status: implemented
       owner: bmux
       repositories:
         - bmux
@@ -598,7 +598,7 @@ roadmap:
           - app_runtime_composition
           - browser_lifecycle
           - devtools_lifecycle
-      capability_maturity: active
+      capability_maturity: validated
       depends_on:
         - app_runtime_service_lifecycle_migration
       enables:
@@ -636,12 +636,9 @@ roadmap:
           - app_host_test_runtime_isolation
         worktree_required: true
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: bmux
-        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-browser-devtools-lifecycle
-        active_branch: app-runtime-browser-devtools-lifecycle
-        active_agent: codex
-      delivery_status: open
+      delivery_status: merged
       acceptance_status: implemented
       rationale: Browser and DevTools lifecycle ownership is the next safest and highest-value Process Integrity slice because the current source still starts BrowserSystemProxyWatcher and browser/inspector teardown paths through AppDelegate, window, and panel entrypoints while the service family remains cohesive enough for one explicit runtime owner.
       acceptance:
@@ -657,13 +654,17 @@ roadmap:
         commits:
           - repository: BrianBusby/bmux
             sha: aa63c9218b3e448065e49186888d951bf413ec51
+          - repository: BrianBusby/bmux
+            sha: cd3d97f2e1615ef97543f8ebcdf2157cfb823154
         pull_requests:
           - repository: BrianBusby/bmux
             number: 103
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
-
+            merged_at: '2026-09-07T22:25:20Z'
+            merge_commit_sha: cd3d97f2e1615ef97543f8ebcdf2157cfb823154
+      completed_at: '2026-09-07'
     - id: app_runtime_sidebar_git_pr_lifecycle_migration
       kind: slice
       title: Sidebar Git and Pull-Request Observation Lifecycle Migration
@@ -681,7 +682,7 @@ roadmap:
           - sidebar_lifecycle
           - git_observation
           - pull_request_observation
-      capability_maturity: gated
+      capability_maturity: ready
       depends_on:
         - app_runtime_browser_devtools_lifecycle_migration
       enables:
