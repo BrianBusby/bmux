@@ -2,18 +2,19 @@ public import Foundation
 
 /// A read-only render-health row for one surface in the `surface.health` payload.
 ///
-/// Mirrors the legacy per-surface dictionary the `v2SurfaceHealth` body built. The
-/// `inWindow` value is optional: the legacy body wrote a Bool for terminal/browser
-/// panels and `NSNull` for any other panel type, so `nil` here maps to the same
-/// JSON `null`. The coordinator mints the surface ref and writes the index.
+/// Mirrors the per-surface dictionary the `surface.health` body builds. The
+/// `inWindow` value is optional: the app writes a Bool for panel types with a
+/// native render-window signal and `nil` for panel types that do not expose one.
+/// The coordinator mints the surface ref and writes the index.
 public struct ControlSurfaceHealthEntry: Sendable, Equatable {
     /// The surface's panel identifier.
     public let surfaceID: UUID
     /// The panel type's raw value.
     public let typeRawValue: String
     /// Whether the surface's hosting view is in a window: a Bool for terminal
-    /// (`isViewInWindow`) and browser (`webView.window != nil`) panels, `nil`
-    /// (JSON `null`) for any other panel type.
+    /// (`isViewInWindow`), browser (`webView.window != nil`), and agent-session
+    /// (`rendererSession.isViewInWindow`) panels, `nil` (JSON `null`) for any
+    /// panel type that does not expose a native render-window signal.
     public let inWindow: Bool?
 
     /// Creates a surface-health entry.
@@ -22,7 +23,7 @@ public struct ControlSurfaceHealthEntry: Sendable, Equatable {
     ///   - surfaceID: The surface's panel identifier.
     ///   - typeRawValue: The panel type's raw value.
     ///   - inWindow: Whether the surface's hosting view is in a window, or `nil`
-    ///     for non-terminal/browser panels.
+    ///     for panel types without a native render-window signal.
     public init(
         surfaceID: UUID,
         typeRawValue: String,
