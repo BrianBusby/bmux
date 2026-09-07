@@ -109,16 +109,6 @@ public final class SidebarGitMetadataService: SidebarGitMetadataServing {
         self.debugLog = debugLog
     }
 
-    deinit {
-        workspaceGitMetadataFallbackTask?.cancel()
-        for task in workspaceGitProbeTasksByKey.values {
-            task.cancel()
-        }
-        for task in workspaceGitSnapshotTasksByDirectory.values {
-            task.cancel()
-        }
-    }
-
     /// Wires the host and captures the initial watch-setting value (matching
     /// the legacy property-initializer capture timing: before any scheduling
     /// entry point runs).
@@ -217,6 +207,26 @@ public final class SidebarGitMetadataService: SidebarGitMetadataServing {
 
         restartWorkspaceGitMetadataWatching(reason: "gitWatchSettingEnabled")
         updateWorkspaceGitMetadataFallbackTimer()
+    }
+
+    public func stopSidebarGitMetadataObservation() {
+        workspaceGitMetadataFallbackTask?.cancel()
+        workspaceGitMetadataFallbackTask = nil
+        for task in workspaceGitProbeTasksByKey.values {
+            task.cancel()
+        }
+        workspaceGitProbeTasksByKey.removeAll()
+        cancelAllWorkspaceGitSnapshotTasks()
+        stopAllWorkspaceGitMetadataWatchers()
+        workspaceGitProbeStateByKey.removeAll()
+        workspaceGitTrackedDirectoryByKey.removeAll()
+        workspaceGitCleanIndexSignatureByKey.removeAll()
+        workspaceGitCleanIndexContentSignatureByKey.removeAll()
+        workspaceGitCleanIndexStatContentSignatureByKey.removeAll()
+        workspaceGitCleanIndexDirtyCheckContentSignatureByKey.removeAll()
+        workspaceGitHeadSignatureByKey.removeAll()
+        pullRequestProbing.resetWorkspacePullRequestRefreshState()
+        host = nil
     }
 
     private func restartWorkspaceGitMetadataWatching(reason: String) {

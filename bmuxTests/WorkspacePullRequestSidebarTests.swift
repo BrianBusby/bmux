@@ -568,7 +568,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
             try? FileManager.default.removeItem(at: repoRoot)
         }
 
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         var seededPanels: [(workspace: Workspace, panelId: UUID)] = []
         let workspaceCount = 45
         var workspaces = manager.tabs
@@ -668,7 +668,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
             observer.stop()
         }
 
-        let manager = TabManager(commandRunner: gitRunner)
+        let manager = makeSidebarGitObservedTabManager(commandRunner: gitRunner)
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -708,7 +708,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
     }
 
     func testBranchOnlyGitReportDoesNotClearExistingDirtyState() throws {
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -734,7 +734,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
     }
 
     func testBranchOnlyGitReportClearsDirtyStateWhenBranchChanges() throws {
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -767,7 +767,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         }
 
         defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         workspace.gitBranch = SidebarGitBranchState(branch: "main", isDirty: true)
 
@@ -805,7 +805,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
             "PR badges should be enabled by default so this covers the stale badge users see."
         )
 
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
         let url = try XCTUnwrap(URL(string: "https://github.com/manaflow-ai/bmux/pull/2722"))
@@ -882,7 +882,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
         defaults.set(false, forKey: SidebarWorkspaceDetailDefaults.showPullRequestsKey)
 
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -913,7 +913,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
         defaults.set(false, forKey: SidebarWorkspaceDetailDefaults.showPullRequestsKey)
 
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
         let url = try XCTUnwrap(URL(string: "https://github.com/manaflow-ai/bmux/pull/2746"))
@@ -963,7 +963,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         }
 
         defaults.set(false, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -1008,7 +1008,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         }
 
         defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -1068,7 +1068,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         }
 
         defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -1109,7 +1109,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         }
 
         defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -1165,7 +1165,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         }
 
         defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -1236,7 +1236,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         }
 
         defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -1307,7 +1307,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         }
 
         defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -1391,7 +1391,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         }
 
         defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -1429,7 +1429,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         }
 
         defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -1484,7 +1484,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         }
 
         defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -1529,7 +1529,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         }
 
         defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -1578,7 +1578,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         }
 
         defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -1645,7 +1645,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         }
 
         defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -1703,7 +1703,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         }
 
         defaults.set(true, forKey: SidebarWorkspaceDetailDefaults.watchGitStatusKey)
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 

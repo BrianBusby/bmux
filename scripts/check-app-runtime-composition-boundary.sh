@@ -120,6 +120,36 @@ check_pattern \
   'Sources/App/BrowserDevToolsRuntimeServiceDependencies.swift owns Browser address/focus observers' \
   'Sources/App/BrowserDevToolsRuntimeServiceDependencies.swift'
 
+check_pattern \
+  'SidebarGitPullRequestObservationRuntimeService\(' \
+  'Sources/App/BmuxAppRuntimeComposition.swift constructs sidebar Git/PR observation runtime' \
+  'Sources/App/BmuxAppRuntimeComposition.swift'
+
+check_pattern \
+  'sidebarGitPullRequestObservationRuntimeService\.(start|stop|detach|tabManagerObservationServices)\(' \
+  'Sources/App/BmuxAppRuntimeServices.swift owns sidebar Git/PR observation runtime start, compatibility, and stop' \
+  'Sources/App/BmuxAppRuntimeServices.swift'
+
+check_pattern \
+  'SidebarGitMetadataService\(' \
+  'Sources/App/SidebarGitPullRequestObservationRuntimeServiceDependencies.swift constructs sidebar Git observers' \
+  'Sources/App/SidebarGitPullRequestObservationRuntimeServiceDependencies.swift'
+
+check_pattern \
+  'PullRequestPollService\(' \
+  'Sources/App/SidebarGitPullRequestObservationRuntimeServiceDependencies.swift constructs sidebar PR observers' \
+  'Sources/App/SidebarGitPullRequestObservationRuntimeServiceDependencies.swift'
+
+check_pattern \
+  'PullRequestProbeService\(' \
+  'Sources/App/SidebarGitPullRequestObservationRuntimeServiceDependencies.swift constructs sidebar PR lookup probes' \
+  'Sources/App/SidebarGitPullRequestObservationRuntimeServiceDependencies.swift'
+
+check_pattern \
+  'WorkspaceGitMetadataProbeLimiter\(' \
+  'Sources/App/SidebarGitPullRequestObservationRuntimeServiceDependencies.swift owns process-wide sidebar Git probe limiting' \
+  'Sources/App/SidebarGitPullRequestObservationRuntimeServiceDependencies.swift'
+
 if (( ${#violations[@]} > 0 )); then
   {
     echo "check-app-runtime-composition-boundary: migrated runtime services must start through the app runtime composition boundary."

@@ -4582,8 +4582,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         )
     }
 
+    func ensureSidebarGitPullRequestObservation(for tabManager: TabManager) {
+        appRuntimeServices?.attachSidebarGitPullRequestObservation(tabManager: tabManager)
+    }
+
     private func removeMobileWorkspaceListObserverIfUnused(for tabManager: TabManager) {
         appRuntimeServices?.removeMobileHostWorkspaceListObserverIfUnused(
+            tabManager: tabManager,
+            isStillUsed: mainWindowContexts.values.contains(where: { $0.tabManager === tabManager })
+        )
+    }
+
+    private func removeSidebarGitPullRequestObservationIfUnused(for tabManager: TabManager) {
+        appRuntimeServices?.removeSidebarGitPullRequestObservationIfUnused(
             tabManager: tabManager,
             isStillUsed: mainWindowContexts.values.contains(where: { $0.tabManager === tabManager })
         )
@@ -4686,6 +4697,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 #endif
         ensureSocketListenerIfEnabled(tabManager: tabManager, source: "mainWindow.register")
         ensureMobileWorkspaceListObserver(for: tabManager)
+        ensureSidebarGitPullRequestObservation(for: tabManager)
         notifyMainWindowContextsDidChange()
         if window.isKeyWindow {
             setActiveMainWindow(window)
@@ -5985,6 +5997,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         }
         rememberRecoverableMainWindowRoute(windowId: removed.windowId, tabManager: removed.tabManager, window: removed.window)
         removeMobileWorkspaceListObserverIfUnused(for: removed.tabManager)
+        removeSidebarGitPullRequestObservationIfUnused(for: removed.tabManager)
         notifyMainWindowContextsDidChange()
         return removed
     }
@@ -6000,6 +6013,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         }
         rememberRecoverableMainWindowRoute(windowId: context.windowId, tabManager: context.tabManager, window: context.window)
         removeMobileWorkspaceListObserverIfUnused(for: context.tabManager)
+        removeSidebarGitPullRequestObservationIfUnused(for: context.tabManager)
         notifyMainWindowContextsDidChange()
 
         commandPaletteWindowStore.removeWindow(context.windowId)
@@ -9162,7 +9176,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             initialWorkspaceTitle: initialWorkspaceTitle,
             initialWorkingDirectory: initialWorkingDirectory,
             initialTerminalInput: initialTerminalInput,
-            autoWelcomeIfNeeded: initialTerminalInput == nil
+            autoWelcomeIfNeeded: initialTerminalInput == nil,
+            sidebarGitPullRequestObservation: appRuntimeServices?.tabManagerSidebarGitPullRequestObservationServices()
         )
         tabManager.windowId = windowId
         if let sessionWindowSnapshot {

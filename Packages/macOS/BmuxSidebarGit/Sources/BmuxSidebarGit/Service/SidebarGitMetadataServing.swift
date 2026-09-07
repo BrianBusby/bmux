@@ -37,6 +37,9 @@ public protocol SidebarGitMetadataServing: AnyObject {
     /// Reacts to the sidebar git watch setting toggling (tear down or
     /// restart watching).
     func sidebarGitMetadataWatchSettingsDidChange()
+    /// Deterministically cancels all runtime-owned probe, watcher, fallback,
+    /// and snapshot work and releases the host seam.
+    func stopSidebarGitMetadataObservation()
     /// Clears all probe state for a closing/detaching workspace.
     func clearWorkspaceGitProbes(workspaceId: UUID)
     /// Clears every probe and tracked directory (session restore swap).

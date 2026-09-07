@@ -88,6 +88,9 @@ final class RecordingPullRequestProbing: PullRequestProbing {
     }
     func refreshTrackedWorkspacePullRequestsIfNeeded(reason: String) {}
     func sidebarPullRequestPollingSettingsDidChange() {}
+    func stopWorkspacePullRequestObservation() {
+        resetWorkspacePullRequestRefreshState()
+    }
     func handleWorkspacePullRequestCommandHint(workspaceId: UUID, panelId: UUID, action: String, target: String?) {}
     func clearWorkspacePullRequestTracking(workspaceId: UUID, panelId: UUID) {
         clearedTrackingKeys.append((workspaceId, panelId))

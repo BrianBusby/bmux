@@ -450,12 +450,10 @@ class TabManager: ObservableObject {
     private var uiTestCancellables = Set<AnyCancellable>()
 #endif
 
-    // Process-wide cap on concurrent sidebar git snapshot probes.
-    // Static matches the legacy shared limiter; tests inject their own instance.
-    private static let sharedWorkspaceGitProbeLimiter = WorkspaceGitMetadataProbeLimiter(limit: 2)
-
-    // Per-window composition point for sidebar git/PR services.
-    let pullRequestProbeService: PullRequestProbeService
+    // Non-owning forwarding seams for sidebar git/PR state. Production injects
+    // the app-runtime facade; compatibility defaults report only explicit
+    // updates and never start long-lived Git or PR observation.
+    let sidebarGitPullRequestObservation: TabManagerSidebarGitPullRequestObservationServices
     let sidebarGitMetadataService: any SidebarGitMetadataServing
     let pullRequestProbing: any PullRequestProbing
 
@@ -470,6 +468,7 @@ class TabManager: ObservableObject {
         gitPollClock: any GitPollClock = SystemGitPollClock(),
         gitProbeLimiter: WorkspaceGitMetadataProbeLimiter? = nil,
         mobileHostDeferral: MobileHostDeferralPolicy = .standard,
+        sidebarGitPullRequestObservation: TabManagerSidebarGitPullRequestObservationServices? = nil,
         panelTitleUpdateCoalescer: NotificationBurstCoalescer? = nil,
         settings: any SettingsWriting = UserDefaultsSettingsClient(defaults: .standard),
         closeTabWarningDefaults: UserDefaults = .standard
@@ -490,38 +489,14 @@ class TabManager: ObservableObject {
             )
         }
 #endif
-#if DEBUG
-        let sidebarGitDebugLog: @Sendable (String) -> Void = { bmuxDebugLog($0) }
-#else
-        let sidebarGitDebugLog: @Sendable (String) -> Void = { _ in }
-#endif
-        let pullRequestProbeService = PullRequestProbeService(
-            commandRunner: commandRunner,
-            debugLog: sidebarGitDebugLog
-        )
-        self.pullRequestProbeService = pullRequestProbeService
-        let pullRequestPollService = PullRequestPollService(
-            gitMetadataService: gitMetadataService,
-            probeService: pullRequestProbeService,
-            clock: gitPollClock,
-            mobileHostDeferral: mobileHostDeferral,
-            debugLog: sidebarGitDebugLog
-        )
-        self.pullRequestProbing = pullRequestPollService
-        self.sidebarGitMetadataService = SidebarGitMetadataService(
-            workspaceGitMetadataReader: workspaceGitMetadataReader ?? gitMetadataService,
-            gitMetadataService: gitMetadataService,
-            pullRequestProbing: pullRequestPollService,
-            probeLimiter: gitProbeLimiter ?? Self.sharedWorkspaceGitProbeLimiter,
-            clock: gitPollClock,
-            mobileHostDeferral: mobileHostDeferral,
-            debugLog: sidebarGitDebugLog
-        )
-        // Wire the host seam before the first workspace is added so the
-        // initial git probe scheduling (addWorkspace below) reaches the
-        // services, matching the legacy in-class scheduling timing.
-        pullRequestProbing.attach(host: self)
-        sidebarGitMetadataService.attach(host: self)
+        let resolvedSidebarGitPullRequestObservation = sidebarGitPullRequestObservation ?? .compatibilityReporter()
+        self.sidebarGitPullRequestObservation = resolvedSidebarGitPullRequestObservation
+        self.sidebarGitMetadataService = resolvedSidebarGitPullRequestObservation.sidebarGitMetadataService
+        self.pullRequestProbing = resolvedSidebarGitPullRequestObservation.pullRequestProbing
+        if resolvedSidebarGitPullRequestObservation.attachesHostFromTabManager {
+            pullRequestProbing.attach(host: self)
+            sidebarGitMetadataService.attach(host: self)
+        }
         lastSidebarMetadataSettingsForFanout = sidebarMetadataSettingsForFanout()
         notificationDismissal.attach(host: self)
         focusHistoryNavigation.attach(host: self)
@@ -619,9 +594,7 @@ class TabManager: ObservableObject {
         observers.removeAll()
         workspaceCycleCooldownTask?.cancel()
         agentPIDSweepTimer?.cancel()
-        // The sidebar git/PR services cancel their own poll, probe, snapshot,
-        // and refresh tasks in their deinits; they deallocate with this
-        // TabManager (the host back-references are weak).
+        sidebarGitPullRequestObservation.cancelSubmittedPullRequestMentionRefreshes()
     }
 
     // MARK: - Agent PID Sweep
