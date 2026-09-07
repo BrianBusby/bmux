@@ -642,7 +642,7 @@ roadmap:
         active_branch: app-runtime-browser-devtools-lifecycle
         active_agent: codex
       delivery_status: open
-      acceptance_status: proposed
+      acceptance_status: implemented
       rationale: Browser and DevTools lifecycle ownership is the next safest and highest-value Process Integrity slice because the current source still starts BrowserSystemProxyWatcher and browser/inspector teardown paths through AppDelegate, window, and panel entrypoints while the service family remains cohesive enough for one explicit runtime owner.
       acceptance:
         criteria:
@@ -653,6 +653,16 @@ roadmap:
           - Shutdown cancels proxy watchers focus observers inspectors and browser tasks.
           - Production-path coverage exercises readiness and teardown.
           - A source guard rejects migrated Browser and DevTools bypasses.
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: aa63c9218b1c6a977547e6d5f14e3f8cfe8d5491
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 103
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
 
     - id: app_runtime_sidebar_git_pr_lifecycle_migration
       kind: slice

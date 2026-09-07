@@ -14,7 +14,7 @@ Repository: `BrianBusby/bmux`
 ## Current Work
 
 - Active slice: Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`)
-- Slice state: open
+- Slice state: implemented
 - Owner: bmux
 - Repository state: active
 
