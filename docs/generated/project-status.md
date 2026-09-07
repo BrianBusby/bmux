@@ -20,12 +20,11 @@ Regenerate with: ./scripts/project-docs generate
 ### Current Capability Frontier
 
 - Primary Capability Frontier: Process Integrity (`process_integrity`)
-- Active or selected slices in the frontier:
-  - Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement (`post_merge_project_truth_reconciliation`) - maturity: active; status: active; selection: current; owner: Bmux
+- Active or selected slices in the frontier: none
 
 ### Active Implementation
 
-- Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement (`post_merge_project_truth_reconciliation`) - maturity: active; status: active; selection: current; owner: Bmux
+- None.
 
 ### Selected Next
 
