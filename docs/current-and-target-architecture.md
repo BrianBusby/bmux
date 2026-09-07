@@ -187,8 +187,8 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 - Active gate: Engineering Observation Period (`engineering_observation_period`) - active
 - Primary capability frontier: Process Integrity (`process_integrity`)
-- Active implementation slice: none selected
-- Bmux repository state: none selected
+- Active implementation slice: Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - open
+- Bmux repository state: active
 
 ### Current Roadmap Lanes
 
@@ -198,6 +198,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Post-Merge Project Truth Reconciliation (`post_merge_project_truth_reconciliation_milestone`) - milestone; status: active; owner: Bmux
 - App Runtime Composition and Test Isolation (`app_runtime_composition_and_test_isolation`) - phase; status: active; owner: Bmux
 - App Runtime Composition Migration (`app_runtime_composition_migration`) - milestone; status: active; owner: Bmux
+- Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - slice; status: active; owner: Bmux
 - Project Truth Governance (`project_truth_governance`) - program; status: active; owner: Provenance Engine
 - Canonical Project Truth State (`canonical_project_truth_state`) - phase; status: active; owner: Provenance Engine
 - Project Truth Manifest and CI (`project_truth_manifest_and_ci`) - milestone; status: active; owner: Provenance Engine
@@ -295,7 +296,6 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Dependency-Ready Work
 
-- Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - selection: planned; owner: Bmux; depends on: `deterministic_app_runtime_composition`. Rationale: Follow-up Process Integrity slice to migrate the next background service family exposed by app-host side effects into explicit construction, readiness, and teardown ownership.
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - selection: planned; owner: Bmux; depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`. Rationale: Consume the PE SessionWorkModel for completed-turn summaries, current-turn state, plan/progress, blockers, approach changes, validations, and richer session-level synthesis once those contracts exist.
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - selection: planned; owner: Bmux; depends on: `agent_accessible_cross_session_retrieval`. Rationale: Measure whether bounded explainable cross-session context improves outcomes before making automatic context assembly a product behavior.
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - selection: planned; owner: Provenance Engine; depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`.
@@ -306,7 +306,6 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Dependency-Ready But Not Selected
 
-- Background Service Lifecycle Migration (`app_runtime_service_lifecycle_migration`) - owner: Bmux; depends on: `deterministic_app_runtime_composition`
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - owner: Bmux; depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - owner: Bmux; depends on: `agent_accessible_cross_session_retrieval`
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - owner: Provenance Engine; depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`

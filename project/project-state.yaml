@@ -483,7 +483,7 @@ roadmap:
       kind: slice
       title: Background Service Lifecycle Migration
       parent: app_runtime_composition_migration
-      status: planned
+      status: active
       owner: bmux
       repositories:
         - bmux
@@ -494,7 +494,7 @@ roadmap:
           - process_integrity
           - app_runtime_composition
           - deferred_service_migration
-      capability_maturity: ready
+      capability_maturity: active
       depends_on:
         - deterministic_app_runtime_composition
       gates:
@@ -516,9 +516,12 @@ roadmap:
           - app_host_test_side_effects
           - global_singletons
       execution:
-        assignment: planned
+        assignment: current
         assigned_to: bmux
-      delivery_status: proposed
+        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-mobile-host-presence-lifecycle
+        active_branch: app-runtime-mobile-host-presence-lifecycle
+        active_agent: codex
+      delivery_status: open
       acceptance_status: proposed
       rationale: Follow-up Process Integrity slice to migrate the next background service family exposed by app-host side effects into explicit construction, readiness, and teardown ownership.
 
