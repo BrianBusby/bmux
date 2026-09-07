@@ -85,6 +85,41 @@ check_pattern \
   'Sources/App/MobileHostRuntimeService.swift' \
   'Sources/App/MobileHostRuntimeServiceDependencies.swift'
 
+check_pattern \
+  'BrowserDevToolsRuntimeService\(' \
+  'Sources/App/BmuxAppRuntimeComposition.swift constructs Browser/DevTools runtime' \
+  'Sources/App/BmuxAppRuntimeComposition.swift'
+
+check_pattern \
+  'BrowserSystemProxyWatcher\.shared\.(startObserving|stopObserving)\(' \
+  'Sources/App/BrowserDevToolsRuntimeServiceDependencies.swift owns system proxy observation lifecycle' \
+  'Sources/App/BrowserDevToolsRuntimeServiceDependencies.swift'
+
+check_pattern \
+  'WebViewInspectorTeardown\.closeAllInspectors\(in: NSApp\.windows\)' \
+  'Sources/App/BrowserDevToolsRuntimeServiceDependencies.swift owns app teardown inspector close' \
+  'Sources/App/BrowserDevToolsRuntimeServiceDependencies.swift'
+
+check_pattern \
+  'BrowserProfileStore\.shared\.flushPendingSaves\(' \
+  'Sources/App/BrowserDevToolsRuntimeServiceDependencies.swift owns profile save drain at shutdown' \
+  'Sources/App/BrowserDevToolsRuntimeServiceDependencies.swift'
+
+check_pattern \
+  'BrowserPrewarmedWebViewPool\.shared\.discard\(' \
+  'Sources/App/BrowserDevToolsRuntimeServiceDependencies.swift owns prewarmed browser resource drain at shutdown' \
+  'Sources/App/BrowserDevToolsRuntimeServiceDependencies.swift'
+
+check_pattern \
+  'browserDevToolsRuntimeService\.(start|stop|stopForAppTermination)\(' \
+  'Sources/App/BmuxAppRuntimeServices.swift owns Browser/DevTools runtime start and stop' \
+  'Sources/App/BmuxAppRuntimeServices.swift'
+
+check_pattern \
+  'installBrowserAddressBarFocusObservers' \
+  'Sources/App/BrowserDevToolsRuntimeServiceDependencies.swift owns Browser address/focus observers' \
+  'Sources/App/BrowserDevToolsRuntimeServiceDependencies.swift'
+
 if (( ${#violations[@]} > 0 )); then
   {
     echo "check-app-runtime-composition-boundary: migrated runtime services must start through the app runtime composition boundary."

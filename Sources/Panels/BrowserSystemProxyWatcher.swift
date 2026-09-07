@@ -23,10 +23,15 @@ final class BrowserSystemProxyWatcher {
 
     private var dynamicStore: SCDynamicStore?
 
+    var isObserving: Bool {
+        dynamicStore != nil
+    }
+
     /// Starts posting `.browserSystemProxySettingsDidChange`; safe to call
     /// repeatedly.
-    func startObserving() {
-        guard dynamicStore == nil else { return }
+    @discardableResult
+    func startObserving() -> Bool {
+        guard dynamicStore == nil else { return true }
 
         // @convention(c) trampoline required by the SCDynamicStore C API. It
         // captures no state: the store delivers on the main queue (set
@@ -43,7 +48,7 @@ final class BrowserSystemProxyWatcher {
             "bmux.browser.system-proxy-watch" as CFString,
             callback,
             nil
-        ) else { return }
+        ) else { return false }
 
         let proxiesKey = SCDynamicStoreKeyCreateProxies(nil)
         guard SCDynamicStoreSetNotificationKeys(store, [proxiesKey] as CFArray, nil),
@@ -51,9 +56,10 @@ final class BrowserSystemProxyWatcher {
             // No queue is set when this path runs today (the queue call is
             // the last to fail); defensive teardown for future reordering.
             SCDynamicStoreSetDispatchQueue(store, nil)
-            return
+            return false
         }
         dynamicStore = store
+        return true
     }
 
     /// Stops watching and releases the dynamic-store session.

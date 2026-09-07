@@ -597,6 +597,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     private final class MainWindowController: NSWindowController, NSWindowDelegate {
         var onClose: (() -> Void)?
         var shouldClose: (() -> Bool)?
+        var closeBrowserWebInspectors: ((NSWindow) -> Void)?
 
         #if DEBUG
         private func logWindowEvent(_ event: String, notification: Notification) {
@@ -641,7 +642,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         func windowShouldClose(_ sender: NSWindow) -> Bool {
             let shouldClose = shouldClose?() ?? true
             if shouldClose {
-                WebViewInspectorTeardown.closeAllInspectors(in: sender)
+                closeBrowserWebInspectors?(sender)
             }
             return shouldClose
         }
@@ -843,7 +844,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     private var ghosttyGotoSplitRightShortcut: StoredShortcut?
     private var ghosttyGotoSplitUpShortcut: StoredShortcut?
     private var ghosttyGotoSplitDownShortcut: StoredShortcut?
-    private var browserAddressBarFocusedPanelId: UUID?
+    private var browserAddressBarFocusedPanelIdFallback: UUID?
+    private var browserAddressBarFocusedPanelId: UUID? {
+        get { appRuntimeServices?.focusedBrowserAddressBarPanelId ?? browserAddressBarFocusedPanelIdFallback }
+        set {
+            browserAddressBarFocusedPanelIdFallback = newValue
+            appRuntimeServices?.setFocusedBrowserAddressBarPanelId(newValue)
+        }
+    }
     /// Owns the browser omnibar selection-repeat state machine, extracted into
     /// `BmuxBrowser`. The app delegate is the composition root: it injects
     /// the `NotificationCenter` selection-move sink and the debug-trace sink.
@@ -865,9 +873,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             debugLog: debugLog
         )
     }()
-    private var browserAddressBarFocusObserver: NSObjectProtocol?
-    private var browserAddressBarBlurObserver: NSObjectProtocol?
-    private var browserWebViewFirstResponderObserver: NSObjectProtocol?
     let updateLog = UpdateLogStore()
     let focusLog = FocusLogStore()
     /// Process-wide identity of the workspace currently being sidebar-dragged in
@@ -1298,7 +1303,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         )
         AppIconLaunchState.markDidFinishLaunching()
         AppearanceSettingsUserDefaultsObserver.shared.startObserving()
-        BrowserSystemProxyWatcher.shared.startObserving()
+        startBrowserAndDevToolsRuntime()
         if isRunningUnderXCTest {
             NSApp.setActivationPolicy(.regular)
         } else {
@@ -1481,7 +1486,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         installGhosttyConfigObserver()
         installGlobalFontMagnificationObserver()
         installWindowResponderSwizzles()
-        installBrowserAddressBarFocusObservers()
         installShortcutMonitor()
         installShortcutDefaultsObserver()
         if !isRunningUnderXCTest {
@@ -2012,7 +2016,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
     @discardableResult
     private func closeAllWebInspectorsBeforeAppTeardown() -> Int {
-        WebViewInspectorTeardown.closeAllInspectors(in: NSApp.windows)
+        appRuntimeServices?.closeBrowserWebInspectorsForAppTeardown() ?? 0
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -2032,7 +2036,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         // Best-effort mobile/presence teardown; unclean exits are covered by
         // the presence service's missed-heartbeat timeout.
         appRuntimeServices?.stopMobileHostAndPresenceForAppTermination()
-        closeAllWebInspectorsBeforeAppTeardown()
+        appRuntimeServices?.stopBrowserAndDevToolsForAppTermination()
         stopSessionAutosaveTimer()
         CloudVMActionLauncher.shared.terminateAll()
         BmuxSSHURLProcessLauncher.shared.terminateAll()
@@ -2040,7 +2044,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         GhosttyApp.terminalPasteboard.cleanupAllOwnedTemporaryImageFiles()
         VSCodeServeWebController.shared.stop()
         appRuntimeServices?.stop()
-        BrowserProfileStore.shared.flushPendingSaves()
         ghosttyCrashBreadcrumbTask?.cancel()
         ghosttyCrashBreadcrumbTask = nil
         cancelAgentChatProjectionSidecarRecovery()
@@ -9324,6 +9327,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
         // Keep a strong reference so the window isn't deallocated.
         let controller = MainWindowController(window: window)
+        controller.closeBrowserWebInspectors = { [weak self] window in
+            self?.appRuntimeServices?.closeBrowserWebInspectors(in: window)
+        }
         controller.onClose = { [weak self, weak controller] in
             guard let self, let controller else { return }
             let manager = self.tabManagerFor(windowId: windowId)
@@ -16573,52 +16579,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         })
     }
 
-    private func installBrowserAddressBarFocusObservers() {
-        guard browserAddressBarFocusObserver == nil,
-              browserAddressBarBlurObserver == nil,
-              browserWebViewFirstResponderObserver == nil else { return }
-
-        browserAddressBarFocusObserver = NotificationCenter.default.addObserver(
-            forName: .browserDidFocusAddressBar,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            guard let self else { return }
-            guard let panelId = notification.object as? UUID else { return }
-            self.browserPanel(for: panelId)?.beginSuppressWebViewFocusForAddressBar()
-            self.browserAddressBarFocusedPanelId = panelId
-            self.stopBrowserOmnibarSelectionRepeat()
-#if DEBUG
-            bmuxDebugLog("addressBar FOCUS panelId=\(panelId.uuidString.prefix(8))")
-#endif
-        }
-
-        browserAddressBarBlurObserver = NotificationCenter.default.addObserver(
-            forName: .browserDidBlurAddressBar,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            guard let self else { return }
-            guard let panelId = notification.object as? UUID else { return }
-            self.browserPanel(for: panelId)?.endSuppressWebViewFocusForAddressBar()
-            if self.browserAddressBarFocusedPanelId == panelId {
-                self.browserAddressBarFocusedPanelId = nil
+    private func startBrowserAndDevToolsRuntime() {
+        appRuntimeServices?.startBrowserAndDevTools(handlers: BrowserDevToolsRuntimeEventHandlers(
+            addressBarFocused: { [weak self] panelId in
+                guard let self else { return }
+                self.browserAddressBarFocusedPanelIdFallback = panelId
+                self.browserPanel(for: panelId)?.beginSuppressWebViewFocusForAddressBar()
                 self.stopBrowserOmnibarSelectionRepeat()
 #if DEBUG
-                bmuxDebugLog("addressBar BLUR panelId=\(panelId.uuidString.prefix(8))")
+                bmuxDebugLog("addressBar FOCUS panelId=\(panelId.uuidString.prefix(8))")
 #endif
-            }
-        }
-
-        browserWebViewFirstResponderObserver = NotificationCenter.default.addObserver(
-            forName: .browserDidBecomeFirstResponderWebView,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            MainActor.assumeIsolated {
+            },
+            addressBarBlurred: { [weak self] panelId, wasTracked in
+                guard let self else { return }
+                self.browserPanel(for: panelId)?.endSuppressWebViewFocusForAddressBar()
+                if wasTracked {
+                    self.browserAddressBarFocusedPanelIdFallback = nil
+                    self.stopBrowserOmnibarSelectionRepeat()
+#if DEBUG
+                    bmuxDebugLog("addressBar BLUR panelId=\(panelId.uuidString.prefix(8))")
+#endif
+                }
+            },
+            webViewBecameFirstResponder: { [weak self] notification in
                 self?.handleBrowserWebViewFirstResponderNotification(notification)
             }
-        }
+        ))
     }
 
     @MainActor

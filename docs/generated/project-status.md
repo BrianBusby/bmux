@@ -21,15 +21,15 @@ Regenerate with: ./scripts/project-docs generate
 
 - Primary Capability Frontier: Process Integrity (`process_integrity`)
 - Active or selected slices in the frontier:
-  - Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) - maturity: ready; status: planned; selection: selected next; owner: Bmux
+  - Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Active Implementation
 
-- None.
+- Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Selected Next
 
-- Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) - maturity: ready; status: planned; selection: selected next; owner: Bmux; dependency status: ready
+- None.
 
 ### Ready Candidates
 
@@ -40,8 +40,7 @@ Regenerate with: ./scripts/project-docs generate
 ### Gated / Blocked Downstream Work
 
 - Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) - maturity: gated; status: planned; selection: planned; owner: Bmux
-  - Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) is not dependency-satisfying
-  - Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) has maturity ready; requires validated for gate `browser_runtime_validated`: Sidebar Git and PR observation should migrate after browser runtime ownership removes adjacent AppDelegate and panel startup churn.
+  - Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) has maturity active; requires validated for gate `browser_runtime_validated`: Sidebar Git and PR observation should migrate after browser runtime ownership removes adjacent AppDelegate and panel startup churn.
 - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) is not dependency-satisfying
   - Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) has maturity gated; requires validated for gate `sidebar_git_pr_runtime_validated`: Notification and push lifecycle work should wait until the higher-churn sidebar observation family has a single owner.
@@ -50,7 +49,6 @@ Regenerate with: ./scripts/project-docs generate
   - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) has maturity gated; requires validated for gate `notification_push_runtime_validated`: Menu-bar presentation lifecycle should migrate after notification ownership clarifies AppDelegate startup and delegate responsibilities.
 - Residual App-Host Background Service Audit (`app_runtime_residual_app_host_service_audit`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
-  - Browser and DevTools Lifecycle Migration (`app_runtime_browser_devtools_lifecycle_migration`) is not dependency-satisfying
   - Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) is not dependency-satisfying
   - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) is not dependency-satisfying
   - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) is not dependency-satisfying

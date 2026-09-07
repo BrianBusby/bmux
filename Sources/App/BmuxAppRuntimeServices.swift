@@ -1,3 +1,4 @@
+import AppKit
 import BmuxAuthRuntime
 import Foundation
 
@@ -8,15 +9,18 @@ final class BmuxAppRuntimeServices {
     private var startCountsByCapability: [BmuxAppRuntimeCapability: Int] = [:]
     let workProvenanceRuntime: WorkProvenanceRuntime
     let mobileHostRuntimeService: MobileHostRuntimeService
+    let browserDevToolsRuntimeService: BrowserDevToolsRuntimeService
 
     init(
         configuration: BmuxAppRuntimeConfiguration,
         workProvenanceRuntime: WorkProvenanceRuntime,
-        mobileHostRuntimeService: MobileHostRuntimeService
+        mobileHostRuntimeService: MobileHostRuntimeService,
+        browserDevToolsRuntimeService: BrowserDevToolsRuntimeService
     ) {
         self.configuration = configuration
         self.workProvenanceRuntime = workProvenanceRuntime
         self.mobileHostRuntimeService = mobileHostRuntimeService
+        self.browserDevToolsRuntimeService = browserDevToolsRuntimeService
     }
 
     func start(tabManager: TabManager) {
@@ -28,6 +32,7 @@ final class BmuxAppRuntimeServices {
     }
 
     func stop() {
+        browserDevToolsRuntimeService.stop()
         mobileHostRuntimeService.stop()
         workProvenanceRuntime.stop()
         startedCapabilities.removeAll()
@@ -83,8 +88,54 @@ final class BmuxAppRuntimeServices {
         startedCapabilities.remove(.mobileHostAndPresence)
     }
 
+    func startBrowserAndDevTools(
+        handlers: BrowserDevToolsRuntimeEventHandlers = .noop
+    ) {
+        guard configuration.enables(.browserAndDevTools) else { return }
+        let wasStarted = startedCapabilities.contains(.browserAndDevTools)
+        browserDevToolsRuntimeService.start(handlers: handlers)
+        guard !wasStarted else { return }
+        startedCapabilities.insert(.browserAndDevTools)
+        startCountsByCapability[.browserAndDevTools, default: 0] += 1
+    }
+
+    func stopBrowserAndDevToolsForAppTermination() {
+        guard configuration.enables(.browserAndDevTools) else { return }
+        browserDevToolsRuntimeService.stopForAppTermination()
+        startedCapabilities.remove(.browserAndDevTools)
+    }
+
+    @discardableResult
+    func closeBrowserWebInspectorsForAppTeardown() -> Int {
+        guard configuration.enables(.browserAndDevTools) else { return 0 }
+        return browserDevToolsRuntimeService.closeAllWebInspectorsForAppTeardown()
+    }
+
+    @discardableResult
+    func closeBrowserWebInspectors(in window: NSWindow) -> Int {
+        guard configuration.enables(.browserAndDevTools) else { return 0 }
+        return browserDevToolsRuntimeService.closeWebInspectors(in: window)
+    }
+
     var mobileHostLifecycleState: MobileHostRuntimeLifecycleState {
         mobileHostRuntimeService.lifecycleState
+    }
+
+    var browserDevToolsLifecycleState: BrowserDevToolsRuntimeLifecycleState {
+        browserDevToolsRuntimeService.lifecycleState
+    }
+
+    var focusedBrowserAddressBarPanelId: UUID? {
+        browserDevToolsRuntimeService.focusedAddressBarPanelId
+    }
+
+    func setFocusedBrowserAddressBarPanelId(_ panelId: UUID?) {
+        browserDevToolsRuntimeService.setFocusedAddressBarPanelId(panelId)
+    }
+
+    @discardableResult
+    func clearFocusedBrowserAddressBarPanelId(_ panelId: UUID) -> Bool {
+        browserDevToolsRuntimeService.clearFocusedAddressBarPanelId(panelId)
     }
 
     func startAgentChatExecutionTelemetryProjection(
