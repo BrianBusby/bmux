@@ -1028,9 +1028,7 @@ public final class MobileShellComposite: MobileTerminalOutputSinking {
             pullToRefreshTask?.cancel()
             cancelAllTerminalReplayTasks()
             teardownSecondaryMacSubscriptions()
-            if let remoteClient {
-                Task { await remoteClient.disconnect() }
-            }
+            if let remoteClient { Task { await remoteClient.disconnect() } }
         }
     }
 
