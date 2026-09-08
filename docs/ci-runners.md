@@ -25,9 +25,10 @@ The table above is the canonical `manaflow-ai/bmux` policy. Forks or local
 repository mirrors may need different repo-variable values when they do not
 have the same paid runner providers connected. For example, `BrianBusby/bmux`
 currently has no registered self-hosted runners, so `MACOS_RUNNER_26_RELEASE`
-must use the GitHub-hosted `macos-26` label there; both `depot-macos-26` and
-`blacksmith-6vcpu-macos-26` queued the `release-build` job with zero steps in
-that fork, while `macos-26` scheduled and completed the Release build.
+and `MACOS_RUNNER_26` must use the GitHub-hosted `macos-26` label there; both
+`depot-macos-26` and `blacksmith-6vcpu-macos-26` queued the `release-build`
+job with zero steps in that fork, while `macos-26` scheduled and completed the
+Release build.
 The same fork currently uses `MACOS_RUNNER_IOS=macos-15`; queued iOS jobs on
 `blacksmith-6vcpu-macos-26` showed `runner_id: 0`, an empty runner name, and no
 executed steps, which indicates the job never matched an available runner.
@@ -83,11 +84,13 @@ gh variable set MACOS_RUNNER_26_RELEASE --repo manaflow-ai/bmux -b blacksmith-6v
 gh variable set MACOS_RUNNER_IOS      --repo manaflow-ai/bmux -b blacksmith-6vcpu-macos-26
 ```
 
-Do not apply the `MACOS_RUNNER_IOS` Blacksmith value to `BrianBusby/bmux`
-unless a fresh test run proves Blacksmith jobs are assigned a real runner there.
-Its current iOS value is:
+Do not apply the macOS Blacksmith values to `BrianBusby/bmux` unless a fresh
+test run proves Blacksmith jobs are assigned a real runner there. Its current
+macOS values are:
 
 ```bash
+gh variable set MACOS_RUNNER_26 --repo BrianBusby/bmux -b macos-26
+gh variable set MACOS_RUNNER_26_RELEASE --repo BrianBusby/bmux -b macos-26
 gh variable set MACOS_RUNNER_IOS --repo BrianBusby/bmux -b macos-15
 ```
 
