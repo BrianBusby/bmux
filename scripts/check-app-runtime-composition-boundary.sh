@@ -31,7 +31,7 @@ check_pattern() {
     [[ "$source_line" =~ ^[[:space:]]*// ]] && continue
     is_allowed "$file" "${allowed_files[@]}" && continue
     violations+=("$line  expected: $expected_path")
-  done < <(rg -n -P "$pattern" Sources --glob '*.swift' || true)
+  done < <(rg -n -P "$pattern" Sources Packages --glob '*.swift' --glob '!**/Tests/**' || true)
 }
 
 check_pattern \
@@ -149,6 +149,16 @@ check_pattern \
   'WorkspaceGitMetadataProbeLimiter\(' \
   'Sources/App/SidebarGitPullRequestObservationRuntimeServiceDependencies.swift owns process-wide sidebar Git probe limiting' \
   'Sources/App/SidebarGitPullRequestObservationRuntimeServiceDependencies.swift'
+
+check_pattern \
+  'WorkProvenanceGitHubCLIPullRequestOwnerResolver' \
+  'PE/workspace-display consumes canonical PR facts and must not reintroduce a GitHub CLI PR metadata owner' \
+  ''
+
+check_pattern \
+  'pullRequestOwnerResolver:[[:space:]]*any[[:space:]]+WorkProvenancePullRequestOwnerResolving[[:space:]]*=[[:space:]]*(?!WorkProvenanceNoopPullRequestOwnerResolver\(\))' \
+  'WorkProvenanceObservationService defaults to a no-op owner resolver; explicit fakes belong in tests' \
+  'Sources/WorkProvenance/WorkProvenanceObservationService.swift'
 
 if (( ${#violations[@]} > 0 )); then
   {

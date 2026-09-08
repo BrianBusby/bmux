@@ -29,6 +29,13 @@ final class AgentChatTranscriptService {
     private var recordSessionLifecycle: @MainActor (AgentSessionLifecycleChange, Date) -> Void
     private var recordHookUserPromptSubmit: @MainActor (AgentChatSessionRecord, WorkstreamEvent) -> Void
     private var recordTranscriptUserPrompts: @MainActor (AgentChatSessionRecord, [ChatMessage]) -> Void
+    private var promptEvidenceBackfillEnabled = true
+    private let promptEvidenceSeeder: @MainActor (
+        [AgentChatSessionRecord],
+        AgentChatTranscriptResolver,
+        TokenOptimizationMode,
+        @escaping @MainActor (AgentChatSessionRecord, [ChatMessage]) -> Void
+    ) -> Task<Void, Never>
     private let recordTaskWorkspaceDirectory: @MainActor (AgentChatSessionRecord, String) -> Void
     private let now: () -> Date
     private var promptEvidenceTasks: [UUID: Task<Void, Never>] = [:]
@@ -73,6 +80,19 @@ final class AgentChatTranscriptService {
         recordSessionLifecycle: @escaping @MainActor (AgentSessionLifecycleChange, Date) -> Void = { _, _ in },
         recordHookUserPromptSubmit: @escaping @MainActor (AgentChatSessionRecord, WorkstreamEvent) -> Void = { _, _ in },
         recordTranscriptUserPrompts: @escaping @MainActor (AgentChatSessionRecord, [ChatMessage]) -> Void = { _, _ in },
+        promptEvidenceSeeder: @escaping @MainActor (
+            [AgentChatSessionRecord],
+            AgentChatTranscriptResolver,
+            TokenOptimizationMode,
+            @escaping @MainActor (AgentChatSessionRecord, [ChatMessage]) -> Void
+        ) -> Task<Void, Never> = { records, resolver, tokenOptimizationMode, recordPrompts in
+            AgentChatTranscriptPromptEvidenceSeeder.seed(
+                records: records,
+                resolver: resolver,
+                tokenOptimizationMode: tokenOptimizationMode,
+                recordPrompts: recordPrompts
+            )
+        },
         recordTaskWorkspaceDirectory: @escaping @MainActor (AgentChatSessionRecord, String) -> Void =
             AgentChatTranscriptService.defaultRecordTaskWorkspaceDirectory,
         now: @escaping () -> Date = { Date() }
@@ -86,6 +106,7 @@ final class AgentChatTranscriptService {
         self.recordSessionLifecycle = recordSessionLifecycle
         self.recordHookUserPromptSubmit = recordHookUserPromptSubmit
         self.recordTranscriptUserPrompts = recordTranscriptUserPrompts
+        self.promptEvidenceSeeder = promptEvidenceSeeder
         self.recordTaskWorkspaceDirectory = recordTaskWorkspaceDirectory
         self.now = now
         registry.onRecordChanged = { [weak self] record, previous in
@@ -202,11 +223,12 @@ final class AgentChatTranscriptService {
         return Task { @MainActor [weak self] in
             guard let self else { return }
             await self.registry.seedFromHookStores()
-            self.trackPromptEvidenceTask(AgentChatTranscriptPromptEvidenceSeeder.seed(
-                records: self.registry.sessions(workspaceID: nil),
-                resolver: self.resolver,
-                tokenOptimizationMode: self.tokenOptimizationModeProvider(),
-                recordPrompts: { [weak self] record, messages in self?.recordTranscriptUserPrompts(record, messages) }
+            guard self.promptEvidenceBackfillEnabled else { return }
+            self.trackPromptEvidenceTask(self.promptEvidenceSeeder(
+                self.registry.sessions(workspaceID: nil),
+                self.resolver,
+                self.tokenOptimizationModeProvider(),
+                { [weak self] record, messages in self?.recordTranscriptUserPrompts(record, messages) }
             ))
         }
     }
@@ -225,6 +247,7 @@ final class AgentChatTranscriptService {
 
     /// Routes session lifecycle changes into the provenance runtime.
     func recordSessionLifecycleChanges(with runtime: WorkProvenanceRuntime) {
+        promptEvidenceBackfillEnabled = runtime.isEnabled
         recordSessionLifecycle = { change, timestamp in
             runtime.recordSessionLifecycleChange(change, timestamp: timestamp)
         }
@@ -475,6 +498,7 @@ final class AgentChatTranscriptService {
     }
 
     private func recordLiveCodexPromptEvidenceFromTranscript(for record: AgentChatSessionRecord) {
+        guard promptEvidenceBackfillEnabled else { return }
         guard record.agentKind == .codex,
               record.state != .ended else {
             return
@@ -483,11 +507,11 @@ final class AgentChatTranscriptService {
         trackPromptEvidenceTask(Task { @MainActor [weak self] in
             await tailer.start()
             guard let self else { return }
-            await AgentChatTranscriptPromptEvidenceSeeder.seed(
-                record: record,
-                resolver: resolver,
-                tokenOptimizationMode: tokenOptimizationModeProvider(),
-                recordPrompts: { [weak self] record, messages in
+            await promptEvidenceSeeder(
+                [record],
+                resolver,
+                tokenOptimizationModeProvider(),
+                { [weak self] record, messages in
                     self?.recordTranscriptUserPrompts(record, messages)
                 }
             ).value

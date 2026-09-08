@@ -2,7 +2,6 @@ import BmuxGit
 import BmuxSidebarGit
 import Foundation
 
-@MainActor
 struct TabManagerSidebarGitPullRequestObservationServices {
     let sidebarGitMetadataService: any SidebarGitMetadataServing
     let pullRequestProbing: any PullRequestProbing
@@ -11,6 +10,7 @@ struct TabManagerSidebarGitPullRequestObservationServices {
     let refreshSubmittedPullRequestMention: (TabManager, UUID, SubmittedPromptPullRequestRecord) -> Void
     let cancelSubmittedPullRequestMentionRefreshes: () -> Void
 
+    @MainActor
     static func compatibilityReporter() -> TabManagerSidebarGitPullRequestObservationServices {
         let pullRequestReporter = SidebarPullRequestCompatibilityReporter()
         let gitReporter = SidebarGitMetadataCompatibilityReporter(pullRequestProbing: pullRequestReporter)
@@ -24,6 +24,7 @@ struct TabManagerSidebarGitPullRequestObservationServices {
         )
     }
 
+    @MainActor
     static func runtimeOwned(
         facade: any SidebarGitMetadataServing & PullRequestProbing,
         refreshSubmittedPullRequestMention: @escaping (TabManager, UUID, SubmittedPromptPullRequestRecord) -> Void,

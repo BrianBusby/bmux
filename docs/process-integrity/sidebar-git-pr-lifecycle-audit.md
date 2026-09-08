@@ -36,10 +36,10 @@ before the first workspace is added. App startup, additional window creation,
 and XCTest `TabManager()` construction therefore all instantiate observation
 services unless individual tests inject fakes.
 
-The services deallocate with `TabManager`. `deinit` cancellation is relied on for
-some long-lived work; there is no explicit app-runtime shutdown call that proves
-all sidebar Git/PR observers, tasks, watchers, timers, and caches have been
-released.
+The services are retained by `TabManager`, with teardown driven by ad hoc
+workspace/reset/settings paths and eventual object lifetime. There is no
+explicit app-runtime shutdown call that proves all sidebar Git/PR observers,
+tasks, watchers, timers, and caches have been released.
 
 ## Producer Inventory
 
@@ -70,7 +70,10 @@ released.
 - `WorkProvenanceObservationService` separately owns PE/workspace durable
   observation and has its own Git inspection for provenance events. It is not
   the sidebar observation owner and is intentionally outside this slice except
-  as a consumer of workspace-display facts.
+  as a consumer of workspace-display facts. Its default pull-request owner
+  resolver is no-op; tests that need owner/title enrichment inject an explicit
+  resolver, and production receives PR owner/title/branch facts from the live
+  workspace metadata model instead of launching a second GitHub CLI path.
 
 ## Consumer Inventory
 
@@ -150,11 +153,9 @@ released.
 
 ## Cancellation and Teardown Before Migration
 
-- `SidebarGitMetadataService.deinit` cancels fallback, probe, and snapshot
-  tasks; watcher teardown is otherwise driven by per-workspace clear/reset and
-  settings changes.
-- `PullRequestPollService.deinit` cancels poll and refresh tasks; reset clears
-  tracking and repo cache.
+- Existing reset/settings paths cancel fallback, probe, snapshot, poll, refresh,
+  and watcher work for the cases that hit those paths, but app termination and
+  `TabManager` teardown do not have one explicit app-runtime stop step.
 - `TabManager.closeWorkspace` clears Git probes and PR tracking for a workspace.
 - Session restore resets all Git/PR tracking.
 - App termination has no explicit sidebar Git/PR runtime stop step.
@@ -212,8 +213,9 @@ The runtime lifecycle states are:
   Individual repositories may still be loading, have no Git metadata, or have no
   associated PR.
 - `degraded`: runtime infrastructure is installed and can accept workspace
-  events, but an app-scoped dependency such as GitHub CLI/auth/network support
-  is unavailable or delayed. Per-workspace failures stay local.
+  events, but injected app-scoped validation reports a capability-level
+  dependency problem. Production does not preflight GitHub CLI/auth/network at
+  startup; those failures stay localized to PR refresh results.
 - `failed`: app-scoped startup validation failed before host services were
   created.
 - `stopping` and `stopped`: runtime-owned sessions, tasks, prompt-mention work,
@@ -292,14 +294,21 @@ The runtime lifecycle states are:
 - Runtime tests observe readiness and completion through synchronous lifecycle
   state, fake service counters, and controllable continuations. They do not use
   fixed sleeps or duration assertions.
+- WorkProvenance owner/title enrichment is explicit-injection only. Default
+  observer construction does not spawn `gh` or use the user's GitHub auth when a
+  display snapshot contains a PR URL without owner metadata.
 
 ## Boundary Guard
 
-`scripts/check-app-runtime-composition-boundary.sh` rejects production source
-that constructs the migrated runtime outside `BmuxAppRuntimeComposition`, starts
-or stops it outside `BmuxAppRuntimeServices`, or constructs the long-lived
+`scripts/check-app-runtime-composition-boundary.sh` rejects production Swift
+under `Sources/` and `Packages/` that constructs the migrated runtime outside
+`BmuxAppRuntimeComposition`, starts or stops it outside `BmuxAppRuntimeServices`,
+or constructs the long-lived
 `SidebarGitMetadataService`, `PullRequestPollService`, `PullRequestProbeService`,
-or shared Git probe limiter outside runtime dependencies.
+or shared Git probe limiter outside runtime dependencies. It also rejects the
+removed PE GitHub CLI PR-owner resolver and protects the no-op default owner
+resolver policy so workspace-display projection cannot become a second PR
+metadata lookup owner.
 
 The guard intentionally still allows short-lived explicit fact report commands,
 pure formatting/rendering, test-target fakes and helpers, and workspace-local
@@ -309,7 +318,10 @@ metadata calculations that do not own observation lifecycle.
 
 - `WorkProvenanceObservationService` still has separate PE Git/resource
   inspection. That is durable provenance observation, not sidebar runtime
-  observation, and remains out of scope.
+  observation, and remains out of scope. Its former default GitHub CLI PR-owner
+  enrichment path has been removed from production/default construction; any
+  future owner resolver must be explicitly injected and justified as durable
+  evidence rather than a sidebar observation owner.
 - Socket commands still apply explicit branch/PR/directory reports directly to
   the `TabManager` forwarding methods. Those are short-lived fact inputs and now
   reach the runtime facade in production.

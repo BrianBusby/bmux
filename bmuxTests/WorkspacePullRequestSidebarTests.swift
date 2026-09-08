@@ -1,8 +1,11 @@
 import XCTest
 import Darwin
 import BmuxFoundation
+import BmuxGit
+import os
 
 import BmuxSidebar
+import BmuxSidebarGit
 
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
@@ -10,57 +13,60 @@ import BmuxSidebar
 @testable import bmux
 #endif
 
-private final class IndexLockObserver: @unchecked Sendable {
-    private let path: String
-    private let queue = DispatchQueue(label: "com.bmux.tests.index-lock-observer", qos: .utility)
-    private let lock = NSLock()
-    private var timer: DispatchSourceTimer?
-    private var storedObservationCount = 0
+private final class CountingWorkspaceGitMetadataReader: WorkspaceGitMetadataReading, @unchecked Sendable {
+    private let delegate: any WorkspaceGitMetadataReading
+    private let invocationCountLock = OSAllocatedUnfairLock(initialState: 0)
 
-    init(path: String) {
-        self.path = path
+    init(delegate: any WorkspaceGitMetadataReading) {
+        self.delegate = delegate
     }
 
-    func start(pollInterval: TimeInterval) {
-        let timer = DispatchSource.makeTimerSource(queue: queue)
-        timer.schedule(deadline: .now(), repeating: pollInterval)
-        timer.setEventHandler { [weak self] in
-            guard let self else { return }
-            if FileManager.default.fileExists(atPath: self.path) {
-                self.lock.lock()
-                self.storedObservationCount += 1
-                self.lock.unlock()
-            }
-        }
-        timer.resume()
-        self.timer = timer
+    var invocationCount: Int {
+        invocationCountLock.withLock { $0 }
     }
 
-    func stop() {
-        timer?.cancel()
-        timer = nil
+    func workspaceMetadata(for directory: String) async -> GitWorkspaceMetadata {
+        incrementInvocationCount()
+        return await delegate.workspaceMetadata(for: directory)
     }
 
-    var observationCount: Int {
-        lock.lock()
-        defer { lock.unlock() }
-        return storedObservationCount
+    func workspaceMetadata(
+        for directory: String,
+        trackedPathEventGeneration: GitTrackedPathEventGeneration?
+    ) async -> GitWorkspaceMetadata {
+        incrementInvocationCount()
+        return await delegate.workspaceMetadata(
+            for: directory,
+            trackedPathEventGeneration: trackedPathEventGeneration
+        )
+    }
+
+    private func incrementInvocationCount() {
+        invocationCountLock.withLock { $0 += 1 }
+    }
+}
+
+private actor ImmediateZeroGitPollClock: GitPollClock {
+    private(set) var recordedDurations: [TimeInterval] = []
+
+    func sleep(for duration: Duration) async throws {
+        let seconds = TimeInterval(duration.components.seconds)
+            + TimeInterval(duration.components.attoseconds) / 1e18
+        recordedDurations.append(seconds)
+        guard seconds == 0 else { throw CancellationError() }
     }
 }
 
 private final class LockTouchingGitRunner: CommandRunning, @unchecked Sendable {
     private let indexLockPath: String
-    private let lock = NSLock()
-    private var storedInvocationCount = 0
+    private let invocationCountLock = OSAllocatedUnfairLock(initialState: 0)
 
     init(indexLockPath: String) {
         self.indexLockPath = indexLockPath
     }
 
     var invocationCount: Int {
-        lock.lock()
-        defer { lock.unlock() }
-        return storedInvocationCount
+        invocationCountLock.withLock { $0 }
     }
 
     func run(directory: String, executable: String, arguments: [String], timeout: TimeInterval?) async -> CommandResult {
@@ -74,13 +80,9 @@ private final class LockTouchingGitRunner: CommandRunning, @unchecked Sendable {
             )
         }
 
-        lock.lock()
-        storedInvocationCount += 1
-        lock.unlock()
+        invocationCountLock.withLock { $0 += 1 }
 
         FileManager.default.createFile(atPath: indexLockPath, contents: Data(), attributes: nil)
-        Thread.sleep(forTimeInterval: 0.15)
-        try? FileManager.default.removeItem(atPath: indexLockPath)
 
         if arguments == ["branch", "--show-current"] {
             return CommandResult(
@@ -131,30 +133,23 @@ private func waitForCondition(
         return true
     }
 
-    let expectation = XCTestExpectation(description: "wait for condition")
     let deadline = Date().addingTimeInterval(timeout)
 
-    func poll() {
+    while Date() < deadline {
         if condition() {
-            expectation.fulfill()
-            return
+            return true
         }
-        guard Date() < deadline else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + pollInterval) {
-            poll()
-        }
+        RunLoop.current.run(
+            mode: .default,
+            before: Date().addingTimeInterval(pollInterval)
+        )
     }
 
-    DispatchQueue.main.async {
-        poll()
+    if condition() {
+        return true
     }
-
-    let result = XCTWaiter().wait(for: [expectation], timeout: timeout + pollInterval + 0.1)
-    if result != .completed {
-        XCTFail("Timed out waiting for condition", file: file, line: line)
-        return false
-    }
-    return true
+    XCTFail("Timed out waiting for condition", file: file, line: line)
+    return false
 }
 
 private func writeMinimalGitRepository(
@@ -648,7 +643,7 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
         )
     }
 
-    func testNoIndexLockTouchDuringSidebarGitMetadataRefreshWindow() throws {
+    func testNoIndexLockTouchDuringSidebarGitMetadataRefreshWindow() async throws {
         let repoURL = FileManager.default.temporaryDirectory.appendingPathComponent(
             "bmux-sidebar-index-lock-\(UUID().uuidString)",
             isDirectory: true
@@ -661,14 +656,16 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
 
         let indexLockPath = repoURL.appendingPathComponent(".git/index.lock").path
         let gitRunner = LockTouchingGitRunner(indexLockPath: indexLockPath)
+        let gitMetadataService = GitMetadataService()
+        let metadataReader = CountingWorkspaceGitMetadataReader(delegate: gitMetadataService)
+        let clock = ImmediateZeroGitPollClock()
 
-        let observer = IndexLockObserver(path: indexLockPath)
-        observer.start(pollInterval: 0.1)
-        defer {
-            observer.stop()
-        }
-
-        let manager = makeSidebarGitObservedTabManager(commandRunner: gitRunner)
+        let manager = makeSidebarGitObservedTabManager(
+            commandRunner: gitRunner,
+            gitMetadataService: gitMetadataService,
+            workspaceGitMetadataReader: metadataReader,
+            gitPollClock: clock
+        )
         let workspace = try XCTUnwrap(manager.selectedWorkspace)
         let panelId = try XCTUnwrap(workspace.focusedPanelId)
 
@@ -678,18 +675,29 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
             directory: repoURL.path
         )
 
-        let completedRefreshWindow = expectation(description: "sidebar git metadata refresh window completed")
-        let refreshTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            manager.refreshTrackedWorkspaceGitMetadataForTesting()
+        let didCompleteInitialRefresh = await waitForMainActorCondition {
+            workspace.panelGitBranches[panelId]?.branch == "main" &&
+                manager.activeWorkspaceGitProbePanelIdsForTesting(workspaceId: workspace.id).isEmpty
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 90.5) {
-            refreshTimer.invalidate()
-            completedRefreshWindow.fulfill()
+        XCTAssertTrue(
+            didCompleteInitialRefresh,
+            "The test must exercise the sidebar git-refresh path."
+        )
+        let initialInvocationCount = metadataReader.invocationCount
+        XCTAssertGreaterThanOrEqual(initialInvocationCount, 1)
+
+        for expectedInvocationCount in (initialInvocationCount + 1)...(initialInvocationCount + 3) {
+            manager.refreshTrackedWorkspaceGitMetadataForTesting()
+            let didCompleteRefresh = await waitForMainActorCondition {
+                metadataReader.invocationCount >= expectedInvocationCount &&
+                    manager.activeWorkspaceGitProbePanelIdsForTesting(workspaceId: workspace.id).isEmpty
+            }
+            XCTAssertTrue(
+                didCompleteRefresh,
+                "Sidebar git metadata refresh did not complete."
+            )
         }
 
-        let result = XCTWaiter().wait(for: [completedRefreshWindow], timeout: 92)
-        refreshTimer.invalidate()
-        XCTAssertEqual(result, .completed)
         XCTAssertEqual(
             gitRunner.invocationCount,
             0,
@@ -701,9 +709,9 @@ final class WorkspacePullRequestSidebarTests: XCTestCase {
             "The test must exercise the sidebar git-refresh path."
         )
         XCTAssertEqual(
-            observer.observationCount,
-            0,
-            "Sidebar git metadata refresh must never create or observe .git/index.lock during a 90s window."
+            FileManager.default.fileExists(atPath: indexLockPath),
+            false,
+            "Sidebar git metadata refresh must never create .git/index.lock."
         )
     }
 

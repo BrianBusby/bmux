@@ -462,12 +462,6 @@ class TabManager: ObservableObject {
         initialWorkingDirectory: String? = nil,
         initialTerminalInput: String? = nil,
         autoWelcomeIfNeeded: Bool = true,
-        commandRunner: any CommandRunning = CommandRunner(),
-        gitMetadataService: GitMetadataService = GitMetadataService(),
-        workspaceGitMetadataReader: (any WorkspaceGitMetadataReading)? = nil,
-        gitPollClock: any GitPollClock = SystemGitPollClock(),
-        gitProbeLimiter: WorkspaceGitMetadataProbeLimiter? = nil,
-        mobileHostDeferral: MobileHostDeferralPolicy = .standard,
         sidebarGitPullRequestObservation: TabManagerSidebarGitPullRequestObservationServices? = nil,
         panelTitleUpdateCoalescer: NotificationBurstCoalescer? = nil,
         settings: any SettingsWriting = UserDefaultsSettingsClient(defaults: .standard),
@@ -611,7 +605,7 @@ class TabManager: ObservableObject {
         return !services.attachesHostFromTabManager
     }
 
-    isolated deinit {
+    deinit {
         for observer in observers {
             NotificationCenter.default.removeObserver(observer)
         }

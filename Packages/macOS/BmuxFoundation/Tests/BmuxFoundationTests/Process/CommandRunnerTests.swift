@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 import Testing
 
 @testable import BmuxFoundation
@@ -121,6 +122,46 @@ import Testing
         #expect(result.exitStatus == nil)
     }
 
+    @Test func cancellingRunTerminatesProcessAndReturnsImmediately() async throws {
+        let pidFile = FileManager.default.temporaryDirectory.appendingPathComponent(
+            "bmux-command-cancel-\(UUID().uuidString).pid"
+        )
+        defer { try? FileManager.default.removeItem(at: pidFile) }
+
+        let task = Task {
+            await runner.run(
+                directory: tempDir,
+                executable: "sh",
+                arguments: [
+                    "-c",
+                    "echo $$ > \"$1\"; trap 'exit 0' TERM; while true; do sleep 1; done",
+                    "bmux-command-cancel-test",
+                    pidFile.path,
+                ],
+                timeout: nil
+            )
+        }
+        try await waitUntil(within: 4, description: "command wrote its pid") {
+            FileManager.default.fileExists(atPath: pidFile.path)
+        }
+        let pidString = try String(contentsOf: pidFile, encoding: .utf8)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let pid = try #require(Int32(pidString))
+
+        task.cancel()
+
+        let result = try await expectCompletes(within: 4) {
+            await task.value
+        }
+        #expect(result.executionError == "cancelled")
+        #expect(result.timedOut == false)
+        #expect(result.exitStatus == nil)
+        try await waitUntil(within: 4, description: "cancelled process exited") {
+            errno = 0
+            return Darwin.kill(pid, 0) == -1 && errno == ESRCH
+        }
+    }
+
     @Test func handlesLargeOutputWithoutDeadlock() async {
         // ~1 MiB of output exceeds the pipe buffer; concurrent draining must avoid deadlock.
         let result = await runner.run(
@@ -216,6 +257,22 @@ import Testing
                 throw TimedOutWaiting()
             }
         }
+    }
+
+    private func waitUntil(
+        within guardSeconds: Double,
+        description: String,
+        sourceLocation: SourceLocation = #_sourceLocation,
+        condition: () throws -> Bool
+    ) async throws {
+        let deadline = Date().addingTimeInterval(guardSeconds)
+        while Date() < deadline {
+            if try condition() { return }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        if try condition() { return }
+        Issue.record("Timed out waiting for \(description)", sourceLocation: sourceLocation)
+        throw TimedOutWaiting()
     }
 
     /// The guard deadline in ``expectCompletes(within:_:sourceLocation:)`` won the race

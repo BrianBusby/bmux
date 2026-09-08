@@ -75,12 +75,6 @@ func makeSidebarGitObservedTabManager(
         cancelSubmittedPullRequestMentionRefreshes: {}
     )
     return TabManager(
-        commandRunner: commandRunner,
-        gitMetadataService: gitMetadataService,
-        workspaceGitMetadataReader: workspaceGitMetadataReader,
-        gitPollClock: gitPollClock,
-        gitProbeLimiter: gitProbeLimiter,
-        mobileHostDeferral: mobileHostDeferral,
         sidebarGitPullRequestObservation: observation
     )
 }

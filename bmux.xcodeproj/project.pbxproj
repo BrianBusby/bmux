@@ -1603,7 +1603,6 @@
 		CE0D10100000000000000001 /* WorkProvenanceFileChangeRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 551E43CA9A0612FD95C9FFC1 /* WorkProvenanceFileChangeRecord.swift */; };
 		8F8D42DC292DA91C0414BAE4 /* WorkProvenanceGitCommandResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0249B2F5626865AD48C6631 /* WorkProvenanceGitCommandResult.swift */; };
 		D89012A6791CAB63645BC4BC /* WorkProvenanceGitCommandRunning.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B359CAAF748DEC78DF85972 /* WorkProvenanceGitCommandRunning.swift */; };
-		CE0E03010000000000000001 /* WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03010000000000000002 /* WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift */; };
 		1E5E54C50421C308F5CC6FA6 /* WorkProvenanceGitInspecting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B10CFF4B63B1795ECEFA3E2 /* WorkProvenanceGitInspecting.swift */; };
 		918962BA99BFA9005D41242F /* WorkProvenanceGitInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95724FA299FCA4FB3C2E4CB8 /* WorkProvenanceGitInspector.swift */; };
 		CE0D10240000000000000001 /* WorkProvenanceGitSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C06F80B2E8D31C31B6DD8EE /* WorkProvenanceGitSnapshot.swift */; };
@@ -3332,7 +3331,6 @@
 		551E43CA9A0612FD95C9FFC1 /* WorkProvenanceFileChangeRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceFileChangeRecord.swift; sourceTree = "<group>"; };
 		F0249B2F5626865AD48C6631 /* WorkProvenanceGitCommandResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitCommandResult.swift; sourceTree = "<group>"; };
 		1B359CAAF748DEC78DF85972 /* WorkProvenanceGitCommandRunning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitCommandRunning.swift; sourceTree = "<group>"; };
-		CE0E03010000000000000002 /* WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift; sourceTree = "<group>"; };
 		2B10CFF4B63B1795ECEFA3E2 /* WorkProvenanceGitInspecting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitInspecting.swift; sourceTree = "<group>"; };
 		95724FA299FCA4FB3C2E4CB8 /* WorkProvenanceGitInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitInspector.swift; sourceTree = "<group>"; };
 		3C06F80B2E8D31C31B6DD8EE /* WorkProvenanceGitSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitSnapshot.swift; sourceTree = "<group>"; };
@@ -5280,7 +5278,6 @@
 				551E43CA9A0612FD95C9FFC1 /* WorkProvenanceFileChangeRecord.swift */,
 				F0249B2F5626865AD48C6631 /* WorkProvenanceGitCommandResult.swift */,
 				1B359CAAF748DEC78DF85972 /* WorkProvenanceGitCommandRunning.swift */,
-				CE0E03010000000000000002 /* WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift */,
 				2B10CFF4B63B1795ECEFA3E2 /* WorkProvenanceGitInspecting.swift */,
 				95724FA299FCA4FB3C2E4CB8 /* WorkProvenanceGitInspector.swift */,
 				CE0E03070000000000000002 /* WorkProvenanceCompositeLinearAuthorizationProvider.swift */,
@@ -6738,7 +6735,6 @@
 				159BDE59D7EF1EF6F6957714 /* WorkProvenanceFileChangeRecord.swift in Sources */,
 				8F8D42DC292DA91C0414BAE4 /* WorkProvenanceGitCommandResult.swift in Sources */,
 				D89012A6791CAB63645BC4BC /* WorkProvenanceGitCommandRunning.swift in Sources */,
-				CE0E03010000000000000001 /* WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift in Sources */,
 				1E5E54C50421C308F5CC6FA6 /* WorkProvenanceGitInspecting.swift in Sources */,
 				918962BA99BFA9005D41242F /* WorkProvenanceGitInspector.swift in Sources */,
 				D98713E6CE24785E075BF87F /* WorkProvenanceGitSnapshot.swift in Sources */,
