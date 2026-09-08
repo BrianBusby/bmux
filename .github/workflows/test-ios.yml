@@ -191,7 +191,13 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.ref }}
           persist-credentials: false
-          submodules: recursive
+          submodules: false
+
+      - name: Checkout required submodules
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.device_family != 'both' && inputs.device_family != matrix.family) }}
+        run: |
+          set -euo pipefail
+          git submodule update --init --depth=1 ghostty vendor/bonsplit
 
       - name: Select Xcode
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.device_family != 'both' && inputs.device_family != matrix.family) }}

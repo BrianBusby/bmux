@@ -209,6 +209,17 @@ check_ios_runner_fallbacks() {
     exit 1
   fi
 
+  for file in "$TEST_IOS_FILE" "$IOS_TESTFLIGHT_FILE"; do
+    if grep -Fq "submodules: recursive" "$file"; then
+      echo "FAIL: $(basename "$file") must not recursively checkout every submodule; iOS lanes should avoid private release-only submodules"
+      exit 1
+    fi
+    if ! grep -Fq "git submodule update --init --depth=1 ghostty vendor/bonsplit" "$file"; then
+      echo "FAIL: $(basename "$file") must explicitly checkout the submodules needed by GhosttyKit and iOS builds"
+      exit 1
+    fi
+  done
+
   echo "PASS: iOS macOS runner fallbacks use repo variables before GitHub-hosted macos-15"
 }
 

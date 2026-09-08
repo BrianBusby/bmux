@@ -277,11 +277,16 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-          submodules: recursive
+          submodules: false
           # Full history + tags so generate-testflight-notes.sh can walk the
           # commit range since the last beta and --auto-version can read ios-v*.
           fetch-depth: 0
           fetch-tags: true
+
+      - name: Checkout required submodules
+        run: |
+          set -euo pipefail
+          git submodule update --init --depth=1 ghostty vendor/bonsplit
 
       - name: Select Xcode
         run: |

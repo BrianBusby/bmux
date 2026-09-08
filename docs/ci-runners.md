@@ -62,7 +62,10 @@ queued before checkout. `macos-15` is GitHub-hosted, has Xcode installed on the
 standard image, and supports the Swift package and iOS simulator work used by
 these lanes. If an iOS lane needs a different provider, set
 `MACOS_RUNNER_IOS` explicitly and confirm a fresh workflow run is assigned a
-real runner before relying on it.
+real runner before relying on it. The iOS lanes also initialize only the
+`ghostty` and `vendor/bonsplit` submodules they need for GhosttyKit and app
+builds; they must not recursively clone release-only private submodules such as
+`homebrew-bmux`.
 
 ## Break-glass: switch a runner type off Blacksmith
 
