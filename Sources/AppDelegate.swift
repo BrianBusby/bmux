@@ -4575,34 +4575,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         NotificationCenter.default.post(name: .mainWindowContextsDidChange, object: self)
     }
 
-    func ensureMobileWorkspaceListObserver(for tabManager: TabManager) {
-        appRuntimeServices?.attachMobileHostWorkspaceListObserver(
-            tabManager: tabManager,
-            notificationStore: notificationStore
-        )
-    }
-
-    func ensureSidebarGitPullRequestObservation(for tabManager: TabManager) {
-        guard let appRuntimeServices else { return }
-        let services = appRuntimeServices.tabManagerSidebarGitPullRequestObservationServices()
-        guard tabManager.installSidebarGitPullRequestObservationServicesIfCompatibility(services) else { return }
-        appRuntimeServices.attachSidebarGitPullRequestObservation(tabManager: tabManager)
-    }
-
-    private func removeMobileWorkspaceListObserverIfUnused(for tabManager: TabManager) {
-        appRuntimeServices?.removeMobileHostWorkspaceListObserverIfUnused(
-            tabManager: tabManager,
-            isStillUsed: mainWindowContexts.values.contains(where: { $0.tabManager === tabManager })
-        )
-    }
-
-    private func removeSidebarGitPullRequestObservationIfUnused(for tabManager: TabManager) {
-        appRuntimeServices?.removeSidebarGitPullRequestObservationIfUnused(
-            tabManager: tabManager,
-            isStillUsed: mainWindowContexts.values.contains(where: { $0.tabManager === tabManager })
-        )
-    }
-
     /// Register a terminal window with the AppDelegate so menu commands and socket control
     /// can target whichever window is currently active.
     func registerMainWindow(

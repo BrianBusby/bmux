@@ -1025,10 +1025,7 @@ final class TabManagerPullRequestProbeTests: XCTestCase {
             }
         }
 
-        let manager = makeSidebarGitObservedTabManager(
-            workspaceGitMetadataReader: reader,
-            mobileHostDeferral: .disabledForSidebarGitTests
-        )
+        let manager = makeSidebarGitObservedTabManager(workspaceGitMetadataReader: reader, mobileHostDeferral: .disabledForSidebarGitTests)
         guard let workspace = manager.selectedWorkspace,
               let mainPanelId = workspace.focusedPanelId,
               let paneId = workspace.bonsplitController.focusedPaneId,
