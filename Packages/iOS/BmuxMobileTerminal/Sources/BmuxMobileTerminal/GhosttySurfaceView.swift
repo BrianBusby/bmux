@@ -2045,7 +2045,7 @@ public final class GhosttySurfaceView: UIView, TerminalSurfaceHosting {
             let a11yNow = CACurrentMediaTime()
             if a11yNow - workQueue.lastAccessibilityTextTime > 0.5 {
                 workQueue.lastAccessibilityTextTime = a11yNow
-                accessibilityText = Self.accessibilitySurfaceText(surface)
+                accessibilityText = Self.accessibilitySurfaceText(surfaceHandle.surface)
             }
             #endif
             DispatchQueue.main.async {
