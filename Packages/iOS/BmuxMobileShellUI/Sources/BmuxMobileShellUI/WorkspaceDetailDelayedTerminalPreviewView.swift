@@ -13,14 +13,13 @@ struct WorkspaceDetailDelayedTerminalPreviewView: View {
     private static let longWorkspaceTitle = "Extremely Long Workspace Title That Should Truncate Before Toolbar Buttons Overflow"
     private static let longTerminalTitle = "Long Agent Session Subtitle That Should Also Truncate First"
 
-    @State private var store = MobileShellComposite(
-        isSignedIn: true,
-        connectionState: .connected,
-        connectedHostName: "UI Test Mac",
-        workspaces: initialWorkspaces
-    )
+    @State private var store: MobileShellComposite
     @State private var browserStore = BrowserSurfaceStore()
     @State private var didStartFixture = false
+
+    init() {
+        _store = State(initialValue: Self.makeInitialStore())
+    }
 
     var body: some View {
         WorkspaceShellView(
@@ -106,6 +105,15 @@ struct WorkspaceDetailDelayedTerminalPreviewView: View {
                 terminals: []
             ),
         ]
+    }
+
+    private static func makeInitialStore() -> MobileShellComposite {
+        MobileShellComposite(
+            isSignedIn: true,
+            connectionState: .connected,
+            connectedHostName: "UI Test Mac",
+            workspaces: initialWorkspaces
+        )
     }
 
     private static func refreshingWorkspace(generation: Int) -> MobileWorkspacePreview {

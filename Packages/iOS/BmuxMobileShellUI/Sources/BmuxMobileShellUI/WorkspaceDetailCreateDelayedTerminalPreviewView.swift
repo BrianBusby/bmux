@@ -8,29 +8,13 @@ struct WorkspaceDetailCreateDelayedTerminalPreviewView: View {
     private static let initialWorkspaceID = MobileWorkspacePreview.ID(rawValue: "workspace-main")
     private static let initialTerminalID = MobileTerminalPreview.ID(rawValue: "terminal-build")
 
-    @State private var store = MobileShellComposite(
-        isSignedIn: true,
-        connectionState: .connected,
-        connectedHostName: "UI Test Mac",
-        workspaces: [
-            MobileWorkspacePreview(
-                id: initialWorkspaceID,
-                name: "bmux",
-                terminals: [
-                    MobileTerminalPreview(id: initialTerminalID, name: "Build"),
-                ]
-            ),
-            MobileWorkspacePreview(
-                id: "workspace-docs",
-                name: "Docs",
-                terminals: [
-                    MobileTerminalPreview(id: "terminal-notes", name: "Notes"),
-                ]
-            ),
-        ]
-    )
+    @State private var store: MobileShellComposite
     @State private var browserStore = BrowserSurfaceStore()
     @State private var delayedTerminalTask: Task<Void, Never>?
+
+    init() {
+        _store = State(initialValue: Self.makeInitialStore())
+    }
 
     var body: some View {
         WorkspaceShellView(
@@ -86,6 +70,30 @@ struct WorkspaceDetailCreateDelayedTerminalPreviewView: View {
             store.selectedWorkspaceID = workspaceID
             store.selectedTerminalID = terminalID
         }
+    }
+
+    private static func makeInitialStore() -> MobileShellComposite {
+        MobileShellComposite(
+            isSignedIn: true,
+            connectionState: .connected,
+            connectedHostName: "UI Test Mac",
+            workspaces: [
+                MobileWorkspacePreview(
+                    id: initialWorkspaceID,
+                    name: "bmux",
+                    terminals: [
+                        MobileTerminalPreview(id: initialTerminalID, name: "Build"),
+                    ]
+                ),
+                MobileWorkspacePreview(
+                    id: "workspace-docs",
+                    name: "Docs",
+                    terminals: [
+                        MobileTerminalPreview(id: "terminal-notes", name: "Notes"),
+                    ]
+                ),
+            ]
+        )
     }
 }
 #endif
