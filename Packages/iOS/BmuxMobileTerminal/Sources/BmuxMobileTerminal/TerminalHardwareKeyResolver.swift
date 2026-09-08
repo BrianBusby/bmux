@@ -34,12 +34,14 @@ struct TerminalHardwareKeyResolver {
     }()
 
     static func makeKeyCommands(target: Any, action: Selector) -> [UIKeyCommand] {
-        keyCommands.map { command in
-            UIKeyCommand(
-                input: command.input,
-                modifierFlags: command.modifierFlags,
-                action: action
-            )
+        MainActor.assumeIsolated {
+            keyCommands.map { command in
+                UIKeyCommand(
+                    input: command.input,
+                    modifierFlags: command.modifierFlags,
+                    action: action
+                )
+            }
         }
     }
 
