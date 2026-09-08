@@ -4,6 +4,34 @@ import Testing
 @testable import BmuxFoundation
 
 @Suite struct FileWatcherTests {
+    private actor GateClock: FileWatchClock {
+        private var sleepers: [CheckedContinuation<Void, Never>] = []
+        private var arrivalWaiters: [CheckedContinuation<Void, Never>] = []
+
+        func sleep(for duration: Duration) async throws {
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                sleepers.append(continuation)
+                let waiters = arrivalWaiters
+                arrivalWaiters.removeAll()
+                for waiter in waiters { waiter.resume() }
+            }
+        }
+
+        var sleeperCount: Int { sleepers.count }
+
+        func waitForSleeper() async {
+            if !sleepers.isEmpty { return }
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                arrivalWaiters.append(continuation)
+            }
+        }
+
+        func releaseOne() {
+            guard !sleepers.isEmpty else { return }
+            sleepers.removeFirst().resume()
+        }
+    }
+
     /// Awaits the watcher's first event, bounded so a broken watcher fails the
     /// test instead of hanging CI.
     private func firstEvent(_ watcher: FileWatcher, within seconds: Double) async -> Bool {
@@ -113,8 +141,9 @@ import Testing
     }
 
     @Test func throttledWatcherYieldsAfterChange() async throws {
-        // A throttled watcher (the FileExplorer/MarkdownPanel coalescing config)
-        // still delivers an event for a real change.
+        // Real filesystem delivery is covered by the unthrottled tests above.
+        // Drive this through the clock seam so throttle behavior does not depend
+        // on kqueue scheduling under CI load.
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-file-watcher-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -122,12 +151,18 @@ import Testing
         let file = directory.appendingPathComponent("watched.txt")
         try "initial".write(to: file, atomically: true, encoding: .utf8)
 
-        let watcher = FileWatcher(path: file.path, throttle: .milliseconds(50))
+        let clock = GateClock()
+        let watcher = FileWatcher(path: file.path, throttle: .milliseconds(50), clock: clock)
         defer { Task { await watcher.stop() } }
+        var iterator = watcher.events.makeAsyncIterator()
 
-        try "changed".write(to: file, atomically: false, encoding: .utf8)
+        await watcher.simulateFileSystemEventForTesting()
+        await clock.waitForSleeper()
+        #expect(await clock.sleeperCount == 1)
 
-        #expect(await firstEvent(watcher, within: 5))
+        await clock.releaseOne()
+        let event: Void? = await iterator.next()
+        #expect(event != nil)
     }
 
     @Test func stopFinishesStream() async {

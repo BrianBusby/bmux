@@ -211,6 +211,12 @@ public actor FileWatcher {
         continuation.yield(())
     }
 
+    /// Feeds a synthetic filesystem event into the throttle. Test-only seam used
+    /// to make throttle behavior deterministic without depending on kqueue timing.
+    func simulateFileSystemEventForTesting() {
+        handleRawEvent()
+    }
+
     /// Moves the directory source to the current nearest existing ancestor (if it
     /// changed) and reattaches the path source to the current inode. Each previous
     /// source's `setCancelHandler` closes its own fd.
