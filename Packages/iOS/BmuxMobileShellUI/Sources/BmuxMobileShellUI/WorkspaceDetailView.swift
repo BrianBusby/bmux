@@ -122,9 +122,11 @@ struct WorkspaceDetailView: View {
             ToolbarItem(id: "workspace-back", placement: .topBarLeading) {
                 workspaceBackToolbarButton
             }
+            #if compiler(>=6.2)
             if #available(iOS 26.0, *) {
                 ToolbarSpacer(.fixed, placement: .topBarLeading)
             }
+            #endif
         }
         ToolbarItem(id: "workspace-title", placement: .topBarLeading) {
             workspaceTitleToolbarMenu
