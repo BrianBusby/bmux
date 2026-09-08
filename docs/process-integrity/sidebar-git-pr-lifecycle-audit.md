@@ -194,6 +194,10 @@ per-window sessions through app window registration.
   instances receive the runtime facade and do not construct observers. Default
   compatibility instances can accept explicit branch/PR reports but do not
   launch background probes, watchers, timers, `gh`, or network work.
+- `AppDelegate` promotes an early-created compatibility `TabManager` to the
+  runtime facade before attaching observation. Promotion is guarded so explicit
+  test-owned services are not replaced and a second observation owner is not
+  created.
 - Focused app-host tests that need live sidebar Git behavior build local
   `BmuxSidebarGit` services in `bmuxTests/TabManagerSidebarGitTestSupport.swift`
   with injected dependencies. This is test-target construction, not a

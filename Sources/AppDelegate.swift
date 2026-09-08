@@ -4583,7 +4583,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     func ensureSidebarGitPullRequestObservation(for tabManager: TabManager) {
-        appRuntimeServices?.attachSidebarGitPullRequestObservation(tabManager: tabManager)
+        guard let appRuntimeServices else { return }
+        let services = appRuntimeServices.tabManagerSidebarGitPullRequestObservationServices()
+        guard tabManager.installSidebarGitPullRequestObservationServicesIfCompatibility(services) else { return }
+        appRuntimeServices.attachSidebarGitPullRequestObservation(tabManager: tabManager)
     }
 
     private func removeMobileWorkspaceListObserverIfUnused(for tabManager: TabManager) {

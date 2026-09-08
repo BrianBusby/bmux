@@ -7,6 +7,7 @@ struct TabManagerSidebarGitPullRequestObservationServices {
     let sidebarGitMetadataService: any SidebarGitMetadataServing
     let pullRequestProbing: any PullRequestProbing
     let attachesHostFromTabManager: Bool
+    let isCompatibilityReporter: Bool
     let refreshSubmittedPullRequestMention: (TabManager, UUID, SubmittedPromptPullRequestRecord) -> Void
     let cancelSubmittedPullRequestMentionRefreshes: () -> Void
 
@@ -17,6 +18,7 @@ struct TabManagerSidebarGitPullRequestObservationServices {
             sidebarGitMetadataService: gitReporter,
             pullRequestProbing: pullRequestReporter,
             attachesHostFromTabManager: true,
+            isCompatibilityReporter: true,
             refreshSubmittedPullRequestMention: { _, _, _ in },
             cancelSubmittedPullRequestMentionRefreshes: {}
         )
@@ -31,6 +33,7 @@ struct TabManagerSidebarGitPullRequestObservationServices {
             sidebarGitMetadataService: facade,
             pullRequestProbing: facade,
             attachesHostFromTabManager: false,
+            isCompatibilityReporter: false,
             refreshSubmittedPullRequestMention: refreshSubmittedPullRequestMention,
             cancelSubmittedPullRequestMentionRefreshes: cancelSubmittedPullRequestMentionRefreshes
         )

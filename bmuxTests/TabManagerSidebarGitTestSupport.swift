@@ -70,6 +70,7 @@ func makeSidebarGitObservedTabManager(
         sidebarGitMetadataService: sidebarGitMetadataService,
         pullRequestProbing: pullRequestPollService,
         attachesHostFromTabManager: true,
+        isCompatibilityReporter: false,
         refreshSubmittedPullRequestMention: { _, _, _ in },
         cancelSubmittedPullRequestMentionRefreshes: {}
     )

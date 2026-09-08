@@ -738,6 +738,14 @@ roadmap:
           - Shutdown cancels Git and PR observation tasks row refresh work and publication.
           - A source guard rejects migrated Git and PR observation bypasses.
           - Production-path coverage exercises runtime composition and teardown.
+      evidence:
+        commits: []
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 105
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
 
     - id: app_runtime_notification_push_lifecycle_migration
       kind: slice

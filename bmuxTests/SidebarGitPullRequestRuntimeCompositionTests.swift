@@ -85,6 +85,84 @@ struct SidebarGitPullRequestRuntimeCompositionTests {
         #expect(service.pullRequestRefreshReasons == ["runtimeStart"])
     }
 
+    @Test func compatibilityConstructedTabManagerPromotesToRuntimeObservationBeforeAttach() throws {
+        let homeDirectory = try Self.temporaryDirectory(named: "late-runtime-install")
+        let harness = SidebarGitPullRequestRuntimeTestHarness()
+        let services = Self.runtimeServices(homeDirectory: homeDirectory, harness: harness)
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelId = try #require(workspace.focusedPanelId)
+
+        manager.updateSurfaceGitBranch(
+            tabId: workspace.id,
+            surfaceId: panelId,
+            branch: "feature/compatibility-only",
+            isDirty: false
+        )
+        manager.updateSurfaceShellActivity(tabId: workspace.id, surfaceId: panelId, state: .promptIdle)
+        #expect(harness.makeHostServicesCount == 0)
+
+        let shouldAttachRuntime = manager.installSidebarGitPullRequestObservationServicesIfCompatibility(
+            services.tabManagerSidebarGitPullRequestObservationServices()
+        )
+        #expect(shouldAttachRuntime)
+        services.attachSidebarGitPullRequestObservation(tabManager: manager)
+        manager.updateSurfaceGitBranch(
+            tabId: workspace.id,
+            surfaceId: panelId,
+            branch: "feature/runtime-owned",
+            isDirty: false
+        )
+        manager.updateSurfaceShellActivity(tabId: workspace.id, surfaceId: panelId, state: .promptIdle)
+
+        let service = try #require(harness.services.first)
+        #expect(harness.makeHostServicesCount == 1)
+        #expect(service.initialGitRefreshes == [RecordedInitialGitRefresh(workspaceId: workspace.id, panelId: panelId, reason: "runtimeStart")])
+        #expect(service.scheduledPullRequestRefreshes.contains(RecordedInitialGitRefresh(workspaceId: workspace.id, panelId: panelId, reason: "shellPrompt")))
+    }
+
+    @Test func explicitHostAttachedObservationServicesAreNotPromotedOrDoubleAttached() throws {
+        let homeDirectory = try Self.temporaryDirectory(named: "explicit-services")
+        let runtimeHarness = SidebarGitPullRequestRuntimeTestHarness()
+        let services = Self.runtimeServices(homeDirectory: homeDirectory, harness: runtimeHarness)
+        let explicitService = RecordingSidebarGitPullRequestObservationService(
+            publishObservedFactsOnInitialRefresh: false,
+            shouldFailWorkspace: { _ in false }
+        )
+        let manager = TabManager(
+            sidebarGitPullRequestObservation: TabManagerSidebarGitPullRequestObservationServices(
+                sidebarGitMetadataService: explicitService,
+                pullRequestProbing: explicitService,
+                attachesHostFromTabManager: true,
+                isCompatibilityReporter: false,
+                refreshSubmittedPullRequestMention: { _, _, _ in },
+                cancelSubmittedPullRequestMentionRefreshes: {}
+            )
+        )
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelId = try #require(workspace.focusedPanelId)
+        let explicitAttachCountBeforePromotion = explicitService.attachCount
+
+        let shouldAttachRuntime = manager.installSidebarGitPullRequestObservationServicesIfCompatibility(
+            services.tabManagerSidebarGitPullRequestObservationServices()
+        )
+        if shouldAttachRuntime {
+            services.attachSidebarGitPullRequestObservation(tabManager: manager)
+        }
+        manager.updateSurfaceGitBranch(
+            tabId: workspace.id,
+            surfaceId: panelId,
+            branch: "feature/explicit-owner",
+            isDirty: false
+        )
+        manager.updateSurfaceShellActivity(tabId: workspace.id, surfaceId: panelId, state: .promptIdle)
+
+        #expect(!shouldAttachRuntime)
+        #expect(runtimeHarness.makeHostServicesCount == 0)
+        #expect(explicitService.attachCount == explicitAttachCountBeforePromotion)
+        #expect(explicitService.scheduledPullRequestRefreshes.contains(RecordedInitialGitRefresh(workspaceId: workspace.id, panelId: panelId, reason: "shellPrompt")))
+    }
+
     @Test func initialWorkspaceObservationPublishesOneFactSetToSidebarCustomSocketAndWorkspaceDisplay() throws {
         let homeDirectory = try Self.temporaryDirectory(named: "consumer-consistency")
         let harness = SidebarGitPullRequestRuntimeTestHarness(

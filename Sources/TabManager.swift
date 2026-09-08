@@ -453,9 +453,9 @@ class TabManager: ObservableObject {
     // Non-owning forwarding seams for sidebar git/PR state. Production injects
     // the app-runtime facade; compatibility defaults report only explicit
     // updates and never start long-lived Git or PR observation.
-    let sidebarGitPullRequestObservation: TabManagerSidebarGitPullRequestObservationServices
-    let sidebarGitMetadataService: any SidebarGitMetadataServing
-    let pullRequestProbing: any PullRequestProbing
+    var sidebarGitPullRequestObservation: TabManagerSidebarGitPullRequestObservationServices
+    var sidebarGitMetadataService: any SidebarGitMetadataServing
+    var pullRequestProbing: any PullRequestProbing
 
     init(
         initialWorkspaceTitle: String? = nil,
@@ -585,6 +585,30 @@ class TabManager: ObservableObject {
         setupChildExitSplitUITestIfNeeded()
         setupChildExitKeyboardUITestIfNeeded()
 #endif
+    }
+
+    @discardableResult
+    func installSidebarGitPullRequestObservationServicesIfCompatibility(
+        _ services: TabManagerSidebarGitPullRequestObservationServices
+    ) -> Bool {
+        guard sidebarGitPullRequestObservation.isCompatibilityReporter else {
+            return !sidebarGitPullRequestObservation.attachesHostFromTabManager
+        }
+        let previousObservation = sidebarGitPullRequestObservation
+        previousObservation.cancelSubmittedPullRequestMentionRefreshes()
+        if previousObservation.attachesHostFromTabManager {
+            previousObservation.sidebarGitMetadataService.stopSidebarGitMetadataObservation()
+            previousObservation.pullRequestProbing.stopWorkspacePullRequestObservation()
+        }
+
+        sidebarGitPullRequestObservation = services
+        sidebarGitMetadataService = services.sidebarGitMetadataService
+        pullRequestProbing = services.pullRequestProbing
+        if services.attachesHostFromTabManager {
+            pullRequestProbing.attach(host: self)
+            sidebarGitMetadataService.attach(host: self)
+        }
+        return !services.attachesHostFromTabManager
     }
 
     deinit {
