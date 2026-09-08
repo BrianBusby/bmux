@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Regression test for https://github.com/manaflow-ai/bmux/issues/385.
-# Ensures paid CI jobs use a paid macOS runner (Blacksmith or WarpBuild, routed
-# through the MACOS_RUNNER_15 / MACOS_RUNNER_26 repo variables), never a free
-# GitHub-hosted runner. Flip Blacksmith<->Warp by editing those repo variables;
-# see docs/ci-runners.md.
+# Ensures paid CI jobs use paid macOS runners through the MACOS_RUNNER_15 /
+# MACOS_RUNNER_26 repo variables, while iOS jobs keep an explicit GitHub-hosted
+# macos-15 fallback for repositories without the Blacksmith integration. Flip
+# runner providers by editing repo variables; see docs/ci-runners.md.
 # Fork PRs are gated by GitHub's built-in "Require approval for outside
 # collaborators" setting, so workflow-level fork guards are not needed.
 set -euo pipefail
@@ -14,6 +14,8 @@ GHOSTTYKIT_FILE="$ROOT_DIR/.github/workflows/build-ghosttykit.yml"
 COMPAT_FILE="$ROOT_DIR/.github/workflows/ci-macos-compat.yml"
 E2E_FILE="$ROOT_DIR/.github/workflows/test-e2e.yml"
 TMUX_CORPUS_FILE="$ROOT_DIR/.github/workflows/tmux-corpus.yml"
+TEST_IOS_FILE="$ROOT_DIR/.github/workflows/test-ios.yml"
+IOS_TESTFLIGHT_FILE="$ROOT_DIR/.github/workflows/ios-testflight.yml"
 
 check_macos_runner() {
   local file="$1" job="$2"
@@ -185,6 +187,29 @@ check_e2e_runner_fallbacks() {
   fi
 
   echo "PASS: test-e2e.yml exposes Depot runner choices, identity guard, and duplicate-queue cancellation"
+}
+
+check_ios_runner_fallbacks() {
+  local fallback="\${{ vars.MACOS_RUNNER_IOS || vars.MACOS_RUNNER_15 || 'macos-15' }}"
+  local file
+  for file in "$TEST_IOS_FILE" "$IOS_TESTFLIGHT_FILE"; do
+    if grep -Fq "blacksmith-6vcpu-macos-26" "$file"; then
+      echo "FAIL: $(basename "$file") must not fall back to Blacksmith for iOS macOS runner selection"
+      exit 1
+    fi
+  done
+
+  if [[ "$(grep -Fc "runs-on: $fallback" "$TEST_IOS_FILE")" -ne 2 ]]; then
+    echo "FAIL: test-ios.yml must route both mobile-core-package and ios-simulator through MACOS_RUNNER_IOS, MACOS_RUNNER_15, then macos-15"
+    exit 1
+  fi
+
+  if [[ "$(grep -Fc "runs-on: $fallback" "$IOS_TESTFLIGHT_FILE")" -ne 1 ]]; then
+    echo "FAIL: ios-testflight.yml must route TestFlight upload through MACOS_RUNNER_IOS, MACOS_RUNNER_15, then macos-15"
+    exit 1
+  fi
+
+  echo "PASS: iOS macOS runner fallbacks use repo variables before GitHub-hosted macos-15"
 }
 
 check_xcode_selection() {
@@ -807,16 +832,16 @@ check_tmux_terminal_nightly_isolation() {
 
 check_no_bare_github_hosted_runners() {
   # Every job must route its runner through a repo variable (LINUX_RUNNER,
-  # MACOS_RUNNER_*) so the Blacksmith<->Warp / Blacksmith<->macos-26 overflow
-  # switch is a single repo-variable flip with no PR. A bare GitHub-hosted
-  # label (ubuntu-*, macos-NN) cannot be redirected, so it is forbidden.
+  # MACOS_RUNNER_*) so provider changes stay a single repo-variable flip with
+  # no PR. A direct bare GitHub-hosted label (ubuntu-*, macos-NN) cannot be
+  # redirected, so it is forbidden outside explicit variable-routed fallbacks.
   # Bare paid-provider labels (blacksmith-*, warp-*, depot-*) stay allowed for
   # deliberate single-runner pins such as the testmanagerd-wedged
   # `app-host-unit-tests` job.
   local hits
   hits="$(grep -rnE "runs-on:[[:space:]]*(ubuntu-[a-z0-9.]+|macos-[a-z0-9]+)[[:space:]]*$" "$ROOT_DIR/.github/workflows" || true)"
   if [[ -n "$hits" ]]; then
-    echo "FAIL: these jobs use a bare GitHub-hosted runner; route them through vars.LINUX_RUNNER / vars.MACOS_RUNNER_IOS so Blacksmith<->overflow stays a repo-variable flip:"
+    echo "FAIL: these jobs use a bare GitHub-hosted runner directly; route them through vars.LINUX_RUNNER / vars.MACOS_RUNNER_* so provider changes stay a repo-variable flip:"
     echo "$hits"
     exit 1
   fi
@@ -894,6 +919,7 @@ check_no_self_hosted_fleet_runners() {
 # ci.yml jobs
 check_no_bare_github_hosted_runners
 check_no_self_hosted_fleet_runners
+check_ios_runner_fallbacks
 check_macos_runner "$CI_FILE" "app-host-unit-tests"
 check_macos_runner "$CI_FILE" "tests-build-and-lag"
 check_macos_runner "$CI_FILE" "release-build"

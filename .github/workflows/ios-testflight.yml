@@ -258,7 +258,10 @@ jobs:
     # blocks publishing arbitrary code by dispatching the workflow against a
     # feature branch (the ASC secrets are only meant to ship reviewed main).
     if: needs.decide.outputs.should_build == 'true' && github.ref == 'refs/heads/main'
-    runs-on: ${{ vars.MACOS_RUNNER_IOS || 'blacksmith-6vcpu-macos-26' }}
+    # Share the same iOS runner route as PR simulator tests. macos-15 is the
+    # final fallback because TestFlight must not depend on an unavailable
+    # third-party runner integration.
+    runs-on: ${{ vars.MACOS_RUNNER_IOS || vars.MACOS_RUNNER_15 || 'macos-15' }}
     timeout-minutes: 60
     outputs:
       final_build_number: ${{ steps.upload.outputs.final_build_number }}
