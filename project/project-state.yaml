@@ -739,7 +739,11 @@ roadmap:
           - A source guard rejects migrated Git and PR observation bypasses.
           - Production-path coverage exercises runtime composition and teardown.
       evidence:
-        commits: []
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 5170a25a676fe73b1e6edd6630b97c2a337b6d83
+          - repository: BrianBusby/bmux
+            sha: 1ab0c501da78d4c6d852fccfa22d45747e5541f6
         pull_requests:
           - repository: BrianBusby/bmux
             number: 105
