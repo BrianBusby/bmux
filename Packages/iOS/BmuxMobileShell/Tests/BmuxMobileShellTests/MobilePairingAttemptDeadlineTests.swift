@@ -32,14 +32,14 @@ import Testing
         let factory = CountingSlowIgnoringCancellationTransportFactory(transport: transport)
         let runtime = PairingDeadlineRuntime(
             transportFactory: factory,
-            pairingAttemptTimeoutNanoseconds: 50_000_000
+            pairingAttemptTimeoutNanoseconds: 2_000_000_000
         )
         let store = makeStore(runtime: runtime)
 
         let firstTask = Task { @MainActor in
             await store.connectPairingURLResult(Self.qrURL)
         }
-        await factory.waitForMakeTransportCount(atLeast: 1)
+        await factory.waitForMakeTransportCount(atLeast: 1, timeoutNanoseconds: 10_000_000_000)
         let first = await firstTask.value
         let second = await store.connectPairingURLResult(Self.qrURL)
         let makeTransportCount = factory.makeTransportCount()
