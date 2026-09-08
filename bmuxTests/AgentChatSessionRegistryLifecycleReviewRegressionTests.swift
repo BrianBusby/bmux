@@ -159,6 +159,44 @@ struct AgentChatSessionRegistryLifecycleReviewRegressionTests {
     }
 
     @MainActor
+    @Test func disabledWorkProvenanceRuntimeDoesNotSeedTranscriptPromptEvidence() async throws {
+        let home = try temporaryHomeDirectory()
+        let sessionID = "24ec0052-450c-4914-b1dd-2ee80d4bc84b"
+        let workspaceID = UUID().uuidString
+        let surfaceID = UUID().uuidString
+        let hookDir = home.appendingPathComponent(".bmuxterm", isDirectory: true)
+        try FileManager.default.createDirectory(at: hookDir, withIntermediateDirectories: true)
+        try #"{"sessions":{"\#(sessionID)":{"workspaceId":"\#(workspaceID)","surfaceId":"\#(surfaceID)","cwd":"/Users/example/project","pid":\#(Int(ProcessInfo.processInfo.processIdentifier)),"updatedAt":140}}}"#.write(
+            to: hookDir.appendingPathComponent("codex-hook-sessions.json"),
+            atomically: true,
+            encoding: .utf8
+        )
+        var seedAttemptCount = 0
+        let service = AgentChatTranscriptService(
+            registry: AgentChatSessionRegistry(hookStore: AgentChatHookSessionStore(homeDirectory: home)),
+            resolver: AgentChatTranscriptResolver(homeDirectory: home, environment: [:]),
+            promptEvidenceSeeder: { _, _, _, _ in
+                seedAttemptCount += 1
+                return Task {}
+            }
+        )
+        service.recordSessionLifecycleChanges(with: WorkProvenanceRuntime.disabledByComposition())
+
+        await service.start().value
+        service.noteHookEvent(WorkstreamEvent(
+            sessionId: sessionID,
+            hookEventName: .userPromptSubmit,
+            source: "codex",
+            workspaceId: workspaceID,
+            surfaceId: surfaceID,
+            cwd: "/Users/example/project"
+        ))
+        await service.waitForPromptEvidenceTasks()
+
+        #expect(seedAttemptCount == 0)
+    }
+
+    @MainActor
     @Test func observeScanDoesNotReviveEndedRecordForSamePID() throws {
         let registry = AgentChatSessionRegistry()
         let sessionID = "24ec0052-450c-4914-b1dd-2ee80d4bc84b"

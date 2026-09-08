@@ -1619,6 +1619,7 @@
 		C0DE70110000000000000001 /* WorkProvenancePruneResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70110000000000000002 /* WorkProvenancePruneResult.swift */; };
 		CE0D10120000000000000001 /* WorkProvenancePruneResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70110000000000000002 /* WorkProvenancePruneResult.swift */; };
 		CE0E03030000000000000001 /* WorkProvenancePullRequestOwner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03030000000000000002 /* WorkProvenancePullRequestOwner.swift */; };
+			CE0E03190000000000000001 /* WorkProvenancePullRequestOwnerResolverDefaultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03190000000000000002 /* WorkProvenancePullRequestOwnerResolverDefaultTests.swift */; };
 		CE0E03040000000000000001 /* WorkProvenancePullRequestOwnerResolving.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03040000000000000002 /* WorkProvenancePullRequestOwnerResolving.swift */; };
 		C0DE70120000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */; };
 		CE0D10140000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */; };
@@ -3344,6 +3345,7 @@
 			ABC5AF6B03C2A9B1ADE669E4 /* WorkProvenanceProcessGitCommandRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceProcessGitCommandRunner.swift; sourceTree = "<group>"; };
 		C0DE70110000000000000002 /* WorkProvenancePruneResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePruneResult.swift; sourceTree = "<group>"; };
 		CE0E03030000000000000002 /* WorkProvenancePullRequestOwner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePullRequestOwner.swift; sourceTree = "<group>"; };
+			CE0E03190000000000000002 /* WorkProvenancePullRequestOwnerResolverDefaultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePullRequestOwnerResolverDefaultTests.swift; sourceTree = "<group>"; };
 		CE0E03040000000000000002 /* WorkProvenancePullRequestOwnerResolving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePullRequestOwnerResolving.swift; sourceTree = "<group>"; };
 		C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRetentionPolicy.swift; sourceTree = "<group>"; };
 		CE0E010B0000000000000002 /* WorkProvenanceRuntime+AgentSessionAssociation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkProvenanceRuntime+AgentSessionAssociation.swift"; sourceTree = "<group>"; };
@@ -5218,6 +5220,7 @@
 
 					642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */,
 					CE0E03140000000000000002 /* WorkProvenanceLinearTicketLinkResolverTests.swift */,
+					CE0E03190000000000000002 /* WorkProvenancePullRequestOwnerResolverDefaultTests.swift */,
 					CE0E03170000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTests.swift */,
 					CE0E03180000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTestSupport.swift */,
 					C0DE70600000000000000002 /* CLIProvenanceCodexTranscriptImporterTests.swift */,
@@ -7434,6 +7437,7 @@
 				604500100000000000000003 /* WindowTitleTemplateTests.swift in Sources */,
 					CE0E03140000000000000001 /* WorkProvenanceLinearTicketLinkResolverTests.swift in Sources */,
 					8DCF06522BB39B4A966FFC83 /* WorkProvenanceObserverTests.swift in Sources */,
+					CE0E03190000000000000001 /* WorkProvenancePullRequestOwnerResolverDefaultTests.swift in Sources */,
 					B1581966C6355C46BC3ABE62 /* WorkProvenanceStoreTests.swift in Sources */,
 					CE0E03170000000000000001 /* WorkProvenanceWorkspaceResourceDiscoveryTests.swift in Sources */,
 					CE0E03180000000000000001 /* WorkProvenanceWorkspaceResourceDiscoveryTestSupport.swift in Sources */,

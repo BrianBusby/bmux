@@ -17,13 +17,9 @@ private final class CountingWorkspaceGitMetadataReader: WorkspaceGitMetadataRead
     private let delegate: any WorkspaceGitMetadataReading
     private let invocationCountLock = OSAllocatedUnfairLock(initialState: 0)
 
-    init(delegate: any WorkspaceGitMetadataReading) {
-        self.delegate = delegate
-    }
+    init(delegate: any WorkspaceGitMetadataReading) { self.delegate = delegate }
 
-    var invocationCount: Int {
-        invocationCountLock.withLock { $0 }
-    }
+    var invocationCount: Int { invocationCountLock.withLock { $0 } }
 
     func workspaceMetadata(for directory: String) async -> GitWorkspaceMetadata {
         incrementInvocationCount()
@@ -35,15 +31,10 @@ private final class CountingWorkspaceGitMetadataReader: WorkspaceGitMetadataRead
         trackedPathEventGeneration: GitTrackedPathEventGeneration?
     ) async -> GitWorkspaceMetadata {
         incrementInvocationCount()
-        return await delegate.workspaceMetadata(
-            for: directory,
-            trackedPathEventGeneration: trackedPathEventGeneration
-        )
+        return await delegate.workspaceMetadata(for: directory, trackedPathEventGeneration: trackedPathEventGeneration)
     }
 
-    private func incrementInvocationCount() {
-        invocationCountLock.withLock { $0 += 1 }
-    }
+    private func incrementInvocationCount() { invocationCountLock.withLock { $0 += 1 } }
 }
 
 private actor ImmediateZeroGitPollClock: GitPollClock {
