@@ -237,8 +237,10 @@ final class MenuBarPresentationRuntimeService {
     private func transientGlobalSearchDismissalHandler(
         for controller: any MenuBarPresentationMenuBarExtraControlling
     ) -> () -> Void {
-        { [weak self, controller] in
-            guard let self, self.isCurrentTransientGlobalSearchController(controller) else { return }
+        { [weak self, weak controller] in
+            guard let self,
+                  let controller,
+                  self.isCurrentTransientGlobalSearchController(controller) else { return }
             controller.removeFromMenuBar()
             self.transientGlobalSearchMenuBarExtraController = nil
         }

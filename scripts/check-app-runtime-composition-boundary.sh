@@ -146,7 +146,7 @@ check_pattern \
   'Sources/App/BmuxAppRuntimeComposition.swift'
 
 check_pattern \
-  'menuBarPresentationRuntimeService\.(start|stop|setMenuBarOnly|toggleGlobalSearchPalette|refreshMenuBarExtraForDebugControls)\(' \
+  'menuBarPresentationRuntimeService\??\.(start|stop|setMenuBarOnly|toggleGlobalSearchPalette|refreshMenuBarExtraForDebugControls)\(' \
   'Sources/App/BmuxAppRuntimeServices.swift owns menu-bar and presentation runtime start, mutation, callbacks, and stop' \
   'Sources/App/BmuxAppRuntimeServices.swift'
 
@@ -156,9 +156,16 @@ check_pattern \
   'Sources/AppDelegate+MenuBarPresentationRuntime.swift'
 
 check_pattern \
-  'NSApp\.setActivationPolicy\(' \
+  '(NSApp|NSApplication\.shared|application|app)\.setActivationPolicy\(' \
   'Sources/App/MenuBarPresentationRuntimeServiceDependencies.swift owns activation-policy mutation' \
-  'Sources/App/MenuBarPresentationRuntimeServiceDependencies.swift'
+  'Sources/App/MenuBarPresentationRuntimeServiceDependencies.swift' \
+  'Packages/macOS/BmuxSidebarInterpreterService/Sources/BmuxSidebarRemoteRender/RunSidebarRenderWorker.swift' \
+  'Packages/macOS/BmuxLiveEval/Sources/LiveEvalDemo/LiveEvalDemoMain.swift'
+
+check_pattern \
+  'NSStatusBar\.system\.(statusItem|removeStatusItem)\(' \
+  'Sources/App/MenuBarExtraController.swift owns raw status item creation/removal; runtime owns controller lifetime' \
+  'Sources/App/MenuBarExtraController.swift'
 
 check_pattern \
   'MenuBarOnlySettings\.setEnabled\(' \

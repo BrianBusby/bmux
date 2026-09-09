@@ -113,8 +113,7 @@ struct BmuxAppRuntimeComposition {
             isCapabilityEnabled: runtimeConfiguration.enables(.menuBarPresentationLifecycle),
             dependencies: menuBarPresentationRuntimeDependencies ?? .production()
         )
-        hostSettingsActionsStorage.setMenuBarPresentationRuntimeService(menuBarPresentationRuntimeService)
-        return BmuxAppRuntimeServices(
+        let services = BmuxAppRuntimeServices(
             configuration: runtimeConfiguration,
             workProvenanceRuntime: workProvenanceRuntime,
             mobileHostRuntimeService: mobileHostRuntimeService,
@@ -123,13 +122,15 @@ struct BmuxAppRuntimeComposition {
             notificationPushRuntimeService: notificationPushRuntimeService,
             menuBarPresentationRuntimeService: menuBarPresentationRuntimeService
         )
+        hostSettingsActionsStorage.setAppRuntimeServices(services)
+        return services
     }
 }
 
 private final class BmuxAppRuntimeHostSettingsActionsStorage {
     private let configFileURL: URL
     private var hostSettingsActions: HostSettingsActions?
-    private weak var menuBarPresentationRuntimeService: MenuBarPresentationRuntimeService?
+    private weak var appRuntimeServices: BmuxAppRuntimeServices?
 
     init(configFileURL: URL) {
         self.configFileURL = configFileURL
@@ -141,16 +142,16 @@ private final class BmuxAppRuntimeHostSettingsActionsStorage {
             return hostSettingsActions
         }
         let actions = HostSettingsActions(configFileURL: configFileURL)
-        if let menuBarPresentationRuntimeService {
-            actions.setMenuBarPresentationRuntimeService(menuBarPresentationRuntimeService)
+        if let appRuntimeServices {
+            actions.setAppRuntimeServices(appRuntimeServices)
         }
         hostSettingsActions = actions
         return actions
     }
 
     @MainActor
-    func setMenuBarPresentationRuntimeService(_ service: MenuBarPresentationRuntimeService) {
-        menuBarPresentationRuntimeService = service
-        hostSettingsActions?.setMenuBarPresentationRuntimeService(service)
+    func setAppRuntimeServices(_ services: BmuxAppRuntimeServices) {
+        appRuntimeServices = services
+        hostSettingsActions?.setAppRuntimeServices(services)
     }
 }
