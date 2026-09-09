@@ -822,7 +822,7 @@ roadmap:
         active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-notification-push-lifecycle
         active_branch: app-runtime-notification-push-lifecycle
         active_agent: codex
-        notes: "Selected on 2026-09-09 after PR #106 reconciled sidebar Git/PR delivery on main at b8599efb3b9eb68fdf8e2ce58afa52d8adc5cafe. Implemented in branch app-runtime-notification-push-lifecycle with commit 1bbd6f0e1af1047c3328970de1d0cd17cae62e51; delivery remains open until the implementation PR merges."
+        notes: "Selected on 2026-09-09 after PR #106 reconciled sidebar Git/PR delivery on main at b8599efb3b9eb68fdf8e2ce58afa52d8adc5cafe. Implemented in branch app-runtime-notification-push-lifecycle with commit 1bbd6f0e1af1047c3328970de1d0cd17cae62e51; PR #107 is open for delivery and remains unmerged."
       delivery_status: open
       acceptance_status: implemented
       rationale: PhonePushClient configuration and notification setup remain app-host background services but are coupled to notification delivery and push registration rather than to the already migrated mobile-host listener and presence loop.
@@ -842,7 +842,14 @@ roadmap:
             sha: d346716251aae93de0e627867da789144364db1c
           - repository: BrianBusby/bmux
             sha: 1bbd6f0e1af1047c3328970de1d0cd17cae62e51
-        pull_requests: []
+          - repository: BrianBusby/bmux
+            sha: d67f4bfefae5d6af19f694466ad967e384e19039
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 107
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
       completed_at: '2026-09-09'
 
     - id: app_runtime_menu_bar_presentation_lifecycle_migration
