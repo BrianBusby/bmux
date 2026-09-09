@@ -13,10 +13,8 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`)
-- Slice state: open
-- Owner: bmux
-- Repository state: active
+- Active slice: none selected
+- Repository state: none selected
 
 ## Release
 

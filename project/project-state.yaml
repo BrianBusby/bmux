@@ -669,7 +669,7 @@ roadmap:
       kind: slice
       title: Sidebar Git and Pull-Request Observation Lifecycle Migration
       parent: app_runtime_composition_migration
-      status: active
+      status: implemented
       owner: bmux
       repositories:
         - bmux
@@ -682,7 +682,7 @@ roadmap:
           - sidebar_lifecycle
           - git_observation
           - pull_request_observation
-      capability_maturity: active
+      capability_maturity: validated
       depends_on:
         - app_runtime_browser_devtools_lifecycle_migration
       enables:
@@ -721,13 +721,10 @@ roadmap:
           - browser_runtime_lifecycle
         worktree_required: true
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: bmux
-        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-sidebar-git-pr-lifecycle
-        active_branch: app-runtime-sidebar-git-pr-lifecycle
-        active_agent: codex
-      delivery_status: open
-      acceptance_status: proposed
+      delivery_status: merged
+      acceptance_status: implemented
       rationale: Sidebar Git and PR observation remains a separate lifecycle family from Browser and DevTools because it owns GitHub CLI/git process observation, sidebar row refresh state, and custom-sidebar PR surfaces rather than webview or inspector resources.
       acceptance:
         criteria:
@@ -758,13 +755,17 @@ roadmap:
             sha: 00834cf2161bd8b9c775b52000f0238f32da84d0
           - repository: BrianBusby/bmux
             sha: 3506348ed89ffa241a583491a7a49135d826ea17
+          - repository: BrianBusby/bmux
+            sha: d59d0d69f387caecc1c94a17a681e63a8129d2ca
         pull_requests:
           - repository: BrianBusby/bmux
             number: 105
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
-
+            merged_at: '2026-09-09T00:47:29Z'
+            merge_commit_sha: d59d0d69f387caecc1c94a17a681e63a8129d2ca
+      completed_at: '2026-09-09'
     - id: app_runtime_notification_push_lifecycle_migration
       kind: slice
       title: Notification and Push-Registration Lifecycle Migration
@@ -781,7 +782,7 @@ roadmap:
           - app_runtime_composition
           - notifications
           - push_registration
-      capability_maturity: gated
+      capability_maturity: ready
       depends_on:
         - app_runtime_sidebar_git_pr_lifecycle_migration
       enables:
