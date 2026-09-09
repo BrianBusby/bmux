@@ -334,7 +334,7 @@ final class TerminalNotificationStore: ObservableObject {
         )
         // Cold lane: mirror the dismiss through APNs for every registered
         // device, attached or not (no-op unless phone forwarding is on).
-        PhonePushClient.shared.forwardDismissed(ids: ids, badgeCount: unreadCount)
+        phonePushForwarding.forwardDismissed(ids: ids, badgeCount: unreadCount)
     }
 
     /// A user-driven dismiss emit that also carries any stale superseded-banner
@@ -447,6 +447,7 @@ final class TerminalNotificationStore: ObservableObject {
         effects in
         store.scheduleUserNotification(notification, effects: effects)
     }
+    private var phonePushForwarding: any TerminalPhonePushForwarding = NoopTerminalPhonePushForwarding()
     private var nativeNotificationDeliveryHooks = NativeNotificationDeliveryHooks()
     private var suppressedNotificationFeedbackHandler: (TerminalNotificationStore, TerminalNotification, TerminalNotificationPolicyEffects) -> Void = {
         store,
@@ -1174,7 +1175,7 @@ final class TerminalNotificationStore: ObservableObject {
             // mirrors the real send gate but ignores that throttle.
             let replacementWillForward = !shouldSuppressExternalDelivery
                 && effects.desktop
-                && PhonePushClient.shared.willForwardReplacement()
+                && phonePushForwarding.willForwardReplacement(defaults: .standard)
             if replacementWillForward {
                 // The superseded entries already left the store; tombstone them
                 // now so the reconcile sweep stays correct while the dismiss is
@@ -1247,7 +1248,7 @@ final class TerminalNotificationStore: ObservableObject {
             // mutated above, so it includes this notification); the server
             // stamps it as `aps.badge` so the icon badge is SET, not incremented.
             if effects.desktop {
-                let queued = PhonePushClient.shared.forward(notification, badgeCount: indexes.unreadCount)
+                let queued = phonePushForwarding.forward(notification, badgeCount: indexes.unreadCount)
                 // Only once the replacement banner push is queued is it safe to
                 // clear the superseded banners it replaces (deferred from
                 // `recordNotification`); a throttled push leaves them stashed
@@ -2021,6 +2022,14 @@ final class TerminalNotificationStore: ObservableObject {
             return lhs.createdAt > rhs.createdAt
         }
         return lhs.id.uuidString < rhs.id.uuidString
+    }
+
+    func configurePhonePushForwarding(_ forwarding: any TerminalPhonePushForwarding) {
+        phonePushForwarding = forwarding
+    }
+
+    func resetPhonePushForwarding() {
+        phonePushForwarding = NoopTerminalPhonePushForwarding()
     }
 
 #if DEBUG

@@ -1,6 +1,8 @@
 import AppKit
 import BmuxAuthRuntime
+import BmuxNotifications
 import Foundation
+import UserNotifications
 
 @MainActor
 final class BmuxAppRuntimeServices {
@@ -11,19 +13,22 @@ final class BmuxAppRuntimeServices {
     let mobileHostRuntimeService: MobileHostRuntimeService
     let browserDevToolsRuntimeService: BrowserDevToolsRuntimeService
     let sidebarGitPullRequestObservationRuntimeService: SidebarGitPullRequestObservationRuntimeService
+    let notificationPushRuntimeService: NotificationPushRuntimeService
 
     init(
         configuration: BmuxAppRuntimeConfiguration,
         workProvenanceRuntime: WorkProvenanceRuntime,
         mobileHostRuntimeService: MobileHostRuntimeService,
         browserDevToolsRuntimeService: BrowserDevToolsRuntimeService,
-        sidebarGitPullRequestObservationRuntimeService: SidebarGitPullRequestObservationRuntimeService
+        sidebarGitPullRequestObservationRuntimeService: SidebarGitPullRequestObservationRuntimeService,
+        notificationPushRuntimeService: NotificationPushRuntimeService
     ) {
         self.configuration = configuration
         self.workProvenanceRuntime = workProvenanceRuntime
         self.mobileHostRuntimeService = mobileHostRuntimeService
         self.browserDevToolsRuntimeService = browserDevToolsRuntimeService
         self.sidebarGitPullRequestObservationRuntimeService = sidebarGitPullRequestObservationRuntimeService
+        self.notificationPushRuntimeService = notificationPushRuntimeService
     }
 
     func start(tabManager: TabManager) {
@@ -40,6 +45,7 @@ final class BmuxAppRuntimeServices {
     }
 
     func stop() {
+        notificationPushRuntimeService.stop()
         browserDevToolsRuntimeService.stop()
         mobileHostRuntimeService.stop()
         sidebarGitPullRequestObservationRuntimeService.stop()
@@ -92,6 +98,35 @@ final class BmuxAppRuntimeServices {
         mobileHostRuntimeService.syncToSettings()
     }
 
+    func startNotificationPushLifecycle(
+        auth: AuthCoordinator,
+        notificationStore: TerminalNotificationStore,
+        userNotificationDelegate: any UNUserNotificationCenterDelegate,
+        terminalNavigation: any NotificationDeliveryTerminalNavigating,
+        feedReplying: any NotificationFeedReplying,
+        applicationActivation: any NotificationApplicationActivating,
+        actionTitles: NotificationDeliveryActionTitles
+    ) {
+        guard configuration.enables(.notificationPushLifecycle) else { return }
+        let shouldCountStart = notificationPushRuntimeService.start(
+            auth: auth,
+            notificationStore: notificationStore,
+            userNotificationDelegate: userNotificationDelegate,
+            terminalNavigation: terminalNavigation,
+            feedReplying: feedReplying,
+            applicationActivation: applicationActivation,
+            actionTitles: actionTitles
+        )
+        guard shouldCountStart else { return }
+        startedCapabilities.insert(.notificationPushLifecycle)
+        startCountsByCapability[.notificationPushLifecycle, default: 0] += 1
+    }
+
+    func notificationPushDidBecomeActive() {
+        guard configuration.enables(.notificationPushLifecycle) else { return }
+        notificationPushRuntimeService.handleApplicationDidBecomeActive()
+    }
+
     func attachMobileHostWorkspaceListObserver(
         tabManager: TabManager,
         notificationStore: TerminalNotificationStore?
@@ -137,6 +172,16 @@ final class BmuxAppRuntimeServices {
         startedCapabilities.remove(.browserAndDevTools)
     }
 
+    func handleNotificationResponse(_ response: UNNotificationResponse) {
+        guard configuration.enables(.notificationPushLifecycle) else { return }
+        notificationPushRuntimeService.handleNotificationResponse(response)
+    }
+
+    func presentationOptions(for notification: UNNotification) -> UNNotificationPresentationOptions {
+        guard configuration.enables(.notificationPushLifecycle) else { return [] }
+        return notificationPushRuntimeService.presentationOptions(for: notification)
+    }
+
     @discardableResult
     func closeBrowserWebInspectorsForAppTeardown() -> Int {
         guard configuration.enables(.browserAndDevTools) else { return 0 }
@@ -159,6 +204,10 @@ final class BmuxAppRuntimeServices {
 
     var sidebarGitPullRequestObservationLifecycleState: SidebarGitPullRequestObservationRuntimeLifecycleState {
         sidebarGitPullRequestObservationRuntimeService.lifecycleState
+    }
+
+    var notificationPushLifecycleState: NotificationPushRuntimeLifecycleState {
+        notificationPushRuntimeService.lifecycleState
     }
 
     var focusedBrowserAddressBarPanelId: UUID? {

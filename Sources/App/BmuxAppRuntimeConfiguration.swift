@@ -24,6 +24,7 @@ struct BmuxAppRuntimeConfiguration: Sendable {
             enabledCapabilities.insert(.mobileHostAndPresence)
             enabledCapabilities.insert(.browserAndDevTools)
             enabledCapabilities.insert(.sidebarGitPullRequestObservation)
+            enabledCapabilities.insert(.notificationPushLifecycle)
         }
         return BmuxAppRuntimeConfiguration(
             processKind: processKind,

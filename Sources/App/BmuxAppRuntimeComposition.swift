@@ -10,6 +10,7 @@ struct BmuxAppRuntimeComposition {
     private let mobileHostRuntimeDependencies: MobileHostRuntimeServiceDependencies?
     private let browserDevToolsRuntimeDependencies: BrowserDevToolsRuntimeServiceDependencies?
     private let sidebarGitPullRequestObservationRuntimeDependencies: SidebarGitPullRequestObservationRuntimeServiceDependencies?
+    private let notificationPushRuntimeDependencies: NotificationPushRuntimeServiceDependencies?
 
     init(
         configFileURL: URL,
@@ -18,7 +19,8 @@ struct BmuxAppRuntimeComposition {
         runtimeConfiguration: BmuxAppRuntimeConfiguration,
         mobileHostRuntimeDependencies: MobileHostRuntimeServiceDependencies? = nil,
         browserDevToolsRuntimeDependencies: BrowserDevToolsRuntimeServiceDependencies? = nil,
-        sidebarGitPullRequestObservationRuntimeDependencies: SidebarGitPullRequestObservationRuntimeServiceDependencies? = nil
+        sidebarGitPullRequestObservationRuntimeDependencies: SidebarGitPullRequestObservationRuntimeServiceDependencies? = nil,
+        notificationPushRuntimeDependencies: NotificationPushRuntimeServiceDependencies? = nil
     ) {
         self.jsonConfigStore = JSONConfigStore(fileURL: configFileURL)
         self.secretStore = SecretFileStore(baseDirectory: secretBaseDirectory)
@@ -26,6 +28,7 @@ struct BmuxAppRuntimeComposition {
         self.mobileHostRuntimeDependencies = mobileHostRuntimeDependencies
         self.browserDevToolsRuntimeDependencies = browserDevToolsRuntimeDependencies
         self.sidebarGitPullRequestObservationRuntimeDependencies = sidebarGitPullRequestObservationRuntimeDependencies
+        self.notificationPushRuntimeDependencies = notificationPushRuntimeDependencies
         self.keychainStore = KeychainSecretStore(
             service: KeychainSecretStore.serviceName(bundleIdentifier: bundleIdentifier)
         )
@@ -97,12 +100,17 @@ struct BmuxAppRuntimeComposition {
             isCapabilityEnabled: runtimeConfiguration.enables(.sidebarGitPullRequestObservation),
             dependencies: sidebarGitPullRequestObservationRuntimeDependencies ?? .production()
         )
+        let notificationPushRuntimeService = NotificationPushRuntimeService(
+            isCapabilityEnabled: runtimeConfiguration.enables(.notificationPushLifecycle),
+            dependencies: notificationPushRuntimeDependencies ?? .production()
+        )
         return BmuxAppRuntimeServices(
             configuration: runtimeConfiguration,
             workProvenanceRuntime: workProvenanceRuntime,
             mobileHostRuntimeService: mobileHostRuntimeService,
             browserDevToolsRuntimeService: browserDevToolsRuntimeService,
-            sidebarGitPullRequestObservationRuntimeService: sidebarGitPullRequestObservationRuntimeService
+            sidebarGitPullRequestObservationRuntimeService: sidebarGitPullRequestObservationRuntimeService,
+            notificationPushRuntimeService: notificationPushRuntimeService
         )
     }
 }

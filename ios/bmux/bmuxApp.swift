@@ -46,7 +46,7 @@ struct bmuxApp: App {
     }()
 
     init() {
-        Self.root.pushCoordinator.configure(delegate: appDelegate)
+        Self.root.pushCoordinator.start(delegate: appDelegate)
         appDelegate.pushCoordinator = Self.root.pushCoordinator
         appDelegate.analytics = Self.root.analytics.emitter
     }
