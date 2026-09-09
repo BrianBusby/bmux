@@ -3,10 +3,14 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id:
-    title:
-    state: none_selected
-  state: none_selected
+    id: app_runtime_notification_push_lifecycle_migration
+    title: Notification and Push-Registration Lifecycle Migration
+    state: open
+    owner: bmux
+    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-notification-push-lifecycle
+    active_branch: app-runtime-notification-push-lifecycle
+    active_agent: codex
+  state: active
 
 execution_telemetry:
   provider_neutral_contract: implemented

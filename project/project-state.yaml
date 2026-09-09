@@ -770,7 +770,7 @@ roadmap:
       kind: slice
       title: Notification and Push-Registration Lifecycle Migration
       parent: app_runtime_composition_migration
-      status: planned
+      status: active
       owner: bmux
       repositories:
         - bmux
@@ -782,7 +782,7 @@ roadmap:
           - app_runtime_composition
           - notifications
           - push_registration
-      capability_maturity: ready
+      capability_maturity: active
       depends_on:
         - app_runtime_sidebar_git_pr_lifecycle_migration
       enables:
@@ -817,9 +817,13 @@ roadmap:
           - mobile_host_presence_lifecycle
         worktree_required: true
       execution:
-        assignment: planned
+        assignment: current
         assigned_to: bmux
-      delivery_status: proposed
+        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-notification-push-lifecycle
+        active_branch: app-runtime-notification-push-lifecycle
+        active_agent: codex
+        notes: "Selected on 2026-09-09 after PR #106 reconciled sidebar Git/PR delivery on main at b8599efb3b9eb68fdf8e2ce58afa52d8adc5cafe."
+      delivery_status: open
       acceptance_status: proposed
       rationale: PhonePushClient configuration and notification setup remain app-host background services but are coupled to notification delivery and push registration rather than to the already migrated mobile-host listener and presence loop.
       acceptance:

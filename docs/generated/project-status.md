@@ -20,11 +20,12 @@ Regenerate with: ./scripts/project-docs generate
 ### Current Capability Frontier
 
 - Primary Capability Frontier: Process Integrity (`process_integrity`)
-- Active or selected slices in the frontier: none
+- Active or selected slices in the frontier:
+  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Active Implementation
 
-- None.
+- Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Selected Next
 
@@ -32,7 +33,6 @@ Regenerate with: ./scripts/project-docs generate
 
 ### Ready Candidates
 
-- Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) - maturity: ready; status: planned; selection: planned; owner: Bmux
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - maturity: ready; status: planned; selection: planned; owner: Bmux
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - maturity: ready; status: planned; selection: planned; owner: Bmux
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - maturity: ready; status: planned; selection: planned; owner: Provenance Engine
@@ -41,7 +41,7 @@ Regenerate with: ./scripts/project-docs generate
 
 - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) is not dependency-satisfying
-  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) has maturity ready; requires validated for gate `notification_push_runtime_validated`: Menu-bar presentation lifecycle should migrate after notification ownership clarifies AppDelegate startup and delegate responsibilities.
+  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) has maturity active; requires validated for gate `notification_push_runtime_validated`: Menu-bar presentation lifecycle should migrate after notification ownership clarifies AppDelegate startup and delegate responsibilities.
 - Residual App-Host Background Service Audit (`app_runtime_residual_app_host_service_audit`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
   - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) is not dependency-satisfying
@@ -55,7 +55,7 @@ Regenerate with: ./scripts/project-docs generate
 - Swift App and Runtime Test Determinism Burn-Down (`test_determinism_swift_app_runtime_burndown`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) is not dependency-satisfying
   - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) is not dependency-satisfying
-  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) has maturity ready; requires validated for gate `notification_push_runtime_validated`: Notification and mobile-host authorization test determinism should be fixed against the migrated runtime owner.
+  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) has maturity active; requires validated for gate `notification_push_runtime_validated`: Notification and mobile-host authorization test determinism should be fixed against the migrated runtime owner.
   - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) has maturity gated; requires validated for gate `menu_bar_runtime_validated`: Menu-bar duration assertions should be replaced after menu-bar lifecycle ownership is explicit.
 - Python Socket and Tmux Compatibility Test Determinism Burn-Down (`test_determinism_python_socket_tmux_burndown`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
 - UI Test Determinism Burn-Down (`test_determinism_ui_burndown`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
