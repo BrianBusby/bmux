@@ -1,4 +1,6 @@
 import Foundation
+import BmuxFoundation
+import BmuxGit
 import BmuxSidebarGit
 
 #if canImport(bmux_DEV)
@@ -32,6 +34,49 @@ extension TabManager {
     func clearWorkspaceGitProbesForTesting(workspaceId: UUID) {
         sidebarGitMetadataService.clearWorkspaceGitProbes(workspaceId: workspaceId)
     }
+}
+
+@MainActor
+func makeSidebarGitObservedTabManager(
+    commandRunner: any CommandRunning = CommandRunner(),
+    gitMetadataService: GitMetadataService = GitMetadataService(),
+    workspaceGitMetadataReader: (any WorkspaceGitMetadataReading)? = nil,
+    gitPollClock: any GitPollClock = SystemGitPollClock(),
+    gitProbeLimiter: WorkspaceGitMetadataProbeLimiter? = nil,
+    mobileHostDeferral: MobileHostDeferralPolicy = .standard
+) -> TabManager {
+    let debugLog: @Sendable (String) -> Void = { _ in }
+    let pullRequestProbeService = PullRequestProbeService(
+        commandRunner: commandRunner,
+        debugLog: debugLog
+    )
+    let pullRequestPollService = PullRequestPollService(
+        gitMetadataService: gitMetadataService,
+        probeService: pullRequestProbeService,
+        clock: gitPollClock,
+        mobileHostDeferral: mobileHostDeferral,
+        debugLog: debugLog
+    )
+    let sidebarGitMetadataService = SidebarGitMetadataService(
+        workspaceGitMetadataReader: workspaceGitMetadataReader ?? gitMetadataService,
+        gitMetadataService: gitMetadataService,
+        pullRequestProbing: pullRequestPollService,
+        probeLimiter: gitProbeLimiter ?? WorkspaceGitMetadataProbeLimiter(limit: 2),
+        clock: gitPollClock,
+        mobileHostDeferral: mobileHostDeferral,
+        debugLog: debugLog
+    )
+    let observation = TabManagerSidebarGitPullRequestObservationServices(
+        sidebarGitMetadataService: sidebarGitMetadataService,
+        pullRequestProbing: pullRequestPollService,
+        attachesHostFromTabManager: true,
+        isCompatibilityReporter: false,
+        refreshSubmittedPullRequestMention: { _, _, _ in },
+        cancelSubmittedPullRequestMentionRefreshes: {}
+    )
+    return TabManager(
+        sidebarGitPullRequestObservation: observation
+    )
 }
 
 extension MobileHostDeferralPolicy {

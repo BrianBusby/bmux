@@ -20,7 +20,7 @@ actor WorkProvenanceObservationService {
     init(
         client: any ProvenanceEngineContracts.ProvenanceEngineClient,
         gitInspector: any WorkProvenanceGitInspecting,
-        pullRequestOwnerResolver: any WorkProvenancePullRequestOwnerResolving = WorkProvenanceGitHubCLIPullRequestOwnerResolver(),
+        pullRequestOwnerResolver: any WorkProvenancePullRequestOwnerResolving = WorkProvenanceNoopPullRequestOwnerResolver(),
         ticketLinkResolver: any WorkProvenanceTicketLinkResolving = WorkProvenanceLinearTicketLinkResolver(),
         resourceDiscovery: WorkProvenanceWorkspaceResourceDiscovery = WorkProvenanceWorkspaceResourceDiscovery(),
         stableIDFactory: WorkProvenanceStableIDFactory = WorkProvenanceStableIDFactory(),

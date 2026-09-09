@@ -669,7 +669,7 @@ roadmap:
       kind: slice
       title: Sidebar Git and Pull-Request Observation Lifecycle Migration
       parent: app_runtime_composition_migration
-      status: planned
+      status: active
       owner: bmux
       repositories:
         - bmux
@@ -682,7 +682,7 @@ roadmap:
           - sidebar_lifecycle
           - git_observation
           - pull_request_observation
-      capability_maturity: ready
+      capability_maturity: active
       depends_on:
         - app_runtime_browser_devtools_lifecycle_migration
       enables:
@@ -721,9 +721,12 @@ roadmap:
           - browser_runtime_lifecycle
         worktree_required: true
       execution:
-        assignment: planned
+        assignment: current
         assigned_to: bmux
-      delivery_status: proposed
+        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-sidebar-git-pr-lifecycle
+        active_branch: app-runtime-sidebar-git-pr-lifecycle
+        active_agent: codex
+      delivery_status: open
       acceptance_status: proposed
       rationale: Sidebar Git and PR observation remains a separate lifecycle family from Browser and DevTools because it owns GitHub CLI/git process observation, sidebar row refresh state, and custom-sidebar PR surfaces rather than webview or inspector resources.
       acceptance:
@@ -735,6 +738,32 @@ roadmap:
           - Shutdown cancels Git and PR observation tasks row refresh work and publication.
           - A source guard rejects migrated Git and PR observation bypasses.
           - Production-path coverage exercises runtime composition and teardown.
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 5170a25a676fe73b1e6edd6630b97c2a337b6d83
+          - repository: BrianBusby/bmux
+            sha: 1ab0c501da78d4c6d852fccfa22d45747e5541f6
+          - repository: BrianBusby/bmux
+            sha: fd6e7f418327f16edd5bac8784087641606ab17c
+          - repository: BrianBusby/bmux
+            sha: 12aa530823b1c25fd63c6e12c43b670075b90dad
+          - repository: BrianBusby/bmux
+            sha: 53d590c359fa69b488e0e4c9a715eb0f18c57614
+          - repository: BrianBusby/bmux
+            sha: c10801552c6759a84a18b9c6a0ae3cbd8bd7dfaf
+          - repository: BrianBusby/bmux
+            sha: 49889761a9740f6e43ea359f09bc909c80961e75
+          - repository: BrianBusby/bmux
+            sha: 00834cf2161bd8b9c775b52000f0238f32da84d0
+          - repository: BrianBusby/bmux
+            sha: 3506348ed89ffa241a583491a7a49135d826ea17
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 105
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
 
     - id: app_runtime_notification_push_lifecycle_migration
       kind: slice

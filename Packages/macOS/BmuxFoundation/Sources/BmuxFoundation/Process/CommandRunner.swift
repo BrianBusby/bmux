@@ -75,6 +75,27 @@ public struct CommandRunner: CommandRunning, Sendable {
         arguments: [String],
         timeout: TimeInterval?
     ) async -> CommandResult {
+        let cancellation = CommandRunCancellation()
+        return await withTaskCancellationHandler {
+            await runCancellable(
+                directory: directory,
+                executable: executable,
+                arguments: arguments,
+                timeout: timeout,
+                cancellation: cancellation
+            )
+        } onCancel: {
+            cancellation.cancel()
+        }
+    }
+
+    private func runCancellable(
+        directory: String,
+        executable: String,
+        arguments: [String],
+        timeout: TimeInterval?,
+        cancellation: CommandRunCancellation
+    ) async -> CommandResult {
         let process = Process()
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
@@ -129,6 +150,7 @@ public struct CommandRunner: CommandRunning, Sendable {
                         )
                     }
                 timerToCancel?.cancel()
+                if completed != nil { cancellation.clear() }
                 if let completed { continuation.resume(returning: completed) }
             }
 
@@ -142,10 +164,33 @@ public struct CommandRunner: CommandRunning, Sendable {
                         let timer = s.deadlineTimer
                         s.deadlineTimer = nil
                         return (true, timer)
-                    }
+                }
                 timerToCancel?.cancel()
+                if won { cancellation.clear() }
                 if won { continuation.resume(returning: result) }
                 return won
+            }
+
+            @Sendable func cancelledResult() -> CommandResult {
+                CommandResult(
+                    stdout: nil,
+                    stderr: nil,
+                    exitStatus: nil,
+                    timedOut: false,
+                    executionError: "cancelled"
+                )
+            }
+
+            @Sendable func terminateForCancellation() {
+                if claimImmediate(cancelledResult()), process.isRunning {
+                    process.terminate()
+                    Self.scheduleSigkill(process)
+                }
+            }
+
+            if Task.isCancelled {
+                _ = claimImmediate(cancelledResult())
+                return
             }
 
             // Drain both streams on detached tasks so a full pipe buffer cannot deadlock
@@ -180,6 +225,7 @@ public struct CommandRunner: CommandRunning, Sendable {
                 ))
                 return
             }
+            cancellation.install(terminateForCancellation)
 
             // Close the parent's write ends so the readers see EOF once the child (and any
             // descendants that inherited them) close their copies.
@@ -232,6 +278,42 @@ public struct CommandRunner: CommandRunning, Sendable {
         var resumed = false
         // The command deadline timer, cancelled when the continuation resumes (any path).
         var deadlineTimer: (any DispatchSourceTimer)?
+    }
+
+    private final class CommandRunCancellation: @unchecked Sendable {
+        private struct State {
+            var isCancelled = false
+            var onCancel: (@Sendable () -> Void)?
+        }
+
+        private let state = OSAllocatedUnfairLock(initialState: State())
+
+        func install(_ onCancel: @escaping @Sendable () -> Void) {
+            let shouldCancelImmediately = state.withLock { state in
+                guard !state.isCancelled else { return true }
+                state.onCancel = onCancel
+                return false
+            }
+            if shouldCancelImmediately {
+                onCancel()
+            }
+        }
+
+        func cancel() {
+            let callback = state.withLock { state in
+                state.isCancelled = true
+                let callback = state.onCancel
+                state.onCancel = nil
+                return callback
+            }
+            callback?()
+        }
+
+        func clear() {
+            state.withLock { state in
+                state.onCancel = nil
+            }
+        }
     }
 
     private static func scheduleSigkill(_ process: Process) {

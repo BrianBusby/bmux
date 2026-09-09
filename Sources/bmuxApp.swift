@@ -203,7 +203,7 @@ struct bmuxApp: App {
         }
         StartupBreadcrumbLog.append("app.init.workProvenance.created", fields: provenanceFields)
         StartupBreadcrumbLog.append("app.init.tabManager.begin")
-        let tabManager = TabManager()
+        let tabManager = TabManager(sidebarGitPullRequestObservation: appRuntimeServices.tabManagerSidebarGitPullRequestObservationServices())
         tabManager.workProvenanceRuntime = workProvenanceRuntime
         _tabManager = StateObject(wrappedValue: tabManager)
         appRuntimeServices.start(tabManager: tabManager)

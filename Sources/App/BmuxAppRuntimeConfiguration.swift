@@ -23,6 +23,7 @@ struct BmuxAppRuntimeConfiguration: Sendable {
         if processKind == .productionApp {
             enabledCapabilities.insert(.mobileHostAndPresence)
             enabledCapabilities.insert(.browserAndDevTools)
+            enabledCapabilities.insert(.sidebarGitPullRequestObservation)
         }
         return BmuxAppRuntimeConfiguration(
             processKind: processKind,

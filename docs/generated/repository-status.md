@@ -13,8 +13,10 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: none selected
-- Repository state: none selected
+- Active slice: Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`)
+- Slice state: open
+- Owner: bmux
+- Repository state: active
 
 ## Release
 
@@ -30,7 +32,7 @@ Repository: `BrianBusby/bmux`
 | App Runtime Composition Boundary | under observation |
 | App Runtime Menu Bar Presentation Lifecycle | planned |
 | App Runtime Notification Push Lifecycle | planned |
-| App Runtime Sidebar Git Pr Lifecycle | planned |
+| App Runtime Sidebar Git Pr Lifecycle | under observation |
 | Bmux Cross Session Context Assembly Experiment | planned |
 | Bmux Proactive Cross Session Awareness | implemented |
 | Codex Historical Import Startup Boundary Guard | planned |

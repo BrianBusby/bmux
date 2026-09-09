@@ -20,6 +20,9 @@ public protocol PullRequestProbing: AnyObject {
     func refreshTrackedWorkspacePullRequestsIfNeeded(reason: String)
     /// Reacts to the pull-request polling setting toggling.
     func sidebarPullRequestPollingSettingsDidChange()
+    /// Deterministically cancels runtime-owned poll/refresh work, clears
+    /// short-lived caches, and releases the host seam.
+    func stopWorkspacePullRequestObservation()
     /// Applies a `gh pr merge/close/reopen` command hint optimistically and
     /// schedules a verifying refresh.
     func handleWorkspacePullRequestCommandHint(

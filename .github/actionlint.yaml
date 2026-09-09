@@ -1,16 +1,17 @@
 self-hosted-runner:
   labels:
-    # Active default lives in the MACOS_RUNNER_15 / MACOS_RUNNER_26 /
-    # MACOS_RUNNER_IOS / LINUX_RUNNER repo variables; these are the literal
-    # labels referenced as fallbacks or as manual workflow_dispatch choices.
+    # Active defaults live in the MACOS_RUNNER_* / LINUX_RUNNER repo variables.
+    # These are the non-GitHub-hosted labels referenced as fallbacks or as
+    # manual workflow_dispatch choices. Built-in GitHub-hosted labels such as
+    # macos-15 do not need to be listed here.
     # See docs/ci-runners.md.
     - blacksmith-6vcpu-macos-15
     - blacksmith-6vcpu-macos-26
     - blacksmith-6vcpu-macos-latest
     - warp-macos-15-arm64-6x
-    # macOS 26 needs route to Blacksmith cloud, not warp-macos-26-arm64-6x: our
-    # self-hosted minis carry that label, and GitHub prefers a matching
-    # self-hosted runner. See check_no_self_hosted_fleet_runners.
+    # macOS 26 should route to Blacksmith cloud, not warp-macos-26-arm64-6x:
+    # upstream self-hosted minis carry that Warp label. See
+    # check_no_self_hosted_fleet_runners.
     - depot-macos-latest
     - depot-macos-14
     # Linux: Blacksmith primary (LINUX_RUNNER), WarpBuild overflow fallback.

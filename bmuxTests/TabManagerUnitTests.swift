@@ -934,7 +934,7 @@ final class TabManagerPullRequestProbeTests: XCTestCase {
     // (BmuxGitTests.PullRequestProbeServiceTests) with the extraction.
 
     func testTrackedWorkspaceGitMetadataPollCandidatesIncludeMainAndMasterPanels() throws {
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         guard let workspace = manager.selectedWorkspace,
               let mainPanelId = workspace.focusedPanelId else {
             XCTFail("Expected selected workspace with focused panel")
@@ -969,7 +969,7 @@ final class TabManagerPullRequestProbeTests: XCTestCase {
     }
 
     func testTrackedWorkspaceGitMetadataPollCandidatesIncludeFocusedFallbackOnMain() {
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         guard let workspace = manager.selectedWorkspace,
               let panelId = workspace.focusedPanelId else {
             XCTFail("Expected selected workspace with focused panel")
@@ -1025,7 +1025,7 @@ final class TabManagerPullRequestProbeTests: XCTestCase {
             }
         }
 
-        let manager = TabManager(workspaceGitMetadataReader: reader, mobileHostDeferral: .disabledForSidebarGitTests)
+        let manager = makeSidebarGitObservedTabManager(workspaceGitMetadataReader: reader, mobileHostDeferral: .disabledForSidebarGitTests)
         guard let workspace = manager.selectedWorkspace,
               let mainPanelId = workspace.focusedPanelId,
               let paneId = workspace.bonsplitController.focusedPaneId,
@@ -1085,7 +1085,7 @@ final class TabManagerPullRequestProbeTests: XCTestCase {
         try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         defer { try? fileManager.removeItem(at: directoryURL) }
 
-        let manager = TabManager(mobileHostDeferral: .disabledForSidebarGitTests)
+        let manager = makeSidebarGitObservedTabManager(mobileHostDeferral: .disabledForSidebarGitTests)
         guard let workspace = manager.selectedWorkspace,
               let panelId = workspace.focusedPanelId else {
             XCTFail("Expected selected workspace with focused panel")
@@ -1124,7 +1124,7 @@ final class TabManagerPullRequestProbeTests: XCTestCase {
         try runGit(["add", "README.md"], in: repoURL)
         try runGit(["commit", "-m", "Initial commit"], in: repoURL)
 
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         guard let workspace = manager.selectedWorkspace else {
             XCTFail("Expected selected workspace")
             return
@@ -1163,7 +1163,7 @@ final class TabManagerPullRequestProbeTests: XCTestCase {
         try runGit(["add", "README.md"], in: repoURL)
         try runGit(["commit", "-m", "Initial commit"], in: repoURL)
 
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         guard let workspace = manager.selectedWorkspace,
               let panelId = workspace.focusedPanelId else {
             XCTFail("Expected selected workspace with focused panel")
@@ -1210,7 +1210,7 @@ final class TabManagerPullRequestProbeTests: XCTestCase {
         try runGit(["add", "README.md"], in: repoURL)
         try runGit(["commit", "-m", "Initial commit"], in: repoURL)
 
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         guard let workspace = manager.selectedWorkspace,
               let panelId = workspace.focusedPanelId else {
             XCTFail("Expected selected workspace with focused panel")
@@ -1234,7 +1234,7 @@ final class TabManagerPullRequestProbeTests: XCTestCase {
     }
 
     func testRemoteSplitSkipsInitialGitMetadataProbe() async throws {
-        let manager = TabManager(mobileHostDeferral: .disabledForSidebarGitTests)
+        let manager = makeSidebarGitObservedTabManager(mobileHostDeferral: .disabledForSidebarGitTests)
         guard let workspace = manager.selectedWorkspace,
               let panelId = workspace.focusedPanelId else {
             XCTFail("Expected selected workspace with focused panel")
@@ -1295,7 +1295,7 @@ final class TabManagerPullRequestProbeTests: XCTestCase {
         try runGit(["commit", "-m", "Initial commit"], in: repoURL)
         try runGit(["checkout", "-b", "feature/sidebar-pr"], in: repoURL)
 
-        let manager = TabManager()
+        let manager = makeSidebarGitObservedTabManager()
         guard let workspace = manager.selectedWorkspace,
               let panelId = workspace.focusedPanelId else {
             XCTFail("Expected selected workspace with focused panel")

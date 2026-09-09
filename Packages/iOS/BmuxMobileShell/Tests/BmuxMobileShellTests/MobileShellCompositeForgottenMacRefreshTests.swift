@@ -412,10 +412,17 @@ import Testing
         routes: [CmxAttachRoute]? = nil,
         teamID: String? = "team-a"
     ) throws -> MobilePairedMac {
-        MobilePairedMac(
+        let resolvedRoutes: [CmxAttachRoute]
+        if let routes {
+            resolvedRoutes = routes
+        } else {
+            resolvedRoutes = [try CmxAttachRoute(id: "manual", kind: .tailscale, endpoint: .hostPort(host: host, port: port))]
+        }
+
+        return MobilePairedMac(
             macDeviceID: id,
             displayName: displayName,
-            routes: routes ?? [try CmxAttachRoute(id: "manual", kind: .tailscale, endpoint: .hostPort(host: host, port: port))],
+            routes: resolvedRoutes,
             createdAt: Date(timeIntervalSince1970: 1),
             lastSeenAt: lastSeenAt,
             isActive: isActive,

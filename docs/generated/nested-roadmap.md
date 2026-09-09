@@ -16,11 +16,12 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 ### Current Capability Frontier
 
 - Primary Capability Frontier: Process Integrity (`process_integrity`)
-- Active or selected slices in the frontier: none
+- Active or selected slices in the frontier:
+  - Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Active Implementation
 
-- None.
+- Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Selected Next
 
@@ -28,7 +29,6 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Ready Candidates
 
-- Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) - maturity: ready; status: planned; selection: planned; owner: Bmux
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - maturity: ready; status: planned; selection: planned; owner: Bmux
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - maturity: ready; status: planned; selection: planned; owner: Bmux
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - maturity: ready; status: planned; selection: planned; owner: Provenance Engine
@@ -37,7 +37,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) is not dependency-satisfying
-  - Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) has maturity ready; requires validated for gate `sidebar_git_pr_runtime_validated`: Notification and push lifecycle work should wait until the higher-churn sidebar observation family has a single owner.
+  - Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) has maturity active; requires validated for gate `sidebar_git_pr_runtime_validated`: Notification and push lifecycle work should wait until the higher-churn sidebar observation family has a single owner.
 - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) is not dependency-satisfying
   - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) has maturity gated; requires validated for gate `notification_push_runtime_validated`: Menu-bar presentation lifecycle should migrate after notification ownership clarifies AppDelegate startup and delegate responsibilities.
@@ -194,7 +194,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Evidence: BrianBusby/bmux@aa63c9218b3e, BrianBusby/bmux@cd3d97f2e161, BrianBusby/bmux#103 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Browser and DevTools lifecycle ownership is the next safest and highest-value Process Integrity slice because the current source still starts BrowserSystemProxyWatcher and browser/inspector teardown paths through AppDelegate, window, and panel entrypoints while the service family remains cohesive enough for one explicit runtime owner.
           Acceptance criteria: Browser lifecycle configuration is explicit.; Runtime services own browser startup readiness failure and shutdown.; Test dependencies are isolated.; AppDelegate window panel and shortcut paths cannot become second owners.; Shutdown cancels proxy watchers focus observers inspectors and browser tasks.; Production-path coverage exercises readiness and teardown.; A source guard rejects migrated Browser and DevTools bypasses.
-        - **Sidebar Git and Pull-Request Observation Lifecycle Migration** (`app_runtime_sidebar_git_pr_lifecycle_migration`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: ready
+        - **Sidebar Git and Pull-Request Observation Lifecycle Migration** (`app_runtime_sidebar_git_pr_lifecycle_migration`) - slice; status: active; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: current / Bmux; parallelism: serial; delivery: open; acceptance: proposed; maturity: active
           Depends on: `app_runtime_browser_devtools_lifecycle_migration`
           Enables: `app_runtime_notification_push_lifecycle_migration`
           Expected contract domains: `sidebar_git_metadata_observation`, `pull_request_observation`, `custom_sidebar_pr_state`, `sidebar_socket_and_workspace_display_consistency`, `production_startup_readiness_shutdown`
@@ -202,7 +202,9 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `sidebar_git_cache`, `pull_request_refresh`, `workspace_display_observation`, `custom_sidebar_lifecycle`
           Contract dependencies: `app_runtime_composition_boundary`, `browser_runtime_lifecycle`
           Worktree required: true
+          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/app-runtime-sidebar-git-pr-lifecycle`; branch: `app-runtime-sidebar-git-pr-lifecycle`; agent: `codex`
           Gate `browser_runtime_validated`: requires `app_runtime_browser_devtools_lifecycle_migration` maturity validated; reason: Sidebar Git and PR observation should migrate after browser runtime ownership removes adjacent AppDelegate and panel startup churn.
+          Evidence: BrianBusby/bmux@5170a25a676f, BrianBusby/bmux@1ab0c501da78, BrianBusby/bmux@fd6e7f418327, BrianBusby/bmux@12aa530823b1, BrianBusby/bmux@53d590c359fa, BrianBusby/bmux@c10801552c67, BrianBusby/bmux@49889761a974, BrianBusby/bmux@00834cf2161b, BrianBusby/bmux@3506348ed89f, BrianBusby/bmux#105 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Sidebar Git and PR observation remains a separate lifecycle family from Browser and DevTools because it owns GitHub CLI/git process observation, sidebar row refresh state, and custom-sidebar PR surfaces rather than webview or inspector resources.
           Acceptance criteria: One runtime owner starts reconciles and stops sidebar Git and PR observation.; Git GitHub CLI PR and workspace-display dependencies are injected or isolated.; Sidebar custom-sidebar socket and workspace-display consumers read the same state.; Lifecycle state exposes readiness degraded failure cancellation and stopped behavior.; Shutdown cancels Git and PR observation tasks row refresh work and publication.; A source guard rejects migrated Git and PR observation bypasses.; Production-path coverage exercises runtime composition and teardown.
         - **Notification and Push-Registration Lifecycle Migration** (`app_runtime_notification_push_lifecycle_migration`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: gated
@@ -965,20 +967,20 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.
 
-- Active implementation assignments: none selected.
+| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) | serial | /Users/brianbusby/repos/.bmux-worktrees/app-runtime-sidebar-git-pr-lifecycle | app-runtime-sidebar-git-pr-lifecycle | codex | `custom_sidebar_lifecycle`, `pull_request_refresh`, `sidebar_git_cache`, `workspace_display_observation` | `app_runtime_composition_boundary`, `browser_runtime_lifecycle` | single active assignment |
 
 ### Dependency-Ready Preflight
 
 | Slice | Selection | Dependency status | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) | planned | ready | serial | true | `sidebar_git_cache`, `pull_request_refresh`, `workspace_display_observation`, `custom_sidebar_lifecycle` | `app_runtime_composition_boundary`, `browser_runtime_lifecycle` | `sidebar_git_metadata_observation`, `pull_request_observation`, `custom_sidebar_pr_state`, `sidebar_socket_and_workspace_display_consistency`, `production_startup_readiness_shutdown` | `Sources/App/BmuxAppRuntime*.swift`, `Sources/BmuxGit`, `Sources/BmuxSidebar`, `Sources/TabManager+SidebarGitHosting.swift`, `Sources/Workspace+CustomSidebarPullRequests.swift`, `Sources/WorkProvenance/WorkProvenanceObservationService.swift`, `Packages/macOS/BmuxControlSocket`, `bmuxTests/*Sidebar*Tests.swift`, `bmuxTests/*PullRequest*Tests.swift` |
 | React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) | planned | ready | serial | true | `session_work_model_projection`, `react_session_presentation`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `blocker_approach_change_semantics`, `semantic_explanation_provenance` | `React Smart Session surface`, `bmux SessionWorkModel client`, `Sources/WorkProvenance`, `Sources/ProvenanceEngineContracts` |
 | Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) | planned | ready | serial | true | `prompt_context_assembly`, `retrieval_contracts`, `privacy_policy` | `cross_session_agent_query`, `context_effectiveness_metrics` | `context_assembly_policy`, `cross_session_effectiveness_metrics`, `bounded_context_pack` | `bmux context assembly`, `bmux agent launch/session orchestration`, `evaluation fixtures` |
 | Milestone-to-code relationships (`milestone_to_code_relationships`) | planned | ready | serial | true | `milestone_relationships`, `file_change_attribution` | `milestone_semantics`, `richer_coding_agent_evidence` | `milestone_code_relationships`, `file_change_attribution` | `Sources/ProvenanceEngineCore`, `Sources/ProvenanceEngineContracts`, `Tests/ProvenanceEngineTests` |
 
 ## Dependency-Ready Work
 
-- Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) - selection: planned; depends on: `app_runtime_browser_devtools_lifecycle_migration`
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - selection: planned; depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - selection: planned; depends on: `agent_accessible_cross_session_retrieval`
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - selection: planned; depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`
@@ -989,7 +991,6 @@ None.
 
 ## Dependency-Ready But Not Selected
 
-- Sidebar Git and Pull-Request Observation Lifecycle Migration (`app_runtime_sidebar_git_pr_lifecycle_migration`) - depends on: `app_runtime_browser_devtools_lifecycle_migration`
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - depends on: `agent_accessible_cross_session_retrieval`
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`

@@ -43,8 +43,11 @@ if let paths = await git.watchedPaths(for: checkoutPath) {
 let slugs = await git.repositorySlugs(forDirectory: checkoutPath)
 ```
 
-The service is stateless and `Sendable`; construct one at the app's composition
-root and inject it (e.g. `TabManager(gitMetadataService:)`).
+The service is stateless and `Sendable`. The macOS app's runtime composition
+root constructs it inside `SidebarGitPullRequestObservationRuntimeServiceDependencies`
+and injects it into the sidebar Git/PR observation service; tests that need live
+observation use injected host services rather than `TabManager` owning this
+reader directly.
 
 ## Testing
 

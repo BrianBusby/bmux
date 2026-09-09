@@ -81,11 +81,6 @@ public final class PullRequestPollService: PullRequestProbing {
         self.debugLog = debugLog
     }
 
-    deinit {
-        workspacePullRequestPollTask?.cancel()
-        workspacePullRequestRefreshTask?.cancel()
-    }
-
     /// Wires the host and captures the initial polling-setting value
     /// (matching the legacy property-initializer capture timing: before any
     /// scheduling entry point runs).
@@ -93,6 +88,13 @@ public final class PullRequestPollService: PullRequestProbing {
         self.host = host
         lastSidebarPullRequestPollingEnabled = host.isPullRequestPollingEnabled
         updateWorkspacePullRequestPollTimer()
+    }
+
+    public func stopWorkspacePullRequestObservation() {
+        workspacePullRequestPollTask?.cancel()
+        workspacePullRequestPollTask = nil
+        resetWorkspacePullRequestRefreshState()
+        host = nil
     }
 
     var sidebarPullRequestPollingEnabled: Bool {

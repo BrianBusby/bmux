@@ -116,6 +116,7 @@
 		B71000000000000000000001 /* AppDelegate+PushToTalkVoiceInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = B71000000000000000000002 /* AppDelegate+PushToTalkVoiceInput.swift */; };
 		2907A0012907A0012907A001 /* AppDelegate+RecoverableMainWindowRoutes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2907A0022907A0022907A002 /* AppDelegate+RecoverableMainWindowRoutes.swift */; };
 		C0DEAA010000000000000101 /* AppDelegate+RepoAgentLauncherCustomParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEAA010000000000000001 /* AppDelegate+RepoAgentLauncherCustomParameters.swift */; };
+		CE0E0B090000000000000001 /* AppDelegate+RuntimeObservation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0B090000000000000002 /* AppDelegate+RuntimeObservation.swift */; };
 		C0DE74140000000000000001 /* AppDelegate+SavedLayoutMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE74140000000000000002 /* AppDelegate+SavedLayoutMenu.swift */; };
 		6419A0016419A0016419A001 /* AppDelegate+ShortcutRoutingTesting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6419A0026419A0026419A002 /* AppDelegate+ShortcutRoutingTesting.swift */; };
 		6419A0036419A0036419A003 /* AppDelegate+ShortcutRoutingWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6419A0046419A0046419A004 /* AppDelegate+ShortcutRoutingWindow.swift */; };
@@ -1249,6 +1250,13 @@
 		D7AB34300000000000000003 /* SidebarBonsplitTabWorkspaceDropOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AB34300000000000000004 /* SidebarBonsplitTabWorkspaceDropOverlay.swift */; };
 		D7AB34310000000000000001 /* SidebarBonsplitWorkspaceRowDropModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AB34310000000000000002 /* SidebarBonsplitWorkspaceRowDropModifier.swift */; };
 		EA1F00000000000000000003 /* SidebarDirectoryText.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA1F00000000000000000004 /* SidebarDirectoryText.swift */; };
+		CE0E0B070000000000000001 /* SidebarGitPullRequestObservationRuntimeFacade.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0B070000000000000002 /* SidebarGitPullRequestObservationRuntimeFacade.swift */; };
+		CE0E0B010000000000000001 /* SidebarGitPullRequestObservationRuntimeLifecycleState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0B010000000000000002 /* SidebarGitPullRequestObservationRuntimeLifecycleState.swift */; };
+		CE0E0B020000000000000001 /* SidebarGitPullRequestObservationRuntimeOperationResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0B020000000000000002 /* SidebarGitPullRequestObservationRuntimeOperationResult.swift */; };
+		CE0E0B030000000000000001 /* SidebarGitPullRequestObservationRuntimeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0B030000000000000002 /* SidebarGitPullRequestObservationRuntimeService.swift */; };
+		CE0E0B040000000000000001 /* SidebarGitPullRequestObservationRuntimeServiceDependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0B040000000000000002 /* SidebarGitPullRequestObservationRuntimeServiceDependencies.swift */; };
+		CE0E0B060000000000000001 /* SidebarGitPullRequestRuntimeCompositionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0B060000000000000002 /* SidebarGitPullRequestRuntimeCompositionTests.swift */; };
+		CE0E0B080000000000000001 /* SidebarGitPullRequestRuntimeTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0B080000000000000002 /* SidebarGitPullRequestRuntimeTestSupport.swift */; };
 		B8F266246A1A3D9A45BD840F /* SidebarHelpMenuUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F266256A1A3D9A45BD840F /* SidebarHelpMenuUITests.swift */; };
 		51D800000000000000000001 /* SidebarIdentifierFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D800000000000000000002 /* SidebarIdentifierFormattingTests.swift */; };
 		AABBCC00000000000000020C /* SidebarInlineRenameAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = AABBCC00000000000000020B /* SidebarInlineRenameAction.swift */; };
@@ -1384,6 +1392,7 @@
 		A5001003 /* TabManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001013 /* TabManager.swift */; };
 		C0DE64160000000000000001 /* TabManagerNotificationFocusRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE64160000000000000002 /* TabManagerNotificationFocusRegressionTests.swift */; };
 		2BB56A710BB1FC50367E5BCF /* TabManagerSessionSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10D684CFFB8CDEF89CE2D9E1 /* TabManagerSessionSnapshotTests.swift */; };
+		CE0E0B050000000000000001 /* TabManagerSidebarGitPullRequestObservationServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0B050000000000000002 /* TabManagerSidebarGitPullRequestObservationServices.swift */; };
 		B1F0D1040000000000000001 /* TabManagerSidebarGitTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0D1040000000000000002 /* TabManagerSidebarGitTestSupport.swift */; };
 		C06552030000000000000001 /* TabManagerTitleUpdateStalenessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C06552030000000000000002 /* TabManagerTitleUpdateStalenessTests.swift */; };
 		C06552020000000000000001 /* TabManagerTitleUpdateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C06552020000000000000002 /* TabManagerTitleUpdateTests.swift */; };
@@ -1594,7 +1603,6 @@
 		CE0D10100000000000000001 /* WorkProvenanceFileChangeRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 551E43CA9A0612FD95C9FFC1 /* WorkProvenanceFileChangeRecord.swift */; };
 		8F8D42DC292DA91C0414BAE4 /* WorkProvenanceGitCommandResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0249B2F5626865AD48C6631 /* WorkProvenanceGitCommandResult.swift */; };
 		D89012A6791CAB63645BC4BC /* WorkProvenanceGitCommandRunning.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B359CAAF748DEC78DF85972 /* WorkProvenanceGitCommandRunning.swift */; };
-		CE0E03010000000000000001 /* WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03010000000000000002 /* WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift */; };
 		1E5E54C50421C308F5CC6FA6 /* WorkProvenanceGitInspecting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B10CFF4B63B1795ECEFA3E2 /* WorkProvenanceGitInspecting.swift */; };
 		918962BA99BFA9005D41242F /* WorkProvenanceGitInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95724FA299FCA4FB3C2E4CB8 /* WorkProvenanceGitInspector.swift */; };
 		CE0D10240000000000000001 /* WorkProvenanceGitSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C06F80B2E8D31C31B6DD8EE /* WorkProvenanceGitSnapshot.swift */; };
@@ -1611,6 +1619,7 @@
 		C0DE70110000000000000001 /* WorkProvenancePruneResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70110000000000000002 /* WorkProvenancePruneResult.swift */; };
 		CE0D10120000000000000001 /* WorkProvenancePruneResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70110000000000000002 /* WorkProvenancePruneResult.swift */; };
 		CE0E03030000000000000001 /* WorkProvenancePullRequestOwner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03030000000000000002 /* WorkProvenancePullRequestOwner.swift */; };
+			CE0E03190000000000000001 /* WorkProvenancePullRequestOwnerResolverDefaultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03190000000000000002 /* WorkProvenancePullRequestOwnerResolverDefaultTests.swift */; };
 		CE0E03040000000000000001 /* WorkProvenancePullRequestOwnerResolving.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03040000000000000002 /* WorkProvenancePullRequestOwnerResolving.swift */; };
 		C0DE70120000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */; };
 		CE0D10140000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */; };
@@ -1941,6 +1950,7 @@
 		B71000000000000000000002 /* AppDelegate+PushToTalkVoiceInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+PushToTalkVoiceInput.swift"; sourceTree = "<group>"; };
 		2907A0022907A0022907A002 /* AppDelegate+RecoverableMainWindowRoutes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+RecoverableMainWindowRoutes.swift"; sourceTree = "<group>"; };
 		C0DEAA010000000000000001 /* AppDelegate+RepoAgentLauncherCustomParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+RepoAgentLauncherCustomParameters.swift"; sourceTree = "<group>"; };
+		CE0E0B090000000000000002 /* AppDelegate+RuntimeObservation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+RuntimeObservation.swift"; sourceTree = "<group>"; };
 		C0DE74140000000000000002 /* AppDelegate+SavedLayoutMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+SavedLayoutMenu.swift"; sourceTree = "<group>"; };
 		6419A0026419A0026419A002 /* AppDelegate+ShortcutRoutingTesting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+ShortcutRoutingTesting.swift"; sourceTree = "<group>"; };
 		6419A0046419A0046419A004 /* AppDelegate+ShortcutRoutingWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+ShortcutRoutingWindow.swift"; sourceTree = "<group>"; };
@@ -2983,6 +2993,13 @@
 		D7AB34300000000000000004 /* SidebarBonsplitTabWorkspaceDropOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarBonsplitTabWorkspaceDropOverlay.swift; sourceTree = "<group>"; };
 		D7AB34310000000000000002 /* SidebarBonsplitWorkspaceRowDropModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarBonsplitWorkspaceRowDropModifier.swift; sourceTree = "<group>"; };
 		EA1F00000000000000000004 /* SidebarDirectoryText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarDirectoryText.swift; sourceTree = "<group>"; };
+		CE0E0B070000000000000002 /* SidebarGitPullRequestObservationRuntimeFacade.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/SidebarGitPullRequestObservationRuntimeFacade.swift; sourceTree = "<group>"; };
+		CE0E0B010000000000000002 /* SidebarGitPullRequestObservationRuntimeLifecycleState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/SidebarGitPullRequestObservationRuntimeLifecycleState.swift; sourceTree = "<group>"; };
+		CE0E0B020000000000000002 /* SidebarGitPullRequestObservationRuntimeOperationResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/SidebarGitPullRequestObservationRuntimeOperationResult.swift; sourceTree = "<group>"; };
+		CE0E0B030000000000000002 /* SidebarGitPullRequestObservationRuntimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/SidebarGitPullRequestObservationRuntimeService.swift; sourceTree = "<group>"; };
+		CE0E0B040000000000000002 /* SidebarGitPullRequestObservationRuntimeServiceDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/SidebarGitPullRequestObservationRuntimeServiceDependencies.swift; sourceTree = "<group>"; };
+		CE0E0B060000000000000002 /* SidebarGitPullRequestRuntimeCompositionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarGitPullRequestRuntimeCompositionTests.swift; sourceTree = "<group>"; };
+		CE0E0B080000000000000002 /* SidebarGitPullRequestRuntimeTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarGitPullRequestRuntimeTestSupport.swift; sourceTree = "<group>"; };
 		B8F266256A1A3D9A45BD840F /* SidebarHelpMenuUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarHelpMenuUITests.swift; sourceTree = "<group>"; };
 		51D800000000000000000002 /* SidebarIdentifierFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarIdentifierFormattingTests.swift; sourceTree = "<group>"; };
 		AABBCC00000000000000020B /* SidebarInlineRenameAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarInlineRenameAction.swift; sourceTree = "<group>"; };
@@ -3112,6 +3129,7 @@
 		A5001013 /* TabManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManager.swift; sourceTree = "<group>"; };
 		C0DE64160000000000000002 /* TabManagerNotificationFocusRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerNotificationFocusRegressionTests.swift; sourceTree = "<group>"; };
 		10D684CFFB8CDEF89CE2D9E1 /* TabManagerSessionSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerSessionSnapshotTests.swift; sourceTree = "<group>"; };
+		CE0E0B050000000000000002 /* TabManagerSidebarGitPullRequestObservationServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerSidebarGitPullRequestObservationServices.swift; sourceTree = "<group>"; };
 		B1F0D1040000000000000002 /* TabManagerSidebarGitTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerSidebarGitTestSupport.swift; sourceTree = "<group>"; };
 		C06552030000000000000002 /* TabManagerTitleUpdateStalenessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerTitleUpdateStalenessTests.swift; sourceTree = "<group>"; };
 		C06552020000000000000002 /* TabManagerTitleUpdateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabManagerTitleUpdateTests.swift; sourceTree = "<group>"; };
@@ -3314,7 +3332,6 @@
 		551E43CA9A0612FD95C9FFC1 /* WorkProvenanceFileChangeRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceFileChangeRecord.swift; sourceTree = "<group>"; };
 		F0249B2F5626865AD48C6631 /* WorkProvenanceGitCommandResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitCommandResult.swift; sourceTree = "<group>"; };
 		1B359CAAF748DEC78DF85972 /* WorkProvenanceGitCommandRunning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitCommandRunning.swift; sourceTree = "<group>"; };
-		CE0E03010000000000000002 /* WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift; sourceTree = "<group>"; };
 		2B10CFF4B63B1795ECEFA3E2 /* WorkProvenanceGitInspecting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitInspecting.swift; sourceTree = "<group>"; };
 		95724FA299FCA4FB3C2E4CB8 /* WorkProvenanceGitInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitInspector.swift; sourceTree = "<group>"; };
 		3C06F80B2E8D31C31B6DD8EE /* WorkProvenanceGitSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceGitSnapshot.swift; sourceTree = "<group>"; };
@@ -3328,6 +3345,7 @@
 			ABC5AF6B03C2A9B1ADE669E4 /* WorkProvenanceProcessGitCommandRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceProcessGitCommandRunner.swift; sourceTree = "<group>"; };
 		C0DE70110000000000000002 /* WorkProvenancePruneResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePruneResult.swift; sourceTree = "<group>"; };
 		CE0E03030000000000000002 /* WorkProvenancePullRequestOwner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePullRequestOwner.swift; sourceTree = "<group>"; };
+			CE0E03190000000000000002 /* WorkProvenancePullRequestOwnerResolverDefaultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePullRequestOwnerResolverDefaultTests.swift; sourceTree = "<group>"; };
 		CE0E03040000000000000002 /* WorkProvenancePullRequestOwnerResolving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePullRequestOwnerResolving.swift; sourceTree = "<group>"; };
 		C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRetentionPolicy.swift; sourceTree = "<group>"; };
 		CE0E010B0000000000000002 /* WorkProvenanceRuntime+AgentSessionAssociation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkProvenanceRuntime+AgentSessionAssociation.swift"; sourceTree = "<group>"; };
@@ -3770,6 +3788,11 @@
 				CE0E0A020000000000000002 /* BrowserDevToolsRuntimeOperationResult.swift */,
 				CE0E0A030000000000000002 /* BrowserDevToolsRuntimeService.swift */,
 				CE0E0A040000000000000002 /* BrowserDevToolsRuntimeServiceDependencies.swift */,
+				CE0E0B010000000000000002 /* SidebarGitPullRequestObservationRuntimeLifecycleState.swift */,
+				CE0E0B020000000000000002 /* SidebarGitPullRequestObservationRuntimeOperationResult.swift */,
+				CE0E0B030000000000000002 /* SidebarGitPullRequestObservationRuntimeService.swift */,
+				CE0E0B040000000000000002 /* SidebarGitPullRequestObservationRuntimeServiceDependencies.swift */,
+				CE0E0B070000000000000002 /* SidebarGitPullRequestObservationRuntimeFacade.swift */,
 				CE0E09010000000000000002 /* MobileHostRuntimeLifecycleState.swift */,
 				CE0E09020000000000000002 /* MobileHostRuntimeOperationResult.swift */,
 				CE0E09030000000000000002 /* MobileHostRuntimeService.swift */,
@@ -4008,6 +4031,7 @@
 				C548600B0000000000000002 /* TabManager+SessionRestoreIdentity.swift */,
 				DCDC1000000000000000B016 /* TabManager+BrowserFocus.swift */,
 				C5B6A10000000000000000B2 /* TabManager+SidebarGitHosting.swift */,
+				CE0E0B050000000000000002 /* TabManagerSidebarGitPullRequestObservationServices.swift */,
 				736200000000000000000003 /* TabManager+WorkspaceCustomTitle.swift */,
 				C0DECDA10000000000000002 /* TabManager+WorkspaceActions.swift */,
 				C1AC71030000000000000002 /* TabManager+WorkspaceGroupActions.swift */,
@@ -4230,6 +4254,7 @@
 				A5001090 /* AppDelegate.swift */,
 				C0DE45AC0000000000000002 /* AppDelegate+AgentChat.swift */,
 				C0DEAA010000000000000001 /* AppDelegate+RepoAgentLauncherCustomParameters.swift */,
+				CE0E0B090000000000000002 /* AppDelegate+RuntimeObservation.swift */,
 				B71000000000000000000002 /* AppDelegate+PushToTalkVoiceInput.swift */,
 				B71000000000000000000004 /* PushToTalkVoiceInputController.swift */,
 				B1F0C0080000000000000002 /* AppDelegateDetachedInspectorClose.swift */,
@@ -4833,10 +4858,12 @@
 				C7A51D100000000000000001 /* AgentChatSessionRegistryObservationReviewRegressionTests.swift */,
 				C7A51D000000000000000001 /* AgentChatSessionRegistryObservationTests.swift */,
 					CE0B00050000000000000002 /* SessionProvenanceTests.swift */,
-						CE0E08010000000000000002 /* AppRuntimeCompositionTests.swift */,
-						CE0E09050000000000000002 /* MobileHostRuntimeCompositionTests.swift */,
-						CE0E0A060000000000000002 /* BrowserDevToolsRuntimeCompositionTests.swift */,
-						CE0E06200000000000000002 /* PromptSessionLinkProductionLifecycleTests.swift */,
+					CE0E08010000000000000002 /* AppRuntimeCompositionTests.swift */,
+					CE0E09050000000000000002 /* MobileHostRuntimeCompositionTests.swift */,
+					CE0E0A060000000000000002 /* BrowserDevToolsRuntimeCompositionTests.swift */,
+					CE0E0B060000000000000002 /* SidebarGitPullRequestRuntimeCompositionTests.swift */,
+					CE0E0B080000000000000002 /* SidebarGitPullRequestRuntimeTestSupport.swift */,
+					CE0E06200000000000000002 /* PromptSessionLinkProductionLifecycleTests.swift */,
 					CE0E06100000000000000002 /* PromptSessionLinkProjectionTests.swift */,
 				D3610B010000000000000002 /* AgentSessionAutoResumeSettingsTests.swift */,
 				D3610B020000000000000002 /* AgentSessionAutoResumeSwiftTests.swift */,
@@ -5193,6 +5220,7 @@
 
 					642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */,
 					CE0E03140000000000000002 /* WorkProvenanceLinearTicketLinkResolverTests.swift */,
+					CE0E03190000000000000002 /* WorkProvenancePullRequestOwnerResolverDefaultTests.swift */,
 					CE0E03170000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTests.swift */,
 					CE0E03180000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTestSupport.swift */,
 					C0DE70600000000000000002 /* CLIProvenanceCodexTranscriptImporterTests.swift */,
@@ -5253,7 +5281,6 @@
 				551E43CA9A0612FD95C9FFC1 /* WorkProvenanceFileChangeRecord.swift */,
 				F0249B2F5626865AD48C6631 /* WorkProvenanceGitCommandResult.swift */,
 				1B359CAAF748DEC78DF85972 /* WorkProvenanceGitCommandRunning.swift */,
-				CE0E03010000000000000002 /* WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift */,
 				2B10CFF4B63B1795ECEFA3E2 /* WorkProvenanceGitInspecting.swift */,
 				95724FA299FCA4FB3C2E4CB8 /* WorkProvenanceGitInspector.swift */,
 				CE0E03070000000000000002 /* WorkProvenanceCompositeLinearAuthorizationProvider.swift */,
@@ -5834,6 +5861,7 @@
 				B71000000000000000000001 /* AppDelegate+PushToTalkVoiceInput.swift in Sources */,
 				2907A0012907A0012907A001 /* AppDelegate+RecoverableMainWindowRoutes.swift in Sources */,
 				C0DEAA010000000000000101 /* AppDelegate+RepoAgentLauncherCustomParameters.swift in Sources */,
+				CE0E0B090000000000000001 /* AppDelegate+RuntimeObservation.swift in Sources */,
 				C0DE74140000000000000001 /* AppDelegate+SavedLayoutMenu.swift in Sources */,
 				6419A0016419A0016419A001 /* AppDelegate+ShortcutRoutingTesting.swift in Sources */,
 				6419A0036419A0036419A003 /* AppDelegate+ShortcutRoutingWindow.swift in Sources */,
@@ -6458,6 +6486,11 @@
 				D7AB34300000000000000003 /* SidebarBonsplitTabWorkspaceDropOverlay.swift in Sources */,
 				D7AB34310000000000000001 /* SidebarBonsplitWorkspaceRowDropModifier.swift in Sources */,
 				EA1F00000000000000000003 /* SidebarDirectoryText.swift in Sources */,
+					CE0E0B070000000000000001 /* SidebarGitPullRequestObservationRuntimeFacade.swift in Sources */,
+					CE0E0B010000000000000001 /* SidebarGitPullRequestObservationRuntimeLifecycleState.swift in Sources */,
+					CE0E0B020000000000000001 /* SidebarGitPullRequestObservationRuntimeOperationResult.swift in Sources */,
+					CE0E0B030000000000000001 /* SidebarGitPullRequestObservationRuntimeService.swift in Sources */,
+					CE0E0B040000000000000001 /* SidebarGitPullRequestObservationRuntimeServiceDependencies.swift in Sources */,
 				AABBCC00000000000000020C /* SidebarInlineRenameAction.swift in Sources */,
 				AABBCC00000000000000020E /* SidebarInlineRenameCommit.swift in Sources */,
 				AABBCC000000000000000210 /* SidebarInlineRenameCoordinator.swift in Sources */,
@@ -6548,6 +6581,7 @@
 				736200000000000000000004 /* TabManager+WorkspaceCustomTitle.swift in Sources */,
 				C1AC71030000000000000001 /* TabManager+WorkspaceGroupActions.swift in Sources */,
 				A5001003 /* TabManager.swift in Sources */,
+				CE0E0B050000000000000001 /* TabManagerSidebarGitPullRequestObservationServices.swift in Sources */,
 				C7A503000000000000000002 /* TaskManagerSnapshot.swift in Sources */,
 				C7A504000000000000000002 /* TaskManagerTypes.swift in Sources */,
 				C7A506000000000000000002 /* TaskManagerView.swift in Sources */,
@@ -6704,7 +6738,6 @@
 				159BDE59D7EF1EF6F6957714 /* WorkProvenanceFileChangeRecord.swift in Sources */,
 				8F8D42DC292DA91C0414BAE4 /* WorkProvenanceGitCommandResult.swift in Sources */,
 				D89012A6791CAB63645BC4BC /* WorkProvenanceGitCommandRunning.swift in Sources */,
-				CE0E03010000000000000001 /* WorkProvenanceGitHubCLIPullRequestOwnerResolver.swift in Sources */,
 				1E5E54C50421C308F5CC6FA6 /* WorkProvenanceGitInspecting.swift in Sources */,
 				918962BA99BFA9005D41242F /* WorkProvenanceGitInspector.swift in Sources */,
 				D98713E6CE24785E075BF87F /* WorkProvenanceGitSnapshot.swift in Sources */,
@@ -7089,7 +7122,7 @@
 					E12E88F82733EC42F32C36A3 /* BrowserConfigTests.swift in Sources */,
 					B1F0C0060000000000000001 /* BrowserDeveloperToolsDockControlNormalizerTests.swift in Sources */,
 				B1F0C0070000000000000001 /* BrowserDeveloperToolsLifecycleTests.swift in Sources */,
-					B1F0D1030000000000000001 /* BrowserDeveloperToolsTestSupport.swift in Sources */,
+				B1F0D1030000000000000001 /* BrowserDeveloperToolsTestSupport.swift in Sources */,
 					CE0E0A060000000000000001 /* BrowserDevToolsRuntimeCompositionTests.swift in Sources */,
 				C59240010000000000000003 /* BrowserDownloadFilenameResolverTests.swift in Sources */,
 				A5008381 /* BrowserFindJavaScriptTests.swift in Sources */,
@@ -7326,6 +7359,8 @@
 				6042A0016042A0016042A001 /* ShortcutHintModifierPolicyTests.swift in Sources */,
 				F6001000A1B2C3D4E5F60718 /* ShortcutUnbindingTests.swift in Sources */,
 				C3467AB10000000000000001 /* ShortcutWhenClauseTests.swift in Sources */,
+					CE0E0B060000000000000001 /* SidebarGitPullRequestRuntimeCompositionTests.swift in Sources */,
+				CE0E0B080000000000000001 /* SidebarGitPullRequestRuntimeTestSupport.swift in Sources */,
 				51D800000000000000000001 /* SidebarIdentifierFormattingTests.swift in Sources */,
 				AABBCC000000000000000206 /* SidebarInlineRenameKeyResolverTests.swift in Sources */,
 				D41A7C01D41A7C01D41A7C01 /* SidebarLazyLayoutScaleTests.swift in Sources */,
@@ -7402,6 +7437,7 @@
 				604500100000000000000003 /* WindowTitleTemplateTests.swift in Sources */,
 					CE0E03140000000000000001 /* WorkProvenanceLinearTicketLinkResolverTests.swift in Sources */,
 					8DCF06522BB39B4A966FFC83 /* WorkProvenanceObserverTests.swift in Sources */,
+					CE0E03190000000000000001 /* WorkProvenancePullRequestOwnerResolverDefaultTests.swift in Sources */,
 					B1581966C6355C46BC3ABE62 /* WorkProvenanceStoreTests.swift in Sources */,
 					CE0E03170000000000000001 /* WorkProvenanceWorkspaceResourceDiscoveryTests.swift in Sources */,
 					CE0E03180000000000000001 /* WorkProvenanceWorkspaceResourceDiscoveryTestSupport.swift in Sources */,

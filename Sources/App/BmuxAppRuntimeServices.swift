@@ -10,20 +10,28 @@ final class BmuxAppRuntimeServices {
     let workProvenanceRuntime: WorkProvenanceRuntime
     let mobileHostRuntimeService: MobileHostRuntimeService
     let browserDevToolsRuntimeService: BrowserDevToolsRuntimeService
+    let sidebarGitPullRequestObservationRuntimeService: SidebarGitPullRequestObservationRuntimeService
 
     init(
         configuration: BmuxAppRuntimeConfiguration,
         workProvenanceRuntime: WorkProvenanceRuntime,
         mobileHostRuntimeService: MobileHostRuntimeService,
-        browserDevToolsRuntimeService: BrowserDevToolsRuntimeService
+        browserDevToolsRuntimeService: BrowserDevToolsRuntimeService,
+        sidebarGitPullRequestObservationRuntimeService: SidebarGitPullRequestObservationRuntimeService
     ) {
         self.configuration = configuration
         self.workProvenanceRuntime = workProvenanceRuntime
         self.mobileHostRuntimeService = mobileHostRuntimeService
         self.browserDevToolsRuntimeService = browserDevToolsRuntimeService
+        self.sidebarGitPullRequestObservationRuntimeService = sidebarGitPullRequestObservationRuntimeService
     }
 
     func start(tabManager: TabManager) {
+        startWorkProvenanceObservation(tabManager: tabManager)
+        attachSidebarGitPullRequestObservation(tabManager: tabManager)
+    }
+
+    private func startWorkProvenanceObservation(tabManager: TabManager) {
         guard configuration.enables(.workProvenanceObservation) else { return }
         guard !startedCapabilities.contains(.workProvenanceObservation) else { return }
         startedCapabilities.insert(.workProvenanceObservation)
@@ -34,8 +42,32 @@ final class BmuxAppRuntimeServices {
     func stop() {
         browserDevToolsRuntimeService.stop()
         mobileHostRuntimeService.stop()
+        sidebarGitPullRequestObservationRuntimeService.stop()
         workProvenanceRuntime.stop()
         startedCapabilities.removeAll()
+    }
+
+    func tabManagerSidebarGitPullRequestObservationServices() -> TabManagerSidebarGitPullRequestObservationServices {
+        guard configuration.enables(.sidebarGitPullRequestObservation) else {
+            return .compatibilityReporter()
+        }
+        return sidebarGitPullRequestObservationRuntimeService.tabManagerObservationServices()
+    }
+
+    func attachSidebarGitPullRequestObservation(tabManager: TabManager) {
+        guard configuration.enables(.sidebarGitPullRequestObservation) else { return }
+        let shouldCountStart = sidebarGitPullRequestObservationRuntimeService.start(host: tabManager)
+        guard shouldCountStart else { return }
+        startedCapabilities.insert(.sidebarGitPullRequestObservation)
+        startCountsByCapability[.sidebarGitPullRequestObservation, default: 0] += 1
+    }
+
+    func removeSidebarGitPullRequestObservationIfUnused(
+        tabManager: TabManager,
+        isStillUsed: Bool
+    ) {
+        guard configuration.enables(.sidebarGitPullRequestObservation) else { return }
+        sidebarGitPullRequestObservationRuntimeService.detach(host: tabManager, isStillUsed: isStillUsed)
     }
 
     func startMobileHostAndPresence(
@@ -123,6 +155,10 @@ final class BmuxAppRuntimeServices {
 
     var browserDevToolsLifecycleState: BrowserDevToolsRuntimeLifecycleState {
         browserDevToolsRuntimeService.lifecycleState
+    }
+
+    var sidebarGitPullRequestObservationLifecycleState: SidebarGitPullRequestObservationRuntimeLifecycleState {
+        sidebarGitPullRequestObservationRuntimeService.lifecycleState
     }
 
     var focusedBrowserAddressBarPanelId: UUID? {

@@ -389,6 +389,7 @@ private struct ChatTranscriptTableConfiguration {
     }
 
     @ViewBuilder
+    @MainActor
     func view(for item: ChatTranscriptTableItem, tableWidth: CGFloat) -> some View {
         itemView(for: item)
             .padding(.horizontal, theme.horizontalMargin)
@@ -402,6 +403,7 @@ private struct ChatTranscriptTableConfiguration {
     }
 
     @ViewBuilder
+    @MainActor
     private func itemView(for item: ChatTranscriptTableItem) -> some View {
         switch item {
         case .loadingMore:
