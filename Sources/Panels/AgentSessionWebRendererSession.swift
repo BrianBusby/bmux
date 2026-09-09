@@ -18,6 +18,9 @@ final class AgentSessionWebRendererSession {
             ownedCoordinator.onProviderIDChanged = onProviderIDChanged
         }
     }
+    var isViewInWindow: Bool {
+        ownedCoordinator.isViewInWindow
+    }
 
     func coordinator(
         panelId: UUID,

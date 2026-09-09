@@ -37,6 +37,10 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
     }
     var onProviderIDChanged: ((AgentSessionProviderID) -> Void)?
 
+    var isViewInWindow: Bool {
+        webView?.window != nil
+    }
+
     func bind(
         panelId: UUID,
         workspaceId: UUID,
