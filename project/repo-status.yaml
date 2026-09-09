@@ -5,7 +5,7 @@ current_work:
   active_slice:
     id: app_runtime_notification_push_lifecycle_migration
     title: Notification and Push-Registration Lifecycle Migration
-    state: open
+    state: implemented
     owner: bmux
     active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-notification-push-lifecycle
     active_branch: app-runtime-notification-push-lifecycle
@@ -97,7 +97,7 @@ local_capabilities:
   work_provenance_runtime_lifecycle_state: under_observation
   app_runtime_browser_devtools_lifecycle: under_observation
   app_runtime_sidebar_git_pr_lifecycle: under_observation
-  app_runtime_notification_push_lifecycle: planned
+  app_runtime_notification_push_lifecycle: under_observation
   app_runtime_menu_bar_presentation_lifecycle: planned
   workspace_display_file_watcher_churn_policy: planned
   pe_shared_sqlite_writer_policy: planned

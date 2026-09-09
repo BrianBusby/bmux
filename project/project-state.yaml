@@ -770,7 +770,7 @@ roadmap:
       kind: slice
       title: Notification and Push-Registration Lifecycle Migration
       parent: app_runtime_composition_migration
-      status: active
+      status: implemented
       owner: bmux
       repositories:
         - bmux
@@ -782,7 +782,7 @@ roadmap:
           - app_runtime_composition
           - notifications
           - push_registration
-      capability_maturity: active
+      capability_maturity: validated
       depends_on:
         - app_runtime_sidebar_git_pr_lifecycle_migration
       enables:
@@ -822,9 +822,9 @@ roadmap:
         active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-notification-push-lifecycle
         active_branch: app-runtime-notification-push-lifecycle
         active_agent: codex
-        notes: "Selected on 2026-09-09 after PR #106 reconciled sidebar Git/PR delivery on main at b8599efb3b9eb68fdf8e2ce58afa52d8adc5cafe."
+        notes: "Selected on 2026-09-09 after PR #106 reconciled sidebar Git/PR delivery on main at b8599efb3b9eb68fdf8e2ce58afa52d8adc5cafe. Implemented in branch app-runtime-notification-push-lifecycle with commit 1bbd6f0e1af1047c3328970de1d0cd17cae62e51; delivery remains open until the implementation PR merges."
       delivery_status: open
-      acceptance_status: proposed
+      acceptance_status: implemented
       rationale: PhonePushClient configuration and notification setup remain app-host background services but are coupled to notification delivery and push registration rather than to the already migrated mobile-host listener and presence loop.
       acceptance:
         criteria:
@@ -836,6 +836,14 @@ roadmap:
           - Retained singleton access cannot become a second lifecycle owner.
           - Production-path coverage exercises readiness and deterministic teardown.
           - A source guard rejects migrated notification and push bypasses.
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: d346716251aae93de0e627867da789144364db1c
+          - repository: BrianBusby/bmux
+            sha: 1bbd6f0e1af1047c3328970de1d0cd17cae62e51
+        pull_requests: []
+      completed_at: '2026-09-09'
 
     - id: app_runtime_menu_bar_presentation_lifecycle_migration
       kind: slice
@@ -853,7 +861,7 @@ roadmap:
           - app_runtime_composition
           - menu_bar
           - presentation_preferences
-      capability_maturity: gated
+      capability_maturity: ready
       depends_on:
         - app_runtime_notification_push_lifecycle_migration
       gates:

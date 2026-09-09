@@ -14,7 +14,7 @@ Repository: `BrianBusby/bmux`
 ## Current Work
 
 - Active slice: Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`)
-- Slice state: open
+- Slice state: implemented
 - Owner: bmux
 - Repository state: active
 
@@ -31,7 +31,7 @@ Repository: `BrianBusby/bmux`
 | App Runtime Browser Devtools Lifecycle | under observation |
 | App Runtime Composition Boundary | under observation |
 | App Runtime Menu Bar Presentation Lifecycle | planned |
-| App Runtime Notification Push Lifecycle | planned |
+| App Runtime Notification Push Lifecycle | under observation |
 | App Runtime Sidebar Git Pr Lifecycle | under observation |
 | Bmux Cross Session Context Assembly Experiment | planned |
 | Bmux Proactive Cross Session Awareness | implemented |
