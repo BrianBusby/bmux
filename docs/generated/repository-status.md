@@ -13,10 +13,8 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`)
-- Slice state: implemented
-- Owner: bmux
-- Repository state: active
+- Active slice: none selected
+- Repository state: none selected
 
 ## Release
 

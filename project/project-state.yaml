@@ -817,13 +817,10 @@ roadmap:
           - mobile_host_presence_lifecycle
         worktree_required: true
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: bmux
-        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-notification-push-lifecycle
-        active_branch: app-runtime-notification-push-lifecycle
-        active_agent: codex
         notes: "Selected on 2026-09-09 after PR #106 reconciled sidebar Git/PR delivery on main at b8599efb3b9eb68fdf8e2ce58afa52d8adc5cafe. Implemented in branch app-runtime-notification-push-lifecycle with commit 1bbd6f0e1af1047c3328970de1d0cd17cae62e51; PR #107 is open for delivery and remains unmerged. CI guard repair commit d639267b9c9bdc9b722c1e10b45b23309eeaa843 keeps TerminalNotificationStore within the tracked Swift file-length budget."
-      delivery_status: open
+      delivery_status: merged
       acceptance_status: implemented
       rationale: PhonePushClient configuration and notification setup remain app-host background services but are coupled to notification delivery and push registration rather than to the already migrated mobile-host listener and presence loop.
       acceptance:
@@ -846,12 +843,16 @@ roadmap:
             sha: d67f4bfefae5d6af19f694466ad967e384e19039
           - repository: BrianBusby/bmux
             sha: d639267b9c9bdc9b722c1e10b45b23309eeaa843
+          - repository: BrianBusby/bmux
+            sha: fa364e7a963db00052dd9b63ec1c0168ea363830
         pull_requests:
           - repository: BrianBusby/bmux
             number: 107
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-09-09T16:23:09Z'
+            merge_commit_sha: fa364e7a963db00052dd9b63ec1c0168ea363830
       completed_at: '2026-09-09'
 
     - id: app_runtime_menu_bar_presentation_lifecycle_migration
