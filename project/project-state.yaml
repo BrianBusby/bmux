@@ -901,13 +901,10 @@ roadmap:
         contract_dependencies:
           - app_runtime_composition_boundary
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: bmux
-        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-menu-bar-presentation-lifecycle
-        active_branch: app-runtime-menu-bar-presentation-lifecycle
-        active_agent: codex
         notes: "Selected on 2026-09-09 after PR #108 reconciled notification/push delivery on main at af91c7601ef566a33e60a32b2b7f5c12b26a1abf. Implemented in branch app-runtime-menu-bar-presentation-lifecycle with commit 1c23c7b2cf98212ccd501025003481ac5dacaaee and review boundary hardening commit 4b6886f2ca79c2af6870be78df189c4a029547f4; PR #109 is open for delivery and remains unmerged."
-      delivery_status: open
+      delivery_status: merged
       acceptance_status: implemented
       rationale: Menu-bar visibility activation policy and presentation preference observation are a distinct AppDelegate-owned service family and should not be bundled into notification or browser lifecycle work.
       acceptance:
@@ -928,12 +925,16 @@ roadmap:
             sha: 1c23c7b2cf98212ccd501025003481ac5dacaaee
           - repository: BrianBusby/bmux
             sha: 4b6886f2ca79c2af6870be78df189c4a029547f4
+          - repository: BrianBusby/bmux
+            sha: 55f6d6487fa84e08560cb70c0d727aeff9d3eeb9
         pull_requests:
           - repository: BrianBusby/bmux
             number: 109
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby
+            merged_at: '2026-09-09T21:18:04Z'
+            merge_commit_sha: 55f6d6487fa84e08560cb70c0d727aeff9d3eeb9
       completed_at: '2026-09-09'
 
     - id: app_runtime_residual_app_host_service_audit
