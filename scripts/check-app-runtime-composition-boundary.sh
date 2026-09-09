@@ -141,6 +141,44 @@ check_pattern \
   'Sources/App/BmuxAppRuntimeServices.swift'
 
 check_pattern \
+  '(?<![[:alnum:]_])MenuBarPresentationRuntimeService\(' \
+  'Sources/App/BmuxAppRuntimeComposition.swift constructs menu-bar and presentation runtime' \
+  'Sources/App/BmuxAppRuntimeComposition.swift'
+
+check_pattern \
+  'menuBarPresentationRuntimeService\.(start|stop|setMenuBarOnly|toggleGlobalSearchPalette|refreshMenuBarExtraForDebugControls)\(' \
+  'Sources/App/BmuxAppRuntimeServices.swift owns menu-bar and presentation runtime start, mutation, callbacks, and stop' \
+  'Sources/App/BmuxAppRuntimeServices.swift'
+
+check_pattern \
+  '(?<![[:alnum:]_])MenuBarExtraController\(' \
+  'Sources/AppDelegate+MenuBarPresentationRuntime.swift creates status-item UI adapters for the menu-bar runtime' \
+  'Sources/AppDelegate+MenuBarPresentationRuntime.swift'
+
+check_pattern \
+  'NSApp\.setActivationPolicy\(' \
+  'Sources/App/MenuBarPresentationRuntimeServiceDependencies.swift owns activation-policy mutation' \
+  'Sources/App/MenuBarPresentationRuntimeServiceDependencies.swift'
+
+check_pattern \
+  'MenuBarOnlySettings\.setEnabled\(' \
+  'Sources/App/MenuBarPresentationRuntimeServiceDependencies.swift owns menu-bar-only preference writes for runtime reconciliation' \
+  'Sources/App/MenuBarPresentationRuntimeServiceDependencies.swift'
+
+check_pattern \
+  'SleepyModeController\.shared\.onStateChange' \
+  'Sources/App/MenuBarPresentationRuntimeServiceDependencies.swift owns menu-bar refresh callback installation' \
+  'Sources/App/MenuBarPresentationRuntimeServiceDependencies.swift'
+
+check_pattern \
+  'MenuBarOnlySettings\.applyActivationPolicy' \
+  'activation-policy application must route through MenuBarPresentationRuntimeService dependencies'
+
+check_pattern \
+  '(menuBarVisibilityObserver|syncApplicationPresentationPreferences|syncMenuBarExtraVisibility|installMenuBarVisibilityObserver|setupMenuBarExtra|lastMenuBarExtraShouldInstall)' \
+  'menu-bar visibility and presentation lifecycle state moved to MenuBarPresentationRuntimeService'
+
+check_pattern \
   'PhonePushClient\.shared\.(configure|stop|forward|forwardDismissed|willForwardReplacement)\(' \
   'Sources/App/NotificationPushRuntimeServiceDependencies.swift owns PhonePushClient lifecycle and forwarding' \
   'Sources/App/NotificationPushRuntimeServiceDependencies.swift'

@@ -11,6 +11,8 @@ struct BmuxAppRuntimeComposition {
     private let browserDevToolsRuntimeDependencies: BrowserDevToolsRuntimeServiceDependencies?
     private let sidebarGitPullRequestObservationRuntimeDependencies: SidebarGitPullRequestObservationRuntimeServiceDependencies?
     private let notificationPushRuntimeDependencies: NotificationPushRuntimeServiceDependencies?
+    private let menuBarPresentationRuntimeDependencies: MenuBarPresentationRuntimeServiceDependencies?
+    private let hostSettingsActionsStorage: BmuxAppRuntimeHostSettingsActionsStorage
 
     init(
         configFileURL: URL,
@@ -20,7 +22,8 @@ struct BmuxAppRuntimeComposition {
         mobileHostRuntimeDependencies: MobileHostRuntimeServiceDependencies? = nil,
         browserDevToolsRuntimeDependencies: BrowserDevToolsRuntimeServiceDependencies? = nil,
         sidebarGitPullRequestObservationRuntimeDependencies: SidebarGitPullRequestObservationRuntimeServiceDependencies? = nil,
-        notificationPushRuntimeDependencies: NotificationPushRuntimeServiceDependencies? = nil
+        notificationPushRuntimeDependencies: NotificationPushRuntimeServiceDependencies? = nil,
+        menuBarPresentationRuntimeDependencies: MenuBarPresentationRuntimeServiceDependencies? = nil
     ) {
         self.jsonConfigStore = JSONConfigStore(fileURL: configFileURL)
         self.secretStore = SecretFileStore(baseDirectory: secretBaseDirectory)
@@ -29,6 +32,8 @@ struct BmuxAppRuntimeComposition {
         self.browserDevToolsRuntimeDependencies = browserDevToolsRuntimeDependencies
         self.sidebarGitPullRequestObservationRuntimeDependencies = sidebarGitPullRequestObservationRuntimeDependencies
         self.notificationPushRuntimeDependencies = notificationPushRuntimeDependencies
+        self.menuBarPresentationRuntimeDependencies = menuBarPresentationRuntimeDependencies
+        self.hostSettingsActionsStorage = BmuxAppRuntimeHostSettingsActionsStorage(configFileURL: configFileURL)
         self.keychainStore = KeychainSecretStore(
             service: KeychainSecretStore.serviceName(bundleIdentifier: bundleIdentifier)
         )
@@ -54,7 +59,7 @@ struct BmuxAppRuntimeComposition {
                 coordinator: authComposition.coordinator,
                 browserSignIn: authComposition.browserSignIn
             ),
-            hostActions: HostSettingsActions(configFileURL: configFileURL)
+            hostActions: hostSettingsActionsStorage.actions()
         )
     }
 
@@ -104,13 +109,48 @@ struct BmuxAppRuntimeComposition {
             isCapabilityEnabled: runtimeConfiguration.enables(.notificationPushLifecycle),
             dependencies: notificationPushRuntimeDependencies ?? .production()
         )
+        let menuBarPresentationRuntimeService = MenuBarPresentationRuntimeService(
+            isCapabilityEnabled: runtimeConfiguration.enables(.menuBarPresentationLifecycle),
+            dependencies: menuBarPresentationRuntimeDependencies ?? .production()
+        )
+        hostSettingsActionsStorage.setMenuBarPresentationRuntimeService(menuBarPresentationRuntimeService)
         return BmuxAppRuntimeServices(
             configuration: runtimeConfiguration,
             workProvenanceRuntime: workProvenanceRuntime,
             mobileHostRuntimeService: mobileHostRuntimeService,
             browserDevToolsRuntimeService: browserDevToolsRuntimeService,
             sidebarGitPullRequestObservationRuntimeService: sidebarGitPullRequestObservationRuntimeService,
-            notificationPushRuntimeService: notificationPushRuntimeService
+            notificationPushRuntimeService: notificationPushRuntimeService,
+            menuBarPresentationRuntimeService: menuBarPresentationRuntimeService
         )
+    }
+}
+
+private final class BmuxAppRuntimeHostSettingsActionsStorage {
+    private let configFileURL: URL
+    private var hostSettingsActions: HostSettingsActions?
+    private weak var menuBarPresentationRuntimeService: MenuBarPresentationRuntimeService?
+
+    init(configFileURL: URL) {
+        self.configFileURL = configFileURL
+    }
+
+    @MainActor
+    func actions() -> HostSettingsActions {
+        if let hostSettingsActions {
+            return hostSettingsActions
+        }
+        let actions = HostSettingsActions(configFileURL: configFileURL)
+        if let menuBarPresentationRuntimeService {
+            actions.setMenuBarPresentationRuntimeService(menuBarPresentationRuntimeService)
+        }
+        hostSettingsActions = actions
+        return actions
+    }
+
+    @MainActor
+    func setMenuBarPresentationRuntimeService(_ service: MenuBarPresentationRuntimeService) {
+        menuBarPresentationRuntimeService = service
+        hostSettingsActions?.setMenuBarPresentationRuntimeService(service)
     }
 }

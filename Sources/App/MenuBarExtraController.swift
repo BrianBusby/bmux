@@ -563,11 +563,6 @@ enum MenuBarOnlySettings {
         isEnabled(defaults: defaults)
     }
 
-    static func applyActivationPolicy(defaults: UserDefaults = .standard, application: NSApplication = .shared) {
-        let targetPolicy = activationPolicy(defaults: defaults)
-        guard application.activationPolicy() != targetPolicy else { return }
-        application.setActivationPolicy(targetPolicy)
-    }
 }
 
 struct MenuBarBadgeRenderConfig {

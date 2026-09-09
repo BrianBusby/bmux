@@ -17,6 +17,7 @@ private let hostSettingsLogger = Logger(subsystem: "com.bmuxterm.app", category:
 @MainActor
 final class HostSettingsActions: SettingsHostActions {
     private let configFileURL: URL
+    private weak var menuBarPresentationRuntimeService: MenuBarPresentationRuntimeService?
 
     /// Serializes font-size config writes so rapid slider saves persist in order.
     private let fontConfigWriter = FontConfigWriter()
@@ -163,8 +164,11 @@ final class HostSettingsActions: SettingsHostActions {
     }
 
     func setMenuBarOnly(_ enabled: Bool) -> Bool {
-        MenuBarOnlySettings.setEnabled(enabled)
-        return true
+        menuBarPresentationRuntimeService?.setMenuBarOnly(enabled) ?? false
+    }
+
+    func setMenuBarPresentationRuntimeService(_ service: MenuBarPresentationRuntimeService) {
+        menuBarPresentationRuntimeService = service
     }
 
     func openMobilePairingWindow() {

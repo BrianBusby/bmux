@@ -14,6 +14,7 @@ final class BmuxAppRuntimeServices {
     let browserDevToolsRuntimeService: BrowserDevToolsRuntimeService
     let sidebarGitPullRequestObservationRuntimeService: SidebarGitPullRequestObservationRuntimeService
     let notificationPushRuntimeService: NotificationPushRuntimeService
+    let menuBarPresentationRuntimeService: MenuBarPresentationRuntimeService
 
     init(
         configuration: BmuxAppRuntimeConfiguration,
@@ -21,7 +22,8 @@ final class BmuxAppRuntimeServices {
         mobileHostRuntimeService: MobileHostRuntimeService,
         browserDevToolsRuntimeService: BrowserDevToolsRuntimeService,
         sidebarGitPullRequestObservationRuntimeService: SidebarGitPullRequestObservationRuntimeService,
-        notificationPushRuntimeService: NotificationPushRuntimeService
+        notificationPushRuntimeService: NotificationPushRuntimeService,
+        menuBarPresentationRuntimeService: MenuBarPresentationRuntimeService
     ) {
         self.configuration = configuration
         self.workProvenanceRuntime = workProvenanceRuntime
@@ -29,6 +31,7 @@ final class BmuxAppRuntimeServices {
         self.browserDevToolsRuntimeService = browserDevToolsRuntimeService
         self.sidebarGitPullRequestObservationRuntimeService = sidebarGitPullRequestObservationRuntimeService
         self.notificationPushRuntimeService = notificationPushRuntimeService
+        self.menuBarPresentationRuntimeService = menuBarPresentationRuntimeService
     }
 
     func start(tabManager: TabManager) {
@@ -45,6 +48,7 @@ final class BmuxAppRuntimeServices {
     }
 
     func stop() {
+        menuBarPresentationRuntimeService.stop()
         notificationPushRuntimeService.stop()
         browserDevToolsRuntimeService.stop()
         mobileHostRuntimeService.stop()
@@ -120,6 +124,33 @@ final class BmuxAppRuntimeServices {
         guard shouldCountStart else { return }
         startedCapabilities.insert(.notificationPushLifecycle)
         startCountsByCapability[.notificationPushLifecycle, default: 0] += 1
+    }
+
+    func startMenuBarPresentationLifecycle(
+        actions: MenuBarPresentationRuntimeUIActions
+    ) {
+        guard configuration.enables(.menuBarPresentationLifecycle) else { return }
+        let shouldCountStart = menuBarPresentationRuntimeService.start(actions: actions)
+        guard shouldCountStart else { return }
+        startedCapabilities.insert(.menuBarPresentationLifecycle)
+        startCountsByCapability[.menuBarPresentationLifecycle, default: 0] += 1
+    }
+
+    @discardableResult
+    func setMenuBarOnly(_ enabled: Bool) -> Bool {
+        guard configuration.enables(.menuBarPresentationLifecycle) else { return false }
+        return menuBarPresentationRuntimeService.setMenuBarOnly(enabled)
+    }
+
+    @discardableResult
+    func toggleGlobalSearchPaletteFromMenuBarRuntime() -> Bool {
+        guard configuration.enables(.menuBarPresentationLifecycle) else { return false }
+        return menuBarPresentationRuntimeService.toggleGlobalSearchPalette()
+    }
+
+    func refreshMenuBarExtraForDebugControls() {
+        guard configuration.enables(.menuBarPresentationLifecycle) else { return }
+        menuBarPresentationRuntimeService.refreshMenuBarExtraForDebugControls()
     }
 
     func notificationPushDidBecomeActive() {
@@ -208,6 +239,10 @@ final class BmuxAppRuntimeServices {
 
     var notificationPushLifecycleState: NotificationPushRuntimeLifecycleState {
         notificationPushRuntimeService.lifecycleState
+    }
+
+    var menuBarPresentationLifecycleState: MenuBarPresentationRuntimeLifecycleState {
+        menuBarPresentationRuntimeService.lifecycleState
     }
 
     var focusedBrowserAddressBarPanelId: UUID? {
