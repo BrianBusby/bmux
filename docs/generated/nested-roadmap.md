@@ -16,12 +16,11 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 ### Current Capability Frontier
 
 - Primary Capability Frontier: Process Integrity (`process_integrity`)
-- Active or selected slices in the frontier:
-  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) - maturity: validated; status: implemented; selection: current; owner: Bmux
+- Active or selected slices in the frontier: none
 
 ### Active Implementation
 
-- Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) - maturity: validated; status: implemented; selection: current; owner: Bmux
+- None.
 
 ### Selected Next
 
@@ -197,7 +196,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Evidence: BrianBusby/bmux@5170a25a676f, BrianBusby/bmux@1ab0c501da78, BrianBusby/bmux@fd6e7f418327, BrianBusby/bmux@12aa530823b1, BrianBusby/bmux@53d590c359fa, BrianBusby/bmux@c10801552c67, BrianBusby/bmux@49889761a974, BrianBusby/bmux@00834cf2161b, BrianBusby/bmux@3506348ed89f, BrianBusby/bmux@d59d0d69f387, BrianBusby/bmux#105 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Sidebar Git and PR observation remains a separate lifecycle family from Browser and DevTools because it owns GitHub CLI/git process observation, sidebar row refresh state, and custom-sidebar PR surfaces rather than webview or inspector resources.
           Acceptance criteria: One runtime owner starts reconciles and stops sidebar Git and PR observation.; Git GitHub CLI PR and workspace-display dependencies are injected or isolated.; Sidebar custom-sidebar socket and workspace-display consumers read the same state.; Lifecycle state exposes readiness degraded failure cancellation and stopped behavior.; Shutdown cancels Git and PR observation tasks row refresh work and publication.; A source guard rejects migrated Git and PR observation bypasses.; Production-path coverage exercises runtime composition and teardown.
-        - **Notification and Push-Registration Lifecycle Migration** (`app_runtime_notification_push_lifecycle_migration`) - slice; status: implemented; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: current / Bmux; parallelism: serial; delivery: open; acceptance: implemented; maturity: validated
+        - **Notification and Push-Registration Lifecycle Migration** (`app_runtime_notification_push_lifecycle_migration`) - slice; status: implemented; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: complete / Bmux; parallelism: serial; delivery: merged; acceptance: implemented; maturity: validated
           Depends on: `app_runtime_sidebar_git_pr_lifecycle_migration`
           Enables: `app_runtime_menu_bar_presentation_lifecycle_migration`
           Expected contract domains: `user_notification_configuration`, `phone_push_client_auth_and_send`, `push_registration`, `notification_delivery_teardown`
@@ -205,10 +204,9 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `app_delegate_startup`, `user_notifications_delegate`, `phone_push_client_singleton`, `mobile_host_presence`
           Contract dependencies: `app_runtime_composition_boundary`, `mobile_host_presence_lifecycle`
           Worktree required: true
-          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/app-runtime-notification-push-lifecycle`; branch: `app-runtime-notification-push-lifecycle`; agent: `codex`
           Execution notes: Selected on 2026-09-09 after PR #106 reconciled sidebar Git/PR delivery on main at b8599efb3b9eb68fdf8e2ce58afa52d8adc5cafe. Implemented in branch app-runtime-notification-push-lifecycle with commit 1bbd6f0e1af1047c3328970de1d0cd17cae62e51; PR #107 is open for delivery and remains unmerged. CI guard repair commit d639267b9c9bdc9b722c1e10b45b23309eeaa843 keeps TerminalNotificationStore within the tracked Swift file-length budget.
           Gate `sidebar_git_pr_runtime_validated`: requires `app_runtime_sidebar_git_pr_lifecycle_migration` maturity validated; reason: Notification and push lifecycle work should wait until the higher-churn sidebar observation family has a single owner.
-          Evidence: BrianBusby/bmux@d346716251aa, BrianBusby/bmux@1bbd6f0e1af1, BrianBusby/bmux@d67f4bfefae5, BrianBusby/bmux@d639267b9c9b, BrianBusby/bmux#107 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@d346716251aa, BrianBusby/bmux@1bbd6f0e1af1, BrianBusby/bmux@d67f4bfefae5, BrianBusby/bmux@d639267b9c9b, BrianBusby/bmux@fa364e7a963d, BrianBusby/bmux#107 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: PhonePushClient configuration and notification setup remain app-host background services but are coupled to notification delivery and push registration rather than to the already migrated mobile-host listener and presence loop.
           Acceptance criteria: One runtime owner configures notifications push registration and PhonePushClient lifecycle.; Production and XCTest configuration explicitly enables or disables the capability.; Tests inject notification auth network and registration dependencies.; Lifecycle state distinguishes disabled ready degraded failed stopping and stopped behavior.; Shutdown cancels push sends dismissal drain observers and registration tasks.; Retained singleton access cannot become a second lifecycle owner.; Production-path coverage exercises readiness and deterministic teardown.; A source guard rejects migrated notification and push bypasses.
         - **Menu-Bar and Presentation Preference Lifecycle Migration** (`app_runtime_menu_bar_presentation_lifecycle_migration`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: ready
@@ -960,9 +958,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.
 
-| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) | serial | /Users/brianbusby/repos/.bmux-worktrees/app-runtime-notification-push-lifecycle | app-runtime-notification-push-lifecycle | codex | `app_delegate_startup`, `mobile_host_presence`, `phone_push_client_singleton`, `user_notifications_delegate` | `app_runtime_composition_boundary`, `mobile_host_presence_lifecycle` | single active assignment |
+- Active implementation assignments: none selected.
 
 ### Dependency-Ready Preflight
 
