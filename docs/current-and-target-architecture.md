@@ -187,8 +187,8 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 - Active gate: Engineering Observation Period (`engineering_observation_period`) - active
 - Primary capability frontier: Process Integrity (`process_integrity`)
-- Active implementation slice: none selected
-- Bmux repository state: none selected
+- Active implementation slice: Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) - implemented
+- Bmux repository state: active
 
 ### Current Roadmap Lanes
 
@@ -198,6 +198,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Post-Merge Project Truth Reconciliation (`post_merge_project_truth_reconciliation_milestone`) - milestone; status: active; owner: Bmux
 - App Runtime Composition and Test Isolation (`app_runtime_composition_and_test_isolation`) - phase; status: active; owner: Bmux
 - App Runtime Composition Migration (`app_runtime_composition_migration`) - milestone; status: active; owner: Bmux
+- Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) - slice; status: implemented; owner: Bmux
 - Project Truth Governance (`project_truth_governance`) - program; status: active; owner: Provenance Engine
 - Canonical Project Truth State (`canonical_project_truth_state`) - phase; status: active; owner: Provenance Engine
 - Project Truth Manifest and CI (`project_truth_manifest_and_ci`) - milestone; status: active; owner: Provenance Engine
@@ -295,7 +296,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Dependency-Ready Work
 
-- Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) - selection: planned; owner: Bmux; depends on: `app_runtime_notification_push_lifecycle_migration`. Rationale: Menu-bar visibility activation policy and presentation preference observation are a distinct AppDelegate-owned service family and should not be bundled into notification or browser lifecycle work.
+- Swift App and Runtime Test Determinism Burn-Down (`test_determinism_swift_app_runtime_burndown`) - selection: planned; owner: Bmux; depends on: `app_runtime_notification_push_lifecycle_migration`, `app_runtime_menu_bar_presentation_lifecycle_migration`. Rationale: App and runtime determinism should follow lifecycle ownership migrations so tests target explicit readiness and teardown contracts instead of old scattered startup side effects.
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - selection: planned; owner: Bmux; depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`. Rationale: Consume the PE SessionWorkModel for completed-turn summaries, current-turn state, plan/progress, blockers, approach changes, validations, and richer session-level synthesis once those contracts exist.
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - selection: planned; owner: Bmux; depends on: `agent_accessible_cross_session_retrieval`. Rationale: Measure whether bounded explainable cross-session context improves outcomes before making automatic context assembly a product behavior.
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - selection: planned; owner: Provenance Engine; depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`.
@@ -306,7 +307,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Dependency-Ready But Not Selected
 
-- Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) - owner: Bmux; depends on: `app_runtime_notification_push_lifecycle_migration`
+- Swift App and Runtime Test Determinism Burn-Down (`test_determinism_swift_app_runtime_burndown`) - owner: Bmux; depends on: `app_runtime_notification_push_lifecycle_migration`, `app_runtime_menu_bar_presentation_lifecycle_migration`
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - owner: Bmux; depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - owner: Bmux; depends on: `agent_accessible_cross_session_retrieval`
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - owner: Provenance Engine; depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`
@@ -315,16 +316,12 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 - Residual App-Host Background Service Audit (`app_runtime_residual_app_host_service_audit`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
-  - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) is not dependency-satisfying
 - Workspace Display File-Watcher Churn Policy (`workspace_display_file_watcher_churn_policy`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
 - Local PE SQLite Multi-Writer Policy (`pe_shared_sqlite_writer_policy`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - Historical Codex Transcript Import Startup Boundary Guard (`codex_historical_import_startup_boundary_guard`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
 - Config Workspace-Launch Canonicalization (`config_workspace_launch_canonicalization`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
 - Swift Package Test Determinism Burn-Down (`test_determinism_swift_package_burndown`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
-- Swift App and Runtime Test Determinism Burn-Down (`test_determinism_swift_app_runtime_burndown`) - maturity: gated; status: planned; selection: planned; owner: Bmux
-  - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) is not dependency-satisfying
-  - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) has maturity ready; requires validated for gate `menu_bar_runtime_validated`: Menu-bar duration assertions should be replaced after menu-bar lifecycle ownership is explicit.
 - Python Socket and Tmux Compatibility Test Determinism Burn-Down (`test_determinism_python_socket_tmux_burndown`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
 - UI Test Determinism Burn-Down (`test_determinism_ui_burndown`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
