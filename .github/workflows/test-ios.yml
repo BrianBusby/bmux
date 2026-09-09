@@ -277,7 +277,7 @@ jobs:
               if device.get("isAvailable", True)
           ]
           prefix = "iPad" if family == "ipad" else "iPhone"
-          preferred = ["iPad Pro 13-inch (M4)", "iPad Air 13-inch (M3)"] if family == "ipad" else ["iPhone 17", "iPhone 16"]
+          preferred = ["iPad Pro 13-inch (M4)", "iPad Air 13-inch (M3)"] if family == "ipad" else ["iPhone 16", "iPhone 17", "iPhone 15"]
           selected = next((d for name in preferred for d in devices if d.get("name") == name), None)
           selected = selected or next((d for d in devices if d.get("name", "").startswith(prefix)), None)
           if selected is None:
@@ -374,13 +374,48 @@ jobs:
               grep -Eq "Executed [1-9][0-9]* tests, with 0 failures \\(0 unexpected\\)" "$log_path" &&
               ! grep -Eq "Test Suite '.*' failed|Test Case '.*' failed|Assertion Failure|Failing tests:|with [1-9][0-9]* failures|with [0-9]+ failures \\([1-9][0-9]* unexpected\\)|✘ Test|✘ Suite" "$log_path"
           }
+          prepare_simulator() {
+            python3 - <<'PY'
+          import os
+          import subprocess
+          import sys
+
+          simulator_id = os.environ["SIMULATOR_ID"]
+
+          def run_simctl(arguments, timeout, allow_failure=False):
+              command = ["xcrun", "simctl", *arguments]
+              try:
+                  result = subprocess.run(command, timeout=timeout, check=False)
+              except subprocess.TimeoutExpired:
+                  print(f"Timed out while running: {' '.join(command)}", file=sys.stderr)
+                  return False
+
+              if result.returncode != 0 and not allow_failure:
+                  print(f"simctl command failed ({result.returncode}): {' '.join(command)}", file=sys.stderr)
+                  return False
+
+              return True
+
+          run_simctl(["shutdown", simulator_id], timeout=30, allow_failure=True)
+          if not run_simctl(["erase", simulator_id], timeout=90):
+              sys.exit(1)
+          run_simctl(["boot", simulator_id], timeout=60, allow_failure=True)
+          if not run_simctl(["bootstatus", simulator_id, "-b"], timeout=180):
+              sys.exit(1)
+          PY
+          }
           for attempt in 1 2; do
             LOG_PATH="$IOS_DERIVED_DATA/logs/attempt-${attempt}.log"
             echo "Preparing $SIMULATOR_NAME ($SIMULATOR_ID), attempt $attempt"
-            xcrun simctl shutdown "$SIMULATOR_ID" >/dev/null 2>&1 || true
-            xcrun simctl erase "$SIMULATOR_ID"
-            xcrun simctl boot "$SIMULATOR_ID" >/dev/null 2>&1 || true
-            xcrun simctl bootstatus "$SIMULATOR_ID" -b
+            prepare_status=0
+            prepare_simulator || prepare_status="$?"
+            if [ "$prepare_status" -ne 0 ]; then
+              if [ "$attempt" -lt 2 ]; then
+                echo "Simulator preparation failed with status $prepare_status, retrying on a clean simulator."
+                continue
+              fi
+              exit "$prepare_status"
+            fi
             if xcodebuild "${XCODEBUILD_ARGS[@]}" 2>&1 | tee "$LOG_PATH"; then
               exit 0
             fi
