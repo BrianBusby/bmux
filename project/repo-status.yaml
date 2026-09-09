@@ -3,10 +3,14 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id:
-    title:
-    state: none_selected
-  state: none_selected
+    id: app_runtime_menu_bar_presentation_lifecycle_migration
+    title: Menu-Bar and Presentation Preference Lifecycle Migration
+    state: open
+    owner: bmux
+    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-menu-bar-presentation-lifecycle
+    active_branch: app-runtime-menu-bar-presentation-lifecycle
+    active_agent: codex
+  state: active
 
 execution_telemetry:
   provider_neutral_contract: implemented

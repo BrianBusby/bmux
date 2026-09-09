@@ -859,7 +859,7 @@ roadmap:
       kind: slice
       title: Menu-Bar and Presentation Preference Lifecycle Migration
       parent: app_runtime_composition_migration
-      status: planned
+      status: active
       owner: bmux
       repositories:
         - bmux
@@ -871,7 +871,7 @@ roadmap:
           - app_runtime_composition
           - menu_bar
           - presentation_preferences
-      capability_maturity: ready
+      capability_maturity: active
       depends_on:
         - app_runtime_notification_push_lifecycle_migration
       gates:
@@ -901,9 +901,13 @@ roadmap:
         contract_dependencies:
           - app_runtime_composition_boundary
       execution:
-        assignment: planned
+        assignment: current
         assigned_to: bmux
-      delivery_status: proposed
+        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-menu-bar-presentation-lifecycle
+        active_branch: app-runtime-menu-bar-presentation-lifecycle
+        active_agent: codex
+        notes: "Selected on 2026-09-09 after PR #108 reconciled notification/push delivery on main at af91c7601ef566a33e60a32b2b7f5c12b26a1abf."
+      delivery_status: open
       acceptance_status: proposed
       rationale: Menu-bar visibility activation policy and presentation preference observation are a distinct AppDelegate-owned service family and should not be bundled into notification or browser lifecycle work.
       acceptance:
