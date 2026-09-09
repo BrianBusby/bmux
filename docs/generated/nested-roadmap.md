@@ -16,12 +16,11 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 ### Current Capability Frontier
 
 - Primary Capability Frontier: Process Integrity (`process_integrity`)
-- Active or selected slices in the frontier:
-  - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) - maturity: validated; status: implemented; selection: current; owner: Bmux
+- Active or selected slices in the frontier: none
 
 ### Active Implementation
 
-- Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) - maturity: validated; status: implemented; selection: current; owner: Bmux
+- None.
 
 ### Selected Next
 
@@ -206,16 +205,15 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Evidence: BrianBusby/bmux@d346716251aa, BrianBusby/bmux@1bbd6f0e1af1, BrianBusby/bmux@d67f4bfefae5, BrianBusby/bmux@d639267b9c9b, BrianBusby/bmux@fa364e7a963d, BrianBusby/bmux#107 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: PhonePushClient configuration and notification setup remain app-host background services but are coupled to notification delivery and push registration rather than to the already migrated mobile-host listener and presence loop.
           Acceptance criteria: One runtime owner configures notifications push registration and PhonePushClient lifecycle.; Production and XCTest configuration explicitly enables or disables the capability.; Tests inject notification auth network and registration dependencies.; Lifecycle state distinguishes disabled ready degraded failed stopping and stopped behavior.; Shutdown cancels push sends dismissal drain observers and registration tasks.; Retained singleton access cannot become a second lifecycle owner.; Production-path coverage exercises readiness and deterministic teardown.; A source guard rejects migrated notification and push bypasses.
-        - **Menu-Bar and Presentation Preference Lifecycle Migration** (`app_runtime_menu_bar_presentation_lifecycle_migration`) - slice; status: implemented; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: current / Bmux; parallelism: serial; delivery: open; acceptance: implemented; maturity: validated
+        - **Menu-Bar and Presentation Preference Lifecycle Migration** (`app_runtime_menu_bar_presentation_lifecycle_migration`) - slice; status: implemented; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: complete / Bmux; parallelism: serial; delivery: merged; acceptance: implemented; maturity: validated
           Depends on: `app_runtime_notification_push_lifecycle_migration`
           Expected contract domains: `menu_bar_extra_visibility`, `activation_policy_sync`, `presentation_user_defaults_observation`, `production_startup_readiness_shutdown`
           Expected code areas: `Sources/AppDelegate*.swift`, `Sources/App/BmuxAppRuntime*.swift`, `Sources/MenuBar`, `Sources/Settings`, `bmuxTests/NotificationAndMenuBarTests.swift`
           Likely conflict domains: `app_delegate_startup`, `user_defaults_observation`, `activation_policy`, `menu_bar_state`
           Contract dependencies: `app_runtime_composition_boundary`
-          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/app-runtime-menu-bar-presentation-lifecycle`; branch: `app-runtime-menu-bar-presentation-lifecycle`; agent: `codex`
-          Execution notes: Selected on 2026-09-09 after PR #108 reconciled notification/push delivery on main at af91c7601ef566a33e60a32b2b7f5c12b26a1abf. Implemented in branch app-runtime-menu-bar-presentation-lifecycle with commit 1c23c7b2cf98212ccd501025003481ac5dacaaee and review boundary hardening commit 4b6886f2ca79c2af6870be78df189c4a029547f4; PR #109 is open for delivery and remains unmerged.
+          Execution notes: Selected on 2026-09-09 after PR #108 reconciled notification/push delivery on main at af91c7601ef566a33e60a32b2b7f5c12b26a1abf. Implemented in branch app-runtime-menu-bar-presentation-lifecycle with commit 1c23c7b2cf98212ccd501025003481ac5dacaaee and review boundary hardening commit 4b6886f2ca79c2af6870be78df189c4a029547f4; PR #109 merged on 2026-09-09 at 55f6d6487fa84e08560cb70c0d727aeff9d3eeb9. Human acceptance is not claimed.
           Gate `notification_push_runtime_validated`: requires `app_runtime_notification_push_lifecycle_migration` maturity validated; reason: Menu-bar presentation lifecycle should migrate after notification ownership clarifies AppDelegate startup and delegate responsibilities.
-          Evidence: BrianBusby/bmux@4bbc3dedb35a, BrianBusby/bmux@1c23c7b2cf98, BrianBusby/bmux@4b6886f2ca79, BrianBusby/bmux#109 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@4bbc3dedb35a, BrianBusby/bmux@1c23c7b2cf98, BrianBusby/bmux@4b6886f2ca79, BrianBusby/bmux@55f6d6487fa8, BrianBusby/bmux#109 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Menu-bar visibility activation policy and presentation preference observation are a distinct AppDelegate-owned service family and should not be bundled into notification or browser lifecycle work.
           Acceptance criteria: One runtime owner manages menu-bar visibility activation policy and preferences.; Production and test configuration explicitly selects the capability.; Tests inject UserDefaults menu-bar and activation-policy dependencies.; Startup and settings changes reconcile through deterministic lifecycle state.; Observer teardown is complete.; AppDelegate and settings entrypoints call the runtime owner.; Production-path coverage verifies startup settings reconciliation and shutdown.; A source guard rejects migrated menu-bar and presentation bypasses.
         - **Residual App-Host Background Service Audit** (`app_runtime_residual_app_host_service_audit`) - slice; status: deferred; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: deferred / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: captured
@@ -958,9 +956,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.
 
-| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) | serial | /Users/brianbusby/repos/.bmux-worktrees/app-runtime-menu-bar-presentation-lifecycle | app-runtime-menu-bar-presentation-lifecycle | codex | `activation_policy`, `app_delegate_startup`, `menu_bar_state`, `user_defaults_observation` | `app_runtime_composition_boundary` | single active assignment |
+- Active implementation assignments: none selected.
 
 ### Dependency-Ready Preflight
 

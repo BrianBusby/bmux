@@ -13,10 +13,8 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`)
-- Slice state: implemented
-- Owner: bmux
-- Repository state: active
+- Active slice: none selected
+- Repository state: none selected
 
 ## Release
 
