@@ -16,11 +16,12 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 ### Current Capability Frontier
 
 - Primary Capability Frontier: Process Integrity (`process_integrity`)
-- Active or selected slices in the frontier: none
+- Active or selected slices in the frontier:
+  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) - maturity: validated; status: implemented; selection: current; owner: Bmux
 
 ### Active Implementation
 
-- None.
+- Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) - maturity: validated; status: implemented; selection: current; owner: Bmux
 
 ### Selected Next
 
@@ -28,19 +29,15 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Ready Candidates
 
-- Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) - maturity: ready; status: planned; selection: planned; owner: Bmux
+- Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) - maturity: ready; status: planned; selection: planned; owner: Bmux
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - maturity: ready; status: planned; selection: planned; owner: Bmux
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - maturity: ready; status: planned; selection: planned; owner: Bmux
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - maturity: ready; status: planned; selection: planned; owner: Provenance Engine
 
 ### Gated / Blocked Downstream Work
 
-- Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) - maturity: gated; status: planned; selection: planned; owner: Bmux
-  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) is not dependency-satisfying
-  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) has maturity ready; requires validated for gate `notification_push_runtime_validated`: Menu-bar presentation lifecycle should migrate after notification ownership clarifies AppDelegate startup and delegate responsibilities.
 - Residual App-Host Background Service Audit (`app_runtime_residual_app_host_service_audit`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
-  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) is not dependency-satisfying
   - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) is not dependency-satisfying
 - Workspace Display File-Watcher Churn Policy (`workspace_display_file_watcher_churn_policy`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
 - Local PE SQLite Multi-Writer Policy (`pe_shared_sqlite_writer_policy`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
@@ -49,10 +46,8 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 - Config Workspace-Launch Canonicalization (`config_workspace_launch_canonicalization`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
 - Swift Package Test Determinism Burn-Down (`test_determinism_swift_package_burndown`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
 - Swift App and Runtime Test Determinism Burn-Down (`test_determinism_swift_app_runtime_burndown`) - maturity: gated; status: planned; selection: planned; owner: Bmux
-  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) is not dependency-satisfying
   - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) is not dependency-satisfying
-  - Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) has maturity ready; requires validated for gate `notification_push_runtime_validated`: Notification and mobile-host authorization test determinism should be fixed against the migrated runtime owner.
-  - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) has maturity gated; requires validated for gate `menu_bar_runtime_validated`: Menu-bar duration assertions should be replaced after menu-bar lifecycle ownership is explicit.
+  - Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) has maturity ready; requires validated for gate `menu_bar_runtime_validated`: Menu-bar duration assertions should be replaced after menu-bar lifecycle ownership is explicit.
 - Python Socket and Tmux Compatibility Test Determinism Burn-Down (`test_determinism_python_socket_tmux_burndown`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
 - UI Test Determinism Burn-Down (`test_determinism_ui_burndown`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
@@ -202,7 +197,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Evidence: BrianBusby/bmux@5170a25a676f, BrianBusby/bmux@1ab0c501da78, BrianBusby/bmux@fd6e7f418327, BrianBusby/bmux@12aa530823b1, BrianBusby/bmux@53d590c359fa, BrianBusby/bmux@c10801552c67, BrianBusby/bmux@49889761a974, BrianBusby/bmux@00834cf2161b, BrianBusby/bmux@3506348ed89f, BrianBusby/bmux@d59d0d69f387, BrianBusby/bmux#105 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Sidebar Git and PR observation remains a separate lifecycle family from Browser and DevTools because it owns GitHub CLI/git process observation, sidebar row refresh state, and custom-sidebar PR surfaces rather than webview or inspector resources.
           Acceptance criteria: One runtime owner starts reconciles and stops sidebar Git and PR observation.; Git GitHub CLI PR and workspace-display dependencies are injected or isolated.; Sidebar custom-sidebar socket and workspace-display consumers read the same state.; Lifecycle state exposes readiness degraded failure cancellation and stopped behavior.; Shutdown cancels Git and PR observation tasks row refresh work and publication.; A source guard rejects migrated Git and PR observation bypasses.; Production-path coverage exercises runtime composition and teardown.
-        - **Notification and Push-Registration Lifecycle Migration** (`app_runtime_notification_push_lifecycle_migration`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: ready
+        - **Notification and Push-Registration Lifecycle Migration** (`app_runtime_notification_push_lifecycle_migration`) - slice; status: implemented; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: current / Bmux; parallelism: serial; delivery: open; acceptance: implemented; maturity: validated
           Depends on: `app_runtime_sidebar_git_pr_lifecycle_migration`
           Enables: `app_runtime_menu_bar_presentation_lifecycle_migration`
           Expected contract domains: `user_notification_configuration`, `phone_push_client_auth_and_send`, `push_registration`, `notification_delivery_teardown`
@@ -210,10 +205,13 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Likely conflict domains: `app_delegate_startup`, `user_notifications_delegate`, `phone_push_client_singleton`, `mobile_host_presence`
           Contract dependencies: `app_runtime_composition_boundary`, `mobile_host_presence_lifecycle`
           Worktree required: true
+          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/app-runtime-notification-push-lifecycle`; branch: `app-runtime-notification-push-lifecycle`; agent: `codex`
+          Execution notes: Selected on 2026-09-09 after PR #106 reconciled sidebar Git/PR delivery on main at b8599efb3b9eb68fdf8e2ce58afa52d8adc5cafe. Implemented in branch app-runtime-notification-push-lifecycle with commit 1bbd6f0e1af1047c3328970de1d0cd17cae62e51; PR #107 is open for delivery and remains unmerged. CI guard repair commit d639267b9c9bdc9b722c1e10b45b23309eeaa843 keeps TerminalNotificationStore within the tracked Swift file-length budget.
           Gate `sidebar_git_pr_runtime_validated`: requires `app_runtime_sidebar_git_pr_lifecycle_migration` maturity validated; reason: Notification and push lifecycle work should wait until the higher-churn sidebar observation family has a single owner.
+          Evidence: BrianBusby/bmux@d346716251aa, BrianBusby/bmux@1bbd6f0e1af1, BrianBusby/bmux@d67f4bfefae5, BrianBusby/bmux@d639267b9c9b, BrianBusby/bmux#107 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: PhonePushClient configuration and notification setup remain app-host background services but are coupled to notification delivery and push registration rather than to the already migrated mobile-host listener and presence loop.
           Acceptance criteria: One runtime owner configures notifications push registration and PhonePushClient lifecycle.; Production and XCTest configuration explicitly enables or disables the capability.; Tests inject notification auth network and registration dependencies.; Lifecycle state distinguishes disabled ready degraded failed stopping and stopped behavior.; Shutdown cancels push sends dismissal drain observers and registration tasks.; Retained singleton access cannot become a second lifecycle owner.; Production-path coverage exercises readiness and deterministic teardown.; A source guard rejects migrated notification and push bypasses.
-        - **Menu-Bar and Presentation Preference Lifecycle Migration** (`app_runtime_menu_bar_presentation_lifecycle_migration`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: gated
+        - **Menu-Bar and Presentation Preference Lifecycle Migration** (`app_runtime_menu_bar_presentation_lifecycle_migration`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: ready
           Depends on: `app_runtime_notification_push_lifecycle_migration`
           Expected contract domains: `menu_bar_extra_visibility`, `activation_policy_sync`, `presentation_user_defaults_observation`, `production_startup_readiness_shutdown`
           Expected code areas: `Sources/AppDelegate*.swift`, `Sources/App/BmuxAppRuntime*.swift`, `Sources/MenuBar`, `Sources/Settings`, `bmuxTests/NotificationAndMenuBarTests.swift`
@@ -962,20 +960,22 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.
 
-- Active implementation assignments: none selected.
+| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) | serial | /Users/brianbusby/repos/.bmux-worktrees/app-runtime-notification-push-lifecycle | app-runtime-notification-push-lifecycle | codex | `app_delegate_startup`, `mobile_host_presence`, `phone_push_client_singleton`, `user_notifications_delegate` | `app_runtime_composition_boundary`, `mobile_host_presence_lifecycle` | single active assignment |
 
 ### Dependency-Ready Preflight
 
 | Slice | Selection | Dependency status | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) | planned | ready | serial | true | `app_delegate_startup`, `user_notifications_delegate`, `phone_push_client_singleton`, `mobile_host_presence` | `app_runtime_composition_boundary`, `mobile_host_presence_lifecycle` | `user_notification_configuration`, `phone_push_client_auth_and_send`, `push_registration`, `notification_delivery_teardown` | `Sources/AppDelegate*.swift`, `Sources/App/BmuxAppRuntime*.swift`, `Sources/Cloud/PhonePushClient.swift`, `Sources/Notifications`, `bmuxTests/NotificationAndMenuBarTests.swift`, `bmuxTests/MobileHostAuthorizationTests.swift` |
+| Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) | planned | ready | serial | false | `app_delegate_startup`, `user_defaults_observation`, `activation_policy`, `menu_bar_state` | `app_runtime_composition_boundary` | `menu_bar_extra_visibility`, `activation_policy_sync`, `presentation_user_defaults_observation`, `production_startup_readiness_shutdown` | `Sources/AppDelegate*.swift`, `Sources/App/BmuxAppRuntime*.swift`, `Sources/MenuBar`, `Sources/Settings`, `bmuxTests/NotificationAndMenuBarTests.swift` |
 | React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) | planned | ready | serial | true | `session_work_model_projection`, `react_session_presentation`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `blocker_approach_change_semantics`, `semantic_explanation_provenance` | `React Smart Session surface`, `bmux SessionWorkModel client`, `Sources/WorkProvenance`, `Sources/ProvenanceEngineContracts` |
 | Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) | planned | ready | serial | true | `prompt_context_assembly`, `retrieval_contracts`, `privacy_policy` | `cross_session_agent_query`, `context_effectiveness_metrics` | `context_assembly_policy`, `cross_session_effectiveness_metrics`, `bounded_context_pack` | `bmux context assembly`, `bmux agent launch/session orchestration`, `evaluation fixtures` |
 | Milestone-to-code relationships (`milestone_to_code_relationships`) | planned | ready | serial | true | `milestone_relationships`, `file_change_attribution` | `milestone_semantics`, `richer_coding_agent_evidence` | `milestone_code_relationships`, `file_change_attribution` | `Sources/ProvenanceEngineCore`, `Sources/ProvenanceEngineContracts`, `Tests/ProvenanceEngineTests` |
 
 ## Dependency-Ready Work
 
-- Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) - selection: planned; depends on: `app_runtime_sidebar_git_pr_lifecycle_migration`
+- Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) - selection: planned; depends on: `app_runtime_notification_push_lifecycle_migration`
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - selection: planned; depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - selection: planned; depends on: `agent_accessible_cross_session_retrieval`
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - selection: planned; depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`
@@ -986,7 +986,7 @@ None.
 
 ## Dependency-Ready But Not Selected
 
-- Notification and Push-Registration Lifecycle Migration (`app_runtime_notification_push_lifecycle_migration`) - depends on: `app_runtime_sidebar_git_pr_lifecycle_migration`
+- Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`) - depends on: `app_runtime_notification_push_lifecycle_migration`
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - depends on: `agent_accessible_cross_session_retrieval`
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`

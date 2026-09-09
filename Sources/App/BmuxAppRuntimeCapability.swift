@@ -6,4 +6,5 @@ enum BmuxAppRuntimeCapability: Hashable, Sendable {
     case mobileHostAndPresence
     case browserAndDevTools
     case sidebarGitPullRequestObservation
+    case notificationPushLifecycle
 }

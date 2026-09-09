@@ -52,6 +52,7 @@ final class PhonePushClient {
     /// the badge that ships is always the latest total.
     private var pendingDismissBadgeCount = 0
     private var dismissDrainTask: Task<Void, Never>?
+    private var sendTasks: [UUID: Task<Void, Never>] = [:]
     /// Keep each dismiss push within the server's `MAX_PUSH_DISMISS_IDS`.
     private static let maxDismissIDsPerPush = 64
 
@@ -60,6 +61,23 @@ final class PhonePushClient {
     /// Inject the auth dependency. Call once at the composition root.
     func configure(auth: AuthCoordinator) {
         self.auth = auth
+    }
+
+    func stop() {
+        auth = nil
+        pendingDismissedIDs.removeAll()
+        dismissDrainTask?.cancel()
+        dismissDrainTask = nil
+        for task in sendTasks.values {
+            task.cancel()
+        }
+        sendTasks.removeAll()
+        lastSentAt.removeAll()
+        presenceCache = MacPresenceDecisionCache()
+    }
+
+    var hasActiveLifecycleWork: Bool {
+        auth != nil || dismissDrainTask != nil || !sendTasks.isEmpty
     }
 
     static var isForwardingEnabled: Bool {
@@ -165,7 +183,7 @@ final class PhonePushClient {
             badgeCount: badgeCount,
             hideContent: hideContent
         )
-        Task { await send(payload) }
+        enqueueSend(payload)
         return true
     }
 
@@ -188,9 +206,21 @@ final class PhonePushClient {
         }
     }
 
+    private func enqueueSend(_ payload: PhonePushPayload) {
+        let taskID = UUID()
+        sendTasks[taskID] = Task { @MainActor [weak self] in
+            await self?.send(payload)
+            self?.sendTasks.removeValue(forKey: taskID)
+        }
+    }
+
     private func drainPendingDismisses() async {
         defer { dismissDrainTask = nil }
         while !pendingDismissedIDs.isEmpty {
+            guard !Task.isCancelled else {
+                pendingDismissedIDs.removeAll()
+                return
+            }
             var seen = Set<String>()
             let deduped = pendingDismissedIDs.filter { seen.insert($0).inserted }
             let chunk = Array(deduped.prefix(Self.maxDismissIDsPerPush))
@@ -212,6 +242,7 @@ final class PhonePushClient {
     }
 
     private func send(_ payload: PhonePushPayload) async {
+        guard !Task.isCancelled else { return }
         guard let auth else { return }
         let tokens: (accessToken: String, refreshToken: String)
         do {
@@ -219,6 +250,7 @@ final class PhonePushClient {
         } catch {
             return // not signed in → nothing to do
         }
+        guard !Task.isCancelled else { return }
         let teamID = auth.resolvedTeamID
 
         guard var comps = URLComponents(url: AuthEnvironment.vmAPIBaseURL, resolvingAgainstBaseURL: false) else {
@@ -262,6 +294,7 @@ final class PhonePushClient {
         req.httpBody = try? JSONSerialization.data(withJSONObject: bodyDict, options: [])
 
         do {
+            guard !Task.isCancelled else { return }
             let (_, response) = try await session.data(for: req)
             if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
                 NSLog("bmux.phonepush failed kind=%@ status=%d", payload.kind.rawValue, http.statusCode)

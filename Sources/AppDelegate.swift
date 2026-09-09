@@ -724,26 +724,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             }
         )
 
-    /// OS notification delivery/response coordination, extracted into
-    /// `BmuxNotifications`. The app target injects the concrete
-    /// `UNUserNotificationCenter`, terminal identifiers from
-    /// `TerminalNotificationStore`, localized action titles, and the weak-owner
-    /// Feed/app activation seam.
+    /// OS notification delivery/response seams, extracted into
+    /// `BmuxNotifications`. The notification/push runtime owns the delivery
+    /// coordinator and receives this weak-owner adapter at startup.
     lazy var notificationDeliverySeams = NotificationDeliverySeamAdapter(owner: self)
 
-    lazy var notificationDelivery = NotificationDeliveryCoordinator(
-        center: UNUserNotificationCenter.current(),
-        terminalNavigation: notificationNavigation,
-        feedReplying: notificationDeliverySeams,
-        applicationActivation: notificationDeliverySeams,
-        terminalIdentifiers: TerminalNotificationDeliveryIdentifiers(
-            categoryIdentifier: TerminalNotificationStore.categoryIdentifier,
-            showActionIdentifier: TerminalNotificationStore.actionShowIdentifier
-        ),
-        actionTitles: notificationDeliveryActionTitles
-    )
-
-    private var notificationDeliveryActionTitles: NotificationDeliveryActionTitles {
+    var notificationDeliveryActionTitles: NotificationDeliveryActionTitles {
         NotificationDeliveryActionTitles(
             show: String(
                 localized: "terminal.notification.action.show",
@@ -1473,7 +1459,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             ensureApplicationIcon()
         }
         if !isRunningUnderXCTest {
-            configureUserNotifications()
             installMenuBarVisibilityObserver()
             syncApplicationPresentationPreferences()
             updateController.actionDelegate = self
@@ -1843,7 +1828,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         }
 
         guard let notificationStore else { return }
-        notificationStore.handleApplicationDidBecomeActive()
+        appRuntimeServices?.notificationPushDidBecomeActive()
         guard let tabManager else { return }
         guard let tabId = tabManager.selectedTabId else { return }
         let surfaceId = tabManager.focusedSurfaceId(for: tabId)
@@ -2083,9 +2068,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         self.sidebarState = sidebarState
         self.auth = auth
         VMClient.bootstrap(auth: auth.coordinator)
+        startNotificationPushRuntime(auth: auth, notificationStore: notificationStore)
         RemotesClient.bootstrap(auth: auth.coordinator)
         AIAccountsClient.bootstrap(auth: auth.coordinator)
-        PhonePushClient.shared.configure(auth: auth.coordinator)
         appRuntimeServices.startMobileHostAndPresence(
             auth: auth.coordinator,
             tabManager: tabManager,
@@ -16383,10 +16368,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         true
     }
 
-    private func configureUserNotifications() {
-        notificationDelivery.configureUserNotifications(delegate: self)
-    }
-
     private func disableNativeTabbingShortcut() {
         guard let menu = NSApp.mainMenu else { return }
         disableMenuItemShortcut(in: menu, action: #selector(NSWindow.toggleTabBar(_:)))
@@ -16538,7 +16519,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         Task { @MainActor [weak self] in
-            self?.notificationDelivery.handleNotificationResponse(response)
+            self?.appRuntimeServices?.handleNotificationResponse(response)
             completionHandler()
         }
     }
@@ -16549,7 +16530,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         Task { @MainActor [weak self] in
-            let options = self?.notificationDelivery.presentationOptions(for: notification) ?? []
+            let options = self?.appRuntimeServices?.presentationOptions(for: notification) ?? []
             completionHandler(options)
         }
     }

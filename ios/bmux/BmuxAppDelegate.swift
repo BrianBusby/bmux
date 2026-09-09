@@ -40,13 +40,8 @@ final class BmuxAppDelegate: NSObject, @preconcurrency UIApplicationDelegate, UN
         didFailToRegisterForRemoteNotificationsWithError error: Error
     ) {
         NSLog("bmux.push registration failed: %@", error.localizedDescription)
-        let nsError = error as NSError
         Task { @MainActor in
-            analytics?.capture("ios_push_token_registration_failed", [
-                "stage": .string("apns"),
-                "error_code": .int(nsError.code),
-                "error_domain": .string(nsError.domain),
-            ])
+            pushCoordinator?.handleRegistrationFailure(error)
         }
     }
 

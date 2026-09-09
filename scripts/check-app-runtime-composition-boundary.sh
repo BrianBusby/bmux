@@ -131,6 +131,31 @@ check_pattern \
   'Sources/App/BmuxAppRuntimeServices.swift'
 
 check_pattern \
+  'NotificationPushRuntimeService\(' \
+  'Sources/App/BmuxAppRuntimeComposition.swift constructs notification and push runtime' \
+  'Sources/App/BmuxAppRuntimeComposition.swift'
+
+check_pattern \
+  'notificationPushRuntimeService\.(start|stop|handleApplicationDidBecomeActive|handleNotificationResponse|presentationOptions)\(' \
+  'Sources/App/BmuxAppRuntimeServices.swift owns notification and push runtime start, callbacks, and stop' \
+  'Sources/App/BmuxAppRuntimeServices.swift'
+
+check_pattern \
+  'PhonePushClient\.shared\.(configure|stop|forward|forwardDismissed|willForwardReplacement)\(' \
+  'Sources/App/NotificationPushRuntimeServiceDependencies.swift owns PhonePushClient lifecycle and forwarding' \
+  'Sources/App/NotificationPushRuntimeServiceDependencies.swift'
+
+check_pattern \
+  'NotificationDeliveryCoordinator\(' \
+  'Sources/App/NotificationPushRuntimeServiceDependencies.swift constructs macOS notification delivery' \
+  'Sources/App/NotificationPushRuntimeServiceDependencies.swift'
+
+check_pattern \
+  'UIApplication\.shared\.(registerForRemoteNotifications|unregisterForRemoteNotifications)\(' \
+  'Packages/iOS/BmuxMobileShellUI/Sources/BmuxMobileShellUI/SystemMobilePushSystemClient.swift owns iOS APNs registration calls' \
+  'Packages/iOS/BmuxMobileShellUI/Sources/BmuxMobileShellUI/SystemMobilePushSystemClient.swift'
+
+check_pattern \
   'SidebarGitMetadataService\(' \
   'Sources/App/SidebarGitPullRequestObservationRuntimeServiceDependencies.swift constructs sidebar Git observers' \
   'Sources/App/SidebarGitPullRequestObservationRuntimeServiceDependencies.swift'

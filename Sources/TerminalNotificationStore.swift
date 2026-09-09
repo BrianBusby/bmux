@@ -334,7 +334,7 @@ final class TerminalNotificationStore: ObservableObject {
         )
         // Cold lane: mirror the dismiss through APNs for every registered
         // device, attached or not (no-op unless phone forwarding is on).
-        PhonePushClient.shared.forwardDismissed(ids: ids, badgeCount: unreadCount)
+        phonePushForwarding.forwardDismissed(ids: ids, badgeCount: unreadCount)
     }
 
     /// A user-driven dismiss emit that also carries any stale superseded-banner
@@ -447,6 +447,7 @@ final class TerminalNotificationStore: ObservableObject {
         effects in
         store.scheduleUserNotification(notification, effects: effects)
     }
+    private var phonePushForwarding: any TerminalPhonePushForwarding = NoopTerminalPhonePushForwarding()
     private var nativeNotificationDeliveryHooks = NativeNotificationDeliveryHooks()
     private var suppressedNotificationFeedbackHandler: (TerminalNotificationStore, TerminalNotification, TerminalNotificationPolicyEffects) -> Void = {
         store,
@@ -1159,22 +1160,15 @@ final class TerminalNotificationStore: ObservableObject {
             center.removeDeliveredNotificationsOffMain(withIdentifiers: idsToClear)
             center.removePendingNotificationRequestsOffMain(withIdentifiers: idsToClear)
             // A newer notification for this tab+surface superseded the old one
-            // and its Mac banner was just cleared. When a replacement banner
-            // push is expected, DEFER the phone-banner dismiss until that push
-            // is actually queued (see ``deliverNotificationSideEffects``): the
-            // phone must never lose its only banner to a dismissal whose
-            // replacement was throttled. When no replacement will be forwarded
-            // (suppressed/focused, non-desktop effects, forwarding off, or the
-            // `.onlyWhenAway` presence gate suppressing it while the Mac is
-            // active), emit the dismiss immediately — nothing is coming to
-            // replace the banner, and the Mac is not showing one either, so
-            // deferring would just leave the stale banner stuck until a later
-            // forward. Only the burst throttle is a legitimate defer-and-flush
-            // case, which is why ``PhonePushClient/willForwardReplacement()``
-            // mirrors the real send gate but ignores that throttle.
+            // and its Mac banner was just cleared. Defer the phone-banner
+            // dismiss until the replacement push is queued; otherwise emit the
+            // dismiss now so the phone does not keep a stale banner. Only the
+            // burst throttle is a legitimate defer-and-flush case, which is why
+            // the forwarding seam mirrors the real send gate but ignores that
+            // throttle.
             let replacementWillForward = !shouldSuppressExternalDelivery
                 && effects.desktop
-                && PhonePushClient.shared.willForwardReplacement()
+                && phonePushForwarding.willForwardReplacement(defaults: .standard)
             if replacementWillForward {
                 // The superseded entries already left the store; tombstone them
                 // now so the reconcile sweep stays correct while the dismiss is
@@ -1247,7 +1241,7 @@ final class TerminalNotificationStore: ObservableObject {
             // mutated above, so it includes this notification); the server
             // stamps it as `aps.badge` so the icon badge is SET, not incremented.
             if effects.desktop {
-                let queued = PhonePushClient.shared.forward(notification, badgeCount: indexes.unreadCount)
+                let queued = phonePushForwarding.forward(notification, badgeCount: indexes.unreadCount)
                 // Only once the replacement banner push is queued is it safe to
                 // clear the superseded banners it replaces (deferred from
                 // `recordNotification`); a throttled push leaves them stashed
@@ -2022,6 +2016,9 @@ final class TerminalNotificationStore: ObservableObject {
         }
         return lhs.id.uuidString < rhs.id.uuidString
     }
+
+    func configurePhonePushForwarding(_ forwarding: any TerminalPhonePushForwarding) { phonePushForwarding = forwarding }
+    func resetPhonePushForwarding() { phonePushForwarding = NoopTerminalPhonePushForwarding() }
 
 #if DEBUG
     func configureNotificationSettingsPromptHooksForTesting(

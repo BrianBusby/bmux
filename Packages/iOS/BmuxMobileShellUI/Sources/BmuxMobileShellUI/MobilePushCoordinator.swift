@@ -23,6 +23,7 @@ import UserNotifications
 public final class MobilePushCoordinator {
     private let registration: any PushRegistering
     private let analytics: any AnalyticsEmitting
+    private let system: any MobilePushSystemClient
     /// The system-notification surface used by the cold dismiss lane. Owned here
     /// (not via the store) because a silent dismiss push can wake the app in the
     /// background before any scene — and therefore any store — exists.
@@ -61,6 +62,8 @@ public final class MobilePushCoordinator {
     }
 
     @ObservationIgnored private var pendingDeeplink: PendingDeeplink?
+    @ObservationIgnored private var didStart = false
+    public private(set) var lifecycleState: MobilePushLifecycleState = .notStarted
     /// Bounded so a tap from long ago cannot yank the user out of whatever
     /// they navigated to in the meantime, but generous enough to cover cold
     /// launch plus sign-in plus a slow attach.
@@ -72,6 +75,8 @@ public final class MobilePushCoordinator {
     ///   - registration: The injected push-registration service.
     ///   - analytics: The injected fire-and-forget analytics emitter. Defaults to
     ///     ``NoopAnalytics`` for previews/tests.
+    ///   - system: The app/notification-center seam. Defaults to the real
+    ///     UIKit/UserNotifications implementation.
     ///   - defaults: The store backing the opt-in flag (must match the suite the
     ///     registration service uses). Defaults to `.standard`.
     ///   - deliveredNotificationClearer: The system-notification seam used to
@@ -85,6 +90,7 @@ public final class MobilePushCoordinator {
     public init(
         registration: any PushRegistering,
         analytics: any AnalyticsEmitting = NoopAnalytics(),
+        system: any MobilePushSystemClient = SystemMobilePushSystemClient(),
         defaults: UserDefaults = .standard,
         deliveredNotificationClearer: any DeliveredNotificationClearing = SystemDeliveredNotificationClearer(),
         pendingDismissQueue: PendingNotificationDismissQueue = PendingNotificationDismissQueue(),
@@ -92,6 +98,7 @@ public final class MobilePushCoordinator {
     ) {
         self.registration = registration
         self.analytics = analytics
+        self.system = system
         self.defaults = defaults
         self.deliveredNotificationClearer = deliveredNotificationClearer
         self.pendingDismissQueue = pendingDismissQueue
@@ -114,33 +121,53 @@ public final class MobilePushCoordinator {
         applyPendingDeeplinkIfReady()
     }
 
-    /// Install the notification-center delegate, register the dismiss-sync
-    /// notification category, and, if already opted in, re-assert remote
-    /// registration so a rotated token re-uploads. Call once at launch from the
-    /// AppDelegate.
+    /// Compatibility entrypoint for callers that still name the launch action
+    /// `configure`. Routes through the explicit lifecycle owner.
     public func configure(delegate: any UNUserNotificationCenterDelegate) {
-        let center = UNUserNotificationCenter.current()
-        center.delegate = delegate
-        // The category must carry `.customDismissAction` so a swipe/clear of a
-        // bmux banner delivers `UNNotificationDismissActionIdentifier` to the
-        // delegate; that is what lets us tell the Mac the user dismissed it.
+        start(delegate: delegate)
+    }
+
+    /// Install the notification-center delegate, register the dismiss-sync
+    /// category, and re-assert APNs registration when already opted in.
+    public func start(delegate: any UNUserNotificationCenterDelegate) {
+        guard !didStart else { return }
+        lifecycleState = .starting
+        system.configure(delegate: delegate, categories: Self.notificationCategories())
+        if isEnabled {
+            system.registerForRemoteNotifications()
+        }
+        didStart = true
+        lifecycleState = .ready
+    }
+
+    public func stop() {
+        guard didStart else {
+            lifecycleState = .stopped
+            return
+        }
+        lifecycleState = .stopping
+        system.clearDelegate()
+        store = nil
+        pendingDeeplink = nil
+        didStart = false
+        lifecycleState = .stopped
+    }
+
+    private static func notificationCategories() -> Set<UNNotificationCategory> {
         let dismissSyncCategory = UNNotificationCategory(
-            identifier: Self.dismissSyncCategoryIdentifier,
+            identifier: dismissSyncCategoryIdentifier,
             actions: [],
             intentIdentifiers: [],
             options: [.customDismissAction]
         )
-        center.setNotificationCategories([dismissSyncCategory])
-        if isEnabled {
-            UIApplication.shared.registerForRemoteNotifications()
-        }
+        return [dismissSyncCategory]
     }
 
     /// Opt in: request system authorization, register for remote notifications,
     /// and persist the flag. Returns whether authorization was granted.
     @discardableResult
     public func enable() async -> Bool {
-        let priorStatus = await Self.currentAuthorizationStatus()
+        let priorStatus = await system.currentAuthorizationStatus()
         // Only an undetermined status produces a real OS prompt; gate the
         // "shown" event on it so a re-toggle of an already-decided status does
         // not log a phantom prompt.
@@ -150,8 +177,7 @@ public final class MobilePushCoordinator {
                 "prior_authorization_status": .string("not_determined"),
             ])
         }
-        let granted = (try? await UNUserNotificationCenter.current()
-            .requestAuthorization(options: [.alert, .sound, .badge])) ?? false
+        let granted = (try? await system.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
         guard granted else {
             analytics.capture("ios_push_optin_declined", [
                 "trigger": .string("settings_toggle"),
@@ -161,27 +187,29 @@ public final class MobilePushCoordinator {
         }
         analytics.capture("ios_push_optin_granted", ["trigger": .string("settings_toggle")])
         await registration.setEnabled(true)
-        UIApplication.shared.registerForRemoteNotifications()
+        system.registerForRemoteNotifications()
         return true
     }
 
     /// Opt out: stop receiving pushes and remove the token server-side.
     public func disable() async {
         await registration.setEnabled(false)
-        UIApplication.shared.unregisterForRemoteNotifications()
-    }
-
-    private static func currentAuthorizationStatus() async -> UNAuthorizationStatus {
-        await withCheckedContinuation { continuation in
-            UNUserNotificationCenter.current().getNotificationSettings { settings in
-                continuation.resume(returning: settings.authorizationStatus)
-            }
-        }
+        system.unregisterForRemoteNotifications()
     }
 
     /// Hand a freshly-registered APNs token to the network layer.
     public func handleDeviceToken(_ token: Data) async {
         await registration.register(deviceToken: token)
+    }
+
+    /// Record APNs registration failure through the push lifecycle owner.
+    public func handleRegistrationFailure(_ error: Error) {
+        let nsError = error as NSError
+        analytics.capture("ios_push_token_registration_failed", [
+            "stage": .string("apns"),
+            "error_code": .int(nsError.code),
+            "error_domain": .string(nsError.domain),
+        ])
     }
 
     /// Re-upload the cached token when possible (e.g. after sign-in).
