@@ -903,7 +903,7 @@ roadmap:
       execution:
         assignment: complete
         assigned_to: bmux
-        notes: "Selected on 2026-09-09 after PR #108 reconciled notification/push delivery on main at af91c7601ef566a33e60a32b2b7f5c12b26a1abf. Implemented in branch app-runtime-menu-bar-presentation-lifecycle with commit 1c23c7b2cf98212ccd501025003481ac5dacaaee and review boundary hardening commit 4b6886f2ca79c2af6870be78df189c4a029547f4; PR #109 is open for delivery and remains unmerged."
+        notes: "Selected on 2026-09-09 after PR #108 reconciled notification/push delivery on main at af91c7601ef566a33e60a32b2b7f5c12b26a1abf. Implemented in branch app-runtime-menu-bar-presentation-lifecycle with commit 1c23c7b2cf98212ccd501025003481ac5dacaaee and review boundary hardening commit 4b6886f2ca79c2af6870be78df189c4a029547f4; PR #109 merged on 2026-09-09 at 55f6d6487fa84e08560cb70c0d727aeff9d3eeb9. Human acceptance is not claimed."
       delivery_status: merged
       acceptance_status: implemented
       rationale: Menu-bar visibility activation policy and presentation preference observation are a distinct AppDelegate-owned service family and should not be bundled into notification or browser lifecycle work.
