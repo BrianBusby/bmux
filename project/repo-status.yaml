@@ -5,7 +5,7 @@ current_work:
   active_slice:
     id: app_runtime_menu_bar_presentation_lifecycle_migration
     title: Menu-Bar and Presentation Preference Lifecycle Migration
-    state: open
+    state: implemented
     owner: bmux
     active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-menu-bar-presentation-lifecycle
     active_branch: app-runtime-menu-bar-presentation-lifecycle
@@ -98,7 +98,7 @@ local_capabilities:
   app_runtime_browser_devtools_lifecycle: under_observation
   app_runtime_sidebar_git_pr_lifecycle: under_observation
   app_runtime_notification_push_lifecycle: under_observation
-  app_runtime_menu_bar_presentation_lifecycle: planned
+  app_runtime_menu_bar_presentation_lifecycle: under_observation
   workspace_display_file_watcher_churn_policy: planned
   pe_shared_sqlite_writer_policy: planned
   codex_historical_import_startup_boundary_guard: planned

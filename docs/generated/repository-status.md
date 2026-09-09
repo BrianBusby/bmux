@@ -14,7 +14,7 @@ Repository: `BrianBusby/bmux`
 ## Current Work
 
 - Active slice: Menu-Bar and Presentation Preference Lifecycle Migration (`app_runtime_menu_bar_presentation_lifecycle_migration`)
-- Slice state: open
+- Slice state: implemented
 - Owner: bmux
 - Repository state: active
 
@@ -30,7 +30,7 @@ Repository: `BrianBusby/bmux`
 | App Host Test Runtime Isolation | under observation |
 | App Runtime Browser Devtools Lifecycle | under observation |
 | App Runtime Composition Boundary | under observation |
-| App Runtime Menu Bar Presentation Lifecycle | planned |
+| App Runtime Menu Bar Presentation Lifecycle | under observation |
 | App Runtime Notification Push Lifecycle | under observation |
 | App Runtime Sidebar Git Pr Lifecycle | under observation |
 | Bmux Cross Session Context Assembly Experiment | planned |

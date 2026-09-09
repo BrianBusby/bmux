@@ -859,7 +859,7 @@ roadmap:
       kind: slice
       title: Menu-Bar and Presentation Preference Lifecycle Migration
       parent: app_runtime_composition_migration
-      status: active
+      status: implemented
       owner: bmux
       repositories:
         - bmux
@@ -871,7 +871,7 @@ roadmap:
           - app_runtime_composition
           - menu_bar
           - presentation_preferences
-      capability_maturity: active
+      capability_maturity: validated
       depends_on:
         - app_runtime_notification_push_lifecycle_migration
       gates:
@@ -906,9 +906,9 @@ roadmap:
         active_worktree: /Users/brianbusby/repos/.bmux-worktrees/app-runtime-menu-bar-presentation-lifecycle
         active_branch: app-runtime-menu-bar-presentation-lifecycle
         active_agent: codex
-        notes: "Selected on 2026-09-09 after PR #108 reconciled notification/push delivery on main at af91c7601ef566a33e60a32b2b7f5c12b26a1abf."
+        notes: "Selected on 2026-09-09 after PR #108 reconciled notification/push delivery on main at af91c7601ef566a33e60a32b2b7f5c12b26a1abf. Implemented in branch app-runtime-menu-bar-presentation-lifecycle with commit 1c23c7b2cf98212ccd501025003481ac5dacaaee; PR #109 is open for delivery and remains unmerged."
       delivery_status: open
-      acceptance_status: proposed
+      acceptance_status: implemented
       rationale: Menu-bar visibility activation policy and presentation preference observation are a distinct AppDelegate-owned service family and should not be bundled into notification or browser lifecycle work.
       acceptance:
         criteria:
@@ -920,6 +920,19 @@ roadmap:
           - AppDelegate and settings entrypoints call the runtime owner.
           - Production-path coverage verifies startup settings reconciliation and shutdown.
           - A source guard rejects migrated menu-bar and presentation bypasses.
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 4bbc3dedb35acb5d2e1247c4203231b4ff299190
+          - repository: BrianBusby/bmux
+            sha: 1c23c7b2cf98212ccd501025003481ac5dacaaee
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 109
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+      completed_at: '2026-09-09'
 
     - id: app_runtime_residual_app_host_service_audit
       kind: slice
@@ -1412,7 +1425,7 @@ roadmap:
           - test_determinism
           - swift_app_tests
           - runtime_tests
-      capability_maturity: gated
+      capability_maturity: ready
       depends_on:
         - app_runtime_notification_push_lifecycle_migration
         - app_runtime_menu_bar_presentation_lifecycle_migration
