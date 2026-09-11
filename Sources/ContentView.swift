@@ -13601,6 +13601,7 @@ struct TabItemView: View, Equatable {
             latestConversationMessage: workspaceSnapshot.latestConversationMessage,
             hidesAllDetails: settings.hidesAllDetails,
             iMessageModeEnabled: settings.iMessageModeEnabled,
+            displayedTitle: workspaceSnapshot.title,
             hiddenPullRequestNumbers: Set(workspaceSnapshot.pullRequestRows.map(\.number))
         )
         let subtitle = SidebarWorkspaceRowLineLimitPolicy.subtitle(
@@ -13608,6 +13609,11 @@ struct TabItemView: View, Equatable {
             conversationMessage: conversationMessageSubtitle
         )
         let detailVisibility = visibleAuxiliaryDetails
+        let visibleProgress = visibleProgressState(
+            workspaceSnapshot.progress,
+            latestSubmittedMessage: workspaceSnapshot.latestSubmittedMessage,
+            workspaceTitle: workspaceSnapshot.title
+        )
         let titleLineLimit = SidebarWorkspaceRowLineLimitPolicy.titleLineLimit(wrapsWorkspaceTitles: settings.wrapsWorkspaceTitles)
         let scaledUnreadBadgeSize = 16 * fontScale
         let scaledLoadingIndicatorSize = TronLoadingIndicatorMotion.workspaceTabSize(forBadgeSize: scaledUnreadBadgeSize)
@@ -13702,8 +13708,16 @@ struct TabItemView: View, Equatable {
                     .layoutPriority(1)
                 } else {
                     VStack(alignment: .leading, spacing: 1) {
-                        if !workspaceSnapshot.ticketRows.isEmpty {
-                            ticketRowsView(workspaceSnapshot.ticketRows, prominent: true)
+                        if !workspaceSnapshot.pullRequestRows.isEmpty {
+                            pullRequestRowsView(workspaceSnapshot.pullRequestRows)
+                        }
+
+                        if let repoBadgeAppearance = workspaceSnapshot.repoBadgeAppearance {
+                            Text(repoBadgeAppearance.name)
+                                .font(magnifiedFont(scaledFontSize(9), weight: .medium))
+                                .foregroundColor(repoBadgeForegroundColor(for: repoBadgeAppearance))
+                                .lineLimit(1)
+                                .truncationMode(.middle)
                         }
 
                         Text(workspaceSnapshot.title)
@@ -13713,14 +13727,6 @@ struct TabItemView: View, Equatable {
                             .truncationMode(.tail)
                             .fixedSize(horizontal: false, vertical: true)
                             .multilineTextAlignment(.leading)
-
-                        if let repoBadgeAppearance = workspaceSnapshot.repoBadgeAppearance {
-                            Text(repoBadgeAppearance.name)
-                                .font(magnifiedFont(scaledFontSize(9), weight: .medium))
-                                .foregroundColor(repoBadgeForegroundColor(for: repoBadgeAppearance))
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                        }
                     }
                     .padding(.trailing, workspaceSnapshot.hasActiveAIWork && !canCloseWorkspace ? scaledLoadingIndicatorSize + 4 : 0)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -13752,15 +13758,6 @@ struct TabItemView: View, Equatable {
                 }
             }
 
-            if let description = workspaceSnapshot.customDescription {
-                SidebarWorkspaceDescriptionText(
-                    markdown: description,
-                    isActive: usesInvertedActiveForeground,
-                    activeForegroundColor: activeSecondaryColor(0.84),
-                    fontScale: fontScale
-                )
-            }
-
             if let subtitle {
                 Text(subtitle.text)
                     .font(magnifiedFont(scaledFontSize(10)))
@@ -13768,6 +13765,15 @@ struct TabItemView: View, Equatable {
                     .lineLimit(subtitle.lineLimit)
                     .truncationMode(.tail)
                     .multilineTextAlignment(.leading)
+            }
+
+            if let description = workspaceSnapshot.customDescription {
+                SidebarWorkspaceDescriptionText(
+                    markdown: description,
+                    isActive: usesInvertedActiveForeground,
+                    activeForegroundColor: activeSecondaryColor(0.84),
+                    fontScale: fontScale
+                )
             }
 
             remoteWorkspaceSection
@@ -13812,7 +13818,7 @@ struct TabItemView: View, Equatable {
                 .transition(.opacity)
             }
 
-            if detailVisibility.showsProgress, let progress = workspaceSnapshot.progress {
+            if detailVisibility.showsProgress, let progress = visibleProgress {
                 VStack(alignment: .leading, spacing: 2) {
                     let progressFraction = CGFloat(max(0, min(progress.value, 1)))
                     ZStack(alignment: .leading) {
@@ -13926,11 +13932,6 @@ struct TabItemView: View, Equatable {
                         )
                     }
                 }
-            }
-
-            // Pull request rows
-            if !workspaceSnapshot.pullRequestRows.isEmpty {
-                pullRequestRowsView(workspaceSnapshot.pullRequestRows)
             }
 
             // Project rows
@@ -14249,6 +14250,24 @@ struct TabItemView: View, Equatable {
             workspaceSnapshotStorage = pendingSnapshot
         }
         contextMenuState.pendingWorkspaceSnapshot = nil
+    }
+
+    private func visibleProgressState(
+        _ progress: SidebarProgressState?,
+        latestSubmittedMessage: String?,
+        workspaceTitle: String
+    ) -> SidebarProgressState? {
+        guard let progress else { return nil }
+        let label = SidebarWorkspaceRowLineLimitPolicy.nonDuplicateProgressLabel(
+            progress.label,
+            latestSubmittedMessage: latestSubmittedMessage,
+            workspaceTitle: workspaceTitle
+        )
+        let originalLabel = progress.label?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if label == nil, !originalLabel.isEmpty, progress.value <= 0 {
+            return nil
+        }
+        return SidebarProgressState(value: progress.value, label: label)
     }
 
     private func contextMenuLabel(multi: String, single: String, isMulti: Bool) -> String {

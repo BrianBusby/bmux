@@ -25,18 +25,33 @@ struct SidebarWorkspaceRowLineLimitPolicy {
         latestConversationMessage _: String?,
         hidesAllDetails: Bool,
         iMessageModeEnabled: Bool,
+        displayedTitle: String? = nil,
         hiddenPullRequestNumbers: Set<Int> = []
     ) -> String? {
         guard !hidesAllDetails, iMessageModeEnabled else { return nil }
-        guard let message = latestSubmittedMessage?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .nilIfEmpty else {
+        guard let message = normalizedDisplayText(latestSubmittedMessage) else {
             return nil
         }
+        guard !displayTextsMatch(message, displayedTitle) else { return nil }
         guard !containsPullRequestMention(message, matchingAny: hiddenPullRequestNumbers) else {
             return nil
         }
         return message
+    }
+
+    static func nonDuplicateProgressLabel(
+        _ label: String?,
+        latestSubmittedMessage: String?,
+        workspaceTitle: String?
+    ) -> String? {
+        guard let label = normalizedDisplayText(label) else { return nil }
+        if displayTextsMatch(label, latestSubmittedMessage) {
+            return nil
+        }
+        if displayTextsMatch(label, workspaceTitle) {
+            return nil
+        }
+        return label
     }
 
     static func subtitle(notificationText: String?, conversationMessage: String?) -> Subtitle? {
@@ -69,5 +84,17 @@ struct SidebarWorkspaceRowLineLimitPolicy {
             }
             return pullRequestNumbers.contains(number)
         }
+    }
+
+    private static func displayTextsMatch(_ lhs: String?, _ rhs: String?) -> Bool {
+        guard let lhs = normalizedDisplayText(lhs),
+              let rhs = normalizedDisplayText(rhs) else {
+            return false
+        }
+        return lhs == rhs
+    }
+
+    private static func normalizedDisplayText(_ value: String?) -> String? {
+        value?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
     }
 }

@@ -58,6 +58,18 @@ import Testing
         #expect(subtitle == "last prompt I submitted")
     }
 
+    @Test func conversationSubtitleHidesSubmittedPromptWhenItMatchesWorkspaceTitle() {
+        let subtitle = SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
+            latestSubmittedMessage: "last prompt I submitted",
+            latestConversationMessage: nil,
+            hidesAllDetails: false,
+            iMessageModeEnabled: true,
+            displayedTitle: " last prompt I submitted "
+        )
+
+        #expect(subtitle == nil)
+    }
+
     @Test func conversationSubtitleHidesDisplayedPullRequestPrompt() {
         let subtitle = SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
             latestSubmittedMessage: "do an adversarial review of this pr: https://github.com/CompanyCam/Company-Cam-API/pull/25964",
@@ -68,6 +80,36 @@ import Testing
         )
 
         #expect(subtitle == nil)
+    }
+
+    @Test func progressLabelHidesSubmittedPromptDuplicate() {
+        let label = SidebarWorkspaceRowLineLimitPolicy.nonDuplicateProgressLabel(
+            "last prompt I submitted",
+            latestSubmittedMessage: " last prompt I submitted ",
+            workspaceTitle: "Workspace title"
+        )
+
+        #expect(label == nil)
+    }
+
+    @Test func progressLabelHidesWorkspaceTitleDuplicate() {
+        let label = SidebarWorkspaceRowLineLimitPolicy.nonDuplicateProgressLabel(
+            "Workspace title",
+            latestSubmittedMessage: "different prompt",
+            workspaceTitle: " Workspace title "
+        )
+
+        #expect(label == nil)
+    }
+
+    @Test func progressLabelKeepsDistinctCurrentWorkSummary() {
+        let label = SidebarWorkspaceRowLineLimitPolicy.nonDuplicateProgressLabel(
+            "indexing context",
+            latestSubmittedMessage: "last prompt I submitted",
+            workspaceTitle: "Workspace title"
+        )
+
+        #expect(label == "indexing context")
     }
 
     @Test func conversationSubtitleKeepsDifferentPullRequestPrompt() {
