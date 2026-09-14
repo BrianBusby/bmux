@@ -121,7 +121,7 @@ import Testing
         #expect(SidebarWorkspaceSnapshotBuilder.selectedWorkspaceHeaderResources(resources, isSelected: true) != nil)
     }
 
-    @Test func selectedBorderIsOnePixelThickerThanPreviousSelectedTabBorder() {
+    @Test func selectedBorderUsesTwoPixelRoundedGeometry() {
         let geometry = SelectedWorkspaceConnectedBorderGeometry.resolve(
             containerSize: CGSize(width: 900, height: 600),
             sidebarWidth: 240,
@@ -129,7 +129,8 @@ import Testing
             selectedRowFrame: CGRect(x: 8, y: 100, width: 224, height: 64)
         )
 
-        #expect(geometry.lineWidth == SidebarWorkspaceSelectionBorderMetrics.previousSelectedTabLineWidth + 1)
+        #expect(geometry.lineWidth == 2)
+        #expect(geometry.cornerRadius == SidebarWorkspaceSelectionBorderMetrics.connectedCornerRadius)
     }
 
     @Test func selectedBorderOmitsTabRightSideAndWorkspaceSharedSegment() {
@@ -148,6 +149,29 @@ import Testing
         #expect(geometry.containsHorizontalSegment(y: 164, fromX: 8, toX: 240))
     }
 
+    @Test func selectedBorderTopStartsBelowTitlebarChrome() {
+        let geometry = SelectedWorkspaceConnectedBorderGeometry.resolve(
+            containerSize: CGSize(width: 900, height: 600),
+            sidebarWidth: 240,
+            rightSidebarWidth: 120,
+            selectedRowFrame: CGRect(x: 8, y: 100, width: 224, height: 64),
+            workspaceTopY: WindowChromeMetrics.appTitlebarHeight
+        )
+
+        #expect(geometry.workspaceTopY == WindowChromeMetrics.appTitlebarHeight)
+        #expect(geometry.containsHorizontalSegment(
+            y: WindowChromeMetrics.appTitlebarHeight,
+            fromX: 240,
+            toX: 780
+        ))
+        #expect(!geometry.containsHorizontalSegment(y: 0, fromX: 240, toX: 780))
+        #expect(geometry.containsVerticalSegment(
+            x: 240,
+            fromY: WindowChromeMetrics.appTitlebarHeight,
+            toY: 100
+        ))
+    }
+
     @Test func selectedBorderGeometryTracksSidebarResizeAndSelectedRowMovement() {
         let geometry = SelectedWorkspaceConnectedBorderGeometry.resolve(
             containerSize: CGSize(width: 1000, height: 700),
@@ -160,6 +184,14 @@ import Testing
         #expect(geometry.containsVerticalSegment(x: 300, fromY: 0, toY: 220))
         #expect(geometry.containsVerticalSegment(x: 300, fromY: 290, toY: 700))
         #expect(!geometry.containsVerticalSegment(x: 300, fromY: 220, toY: 290))
+    }
+
+    @Test func selectedTabFillExtendsIntoConnectedBorderJunction() {
+        #expect(
+            SidebarWorkspaceSelectionBorderMetrics.selectedTabConnectionFillExtensionWidth ==
+                SidebarWorkspaceListMetrics.rowOuterHorizontalPadding +
+                SidebarWorkspaceSelectionBorderMetrics.connectedCornerRadius
+        )
     }
 
     @Test func selectedSolidFillRowsRetainAssignedWorkspaceColor() throws {
