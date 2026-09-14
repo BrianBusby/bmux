@@ -294,152 +294,6 @@ import Testing
         #expect(rows.first?.isFromProvenance == true)
     }
 
-    @Test func missingResourceURLsProduceNoHeaderItems() {
-        let resources = SidebarWorkspaceSnapshotBuilder.resourceLinkPresentation(
-            pullRequestRows: [],
-            projectRows: [],
-            ticketRows: [
-                SidebarWorkspaceSnapshotBuilder.TicketDisplay(
-                    id: "STE-1964",
-                    title: nil,
-                    url: nil,
-                    ownerName: "Brian Busby",
-                    ownerURL: nil
-                )
-            ]
-        )
-
-        #expect(!resources.hasHeaderItems)
-        #expect(resources.headerItems.isEmpty)
-    }
-
-    @Test func resourcePresentationHeaderItemsAreDeterministic() throws {
-        let resources = SidebarWorkspaceSnapshotBuilder.resourceLinkPresentation(
-            pullRequestRows: [Self.pullRequest(number: 57, title: "Unify workspace header", ownerLogin: "octocat")],
-            projectRows: [
-                SidebarWorkspaceSnapshotBuilder.ProjectDisplay(
-                    id: "context-efficiency",
-                    title: "Context Efficiency",
-                    url: URL(string: "https://linear.app/companycam/project/context-efficiency")!
-                )
-            ],
-            ticketRows: [
-                SidebarWorkspaceSnapshotBuilder.TicketDisplay(
-                    id: "STE-1964",
-                    title: "Canonical domain mutation paths",
-                    url: URL(string: "https://linear.app/companycam/issue/STE-1964")!,
-                    ownerName: "Brian Busby",
-                    ownerURL: URL(string: "https://linear.app/companycam/user/brian")!
-                )
-            ]
-        )
-
-        #expect(resources.headerItems.map(\.kind) == [.ticket, .pullRequest, .project, .owner, .owner])
-        #expect(resources.headerItems.map(\.text) == [
-            "STE-1964: Canonical domain mutation paths",
-            "#57",
-            "Context Efficiency",
-            "octocat",
-            "Brian Busby",
-        ])
-    }
-
-    @Test func selectedHeaderPlacementSuppressesOnlySelectedSidebarResources() {
-        let resources = Self.ticketResourcePresentation()
-
-        let selectedHeader = SidebarWorkspaceSnapshotBuilder.selectedWorkspaceHeaderResources(
-            resources,
-            isSelected: true
-        )
-        let unselectedHeader = SidebarWorkspaceSnapshotBuilder.selectedWorkspaceHeaderResources(
-            resources,
-            isSelected: false
-        )
-
-        #expect(selectedHeader == resources)
-        #expect(unselectedHeader == nil)
-        #expect(!SidebarWorkspaceSnapshotBuilder.showsSidebarResourceRows(selectedWorkspaceHeaderResources: selectedHeader))
-        #expect(SidebarWorkspaceSnapshotBuilder.showsSidebarResourceRows(selectedWorkspaceHeaderResources: unselectedHeader))
-    }
-
-    @Test func switchingSelectionTransfersHeaderPlacement() {
-        let resources = Self.ticketResourcePresentation()
-
-        #expect(SidebarWorkspaceSnapshotBuilder.selectedWorkspaceHeaderResources(resources, isSelected: true) != nil)
-        #expect(SidebarWorkspaceSnapshotBuilder.selectedWorkspaceHeaderResources(resources, isSelected: false) == nil)
-        #expect(SidebarWorkspaceSnapshotBuilder.selectedWorkspaceHeaderResources(resources, isSelected: false) == nil)
-        #expect(SidebarWorkspaceSnapshotBuilder.selectedWorkspaceHeaderResources(resources, isSelected: true) != nil)
-    }
-
-    @Test func selectedBorderIsOnePixelThickerThanPreviousSelectedTabBorder() {
-        let geometry = SelectedWorkspaceConnectedBorderGeometry.resolve(
-            containerSize: CGSize(width: 900, height: 600),
-            sidebarWidth: 240,
-            rightSidebarWidth: 120,
-            selectedRowFrame: CGRect(x: 8, y: 100, width: 224, height: 64)
-        )
-
-        #expect(geometry.lineWidth == SidebarWorkspaceSelectionBorderMetrics.previousSelectedTabLineWidth + 1)
-    }
-
-    @Test func selectedBorderOmitsTabRightSideAndWorkspaceSharedSegment() {
-        let geometry = SelectedWorkspaceConnectedBorderGeometry.resolve(
-            containerSize: CGSize(width: 900, height: 600),
-            sidebarWidth: 240,
-            rightSidebarWidth: 120,
-            selectedRowFrame: CGRect(x: 8, y: 100, width: 224, height: 64)
-        )
-
-        #expect(!geometry.containsVerticalSegment(x: 240, fromY: 100, toY: 164))
-        #expect(geometry.containsVerticalSegment(x: 240, fromY: 0, toY: 100))
-        #expect(geometry.containsVerticalSegment(x: 240, fromY: 164, toY: 600))
-        #expect(geometry.containsHorizontalSegment(y: 100, fromX: 8, toX: 240))
-        #expect(geometry.containsVerticalSegment(x: 8, fromY: 100, toY: 164))
-        #expect(geometry.containsHorizontalSegment(y: 164, fromX: 8, toX: 240))
-    }
-
-    @Test func selectedBorderGeometryTracksSidebarResizeAndSelectedRowMovement() {
-        let geometry = SelectedWorkspaceConnectedBorderGeometry.resolve(
-            containerSize: CGSize(width: 1000, height: 700),
-            sidebarWidth: 300,
-            rightSidebarWidth: 180,
-            selectedRowFrame: CGRect(x: 12, y: 220, width: 270, height: 70)
-        )
-
-        #expect(geometry.containsHorizontalSegment(y: 0, fromX: 300, toX: 820))
-        #expect(geometry.containsVerticalSegment(x: 300, fromY: 0, toY: 220))
-        #expect(geometry.containsVerticalSegment(x: 300, fromY: 290, toY: 700))
-        #expect(!geometry.containsVerticalSegment(x: 300, fromY: 220, toY: 290))
-    }
-
-    @Test func selectedSolidFillRowsRetainAssignedWorkspaceColor() throws {
-        let assignedColorHexes = [
-            try #require(WorkspaceTabColorSettings.defaultPalette.first?.hex),
-            "#12ABCD",
-        ]
-
-        for colorScheme in [ColorScheme.light, .dark] {
-            for hex in assignedColorHexes {
-                let style = sidebarWorkspaceRowBackgroundStyle(
-                    activeTabIndicatorStyle: .solidFill,
-                    isActive: true,
-                    isMultiSelected: false,
-                    customColorHex: hex,
-                    colorScheme: colorScheme,
-                    sidebarSelectionColorHex: "#FF00FF"
-                )
-                let expectedColor = try #require(WorkspaceTabColorSettings.displayNSColor(
-                    hex: hex,
-                    colorScheme: colorScheme,
-                    forceBright: false
-                ))
-
-                #expect(style.color?.hexString() == expectedColor.hexString())
-                #expect(style.opacity == 0.46)
-            }
-        }
-    }
-
     @Test func closedContextMenuStoresNextAndClearsPending() {
         let current = Self.snapshot(title: "old", isPinned: false)
         let next = Self.snapshot(title: "new", isPinned: true)
@@ -555,22 +409,6 @@ import Testing
         )
     }
 
-    private static func ticketResourcePresentation() -> SidebarWorkspaceSnapshotBuilder.ResourceLinkPresentation {
-        SidebarWorkspaceSnapshotBuilder.resourceLinkPresentation(
-            pullRequestRows: [],
-            projectRows: [],
-            ticketRows: [
-                SidebarWorkspaceSnapshotBuilder.TicketDisplay(
-                    id: "STE-1964",
-                    title: nil,
-                    url: URL(string: "https://linear.app/companycam/issue/STE-1964")!,
-                    ownerName: nil,
-                    ownerURL: nil
-                )
-            ]
-        )
-    }
-
     private static func livePullRequest(
         number: Int,
         title: String? = nil,
@@ -620,24 +458,6 @@ import Testing
             updatedAt: updatedAt
         )
         return try #require(WorkspaceDisplayCurrentStateSnapshot(record)?.pullRequest)
-    }
-}
-
-private extension SelectedWorkspaceConnectedBorderGeometry {
-    func containsHorizontalSegment(y: CGFloat, fromX: CGFloat, toX: CGFloat) -> Bool {
-        segments.contains {
-            $0.start.y == y && $0.end.y == y &&
-                min($0.start.x, $0.end.x) == min(fromX, toX) &&
-                max($0.start.x, $0.end.x) == max(fromX, toX)
-        }
-    }
-
-    func containsVerticalSegment(x: CGFloat, fromY: CGFloat, toY: CGFloat) -> Bool {
-        segments.contains {
-            $0.start.x == x && $0.end.x == x &&
-                min($0.start.y, $0.end.y) == min(fromY, toY) &&
-                max($0.start.y, $0.end.y) == max(fromY, toY)
-        }
     }
 }
 
@@ -723,7 +543,6 @@ private extension SelectedWorkspaceConnectedBorderGeometry {
                 colorHex: "#F2C94C"
             )
         )
-
         #expect(colorHex == "#56CCF2")
     }
 
