@@ -157,6 +157,30 @@ struct SelectedWorkspaceConnectedBorderOverlay: View {
     }
 }
 
+extension View {
+    func selectedWorkspaceConnectedBorder(
+        isVisible: Bool,
+        selectedWorkspaceId: UUID?,
+        sidebarWidth: CGFloat,
+        rightSidebarWidth: CGFloat,
+        workspaceTopY: CGFloat
+    ) -> some View {
+        overlayPreferenceValue(SelectedWorkspaceRowFramePreferenceKey.self) { anchors in
+            GeometryReader { proxy in
+                if isVisible, let selectedWorkspaceId {
+                    SelectedWorkspaceConnectedBorderOverlay(
+                        sidebarWidth: sidebarWidth,
+                        rightSidebarWidth: rightSidebarWidth,
+                        selectedRowFrame: anchors[selectedWorkspaceId].map { proxy[$0] },
+                        workspaceTopY: workspaceTopY
+                    )
+                    .zIndex(900)
+                }
+            }
+        }
+    }
+}
+
 private extension CGPoint {
     func distance(to other: CGPoint) -> CGFloat {
         hypot(x - other.x, y - other.y)

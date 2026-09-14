@@ -1670,15 +1670,6 @@ struct ContentView: View {
         workspacePresentationModeRuntimeCache.isMinimalMode
     }
 
-    private var selectedWorkspaceConnectedBorderTopY: CGFloat {
-        max(0, Self.effectiveTitlebarPadding(
-            isMinimalMode: currentIsMinimalMode,
-            isFullScreen: isFullScreen,
-            titlebarPadding: titlebarPadding,
-            hostingSafeAreaTop: hostingSafeAreaTop
-        ))
-    }
-
     static func effectiveTitlebarPadding(
         isMinimalMode: Bool,
         isFullScreen: Bool,
@@ -2502,22 +2493,18 @@ struct ContentView: View {
                             .zIndex(1000)
                     }
                 }
-                .overlayPreferenceValue(SelectedWorkspaceRowFramePreferenceKey.self) { anchors in
-                    GeometryReader { proxy in
-                        if sidebarState.isVisible,
-                           sidebarSelectionState.selection == .tabs,
-                           let selectedWorkspaceId = tabManager.selectedTabId {
-                            let selectedRowFrame = anchors[selectedWorkspaceId].map { proxy[$0] }
-                            SelectedWorkspaceConnectedBorderOverlay(
-                                sidebarWidth: sidebarWidth,
-                                rightSidebarWidth: rightSidebarWidth,
-                                selectedRowFrame: selectedRowFrame,
-                                workspaceTopY: selectedWorkspaceConnectedBorderTopY
-                            )
-                            .zIndex(900)
-                        }
-                    }
-                }
+                .selectedWorkspaceConnectedBorder(
+                    isVisible: sidebarState.isVisible && sidebarSelectionState.selection == .tabs,
+                    selectedWorkspaceId: tabManager.selectedTabId,
+                    sidebarWidth: sidebarWidth,
+                    rightSidebarWidth: rightSidebarWidth,
+                    workspaceTopY: max(0, Self.effectiveTitlebarPadding(
+                        isMinimalMode: currentIsMinimalMode,
+                        isFullScreen: isFullScreen,
+                        titlebarPadding: titlebarPadding,
+                        hostingSafeAreaTop: hostingSafeAreaTop
+                    ))
+                )
         )
     }
 
@@ -13247,7 +13234,6 @@ struct TabItemView: View, Equatable {
     @State private var renameBaselineHadUserCustomTitle = false
     private static let maxWrappedTitleLines = 8
     private static let maxDisplayedTitleCharacters = 2048
-    private static let selectedBackgroundCornerRadius: CGFloat = 6
 
     var isMultiSelected: Bool {
         selectedTabIds.contains(tab.id)
@@ -13983,18 +13969,18 @@ struct TabItemView: View, Equatable {
         .padding(.horizontal, SidebarWorkspaceListMetrics.rowContentHorizontalPadding)
         .padding(.vertical, 8)
         .background(
-            RoundedRectangle(cornerRadius: Self.selectedBackgroundCornerRadius)
+            RoundedRectangle(cornerRadius: SidebarWorkspaceSelectionBorderMetrics.connectedCornerRadius)
                 .fill(backgroundColor)
                 .overlay(alignment: .trailing) {
-                    if let selectedTabConnectionFillColor {
+                    if isActive {
                         Rectangle()
-                            .fill(selectedTabConnectionFillColor)
+                            .fill(backgroundColor)
                             .frame(width: SidebarWorkspaceSelectionBorderMetrics.selectedTabConnectionFillExtensionWidth)
                             .offset(x: SidebarWorkspaceListMetrics.rowOuterHorizontalPadding)
                     }
                 }
                 .overlay {
-                    RoundedRectangle(cornerRadius: Self.selectedBackgroundCornerRadius)
+                    RoundedRectangle(cornerRadius: SidebarWorkspaceSelectionBorderMetrics.connectedCornerRadius)
                         .strokeBorder(activeBorderColor, lineWidth: activeBorderLineWidth)
                 }
                 .overlay(alignment: .leading) {
@@ -14559,8 +14545,8 @@ struct TabItemView: View, Equatable {
         }
     }
 
-    private var backgroundStyle: SidebarWorkspaceRowBackgroundStyle {
-        sidebarWorkspaceRowBackgroundStyle(
+    private var backgroundColor: Color {
+        let style = sidebarWorkspaceRowBackgroundStyle(
             activeTabIndicatorStyle: activeTabIndicatorStyle,
             isActive: isActive,
             isMultiSelected: isMultiSelected,
@@ -14568,17 +14554,8 @@ struct TabItemView: View, Equatable {
             colorScheme: colorScheme,
             sidebarSelectionColorHex: sidebarSelectionColorHex
         )
-    }
-
-    private var backgroundColor: Color {
-        let style = backgroundStyle
         guard let color = style.color else { return .clear }
         return Color(nsColor: color).opacity(style.opacity)
-    }
-
-    private var selectedTabConnectionFillColor: Color? {
-        guard isActive, let color = backgroundStyle.color else { return nil }
-        return Color(nsColor: color).opacity(backgroundStyle.opacity)
     }
 
     private var railColor: Color {

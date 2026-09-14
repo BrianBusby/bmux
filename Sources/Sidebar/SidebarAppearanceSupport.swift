@@ -274,7 +274,7 @@ struct SidebarWorkspaceRowBackgroundStyle {
 
 enum SidebarWorkspaceSelectionBorderMetrics {
     static let previousSelectedTabLineWidth: CGFloat = 1.5
-    static let connectedLineWidth: CGFloat = previousSelectedTabLineWidth + 1
+    static let connectedLineWidth: CGFloat = 2
     static let connectedCornerRadius: CGFloat = 6
     static let selectedTabConnectionFillExtensionWidth: CGFloat =
         SidebarWorkspaceListMetrics.rowOuterHorizontalPadding + connectedCornerRadius
