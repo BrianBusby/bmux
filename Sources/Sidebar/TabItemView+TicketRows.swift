@@ -1,10 +1,13 @@
+import Foundation
 import SwiftUI
 
 extension TabItemView {
     @ViewBuilder
     func ticketRowsView(
         _ rows: [SidebarWorkspaceSnapshotBuilder.TicketDisplay],
-        prominent: Bool = false
+        prominent: Bool = false,
+        hiddenTicketURLs: Set<URL> = [],
+        hiddenOwnerURLs: Set<URL> = []
     ) -> some View {
         VStack(alignment: .leading, spacing: 1) {
             ForEach(rows) { ticket in
@@ -28,24 +31,27 @@ extension TabItemView {
                 }
                 .font(magnifiedFont(fontSize, weight: fontWeight, design: .monospaced))
                 .foregroundColor(activeSecondaryColor(0.75))
-                if let url = ticket.url {
-                    Button(action: { openTicketLink(url) }) { rowContent }
-                        .buttonStyle(.plain)
-                        .tint(activeSecondaryColor(0.75))
-                        .safeHelp(String(
-                            format: String(
-                                localized: "sidebar.ticket.openTooltip",
-                                defaultValue: "Open %@"
-                            ),
-                            locale: .current,
-                            linkText
-                        ))
-                        .accessibilityIdentifier("SidebarTicketRow")
-                } else {
-                    rowContent.accessibilityElement(children: .combine).accessibilityIdentifier("SidebarTicketRow")
+                if ticket.url.map({ !hiddenTicketURLs.contains($0) }) ?? true {
+                    if let url = ticket.url {
+                        Button(action: { openTicketLink(url) }) { rowContent }
+                            .buttonStyle(.plain)
+                            .tint(activeSecondaryColor(0.75))
+                            .safeHelp(String(
+                                format: String(
+                                    localized: "sidebar.ticket.openTooltip",
+                                    defaultValue: "Open %@"
+                                ),
+                                locale: .current,
+                                linkText
+                            ))
+                            .accessibilityIdentifier("SidebarTicketRow")
+                    } else {
+                        rowContent.accessibilityElement(children: .combine).accessibilityIdentifier("SidebarTicketRow")
+                    }
                 }
                 if let ownerName = ticket.ownerName?.trimmingCharacters(in: .whitespacesAndNewlines),
-                   !ownerName.isEmpty {
+                   !ownerName.isEmpty,
+                   ticket.ownerURL.map({ !hiddenOwnerURLs.contains($0) }) ?? true {
                     ticketOwnerRowView(ticket, ownerName: ownerName)
                 }
             }

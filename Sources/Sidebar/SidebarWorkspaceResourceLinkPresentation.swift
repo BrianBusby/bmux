@@ -82,5 +82,37 @@ extension SidebarWorkspaceSnapshotBuilder {
             }
             return ticketItems + pullRequestItems + projectItems + ownerItems
         }
+
+        var headerSuppression: HeaderSuppression {
+            HeaderSuppression(
+                ticketURLs: Set(ticketRows.compactMap(\.url)),
+                pullRequestURLs: Set(pullRequestRows.compactMap(\.url)),
+                projectURLs: Set(projectRows.compactMap(\.url)),
+                ownerURLs: Set(ownerRows.compactMap(\.url))
+            )
+        }
+    }
+
+    struct HeaderSuppression: Equatable {
+        let ticketURLs: Set<URL>
+        let pullRequestURLs: Set<URL>
+        let projectURLs: Set<URL>
+        let ownerURLs: Set<URL>
+
+        static let empty = HeaderSuppression(
+            ticketURLs: [],
+            pullRequestURLs: [],
+            projectURLs: [],
+            ownerURLs: []
+        )
+    }
+
+    struct SidebarResourceRows: Equatable {
+        let ticketRows: [TicketDisplay]
+        let hiddenTicketURLs: Set<URL>
+        let hiddenOwnerURLs: Set<URL>
+        let pullRequestRows: [PullRequestDisplay]
+        let projectRows: [ProjectDisplay]
+        let pullRequestOwnerRows: [PullRequestDisplay]
     }
 }

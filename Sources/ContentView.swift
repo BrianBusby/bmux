@@ -12438,7 +12438,6 @@ struct VerticalTabsSidebar: View {
             .sidebarWorkspaceFrameAnchor(id: tab.id, isEnabled: shouldCollectWorkspaceDropTargets)
             .padding(.leading, tab.groupId != nil ? SidebarWorkspaceGroupingMetrics.memberIndent : 0)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .selectedWorkspaceFrameAnchor(id: tab.id, isSelected: tabManager.selectedTabId == tab.id)
             .contentShape(Rectangle())
     }
 
@@ -13581,7 +13580,8 @@ struct TabItemView: View, Equatable {
 #endif
         let signpost = SidebarProfilingSignposts.begin("sidebar-tab-item-body", "index=\(index) workspace=\(sidebarShortTabId(tab.id)) active=\(isActive) unread=\(unreadCount)")
         let workspaceSnapshot = self.workspaceSnapshot
-        let showsSidebarResourceRows = SidebarWorkspaceSnapshotBuilder.showsSidebarResourceRows(
+        let sidebarResourceRows = SidebarWorkspaceSnapshotBuilder.sidebarResourceRows(
+            resources: workspaceSnapshot.resourceLinks,
             selectedWorkspaceHeaderResources: selectedWorkspaceHeaderResources
         )
         let closeWorkspaceTooltip = String(localized: "sidebar.closeWorkspace.tooltip", defaultValue: "Close Workspace")
@@ -13701,8 +13701,8 @@ struct TabItemView: View, Equatable {
                     .layoutPriority(1)
                 } else {
                     VStack(alignment: .leading, spacing: 1) {
-                        if showsSidebarResourceRows, !workspaceSnapshot.ticketRows.isEmpty {
-                            ticketRowsView(workspaceSnapshot.ticketRows, prominent: true)
+                        if !sidebarResourceRows.ticketRows.isEmpty {
+                            ticketRowsView(sidebarResourceRows.ticketRows, prominent: true, hiddenTicketURLs: sidebarResourceRows.hiddenTicketURLs, hiddenOwnerURLs: sidebarResourceRows.hiddenOwnerURLs)
                         }
 
                         Text(workspaceSnapshot.title)
@@ -13928,17 +13928,17 @@ struct TabItemView: View, Equatable {
             }
 
             // Pull request rows
-            if showsSidebarResourceRows, !workspaceSnapshot.pullRequestRows.isEmpty {
-                pullRequestRowsView(workspaceSnapshot.pullRequestRows)
+            if !sidebarResourceRows.pullRequestRows.isEmpty {
+                pullRequestRowsView(sidebarResourceRows.pullRequestRows)
             }
 
             // Project rows
-            if showsSidebarResourceRows, !workspaceSnapshot.projectRows.isEmpty {
-                projectRowsView(workspaceSnapshot.projectRows)
+            if !sidebarResourceRows.projectRows.isEmpty {
+                projectRowsView(sidebarResourceRows.projectRows)
             }
 
-            if showsSidebarResourceRows, !workspaceSnapshot.pullRequestRows.isEmpty {
-                pullRequestOwnerRowsView(workspaceSnapshot.pullRequestRows)
+            if !sidebarResourceRows.pullRequestOwnerRows.isEmpty {
+                pullRequestOwnerRowsView(sidebarResourceRows.pullRequestOwnerRows)
             }
 
             // Ports row
@@ -14005,6 +14005,7 @@ struct TabItemView: View, Equatable {
             fontSize: scaledFontSize(10)
         )
         .shortcutHintVisibilityAnimation(value: showsWorkspaceShortcutHint)
+        .selectedWorkspaceFrameAnchor(id: tab.id, isSelected: isActive)
         .padding(.horizontal, SidebarWorkspaceListMetrics.rowOuterHorizontalPadding)
         .contentShape(Rectangle())
         .sidebarWorkspaceRowHoverTracking($rowInteractionState)

@@ -74,8 +74,42 @@ import Testing
 
         #expect(selectedHeader == resources)
         #expect(unselectedHeader == nil)
-        #expect(!SidebarWorkspaceSnapshotBuilder.showsSidebarResourceRows(selectedWorkspaceHeaderResources: selectedHeader))
-        #expect(SidebarWorkspaceSnapshotBuilder.showsSidebarResourceRows(selectedWorkspaceHeaderResources: unselectedHeader))
+        #expect(SidebarWorkspaceSnapshotBuilder.sidebarResourceRows(resources: resources, selectedWorkspaceHeaderResources: selectedHeader).ticketRows.isEmpty)
+        #expect(SidebarWorkspaceSnapshotBuilder.sidebarResourceRows(resources: resources, selectedWorkspaceHeaderResources: unselectedHeader).ticketRows.map(\.id) == ["STE-1964"])
+    }
+
+    @Test func selectedSidebarRetainsRowsNotRepresentedInHeader() {
+        let ticketURL = URL(string: "https://linear.app/companycam/issue/STE-1964")!
+        let resources = SidebarWorkspaceSnapshotBuilder.resourceLinkPresentation(
+            pullRequestRows: [Self.pullRequest(number: 57, title: "Unify workspace header", ownerLogin: "octocat")],
+            projectRows: [],
+            ticketRows: [
+                SidebarWorkspaceSnapshotBuilder.TicketDisplay(
+                    id: "STE-1964",
+                    title: nil,
+                    url: nil,
+                    ownerName: nil,
+                    ownerURL: nil
+                ),
+                SidebarWorkspaceSnapshotBuilder.TicketDisplay(
+                    id: "STE-2000",
+                    title: "Linked ticket with unlinked owner",
+                    url: ticketURL,
+                    ownerName: "Brian Busby",
+                    ownerURL: nil
+                ),
+            ]
+        )
+        let selectedHeader = SidebarWorkspaceSnapshotBuilder.selectedWorkspaceHeaderResources(resources, isSelected: true)
+        let rows = SidebarWorkspaceSnapshotBuilder.sidebarResourceRows(
+            resources: resources,
+            selectedWorkspaceHeaderResources: selectedHeader
+        )
+
+        #expect(rows.pullRequestRows.isEmpty)
+        #expect(rows.ticketRows.map(\.id) == ["STE-1964", "STE-2000"])
+        #expect(rows.hiddenTicketURLs == Set([ticketURL]))
+        #expect(rows.pullRequestOwnerRows.isEmpty)
     }
 
     @Test func switchingSelectionTransfersHeaderPlacement() {

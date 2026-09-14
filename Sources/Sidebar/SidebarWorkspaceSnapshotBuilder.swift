@@ -225,10 +225,28 @@ struct SidebarWorkspaceSnapshotBuilder {
         return resources
     }
 
-    static func showsSidebarResourceRows(
+    static func sidebarResourceRows(
+        resources: ResourceLinkPresentation,
         selectedWorkspaceHeaderResources: ResourceLinkPresentation?
-    ) -> Bool {
-        selectedWorkspaceHeaderResources?.hasHeaderItems != true
+    ) -> SidebarResourceRows {
+        let suppression = selectedWorkspaceHeaderResources?.headerSuppression ?? .empty
+        let ticketRows = resources.ticketRows.filter {
+            let showsTicket = $0.url.map { !suppression.ticketURLs.contains($0) } ?? true
+            let showsOwner = ($0.ownerName?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false)
+                && ($0.ownerURL.map { !suppression.ownerURLs.contains($0) } ?? true)
+            return showsTicket || showsOwner
+        }
+        return SidebarResourceRows(
+            ticketRows: ticketRows,
+            hiddenTicketURLs: suppression.ticketURLs,
+            hiddenOwnerURLs: suppression.ownerURLs,
+            pullRequestRows: resources.pullRequestRows.filter { $0.url.map { !suppression.pullRequestURLs.contains($0) } ?? true },
+            projectRows: resources.projectRows.filter { $0.url.map { !suppression.projectURLs.contains($0) } ?? true },
+            pullRequestOwnerRows: resources.pullRequestRows.filter {
+                ($0.ownerLogin?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false)
+                    && ($0.ownerURL.map { !suppression.ownerURLs.contains($0) } ?? true)
+            }
+        )
     }
 
     static func ticketDisplays(
