@@ -13,8 +13,10 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: none selected
-- Repository state: none selected
+- Active slice: Unified selected workspace header and border (`workspace_selected_header_border_presentation`)
+- Slice state: open
+- Owner: bmux
+- Repository state: active
 
 ## Release
 
@@ -110,6 +112,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Display File Watcher Churn Policy | planned |
 | Workspace Display Projection | implemented |
 | Workspace Display Prompt Resource Discovery | implemented |
+| Workspace Display Selected Header Border Presentation | implemented |
 | Workspace Display Tab Projection | implemented |
 | Workspace Display Ticket Link Facts | implemented |
 | Workspace Display Ticket Title Sidebar | implemented |

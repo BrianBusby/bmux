@@ -272,6 +272,11 @@ struct SidebarWorkspaceRowBackgroundStyle {
     static let clear = Self(color: nil, opacity: 0)
 }
 
+enum SidebarWorkspaceSelectionBorderMetrics {
+    static let previousSelectedTabLineWidth: CGFloat = 1.5
+    static let connectedLineWidth: CGFloat = previousSelectedTabLineWidth + 1
+}
+
 func sidebarWorkspaceRowExplicitRailNSColor(
     activeTabIndicatorStyle: WorkspaceIndicatorStyle,
     customColorHex: String?,

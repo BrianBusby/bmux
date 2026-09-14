@@ -3,10 +3,14 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id:
-    title:
-    state: none_selected
-  state: none_selected
+    id: workspace_selected_header_border_presentation
+    title: Unified selected workspace header and border
+    state: open
+    owner: bmux
+    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/unified-selected-workspace-header-border
+    active_branch: unified-selected-workspace-header-border
+    active_agent: Codex
+  state: active
 
 execution_telemetry:
   provider_neutral_contract: implemented
@@ -84,6 +88,7 @@ local_capabilities:
   workspace_display_ticket_title_sidebar: implemented
   workspace_display_durable_context: implemented
   workspace_display_prompt_resource_discovery: implemented
+  workspace_display_selected_header_border_presentation: implemented
   session_work_model_consumer: planned
   richer_session_work_view: planned
   normal_coding_agent_evidence_ingestion: implemented
