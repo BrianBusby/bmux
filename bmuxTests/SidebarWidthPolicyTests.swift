@@ -278,6 +278,43 @@ final class SidebarWidthPolicyTests: XCTestCase {
 }
 
 final class SidebarWorkspaceSelectionColorTests: XCTestCase {
+    func testWorkspaceRowLinkColorKeepsSystemLinkOnClearRows() {
+        let foreground = sidebarWorkspaceRowLinkNSColor(
+            activeTabIndicatorStyle: .leftRail,
+            isActive: true,
+            isMultiSelected: false,
+            customColorHex: nil,
+            colorScheme: .light,
+            sidebarSelectionColorHex: nil,
+            baseBackgroundColor: .white
+        )
+
+        assertColor(foreground, equals: .linkColor)
+    }
+
+    func testWorkspaceRowLinkColorFallsBackOnFilledSelectedRows() throws {
+        let rowColorHex = "#0066FF"
+        let rowColor = try XCTUnwrap(NSColor(hex: rowColorHex))
+        let effectiveBackground = bmuxCompositedNSColor(
+            rowColor.withAlphaComponent(0.46),
+            over: NSColor.black
+        )
+        let foreground = sidebarWorkspaceRowLinkNSColor(
+            activeTabIndicatorStyle: .solidFill,
+            isActive: true,
+            isMultiSelected: false,
+            customColorHex: rowColorHex,
+            colorScheme: .dark,
+            sidebarSelectionColorHex: nil,
+            baseBackgroundColor: .black
+        )
+
+        XCTAssertGreaterThanOrEqual(
+            bmuxContrastRatio(foreground: foreground, background: effectiveBackground),
+            4.5
+        )
+    }
+
     func testSelectedWorkspaceRowsKeepUnselectedBackgroundInLightAndDark() {
         for colorScheme in [ColorScheme.light, .dark] {
             let coloredSelected = sidebarWorkspaceRowBackgroundStyle(

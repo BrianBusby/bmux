@@ -376,3 +376,33 @@ func sidebarWorkspaceRowLoadingIndicatorNSColor(
     }
     return bmuxReadableForegroundNSColor(on: effectiveBackground, opacity: 1)
 }
+
+func sidebarWorkspaceRowLinkNSColor(
+    activeTabIndicatorStyle: WorkspaceIndicatorStyle,
+    isActive: Bool,
+    isMultiSelected: Bool,
+    customColorHex: String?,
+    colorScheme: ColorScheme,
+    sidebarSelectionColorHex: String?,
+    baseBackgroundColor: NSColor
+) -> NSColor {
+    let style = sidebarWorkspaceRowBackgroundStyle(
+        activeTabIndicatorStyle: activeTabIndicatorStyle,
+        isActive: isActive,
+        isMultiSelected: isMultiSelected,
+        customColorHex: customColorHex,
+        colorScheme: colorScheme,
+        sidebarSelectionColorHex: sidebarSelectionColorHex
+    )
+    guard let rowColor = style.color else {
+        return .linkColor
+    }
+    let effectiveBackground = bmuxCompositedNSColor(
+        rowColor.withAlphaComponent(CGFloat(style.opacity)),
+        over: baseBackgroundColor
+    )
+    return bmuxReadableForegroundNSColor(
+        preferred: .linkColor,
+        on: effectiveBackground
+    )
+}

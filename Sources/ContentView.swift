@@ -15187,7 +15187,15 @@ struct TabItemView: View, Equatable {
     }
 
     var pullRequestLinkColor: Color {
-        Color(nsColor: .linkColor)
+        Color(nsColor: sidebarWorkspaceRowLinkNSColor(
+            activeTabIndicatorStyle: activeTabIndicatorStyle,
+            isActive: isActive,
+            isMultiSelected: isMultiSelected,
+            customColorHex: workspaceRowColorHex,
+            colorScheme: colorScheme,
+            sidebarSelectionColorHex: sidebarSelectionColorHex,
+            baseBackgroundColor: colorScheme == .dark ? .black : .white
+        ))
     }
 
     private func openPullRequestLink(_ url: URL) {
