@@ -121,7 +121,7 @@ import Testing
         #expect(SidebarWorkspaceSnapshotBuilder.selectedWorkspaceHeaderResources(resources, isSelected: true) != nil)
     }
 
-    @Test func selectedBorderUsesTwoPixelRoundedGeometry() {
+    @Test func selectedBorderIsOnePixelThickerThanPreviousSelectedTabBorderAndRounded() {
         let geometry = SelectedWorkspaceConnectedBorderGeometry.resolve(
             containerSize: CGSize(width: 900, height: 600),
             sidebarWidth: 240,
@@ -129,7 +129,7 @@ import Testing
             selectedRowFrame: CGRect(x: 8, y: 100, width: 224, height: 64)
         )
 
-        #expect(geometry.lineWidth == 2)
+        #expect(geometry.lineWidth == SidebarWorkspaceSelectionBorderMetrics.previousSelectedTabLineWidth + 1)
         #expect(geometry.cornerRadius == SidebarWorkspaceSelectionBorderMetrics.connectedCornerRadius)
     }
 
