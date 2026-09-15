@@ -278,27 +278,9 @@ final class SidebarWidthPolicyTests: XCTestCase {
 }
 
 final class SidebarWorkspaceSelectionColorTests: XCTestCase {
-    func testWorkspaceRowLinkColorKeepsSystemLinkOnClearRows() {
-        let foreground = sidebarWorkspaceRowLinkNSColor(
-            activeTabIndicatorStyle: .leftRail,
-            isActive: true,
-            isMultiSelected: false,
-            customColorHex: nil,
-            colorScheme: .light,
-            sidebarSelectionColorHex: nil,
-            baseBackgroundColor: .white
-        )
-
-        assertColor(foreground, equals: .linkColor)
-    }
-
-    func testWorkspaceRowLinkColorFallsBackOnFilledSelectedRows() throws {
+    func testWorkspaceRowLinkColorKeepsSystemLinkOnClearRowsAndFallsBackOnFilledRows() throws {
+        assertColor(sidebarWorkspaceRowLinkNSColor(activeTabIndicatorStyle: .leftRail, isActive: true, isMultiSelected: false, customColorHex: nil, colorScheme: .light, sidebarSelectionColorHex: nil, baseBackgroundColor: .white), equals: .linkColor)
         let rowColorHex = "#0066FF"
-        let rowColor = try XCTUnwrap(NSColor(hex: rowColorHex))
-        let effectiveBackground = bmuxCompositedNSColor(
-            rowColor.withAlphaComponent(0.46),
-            over: NSColor.black
-        )
         let foreground = sidebarWorkspaceRowLinkNSColor(
             activeTabIndicatorStyle: .solidFill,
             isActive: true,
@@ -308,7 +290,10 @@ final class SidebarWorkspaceSelectionColorTests: XCTestCase {
             sidebarSelectionColorHex: nil,
             baseBackgroundColor: .black
         )
+        let style = sidebarWorkspaceRowBackgroundStyle(activeTabIndicatorStyle: .solidFill, isActive: true, isMultiSelected: false, customColorHex: rowColorHex, colorScheme: .dark, sidebarSelectionColorHex: nil)
+        let effectiveBackground = bmuxCompositedNSColor(try XCTUnwrap(style.color).withAlphaComponent(CGFloat(style.opacity)), over: .black)
 
+        XCTAssertFalse(colorsAreEqual(foreground, .linkColor))
         XCTAssertGreaterThanOrEqual(
             bmuxContrastRatio(foreground: foreground, background: effectiveBackground),
             4.5
