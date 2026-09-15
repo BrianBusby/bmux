@@ -43,6 +43,17 @@ final class BMUXOpenCommandTests: XCTestCase {
         }
     }
 
+    private var diffViewerRootURLs: [URL] = []
+
+    override func tearDown() {
+        for rootURL in diffViewerRootURLs {
+            terminateDiffViewerServer(in: rootURL)
+            try? FileManager.default.removeItem(at: rootURL)
+        }
+        diffViewerRootURLs.removeAll()
+        super.tearDown()
+    }
+
     func testOpenCommandHonorsTerminatorForDashPrefixedPath() throws {
         let cliPath = try bundledCLIPath()
         let socketPath = makeSocketPath("open-dash")
@@ -347,7 +358,7 @@ final class BMUXOpenCommandTests: XCTestCase {
         wait(for: [serverHandled], timeout: 5)
         XCTAssertFalse(result.timedOut, result.stderr)
         XCTAssertEqual(result.status, 0, result.stderr)
-        XCTAssertTrue(result.stdout.hasPrefix("OK surface=surface-id pane=pane-id path="), result.stdout)
+        XCTAssertEqual(result.stdout, "OK surface=surface-id pane=pane-id\n", result.stdout)
         XCTAssertEqual(state.commands.compactMap { Self.v2Payload(from: $0)?["method"] as? String }, ["browser.open_split"])
 
         let commandPayload = try XCTUnwrap(Self.v2Payload(from: try XCTUnwrap(state.commands.first)))
@@ -390,13 +401,19 @@ final class BMUXOpenCommandTests: XCTestCase {
         XCTAssertTrue(html.contains("Review diff"), html)
         XCTAssertTrue(html.contains("<script id=\"bmux-diff-viewer-config\" type=\"application/json\">") && html.contains("background: transparent;"), html)
         XCTAssertTrue(html.contains("<div id=\"root\"></div>"), html)
-        XCTAssertTrue(html.contains("<script type=\"module\" src=\"./assets/bmux-diff-viewer-app/main.mjs\"></script>"), html)
+        XCTAssertTrue(html.contains("<script type=\"module\" src=\"./assets/bmux-webviews-app-"), html)
+        XCTAssertTrue(html.contains("/main.mjs\"></script>"), html)
         let assetDirectory = viewerFileURL.deletingLastPathComponent()
             .appendingPathComponent("assets", isDirectory: true)
             .appendingPathComponent("pierre-diffs-1.2.7-trees-1.0.0-beta.4", isDirectory: true)
-        let appAssetDirectory = viewerFileURL.deletingLastPathComponent()
-            .appendingPathComponent("assets", isDirectory: true)
-            .appendingPathComponent("bmux-diff-viewer-app", isDirectory: true)
+        let appAssetEntry = try XCTUnwrap(files.first { file in
+            guard let requestPath = file["request_path"] as? String else { return false }
+            return requestPath.hasPrefix("/assets/bmux-webviews-app-") &&
+                requestPath.hasSuffix("/main.mjs")
+        })
+        let appAssetMainPath = try XCTUnwrap(appAssetEntry["file_path"] as? String)
+        let appAssetDirectory = URL(fileURLWithPath: appAssetMainPath, isDirectory: false)
+            .deletingLastPathComponent()
         XCTAssertTrue(FileManager.default.fileExists(atPath: assetDirectory.appendingPathComponent("diffs.mjs").path))
         XCTAssertTrue(FileManager.default.fileExists(atPath: assetDirectory.appendingPathComponent("trees.mjs").path))
         XCTAssertTrue(FileManager.default.fileExists(atPath: assetDirectory.appendingPathComponent("worker-pool/worker-pool.mjs").path))
@@ -424,7 +441,9 @@ final class BMUXOpenCommandTests: XCTestCase {
                 file["mime_type"] as? String == "text/x-diff"
         })
         XCTAssertTrue(files.contains { file in
-            file["request_path"] as? String == "/assets/bmux-diff-viewer-app/main.mjs" &&
+            guard let requestPath = file["request_path"] as? String else { return false }
+            return requestPath.hasPrefix("/assets/bmux-webviews-app-") &&
+                requestPath.hasSuffix("/main.mjs") &&
                 file["mime_type"] as? String == "text/javascript"
         })
         XCTAssertTrue(files.contains { file in
@@ -538,15 +557,16 @@ final class BMUXOpenCommandTests: XCTestCase {
         let rawURL = try XCTUnwrap(params["url"] as? String)
         let files = try diffViewerAllowedFiles(for: rawURL, from: params)
         let appEntry = try XCTUnwrap(files.first { file in
-            (file["request_path"] as? String)?.hasSuffix("/assets/bmux-diff-viewer-app/main.mjs") == true
+            guard let requestPath = file["request_path"] as? String else { return false }
+            return requestPath.hasPrefix("/assets/bmux-webviews-app-") &&
+                requestPath.hasSuffix("/main.mjs")
         })
         let appFilePath = try XCTUnwrap(appEntry["file_path"] as? String)
         let appMain = try String(contentsOfFile: appFilePath, encoding: .utf8)
         XCTAssertTrue(appMain.contains("bmuxTaggedSocketAssetMarker = 'target-\(tag)'"), appMain)
 
-        let stateURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-            .appendingPathComponent("bmux-diff-viewer-\(Darwin.getuid())", isDirectory: true)
-            .appendingPathComponent(".server-state", isDirectory: false)
+        let stateURL = try XCTUnwrap(diffViewerRootURLs.last)
+            .appendingPathComponent(".server.json", isDirectory: false)
         let serverState = try JSONSerialization.jsonObject(with: Data(contentsOf: stateURL)) as? [String: Any]
         XCTAssertEqual(serverState?["executablePath"] as? String, targetCLIURL.path)
     }
@@ -610,7 +630,7 @@ final class BMUXOpenCommandTests: XCTestCase {
 
         let process = Process()
         let stdoutPipe = Pipe()
-        var environment = ProcessInfo.processInfo.environment
+        var environment = sanitizedCLIEnvironment()
         environment["BMUX_DIFF_VIEWER_WAIT_TIMEOUT_SECONDS"] = "0.05"
         process.executableURL = URL(fileURLWithPath: cliPath)
         process.arguments = ["diff-viewer-server", "--root", rootURL.path]
@@ -1493,6 +1513,7 @@ final class BMUXOpenCommandTests: XCTestCase {
         let surfaceId = UUID().uuidString.lowercased()
         let sessionId = "session-duplicate-turn"
         let turnId = "turn-duplicate"
+        let nextTurnId = "turn-next"
 
         func runHook(subcommand: String, input: [String: Any]) throws -> ProcessRunResult {
             let socketPath = makeSocketPath("hookdu")
@@ -1542,7 +1563,7 @@ final class BMUXOpenCommandTests: XCTestCase {
             return result
         }
 
-        func runPromptSubmit() throws -> ProcessRunResult {
+        func runPromptSubmit(turnId: String = turnId) throws -> ProcessRunResult {
             try runHook(
                 subcommand: "prompt-submit",
                 input: [
@@ -1601,13 +1622,16 @@ final class BMUXOpenCommandTests: XCTestCase {
         XCTAssertEqual(stopHook.status, 0, stopHook.stderr)
         try "one\ntwo\nthree\n".write(to: fileURL, atomically: true, encoding: .utf8)
 
-        let nextHook = try runPromptSubmit()
+        let nextHook = try runPromptSubmit(turnId: nextTurnId)
         XCTAssertFalse(nextHook.timedOut, nextHook.stderr)
         XCTAssertEqual(nextHook.status, 0, nextHook.stderr)
 
         let refreshedRecords = try diffBaselineRecords()
         XCTAssertEqual(refreshedRecords.filter { $0["turnId"] as? String == turnId }.count, 1)
-        let refreshedBaseCommit = try XCTUnwrap(refreshedRecords.first?["baseCommit"] as? String)
+        XCTAssertEqual(refreshedRecords.filter { $0["turnId"] as? String == nextTurnId }.count, 1)
+        let refreshedBaseCommit = try XCTUnwrap(
+            refreshedRecords.first { $0["turnId"] as? String == nextTurnId }?["baseCommit"] as? String
+        )
         XCTAssertNotEqual(refreshedBaseCommit, duplicateBaseCommit)
     }
 
@@ -1685,6 +1709,17 @@ final class BMUXOpenCommandTests: XCTestCase {
           exit 0
         fi
         if [ "${1:-}" = "diff" ]; then
+          for arg in "$@"; do
+            if [ "$arg" = "--cached" ]; then
+              : > "$BMUX_FAKE_GIT_ALTERNATE_STARTED"
+              while [ ! -f "$BMUX_FAKE_GIT_RELEASE_ALTERNATE" ]; do
+                sleep 0.05
+              done
+              exit 0
+            fi
+          done
+        fi
+        if [ "${1:-}" = "diff" ]; then
           : > "$BMUX_FAKE_GIT_STARTED"
           while [ ! -f "$BMUX_FAKE_GIT_RELEASE" ]; do
             sleep 0.05
@@ -1715,6 +1750,11 @@ final class BMUXOpenCommandTests: XCTestCase {
         let pendingHTMLBox = AsyncValueBox<String?>(nil)
         let diffHadStartedWhenOpenedBox = AsyncValueBox<Bool?>(nil)
         let openHandled = expectation(description: "browser opened before fake git diff completed")
+        var processEnvironment = sanitizedCLIEnvironment()
+        let diffViewerRootURL = URL(
+            fileURLWithPath: try XCTUnwrap(processEnvironment["BMUX_DIFF_VIEWER_DIRECTORY"]),
+            isDirectory: true
+        )
         defer {
             Darwin.close(listenerFD)
             unlink(socketPath)
@@ -1731,7 +1771,10 @@ final class BMUXOpenCommandTests: XCTestCase {
             }
             openedURLBox.set(rawURL)
             diffHadStartedWhenOpenedBox.set(FileManager.default.fileExists(atPath: diffStartedURL.path))
-            if let htmlURL = Self.diffViewerHTMLFileURLFromHTTPManifest(for: rawURL) {
+            if let htmlURL = Self.diffViewerHTMLFileURLFromHTTPManifest(
+                for: rawURL,
+                rootDirectory: diffViewerRootURL
+            ) {
                 openedHTMLURLBox.set(htmlURL)
                 pendingHTMLBox.set(try? String(contentsOf: htmlURL, encoding: .utf8))
             }
@@ -1746,19 +1789,18 @@ final class BMUXOpenCommandTests: XCTestCase {
         let process = Process()
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
-        var environment = ProcessInfo.processInfo.environment
-        environment["PATH"] = "\(fakeBinURL.path):\(environment["PATH"] ?? "")"
-        environment["BMUX_SOCKET_PATH"] = socketPath
-        environment["BMUX_CLI_SENTRY_DISABLED"] = "1"
-        environment["BMUX_CLAUDE_HOOK_SENTRY_DISABLED"] = "1"
-        environment["BMUX_FAKE_GIT_REPO_ROOT"] = repoURL.path
-        environment["BMUX_FAKE_GIT_STARTED"] = diffStartedURL.path
-        environment["BMUX_FAKE_GIT_RELEASE"] = releaseDiffURL.path
-        environment["BMUX_FAKE_GIT_ALTERNATE_STARTED"] = alternateStartedURL.path
-        environment["BMUX_FAKE_GIT_RELEASE_ALTERNATE"] = releaseAlternateURL.path
+        processEnvironment["PATH"] = "\(fakeBinURL.path):\(processEnvironment["PATH"] ?? "")"
+        processEnvironment["BMUX_SOCKET_PATH"] = socketPath
+        processEnvironment["BMUX_CLI_SENTRY_DISABLED"] = "1"
+        processEnvironment["BMUX_CLAUDE_HOOK_SENTRY_DISABLED"] = "1"
+        processEnvironment["BMUX_FAKE_GIT_REPO_ROOT"] = repoURL.path
+        processEnvironment["BMUX_FAKE_GIT_STARTED"] = diffStartedURL.path
+        processEnvironment["BMUX_FAKE_GIT_RELEASE"] = releaseDiffURL.path
+        processEnvironment["BMUX_FAKE_GIT_ALTERNATE_STARTED"] = alternateStartedURL.path
+        processEnvironment["BMUX_FAKE_GIT_RELEASE_ALTERNATE"] = releaseAlternateURL.path
         process.executableURL = URL(fileURLWithPath: cliPath)
         process.arguments = ["diff", "--unstaged", "--cwd", repoURL.path, "--title", "Slow diff", "--no-focus"]
-        process.environment = environment
+        process.environment = processEnvironment
         process.currentDirectoryURL = repoURL
         process.standardInput = FileHandle.nullDevice
         process.standardOutput = stdoutPipe
@@ -2181,7 +2223,7 @@ final class BMUXOpenCommandTests: XCTestCase {
         currentDirectoryURL: URL? = nil,
         stdinText: String? = nil
     ) -> ProcessRunResult {
-        var environment = ProcessInfo.processInfo.environment
+        var environment = sanitizedCLIEnvironment()
         environment["BMUX_SOCKET_PATH"] = socketPath
         environment["BMUX_CLI_SENTRY_DISABLED"] = "1"
         environment["BMUX_CLAUDE_HOOK_SENTRY_DISABLED"] = "1"
@@ -2304,7 +2346,7 @@ final class BMUXOpenCommandTests: XCTestCase {
         return try diffViewerHTMLFileURL(for: rawURL, from: params)
     }
 
-    private static func diffViewerHTMLFileURLFromHTTPManifest(for rawURL: String) -> URL? {
+    private static func diffViewerHTMLFileURLFromHTTPManifest(for rawURL: String, rootDirectory: URL) -> URL? {
         guard let viewerURL = URL(string: rawURL),
               viewerURL.scheme == "http",
               viewerURL.host == "127.0.0.1" else {
@@ -2317,8 +2359,7 @@ final class BMUXOpenCommandTests: XCTestCase {
             return nil
         }
         let manifestRequestPath = "/" + pathParts.dropFirst().joined(separator: "/")
-        let manifestURL = URL(fileURLWithPath: "/tmp", isDirectory: true)
-            .appendingPathComponent("bmux-diff-viewer-\(Darwin.getuid())", isDirectory: true)
+        let manifestURL = rootDirectory
             .appendingPathComponent(".manifest-\(token).json", isDirectory: false)
         guard let data = try? Data(contentsOf: manifestURL),
               let manifest = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -2362,9 +2403,7 @@ final class BMUXOpenCommandTests: XCTestCase {
         let viewerURL = try XCTUnwrap(URL(string: rawURL))
         if viewerURL.scheme == "http" {
             let token = try diffViewerHTTPToken(for: viewerURL)
-            let manifestURL = URL(fileURLWithPath: "/tmp", isDirectory: true)
-                .appendingPathComponent("bmux-diff-viewer-\(Darwin.getuid())", isDirectory: true)
-                .appendingPathComponent(".manifest-\(token).json", isDirectory: false)
+            let manifestURL = diffViewerHTTPManifestURL(token: token)
             let manifest = try XCTUnwrap(
                 JSONSerialization.jsonObject(with: Data(contentsOf: manifestURL)) as? [String: Any]
             )
@@ -2377,6 +2416,20 @@ final class BMUXOpenCommandTests: XCTestCase {
         let requestPath = URLComponents(url: url, resolvingAgainstBaseURL: false)?.percentEncodedPath ?? url.path
         let pathParts = requestPath.split(separator: "/", omittingEmptySubsequences: true)
         return try XCTUnwrap(pathParts.first.map(String.init))
+    }
+
+    private func diffViewerHTTPManifestURL(token: String) -> URL {
+        let roots = Array(diffViewerRootURLs.reversed()) + [
+            URL(fileURLWithPath: "/tmp", isDirectory: true)
+                .appendingPathComponent("bmux-diff-viewer-\(Darwin.getuid())", isDirectory: true),
+        ]
+        for root in roots {
+            let candidate = root.appendingPathComponent(".manifest-\(token).json", isDirectory: false)
+            if FileManager.default.fileExists(atPath: candidate.path) {
+                return candidate
+            }
+        }
+        return roots[0].appendingPathComponent(".manifest-\(token).json", isDirectory: false)
     }
 
     private func diffViewerManifestRequestPath(for url: URL) throws -> String {
@@ -2542,13 +2595,36 @@ final class BMUXOpenCommandTests: XCTestCase {
         try BundledCLITestSupport.bundledCLIPath(for: Self.self)
     }
 
+    private func sanitizedCLIEnvironment() -> [String: String] {
+        var environment = ProcessInfo.processInfo.environment
+        for key in environment.keys where key == "BMUX_SOCKET" || key.hasPrefix("BMUX_") {
+            environment.removeValue(forKey: key)
+        }
+        let homeURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-open-command-home-\(UUID().uuidString)", isDirectory: true)
+        let diffViewerRootURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-open-command-diff-viewer-\(UUID().uuidString)", isDirectory: true)
+        diffViewerRootURLs.append(diffViewerRootURL)
+        try? FileManager.default.createDirectory(at: homeURL, withIntermediateDirectories: true)
+        addTeardownBlock {
+            self.terminateDiffViewerServer(in: diffViewerRootURL)
+            try? FileManager.default.removeItem(at: diffViewerRootURL)
+            try? FileManager.default.removeItem(at: homeURL)
+        }
+        environment["HOME"] = homeURL.path
+        environment["CFFIXED_USER_HOME"] = homeURL.path
+        environment["BMUX_DIFF_VIEWER_DIRECTORY"] = diffViewerRootURL.path
+        environment["PATH"] = environment["PATH"] ?? "/usr/bin:/bin:/usr/sbin:/sbin"
+        return environment
+    }
+
     private func writeTestDiffViewerAssets(resourcesURL: URL, appMain: String) throws {
         let diffViewerURL = resourcesURL
             .appendingPathComponent("markdown-viewer", isDirectory: true)
             .appendingPathComponent("diff-viewer", isDirectory: true)
         let appURL = resourcesURL
             .appendingPathComponent("markdown-viewer", isDirectory: true)
-            .appendingPathComponent("diff-viewer-app", isDirectory: true)
+            .appendingPathComponent("webviews-app", isDirectory: true)
         let workerPoolURL = diffViewerURL.appendingPathComponent("worker-pool", isDirectory: true)
         try FileManager.default.createDirectory(at: workerPoolURL, withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: appURL, withIntermediateDirectories: true)
@@ -2702,6 +2778,39 @@ final class BMUXOpenCommandTests: XCTestCase {
             kill(process.processIdentifier, SIGKILL)
             _ = finished.wait(timeout: .now() + 1)
         }
+    }
+
+    private func terminateDiffViewerServer(in rootURL: URL) {
+        let stateURL = rootURL.appendingPathComponent(".server.json", isDirectory: false)
+        guard let data = try? Data(contentsOf: stateURL),
+              let state = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let pidNumber = state["pid"] as? NSNumber else {
+            return
+        }
+        let pid = pid_t(pidNumber.int32Value)
+        guard pid > 1 else { return }
+        if let executablePath = state["executablePath"] as? String,
+           let runningExecutablePath = processExecutablePath(pid: pid),
+           runningExecutablePath != URL(fileURLWithPath: executablePath)
+               .standardizedFileURL
+               .resolvingSymlinksInPath()
+               .path {
+            return
+        }
+        Darwin.kill(pid, SIGTERM)
+    }
+
+    private func processExecutablePath(pid: pid_t) -> String? {
+        var buffer = [CChar](repeating: 0, count: 4096)
+        let count = buffer.withUnsafeMutableBufferPointer { pointer -> Int32 in
+            guard let baseAddress = pointer.baseAddress else { return 0 }
+            return proc_pidpath(pid, baseAddress, UInt32(pointer.count))
+        }
+        guard count > 0 else { return nil }
+        return URL(fileURLWithPath: String(cString: buffer))
+            .standardizedFileURL
+            .resolvingSymlinksInPath()
+            .path
     }
 
     private func waitUntil(timeout: TimeInterval, condition: () -> Bool) -> Bool {

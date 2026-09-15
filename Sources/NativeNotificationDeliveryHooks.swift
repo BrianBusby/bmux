@@ -5,6 +5,7 @@ struct NativeNotificationDeliveryHooks: Sendable {
     typealias AuthorizationCompletion = @Sendable (Bool, NotificationAuthorizationState) -> Void
     typealias AuthorizationHandler = @Sendable (@escaping AuthorizationCompletion) -> Void
     typealias Scheduler = @Sendable (UNNotificationRequest, @escaping @Sendable (Error?) -> Void) -> Void
+    typealias SoundPlayer = @Sendable () -> Void
     typealias CommandRunner = @Sendable (String, String, String) -> Void
 
     var authorizationHandlerForTesting: AuthorizationHandler?
@@ -12,6 +13,9 @@ struct NativeNotificationDeliveryHooks: Sendable {
         request,
         completion in
         UNUserNotificationCenter.current().add(request, withCompletionHandler: completion)
+    }
+    var soundPlayer: SoundPlayer = {
+        NotificationSoundSettings.playSelectedSound()
     }
     var commandRunner: CommandRunner = {
         title,
@@ -52,6 +56,7 @@ struct NativeNotificationDeliveryHooks: Sendable {
             body: body,
             effects: effects,
             runCommand: runCommand,
+            soundPlayer: soundPlayer,
             commandRunner: commandRunner
         )
     }
@@ -68,6 +73,9 @@ struct NativeNotificationDeliveryHooks: Sendable {
         body: String,
         effects: TerminalNotificationPolicyEffects,
         runCommand: Bool = true,
+        soundPlayer: SoundPlayer = {
+            NotificationSoundSettings.playSelectedSound()
+        },
         commandRunner: CommandRunner = {
             title,
             subtitle,
@@ -76,7 +84,7 @@ struct NativeNotificationDeliveryHooks: Sendable {
         }
     ) {
         if effects.sound {
-            NotificationSoundSettings.playSelectedSound()
+            soundPlayer()
         }
         if effects.command, runCommand {
             commandRunner(title, subtitle, body)

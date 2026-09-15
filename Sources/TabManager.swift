@@ -409,7 +409,7 @@ class TabManager: ObservableObject {
     // (BmuxWorkspaceNavigation); this window is its host via
     // FocusHistoryHosting and republishes its revision bumps through
     // `focusHistoryRevision` above.
-    let focusHistoryNavigation: any FocusHistoryNavigating = FocusHistoryModel()
+    let focusHistoryNavigation: any FocusHistoryNavigating
     // Stateless split-geometry application (equalize/resize divider moves);
     // the pure planning lives in BmuxPanes' ExternalTreeNode extensions.
     let paneLayout = PaneLayoutService()
@@ -465,11 +465,13 @@ class TabManager: ObservableObject {
         sidebarGitPullRequestObservation: TabManagerSidebarGitPullRequestObservationServices? = nil,
         panelTitleUpdateCoalescer: NotificationBurstCoalescer? = nil,
         settings: any SettingsWriting = UserDefaultsSettingsClient(defaults: .standard),
-        closeTabWarningDefaults: UserDefaults = .standard
+        closeTabWarningDefaults: UserDefaults = .standard,
+        focusHistoryNavigation: (any FocusHistoryNavigating)? = nil
     ) {
         self.settings = settings
         self.panelTitleUpdateCoalescer = panelTitleUpdateCoalescer ?? NotificationBurstCoalescer()
         self.closeTabWarningDefaults = closeTabWarningDefaults
+        self.focusHistoryNavigation = focusHistoryNavigation ?? FocusHistoryModel()
         workspaceReordering = WorkspaceReorderCoordinator(model: workspaces)
         workspaceGrouping = WorkspaceGroupCoordinator(model: workspaces)
 #if DEBUG
@@ -493,7 +495,7 @@ class TabManager: ObservableObject {
         }
         lastSidebarMetadataSettingsForFanout = sidebarMetadataSettingsForFanout()
         notificationDismissal.attach(host: self)
-        focusHistoryNavigation.attach(host: self)
+        self.focusHistoryNavigation.attach(host: self)
         // Workspace-list/group/selection storage (BmuxWorkspaces). Attached
         // before the first addWorkspace so the property-observer hooks fire
         // from the very first insertion, matching the legacy @Published
@@ -534,13 +536,13 @@ class TabManager: ObservableObject {
                 let panelId = panelIdForFocusHistorySurface(surfaceId, workspaceId: tabId)
                 if selectedTabId == tabId {
                     if explicitFocusIntent {
-                        focusHistoryNavigation.recordFocusInHistory(
+                        self.focusHistoryNavigation.recordFocusInHistory(
                             workspaceId: tabId,
                             panelId: panelId,
                             preservingForwardBranch: false
                         )
                     } else {
-                        focusHistoryNavigation.recordImplicitFocusInHistory(workspaceId: tabId, panelId: panelId)
+                        self.focusHistoryNavigation.recordImplicitFocusInHistory(workspaceId: tabId, panelId: panelId)
                     }
                 }
                 dismissPanelNotificationOnFocus(tabId: tabId, panelId: panelId, explicitFocusIntent: explicitFocusIntent)
@@ -5951,12 +5953,35 @@ extension TabManager {
     }
 
     private static func isCloudVMSessionRestoreWorkspace(_ snapshot: SessionWorkspaceSnapshot) -> Bool {
-        isManagedCloudVMSessionRestoreWorkspace(snapshot)
+        isManagedCloudVMSessionRestoreWorkspace(snapshot) ||
+            isLegacyLocalCloudVMSessionRestoreWorkspace(snapshot)
     }
 
     private static func isManagedCloudVMSessionRestoreWorkspace(_ snapshot: SessionWorkspaceSnapshot) -> Bool {
         guard let managedCloudVMID = snapshot.remote?.managedCloudVMID else { return false }
         return !managedCloudVMID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private static func isLegacyLocalCloudVMSessionRestoreWorkspace(_ snapshot: SessionWorkspaceSnapshot) -> Bool {
+        guard snapshot.remote == nil, snapshot.isPinned else { return false }
+        guard snapshot.processTitle.trimmingCharacters(in: .whitespacesAndNewlines) == "Cloud VM" else {
+            return false
+        }
+        guard snapshot.customTitle?.trimmingCharacters(in: .whitespacesAndNewlines) == "Cloud VM" else {
+            return false
+        }
+        guard !snapshot.panels.isEmpty else { return false }
+        return snapshot.panels.allSatisfy { panel in
+            panel.type == .terminal &&
+                panel.terminal != nil &&
+                panel.browser == nil &&
+                panel.markdown == nil &&
+                panel.filePreview == nil &&
+                panel.rightSidebarTool == nil &&
+                panel.customSidebar == nil &&
+                panel.agentSession == nil &&
+                panel.project == nil
+        }
     }
 
     @discardableResult

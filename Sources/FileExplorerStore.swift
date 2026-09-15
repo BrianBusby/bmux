@@ -952,12 +952,12 @@ final class FileExplorerStore: ObservableObject {
         cancelAllLoads()
         rootNodes = []
         nodesByPath = [:]
-        guard !rootPath.isEmpty, provider != nil else { return }
+        guard !rootPath.isEmpty, let provider else { return }
         isRootLoading = true
         let path = rootPath
-        let task = Task { [weak self] in
+        let task = Task { [weak self, provider] in
             guard let self else { return }
-            await self.loadChildren(for: nil, at: path)
+            await self.loadChildren(for: nil, at: path, using: provider)
         }
         loadTasks[rootPath] = task
     }
@@ -966,13 +966,14 @@ final class FileExplorerStore: ObservableObject {
         guard node.isDirectory else { return }
         expandedPaths.insert(node.path)
         if node.children == nil, loadTasks[node.path] == nil, !loadingPaths.contains(node.path) {
+            guard let provider else { return }
             node.isLoading = true
             node.error = nil
             objectWillChange.send()
             let nodePath = node.path
-            let task = Task { [weak self] in
+            let task = Task { [weak self, provider] in
                 guard let self else { return }
-                await self.loadChildren(for: node, at: nodePath)
+                await self.loadChildren(for: node, at: nodePath, using: provider)
             }
             loadTasks[node.path] = task
         }
@@ -1027,9 +1028,12 @@ final class FileExplorerStore: ObservableObject {
         prefetchWorkItems[path]?.cancel()
         let workItem = DispatchWorkItem { [weak self] in
             Task { @MainActor [weak self] in
-                guard let self, node.children == nil, !self.loadingPaths.contains(path) else { return }
+                guard let self,
+                      let provider = self.provider,
+                      node.children == nil,
+                      !self.loadingPaths.contains(path) else { return }
                 // Silent prefetch: don't show loading indicator
-                await self.loadChildren(for: node, at: path, silent: true)
+                await self.loadChildren(for: node, at: path, using: provider, silent: true)
             }
         }
         prefetchWorkItems[path] = workItem
@@ -1054,8 +1058,13 @@ final class FileExplorerStore: ObservableObject {
     // MARK: - Private
 
     @MainActor
-    private func loadChildren(for parentNode: FileExplorerNode?, at path: String, silent: Bool = false) async {
-        guard let provider else { return }
+    private func loadChildren(
+        for parentNode: FileExplorerNode?,
+        at path: String,
+        using provider: FileExplorerProvider,
+        silent: Bool = false
+    ) async {
+        guard self.provider === provider else { return }
 
         if !silent {
             loadingPaths.insert(path)
@@ -1066,6 +1075,11 @@ final class FileExplorerStore: ObservableObject {
         do {
             let entries = try await provider.listDirectory(path: path, showHidden: showHiddenFiles)
             try Task.checkCancellation()
+            guard self.provider === provider else {
+                loadingPaths.remove(path)
+                loadTasks.removeValue(forKey: path)
+                return
+            }
             let children = entries.map { entry in
                 let node = FileExplorerNode(name: entry.name, path: entry.path, isDirectory: entry.isDirectory)
                 nodesByPath[entry.path] = node
@@ -1103,9 +1117,9 @@ final class FileExplorerStore: ObservableObject {
                 child.isLoading = true
                 objectWillChange.send()
                 let childPath = child.path
-                let childTask = Task { [weak self] in
+                let childTask = Task { [weak self, provider] in
                     guard let self else { return }
-                    await self.loadChildren(for: child, at: childPath)
+                    await self.loadChildren(for: child, at: childPath, using: provider)
                 }
                 loadTasks[child.path] = childTask
             }

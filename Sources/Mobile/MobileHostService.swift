@@ -1953,6 +1953,7 @@ actor MobileHostConnection {
     private let callbackQueue: DispatchQueue
     private let firstFrameTimeoutNanoseconds: UInt64
     private let idleTimeoutNanoseconds: UInt64
+    private let sleepNanoseconds: @Sendable (UInt64) async throws -> Void
     private let authorizeRequest: @Sendable (MobileHostRPCRequest) async -> MobileHostRPCResult?
     private let onAuthorizedRequest: @Sendable (MobileHostRPCRequest) async -> Void
     private let handleRequest: @Sendable (MobileHostRPCRequest) async -> MobileHostRPCResult
@@ -1972,6 +1973,10 @@ actor MobileHostConnection {
         connection: NWConnection,
         firstFrameTimeoutNanoseconds: UInt64 = MobileHostConnection.defaultFirstFrameTimeoutNanoseconds,
         idleTimeoutNanoseconds: UInt64 = MobileHostConnection.defaultIdleTimeoutNanoseconds,
+        sleepNanoseconds: @escaping @Sendable (UInt64) async throws -> Void = { nanoseconds in
+            // Bounded connection timeout delay; tests inject a manual sleeper.
+            try await Task.sleep(nanoseconds: nanoseconds)
+        },
         authorizeRequest: @escaping @Sendable (MobileHostRPCRequest) async -> MobileHostRPCResult?,
         onAuthorizedRequest: @escaping @Sendable (MobileHostRPCRequest) async -> Void,
         handleRequest: @escaping @Sendable (MobileHostRPCRequest) async -> MobileHostRPCResult,
@@ -1982,6 +1987,7 @@ actor MobileHostConnection {
         self.callbackQueue = DispatchQueue(label: "dev.bmux.mobile.host-connection.\(id.uuidString)")
         self.firstFrameTimeoutNanoseconds = firstFrameTimeoutNanoseconds
         self.idleTimeoutNanoseconds = idleTimeoutNanoseconds
+        self.sleepNanoseconds = sleepNanoseconds
         self.authorizeRequest = authorizeRequest
         self.onAuthorizedRequest = onAuthorizedRequest
         self.handleRequest = handleRequest
@@ -2133,9 +2139,11 @@ actor MobileHostConnection {
         }
         firstFrameTimeoutTask?.cancel()
         let timeoutNanoseconds = firstFrameTimeoutNanoseconds
-        firstFrameTimeoutTask = Task { [weak self] in
+        let sleepNanoseconds = sleepNanoseconds
+        firstFrameTimeoutTask = Task { [weak self, sleepNanoseconds] in
             do {
-                try await Task.sleep(nanoseconds: timeoutNanoseconds)
+                try await sleepNanoseconds(timeoutNanoseconds)
+                guard !Task.isCancelled else { return }
                 await self?.closeIfWaitingForFirstFrame()
             } catch {}
         }
@@ -2158,9 +2166,11 @@ actor MobileHostConnection {
         }
         idleTimeoutTask?.cancel()
         let timeoutNanoseconds = idleTimeoutNanoseconds
-        idleTimeoutTask = Task { [weak self] in
+        let sleepNanoseconds = sleepNanoseconds
+        idleTimeoutTask = Task { [weak self, sleepNanoseconds] in
             do {
-                try await Task.sleep(nanoseconds: timeoutNanoseconds)
+                try await sleepNanoseconds(timeoutNanoseconds)
+                guard !Task.isCancelled else { return }
                 await self?.closeIfIdleAfterFrame()
             } catch {}
         }
@@ -2398,6 +2408,13 @@ extension MobileHostConnection {
             isComplete: false,
             errorDescription: nil
         )
+    }
+
+    func debugDrainResponseTasksForTesting() async {
+        let tasks = Array(responseTasks.values)
+        for task in tasks {
+            await task.value
+        }
     }
 }
 #endif

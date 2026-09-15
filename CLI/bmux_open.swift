@@ -413,6 +413,7 @@ extension BMUXCLI {
     }
 
     private static let diffViewerHTTPServerProtocolVersion = "wait-v2 remote-stream manifest-refresh react-app-v2 executable-bound branch-picker-v1"
+    private static let diffViewerDirectoryEnvironmentKey = "BMUX_DIFF_VIEWER_DIRECTORY"
     private static let diffViewerHTTPServerHealthResponse = Data("ok \(diffViewerHTTPServerProtocolVersion)\n".utf8)
 
     /// Persisted, per-group session descriptor for the branch base picker. The
@@ -4916,6 +4917,8 @@ extension BMUXCLI {
                     return completion
                 } catch is EmptyDiffSourceError {
                     continue
+                } catch let error as CLIError where source == .lastTurn && error.message.hasPrefix("bmux diff --last-turn requires a workspace and surface context") {
+                    continue
                 } catch let fallbackError {
                     throw fallbackError
                 }
@@ -5672,8 +5675,18 @@ extension BMUXCLI {
     }
 
     private func diffViewerDirectory() throws -> URL {
-        let directory = URL(fileURLWithPath: "/tmp", isDirectory: true)
-            .appendingPathComponent("bmux-diff-viewer-\(getuid())", isDirectory: true)
+        let directory: URL
+        if let overridePath = ProcessInfo.processInfo.environment[Self.diffViewerDirectoryEnvironmentKey]?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+            !overridePath.isEmpty {
+            directory = URL(
+                fileURLWithPath: NSString(string: overridePath).expandingTildeInPath,
+                isDirectory: true
+            )
+        } else {
+            directory = URL(fileURLWithPath: "/tmp", isDirectory: true)
+                .appendingPathComponent("bmux-diff-viewer-\(getuid())", isDirectory: true)
+        }
         try ensureSecureDiffViewerDirectory(directory)
         pruneDiffViewerFiles(in: directory)
         return directory

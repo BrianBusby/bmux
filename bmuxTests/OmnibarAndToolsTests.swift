@@ -332,7 +332,7 @@ final class ServeWebOutputCollectorTests: XCTestCase {
         let collector = ServeWebOutputCollector()
         let urlLine = "Web UI available at http://127.0.0.1:7777?tkn=test-token\n"
 
-        DispatchQueue.global().asyncAfter(deadline: .now() + 0.05) {
+        DispatchQueue.global().async {
             collector.append(Data(urlLine.utf8))
         }
 

@@ -668,6 +668,14 @@ final class FileExplorerContainerView: NSView {
     private let searchDebounceDelayMilliseconds = 200
     private var searchBarVisibleHeight: CGFloat { max(48, GlobalFontMagnification.scaled(48)) }
     private var searchFieldVisibleHeight: CGFloat { max(24, GlobalFontMagnification.scaled(24)) }
+    private var lastVisibilitySnapshot: VisibilitySnapshot?
+
+    private struct VisibilitySnapshot: Equatable {
+        let hasContent: Bool
+        let isLoading: Bool
+        let statusMessage: String?
+        let isSearchVisible: Bool
+    }
 
 #if DEBUG
     private var debugLastSearchTextChangeUptime: TimeInterval = 0
@@ -675,6 +683,7 @@ final class FileExplorerContainerView: NSView {
     private var debugLastSearchLayoutStatusWidth: CGFloat = -1
     private var debugLastLoggedSearchResultCount = -1
     private var debugLastLoggedSearchStatus = ""
+    private(set) var debugLayoutMutationCount = 0
 #endif
 
     init(
@@ -1010,6 +1019,15 @@ final class FileExplorerContainerView: NSView {
 
     func updateVisibility(hasContent: Bool, isLoading: Bool, statusMessage: String?) {
         let normalizedStatus = statusMessage?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let snapshot = VisibilitySnapshot(
+            hasContent: hasContent,
+            isLoading: isLoading,
+            statusMessage: normalizedStatus,
+            isSearchVisible: isSearchVisible
+        )
+        guard snapshot != lastVisibilitySnapshot else { return }
+        lastVisibilitySnapshot = snapshot
+
         let hasStatus = normalizedStatus?.isEmpty == false
         let canShowTree = hasContent && !hasStatus
         applyHidden(headerView, !hasContent && !hasStatus)
@@ -1020,6 +1038,9 @@ final class FileExplorerContainerView: NSView {
             : String(localized: "fileExplorer.empty", defaultValue: "No folder open")
         if emptyLabel.stringValue != nextEmptyText {
             emptyLabel.stringValue = nextEmptyText
+#if DEBUG
+            debugLayoutMutationCount += 1
+#endif
         }
         applyHidden(emptyLabel, canShowTree || searchCanShow || isLoading)
         // Toggle the spinner only when the loading state actually changes.
@@ -1204,6 +1225,9 @@ final class FileExplorerContainerView: NSView {
         if searchBarHeightConstraint.constant != nextSearchBarHeight {
             searchBarHeightConstraint.constant = nextSearchBarHeight
             changed = true
+#if DEBUG
+            debugLayoutMutationCount += 1
+#endif
         }
         if applyHidden(searchScrollView, !showSearch) { changed = true }
         if applyHidden(scrollView, showSearch || !effectiveHasContent || effectiveIsLoading) { changed = true }
@@ -1217,6 +1241,9 @@ final class FileExplorerContainerView: NSView {
     private func applyHidden(_ view: NSView, _ hidden: Bool) -> Bool {
         guard view.isHidden != hidden else { return false }
         view.isHidden = hidden
+#if DEBUG
+        debugLayoutMutationCount += 1
+#endif
         return true
     }
 
