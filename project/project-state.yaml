@@ -1473,7 +1473,9 @@ roadmap:
         commits:
           - repository: BrianBusby/bmux
             sha: cf1bf749467b0acb5aeb10fe7deb15e00bac3b2c
-        pull_requests: []
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 113
       rationale: App and runtime determinism should follow lifecycle ownership migrations so tests target explicit readiness and teardown contracts instead of old scattered startup side effects.
       acceptance:
         criteria:
