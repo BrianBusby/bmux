@@ -6,13 +6,11 @@ import WebKit
 import ObjectiveC.runtime
 import Bonsplit
 import UserNotifications
-
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
 #elseif canImport(bmux)
 @testable import bmux
 #endif
-
 /// Thread-safe one-shot holder for a policy-evaluation result. Lets a test
 /// detect a stalled evaluation by reading the stored value after a timeout,
 /// instead of awaiting (and hanging on) the evaluation `Task` itself when the
@@ -20,43 +18,36 @@ import UserNotifications
 private final class NotificationHookEvaluationResultBox: @unchecked Sendable {
     private let lock = NSLock()
     private var stored: Result<TerminalNotificationPolicyEnvelope, TerminalNotificationPolicyFailure>?
-
     func store(_ value: Result<TerminalNotificationPolicyEnvelope, TerminalNotificationPolicyFailure>) {
         lock.lock()
         defer { lock.unlock() }
         stored = value
     }
-
     func take() -> Result<TerminalNotificationPolicyEnvelope, TerminalNotificationPolicyFailure>? {
         lock.lock()
         defer { lock.unlock() }
         return stored
     }
 }
-
 private struct NotificationCommandInvocation: Equatable, Sendable {
     let title: String
     let subtitle: String
     let body: String
 }
-
 private final class NotificationCommandInvocationRecorder: @unchecked Sendable {
     private let lock = NSLock()
     private var stored: [NotificationCommandInvocation] = []
-
     func record(title: String, subtitle: String, body: String) {
         lock.lock()
         defer { lock.unlock() }
         stored.append(NotificationCommandInvocation(title: title, subtitle: subtitle, body: body))
     }
-
     func invocations() -> [NotificationCommandInvocation] {
         lock.lock()
         defer { lock.unlock() }
         return stored
     }
 }
-
 final class TerminalNotificationPolicyEngineTests: XCTestCase {
     private func evaluate(
         request: TerminalNotificationPolicyRequest,
@@ -67,7 +58,6 @@ final class TerminalNotificationPolicyEngineTests: XCTestCase {
             hooks: hooks
         )
     }
-
     func testHookCanDisableDesktopAndTransformBody() async throws {
         let request = TerminalNotificationPolicyRequest(
             tabId: UUID(),

@@ -822,24 +822,16 @@ struct MobileHostAuthorizationTests {
         let connectionID = UUID()
         let recorder = MobileHostConnectionCloseRecorder()
         let sleeper = MobileHostManualSleeper()
-        let connection = NWConnection(
-            host: NWEndpoint.Host("127.0.0.1"),
-            port: NWEndpoint.Port(rawValue: 9)!,
-            using: .tcp
-        )
+        let connection = NWConnection.bmuxTestLoopback()
         let session = MobileHostConnection(
             id: connectionID,
             connection: connection,
             firstFrameTimeoutNanoseconds: 1_000_000,
-            sleepNanoseconds: { nanoseconds in
-                try await sleeper.sleep(nanoseconds: nanoseconds)
-            },
+            sleepNanoseconds: { try await sleeper.sleep(nanoseconds: $0) },
             authorizeRequest: { _ in nil },
             onAuthorizedRequest: { _ in },
             handleRequest: { _ in .ok([:]) },
-            onClose: { id in
-                await recorder.record(id)
-            }
+            onClose: { await recorder.record($0) }
         )
         await session.debugStartFirstFrameTimeoutForTesting()
         let requestedNanoseconds = try await sleeper.waitForFirstRequest()
@@ -852,24 +844,16 @@ struct MobileHostAuthorizationTests {
         let connectionID = UUID()
         let recorder = MobileHostConnectionCloseRecorder()
         let sleeper = MobileHostManualSleeper()
-        let connection = NWConnection(
-            host: NWEndpoint.Host("127.0.0.1"),
-            port: NWEndpoint.Port(rawValue: 9)!,
-            using: .tcp
-        )
+        let connection = NWConnection.bmuxTestLoopback()
         let session = MobileHostConnection(
             id: connectionID,
             connection: connection,
             idleTimeoutNanoseconds: 1_000_000,
-            sleepNanoseconds: { nanoseconds in
-                try await sleeper.sleep(nanoseconds: nanoseconds)
-            },
+            sleepNanoseconds: { try await sleeper.sleep(nanoseconds: $0) },
             authorizeRequest: { _ in nil },
             onAuthorizedRequest: { _ in },
             handleRequest: { _ in .ok([:]) },
-            onClose: { id in
-                await recorder.record(id)
-            }
+            onClose: { await recorder.record($0) }
         )
         await session.debugStartIdleTimeoutAfterFrameForTesting()
         let requestedNanoseconds = try await sleeper.waitForFirstRequest()
@@ -882,24 +866,16 @@ struct MobileHostAuthorizationTests {
         let connectionID = UUID()
         let recorder = MobileHostConnectionCloseRecorder()
         let sleeper = MobileHostManualSleeper()
-        let connection = NWConnection(
-            host: NWEndpoint.Host("127.0.0.1"),
-            port: NWEndpoint.Port(rawValue: 9)!,
-            using: .tcp
-        )
+        let connection = NWConnection.bmuxTestLoopback()
         let session = MobileHostConnection(
             id: connectionID,
             connection: connection,
             idleTimeoutNanoseconds: 1_000_000,
-            sleepNanoseconds: { nanoseconds in
-                try await sleeper.sleep(nanoseconds: nanoseconds)
-            },
+            sleepNanoseconds: { try await sleeper.sleep(nanoseconds: $0) },
             authorizeRequest: { _ in nil },
             onAuthorizedRequest: { _ in },
             handleRequest: { _ in .ok([:]) },
-            onClose: { id in
-                await recorder.record(id)
-            }
+            onClose: { await recorder.record($0) }
         )
         await session.subscribe(streamID: "events", topics: ["terminal.updated"])
         await session.debugStartIdleTimeoutAfterFrameForTesting()
@@ -935,11 +911,7 @@ struct MobileHostAuthorizationTests {
         #expect(!observer.debugIsRetainingNotificationDemandForTesting)
         let session = MobileHostConnection(
             id: UUID(),
-            connection: NWConnection(
-                host: NWEndpoint.Host("127.0.0.1"),
-                port: NWEndpoint.Port(rawValue: 9)!,
-                using: .tcp
-            ),
+            connection: NWConnection.bmuxTestLoopback(),
             authorizeRequest: { _ in nil },
             onAuthorizedRequest: { _ in },
             handleRequest: { _ in .ok([:]) },
@@ -987,17 +959,13 @@ struct MobileHostAuthorizationTests {
             id: connectionID,
             connection: socket.connection,
             idleTimeoutNanoseconds: 1_000_000,
-            sleepNanoseconds: { nanoseconds in
-                try await sleeper.sleep(nanoseconds: nanoseconds)
-            },
+            sleepNanoseconds: { try await sleeper.sleep(nanoseconds: $0) },
             authorizeRequest: { _ in
                 .failure(MobileHostRPCError(code: "unauthorized", message: "no"))
             },
             onAuthorizedRequest: { _ in },
             handleRequest: { _ in .ok([:]) },
-            onClose: { id in
-                await recorder.record(id)
-            }
+            onClose: { await recorder.record($0) }
         )
         let frame = try MobileSyncFrameCodec.encodeFrame(
             Data(#"{"id":"subscribe","method":"mobile.events.subscribe","params":{"stream_id":"events","topics":["terminal.updated"]}}"#.utf8)
@@ -1024,11 +992,7 @@ struct MobileHostAuthorizationTests {
         let secondAuthorizeStarted = AsyncTestSignal()
         let secondAuthorizeFinished = AsyncTestSignal()
         let secondGate = SendableSemaphore(value: 0)
-        let connection = NWConnection(
-            host: NWEndpoint.Host("127.0.0.1"),
-            port: NWEndpoint.Port(rawValue: 9)!,
-            using: .tcp
-        )
+        let connection = NWConnection.bmuxTestLoopback()
         let session = MobileHostConnection(
             id: connectionID,
             connection: connection,
@@ -1187,11 +1151,7 @@ private final class MobileHostStartedTestSocket: @unchecked Sendable {
             listener.cancel()
             throw MobileHostStartedTestSocketError.listenerPortUnavailable
         }
-        let connection = NWConnection(
-            host: NWEndpoint.Host("127.0.0.1"),
-            port: port,
-            using: .tcp
-        )
+        let connection = NWConnection.bmuxTestLoopback(port: port)
         let connectionReady = DispatchSemaphore(value: 0)
         connection.stateUpdateHandler = { state in
             if case .ready = state {
@@ -1269,6 +1229,11 @@ private actor MobileHostConnectionBox {
     }
     func close(reason: String) async {
         await session?.close(reason: reason)
+    }
+}
+private extension NWConnection {
+    static func bmuxTestLoopback(port: NWEndpoint.Port = NWEndpoint.Port(rawValue: 9)!) -> NWConnection {
+        NWConnection(host: NWEndpoint.Host("127.0.0.1"), port: port, using: .tcp)
     }
 }
 private enum AsyncTestSignalError: Error {

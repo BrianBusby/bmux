@@ -24,7 +24,6 @@ import Darwin
 import Network
 import CoreText
 import BmuxAgentChat
-
 #if DEBUG
 private func debugWorkspaceDescriptionPreview(_ text: String?, limit: Int = 120) -> String {
     guard let text else { return "nil" }

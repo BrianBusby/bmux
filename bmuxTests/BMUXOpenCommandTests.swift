@@ -1,7 +1,6 @@
 import Darwin
 import Foundation
 import XCTest
-
 final class BMUXOpenCommandTests: XCTestCase {
     private struct ProcessRunResult {
         let status: Int32
@@ -9,32 +8,26 @@ final class BMUXOpenCommandTests: XCTestCase {
         let stderr: String
         let timedOut: Bool
     }
-
     private final class MockSocketServerState: @unchecked Sendable {
         private let lock = NSLock()
         private(set) var commands: [String] = []
-
         func append(_ command: String) {
             lock.lock()
             commands.append(command)
             lock.unlock()
         }
     }
-
     private final class AsyncValueBox<Value>: @unchecked Sendable {
         private let lock = NSLock()
         private var value: Value
-
         init(_ value: Value) {
             self.value = value
         }
-
         func set(_ value: Value) {
             lock.lock()
             self.value = value
             lock.unlock()
         }
-
         func get() -> Value {
             lock.lock()
             let value = self.value
@@ -42,9 +35,7 @@ final class BMUXOpenCommandTests: XCTestCase {
             return value
         }
     }
-
     private var diffViewerRootURLs: [URL] = []
-
     override func tearDown() {
         for rootURL in diffViewerRootURLs {
             terminateDiffViewerServer(in: rootURL)
@@ -53,7 +44,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         diffViewerRootURLs.removeAll()
         super.tearDown()
     }
-
     func testOpenCommandHonorsTerminatorForDashPrefixedPath() throws {
         let cliPath = try bundledCLIPath()
         let socketPath = makeSocketPath("open-dash")
@@ -64,20 +54,17 @@ final class BMUXOpenCommandTests: XCTestCase {
         try FileManager.default.createDirectory(at: rootURL, withIntermediateDirectories: true)
         try "dash file\n".write(to: fileURL, atomically: true, encoding: .utf8)
         let state = MockSocketServerState()
-
         defer {
             Darwin.close(listenerFD)
             unlink(socketPath)
             try? FileManager.default.removeItem(at: rootURL)
         }
-
         let serverHandled = startMockServer(listenerFD: listenerFD, state: state) { line in
             guard let payload = Self.v2Payload(from: line),
                   let id = payload["id"] as? String,
                   let method = payload["method"] as? String else {
                 return Self.v2Response(id: "unknown", ok: false, error: ["code": "unexpected"])
             }
-
             let params = payload["params"] as? [String: Any] ?? [:]
             if method == "file.open",
                let paths = params["paths"] as? [String],
@@ -86,19 +73,16 @@ final class BMUXOpenCommandTests: XCTestCase {
             }
             return Self.v2Response(id: id, ok: false, error: ["code": "unexpected", "message": method])
         }
-
         let result = runCLI(
             cliPath: cliPath,
             socketPath: socketPath,
             arguments: ["open", "--", fileURL.path]
         )
-
         wait(for: [serverHandled], timeout: 5)
         XCTAssertFalse(result.timedOut, result.stderr)
         XCTAssertEqual(result.status, 0, result.stderr)
         XCTAssertEqual(result.stdout, "OK files=1 surface=surface-id pane=pane-id\n")
     }
-
     func testOpenCommandProcessesMixedTargetsInInputOrder() throws {
         let cliPath = try bundledCLIPath()
         let socketPath = makeSocketPath("open-order")
@@ -110,20 +94,17 @@ final class BMUXOpenCommandTests: XCTestCase {
         try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         try "notes\n".write(to: fileURL, atomically: true, encoding: .utf8)
         let state = MockSocketServerState()
-
         defer {
             Darwin.close(listenerFD)
             unlink(socketPath)
             try? FileManager.default.removeItem(at: rootURL)
         }
-
         let serverHandled = startMockServer(listenerFD: listenerFD, state: state) { line in
             guard let payload = Self.v2Payload(from: line),
                   let id = payload["id"] as? String,
                   let method = payload["method"] as? String else {
                 return Self.v2Response(id: "unknown", ok: false, error: ["code": "unexpected"])
             }
-
             let params = payload["params"] as? [String: Any] ?? [:]
             switch method {
             case "file.open":
@@ -140,20 +121,17 @@ final class BMUXOpenCommandTests: XCTestCase {
                 return Self.v2Response(id: id, ok: false, error: ["code": "unexpected-method", "message": method])
             }
         }
-
         let result = runCLI(
             cliPath: cliPath,
             socketPath: socketPath,
             arguments: ["open", fileURL.path, directoryURL.path]
         )
-
         wait(for: [serverHandled], timeout: 5)
         XCTAssertFalse(result.timedOut, result.stderr)
         XCTAssertEqual(result.status, 0, result.stderr)
         XCTAssertEqual(result.stdout, "OK files=1 surface=surface-id pane=pane-id workspaces=1\n")
         XCTAssertEqual(state.commands.compactMap { Self.v2Payload(from: $0)?["method"] as? String }, ["file.open", "workspace.create"])
     }
-
     func testMarkdownOpenCommandUsesMarkdownOpenEndpoint() throws {
         let cliPath = try bundledCLIPath()
         let socketPath = makeSocketPath("markdown-open")
@@ -164,20 +142,17 @@ final class BMUXOpenCommandTests: XCTestCase {
         try FileManager.default.createDirectory(at: rootURL, withIntermediateDirectories: true)
         try "# Smoke\n".write(to: fileURL, atomically: true, encoding: .utf8)
         let state = MockSocketServerState()
-
         defer {
             Darwin.close(listenerFD)
             unlink(socketPath)
             try? FileManager.default.removeItem(at: rootURL)
         }
-
         let serverHandled = startMockServer(listenerFD: listenerFD, state: state) { line in
             guard let payload = Self.v2Payload(from: line),
                   let id = payload["id"] as? String,
                   let method = payload["method"] as? String else {
                 return Self.v2Response(id: "unknown", ok: false, error: ["code": "unexpected"])
             }
-
             let params = payload["params"] as? [String: Any] ?? [:]
             guard method == "markdown.open",
                   params["path"] as? String == fileURL.path else {
@@ -189,20 +164,17 @@ final class BMUXOpenCommandTests: XCTestCase {
                 result: ["surface_id": "surface-id", "pane_id": "pane-id", "path": fileURL.path]
             )
         }
-
         let result = runCLI(
             cliPath: cliPath,
             socketPath: socketPath,
             arguments: ["markdown", "open", fileURL.path]
         )
-
         wait(for: [serverHandled], timeout: 5)
         XCTAssertFalse(result.timedOut, result.stderr)
         XCTAssertEqual(result.status, 0, result.stderr)
         XCTAssertEqual(result.stdout, "OK surface=surface-id pane=pane-id path=\(fileURL.path)\n")
         XCTAssertEqual(state.commands.compactMap { Self.v2Payload(from: $0)?["method"] as? String }, ["markdown.open"])
     }
-
     func testDiffCommandGeneratesCodeViewAndOpensBrowserSplit() throws {
         let cliPath = try bundledCLIPath()
         let socketPath = makeSocketPath("diff-open")
@@ -307,20 +279,17 @@ final class BMUXOpenCommandTests: XCTestCase {
          four
         """.write(to: patchURL, atomically: true, encoding: .utf8)
         let state = MockSocketServerState()
-
         defer {
             Darwin.close(listenerFD)
             unlink(socketPath)
             try? FileManager.default.removeItem(at: rootURL)
         }
-
         let serverHandled = startMockServer(listenerFD: listenerFD, state: state) { line in
             guard let payload = Self.v2Payload(from: line),
                   let id = payload["id"] as? String,
                   let method = payload["method"] as? String else {
                 return Self.v2Response(id: "unknown", ok: false, error: ["code": "unexpected"])
             }
-
             let params = payload["params"] as? [String: Any] ?? [:]
             guard method == "browser.open_split",
                   params["focus"] as? Bool == true,
@@ -337,7 +306,6 @@ final class BMUXOpenCommandTests: XCTestCase {
                 result: ["surface_id": "surface-id", "pane_id": "pane-id", "url": rawURL]
             )
         }
-
         let result = runCLI(
             cliPath: cliPath,
             socketPath: socketPath,
@@ -354,13 +322,11 @@ final class BMUXOpenCommandTests: XCTestCase {
                 "GHOSTTY_RESOURCES_DIR": ghosttyResourcesURL.path
             ]
         )
-
         wait(for: [serverHandled], timeout: 5)
         XCTAssertFalse(result.timedOut, result.stderr)
         XCTAssertEqual(result.status, 0, result.stderr)
         XCTAssertEqual(result.stdout, "OK surface=surface-id pane=pane-id\n", result.stdout)
         XCTAssertEqual(state.commands.compactMap { Self.v2Payload(from: $0)?["method"] as? String }, ["browser.open_split"])
-
         let commandPayload = try XCTUnwrap(Self.v2Payload(from: try XCTUnwrap(state.commands.first)))
         let params = try XCTUnwrap(commandPayload["params"] as? [String: Any])
         XCTAssertEqual(params["show_omnibar"] as? Bool, false)
@@ -377,7 +343,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: viewerFileURL) }
         let patchSidecarURL = viewerFileURL.deletingPathExtension().appendingPathExtension("patch")
         defer { try? FileManager.default.removeItem(at: patchSidecarURL) }
-
         let html = try String(contentsOf: viewerFileURL, encoding: .utf8)
         let patchText = try String(contentsOf: patchSidecarURL, encoding: .utf8)
         let viewerConfig = try diffViewerConfig(from: html)
@@ -456,7 +421,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         XCTAssertTrue(patchText.contains("literal </script> marker"), patchText)
         XCTAssertTrue(html.contains("\"layout\":\"unified\""), html)
         XCTAssertFalse(html.contains("git apply <<'PATCH'"), html)
-
         let darkOnlyConfigContents = """
         font-family = Unit Mono
         font-size = 14
@@ -477,7 +441,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         XCTAssertTrue(darkOnlyTheme.html.contains("\"ghosttyName\":\"Apple System Colors Light\""), darkOnlyTheme.html)
         XCTAssertTrue(darkOnlyTheme.html.contains("\"ghosttyName\":\"Unit Dark\""), darkOnlyTheme.html)
     }
-
     func testDiffCommandUsesTaggedSocketAppAssetsAndServer() throws {
         let cliPath = try bundledCLIPath()
         let tag = "asset\(UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(6).lowercased())"
@@ -498,7 +461,6 @@ final class BMUXOpenCommandTests: XCTestCase {
             .deletingLastPathComponent()
         let patchURL = rootURL.appendingPathComponent("change.patch", isDirectory: false)
         let state = MockSocketServerState()
-
         try FileManager.default.createDirectory(at: targetCLIURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try FileManager.default.copyItem(at: URL(fileURLWithPath: cliPath), to: targetCLIURL)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: targetCLIURL.path)
@@ -515,13 +477,11 @@ final class BMUXOpenCommandTests: XCTestCase {
         -old
         +new
         """.write(to: patchURL, atomically: true, encoding: .utf8)
-
         defer {
             Darwin.close(listenerFD)
             unlink(socketPath)
             try? FileManager.default.removeItem(at: rootURL)
         }
-
         let serverHandled = startMockServer(listenerFD: listenerFD, state: state) { line in
             guard let payload = Self.v2Payload(from: line),
                   let id = payload["id"] as? String,
@@ -537,7 +497,6 @@ final class BMUXOpenCommandTests: XCTestCase {
                 result: ["surface_id": "surface-id", "pane_id": "pane-id", "url": rawURL]
             )
         }
-
         let result = runCLI(
             cliPath: cliPath,
             socketPath: socketPath,
@@ -547,11 +506,9 @@ final class BMUXOpenCommandTests: XCTestCase {
                 "CFFIXED_USER_HOME": homeURL.path
             ]
         )
-
         wait(for: [serverHandled], timeout: 5)
         XCTAssertFalse(result.timedOut, result.stderr)
         XCTAssertEqual(result.status, 0, result.stderr)
-
         let payload = try XCTUnwrap(Self.v2Payload(from: try XCTUnwrap(state.commands.first)))
         let params = try XCTUnwrap(payload["params"] as? [String: Any])
         let rawURL = try XCTUnwrap(params["url"] as? String)
@@ -564,16 +521,13 @@ final class BMUXOpenCommandTests: XCTestCase {
         let appFilePath = try XCTUnwrap(appEntry["file_path"] as? String)
         let appMain = try String(contentsOfFile: appFilePath, encoding: .utf8)
         XCTAssertTrue(appMain.contains("bmuxTaggedSocketAssetMarker = 'target-\(tag)'"), appMain)
-
         let stateURL = try XCTUnwrap(diffViewerRootURLs.last)
             .appendingPathComponent(".server.json", isDirectory: false)
         let serverState = try JSONSerialization.jsonObject(with: Data(contentsOf: stateURL)) as? [String: Any]
         XCTAssertEqual(serverState?["executablePath"] as? String, targetCLIURL.path)
     }
-
     func testDiffCommandLinksOriginalDiffshubPRURL() throws {
         let cliPath = try bundledCLIPath()
-
         let originalURL = "https://diffshub.com/oven-sh/bun/pull/30412"
         let result = try runDiffCLIAndReadHTML(
             cliPath: cliPath,
@@ -581,7 +535,6 @@ final class BMUXOpenCommandTests: XCTestCase {
             environmentOverrides: ["BMUX_DIFF_VIEWER_STREAM_REMOTE": "1"],
             readPatchSidecar: false
         )
-
         XCTAssertEqual(result.params["show_omnibar"] as? Bool, false)
         let payload = try diffViewerPayload(from: result.html)
         XCTAssertEqual(payload["externalURL"] as? String, originalURL)
@@ -597,7 +550,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         let patchSidecarURL = viewerFileURL.deletingPathExtension().appendingPathExtension("patch")
         XCTAssertFalse(FileManager.default.fileExists(atPath: patchSidecarURL.path))
     }
-
     func testDiffViewerServerBoundsDeferredWaitRequests() throws {
         let cliPath = try bundledCLIPath()
         let token = "test-\(UUID().uuidString.lowercased())"
@@ -608,7 +560,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         try FileManager.default.createDirectory(at: rootURL, withIntermediateDirectories: true)
         chmod(rootURL.path, 0o700)
         defer { try? FileManager.default.removeItem(at: rootURL) }
-
         try """
         <!doctype html>
         <html data-bmux-diff-pending="true">
@@ -627,7 +578,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         ]
         try JSONSerialization.data(withJSONObject: manifest, options: [.sortedKeys])
             .write(to: manifestURL, options: .atomic)
-
         let process = Process()
         let stdoutPipe = Pipe()
         var environment = sanitizedCLIEnvironment()
@@ -638,10 +588,8 @@ final class BMUXOpenCommandTests: XCTestCase {
         process.standardInput = FileHandle.nullDevice
         process.standardOutput = stdoutPipe
         process.standardError = FileHandle.nullDevice
-
         try process.run()
         defer { terminateProcess(process) }
-
         let portLine = try readLine(from: stdoutPipe.fileHandleForReading, timeout: 3)
         let port = try XCTUnwrap(Int(portLine), "invalid diff viewer server port: \(portLine)")
         let url = try XCTUnwrap(URL(string: "http://127.0.0.1:\(port)/__bmux_diff_viewer_wait/\(token)/pending.html"))
@@ -653,13 +601,11 @@ final class BMUXOpenCommandTests: XCTestCase {
         // We assert on the logical outcome of the bound rather than a wall-clock latency:
         // a 504 whose body has the pending marker stripped and the render-failed copy.
         let response = try fetchData(from: url, timeout: 3)
-
         XCTAssertEqual(response.statusCode, 504)
         let body = String(data: response.data, encoding: .utf8) ?? ""
         XCTAssertFalse(body.contains("data-bmux-diff-pending=\"true\""), body)
         XCTAssertTrue(body.contains("Could not render this diff"), body)
     }
-
     func testDiffCommandTakesPrecedenceOverLocalPathNamedDiff() throws {
         let cliPath = try bundledCLIPath()
         let rootURL = FileManager.default.temporaryDirectory
@@ -668,7 +614,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         let patchURL = rootURL.appendingPathComponent("changes.patch", isDirectory: false)
         try FileManager.default.createDirectory(at: rootURL, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: rootURL) }
-
         try "not a command\n".write(to: shadowCommandURL, atomically: true, encoding: .utf8)
         try """
         diff --git a/hello.txt b/hello.txt
@@ -679,17 +624,14 @@ final class BMUXOpenCommandTests: XCTestCase {
         -old
         +new
         """.write(to: patchURL, atomically: true, encoding: .utf8)
-
         let result = try runDiffCLIAndReadHTML(
             cliPath: cliPath,
             arguments: ["diff", patchURL.path, "--no-focus"],
             currentDirectoryURL: rootURL
         )
-
         XCTAssertTrue(result.patch.contains("hello.txt"), result.patch)
         XCTAssertEqual(result.params["show_omnibar"] as? Bool, false)
     }
-
     func testDiffCommandUsesBundledAppLocalizationsForViewerLabels() throws {
         let cliPath = try bundledCLIPath()
         let rootURL = FileManager.default.temporaryDirectory
@@ -707,7 +649,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         +three
         """.write(to: patchURL, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(at: rootURL) }
-
         let result = try runDiffCLIAndReadHTML(
             cliPath: cliPath,
             arguments: ["diff", patchURL.path],
@@ -716,12 +657,10 @@ final class BMUXOpenCommandTests: XCTestCase {
                 "LANG": "ja_JP.UTF-8"
             ]
         )
-
         XCTAssertTrue(result.html.contains("インジケータースタイル"), result.html)
         XCTAssertTrue(result.html.contains("git apply コマンドをコピー"), result.html)
         XCTAssertFalse(result.html.contains("Indicator style"), result.html)
     }
-
     func testDiffCommandUsageDocumentsFocusTitleAndNoFocus() throws {
         let cliPath = try bundledCLIPath()
         let result = runCLI(
@@ -729,7 +668,6 @@ final class BMUXOpenCommandTests: XCTestCase {
             socketPath: makeSocketPath("diff-help"),
             arguments: ["help"]
         )
-
         XCTAssertFalse(result.timedOut, result.stderr)
         XCTAssertEqual(result.status, 0, result.stderr)
         XCTAssertTrue(result.stdout.contains("diff [patch-file|-]"), result.stdout)
@@ -737,7 +675,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         XCTAssertTrue(result.stdout.contains("[--cwd <path>] [--base <ref>]"), result.stdout)
         XCTAssertTrue(result.stdout.contains("--base <ref>"), result.stdout)
     }
-
     func testDiffCommandFallsBackToNonEmptyGitSourceForSelector() throws {
         let cliPath = try bundledCLIPath()
         let rootURL = FileManager.default.temporaryDirectory
@@ -746,7 +683,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         let fileURL = repoURL.appendingPathComponent("story.txt")
         try FileManager.default.createDirectory(at: repoURL, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: rootURL) }
-
         try runGit(["init"], in: repoURL)
         try runGit(["checkout", "-b", "main"], in: repoURL)
         try runGit(["config", "user.name", "bmux tests"], in: repoURL)
@@ -756,7 +692,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         try runGit(["commit", "-m", "initial"], in: repoURL)
         try "one\ntwo\n".write(to: fileURL, atomically: true, encoding: .utf8)
         try runGit(["add", "story.txt"], in: repoURL)
-
         let plainSiblingURL = rootURL.appendingPathComponent("plain-sibling", isDirectory: true)
         let binURL = rootURL.appendingPathComponent("bin", isDirectory: true)
         let gitWrapperURL = binURL.appendingPathComponent("git", isDirectory: false)
@@ -772,7 +707,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         exec /usr/bin/git "$@"
         """.write(to: gitWrapperURL, atomically: true, encoding: .utf8)
         chmod(gitWrapperURL.path, 0o755)
-
         let stagedFallback = try runDiffCLIAndReadHTML(
             cliPath: cliPath,
             arguments: ["diff", "--unstaged"],
@@ -781,7 +715,6 @@ final class BMUXOpenCommandTests: XCTestCase {
             ],
             currentDirectoryURL: repoURL
         )
-
         XCTAssertTrue(stagedFallback.html.contains("Staged changes"), stagedFallback.html)
         XCTAssertTrue(stagedFallback.html.contains("\"sourceLabel\":\"git staged\""), stagedFallback.html)
         XCTAssertTrue(stagedFallback.patch.contains("+two"), stagedFallback.patch)
@@ -799,7 +732,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         let gitLog = try String(contentsOf: gitLogURL, encoding: .utf8)
         XCTAssertFalse(gitLog.contains(plainSiblingURL.path), gitLog)
     }
-
     func testDiffCommandShowsFriendlyEmptyStateWhenEveryGitSourceIsEmpty() throws {
         let cliPath = try bundledCLIPath()
         let rootURL = FileManager.default.temporaryDirectory
@@ -808,7 +740,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         let fileURL = repoURL.appendingPathComponent("story.txt")
         try FileManager.default.createDirectory(at: repoURL, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: rootURL) }
-
         try runGit(["init"], in: repoURL)
         try runGit(["checkout", "-b", "main"], in: repoURL)
         try runGit(["config", "user.name", "bmux tests"], in: repoURL)
@@ -816,7 +747,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         try "one\n".write(to: fileURL, atomically: true, encoding: .utf8)
         try runGit(["add", "story.txt"], in: repoURL)
         try runGit(["commit", "-m", "initial"], in: repoURL)
-
         let socketPath = makeSocketPath("diff-empty")
         let listenerFD = try bindUnixSocket(at: socketPath)
         let state = MockSocketServerState()
@@ -824,7 +754,6 @@ final class BMUXOpenCommandTests: XCTestCase {
             Darwin.close(listenerFD)
             unlink(socketPath)
         }
-
         let serverHandled = startMockServer(listenerFD: listenerFD, state: state) { line in
             guard let payload = Self.v2Payload(from: line),
                   let id = payload["id"] as? String,
@@ -840,14 +769,12 @@ final class BMUXOpenCommandTests: XCTestCase {
                 result: ["surface_id": "surface-id", "pane_id": "pane-id", "url": rawURL]
             )
         }
-
         let result = runCLI(
             cliPath: cliPath,
             socketPath: socketPath,
             arguments: ["diff", "--unstaged"],
             currentDirectoryURL: repoURL
         )
-
         wait(for: [serverHandled], timeout: 5)
         XCTAssertFalse(result.timedOut, result.stderr)
         // Empty diffs are a friendly state, not an error: the CLI exits 0 (so the
@@ -856,7 +783,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         XCTAssertEqual(result.status, 0, result.stderr)
         XCTAssertFalse(result.stderr.contains("No unstaged changes to diff."), result.stderr)
         XCTAssertFalse(result.stderr.contains("EmptyDiffSourceError"), result.stderr)
-
         let commandPayload = try XCTUnwrap(
             state.commands.compactMap { Self.v2Payload(from: $0) }.first { payload in
                 payload["method"] as? String == "browser.open_split"
@@ -872,7 +798,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         let payload = try diffViewerPayload(from: html)
         XCTAssertEqual(payload["statusIsError"] as? Bool, false, html)
     }
-
     func testDiffCommandShowsFriendlyEmptyStateForLastTurnWithoutBaseline() throws {
         // Regression: a last-turn diff with no recorded baseline must render the
         // friendly empty diff state (with the source switcher) and exit 0, not
@@ -886,7 +811,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         let fileURL = repoURL.appendingPathComponent("story.txt")
         try FileManager.default.createDirectory(at: repoURL, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: rootURL) }
-
         try runGit(["init"], in: repoURL)
         try runGit(["checkout", "-b", "main"], in: repoURL)
         try runGit(["config", "user.name", "bmux tests"], in: repoURL)
@@ -898,7 +822,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         // back to them — it stays on its own empty state.
         try "one\ntwo\n".write(to: fileURL, atomically: true, encoding: .utf8)
         try runGit(["add", "story.txt"], in: repoURL)
-
         let result = try runDiffCLIAndReadHTML(
             cliPath: cliPath,
             arguments: ["diff", "--last-turn"],
@@ -910,12 +833,10 @@ final class BMUXOpenCommandTests: XCTestCase {
             currentDirectoryURL: repoURL,
             readPatchSidecar: false
         )
-
         try assertFriendlyLastTurnEmptyState(html: result.html)
         // No silent fallback to the staged "+two" change.
         XCTAssertFalse(result.html.contains("+two"), result.html)
     }
-
     func testDiffCommandShowsFriendlyEmptyStateForEmptyLastTurnDiff() throws {
         let cliPath = try bundledCLIPath()
         let rootURL = FileManager.default.temporaryDirectory
@@ -926,7 +847,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         try FileManager.default.createDirectory(at: repoURL, withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: stateURL, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: rootURL) }
-
         try runGit(["init"], in: repoURL)
         try runGit(["checkout", "-b", "main"], in: repoURL)
         try runGit(["config", "user.name", "bmux tests"], in: repoURL)
@@ -952,7 +872,6 @@ final class BMUXOpenCommandTests: XCTestCase {
             surfaceId: surfaceId,
             baseCommit: featureCommit
         )
-
         let result = try runDiffCLIAndReadHTML(
             cliPath: cliPath,
             arguments: ["diff", "--last-turn"],
@@ -964,10 +883,8 @@ final class BMUXOpenCommandTests: XCTestCase {
             currentDirectoryURL: repoURL,
             readPatchSidecar: false
         )
-
         try assertFriendlyLastTurnEmptyState(html: result.html)
     }
-
     func testDiffCommandSupportsGitSourcesAndSurfaceScopedLastTurn() throws {
         let cliPath = try bundledCLIPath()
         let rootURL = FileManager.default.temporaryDirectory
@@ -983,7 +900,6 @@ final class BMUXOpenCommandTests: XCTestCase {
             XCTAssertFalse(html.contains("\\u001B"), html, file: file, line: line)
             XCTAssertFalse(html.contains("\\u001b"), html, file: file, line: line)
         }
-
         try runGit(["init"], in: repoURL)
         try runGit(["checkout", "-b", "main"], in: repoURL)
         try runGit(["config", "user.name", "bmux tests"], in: repoURL)
@@ -997,7 +913,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         let initialCommit = try runGitStdout(["rev-parse", "HEAD"], in: repoURL)
         try runGit(["update-ref", "refs/remotes/origin/main", initialCommit], in: repoURL)
         try runGit(["symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main"], in: repoURL)
-
         let siblingRepoURL = rootURL.appendingPathComponent("other-repo", isDirectory: true)
         let siblingFileURL = siblingRepoURL.appendingPathComponent("other.txt")
         try FileManager.default.createDirectory(at: siblingRepoURL, withIntermediateDirectories: true)
@@ -1013,7 +928,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         try runGit(["symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main"], in: siblingRepoURL)
         try runGit(["checkout", "-b", "feature/other"], in: siblingRepoURL)
         try "base\nchanged\n".write(to: siblingFileURL, atomically: true, encoding: .utf8)
-
         try runGit(["checkout", "-b", "feature/diff-source"], in: repoURL)
         try "one\ntwo\n".write(to: fileURL, atomically: true, encoding: .utf8)
         try runGit(["add", "story.txt"], in: repoURL)
@@ -1022,7 +936,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         try runGit(["update-ref", "refs/remotes/origin/feature/diff-source", featureCommit], in: repoURL)
         try runGit(["branch", "--set-upstream-to=origin/feature/diff-source"], in: repoURL)
         try "one\ntwo\nthree\n".write(to: fileURL, atomically: true, encoding: .utf8)
-
         let branch = try runDiffCLIAndReadHTML(
             cliPath: cliPath,
             arguments: ["diff", "--branch", "--title", "Branch source"],
@@ -1043,7 +956,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         XCTAssertTrue(branch.html.contains("\"label\":\"Branch\""), branch.html)
         XCTAssertTrue(branch.html.contains("\"label\":\"Last turn\""), branch.html)
         assertNoANSIEscape(branch.html)
-
         let branchPayload = try diffViewerPayload(from: branch.html)
         let branchSourceOptions = try XCTUnwrap(branchPayload["sourceOptions"] as? [[String: Any]])
         let selectedRepoUnstagedURLString = try diffViewerOptionURL(value: "unstaged", in: branchSourceOptions)
@@ -1069,7 +981,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         XCTAssertTrue(siblingRepoUnstagedHTML.contains("\"repoRoot\":\"\(siblingRepoURL.path)\""), siblingRepoUnstagedHTML)
         XCTAssertTrue(siblingRepoUnstagedPatch.contains("+changed"), siblingRepoUnstagedPatch)
         XCTAssertFalse(siblingRepoUnstagedHTML.contains("\"sourceLabel\":\"git branch"), siblingRepoUnstagedHTML)
-
         let branchWithBase = try runDiffCLIAndReadHTML(
             cliPath: cliPath,
             arguments: ["diff", "--branch", "--base", "main"],
@@ -1094,7 +1005,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         XCTAssertTrue(siblingRepoBranchHTML.contains("\"branchBaseRef\":\"main\""), siblingRepoBranchHTML)
         XCTAssertTrue(siblingRepoBranchHTML.contains("\"repoRoot\":\"\(siblingRepoURL.path)\""), siblingRepoBranchHTML)
         XCTAssertTrue(siblingRepoBranchPatch.contains("+changed"), siblingRepoBranchPatch)
-
         let repoOverride = try runDiffCLIAndReadHTML(
             cliPath: cliPath,
             arguments: ["diff", "--unstaged", "--repo", repoURL.path],
@@ -1103,7 +1013,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         XCTAssertTrue(repoOverride.html.contains("\"sourceLabel\":\"git unstaged\""), repoOverride.html)
         XCTAssertTrue(repoOverride.html.contains("\"repoRoot\":\"\(repoURL.path)\""), repoOverride.html)
         XCTAssertTrue(repoOverride.patch.contains("+three"), repoOverride.patch)
-
         let unstaged = try runDiffCLIAndReadHTML(
             cliPath: cliPath,
             arguments: ["diff", "--unstaged"],
@@ -1113,7 +1022,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         XCTAssertTrue(unstaged.patch.contains("+three"), unstaged.patch)
         XCTAssertTrue(unstaged.html.contains("\"sourceLabel\":\"git unstaged\""), unstaged.html)
         assertNoANSIEscape(unstaged.patch)
-
         try runGit(["add", "story.txt"], in: repoURL)
         let staged = try runDiffCLIAndReadHTML(
             cliPath: cliPath,
@@ -1124,7 +1032,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         XCTAssertTrue(staged.patch.contains("+three"), staged.patch)
         XCTAssertTrue(staged.html.contains("\"sourceLabel\":\"git staged\""), staged.html)
         assertNoANSIEscape(staged.patch)
-
         let workspaceId = UUID().uuidString.lowercased()
         let surfaceId = UUID().uuidString.lowercased()
         try "before\n".write(to: repoURL.appendingPathComponent("preexisting.txt"), atomically: true, encoding: .utf8)
@@ -1193,7 +1100,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         XCTAssertTrue(lastTurn.patch.contains("-remove me"), lastTurn.patch)
         XCTAssertFalse(lastTurn.patch.contains("unchanged-untracked.txt"), lastTurn.patch)
         assertNoANSIEscape(lastTurn.patch)
-
         let refLastTurn = try runDiffCLIAndReadHTML(
             cliPath: cliPath,
             arguments: ["diff", "--last-turn", "--workspace", "workspace:1", "--surface", "surface:1"],
@@ -1246,7 +1152,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         XCTAssertEqual(refLastTurn.params["workspace_id"] as? String, workspaceId)
         XCTAssertEqual(refLastTurn.params["surface_id"] as? String, surfaceId)
         XCTAssertTrue(refLastTurn.html.contains("Last turn diff"), refLastTurn.html)
-
         let homeURL = rootURL.appendingPathComponent("custom-home", isDirectory: true)
         let homeStateURL = homeURL.appendingPathComponent(".bmuxterm", isDirectory: true)
         try FileManager.default.createDirectory(at: homeStateURL, withIntermediateDirectories: true)
@@ -1270,7 +1175,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         )
         XCTAssertTrue(homeLastTurn.html.contains("Last turn diff"), homeLastTurn.html)
         XCTAssertTrue(homeLastTurn.patch.contains("new-turn-file.txt"), homeLastTurn.patch)
-
         let wrongSurfaceResult = try runDiffCLIAndReadHTML(
             cliPath: cliPath,
             arguments: ["diff", "--last-turn"],
@@ -1284,7 +1188,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         )
         try assertFriendlyLastTurnEmptyState(html: wrongSurfaceResult.html)
     }
-
     /// Asserts the diff viewer HTML renders the friendly, non-error last-turn empty
     /// state: plain-language copy (never the raw baseline CLI error), `statusIsError`
     /// false, and the source switcher still present with last turn selected.
@@ -1300,7 +1203,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         )
         XCTAssertEqual(lastTurnOption["selected"] as? Bool, true, html)
     }
-
     func testAgentTurnDiffBaselineStoresUntrackedSnapshotsOutsideGit() throws {
         let cliPath = try bundledCLIPath()
         let rootURL = FileManager.default.temporaryDirectory
@@ -1310,7 +1212,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         try FileManager.default.createDirectory(at: repoURL, withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: stateURL, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: rootURL) }
-
         try runGit(["init"], in: repoURL)
         try runGit(["config", "user.name", "bmux tests"], in: repoURL)
         try runGit(["config", "user.email", "bmux@example.invalid"], in: repoURL)
@@ -1320,7 +1221,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         let secretURL = repoURL.appendingPathComponent("secret.txt")
         try "before\n".write(to: secretURL, atomically: true, encoding: .utf8)
         chmod(secretURL.path, 0o644)
-
         let workspaceId = UUID().uuidString.lowercased()
         let surfaceId = UUID().uuidString.lowercased()
         let socketPath = makeSocketPath("hook-diff")
@@ -1354,7 +1254,6 @@ final class BMUXOpenCommandTests: XCTestCase {
             }
             return Self.v2Response(id: id, ok: true, result: [:])
         }
-
         let result = runCLI(
             cliPath: cliPath,
             socketPath: socketPath,
@@ -1365,7 +1264,6 @@ final class BMUXOpenCommandTests: XCTestCase {
             ],
             currentDirectoryURL: repoURL
         )
-
         wait(for: [serverHandled], timeout: 5)
         XCTAssertFalse(result.timedOut, result.stderr)
         XCTAssertEqual(result.status, 0, result.stderr)
@@ -1374,7 +1272,6 @@ final class BMUXOpenCommandTests: XCTestCase {
             in: repoURL
         )
         XCTAssertEqual(untrackedRefs.trimmingCharacters(in: .whitespacesAndNewlines), "")
-
         let storeURL = stateURL.appendingPathComponent("agent-turn-diff-baselines.json")
         let lockURL = stateURL.appendingPathComponent("agent-turn-diff-baselines.json.lock")
         let storeData = try Data(contentsOf: storeURL)
@@ -1401,7 +1298,6 @@ final class BMUXOpenCommandTests: XCTestCase {
         XCTAssertEqual(try posixPermissions(at: filesDirectory), 0o700)
         XCTAssertEqual(try posixPermissions(at: snapshotFile), 0o600)
     }
-
     func testAgentTurnDiffBaselineUsesEmptyTreeForUnbornGitRepo() throws {
         let cliPath = try bundledCLIPath()
         let rootURL = FileManager.default.temporaryDirectory
@@ -1411,10 +1307,8 @@ final class BMUXOpenCommandTests: XCTestCase {
         try FileManager.default.createDirectory(at: repoURL, withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: stateURL, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: rootURL) }
-
         try runGit(["init"], in: repoURL)
         let emptyTree = try runGitStdout(["hash-object", "-t", "tree", "/dev/null"], in: repoURL)
-
         let workspaceId = UUID().uuidString.lowercased()
         let surfaceId = UUID().uuidString.lowercased()
         let socketPath = makeSocketPath("hook-empty")
@@ -1448,7 +1342,6 @@ final class BMUXOpenCommandTests: XCTestCase {
             }
             return Self.v2Response(id: id, ok: true, result: [:])
         }
-
         let hook = runCLI(
             cliPath: cliPath,
             socketPath: socketPath,
@@ -1459,11 +1352,9 @@ final class BMUXOpenCommandTests: XCTestCase {
             ],
             currentDirectoryURL: repoURL
         )
-
         wait(for: [serverHandled], timeout: 5)
         XCTAssertFalse(hook.timedOut, hook.stderr)
         XCTAssertEqual(hook.status, 0, hook.stderr)
-
         let storeURL = stateURL.appendingPathComponent("agent-turn-diff-baselines.json")
         let storeData = try Data(contentsOf: storeURL)
         let store = try XCTUnwrap(JSONSerialization.jsonObject(with: storeData) as? [String: Any])

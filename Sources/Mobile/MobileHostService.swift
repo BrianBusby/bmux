@@ -8,14 +8,11 @@ import Foundation
 import OSLog
 import StackAuth
 import os
-
 private let mobileHostLog = Logger(subsystem: "dev.bmux", category: "mobile-host")
-
 extension Notification.Name {
     static let mobileHostEventSubscriptionsDidChange = Notification.Name(
         "bmux.mobileHostEventSubscriptionsDidChange"
     )
-
     /// Posted whenever the mobile pairing host's observable status changes:
     /// the listener binds or stops, the bound port changes, or the active
     /// connection count changes. The Settings host adapter bridges this to an
@@ -25,17 +22,14 @@ extension Notification.Name {
         "bmux.mobileHostStatusDidChange"
     )
 }
-
 private enum MobileHostEventSubscriptionTracker {
     private static let lock = NSLock()
     private nonisolated(unsafe) static var topicCounts: [String: Int] = [:]
-
     static func hasSubscribers(topic: String) -> Bool {
         lock.lock()
         defer { lock.unlock() }
         return (topicCounts[topic] ?? 0) > 0
     }
-
     static func replace(previousTopics: Set<String>?, nextTopics: Set<String>?) {
         let changedTopics = updateCounts(previousTopics: previousTopics, nextTopics: nextTopics)
         guard !changedTopics.isEmpty else { return }
@@ -45,15 +39,12 @@ private enum MobileHostEventSubscriptionTracker {
             userInfo: ["topics": Array(changedTopics).sorted()]
         )
     }
-
     private static func updateCounts(previousTopics: Set<String>?, nextTopics: Set<String>?) -> Set<String> {
         lock.lock()
         defer { lock.unlock() }
-
         var changedTopics = Set<String>()
         let allTopics = Set(previousTopics ?? []).union(nextTopics ?? [])
         let before = Dictionary(uniqueKeysWithValues: allTopics.map { ($0, topicCounts[$0] ?? 0) })
-
         for topic in previousTopics ?? [] {
             let nextCount = max(0, (topicCounts[topic] ?? 0) - 1)
             if nextCount == 0 {
@@ -65,7 +56,6 @@ private enum MobileHostEventSubscriptionTracker {
         for topic in nextTopics ?? [] {
             topicCounts[topic] = (topicCounts[topic] ?? 0) + 1
         }
-
         for topic in allTopics {
             let wasActive = (before[topic] ?? 0) > 0
             let isActive = (topicCounts[topic] ?? 0) > 0
@@ -75,7 +65,6 @@ private enum MobileHostEventSubscriptionTracker {
         }
         return changedTopics
     }
-
     static func reset() {
         lock.lock()
         topicCounts.removeAll()
@@ -86,26 +75,21 @@ private enum MobileHostEventSubscriptionTracker {
             userInfo: ["topics": []]
         )
     }
-
     #if DEBUG
     static func resetForTesting() {
         reset()
     }
     #endif
 }
-
 private final class MobileHostConnectionRegistry: @unchecked Sendable {
     static let shared = MobileHostConnectionRegistry()
-
     private let lock = NSLock()
     private var connections: [UUID: MobileHostConnection] = [:]
-
     var count: Int {
         lock.lock()
         defer { lock.unlock() }
         return connections.count
     }
-
     func insert(_ connection: MobileHostConnection, id: UUID, limit: Int) -> Bool {
         lock.lock()
         guard connections.count < limit else {
@@ -120,7 +104,6 @@ private final class MobileHostConnectionRegistry: @unchecked Sendable {
         NotificationCenter.default.post(name: .mobileHostStatusDidChange, object: nil)
         return true
     }
-
     func remove(id: UUID) {
         lock.lock()
         let didRemove = connections.removeValue(forKey: id) != nil

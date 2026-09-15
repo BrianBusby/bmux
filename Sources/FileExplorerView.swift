@@ -5,20 +5,16 @@ import BmuxFoundation
 import BmuxWorkspaces
 import BmuxSettings
 import SwiftUI
-
 #if DEBUG
 private func fileExplorerDebugResponder(_ responder: NSResponder?) -> String {
     guard let responder else { return "nil" }
     return String(describing: type(of: responder))
 }
 #endif
-
 // MARK: - File Explorer Panel (single NSViewRepresentable)
-
 enum FileExplorerPanelPresentation: Equatable {
     case files
     case find
-
     var rightSidebarMode: RightSidebarMode {
         switch self {
         case .files: return .files
@@ -26,12 +22,10 @@ enum FileExplorerPanelPresentation: Equatable {
         }
     }
 }
-
 enum FileExplorerPanelPlacement: Equatable {
     case rightSidebar
     case pane
 }
-
 /// The entire file explorer panel as one AppKit view hierarchy.
 /// Contains the header bar (path + controls) and NSOutlineView, with no SwiftUI intermediaries.
 struct FileExplorerPanelView: NSViewRepresentable {
@@ -42,7 +36,6 @@ struct FileExplorerPanelView: NSViewRepresentable {
     var placement: FileExplorerPanelPlacement = .rightSidebar
     var onFocus: (() -> Void)?
     var onContainerChange: ((FileExplorerContainerView?) -> Void)?
-
     func makeCoordinator() -> Coordinator {
         Coordinator(
             store: store,
@@ -53,14 +46,12 @@ struct FileExplorerPanelView: NSViewRepresentable {
             onContainerChange: onContainerChange
         )
     }
-
     func makeNSView(context: Context) -> FileExplorerContainerView {
         let container = FileExplorerContainerView(coordinator: context.coordinator, presentation: presentation)
         context.coordinator.containerView = container
         context.coordinator.onContainerChange?(container)
         return container
     }
-
     func updateNSView(_ container: FileExplorerContainerView, context: Context) {
         context.coordinator.store = store
         context.coordinator.state = state
@@ -75,14 +66,11 @@ struct FileExplorerPanelView: NSViewRepresentable {
         context.coordinator.reloadIfNeeded()
         container.registerWithKeyboardFocusCoordinatorIfNeeded()
     }
-
     static func dismantleNSView(_ nsView: FileExplorerContainerView, coordinator: Coordinator) {
         _ = nsView
         coordinator.onContainerChange?(nil)
     }
-
     // MARK: - Coordinator
-
     final class Coordinator: NSObject, NSOutlineViewDataSource, NSOutlineViewDelegate, NSMenuDelegate {
         var store: FileExplorerStore
         var state: FileExplorerState
@@ -96,7 +84,6 @@ struct FileExplorerPanelView: NSViewRepresentable {
         private var observationCancellable: AnyCancellable?
         private var styleObserver: Any?
         private var isUpdatingOutlineProgrammatically = false
-
         init(
             store: FileExplorerStore,
             state: FileExplorerState,
@@ -127,7 +114,6 @@ struct FileExplorerPanelView: NSViewRepresentable {
                 }
             }
         }
-
         @MainActor
         @discardableResult
         func handleModeShortcut(_ mode: RightSidebarMode, in window: NSWindow?) -> Bool {
@@ -139,7 +125,6 @@ struct FileExplorerPanelView: NSViewRepresentable {
             )
             return true
         }
-
         @MainActor
         func noteKeyboardFocus(mode: RightSidebarMode, in window: NSWindow?) {
             switch placement {
@@ -150,13 +135,11 @@ struct FileExplorerPanelView: NSViewRepresentable {
                 onFocus?()
             }
         }
-
         deinit {
             if let observer = styleObserver {
                 NotificationCenter.default.removeObserver(observer)
             }
         }
-
         private func observeStore() {
             observationCancellable = store.objectWillChange
                 .debounce(for: .milliseconds(50), scheduler: RunLoop.main)
@@ -166,18 +149,15 @@ struct FileExplorerPanelView: NSViewRepresentable {
                     }
                 }
         }
-
         @MainActor
         func reloadIfNeeded() {
             guard let outlineView else { return }
-
             // Update empty state vs tree visibility
             containerView?.updateVisibility(
                 hasContent: !store.rootPath.isEmpty,
                 isLoading: store.isRootLoading,
                 statusMessage: store.rootStatusMessage
             )
-
             let newCount = store.rootNodes.count
             withProgrammaticOutlineUpdate {
                 if newCount != lastRootNodeCount {
@@ -191,7 +171,6 @@ struct FileExplorerPanelView: NSViewRepresentable {
                 applyStoredSelection(in: outlineView, fallbackToFirstVisible: false, scroll: false)
             }
         }
-
         private func restoreExpansionState(_ expandedPaths: Set<String>, in outlineView: NSOutlineView) {
             for row in 0..<outlineView.numberOfRows {
                 guard let node = outlineView.item(atRow: row) as? FileExplorerNode else { continue }
@@ -200,14 +179,12 @@ struct FileExplorerPanelView: NSViewRepresentable {
                 }
             }
         }
-
         private func refreshLoadedNodes(in outlineView: NSOutlineView) {
             for row in 0..<outlineView.numberOfRows {
                 guard let node = outlineView.item(atRow: row) as? FileExplorerNode else { continue }
                 if node.isDirectory {
                     let isCurrentlyExpanded = outlineView.isItemExpanded(node)
                     let shouldBeExpanded = store.expandedPaths.contains(node.path)
-
                     if shouldBeExpanded && !isCurrentlyExpanded && node.children != nil {
                         outlineView.reloadItem(node, reloadChildren: true)
                         outlineView.expandItem(node)
@@ -222,9 +199,7 @@ struct FileExplorerPanelView: NSViewRepresentable {
                 }
             }
         }
-
         // MARK: - NSOutlineViewDataSource
-
         func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
             if item == nil {
                 return store.rootNodes.count
@@ -232,7 +207,6 @@ struct FileExplorerPanelView: NSViewRepresentable {
             guard let node = item as? FileExplorerNode else { return 0 }
             return node.sortedChildren?.count ?? 0
         }
-
         func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
             if item == nil {
                 return store.rootNodes[index]
@@ -243,7 +217,6 @@ struct FileExplorerPanelView: NSViewRepresentable {
             }
             return children[index]
         }
-
         func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
             guard let node = item as? FileExplorerNode else { return false }
             return node.isExpandable

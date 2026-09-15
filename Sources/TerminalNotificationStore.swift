@@ -5,7 +5,6 @@ import os
 import UserNotifications
 import Bonsplit
 import BmuxSettings
-
 nonisolated private let terminalNotificationLogger = Logger(
     subsystem: "com.bmuxterm.app",
     category: "notification"

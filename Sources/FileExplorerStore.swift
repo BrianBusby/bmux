@@ -4,16 +4,13 @@ import Combine
 import Foundation
 import QuartzCore
 import SwiftUI
-
 // MARK: - Explorer Visual Style
-
 enum FileExplorerStyle: Int, CaseIterable {
     case liquidGlass = 0
     case highDensity = 1
     case terminalStealth = 2
     case proStudio = 3
     case finder = 4
-
     var label: String {
         switch self {
         case .liquidGlass: return "Liquid Glass"
@@ -23,7 +20,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return "Finder"
         }
     }
-
     var rowHeight: CGFloat {
         let baseHeight: CGFloat
         switch self {
@@ -35,7 +31,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         }
         return GlobalFontMagnification.scaledSize(baseHeight)
     }
-
     var indentation: CGFloat {
         switch self {
         case .liquidGlass: return 16
@@ -45,7 +40,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return 18
         }
     }
-
     var iconSize: CGFloat {
         switch self {
         case .liquidGlass: return 16
@@ -55,7 +49,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return 18
         }
     }
-
     var iconWeight: NSFont.Weight {
         switch self {
         case .liquidGlass: return .regular
@@ -65,7 +58,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return .medium
         }
     }
-
     var nameFont: NSFont {
         switch self {
         case .liquidGlass: return GlobalFontMagnification.systemFont(ofSize: 13, weight: .medium)
@@ -75,7 +67,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return GlobalFontMagnification.systemFont(ofSize: 13, weight: .regular)
         }
     }
-
     var iconToTextSpacing: CGFloat {
         switch self {
         case .liquidGlass: return 8
@@ -85,7 +76,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return 6
         }
     }
-
     var selectionInset: CGFloat {
         switch self {
         case .liquidGlass: return 8
@@ -95,7 +85,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return 4
         }
     }
-
     var selectionRadius: CGFloat {
         switch self {
         case .liquidGlass: return 6
@@ -105,7 +94,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return 5
         }
     }
-
     var selectionColor: NSColor {
         switch self {
         case .liquidGlass: return .controlAccentColor.withAlphaComponent(0.15)
@@ -115,7 +103,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return .controlAccentColor.withAlphaComponent(0.15)
         }
     }
-
     var hoverColor: NSColor {
         switch self {
         case .liquidGlass: return .labelColor.withAlphaComponent(0.05)
@@ -125,7 +112,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return .labelColor.withAlphaComponent(0.04)
         }
     }
-
     var usesBorderSelection: Bool {
         self == .terminalStealth
     }
