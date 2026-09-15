@@ -391,7 +391,8 @@ import Testing
     private static func pullRequest(
         number: Int,
         title: String? = nil,
-        isStale: Bool = false
+        isStale: Bool = false,
+        ownerLogin: String? = nil
     ) -> SidebarWorkspaceSnapshotBuilder.PullRequestDisplay {
         SidebarWorkspaceSnapshotBuilder.PullRequestDisplay(
             id: "pr#\(number)|https://github.com/manaflow-ai/bmux/pull/\(number)",
@@ -400,8 +401,8 @@ import Testing
             label: "PR",
             url: URL(string: "https://github.com/manaflow-ai/bmux/pull/\(number)")!,
             status: .open,
-            ownerLogin: nil,
-            ownerURL: nil,
+            ownerLogin: ownerLogin,
+            ownerURL: ownerLogin.flatMap { URL(string: "https://github.com/\($0)") },
             branch: nil,
             isStale: isStale,
             isFromProvenance: false
@@ -542,7 +543,6 @@ import Testing
                 colorHex: "#F2C94C"
             )
         )
-
         #expect(colorHex == "#56CCF2")
     }
 

@@ -24,7 +24,7 @@ Regenerate with: ./scripts/project-docs generate
 
 ### Active Implementation
 
-- None.
+- Unified selected workspace header and border (`workspace_selected_header_border_presentation`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Selected Next
 

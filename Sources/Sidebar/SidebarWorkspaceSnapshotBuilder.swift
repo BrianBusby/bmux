@@ -147,11 +147,161 @@ struct SidebarWorkspaceSnapshotBuilder {
         let pullRequestRows: [PullRequestDisplay]
         let projectRows: [ProjectDisplay]
         let ticketRows: [TicketDisplay]
+        var resourceLinks: ResourceLinkPresentation {
+            SidebarWorkspaceSnapshotBuilder.resourceLinkPresentation(
+                pullRequestRows: pullRequestRows,
+                projectRows: projectRows,
+                ticketRows: ticketRows
+            )
+        }
         let listeningPorts: [Int]
         let finderDirectoryPath: String?
         let repoBadgeAppearance: WorkspaceRepoBadgeAppearance?
         let mediaActivity: BrowserMediaActivity
         let hasActiveAIWork: Bool
+    }
+
+    @MainActor static func resourceLinkPresentation(
+        workspace: Workspace,
+        provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot?,
+        label: String
+    ) -> ResourceLinkPresentation {
+        let orderedPanelIds = workspace.sidebarOrderedPanelIds()
+        return resourceLinkPresentation(
+            livePullRequests: workspace.sidebarPullRequestsInDisplayOrder(orderedPanelIds: orderedPanelIds),
+            provenanceDisplaySnapshot: provenanceDisplaySnapshot,
+            latestSubmittedMessage: provenanceDisplaySnapshot?.lastSubmittedPrompt ?? workspace.latestSubmittedMessage,
+            latestConversationMessage: workspace.latestConversationMessage,
+            label: label
+        )
+    }
+
+    static func resourceLinkPresentation(
+        livePullRequests: [SidebarPullRequestState],
+        provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot?,
+        latestSubmittedMessage: String?,
+        latestConversationMessage: String?,
+        label: String
+    ) -> ResourceLinkPresentation {
+        let pullRequestRows = pullRequestDisplays(
+            livePullRequests: livePullRequests,
+            provenancePullRequest: provenanceDisplaySnapshot?.pullRequest,
+            provenanceCurrentDirectory: provenanceDisplaySnapshot?.currentDirectory,
+            provenanceBranch: provenanceDisplaySnapshot?.branch,
+            latestSubmittedMessage: latestSubmittedMessage,
+            latestConversationMessage: latestConversationMessage,
+            label: label
+        )
+        return resourceLinkPresentation(
+            pullRequestRows: pullRequestRows,
+            projectRows: projectDisplays(from: provenanceDisplaySnapshot),
+            ticketRows: ticketDisplays(from: provenanceDisplaySnapshot)
+        )
+    }
+
+    static func resourceLinkPresentation(
+        pullRequestRows: [PullRequestDisplay],
+        projectRows: [ProjectDisplay],
+        ticketRows: [TicketDisplay]
+    ) -> ResourceLinkPresentation {
+        ResourceLinkPresentation(
+            ticketRows: ticketRows,
+            pullRequestRows: pullRequestRows,
+            projectRows: projectRows,
+            ownerRows: ownerDisplays(
+                pullRequestRows: pullRequestRows,
+                ticketRows: ticketRows
+            )
+        )
+    }
+
+    static func selectedWorkspaceHeaderResources(
+        _ resources: ResourceLinkPresentation,
+        isSelected: Bool
+    ) -> ResourceLinkPresentation? {
+        guard isSelected, resources.hasHeaderItems else {
+            return nil
+        }
+        return resources
+    }
+
+    static func sidebarResourceRows(
+        resources: ResourceLinkPresentation,
+        selectedWorkspaceHeaderResources: ResourceLinkPresentation?
+    ) -> SidebarResourceRows {
+        let suppression = selectedWorkspaceHeaderResources?.headerSuppression ?? .empty
+        let ticketRows = resources.ticketRows.filter {
+            let showsTicket = $0.url.map { !suppression.ticketURLs.contains($0) } ?? true
+            let showsOwner = ($0.ownerName?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false)
+                && ($0.ownerURL.map { !suppression.ownerURLs.contains($0) } ?? true)
+            return showsTicket || showsOwner
+        }
+        return SidebarResourceRows(
+            ticketRows: ticketRows,
+            hiddenTicketURLs: suppression.ticketURLs,
+            hiddenOwnerURLs: suppression.ownerURLs,
+            pullRequestRows: resources.pullRequestRows.filter { $0.url.map { !suppression.pullRequestURLs.contains($0) } ?? true },
+            projectRows: resources.projectRows.filter { $0.url.map { !suppression.projectURLs.contains($0) } ?? true },
+            pullRequestOwnerRows: resources.pullRequestRows.filter {
+                ($0.ownerLogin?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false)
+                    && ($0.ownerURL.map { !suppression.ownerURLs.contains($0) } ?? true)
+            }
+        )
+    }
+
+    static func ticketDisplays(
+        from provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot?
+    ) -> [TicketDisplay] {
+        provenanceDisplaySnapshot?.ticketLinks.map {
+            TicketDisplay(
+                id: $0.id,
+                title: $0.title,
+                url: $0.url,
+                ownerName: $0.ownerName,
+                ownerURL: $0.ownerURL
+            )
+        } ?? []
+    }
+
+    static func projectDisplays(
+        from provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot?
+    ) -> [ProjectDisplay] {
+        provenanceDisplaySnapshot?.projectLinks.map {
+            ProjectDisplay(
+                id: $0.id,
+                title: $0.title,
+                url: $0.url
+            )
+        } ?? []
+    }
+
+    private static func ownerDisplays(
+        pullRequestRows: [PullRequestDisplay],
+        ticketRows: [TicketDisplay]
+    ) -> [OwnerDisplay] {
+        var seenKeys = Set<String>()
+        var owners: [OwnerDisplay] = []
+
+        func append(name: String?, url: URL?, source: String) {
+            let trimmedName = name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !trimmedName.isEmpty else { return }
+            let identity = url?.absoluteString.lowercased() ?? trimmedName.lowercased()
+            guard seenKeys.insert(identity).inserted else { return }
+            owners.append(OwnerDisplay(
+                id: "\(source):\(trimmedName.lowercased())|\(url?.absoluteString ?? "")",
+                name: trimmedName,
+                url: url
+            ))
+        }
+
+        for pullRequest in pullRequestRows {
+            append(name: pullRequest.ownerLogin, url: pullRequest.ownerURL, source: "pullRequest")
+        }
+        for ticket in ticketRows {
+            append(name: ticket.ownerName, url: ticket.ownerURL, source: "ticket")
+        }
+
+        return owners
     }
 
     static func pullRequestDisplays(

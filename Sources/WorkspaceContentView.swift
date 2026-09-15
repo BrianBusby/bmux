@@ -13,51 +13,6 @@ private enum WorkspaceTitlebarInteractionMetrics {
     static let minimalModeTopStripHeight: CGFloat = MinimalModeChromeMetrics.titlebarHeight
 }
 
-private struct WorkspacePanelContentHostView: View {
-    let workspace: Workspace
-    let panel: any Panel
-    let paneId: PaneID
-    let isFocused: Bool
-    let isSelectedInPane: Bool
-    let isVisibleInUI: Bool
-    let portalPriority: Int
-    let isSplit: Bool
-    let appearance: PanelAppearance
-    let windowAppearance: WindowAppearanceSnapshot
-    let customSidebarTabManager: TabManager?
-    let hasUnreadNotification: Bool
-    let onFocus: () -> Void
-    let onRequestPanelFocus: () -> Void
-    let onResumeAgentHibernation: () -> Void
-    let onAutoResumeAgentHibernation: () -> Void
-    let onTriggerFlash: () -> Void
-
-    var body: some View {
-        PanelContentView(
-            panel: panel,
-            workspaceId: workspace.id,
-            stableWorkspaceId: workspace.stableId,
-            paneId: paneId,
-            isFocused: isFocused,
-            isSelectedInPane: isSelectedInPane,
-            isVisibleInUI: isVisibleInUI,
-            portalPriority: portalPriority,
-            isSplit: isSplit,
-            appearance: appearance,
-            windowAppearance: windowAppearance,
-            customSidebarTabManager: customSidebarTabManager,
-            hasUnreadNotification: hasUnreadNotification,
-            terminalAgentContext: WorkspaceContentView.terminalAgentContext(panel: panel, workspace: workspace),
-            workProvenanceRuntime: workspace.owningTabManager?.workProvenanceRuntime,
-            onFocus: onFocus,
-            onRequestPanelFocus: onRequestPanelFocus,
-            onResumeAgentHibernation: onResumeAgentHibernation,
-            onAutoResumeAgentHibernation: onAutoResumeAgentHibernation,
-            onTriggerFlash: onTriggerFlash
-        )
-    }
-}
-
 @MainActor
 final class TmuxWorkspacePaneOverlayModel {
     private(set) var unreadRects: [CGRect] = []
@@ -132,6 +87,7 @@ struct WorkspaceContentView: View {
     let isFullScreen: Bool
     let workspacePortalPriority: Int
     let windowAppearance: WindowAppearanceSnapshot
+    let workspaceHeaderResources: SidebarWorkspaceSnapshotBuilder.ResourceLinkPresentation?
     let onThemeRefreshRequest: ((
         _ reason: String,
         _ backgroundEventId: UInt64?,
@@ -354,19 +310,30 @@ struct WorkspaceContentView: View {
             )
         }
 
-        Group {
-            if workspace.layoutMode == .canvas {
-                WorkspaceCanvasHostView(
-                    workspace: workspace,
-                    isWorkspaceVisible: isWorkspaceVisible,
-                    isWorkspaceInputActive: isWorkspaceInputActive,
-                    portalPriority: workspacePortalPriority,
-                    appearance: appearance, windowAppearance: windowAppearance
+        VStack(spacing: 0) {
+            if let workspaceHeaderResources, workspaceHeaderResources.hasHeaderItems {
+                WorkspaceResourceHeaderView(
+                    resources: workspaceHeaderResources,
+                    onOpen: openHeaderResource
                 )
-            } else {
-                bonsplitView
             }
+
+            Group {
+                if workspace.layoutMode == .canvas {
+                    WorkspaceCanvasHostView(
+                        workspace: workspace,
+                        isWorkspaceVisible: isWorkspaceVisible,
+                        isWorkspaceInputActive: isWorkspaceInputActive,
+                        portalPriority: workspacePortalPriority,
+                        appearance: appearance, windowAppearance: windowAppearance
+                    )
+                } else {
+                    bonsplitView
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .modifier(WorkspaceContentMinimalModeSafeAreaModifier(isFullScreen: isFullScreen))
     }
 

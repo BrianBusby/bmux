@@ -200704,6 +200704,69 @@
         }
       }
     },
+    "workspace.header.openTooltip": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Open %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@を開く" } }
+      }
+    },
+    "workspace.header.owner.accessibilityLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Owner %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "所有者 %@" } }
+      }
+    },
+    "workspace.header.owner.label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Owner" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "所有者" } }
+      }
+    },
+    "workspace.header.project.accessibilityLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Project %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "プロジェクト %@" } }
+      }
+    },
+    "workspace.header.project.label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Project" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "プロジェクト" } }
+      }
+    },
+    "workspace.header.pullRequest.accessibilityLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Pull request %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "プルリクエスト %@" } }
+      }
+    },
+    "workspace.header.pullRequest.label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "PR" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "PR" } }
+      }
+    },
+    "workspace.header.ticket.accessibilityLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Ticket %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "チケット %@" } }
+      }
+    },
+    "workspace.header.ticket.label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Ticket" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "チケット" } }
+      }
+    },
     "sidebar.pullRequest.label": {
       "extractionState": "manual",
       "localizations": {

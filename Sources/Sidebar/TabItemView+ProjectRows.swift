@@ -2,25 +2,11 @@ import SwiftUI
 
 extension TabItemView {
     var provenanceTicketDisplays: [SidebarWorkspaceSnapshotBuilder.TicketDisplay] {
-        provenanceDisplaySnapshot?.ticketLinks.map {
-            SidebarWorkspaceSnapshotBuilder.TicketDisplay(
-                id: $0.id,
-                title: $0.title,
-                url: $0.url,
-                ownerName: $0.ownerName,
-                ownerURL: $0.ownerURL
-            )
-        } ?? []
+        SidebarWorkspaceSnapshotBuilder.ticketDisplays(from: provenanceDisplaySnapshot)
     }
 
     var provenanceProjectDisplays: [SidebarWorkspaceSnapshotBuilder.ProjectDisplay] {
-        provenanceDisplaySnapshot?.projectLinks.map {
-            SidebarWorkspaceSnapshotBuilder.ProjectDisplay(
-                id: $0.id,
-                title: $0.title,
-                url: $0.url
-            )
-        } ?? []
+        SidebarWorkspaceSnapshotBuilder.projectDisplays(from: provenanceDisplaySnapshot)
     }
 
     @ViewBuilder

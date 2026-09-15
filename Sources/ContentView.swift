@@ -1749,6 +1749,9 @@ struct ContentView: View {
                     // delay handoff completion and make browser returns feel laggy.
                     let isInputActive = isSelectedWorkspace
                     let portalPriority = isSelectedWorkspace ? 2 : (isRetiringWorkspace ? 1 : 0)
+                    let provenanceDisplaySnapshot = tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: tab)
+                    let resourceLinks = SidebarWorkspaceSnapshotBuilder.resourceLinkPresentation(workspace: tab, provenanceDisplaySnapshot: provenanceDisplaySnapshot, label: String(localized: "sidebar.pullRequest.label", defaultValue: "PR"))
+                    let workspaceHeaderResources = SidebarWorkspaceSnapshotBuilder.selectedWorkspaceHeaderResources(resourceLinks, isSelected: isSelectedWorkspace)
                     WorkspaceContentView(
                         workspace: tab,
                         isWorkspaceVisible: presentation.isPanelVisible,
@@ -1757,6 +1760,7 @@ struct ContentView: View {
                         isFullScreen: isFullScreen,
                         workspacePortalPriority: portalPriority,
                         windowAppearance: appearance,
+                        workspaceHeaderResources: workspaceHeaderResources,
                         onThemeRefreshRequest: { reason, eventId, source, payloadHex in
                             scheduleTitlebarThemeRefreshFromWorkspace(
                                 workspaceId: tab.id,
@@ -2489,6 +2493,18 @@ struct ContentView: View {
                             .zIndex(1000)
                     }
                 }
+                .selectedWorkspaceConnectedBorder(
+                    isVisible: sidebarState.isVisible && sidebarSelectionState.selection == .tabs,
+                    selectedWorkspaceId: tabManager.selectedTabId,
+                    sidebarWidth: sidebarWidth,
+                    rightSidebarWidth: rightSidebarWidth,
+                    workspaceTopY: max(0, Self.effectiveTitlebarPadding(
+                        isMinimalMode: currentIsMinimalMode,
+                        isFullScreen: isFullScreen,
+                        titlebarPadding: titlebarPadding,
+                        hostingSafeAreaTop: hostingSafeAreaTop
+                    ))
+                )
         )
     }
 
@@ -12367,11 +12383,15 @@ struct VerticalTabsSidebar: View {
                 lastSidebarSelectionIndex = nil
             }
         }
+        let provenanceDisplaySnapshot = tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: tab)
+        let resourceLinks = SidebarWorkspaceSnapshotBuilder.resourceLinkPresentation(workspace: tab, provenanceDisplaySnapshot: provenanceDisplaySnapshot, label: String(localized: "sidebar.pullRequest.label", defaultValue: "PR"))
+        let selectedWorkspaceHeaderResources = SidebarWorkspaceSnapshotBuilder.selectedWorkspaceHeaderResources(resourceLinks, isSelected: tabManager.selectedTabId == tab.id)
         let row = TabItemView(
             tabManager: tabManager,
             notificationStore: notificationStore,
             tab: tab,
-            provenanceDisplaySnapshot: tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: tab),
+            provenanceDisplaySnapshot: provenanceDisplaySnapshot,
+            selectedWorkspaceHeaderResources: selectedWorkspaceHeaderResources,
             index: index,
             workspaceShortcutDigit: WorkspaceShortcutMapper.digitForWorkspace(
                 at: index,
@@ -12418,36 +12438,6 @@ struct VerticalTabsSidebar: View {
             .contentShape(Rectangle())
     }
 
-}
-
-struct SidebarWorkspaceFrameAnchorModifier: ViewModifier {
-    let id: UUID
-    let isEnabled: Bool
-
-    func body(content: Content) -> some View {
-        // Branchless: always apply anchorPreference, emit [:] when disabled. An
-        // if/else gives `content` distinct identity per state, so flipping
-        // isEnabled at drag start/end recreated every visible row's subtree
-        // (lost @State, fresh snapshot builds + relayout mid-drag). The frame
-        // *reader* stays gated on the drag (#5325), so an empty emit costs nothing.
-        content.anchorPreference(key: SidebarWorkspaceRowFramePreferenceKey.self, value: .bounds) { anchor in
-            isEnabled ? [id: anchor] : [:]
-        }
-    }
-}
-
-extension View {
-    func sidebarWorkspaceFrameAnchor(id: UUID, isEnabled: Bool) -> some View {
-        modifier(SidebarWorkspaceFrameAnchorModifier(id: id, isEnabled: isEnabled))
-    }
-}
-
-struct SidebarWorkspaceRowFramePreferenceKey: PreferenceKey {
-    static let defaultValue: [UUID: Anchor<CGRect>] = [:]
-
-    static func reduce(value: inout [UUID: Anchor<CGRect>], nextValue: () -> [UUID: Anchor<CGRect>]) {
-        value.merge(nextValue()) { _, next in next }
-    }
 }
 
 @MainActor
@@ -13144,6 +13134,7 @@ struct TabItemView: View, Equatable {
     nonisolated static func == (lhs: TabItemView, rhs: TabItemView) -> Bool {
         lhs.tab === rhs.tab &&
         lhs.provenanceDisplaySnapshot == rhs.provenanceDisplaySnapshot &&
+        lhs.selectedWorkspaceHeaderResources == rhs.selectedWorkspaceHeaderResources &&
         lhs.index == rhs.index &&
         lhs.workspaceShortcutDigit == rhs.workspaceShortcutDigit &&
         lhs.workspaceShortcutModifierSymbol == rhs.workspaceShortcutModifierSymbol &&
@@ -13189,6 +13180,7 @@ struct TabItemView: View, Equatable {
 #endif
     let tab: Tab
     let provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot?
+    let selectedWorkspaceHeaderResources: SidebarWorkspaceSnapshotBuilder.ResourceLinkPresentation?
     let index: Int
     let workspaceShortcutDigit: Int?
     let workspaceShortcutModifierSymbol: String
@@ -13370,7 +13362,7 @@ struct TabItemView: View, Equatable {
     }
 
     private var activeBorderLineWidth: CGFloat {
-        isActive ? 1.5 : 0
+        0
     }
 
     private var activeBorderColor: Color {
@@ -13585,6 +13577,10 @@ struct TabItemView: View, Equatable {
 #endif
         let signpost = SidebarProfilingSignposts.begin("sidebar-tab-item-body", "index=\(index) workspace=\(sidebarShortTabId(tab.id)) active=\(isActive) unread=\(unreadCount)")
         let workspaceSnapshot = self.workspaceSnapshot
+        let sidebarResourceRows = SidebarWorkspaceSnapshotBuilder.sidebarResourceRows(
+            resources: workspaceSnapshot.resourceLinks,
+            selectedWorkspaceHeaderResources: selectedWorkspaceHeaderResources
+        )
         let closeWorkspaceTooltip = String(localized: "sidebar.closeWorkspace.tooltip", defaultValue: "Close Workspace")
         let protectedWorkspaceTooltip = String(
             localized: "sidebar.pinnedWorkspaceProtected.tooltip",
@@ -13702,8 +13698,8 @@ struct TabItemView: View, Equatable {
                     .layoutPriority(1)
                 } else {
                     VStack(alignment: .leading, spacing: 1) {
-                        if !workspaceSnapshot.ticketRows.isEmpty {
-                            ticketRowsView(workspaceSnapshot.ticketRows, prominent: true)
+                        if !sidebarResourceRows.ticketRows.isEmpty {
+                            ticketRowsView(sidebarResourceRows.ticketRows, prominent: true, hiddenTicketURLs: sidebarResourceRows.hiddenTicketURLs, hiddenOwnerURLs: sidebarResourceRows.hiddenOwnerURLs)
                         }
 
                         Text(workspaceSnapshot.title)
@@ -13929,17 +13925,17 @@ struct TabItemView: View, Equatable {
             }
 
             // Pull request rows
-            if !workspaceSnapshot.pullRequestRows.isEmpty {
-                pullRequestRowsView(workspaceSnapshot.pullRequestRows)
+            if !sidebarResourceRows.pullRequestRows.isEmpty {
+                pullRequestRowsView(sidebarResourceRows.pullRequestRows)
             }
 
             // Project rows
-            if !workspaceSnapshot.projectRows.isEmpty {
-                projectRowsView(workspaceSnapshot.projectRows)
+            if !sidebarResourceRows.projectRows.isEmpty {
+                projectRowsView(sidebarResourceRows.projectRows)
             }
 
-            if !workspaceSnapshot.pullRequestRows.isEmpty {
-                pullRequestOwnerRowsView(workspaceSnapshot.pullRequestRows)
+            if !sidebarResourceRows.pullRequestOwnerRows.isEmpty {
+                pullRequestOwnerRowsView(sidebarResourceRows.pullRequestOwnerRows)
             }
 
             // Ports row
@@ -13973,10 +13969,18 @@ struct TabItemView: View, Equatable {
         .padding(.horizontal, SidebarWorkspaceListMetrics.rowContentHorizontalPadding)
         .padding(.vertical, 8)
         .background(
-            RoundedRectangle(cornerRadius: 6)
+            RoundedRectangle(cornerRadius: SidebarWorkspaceSelectionBorderMetrics.connectedCornerRadius)
                 .fill(backgroundColor)
+                .overlay(alignment: .trailing) {
+                    if isActive {
+                        Rectangle()
+                            .fill(backgroundColor)
+                            .frame(width: SidebarWorkspaceSelectionBorderMetrics.selectedTabConnectionFillExtensionWidth)
+                            .offset(x: SidebarWorkspaceListMetrics.rowOuterHorizontalPadding)
+                    }
+                }
                 .overlay {
-                    RoundedRectangle(cornerRadius: 6)
+                    RoundedRectangle(cornerRadius: SidebarWorkspaceSelectionBorderMetrics.connectedCornerRadius)
                         .strokeBorder(activeBorderColor, lineWidth: activeBorderLineWidth)
                 }
                 .overlay(alignment: .leading) {
@@ -14006,6 +14010,7 @@ struct TabItemView: View, Equatable {
             fontSize: scaledFontSize(10)
         )
         .shortcutHintVisibilityAnimation(value: showsWorkspaceShortcutHint)
+        .selectedWorkspaceFrameAnchor(id: tab.id, isSelected: isActive)
         .padding(.horizontal, SidebarWorkspaceListMetrics.rowOuterHorizontalPadding)
         .contentShape(Rectangle())
         .sidebarWorkspaceRowHoverTracking($rowInteractionState)
@@ -14858,18 +14863,11 @@ struct TabItemView: View, Equatable {
             return verticalBranchDirectoryLines(orderedPanelIds: orderedPanelIds)
         }()
         let branchLinesContainBranch = sidebarShowGitBranch && branchDirectoryLines.contains { $0.branch != nil }
-        let pullRequestRows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
-            livePullRequests: tab.sidebarPullRequestsInDisplayOrder(orderedPanelIds: orderedPanelIds),
-            provenancePullRequest: provenanceDisplaySnapshot?.pullRequest,
-            provenanceCurrentDirectory: provenanceDisplaySnapshot?.currentDirectory,
-            provenanceBranch: provenanceDisplaySnapshot?.branch,
-            latestSubmittedMessage: provenanceDisplaySnapshot?.lastSubmittedPrompt ?? tab.latestSubmittedMessage,
-            latestConversationMessage: tab.latestConversationMessage,
-            label: String(localized: "sidebar.pullRequest.label", defaultValue: "PR")
-        )
+        let resourceLinks = SidebarWorkspaceSnapshotBuilder.resourceLinkPresentation(workspace: tab, provenanceDisplaySnapshot: provenanceDisplaySnapshot, label: String(localized: "sidebar.pullRequest.label", defaultValue: "PR"))
+        let pullRequestRows = resourceLinks.pullRequestRows
         let displayedPullRequestNumbers = Set(pullRequestRows.map(\.number))
-        let projectRows = provenanceProjectDisplays
-        let ticketRows = provenanceTicketDisplays
+        let projectRows = resourceLinks.projectRows
+        let ticketRows = resourceLinks.ticketRows
         let provenanceProgress = provenanceDisplaySnapshot?.currentWorkSummary.map {
             SidebarProgressState(value: tab.progress?.value ?? 0, label: $0)
         }

@@ -20,7 +20,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Active Implementation
 
-- None.
+- Unified selected workspace header and border (`workspace_selected_header_border_presentation`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Selected Next
 
@@ -388,6 +388,24 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Evidence: BrianBusby/bmux@9fc7061ba353, BrianBusby/bmux#93 by [BrianBusby](https://github.com/BrianBusby)
           Acceptance reason: bmux now performs bounded prompt-derived Linear resource discovery in the workspace observation path, merges it with PR-derived evidence, and writes normalized durable workspace display facts to Provenance Engine.
           Acceptance criteria: Submitted workspace prompts produce normalized Linear ticket evidence when they contain explicit Linear issue URLs or known bare ticket IDs.; Prompt evidence, stored-prompt backfill, PR title evidence, and PR branch evidence merge without duplicate ticket, ticket-link, or project-link facts.; Linear lookup enriches resolved tickets and projects when available, while unavailable authentication or resolution failure preserves unresolved IDs and explicit URLs for retry.; Sidebar and row views continue to render normalized PE workspace display metadata without provider-specific parsing.
+      - **Workspace Display Presentation** (`workspace_display_presentation`) - milestone; status: active; owner: Bmux; repositories: Bmux; concept: workspace display; layer: consumer presentation; execution: current / Bmux; parallelism: conditional; delivery: draft; acceptance: proposed
+        Depends on: `workspace_display_prompt_resource_discovery`
+        Expected contract domains: `workspace_display_presentation`, `sidebar_workspace_snapshot`, `selected_workspace_geometry`
+        Expected code areas: `Sources/ContentView.swift`, `Sources/WorkspaceContentView.swift`, `Sources/Sidebar/SidebarWorkspaceSnapshotBuilder.swift`, `Sources/Sidebar/TabItemView+TicketRows.swift`, `Sources/Sidebar/TabItemView+ProjectRows.swift`, `Resources/Localizable.xcstrings`, `bmuxTests/*Workspace*Tests.swift`, `bmuxTests/*Sidebar*Tests.swift`
+        Likely conflict domains: `workspace_sidebar_rows`, `workspace_content_layout`, `selected_workspace_border`, `project_truth_manifest`, `generated_project_truth_docs`
+        Contract dependencies: `workspace_display_tab_projection`, `workspace_display_prompt_resource_discovery`
+        Worktree required: true
+        Rationale: Tracks bmux-owned presentation work that consumes the existing normalized workspace-display projection to join selected workspace tabs with their content area, without adding new provider parsing or durable evidence paths.
+        - **Unified selected workspace header and border** (`workspace_selected_header_border_presentation`) - slice; status: active; owner: Bmux; repositories: Bmux; concept: workspace display; layer: consumer presentation; execution: current / Bmux; parallelism: conditional; delivery: draft; acceptance: proposed; maturity: active
+          Depends on: `workspace_display_prompt_resource_discovery`
+          Expected contract domains: `immutable_workspace_link_presentation`, `sidebar_snapshot_boundary`, `selected_workspace_geometry`, `localized_accessibility_labels`
+          Expected code areas: `Sources/ContentView.swift`, `Sources/WorkspaceContentView.swift`, `Sources/Sidebar/SidebarWorkspaceSnapshotBuilder.swift`, `Sources/Sidebar/TabItemView+TicketRows.swift`, `Sources/Sidebar/TabItemView+ProjectRows.swift`, `Resources/Localizable.xcstrings`, `bmuxTests/*Workspace*Tests.swift`, `bmuxTests/*Sidebar*Tests.swift`
+          Likely conflict domains: `workspace_sidebar_rows`, `workspace_display_projection`, `selected_workspace_border`, `project_truth_manifest`, `generated_project_truth_docs`
+          Contract dependencies: `workspace_display_tab_projection`, `workspace_display_prompt_resource_discovery`
+          Worktree required: true
+          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/unified-selected-workspace-header-border`; branch: `unified-selected-workspace-header-border`; agent: `Codex`
+          Rationale: Move selected workspace resource links from the sidebar tab into a reusable workspace header, preserve selected tab color, and draw a coordinated connected border between the selected tab and workspace content using one immutable presentation snapshot.
+          Acceptance criteria: Selected workspace content shows a compact reusable header for available normalized ticket, pull request, project, and owner links.; Selected sidebar tabs suppress only duplicated resource rows while unselected tabs retain their links from the same immutable snapshot.; Built-in and custom workspace colors remain visible on selected tabs across hover and activity states.; The selected tab and workspace content share a continuous border that is one pixel thicker than the previous selected-tab border with no doubled shared seam.
   - **Project Truth Governance** (`project_truth_governance`) - program; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: project truth; layer: project truth; execution: current / Provenance Engine; parallelism: safe
     Rationale: Maintains canonical structured project state, generated status, and read-only CI checks that prevent authored documentation drift.
     - **Canonical Project Truth State** (`canonical_project_truth_state`) - phase; status: active; owner: Provenance Engine; repositories: Provenance Engine; concept: project truth; layer: project truth; execution: current / Provenance Engine; parallelism: serial
@@ -956,7 +974,9 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.
 
-- Active implementation assignments: none selected.
+| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Unified selected workspace header and border (`workspace_selected_header_border_presentation`) | conditional | /Users/brianbusby/repos/.bmux-worktrees/unified-selected-workspace-header-border | unified-selected-workspace-header-border | Codex | `generated_project_truth_docs`, `project_truth_manifest`, `selected_workspace_border`, `workspace_display_projection`, `workspace_sidebar_rows` | `workspace_display_prompt_resource_discovery`, `workspace_display_tab_projection` | single active assignment |
 
 ### Dependency-Ready Preflight
 

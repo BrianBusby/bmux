@@ -2202,6 +2202,116 @@ roadmap:
           - Sidebar and row views continue to render normalized PE workspace display metadata without provider-specific parsing.
       acceptance_reason: bmux now performs bounded prompt-derived Linear resource discovery in the workspace observation path, merges it with PR-derived evidence, and writes normalized durable workspace display facts to Provenance Engine.
 
+    - id: workspace_display_presentation
+      kind: milestone
+      title: Workspace Display Presentation
+      parent: runtime_observation_and_workspace_display
+      status: active
+      owner: bmux
+      repositories:
+        - bmux
+      concept_classification:
+        primary: workspace_display
+        architecture_layer: consumer_presentation
+        tags:
+          - workspace_display
+          - presentation
+          - sidebar
+      depends_on:
+        - workspace_display_prompt_resource_discovery
+      parallelism:
+        classification: conditional
+        expected_contract_domains:
+          - workspace_display_presentation
+          - sidebar_workspace_snapshot
+          - selected_workspace_geometry
+        expected_code_areas:
+          - Sources/ContentView.swift
+          - Sources/WorkspaceContentView.swift
+          - Sources/Sidebar/SidebarWorkspaceSnapshotBuilder.swift
+          - Sources/Sidebar/TabItemView+TicketRows.swift
+          - Sources/Sidebar/TabItemView+ProjectRows.swift
+          - Resources/Localizable.xcstrings
+          - bmuxTests/*Workspace*Tests.swift
+          - bmuxTests/*Sidebar*Tests.swift
+        likely_conflict_domains:
+          - workspace_sidebar_rows
+          - workspace_content_layout
+          - selected_workspace_border
+          - project_truth_manifest
+          - generated_project_truth_docs
+        contract_dependencies:
+          - workspace_display_tab_projection
+          - workspace_display_prompt_resource_discovery
+        worktree_required: true
+      execution:
+        assignment: current
+        assigned_to: bmux
+      delivery_status: draft
+      acceptance_status: proposed
+      rationale: Tracks bmux-owned presentation work that consumes the existing normalized workspace-display projection to join selected workspace tabs with their content area, without adding new provider parsing or durable evidence paths.
+
+    - id: workspace_selected_header_border_presentation
+      kind: slice
+      title: Unified selected workspace header and border
+      parent: workspace_display_presentation
+      status: active
+      owner: bmux
+      repositories:
+        - bmux
+      concept_classification:
+        primary: workspace_display
+        architecture_layer: consumer_presentation
+        tags:
+          - workspace_display
+          - workspace_header
+          - sidebar
+          - selected_border
+      capability_maturity: active
+      depends_on:
+        - workspace_display_prompt_resource_discovery
+      parallelism:
+        classification: conditional
+        expected_contract_domains:
+          - immutable_workspace_link_presentation
+          - sidebar_snapshot_boundary
+          - selected_workspace_geometry
+          - localized_accessibility_labels
+        expected_code_areas:
+          - Sources/ContentView.swift
+          - Sources/WorkspaceContentView.swift
+          - Sources/Sidebar/SidebarWorkspaceSnapshotBuilder.swift
+          - Sources/Sidebar/TabItemView+TicketRows.swift
+          - Sources/Sidebar/TabItemView+ProjectRows.swift
+          - Resources/Localizable.xcstrings
+          - bmuxTests/*Workspace*Tests.swift
+          - bmuxTests/*Sidebar*Tests.swift
+        likely_conflict_domains:
+          - workspace_sidebar_rows
+          - workspace_display_projection
+          - selected_workspace_border
+          - project_truth_manifest
+          - generated_project_truth_docs
+        contract_dependencies:
+          - workspace_display_tab_projection
+          - workspace_display_prompt_resource_discovery
+        worktree_required: true
+      execution:
+        assignment: current
+        assigned_to: bmux
+        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/unified-selected-workspace-header-border
+        active_branch: unified-selected-workspace-header-border
+        active_agent: Codex
+      delivery_status: draft
+      acceptance_status: proposed
+      rationale: Move selected workspace resource links from the sidebar tab into a reusable workspace header, preserve selected tab color, and draw a coordinated connected border between the selected tab and workspace content using one immutable presentation snapshot.
+      acceptance:
+        criteria:
+          - Selected workspace content shows a compact reusable header for available normalized ticket, pull request, project, and owner links.
+          - Selected sidebar tabs suppress only duplicated resource rows while unselected tabs retain their links from the same immutable snapshot.
+          - Built-in and custom workspace colors remain visible on selected tabs across hover and activity states.
+          - The selected tab and workspace content share a continuous border that is one pixel thicker than the previous selected-tab border with no doubled shared seam.
+
     - id: project_truth_governance
       kind: program
       title: Project Truth Governance
