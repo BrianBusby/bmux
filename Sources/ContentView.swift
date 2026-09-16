@@ -13954,8 +13954,7 @@ struct TabItemView: View, Equatable {
                             Text(portLabel)
                                 .underline()
                         }
-                        .buttonStyle(.plain)
-                        .background(SidebarLinkCursor())
+                        .buttonStyle(.plain).background(SidebarLinkCursor())
                         .safeHelp(portTooltip)
                     }
                     Spacer(minLength: 0)
@@ -15125,8 +15124,7 @@ struct TabItemView: View, Equatable {
                 .opacity(pullRequest.isStale ? 0.5 : 1)
                 if let url = pullRequest.url {
                     Button(action: { openPullRequestLink(url) }) { rowContent }
-                        .buttonStyle(.plain)
-                        .background(SidebarLinkCursor())
+                        .buttonStyle(.plain).background(SidebarLinkCursor())
                         .safeHelp(String(
                             format: String(
                                 localized: "sidebar.pullRequest.openTooltip",
@@ -15165,8 +15163,7 @@ struct TabItemView: View, Equatable {
                 .foregroundColor(activeSecondaryColor(0.75))
                 if let url = pullRequest.ownerURL {
                     Button(action: { openPullRequestOwnerLink(url) }) { rowContent }
-                        .buttonStyle(.plain)
-                        .background(SidebarLinkCursor())
+                        .buttonStyle(.plain).background(SidebarLinkCursor())
                         .safeHelp(String(
                             format: String(
                                 localized: "sidebar.pullRequest.owner.openTooltip",
@@ -15545,8 +15542,7 @@ private struct SidebarMetadataEntryRow: View {
                 } label: {
                     rowContent(underlined: true)
                 }
-                .buttonStyle(.plain)
-                .background(SidebarLinkCursor())
+                .buttonStyle(.plain).background(SidebarLinkCursor())
                 .safeHelp(url.absoluteString)
             } else {
                 rowContent(underlined: false)
