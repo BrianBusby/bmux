@@ -13955,6 +13955,7 @@ struct TabItemView: View, Equatable {
                                 .underline()
                         }
                         .buttonStyle(.plain)
+                        .background(SidebarLinkCursor())
                         .safeHelp(portTooltip)
                     }
                     Spacer(minLength: 0)
@@ -15125,6 +15126,7 @@ struct TabItemView: View, Equatable {
                 if let url = pullRequest.url {
                     Button(action: { openPullRequestLink(url) }) { rowContent }
                         .buttonStyle(.plain)
+                        .background(SidebarLinkCursor())
                         .safeHelp(String(
                             format: String(
                                 localized: "sidebar.pullRequest.openTooltip",
@@ -15164,6 +15166,7 @@ struct TabItemView: View, Equatable {
                 if let url = pullRequest.ownerURL {
                     Button(action: { openPullRequestOwnerLink(url) }) { rowContent }
                         .buttonStyle(.plain)
+                        .background(SidebarLinkCursor())
                         .safeHelp(String(
                             format: String(
                                 localized: "sidebar.pullRequest.owner.openTooltip",

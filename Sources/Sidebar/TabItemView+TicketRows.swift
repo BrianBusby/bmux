@@ -31,6 +31,7 @@ extension TabItemView {
                 if let url = ticket.url {
                     Button(action: { openTicketLink(url) }) { rowContent }
                         .buttonStyle(.plain)
+                        .background(SidebarLinkCursor())
                         .tint(activeSecondaryColor(0.75))
                         .safeHelp(String(
                             format: String(
@@ -72,6 +73,7 @@ extension TabItemView {
         if let url = ticket.ownerURL {
             Button(action: { openTicketLink(url) }) { rowContent }
                 .buttonStyle(.plain)
+                .background(SidebarLinkCursor())
                 .tint(activeSecondaryColor(0.75))
                 .safeHelp(String(
                     format: String(

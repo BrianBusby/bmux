@@ -43,6 +43,7 @@ extension TabItemView {
                 if let url = project.url {
                     Button(action: { openTicketLink(url) }) { rowContent }
                         .buttonStyle(.plain)
+                        .background(SidebarLinkCursor())
                         .tint(activeSecondaryColor(0.75))
                         .safeHelp(String(
                             format: String(
