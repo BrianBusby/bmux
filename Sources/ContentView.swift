@@ -15546,6 +15546,7 @@ private struct SidebarMetadataEntryRow: View {
                     rowContent(underlined: true)
                 }
                 .buttonStyle(.plain)
+                .background(SidebarLinkCursor())
                 .safeHelp(url.absoluteString)
             } else {
                 rowContent(underlined: false)
