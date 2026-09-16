@@ -1286,6 +1286,7 @@
 		5732A0125732A0125732A012 /* SidebarLazyContractProbeKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5732B0125732B0125732B012 /* SidebarLazyContractProbeKey.swift */; };
 		D41A7C01D41A7C01D41A7C01 /* SidebarLazyLayoutScaleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D41A7C02D41A7C02D41A7C02 /* SidebarLazyLayoutScaleTests.swift */; };
 		B15C09150000000000000001 /* SidebarLinkCursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B15C09150000000000000002 /* SidebarLinkCursor.swift */; };
+		B15C09160000000000000003 /* SidebarLinkCursorFallback.swift in Sources */ = {isa = PBXBuildFile; fileRef = B15C09160000000000000004 /* SidebarLinkCursorFallback.swift */; };
 		B15C09160000000000000001 /* SidebarLinkCursorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B15C09160000000000000002 /* SidebarLinkCursorTests.swift */; };
 		B15C09150000000000000003 /* SidebarLinkCursorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B15C09150000000000000004 /* SidebarLinkCursorView.swift */; };
 		385C6BA7E78DB87460E5D930 /* SidebarMarkdownRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C3F1DBF6BF5D7223C4A30C /* SidebarMarkdownRendererTests.swift */; };
@@ -3049,6 +3050,7 @@
 		5732B0125732B0125732B012 /* SidebarLazyContractProbeKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Debug/SidebarLazyContractProbeKey.swift"; sourceTree = "<group>"; };
 		D41A7C02D41A7C02D41A7C02 /* SidebarLazyLayoutScaleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarLazyLayoutScaleTests.swift; sourceTree = "<group>"; };
 		B15C09150000000000000002 /* SidebarLinkCursor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarLinkCursor.swift; sourceTree = "<group>"; };
+		B15C09160000000000000004 /* SidebarLinkCursorFallback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarLinkCursorFallback.swift; sourceTree = "<group>"; };
 		B15C09160000000000000002 /* SidebarLinkCursorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarLinkCursorTests.swift; sourceTree = "<group>"; };
 		B15C09150000000000000004 /* SidebarLinkCursorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarLinkCursorView.swift; sourceTree = "<group>"; };
 		F1C3F1DBF6BF5D7223C4A30C /* SidebarMarkdownRendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarMarkdownRendererTests.swift; sourceTree = "<group>"; };
@@ -3987,6 +3989,7 @@
 				C9A5760CC9A5760CC9A5760C /* SidebarWorkspaceReorderPendingDrop.swift */,
 				D35450070000000000000008 /* SidebarWorkspaceRowHoverReconciler.swift */,
 				B15C09150000000000000002 /* SidebarLinkCursor.swift */,
+				B15C09160000000000000004 /* SidebarLinkCursorFallback.swift */,
 				D3545007000000000000000A /* SidebarWorkspaceRowHoverReconcilerView.swift */,
 				B15C09150000000000000004 /* SidebarLinkCursorView.swift */,
 				D3545007000000000000000C /* SidebarWorkspaceRowHoverTrackingModifier.swift */,
@@ -6574,6 +6577,7 @@
 				5732A0115732A0115732A011 /* SidebarLazyContractProbe.swift in Sources */,
 				5732A0125732A0125732A012 /* SidebarLazyContractProbeKey.swift in Sources */,
 				B15C09150000000000000001 /* SidebarLinkCursor.swift in Sources */,
+				B15C09160000000000000003 /* SidebarLinkCursorFallback.swift in Sources */,
 				B15C09150000000000000003 /* SidebarLinkCursorView.swift in Sources */,
 				C0DE5F210000000000000001 /* SidebarMetadataMarkdownRenderer.swift in Sources */,
 				EA1F00000000000000000001 /* SidebarPathFormatter.swift in Sources */,
