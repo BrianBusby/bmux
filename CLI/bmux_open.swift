@@ -1,7 +1,6 @@
 import CryptoKit
 import Darwin
 import Foundation
-
 struct BMUXAgentTurnDiffBaselineRecord: Codable {
     var workspaceId: String
     var surfaceId: String
@@ -15,18 +14,15 @@ struct BMUXAgentTurnDiffBaselineRecord: Codable {
     var untrackedSnapshotId: String?
     var capturedAt: TimeInterval
 }
-
 struct BMUXAgentTurnDiffBaselineStore: Codable {
     var version: Int = 1
     var records: [BMUXAgentTurnDiffBaselineRecord] = []
 }
-
 private enum BMUXAgentTurnUntrackedSnapshotLimits {
     static let maxFiles = 64
     static let maxFileBytes: UInt64 = 1 * 1024 * 1024
     static let maxTotalBytes: UInt64 = 4 * 1024 * 1024
 }
-
 enum BMUXAgentTurnDiffBaselineFile {
     static func path(env: [String: String] = ProcessInfo.processInfo.environment) -> String {
         if let overrideDirectory = normalized(env["BMUX_AGENT_HOOK_STATE_DIR"]) {
@@ -36,7 +32,6 @@ enum BMUXAgentTurnDiffBaselineFile {
         }
         return homeExpandedPath("~/.bmuxterm/agent-turn-diff-baselines.json", env: env)
     }
-
     private static func normalized(_ value: String?) -> String? {
         guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
               !trimmed.isEmpty else {
@@ -44,7 +39,6 @@ enum BMUXAgentTurnDiffBaselineFile {
         }
         return trimmed
     }
-
     private static func homeExpandedPath(_ rawPath: String, env: [String: String]) -> String {
         let trimmed = rawPath.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed == "~" || trimmed.hasPrefix("~/") else {
@@ -61,7 +55,6 @@ enum BMUXAgentTurnDiffBaselineFile {
             .path
     }
 }
-
 enum BMUXDiffViewerLocalization {
     static func string(
         _ key: String,
@@ -75,26 +68,22 @@ enum BMUXDiffViewerLocalization {
         }
         return bundle.localizedString(forKey: key, value: defaultValue, table: nil)
     }
-
     static func localizationBundle(
         mainBundle: Bundle = .main,
         executableURL: URL? = CLIExecutableLocator.currentExecutableURL()
     ) -> Bundle {
         CLIExecutableLocator.enclosingAppBundle(startingAt: executableURL) ?? mainBundle
     }
-
     private static func explicitLocalization(in environment: [String: String], bundle: Bundle) -> String? {
         guard let languages = appleLanguages(from: environment["AppleLanguages"]),
               !languages.isEmpty else {
             return nil
         }
-
         return Bundle.preferredLocalizations(
             from: bundle.localizations,
             forPreferences: languages
         ).first
     }
-
     private static func appleLanguages(from rawValue: String?) -> [String]? {
         guard var value = rawValue?.trimmingCharacters(in: .whitespacesAndNewlines),
               !value.isEmpty else {
@@ -114,7 +103,6 @@ enum BMUXDiffViewerLocalization {
             .filter { !$0.isEmpty }
         return languages.isEmpty ? nil : languages
     }
-
     private static func localizedString(
         _ key: String,
         defaultValue: String,
@@ -128,7 +116,6 @@ enum BMUXDiffViewerLocalization {
         return languageBundle.localizedString(forKey: key, value: defaultValue, table: nil)
     }
 }
-
 extension BMUXCLI {
     private enum DiffViewerLimits {
         static let repoOptions = 12
@@ -413,6 +400,7 @@ extension BMUXCLI {
     }
 
     private static let diffViewerHTTPServerProtocolVersion = "wait-v2 remote-stream manifest-refresh react-app-v2 executable-bound branch-picker-v1"
+    private static let diffViewerDirectoryEnvironmentKey = "BMUX_DIFF_VIEWER_DIRECTORY"
     private static let diffViewerHTTPServerHealthResponse = Data("ok \(diffViewerHTTPServerProtocolVersion)\n".utf8)
 
     /// Persisted, per-group session descriptor for the branch base picker. The
@@ -4916,6 +4904,8 @@ extension BMUXCLI {
                     return completion
                 } catch is EmptyDiffSourceError {
                     continue
+                } catch let error as CLIError where source == .lastTurn && error.message.hasPrefix("bmux diff --last-turn requires a workspace and surface context") {
+                    continue
                 } catch let fallbackError {
                     throw fallbackError
                 }
@@ -5672,8 +5662,18 @@ extension BMUXCLI {
     }
 
     private func diffViewerDirectory() throws -> URL {
-        let directory = URL(fileURLWithPath: "/tmp", isDirectory: true)
-            .appendingPathComponent("bmux-diff-viewer-\(getuid())", isDirectory: true)
+        let directory: URL
+        if let overridePath = ProcessInfo.processInfo.environment[Self.diffViewerDirectoryEnvironmentKey]?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+            !overridePath.isEmpty {
+            directory = URL(
+                fileURLWithPath: NSString(string: overridePath).expandingTildeInPath,
+                isDirectory: true
+            )
+        } else {
+            directory = URL(fileURLWithPath: "/tmp", isDirectory: true)
+                .appendingPathComponent("bmux-diff-viewer-\(getuid())", isDirectory: true)
+        }
         try ensureSecureDiffViewerDirectory(directory)
         pruneDiffViewerFiles(in: directory)
         return directory

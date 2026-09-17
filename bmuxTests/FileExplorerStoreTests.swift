@@ -960,29 +960,29 @@ struct FileSearchControllerTests {
         // updateVisibility runs on every store/content update and is unguarded; a second
         // identical pass must not invalidate layout.
         container.updateVisibility(hasContent: true, isLoading: false, statusMessage: nil)
-        container.needsLayout = false
+        let visibilityMutationCount = container.debugLayoutMutationCount
         container.updateVisibility(hasContent: true, isLoading: false, statusMessage: nil)
         #expect(
-            !container.needsLayout,
-            "A redundant updateVisibility pass must not invalidate layout; otherwise updateNSView re-enters the SwiftUI graph and loops (#4931)."
+            container.debugLayoutMutationCount == visibilityMutationCount,
+            "A redundant updateVisibility pass must not mutate layout-affecting AppKit properties; otherwise updateNSView re-enters the SwiftUI graph and loops (#4931)."
         )
 
         // The guard-else in updatePresentation(.find) re-runs updateSearchLayout on every
         // redundant pass (the Cmd+Shift+F re-entry path); it must be a no-op too.
-        container.needsLayout = false
+        let presentationMutationCount = container.debugLayoutMutationCount
         container.updatePresentation(.find)
         #expect(
-            !container.needsLayout,
-            "A redundant updatePresentation(.find) pass must not invalidate layout (#4931)."
+            container.debugLayoutMutationCount == presentationMutationCount,
+            "A redundant updatePresentation(.find) pass must not mutate layout-affecting AppKit properties (#4931)."
         )
 
         // Positive control: a genuine visibility change must still invalidate layout, so
         // the no-op assertions above are meaningful rather than vacuous.
-        container.needsLayout = false
+        let changedVisibilityMutationCount = container.debugLayoutMutationCount
         container.updateVisibility(hasContent: false, isLoading: false, statusMessage: nil)
         #expect(
-            container.needsLayout,
-            "A genuine visibility change must still invalidate layout."
+            container.debugLayoutMutationCount > changedVisibilityMutationCount,
+            "A genuine visibility change must still mutate layout-affecting AppKit properties."
         )
     }
 

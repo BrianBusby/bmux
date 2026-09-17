@@ -18,22 +18,17 @@ import CoreServices
 import Darwin
 import OSLog
 import BmuxTerminal
-
 // MARK: - Tab Type Alias for Backwards Compatibility
 // The old Tab class is replaced by Workspace
 typealias Tab = Workspace
-
 private let tabManagerLogger = Logger(subsystem: "com.bmuxterm.app", category: "TabManager")
-
 enum WorkspaceOrderChangeNotificationKey {
     static let movedWorkspaceIds = "movedWorkspaceIds"
 }
-
 enum WorkspaceAdjacentSelectionDirection: Equatable {
     case next
     case previous
 }
-
 #if DEBUG
 // Sample the actual IOSurface-backed terminal layer at vsync cadence so UI tests can reliably
 // catch a single compositor-frame blank flash and any transient compositor scaling (stretched text).
@@ -44,33 +39,25 @@ fileprivate final class VsyncIOSurfaceTimelineState {
         let label: String
         let sample: @MainActor () -> GhosttySurfaceScrollView.DebugFrameSample?
     }
-
     let frameCount: Int
     let closeFrame: Int
     let lock = NSLock()
-
     var framesWritten = 0
     var inFlight = false
     var finished = false
-
     var scheduledActions: [(frame: Int, action: () -> Void)] = []
     var nextActionIndex: Int = 0
-
     var targets: [Target] = []
-
     // Results
     var firstBlank: (label: String, frame: Int)?
     var firstSizeMismatch: (label: String, frame: Int, ios: String, expected: String)?
     var trace: [String] = []
-
     var link: CVDisplayLink?
     var continuation: CheckedContinuation<Void, Never>?
-
     init(frameCount: Int, closeFrame: Int) {
         self.frameCount = frameCount
         self.closeFrame = closeFrame
     }
-
     func tryBeginCapture() -> Bool {
         lock.lock()
         defer { lock.unlock() }
@@ -79,13 +66,11 @@ fileprivate final class VsyncIOSurfaceTimelineState {
         inFlight = true
         return true
     }
-
     func endCapture() {
         lock.lock()
         inFlight = false
         lock.unlock()
     }
-
     func finish() {
         lock.lock()
         if finished {
@@ -99,7 +84,6 @@ fileprivate final class VsyncIOSurfaceTimelineState {
         cont?.resume()
     }
 }
-
 fileprivate func bmuxVsyncIOSurfaceTimelineCallback(
     _ displayLink: CVDisplayLink,
     _ inNow: UnsafePointer<CVTimeStamp>,
@@ -111,23 +95,19 @@ fileprivate func bmuxVsyncIOSurfaceTimelineCallback(
     guard let ctx else { return kCVReturnSuccess }
     let st = Unmanaged<VsyncIOSurfaceTimelineState>.fromOpaque(ctx).takeUnretainedValue()
     if !st.tryBeginCapture() { return kCVReturnSuccess }
-
     // Sample on the main thread synchronously so we don't "miss" a single compositor frame.
     // (The previous Task/@MainActor hop could be delayed long enough to skip the blank frame.)
     DispatchQueue.main.sync {
         defer { st.endCapture() }
         guard st.framesWritten < st.frameCount else { return }
-
         while st.nextActionIndex < st.scheduledActions.count {
             let next = st.scheduledActions[st.nextActionIndex]
             if next.frame != st.framesWritten { break }
             st.nextActionIndex += 1
             next.action()
         }
-
         for t in st.targets {
             guard let s = t.sample() else { continue }
-
             let iosW = s.iosurfaceWidthPx
             let iosH = s.iosurfaceHeightPx
             let expW = s.expectedWidthPx
@@ -138,13 +118,11 @@ fileprivate func bmuxVsyncIOSurfaceTimelineCallback(
             let dh = hasDimensions ? abs(iosH - expH) : 0
             let hasSizeMismatch = hasDimensions && (dw > 2 || dh > 2)
             let stretchRisk = (gravity == CALayerContentsGravity.resize.rawValue)
-
             // Ignore setup/warmup frames before the close action. We only care about
             // regressions that happen at/after the close mutation.
             if st.firstBlank == nil, st.framesWritten >= st.closeFrame, s.isProbablyBlank {
                 st.firstBlank = (label: t.label, frame: st.framesWritten)
             }
-
             if st.firstSizeMismatch == nil,
                st.framesWritten >= st.closeFrame,
                stretchRisk,
@@ -156,15 +134,12 @@ fileprivate func bmuxVsyncIOSurfaceTimelineCallback(
                     expected: "\(expW)x\(expH)"
                 )
             }
-
             if st.trace.count < 200 {
                 st.trace.append("\(st.framesWritten):\(t.label):blank=\(s.isProbablyBlank ? 1 : 0):ios=\(iosW)x\(iosH):exp=\(expW)x\(expH):gravity=\(gravity):key=\(s.layerContentsKey)")
             }
         }
-
         st.framesWritten += 1
     }
-
     // Stop/resume outside the main-thread sync block to avoid reentrancy issues.
     if st.framesWritten >= st.frameCount, let link = st.link {
         CVDisplayLinkStop(link)
@@ -409,7 +384,7 @@ class TabManager: ObservableObject {
     // (BmuxWorkspaceNavigation); this window is its host via
     // FocusHistoryHosting and republishes its revision bumps through
     // `focusHistoryRevision` above.
-    let focusHistoryNavigation: any FocusHistoryNavigating = FocusHistoryModel()
+    let focusHistoryNavigation: any FocusHistoryNavigating
     // Stateless split-geometry application (equalize/resize divider moves);
     // the pure planning lives in BmuxPanes' ExternalTreeNode extensions.
     let paneLayout = PaneLayoutService()
@@ -465,11 +440,13 @@ class TabManager: ObservableObject {
         sidebarGitPullRequestObservation: TabManagerSidebarGitPullRequestObservationServices? = nil,
         panelTitleUpdateCoalescer: NotificationBurstCoalescer? = nil,
         settings: any SettingsWriting = UserDefaultsSettingsClient(defaults: .standard),
-        closeTabWarningDefaults: UserDefaults = .standard
+        closeTabWarningDefaults: UserDefaults = .standard,
+        focusHistoryNavigation: (any FocusHistoryNavigating)? = nil
     ) {
         self.settings = settings
         self.panelTitleUpdateCoalescer = panelTitleUpdateCoalescer ?? NotificationBurstCoalescer()
         self.closeTabWarningDefaults = closeTabWarningDefaults
+        self.focusHistoryNavigation = focusHistoryNavigation ?? FocusHistoryModel()
         workspaceReordering = WorkspaceReorderCoordinator(model: workspaces)
         workspaceGrouping = WorkspaceGroupCoordinator(model: workspaces)
 #if DEBUG
@@ -493,7 +470,7 @@ class TabManager: ObservableObject {
         }
         lastSidebarMetadataSettingsForFanout = sidebarMetadataSettingsForFanout()
         notificationDismissal.attach(host: self)
-        focusHistoryNavigation.attach(host: self)
+        self.focusHistoryNavigation.attach(host: self)
         // Workspace-list/group/selection storage (BmuxWorkspaces). Attached
         // before the first addWorkspace so the property-observer hooks fire
         // from the very first insertion, matching the legacy @Published
@@ -534,13 +511,13 @@ class TabManager: ObservableObject {
                 let panelId = panelIdForFocusHistorySurface(surfaceId, workspaceId: tabId)
                 if selectedTabId == tabId {
                     if explicitFocusIntent {
-                        focusHistoryNavigation.recordFocusInHistory(
+                        self.focusHistoryNavigation.recordFocusInHistory(
                             workspaceId: tabId,
                             panelId: panelId,
                             preservingForwardBranch: false
                         )
                     } else {
-                        focusHistoryNavigation.recordImplicitFocusInHistory(workspaceId: tabId, panelId: panelId)
+                        self.focusHistoryNavigation.recordImplicitFocusInHistory(workspaceId: tabId, panelId: panelId)
                     }
                 }
                 dismissPanelNotificationOnFocus(tabId: tabId, panelId: panelId, explicitFocusIntent: explicitFocusIntent)
@@ -5951,12 +5928,35 @@ extension TabManager {
     }
 
     private static func isCloudVMSessionRestoreWorkspace(_ snapshot: SessionWorkspaceSnapshot) -> Bool {
-        isManagedCloudVMSessionRestoreWorkspace(snapshot)
+        isManagedCloudVMSessionRestoreWorkspace(snapshot) ||
+            isLegacyLocalCloudVMSessionRestoreWorkspace(snapshot)
     }
 
     private static func isManagedCloudVMSessionRestoreWorkspace(_ snapshot: SessionWorkspaceSnapshot) -> Bool {
         guard let managedCloudVMID = snapshot.remote?.managedCloudVMID else { return false }
         return !managedCloudVMID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private static func isLegacyLocalCloudVMSessionRestoreWorkspace(_ snapshot: SessionWorkspaceSnapshot) -> Bool {
+        guard snapshot.remote == nil, snapshot.isPinned else { return false }
+        guard snapshot.processTitle.trimmingCharacters(in: .whitespacesAndNewlines) == "Cloud VM" else {
+            return false
+        }
+        guard snapshot.customTitle?.trimmingCharacters(in: .whitespacesAndNewlines) == "Cloud VM" else {
+            return false
+        }
+        guard !snapshot.panels.isEmpty else { return false }
+        return snapshot.panels.allSatisfy { panel in
+            panel.type == .terminal &&
+                panel.terminal != nil &&
+                panel.browser == nil &&
+                panel.markdown == nil &&
+                panel.filePreview == nil &&
+                panel.rightSidebarTool == nil &&
+                panel.customSidebar == nil &&
+                panel.agentSession == nil &&
+                panel.project == nil
+        }
     }
 
     @discardableResult
