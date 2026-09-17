@@ -7,7 +7,7 @@ extension AgentChatTranscriptService: TerminalChatReading {
         // Reconcile the stable surface against the restored workspace before
         // filtering. Workspace UUIDs are regenerated on restore, while a
         // surviving terminal retains its surface binding.
-        let records = sessionRecords().compactMap { record -> AgentChatSessionRecord? in
+        let records = sessionRecords(workspaceID: nil).compactMap { record -> AgentChatSessionRecord? in
             guard record.surfaceID.flatMap(UUID.init(uuidString:)) == surfaceID else { return nil }
             guard record.workspaceID == workspaceID.uuidString else {
                 updateSessionWorkspace(sessionID: record.sessionID, workspaceID: workspaceID.uuidString)
