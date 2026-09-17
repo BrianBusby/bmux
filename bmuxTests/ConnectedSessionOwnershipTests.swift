@@ -51,7 +51,8 @@ import Testing
         await transport.setLoadedThreads(["thread-a", "thread-b"])
         let snapshot = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
         #expect((snapshot["control"] as? [String: Any])?["status"] as? String == "connected")
-        #expect((snapshot["control"] as? [String: Any])?["draft"] as? String == "Keep this draft")
+        let retainedDraft = (snapshot["control"] as? [String: Any])?["draft"] as? [String: Any]
+        #expect(retainedDraft?["text"] as? String == "Keep this draft")
         let result = try await runtime.performConnectedAction(
             workspaceID: workspace,
             surfaceID: surface,
@@ -82,7 +83,8 @@ import Testing
 
         let snapshot = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
         #expect((snapshot["control"] as? [String: Any])?["status"] as? String == "unavailable")
-        #expect((snapshot["control"] as? [String: Any])?["draft"] as? String == "Keep this draft")
+        let retainedDraft = (snapshot["control"] as? [String: Any])?["draft"] as? [String: Any]
+        #expect(retainedDraft?["text"] as? String == "Keep this draft")
         await #expect(throws: CodexControlError.disconnected) {
             try await runtime.performConnectedAction(
                 workspaceID: workspace,
