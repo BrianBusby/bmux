@@ -318,3 +318,23 @@ draft preservation. Drafts and action receipts survive webview reloads in native
 memory; they are not persisted across application restart. Provider queue
 ordering is provider-owned. Queue editing/cancellation and approval interaction
 remain in Terminal and have not passed cross-view acceptance.
+
+
+### Build 572 dogfood: Chat-to-Terminal delivery
+
+On September 17 the user reported an empty Chat with “Multiple session bindings.”
+Inspection of the running build 572 confirmed a connected host (PID 33141), its
+original TUI (PID 33143), and exactly one loaded thread,
+`01a0af03-7756-70a1-b7f4-80189f1dcb22`. Without restarting the app or provider,
+Chat subsequently recovered the user's existing greeting and enabled its composer.
+The precise cause and duration of the earlier binding failure remain unresolved;
+this is not evidence that all startup/recovery UI gates pass.
+
+A single UI submission requested `CHAT_CONNECTION_VERIFIED` without tools.
+Chat displayed “Accepted by Codex.” Provider turn
+`01a0af06-ae72-7e83-9799-c920203c1d96` completed with exactly one matching user
+item, client ID `5AE5DA78-63A0-49FF-AF8B-4D7DD07EEAF9`. The original raw
+Terminal and Chat both displayed the marker. No second conversation or process
+restart occurred. This closes the basic UI delivery gate for build 572;
+focus/typing behavior, startup ambiguity, broader recovery, and later draft
+changes still need verification. The running app was not rebuilt or replaced.
