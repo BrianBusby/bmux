@@ -50,8 +50,17 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
             workProvenanceRuntime: nil, rendererKind: .react, initialProviderID: .codex,
             workingDirectory: nil, theme: .resolve(appearance: appearance), isFocused: false
         )
-        let webView = coordinator.ensureWebView(onPointerDown: onRequestPanelFocus)
-        webView.onPointerDown = onRequestPanelFocus
+        // The surrounding pane's SwiftUI tap gesture can reassert terminal
+        // focus after WebKit handles mouseDown. Reclaim panel/WebKit focus on
+        // the following runloop turn, after that gesture has completed.
+        let webView = coordinator.ensureWebView(onPointerDown: {})
+        webView.onPointerDown = {}
+        webView.onPointerUp = { [weak coordinator] in
+            DispatchQueue.main.async {
+                onRequestPanelFocus()
+                coordinator?.focus()
+            }
+        }
         webView.underPageBackgroundColor = appearance.contentBackgroundColor
         host.attachWebView(webView)
         host.onDidMoveToWindow = { [weak coordinator] in coordinator?.loadShellIfNeeded() }

@@ -171,6 +171,7 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             webView.navigationDelegate = nil
             webView.uiDelegate = nil
             webView.onPointerDown = nil
+            webView.onPointerUp = nil
         }
         webView = nil
         loadedRendererKind = nil
