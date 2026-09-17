@@ -19,6 +19,7 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
     func updateNSView(_ host: AgentSessionWebHostView, context: Context) {
         panel.isChatPresentationActive = true
         let coordinator = context.coordinator
+        coordinator.setTerminalChatVisible(true)
         coordinator.terminalChatSnapshot = { [weak reader, weak panel] in
             guard let reader, let panel else { return ["status": "unavailable"] }
             return await reader.terminalChatSnapshot(workspaceID: panel.workspaceId, surfaceID: panel.id)
@@ -73,6 +74,7 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
     }
 
     static func dismantleNSView(_ host: AgentSessionWebHostView, coordinator: AgentSessionWebRendererCoordinator) {
+        coordinator.setTerminalChatVisible(false)
         host.detachHostedWebViewIfOwned(coordinator.webView)
         host.onDidMoveToWindow = nil
         host.onGeometryChanged = nil

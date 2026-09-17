@@ -36,7 +36,7 @@ test("reload restores an uncertain draft without resending, then reconciles acce
     expect(calls).toEqual([]);
     await act(async () => root.unmount());
     root = createRoot(dom.window.document.getElementById("root")!);
-    await act(async () => root.render(<ConnectedChatComposer context={context} control={{ ...control, draft: "Inspect the build",
+    await act(async () => root.render(<ConnectedChatComposer context={context} control={{ ...control, draft: { revision: "restored-r1", text: "Inspect the build" },
       actions: control.actions!.map(action => ({ ...action, delivery: "accepted" })) }} enabled />));
     expect(dom.window.document.querySelector("textarea")?.value).toBe("Inspect the build");
     const terminal = [...dom.window.document.querySelectorAll("button")].find(button => button.textContent === "Interact in Terminal")!;

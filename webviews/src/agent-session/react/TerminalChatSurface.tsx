@@ -17,8 +17,15 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
   const copy = context.copy;
   useEffect(() => {
     let cancelled = false;
+    let visible = true;
     let timer: ReturnType<typeof setTimeout>;
+    const onVisibility = (event: Event) => {
+      visible = (event as CustomEvent<{ visible: boolean }>).detail.visible;
+      clearTimeout(timer);
+      if (visible && !cancelled) void refresh();
+    };
     const refresh = async () => {
+      if (!visible) return;
       try {
         const snapshot = await callNative<TerminalChatSnapshot>("terminalChat.snapshot");
         if (!cancelled) setState(previous => reconcileTerminalChat(previous, snapshot, context));
@@ -26,10 +33,11 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
         if (!cancelled) setState(previous => ({ ...previous, control: undefined, status: previous.messages.length ? "stale" : "unavailable" }));
       }
       // One outstanding read at a time; never retry provider actions.
-      if (!cancelled) timer = setTimeout(refresh, 2000);
+      if (!cancelled && visible) timer = setTimeout(refresh, 2000);
     };
+    window.addEventListener("bmux-terminal-chat-visibility", onVisibility);
     void refresh();
-    return () => { cancelled = true; clearTimeout(timer); };
+    return () => { cancelled = true; clearTimeout(timer); window.removeEventListener("bmux-terminal-chat-visibility", onVisibility); };
   }, [context]);
   useLayoutEffect(() => {
     if (following.current && scroll.current) scroll.current.scrollTop = scroll.current.scrollHeight;
