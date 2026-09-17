@@ -7,6 +7,7 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
     let reader: any TerminalChatReading
     let appearance: PanelAppearance
     var onStartConnectedSession: (() async throws -> Void)? = nil
+    let onRequestPanelFocus: () -> Void
     let onTerminal: () -> Void
 
     func makeCoordinator() -> AgentSessionWebRendererCoordinator { panel.presentation.chatRenderer }
@@ -49,7 +50,8 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
             workProvenanceRuntime: nil, rendererKind: .react, initialProviderID: .codex,
             workingDirectory: nil, theme: .resolve(appearance: appearance), isFocused: false
         )
-        let webView = coordinator.ensureWebView(onPointerDown: {})
+        let webView = coordinator.ensureWebView(onPointerDown: onRequestPanelFocus)
+        webView.onPointerDown = onRequestPanelFocus
         webView.underPageBackgroundColor = appearance.contentBackgroundColor
         host.attachWebView(webView)
         host.onDidMoveToWindow = { [weak coordinator] in coordinator?.loadShellIfNeeded() }

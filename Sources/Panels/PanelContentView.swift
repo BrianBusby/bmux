@@ -62,6 +62,7 @@ struct PanelContentView: View {
                     terminalChatReader: terminalChatReader,
                     workProvenanceRuntime: workProvenanceRuntime,
                     onFocus: onFocus,
+                    onRequestPanelFocus: onRequestPanelFocus,
                     onResumeAgentHibernation: onResumeAgentHibernation,
                     onAutoResumeAgentHibernation: onAutoResumeAgentHibernation,
                     onTriggerFlash: onTriggerFlash

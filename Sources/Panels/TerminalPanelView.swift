@@ -28,6 +28,7 @@ struct TerminalPanelView: View {
     var terminalChatReader: (any TerminalChatReading)? = nil
     var workProvenanceRuntime: WorkProvenanceRuntime? = nil
     let onFocus: () -> Void
+    let onRequestPanelFocus: () -> Void
     let onResumeAgentHibernation: () -> Void
     let onAutoResumeAgentHibernation: () -> Void
     let onTriggerFlash: () -> Void

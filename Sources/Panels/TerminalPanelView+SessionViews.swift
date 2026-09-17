@@ -6,7 +6,10 @@ extension TerminalPanelView {
             showsSwitcher: showsFactualSessionSwitcher || terminalChatReader != nil,
             chatContent: terminalChatReader.map { reader in
                 { onTerminal in AnyView(TerminalChatWebRenderer(
-                    panel: panel, reader: reader, appearance: appearance, onStartConnectedSession: onStartConnectedSession, onTerminal: onTerminal
+                    panel: panel, reader: reader, appearance: appearance,
+                    onStartConnectedSession: onStartConnectedSession,
+                    onRequestPanelFocus: onRequestPanelFocus,
+                    onTerminal: onTerminal
                 )) }
             },
             stableWorkspaceID: stableWorkspaceId,
