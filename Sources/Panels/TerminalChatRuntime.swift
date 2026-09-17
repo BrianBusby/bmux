@@ -60,10 +60,11 @@ final class TerminalChatRuntime: TerminalChatConnecting {
         do {
             guard terminalLiveness[surfaceID]?() == true else { throw CodexControlError.disconnected }
             let loaded = try await host.connection.request(method: "thread/loaded/list", params: Data("{}".utf8))
+            // Ownership was established when the host adopted its original thread; other loaded threads do not replace it.
             guard let loadedResponse = try JSONSerialization.jsonObject(with: loaded) as? [String: Any],
-                  loadedResponse["data"] as? [String] == [threadID], loadedResponse["nextCursor"] is NSNull else {
-                // A changed or ambiguous TUI thread must not retain old live history or controls.
-                return ["status": "unavailable", "reason": "ambiguous"]
+                  let loadedThreadIDs = loadedResponse["data"] as? [String],
+                  loadedThreadIDs.contains(threadID), loadedResponse["nextCursor"] is NSNull else {
+                return ["status": "unavailable", "reason": "connectionUnavailable"]
             }
             let parameters = try JSONSerialization.data(withJSONObject: ["threadId": threadID, "includeTurns": false])
             let data = try await host.connection.request(method: "thread/read", params: parameters)
