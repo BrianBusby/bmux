@@ -7,6 +7,19 @@ import Testing
 /// format (Codex CLI 0.139), with content anonymized.
 @Suite("CodexTranscriptParser")
 struct CodexTranscriptParserTests {
+    @Test
+    func providerInterruptionIsDurableWithoutInventingCompletion() {
+        let event = line(type: "event_msg", payload: ["type": "turn_aborted", "turn_id": "turn-original"])
+        let result = CodexTranscriptParser().parse(lines: [event], startingSeq: 4)
+        #expect(result.messages.count == 1)
+        guard let message = result.messages.first, case .status(let status) = message.kind else {
+            Issue.record("Provider interruption must survive transcript projection")
+            return
+        }
+        #expect(message.id == "line-4")
+        #expect(status.event == .interrupted)
+    }
+
     private let parser = CodexTranscriptParser()
 
     private func line(
