@@ -9,11 +9,28 @@ extension Workspace {
     func focusConnectedCodexChat(panelID: UUID) {
         guard let manager = owningTabManager ?? AppDelegate.shared?.tabManagerFor(tabId: id),
               panels[panelID] is TerminalPanel else { return }
+        guard Self.shouldRequestConnectedCodexChatFocus(
+            selectedWorkspaceId: manager.selectedTabId,
+            focusedPanelId: focusedPanelId,
+            workspaceId: id,
+            panelId: panelID
+        ) else {
+            return
+        }
         _ = manager.focusWorkspaceSurfaceForAction(
             workspaceId: id,
             surfaceId: panelID,
             focusIntent: .terminal(.chatComposer)
         )
+    }
+
+    static func shouldRequestConnectedCodexChatFocus(
+        selectedWorkspaceId: UUID?,
+        focusedPanelId: UUID?,
+        workspaceId: UUID,
+        panelId: UUID
+    ) -> Bool {
+        selectedWorkspaceId != workspaceId || focusedPanelId != panelId
     }
 
     /// Creates a new terminal with a shared host; never injects a launch command

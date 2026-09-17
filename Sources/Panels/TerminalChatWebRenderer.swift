@@ -17,7 +17,6 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
     }
 
     func updateNSView(_ host: AgentSessionWebHostView, context: Context) {
-        panel.isChatPresentationActive = true
         let coordinator = context.coordinator
         coordinator.terminalChatSnapshot = { [weak reader, weak panel] in
             guard let reader, let panel else { return ["status": "unavailable"] }

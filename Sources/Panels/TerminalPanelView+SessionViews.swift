@@ -10,7 +10,9 @@ extension TerminalPanelView {
                     onStartConnectedSession: onStartConnectedSession,
                     onRequestPanelFocus: onRequestTerminalChatFocus,
                     onTerminal: onTerminal
-                ).onDisappear { panel.isChatPresentationActive = false }) }
+                )
+                .onAppear { panel.isChatPresentationActive = true }
+                .onDisappear { panel.isChatPresentationActive = false }) }
             },
             stableWorkspaceID: stableWorkspaceId,
             workProvenanceRuntime: workProvenanceRuntime,
