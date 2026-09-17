@@ -35,7 +35,7 @@ import Testing
         await runtime.closeConnectedSession(surfaceID: surface)
     }
 
-    @Test func exitedTerminalAndChangedThreadDisableControlWithoutDiscardingTheDraft() async throws {
+    @Test func additionalLoadedThreadDoesNotDisplaceTheVerifiedOriginalConnection() async throws {
         let transport = ConnectedCodexFixtureTransport()
         let connection = CodexRPCConnection(transport: transport)
         try await connection.start()
@@ -46,19 +46,50 @@ import Testing
         runtime.attachConnectedTerminal(surfaceID: surface, isAlive: { alive })
         _ = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
         try runtime.updateConnectedDraft(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", text: "Keep this draft")
-        alive = false
-        let exited = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
-        #expect((exited["control"] as? [String: Any])?["status"] as? String == "unavailable")
-        #expect((exited["control"] as? [String: Any])?["draft"] as? String == "Keep this draft")
-        await #expect(throws: CodexControlError.disconnected) {
-            try await runtime.performConnectedAction(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", requestID: UUID(), text: "Must not send", expectedTurnID: nil)
-        }
-        alive = true
         await transport.setLoadedThreads(["thread-a", "thread-b"])
-        let ambiguous = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
-        #expect(ambiguous["reason"] as? String == "ambiguous")
-        #expect(ambiguous["control"] == nil)
-        #expect(await transport.mutationThreads.isEmpty)
+        let snapshot = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        #expect((snapshot["control"] as? [String: Any])?["status"] as? String == "connected")
+        #expect((snapshot["control"] as? [String: Any])?["draft"] as? String == "Keep this draft")
+        let result = try await runtime.performConnectedAction(
+            workspaceID: workspace,
+            surfaceID: surface,
+            sessionID: "thread-a",
+            requestID: UUID(),
+            text: "Follow up",
+            expectedTurnID: nil
+        )
+        #expect(result["delivery"] as? String == "accepted")
+        #expect(await transport.mutationThreads == ["thread-a"])
+        await runtime.closeConnectedSession(surfaceID: surface)
+    }
+
+    @Test func exitedTerminalDisablesControlWithoutDiscardingTheDraft() async throws {
+        let transport = ConnectedCodexFixtureTransport()
+        let connection = CodexRPCConnection(transport: transport)
+        try await connection.start()
+        let runtime = TerminalChatRuntime(reader: ConnectedCodexFixtureReader(), hosts: ConnectedCodexFixtureHost(connection: connection), bind: { _, _, _, _ in })
+        let workspace = UUID(), surface = UUID()
+        var alive = true
+        _ = try await runtime.prepareConnectedSession(workspaceID: workspace, surfaceID: surface, workingDirectory: "/fixture")
+        runtime.attachConnectedTerminal(surfaceID: surface, isAlive: { alive })
+        _ = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        try runtime.updateConnectedDraft(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", text: "Keep this draft")
+
+        alive = false
+
+        let snapshot = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        #expect((snapshot["control"] as? [String: Any])?["status"] as? String == "unavailable")
+        #expect((snapshot["control"] as? [String: Any])?["draft"] as? String == "Keep this draft")
+        await #expect(throws: CodexControlError.disconnected) {
+            try await runtime.performConnectedAction(
+                workspaceID: workspace,
+                surfaceID: surface,
+                sessionID: "thread-a",
+                requestID: UUID(),
+                text: "Must not send",
+                expectedTurnID: nil
+            )
+        }
         await runtime.closeConnectedSession(surfaceID: surface)
     }
 }
