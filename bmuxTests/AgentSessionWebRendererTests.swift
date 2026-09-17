@@ -103,3 +103,36 @@ struct AgentSessionWebRendererTests {
     }
 
 }
+
+@Suite(.serialized) @MainActor
+struct ConnectedSessionBridgeTests {
+    @Test func absentControlOwnerCannotAcceptAnAction() async throws {
+        let coordinator = AgentSessionWebRendererCoordinator()
+        coordinator.terminalChatSnapshot = { ["status": "unavailable"] }
+        await #expect(throws: (any Error).self) {
+            try await coordinator.handle(AgentSessionBridgeRequest(body: ["id": "action", "method": "terminalChat.action", "params": [:]]))
+        }
+        coordinator.close()
+    }
+
+    @Test func attachedActionOwnerDoesNotUnlockManagedProviderMutations() async throws {
+        let coordinator = AgentSessionWebRendererCoordinator()
+        var actions = 0
+        coordinator.terminalChatSnapshot = { ["status": "observed"] }
+        coordinator.terminalChatAction = { request in
+            actions += 1
+            return ["id": try request.requiredString("requestId"), "delivery": "accepted"]
+        }
+        let action = try AgentSessionBridgeRequest(body: ["id": "bridge-1", "method": "terminalChat.action", "params": ["requestId": "client-1"]])
+        let result = try await coordinator.handle(action) as? [String: String]
+        #expect(result?["id"] == "client-1")
+        #expect(actions == 1)
+        for method in ["provider.start", "provider.stop", "provider.writeLine"] {
+            await #expect(throws: (any Error).self) {
+                try await coordinator.handle(AgentSessionBridgeRequest(body: ["id": "forbidden", "method": method]))
+            }
+        }
+        #expect(actions == 1)
+        coordinator.close()
+    }
+}

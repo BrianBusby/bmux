@@ -15,3 +15,26 @@
 .terminal-chat button { color:inherit; background:color-mix(in srgb,currentColor 5%,transparent); border:1px solid color-mix(in srgb,currentColor 18%,transparent); border-radius:6px; padding:5px 10px; cursor:pointer; }
 .terminal-chat :focus-visible { outline:2px solid Highlight; outline-offset:3px; }
 .terminal-chat-notice { font-size:12px; opacity:.7; max-width:850px; margin:0 auto 16px; }
+
+.terminal-chat-composer, .terminal-chat-launch {
+  padding: 10px 16px;
+  border-top: 1px solid color-mix(in srgb,currentColor 12%,transparent);
+  display: grid;
+  gap: 8px;
+}
+.terminal-chat-composer textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 54px;
+  max-height: 180px;
+  padding: 8px;
+  font: inherit;
+  color: inherit;
+  background: var(--agent-page-bg);
+  border: 1px solid color-mix(in srgb,currentColor 12%,transparent);
+  border-radius: 6px;
+}
+.terminal-chat-composer-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.terminal-chat-composer p, .terminal-chat-composer output, .terminal-chat-launch output { margin: 0; font-size: 12px; opacity: .8; }
+.terminal-chat button:disabled { opacity: .45; cursor: default; }
+.terminal-chat-launch button { justify-self: start; }

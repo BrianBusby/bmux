@@ -24,6 +24,7 @@ struct TerminalPanelView: View {
     let hasUnreadNotification: Bool
     let terminalAgentContext: String
     var stableWorkspaceId: UUID? = nil
+    var onStartConnectedSession: (() async throws -> Void)? = nil
     var terminalChatReader: (any TerminalChatReading)? = nil
     var workProvenanceRuntime: WorkProvenanceRuntime? = nil
     let onFocus: () -> Void
@@ -63,23 +64,7 @@ struct TerminalPanelView: View {
         }
     }
 
-    private var terminalBody: some View {
-        AgentSessionFactualProjectionModeHost(
-            showsSwitcher: showsFactualSessionSwitcher || terminalChatReader != nil,
-            chatContent: terminalChatReader.map { reader in
-                { onTerminal in AnyView(TerminalChatWebRenderer(
-                    panel: panel, reader: reader, appearance: appearance, onTerminal: onTerminal
-                )) }
-            },
-            stableWorkspaceID: stableWorkspaceId,
-            workProvenanceRuntime: workProvenanceRuntime,
-            backgroundColor: appearance.contentBackgroundColor
-        ) { isVisibleForMode in
-            terminalSurfaceBody(isVisibleForMode: isVisibleForMode)
-        }
-    }
-
-    private func terminalSurfaceBody(isVisibleForMode: Bool) -> some View {
+    func terminalSurfaceBody(isVisibleForMode: Bool) -> some View {
         @Bindable var textBoxState = panel.textBoxState
         let terminalIsVisibleInUI = isVisibleInUI && isVisibleForMode
 
@@ -180,7 +165,7 @@ struct TerminalPanelView: View {
         }
     }
 
-    private var showsFactualSessionSwitcher: Bool {
+    var showsFactualSessionSwitcher: Bool {
         Self.shouldShowFactualSessionSwitcher(
             terminalAgentContext: effectiveTerminalAgentContext,
             panelTitle: panel.displayTitle,

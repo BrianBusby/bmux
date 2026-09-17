@@ -6,9 +6,10 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
     let panel: TerminalPanel
     let reader: any TerminalChatReading
     let appearance: PanelAppearance
+    var onStartConnectedSession: (() async throws -> Void)? = nil
     let onTerminal: () -> Void
 
-    func makeCoordinator() -> AgentSessionWebRendererCoordinator { panel.chatRenderer }
+    func makeCoordinator() -> AgentSessionWebRendererCoordinator { panel.presentation.chatRenderer }
 
     func makeNSView(context: Context) -> AgentSessionWebHostView {
         AgentSessionWebHostView()
@@ -25,6 +26,22 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
             return try await reader.terminalChatRawOutput(
                 workspaceID: panel.workspaceId, surfaceID: panel.id, sessionID: sessionID, messageID: messageID
             )
+        }
+        coordinator.onStartConnectedSession = onStartConnectedSession
+        coordinator.terminalChatDraft = { [weak reader, weak panel] request in
+            guard let runtime = reader as? any TerminalChatConnecting, let panel,
+                  let text = request.params["text"] as? String else { throw AgentSessionBridgeError.invalidRequest }
+            try runtime.updateConnectedDraft(workspaceID: panel.workspaceId, surfaceID: panel.id,
+                sessionID: request.requiredString("sessionId"), text: text)
+        }
+        coordinator.terminalChatAction = { [weak reader, weak panel] request in
+            guard let runtime = reader as? any TerminalChatConnecting, let panel,
+                  let requestID = UUID(uuidString: try request.requiredString("requestId")) else {
+                throw AgentSessionBridgeError.invalidRequest
+            }
+            return try await runtime.performConnectedAction(workspaceID: panel.workspaceId, surfaceID: panel.id,
+                sessionID: request.requiredString("sessionId"), requestID: requestID,
+                text: request.params["text"] as? String ?? "", expectedTurnID: request.params["expectedTurnId"] as? String)
         }
         coordinator.onInteractInTerminal = onTerminal
         coordinator.bind(

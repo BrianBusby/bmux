@@ -23,7 +23,10 @@ transport, transcript, native bridge and tagged macOS evidence in that decision.
 Broader provider/recovery acceptance and all shared controls remain open. A new
 shared-host TUI probe accepted a second-client prompt, but a stale interrupt
 with an old turn ID stopped a newer turn in Codex 0.154.0. This is a provider
-control gate failure, not authorization to enable Chat controls.
+control gate failure. The user subsequently authorized opt-in newly connected
+sessions. Queue and expected-turn steering are implemented with live transport proof on
+`connected-session-controls`; corrected native launch UI acceptance remains blocked by `cgWindowNotFound`, and interrupt remains disabled. The original
+`shared-session-chat` dogfood build must remain running and untouched.
 Process Integrity remains the broader frontier and its completed slices remain
 unchanged. This assignment does not authorize unrelated cleanup.
 

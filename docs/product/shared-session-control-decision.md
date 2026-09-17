@@ -1,6 +1,6 @@
 # Shared-session Chat control decision
 
-Status: read-only implementation under observation; shared control remains blocked at the feasibility gate. This is not a claim that
+Status: ordinary CLI read-only implementation under observation; opt-in new shared-host controls are being implemented and verified. Ordinary attachment and safe structured interruption have not passed their gates. This is not a claim that
 all three assignment phases passed. Base: `585f0a693f18b45954227d87dea4d0099a23e2d3`.
 
 ## Ownership and identity
@@ -82,16 +82,13 @@ same-owner, acknowledgement, approval and interruption proof.
 
 The UI contract enumerates each operation and its unavailable reason. The native
 read-only bridge independently rejects provider mutations; hiding a composer
-alone is not the boundary. Stable action IDs, uncertain delivery reconciliation,
-expected-turn interruption, shared approval retirement, and durable follow-up
-queue remain gated. There is no fake pending echo, automatic retry, inferred
+alone is not the boundary. The ordinary-CLI boundary remains read-only. The new opt-in connection contract below separately owns action IDs and delivery reconciliation. Expected-turn interruption and shared approval retirement remain gated. There is no fake pending echo, automatic retry, inferred
 approval option, or terminal keystroke adapter in Chat.
 
 ## Read-only implementation boundary
 
 The terminal panel retains the WebKit consumer while the original surface stays
-mounted. View changes only change visibility/input focus; Chat cannot launch,
-stop, resume, or own the CLI. PE failure does not affect direct terminal input.
+mounted. For ordinary existing CLI sessions, view changes only change visibility/input focus; Chat cannot stop, resume, or own that CLI. PE failure does not affect direct terminal input.
 The existing React shell, theme, sanitized Markdown and native trusted-frame
 bridge are reused. Messages are chronological; the Session prior-turn overview
 keeps its existing order. Tool IDs survive late results; bounded snapshots
@@ -174,8 +171,7 @@ its tooltip/accessibility name; it has not acquired safe turn interruption.
 - New UI copy has English and Japanese catalog entries. Existing workspace PR,
   ticket, project and PR-owner rendering paths were not replaced.
 
-Shared send, steering, delayed interrupt, acknowledgement-loss reconciliation,
-approval retirement and queue delivery are intentionally unverified/disabled.
+At the read-only handoff, shared send, steering, delayed interrupt, acknowledgement-loss reconciliation, approval retirement and queue delivery were unverified/disabled. The opt-in follow-up below does not change ordinary CLI capabilities.
 The consumer uses authoritative history only, with no provisional preview.
 Working/completed/interrupted states require explicit Codex events; no state is
 inferred from prose or elapsed silence. Individual failed tool results remain
@@ -218,6 +214,107 @@ client's prompt and keep the real TUI attached. It does **not** establish comple
 CLI command parity, safe delayed interruption, approval retirement, reconnect
 idempotency, or queue semantics. The official transport is still described as
 experimental. Existing sessions remain read-only. Opt-in shared-host launches
-with only individually verified controls require the explicit architecture
-choice described above; no such launch mode or controls were enabled by this
-probe. The existing dogfood app was not rebuilt or replaced.
+with only individually verified controls required an explicit architecture choice; the user subsequently authorized that new-session mode. No controls were enabled by the probe alone. The existing dogfood app was not rebuilt or replaced.
+
+## Opt-in connected sessions: implementation in verification
+
+The user's “keep going” authorizes a new-session mode. **New connected Codex
+session** creates a new raw terminal and a dedicated authenticated loopback
+app-server, then starts the original Codex TUI with `--remote`. It does not replace or adopt the currently selected ordinary CLI.
+The TUI creates its new thread on that host; Chat binds only when the dedicated host reports exactly one loaded thread. Both clients use that same live owner.
+The provider process, TUI process, provider thread, and PE identity remain distinct.
+
+The implementation pins controls to empirically tested Codex 0.154.0. It uses a
+random capability token in a private file, verifies that an unauthenticated
+WebSocket handshake receives HTTP 401, and only then initializes its native
+`URLSessionWebSocketTask`. The token is never sent through the webview bridge,
+placed in argv, or passed into the provider host's tool environment. Native
+WebSocket initialization was exercised successfully against the real provider.
+
+| New connected session operation | Scope |
+| --- | --- |
+| Read conversation | Same exact-bound durable transcript adapter as ordinary Chat |
+| Send follow-up | Provider-owned `thread/queue/add`, not idle `turn/start`; the real TUI drains the queue |
+| Steer current turn | `turn/steer` with required expected turn ID; mismatched IDs are rejected by the tested provider |
+| Interrupt | Terminal only; the stale-turn failure above remains open |
+| Approval, question, queue editing/cancellation, settings | Terminal only; no synthetic answers or fabricated controls |
+| Reconnect | Rejoin only the known, still-running dedicated host and loaded thread; reconcile IDs, never replay a mutation |
+| App restore | Connected control ownership is not restored yet; ordinary transcript observation and Terminal remain the fallback |
+
+A second disposable probe used host PID `13196` and thread
+`01a0ad95-c517-7a00-9e8f-667a86807dea`. Ambient bmux routing variables were removed.
+The TUI displayed `CONNECTED_READY_917`. Two queue-add requests carrying the
+same client ID `d748cda4-e566-41c4-946f-e16475b07e14` produced **two** completed
+turns (`01a0ad96-7f00-70a1-9eeb-0e3739e555f9` and
+`01a0ad96-8806-7b70-bfc2-6795526388f2`). Client IDs are correlation evidence,
+not an idempotency guarantee in this provider build.
+
+During active turn `01a0ad99-4ff5-7c42-94d3-d9a042bbeee5`, steering with the old
+turn ID was rejected with `-32600`; an explicit queue start was rejected because
+a turn was active. Queue item `01a0ad99-4ff8-7112-8ba7-2672f8c35a52` survived a
+client disconnect/rejoin and later became exactly one completed follow-up turn,
+`01a0ad99-9e51-79b1-903e-6f2932655965`. The authoritative user message retained
+client ID `60a66690-e988-41ea-adcd-e4d7af15054d`.
+
+The native action owner reserves each request ID before sending. It keeps
+pending, accepted, failed, and uncertain states independently of Chat mounting;
+missing acknowledgments preserve drafts and block blind retries. Read-only
+reconciliation can establish acceptance from a queued item or provider-authored
+user-message client ID. A missing item is never treated as proof of non-delivery.
+No optimistic conversation message is appended. Request tombstones outlive
+retired prompt bodies, and both are bounded.
+
+Five new transport/state tests cover one accepted action, duplicate requests,
+wrong-thread rejection, stale-turn rejection, slash-command handling, uncertain
+delivery, and reconciliation after a replacement connection without a resend.
+Native tagged UI verification is in progress. An initial live launch exposed that Codex cannot resume an empty, unpersisted thread; startup now lets the TUI create its own thread, with no dummy prompt. A direct authenticated TUI-first test accepted one queued prompt and produced one completed turn. Subsequent macOS UI automation returned `cgWindowNotFound`, so the corrected application launch has not yet passed the UI gate. Approvals, provider restart, dark mode,
+VoiceOver, and restored control ownership remain unaccepted gates.
+
+For a connected host, fresh authenticated provider state and transcript availability
+are separate. An empty TUI can accept a first queued prompt even before Codex has
+created its durable rollout. Failed history reads stay unavailable/stale; they do
+not masquerade as live history. A lost bridge response clears live control state.
+The owning terminal's actual Ghostty process-exit signal additionally gates
+controls. Multiple loaded threads or a changed selected thread fail closed rather
+than routing to an arbitrary conversation. This conservative restriction can
+also temporarily disable controls while a provider-created auxiliary thread is
+loaded. The app does not adopt a thread based on repository directory or PID.
+
+
+### Native control smoke evidence (Codex 0.154.0)
+
+The product `Control/*.swift` implementation was compiled into a disposable
+command-line harness, using an authenticated host and a real `codex --remote`
+TUI in a temporary workspace. Host PID `79026` and TUI PID `79050` remained
+alive throughout. The TUI created thread
+`01a0adc0-3373-77a1-8383-3227e2d5b886` before either Chat-side action.
+
+1. `thread/queue/add` acknowledged client request
+   `3C976673-47F0-4F03-9A7D-04920059B662`; the harmless prompt requested a short
+   sleep and a marker.
+2. During turn `01a0adc1-15da-7e20-82fd-df91236c211f`, `turn/steer` acknowledged
+   client request `9D7EE3B4-B376-4CDD-B7AC-E446B8EEFC9C` and that same turn ID.
+3. The authoritative completed turn contained exactly those two user-message
+   client IDs. The original TUI displayed the requested `STEER_ACCEPTED_917`
+   marker. No second thread or provider owner was created.
+
+Reproduce with the pinned CLI: create a private temporary directory and token
+file, launch `codex app-server --listen ws://127.0.0.1:0 --ws-auth
+capability-token --ws-token-file <private-file>`, and start the TUI using
+`codex --remote <reported-loopback-url> --remote-auth-token-env <token-env-name>`.
+Initialize a second authenticated WebSocket client with `experimentalApi: true`,
+read the sole loaded thread, then issue the queue and expected-turn steering
+requests above with fresh client IDs. Corroborate IDs in `thread/read` and the
+marker in the original TUI. Never reuse client IDs as a provider deduplication
+mechanism. Token values, credentials, and full transcripts are intentionally not
+included here. This protocol smoke test does not substitute for the application
+UI gate.
+
+Verification: 214 shared-package tests, eight native bridge/ownership tests,
+and 67 web state/DOM tests passed; TypeScript type checking and lint passed.
+Native tests exercise wrong workspace/thread targeting, missing history with a
+healthy control connection, actual terminal exit, ambiguous loaded threads, and
+draft preservation. Drafts and action receipts survive webview reloads in native
+memory; they are not persisted across application restart. Provider queue
+ordering is provider-owned. Queue editing/cancellation and approval interaction
+remain in Terminal and have not passed cross-view acceptance.

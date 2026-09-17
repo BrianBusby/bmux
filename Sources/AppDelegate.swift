@@ -786,7 +786,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     // `FocusedNotificationResolving`).
     /// The auth graph, injected once via `configure(...)` at app startup.
     private(set) var auth: MacAuthComposition?
-    private let agentChatTranscriptService = AgentChatTranscriptService()
+    let agentChatApplicationRuntime = AgentChatApplicationRuntime()
     let pushToTalkVoiceInputController = PushToTalkVoiceInputController()
     /// The app's settings dependency container, handed over by `bmuxApp` via
     /// `configure(...)` before any main window is created. AppKit builds the
@@ -2051,8 +2051,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         self.tabManager = tabManager
         self.appRuntimeServices = appRuntimeServices
         self.workProvenanceRuntime = appRuntimeServices.workProvenanceRuntime
-        tabManager.terminalChatReader = agentChatTranscriptService
-        tabManager.workProvenanceRuntime = appRuntimeServices.workProvenanceRuntime
+        configureSessionPresentation(tabManager)
         self.settingsRuntime = settingsRuntime
         self.notificationStore = notificationStore
         self.sidebarState = sidebarState
@@ -4606,8 +4605,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             }
             tabManager.window = window
             tabManager.windowId = windowId
-            tabManager.terminalChatReader = agentChatTranscriptService
-            tabManager.workProvenanceRuntime = workProvenanceRuntime
+            configureSessionPresentation(tabManager)
             existing.window = window
             let resolvedFileExplorerState = fileExplorerState ?? existing.fileExplorerState
             if let fileExplorerState {
@@ -4626,8 +4624,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         } else {
             tabManager.window = window
             tabManager.windowId = windowId
-            tabManager.terminalChatReader = agentChatTranscriptService
-            tabManager.workProvenanceRuntime = workProvenanceRuntime
+            configureSessionPresentation(tabManager)
             let context = MainWindowContext(
                 windowId: windowId,
                 tabManager: tabManager,

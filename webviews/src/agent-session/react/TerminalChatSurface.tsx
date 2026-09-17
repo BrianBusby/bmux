@@ -3,11 +3,15 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { callNative } from "../shared/bridge";
 import { renderMarkdownHTML } from "../shared/markdown";
 import { initialTerminalChat, reconcileTerminalChat, terminalCapabilities, type ObservedMessage, type TerminalChatSnapshot } from "../shared/terminalChat";
+import { ConnectedChatComposer } from "./ConnectedChatComposer";
+import { canUseConnectedControl } from "../shared/connectedChat";
 import type { AppContext } from "../shared/types";
 
 
 export function TerminalChatSurface({ context }: { context: AppContext }) {
   const [state, setState] = useState(initialTerminalChat);
+  const [starting, setStarting] = useState(false);
+  const [startFailed, setStartFailed] = useState(false);
   const scroll = useRef<HTMLDivElement>(null);
   const following = useRef(true);
   const copy = context.copy;
@@ -19,7 +23,7 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
         const snapshot = await callNative<TerminalChatSnapshot>("terminalChat.snapshot");
         if (!cancelled) setState(previous => reconcileTerminalChat(previous, snapshot, context));
       } catch {
-        if (!cancelled) setState(previous => ({ ...previous, status: previous.messages.length ? "stale" : "unavailable" }));
+        if (!cancelled) setState(previous => ({ ...previous, control: undefined, status: previous.messages.length ? "stale" : "unavailable" }));
       }
       // One outstanding read at a time; never retry provider actions.
       if (!cancelled) timer = setTimeout(refresh, 2000);
@@ -46,7 +50,16 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
         {state.messages.map(message => <ObservedRow key={message.id} message={message} context={context} sessionId={state.sessionId!} />)}
       </div>
     </section>
-    {!capabilities.submitPrompt.available && <footer className="terminal-chat-footer">{copy.chatReadOnly}</footer>}
+    {state.control ? <ConnectedChatComposer context={context} control={state.control}
+      enabled={canUseConnectedControl(state.control, state.sessionId)} /> :
+      !capabilities.submitPrompt.available && <footer className="terminal-chat-footer">{copy.chatReadOnly}</footer>}
+    {context.canStartConnectedSession && <div className="terminal-chat-launch">
+      <button disabled={starting} onClick={() => {
+        setStarting(true); setStartFailed(false);
+        void callNative("terminalChat.startConnected").catch(() => setStartFailed(true)).finally(() => setStarting(false));
+      }}>{starting ? copy.startingStatus : copy.connectedNewSession}</button>
+      {startFailed && <output role="alert">{copy.connectedStartFailed}</output>}
+    </div>}
   </section>;
 }
 

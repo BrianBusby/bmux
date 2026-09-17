@@ -13,6 +13,15 @@ extension AgentChatTranscriptService: TerminalChatReading {
         guard candidates.count == 1, let record = candidates.first else {
             return ["status": "unavailable", "reason": candidates.isEmpty ? "unassociated" : "ambiguous"]
         }
+        return await terminalChatSnapshot(workspaceID: workspaceID, surfaceID: surfaceID, sessionID: record.sessionID)
+    }
+
+    func terminalChatSnapshot(workspaceID: UUID, surfaceID: UUID, sessionID: String) async -> [String: Any] {
+        guard let record = sessionRecord(sessionID: sessionID),
+              record.workspaceID.flatMap(UUID.init(uuidString:)) == workspaceID,
+              record.surfaceID.flatMap(UUID.init(uuidString:)) == surfaceID else {
+            return ["status": "unavailable", "reason": "unassociated"]
+        }
         guard let page = await history(sessionID: record.sessionID, beforeSeq: nil, limit: 500, refresh: true),
               let current = sessionRecord(sessionID: record.sessionID),
               current.surfaceID.flatMap(UUID.init(uuidString:)) == surfaceID,

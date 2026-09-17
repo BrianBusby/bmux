@@ -3668,13 +3668,13 @@ roadmap:
       execution:
         assignment: current
         assigned_to: bmux
-        active_branch: shared-session-chat
+        active_branch: connected-session-controls
         active_worktree: /Users/brianbusby/repos/.bmux-worktrees/shared-session-chat
         active_agent: codex
-        notes: User-authorized read-only ordinary CLI view proceeds independently of unproven shared control; existing Process Integrity backlog remains deferred for this assignment.
+        notes: User authorized opt-in newly connected Codex sessions after the shared-host proof. Existing ordinary CLI sessions remain read-only in Chat. Queue delivery and expected-turn steering passed live protocol verification with the original TUI. Native UI acceptance remains blocked by cgWindowNotFound; the existing dogfood build remains untouched.
       delivery_status: proposed
       acceptance_status: under_observation
-      rationale: Preserve the original PTY and reuse transcript observation for Chat. Ordinary Codex 0.154.0 attachment via app-server proxy failed because no control socket exists; submit, steer, queue, interrupt, approvals, questions and settings remain gated. See docs/product/shared-session-control-decision.md. Read-only native UI, late output, view continuity and raw-terminal interruption were exercised; A separate new shared-host TUI probe accepted a second-client prompt but failed expected-turn interruption; an old turn ID interrupted a newer turn in Codex 0.154.0. Shared-host controls remain disabled. Codex turn states use explicit provider events. Older-history paging, broader recovery acceptance and shared controls remain open. This does not complete React Chat productization or three-view control acceptance.
+      rationale: Preserve the original PTY and reuse transcript observation for Chat. Ordinary Codex 0.154.0 attachment via app-server proxy failed because no control socket exists; submit, steer, queue, interrupt, approvals, questions and settings remain gated. See docs/product/shared-session-control-decision.md. Read-only native UI, late output, view continuity and raw-terminal interruption were exercised; A separate new shared-host TUI probe accepted a second-client prompt but failed expected-turn interruption; an old turn ID interrupted a newer turn in Codex 0.154.0. Opt-in new shared-host queue and expected-turn steering are implemented with live native transport proof and automated ownership/delivery tests; corrected launch UI and broader recovery acceptance remain open. Shared-host interrupt remains disabled. Codex turn states use explicit provider events. Older-history paging, broader recovery acceptance and shared controls remain open. This does not complete React Chat productization or three-view control acceptance.
 
     - id: react_terminal_productization
       kind: slice

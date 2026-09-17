@@ -1,6 +1,19 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "agentSession.chat.connectedPrompt" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Message Codex"}}, "ja": {"stringUnit": {"state": "translated", "value": "Codex にメッセージ"}}}},
+    "agentSession.chat.connectedQueue" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Send follow-up"}}, "ja": {"stringUnit": {"state": "translated", "value": "追加メッセージを送信"}}}},
+    "agentSession.chat.connectedSteer" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Steer current turn"}}, "ja": {"stringUnit": {"state": "translated", "value": "現在のターンに指示を追加"}}}},
+    "agentSession.chat.connectedPending" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Awaiting provider acknowledgment…"}}, "ja": {"stringUnit": {"state": "translated", "value": "プロバイダーの確認を待っています…"}}}},
+    "agentSession.chat.connectedAccepted" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Accepted by Codex"}}, "ja": {"stringUnit": {"state": "translated", "value": "Codex が受信しました"}}}},
+    "agentSession.chat.connectedFailed" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Not accepted. Your draft is preserved."}}, "ja": {"stringUnit": {"state": "translated", "value": "受信されませんでした。下書きは保持されています。"}}}},
+    "agentSession.chat.connectedUncertain" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Delivery is uncertain. Check Terminal before sending again."}}, "ja": {"stringUnit": {"state": "translated", "value": "送信結果を確認できません。再送信する前に Terminal を確認してください。"}}}},
+    "agentSession.chat.connectedSlashCommands" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Use Terminal for Codex slash commands."}}, "ja": {"stringUnit": {"state": "translated", "value": "Codex のスラッシュコマンドは Terminal で実行してください。"}}}},
+    "agentSession.chat.connectedQueuePolicy" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Follow-ups join the Codex queue. Terminal starts them after the current turn and owns queue editing, approvals, settings, and interruption."}}, "ja": {"stringUnit": {"state": "translated", "value": "追加メッセージは Codex のキューに入ります。現在のターンが終わると Terminal が実行します。キューの編集、承認、設定、割り込みは Terminal で操作してください。"}}}},
+    "agentSession.chat.connectedUnavailable" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "The shared connection is unavailable. Continue in Terminal."}}, "ja": {"stringUnit": {"state": "translated", "value": "共有接続を利用できません。Terminal で続行してください。"}}}},
+    "agentSession.chat.connectedNewSession" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "New connected Codex session"}}, "ja": {"stringUnit": {"state": "translated", "value": "新しい接続済み Codex セッション"}}}},
+    "agentSession.chat.connectedStartFailed" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Could not start a connected session. This preview requires Codex 0.154.0; your existing terminal is unchanged."}}, "ja": {"stringUnit": {"state": "translated", "value": "接続済みセッションを開始できませんでした。このプレビューには Codex 0.154.0 が必要です。既存のターミナルは変更されていません。"}}}},
+
     "agentSession.chat.chatLoading": {
       "extractionState": "manual",
       "localizations": {

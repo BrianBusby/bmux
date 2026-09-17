@@ -74,7 +74,7 @@ final class TerminalPanel: Panel, ObservableObject {
     }
 
     let id: UUID
-    let chatRenderer = AgentSessionWebRendererCoordinator()
+    let presentation = TerminalPanelPresentationState()
     let stableSurfaceIdentity = PanelStableSurfaceIdentity()
     let panelType: PanelType = .terminal
 
@@ -684,34 +684,9 @@ final class TerminalPanel: Panel, ObservableObject {
     }
 
     func close() {
-        chatRenderer.close()
         isClosingPanel = true
         discardTextBoxContentForClose()
-        // The surface will be cleaned up by its deinit
-        // Detach from the window portal on real close so stale hosted views
-        // cannot remain above browser panes after split close.
-        surface.beginPortalCloseLifecycle(reason: "panel.close")
-#if DEBUG
-        let frame = String(format: "%.1fx%.1f", hostedView.frame.width, hostedView.frame.height)
-        let bounds = String(format: "%.1fx%.1f", hostedView.bounds.width, hostedView.bounds.height)
-        bmuxDebugLog(
-            "surface.panel.close.begin panel=\(id.uuidString.prefix(5)) " +
-            "workspace=\(workspaceId.uuidString.prefix(5)) runtimeSurface=\(surface.surface != nil ? 1 : 0) " +
-            "inWindow=\(surface.isViewInWindow ? 1 : 0) hasSuperview=\(hostedView.superview != nil ? 1 : 0) " +
-            "hidden=\(hostedView.isHidden ? 1 : 0) frame=\(frame) bounds=\(bounds)"
-        )
-#endif
-        unfocus()
-        hostedView.setVisibleInUI(false)
-        TerminalWindowPortalRegistry.detach(hostedView: hostedView)
-#if DEBUG
-        bmuxDebugLog(
-            "surface.panel.close.end panel=\(id.uuidString.prefix(5)) " +
-            "inWindow=\(surface.isViewInWindow ? 1 : 0) hasSuperview=\(hostedView.superview != nil ? 1 : 0) " +
-            "hidden=\(hostedView.isHidden ? 1 : 0)"
-        )
-#endif
-        surface.teardownSurface()
+        presentation.close(panel: self)
     }
 
     func enterAgentHibernation(
