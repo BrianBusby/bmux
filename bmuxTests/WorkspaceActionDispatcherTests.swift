@@ -817,6 +817,28 @@ import Bonsplit
         #expect(manager.selectedTabId == targetWorkspace.id)
     }
 
+    @Test func connectedCodexChatFocusSkipsAnAlreadySelectedTerminal() {
+        let workspaceId = UUID()
+        let panelId = UUID()
+
+        #expect(
+            !Workspace.shouldRequestConnectedCodexChatFocus(
+                selectedWorkspaceId: workspaceId,
+                focusedPanelId: panelId,
+                workspaceId: workspaceId,
+                panelId: panelId
+            )
+        )
+        #expect(
+            Workspace.shouldRequestConnectedCodexChatFocus(
+                selectedWorkspaceId: workspaceId,
+                focusedPanelId: UUID(),
+                workspaceId: workspaceId,
+                panelId: panelId
+            )
+        )
+    }
+
     private func panelOrder(in workspace: Workspace, pane: PaneID) -> [UUID] {
         workspace.bonsplitController.tabs(inPane: pane).compactMap {
             workspace.panelIdFromSurfaceId($0.id)
