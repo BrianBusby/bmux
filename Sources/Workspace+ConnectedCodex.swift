@@ -3,6 +3,19 @@ import Bonsplit
 import Foundation
 
 extension Workspace {
+    /// Selects the terminal panel for a Chat click without transferring the
+    /// AppKit first responder away from that WebKit composer.
+    @MainActor
+    func focusConnectedCodexChat(panelID: UUID) {
+        guard let manager = owningTabManager ?? AppDelegate.shared?.tabManagerFor(tabId: id),
+              panels[panelID] is TerminalPanel else { return }
+        _ = manager.focusWorkspaceSurfaceForAction(
+            workspaceId: id,
+            surfaceId: panelID,
+            focusIntent: .terminal(.chatComposer)
+        )
+    }
+
     /// Creates a new terminal with a shared host; never injects a launch command
     /// into an existing shell or replaces an ordinary running agent.
     @MainActor

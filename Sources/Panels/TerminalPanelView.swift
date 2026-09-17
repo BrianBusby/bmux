@@ -29,6 +29,7 @@ struct TerminalPanelView: View {
     var workProvenanceRuntime: WorkProvenanceRuntime? = nil
     let onFocus: () -> Void
     let onRequestPanelFocus: () -> Void
+    let onRequestTerminalChatFocus: () -> Void
     let onResumeAgentHibernation: () -> Void
     let onAutoResumeAgentHibernation: () -> Void
     let onTriggerFlash: () -> Void

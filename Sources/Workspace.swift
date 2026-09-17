@@ -12286,7 +12286,7 @@ extension Workspace: BonsplitDelegate {
 
     private func shouldMoveTerminalSurfaceFocus(for intent: PanelFocusIntent) -> Bool {
         switch intent {
-        case .terminal(.findField), .terminal(.textBoxInput):
+        case .terminal(.findField), .terminal(.textBoxInput), .terminal(.chatComposer):
             return false
         default:
             return true
@@ -12313,7 +12313,7 @@ extension Workspace: BonsplitDelegate {
 
     private func shouldRestoreFocusIntentAfterActivation(_ intent: PanelFocusIntent) -> Bool {
         switch intent {
-        case .browser(.addressBar), .browser(.findField), .terminal(.findField), .terminal(.textBoxInput):
+        case .browser(.addressBar), .browser(.findField), .terminal(.findField), .terminal(.textBoxInput), .terminal(.chatComposer):
             return true
         case .panel, .browser(.webView), .terminal(.surface), .filePreview, .project:
             return false

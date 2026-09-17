@@ -1011,7 +1011,7 @@ final class TerminalPanel: Panel, ObservableObject {
         guard !isAgentHibernated else { return }
         guard case .terminal(let target) = intent else { return }
         switch target {
-        case .surface, .findField:
+        case .surface, .findField, .chatComposer:
             if isTextBoxActive {
                 textBoxInputFocusIntent = .terminal
                 shouldFocusTextBoxWhenAvailable = false
@@ -1041,6 +1041,8 @@ final class TerminalPanel: Panel, ObservableObject {
                 return focusTextBoxInput()
             case .findField:
                 return hostedView.restorePanelFocusIntent(target)
+            case .chatComposer:
+                return true
             }
         default:
             return false

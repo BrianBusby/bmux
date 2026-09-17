@@ -8,7 +8,7 @@ extension TerminalPanelView {
                 { onTerminal in AnyView(TerminalChatWebRenderer(
                     panel: panel, reader: reader, appearance: appearance,
                     onStartConnectedSession: onStartConnectedSession,
-                    onRequestPanelFocus: onRequestPanelFocus,
+                    onRequestPanelFocus: onRequestTerminalChatFocus,
                     onTerminal: onTerminal
                 )) }
             },

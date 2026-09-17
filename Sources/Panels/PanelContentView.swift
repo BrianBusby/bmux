@@ -31,6 +31,7 @@ struct PanelContentView: View {
     var paneOwnershipOverride: Bool? = nil
     let onFocus: () -> Void
     let onRequestPanelFocus: () -> Void
+    let onRequestTerminalChatFocus: () -> Void
     let onResumeAgentHibernation: () -> Void
     let onAutoResumeAgentHibernation: () -> Void
     let onTriggerFlash: () -> Void
@@ -63,6 +64,7 @@ struct PanelContentView: View {
                     workProvenanceRuntime: workProvenanceRuntime,
                     onFocus: onFocus,
                     onRequestPanelFocus: onRequestPanelFocus,
+                    onRequestTerminalChatFocus: onRequestTerminalChatFocus,
                     onResumeAgentHibernation: onResumeAgentHibernation,
                     onAutoResumeAgentHibernation: onAutoResumeAgentHibernation,
                     onTriggerFlash: onTriggerFlash
