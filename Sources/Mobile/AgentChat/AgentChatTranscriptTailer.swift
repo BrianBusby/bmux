@@ -34,6 +34,7 @@ actor AgentChatTranscriptTailer {
     private let maxInitialLines: Int
     private let maxCachedMessages: Int
 
+    private var sourceRevision = UUID().uuidString
     private var cache: [ChatMessage] = []
     private var parseState = ChatTranscriptParseState()
     private var byteOffset: UInt64 = 0
@@ -117,6 +118,15 @@ actor AgentChatTranscriptTailer {
         watcher = nil
     }
 
+    /// Reconciles file growth before a pull consumer reads the cached page.
+    /// File watcher delivery alone is not a freshness guarantee.
+    func refreshHistory(beforeSeq: Int?, limit: Int) async -> ChatHistoryPage? {
+        guard let handle = FileHandle(forReadingAtPath: path) else { return nil }
+        try? handle.close()
+        await drainNewContent()
+        return history(beforeSeq: beforeSeq, limit: limit)
+    }
+
     /// Serves one history page from the cache, keeping equal-seq groups
     /// whole at page boundaries.
     ///
@@ -145,7 +155,9 @@ actor AgentChatTranscriptTailer {
         // history is on your Mac" cell instead of looping.
         return ChatHistoryPage(
             messages: page,
-            hasMore: start > eligible.startIndex || headTruncated
+            hasMore: start > eligible.startIndex || headTruncated,
+            observedTurn: parseState.observedTurn,
+            sourceRevision: sourceRevision
         )
     }
 
@@ -213,6 +225,7 @@ actor AgentChatTranscriptTailer {
             // new file's head). Reset, re-read from scratch, and tell
             // clients explicitly: the seq space restarted, and id-based
             // heuristics can't always detect that (codex line-N ids repeat).
+            sourceRevision = UUID().uuidString
             byteOffset = 0
             lineCount = 0
             pendingFragment = Data()

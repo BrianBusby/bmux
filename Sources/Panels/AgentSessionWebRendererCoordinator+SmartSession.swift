@@ -3,9 +3,27 @@ import Foundation
 extension AgentSessionWebRendererCoordinator {
     static var smartSessionCopy: [String: String] {
         [
+            "chatLoading": String(localized: "agentSession.chat.chatLoading", defaultValue: "Loading conversation"),
+            "chatInterrupted": String(localized: "agentSession.chat.chatInterrupted", defaultValue: "Turn interrupted"),
+            "chatAmbiguous": String(localized: "agentSession.chat.chatAmbiguous", defaultValue: "Multiple session bindings · select the conversation in Terminal"),
+            "chatObserved": String(localized: "agentSession.chat.chatObserved", defaultValue: "Observed transcript · turn state unavailable"),
+            "chatEnded": String(localized: "agentSession.chat.chatEnded", defaultValue: "Session ended"),
+            "chatStale": String(localized: "agentSession.chat.chatStale", defaultValue: "Refresh failed · showing cached history"),
+            "chatUnavailable": String(localized: "agentSession.chat.chatUnavailable", defaultValue: "Conversation unavailable"),
+            "chatInteract": String(localized: "agentSession.chat.chatInteract", defaultValue: "Interact in Terminal"),
+            "chatConversation": String(localized: "agentSession.chat.chatConversation", defaultValue: "Conversation"),
+            "chatPartial": String(localized: "agentSession.chat.chatPartial", defaultValue: "Partial history · showing the latest 500 messages. Earlier content is outside this view."),
+            "chatReadOnly": String(localized: "agentSession.chat.chatReadOnly", defaultValue: "Read-only · no verified control connection to this CLI. Use Terminal for prompts, approvals, and interruption."),
+            "chatUser": String(localized: "agentSession.chat.chatUser", defaultValue: "You"),
+            "chatAssistant": String(localized: "agentSession.chat.chatAssistant", defaultValue: "Assistant"),
+            "chatActivity": String(localized: "agentSession.chat.chatActivity", defaultValue: "Activity"),
+            "chatFailed": String(localized: "agentSession.chat.chatFailed", defaultValue: "Failed"),
+            "chatCompleted": String(localized: "agentSession.chat.chatCompleted", defaultValue: "Completed"),
+            "chatAwaitingResult": String(localized: "agentSession.chat.chatAwaitingResult", defaultValue: "Awaiting result"),
+            "chatUnknown": String(localized: "agentSession.chat.chatUnknown", defaultValue: "Status unknown"),
             "terminalView": String(
-                localized: "agentSession.web.view.terminal",
-                defaultValue: "Terminal"
+                localized: "agentSession.viewMode.chat",
+                defaultValue: "Chat"
             ),
             "sessionView": String(
                 localized: "agentSession.web.view.session",

@@ -1,56 +1,38 @@
 # Coding Session Views
 
-One coding-agent session should support three complementary views. These views
-share session identity but answer different user questions.
-
-## Native
-
-Question: what does the provider itself expose?
-
-Native is the fidelity and escape-hatch surface. It should preserve provider
-specific behavior, debugging access, and features bmux has not normalized yet.
+A coding-agent session has three complementary views. Switching views must not
+create a conversation or transfer ownership of the provider process.
 
 ## Terminal
 
-Question: what is happening live, and how do I interact with the coding agent?
+Terminal is the actual provider CLI in its original terminal. It retains provider
+shortcuts, prompts, approvals, interrupts and debugging behavior. It remains
+available when Chat, Session, or PE is unavailable.
 
-Terminal is the React live interaction surface built from `agent-chat`. It owns
-streaming conversation, tool activity, provider metadata, model controls,
-reasoning effort display, collaboration mode controls, approvals, sandbox state,
-interrupts, skills/commands, working directory display, and live session
-lifecycle interaction.
+## Chat
 
-Terminal may consume ephemeral provider/runtime events directly. It is not the
-semantic reasoning layer.
+Chat is a styled chronological conversation with expandable tool activity.
+Controls are available only when verified for the actual connection, provider,
+session and turn. Ordinary CLI transcript observation is read-only: use
+**Interact in Terminal** for input and approval handling. Transcript availability
+is not control authority. Chat does not infer semantic progress or findings.
 
 ## Session
 
-Question: what does the work mean and how is this session progressing?
+Session is the PE-backed work overview, progress, findings, related work and
+inspectable evidence. Its previous-turn overview remains newest-first, separate
+from Chat's oldest-first conversation. bmux renders PE meaning rather than
+recreating semantic conclusions from raw provider events.
 
-Session is a React smart summary surface backed by PE factual and semantic
-models. It should not duplicate the transcript. It should eventually expose:
+## Compatibility and ownership
 
-- session goal,
-- current phase,
-- current turn,
-- current activity,
-- current plan,
-- completed turns,
-- work completed,
-- files affected,
-- validations and results,
-- blockers,
-- approach changes,
-- milestones,
-- architecture affected,
-- progress.
+Earlier documents called the provider terminal Native and the structured view
+Terminal. Those labels must not be used to swap implementations. Existing
+`react` and `solid` renderer values, panel kinds, preference keys and persisted
+view identifiers retain their meanings. Displaying Chat in a terminal pane does
+not turn that pane into the existing managed agent-session panel.
 
-Completed turns should be compact and individually inspectable, with factual,
-semantic, and provenance detail available on demand.
-
-## Boundary
-
-bmux presents the views and owns interaction. PE owns accepted evidence,
-deterministic factual projection, semantic records, semantic messages, and the
-`SessionWorkModel`. React should render PE-owned meaning, not recreate
-that meaning from raw provider events.
+See [the control decision and capability matrix](shared-session-control-decision.md)
+for tested limits, transport ownership and verification status. Workspace PR,
+individual ticket, project and PR-owner links retain their current destinations
+and selected-workspace behavior. No Knowledge Compiler work is included.

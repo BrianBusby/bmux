@@ -48,6 +48,11 @@ private struct WorkspacePanelContentHostView: View {
             customSidebarTabManager: customSidebarTabManager,
             hasUnreadNotification: hasUnreadNotification,
             terminalAgentContext: WorkspaceContentView.terminalAgentContext(panel: panel, workspace: workspace),
+            onStartConnectedSession: workspace.remoteConfiguration == nil ? {
+                let directory = (panel as? TerminalPanel)?.directory ?? ""
+                try await workspace.startConnectedCodex(in: paneId, workingDirectory: directory.isEmpty ? workspace.currentDirectory : directory)
+            } : nil,
+            terminalChatReader: workspace.owningTabManager?.terminalChatReader,
             workProvenanceRuntime: workspace.owningTabManager?.workProvenanceRuntime,
             onFocus: onFocus,
             onRequestPanelFocus: onRequestPanelFocus,

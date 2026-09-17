@@ -4,15 +4,21 @@ import WebKit
 
 @MainActor
 final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandlerWithReply {
+    var terminalChatSnapshot: (() async -> [String: Any])?
+    var terminalChatRawOutput: ((_ sessionID: String, _ messageID: String) async throws -> String?)?
+    var terminalChatDraft: ((AgentSessionBridgeRequest) throws -> Void)?
+    var terminalChatAction: ((AgentSessionBridgeRequest) async throws -> [String: Any])?
+    var onStartConnectedSession: (() async throws -> Void)?
+    var onInteractInTerminal: (() -> Void)?
     var webView: AgentSessionWebView?
-    private var panelId = UUID()
-    private var workspaceId = UUID()
-    private var stableWorkspaceId = UUID()
-    private var rendererKind: AgentSessionRendererKind = .react
-    private var initialProviderID: AgentSessionProviderID = .codex
-    private var workingDirectory: String?
+    var panelId = UUID()
+    var workspaceId = UUID()
+    var stableWorkspaceId = UUID()
+    var rendererKind: AgentSessionRendererKind = .react
+    var initialProviderID: AgentSessionProviderID = .codex
+    var workingDirectory: String?
     private weak var workProvenanceRuntime: WorkProvenanceRuntime?
-    private var theme: AgentSessionWebTheme = .resolve(
+    var theme: AgentSessionWebTheme = .resolve(
         appearance: .fromConfig(GhosttyConfig.load())
     )
     private var loadedRendererKind: AgentSessionRendererKind?
@@ -122,7 +128,8 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         }
         let indexURL = Self.shellURL(
             rendererKind: rendererKind,
-            resourceDirectoryURL: resourceDirectoryURL
+            resourceDirectoryURL: resourceDirectoryURL,
+            attachedTerminal: terminalChatSnapshot != nil
         )
         trustedShellURL = Self.normalizedTrustedFileURL(indexURL)
 #if DEBUG
@@ -332,9 +339,12 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
 
     nonisolated static func shellURL(
         rendererKind: AgentSessionRendererKind,
-        resourceDirectoryURL: URL
+        resourceDirectoryURL: URL,
+        attachedTerminal: Bool = false
     ) -> URL {
-        rendererKind.resourceHTMLPathComponents.reduce(resourceDirectoryURL) {
+        // The embedded shell uses the same React renderer without file-origin module imports.
+        let components = attachedTerminal ? ["agent-session-react", "index.html"] : rendererKind.resourceHTMLPathComponents
+        return components.reduce(resourceDirectoryURL) {
             $0.appendingPathComponent($1, isDirectory: false)
         }
     }
@@ -354,229 +364,39 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         return url.standardizedFileURL.resolvingSymlinksInPath()
     }
 
-    private func handle(_ request: AgentSessionBridgeRequest) async throws -> Any {
-        switch request.method {
-        case "app.context":
-            var copy: [String: String] = [
-                "start": String(localized: "agentSession.web.start", defaultValue: "Start"),
-                "stop": String(localized: "agentSession.web.stop", defaultValue: "Stop"),
-                "send": String(localized: "agentSession.web.send", defaultValue: "Send"),
-                "provider": String(localized: "agentSession.web.provider", defaultValue: "Provider"),
-                "rateLimits": String(localized: "agentSession.web.rateLimits", defaultValue: "Rate limits"),
-                "rateLimitUsageRemaining": String(
-                    localized: "agentSession.web.rateLimit.usageRemaining",
-                    defaultValue: "Usage remaining"
-                ),
-                "rateLimitPrimary": String(localized: "agentSession.web.rateLimit.primary", defaultValue: "Primary"),
-                "rateLimitSecondary": String(localized: "agentSession.web.rateLimit.secondary", defaultValue: "Secondary"),
-                "rateLimitWeekly": String(localized: "agentSession.web.rateLimit.weekly", defaultValue: "Weekly"),
-                "rateLimitMonthly": String(localized: "agentSession.web.rateLimit.monthly", defaultValue: "Monthly"),
-                "rateLimitDaysFormat": String(localized: "agentSession.web.rateLimit.daysFormat", defaultValue: "%@d"),
-                "rateLimitHoursFormat": String(localized: "agentSession.web.rateLimit.hoursFormat", defaultValue: "%@h"),
-                "rateLimitMinutesFormat": String(localized: "agentSession.web.rateLimit.minutesFormat", defaultValue: "%@m"),
-                "rateLimitResets": String(localized: "agentSession.web.rateLimit.resets", defaultValue: "resets"),
-                "voiceInput": String(localized: "agentSession.web.voiceInput", defaultValue: "Voice input"),
-                "promptPlaceholder": String(
-                    localized: "agentSession.web.promptPlaceholder",
-                    defaultValue: "Ask anything"
-                ),
-                "attachFile": String(
-                    localized: "agentSession.web.attachFile",
-                    defaultValue: "Attach file"
-                ),
-                "addFilesAndMore": String(
-                    localized: "agentSession.web.addFilesAndMore",
-                    defaultValue: "Add files and more"
-                ),
-                "addPhotosAndFiles": String(
-                    localized: "agentSession.web.addPhotosAndFiles",
-                    defaultValue: "Add photos & files"
-                ),
-                "removeAttachment": String(
-                    localized: "agentSession.web.removeAttachment",
-                    defaultValue: "Remove attachment"
-                ),
-                "copyOutput": String(
-                    localized: "agentSession.web.copyOutput",
-                    defaultValue: "Copy output"
-                ),
-                "copyAssistantMessage": String(
-                    localized: "agentSession.web.copyAssistantMessage",
-                    defaultValue: "Copy"
-                ),
-                "copiedAssistantMessage": String(
-                    localized: "agentSession.web.copiedAssistantMessage",
-                    defaultValue: "Copied"
-                ),
-                "copyUserMessage": String(
-                    localized: "agentSession.web.copyUserMessage",
-                    defaultValue: "Copy message"
-                ),
-                "copiedUserMessage": String(
-                    localized: "agentSession.web.copiedUserMessage",
-                    defaultValue: "Copied"
-                ),
-                "shellLabel": String(
-                    localized: "agentSession.web.shellLabel",
-                    defaultValue: "Shell"
-                ),
-                "copyShellContents": String(
-                    localized: "agentSession.web.copyShellContents",
-                    defaultValue: "Copy shell contents"
-                ),
-                "copiedShellContents": String(
-                    localized: "agentSession.web.copiedShellContents",
-                    defaultValue: "Copied shell contents"
-                ),
-                "collapseShell": String(
-                    localized: "agentSession.web.collapseShell",
-                    defaultValue: "Collapse shell"
-                ),
-                "showRawOutput": String(
-                    localized: "agentSession.web.showRawOutput",
-                    defaultValue: "Show raw output"
-                ),
-                "showOptimizedOutput": String(
-                    localized: "agentSession.web.showOptimizedOutput",
-                    defaultValue: "Show optimized output"
-                ),
-                "rawOutputUnavailable": String(
-                    localized: "agentSession.web.rawOutputUnavailable",
-                    defaultValue: "Raw output unavailable"
-                ),
-                "shellSuccess": String(
-                    localized: "agentSession.web.shellSuccess",
-                    defaultValue: "Success"
-                ),
-                "showMore": String(
-                    localized: "agentSession.web.showMore",
-                    defaultValue: "Show more"
-                ),
-                "showLess": String(
-                    localized: "agentSession.web.showLess",
-                    defaultValue: "Show less"
-                ),
-                "browseWeb": String(localized: "agentSession.web.browseWeb", defaultValue: "Browse web"),
-                "autoContext": String(localized: "agentSession.web.autoContext", defaultValue: "Context"),
-                "includeIdeContext": String(
-                    localized: "agentSession.web.includeIdeContext",
-                    defaultValue: "Include IDE context"
-                ),
-                "ideContext": String(
-                    localized: "agentSession.web.ideContext",
-                    defaultValue: "IDE context"
-                ),
-                "tools": String(localized: "agentSession.web.tools", defaultValue: "Tools"),
-                "changePermissions": String(
-                    localized: "agentSession.web.changePermissions",
-                    defaultValue: "Change permissions"
-                ),
-                "permissionsDefault": String(
-                    localized: "agentSession.web.permissions.default",
-                    defaultValue: "Default permissions"
-                ),
-                "permissionsFullAccess": String(
-                    localized: "agentSession.web.permissions.fullAccess",
-                    defaultValue: "Full access"
-                ),
-                "permissionsAutoReview": String(
-                    localized: "agentSession.web.permissions.autoReview",
-                    defaultValue: "Auto-review"
-                ),
-                "permissionsCustom": String(
-                    localized: "agentSession.web.permissions.custom",
-                    defaultValue: "Custom (config.toml)"
-                ),
-                "reasoningEffortHigh": String(
-                    localized: "agentSession.web.reasoningEffort.high",
-                    defaultValue: "High"
-                ),
-                "mentionMenuTitle": String(
-                    localized: "agentSession.web.mentionMenuTitle",
-                    defaultValue: "Mention"
-                ),
-                "mentionCurrentWorkspace": String(
-                    localized: "agentSession.web.mentionCurrentWorkspace",
-                    defaultValue: "Current workspace"
-                ),
-                "skillMenuTitle": String(
-                    localized: "agentSession.web.skillMenuTitle",
-                    defaultValue: "Skills"
-                ),
-                "composerNoResults": String(
-                    localized: "agentSession.web.composerNoResults",
-                    defaultValue: "No results"
-                ),
-                "planMode": String(localized: "agentSession.web.planMode", defaultValue: "Plan mode"),
-                "planSuggestionAction": String(
-                    localized: "agentSession.web.planSuggestion.action",
-                    defaultValue: "Use plan mode"
-                ),
-                "planSuggestionDismiss": String(
-                    localized: "agentSession.web.planSuggestion.dismiss",
-                    defaultValue: "Dismiss suggestion"
-                ),
-                "planSuggestionShortcut": String(
-                    localized: "agentSession.web.planSuggestion.shortcut",
-                    defaultValue: "Shift + Tab"
-                ),
-                "planSuggestionTitle": String(
-                    localized: "agentSession.web.planSuggestion.title",
-                    defaultValue: "Create a plan"
-                ),
-                "skillPlan": String(localized: "agentSession.web.skillPlan", defaultValue: "Plan"),
-                "skillCodeReview": String(
-                    localized: "agentSession.web.skillCodeReview",
-                    defaultValue: "Code review"
-                ),
-                "skillResearch": String(
-                    localized: "agentSession.web.skillResearch",
-                    defaultValue: "Research"
-                ),
-                "loadingStatus": String(localized: "agentSession.web.status.loading", defaultValue: "Loading"),
-                "idleStatus": String(localized: "agentSession.web.status.idle", defaultValue: "Idle"),
-                "startingStatus": String(localized: "agentSession.web.status.starting", defaultValue: "Starting"),
-                "runningStatus": String(localized: "agentSession.web.status.running", defaultValue: "Running"),
-                "stoppingStatus": String(localized: "agentSession.web.status.stopping", defaultValue: "Stopping"),
-                "failedStatus": String(localized: "agentSession.web.status.failed", defaultValue: "Failed"),
-                "rendererReadyFormat": String(
-                    localized: "agentSession.web.log.rendererReadyFormat",
-                    defaultValue: "%@ ready"
-                ),
-                "stopped": String(localized: "agentSession.web.log.stopped", defaultValue: "Stopped"),
-                "sentCharsFormat": String(
-                    localized: "agentSession.web.log.sentCharsFormat",
-                    defaultValue: "Sent %d chars"
-                ),
-                "providerStarted": String(
-                    localized: "agentSession.web.log.providerStarted",
-                    defaultValue: "Provider started"
-                ),
-                "providerExitedFormat": String(
-                    localized: "agentSession.web.log.providerExitedFormat",
-                    defaultValue: "Provider exited %d"
-                ),
-                "requestFailed": String(
-                    localized: "agentSession.web.error.requestFailed",
-                    defaultValue: "Native bridge request failed."
-                )
-            ]
-            copy.merge(Self.smartSessionCopy) { _, newValue in newValue }
-
-            var context: [String: Any] = [
-                "panelId": panelId.uuidString,
-                "workspaceId": workspaceId.uuidString,
-                "stableWorkspaceId": stableWorkspaceId.uuidString,
-                "renderer": rendererKind.rawValue,
-                "initialProviderId": initialProviderID.rawValue,
-                "theme": theme.dictionary,
-                "rateLimitRows": [],
-                "copy": copy
-            ]
-            if let workingDirectory {
-                context["workingDirectory"] = workingDirectory
+    func handle(_ request: AgentSessionBridgeRequest) async throws -> Any {
+        if terminalChatSnapshot != nil {
+            switch request.method {
+            case "app.context", "terminalChat.snapshot", "terminalChat.openTerminal", "terminalChat.rawOutput", "terminalChat.action", "terminalChat.draft", "terminalChat.startConnected", "provider.list": break
+            default: throw AgentSessionBridgeError.unsupportedMethod(request.method)
             }
-            return context
+        }
+        switch request.method {
+        case "terminalChat.draft":
+            guard let terminalChatDraft else { throw AgentSessionBridgeError.invalidRequest }
+            try terminalChatDraft(request)
+            return ["saved": true]
+        case "terminalChat.action":
+            guard let terminalChatAction else { throw AgentSessionBridgeError.invalidRequest }
+            return try await terminalChatAction(request)
+        case "terminalChat.startConnected":
+            guard let onStartConnectedSession else { throw AgentSessionBridgeError.invalidRequest }
+            try await onStartConnectedSession()
+            return ["started": true]
+        case "terminalChat.snapshot":
+            guard let terminalChatSnapshot else { throw AgentSessionBridgeError.invalidRequest }
+            return await terminalChatSnapshot()
+        case "terminalChat.rawOutput":
+            guard let terminalChatRawOutput,
+                  let output = try await terminalChatRawOutput(request.requiredString("sessionId"), request.requiredString("messageId")) else {
+                throw AgentSessionBridgeError.invalidRequest
+            }
+            return ["output": output]
+        case "terminalChat.openTerminal":
+            onInteractInTerminal?()
+            return ["opened": true]
+        case "app.context":
+            return makeAppContext()
         case "smartSession.snapshot":
             guard let workProvenanceRuntime else {
                 return AgentSessionSmartSessionReadResult.unavailable.bridgePayload
@@ -587,6 +407,7 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         case "app.pickFiles":
             return await pickLocalFiles()
         case "provider.list":
+            if terminalChatSnapshot != nil { return [] as [Any] }
             return AgentSessionProviderID.allCases.map { provider in
                 [
                     "id": provider.rawValue,

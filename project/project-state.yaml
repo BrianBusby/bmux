@@ -3662,9 +3662,38 @@ roadmap:
       completed_at: 2026-08-17
       rationale: Records the completed bmux factual Session view work as a prerequisite PE factual-projection consumer. The native view is useful inspection/debug scaffolding and data-access foundation, but the intended user-facing Smart Session surface is React and remains separate from the React Terminal transcript/live interaction surface.
 
+    - id: shared_session_chat
+      kind: slice
+      title: Shared-session Chat and permanent Terminal
+      parent: coding_session_view_surfaces
+      status: active
+      owner: bmux
+      repositories:
+        - bmux
+      concept_classification:
+        primary: execution_telemetry
+        architecture_layer: consumer_presentation
+        tags:
+          - agent_chat
+          - provider_runtime_identity
+      capability_maturity: active
+      parallelism:
+        classification: serial
+        worktree_required: true
+      execution:
+        assignment: current
+        assigned_to: bmux
+        active_branch: connected-session-controls
+        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/shared-session-chat
+        active_agent: codex
+        notes: User authorized opt-in newly connected Codex sessions after the shared-host proof. Existing ordinary CLI sessions remain read-only in Chat. Queue delivery and expected-turn steering passed live protocol verification with the original TUI. Native UI acceptance remains blocked by cgWindowNotFound; the existing dogfood build remains untouched.
+      delivery_status: proposed
+      acceptance_status: under_observation
+      rationale: Preserve the original PTY and reuse transcript observation for Chat. Ordinary Codex 0.154.0 attachment via app-server proxy failed because no control socket exists; submit, steer, queue, interrupt, approvals, questions and settings remain gated. See docs/product/shared-session-control-decision.md. Read-only native UI, late output, view continuity and raw-terminal interruption were exercised; A separate new shared-host TUI probe accepted a second-client prompt but failed expected-turn interruption; an old turn ID interrupted a newer turn in Codex 0.154.0. Opt-in new shared-host queue and expected-turn steering are implemented with live native transport proof and automated ownership/delivery tests; corrected launch UI and broader recovery acceptance remain open. Shared-host interrupt remains disabled. Codex turn states use explicit provider events. Older-history paging, broader recovery acceptance and shared controls remain open. This does not complete React Chat productization or three-view control acceptance.
+
     - id: react_terminal_productization
       kind: slice
-      title: React Terminal live interaction productization
+      title: React Chat live interaction productization
       parent: coding_session_view_surfaces
       status: planned
       owner: bmux
@@ -3705,7 +3734,7 @@ roadmap:
         assigned_to: bmux
       delivery_status: proposed
       acceptance_status: proposed
-      rationale: Productize the existing agent-chat React surface as bmux's Terminal view for live conversation, streaming, tool lifecycle, controls, interrupts, and provider-normalized interaction. It must not become the Smart Session semantic summary surface or duplicate PE inference.
+      rationale: Productize the existing agent-chat React surface as bmux's Chat view for live conversation, streaming, tool lifecycle, controls, interrupts, and provider-normalized interaction. It must not become the Smart Session semantic summary surface or duplicate PE inference.
 
     - id: react_smart_session_foundation
       kind: slice
@@ -3970,7 +3999,7 @@ roadmap:
           requires:
             node: react_terminal_productization
             maturity: validated
-          reason: Three-view navigation should preserve identity across a productized Terminal surface, not an unfinished live-interaction direction.
+          reason: Three-view navigation should preserve identity across a productized Chat surface, not an unfinished live-interaction direction.
       parallelism:
         classification: conditional
         expected_contract_domains:
@@ -3999,7 +4028,7 @@ roadmap:
         assigned_to: bmux
       delivery_status: proposed
       acceptance_status: proposed
-      rationale: Provide coherent switching among Native, Terminal, and Session views while preserving provider thread/session identity, working directory/worktree identity, active view restoration, and the provider-native escape hatch.
+      rationale: Provide coherent switching among Terminal, Chat, and Session views while preserving provider thread/session identity, working directory/worktree identity, active view restoration, and the provider-native escape hatch.
 
     - id: cross_session_work_awareness
       kind: program

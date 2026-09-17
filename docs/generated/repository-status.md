@@ -34,12 +34,15 @@ Repository: `BrianBusby/bmux`
 | Bmux Cross Session Context Assembly Experiment | planned |
 | Bmux Proactive Cross Session Awareness | implemented |
 | Codex Historical Import Startup Boundary Guard | planned |
+| Connected Codex Shared Host Controls | under observation |
 | Factual Agent Session View | implemented |
 | Knowledge Compiler Cross Session Bridge | planned |
 | Legacy Bmux Provenance Retirement | planned |
 | Monorepo Migration Ledger Closure | planned |
 | Native Provider Session View | implemented |
 | Normal Coding Agent Evidence Ingestion | implemented |
+| Ordinary Cli Read Only Chat | under observation |
+| Ordinary Cli Shared Control | not implemented |
 | Pe Shared Sqlite Writer Policy | planned |
 | Provenance Engine Agent Accessible Cross Session Retrieval | implemented |
 | Provenance Engine Blocker Approach Change Semantics | implemented |
@@ -138,6 +141,9 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `connected_codex_delivery_and_recovery_verification` | open |
+| `shared_host_codex_stale_interrupt` | open |
+| `ordinary_cli_shared_control_unverified` | open |
 | `broad_legacy_storage_migration` | open |
 | `residual_app_runtime_lifecycle_ownership` | open |
 | `workspace_display_file_watcher_churn` | open |

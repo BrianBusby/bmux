@@ -82,6 +82,30 @@ public struct CodexTranscriptParser: Sendable {
                         kind: .status(ChatStatusTransition(event: .contextCompacted))
                     )
                 )
+            case "event_msg":
+                if let turnID = payload?["turn_id"]?.string, !turnID.isEmpty {
+                    switch payload?["type"]?.string {
+                    case "task_started":
+                        if assembler.observedTurn?.id != turnID {
+                            assembler.observedTurn = ChatObservedTurn(id: turnID, state: .working)
+                        }
+                    case "task_complete", "turn_aborted":
+                        // A late terminal event for an older turn cannot finish the current one.
+                        if assembler.observedTurn == nil || assembler.observedTurn?.id == turnID {
+                            assembler.observedTurn = ChatObservedTurn(
+                                id: turnID,
+                                state: payload?["type"]?.string == "turn_aborted" ? .interrupted : .completed
+                            )
+                        }
+                    default: break
+                    }
+                }
+                if payload?["type"]?.string == "turn_aborted" {
+                    assembler.append(ChatMessage(
+                        id: "line-\(seq)", seq: seq, role: .system, timestamp: timestamp,
+                        kind: .status(ChatStatusTransition(event: .interrupted))
+                    ))
+                }
             case "response_item":
                 appendResponseItem(payload, seq: seq, timestamp: timestamp, into: &assembler)
             default:

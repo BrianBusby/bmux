@@ -23,6 +23,8 @@ struct PanelContentView: View {
     let customSidebarUnread: SidebarUnreadModel = TerminalNotificationStore.shared.sidebarUnread
     let hasUnreadNotification: Bool
     let terminalAgentContext: String
+    var onStartConnectedSession: (() async throws -> Void)? = nil
+    var terminalChatReader: (any TerminalChatReading)? = nil
     var workProvenanceRuntime: WorkProvenanceRuntime? = nil
     /// Explicit browser pane-ownership signal for hosts whose panels live outside
     /// the main `Workspace` tree (the Dock). `nil` keeps the main-area behavior.
@@ -56,6 +58,8 @@ struct PanelContentView: View {
                     hasUnreadNotification: hasUnreadNotification,
                     terminalAgentContext: terminalAgentContext,
                     stableWorkspaceId: stableWorkspaceId ?? workspaceId,
+                    onStartConnectedSession: onStartConnectedSession,
+                    terminalChatReader: terminalChatReader,
                     workProvenanceRuntime: workProvenanceRuntime,
                     onFocus: onFocus,
                     onResumeAgentHibernation: onResumeAgentHibernation,

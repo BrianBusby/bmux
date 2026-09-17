@@ -173,7 +173,7 @@ class TabManager: ObservableObject {
     // side effects in didSet).
     let workspaces = WorkspacesModel<Workspace>()
     private var workspacesById: [UUID: Workspace] = [:]
-    var workProvenanceRuntime: WorkProvenanceRuntime?
+    let sessionPresentation = WindowSessionPresentation()
 
     var tabs: [Workspace] {
         get { workspaces.tabs }

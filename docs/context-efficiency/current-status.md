@@ -15,18 +15,24 @@ or caveat changes. Shared milestone, gate, ownership, roadmap, and policy
 changes belong in root `project/project-state.yaml`. The old
 `project/shared-project-source.yaml` pointer is obsolete.
 
-Process Integrity is the primary active frontier. Repo-local `current_work` is
-`none_selected` after PR #101 reconciled the mobile-host/presence lifecycle
-migration. The completed and validated Process Integrity slices remain:
-`deterministic_app_runtime_composition` from PR #97,
-`post_merge_project_truth_reconciliation` from PR #98, and
-`app_runtime_service_lifecycle_migration` from PR #100. PR #99 and PR #101 are
-historical evidence that the post-merge reconciliation loop works.
+The user-selected implementation is `shared_session_chat`, tracked in the root
+manifests. See [the shared-session control decision](../product/shared-session-control-decision.md)
+for the capability matrix and evidence. Shared ordinary-CLI control remains
+unproven; read-only Chat is implemented and under observation, with local
+transport, transcript, native bridge and tagged macOS evidence in that decision.
+Broader provider/recovery acceptance and all shared controls remain open. A new
+shared-host TUI probe accepted a second-client prompt, but a stale interrupt
+with an old turn ID stopped a newer turn in Codex 0.154.0. This is a provider
+control gate failure. The user subsequently authorized opt-in newly connected
+sessions. Queue and expected-turn steering are implemented with live transport proof on
+`connected-session-controls`; corrected native launch UI acceptance remains blocked by `cgWindowNotFound`, and interrupt remains disabled. The original
+`shared-session-chat` dogfood build must remain running and untouched.
+Process Integrity remains the broader frontier and its completed slices remain
+unchanged. This assignment does not authorize unrelated cleanup.
 
 The remaining patched-area audit backlog is now represented in Project Truth.
 The selected next Process Integrity slice is
-`app_runtime_browser_devtools_lifecycle_migration`; no implementation branch is
-active. The planning snapshot and grouping rationale live in
+`app_runtime_browser_devtools_lifecycle_migration`; that backlog is not being implemented in the Chat branch. The planning snapshot and grouping rationale live in
 [`docs/process-integrity/remaining-patch-audit-backlog.md`](../process-integrity/remaining-patch-audit-backlog.md),
 with detailed historical context in the runtime composition and mobile-host
 audit documents.
@@ -85,12 +91,11 @@ evidence uses that provider turn instead of a synthetic hook turn, transcript
 prompt IDs canonicalize by provider turn when available, and prompt-only
 transcript backfill no longer creates duplicate transcript-specific turns.
 
-Three-view session boundary: one coding-agent session should be viewable as
-Native, Terminal, and Session. Native is the provider-native surface and escape
-hatch. Terminal is bmux's React live interaction surface, building on
-`agent-chat`. Session is a separate React smart summary surface backed by PE
-factual and semantic models. bmux should not turn Terminal into a semantic
-engine or build parallel Swift and React Smart Session products.
+Three-view session boundary: Terminal is the original provider CLI, Chat is the
+styled conversation with connection-scoped capabilities, and Session is the
+PE-backed work overview. The old Native/Terminal labels are historical; renderer
+identifiers and persisted selections must retain their existing meanings.
+Chat never owns the original terminal process and PE is not a control transport.
 
 Normal terminal Codex rich evidence is implemented for active bmux-managed
 Codex sessions under the current factual evidence contract. Historical import

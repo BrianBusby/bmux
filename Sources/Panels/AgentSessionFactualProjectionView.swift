@@ -77,6 +77,7 @@ enum AgentSessionFactualProjectionEvidenceRows {
 
 struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     let showsSwitcher: Bool
+    var chatContent: ((_ onTerminal: @escaping () -> Void) -> AnyView)? = nil
     let stableWorkspaceID: UUID?
     let workProvenanceRuntime: WorkProvenanceRuntime?
     let backgroundColor: NSColor
@@ -131,6 +132,10 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
                 .allowsHitTesting(primaryContentIsVisible)
                 .accessibilityHidden(!primaryContentIsVisible)
 
+            if let chatContent, viewMode == .chat {
+                chatContent { viewMode = .terminal }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
             if showsSessionContent {
                 AgentSessionFactualProjectionView(
                     result: factualProjectionResult,
@@ -153,19 +158,19 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     }
 
     private var primaryContentIsVisible: Bool {
-        !showsSessionContent
+        !showsSessionContent && viewMode != .chat
     }
 
     private var modePicker: some View {
         HStack(spacing: 8) {
             Picker("", selection: $viewMode) {
-                ForEach(AgentSessionFactualProjectionMode.allCases) { mode in
+                ForEach(AgentSessionFactualProjectionMode.allCases.filter { $0 != .chat || chatContent != nil }) { mode in
                     Text(mode.title).tag(mode)
                 }
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: 180)
+            .frame(width: chatContent == nil ? 180 : 260)
 
             Spacer(minLength: 0)
         }
@@ -221,6 +226,7 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
 
 private enum AgentSessionFactualProjectionMode: String, CaseIterable, Identifiable {
     case terminal
+    case chat
     case session
 
     var id: String { rawValue }
@@ -229,6 +235,8 @@ private enum AgentSessionFactualProjectionMode: String, CaseIterable, Identifiab
         switch self {
         case .terminal:
             String(localized: "agentSession.viewMode.terminal", defaultValue: "Terminal")
+        case .chat:
+            String(localized: "agentSession.viewMode.chat", defaultValue: "Chat")
         case .session:
             String(localized: "agentSession.viewMode.session", defaultValue: "Session")
         }

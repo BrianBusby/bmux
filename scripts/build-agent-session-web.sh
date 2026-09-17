@@ -26,8 +26,7 @@ run_esbuild() {
 
 run_tailwindcss() {
   if [ -x "$ROOT/node_modules/.bin/tailwindcss" ]; then
-    NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--preserve-symlinks --preserve-symlinks-main" \
-      "$ROOT/node_modules/.bin/tailwindcss" "$@"
+    bun "$ROOT/node_modules/@tailwindcss/cli/dist/index.mjs" "$@"
   else
     bunx tailwindcss "$@"
   fi

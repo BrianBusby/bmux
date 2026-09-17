@@ -31,6 +31,8 @@ export type AgentSessionTheme = {
 };
 
 export type AppContext = {
+  readOnlyTerminalChat?: boolean;
+  canStartConnectedSession?: boolean;
   panelId: string;
   workspaceId: string;
   stableWorkspaceId?: string;
@@ -51,6 +53,38 @@ export type AgentSessionRateLimitRow = {
 };
 
 export type AgentSessionCopy = {
+  connectedPrompt?: string;
+  connectedQueue?: string;
+  connectedSteer?: string;
+  connectedPending?: string;
+  connectedAccepted?: string;
+  connectedFailed?: string;
+  connectedUncertain?: string;
+  connectedSlashCommands?: string;
+  connectedQueuePolicy?: string;
+  connectedUnavailable?: string;
+  connectedNewSession?: string;
+  connectedStartFailed?: string;
+
+  chatLoading?: string;
+  chatObserved?: string;
+  chatAmbiguous?: string;
+  chatInterrupted?: string;
+  chatEnded?: string;
+  chatStale?: string;
+  chatUnavailable?: string;
+  chatInteract?: string;
+  chatConversation?: string;
+  chatPartial?: string;
+  chatReadOnly?: string;
+  chatUser?: string;
+  chatAssistant?: string;
+  chatActivity?: string;
+  chatFailed?: string;
+  chatCompleted?: string;
+  chatAwaitingResult?: string;
+  chatUnknown?: string;
+
   start: string;
   stop: string;
   send: string;

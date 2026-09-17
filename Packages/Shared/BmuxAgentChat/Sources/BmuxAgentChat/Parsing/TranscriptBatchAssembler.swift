@@ -4,6 +4,7 @@ import Foundation
 /// the right place: in-batch messages are completed in place, messages from
 /// earlier calls are re-emitted as updates.
 struct TranscriptBatchAssembler {
+    var observedTurn: ChatObservedTurn?
     private var messages: [ChatMessage] = []
     private var updatedMessages: [ChatMessage] = []
     private var rawTerminalOutputs: [ChatRawTerminalOutputRecord] = []
@@ -31,6 +32,7 @@ struct TranscriptBatchAssembler {
         tokenOptimizationMode: TokenOptimizationMode = .balanced
     ) {
         self.pending = state.pendingToolUses
+        self.observedTurn = state.observedTurn
         self.budget = budget
         self.tokenOptimizationMode = tokenOptimizationMode
     }
@@ -92,7 +94,8 @@ struct TranscriptBatchAssembler {
             updatedMessages: updatedMessages,
             state: ChatTranscriptParseState(
                 pendingToolUses: Self.bounded(pending),
-                lastTimestamp: lastTimestamp
+                lastTimestamp: lastTimestamp,
+                observedTurn: observedTurn
             ),
             rawTerminalOutputs: rawTerminalOutputs
         )

@@ -14,7 +14,7 @@ final class AgentChatTranscriptService {
 
     let registry: AgentChatSessionRegistry
     let resolver: AgentChatTranscriptResolver
-    private let rawOutputStore: ChatRawTerminalOutputFileStore
+    let rawOutputStore: ChatRawTerminalOutputFileStore
     private let tokenOptimizationModeProvider: () -> TokenOptimizationMode
     private var tailers: [String: AgentChatTranscriptTailer] = [:]
     private struct ActiveSubsessionWorkspace {
@@ -418,14 +418,18 @@ final class AgentChatTranscriptService {
     ///   - limit: Page size cap.
     /// - Returns: The page, or `nil` when the session or transcript is
     ///   unknown.
-    func history(sessionID: String, beforeSeq: Int?, limit: Int) async -> ChatHistoryPage? {
+    func history(sessionID: String, beforeSeq: Int?, limit: Int, refresh: Bool = false) async -> ChatHistoryPage? {
         guard let record = registry.record(sessionID: sessionID) else { return nil }
         // A user opening the chat is the right moment to retry a previously
         // failed transcript resolution.
         failedResolutions.remove(sessionID)
         guard let tailer = ensureTailer(for: record) else { return nil }
         await tailer.start()
-        let page = await tailer.history(beforeSeq: beforeSeq, limit: limit)
+        let page = if refresh {
+            await tailer.refreshHistory(beforeSeq: beforeSeq, limit: limit)
+        } else {
+            await tailer.history(beforeSeq: beforeSeq, limit: limit)
+        }
         if record.title == nil, let title = await tailer.title {
             registry.update(sessionID: sessionID) { $0.title = title }
         }

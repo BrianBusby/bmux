@@ -68,6 +68,8 @@ import {
 } from "./proseMirrorPromptEditor";
 import { SmartSessionSurface } from "./SmartSessionSurface";
 
+import { TerminalChatSurface } from "./TerminalChatSurface";
+
 const h = React.createElement;
 
 const USER_MESSAGE_COLLAPSED_LINE_COUNT = 20;
@@ -271,6 +273,7 @@ export function AgentSessionApp() {
   useInitialData(dispatch);
   useNativeEvents(dispatch);
   useAutoStart(state, dispatch);
+  if (state.context?.readOnlyTerminalChat) return h(TerminalChatSurface, { context: state.context });
   return h(
     "div",
     { className: "agent-view-root", "data-active-view": viewMode },
@@ -318,7 +321,7 @@ function AgentSessionViewSwitcher({
         "data-active": mode === "terminal" ? "true" : undefined,
         onClick: () => onModeChange("terminal"),
       },
-      copy?.terminalView ?? "Terminal",
+      copy?.terminalView ?? "Chat",
     ),
     h(
       "button",
@@ -771,7 +774,8 @@ function SessionSurface({
             className:
               `codex-action codex-stop ${CODEX_BUTTON_BASE} ${CODEX_BUTTON_GHOST} ${CODEX_BUTTON_COMPOSER} ${CODEX_BUTTON_UNIFORM} rounded-full`,
             type: "button",
-            "aria-label": state.context?.copy.stop ?? "Stop",
+            "aria-label": state.context?.copy.stop ?? "End session",
+            title: state.context?.copy.stop ?? "End session",
             onClick: () => void stopProvider(state, dispatch),
           },
           stopIcon(),

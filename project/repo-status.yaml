@@ -22,6 +22,9 @@ execution_telemetry:
   live_codex_evidence_convergence_correctness: implemented
 
 local_capabilities:
+  ordinary_cli_read_only_chat: under_observation
+  ordinary_cli_shared_control: not_implemented
+  connected_codex_shared_host_controls: under_observation
   provenance_engine_public_in_process_sdk: implemented
   provenance_engine_sqlite_store: implemented
   provenance_engine_immutable_ledger: implemented
@@ -122,6 +125,12 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: connected_codex_delivery_and_recovery_verification
+    status: open
+  - id: shared_host_codex_stale_interrupt
+    status: open
+  - id: ordinary_cli_shared_control_unverified
+    status: open
   - id: broad_legacy_storage_migration
     status: open
   - id: residual_app_runtime_lifecycle_ownership
