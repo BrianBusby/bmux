@@ -73,7 +73,12 @@ final class TerminalChatRuntime: TerminalChatConnecting {
             }
             // A timeout or malformed reply does not necessarily disconnect the socket.
             // Reconcile from provider evidence on healthy refreshes too; never resend.
+            let uncertainIDs = Set(await actionOwner.actionSnapshot().filter { $0.delivery == .uncertain }.map(\.id))
             try await actionOwner.reconcile()
+            let reconciled = await actionOwner.actionSnapshot()
+            if reconciled.contains(where: { uncertainIDs.contains($0.id) && $0.delivery == .accepted && drafts[surfaceID] == $0.text }) {
+                drafts[surfaceID] = ""
+            }
             let providerState = thread["status"] as? [String: Any]
             let history = snapshot["history"] as? [String: Any]
             let turn = history?["observed_turn"] as? [String: Any]

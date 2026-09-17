@@ -15,9 +15,15 @@ export function ConnectedChatComposer({ context, control, enabled }: { context: 
   const copy = context.copy;
   const observed = action && control.actions?.find(item => item.id.toLowerCase() === action.id.toLowerCase());
   const latest = observed ?? action ?? control.actions?.at(-1);
+  const previousReceipt = useRef(latest);
   useEffect(() => {
-    if (latest?.delivery === "accepted") setDraft(current => current === latest.text ? "" : current);
-  }, [latest?.id, latest?.delivery, latest?.text]);
+    const previous = previousReceipt.current;
+    previousReceipt.current = latest;
+    // An accepted historical action must not erase a newly restored draft.
+    if (latest?.delivery === "accepted" && previous?.id === latest.id && previous.delivery !== "accepted") {
+      setDraft(current => current === latest.text ? "" : current);
+    }
+  }, [latest]);
   const blocked = sending || latest?.delivery === "pending" || latest?.delivery === "uncertain";
   const slashCommand = draft.trimStart().startsWith("/");
   const submit = async (operation: "queue" | "steer") => {
