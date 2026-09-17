@@ -20,7 +20,7 @@ test("reload restores an uncertain draft without resending, then reconciles acce
   const context = { copy } as AppContext;
   const control: ConnectedControl = { threadId: "original", status: "connected", queueFollowUp: true,
     actions: [{ id: "request-1", threadID: "original", operation: "queue", text: "Inspect the build", delivery: "uncertain" }] };
-  const root = createRoot(dom.window.document.getElementById("root")!);
+  let root = createRoot(dom.window.document.getElementById("root")!);
   try {
     await act(async () => root.render(<ConnectedChatComposer context={context} control={control} enabled />));
     expect(dom.window.document.querySelector("textarea")?.value).toBe("Inspect the build");
@@ -34,6 +34,11 @@ test("reload restores an uncertain draft without resending, then reconciles acce
     expect(dom.window.document.querySelector("textarea")?.value).toBe("");
     expect(dom.window.document.body.textContent).toContain("Accepted");
     expect(calls).toEqual([]);
+    await act(async () => root.unmount());
+    root = createRoot(dom.window.document.getElementById("root")!);
+    await act(async () => root.render(<ConnectedChatComposer context={context} control={{ ...control, draft: "Inspect the build",
+      actions: control.actions!.map(action => ({ ...action, delivery: "accepted" })) }} enabled />));
+    expect(dom.window.document.querySelector("textarea")?.value).toBe("Inspect the build");
     const terminal = [...dom.window.document.querySelectorAll("button")].find(button => button.textContent === "Interact in Terminal")!;
     await act(async () => terminal.click());
     expect(calls).toEqual(["terminalChat.openTerminal"]);
