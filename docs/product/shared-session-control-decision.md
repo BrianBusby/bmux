@@ -96,7 +96,7 @@ The existing React shell, theme, sanitized Markdown and native trusted-frame
 bridge are reused. Messages are chronological; the Session prior-turn overview
 keeps its existing order. Tool IDs survive late results; bounded snapshots
 replace the window rather than appending replayed events. Transcript truncation
-replaces old rows, and failed reads explicitly label retained content stale.
+replaces old rows and changes the source revision to clear cached row output, and failed reads explicitly label retained content stale.
 
 The current consumer shows the newest 500 messages with an explicit partial
 history notice. Tool output expands in chunks and reads retained raw command

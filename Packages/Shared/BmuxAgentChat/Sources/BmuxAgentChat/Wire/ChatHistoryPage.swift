@@ -14,6 +14,9 @@ public struct ChatHistoryPage: Sendable, Equatable, Codable {
     /// Latest provider-authored turn state; independent of the paged message window.
     public let observedTurn: ChatObservedTurn?
 
+    /// Changes when the transcript source is replaced or the tailer is recreated.
+    public let sourceRevision: String?
+
     /// Creates a history page.
     ///
     /// - Parameters:
@@ -24,12 +27,14 @@ public struct ChatHistoryPage: Sendable, Equatable, Codable {
         messages: [ChatMessage],
         hasMore: Bool,
         terminalBlocks: [TerminalCommandBlock]? = nil,
-        observedTurn: ChatObservedTurn? = nil
+        observedTurn: ChatObservedTurn? = nil,
+        sourceRevision: String? = nil
     ) {
         self.messages = messages
         self.hasMore = hasMore
         self.terminalBlocks = terminalBlocks
         self.observedTurn = observedTurn
+        self.sourceRevision = sourceRevision
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -37,5 +42,6 @@ public struct ChatHistoryPage: Sendable, Equatable, Codable {
         case hasMore = "has_more"
         case terminalBlocks = "terminal_blocks"
         case observedTurn = "observed_turn"
+        case sourceRevision = "source_revision"
     }
 }

@@ -11,10 +11,11 @@ test("read-only Chat renders authoritative content and only opens its terminal",
   const previousDocument = globalThis.document;
   Object.assign(globalThis, { window: dom.window, document: dom.window.document, IS_REACT_ACT_ENVIRONMENT: true });
   const calls: string[] = [];
+  let sourceRevision = "original";
   Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: { postMessage: async (request: { method: string }) => {
     calls.push(request.method);
     return { ok: true, value: { status: "observed", sessionId: "thread", workspaceId: "workspace", surfaceId: "surface",
-      history: { has_more: false, messages: [
+      history: { has_more: false, source_revision: sourceRevision, messages: [
         { id: "prompt", seq: 1, role: "user", kind: { type: "prose", text: "Review the roof inspection" } },
         { id: "answer", seq: 2, role: "agent", kind: { type: "prose", text: "<script>unsafe()</script> Ready" } },
         { id: "tool", seq: 3, role: "agent", kind: { type: "terminal", command: "cat report.txt", output: "Inspection complete\n".repeat(1000), exit_code: 0 } },
@@ -34,9 +35,15 @@ test("read-only Chat renders authoritative content and only opens its terminal",
     const more = [...dom.window.document.querySelectorAll("button")].find(button => button.textContent === "Show more")!;
     await act(async () => more.click());
     expect(dom.window.document.querySelector("pre")?.textContent?.length).toBe(20000);
+    await act(async () => root.render(<TerminalChatSurface context={{ ...context }} />));
+    expect(dom.window.document.querySelector("pre")?.textContent?.length).toBe(20000);
+    sourceRevision = "replacement";
+    await act(async () => root.render(<TerminalChatSurface context={{ ...context }} />));
+    expect(dom.window.document.querySelector("pre")?.textContent?.length).toBe(8192);
+    expect(dom.window.document.querySelectorAll("details")).toHaveLength(1);
     const fallback = [...dom.window.document.querySelectorAll("button")].find(button => button.textContent === "Interact in Terminal")!;
     await act(async () => fallback.click());
-    expect(calls).toEqual(["terminalChat.snapshot", "terminalChat.openTerminal"]);
+    expect(calls).toEqual(["terminalChat.snapshot", "terminalChat.snapshot", "terminalChat.snapshot", "terminalChat.openTerminal"]);
   } finally {
     await act(async () => root.unmount());
     dom.window.close();

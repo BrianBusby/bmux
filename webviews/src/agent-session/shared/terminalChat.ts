@@ -29,7 +29,7 @@ export type TerminalChatSnapshot = {
   sessionId?: string;
   workspaceId?: string;
   surfaceId?: string;
-  history?: { messages: ObservedMessage[]; has_more: boolean; observed_turn?: ObservedTurn };
+  history?: { messages: ObservedMessage[]; has_more: boolean; observed_turn?: ObservedTurn; source_revision?: string };
 };
 export type TerminalChatState = {
   status: "loading" | "observed" | "ended" | "stale" | "unavailable";
@@ -37,6 +37,7 @@ export type TerminalChatState = {
   messages: ObservedMessage[];
   partial: boolean;
   observedTurn?: ObservedTurn;
+  sourceRevision?: string;
   reason?: "ambiguous" | "unassociated" | "historyUnavailable";
 };
 export const initialTerminalChat: TerminalChatState = { status: "loading", messages: [], partial: false };
@@ -62,7 +63,7 @@ export function reconcileTerminalChat(previous: TerminalChatState, snapshot: Ter
   const byId = new Map(snapshot.history.messages.map(message => [message.id, message]));
   const ordered = [...byId.values()].sort((a, b) => a.seq - b.seq);
   return {
-    status: snapshot.status, sessionId: snapshot.sessionId, observedTurn: snapshot.history.observed_turn,
+    status: snapshot.status, sessionId: snapshot.sessionId, observedTurn: snapshot.history.observed_turn, sourceRevision: snapshot.history.source_revision,
     messages: ordered.slice(-500), partial: snapshot.history.has_more || ordered.length > 500,
   };
 }

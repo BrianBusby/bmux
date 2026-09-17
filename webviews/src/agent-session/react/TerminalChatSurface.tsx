@@ -42,7 +42,7 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
     <section className="terminal-chat-history" ref={scroll} tabIndex={0} aria-label={copy.chatConversation}
       onScroll={() => { const node = scroll.current; if (node) following.current = node.scrollHeight - node.scrollTop - node.clientHeight < 48; }}>
       {state.partial && <p className="terminal-chat-notice">{copy.chatPartial}</p>}
-      <div className="terminal-chat-messages" key={state.sessionId}>
+      <div className="terminal-chat-messages" key={`${state.sessionId}:${state.sourceRevision}`}>
         {state.messages.map(message => <ObservedRow key={message.id} message={message} context={context} sessionId={state.sessionId!} />)}
       </div>
     </section>
