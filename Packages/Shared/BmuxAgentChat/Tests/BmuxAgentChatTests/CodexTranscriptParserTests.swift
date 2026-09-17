@@ -20,6 +20,23 @@ struct CodexTranscriptParserTests {
         #expect(status.event == .interrupted)
     }
 
+    @Test
+    func observedTurnRequiresProviderEventsAndIgnoresAnOlderTurnCompletion() {
+        let parser = CodexTranscriptParser()
+        let started = parser.parse(lines: [line(type: "event_msg", payload: ["type": "task_started", "turn_id": "current"])], startingSeq: 0)
+        #expect(started.state.observedTurn == ChatObservedTurn(id: "current", state: .working))
+        let prose = parser.parse(lines: [messageLine(role: "assistant", texts: ["Still working"])], startingSeq: 1, state: started.state)
+        #expect(prose.state.observedTurn?.state == .working)
+        let late = parser.parse(lines: [line(type: "event_msg", payload: ["type": "task_complete", "turn_id": "older"])], startingSeq: 2, state: prose.state)
+        #expect(late.state.observedTurn?.state == .working)
+        let completed = parser.parse(lines: [line(type: "event_msg", payload: ["type": "task_complete", "turn_id": "current"])], startingSeq: 3, state: late.state)
+        #expect(completed.state.observedTurn?.state == .completed)
+        let replay = parser.parse(lines: [line(type: "event_msg", payload: ["type": "task_started", "turn_id": "current"])], startingSeq: 4, state: completed.state)
+        #expect(replay.state.observedTurn?.state == .completed)
+        let reset = parser.parse(lines: [messageLine(role: "user", texts: ["New transcript"])], startingSeq: 0)
+        #expect(reset.state.observedTurn == nil)
+    }
+
     private let parser = CodexTranscriptParser()
 
     private func line(

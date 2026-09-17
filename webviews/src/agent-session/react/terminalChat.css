@@ -1,0 +1,17 @@
+.terminal-chat { --chat-gap: 18px; --chat-radius: 10px; display:flex; flex-direction:column; height:100%; min-height:0; color:var(--agent-text); background:var(--agent-page-bg); font:14px/1.6 system-ui,sans-serif; }
+.terminal-chat-header,.terminal-chat-footer { padding:10px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid color-mix(in srgb,currentColor 12%,transparent); font-size:12px; }
+.terminal-chat-footer { border-top:1px solid color-mix(in srgb,currentColor 12%,transparent); border-bottom:0; opacity:.75; }
+.terminal-chat-history { overflow:auto; flex:1; min-height:0; padding:20px; overflow-anchor:auto; }
+.terminal-chat-messages { max-width:850px; margin:auto; display:flex; flex-direction:column; gap:var(--chat-gap); }
+.terminal-chat-message { padding:12px 16px; overflow-wrap:anywhere; }
+.terminal-chat-user { border-radius:var(--chat-radius); background:color-mix(in srgb,currentColor 6%,transparent); }
+.terminal-chat-role { display:block; font-size:11px; opacity:.65; margin-bottom:6px; }
+.terminal-chat-prose { white-space:pre-wrap; }
+.terminal-chat-prose p { margin:0 0 12px; }
+.terminal-chat-tool { border:1px solid color-mix(in srgb,currentColor 12%,transparent); border-radius:var(--chat-radius); padding:8px 12px; }
+.terminal-chat-tool summary { cursor:pointer; overflow-wrap:anywhere; }
+.terminal-chat-tool-status { font-size:11px; opacity:.65; margin-left:12px; }
+.terminal-chat pre { font:12px/1.5 ui-monospace,monospace; white-space:pre-wrap; overflow-wrap:anywhere; max-height:420px; overflow:auto; }
+.terminal-chat button { color:inherit; background:color-mix(in srgb,currentColor 5%,transparent); border:1px solid color-mix(in srgb,currentColor 18%,transparent); border-radius:6px; padding:5px 10px; cursor:pointer; }
+.terminal-chat :focus-visible { outline:2px solid Highlight; outline-offset:3px; }
+.terminal-chat-notice { font-size:12px; opacity:.7; max-width:850px; margin:0 auto 16px; }

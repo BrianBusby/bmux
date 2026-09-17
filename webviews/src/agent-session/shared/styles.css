@@ -1,4 +1,5 @@
 @import "tailwindcss" source(none);
+@import "../react/terminalChat.css";
 
 @source "../react/**/*.ts";
 @source "../solid/**/*.ts";

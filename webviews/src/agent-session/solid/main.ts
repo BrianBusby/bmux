@@ -290,12 +290,13 @@ function SessionSurface({
   stop.className =
     `codex-action codex-circle-action ${CODEX_BUTTON_BASE} ${CODEX_BUTTON_GHOST} ${CODEX_BUTTON_COMPOSER} ${CODEX_BUTTON_UNIFORM} rounded-full`;
   stop.type = "button";
-  stop.setAttribute("aria-label", "Stop");
+  stop.setAttribute("aria-label", "End session");
   stop.addEventListener("click", () => void stopProvider(state(), dispatch));
   stop.append(stopIcon());
   controlsRight.append(stop);
   createEffect(() => {
-    stop.setAttribute("aria-label", state().context?.copy.stop ?? "Stop");
+    stop.setAttribute("aria-label", state().context?.copy.stop ?? "End session");
+    stop.title = state().context?.copy.stop ?? "End session";
     const showStop = canStop();
     stop.hidden = !showStop;
     stop.disabled = !showStop;

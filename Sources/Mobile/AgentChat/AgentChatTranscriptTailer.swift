@@ -117,6 +117,15 @@ actor AgentChatTranscriptTailer {
         watcher = nil
     }
 
+    /// Reconciles file growth before a pull consumer reads the cached page.
+    /// File watcher delivery alone is not a freshness guarantee.
+    func refreshHistory(beforeSeq: Int?, limit: Int) async -> ChatHistoryPage? {
+        guard let handle = FileHandle(forReadingAtPath: path) else { return nil }
+        try? handle.close()
+        await drainNewContent()
+        return history(beforeSeq: beforeSeq, limit: limit)
+    }
+
     /// Serves one history page from the cache, keeping equal-seq groups
     /// whole at page boundaries.
     ///
@@ -145,7 +154,8 @@ actor AgentChatTranscriptTailer {
         // history is on your Mac" cell instead of looping.
         return ChatHistoryPage(
             messages: page,
-            hasMore: start > eligible.startIndex || headTruncated
+            hasMore: start > eligible.startIndex || headTruncated,
+            observedTurn: parseState.observedTurn
         )
     }
 

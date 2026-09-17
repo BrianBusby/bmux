@@ -3,10 +3,14 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id:
-    title:
-    state: none_selected
-  state: none_selected
+    id: shared_session_chat
+    title: Shared-session Chat and permanent Terminal
+    state: open
+    owner: bmux
+    active_agent: codex
+    active_branch: shared-session-chat
+    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/shared-session-chat
+  state: active
 
 execution_telemetry:
   provider_neutral_contract: implemented
@@ -25,6 +29,8 @@ execution_telemetry:
   live_codex_evidence_convergence_correctness: implemented
 
 local_capabilities:
+  ordinary_cli_read_only_chat: under_observation
+  ordinary_cli_shared_control: not_implemented
   provenance_engine_public_in_process_sdk: implemented
   provenance_engine_sqlite_store: implemented
   provenance_engine_immutable_ledger: implemented
@@ -125,6 +131,8 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: ordinary_cli_shared_control_unverified
+    status: open
   - id: broad_legacy_storage_migration
     status: open
   - id: residual_app_runtime_lifecycle_ownership

@@ -22,19 +22,24 @@ public struct ChatTranscriptParseState: Sendable, Equatable, Codable {
     /// for subsequent lines that omit a timestamp.
     public var lastTimestamp: Date?
 
+    /// Latest explicit provider turn lifecycle, if the source supplies it.
+    public var observedTurn: ChatObservedTurn?
+
     /// Creates parse carry-over state.
     ///
     /// - Parameters:
     ///   - pendingToolUses: Tool invocations awaiting a result, keyed by
     ///     tool call identifier.
     ///   - lastTimestamp: Timestamp fallback for lines without one.
-    public init(pendingToolUses: [String: [ChatMessage]] = [:], lastTimestamp: Date? = nil) {
+    public init(pendingToolUses: [String: [ChatMessage]] = [:], lastTimestamp: Date? = nil, observedTurn: ChatObservedTurn? = nil) {
         self.pendingToolUses = pendingToolUses
         self.lastTimestamp = lastTimestamp
+        self.observedTurn = observedTurn
     }
 
     private enum CodingKeys: String, CodingKey {
         case pendingToolUses = "pending_tool_uses"
         case lastTimestamp = "last_timestamp"
+        case observedTurn = "observed_turn"
     }
 }

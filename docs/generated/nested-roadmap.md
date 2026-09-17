@@ -20,7 +20,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Active Implementation
 
-- None.
+- Shared-session Chat and permanent Terminal (`shared_session_chat`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Selected Next
 
@@ -51,13 +51,13 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
   - Legacy Bmux-Local Provenance Caller Inventory and Retirement Plan (`legacy_bmux_provenance_caller_inventory`) is not dependency-satisfying
   - Legacy Bmux-Local Provenance Caller Inventory and Retirement Plan (`legacy_bmux_provenance_caller_inventory`) has maturity ready; requires validated for gate `legacy_inventory_validated`: Cleanup must wait for an explicit caller inventory PE replacement map and rollback/data-preservation decision.
 - Monorepo Migration Ledger Disposition Closure (`monorepo_migration_ledger_disposition_closure`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
-- React Terminal live interaction productization (`react_terminal_productization`) - maturity: captured; status: planned; selection: planned; owner: Bmux
+- React Chat live interaction productization (`react_terminal_productization`) - maturity: captured; status: planned; selection: planned; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - Clickable semantic explanation UI (`clickable_semantic_explanation_ui`) - maturity: captured; status: planned; selection: planned; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - Three-view session navigation (`three_view_session_navigation`) - maturity: gated; status: planned; selection: planned; owner: Bmux
-  - React Terminal live interaction productization (`react_terminal_productization`) is not dependency-satisfying
-  - React Terminal live interaction productization (`react_terminal_productization`) has maturity captured; requires validated for gate `terminal_productized`: Three-view navigation should preserve identity across a productized Terminal surface, not an unfinished live-interaction direction.
+  - React Chat live interaction productization (`react_terminal_productization`) is not dependency-satisfying
+  - React Chat live interaction productization (`react_terminal_productization`) has maturity captured; requires validated for gate `terminal_productized`: Three-view navigation should preserve identity across a productized Chat surface, not an unfinished live-interaction direction.
 - Knowledge Compiler cross-session bridge (`knowledge_compiler_cross_session_bridge`) - maturity: gated; status: deferred; selection: deferred; owner: Provenance Engine
   - Local Knowledge Compiler (`knowledge_compiler_outcomes`) is not dependency-satisfying
   - Local Knowledge Compiler (`knowledge_compiler_outcomes`) has maturity gated; requires active for gate `compiler_implementation_available`: Cross-session outcomes cannot be promoted into durable knowledge until the Knowledge Compiler exists.
@@ -645,7 +645,12 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Execution notes: PR #49 is factual-only Swift/native UI and should not be counted as satisfying React Smart Session or clickable semantic explanation behavior.
           Evidence: BrianBusby/bmux@6fe54d5411fe, BrianBusby/bmux@1c1281d7b58d, BrianBusby/bmux#49 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Records the completed bmux factual Session view work as a prerequisite PE factual-projection consumer. The native view is useful inspection/debug scaffolding and data-access foundation, but the intended user-facing Smart Session surface is React and remains separate from the React Terminal transcript/live interaction surface.
-        - **React Terminal live interaction productization** (`react_terminal_productization`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: execution telemetry; layer: consumer presentation; execution: planned / Bmux; parallelism: safe; delivery: proposed; acceptance: proposed; maturity: captured
+        - **Shared-session Chat and permanent Terminal** (`shared_session_chat`) - slice; status: active; owner: Bmux; repositories: Bmux; concept: execution telemetry; layer: consumer presentation; execution: current / Bmux; parallelism: serial; delivery: proposed; acceptance: under observation; maturity: active
+          Worktree required: true
+          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/shared-session-chat`; branch: `shared-session-chat`; agent: `codex`
+          Execution notes: User-authorized read-only ordinary CLI view proceeds independently of unproven shared control; existing Process Integrity backlog remains deferred for this assignment.
+          Rationale: Preserve the original PTY and reuse transcript observation for Chat. Ordinary Codex 0.154.0 attachment via app-server proxy failed because no control socket exists; submit, steer, queue, interrupt, approvals, questions and settings remain gated. See docs/product/shared-session-control-decision.md. Read-only native UI, late output, view continuity and raw-terminal interruption were exercised; Codex turn states use explicit provider events. Older-history paging, broader recovery acceptance and shared controls remain open. This does not complete React Chat productization or three-view control acceptance.
+        - **React Chat live interaction productization** (`react_terminal_productization`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: execution telemetry; layer: consumer presentation; execution: planned / Bmux; parallelism: safe; delivery: proposed; acceptance: proposed; maturity: captured
           Enables: `three_view_session_navigation`
           Expected contract domains: `agent_chat_live_event_schema`, `provider_runtime_identity`, `native_webview_surface_lifecycle`
           Expected code areas: `agent-chat`, `Sources/Panels/AgentSessionWebRenderer.swift`, `Sources/Panels/AgentSessionWebRendererCoordinator.swift`, `Sources/Panels/AgentSessionPanel.swift`, `Sources/Panels/BrowserPanelView.swift`
@@ -653,7 +658,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Contract dependencies: `codex_app_server_live_events`, `bmux_browser_surface_hosting`
           Worktree required: true
           Conflict note: Can proceed in parallel with PE semantic work when it remains focused on live interaction, provider controls, runtime identity, and surface lifecycle rather than Smart Session inference.
-          Rationale: Productize the existing agent-chat React surface as bmux's Terminal view for live conversation, streaming, tool lifecycle, controls, interrupts, and provider-normalized interaction. It must not become the Smart Session semantic summary surface or duplicate PE inference.
+          Rationale: Productize the existing agent-chat React surface as bmux's Chat view for live conversation, streaming, tool lifecycle, controls, interrupts, and provider-normalized interaction. It must not become the Smart Session semantic summary surface or duplicate PE inference.
         - **React Smart Session foundation** (`react_smart_session_foundation`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: semantic understanding; layer: consumer presentation; execution: complete / Bmux; parallelism: conditional; delivery: merged; acceptance: under observation; maturity: validated
           Depends on: `factual_agent_session_view`, `human_readable_semantic_messaging`
           Enables: `clickable_semantic_explanation_ui`, `react_smart_session_initial_work_model_consumer`, `react_smart_session_work_model_consumer`, `three_view_session_navigation`
@@ -706,8 +711,8 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Contract dependencies: `react_terminal_surface_identity`, `react_smart_session_surface_identity`, `provider_thread_identity`
           Worktree required: true
           Conflict note: Depends on productized Terminal and Smart Session foundations so switching preserves one underlying agent session instead of creating separate conceptual sessions.
-          Gate `terminal_productized`: requires `react_terminal_productization` maturity validated; reason: Three-view navigation should preserve identity across a productized Terminal surface, not an unfinished live-interaction direction.
-          Rationale: Provide coherent switching among Native, Terminal, and Session views while preserving provider thread/session identity, working directory/worktree identity, active view restoration, and the provider-native escape hatch.
+          Gate `terminal_productized`: requires `react_terminal_productization` maturity validated; reason: Three-view navigation should preserve identity across a productized Chat surface, not an unfinished live-interaction direction.
+          Rationale: Provide coherent switching among Terminal, Chat, and Session views while preserving provider thread/session identity, working directory/worktree identity, active view restoration, and the provider-native escape hatch.
     - **Structured Work Understanding** (`structured_work_understanding`) - phase; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: safe; maturity: ready
       Depends on: `first_semantic_session_inferences`
       - **Milestone Semantics and Relationships** (`semantic_milestone_relationships`) - milestone; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: structured work understanding; layer: inference session work projections; execution: planned / Provenance Engine; parallelism: safe; maturity: ready
@@ -956,7 +961,9 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.
 
-- Active implementation assignments: none selected.
+| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Shared-session Chat and permanent Terminal (`shared_session_chat`) | serial | /Users/brianbusby/repos/.bmux-worktrees/shared-session-chat | shared-session-chat | codex | None | None | single active assignment |
 
 ### Dependency-Ready Preflight
 

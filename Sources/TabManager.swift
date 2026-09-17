@@ -198,6 +198,7 @@ class TabManager: ObservableObject {
     // side effects in didSet).
     let workspaces = WorkspacesModel<Workspace>()
     private var workspacesById: [UUID: Workspace] = [:]
+    var terminalChatReader: (any TerminalChatReading)?
     var workProvenanceRuntime: WorkProvenanceRuntime?
 
     var tabs: [Workspace] {

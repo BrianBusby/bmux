@@ -11,6 +11,9 @@ public struct ChatHistoryPage: Sendable, Equatable, Codable {
     /// optional so existing agent payloads keep decoding unchanged.
     public let terminalBlocks: [TerminalCommandBlock]?
 
+    /// Latest provider-authored turn state; independent of the paged message window.
+    public let observedTurn: ChatObservedTurn?
+
     /// Creates a history page.
     ///
     /// - Parameters:
@@ -20,16 +23,19 @@ public struct ChatHistoryPage: Sendable, Equatable, Codable {
     public init(
         messages: [ChatMessage],
         hasMore: Bool,
-        terminalBlocks: [TerminalCommandBlock]? = nil
+        terminalBlocks: [TerminalCommandBlock]? = nil,
+        observedTurn: ChatObservedTurn? = nil
     ) {
         self.messages = messages
         self.hasMore = hasMore
         self.terminalBlocks = terminalBlocks
+        self.observedTurn = observedTurn
     }
 
     private enum CodingKeys: String, CodingKey {
         case messages
         case hasMore = "has_more"
         case terminalBlocks = "terminal_blocks"
+        case observedTurn = "observed_turn"
     }
 }

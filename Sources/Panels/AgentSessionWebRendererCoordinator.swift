@@ -4,6 +4,9 @@ import WebKit
 
 @MainActor
 final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandlerWithReply {
+    var terminalChatSnapshot: (() async -> [String: Any])?
+    var terminalChatRawOutput: ((_ sessionID: String, _ messageID: String) async throws -> String?)?
+    var onInteractInTerminal: (() -> Void)?
     var webView: AgentSessionWebView?
     private var panelId = UUID()
     private var workspaceId = UUID()
@@ -122,7 +125,8 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         }
         let indexURL = Self.shellURL(
             rendererKind: rendererKind,
-            resourceDirectoryURL: resourceDirectoryURL
+            resourceDirectoryURL: resourceDirectoryURL,
+            attachedTerminal: terminalChatSnapshot != nil
         )
         trustedShellURL = Self.normalizedTrustedFileURL(indexURL)
 #if DEBUG
@@ -332,9 +336,12 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
 
     nonisolated static func shellURL(
         rendererKind: AgentSessionRendererKind,
-        resourceDirectoryURL: URL
+        resourceDirectoryURL: URL,
+        attachedTerminal: Bool = false
     ) -> URL {
-        rendererKind.resourceHTMLPathComponents.reduce(resourceDirectoryURL) {
+        // The embedded shell uses the same React renderer without file-origin module imports.
+        let components = attachedTerminal ? ["agent-session-react", "index.html"] : rendererKind.resourceHTMLPathComponents
+        return components.reduce(resourceDirectoryURL) {
             $0.appendingPathComponent($1, isDirectory: false)
         }
     }
@@ -354,12 +361,30 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         return url.standardizedFileURL.resolvingSymlinksInPath()
     }
 
-    private func handle(_ request: AgentSessionBridgeRequest) async throws -> Any {
+    func handle(_ request: AgentSessionBridgeRequest) async throws -> Any {
+        if terminalChatSnapshot != nil {
+            switch request.method {
+            case "app.context", "terminalChat.snapshot", "terminalChat.openTerminal", "terminalChat.rawOutput", "provider.list": break
+            default: throw AgentSessionBridgeError.unsupportedMethod(request.method)
+            }
+        }
         switch request.method {
+        case "terminalChat.snapshot":
+            guard let terminalChatSnapshot else { throw AgentSessionBridgeError.invalidRequest }
+            return await terminalChatSnapshot()
+        case "terminalChat.rawOutput":
+            guard let terminalChatRawOutput,
+                  let output = try await terminalChatRawOutput(request.requiredString("sessionId"), request.requiredString("messageId")) else {
+                throw AgentSessionBridgeError.invalidRequest
+            }
+            return ["output": output]
+        case "terminalChat.openTerminal":
+            onInteractInTerminal?()
+            return ["opened": true]
         case "app.context":
             var copy: [String: String] = [
                 "start": String(localized: "agentSession.web.start", defaultValue: "Start"),
-                "stop": String(localized: "agentSession.web.stop", defaultValue: "Stop"),
+                "stop": String(localized: "agentSession.web.endSession", defaultValue: "End session"),
                 "send": String(localized: "agentSession.web.send", defaultValue: "Send"),
                 "provider": String(localized: "agentSession.web.provider", defaultValue: "Provider"),
                 "rateLimits": String(localized: "agentSession.web.rateLimits", defaultValue: "Rate limits"),
@@ -573,6 +598,7 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
                 "rateLimitRows": [],
                 "copy": copy
             ]
+            context["readOnlyTerminalChat"] = terminalChatSnapshot != nil
             if let workingDirectory {
                 context["workingDirectory"] = workingDirectory
             }
@@ -587,6 +613,7 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         case "app.pickFiles":
             return await pickLocalFiles()
         case "provider.list":
+            if terminalChatSnapshot != nil { return [] as [Any] }
             return AgentSessionProviderID.allCases.map { provider in
                 [
                     "id": provider.rawValue,

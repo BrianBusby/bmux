@@ -13,8 +13,10 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: none selected
-- Repository state: none selected
+- Active slice: Shared-session Chat and permanent Terminal (`shared_session_chat`)
+- Slice state: open
+- Owner: bmux
+- Repository state: active
 
 ## Release
 
@@ -40,6 +42,8 @@ Repository: `BrianBusby/bmux`
 | Monorepo Migration Ledger Closure | planned |
 | Native Provider Session View | implemented |
 | Normal Coding Agent Evidence Ingestion | implemented |
+| Ordinary Cli Read Only Chat | under observation |
+| Ordinary Cli Shared Control | not implemented |
 | Pe Shared Sqlite Writer Policy | planned |
 | Provenance Engine Agent Accessible Cross Session Retrieval | implemented |
 | Provenance Engine Blocker Approach Change Semantics | implemented |
@@ -138,6 +142,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `ordinary_cli_shared_control_unverified` | open |
 | `broad_legacy_storage_migration` | open |
 | `residual_app_runtime_lifecycle_ownership` | open |
 | `workspace_display_file_watcher_churn` | open |

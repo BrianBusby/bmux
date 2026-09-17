@@ -2051,6 +2051,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         self.tabManager = tabManager
         self.appRuntimeServices = appRuntimeServices
         self.workProvenanceRuntime = appRuntimeServices.workProvenanceRuntime
+        tabManager.terminalChatReader = agentChatTranscriptService
         tabManager.workProvenanceRuntime = appRuntimeServices.workProvenanceRuntime
         self.settingsRuntime = settingsRuntime
         self.notificationStore = notificationStore
@@ -4605,6 +4606,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             }
             tabManager.window = window
             tabManager.windowId = windowId
+            tabManager.terminalChatReader = agentChatTranscriptService
             tabManager.workProvenanceRuntime = workProvenanceRuntime
             existing.window = window
             let resolvedFileExplorerState = fileExplorerState ?? existing.fileExplorerState
@@ -4624,6 +4626,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         } else {
             tabManager.window = window
             tabManager.windowId = windowId
+            tabManager.terminalChatReader = agentChatTranscriptService
             tabManager.workProvenanceRuntime = workProvenanceRuntime
             let context = MainWindowContext(
                 windowId: windowId,

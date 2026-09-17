@@ -341,7 +341,7 @@ export function statusLabel(state: SessionState): string {
 }
 
 export function canStartProvider(state: SessionState): boolean {
-  return (state.status === "idle" || state.status === "failed") && !state.runningSessionId && Boolean(state.context);
+  return !state.context?.readOnlyTerminalChat && (state.status === "idle" || state.status === "failed") && !state.runningSessionId && Boolean(state.context);
 }
 
 export function canSelectProvider(state: SessionState): boolean {

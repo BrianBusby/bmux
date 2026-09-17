@@ -24,6 +24,7 @@ struct TerminalPanelView: View {
     let hasUnreadNotification: Bool
     let terminalAgentContext: String
     var stableWorkspaceId: UUID? = nil
+    var terminalChatReader: (any TerminalChatReading)? = nil
     var workProvenanceRuntime: WorkProvenanceRuntime? = nil
     let onFocus: () -> Void
     let onResumeAgentHibernation: () -> Void
@@ -64,7 +65,12 @@ struct TerminalPanelView: View {
 
     private var terminalBody: some View {
         AgentSessionFactualProjectionModeHost(
-            showsSwitcher: showsFactualSessionSwitcher,
+            showsSwitcher: showsFactualSessionSwitcher || terminalChatReader != nil,
+            chatContent: terminalChatReader.map { reader in
+                { onTerminal in AnyView(TerminalChatWebRenderer(
+                    panel: panel, reader: reader, appearance: appearance, onTerminal: onTerminal
+                )) }
+            },
             stableWorkspaceID: stableWorkspaceId,
             workProvenanceRuntime: workProvenanceRuntime,
             backgroundColor: appearance.contentBackgroundColor

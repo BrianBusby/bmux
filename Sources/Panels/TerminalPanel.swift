@@ -74,6 +74,7 @@ final class TerminalPanel: Panel, ObservableObject {
     }
 
     let id: UUID
+    let chatRenderer = AgentSessionWebRendererCoordinator()
     let stableSurfaceIdentity = PanelStableSurfaceIdentity()
     let panelType: PanelType = .terminal
 
@@ -683,6 +684,7 @@ final class TerminalPanel: Panel, ObservableObject {
     }
 
     func close() {
+        chatRenderer.close()
         isClosingPanel = true
         discardTextBoxContentForClose()
         // The surface will be cleaned up by its deinit
