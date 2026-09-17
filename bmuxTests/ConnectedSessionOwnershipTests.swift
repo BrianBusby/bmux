@@ -32,7 +32,7 @@ import Testing
         #expect(result["delivery"] as? String == "accepted")
         #expect(await transport.mutationThreads == ["thread-a"])
         let refreshed = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
-        #expect((refreshed["control"] as? [String: Any])?["draft"] as? String == "")
+        #expect((refreshed["control"] as? [String: Any])?["draft"] == nil)
         await runtime.closeConnectedSession(surfaceID: surface)
     }
 
@@ -93,6 +93,30 @@ import Testing
                 expectedTurnID: nil
             )
         }
+        await runtime.closeConnectedSession(surfaceID: surface)
+    }
+
+    @Test func recoveredAcceptanceDoesNotRetireALaterSameTextDraft() async throws {
+        let transport = ConnectedCodexFixtureTransport()
+        await transport.omitQueueAcknowledgmentID()
+        let connection = CodexRPCConnection(transport: transport)
+        try await connection.start()
+        let runtime = TerminalChatRuntime(reader: ConnectedCodexFixtureReader(), hosts: ConnectedCodexFixtureHost(connection: connection), bind: { _, _, _, _ in })
+        let workspace = UUID(), surface = UUID()
+        _ = try await runtime.prepareConnectedSession(workspaceID: workspace, surfaceID: surface, workingDirectory: "/fixture")
+        runtime.attachConnectedTerminal(surfaceID: surface, isAlive: { true })
+        _ = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        let r1 = UUID(), r2 = UUID(), r3 = UUID(), request = UUID()
+        try runtime.updateConnectedDraft(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", revision: r1, text: "X")
+        let result = try await runtime.performConnectedAction(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", requestID: request, draftRevision: r1, text: "X", expectedTurnID: nil)
+        #expect(result["delivery"] as? String == "uncertain")
+        try runtime.updateConnectedDraft(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", revision: r2, text: "Y")
+        try runtime.updateConnectedDraft(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", revision: r3, text: "X")
+        let refreshed = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        let draft = (refreshed["control"] as? [String: Any])?["draft"] as? [String: Any]
+        #expect(draft?["revision"] as? String == r3.uuidString)
+        #expect(draft?["text"] as? String == "X")
+        #expect(await transport.mutationThreads == ["thread-a"])
         await runtime.closeConnectedSession(surfaceID: surface)
     }
 }
