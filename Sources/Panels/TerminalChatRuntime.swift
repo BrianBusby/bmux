@@ -8,7 +8,12 @@ final class TerminalChatRuntime: TerminalChatConnecting {
     private let reader: any TerminalChatReading
     private let hosts: any ConnectedCodexHosting
     private let bind: (String, UUID, UUID, String) -> Void
-    private var drafts: [UUID: String] = [:]
+    private struct Draft: Sendable {
+        let revision: UUID
+        let text: String
+    }
+    private var drafts: [UUID: Draft] = [:]
+    private var submittedDraftRevisions: [UUID: UUID] = [:]
     private var terminalLiveness: [UUID: @MainActor () -> Bool] = [:]
     private var connections: [UUID: (workspaceID: UUID, directory: String, host: ConnectedCodexHost)] = [:]
 
@@ -60,10 +65,11 @@ final class TerminalChatRuntime: TerminalChatConnecting {
         do {
             guard terminalLiveness[surfaceID]?() == true else { throw CodexControlError.disconnected }
             let loaded = try await host.connection.request(method: "thread/loaded/list", params: Data("{}".utf8))
+            // Ownership was established when the host adopted its original thread; other loaded threads do not replace it.
             guard let loadedResponse = try JSONSerialization.jsonObject(with: loaded) as? [String: Any],
-                  loadedResponse["data"] as? [String] == [threadID], loadedResponse["nextCursor"] is NSNull else {
-                // A changed or ambiguous TUI thread must not retain old live history or controls.
-                return ["status": "unavailable", "reason": "ambiguous"]
+                  let loadedThreadIDs = loadedResponse["data"] as? [String],
+                  loadedThreadIDs.contains(threadID), loadedResponse["nextCursor"] is NSNull else {
+                return ["status": "unavailable", "reason": "connectionUnavailable"]
             }
             let parameters = try JSONSerialization.data(withJSONObject: ["threadId": threadID, "includeTurns": false])
             let data = try await host.connection.request(method: "thread/read", params: parameters)
@@ -76,8 +82,8 @@ final class TerminalChatRuntime: TerminalChatConnecting {
             let uncertainIDs = Set(await actionOwner.actionSnapshot().filter { $0.delivery == .uncertain }.map(\.id))
             try await actionOwner.reconcile()
             let reconciled = await actionOwner.actionSnapshot()
-            if reconciled.contains(where: { uncertainIDs.contains($0.id) && $0.delivery == .accepted && drafts[surfaceID] == $0.text }) {
-                drafts[surfaceID] = ""
+            for action in reconciled where uncertainIDs.contains(action.id) && action.delivery == .accepted {
+                retireDraft(for: action.id, surfaceID: surfaceID)
             }
             let providerState = thread["status"] as? [String: Any]
             let history = snapshot["history"] as? [String: Any]
@@ -97,7 +103,9 @@ final class TerminalChatRuntime: TerminalChatConnecting {
         control["providerVersion"] = "0.154.0"
         control["capabilities"] = Self.capabilities(connected: available, activeTurn: control["activeTurnId"] != nil,
                                                    historyAvailable: snapshot["history"] != nil)
-        control["draft"] = drafts[surfaceID]
+        if let draft = drafts[surfaceID] {
+            control["draft"] = ["revision": draft.revision.uuidString, "text": draft.text]
+        }
         control["actions"] = (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(await actionOwner.actionSnapshot()))) ?? []
         snapshot["control"] = control
         snapshot["sessionId"] = threadID
@@ -106,24 +114,31 @@ final class TerminalChatRuntime: TerminalChatConnecting {
         return snapshot
     }
 
-    func updateConnectedDraft(workspaceID: UUID, surfaceID: UUID, sessionID: String, text: String) throws {
+    func updateConnectedDraft(workspaceID: UUID, surfaceID: UUID, sessionID: String, revision: UUID, text: String) throws {
         guard let entry = connections[surfaceID], entry.workspaceID == workspaceID,
               entry.host.threadID == sessionID, text.utf8.count <= 64 * 1024 else { throw CodexControlError.wrongThread }
-        drafts[surfaceID] = text
+        drafts[surfaceID] = Draft(revision: revision, text: text)
     }
 
-    func performConnectedAction(workspaceID: UUID, surfaceID: UUID, sessionID: String, requestID: UUID, text: String, expectedTurnID: String?) async throws -> [String: Any] {
+    func performConnectedAction(workspaceID: UUID, surfaceID: UUID, sessionID: String, requestID: UUID, draftRevision: UUID, text: String, expectedTurnID: String?) async throws -> [String: Any] {
         guard let entry = connections[surfaceID], entry.workspaceID == workspaceID,
               entry.host.threadID == sessionID, let owner = entry.host.control else { throw CodexControlError.wrongThread }
         let snapshot = await terminalChatSnapshot(workspaceID: workspaceID, surfaceID: surfaceID)
         guard let control = snapshot["control"] as? [String: Any], control["status"] as? String == "connected" else {
             throw CodexControlError.disconnected
         }
+        guard drafts[surfaceID]?.revision == draftRevision, drafts[surfaceID]?.text == text else { throw CodexControlError.wrongThread }
+        submittedDraftRevisions[requestID] = draftRevision
         let action = CodexControlAction(id: requestID, threadID: sessionID, operation: expectedTurnID == nil ? .queue : .steer,
                                         expectedTurnID: expectedTurnID, text: text)
         let result = try await owner.submit(action)
-        if result.delivery == .accepted, drafts[surfaceID] == text { drafts[surfaceID] = "" }
+        if result.delivery == .accepted { retireDraft(for: requestID, surfaceID: surfaceID) }
         return try JSONSerialization.jsonObject(with: JSONEncoder().encode(result)) as? [String: Any] ?? [:]
+    }
+
+    private func retireDraft(for requestID: UUID, surfaceID: UUID) {
+        guard let revision = submittedDraftRevisions.removeValue(forKey: requestID), drafts[surfaceID]?.revision == revision else { return }
+        drafts.removeValue(forKey: surfaceID)
     }
 
     private static func capabilities(connected: Bool, activeTurn: Bool, historyAvailable: Bool) -> [String: [String: Any]] {

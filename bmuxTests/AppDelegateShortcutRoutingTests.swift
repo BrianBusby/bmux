@@ -4,12 +4,14 @@ import AppKit
 import Carbon.HIToolbox
 import Combine
 import SwiftUI
+import BmuxSettings
 @testable import BmuxSettingsUI
-
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
+private typealias StoredShortcut = bmux_DEV.StoredShortcut
 #elseif canImport(bmux)
 @testable import bmux
+private typealias StoredShortcut = bmux.StoredShortcut
 #endif
 private let appDelegateLastSurfaceCloseShortcutDefaultsKey = "closeWorkspaceOnLastSurfaceShortcut"
 private final class FakeWKInspectorContainerView: NSView {}
@@ -27,35 +29,29 @@ private final class FakeTextBoxSubmitSurface: TextBoxSubmitSurfaceControlling {
     var performBindingActionResult = true
     private(set) var sentText: [String] = []
     private(set) var sentKeys: [String] = []
-
     func visibleText() -> String? {
         visibleTextValue
     }
-
     @discardableResult
     func sendKeyText(_ text: String) -> Bool {
         sentText.append(text)
         return sendKeyTextResult
     }
-
     @discardableResult
     func sendText(_ text: String) -> Bool {
         sentText.append(text)
         return sendTextResult
     }
-
     @discardableResult
     func sendNamedKey(_ keyName: String) -> TerminalSurface.NamedKeySendResult {
         sentKeys.append(keyName)
         return sendNamedKeyResult
     }
-
     @discardableResult
     func performBindingAction(_ action: String) -> Bool {
         sentKeys.append(action)
         return performBindingActionResult
     }
-
     func completeClipboardRead() {
         clipboardReadGeneration += 1
         NotificationCenter.default.post(
@@ -77,26 +73,21 @@ private final class GhosttyCommandEquivalentProbeView: GhosttyNSView {
     var pasteCallCount = 0
     var pasteAsPlainTextCallCount = 0
     var performAfterMenuMissResult = true
-
     override func performKeyEquivalentAfterMenuMiss(with event: NSEvent) -> Bool {
         afterMenuMissCallCount += 1
         return performAfterMenuMissResult
     }
-
     override func keyDown(with event: NSEvent) {
         keyDownCallCount += 1
         lastKeyDownCharactersIgnoringModifiers = event.charactersIgnoringModifiers
     }
-
     override func paste(_ sender: Any?) {
         pasteCallCount += 1
     }
-
     override func pasteAsPlainText(_ sender: Any?) {
         pasteAsPlainTextCallCount += 1
     }
 }
-
 @MainActor
 final class AppDelegateShortcutRoutingTests: XCTestCase {
     private static var retainedTextBoxUndoWindows: [NSWindow] = []
@@ -104,10 +95,10 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
     private static var retainedTextBoxRestoreViews: [TextBoxInputTextView] = []
     private var savedShortcutsByAction: [KeyboardShortcutSettings.Action: StoredShortcut] = [:]
     private var actionsWithPersistedShortcut: Set<KeyboardShortcutSettings.Action> = []
+    private var tabManagerSettingsSuiteNames: [String] = []
     // Optional, not IUO: setUpWithError() can XCTSkip before this is assigned,
     // and tearDown() still runs after a skip, so it must tolerate a nil here.
     private var originalSettingsFileStore: KeyboardShortcutSettingsFileStore?
-
     private func makeKeyEvent(
         modifierFlags: NSEvent.ModifierFlags,
         characters: String,
@@ -130,7 +121,6 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
         }
         return event
     }
-
     private func ghosttyConfigKeyIsBinding(
         _ config: ghostty_config_t,
         key: String,
@@ -144,13 +134,11 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
         keyEvent.consumed_mods = GHOSTTY_MODS_NONE
         keyEvent.unshifted_codepoint = key.unicodeScalars.first.map { UInt32($0.value) } ?? 0
         keyEvent.composing = false
-
         return key.withCString { ptr in
             keyEvent.text = ptr
             return ghostty_config_key_is_binding(config, keyEvent)
         }
     }
-
     private func ghosttyMods(from modifiers: NSEvent.ModifierFlags) -> ghostty_input_mods_e {
         var rawValue = GHOSTTY_MODS_NONE.rawValue
         if modifiers.contains(.shift) { rawValue |= GHOSTTY_MODS_SHIFT.rawValue }
@@ -159,7 +147,22 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
         if modifiers.contains(.command) { rawValue |= GHOSTTY_MODS_SUPER.rawValue }
         return ghostty_input_mods_e(rawValue: rawValue)
     }
-
+    private func makeWorkspacePlacementIsolatedTabManager(autoWelcomeIfNeeded: Bool) -> TabManager {
+        let suiteName = "bmux.tests.AppDelegateShortcutRoutingTests.\(UUID().uuidString)"
+        tabManagerSettingsSuiteNames.append(suiteName)
+        guard let defaults = UserDefaults(suiteName: suiteName) else {
+            XCTFail("Expected isolated user defaults")
+            return TabManager(autoWelcomeIfNeeded: autoWelcomeIfNeeded)
+        }
+        defaults.removePersistentDomain(forName: suiteName)
+        let settings = UserDefaultsSettingsClient(defaults: defaults)
+        settings.set(.afterCurrent, for: SettingCatalog().app.newWorkspacePlacement)
+        return TabManager(
+            autoWelcomeIfNeeded: autoWelcomeIfNeeded,
+            settings: settings,
+            closeTabWarningDefaults: defaults
+        )
+    }
     override func setUpWithError() throws {
         try super.setUpWithError()
         // Prevent a single hanging test from consuming the entire CI timeout budget.
@@ -185,7 +188,6 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
         AppDelegate.shared?.debugResetShortcutRoutingStateForTesting()
         #endif
     }
-
     override func tearDown() {
         #if DEBUG
         KeyboardShortcutRecorderActivity.resetForTesting()
@@ -220,9 +222,12 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
         Self.retainedTextBoxUndoWindows.removeAll()
         Self.retainedTextBoxRenderScrollViews.removeAll()
         Self.retainedTextBoxRestoreViews.removeAll()
+        for suiteName in tabManagerSettingsSuiteNames {
+            UserDefaults.standard.removePersistentDomain(forName: suiteName)
+        }
+        tabManagerSettingsSuiteNames.removeAll()
         super.tearDown()
     }
-
     func testShortcutMonitorIgnoresSystemDefinedEvents() {
         guard let appDelegate = AppDelegate.shared else {
             XCTFail("Expected AppDelegate.shared")
@@ -242,23 +247,18 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
             XCTFail("Failed to construct system-defined event")
             return
         }
-
 #if DEBUG
         XCTAssertFalse(appDelegate.debugHandleShortcutMonitorEvent(event: event))
 #else
         XCTFail("debugHandleShortcutMonitorEvent is only available in DEBUG")
 #endif
     }
-
     func testStopAllRecordingClearsStaleRecorderActivityCount() {
         defer { KeyboardShortcutRecorderActivity.stopAllRecording() }
-
         KeyboardShortcutRecorderActivity.beginRecording()
         KeyboardShortcutRecorderActivity.beginRecording()
         XCTAssertTrue(KeyboardShortcutRecorderActivity.isAnyRecorderActive)
-
         KeyboardShortcutRecorderActivity.stopAllRecording()
-
         XCTAssertFalse(KeyboardShortcutRecorderActivity.isAnyRecorderActive)
     }
 
@@ -10386,7 +10386,7 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
     }
 
     func testTabManagerSessionRestoreRestoresTextBoxDraftsAcrossWorkspaces() throws {
-        let manager = TabManager(autoWelcomeIfNeeded: false)
+        let manager = makeWorkspacePlacementIsolatedTabManager(autoWelcomeIfNeeded: false)
         let firstWorkspace = try XCTUnwrap(manager.tabs.first)
         let secondWorkspace = manager.addWorkspace(
             title: "Second",
@@ -10413,7 +10413,7 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
         XCTAssertEqual(snapshot.workspaces.count, 2)
         XCTAssertEqual(snapshot.selectedWorkspaceIndex, 1)
 
-        let restoredManager = TabManager(autoWelcomeIfNeeded: false)
+        let restoredManager = makeWorkspacePlacementIsolatedTabManager(autoWelcomeIfNeeded: false)
         restoredManager.restoreSessionSnapshot(snapshot)
 
         XCTAssertEqual(restoredManager.tabs.count, 2)

@@ -4,8 +4,16 @@ import Foundation
 extension AgentChatTranscriptService: TerminalChatReading {
     func terminalChatSnapshot(workspaceID: UUID, surfaceID: UUID) async -> [String: Any] {
         _ = await observeAgentProcessesForListing(surfaceIDs: [surfaceID], waitUpTo: .seconds(1))
-        let records = sessionRecords(workspaceID: workspaceID.uuidString).filter {
-            $0.surfaceID.flatMap(UUID.init(uuidString:)) == surfaceID
+        // Reconcile the stable surface against the restored workspace before
+        // filtering. Workspace UUIDs are regenerated on restore, while a
+        // surviving terminal retains its surface binding.
+        let records = sessionRecords().compactMap { record -> AgentChatSessionRecord? in
+            guard record.surfaceID.flatMap(UUID.init(uuidString:)) == surfaceID else { return nil }
+            guard record.workspaceID == workspaceID.uuidString else {
+                updateSessionWorkspace(sessionID: record.sessionID, workspaceID: workspaceID.uuidString)
+                return sessionRecord(sessionID: record.sessionID)
+            }
+            return record
         }
         let live = records.filter { $0.state != .ended }
         let candidates = live.isEmpty ? records : live
@@ -27,7 +35,11 @@ extension AgentChatTranscriptService: TerminalChatReading {
               current.surfaceID.flatMap(UUID.init(uuidString:)) == surfaceID,
               current.workspaceID.flatMap(UUID.init(uuidString:)) == workspaceID,
               let payload = wirePayload(page) else {
-            return ["status": "unavailable", "reason": "historyUnavailable"]
+            // Identity is authoritative even when the transcript is briefly
+            // unreadable. Consumers must clear a different session's cache.
+            return ["status": "unavailable", "reason": "historyUnavailable",
+                    "sessionId": record.sessionID, "workspaceId": workspaceID.uuidString,
+                    "surfaceId": surfaceID.uuidString]
         }
         return [
             "status": current.state == .ended ? "ended" : "observed",

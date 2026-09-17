@@ -89,7 +89,7 @@ public struct CodexTranscriptParser: Sendable {
                         if assembler.observedTurn?.id != turnID {
                             assembler.observedTurn = ChatObservedTurn(id: turnID, state: .working)
                         }
-                    case "task_complete", "turn_aborted":
+                    case "task_complete", "turn_complete", "turn_aborted":
                         // A late terminal event for an older turn cannot finish the current one.
                         if assembler.observedTurn == nil || assembler.observedTurn?.id == turnID {
                             assembler.observedTurn = ChatObservedTurn(

@@ -4,16 +4,13 @@ import Combine
 import Foundation
 import QuartzCore
 import SwiftUI
-
 // MARK: - Explorer Visual Style
-
 enum FileExplorerStyle: Int, CaseIterable {
     case liquidGlass = 0
     case highDensity = 1
     case terminalStealth = 2
     case proStudio = 3
     case finder = 4
-
     var label: String {
         switch self {
         case .liquidGlass: return "Liquid Glass"
@@ -23,7 +20,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return "Finder"
         }
     }
-
     var rowHeight: CGFloat {
         let baseHeight: CGFloat
         switch self {
@@ -35,7 +31,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         }
         return GlobalFontMagnification.scaledSize(baseHeight)
     }
-
     var indentation: CGFloat {
         switch self {
         case .liquidGlass: return 16
@@ -45,7 +40,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return 18
         }
     }
-
     var iconSize: CGFloat {
         switch self {
         case .liquidGlass: return 16
@@ -55,7 +49,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return 18
         }
     }
-
     var iconWeight: NSFont.Weight {
         switch self {
         case .liquidGlass: return .regular
@@ -65,7 +58,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return .medium
         }
     }
-
     var nameFont: NSFont {
         switch self {
         case .liquidGlass: return GlobalFontMagnification.systemFont(ofSize: 13, weight: .medium)
@@ -75,7 +67,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return GlobalFontMagnification.systemFont(ofSize: 13, weight: .regular)
         }
     }
-
     var iconToTextSpacing: CGFloat {
         switch self {
         case .liquidGlass: return 8
@@ -85,7 +76,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return 6
         }
     }
-
     var selectionInset: CGFloat {
         switch self {
         case .liquidGlass: return 8
@@ -95,7 +85,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return 4
         }
     }
-
     var selectionRadius: CGFloat {
         switch self {
         case .liquidGlass: return 6
@@ -105,7 +94,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return 5
         }
     }
-
     var selectionColor: NSColor {
         switch self {
         case .liquidGlass: return .controlAccentColor.withAlphaComponent(0.15)
@@ -115,7 +103,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return .controlAccentColor.withAlphaComponent(0.15)
         }
     }
-
     var hoverColor: NSColor {
         switch self {
         case .liquidGlass: return .labelColor.withAlphaComponent(0.05)
@@ -125,7 +112,6 @@ enum FileExplorerStyle: Int, CaseIterable {
         case .finder: return .labelColor.withAlphaComponent(0.04)
         }
     }
-
     var usesBorderSelection: Bool {
         self == .terminalStealth
     }
@@ -952,12 +938,12 @@ final class FileExplorerStore: ObservableObject {
         cancelAllLoads()
         rootNodes = []
         nodesByPath = [:]
-        guard !rootPath.isEmpty, provider != nil else { return }
+        guard !rootPath.isEmpty, let provider else { return }
         isRootLoading = true
         let path = rootPath
-        let task = Task { [weak self] in
+        let task = Task { [weak self, provider] in
             guard let self else { return }
-            await self.loadChildren(for: nil, at: path)
+            await self.loadChildren(for: nil, at: path, using: provider)
         }
         loadTasks[rootPath] = task
     }
@@ -966,13 +952,14 @@ final class FileExplorerStore: ObservableObject {
         guard node.isDirectory else { return }
         expandedPaths.insert(node.path)
         if node.children == nil, loadTasks[node.path] == nil, !loadingPaths.contains(node.path) {
+            guard let provider else { return }
             node.isLoading = true
             node.error = nil
             objectWillChange.send()
             let nodePath = node.path
-            let task = Task { [weak self] in
+            let task = Task { [weak self, provider] in
                 guard let self else { return }
-                await self.loadChildren(for: node, at: nodePath)
+                await self.loadChildren(for: node, at: nodePath, using: provider)
             }
             loadTasks[node.path] = task
         }
@@ -1027,9 +1014,12 @@ final class FileExplorerStore: ObservableObject {
         prefetchWorkItems[path]?.cancel()
         let workItem = DispatchWorkItem { [weak self] in
             Task { @MainActor [weak self] in
-                guard let self, node.children == nil, !self.loadingPaths.contains(path) else { return }
+                guard let self,
+                      let provider = self.provider,
+                      node.children == nil,
+                      !self.loadingPaths.contains(path) else { return }
                 // Silent prefetch: don't show loading indicator
-                await self.loadChildren(for: node, at: path, silent: true)
+                await self.loadChildren(for: node, at: path, using: provider, silent: true)
             }
         }
         prefetchWorkItems[path] = workItem
@@ -1054,8 +1044,13 @@ final class FileExplorerStore: ObservableObject {
     // MARK: - Private
 
     @MainActor
-    private func loadChildren(for parentNode: FileExplorerNode?, at path: String, silent: Bool = false) async {
-        guard let provider else { return }
+    private func loadChildren(
+        for parentNode: FileExplorerNode?,
+        at path: String,
+        using provider: FileExplorerProvider,
+        silent: Bool = false
+    ) async {
+        guard self.provider === provider else { return }
 
         if !silent {
             loadingPaths.insert(path)
@@ -1066,6 +1061,11 @@ final class FileExplorerStore: ObservableObject {
         do {
             let entries = try await provider.listDirectory(path: path, showHidden: showHiddenFiles)
             try Task.checkCancellation()
+            guard self.provider === provider else {
+                loadingPaths.remove(path)
+                loadTasks.removeValue(forKey: path)
+                return
+            }
             let children = entries.map { entry in
                 let node = FileExplorerNode(name: entry.name, path: entry.path, isDirectory: entry.isDirectory)
                 nodesByPath[entry.path] = node
@@ -1103,9 +1103,9 @@ final class FileExplorerStore: ObservableObject {
                 child.isLoading = true
                 objectWillChange.send()
                 let childPath = child.path
-                let childTask = Task { [weak self] in
+                let childTask = Task { [weak self, provider] in
                     guard let self else { return }
-                    await self.loadChildren(for: child, at: childPath)
+                    await self.loadChildren(for: child, at: childPath, using: provider)
                 }
                 loadTasks[child.path] = childTask
             }

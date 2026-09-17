@@ -32,17 +32,20 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
         coordinator.onStartConnectedSession = onStartConnectedSession
         coordinator.terminalChatDraft = { [weak reader, weak panel] request in
             guard let runtime = reader as? any TerminalChatConnecting, let panel,
+                  let revision = UUID(uuidString: try request.requiredString("draftRevision")),
                   let text = request.params["text"] as? String else { throw AgentSessionBridgeError.invalidRequest }
             try runtime.updateConnectedDraft(workspaceID: panel.workspaceId, surfaceID: panel.id,
-                sessionID: request.requiredString("sessionId"), text: text)
+                sessionID: request.requiredString("sessionId"), revision: revision, text: text)
         }
         coordinator.terminalChatAction = { [weak reader, weak panel] request in
             guard let runtime = reader as? any TerminalChatConnecting, let panel,
                   let requestID = UUID(uuidString: try request.requiredString("requestId")) else {
                 throw AgentSessionBridgeError.invalidRequest
             }
+            guard let draftRevision = UUID(uuidString: try request.requiredString("draftRevision")) else { throw AgentSessionBridgeError.invalidRequest }
             return try await runtime.performConnectedAction(workspaceID: panel.workspaceId, surfaceID: panel.id,
                 sessionID: request.requiredString("sessionId"), requestID: requestID,
+                draftRevision: draftRevision,
                 text: request.params["text"] as? String ?? "", expectedTurnID: request.params["expectedTurnId"] as? String)
         }
         coordinator.onInteractInTerminal = onTerminal

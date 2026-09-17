@@ -28,7 +28,6 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Ready Candidates
 
-- Swift App and Runtime Test Determinism Burn-Down (`test_determinism_swift_app_runtime_burndown`) - maturity: ready; status: planned; selection: planned; owner: Bmux
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - maturity: ready; status: planned; selection: planned; owner: Bmux
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - maturity: ready; status: planned; selection: planned; owner: Bmux
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - maturity: ready; status: planned; selection: planned; owner: Provenance Engine
@@ -283,13 +282,15 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Execution notes: Implementation-ready as an isolated package-test slice, but lower priority than production lifecycle ownership.
           Rationale: Five grandfathered package-test findings are isolated from app-host lifecycle migration and can be burned down through package-local deterministic readiness or clock seams.
           Acceptance criteria: Replace package-level sleeps and elapsed-duration assertions with observable readiness controllable clocks events or deterministic polling contracts.; Keep package tests behavior-level and avoid source-text or metadata-only assertions.; Remove only the allowlist lines whose underlying nondeterminism is fixed in this slice.; Run the affected package tests and the test-determinism guard.
-        - **Swift App and Runtime Test Determinism Burn-Down** (`test_determinism_swift_app_runtime_burndown`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: planned / Bmux; parallelism: conditional; delivery: proposed; acceptance: proposed; maturity: ready
+        - **Swift App and Runtime Test Determinism Burn-Down** (`test_determinism_swift_app_runtime_burndown`) - slice; status: implemented; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: complete / Bmux; parallelism: conditional; delivery: merged; acceptance: implemented; maturity: validated
           Depends on: `app_runtime_notification_push_lifecycle_migration`, `app_runtime_menu_bar_presentation_lifecycle_migration`
           Expected contract domains: `app_host_runtime_readiness`, `swift_app_sleep_then_assert`, `swift_app_elapsed_duration_assertions`, `injected_scheduling`
           Expected code areas: `bmuxTests/BMUXOpenCommandTests.swift`, `bmuxTests/FileExplorerStoreTests.swift`, `bmuxTests/MobileHostAuthorizationTests.swift`, `bmuxTests/NotificationAndMenuBarTests.swift`, `bmuxTests/OmnibarAndToolsTests.swift`, `bmuxTests/RovoDevSessionIndexTests.swift`, `bmuxTests/TabManagerSessionSnapshotTests.swift`, `.github/test-determinism-allowlist.txt`
           Likely conflict domains: `app_runtime_tests`, `mobile_host_presence_tests`, `notification_menu_tests`
+          Execution notes: Selected on 2026-09-15 after PR #110 reconciled Project Truth delivery on main at 9d1c3bafe6d3d5a76b95cc760dd2a4e0fbb6defc. Implementation complete in branch test-determinism-swift-app-runtime-burndown; seven corrected Swift app/runtime allowlist entries were removed after focused repeated tests and affected suites passed. Delivery remains open until the PR is merged; human acceptance is not claimed.
           Gate `notification_push_runtime_validated`: requires `app_runtime_notification_push_lifecycle_migration` maturity validated; reason: Notification and mobile-host authorization test determinism should be fixed against the migrated runtime owner.
           Gate `menu_bar_runtime_validated`: requires `app_runtime_menu_bar_presentation_lifecycle_migration` maturity validated; reason: Menu-bar duration assertions should be replaced after menu-bar lifecycle ownership is explicit.
+          Evidence: BrianBusby/bmux@cf1bf749467b, BrianBusby/bmux@3a90b85b9051, BrianBusby/bmux#113 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: App and runtime determinism should follow lifecycle ownership migrations so tests target explicit readiness and teardown contracts instead of old scattered startup side effects.
           Acceptance criteria: Replace app/runtime sleeps and elapsed-duration assertions with runtime state events controllable clocks deterministic polling or injected scheduling.; Remove only corrected allowlist entries from .github/test-determinism-allowlist.txt.; Run affected bmuxTests the app/unit test target needed by the touched area and the test-determinism guard.
         - **Python Socket and Tmux Compatibility Test Determinism Burn-Down** (`test_determinism_python_socket_tmux_burndown`) - slice; status: deferred; owner: Bmux; repositories: Bmux; concept: platform; layer: platform; execution: deferred / Bmux; parallelism: conditional; delivery: proposed; acceptance: proposed; maturity: ready
@@ -969,14 +970,12 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 
 | Slice | Selection | Dependency status | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Swift App and Runtime Test Determinism Burn-Down (`test_determinism_swift_app_runtime_burndown`) | planned | ready | conditional | false | `app_runtime_tests`, `mobile_host_presence_tests`, `notification_menu_tests` | None | `app_host_runtime_readiness`, `swift_app_sleep_then_assert`, `swift_app_elapsed_duration_assertions`, `injected_scheduling` | `bmuxTests/BMUXOpenCommandTests.swift`, `bmuxTests/FileExplorerStoreTests.swift`, `bmuxTests/MobileHostAuthorizationTests.swift`, `bmuxTests/NotificationAndMenuBarTests.swift`, `bmuxTests/OmnibarAndToolsTests.swift`, `bmuxTests/RovoDevSessionIndexTests.swift`, `bmuxTests/TabManagerSessionSnapshotTests.swift`, `.github/test-determinism-allowlist.txt` |
 | React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) | planned | ready | serial | true | `session_work_model_projection`, `react_session_presentation`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `blocker_approach_change_semantics`, `semantic_explanation_provenance` | `React Smart Session surface`, `bmux SessionWorkModel client`, `Sources/WorkProvenance`, `Sources/ProvenanceEngineContracts` |
 | Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) | planned | ready | serial | true | `prompt_context_assembly`, `retrieval_contracts`, `privacy_policy` | `cross_session_agent_query`, `context_effectiveness_metrics` | `context_assembly_policy`, `cross_session_effectiveness_metrics`, `bounded_context_pack` | `bmux context assembly`, `bmux agent launch/session orchestration`, `evaluation fixtures` |
 | Milestone-to-code relationships (`milestone_to_code_relationships`) | planned | ready | serial | true | `milestone_relationships`, `file_change_attribution` | `milestone_semantics`, `richer_coding_agent_evidence` | `milestone_code_relationships`, `file_change_attribution` | `Sources/ProvenanceEngineCore`, `Sources/ProvenanceEngineContracts`, `Tests/ProvenanceEngineTests` |
 
 ## Dependency-Ready Work
 
-- Swift App and Runtime Test Determinism Burn-Down (`test_determinism_swift_app_runtime_burndown`) - selection: planned; depends on: `app_runtime_notification_push_lifecycle_migration`, `app_runtime_menu_bar_presentation_lifecycle_migration`
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - selection: planned; depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - selection: planned; depends on: `agent_accessible_cross_session_retrieval`
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - selection: planned; depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`
@@ -987,7 +986,6 @@ None.
 
 ## Dependency-Ready But Not Selected
 
-- Swift App and Runtime Test Determinism Burn-Down (`test_determinism_swift_app_runtime_burndown`) - depends on: `app_runtime_notification_push_lifecycle_migration`, `app_runtime_menu_bar_presentation_lifecycle_migration`
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - depends on: `agent_accessible_cross_session_retrieval`
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`

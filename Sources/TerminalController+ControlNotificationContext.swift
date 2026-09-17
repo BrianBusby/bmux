@@ -144,6 +144,9 @@ extension TerminalController: ControlNotificationContext {
         let before = store.notifications
         if hasSurfaceSelector {
             store.markRead(forTabId: workspaceID, surfaceId: surfaceID)
+            if let surfaceID {
+                store.clearFocusedReadIndicator(forTabId: workspaceID, surfaceId: surfaceID)
+            }
         } else {
             store.markRead(forTabId: workspaceID)
         }

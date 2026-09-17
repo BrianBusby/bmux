@@ -6,13 +6,11 @@ import WebKit
 import ObjectiveC.runtime
 import Bonsplit
 import UserNotifications
-
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
 #elseif canImport(bmux)
 @testable import bmux
 #endif
-
 /// Thread-safe one-shot holder for a policy-evaluation result. Lets a test
 /// detect a stalled evaluation by reading the stored value after a timeout,
 /// instead of awaiting (and hanging on) the evaluation `Task` itself when the
@@ -20,20 +18,36 @@ import UserNotifications
 private final class NotificationHookEvaluationResultBox: @unchecked Sendable {
     private let lock = NSLock()
     private var stored: Result<TerminalNotificationPolicyEnvelope, TerminalNotificationPolicyFailure>?
-
     func store(_ value: Result<TerminalNotificationPolicyEnvelope, TerminalNotificationPolicyFailure>) {
         lock.lock()
         defer { lock.unlock() }
         stored = value
     }
-
     func take() -> Result<TerminalNotificationPolicyEnvelope, TerminalNotificationPolicyFailure>? {
         lock.lock()
         defer { lock.unlock() }
         return stored
     }
 }
-
+private struct NotificationCommandInvocation: Equatable, Sendable {
+    let title: String
+    let subtitle: String
+    let body: String
+}
+private final class NotificationCommandInvocationRecorder: @unchecked Sendable {
+    private let lock = NSLock()
+    private var stored: [NotificationCommandInvocation] = []
+    func record(title: String, subtitle: String, body: String) {
+        lock.lock()
+        defer { lock.unlock() }
+        stored.append(NotificationCommandInvocation(title: title, subtitle: subtitle, body: body))
+    }
+    func invocations() -> [NotificationCommandInvocation] {
+        lock.lock()
+        defer { lock.unlock() }
+        return stored
+    }
+}
 final class TerminalNotificationPolicyEngineTests: XCTestCase {
     private func evaluate(
         request: TerminalNotificationPolicyRequest,
@@ -44,7 +58,6 @@ final class TerminalNotificationPolicyEngineTests: XCTestCase {
             hooks: hooks
         )
     }
-
     func testHookCanDisableDesktopAndTransformBody() async throws {
         let request = TerminalNotificationPolicyRequest(
             tabId: UUID(),
@@ -650,6 +663,9 @@ final class NotificationDockBadgeTests: XCTestCase {
         TerminalNotificationStore.shared.replaceNotificationsForTesting([])
         TerminalNotificationStore.shared.resetNotificationDeliveryHandlerForTesting()
         TerminalNotificationStore.shared.resetSuppressedNotificationFeedbackHandlerForTesting()
+        TerminalNotificationStore.shared.configureNativeNotificationDeliveryHooksForTesting {
+            $0 = NativeNotificationDeliveryHooks()
+        }
         super.tearDown()
     }
 
@@ -1224,17 +1240,11 @@ final class NotificationDockBadgeTests: XCTestCase {
         }
         let manager = TabManager()
         let store = TerminalNotificationStore.shared
-        let defaults = UserDefaults.standard
-        let commandOutputURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("bmux-notification-command-\(UUID().uuidString).txt", isDirectory: false)
+        let commandRecorder = NotificationCommandInvocationRecorder()
 
         let originalTabManager = appDelegate.tabManager
         let originalNotificationStore = appDelegate.notificationStore
         let originalAppFocusOverride = AppFocusState.overrideIsFocused
-        let hadSoundValue = defaults.object(forKey: NotificationSoundSettings.key) != nil
-        let originalSoundValue = defaults.object(forKey: NotificationSoundSettings.key)
-        let hadCommandValue = defaults.object(forKey: NotificationSoundSettings.customCommandKey) != nil
-        let originalCommandValue = defaults.object(forKey: NotificationSoundSettings.customCommandKey)
 
         var deliveredNotificationIDs: [UUID] = []
 
@@ -1242,31 +1252,24 @@ final class NotificationDockBadgeTests: XCTestCase {
         store.configureNotificationDeliveryHandlerForTesting { _, notification in
             deliveredNotificationIDs.append(notification.id)
         }
+        store.configureNativeNotificationDeliveryHooksForTesting { hooks in
+            hooks.soundPlayer = {}
+            hooks.commandRunner = { title, subtitle, body in
+                commandRecorder.record(title: title, subtitle: subtitle, body: body)
+            }
+        }
         appDelegate.tabManager = manager
         appDelegate.notificationStore = store
         AppFocusState.overrideIsFocused = true
-        defaults.set("none", forKey: NotificationSoundSettings.key)
-        defaults.set(
-            "printf '%s\\n%s\\n%s' \"$BMUX_NOTIFICATION_TITLE\" \"$BMUX_NOTIFICATION_SUBTITLE\" \"$BMUX_NOTIFICATION_BODY\" > '\(commandOutputURL.path)'",
-            forKey: NotificationSoundSettings.customCommandKey
-        )
 
         defer {
             store.replaceNotificationsForTesting([])
             appDelegate.tabManager = originalTabManager
             appDelegate.notificationStore = originalNotificationStore
             AppFocusState.overrideIsFocused = originalAppFocusOverride
-            if hadSoundValue {
-                defaults.set(originalSoundValue, forKey: NotificationSoundSettings.key)
-            } else {
-                defaults.removeObject(forKey: NotificationSoundSettings.key)
+            store.configureNativeNotificationDeliveryHooksForTesting {
+                $0 = NativeNotificationDeliveryHooks()
             }
-            if hadCommandValue {
-                defaults.set(originalCommandValue, forKey: NotificationSoundSettings.customCommandKey)
-            } else {
-                defaults.removeObject(forKey: NotificationSoundSettings.customCommandKey)
-            }
-            try? FileManager.default.removeItem(at: commandOutputURL)
         }
 
         guard let workspace = manager.selectedWorkspace,
@@ -1283,21 +1286,18 @@ final class NotificationDockBadgeTests: XCTestCase {
             body: "Focused body"
         )
 
-        let commandFinished = XCTNSPredicateExpectation(
-            predicate: NSPredicate { _, _ in
-                FileManager.default.fileExists(atPath: commandOutputURL.path)
-            },
-            object: NSObject()
-        )
-        XCTAssertEqual(XCTWaiter().wait(for: [commandFinished], timeout: 10.0), .completed)
         XCTAssertTrue(deliveredNotificationIDs.isEmpty)
 
-        let output = try String(contentsOf: commandOutputURL, encoding: .utf8)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
         let expectedTitle = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
             ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
             ?? "bmux"
-        XCTAssertEqual(output.components(separatedBy: "\n"), [expectedTitle, "Focused subtitle", "Focused body"])
+        XCTAssertEqual(commandRecorder.invocations(), [
+            NotificationCommandInvocation(
+                title: expectedTitle,
+                subtitle: "Focused subtitle",
+                body: "Focused body"
+            ),
+        ])
     }
 
     func testNotificationAuthorizationStateMappingCoversKnownUNAuthorizationStatuses() {

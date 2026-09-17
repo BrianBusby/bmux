@@ -28,11 +28,13 @@ public final class FocusHistoryModel: FocusHistoryNavigating {
     private var focusHistoryRecordingSuppressionDepth = 0
     private var focusHistorySuppressedSelectionSideEffectGenerations: Set<UInt64> = []
     private let maxHistorySize: Int
+    private let now: @MainActor () -> Date
 
     /// Creates a detached model; call ``attach(host:)`` before use.
     /// `maxHistorySize` is the legacy stack cap (50).
-    public init(maxHistorySize: Int = 50) {
+    public init(maxHistorySize: Int = 50, now: @escaping @MainActor () -> Date = Date.init) {
         self.maxHistorySize = maxHistorySize
+        self.now = now
     }
 
     public func attach(host: any FocusHistoryHosting) {
@@ -97,7 +99,7 @@ public final class FocusHistoryModel: FocusHistoryNavigating {
                     return
                 }
 
-                focusHistory.insert(FocusHistoryRecord(entry: entry), at: insertionIndex)
+                focusHistory.insert(FocusHistoryRecord(entry: entry, focusedAt: now()), at: insertionIndex)
                 let overflow = max(0, focusHistory.count - maxHistorySize)
                 if overflow > 0 {
                     focusHistory.removeFirst(overflow)
@@ -119,7 +121,7 @@ public final class FocusHistoryModel: FocusHistoryNavigating {
             return
         }
 
-        focusHistory.append(FocusHistoryRecord(entry: entry))
+        focusHistory.append(FocusHistoryRecord(entry: entry, focusedAt: now()))
         if focusHistory.count > maxHistorySize {
             focusHistory.removeFirst(focusHistory.count - maxHistorySize)
         }
@@ -149,7 +151,7 @@ public final class FocusHistoryModel: FocusHistoryNavigating {
            historyIndex < focusHistory.count - 1,
            focusHistory[historyIndex].entry.workspaceId == workspaceId {
             if focusHistory[historyIndex].entry != entry {
-                focusHistory[historyIndex] = FocusHistoryRecord(entry: entry)
+                focusHistory[historyIndex] = FocusHistoryRecord(entry: entry, focusedAt: now())
                 host?.focusHistoryRevisionDidChange()
             }
             return

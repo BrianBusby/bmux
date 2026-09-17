@@ -3,14 +3,7 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-    id: shared_session_chat
-    title: Shared-session Chat and permanent Terminal
-    state: open
-    owner: bmux
-    active_agent: codex
-    active_branch: connected-session-controls
-    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/shared-session-chat
-  state: active
+  state: none_selected
 
 execution_telemetry:
   provider_neutral_contract: implemented
