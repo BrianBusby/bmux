@@ -2,7 +2,7 @@ schema_version: 1
 repository: BrianBusby/bmux
 
 current_work:
-  active_slice: null
+  active_slice:
   state: none_selected
 
 execution_telemetry:
