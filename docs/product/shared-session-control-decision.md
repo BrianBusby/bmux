@@ -185,3 +185,39 @@ The latest 500 messages are shown, with no older-history paging yet. Dark-mode
 visual inspection, VoiceOver, provider-crash recovery, and a real PE outage were
 not exercised. Those remain acceptance checks; neither all of Phase 2 nor Phase
 3 is marked complete. No demo video was recorded.
+
+## Follow-up: shared-host connection probe (2026-09-17)
+
+The next experiment used a **new** disposable Codex 0.154.0 session, not an
+attachment to an ordinary existing TUI. A single app-server (PID `80313`) listened
+on a mode-0600 Unix socket inside a mode-0700 temporary directory. The real Codex
+TUI (PID `80459`) connected with `--remote unix://<socket>` and stayed attached.
+A second WebSocket client joined that same live server/thread. Unix transport
+requires the HTTP Upgrade/WebSocket protocol; raw JSONL or a byte proxy alone
+is not a JSON-RPC client for that listener.
+
+The TUI created provider thread `01a0ad82-cf12-7bd0-844d-b6db4f423461`.
+`thread/loaded/list` returned that single loaded thread; `thread/resume` on the
+same server rejoined it. No second provider owner or conversation was started.
+
+| Action | Observed result |
+| --- | --- |
+| Second client sends `turn/start` with client message ID `73a600c6-94f5-465a-8dd3-5bdf1d1a36be` | Acknowledged turn `01a0ad84-ed8b-7621-8206-da92067b9656`; completed with the requested marker in the original TUI; one corresponding provider turn |
+| Start harmless sleep turn `01a0ad85-acd5-7032-a4ae-3476914a45fc`, wait for command activity, then interrupt it | `turn/interrupt` acknowledged; turn completed with status `interrupted`; server and TUI survived |
+| Start next turn `01a0ad85-be38-72e1-b57d-c1364e018022`, then repeat interrupt carrying **previous** turn ID | **Gate failure:** server acknowledged `{}` and interrupted the newer turn |
+| Send recovery prompt | Turn `01a0ad86-9b03-7c81-836f-94b501a851d1` completed; both original PIDs were still alive |
+
+The stale interrupt request was structurally valid and carried the documented
+`threadId` and `turnId` fields. Its old `turnId` did not protect the next turn in
+this installed build. A client-side read-then-check cannot make that atomic when
+the real TUI can concurrently start another turn. Safe interrupt capability
+therefore remains disabled even for this experimentally shared hosting topology.
+
+The probe establishes that a new shared-host session can accept a second
+client's prompt and keep the real TUI attached. It does **not** establish complete
+CLI command parity, safe delayed interruption, approval retirement, reconnect
+idempotency, or queue semantics. The official transport is still described as
+experimental. Existing sessions remain read-only. Opt-in shared-host launches
+with only individually verified controls require the explicit architecture
+choice described above; no such launch mode or controls were enabled by this
+probe. The existing dogfood app was not rebuilt or replaced.

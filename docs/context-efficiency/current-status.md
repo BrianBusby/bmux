@@ -20,7 +20,10 @@ manifests. See [the shared-session control decision](../product/shared-session-c
 for the capability matrix and evidence. Shared ordinary-CLI control remains
 unproven; read-only Chat is implemented and under observation, with local
 transport, transcript, native bridge and tagged macOS evidence in that decision.
-Broader provider/recovery acceptance and all shared controls remain open.
+Broader provider/recovery acceptance and all shared controls remain open. A new
+shared-host TUI probe accepted a second-client prompt, but a stale interrupt
+with an old turn ID stopped a newer turn in Codex 0.154.0. This is a provider
+control gate failure, not authorization to enable Chat controls.
 Process Integrity remains the broader frontier and its completed slices remain
 unchanged. This assignment does not authorize unrelated cleanup.
 

@@ -142,6 +142,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `shared_host_codex_stale_interrupt` | open |
 | `ordinary_cli_shared_control_unverified` | open |
 | `broad_legacy_storage_migration` | open |
 | `residual_app_runtime_lifecycle_ownership` | open |

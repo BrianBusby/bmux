@@ -131,6 +131,8 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: shared_host_codex_stale_interrupt
+    status: open
   - id: ordinary_cli_shared_control_unverified
     status: open
   - id: broad_legacy_storage_migration
