@@ -1466,7 +1466,7 @@ roadmap:
       execution:
         assignment: complete
         assigned_to: bmux
-        notes: "Selected on 2026-09-15 after PR #110 reconciled Project Truth delivery on main at 9d1c3bafe6d3d5a76b95cc760dd2a4e0fbb6defc. Implementation complete in branch test-determinism-swift-app-runtime-burndown; seven corrected Swift app/runtime allowlist entries were removed after focused repeated tests and affected suites passed. Delivery remains open until the PR is merged; human acceptance is not claimed."
+        notes: "Selected on 2026-09-15 after PR #110 reconciled Project Truth delivery on main at 9d1c3bafe6d3d5a76b95cc760dd2a4e0fbb6defc. PR #113 merged on 2026-09-17; seven corrected Swift app/runtime allowlist entries were removed after focused repeated tests and affected suites passed. Human acceptance is not claimed."
       delivery_status: merged
       acceptance_status: implemented
       evidence:
