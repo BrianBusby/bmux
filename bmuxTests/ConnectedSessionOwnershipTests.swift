@@ -46,6 +46,7 @@ import Testing
         runtime.attachConnectedTerminal(surfaceID: surface, isAlive: { true })
         _ = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
         let requestID = UUID()
+        try runtime.updateConnectedDraft(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", text: "Inspect the build")
         let receipt = try await runtime.performConnectedAction(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", requestID: requestID, text: "Inspect the build", expectedTurnID: nil)
         #expect(receipt["delivery"] as? String == "uncertain")
         let snapshot = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
@@ -54,6 +55,10 @@ import Testing
         #expect(control["status"] as? String == "connected")
         #expect(actions.first?["delivery"] as? String == "accepted")
         #expect(actions.first?["providerID"] as? String == "queued-a")
+        #expect(control["draft"] as? String == "")
+        try runtime.updateConnectedDraft(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", text: "Inspect the build")
+        let nextSnapshot = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        #expect((nextSnapshot["control"] as? [String: Any])?["draft"] as? String == "Inspect the build")
         #expect(await transport.mutationThreads == ["thread-a"])
         await runtime.closeConnectedSession(surfaceID: surface)
     }
