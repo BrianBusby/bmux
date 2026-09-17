@@ -7,13 +7,6 @@ Packages/macOS/BmuxBrowser/Tests/BmuxBrowserTests/Omnibar/BrowserOmnibarPageFocu
 Packages/macOS/BmuxControlSocket/Tests/BmuxControlSocketTests/SocketTransportIOTests.swift	assert-on-duration	grandfathered
 Packages/macOS/BmuxFoundation/Tests/BmuxFoundationTests/Process/CommandRunnerTests.swift	assert-on-duration	grandfathered
 Packages/macOS/BmuxSettings/Tests/BmuxSettingsTests/UserDefaultsSettingsStoreTests.swift	sleep-then-assert	grandfathered
-bmuxTests/BMUXOpenCommandTests.swift	assert-on-duration	grandfathered
-bmuxTests/FileExplorerStoreTests.swift	sleep-then-assert	grandfathered
-bmuxTests/MobileHostAuthorizationTests.swift	sleep-then-assert	grandfathered
-bmuxTests/NotificationAndMenuBarTests.swift	assert-on-duration	grandfathered
-bmuxTests/OmnibarAndToolsTests.swift	assert-on-duration	grandfathered
-bmuxTests/RovoDevSessionIndexTests.swift	sleep-then-assert	grandfathered
-bmuxTests/TabManagerSessionSnapshotTests.swift	assert-on-duration	grandfathered
 bmuxUITests/FeedSidebarUITests.swift	sleep-then-assert	grandfathered
 tests/test_multi_workspace_focus.py	sleep-then-assert	grandfathered
 tests_v2/test_browser_api_extended_families.py	sleep-then-assert	grandfathered

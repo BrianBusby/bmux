@@ -5,7 +5,6 @@ import os
 import UserNotifications
 import Bonsplit
 import BmuxSettings
-
 nonisolated private let terminalNotificationLogger = Logger(
     subsystem: "com.bmuxterm.app",
     category: "notification"
@@ -1391,7 +1390,8 @@ final class TerminalNotificationStore: ObservableObject {
         if !idsToClear.isEmpty {
             notifications = updated
         }
-        clearFocusedReadIndicator(forTabId: tabId, surfaceId: surfaceId)
+        // Auto-read on focused app activation uses this path too. Keep the
+        // focused-read indicator until an explicit dismissal path clears it.
         if surfaceId == nil {
             clearWorkspacePanelUnread(forTabId: tabId)
             setPanelDerivedWorkspaceUnread(false, forTabId: tabId)

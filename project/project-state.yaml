@@ -1416,7 +1416,7 @@ roadmap:
       kind: slice
       title: Swift App and Runtime Test Determinism Burn-Down
       parent: test_determinism_allowlist_burndown
-      status: planned
+      status: implemented
       owner: bmux
       repositories:
         - bmux
@@ -1428,7 +1428,7 @@ roadmap:
           - test_determinism
           - swift_app_tests
           - runtime_tests
-      capability_maturity: ready
+      capability_maturity: validated
       depends_on:
         - app_runtime_notification_push_lifecycle_migration
         - app_runtime_menu_bar_presentation_lifecycle_migration
@@ -1464,10 +1464,18 @@ roadmap:
           - mobile_host_presence_tests
           - notification_menu_tests
       execution:
-        assignment: planned
+        assignment: complete
         assigned_to: bmux
-      delivery_status: proposed
-      acceptance_status: proposed
+        notes: "Selected on 2026-09-15 after PR #110 reconciled Project Truth delivery on main at 9d1c3bafe6d3d5a76b95cc760dd2a4e0fbb6defc. Implementation complete in branch test-determinism-swift-app-runtime-burndown; seven corrected Swift app/runtime allowlist entries were removed after focused repeated tests and affected suites passed. Delivery remains open until the PR is merged; human acceptance is not claimed."
+      delivery_status: open
+      acceptance_status: implemented
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: cf1bf749467b0acb5aeb10fe7deb15e00bac3b2c
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 113
       rationale: App and runtime determinism should follow lifecycle ownership migrations so tests target explicit readiness and teardown contracts instead of old scattered startup side effects.
       acceptance:
         criteria:

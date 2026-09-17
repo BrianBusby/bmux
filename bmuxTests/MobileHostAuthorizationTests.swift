@@ -821,81 +821,61 @@ struct MobileHostAuthorizationTests {
     @Test func testMobileHostConnectionClosesWhenFirstFrameTimesOut() async throws {
         let connectionID = UUID()
         let recorder = MobileHostConnectionCloseRecorder()
-        let connection = NWConnection(
-            host: NWEndpoint.Host("127.0.0.1"),
-            port: NWEndpoint.Port(rawValue: 9)!,
-            using: .tcp
-        )
+        let sleeper = MobileHostManualSleeper()
+        let connection = NWConnection.bmuxTestLoopback()
         let session = MobileHostConnection(
             id: connectionID,
             connection: connection,
             firstFrameTimeoutNanoseconds: 1_000_000,
+            sleepNanoseconds: { try await sleeper.sleep(nanoseconds: $0) },
             authorizeRequest: { _ in nil },
             onAuthorizedRequest: { _ in },
             handleRequest: { _ in .ok([:]) },
-            onClose: { id in
-                await recorder.record(id)
-            }
+            onClose: { await recorder.record($0) }
         )
         await session.debugStartFirstFrameTimeoutForTesting()
-        for _ in 0..<100 {
-            let recordedIDs = await recorder.recordedIDs()
-            if !recordedIDs.isEmpty {
-                break
-            }
-            try await Task.sleep(nanoseconds: 1_000_000)
-        }
-        let finalRecordedIDs = await recorder.recordedIDs()
+        let requestedNanoseconds = try await sleeper.waitForFirstRequest()
+        #expect(requestedNanoseconds == [1_000_000])
+        await sleeper.resumeNext()
+        let finalRecordedIDs = try await recorder.waitForRecordedIDs()
         #expect(finalRecordedIDs == [connectionID])
     }
     @Test func testMobileHostConnectionClosesWhenIdleAfterFirstFrame() async throws {
         let connectionID = UUID()
         let recorder = MobileHostConnectionCloseRecorder()
-        let connection = NWConnection(
-            host: NWEndpoint.Host("127.0.0.1"),
-            port: NWEndpoint.Port(rawValue: 9)!,
-            using: .tcp
-        )
+        let sleeper = MobileHostManualSleeper()
+        let connection = NWConnection.bmuxTestLoopback()
         let session = MobileHostConnection(
             id: connectionID,
             connection: connection,
             idleTimeoutNanoseconds: 1_000_000,
+            sleepNanoseconds: { try await sleeper.sleep(nanoseconds: $0) },
             authorizeRequest: { _ in nil },
             onAuthorizedRequest: { _ in },
             handleRequest: { _ in .ok([:]) },
-            onClose: { id in
-                await recorder.record(id)
-            }
+            onClose: { await recorder.record($0) }
         )
         await session.debugStartIdleTimeoutAfterFrameForTesting()
-        for _ in 0..<100 {
-            let recordedIDs = await recorder.recordedIDs()
-            if !recordedIDs.isEmpty {
-                break
-            }
-            try await Task.sleep(nanoseconds: 1_000_000)
-        }
-        let finalRecordedIDs = await recorder.recordedIDs()
+        let requestedNanoseconds = try await sleeper.waitForFirstRequest()
+        #expect(requestedNanoseconds == [1_000_000])
+        await sleeper.resumeNext()
+        let finalRecordedIDs = try await recorder.waitForRecordedIDs()
         #expect(finalRecordedIDs == [connectionID])
     }
     @Test func testMobileHostConnectionKeepsSubscribedEventStreamPastIdleTimeout() async throws {
         let connectionID = UUID()
         let recorder = MobileHostConnectionCloseRecorder()
-        let connection = NWConnection(
-            host: NWEndpoint.Host("127.0.0.1"),
-            port: NWEndpoint.Port(rawValue: 9)!,
-            using: .tcp
-        )
+        let sleeper = MobileHostManualSleeper()
+        let connection = NWConnection.bmuxTestLoopback()
         let session = MobileHostConnection(
             id: connectionID,
             connection: connection,
             idleTimeoutNanoseconds: 1_000_000,
+            sleepNanoseconds: { try await sleeper.sleep(nanoseconds: $0) },
             authorizeRequest: { _ in nil },
             onAuthorizedRequest: { _ in },
             handleRequest: { _ in .ok([:]) },
-            onClose: { id in
-                await recorder.record(id)
-            }
+            onClose: { await recorder.record($0) }
         )
         await session.subscribe(streamID: "events", topics: ["terminal.updated"])
         await session.debugStartIdleTimeoutAfterFrameForTesting()
@@ -906,17 +886,14 @@ struct MobileHostAuthorizationTests {
         // subscribed, so the recorder reflects the final state with no
         // wall-clock window to race.
         #expect(await session.isSubscribed(to: "terminal.updated"))
+        #expect(await sleeper.requestCount() == 0)
         let subscribedCloseIDs = await recorder.recordedIDs()
         #expect(subscribedCloseIDs.isEmpty)
         _ = await session.unsubscribe(streamID: "events")
-        for _ in 0..<100 {
-            let recordedIDs = await recorder.recordedIDs()
-            if !recordedIDs.isEmpty {
-                break
-            }
-            try await Task.sleep(nanoseconds: 1_000_000)
-        }
-        let finalRecordedIDs = await recorder.recordedIDs()
+        let requestedNanoseconds = try await sleeper.waitForFirstRequest()
+        #expect(requestedNanoseconds == [1_000_000])
+        await sleeper.resumeNext()
+        let finalRecordedIDs = try await recorder.waitForRecordedIDs()
         #expect(finalRecordedIDs == [connectionID])
     }
     @Test func testTerminalRenderObserverRetainsGhosttyDemandOnlyWithTerminalSubscriber() async throws {
@@ -934,11 +911,7 @@ struct MobileHostAuthorizationTests {
         #expect(!observer.debugIsRetainingNotificationDemandForTesting)
         let session = MobileHostConnection(
             id: UUID(),
-            connection: NWConnection(
-                host: NWEndpoint.Host("127.0.0.1"),
-                port: NWEndpoint.Port(rawValue: 9)!,
-                using: .tcp
-            ),
+            connection: NWConnection.bmuxTestLoopback(),
             authorizeRequest: { _ in nil },
             onAuthorizedRequest: { _ in },
             handleRequest: { _ in .ok([:]) },
@@ -979,35 +952,31 @@ struct MobileHostAuthorizationTests {
     @Test func testMobileHostConnectionDoesNotPersistUnauthorizedEventSubscription() async throws {
         let connectionID = UUID()
         let recorder = MobileHostConnectionCloseRecorder()
+        let sleeper = MobileHostManualSleeper()
         let socket = try MobileHostStartedTestSocket()
         defer { socket.close() }
         let session = MobileHostConnection(
             id: connectionID,
             connection: socket.connection,
             idleTimeoutNanoseconds: 1_000_000,
+            sleepNanoseconds: { try await sleeper.sleep(nanoseconds: $0) },
             authorizeRequest: { _ in
                 .failure(MobileHostRPCError(code: "unauthorized", message: "no"))
             },
             onAuthorizedRequest: { _ in },
             handleRequest: { _ in .ok([:]) },
-            onClose: { id in
-                await recorder.record(id)
-            }
+            onClose: { await recorder.record($0) }
         )
         let frame = try MobileSyncFrameCodec.encodeFrame(
             Data(#"{"id":"subscribe","method":"mobile.events.subscribe","params":{"stream_id":"events","topics":["terminal.updated"]}}"#.utf8)
         )
         await session.debugHandleReceiveDataForTesting(frame)
-        try await Task.sleep(nanoseconds: 25_000_000)
-        await session.debugStartIdleTimeoutAfterFrameForTesting()
-        for _ in 0..<100 {
-            let recordedIDs = await recorder.recordedIDs()
-            if !recordedIDs.isEmpty {
-                break
-            }
-            try await Task.sleep(nanoseconds: 1_000_000)
-        }
-        let finalRecordedIDs = await recorder.recordedIDs()
+        await session.debugDrainResponseTasksForTesting()
+        #expect(!(await session.isSubscribed(to: "terminal.updated")))
+        let requestedNanoseconds = try await sleeper.waitForFirstRequest()
+        #expect(requestedNanoseconds == [1_000_000])
+        await sleeper.resumeNext()
+        let finalRecordedIDs = try await recorder.waitForRecordedIDs()
         #expect(finalRecordedIDs == [connectionID])
     }
     @Test func testMobileHostConnectionStopsBatchedFrameProcessingAfterClose() async throws {
@@ -1023,11 +992,7 @@ struct MobileHostAuthorizationTests {
         let secondAuthorizeStarted = AsyncTestSignal()
         let secondAuthorizeFinished = AsyncTestSignal()
         let secondGate = SendableSemaphore(value: 0)
-        let connection = NWConnection(
-            host: NWEndpoint.Host("127.0.0.1"),
-            port: NWEndpoint.Port(rawValue: 9)!,
-            using: .tcp
-        )
+        let connection = NWConnection.bmuxTestLoopback()
         let session = MobileHostConnection(
             id: connectionID,
             connection: connection,
@@ -1186,11 +1151,7 @@ private final class MobileHostStartedTestSocket: @unchecked Sendable {
             listener.cancel()
             throw MobileHostStartedTestSocketError.listenerPortUnavailable
         }
-        let connection = NWConnection(
-            host: NWEndpoint.Host("127.0.0.1"),
-            port: port,
-            using: .tcp
-        )
+        let connection = NWConnection.bmuxTestLoopback(port: port)
         let connectionReady = DispatchSemaphore(value: 0)
         connection.stateUpdateHandler = { state in
             if case .ready = state {
@@ -1214,11 +1175,42 @@ private final class MobileHostStartedTestSocket: @unchecked Sendable {
 }
 private actor MobileHostConnectionCloseRecorder {
     private var ids: [UUID] = []
+    private let recordedSignal = AsyncTestSignal()
     func record(_ id: UUID) {
         ids.append(id)
+        recordedSignal.fulfill()
     }
     func recordedIDs() -> [UUID] {
         ids
+    }
+    func waitForRecordedIDs(timeout: TimeInterval = 1) async throws -> [UUID] {
+        try await recordedSignal.wait(timeout: timeout)
+        return ids
+    }
+}
+private actor MobileHostManualSleeper {
+    private var requests: [UInt64] = []
+    private var continuations: [CheckedContinuation<Void, Error>] = []
+    private let requestedSignal = AsyncTestSignal()
+    func sleep(nanoseconds: UInt64) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            continuations.append(continuation)
+            requests.append(nanoseconds)
+            requestedSignal.fulfill()
+        }
+    }
+    func requestCount() -> Int {
+        requests.count
+    }
+    func waitForFirstRequest(timeout: TimeInterval = 1) async throws -> [UInt64] {
+        if requests.isEmpty {
+            try await requestedSignal.wait(timeout: timeout)
+        }
+        return requests
+    }
+    func resumeNext() {
+        guard !continuations.isEmpty else { return }
+        continuations.removeFirst().resume()
     }
 }
 private actor MobileHostConnectionRequestRecorder {
@@ -1237,6 +1229,11 @@ private actor MobileHostConnectionBox {
     }
     func close(reason: String) async {
         await session?.close(reason: reason)
+    }
+}
+private extension NWConnection {
+    static func bmuxTestLoopback(port: NWEndpoint.Port = NWEndpoint.Port(rawValue: 9)!) -> NWConnection {
+        NWConnection(host: NWEndpoint.Host("127.0.0.1"), port: port, using: .tcp)
     }
 }
 private enum AsyncTestSignalError: Error {
