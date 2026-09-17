@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { callNative } from "../shared/bridge";
 import type { AppContext } from "../shared/types";
-import type { ConnectedAction, ConnectedControl } from "../shared/connectedChat";
+import { shouldSubmitConnectedChatOnEnter, type ConnectedAction, type ConnectedControl } from "../shared/connectedChat";
 
 /** Draft state remains in the panel's retained webview across view switches. */
 export function ConnectedChatComposer({ context, control, enabled }: { context: AppContext; control: ConnectedControl; enabled: boolean }) {
@@ -47,7 +47,12 @@ export function ConnectedChatComposer({ context, control, enabled }: { context: 
     failed: copy.connectedFailed, uncertain: copy.connectedUncertain };
   return <footer className="terminal-chat-composer">
     <label htmlFor="connected-chat-draft">{copy.connectedPrompt}</label>
-    <textarea aria-label={copy.connectedPrompt} id="connected-chat-draft" value={draft} onChange={event => updateDraft(event.target.value)} rows={2} maxLength={16000} />
+    <textarea aria-label={copy.connectedPrompt} id="connected-chat-draft" value={draft} onChange={event => updateDraft(event.target.value)}
+      onKeyDown={event => {
+        if (!shouldSubmitConnectedChatOnEnter(event.nativeEvent)) return;
+        event.preventDefault();
+        void submit("queue");
+      }} rows={2} maxLength={16000} />
     <div className="terminal-chat-composer-actions">
       <button disabled={!enabled || !control.queueFollowUp || blocked || !draft.trim() || slashCommand} onClick={() => void submit("queue")}>{copy.connectedQueue}</button>
       {control.steerTurn && <button disabled={!enabled || blocked || !draft.trim() || slashCommand} onClick={() => void submit("steer")}>{copy.connectedSteer}</button>}

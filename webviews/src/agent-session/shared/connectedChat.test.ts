@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { canUseConnectedControl } from "./connectedChat";
+import { canUseConnectedControl, shouldSubmitConnectedChatOnEnter } from "./connectedChat";
 
 describe("connected session authority", () => {
   test("only the bound live provider connection can enable actions", () => {
@@ -9,6 +9,14 @@ describe("connected session authority", () => {
     expect(canUseConnectedControl(undefined, "original-thread")).toBe(false);
     expect(canUseConnectedControl({ ...control, status: "unavailable" }, "original-thread")).toBe(false);
   });
+});
+
+test("Enter submits a connected follow-up while composition and newline shortcuts remain available", () => {
+  expect(shouldSubmitConnectedChatOnEnter({ key: "Enter" })).toBe(true);
+  expect(shouldSubmitConnectedChatOnEnter({ key: "Enter", shiftKey: true })).toBe(false);
+  expect(shouldSubmitConnectedChatOnEnter({ key: "Enter", altKey: true })).toBe(false);
+  expect(shouldSubmitConnectedChatOnEnter({ key: "Enter", isComposing: true })).toBe(false);
+  expect(shouldSubmitConnectedChatOnEnter({ key: "Enter", keyCode: 229 })).toBe(false);
 });
 
 test("history availability and native connection authority are independent", async () => {
