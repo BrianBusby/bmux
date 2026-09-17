@@ -77,6 +77,8 @@ final class TerminalPanel: Panel, ObservableObject {
     let presentation = TerminalPanelPresentationState()
     let stableSurfaceIdentity = PanelStableSurfaceIdentity()
     let panelType: PanelType = .terminal
+    /// The retained Chat WebView owns keyboard input while Chat is displayed.
+    var isChatPresentationActive = false
 
     /// The underlying terminal surface
     let surface: TerminalSurface
@@ -617,6 +619,11 @@ final class TerminalPanel: Panel, ObservableObject {
 #endif
 
     func focus() {
+        guard !isChatPresentationActive else {
+            surface.setFocus(false)
+            hostedView.setActive(false)
+            return
+        }
         if isAgentHibernated {
             _ = requestAgentHibernationResume(focus: true)
             return
