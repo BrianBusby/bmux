@@ -71,6 +71,9 @@ final class TerminalChatRuntime: TerminalChatConnecting {
                   let thread = response["thread"] as? [String: Any], thread["id"] as? String == threadID else {
                 throw CodexControlError.wrongThread
             }
+            // A timeout or malformed reply does not necessarily disconnect the socket.
+            // Reconcile from provider evidence on healthy refreshes too; never resend.
+            try await actionOwner.reconcile()
             let providerState = thread["status"] as? [String: Any]
             let history = snapshot["history"] as? [String: Any]
             let turn = history?["observed_turn"] as? [String: Any]
