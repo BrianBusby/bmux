@@ -10,19 +10,20 @@ export function ConnectedChatComposer({ context, control, enabled }: { context: 
     return control.draft?.text ?? (last && last.delivery !== "accepted" ? last.text : "");
   });
   const revision = useRef(control.draft?.revision ?? crypto.randomUUID());
-  const [action, setAction] = useState<ConnectedAction>();
+  const [action, setAction] = useState<(ConnectedAction & { draftRevision?: string })>();
   const inFlight = useRef(false);
   const [sending, setSending] = useState(false);
   const copy = context.copy;
   const observed = action && control.actions?.find(item => item.id.toLowerCase() === action.id.toLowerCase());
   const latest = observed ?? action ?? control.actions?.at(-1);
+  const submittedRevision = action?.id.toLowerCase() === latest?.id.toLowerCase() ? action.draftRevision : undefined;
   const previousReceipt = useRef(latest);
   useEffect(() => {
     const previous = previousReceipt.current;
     previousReceipt.current = latest;
     // An accepted historical action must not erase a newly restored draft.
     if (latest?.delivery === "accepted" && previous?.id === latest.id && previous.delivery !== "accepted") {
-      if (control.draft?.revision === revision.current) setDraft("");
+      if (submittedRevision === revision.current) setDraft("");
     }
   }, [latest]);
   const blocked = sending || latest?.delivery === "pending" || latest?.delivery === "uncertain";
