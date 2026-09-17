@@ -35,6 +35,29 @@ import Testing
         await runtime.closeConnectedSession(surfaceID: surface)
     }
 
+    @Test func healthyConnectionReconcilesUncertainAcceptanceWithoutResubmission() async throws {
+        let transport = ConnectedCodexFixtureTransport()
+        await transport.omitQueueAcknowledgmentID()
+        let connection = CodexRPCConnection(transport: transport)
+        try await connection.start()
+        let runtime = TerminalChatRuntime(reader: ConnectedCodexFixtureReader(), hosts: ConnectedCodexFixtureHost(connection: connection), bind: { _, _, _, _ in })
+        let workspace = UUID(), surface = UUID()
+        _ = try await runtime.prepareConnectedSession(workspaceID: workspace, surfaceID: surface, workingDirectory: "/fixture")
+        runtime.attachConnectedTerminal(surfaceID: surface, isAlive: { true })
+        _ = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        let requestID = UUID()
+        let receipt = try await runtime.performConnectedAction(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", requestID: requestID, text: "Inspect the build", expectedTurnID: nil)
+        #expect(receipt["delivery"] as? String == "uncertain")
+        let snapshot = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        let control = try #require(snapshot["control"] as? [String: Any])
+        let actions = try #require(control["actions"] as? [[String: Any]])
+        #expect(control["status"] as? String == "connected")
+        #expect(actions.first?["delivery"] as? String == "accepted")
+        #expect(actions.first?["providerID"] as? String == "queued-a")
+        #expect(await transport.mutationThreads == ["thread-a"])
+        await runtime.closeConnectedSession(surfaceID: surface)
+    }
+
     @Test func exitedTerminalAndChangedThreadDisableControlWithoutDiscardingTheDraft() async throws {
         let transport = ConnectedCodexFixtureTransport()
         let connection = CodexRPCConnection(transport: transport)
