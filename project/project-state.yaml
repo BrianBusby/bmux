@@ -1467,15 +1467,22 @@ roadmap:
         assignment: complete
         assigned_to: bmux
         notes: "Selected on 2026-09-15 after PR #110 reconciled Project Truth delivery on main at 9d1c3bafe6d3d5a76b95cc760dd2a4e0fbb6defc. Implementation complete in branch test-determinism-swift-app-runtime-burndown; seven corrected Swift app/runtime allowlist entries were removed after focused repeated tests and affected suites passed. Delivery remains open until the PR is merged; human acceptance is not claimed."
-      delivery_status: open
+      delivery_status: merged
       acceptance_status: implemented
       evidence:
         commits:
           - repository: BrianBusby/bmux
             sha: cf1bf749467b0acb5aeb10fe7deb15e00bac3b2c
+          - repository: BrianBusby/bmux
+            sha: 3a90b85b9051bf3aee463d679feb9a1deba232e3
         pull_requests:
           - repository: BrianBusby/bmux
             number: 113
+            merged_at: '2026-09-17T18:36:52Z'
+            merge_commit_sha: 3a90b85b9051bf3aee463d679feb9a1deba232e3
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
       rationale: App and runtime determinism should follow lifecycle ownership migrations so tests target explicit readiness and teardown contracts instead of old scattered startup side effects.
       acceptance:
         criteria:
