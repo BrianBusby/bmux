@@ -1,6 +1,6 @@
 # Shared-session Chat control decision
 
-Status: ordinary CLI read-only implementation remains bounded; opt-in new shared-host controls passed the scoped build-593 submission/history gate. DEBUG-only, session-scoped acceptance hooks now cover partial-history and transport-disconnect recovery; release-build and live VoiceOver/appearance/reconnect evidence remain pending. Ordinary attachment and safe structured interruption have not passed their gates. This is not a claim that all three assignment phases passed. Base: `c73448b53`.
+Status: ordinary CLI read-only implementation remains bounded; opt-in new shared-host controls passed the scoped build-593 submission/history gate. DEBUG-only, session-scoped acceptance hooks cover partial-history and transport-disconnect recovery; build 595 verified a real connected target and one-shot recovery, while dark WebKit contrast remains a demonstrated hook limitation and audible VoiceOver remains unverified. Release-build evidence is still pending. Ordinary attachment and safe structured interruption have not passed their gates. This is not a claim that all three assignment phases passed. Base: `596420f12`.
 
 ## Ownership and identity
 
