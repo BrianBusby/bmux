@@ -1,6 +1,6 @@
 # Shared-session Chat control decision
 
-Status: ordinary CLI read-only implementation remains bounded; opt-in new shared-host controls passed the scoped build-593 submission/history gate. DEBUG-only, session-scoped acceptance hooks cover partial-history and transport-disconnect recovery; build 595 verified a real connected target and one-shot recovery, while dark WebKit contrast remains a demonstrated hook limitation and audible VoiceOver remains unverified. Release-build evidence is still pending. Ordinary attachment and safe structured interruption have not passed their gates. This is not a claim that all three assignment phases passed. Base: `596420f12`.
+Status: ordinary CLI read-only implementation remains bounded; opt-in new shared-host controls passed the scoped build-593 submission/history gate. DEBUG-only, session-scoped acceptance hooks cover partial-history and transport-disconnect recovery; build 597 verified the dark WebKit bridge theme and readable connected Chat, while audible VoiceOver remains unverified. Release-build evidence is pending for `1caa584ca`. Ordinary attachment and safe structured interruption have not passed their gates. This is not a claim that all three assignment phases passed. Base: `1caa584ca`.
 
 ## Ownership and identity
 
@@ -185,10 +185,15 @@ Working/completed/interrupted states require explicit Codex events; no state is
 inferred from prose or elapsed silence. Individual failed tool results remain
 separate from turn status. Sources without a known turn-failure event stay
 unknown rather than manufacturing a failed turn.
-The latest 500 messages are shown, with no older-history paging yet. Dark-mode
-visual inspection, VoiceOver, provider-crash recovery, and a real PE outage were
-not exercised. Those remain acceptance checks; neither all of Phase 2 nor Phase
-3 is marked complete. No demo video was recorded.
+The latest 500 messages are shown, with no older-history paging yet. Build 597
+exercised the DEBUG dark appearance override on a verified connected target: the
+native host and WebKit bridge used the dark payload, including an explicit dark page
+backing, and conversation, composer, status, and Terminal fallback were readable.
+Removing the override and recreating Chat restored light appearance. VoiceOver
+keyboard traversal passed with `Tab`, but audible announcements were not observable
+in the execution environment and still require the human check below. Provider-crash
+recovery and a real PE outage were not exercised; neither all of Phase 2 nor Phase 3
+is marked complete.
 
 ## Acceptance-only fault hooks
 
@@ -200,7 +205,8 @@ returns an identity-labelled synthetic snapshot to the normal Chat consumer.
 `bmux.acceptance.disconnectTransport.<surfaceUUID>` is a one-shot request to
 close only that Chat control connection; normal reconnect then owns the same
 verified provider host. `bmux.acceptance.forceDarkAppearance` applies a dark
-appearance to newly-created debug web views. These keys are compiled out of
+appearance to newly-created debug web views and the bridge theme payload, including
+an explicit dark page backing. These keys are compiled out of
 Release and are removed by the test harness after each case; they never alter
 provider transcripts or enable unsupported user controls.
 
