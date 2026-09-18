@@ -102,11 +102,6 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         webView.onPointerDown = onPointerDown
         webView.onDidMoveToWindow = { [weak self] in self?.loadShellIfNeeded() }
         webView.setValue(false, forKey: "drawsBackground")
-#if DEBUG
-        if UserDefaults.standard.bool(forKey: "bmux.acceptance.forceDarkAppearance") {
-            webView.appearance = NSAppearance(named: .darkAqua)
-        }
-#endif
         webView.allowsBackForwardNavigationGestures = false
         webView.allowsLinkPreview = false
         webView.navigationDelegate = self
@@ -129,6 +124,13 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         guard let webView, webView.window != nil else {
             return
         }
+#if DEBUG
+        // Apply after the child has entered its window so WebKit's effective
+        // appearance and prefers-color-scheme are updated for the shell load.
+        if UserDefaults.standard.bool(forKey: "bmux.acceptance.forceDarkAppearance") {
+            webView.appearance = NSAppearance(named: .darkAqua)
+        }
+#endif
         guard let resourceDirectoryURL = Bundle.main.resourceURL else {
             return
         }
