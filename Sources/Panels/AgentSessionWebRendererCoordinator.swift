@@ -100,6 +100,7 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         let webView = AgentSessionWebView(frame: .zero, configuration: configuration)
         isClosed = false
         webView.onPointerDown = onPointerDown
+        webView.onDidMoveToWindow = { [weak self] in self?.loadShellIfNeeded() }
         webView.setValue(false, forKey: "drawsBackground")
         webView.allowsBackForwardNavigationGestures = false
         webView.allowsLinkPreview = false
@@ -177,6 +178,7 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             webView.uiDelegate = nil
             webView.onPointerDown = nil
             webView.onPointerUp = nil
+            webView.onDidMoveToWindow = nil
         }
         webView = nil
         loadedRendererKind = nil

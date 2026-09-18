@@ -5,6 +5,12 @@ import WebKit
 final class AgentSessionWebView: WKWebView {
     var onPointerDown: (() -> Void)?
     var onPointerUp: (() -> Void)?
+    var onDidMoveToWindow: (() -> Void)?
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        onDidMoveToWindow?()
+    }
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
         PaneFirstClickFocusSettings.isEnabled()
