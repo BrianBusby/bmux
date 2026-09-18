@@ -25,7 +25,7 @@ export function ConnectedChatComposer({ context, control, enabled }: { context: 
     if (latest?.delivery === "accepted" && previous?.id === latest.id && previous.delivery !== "accepted") {
       if (submittedRevision === revision.current) setDraft("");
     }
-  }, [latest]);
+  }, [latest, submittedRevision]);
   const blocked = sending || latest?.delivery === "pending" || latest?.delivery === "uncertain";
   const slashCommand = draft.trimStart().startsWith("/");
   const submit = async (operation: "queue" | "steer") => {
