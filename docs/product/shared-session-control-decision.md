@@ -1,9 +1,17 @@
 # Shared-session Chat control decision
 
-Status: ordinary CLI read-only implementation under observation; opt-in new shared-host controls are being implemented and verified. Ordinary attachment and safe structured interruption have not passed their gates. This is not a claim that
-all three assignment phases passed. Base: `585f0a693f18b45954227d87dea4d0099a23e2d3`.
+Status: ordinary CLI read-only implementation remains bounded; opt-in new shared-host controls passed the scoped build-593 submission/history gate and remain draft pending the release-build check and explicitly deferred accessibility, appearance, partial-history, and live reconnect checks. Ordinary attachment and safe structured interruption have not passed their gates. This is not a claim that all three assignment phases passed. Base: `b949e6dfa`.
 
 ## Ownership and identity
+
+Build 593 (`stabilize-shared-session-final-v9`, Codex 0.154.0) showed the connected
+Chat state transition from an empty/pre-ingestion `Conversation unavailable` view to
+one accepted user message and matching assistant response in Chat and the original
+connected Terminal. The same connected workspace retained a draft across
+Terminal-to-Chat and two-workspace switching. This distinguishes an empty initial
+history from unreadable, stale, partial, or unavailable history; those failure
+states remain represented by the transcript freshness contract and are not inferred
+from the initial label.
 
 Terminal is the original Ghostty PTY and provider TUI. `TerminalPanel.id` equals
 `TerminalSurface.id`; `workspaceId` identifies its current workspace. A process
