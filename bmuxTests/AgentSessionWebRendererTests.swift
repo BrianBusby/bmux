@@ -9,6 +9,33 @@ import Testing
 
 @Suite(.serialized)
 struct AgentSessionWebRendererTests {
+#if DEBUG
+    @Test @MainActor
+    func acceptanceDarkOverrideChangesBridgeThemeAndRestores() {
+        let defaults = UserDefaults.standard
+        let key = "bmux.acceptance.forceDarkAppearance"
+        let coordinator = AgentSessionWebRendererCoordinator()
+        let theme = AgentSessionWebTheme.resolve(appearance: .fromConfig(GhosttyConfig.load()))
+        defaults.set(true, forKey: key)
+        coordinator.bind(
+            panelId: UUID(), workspaceId: UUID(), stableWorkspaceId: UUID(),
+            workProvenanceRuntime: nil, rendererKind: .react,
+            initialProviderID: .codex, workingDirectory: nil,
+            theme: theme, isFocused: false
+        )
+        #expect(coordinator.theme.isDark)
+        defaults.removeObject(forKey: key)
+        coordinator.bind(
+            panelId: UUID(), workspaceId: UUID(), stableWorkspaceId: UUID(),
+            workProvenanceRuntime: nil, rendererKind: .react,
+            initialProviderID: .codex, workingDirectory: nil,
+            theme: theme, isFocused: false
+        )
+        #expect(coordinator.theme == theme)
+        coordinator.close()
+    }
+#endif
+
     @Test
     func testTrustedShellURLAcceptsOnlyMatchingFileURL() {
         let resources = URL(fileURLWithPath: "/tmp/bmux DEV test.app/Contents/Resources", isDirectory: true)
