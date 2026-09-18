@@ -102,6 +102,11 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         webView.onPointerDown = onPointerDown
         webView.onDidMoveToWindow = { [weak self] in self?.loadShellIfNeeded() }
         webView.setValue(false, forKey: "drawsBackground")
+#if DEBUG
+        if UserDefaults.standard.bool(forKey: "bmux.acceptance.forceDarkAppearance") {
+            webView.appearance = NSAppearance(named: .darkAqua)
+        }
+#endif
         webView.allowsBackForwardNavigationGestures = false
         webView.allowsLinkPreview = false
         webView.navigationDelegate = self

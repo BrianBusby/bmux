@@ -55,6 +55,9 @@ final class TerminalChatRuntime: TerminalChatConnecting {
         } else {
             snapshot = await reader.terminalChatSnapshot(workspaceID: workspaceID, surfaceID: surfaceID)
         }
+#if DEBUG
+        snapshot = acceptanceHistoryOverride(snapshot, workspaceID: workspaceID, surfaceID: surfaceID)
+#endif
         guard let entry = connections[surfaceID], entry.workspaceID == workspaceID,
               let threadID = entry.host.threadID, let actionOwner = entry.host.control else { return snapshot }
         let host = entry.host
@@ -64,6 +67,12 @@ final class TerminalChatRuntime: TerminalChatConnecting {
         var control: [String: Any] = ["threadId": threadID, "status": "unavailable", "reason": "connectionUnavailable"]
         do {
             guard terminalLiveness[surfaceID]?() == true else { throw CodexControlError.disconnected }
+#if DEBUG
+            if UserDefaults.standard.bool(forKey: "bmux.acceptance.disconnectTransport.\(surfaceID.uuidString)") {
+                UserDefaults.standard.set(false, forKey: "bmux.acceptance.disconnectTransport.\(surfaceID.uuidString)")
+                await host.connection.disconnect()
+            }
+#endif
             let loaded = try await host.connection.request(method: "thread/loaded/list", params: Data("{}".utf8))
             // Ownership was established when the host adopted its original thread; other loaded threads do not replace it.
             guard let loadedResponse = try JSONSerialization.jsonObject(with: loaded) as? [String: Any],
@@ -92,7 +101,11 @@ final class TerminalChatRuntime: TerminalChatConnecting {
             control = ["threadId": threadID, "status": "connected", "queueFollowUp": true,
                        "steerTurn": active != nil, "interruptTurn": false, "reason": "interruptTurnGuardUnsupported"]
             if let active { control["activeTurnId"] = active }
-            if snapshot["history"] != nil { snapshot["status"] = "observed" }
+            if snapshot["history"] != nil,
+               snapshot["status"] as? String != "partial",
+               snapshot["status"] as? String != "stale" {
+                snapshot["status"] = "observed"
+            }
         } catch {
             if terminalLiveness[surfaceID]?() == true, let replacement = try? await hosts.reconnect(host) {
                 connections[surfaceID] = (workspaceID, entry.directory, replacement)
@@ -113,6 +126,42 @@ final class TerminalChatRuntime: TerminalChatConnecting {
         snapshot["surfaceId"] = surfaceID.uuidString
         return snapshot
     }
+
+#if DEBUG
+    /// Test-only history fault injection, scoped by workspace, surface, and
+    /// optionally the selected provider session. It is absent from Release.
+    private func acceptanceHistoryOverride(
+        _ snapshot: [String: Any],
+        workspaceID: UUID,
+        surfaceID: UUID
+    ) -> [String: Any] {
+        let defaults = UserDefaults.standard
+        guard defaults.string(forKey: "bmux.acceptance.history.surface") == surfaceID.uuidString,
+              defaults.string(forKey: "bmux.acceptance.history.workspace") == workspaceID.uuidString,
+              let mode = defaults.string(forKey: "bmux.acceptance.history.mode") else { return snapshot }
+        let sessionID = snapshot["sessionId"] as? String
+        if let expected = defaults.string(forKey: "bmux.acceptance.history.session"), expected != sessionID { return snapshot }
+        switch mode {
+        case "unavailable":
+            return ["status": "unavailable", "reason": "historyUnavailable",
+                    "sessionId": sessionID as Any, "workspaceId": workspaceID.uuidString,
+                    "surfaceId": surfaceID.uuidString]
+        case "partial", "stale":
+            var result = snapshot
+            result["status"] = mode
+            result["historyFreshness"] = mode
+            if var history = result["history"] as? [String: Any],
+               var messages = history["messages"] as? [[String: Any]], messages.count > 1 {
+                messages.removeLast()
+                history["messages"] = messages
+                result["history"] = history
+            }
+            return result
+        default:
+            return snapshot
+        }
+    }
+#endif
 
     func updateConnectedDraft(workspaceID: UUID, surfaceID: UUID, sessionID: String, revision: UUID, text: String) throws {
         guard let entry = connections[surfaceID], entry.workspaceID == workspaceID,
