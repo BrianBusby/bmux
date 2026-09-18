@@ -121,4 +121,58 @@ import Testing
         #expect(await transport.mutationThreads == ["thread-a"])
         await runtime.closeConnectedSession(surfaceID: surface)
     }
+
+    @Test func scopedPartialHistoryOverrideRecoversWithoutCrossSessionLeakage() async throws {
+        let transport = ConnectedCodexFixtureTransport()
+        let connection = CodexRPCConnection(transport: transport)
+        try await connection.start()
+        let reader = ConnectedCodexFixtureReader()
+        reader.response = [
+            "status": "observed", "sessionId": "thread-a",
+            "history": ["messages": [["id": "one"], ["id": "two"]]]
+        ]
+        let runtime = TerminalChatRuntime(reader: reader, hosts: ConnectedCodexFixtureHost(connection: connection), bind: { _, _, _, _ in })
+        let workspace = UUID(), surface = UUID()
+        _ = try await runtime.prepareConnectedSession(workspaceID: workspace, surfaceID: surface, workingDirectory: "/fixture")
+        runtime.attachConnectedTerminal(surfaceID: surface, isAlive: { true })
+        _ = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        let defaults = UserDefaults.standard
+        defaults.set(workspace.uuidString, forKey: "bmux.acceptance.history.workspace")
+        defaults.set(surface.uuidString, forKey: "bmux.acceptance.history.surface")
+        defaults.set("thread-a", forKey: "bmux.acceptance.history.session")
+        defaults.set("partial", forKey: "bmux.acceptance.history.mode")
+        defer {
+            ["bmux.acceptance.history.workspace", "bmux.acceptance.history.surface", "bmux.acceptance.history.session", "bmux.acceptance.history.mode"].forEach(defaults.removeObject(forKey:))
+        }
+        let partial = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        #expect(partial["status"] as? String == "partial")
+        #expect(partial["historyFreshness"] as? String == "partial")
+        #expect(((partial["history"] as? [String: Any])?["messages"] as? [[String: Any]])?.count == 1)
+        defaults.removeObject(forKey: "bmux.acceptance.history.mode")
+        let recovered = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        #expect(recovered["status"] as? String == "observed")
+        #expect(((recovered["history"] as? [String: Any])?["messages"] as? [[String: Any]])?.count == 2)
+        defaults.set("other-thread", forKey: "bmux.acceptance.history.session")
+        let otherSession = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        #expect(otherSession["status"] as? String == "observed")
+        await runtime.closeConnectedSession(surfaceID: surface)
+    }
+
+    @Test func scopedTransportDisconnectFlagIsConsumedWithoutResubmission() async throws {
+        let transport = ConnectedCodexFixtureTransport()
+        let connection = CodexRPCConnection(transport: transport)
+        try await connection.start()
+        let runtime = TerminalChatRuntime(reader: ConnectedCodexFixtureReader(), hosts: ConnectedCodexFixtureHost(connection: connection), bind: { _, _, _, _ in })
+        let workspace = UUID(), surface = UUID()
+        _ = try await runtime.prepareConnectedSession(workspaceID: workspace, surfaceID: surface, workingDirectory: "/fixture")
+        runtime.attachConnectedTerminal(surfaceID: surface, isAlive: { true })
+        _ = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        let key = "bmux.acceptance.disconnectTransport.\(surface.uuidString)"
+        UserDefaults.standard.set(true, forKey: key)
+        defer { UserDefaults.standard.removeObject(forKey: key) }
+        _ = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        #expect(UserDefaults.standard.bool(forKey: key) == false)
+        #expect(await transport.mutationThreads.isEmpty)
+        await runtime.closeConnectedSession(surfaceID: surface)
+    }
 }
