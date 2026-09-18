@@ -94,7 +94,11 @@ struct AgentSessionWebTheme: Equatable {
     var acceptanceDarkened: AgentSessionWebTheme {
         AgentSessionWebTheme(
             isDark: true,
-            pageBackground: "transparent",
+            // A transparent page inherits the native light panel. The
+            // acceptance override must provide its own dark backing so the
+            // explicit dark text/tokens remain legible in an otherwise-light
+            // disposable window.
+            pageBackground: "#11130f",
             surfaceBackground: "rgba(28, 31, 27, 0.34)",
             surfaceElevatedBackground: "rgba(28, 31, 27, 0.48)",
             inputBackground: "rgba(8, 10, 8, 0.36)",

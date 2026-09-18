@@ -24,6 +24,7 @@ struct AgentSessionWebRendererTests {
             theme: theme, isFocused: false
         )
         #expect(coordinator.theme.isDark)
+        #expect(coordinator.theme.pageBackground == "#11130f")
         defaults.removeObject(forKey: key)
         coordinator.bind(
             panelId: UUID(), workspaceId: UUID(), stableWorkspaceId: UUID(),
