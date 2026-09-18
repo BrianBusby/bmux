@@ -1,6 +1,6 @@
 # Shared-session Chat control decision
 
-Status: ordinary CLI read-only implementation remains bounded; opt-in new shared-host controls passed the scoped build-593 submission/history gate. DEBUG-only, session-scoped acceptance hooks cover partial-history and transport-disconnect recovery; build 597 verified the dark WebKit bridge theme and readable connected Chat, while audible VoiceOver remains unverified. Release-build evidence is pending for `1caa584ca`. Ordinary attachment and safe structured interruption have not passed their gates. This is not a claim that all three assignment phases passed. Base: `1caa584ca`.
+Status: ordinary CLI read-only implementation remains bounded; opt-in new shared-host controls passed the scoped build-593 submission/history gate. DEBUG-only, session-scoped acceptance hooks cover partial-history and transport-disconnect recovery; build 597 verified the dark WebKit bridge theme and readable connected Chat, while audible VoiceOver remains unverified. Release workflow repair `0539eb571` passed required-submodule checkout and helper compilation; the macOS 26 signing/build remains queued in run `35402401547`. Ordinary attachment and safe structured interruption have not passed their gates. This is not a claim that all three assignment phases passed. Base: `0539eb571`.
 
 ## Ownership and identity
 
