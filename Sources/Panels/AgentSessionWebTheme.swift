@@ -86,4 +86,28 @@ struct AgentSessionWebTheme: Equatable {
             shadow: isDark ? "rgba(0, 0, 0, 0.20)" : "rgba(0, 0, 0, 0.10)"
         )
     }
+
+#if DEBUG
+    /// Acceptance-only dark payload used to exercise the real bridge/theme
+    /// path. The web surface receives explicit tokens, so a native view
+    /// appearance alone cannot override a light payload from terminal config.
+    var acceptanceDarkened: AgentSessionWebTheme {
+        AgentSessionWebTheme(
+            isDark: true,
+            pageBackground: "transparent",
+            surfaceBackground: "rgba(28, 31, 27, 0.34)",
+            surfaceElevatedBackground: "rgba(28, 31, 27, 0.48)",
+            inputBackground: "rgba(8, 10, 8, 0.36)",
+            border: "rgba(233, 231, 216, 0.12)",
+            borderStrong: "rgba(233, 231, 216, 0.22)",
+            text: "#f1f0e8",
+            mutedText: "rgba(241, 240, 232, 0.58)",
+            softText: "rgba(241, 240, 232, 0.78)",
+            accent: accent,
+            accentSoft: "rgba(138, 180, 248, 0.2)",
+            danger: "#ff8d7e",
+            shadow: "rgba(0, 0, 0, 0.2)"
+        )
+    }
+#endif
 }

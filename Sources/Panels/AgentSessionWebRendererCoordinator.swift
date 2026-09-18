@@ -68,8 +68,16 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         self.initialProviderID = initialProviderID
         self.workingDirectory = workingDirectory
         isPanelFocused = isFocused
-        let themeChanged = self.theme != theme
-        self.theme = theme
+        let effectiveTheme: AgentSessionWebTheme
+#if DEBUG
+        effectiveTheme = UserDefaults.standard.bool(forKey: "bmux.acceptance.forceDarkAppearance")
+            ? theme.acceptanceDarkened
+            : theme
+#else
+        effectiveTheme = theme
+#endif
+        let themeChanged = self.theme != effectiveTheme
+        self.theme = effectiveTheme
         if themeChanged {
             applyThemeToLoadedPage()
         }
