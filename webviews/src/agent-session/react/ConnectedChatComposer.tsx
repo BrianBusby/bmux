@@ -16,7 +16,7 @@ export function ConnectedChatComposer({ context, control, enabled }: { context: 
   const copy = context.copy;
   const observed = action && control.actions?.find(item => item.id.toLowerCase() === action.id.toLowerCase());
   const latest = observed ?? action ?? control.actions?.at(-1);
-  const submittedRevision = action?.id.toLowerCase() === latest?.id.toLowerCase() ? action.draftRevision : undefined;
+  const submittedRevision = action && latest && action.id.toLowerCase() === latest.id.toLowerCase() ? action.draftRevision : undefined;
   const previousReceipt = useRef(latest);
   useEffect(() => {
     const previous = previousReceipt.current;
