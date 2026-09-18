@@ -67,9 +67,14 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
             }
         }
         webView.underPageBackgroundColor = appearance.contentBackgroundColor
-        host.attachWebView(webView)
         host.onDidMoveToWindow = { [weak coordinator] in coordinator?.loadShellIfNeeded() }
         host.onGeometryChanged = { [weak coordinator] in coordinator?.flushVisiblePaintIfReady() }
+        // Installing lifecycle callbacks before attachment is required when a
+        // new connected workspace is mounted while its host has no window yet.
+        // Otherwise the sole move-to-window event is missed and the retained
+        // web view remains blank because loadShellIfNeeded correctly declines
+        // to load outside a window.
+        host.attachWebView(webView)
         coordinator.loadShellIfNeeded()
     }
 
