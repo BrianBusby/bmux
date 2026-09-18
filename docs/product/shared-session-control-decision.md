@@ -1,6 +1,6 @@
 # Shared-session Chat control decision
 
-Status: ordinary CLI read-only implementation remains bounded; opt-in new shared-host controls passed the scoped build-593 submission/history gate and remain draft pending the release-build check and explicitly deferred accessibility, appearance, partial-history, and live reconnect checks. Ordinary attachment and safe structured interruption have not passed their gates. This is not a claim that all three assignment phases passed. Base: `b949e6dfa`.
+Status: ordinary CLI read-only implementation remains bounded; opt-in new shared-host controls passed the scoped build-593 submission/history gate. DEBUG-only, session-scoped acceptance hooks now cover partial-history and transport-disconnect recovery; release-build and live VoiceOver/appearance/reconnect evidence remain pending. Ordinary attachment and safe structured interruption have not passed their gates. This is not a claim that all three assignment phases passed. Base: `c73448b53`.
 
 ## Ownership and identity
 
@@ -189,6 +189,20 @@ The latest 500 messages are shown, with no older-history paging yet. Dark-mode
 visual inspection, VoiceOver, provider-crash recovery, and a real PE outage were
 not exercised. Those remain acceptance checks; neither all of Phase 2 nor Phase
 3 is marked complete. No demo video was recorded.
+
+## Acceptance-only fault hooks
+
+Debug builds expose deliberately inert-by-default `UserDefaults` hooks for
+disposable acceptance sessions. `bmux.acceptance.history.workspace` and
+`.surface` must match the verified binding; optional `.session` further narrows
+the provider thread. `.mode` accepts `partial`, `stale`, or `unavailable` and
+returns an identity-labelled synthetic snapshot to the normal Chat consumer.
+`bmux.acceptance.disconnectTransport.<surfaceUUID>` is a one-shot request to
+close only that Chat control connection; normal reconnect then owns the same
+verified provider host. `bmux.acceptance.forceDarkAppearance` applies a dark
+appearance to newly-created debug web views. These keys are compiled out of
+Release and are removed by the test harness after each case; they never alter
+provider transcripts or enable unsupported user controls.
 
 ## Follow-up: shared-host connection probe (2026-09-17)
 
