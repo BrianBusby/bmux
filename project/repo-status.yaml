@@ -158,5 +158,5 @@ local_caveats:
     status: resolved
   - id: remote_mobile_open_architecture_decisions
     status: open
-  - id: hybrid_workspace_metadata_bridge
+  - id: hybrid_focus_render_capture
     status: open

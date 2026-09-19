@@ -75,12 +75,31 @@ enum AgentSessionFactualProjectionEvidenceRows {
     }
 }
 
+struct AgentSessionWorkspaceLink: Identifiable, Equatable {
+    let id: String
+    let label: String
+    let kind: String
+    let url: URL?
+    let state: String?
+    let owner: String?
+}
+
+struct AgentSessionWorkspaceChrome: Equatable {
+    let title: String
+    let repository: String?
+    let colorHex: String?
+    let status: String?
+    let activity: String?
+    let links: [AgentSessionWorkspaceLink]
+}
+
 struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     let showsSwitcher: Bool
     var chatContent: ((_ onTerminal: @escaping () -> Void) -> AnyView)? = nil
     let stableWorkspaceID: UUID?
     let workProvenanceRuntime: WorkProvenanceRuntime?
     let backgroundColor: NSColor
+    let workspaceChrome: AgentSessionWorkspaceChrome?
     @ViewBuilder let primaryContent: (_ isVisible: Bool) -> PrimaryContent
 
     @State private var viewMode: AgentSessionFactualProjectionMode = .terminal
@@ -114,12 +133,12 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
         }
         .task(id: factualProjectionTaskID) {
             guard showsSwitcher,
-            viewMode == .session else { return }
+            viewMode == .focus else { return }
             await refreshFactualProjection()
         }
         .task(id: factualProjectionRefreshLoopTaskID) {
             guard showsSwitcher,
-                  viewMode == .session else { return }
+                  viewMode == .focus else { return }
             await runFactualProjectionRefreshLoop()
         }
     }
@@ -136,29 +155,42 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
                 chatContent { viewMode = .terminal }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            if showsSessionContent {
-                AgentSessionFactualProjectionView(
-                    result: factualProjectionResult,
-                    isLoading: isLoadingFactualProjection,
-                    backgroundColor: Color(nsColor: backgroundColor),
-                    onRefresh: {
-                        Task { await refreshFactualProjection() }
+            if showsFocusContent {
+                VStack(spacing: 0) {
+                    if let workspaceChrome {
+                        AgentSessionWorkspaceHeader(chrome: workspaceChrome)
                     }
-                )
+                    AgentSessionFactualProjectionView(
+                        result: factualProjectionResult,
+                        isLoading: isLoadingFactualProjection,
+                        backgroundColor: Color(nsColor: backgroundColor),
+                        onRefresh: {
+                            Task { await refreshFactualProjection() }
+                        }
+                    )
+                }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .onAppear {
                     scheduleFactualProjectionRefreshIfNeeded()
                 }
             }
+            if showsLearningsContent {
+                AgentSessionLearningsUnavailableView(backgroundColor: Color(nsColor: backgroundColor))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         }
     }
 
-    private var showsSessionContent: Bool {
-        showsSwitcher && viewMode == .session
+    private var showsFocusContent: Bool {
+        showsSwitcher && viewMode == .focus
+    }
+
+    private var showsLearningsContent: Bool {
+        showsSwitcher && viewMode == .learnings
     }
 
     private var primaryContentIsVisible: Bool {
-        !showsSessionContent && viewMode != .chat
+        !showsFocusContent && !showsLearningsContent && viewMode != .chat
     }
 
     private var modePicker: some View {
@@ -170,7 +202,7 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: chatContent == nil ? 180 : 260)
+            .frame(width: chatContent == nil ? 320 : 390)
 
             Spacer(minLength: 0)
         }
@@ -219,15 +251,106 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     }
 
     private func scheduleFactualProjectionRefreshIfNeeded() {
-        guard showsSwitcher, viewMode == .session else { return }
+        guard showsSwitcher, viewMode == .focus else { return }
         Task { await refreshFactualProjection() }
+    }
+}
+
+private struct AgentSessionWorkspaceHeader: View {
+    let chrome: AgentSessionWorkspaceChrome
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            RoundedRectangle(cornerRadius: 3)
+                .fill(Color(nsColor: chrome.colorHex.flatMap {
+                    WorkspaceTabColorSettings.displayNSColor(hex: $0, colorScheme: colorScheme)
+                } ?? .systemPurple))
+                .frame(width: 4)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 7) {
+                    Text(chrome.repository ?? chrome.title)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.secondary)
+                    Text("/")
+                        .foregroundStyle(.tertiary)
+                    Text(chrome.title)
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                if let activity = chrome.activity ?? chrome.status {
+                    Text(activity)
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+            Spacer(minLength: 0)
+            if !chrome.links.isEmpty {
+                HStack(spacing: 8) {
+                    ForEach(chrome.links.prefix(3)) { link in
+                        if let url = link.url {
+                            Link(link.label, destination: url)
+                                .font(.system(size: 12, weight: .medium))
+                        } else {
+                            Text(link.label)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    if chrome.links.count > 3 {
+                        Text(String(localized: "agentSession.workspace.moreLinks", defaultValue: "More links", comment: "Additional workspace links disclosure"))
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 12)
+        .background(Color(nsColor: .windowBackgroundColor))
+    }
+}
+
+/// Learnings stays honest until a persisted producer and review lifecycle are
+/// available. Related-session history is evidence, not curated knowledge.
+private struct AgentSessionLearningsUnavailableView: View {
+    let backgroundColor: Color
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                Text(String(localized: "agentSession.web.smartSession.learnings", defaultValue: "Learnings"))
+                    .font(.system(size: 20, weight: .semibold))
+                Text(String(localized: "agentSession.web.smartSession.noLearnings", defaultValue: "Useful next time. Grounded in this time."))
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 8) {
+                    Image(systemName: "tray")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(.secondary)
+                    Text(String(localized: "agentSession.web.smartSession.learningsUnavailable", defaultValue: "Learnings are unavailable for this workspace."))
+                        .font(.system(size: 15, weight: .semibold))
+                    Text(String(localized: "agentSession.web.smartSession.learningsUnavailable.detail", defaultValue: "No persisted knowledge producer or review lifecycle is connected. This view will not invent records or counts."))
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(18)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(nsColor: .windowBackgroundColor).opacity(0.55))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(22)
+        }
+        .background(backgroundColor)
     }
 }
 
 private enum AgentSessionFactualProjectionMode: String, CaseIterable, Identifiable {
     case terminal
     case chat
-    case session
+    case focus
+    case learnings
 
     var id: String { rawValue }
 
@@ -237,8 +360,10 @@ private enum AgentSessionFactualProjectionMode: String, CaseIterable, Identifiab
             String(localized: "agentSession.viewMode.terminal", defaultValue: "Terminal")
         case .chat:
             String(localized: "agentSession.viewMode.chat", defaultValue: "Chat")
-        case .session:
-            String(localized: "agentSession.viewMode.session", defaultValue: "Session")
+        case .focus:
+            String(localized: "agentSession.web.smartSession.focus", defaultValue: "Focus")
+        case .learnings:
+            String(localized: "agentSession.web.smartSession.learnings", defaultValue: "Learnings")
         }
     }
 }
@@ -267,7 +392,7 @@ struct AgentSessionFactualProjectionView: View {
 
     private var header: some View {
         HStack(spacing: 10) {
-            Text(String(localized: "agentSession.factual.title", defaultValue: "Session"))
+            Text(String(localized: "agentSession.factual.title", defaultValue: "Focus"))
                 .font(.system(size: 16, weight: .semibold))
             if isLoading {
                 ProgressView()

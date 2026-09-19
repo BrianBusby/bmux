@@ -27,6 +27,7 @@ struct TerminalPanelView: View {
     var onStartConnectedSession: (() async throws -> Void)? = nil
     var terminalChatReader: (any TerminalChatReading)? = nil
     var workProvenanceRuntime: WorkProvenanceRuntime? = nil
+    var workspaceChrome: AgentSessionWorkspaceChrome? = nil
     let onFocus: () -> Void
     let onRequestPanelFocus: () -> Void
     let onRequestTerminalChatFocus: () -> Void

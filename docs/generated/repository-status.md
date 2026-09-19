@@ -158,4 +158,4 @@ Repository: `BrianBusby/bmux`
 | `sidecar_disappearance_lifecycle_policy` | open |
 | `normal_terminal_codex_rich_evidence_gap` | resolved |
 | `remote_mobile_open_architecture_decisions` | open |
-| `hybrid_workspace_metadata_bridge` | open |
+| `hybrid_focus_render_capture` | open |

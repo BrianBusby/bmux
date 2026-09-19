@@ -16,13 +16,17 @@ changes belong in root `project/project-state.yaml`. The old
 `project/shared-project-source.yaml` pointer is obsolete.
 
 The selected hybrid Focus workbench slice is under observation on
-`hybrid-focus-design`. It delivers the shared React shell, Focus reading
-column, retained Chat/Terminal view routing, source-backed inspectors, stable
-completed-turn ordering, and an honest Learnings unavailable state. The current
-webview bridge still exposes one verified workspace identity rather than a
-workspace-card collection, assigned tab color, ticket/PR/project/owner links,
-token attribution, or curated learning records; those remain explicit
-dependencies rather than illustrative production data.
+`hybrid-focus-design`. The normal workspace path now exposes one coherent
+Terminal / Chat / Focus / Learnings host: Terminal remains the native provider
+surface, Chat retains its existing connected/read-only boundary, Focus uses the
+source-backed factual projection with stable completed-turn ordering, and
+Learnings is an honest unavailable state. The selected Focus header receives
+the owning native workspace title, assigned color, source-supported activity,
+and existing PE-backed ticket, pull-request, and project links; link activation
+is separate from workspace selection. Token attribution and curated learning
+records remain unsupported data dependencies. A tagged build is reproducible
+with the pinned sources plus the local Ghostty/Bonsplit cache workaround, but
+CUA cannot currently target the isolated app window for rendered capture.
 
 The user-selected implementation is `shared_session_chat`, tracked in the root
 manifests. See [the shared-session control decision](../product/shared-session-control-decision.md)

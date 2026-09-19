@@ -20,6 +20,7 @@ struct PanelContentView: View {
     let appearance: PanelAppearance
     let windowAppearance: WindowAppearanceSnapshot
     let customSidebarTabManager: TabManager?
+    var workspaceChrome: AgentSessionWorkspaceChrome? = nil
     let customSidebarUnread: SidebarUnreadModel = TerminalNotificationStore.shared.sidebarUnread
     let hasUnreadNotification: Bool
     let terminalAgentContext: String
@@ -62,6 +63,7 @@ struct PanelContentView: View {
                     onStartConnectedSession: onStartConnectedSession,
                     terminalChatReader: terminalChatReader,
                     workProvenanceRuntime: workProvenanceRuntime,
+                    workspaceChrome: workspaceChrome,
                     onFocus: onFocus,
                     onRequestPanelFocus: onRequestPanelFocus,
                     onRequestTerminalChatFocus: onRequestTerminalChatFocus,

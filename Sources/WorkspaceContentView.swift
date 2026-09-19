@@ -46,6 +46,7 @@ private struct WorkspacePanelContentHostView: View {
             appearance: appearance,
             windowAppearance: windowAppearance,
             customSidebarTabManager: customSidebarTabManager,
+            workspaceChrome: workspaceChrome,
             hasUnreadNotification: hasUnreadNotification,
             terminalAgentContext: WorkspaceContentView.terminalAgentContext(panel: panel, workspace: workspace),
             onStartConnectedSession: workspace.remoteConfiguration == nil ? {
@@ -62,6 +63,42 @@ private struct WorkspacePanelContentHostView: View {
             onResumeAgentHibernation: onResumeAgentHibernation,
             onAutoResumeAgentHibernation: onAutoResumeAgentHibernation,
             onTriggerFlash: onTriggerFlash
+        )
+    }
+
+    private var workspaceChrome: AgentSessionWorkspaceChrome {
+        let display = workspace.owningTabManager?.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: workspace)
+        let repository = URL(fileURLWithPath: workspace.currentDirectory, isDirectory: true)
+            .lastPathComponent
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        var links: [AgentSessionWorkspaceLink] = []
+        if let pullRequest = display?.pullRequest {
+            links.append(AgentSessionWorkspaceLink(
+                id: "pr-\(pullRequest.number)",
+                label: pullRequest.ownerLogin.map { "PR #\(pullRequest.number) · \($0)" } ?? "PR #\(pullRequest.number)",
+                kind: "pullRequest", url: pullRequest.url, state: pullRequest.status, owner: pullRequest.ownerLogin
+            ))
+        }
+        for ticket in display?.ticketLinks ?? [] {
+            links.append(AgentSessionWorkspaceLink(
+                id: "ticket-\(ticket.id)",
+                label: ticket.title.map { "\(ticket.id): \($0)" } ?? ticket.id,
+                kind: "ticket", url: ticket.url, state: nil, owner: ticket.ownerName
+            ))
+        }
+        for project in display?.projectLinks ?? [] {
+            links.append(AgentSessionWorkspaceLink(
+                id: "project-\(project.id)", label: project.title ?? project.id,
+                kind: "project", url: project.url, state: nil, owner: nil
+            ))
+        }
+        return AgentSessionWorkspaceChrome(
+            title: workspace.owningTabManager?.resolvedWorkspaceDisplayTitle(for: workspace) ?? workspace.title,
+            repository: repository.isEmpty ? nil : repository,
+            colorHex: workspace.customColor,
+            status: workspace.progress?.label,
+            activity: display?.currentWorkSummary ?? workspace.latestSubmittedMessage,
+            links: links
         )
     }
 }
