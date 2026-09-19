@@ -11,6 +11,68 @@ import Bonsplit
 
 @MainActor
 final class AppDelegateIssue2907RoutingTests: XCTestCase {
+    func testSurfaceHealthReportsAgentSessionWindowState() throws {
+        _ = NSApplication.shared
+        let previousAppDelegate = AppDelegate.shared
+        let app = AppDelegate()
+        defer {
+            TerminalController.shared.setActiveTabManager(nil)
+            AppDelegate.shared = previousAppDelegate
+        }
+
+        let windowId = UUID()
+        let window = makeMainWindow(id: windowId)
+        let manager = TabManager(autoWelcomeIfNeeded: false)
+        app.registerMainWindow(
+            window,
+            windowId: windowId,
+            tabManager: manager,
+            sidebarState: SidebarState(),
+            sidebarSelectionState: SidebarSelectionState(),
+            fileExplorerState: FileExplorerState()
+        )
+        defer {
+            app.unregisterMainWindowContextForTesting(windowId: windowId)
+            window.orderOut(nil)
+        }
+        TerminalController.shared.setActiveTabManager(manager)
+
+        let workspace = try XCTUnwrap(manager.selectedWorkspace)
+        let paneId = try XCTUnwrap(workspace.bonsplitController.focusedPaneId)
+        let agentPanel = try XCTUnwrap(workspace.newAgentSessionSurface(
+            inPane: paneId,
+            rendererKind: .react,
+            focus: true
+        ))
+        defer {
+            agentPanel.close()
+        }
+
+        let coordinator = agentPanel.rendererSession.coordinator(
+            panelId: agentPanel.id,
+            workspaceId: workspace.id,
+            rendererKind: agentPanel.rendererKind,
+            initialProviderID: agentPanel.currentProviderID,
+            workingDirectory: agentPanel.workingDirectory,
+            theme: AgentSessionWebTheme.resolve(appearance: .fromConfig(GhosttyConfig.load())),
+            isFocused: true
+        )
+        let webView = coordinator.ensureWebView(onPointerDown: {})
+        window.contentView?.addSubview(webView)
+        defer {
+            webView.removeFromSuperview()
+        }
+        XCTAssertNotNil(webView.window)
+
+        let health = try v2Result(method: "surface.health", params: ["surface_id": agentPanel.id.uuidString])
+        let surfaces = try XCTUnwrap(health["surfaces"] as? [[String: Any]])
+        let agentRow = try XCTUnwrap(
+            surfaces.first { ($0["id"] as? String) == agentPanel.id.uuidString }
+        )
+        XCTAssertEqual(agentRow["type"] as? String, PanelType.agentSession.rawValue)
+        XCTAssertEqual(agentRow["in_window"] as? Bool, true)
+    }
+
     private func makeMainWindow(id: UUID) -> NSWindow {
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 500, height: 320),
