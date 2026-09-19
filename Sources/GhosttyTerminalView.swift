@@ -11788,7 +11788,7 @@ final class GhosttySurfaceScrollView: NSView {
         case .findField:
             return isCurrentSurfaceSearchResponder(responder) &&
                 isSearchOverlayOrDescendant(responder)
-        case .textBoxInput:
+        case .textBoxInput, .chatComposer:
             return false
         }
     }
@@ -11802,21 +11802,15 @@ final class GhosttySurfaceScrollView: NSView {
             searchFocusTarget = .searchField
         case .textBoxInput:
             searchFocusTarget = .terminal
+        case .chatComposer:
+            // WebKit receives the originating click after the panel selection.
+            // Do not move its responder back to the terminal surface.
+            break
         }
 #if DEBUG
-        let targetLabel: String = {
-            switch intent {
-            case .surface:
-                return "terminal"
-            case .findField:
-                return "searchField"
-            case .textBoxInput:
-                return "textBoxInput"
-            }
-        }()
         bmuxDebugLog(
             "find.preparePanelFocusIntent surface=\(surfaceView.terminalSurface?.id.uuidString.prefix(5) ?? "nil") " +
-            "target=\(targetLabel)"
+            "target=\(String(describing: intent))"
         )
 #endif
     }
@@ -11849,8 +11843,8 @@ final class GhosttySurfaceScrollView: NSView {
             )
 #endif
             return true
-        case .textBoxInput:
-            return false
+        case .textBoxInput, .chatComposer:
+            return intent == .chatComposer
         }
     }
 

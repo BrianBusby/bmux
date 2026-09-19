@@ -56,6 +56,9 @@ private struct WorkspacePanelContentHostView: View {
             workProvenanceRuntime: workspace.owningTabManager?.workProvenanceRuntime,
             onFocus: onFocus,
             onRequestPanelFocus: onRequestPanelFocus,
+            onRequestTerminalChatFocus: {
+                workspace.focusConnectedCodexChat(panelID: panel.id)
+            },
             onResumeAgentHibernation: onResumeAgentHibernation,
             onAutoResumeAgentHibernation: onAutoResumeAgentHibernation,
             onTriggerFlash: onTriggerFlash

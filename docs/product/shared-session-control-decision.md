@@ -1,9 +1,17 @@
 # Shared-session Chat control decision
 
-Status: ordinary CLI read-only implementation under observation; opt-in new shared-host controls are being implemented and verified. Ordinary attachment and safe structured interruption have not passed their gates. This is not a claim that
-all three assignment phases passed. Base: `585f0a693f18b45954227d87dea4d0099a23e2d3`.
+Status: ordinary CLI read-only implementation remains bounded; opt-in new shared-host controls passed the scoped build-593 submission/history gate. DEBUG-only, session-scoped acceptance hooks cover partial-history and transport-disconnect recovery; build 597 verified the dark WebKit bridge theme and readable connected Chat. Keyboard/focus accessibility fixes are retained; broader audible accessibility evaluation is a future redesign consideration, not a gate for this slice. Release workflow repair `0539eb571` passed required-submodule checkout and helper compilation; run `35402401547` then stopped at the empty repository `SPARKLE_PRIVATE_KEY` secret before release compilation. The derivation tool passes a synthetic non-production key; secure secret provisioning is required for release evidence. Ordinary attachment and safe structured interruption have not passed their gates. This is not a claim that all three assignment phases passed. Base: `0539eb571`.
 
 ## Ownership and identity
+
+Build 593 (`stabilize-shared-session-final-v9`, Codex 0.154.0) showed the connected
+Chat state transition from an empty/pre-ingestion `Conversation unavailable` view to
+one accepted user message and matching assistant response in Chat and the original
+connected Terminal. The same connected workspace retained a draft across
+Terminal-to-Chat and two-workspace switching. This distinguishes an empty initial
+history from unreadable, stale, partial, or unavailable history; those failure
+states remain represented by the transcript freshness contract and are not inferred
+from the initial label.
 
 Terminal is the original Ghostty PTY and provider TUI. `TerminalPanel.id` equals
 `TerminalSurface.id`; `workspaceId` identifies its current workspace. A process
@@ -177,10 +185,30 @@ Working/completed/interrupted states require explicit Codex events; no state is
 inferred from prose or elapsed silence. Individual failed tool results remain
 separate from turn status. Sources without a known turn-failure event stay
 unknown rather than manufacturing a failed turn.
-The latest 500 messages are shown, with no older-history paging yet. Dark-mode
-visual inspection, VoiceOver, provider-crash recovery, and a real PE outage were
-not exercised. Those remain acceptance checks; neither all of Phase 2 nor Phase
-3 is marked complete. No demo video was recorded.
+The latest 500 messages are shown, with no older-history paging yet. Build 597
+exercised the DEBUG dark appearance override on a verified connected target: the
+native host and WebKit bridge used the dark payload, including an explicit dark page
+backing, and conversation, composer, status, and Terminal fallback were readable.
+Removing the override and recreating Chat restored light appearance. Keyboard and
+focus traversal passed with `Tab`; broader audible accessibility evaluation is
+reserved for the future redesign and is not a readiness gate for this slice. Provider-crash
+recovery and a real PE outage were not exercised; neither all of Phase 2 nor Phase 3
+is marked complete.
+
+## Acceptance-only fault hooks
+
+Debug builds expose deliberately inert-by-default `UserDefaults` hooks for
+disposable acceptance sessions. `bmux.acceptance.history.workspace` and
+`.surface` must match the verified binding; optional `.session` further narrows
+the provider thread. `.mode` accepts `partial`, `stale`, or `unavailable` and
+returns an identity-labelled synthetic snapshot to the normal Chat consumer.
+`bmux.acceptance.disconnectTransport.<surfaceUUID>` is a one-shot request to
+close only that Chat control connection; normal reconnect then owns the same
+verified provider host. `bmux.acceptance.forceDarkAppearance` applies a dark
+appearance to newly-created debug web views and the bridge theme payload, including
+an explicit dark page backing. These keys are compiled out of
+Release and are removed by the test harness after each case; they never alter
+provider transcripts or enable unsupported user controls.
 
 ## Follow-up: shared-host connection probe (2026-09-17)
 
@@ -268,7 +296,7 @@ Five new transport/state tests cover one accepted action, duplicate requests,
 wrong-thread rejection, stale-turn rejection, slash-command handling, uncertain
 delivery, and reconciliation after a replacement connection without a resend.
 Native tagged UI verification is in progress. An initial live launch exposed that Codex cannot resume an empty, unpersisted thread; startup now lets the TUI create its own thread, with no dummy prompt. A direct authenticated TUI-first test accepted one queued prompt and produced one completed turn. Subsequent macOS UI automation returned `cgWindowNotFound`, so the corrected application launch has not yet passed the UI gate. Approvals, provider restart, dark mode,
-VoiceOver, and restored control ownership remain unaccepted gates.
+Restored control ownership remains an unaccepted gate.
 
 For a connected host, fresh authenticated provider state and transcript availability
 are separate. An empty TUI can accept a first queued prompt even before Codex has
@@ -318,3 +346,23 @@ draft preservation. Drafts and action receipts survive webview reloads in native
 memory; they are not persisted across application restart. Provider queue
 ordering is provider-owned. Queue editing/cancellation and approval interaction
 remain in Terminal and have not passed cross-view acceptance.
+
+
+### Build 572 dogfood: Chat-to-Terminal delivery
+
+On September 17 the user reported an empty Chat with “Multiple session bindings.”
+Inspection of the running build 572 confirmed a connected host (PID 33141), its
+original TUI (PID 33143), and exactly one loaded thread,
+`01a0af03-7756-70a1-b7f4-80189f1dcb22`. Without restarting the app or provider,
+Chat subsequently recovered the user's existing greeting and enabled its composer.
+The precise cause and duration of the earlier binding failure remain unresolved;
+this is not evidence that all startup/recovery UI gates pass.
+
+A single UI submission requested `CHAT_CONNECTION_VERIFIED` without tools.
+Chat displayed “Accepted by Codex.” Provider turn
+`01a0af06-ae72-7e83-9799-c920203c1d96` completed with exactly one matching user
+item, client ID `5AE5DA78-63A0-49FF-AF8B-4D7DD07EEAF9`. The original raw
+Terminal and Chat both displayed the marker. No second conversation or process
+restart occurred. This closes the basic UI delivery gate for build 572;
+focus/typing behavior, startup ambiguity, broader recovery, and later draft
+changes still need verification. The running app was not rebuilt or replaced.

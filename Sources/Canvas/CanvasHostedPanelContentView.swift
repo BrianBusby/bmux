@@ -19,6 +19,7 @@ struct CanvasHostedPanelContentView: View {
     let windowAppearance: WindowAppearanceSnapshot
     let customSidebarTabManager: TabManager?
     let onRequestPanelFocus: () -> Void
+    let onRequestTerminalChatFocus: () -> Void
 
     var body: some View {
         PanelContentView(
@@ -37,6 +38,7 @@ struct CanvasHostedPanelContentView: View {
             terminalAgentContext: "",
             onFocus: onRequestPanelFocus,
             onRequestPanelFocus: onRequestPanelFocus,
+            onRequestTerminalChatFocus: onRequestTerminalChatFocus,
             onResumeAgentHibernation: {},
             onAutoResumeAgentHibernation: {},
             onTriggerFlash: {}

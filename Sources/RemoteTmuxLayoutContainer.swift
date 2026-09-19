@@ -51,6 +51,8 @@ struct RemoteTmuxLayoutContainer: View {
                     hasUnreadNotification: false,
                     terminalAgentContext: "",
                     onFocus: { mirror.focus(pane: paneId) },
+                    onRequestPanelFocus: { mirror.focus(pane: paneId) },
+                    onRequestTerminalChatFocus: { mirror.focus(pane: paneId) },
                     onResumeAgentHibernation: {},
                     onAutoResumeAgentHibernation: {},
                     onTriggerFlash: {}
