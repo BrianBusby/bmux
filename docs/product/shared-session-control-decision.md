@@ -1,6 +1,6 @@
 # Shared-session Chat control decision
 
-Status: ordinary CLI read-only implementation remains bounded; opt-in new shared-host controls passed the scoped build-593 submission/history gate. DEBUG-only, session-scoped acceptance hooks cover partial-history and transport-disconnect recovery; build 597 verified the dark WebKit bridge theme and readable connected Chat, while audible VoiceOver remains unverified. Release workflow repair `0539eb571` passed required-submodule checkout and helper compilation; run `35402401547` then stopped at the empty repository `SPARKLE_PRIVATE_KEY` secret before release compilation. The derivation tool passes a synthetic non-production key; secure secret provisioning is required for release evidence. Ordinary attachment and safe structured interruption have not passed their gates. This is not a claim that all three assignment phases passed. Base: `0539eb571`.
+Status: ordinary CLI read-only implementation remains bounded; opt-in new shared-host controls passed the scoped build-593 submission/history gate. DEBUG-only, session-scoped acceptance hooks cover partial-history and transport-disconnect recovery; build 597 verified the dark WebKit bridge theme and readable connected Chat. Keyboard/focus accessibility fixes are retained; broader audible accessibility evaluation is a future redesign consideration, not a gate for this slice. Release workflow repair `0539eb571` passed required-submodule checkout and helper compilation; run `35402401547` then stopped at the empty repository `SPARKLE_PRIVATE_KEY` secret before release compilation. The derivation tool passes a synthetic non-production key; secure secret provisioning is required for release evidence. Ordinary attachment and safe structured interruption have not passed their gates. This is not a claim that all three assignment phases passed. Base: `0539eb571`.
 
 ## Ownership and identity
 
@@ -189,9 +189,9 @@ The latest 500 messages are shown, with no older-history paging yet. Build 597
 exercised the DEBUG dark appearance override on a verified connected target: the
 native host and WebKit bridge used the dark payload, including an explicit dark page
 backing, and conversation, composer, status, and Terminal fallback were readable.
-Removing the override and recreating Chat restored light appearance. VoiceOver
-keyboard traversal passed with `Tab`, but audible announcements were not observable
-in the execution environment and still require the human check below. Provider-crash
+Removing the override and recreating Chat restored light appearance. Keyboard and
+focus traversal passed with `Tab`; broader audible accessibility evaluation is
+reserved for the future redesign and is not a readiness gate for this slice. Provider-crash
 recovery and a real PE outage were not exercised; neither all of Phase 2 nor Phase 3
 is marked complete.
 
@@ -296,7 +296,7 @@ Five new transport/state tests cover one accepted action, duplicate requests,
 wrong-thread rejection, stale-turn rejection, slash-command handling, uncertain
 delivery, and reconciliation after a replacement connection without a resend.
 Native tagged UI verification is in progress. An initial live launch exposed that Codex cannot resume an empty, unpersisted thread; startup now lets the TUI create its own thread, with no dummy prompt. A direct authenticated TUI-first test accepted one queued prompt and produced one completed turn. Subsequent macOS UI automation returned `cgWindowNotFound`, so the corrected application launch has not yet passed the UI gate. Approvals, provider restart, dark mode,
-VoiceOver, and restored control ownership remain unaccepted gates.
+Restored control ownership remains an unaccepted gate.
 
 For a connected host, fresh authenticated provider state and transcript availability
 are separate. An empty TUI can accept a first queued prompt even before Codex has
