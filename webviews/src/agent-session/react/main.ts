@@ -81,8 +81,6 @@ const SHELL_OUTPUT_BOTTOM_FADE_STYLE: React.CSSProperties = {
 };
 
 type ComposerMenuKind = "mention" | "skill" | null;
-type AgentSessionViewMode = "terminal" | "session";
-
 type FooterControlSpec = {
   canHideLabel: boolean;
   enabled: boolean;
@@ -269,72 +267,18 @@ function useAutoStart(state: SessionState, dispatch: React.Dispatch<Action>) {
 
 export function AgentSessionApp() {
   const [state, dispatch] = useReducer(reduceSession, initialState("react"));
-  const [viewMode, setViewMode] = useState<AgentSessionViewMode>("terminal");
   useInitialData(dispatch);
   useNativeEvents(dispatch);
   useAutoStart(state, dispatch);
-  if (state.context?.readOnlyTerminalChat) return h(TerminalChatSurface, { context: state.context });
   return h(
-    "div",
-    { className: "agent-view-root", "data-active-view": viewMode },
-    h(AgentSessionViewSwitcher, {
-      copy: state.context?.copy,
-      mode: viewMode,
-      onModeChange: setViewMode,
-    }),
-    h(
-      "div",
-      { className: "agent-view-panes" },
-      h(
-        "div",
-        { className: "agent-view-frame", hidden: viewMode !== "terminal" },
-        h(SessionSurface, { state, dispatch, renderer: "React" }),
-      ),
-      h(
-        "div",
-        { className: "agent-view-frame", hidden: viewMode !== "session" },
-        h(SmartSessionSurface, { context: state.context, isActive: viewMode === "session" }),
-      ),
-    ),
-  );
-}
-
-function AgentSessionViewSwitcher({
-  copy,
-  mode,
-  onModeChange,
-}: {
-  copy?: AgentSessionCopy;
-  mode: AgentSessionViewMode;
-  onModeChange: (mode: AgentSessionViewMode) => void;
-}) {
-  return h(
-    "div",
-    { className: "agent-view-switcher", role: "tablist" },
-    h(
-      "button",
-      {
-        className: "agent-view-switcher-button",
-        type: "button",
-        role: "tab",
-        "aria-selected": mode === "terminal",
-        "data-active": mode === "terminal" ? "true" : undefined,
-        onClick: () => onModeChange("terminal"),
-      },
-      copy?.terminalView ?? "Chat",
-    ),
-    h(
-      "button",
-      {
-        className: "agent-view-switcher-button",
-        type: "button",
-        role: "tab",
-        "aria-selected": mode === "session",
-        "data-active": mode === "session" ? "true" : undefined,
-        onClick: () => onModeChange("session"),
-      },
-      copy?.sessionView ?? "Session",
-    ),
+    SmartSessionSurface,
+    {
+      context: state.context,
+      initialView: state.context?.readOnlyTerminalChat ? "chat" : "terminal",
+      isActive: true,
+      renderChat: state.context ? () => h(TerminalChatSurface, { context: state.context! }) : undefined,
+      renderTerminal: () => h(SessionSurface, { state, dispatch, renderer: "React" }),
+    },
   );
 }
 

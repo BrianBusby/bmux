@@ -15,6 +15,15 @@ or caveat changes. Shared milestone, gate, ownership, roadmap, and policy
 changes belong in root `project/project-state.yaml`. The old
 `project/shared-project-source.yaml` pointer is obsolete.
 
+The selected hybrid Focus workbench slice is under observation on
+`hybrid-focus-design`. It delivers the shared React shell, Focus reading
+column, retained Chat/Terminal view routing, source-backed inspectors, stable
+completed-turn ordering, and an honest Learnings unavailable state. The current
+webview bridge still exposes one verified workspace identity rather than a
+workspace-card collection, assigned tab color, ticket/PR/project/owner links,
+token attribution, or curated learning records; those remain explicit
+dependencies rather than illustrative production data.
+
 The user-selected implementation is `shared_session_chat`, tracked in the root
 manifests. See [the shared-session control decision](../product/shared-session-control-decision.md)
 for the capability matrix and evidence. Shared ordinary-CLI control remains

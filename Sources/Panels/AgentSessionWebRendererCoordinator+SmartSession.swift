@@ -164,7 +164,20 @@ extension AgentSessionWebRendererCoordinator {
             "smartSessionTurn": String(
                 localized: "agentSession.web.smartSession.turn",
                 defaultValue: "Turn"
-            )
+            ),
+            "smartSessionFocus": String(localized: "agentSession.web.smartSession.focus", defaultValue: "Focus"),
+            "smartSessionTerminal": String(localized: "agentSession.web.smartSession.terminal", defaultValue: "Terminal"),
+            "smartSessionLearnings": String(localized: "agentSession.web.smartSession.learnings", defaultValue: "Learnings"),
+            "smartSessionWorkspace": String(localized: "agentSession.web.smartSession.workspace", defaultValue: "Workspace"),
+            "smartSessionCurrent": String(localized: "agentSession.web.smartSession.current", defaultValue: "Current"),
+            "smartSessionRelatedWork": String(localized: "agentSession.web.smartSession.relatedWork", defaultValue: "Related work"),
+            "smartSessionNoCurrentTurn": String(localized: "agentSession.web.smartSession.noCurrentTurn", defaultValue: "No current turn. The latest supported outcome appears below."),
+            "smartSessionNoLearnings": String(localized: "agentSession.web.smartSession.noLearnings", defaultValue: "No saved learnings yet"),
+            "smartSessionChanged": String(localized: "agentSession.web.smartSession.changed", defaultValue: "Changed"),
+            "smartSessionChecked": String(localized: "agentSession.web.smartSession.checked", defaultValue: "Checked"),
+            "smartSessionRemains": String(localized: "agentSession.web.smartSession.remains", defaultValue: "Remains"),
+            "smartSessionValidations": String(localized: "agentSession.web.smartSession.validations", defaultValue: "Validation records remain scoped to this turn."),
+            "smartSessionResume": String(localized: "agentSession.web.smartSession.resume", defaultValue: "Resume point is unavailable unless captured by the producer.")
         ]
     }
 }

@@ -236735,6 +236735,19 @@
         }
       }
     },
+    "agentSession.web.smartSession.focus": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Focus"}},"ja":{"stringUnit":{"state":"translated","value":"フォーカス"}}}},
+    "agentSession.web.smartSession.terminal": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Terminal"}},"ja":{"stringUnit":{"state":"translated","value":"ターミナル"}}}},
+    "agentSession.web.smartSession.learnings": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Learnings"}},"ja":{"stringUnit":{"state":"translated","value":"学び"}}}},
+    "agentSession.web.smartSession.workspace": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Workspace"}},"ja":{"stringUnit":{"state":"translated","value":"ワークスペース"}}}},
+    "agentSession.web.smartSession.current": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Current"}},"ja":{"stringUnit":{"state":"translated","value":"現在"}}}},
+    "agentSession.web.smartSession.relatedWork": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Related work"}},"ja":{"stringUnit":{"state":"translated","value":"関連作業"}}}},
+    "agentSession.web.smartSession.noCurrentTurn": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"No current turn. The latest supported outcome appears below."}},"ja":{"stringUnit":{"state":"translated","value":"現在のターンはありません。最後に確認できた結果を以下に表示します。"}}}},
+    "agentSession.web.smartSession.noLearnings": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"No saved learnings yet"}},"ja":{"stringUnit":{"state":"translated","value":"保存された学びはまだありません"}}}},
+    "agentSession.web.smartSession.changed": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Changed"}},"ja":{"stringUnit":{"state":"translated","value":"変更"}}}},
+    "agentSession.web.smartSession.checked": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Checked"}},"ja":{"stringUnit":{"state":"translated","value":"確認済み"}}}},
+    "agentSession.web.smartSession.remains": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Remains"}},"ja":{"stringUnit":{"state":"translated","value":"残り"}}}},
+    "agentSession.web.smartSession.validations": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Validation records remain scoped to this turn."}},"ja":{"stringUnit":{"state":"translated","value":"検証記録はこのターンの範囲に限定されます。"}}}},
+    "agentSession.web.smartSession.resume": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Resume point is unavailable unless captured by the producer."}},"ja":{"stringUnit":{"state":"translated","value":"記録されていない限り、再開地点は利用できません。"}}}},
     "voiceInput.unavailable.message": {
       "extractionState": "manual",
       "localizations": {

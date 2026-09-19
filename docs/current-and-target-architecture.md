@@ -188,7 +188,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Active gate: Engineering Observation Period (`engineering_observation_period`) - active
 - Primary capability frontier: Process Integrity (`process_integrity`)
 - Active implementation slice: none selected
-- Bmux repository state: none selected
+- Bmux repository state: observation
 
 ### Current Roadmap Lanes
 
