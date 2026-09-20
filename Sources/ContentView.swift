@@ -12418,7 +12418,6 @@ struct VerticalTabsSidebar: View {
         let _ = SidebarProfilingSignposts.end(signpost)
         row
             .sidebarWorkspaceFrameAnchor(id: tab.id, isEnabled: shouldCollectWorkspaceDropTargets)
-            .selectedWorkspaceFrameAnchor(id: tab.id, isSelected: tabManager.selectedTabId == tab.id)
             .padding(.leading, tab.groupId != nil ? SidebarWorkspaceGroupingMetrics.memberIndent : 0)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
@@ -14031,6 +14030,10 @@ struct TabItemView: View, Equatable {
                 }
                 .shadow(color: activeElevationShadowColor, radius: 4, x: 0, y: 2)
         )
+        // Anchor the shared perimeter to the rounded card itself. The outer
+        // row padding is deliberately applied at the call site so it remains
+        // outside the connected outline and cannot create a false right seam.
+        .selectedWorkspaceFrameAnchor(id: tab.id, isSelected: isActive)
         .overlay(alignment: .topTrailing) {
             if workspaceSnapshot.hasActiveAIWork && !showCloseButton {
                 TronLoadingIndicator(size: scaledLoadingIndicatorSize, color: workspaceLoadingIndicatorColor, lineWidth: max(1.15, scaledLoadingIndicatorSize * 0.085))
@@ -16574,6 +16577,10 @@ enum SidebarSelection {
 }
 
 #if DEBUG
+private func hybridFixtureText(_ key: String, _ fallback: String) -> String {
+    Bundle.main.localizedString(forKey: key, value: fallback, table: nil)
+}
+
 /// A bounded, inert presentation fixture for the hybrid workbench review.
 ///
 /// This deliberately lives in the native sidebar composition so screenshots
@@ -16587,39 +16594,39 @@ private struct HybridWorkbenchFixtureRail: View {
     private let cards = [
         HybridWorkbenchFixtureCard(
             id: "companycam-mobile",
-            repository: "companycam-mobile",
-            title: "One-off checklist flow",
-            status: "Waiting for review",
+            repository: hybridFixtureText("hybrid.fixture.repo.mobile", "companycam-mobile"),
+            title: hybridFixtureText("hybrid.fixture.title.oneOff", "One-off checklist flow"),
+            status: hybridFixtureText("hybrid.fixture.status.waiting", "Waiting for review"),
             statusColor: "#B9A3FF",
-            activity: "Build local draft checkbox row and retry-safe save",
+            activity: hybridFixtureText("hybrid.fixture.activity.draft", "Build local draft checkbox row and retry-safe save"),
             color: "#342E4B",
             ticket: "INP-2228",
             pullRequest: "PR #11279",
-            project: "Advanced checklists",
-            owner: "BrianBusby",
+            project: hybridFixtureText("hybrid.fixture.project.checklists", "Advanced checklists"),
+            owner: hybridFixtureText("hybrid.fixture.owner.brian", "BrianBusby"),
             ticketURL: URL(string: "https://github.com/CompanyCam/companycam-mobile/issues/2228")!,
             pullRequestURL: URL(string: "https://github.com/CompanyCam/companycam-mobile/pull/11279")!
         ),
         HybridWorkbenchFixtureCard(
             id: "checklist-fields",
-            repository: "companycam-mobile",
-            title: "Reorder checklist fields",
-            status: "Agent working",
+            repository: hybridFixtureText("hybrid.fixture.repo.mobile", "companycam-mobile"),
+            title: hybridFixtureText("hybrid.fixture.title.reorder", "Reorder checklist fields"),
+            status: hybridFixtureText("hybrid.fixture.status.working", "Agent working"),
             statusColor: "#7ED8B1",
-            activity: "Update one-off checklist fields with a single-field move",
+            activity: hybridFixtureText("hybrid.fixture.activity.fields", "Update one-off checklist fields with a single-field move"),
             color: "#25262B",
             ticket: "INP-2341",
             pullRequest: "PR #11279",
-            project: "Advanced checklists",
-            owner: "BrianBusby",
+            project: hybridFixtureText("hybrid.fixture.project.checklists", "Advanced checklists"),
+            owner: hybridFixtureText("hybrid.fixture.owner.brian", "BrianBusby"),
             ticketURL: URL(string: "https://github.com/CompanyCam/companycam-mobile/issues/2341")!,
             pullRequestURL: URL(string: "https://github.com/CompanyCam/companycam-mobile/pull/11279")!
         ),
         HybridWorkbenchFixtureCard(
             id: "companycam-api",
-            repository: "Company-Cam-API",
-            title: "Local GraphQL errors",
-            status: "Needs your input",
+            repository: hybridFixtureText("hybrid.fixture.repo.api", "Company-Cam-API"),
+            title: hybridFixtureText("hybrid.fixture.title.graphQL", "Local GraphQL errors"),
+            status: hybridFixtureText("hybrid.fixture.status.input", "Needs your input"),
             statusColor: "#E6B86A",
             activity: "",
             color: "#25262B",
@@ -16636,12 +16643,12 @@ private struct HybridWorkbenchFixtureRail: View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("IN MOTION")
+                    Text(hybridFixtureText("hybrid.fixture.inMotion", "IN MOTION"))
                         .font(.system(size: 10, weight: .semibold))
                         .tracking(1.2)
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Text("3")
+                    Text(verbatim: "3")
                         .font(.system(size: 11, weight: .medium).monospacedDigit())
                         .foregroundStyle(.secondary)
                 }
@@ -16726,13 +16733,13 @@ private struct HybridWorkbenchFixtureCardView: View {
                     fixtureLinkRow(symbol: "ticket", label: ticket, url: card.ticketURL)
                 }
                 if let pullRequest = card.pullRequest {
-                    fixtureLinkRow(symbol: "arrow.triangle.branch", label: "\(pullRequest) · Open", url: card.pullRequestURL)
+                    fixtureLinkRow(symbol: "arrow.triangle.branch", label: "\(pullRequest) · \(hybridFixtureText("hybrid.fixture.open", "Open"))", url: card.pullRequestURL)
                 }
                 if let project = card.project {
                     fixtureDetailRow(symbol: "folder", label: project)
                 }
                 if let owner = card.owner {
-                    fixtureDetailRow(symbol: "person", label: "PR owner  \(owner)")
+                    fixtureDetailRow(symbol: "person", label: "\(hybridFixtureText("hybrid.fixture.prOwner", "PR owner"))  \(owner)")
                 }
             }
         }

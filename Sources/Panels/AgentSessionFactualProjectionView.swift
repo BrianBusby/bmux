@@ -301,6 +301,10 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
 }
 
 #if DEBUG
+private func hybridFocusFixtureText(_ key: String, _ fallback: String) -> String {
+    Bundle.main.localizedString(forKey: key, value: fallback, table: nil)
+}
+
 /// Fixture-only Focus content used to review density and hierarchy with the
 /// native shell. It is intentionally separate from PE data and never appears
 /// unless the explicit Debug fixture flag is enabled.
@@ -310,46 +314,46 @@ private struct AgentSessionFixtureFocusView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private let history = [
-        ("turn-3", "Check CI across the PR stack", "4m ago · 8.2k"),
-        ("turn-2", "Split implementation into six tickets", "19m ago · 24.6k"),
-        ("turn-1", "Confirm review ownership and rollout", "42m ago · 11.4k")
+        ("turn-3", hybridFocusFixtureText("hybrid.fixture.history.ci", "Check CI across the PR stack"), "4m ago · 8.2k"),
+        ("turn-2", hybridFocusFixtureText("hybrid.fixture.history.tickets", "Split implementation into six tickets"), "19m ago · 24.6k"),
+        ("turn-1", hybridFocusFixtureText("hybrid.fixture.history.ownership", "Confirm review ownership and rollout"), "42m ago · 11.4k")
     ]
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
-                    Text("CURRENT TURN")
+                    Text(hybridFocusFixtureText("hybrid.fixture.currentTurn", "CURRENT TURN"))
                         .font(.system(size: 11, weight: .semibold))
                         .tracking(1.1)
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Text("CODEX · 28M 36S")
+                    Text(verbatim: "CODEX · 28M 36S")
                         .font(.system(size: 11, weight: .medium).monospacedDigit())
                         .foregroundStyle(.secondary)
                 }
 
                 VStack(alignment: .leading, spacing: 14) {
                     HStack(alignment: .firstTextBaseline) {
-                        Text("Move tickets into review")
+                        Text(hybridFocusFixtureText("hybrid.fixture.objective", "Move tickets into review"))
                             .font(.system(size: 17, weight: .semibold))
                         Spacer()
-                        Text("Waiting on reviews")
+                        Text(hybridFocusFixtureText("hybrid.fixture.waitingReviews", "Waiting on reviews"))
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(Color(nsColor: NSColor(hex: "#B9A3FF") ?? .systemPurple))
                     }
-                    Text("The tickets are assigned to you and in review. I’m waiting for the final review checks before handing the stack back.")
+                    Text(hybridFocusFixtureText("hybrid.fixture.summary", "The tickets are assigned to you and in review. I’m waiting for the final review checks before handing the stack back."))
                         .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
-                    fixtureCheck("Four tickets updated", done: true)
-                    fixtureCheck("Lint and TypeScript passed on all six PRs", done: true)
-                    fixtureCheck("Review checks still running", done: false)
+                    fixtureCheck(hybridFocusFixtureText("hybrid.fixture.check.updated", "Four tickets updated"), done: true)
+                    fixtureCheck(hybridFocusFixtureText("hybrid.fixture.check.lint", "Lint and TypeScript passed on all six PRs"), done: true)
+                    fixtureCheck(hybridFocusFixtureText("hybrid.fixture.check.running", "Review checks still running"), done: false)
                     Divider().opacity(0.35)
-                    DisclosureGroup("Tool activity · inspect evidence") {
+                    DisclosureGroup(hybridFocusFixtureText("hybrid.fixture.toolActivity", "Tool activity · inspect evidence")) {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Observed: gh pr checks --watch")
-                            Text("Source: terminal activity · current turn")
+                            Text(hybridFocusFixtureText("hybrid.fixture.observedCommand", "Observed: gh pr checks --watch"))
+                            Text(hybridFocusFixtureText("hybrid.fixture.sourceTurn", "Source: terminal activity · current turn"))
                         }
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
@@ -364,12 +368,12 @@ private struct AgentSessionFixtureFocusView: View {
                 .overlay { RoundedRectangle(cornerRadius: 11, style: .continuous).stroke(cardBorder, lineWidth: 1) }
 
                 HStack {
-                    Text("PREVIOUS TURNS · NEWEST FIRST")
+                    Text(hybridFocusFixtureText("hybrid.fixture.previousTurns", "PREVIOUS TURNS · NEWEST FIRST"))
                         .font(.system(size: 11, weight: .semibold))
                         .tracking(1.1)
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Text("TOKEN USAGE*")
+                    Text(hybridFocusFixtureText("hybrid.fixture.tokenUsage", "TOKEN USAGE*"))
                         .font(.system(size: 11, weight: .semibold))
                         .tracking(1.1)
                         .foregroundStyle(.secondary)
@@ -395,9 +399,9 @@ private struct AgentSessionFixtureFocusView: View {
                             .buttonStyle(.plain)
                             if expandedIDs.contains(item.0) {
                                 VStack(alignment: .leading, spacing: 5) {
-                                    Text("Changed  ·  scoped the implementation to the review stack")
-                                    Text("Checked  ·  targeted validation and source inspection")
-                                    Text("Remains  ·  evidence-backed follow-up")
+                                    Text(hybridFocusFixtureText("hybrid.fixture.changed", "Changed  ·  scoped the implementation to the review stack"))
+                                    Text(hybridFocusFixtureText("hybrid.fixture.checked", "Checked  ·  targeted validation and source inspection"))
+                                    Text(hybridFocusFixtureText("hybrid.fixture.remains", "Remains  ·  evidence-backed follow-up"))
                                 }
                                 .font(.system(size: 12))
                                 .foregroundStyle(.secondary)
@@ -411,8 +415,8 @@ private struct AgentSessionFixtureFocusView: View {
 
                 HStack(spacing: 9) {
                     Image(systemName: "book.closed")
-                    Text("Knowledge travels with the work.")
-                    Text("Explore 2 learnings")
+                    Text(hybridFocusFixtureText("hybrid.fixture.knowledge", "Knowledge travels with the work."))
+                    Text(hybridFocusFixtureText("hybrid.fixture.exploreLearnings", "Explore 2 learnings"))
                         .underline()
                 }
                 .font(.system(size: 12, weight: .medium))
@@ -423,7 +427,7 @@ private struct AgentSessionFixtureFocusView: View {
                 .background(Color(nsColor: NSColor(hex: "#342E4B") ?? .systemPurple))
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
-                Text("* Example data, not live telemetry")
+                Text(hybridFocusFixtureText("hybrid.fixture.exampleTelemetry", "* Example data, not live telemetry"))
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
