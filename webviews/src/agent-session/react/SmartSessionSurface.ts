@@ -34,8 +34,8 @@ export function SmartSessionSurface({ context, initialView = "focus", isActive =
       h(ViewTabs, { copy, view, onChange: setView }),
       h("div", { className: "focus-workbench-body" },
         view === "focus" ? h(FocusView, { copy, state, onRefresh: refresh, expandedTurnID, onExpandTurn: setExpandedTurnID, onInspect: setInspector }) :
-          view === "chat" ? h(ViewFrame, { className: "focus-chat-frame" }, renderChat ? renderChat() : h(UnsupportedView, { copy, kind: "chat" })) :
-            view === "terminal" ? h(ViewFrame, { className: "focus-terminal-frame" }, renderTerminal ? renderTerminal() : h(UnsupportedView, { copy, kind: "terminal" })) :
+          view === "chat" ? h(ViewFrame, { className: "focus-chat-frame", children: renderChat ? renderChat() : h(UnsupportedView, { copy, kind: "chat" }) }) :
+            view === "terminal" ? h(ViewFrame, { className: "focus-terminal-frame", children: renderTerminal ? renderTerminal() : h(UnsupportedView, { copy, kind: "terminal" }) }) :
               h(LearningsView, { copy, onInspect: setInspector }),
       ),
     ),
@@ -91,7 +91,7 @@ function CurrentTurnCard({ copy, turn, purpose, activity, onInspect }: { copy?: 
     h("h2", null, turn.prompt?.text ?? text(copy, "smartSessionUnknown", "Objective unavailable")),
     h("div", { className: "focus-current-grid" }, h(SummaryBlock, { label: text(copy, "smartSessionPurpose", "Objective"), value: purpose?.summary ?? turn.prompt?.text ?? text(copy, "smartSessionUnknown", "Unknown") }), h(SummaryBlock, { label: text(copy, "smartSessionCurrentActivity", "Current activity"), value: activity?.summary ?? latestActivity(turn, copy) })),
     h("section", { className: "focus-results" }, h("h3", null, text(copy, "smartSessionFinalOutput", "Results")), results.length ? h("ul", null, ...results.map((result, index) => h("li", { key: `${turn.turnId}-${index}` }, result))) : h("p", { className: "focus-muted" }, text(copy, "smartSessionNoEvidence", "No evidence yet."))),
-    h("div", { className: "focus-current-actions" }, h("button", { type: "button", className: "focus-secondary-button", onClick: () => onInspect(`turn:${turn.turnId}`) }, text(copy, "smartSessionEvidence", "Inspect evidence")), h("span", { className: "focus-source-note" }, `${turn.provider} · ${turn.confidence}`)),
+    h("div", { className: "focus-current-actions" }, h("button", { type: "button", className: "focus-secondary-button", onClick: () => onInspect(`turn:${turn.turnId}`) }, text(copy, "smartSessionEvidence", "Inspect evidence")), h("span", { className: "focus-source-note" }, turn.provider)),
   );
 }
 
