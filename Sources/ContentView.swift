@@ -1671,15 +1671,6 @@ struct ContentView: View {
         workspacePresentationModeRuntimeCache.isMinimalMode
     }
 
-    private var selectedWorkspaceConnectedBorderTopY: CGFloat {
-        max(0, Self.effectiveTitlebarPadding(
-            isMinimalMode: currentIsMinimalMode,
-            isFullScreen: isFullScreen,
-            titlebarPadding: titlebarPadding,
-            hostingSafeAreaTop: hostingSafeAreaTop
-        ))
-    }
-
     static func effectiveTitlebarPadding(
         isMinimalMode: Bool,
         isFullScreen: Bool,
@@ -2497,22 +2488,6 @@ struct ContentView: View {
                     if rightSidebarVisible {
                         rightSidebarResizerOverlay
                             .zIndex(1000)
-                    }
-                }
-                .overlayPreferenceValue(SelectedWorkspaceRowFramePreferenceKey.self) { anchors in
-                    GeometryReader { proxy in
-                        if sidebarState.isVisible,
-                           sidebarSelectionState.selection == .tabs,
-                           let selectedWorkspaceId = tabManager.selectedTabId {
-                            SelectedWorkspaceConnectedBorderOverlay(
-                                sidebarWidth: sidebarWidth,
-                                rightSidebarWidth: rightSidebarWidth,
-                                selectedRowFrame: anchors[selectedWorkspaceId].map { proxy[$0] },
-                                workspaceTopY: selectedWorkspaceConnectedBorderTopY,
-                                workspaceColorHex: tabManager.tabs.first { $0.id == selectedWorkspaceId }?.customColor
-                            )
-                            .zIndex(900)
-                        }
                     }
                 }
         )
@@ -10089,9 +10064,10 @@ struct VerticalTabsSidebar: View {
 #if DEBUG
     @Environment(\.minimalModeInvalidationProbe) private var minimalModeInvalidationProbe
 
-    /// Opt-in visual fixture for reviewing the hybrid workbench without
-    /// mutating the live workspace store. It is only compiled into Debug
-    /// builds and is enabled with the tagged app's bundle defaults.
+    /// Opt-in fixture for reviewing the hybrid workbench with bounded sample
+    /// card content while retaining live workspace selection. It is only
+    /// compiled into Debug builds and is enabled with the tagged app's bundle
+    /// defaults.
     private var showsHybridWorkbenchFixture: Bool {
         UserDefaults.standard.bool(forKey: "bmux.hybridFocus.fixture")
     }
@@ -10488,7 +10464,13 @@ struct VerticalTabsSidebar: View {
         ZStack(alignment: .bottomLeading) {
 #if DEBUG
             if showsHybridWorkbenchFixture {
-                HybridWorkbenchFixtureRail()
+                HybridWorkbenchFixtureRail(
+                    workspaceIDs: Array(tabs.prefix(3)).map(\.id),
+                    selectedWorkspaceID: tabManager.selectedTabId,
+                    onSelectWorkspace: { workspaceID in
+                        _ = tabManager.selectWorkspaceIdForAction(workspaceID)
+                    }
+                )
             } else {
                 if BmuxExtensionSidebarSelection.resolvesToDefaultSidebar(effectiveProviderId: effectiveExtensionSidebarProviderId) {
                     workspaceScrollArea(renderContext: renderContext)
@@ -12455,31 +12437,6 @@ struct SidebarWorkspaceRowFramePreferenceKey: PreferenceKey {
     }
 }
 
-struct SelectedWorkspaceRowFramePreferenceKey: PreferenceKey {
-    static let defaultValue: [UUID: Anchor<CGRect>] = [:]
-
-    static func reduce(value: inout [UUID: Anchor<CGRect>], nextValue: () -> [UUID: Anchor<CGRect>]) {
-        value.merge(nextValue()) { _, next in next }
-    }
-}
-
-private struct SelectedWorkspaceFrameAnchorModifier: ViewModifier {
-    let id: UUID
-    let isSelected: Bool
-
-    func body(content: Content) -> some View {
-        content.anchorPreference(key: SelectedWorkspaceRowFramePreferenceKey.self, value: .bounds) { anchor in
-            isSelected ? [id: anchor] : [:]
-        }
-    }
-}
-
-private extension View {
-    func selectedWorkspaceFrameAnchor(id: UUID, isSelected: Bool) -> some View {
-        modifier(SelectedWorkspaceFrameAnchorModifier(id: id, isSelected: isSelected))
-    }
-}
-
 @MainActor
 private final class SidebarDragFailsafeMonitor: ObservableObject {
     private static let escapeKeyCode: UInt16 = 53
@@ -13400,13 +13357,13 @@ struct TabItemView: View, Equatable {
     }
 
     private var activeBorderLineWidth: CGFloat {
-        // Active selection is drawn once by the shared rail/content overlay;
-        // keeping a local active stroke would recreate the right seam.
-        isActive ? 0 : 1
+        1
     }
 
     private var activeBorderColor: Color {
-        guard !isActive else { return .clear }
+        if isActive {
+            return workspaceSelectionColor.opacity(colorScheme == .dark ? 0.9 : 0.72)
+        }
         return Color.primary.opacity(colorScheme == .dark ? 0.16 : 0.12)
     }
 
@@ -14030,10 +13987,6 @@ struct TabItemView: View, Equatable {
                 }
                 .shadow(color: activeElevationShadowColor, radius: 4, x: 0, y: 2)
         )
-        // Anchor the shared perimeter to the rounded card itself. The outer
-        // row padding is deliberately applied at the call site so it remains
-        // outside the connected outline and cannot create a false right seam.
-        .selectedWorkspaceFrameAnchor(id: tab.id, isSelected: isActive)
         .overlay(alignment: .topTrailing) {
             if workspaceSnapshot.hasActiveAIWork && !showCloseButton {
                 TronLoadingIndicator(size: scaledLoadingIndicatorSize, color: workspaceLoadingIndicatorColor, lineWidth: max(1.15, scaledLoadingIndicatorSize * 0.085))
@@ -16584,12 +16537,16 @@ private func hybridFixtureText(_ key: String, _ fallback: String) -> String {
 /// A bounded, inert presentation fixture for the hybrid workbench review.
 ///
 /// This deliberately lives in the native sidebar composition so screenshots
-/// exercise the real window, rail, footer, theme and sizing behavior. It does
-/// not create `Workspace` values, alter selection, send provider input, or
-/// write ticket state. The normal route is unchanged unless the explicit
-/// Debug defaults flag is enabled.
+/// exercise the real window, rail, footer, theme and sizing behavior. Sample
+/// card content is inert, while selecting a card delegates to the real
+/// workspace store so the native header and content identity update normally.
+/// The normal route is unchanged unless the explicit Debug defaults flag is
+/// enabled.
 private struct HybridWorkbenchFixtureRail: View {
-    @State private var selectedID = "companycam-mobile"
+    let workspaceIDs: [UUID]
+    let selectedWorkspaceID: UUID?
+    let onSelectWorkspace: (UUID) -> Void
+    @State private var fallbackSelectedID = "companycam-mobile"
 
     private let cards = [
         HybridWorkbenchFixtureCard(
@@ -16655,11 +16612,19 @@ private struct HybridWorkbenchFixtureRail: View {
                 .padding(.horizontal, 14)
                 .padding(.top, 16)
 
-                ForEach(cards) { card in
+                ForEach(Array(cards.enumerated()), id: \.element.id) { index, card in
+                    let workspaceID = workspaceIDs.indices.contains(index) ? workspaceIDs[index] : nil
+                    let isSelected = workspaceID.map { $0 == selectedWorkspaceID } ?? (fallbackSelectedID == card.id)
                     HybridWorkbenchFixtureCardView(
                         card: card,
-                        isSelected: selectedID == card.id,
-                        onSelect: { selectedID = card.id }
+                        isSelected: isSelected,
+                        onSelect: {
+                            if let workspaceID {
+                                onSelectWorkspace(workspaceID)
+                            } else {
+                                fallbackSelectedID = card.id
+                            }
+                        }
                     )
                 }
                 Spacer(minLength: 120)

@@ -21,7 +21,7 @@ Terminal / Chat / Focus / Learnings host: Terminal remains the native provider
 surface, Chat retains its existing connected/read-only boundary, Focus uses the
 source-backed factual projection with stable completed-turn ordering, and
 Learnings is an honest unavailable state. The native shell now uses rich rounded
-workspace cards, retained assigned colors, a joined 3px selection outline,
+workspace cards, retained assigned colors, a restrained card-only selection border,
 separate link controls, a prominent shared workspace header, and underline view
 navigation. Focus puts current evidence before restrained newest-first history,
 with identity/thread detail behind disclosure. The selected header receives the
@@ -29,12 +29,13 @@ owning native workspace title, assigned color, source-supported activity, and
 all known PE-backed ticket, pull-request, project, and owner links. Token
 attribution and curated learning records remain unsupported data dependencies.
 A tagged build is reproducible with the pinned sources plus the local
-Ghostty/Bonsplit cache workaround. CUA capture is now working for the isolated
-app after moving its persisted window geometry from the third display to the
-primary display; the original cgWindowNotFound was a display-targeting issue
-compounded by the shell capture client's missing Screen Recording grant. Focus,
-Chat, and Learnings have been captured in the tagged build; dark/light, narrow,
-and populated-history states remain follow-up visual checks.
+Ghostty/Bonsplit cache workaround. Current-build CUA capture remains
+unavailable: exact tagged-app attachment returns `cgWindowNotFound`, shell
+`screencapture` lacks Screen Recording authorization, and a ScreenCaptureKit
+attempt aborts in `CGS_REQUIRE_INIT`. The supplied build-612 Terminal screenshot
+is before-state evidence; the obsolete shared perimeter is now removed in
+source. Dark/light, narrow, Focus, and populated-history states remain visually
+unverified.
 
 The user-selected implementation is `shared_session_chat`, tracked in the root
 manifests. See [the shared-session control decision](../product/shared-session-control-decision.md)
