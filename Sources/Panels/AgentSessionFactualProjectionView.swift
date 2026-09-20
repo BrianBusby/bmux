@@ -549,7 +549,7 @@ private struct AgentSessionLearningsUnavailableView: View {
             VStack(alignment: .leading, spacing: 14) {
                 Text(String(localized: "agentSession.web.smartSession.learnings", defaultValue: "Learnings"))
                     .font(.system(size: 20, weight: .semibold))
-                Text(String(localized: "agentSession.web.smartSession.noLearnings", defaultValue: "Useful next time. Grounded in this time."))
+                Text(String(localized: "agentSession.web.smartSession.noLearnings", defaultValue: "No learnings are available for this workspace yet."))
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(.secondary)
                 VStack(alignment: .leading, spacing: 8) {
@@ -558,7 +558,7 @@ private struct AgentSessionLearningsUnavailableView: View {
                         .foregroundStyle(.secondary)
                     Text(String(localized: "agentSession.web.smartSession.learningsUnavailable", defaultValue: "Learnings are unavailable for this workspace."))
                         .font(.system(size: 15, weight: .semibold))
-                    Text(String(localized: "agentSession.web.smartSession.learningsUnavailable.detail", defaultValue: "No persisted knowledge producer or review lifecycle is connected. This view will not invent records or counts."))
+                    Text(String(localized: "agentSession.web.smartSession.learningsUnavailable.detail", defaultValue: "This view is unavailable until learnings can be stored and reviewed."))
                         .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                 }

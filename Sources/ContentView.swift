@@ -1838,6 +1838,13 @@ struct ContentView: View {
         @ViewBuilder content: () -> Content
     ) -> some View {
         ZStack(alignment: alignment) {
+            // The workbench rail is an opaque semantic surface. Keeping this
+            // fill below the existing backdrop policy prevents desktop or
+            // terminal wallpaper from bleeding through translucent sidebar
+            // material while leaving terminal rendering itself untouched.
+            Color(nsColor: appearance.sidebarContentColorScheme == .dark
+                ? (NSColor(hex: "#191A1D") ?? .windowBackgroundColor)
+                : (NSColor(hex: "#F3F2F6") ?? .windowBackgroundColor))
             sidebarBackdropLayer(width: width, role: role, appearance: appearance)
             content()
                 .environment(\.colorScheme, appearance.sidebarContentColorScheme)
@@ -13925,6 +13932,10 @@ struct TabItemView: View, Equatable {
             }
 
             // Pull request rows
+            if !isActive, !workspaceSnapshot.ticketRows.isEmpty {
+                ticketRowsView(workspaceSnapshot.ticketRows)
+            }
+
             if !isActive, !workspaceSnapshot.pullRequestRows.isEmpty {
                 pullRequestRowsView(workspaceSnapshot.pullRequestRows)
             }
@@ -16692,7 +16703,12 @@ private struct HybridWorkbenchFixtureCardView: View {
             }
             .buttonStyle(.plain)
 
-            if card.ticket != nil || card.pullRequest != nil || card.project != nil || card.owner != nil {
+            // Selected-card resources are represented by the shared workspace
+            // header. The fixture hides them here exactly as the live card
+            // does; its URLs remain available on inactive cards for testing
+            // independent link activation.
+            if !isSelected,
+               card.ticket != nil || card.pullRequest != nil || card.project != nil || card.owner != nil {
                 Divider().opacity(isSelected ? 0.22 : 0.14)
                 if let ticket = card.ticket {
                     fixtureLinkRow(symbol: "ticket", label: ticket, url: card.ticketURL)
