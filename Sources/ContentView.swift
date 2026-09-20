@@ -863,6 +863,7 @@ struct ContentView: View {
     @Environment(\.colorScheme) private var colorScheme
 #if DEBUG
     @Environment(\.minimalModeInvalidationProbe) private var minimalModeInvalidationProbe
+
 #endif
     @AppStorage(TitlebarControlsStyle.storageKey) private var titlebarControlsStyleRawValue = TitlebarControlsStyle.defaultRawValue
     @AppStorage(RightSidebarWidthSettings.maxWidthKey) private var rightSidebarMaxWidthSetting = RightSidebarWidthSettings.noOverrideValue
@@ -2507,7 +2508,8 @@ struct ContentView: View {
                                 sidebarWidth: sidebarWidth,
                                 rightSidebarWidth: rightSidebarWidth,
                                 selectedRowFrame: anchors[selectedWorkspaceId].map { proxy[$0] },
-                                workspaceTopY: selectedWorkspaceConnectedBorderTopY
+                                workspaceTopY: selectedWorkspaceConnectedBorderTopY,
+                                workspaceColorHex: tabManager.tabs.first { $0.id == selectedWorkspaceId }?.customColor
                             )
                             .zIndex(900)
                         }
@@ -10086,6 +10088,13 @@ struct VerticalTabsSidebar: View {
     @LiveSetting(\.shortcuts.showModifierHoldHints) private var showModifierHoldHints
 #if DEBUG
     @Environment(\.minimalModeInvalidationProbe) private var minimalModeInvalidationProbe
+
+    /// Opt-in visual fixture for reviewing the hybrid workbench without
+    /// mutating the live workspace store. It is only compiled into Debug
+    /// builds and is enabled with the tagged app's bundle defaults.
+    private var showsHybridWorkbenchFixture: Bool {
+        UserDefaults.standard.bool(forKey: "bmux.hybridFocus.fixture")
+    }
 #endif
 
     // The provider to actually render. Built-in views are always honored; only
@@ -10477,23 +10486,28 @@ struct VerticalTabsSidebar: View {
         )
         let _ = SidebarProfilingSignposts.end(signpost)
         ZStack(alignment: .bottomLeading) {
+#if DEBUG
+            if showsHybridWorkbenchFixture {
+                HybridWorkbenchFixtureRail()
+            } else {
+                if BmuxExtensionSidebarSelection.resolvesToDefaultSidebar(effectiveProviderId: effectiveExtensionSidebarProviderId) {
+                    workspaceScrollArea(renderContext: renderContext)
+                } else {
+                    extensionSidebarScrollArea(renderContext: renderContext)
+                }
+            }
+#else
             if BmuxExtensionSidebarSelection.resolvesToDefaultSidebar(effectiveProviderId: effectiveExtensionSidebarProviderId) {
                 workspaceScrollArea(renderContext: renderContext)
             } else {
                 extensionSidebarScrollArea(renderContext: renderContext)
             }
+#endif
             SidebarFooter(updateViewModel: updateViewModel, fileExplorerState: fileExplorerState, onSendFeedback: onSendFeedback)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .accessibilityIdentifier("Sidebar")
         .ignoresSafeArea()
-        .overlay(alignment: .trailing) {
-            WindowChromeBorder(
-                orientation: .vertical,
-                refreshNotificationName: .ghosttyDefaultBackgroundDidChange,
-                backgroundColorProvider: { GhosttyBackgroundTheme.currentColor() }
-            )
-        }
         .background(
             WindowAccessor(refreshID: showModifierHoldHints) { window in
                 modifierKeyMonitor.setHostWindow(showModifierHoldHints ? window : nil)
@@ -13615,13 +13629,20 @@ struct TabItemView: View, Equatable {
         let accessibilityHintText = String(localized: "sidebar.workspace.accessibilityHint", defaultValue: "Activate to focus this workspace. Drag to reorder, or use Move Up and Move Down actions.")
         let moveUpActionText = String(localized: "sidebar.workspace.moveUpAction", defaultValue: "Move Up")
         let moveDownActionText = String(localized: "sidebar.workspace.moveDownAction", defaultValue: "Move Down")
-        let conversationMessageSubtitle = SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
-            latestSubmittedMessage: workspaceSnapshot.latestSubmittedMessage,
-            latestConversationMessage: workspaceSnapshot.latestConversationMessage,
-            hidesAllDetails: settings.hidesAllDetails,
-            iMessageModeEnabled: settings.iMessageModeEnabled,
-            hiddenPullRequestNumbers: Set(workspaceSnapshot.pullRequestRows.map(\.number))
-        )
+        // The selected workspace's activity and contextual links are promoted
+        // into the shared content header. Keeping the prompt-derived subtitle
+        // in the selection control duplicates the header and can expose a
+        // second URL hit target. Unselected cards retain the native activity
+        // summary so the rail remains useful for comparison and scanning.
+        let conversationMessageSubtitle = isActive
+            ? nil
+            : SidebarWorkspaceRowLineLimitPolicy.conversationMessage(
+                latestSubmittedMessage: workspaceSnapshot.latestSubmittedMessage,
+                latestConversationMessage: workspaceSnapshot.latestConversationMessage,
+                hidesAllDetails: settings.hidesAllDetails,
+                iMessageModeEnabled: settings.iMessageModeEnabled,
+                hiddenPullRequestNumbers: Set(workspaceSnapshot.pullRequestRows.map(\.number))
+            )
         let subtitle = SidebarWorkspaceRowLineLimitPolicy.subtitle(
             notificationText: latestNotificationText,
             conversationMessage: conversationMessageSubtitle
@@ -16551,3 +16572,217 @@ enum SidebarSelection {
     case tabs
     case notifications
 }
+
+#if DEBUG
+/// A bounded, inert presentation fixture for the hybrid workbench review.
+///
+/// This deliberately lives in the native sidebar composition so screenshots
+/// exercise the real window, rail, footer, theme and sizing behavior. It does
+/// not create `Workspace` values, alter selection, send provider input, or
+/// write ticket state. The normal route is unchanged unless the explicit
+/// Debug defaults flag is enabled.
+private struct HybridWorkbenchFixtureRail: View {
+    @State private var selectedID = "companycam-mobile"
+
+    private let cards = [
+        HybridWorkbenchFixtureCard(
+            id: "companycam-mobile",
+            repository: "companycam-mobile",
+            title: "One-off checklist flow",
+            status: "Waiting for review",
+            statusColor: "#B9A3FF",
+            activity: "Build local draft checkbox row and retry-safe save",
+            color: "#342E4B",
+            ticket: "INP-2228",
+            pullRequest: "PR #11279",
+            project: "Advanced checklists",
+            owner: "BrianBusby",
+            ticketURL: URL(string: "https://github.com/CompanyCam/companycam-mobile/issues/2228")!,
+            pullRequestURL: URL(string: "https://github.com/CompanyCam/companycam-mobile/pull/11279")!
+        ),
+        HybridWorkbenchFixtureCard(
+            id: "checklist-fields",
+            repository: "companycam-mobile",
+            title: "Reorder checklist fields",
+            status: "Agent working",
+            statusColor: "#7ED8B1",
+            activity: "Update one-off checklist fields with a single-field move",
+            color: "#25262B",
+            ticket: "INP-2341",
+            pullRequest: "PR #11279",
+            project: "Advanced checklists",
+            owner: "BrianBusby",
+            ticketURL: URL(string: "https://github.com/CompanyCam/companycam-mobile/issues/2341")!,
+            pullRequestURL: URL(string: "https://github.com/CompanyCam/companycam-mobile/pull/11279")!
+        ),
+        HybridWorkbenchFixtureCard(
+            id: "companycam-api",
+            repository: "Company-Cam-API",
+            title: "Local GraphQL errors",
+            status: "Needs your input",
+            statusColor: "#E6B86A",
+            activity: "",
+            color: "#25262B",
+            ticket: nil,
+            pullRequest: nil,
+            project: nil,
+            owner: nil,
+            ticketURL: nil,
+            pullRequestURL: nil
+        )
+    ]
+
+    var body: some View {
+        ScrollView(.vertical) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("IN MOTION")
+                        .font(.system(size: 10, weight: .semibold))
+                        .tracking(1.2)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text("3")
+                        .font(.system(size: 11, weight: .medium).monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 14)
+                .padding(.top, 16)
+
+                ForEach(cards) { card in
+                    HybridWorkbenchFixtureCardView(
+                        card: card,
+                        isSelected: selectedID == card.id,
+                        onSelect: { selectedID = card.id }
+                    )
+                }
+                Spacer(minLength: 120)
+            }
+            .padding(.horizontal, 6)
+        }
+        .scrollIndicators(.automatic)
+        .background(Color(nsColor: NSColor(hex: "#191A1D") ?? .windowBackgroundColor))
+    }
+}
+
+private struct HybridWorkbenchFixtureCard: Identifiable {
+    let id: String
+    let repository: String
+    let title: String
+    let status: String
+    let statusColor: String
+    let activity: String
+    let color: String
+    let ticket: String?
+    let pullRequest: String?
+    let project: String?
+    let owner: String?
+    let ticketURL: URL?
+    let pullRequestURL: URL?
+}
+
+private struct HybridWorkbenchFixtureCardView: View {
+    let card: HybridWorkbenchFixtureCard
+    let isSelected: Bool
+    let onSelect: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button(action: onSelect) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(card.repository)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(isSelected ? .white.opacity(0.66) : .secondary)
+                        .lineLimit(1)
+                    Text(card.title)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(isSelected ? .white : .primary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(Color(nsColor: NSColor(hex: card.statusColor) ?? .systemPurple))
+                            .frame(width: 7, height: 7)
+                        Text(card.status)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color(nsColor: NSColor(hex: card.statusColor) ?? .systemPurple))
+                    }
+                    if !card.activity.isEmpty {
+                        Text(card.activity)
+                            .font(.system(size: 11))
+                            .foregroundStyle(isSelected ? .white.opacity(0.72) : .secondary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if card.ticket != nil || card.pullRequest != nil || card.project != nil || card.owner != nil {
+                Divider().opacity(isSelected ? 0.22 : 0.14)
+                if let ticket = card.ticket {
+                    fixtureLinkRow(symbol: "ticket", label: ticket, url: card.ticketURL)
+                }
+                if let pullRequest = card.pullRequest {
+                    fixtureLinkRow(symbol: "arrow.triangle.branch", label: "\(pullRequest) · Open", url: card.pullRequestURL)
+                }
+                if let project = card.project {
+                    fixtureDetailRow(symbol: "folder", label: project)
+                }
+                if let owner = card.owner {
+                    fixtureDetailRow(symbol: "person", label: "PR owner  \(owner)")
+                }
+            }
+        }
+        .padding(13)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color(nsColor: NSColor(hex: isSelected ? card.color : "#25262B") ?? .windowBackgroundColor))
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(
+                    isSelected
+                        ? Color(nsColor: NSColor(hex: card.statusColor) ?? .systemPurple).opacity(0.9)
+                        : Color.primary.opacity(colorScheme == .dark ? 0.16 : 0.12),
+                    lineWidth: isSelected ? 1.5 : 1
+                )
+        }
+        .padding(.horizontal, 8)
+    }
+
+    @ViewBuilder
+    private func fixtureLinkRow(symbol: String, label: String, url: URL?) -> some View {
+        if let url {
+            Link(destination: url) {
+                fixtureRowLabel(symbol: symbol, label: label, underline: true)
+            }
+            .buttonStyle(.plain)
+        } else {
+            fixtureRowLabel(symbol: symbol, label: label, underline: false)
+        }
+    }
+
+    private func fixtureDetailRow(symbol: String, label: String) -> some View {
+        fixtureRowLabel(symbol: symbol, label: label, underline: false)
+    }
+
+    private func fixtureRowLabel(symbol: String, label: String, underline: Bool) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Image(systemName: symbol)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(isSelected ? .white.opacity(0.66) : .secondary)
+                .frame(width: 13)
+            Text(label)
+                .font(.system(size: 11))
+                .foregroundStyle(isSelected ? .white.opacity(0.84) : .secondary)
+                .underline(underline)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+            Spacer(minLength: 0)
+        }
+    }
+}
+#endif

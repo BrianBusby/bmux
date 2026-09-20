@@ -111,7 +111,10 @@ private struct WorkspacePanelContentHostView: View {
             repository: repository.isEmpty ? nil : repository,
             colorHex: workspace.customColor,
             status: workspace.progress?.label,
-            activity: display?.currentWorkSummary ?? workspace.latestSubmittedMessage,
+            // Header activity is a concise source-backed state summary. The
+            // submitted prompt remains conversation data and must not be
+            // duplicated as a second link-bearing activity line.
+            activity: display?.currentWorkSummary ?? workspace.progress?.label,
             links: links
         )
     }

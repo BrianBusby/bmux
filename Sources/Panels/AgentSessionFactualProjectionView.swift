@@ -160,14 +160,31 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             if showsFocusContent {
-                AgentSessionFactualProjectionView(
-                    result: factualProjectionResult,
-                    isLoading: isLoadingFactualProjection,
-                    backgroundColor: shellContentBackground,
-                    onRefresh: {
-                        Task { await refreshFactualProjection() }
+                Group {
+#if DEBUG
+                    if showsHybridWorkbenchFixture {
+                        AgentSessionFixtureFocusView(backgroundColor: shellContentBackground)
+                    } else {
+                        AgentSessionFactualProjectionView(
+                            result: factualProjectionResult,
+                            isLoading: isLoadingFactualProjection,
+                            backgroundColor: shellContentBackground,
+                            onRefresh: {
+                                Task { await refreshFactualProjection() }
+                            }
+                        )
                     }
-                )
+#else
+                    AgentSessionFactualProjectionView(
+                        result: factualProjectionResult,
+                        isLoading: isLoadingFactualProjection,
+                        backgroundColor: shellContentBackground,
+                        onRefresh: {
+                            Task { await refreshFactualProjection() }
+                        }
+                    )
+#endif
+                }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .onAppear {
                     scheduleFactualProjectionRefreshIfNeeded()
@@ -232,6 +249,12 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
         colorScheme == .dark ? Color(nsColor: NSColor(hex: "#222326") ?? backgroundColor) : Color(nsColor: NSColor(hex: "#FCFBFD") ?? backgroundColor)
     }
 
+#if DEBUG
+    private var showsHybridWorkbenchFixture: Bool {
+        UserDefaults.standard.bool(forKey: "bmux.hybridFocus.fixture")
+    }
+#endif
+
     private var factualProjectionTaskID: String {
         "\(showsSwitcher):\(viewMode.rawValue):\(stableWorkspaceID?.uuidString ?? "no-workspace")"
     }
@@ -276,6 +299,157 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
         Task { await refreshFactualProjection() }
     }
 }
+
+#if DEBUG
+/// Fixture-only Focus content used to review density and hierarchy with the
+/// native shell. It is intentionally separate from PE data and never appears
+/// unless the explicit Debug fixture flag is enabled.
+private struct AgentSessionFixtureFocusView: View {
+    let backgroundColor: Color
+    @State private var expandedIDs: Set<String> = []
+    @Environment(\.colorScheme) private var colorScheme
+
+    private let history = [
+        ("turn-3", "Check CI across the PR stack", "4m ago · 8.2k"),
+        ("turn-2", "Split implementation into six tickets", "19m ago · 24.6k"),
+        ("turn-1", "Confirm review ownership and rollout", "42m ago · 11.4k")
+    ]
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text("CURRENT TURN")
+                        .font(.system(size: 11, weight: .semibold))
+                        .tracking(1.1)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text("CODEX · 28M 36S")
+                        .font(.system(size: 11, weight: .medium).monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Move tickets into review")
+                            .font(.system(size: 17, weight: .semibold))
+                        Spacer()
+                        Text("Waiting on reviews")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color(nsColor: NSColor(hex: "#B9A3FF") ?? .systemPurple))
+                    }
+                    Text("The tickets are assigned to you and in review. I’m waiting for the final review checks before handing the stack back.")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    fixtureCheck("Four tickets updated", done: true)
+                    fixtureCheck("Lint and TypeScript passed on all six PRs", done: true)
+                    fixtureCheck("Review checks still running", done: false)
+                    Divider().opacity(0.35)
+                    DisclosureGroup("Tool activity · inspect evidence") {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Observed: gh pr checks --watch")
+                            Text("Source: terminal activity · current turn")
+                        }
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 6)
+                    }
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.secondary)
+                }
+                .padding(16)
+                .background(cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+                .overlay { RoundedRectangle(cornerRadius: 11, style: .continuous).stroke(cardBorder, lineWidth: 1) }
+
+                HStack {
+                    Text("PREVIOUS TURNS · NEWEST FIRST")
+                        .font(.system(size: 11, weight: .semibold))
+                        .tracking(1.1)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text("TOKEN USAGE*")
+                        .font(.system(size: 11, weight: .semibold))
+                        .tracking(1.1)
+                        .foregroundStyle(.secondary)
+                }
+
+                VStack(spacing: 0) {
+                    ForEach(history, id: \.0) { item in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Button {
+                                if expandedIDs.contains(item.0) { expandedIDs.remove(item.0) } else { expandedIDs.insert(item.0) }
+                            } label: {
+                                HStack {
+                                    Text(item.1)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(.primary)
+                                    Spacer()
+                                    Text(item.2)
+                                        .font(.system(size: 11).monospacedDigit())
+                                        .foregroundStyle(.secondary)
+                                }
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            if expandedIDs.contains(item.0) {
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Text("Changed  ·  scoped the implementation to the review stack")
+                                    Text("Checked  ·  targeted validation and source inspection")
+                                    Text("Remains  ·  evidence-backed follow-up")
+                                }
+                                .font(.system(size: 12))
+                                .foregroundStyle(.secondary)
+                                .padding(.bottom, 8)
+                            }
+                            Divider().opacity(0.25)
+                        }
+                        .padding(.vertical, 12)
+                    }
+                }
+
+                HStack(spacing: 9) {
+                    Image(systemName: "book.closed")
+                    Text("Knowledge travels with the work.")
+                    Text("Explore 2 learnings")
+                        .underline()
+                }
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.primary.opacity(0.86))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 11)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(nsColor: NSColor(hex: "#342E4B") ?? .systemPurple))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+                Text("* Example data, not live telemetry")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: 780, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 28)
+            .padding(.vertical, 24)
+        }
+        .background(backgroundColor)
+    }
+
+    private func fixtureCheck(_ text: String, done: Bool) -> some View {
+        Label(text, systemImage: done ? "checkmark" : "circle")
+            .font(.system(size: 12))
+            .foregroundStyle(done ? Color(nsColor: NSColor(hex: "#7ED8B1") ?? .systemGreen) : .secondary)
+    }
+
+    private var cardBackground: Color {
+        colorScheme == .dark ? Color(nsColor: NSColor(hex: "#25262B") ?? .windowBackgroundColor) : Color(nsColor: NSColor(hex: "#F8F7FA") ?? .windowBackgroundColor)
+    }
+
+    private var cardBorder: Color {
+        colorScheme == .dark ? Color(nsColor: NSColor(hex: "#3B3D48") ?? .separatorColor) : Color(nsColor: NSColor(hex: "#D3CEDB") ?? .separatorColor)
+    }
+}
+#endif
 
 private struct AgentSessionWorkspaceHeader: View {
     let chrome: AgentSessionWorkspaceChrome

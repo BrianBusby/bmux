@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Describes the perimeter that joins the selected workspace card to the
@@ -140,6 +141,7 @@ struct SelectedWorkspaceConnectedBorderOverlay: View {
     let rightSidebarWidth: CGFloat
     let selectedRowFrame: CGRect?
     let workspaceTopY: CGFloat
+    let workspaceColorHex: String?
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -153,7 +155,7 @@ struct SelectedWorkspaceConnectedBorderOverlay: View {
             )
             geometry.path()
                 .stroke(
-                    Color.primary.opacity(colorScheme == .dark ? 0.72 : 0.46),
+                    selectionBorderColor,
                     style: StrokeStyle(
                         lineWidth: geometry.lineWidth,
                         lineCap: .round,
@@ -163,6 +165,17 @@ struct SelectedWorkspaceConnectedBorderOverlay: View {
                 .accessibilityHidden(true)
         }
         .allowsHitTesting(false)
+    }
+
+    private var selectionBorderColor: Color {
+        let fallback = colorScheme == .dark ? "#B9A3FF" : "#6542AD"
+        let resolvedHex = workspaceColorHex ?? fallback
+        let color = WorkspaceTabColorSettings.displayNSColor(
+            hex: resolvedHex,
+            colorScheme: colorScheme,
+            forceBright: true
+        ) ?? NSColor.systemPurple
+        return Color(nsColor: color).opacity(colorScheme == .dark ? 0.92 : 0.78)
     }
 }
 
