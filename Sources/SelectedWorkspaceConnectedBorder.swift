@@ -71,7 +71,6 @@ struct SelectedWorkspaceConnectedBorderGeometry: Equatable {
                 start: CGPoint(x: contentMinX, y: topY),
                 end: CGPoint(x: contentMinX, y: rowTop)
             ))
-            points.append(CGPoint(x: contentMinX, y: rowTop))
         }
         segments.append(Segment(
             start: CGPoint(x: contentMinX, y: rowTop),
@@ -91,6 +90,14 @@ struct SelectedWorkspaceConnectedBorderGeometry: Equatable {
                 end: CGPoint(x: contentMinX, y: height)
             ))
         }
+        // Keep one ordered contour for the joined perimeter. The previous
+        // implementation appended connector points to a closed content
+        // rectangle, which made the renderer draw the content's left edge
+        // continuously through the selected card and produced a seam. The
+        // selected card is an indentation in this contour: walk up the frame
+        // to the card's bottom, across to the card, up its left edge, then
+        // back to the frame before closing at the content top-left.
+        points = [contentTopLeft, contentTopRight, contentBottomRight, contentBottomLeft]
         if rowBottom < height {
             points.append(CGPoint(x: contentMinX, y: rowBottom))
         }
