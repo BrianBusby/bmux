@@ -1670,6 +1670,15 @@ struct ContentView: View {
         workspacePresentationModeRuntimeCache.isMinimalMode
     }
 
+    private var selectedWorkspaceConnectedBorderTopY: CGFloat {
+        max(0, Self.effectiveTitlebarPadding(
+            isMinimalMode: currentIsMinimalMode,
+            isFullScreen: isFullScreen,
+            titlebarPadding: titlebarPadding,
+            hostingSafeAreaTop: hostingSafeAreaTop
+        ))
+    }
+
     static func effectiveTitlebarPadding(
         isMinimalMode: Bool,
         isFullScreen: Bool,
@@ -2487,6 +2496,21 @@ struct ContentView: View {
                     if rightSidebarVisible {
                         rightSidebarResizerOverlay
                             .zIndex(1000)
+                    }
+                }
+                .overlayPreferenceValue(SelectedWorkspaceRowFramePreferenceKey.self) { anchors in
+                    GeometryReader { proxy in
+                        if sidebarState.isVisible,
+                           sidebarSelectionState.selection == .tabs,
+                           let selectedWorkspaceId = tabManager.selectedTabId {
+                            SelectedWorkspaceConnectedBorderOverlay(
+                                sidebarWidth: sidebarWidth,
+                                rightSidebarWidth: rightSidebarWidth,
+                                selectedRowFrame: anchors[selectedWorkspaceId].map { proxy[$0] },
+                                workspaceTopY: selectedWorkspaceConnectedBorderTopY
+                            )
+                            .zIndex(900)
+                        }
                     }
                 }
         )
@@ -12380,6 +12404,7 @@ struct VerticalTabsSidebar: View {
         let _ = SidebarProfilingSignposts.end(signpost)
         row
             .sidebarWorkspaceFrameAnchor(id: tab.id, isEnabled: shouldCollectWorkspaceDropTargets)
+            .selectedWorkspaceFrameAnchor(id: tab.id, isSelected: tabManager.selectedTabId == tab.id)
             .padding(.leading, tab.groupId != nil ? SidebarWorkspaceGroupingMetrics.memberIndent : 0)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
@@ -12414,6 +12439,31 @@ struct SidebarWorkspaceRowFramePreferenceKey: PreferenceKey {
 
     static func reduce(value: inout [UUID: Anchor<CGRect>], nextValue: () -> [UUID: Anchor<CGRect>]) {
         value.merge(nextValue()) { _, next in next }
+    }
+}
+
+struct SelectedWorkspaceRowFramePreferenceKey: PreferenceKey {
+    static let defaultValue: [UUID: Anchor<CGRect>] = [:]
+
+    static func reduce(value: inout [UUID: Anchor<CGRect>], nextValue: () -> [UUID: Anchor<CGRect>]) {
+        value.merge(nextValue()) { _, next in next }
+    }
+}
+
+private struct SelectedWorkspaceFrameAnchorModifier: ViewModifier {
+    let id: UUID
+    let isSelected: Bool
+
+    func body(content: Content) -> some View {
+        content.anchorPreference(key: SelectedWorkspaceRowFramePreferenceKey.self, value: .bounds) { anchor in
+            isSelected ? [id: anchor] : [:]
+        }
+    }
+}
+
+private extension View {
+    func selectedWorkspaceFrameAnchor(id: UUID, isSelected: Bool) -> some View {
+        modifier(SelectedWorkspaceFrameAnchorModifier(id: id, isSelected: isSelected))
     }
 }
 
@@ -13337,12 +13387,14 @@ struct TabItemView: View, Equatable {
     }
 
     private var activeBorderLineWidth: CGFloat {
-        isActive ? 3 : 0
+        // Active selection is drawn once by the shared rail/content overlay;
+        // keeping a local active stroke would recreate the right seam.
+        isActive ? 0 : 1
     }
 
     private var activeBorderColor: Color {
-        guard isActive else { return .clear }
-        return workspaceSelectionColor
+        guard !isActive else { return .clear }
+        return Color.primary.opacity(colorScheme == .dark ? 0.16 : 0.12)
     }
 
     private var activeElevationShadowColor: Color {
@@ -13668,26 +13720,22 @@ struct TabItemView: View, Equatable {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .layoutPriority(1)
                 } else {
-                    VStack(alignment: .leading, spacing: 1) {
-                        if !isActive, !workspaceSnapshot.ticketRows.isEmpty {
-                            ticketRowsView(workspaceSnapshot.ticketRows, prominent: true)
+                    VStack(alignment: .leading, spacing: 4) {
+                        if let repoBadgeAppearance = workspaceSnapshot.repoBadgeAppearance {
+                            Text(repoBadgeAppearance.name)
+                                .font(magnifiedFont(scaledFontSize(10), weight: .medium))
+                                .foregroundColor(repoBadgeForegroundColor(for: repoBadgeAppearance))
+                                .lineLimit(1)
+                                .truncationMode(.middle)
                         }
 
                         Text(workspaceSnapshot.title)
-                            .font(magnifiedFont(scaledFontSize(12.5), weight: titleFontWeight))
+                            .font(magnifiedFont(scaledFontSize(13), weight: titleFontWeight))
                             .foregroundColor(activePrimaryTextColor)
                             .lineLimit(titleLineLimit)
                             .truncationMode(.tail)
                             .fixedSize(horizontal: false, vertical: true)
                             .multilineTextAlignment(.leading)
-
-                        if let repoBadgeAppearance = workspaceSnapshot.repoBadgeAppearance {
-                            Text(repoBadgeAppearance.name)
-                                .font(magnifiedFont(scaledFontSize(9), weight: .medium))
-                                .foregroundColor(repoBadgeForegroundColor(for: repoBadgeAppearance))
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                        }
                     }
                     .padding(.trailing, workspaceSnapshot.hasActiveAIWork && !canCloseWorkspace ? scaledLoadingIndicatorSize + 4 : 0)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -13958,9 +14006,6 @@ struct TabItemView: View, Equatable {
                 }
                 .shadow(color: activeElevationShadowColor, radius: 4, x: 0, y: 2)
         )
-        // The active card is the rail half of the shared content frame. Its
-        // trailing edge is intentionally hidden under the frame join.
-        .padding(.trailing, isActive ? -8 : 0)
         .overlay(alignment: .topTrailing) {
             if workspaceSnapshot.hasActiveAIWork && !showCloseButton {
                 TronLoadingIndicator(size: scaledLoadingIndicatorSize, color: workspaceLoadingIndicatorColor, lineWidth: max(1.15, scaledLoadingIndicatorSize * 0.085))

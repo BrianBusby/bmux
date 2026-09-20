@@ -272,6 +272,13 @@ struct SidebarWorkspaceRowBackgroundStyle {
     static let clear = Self(color: nil, opacity: 0)
 }
 
+enum SidebarWorkspaceSelectionBorderMetrics {
+    // The joined perimeter is one point wider than the pre-redesign 2pt
+    // selected-card baseline. The common ancestor owns the active stroke.
+    static let connectedLineWidth: CGFloat = 3
+    static let connectedCornerRadius: CGFloat = 10
+}
+
 func sidebarWorkspaceRowExplicitRailNSColor(
     activeTabIndicatorStyle: WorkspaceIndicatorStyle,
     customColorHex: String?,
