@@ -3,7 +3,7 @@
 Updated 2026-09-19 after Slices 1–3.
 
 - Source: `hybrid-focus-design` after the follow-up visual/data commit.
-- Built identity: tagged Debug build 602, `hybrid-focus-visual-s1`; the isolated build used the existing local Swift package/Ghostty cache because package fetches were unavailable.
+- Built identity: tagged Debug build 603, `hybrid-focus-visual-s1`; the isolated build used the existing local Swift package/Ghostty cache because package fetches were unavailable. The app is running and its tagged socket responds to `workspace list`.
 - Slice 1: native workspace cards, assigned-color selection, joined 3px outline, 340px/290px rail policy, independent link activation, and underline view navigation are implemented in the normal app path.
 - Slice 2: shared workspace header, current-evidence-first Focus composition, restrained newest-first history, disclosure-backed source identity, and coordinated light/dark shell tokens are implemented.
 - Slice 3: native projection now forwards PR state, PR owner, ticket owner, project, and all known resource links; owner links are distinct from PR/ticket links and link activation does not select a workspace.
