@@ -16735,7 +16735,7 @@ private struct HybridWorkbenchFixtureCardView: View {
                     isSelected
                         ? Color(nsColor: NSColor(hex: card.statusColor) ?? .systemPurple).opacity(0.9)
                         : Color.primary.opacity(colorScheme == .dark ? 0.16 : 0.12),
-                    lineWidth: isSelected ? 1.5 : 1
+                    lineWidth: 1
                 )
         }
         .padding(.horizontal, 8)
