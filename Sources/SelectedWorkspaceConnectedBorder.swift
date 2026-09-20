@@ -90,8 +90,14 @@ struct SelectedWorkspaceConnectedBorderGeometry: Equatable {
                 end: CGPoint(x: contentMinX, y: height)
             ))
         }
+        if rowBottom < height {
+            points.append(CGPoint(x: contentMinX, y: rowBottom))
+        }
         points.append(CGPoint(x: cardMinX, y: rowBottom))
         points.append(CGPoint(x: cardMinX, y: rowTop))
+        if rowTop > topY {
+            points.append(CGPoint(x: contentMinX, y: rowTop))
+        }
 
         return Self(
             lineWidth: SidebarWorkspaceSelectionBorderMetrics.connectedLineWidth,

@@ -13767,7 +13767,11 @@ struct TabItemView: View, Equatable {
                 }
             }
 
-            if let description = workspaceSnapshot.customDescription {
+            // The selected card's contextual links and activity are represented
+            // in the shared workspace header/current-work surface. Keeping the
+            // raw workspace description here duplicates prompt/URL content and
+            // can expose a second link hit target inside the selection control.
+            if !isActive, let description = workspaceSnapshot.customDescription {
                 SidebarWorkspaceDescriptionText(
                     markdown: description,
                     isActive: usesInvertedActiveForeground,

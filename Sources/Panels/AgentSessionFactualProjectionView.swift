@@ -742,12 +742,6 @@ private struct AgentSessionFactualProjectionCurrentTurnCardView: View {
                 }
             }
 
-            HStack(spacing: 8) {
-                evidenceBadge("agentSession.factual.commands", turnSnapshot.completedCommands.count)
-                evidenceBadge("agentSession.factual.files", turnSnapshot.fileChangeAttributions.count)
-                evidenceBadge("agentSession.factual.reasoning", turnSnapshot.visibleReasoningSummaries.count)
-            }
-
             DisclosureGroup(isExpanded: $isEvidenceExpanded) {
                 AgentSessionFactualProjectionTurnDetailView(turnSnapshot: turnSnapshot)
                     .padding(.top, 8)
@@ -787,25 +781,6 @@ private struct AgentSessionFactualProjectionCurrentTurnCardView: View {
         return value?.isEmpty == false
             ? value!
             : String(localized: "agentSession.factual.prompt.missing", defaultValue: "No prompt captured")
-    }
-
-    private func evidenceBadge(_ key: String, _ count: Int) -> some View {
-        let localizedLabel: String = switch key {
-        case "agentSession.factual.files":
-            String(localized: "agentSession.factual.files", defaultValue: "Files")
-        case "agentSession.factual.reasoning":
-            String(localized: "agentSession.factual.reasoning", defaultValue: "Reasoning")
-        default:
-            String(localized: "agentSession.factual.commands", defaultValue: "Commands")
-        }
-        return Text(String.localizedStringWithFormat(
-            localizedLabel + ": %d",
-            count
-        ))
-        .font(.system(size: 10, weight: .medium))
-        .padding(.horizontal, 7)
-        .padding(.vertical, 3)
-        .background(.secondary.opacity(0.12), in: Capsule())
     }
 
     private func planStepSymbol(_ status: String) -> String {
