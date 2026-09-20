@@ -2299,9 +2299,8 @@ img.ProseMirror-separator {
 .focus-rail-heading, .focus-card-kicker, .focus-section-heading, .focus-learnings-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .focus-rail-heading { padding: 0 8px 10px; color: var(--agent-muted); font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
 .focus-rail-count, .focus-section-meta { color: var(--agent-soft); font-variant-numeric: tabular-nums; }
-.focus-workspace-card { display: flex; width: 100%; min-height: 132px; flex-direction: column; align-items: flex-start; gap: 7px; padding: 14px; border: 3px solid #6a1b9a; border-radius: 10px 0 0 10px; color: var(--agent-text); background: color-mix(in srgb, #6a1b9a 18%, var(--agent-card)); text-align: left; cursor: pointer; }
-.focus-workspace-card.is-selected { border-right: 0; }
-.focus-workspace-card:hover { background: color-mix(in srgb, #6a1b9a 24%, var(--agent-card)); }
+.focus-workspace-card { display: flex; width: 100%; min-height: 132px; flex-direction: column; align-items: flex-start; gap: 7px; padding: 14px; border: 1px solid var(--agent-border-strong); border-radius: 10px; color: var(--agent-text); background: var(--agent-card); text-align: left; cursor: pointer; }
+.focus-workspace-card:hover { background: var(--agent-surface); }
 .focus-card-repository { color: var(--agent-muted); font: 11px var(--font-mono); }
 .focus-workspace-card strong { overflow: hidden; font-size: 14px; line-height: 19px; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 .focus-card-status, .focus-card-activity { display: flex; align-items: center; gap: 7px; color: var(--agent-soft); font-size: 12px; }
@@ -2309,7 +2308,7 @@ img.ProseMirror-separator {
 .focus-connected-dot { background: #62c58b; }
 .focus-card-activity { color: var(--agent-muted); }
 .focus-rail-note { margin: 16px 8px; color: var(--agent-muted); font-size: 11px; line-height: 16px; }
-.focus-workbench-main { display: flex; min-width: 0; min-height: 0; flex-direction: column; overflow: hidden; border: 3px solid #6a1b9a; border-left: 0; background: var(--agent-page-bg); }
+.focus-workbench-main { display: flex; min-width: 0; min-height: 0; flex-direction: column; overflow: hidden; background: var(--agent-page-bg); }
 .focus-workspace-header { display: flex; flex: 0 0 auto; align-items: flex-start; justify-content: space-between; gap: 24px; padding: 22px 28px 16px; border-bottom: 1px solid var(--agent-border); }
 .focus-header-copy { min-width: 0; }
 .focus-breadcrumb, .focus-header-identity, .focus-source-note { color: var(--agent-muted); font-size: 11px; }

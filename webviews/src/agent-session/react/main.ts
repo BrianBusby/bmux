@@ -270,13 +270,22 @@ export function AgentSessionApp() {
   useInitialData(dispatch);
   useNativeEvents(dispatch);
   useAutoStart(state, dispatch);
+  // TerminalPanelView owns the workspace header and Focus/Chat/Terminal/Learnings
+  // navigation. Its Chat tab mounts this renderer only for the conversation;
+  // rendering SmartSessionSurface here would create a second rail and tab bar.
+  if (state.context?.readOnlyTerminalChat === true) {
+    return state.context ? h(TerminalChatSurface, { context: state.context }) : null;
+  }
+  if (!state.context) {
+    return null;
+  }
   return h(
     SmartSessionSurface,
     {
       context: state.context,
-      initialView: state.context?.readOnlyTerminalChat ? "chat" : "terminal",
+      initialView: "terminal",
       isActive: true,
-      renderChat: state.context ? () => h(TerminalChatSurface, { context: state.context! }) : undefined,
+      renderChat: () => h(TerminalChatSurface, { context: state.context! }),
       renderTerminal: () => h(SessionSurface, { state, dispatch, renderer: "React" }),
     },
   );

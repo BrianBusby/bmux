@@ -483,6 +483,7 @@ private struct AgentSessionWorkspaceHeader: View {
         .padding(.top, 18)
         .padding(.bottom, 14)
         .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(colorScheme == .dark ? Color(nsColor: NSColor(hex: "#222326") ?? .windowBackgroundColor) : Color(nsColor: NSColor(hex: "#FCFBFD") ?? .windowBackgroundColor))
     }
 }
@@ -897,15 +898,25 @@ private struct AgentSessionFactualProjectionCurrentTurnCardView: View {
             }
 
             if let output = AgentSessionFactualProjectionEvidenceRows.finalAssistantMessageText(for: turnSnapshot) {
-                Text(output)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(5)
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(String(localized: "agentSession.factual.finalOutput", defaultValue: "Results"))
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .textCase(.uppercase)
+                    Text(output)
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(5)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
 
             if let plan = turnSnapshot.currentPlan, !plan.steps.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
+                    Text(String(localized: "agentSession.factual.plan", defaultValue: "Current activity"))
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .textCase(.uppercase)
                     ForEach(plan.steps.prefix(5), id: \.id) { step in
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
                             Image(systemName: planStepSymbol(step.status))
