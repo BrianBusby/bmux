@@ -913,7 +913,7 @@ private struct AgentSessionFactualProjectionCurrentTurnCardView: View {
 
             if let plan = turnSnapshot.currentPlan, !plan.steps.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(String(localized: "agentSession.factual.plan", defaultValue: "Current activity"))
+                    Text(String(localized: "agentSession.web.smartSession.currentActivity", defaultValue: "Current activity"))
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(.secondary)
                         .textCase(.uppercase)

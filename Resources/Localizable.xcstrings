@@ -3590,13 +3590,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Latest turn"
+            "value": "Current turn"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最新ターン"
+            "value": "現在のターン"
           }
         }
       }
@@ -10296,13 +10296,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Final output"
+            "value": "Results"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最終出力"
+            "value": "結果"
           }
         }
       }
