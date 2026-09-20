@@ -20,8 +20,9 @@ enum SessionPersistencePolicy {
     // minimum width. The titlebar title tracks the sidebar's actual width only
     // when it is wider than the minimum, so a default above the minimum would make
     // the folder/title shift when toggling the sidebar at the default width.
-    static let defaultSidebarWidth: Double = 240
-    static let defaultMinimumSidebarWidth: Double = 240
+    // Give workspace cards room for repository, task, activity, and resource rows.
+    static let defaultSidebarWidth: Double = 340
+    static let defaultMinimumSidebarWidth: Double = 290
     static let minimumSidebarWidth: Double = 240
     static let sidebarMinimumWidthRange: ClosedRange<Double> = 120...260
     static let maximumSidebarWidth: Double = 600

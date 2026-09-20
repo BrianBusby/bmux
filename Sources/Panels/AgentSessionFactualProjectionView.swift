@@ -105,11 +105,12 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     @State private var viewMode: AgentSessionFactualProjectionMode = .terminal
     @State private var factualProjectionResult: AgentSessionFactualProjectionReadResult = .missingSession
     @State private var isLoadingFactualProjection = false
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(spacing: 0) {
             if showsSwitcher {
-                modePicker
+                viewNavigation
                 Divider()
             }
             selectedContent
@@ -193,22 +194,38 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
         !showsFocusContent && !showsLearningsContent && viewMode != .chat
     }
 
-    private var modePicker: some View {
-        HStack(spacing: 8) {
-            Picker("", selection: $viewMode) {
-                ForEach(AgentSessionFactualProjectionMode.allCases.filter { $0 != .chat || chatContent != nil }) { mode in
-                    Text(mode.title).tag(mode)
+    private var viewNavigation: some View {
+        HStack(spacing: 24) {
+            ForEach(AgentSessionFactualProjectionMode.allCases.filter { $0 != .chat || chatContent != nil }) { mode in
+                Button {
+                    viewMode = mode
+                } label: {
+                    VStack(spacing: 8) {
+                        Text(mode.title)
+                            .font(.system(size: 13, weight: viewMode == mode ? .semibold : .medium))
+                            .foregroundStyle(viewMode == mode ? .primary : .secondary)
+                        Rectangle()
+                            .fill(viewMode == mode ? shellAccent : .clear)
+                            .frame(height: 2)
+                    }
+                    .padding(.top, 10)
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(viewMode == mode ? .isSelected : [])
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(width: chatContent == nil ? 320 : 390)
-
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 7)
-        .background(Color(nsColor: backgroundColor))
+        .padding(.horizontal, 28)
+        .background(shellRail)
+    }
+
+    private var shellRail: Color {
+        colorScheme == .dark ? Color(nsColor: NSColor(hex: "#191A1D") ?? .windowBackgroundColor) : Color(nsColor: NSColor(hex: "#F2F0F5") ?? .windowBackgroundColor)
+    }
+
+    private var shellAccent: Color {
+        colorScheme == .dark ? Color(nsColor: NSColor(hex: "#B9A3FF") ?? .systemPurple) : Color(nsColor: NSColor(hex: "#6542AD") ?? .systemPurple)
     }
 
     private var factualProjectionTaskID: String {
@@ -261,25 +278,26 @@ private struct AgentSessionWorkspaceHeader: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: 14) {
             RoundedRectangle(cornerRadius: 3)
                 .fill(Color(nsColor: chrome.colorHex.flatMap {
                     WorkspaceTabColorSettings.displayNSColor(hex: $0, colorScheme: colorScheme)
                 } ?? .systemPurple))
                 .frame(width: 4)
             VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 7) {
+                HStack(alignment: .firstTextBaseline, spacing: 7) {
                     Text(chrome.repository ?? chrome.title)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
-                    Text("/")
+                    Text(verbatim: "·")
                         .foregroundStyle(.tertiary)
                     Text(chrome.title)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 24, weight: .semibold))
+                        .lineLimit(2)
                 }
                 if let activity = chrome.activity ?? chrome.status {
                     Text(activity)
-                        .font(.system(size: 13))
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -298,16 +316,29 @@ private struct AgentSessionWorkspaceHeader: View {
                         }
                     }
                     if chrome.links.count > 3 {
-                        Text(String(localized: "agentSession.workspace.moreLinks", defaultValue: "More links", comment: "Additional workspace links disclosure"))
+                        Menu {
+                            ForEach(Array(chrome.links.dropFirst(3))) { link in
+                                if let url = link.url {
+                                    Link(link.label, destination: url)
+                                } else {
+                                    Text(link.label)
+                                }
+                            }
+                        } label: {
+                            Label(
+                                String(localized: "agentSession.workspace.moreLinks", defaultValue: "More links", comment: "Additional workspace links disclosure"),
+                                systemImage: "ellipsis"
+                            )
                             .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(.secondary)
+                        }
+                        .menuStyle(.borderlessButton)
                     }
                 }
             }
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 12)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .padding(.horizontal, 28)
+        .padding(.vertical, 18)
+        .background(colorScheme == .dark ? Color(nsColor: NSColor(hex: "#222326") ?? .windowBackgroundColor) : Color(nsColor: NSColor(hex: "#FCFBFD") ?? .windowBackgroundColor))
     }
 }
 
@@ -375,6 +406,7 @@ struct AgentSessionFactualProjectionView: View {
     let onRefresh: () -> Void
 
     @State private var expandedPriorTurnIDs: Set<String> = []
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack {
@@ -384,8 +416,10 @@ struct AgentSessionFactualProjectionView: View {
                     header
                     content
                 }
+                .frame(maxWidth: 780, alignment: .leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(18)
+                .padding(.horizontal, 28)
+                .padding(.vertical, 24)
             }
         }
     }
@@ -393,7 +427,7 @@ struct AgentSessionFactualProjectionView: View {
     private var header: some View {
         HStack(spacing: 10) {
             Text(String(localized: "agentSession.factual.title", defaultValue: "Focus"))
-                .font(.system(size: 16, weight: .semibold))
+                .font(.system(size: 24, weight: .semibold))
             if isLoading {
                 ProgressView()
                     .controlSize(.small)
@@ -541,7 +575,14 @@ struct AgentSessionFactualProjectionView: View {
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
             content()
-            Divider()
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                .stroke(cardBorder, lineWidth: 1)
         }
     }
 
@@ -599,7 +640,21 @@ struct AgentSessionFactualProjectionView: View {
             .font(.system(size: 13))
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-            .padding(.top, 48)
+            .padding(24)
+            .background(cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+    }
+
+    private var cardBackground: Color {
+        colorScheme == .dark
+            ? Color(nsColor: NSColor(hex: "#25262B") ?? .windowBackgroundColor)
+            : Color(nsColor: NSColor(hex: "#F8F7FA") ?? .windowBackgroundColor)
+    }
+
+    private var cardBorder: Color {
+        colorScheme == .dark
+            ? Color(nsColor: NSColor(hex: "#3B3D48") ?? .separatorColor)
+            : Color(nsColor: NSColor(hex: "#D3CEDB") ?? .separatorColor)
     }
 
     private func nonEmpty(_ value: String?) -> String {

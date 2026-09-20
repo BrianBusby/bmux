@@ -13337,12 +13337,12 @@ struct TabItemView: View, Equatable {
     }
 
     private var activeBorderLineWidth: CGFloat {
-        isActive ? 1.5 : 0
+        isActive ? 3 : 0
     }
 
     private var activeBorderColor: Color {
         guard isActive else { return .clear }
-        return colorScheme == .dark ? Color.white.opacity(0.92) : .black
+        return workspaceSelectionColor
     }
 
     private var activeElevationShadowColor: Color {
@@ -13669,7 +13669,7 @@ struct TabItemView: View, Equatable {
                     .layoutPriority(1)
                 } else {
                     VStack(alignment: .leading, spacing: 1) {
-                        if !workspaceSnapshot.ticketRows.isEmpty {
+                        if !isActive, !workspaceSnapshot.ticketRows.isEmpty {
                             ticketRowsView(workspaceSnapshot.ticketRows, prominent: true)
                         }
 
@@ -13896,16 +13896,16 @@ struct TabItemView: View, Equatable {
             }
 
             // Pull request rows
-            if !workspaceSnapshot.pullRequestRows.isEmpty {
+            if !isActive, !workspaceSnapshot.pullRequestRows.isEmpty {
                 pullRequestRowsView(workspaceSnapshot.pullRequestRows)
             }
 
             // Project rows
-            if !workspaceSnapshot.projectRows.isEmpty {
+            if !isActive, !workspaceSnapshot.projectRows.isEmpty {
                 projectRowsView(workspaceSnapshot.projectRows)
             }
 
-            if !workspaceSnapshot.pullRequestRows.isEmpty {
+            if !isActive, !workspaceSnapshot.pullRequestRows.isEmpty {
                 pullRequestOwnerRowsView(workspaceSnapshot.pullRequestRows)
             }
 
@@ -13938,12 +13938,12 @@ struct TabItemView: View, Equatable {
         // refresh rate (#5764 / #5845). Lazy rows must be height-stable after
         // they appear; content changes now apply in one discrete layout pass.
         .padding(.horizontal, SidebarWorkspaceListMetrics.rowContentHorizontalPadding)
-        .padding(.vertical, 8)
+        .padding(.vertical, 12)
         .background(
-            RoundedRectangle(cornerRadius: 6)
+            RoundedRectangle(cornerRadius: 10)
                 .fill(backgroundColor)
                 .overlay {
-                    RoundedRectangle(cornerRadius: 6)
+                    RoundedRectangle(cornerRadius: 10)
                         .strokeBorder(activeBorderColor, lineWidth: activeBorderLineWidth)
                 }
                 .overlay(alignment: .leading) {
@@ -13958,6 +13958,9 @@ struct TabItemView: View, Equatable {
                 }
                 .shadow(color: activeElevationShadowColor, radius: 4, x: 0, y: 2)
         )
+        // The active card is the rail half of the shared content frame. Its
+        // trailing edge is intentionally hidden under the frame join.
+        .padding(.trailing, isActive ? -8 : 0)
         .overlay(alignment: .topTrailing) {
             if workspaceSnapshot.hasActiveAIWork && !showCloseButton {
                 TronLoadingIndicator(size: scaledLoadingIndicatorSize, color: workspaceLoadingIndicatorColor, lineWidth: max(1.15, scaledLoadingIndicatorSize * 0.085))
@@ -14508,6 +14511,9 @@ struct TabItemView: View, Equatable {
     }
 
     private var backgroundColor: Color {
+        if isActive {
+            return workspaceSelectionColor.opacity(colorScheme == .dark ? 0.24 : 0.13)
+        }
         let style = sidebarWorkspaceRowBackgroundStyle(
             activeTabIndicatorStyle: activeTabIndicatorStyle,
             isActive: isActive,
@@ -14516,8 +14522,12 @@ struct TabItemView: View, Equatable {
             colorScheme: colorScheme,
             sidebarSelectionColorHex: sidebarSelectionColorHex
         )
-        guard let color = style.color else { return .clear }
-        return Color(nsColor: color).opacity(style.opacity)
+        if let color = style.color {
+            return Color(nsColor: color).opacity(style.opacity)
+        }
+        let fallback = colorScheme == .dark ? NSColor(hex: "#25262B") : NSColor(hex: "#F8F7FA")
+        return Color(nsColor: fallback ?? .windowBackgroundColor)
+            .opacity(colorScheme == .dark ? 0.92 : 0.9)
     }
 
     private var railColor: Color {
@@ -14540,6 +14550,15 @@ struct TabItemView: View, Equatable {
             customColorHex: workspaceSnapshot.customColorHex,
             repoBadgeAppearance: workspaceSnapshot.repoBadgeAppearance
         )
+    }
+
+    private var workspaceSelectionColor: Color {
+        let hex = workspaceRowColorHex ?? (colorScheme == .dark ? "#B9A3FF" : "#6542AD")
+        return Color(nsColor: WorkspaceTabColorSettings.displayNSColor(
+            hex: hex,
+            colorScheme: colorScheme,
+            forceBright: true
+        ) ?? .systemPurple)
     }
 
     private func tabColorSwatchColor(for hex: String) -> NSColor {
@@ -15158,22 +15177,18 @@ struct TabItemView: View, Equatable {
     }
 
     private func openPullRequestLink(_ url: URL) {
-        updateSelection()
         BrowserExternalLinkOpener().openWebLink(url)
     }
 
     private func openPullRequestOwnerLink(_ url: URL) {
-        updateSelection()
         BrowserExternalLinkOpener().openWebLink(url)
     }
 
     func openTicketLink(_ url: URL) {
-        updateSelection()
         BrowserExternalLinkOpener().openWebLink(url)
     }
 
     private func openWorkspaceExternalLink(_ url: URL) {
-        updateSelection()
         if openSidebarPullRequestLinksInBmuxBrowser {
             if tabManager.openBrowser(
                 inWorkspace: tab.id,
