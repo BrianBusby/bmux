@@ -24,18 +24,11 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
                         Text(prompt)
                             .font(.system(size: 13, weight: .medium))
                             .lineLimit(2)
-                        Text(summary)
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
                     }
                     Spacer(minLength: 8)
-                    VStack(alignment: .trailing, spacing: 4) {
-                        badge(status)
-                        Text(dateText(finishedAt))
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                    }
+                    Text(dateText(finishedAt))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
                 }
                 .contentShape(Rectangle())
             }

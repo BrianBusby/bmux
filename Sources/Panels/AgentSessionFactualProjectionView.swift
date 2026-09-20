@@ -109,6 +109,9 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            if let workspaceChrome {
+                AgentSessionWorkspaceHeader(chrome: workspaceChrome)
+            }
             if showsSwitcher {
                 viewNavigation
                 Divider()
@@ -146,38 +149,33 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
 
     @ViewBuilder
     private var selectedContent: some View {
-        VStack(spacing: 0) {
-            if let workspaceChrome {
-                AgentSessionWorkspaceHeader(chrome: workspaceChrome)
-            }
-            ZStack {
-                primaryContent(primaryContentIsVisible)
-                    .opacity(primaryContentIsVisible ? 1 : 0)
-                    .allowsHitTesting(primaryContentIsVisible)
-                    .accessibilityHidden(!primaryContentIsVisible)
+        ZStack {
+            primaryContent(primaryContentIsVisible)
+                .opacity(primaryContentIsVisible ? 1 : 0)
+                .allowsHitTesting(primaryContentIsVisible)
+                .accessibilityHidden(!primaryContentIsVisible)
 
-                if let chatContent, viewMode == .chat {
-                    chatContent { viewMode = .terminal }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-                if showsFocusContent {
-                    AgentSessionFactualProjectionView(
-                        result: factualProjectionResult,
-                        isLoading: isLoadingFactualProjection,
-                        backgroundColor: shellContentBackground,
-                        onRefresh: {
-                            Task { await refreshFactualProjection() }
-                        }
-                    )
+            if let chatContent, viewMode == .chat {
+                chatContent { viewMode = .terminal }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .onAppear {
-                        scheduleFactualProjectionRefreshIfNeeded()
+            }
+            if showsFocusContent {
+                AgentSessionFactualProjectionView(
+                    result: factualProjectionResult,
+                    isLoading: isLoadingFactualProjection,
+                    backgroundColor: shellContentBackground,
+                    onRefresh: {
+                        Task { await refreshFactualProjection() }
                     }
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .onAppear {
+                    scheduleFactualProjectionRefreshIfNeeded()
                 }
-                if showsLearningsContent {
-                    AgentSessionLearningsUnavailableView(backgroundColor: shellContentBackground)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
+            }
+            if showsLearningsContent {
+                AgentSessionLearningsUnavailableView(backgroundColor: shellContentBackground)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
     }
@@ -196,19 +194,21 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
 
     private var viewNavigation: some View {
         HStack(spacing: 24) {
-            ForEach(AgentSessionFactualProjectionMode.allCases.filter { $0 != .chat || chatContent != nil }) { mode in
+            ForEach(AgentSessionFactualProjectionMode.displayOrder.filter { $0 != .chat || chatContent != nil }) { mode in
                 Button {
                     viewMode = mode
                 } label: {
-                    VStack(spacing: 8) {
-                        Text(mode.title)
-                            .font(.system(size: 13, weight: viewMode == mode ? .semibold : .medium))
-                            .foregroundStyle(viewMode == mode ? .primary : .secondary)
-                        Rectangle()
-                            .fill(viewMode == mode ? shellAccent : .clear)
-                            .frame(height: 2)
-                    }
-                    .padding(.top, 10)
+                    Text(mode.title)
+                        .font(.system(size: 13, weight: viewMode == mode ? .semibold : .medium))
+                        .foregroundStyle(viewMode == mode ? .primary : .secondary)
+                        .padding(.vertical, 10)
+                        .overlay(alignment: .bottom) {
+                            if viewMode == mode {
+                                Rectangle()
+                                    .fill(shellAccent)
+                                    .frame(height: 2)
+                            }
+                        }
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -282,68 +282,82 @@ private struct AgentSessionWorkspaceHeader: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        HStack(alignment: .top, spacing: 14) {
-            RoundedRectangle(cornerRadius: 3)
-                .fill(Color(nsColor: chrome.colorHex.flatMap {
-                    WorkspaceTabColorSettings.displayNSColor(hex: $0, colorScheme: colorScheme)
-                } ?? .systemPurple))
-                .frame(width: 4, height: 72)
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .firstTextBaseline, spacing: 7) {
-                    Text(chrome.repository ?? chrome.title)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.secondary)
-                    Text(verbatim: "·")
-                        .foregroundStyle(.tertiary)
-                    Text(chrome.title)
-                        .font(.system(size: 24, weight: .semibold))
-                        .lineLimit(2)
-                }
-                if let activity = chrome.activity ?? chrome.status {
-                    Text(activity)
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
+        VStack(alignment: .leading, spacing: 7) {
+            Text(chrome.repository ?? chrome.title)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            Text(chrome.title)
+                .font(.system(size: 24, weight: .semibold))
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+            if let activity = chrome.activity ?? chrome.status {
+                Text(activity)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
-            Spacer(minLength: 0)
             if !chrome.links.isEmpty {
-                HStack(spacing: 8) {
-                    ForEach(chrome.links.prefix(3)) { link in
-                        if let url = link.url {
-                            Link(link.label, destination: url)
-                                .font(.system(size: 12, weight: .medium))
-                        } else {
-                            Text(link.label)
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    if chrome.links.count > 3 {
-                        Menu {
-                            ForEach(Array(chrome.links.dropFirst(3))) { link in
-                                if let url = link.url {
-                                    Link(link.label, destination: url)
-                                } else {
-                                    Text(link.label)
-                                }
-                            }
-                        } label: {
-                            Label(
-                                String(localized: "agentSession.workspace.moreLinks", defaultValue: "More links", comment: "Additional workspace links disclosure"),
-                                systemImage: "ellipsis"
-                            )
-                            .font(.system(size: 12, weight: .medium))
-                        }
-                        .menuStyle(.borderlessButton)
-                    }
-                }
+                AgentSessionWorkspaceLinkFlow(links: chrome.links)
             }
         }
         .padding(.horizontal, 28)
-        .padding(.vertical, 18)
+        .padding(.top, 18)
+        .padding(.bottom, 14)
         .fixedSize(horizontal: false, vertical: true)
         .background(colorScheme == .dark ? Color(nsColor: NSColor(hex: "#222326") ?? .windowBackgroundColor) : Color(nsColor: NSColor(hex: "#FCFBFD") ?? .windowBackgroundColor))
+    }
+}
+
+private struct AgentSessionWorkspaceLinkFlow: View {
+    let links: [AgentSessionWorkspaceLink]
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) {
+                visibleLinks
+            }
+            VStack(alignment: .leading, spacing: 6) {
+                visibleLinks
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var visibleLinks: some View {
+        ForEach(links.prefix(3)) { link in
+            linkView(link)
+        }
+        if links.count > 3 {
+            Menu {
+                ForEach(Array(links.dropFirst(3))) { link in
+                    linkView(link)
+                }
+            } label: {
+                Label(
+                    String(localized: "agentSession.workspace.moreLinks", defaultValue: "More links", comment: "Additional workspace links disclosure"),
+                    systemImage: "ellipsis"
+                )
+                .font(.system(size: 12, weight: .medium))
+            }
+            .menuStyle(.borderlessButton)
+        }
+    }
+
+    @ViewBuilder
+    private func linkView(_ link: AgentSessionWorkspaceLink) -> some View {
+        if let url = link.url {
+            Link(link.label, destination: url)
+                .font(.system(size: 12, weight: .medium))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(Color.primary.opacity(0.05))
+                .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+        } else {
+            Text(link.label)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.secondary)
+        }
     }
 }
 
@@ -390,6 +404,8 @@ private enum AgentSessionFactualProjectionMode: String, CaseIterable, Identifiab
 
     var id: String { rawValue }
 
+    static let displayOrder: [Self] = [.focus, .chat, .terminal, .learnings]
+
     var title: String {
         switch self {
         case .terminal:
@@ -431,8 +447,6 @@ struct AgentSessionFactualProjectionView: View {
 
     private var header: some View {
         HStack(spacing: 10) {
-            Text(String(localized: "agentSession.factual.title", defaultValue: "Focus"))
-                .font(.system(size: 24, weight: .semibold))
             if isLoading {
                 ProgressView()
                     .controlSize(.small)
@@ -525,7 +539,7 @@ struct AgentSessionFactualProjectionView: View {
 
     private func availableContent(_ snapshot: ProvenanceFactualSessionProjectionSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            section(String(localized: "agentSession.factual.latestTurn", defaultValue: "Latest turn")) {
+            quietSection(String(localized: "agentSession.factual.latestTurn", defaultValue: "Current turn")) {
                 if let turn = snapshot.latestTurn {
                     AgentSessionFactualProjectionCurrentTurnCardView(turnSnapshot: turn)
                 } else {
@@ -535,7 +549,7 @@ struct AgentSessionFactualProjectionView: View {
 
             // Completed turns stay quiet and newest-first. Their source detail
             // remains behind the stable turn-ID disclosure in the row view.
-            section(String(localized: "agentSession.factual.priorTurns", defaultValue: "Prior turns")) {
+            quietSection(String(localized: "agentSession.factual.priorTurns", defaultValue: "Previous turns · newest first")) {
                 if snapshot.priorTurns.isEmpty {
                     mutedText(String(localized: "agentSession.factual.noPriorTurns", defaultValue: "No prior turns."))
                 } else {
@@ -596,6 +610,16 @@ struct AgentSessionFactualProjectionView: View {
         .overlay {
             RoundedRectangle(cornerRadius: 11, style: .continuous)
                 .stroke(cardBorder, lineWidth: 1)
+        }
+    }
+
+    private func quietSection<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+            content()
         }
     }
 
@@ -680,6 +704,7 @@ struct AgentSessionFactualProjectionView: View {
 private struct AgentSessionFactualProjectionCurrentTurnCardView: View {
     let turnSnapshot: ProvenanceFactualSessionProjectionTurnSnapshot
     @State private var isEvidenceExpanded = false
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -735,6 +760,26 @@ private struct AgentSessionFactualProjectionCurrentTurnCardView: View {
                 .foregroundStyle(.secondary)
             }
         }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                .stroke(cardBorder, lineWidth: 1)
+        }
+    }
+
+    private var cardBackground: Color {
+        colorScheme == .dark
+            ? Color(nsColor: NSColor(hex: "#25262B") ?? .windowBackgroundColor)
+            : Color(nsColor: NSColor(hex: "#F8F7FA") ?? .windowBackgroundColor)
+    }
+
+    private var cardBorder: Color {
+        colorScheme == .dark
+            ? Color(nsColor: NSColor(hex: "#3B3D48") ?? .separatorColor)
+            : Color(nsColor: NSColor(hex: "#D3CEDB") ?? .separatorColor)
     }
 
     private var prompt: String {
