@@ -15,18 +15,27 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
             Button {
                 onToggle()
             } label: {
-                VStack(alignment: .leading, spacing: 10) {
-                    header
-                    Text(prompt)
-                        .font(.system(size: 13, weight: .medium))
-                        .lineLimit(3)
-                        .fixedSize(horizontal: false, vertical: true)
-                    metadata
-                    labeledText(
-                        String(localized: "agentSession.factual.summary", defaultValue: "Summary"),
-                        summary,
-                        lineLimit: 3
-                    )
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 12)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(prompt)
+                            .font(.system(size: 13, weight: .medium))
+                            .lineLimit(2)
+                        Text(summary)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                    Spacer(minLength: 8)
+                    VStack(alignment: .trailing, spacing: 4) {
+                        badge(status)
+                        Text(dateText(finishedAt))
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 .contentShape(Rectangle())
             }
@@ -36,15 +45,12 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
                 expandedDetails
             }
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
-                .fill(cardBackground)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
-                .stroke(cardBorder)
-        )
+        .padding(.vertical, 12)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(cardBorder)
+                .frame(height: 1)
+        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(prompt))
     }

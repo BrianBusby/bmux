@@ -287,7 +287,7 @@ private struct AgentSessionWorkspaceHeader: View {
                 .fill(Color(nsColor: chrome.colorHex.flatMap {
                     WorkspaceTabColorSettings.displayNSColor(hex: $0, colorScheme: colorScheme)
                 } ?? .systemPurple))
-                .frame(width: 4)
+                .frame(width: 4, height: 72)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .firstTextBaseline, spacing: 7) {
                     Text(chrome.repository ?? chrome.title)
@@ -342,6 +342,7 @@ private struct AgentSessionWorkspaceHeader: View {
         }
         .padding(.horizontal, 28)
         .padding(.vertical, 18)
+        .fixedSize(horizontal: false, vertical: true)
         .background(colorScheme == .dark ? Color(nsColor: NSColor(hex: "#222326") ?? .windowBackgroundColor) : Color(nsColor: NSColor(hex: "#FCFBFD") ?? .windowBackgroundColor))
     }
 }
@@ -526,7 +527,7 @@ struct AgentSessionFactualProjectionView: View {
         VStack(alignment: .leading, spacing: 14) {
             section(String(localized: "agentSession.factual.latestTurn", defaultValue: "Latest turn")) {
                 if let turn = snapshot.latestTurn {
-                    AgentSessionFactualProjectionTurnDetailView(turnSnapshot: turn)
+                    AgentSessionFactualProjectionCurrentTurnCardView(turnSnapshot: turn)
                 } else {
                     mutedText(String(localized: "agentSession.factual.noTurns", defaultValue: "No turns observed."))
                 }
@@ -673,5 +674,114 @@ struct AgentSessionFactualProjectionView: View {
         let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if !trimmed.isEmpty { return trimmed }
         return String(localized: "agentSession.factual.unknown", defaultValue: "Unknown")
+    }
+}
+
+private struct AgentSessionFactualProjectionCurrentTurnCardView: View {
+    let turnSnapshot: ProvenanceFactualSessionProjectionTurnSnapshot
+    @State private var isEvidenceExpanded = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(prompt)
+                    .font(.system(size: 17, weight: .semibold))
+                    .lineLimit(3)
+                Spacer(minLength: 8)
+                Text(turnSnapshot.turn.status)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+
+            if let output = AgentSessionFactualProjectionEvidenceRows.finalAssistantMessageText(for: turnSnapshot) {
+                Text(output)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(5)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if let plan = turnSnapshot.currentPlan, !plan.steps.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(plan.steps.prefix(5), id: \.id) { step in
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Image(systemName: planStepSymbol(step.status))
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(planStepColor(step.status))
+                                .frame(width: 14)
+                            Text(step.text)
+                                .font(.system(size: 12))
+                                .lineLimit(2)
+                        }
+                    }
+                }
+            }
+
+            HStack(spacing: 8) {
+                evidenceBadge("agentSession.factual.commands", turnSnapshot.completedCommands.count)
+                evidenceBadge("agentSession.factual.files", turnSnapshot.fileChangeAttributions.count)
+                evidenceBadge("agentSession.factual.reasoning", turnSnapshot.visibleReasoningSummaries.count)
+            }
+
+            DisclosureGroup(isExpanded: $isEvidenceExpanded) {
+                AgentSessionFactualProjectionTurnDetailView(turnSnapshot: turnSnapshot)
+                    .padding(.top, 8)
+            } label: {
+                Label(
+                    String(localized: "agentSession.factual.details", defaultValue: "Details"),
+                    systemImage: "chevron.right"
+                )
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var prompt: String {
+        let value = turnSnapshot.submittedPrompt?.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return value?.isEmpty == false
+            ? value!
+            : String(localized: "agentSession.factual.prompt.missing", defaultValue: "No prompt captured")
+    }
+
+    private func evidenceBadge(_ key: String, _ count: Int) -> some View {
+        let localizedLabel: String = switch key {
+        case "agentSession.factual.files":
+            String(localized: "agentSession.factual.files", defaultValue: "Files")
+        case "agentSession.factual.reasoning":
+            String(localized: "agentSession.factual.reasoning", defaultValue: "Reasoning")
+        default:
+            String(localized: "agentSession.factual.commands", defaultValue: "Commands")
+        }
+        return Text(String.localizedStringWithFormat(
+            localizedLabel + ": %d",
+            count
+        ))
+        .font(.system(size: 10, weight: .medium))
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3)
+        .background(.secondary.opacity(0.12), in: Capsule())
+    }
+
+    private func planStepSymbol(_ status: String) -> String {
+        let normalized = status.lowercased()
+        if normalized.contains("complete") || normalized.contains("done") {
+            return "checkmark"
+        }
+        if normalized.contains("progress") || normalized.contains("running") {
+            return "circle.dotted"
+        }
+        return "circle"
+    }
+
+    private func planStepColor(_ status: String) -> Color {
+        let normalized = status.lowercased()
+        if normalized.contains("complete") || normalized.contains("done") {
+            return .green
+        }
+        if normalized.contains("progress") || normalized.contains("running") {
+            return .orange
+        }
+        return .secondary
     }
 }
