@@ -29,9 +29,12 @@ owning native workspace title, assigned color, source-supported activity, and
 all known PE-backed ticket, pull-request, project, and owner links. Token
 attribution and curated learning records remain unsupported data dependencies.
 A tagged build is reproducible with the pinned sources plus the local
-Ghostty/Bonsplit cache workaround, but CUA cannot currently target the isolated
-app window for rendered capture; the visual changes therefore remain visually
-unverified in this environment.
+Ghostty/Bonsplit cache workaround. CUA capture is now working for the isolated
+app after moving its persisted window geometry from the third display to the
+primary display; the original cgWindowNotFound was a display-targeting issue
+compounded by the shell capture client's missing Screen Recording grant. Focus,
+Chat, and Learnings have been captured in the tagged build; dark/light, narrow,
+and populated-history states remain follow-up visual checks.
 
 The user-selected implementation is `shared_session_chat`, tracked in the root
 manifests. See [the shared-session control decision](../product/shared-session-control-decision.md)
