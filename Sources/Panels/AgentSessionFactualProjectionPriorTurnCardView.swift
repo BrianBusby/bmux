@@ -8,6 +8,7 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
     let ordinal: Int
     let isExpanded: Bool
     let onToggle: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -35,14 +36,14 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
                 expandedDetails
             }
         }
-        .padding(12)
+        .padding(16)
         .background(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Color(nsColor: .controlBackgroundColor))
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .fill(cardBackground)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .stroke(Color.secondary.opacity(0.16))
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .stroke(cardBorder)
         )
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(prompt))
@@ -223,6 +224,18 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
             String(localized: "agentSession.factual.duration.seconds", defaultValue: "%.0f sec"),
             duration
         )
+    }
+
+    private var cardBackground: Color {
+        colorScheme == .dark
+            ? Color(nsColor: NSColor(hex: "#2B2C32") ?? .controlBackgroundColor)
+            : Color(nsColor: NSColor(hex: "#EEECF2") ?? .controlBackgroundColor)
+    }
+
+    private var cardBorder: Color {
+        colorScheme == .dark
+            ? Color(nsColor: NSColor(hex: "#3B3D48") ?? .separatorColor)
+            : Color(nsColor: NSColor(hex: "#D3CEDB") ?? .separatorColor)
     }
 
     private func labeledText(_ label: String, _ text: String, lineLimit: Int) -> some View {

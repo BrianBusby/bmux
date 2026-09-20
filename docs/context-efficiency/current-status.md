@@ -20,13 +20,18 @@ The selected hybrid Focus workbench slice is under observation on
 Terminal / Chat / Focus / Learnings host: Terminal remains the native provider
 surface, Chat retains its existing connected/read-only boundary, Focus uses the
 source-backed factual projection with stable completed-turn ordering, and
-Learnings is an honest unavailable state. The selected Focus header receives
-the owning native workspace title, assigned color, source-supported activity,
-and existing PE-backed ticket, pull-request, and project links; link activation
-is separate from workspace selection. Token attribution and curated learning
-records remain unsupported data dependencies. A tagged build is reproducible
-with the pinned sources plus the local Ghostty/Bonsplit cache workaround, but
-CUA cannot currently target the isolated app window for rendered capture.
+Learnings is an honest unavailable state. The native shell now uses rich rounded
+workspace cards, retained assigned colors, a joined 3px selection outline,
+separate link controls, a prominent shared workspace header, and underline view
+navigation. Focus puts current evidence before restrained newest-first history,
+with identity/thread detail behind disclosure. The selected header receives the
+owning native workspace title, assigned color, source-supported activity, and
+all known PE-backed ticket, pull-request, project, and owner links. Token
+attribution and curated learning records remain unsupported data dependencies.
+A tagged build is reproducible with the pinned sources plus the local
+Ghostty/Bonsplit cache workaround, but CUA cannot currently target the isolated
+app window for rendered capture; the visual changes therefore remain visually
+unverified in this environment.
 
 The user-selected implementation is `shared_session_chat`, tracked in the root
 manifests. See [the shared-session control decision](../product/shared-session-control-decision.md)

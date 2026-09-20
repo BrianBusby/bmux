@@ -75,9 +75,16 @@ private struct WorkspacePanelContentHostView: View {
         if let pullRequest = display?.pullRequest {
             links.append(AgentSessionWorkspaceLink(
                 id: "pr-\(pullRequest.number)",
-                label: pullRequest.ownerLogin.map { "PR #\(pullRequest.number) · \($0)" } ?? "PR #\(pullRequest.number)",
+                label: pullRequest.status.map { "PR #\(pullRequest.number) · \($0)" } ?? "PR #\(pullRequest.number)",
                 kind: "pullRequest", url: pullRequest.url, state: pullRequest.status, owner: pullRequest.ownerLogin
             ))
+            if let owner = pullRequest.ownerLogin, let ownerURL = pullRequest.ownerURL {
+                links.append(AgentSessionWorkspaceLink(
+                    id: "pr-owner-\(pullRequest.number)",
+                    label: owner,
+                    kind: "pullRequestOwner", url: ownerURL, state: nil, owner: owner
+                ))
+            }
         }
         for ticket in display?.ticketLinks ?? [] {
             links.append(AgentSessionWorkspaceLink(
@@ -85,6 +92,13 @@ private struct WorkspacePanelContentHostView: View {
                 label: ticket.title.map { "\(ticket.id): \($0)" } ?? ticket.id,
                 kind: "ticket", url: ticket.url, state: nil, owner: ticket.ownerName
             ))
+            if let owner = ticket.ownerName, let ownerURL = ticket.ownerURL {
+                links.append(AgentSessionWorkspaceLink(
+                    id: "ticket-owner-\(ticket.id)",
+                    label: owner,
+                    kind: "ticketOwner", url: ownerURL, state: nil, owner: owner
+                ))
+            }
         }
         for project in display?.projectLinks ?? [] {
             links.append(AgentSessionWorkspaceLink(

@@ -146,38 +146,38 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
 
     @ViewBuilder
     private var selectedContent: some View {
-        ZStack {
-            primaryContent(primaryContentIsVisible)
-                .opacity(primaryContentIsVisible ? 1 : 0)
-                .allowsHitTesting(primaryContentIsVisible)
-                .accessibilityHidden(!primaryContentIsVisible)
-
-            if let chatContent, viewMode == .chat {
-                chatContent { viewMode = .terminal }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+        VStack(spacing: 0) {
+            if let workspaceChrome {
+                AgentSessionWorkspaceHeader(chrome: workspaceChrome)
             }
-            if showsFocusContent {
-                VStack(spacing: 0) {
-                    if let workspaceChrome {
-                        AgentSessionWorkspaceHeader(chrome: workspaceChrome)
-                    }
+            ZStack {
+                primaryContent(primaryContentIsVisible)
+                    .opacity(primaryContentIsVisible ? 1 : 0)
+                    .allowsHitTesting(primaryContentIsVisible)
+                    .accessibilityHidden(!primaryContentIsVisible)
+
+                if let chatContent, viewMode == .chat {
+                    chatContent { viewMode = .terminal }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                if showsFocusContent {
                     AgentSessionFactualProjectionView(
                         result: factualProjectionResult,
                         isLoading: isLoadingFactualProjection,
-                        backgroundColor: Color(nsColor: backgroundColor),
+                        backgroundColor: shellContentBackground,
                         onRefresh: {
                             Task { await refreshFactualProjection() }
                         }
                     )
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .onAppear {
-                    scheduleFactualProjectionRefreshIfNeeded()
-                }
-            }
-            if showsLearningsContent {
-                AgentSessionLearningsUnavailableView(backgroundColor: Color(nsColor: backgroundColor))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .onAppear {
+                        scheduleFactualProjectionRefreshIfNeeded()
+                    }
+                }
+                if showsLearningsContent {
+                    AgentSessionLearningsUnavailableView(backgroundColor: shellContentBackground)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
             }
         }
     }
@@ -226,6 +226,10 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
 
     private var shellAccent: Color {
         colorScheme == .dark ? Color(nsColor: NSColor(hex: "#B9A3FF") ?? .systemPurple) : Color(nsColor: NSColor(hex: "#6542AD") ?? .systemPurple)
+    }
+
+    private var shellContentBackground: Color {
+        colorScheme == .dark ? Color(nsColor: NSColor(hex: "#222326") ?? backgroundColor) : Color(nsColor: NSColor(hex: "#FCFBFD") ?? backgroundColor)
     }
 
     private var factualProjectionTaskID: String {
@@ -520,24 +524,6 @@ struct AgentSessionFactualProjectionView: View {
 
     private func availableContent(_ snapshot: ProvenanceFactualSessionProjectionSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            section(String(localized: "agentSession.factual.identity", defaultValue: "Identity")) {
-                factRow(String(localized: "agentSession.factual.sessionID", defaultValue: "Session ID"), snapshot.session.id)
-                factRow(String(localized: "agentSession.factual.provider", defaultValue: "Provider"), snapshot.session.agentKind)
-                factRow(String(localized: "agentSession.factual.status", defaultValue: "Status"), snapshot.session.status)
-                factRow(String(localized: "agentSession.factual.cwd", defaultValue: "Directory"), snapshot.session.cwd)
-                factRow(String(localized: "agentSession.factual.revision", defaultValue: "Revision"), snapshot.revision.map(String.init))
-            }
-
-            section(String(localized: "agentSession.factual.threads", defaultValue: "Threads")) {
-                if snapshot.providerThreadIdentities.isEmpty {
-                    mutedText(String(localized: "agentSession.factual.noThreads", defaultValue: "No provider threads observed."))
-                } else {
-                    ForEach(snapshot.providerThreadIdentities, id: \.threadID) { thread in
-                        threadRow(thread)
-                    }
-                }
-            }
-
             section(String(localized: "agentSession.factual.latestTurn", defaultValue: "Latest turn")) {
                 if let turn = snapshot.latestTurn {
                     AgentSessionFactualProjectionTurnDetailView(turnSnapshot: turn)
@@ -546,6 +532,8 @@ struct AgentSessionFactualProjectionView: View {
                 }
             }
 
+            // Completed turns stay quiet and newest-first. Their source detail
+            // remains behind the stable turn-ID disclosure in the row view.
             section(String(localized: "agentSession.factual.priorTurns", defaultValue: "Prior turns")) {
                 if snapshot.priorTurns.isEmpty {
                     mutedText(String(localized: "agentSession.factual.noPriorTurns", defaultValue: "No prior turns."))
@@ -565,6 +553,30 @@ struct AgentSessionFactualProjectionView: View {
                     }
                 }
             }
+
+            DisclosureGroup(String(localized: "agentSession.factual.identity", defaultValue: "Identity")) {
+                VStack(alignment: .leading, spacing: 14) {
+                    section(String(localized: "agentSession.factual.identity", defaultValue: "Identity")) {
+                        factRow(String(localized: "agentSession.factual.sessionID", defaultValue: "Session ID"), snapshot.session.id)
+                        factRow(String(localized: "agentSession.factual.provider", defaultValue: "Provider"), snapshot.session.agentKind)
+                        factRow(String(localized: "agentSession.factual.status", defaultValue: "Status"), snapshot.session.status)
+                        factRow(String(localized: "agentSession.factual.cwd", defaultValue: "Directory"), snapshot.session.cwd)
+                        factRow(String(localized: "agentSession.factual.revision", defaultValue: "Revision"), snapshot.revision.map(String.init))
+                    }
+
+                    section(String(localized: "agentSession.factual.threads", defaultValue: "Threads")) {
+                        if snapshot.providerThreadIdentities.isEmpty {
+                            mutedText(String(localized: "agentSession.factual.noThreads", defaultValue: "No provider threads observed."))
+                        } else {
+                            ForEach(snapshot.providerThreadIdentities, id: \.threadID) { thread in
+                                threadRow(thread)
+                            }
+                        }
+                    }
+                }
+            }
+            .font(.system(size: 12, weight: .medium))
+            .foregroundStyle(.secondary)
         }
     }
 
