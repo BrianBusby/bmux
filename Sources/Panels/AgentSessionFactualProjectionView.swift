@@ -113,6 +113,10 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     let showsSwitcher: Bool
     var showsModePicker = true
     var startsInSession = false
+    var showsAppShell = true
+    var workspaceLabel: String?
+    var sessionTitle: String?
+    var sessionDescription: String?
     var chatContent: ((_ onTerminal: @escaping () -> Void) -> AnyView)? = nil
     let stableWorkspaceID: UUID?
     let workProvenanceRuntime: WorkProvenanceRuntime?
@@ -182,7 +186,11 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
                     backgroundColor: Color(nsColor: backgroundColor),
                     onRefresh: {
                         Task { await refreshFactualProjection() }
-                    }
+                    },
+                    showsAppShell: showsAppShell,
+                    workspaceLabel: workspaceLabel,
+                    sessionTitle: sessionTitle,
+                    sessionDescription: sessionDescription
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .onAppear {
@@ -287,6 +295,10 @@ struct AgentSessionFactualProjectionView: View {
     let isLoading: Bool
     let backgroundColor: Color
     let onRefresh: () -> Void
+    var showsAppShell = true
+    var workspaceLabel: String?
+    var sessionTitle: String?
+    var sessionDescription: String?
 
     @State private var expandedPriorTurnIDs: Set<String> = []
     @State private var selectedPrimaryTab = "Session"
@@ -295,7 +307,11 @@ struct AgentSessionFactualProjectionView: View {
     @State private var composerText = ""
 
     var body: some View {
-        referenceShell
+        if showsAppShell {
+            referenceShell
+        } else {
+            contentPane
+        }
     }
 
     private var referenceShell: some View {
@@ -372,9 +388,9 @@ struct AgentSessionFactualProjectionView: View {
 
     private var contentPane: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("companycam-mobile / Brian Busby").font(.system(size: 12)).foregroundStyle(Color.bmuxTextTertiary)
-            Text("One-off checklist flow").font(.system(size: 26, weight: .bold)).foregroundStyle(Color.bmuxTextPrimary).padding(.top, 4)
-            Text("Build, validate, and hand off the mobile checklist changes.").font(.system(size: 13.5)).foregroundStyle(Color.bmuxTextTertiary).padding(.top, 4)
+            Text(workspaceLabel ?? "companycam-mobile / Brian Busby").font(.system(size: 12)).foregroundStyle(Color.bmuxTextTertiary)
+            Text(sessionTitle ?? "One-off checklist flow").font(.system(size: 26, weight: .bold)).foregroundStyle(Color.bmuxTextPrimary).padding(.top, 4)
+            Text(sessionDescription ?? "Build, validate, and hand off the mobile checklist changes.").font(.system(size: 13.5)).foregroundStyle(Color.bmuxTextTertiary).padding(.top, 4)
             primaryTabs.padding(.top, 16)
             if selectedPrimaryTab == "Session" { sessionContent } else if selectedPrimaryTab == "Terminal" { terminalContent } else { nativeContent }
         }

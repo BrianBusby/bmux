@@ -28,6 +28,29 @@ import ObjectiveC
 import UniformTypeIdentifiers
 import WebKit
 
+private extension Color {
+    static let bmuxSurface = Color(red: 0.067, green: 0.067, blue: 0.067)
+    static let bmuxRail = Color(red: 0.098, green: 0.098, blue: 0.098)
+    static let bmuxCard = Color(red: 0.110, green: 0.110, blue: 0.110)
+    static let bmuxCardBorder = Color(red: 0.145, green: 0.145, blue: 0.145)
+    static let bmuxCardSelected = Color(red: 0.137, green: 0.180, blue: 0.133)
+    static let bmuxCardSelectedBorder = Color(red: 0.227, green: 0.306, blue: 0.220)
+    static let bmuxSeparator = Color(red: 0.114, green: 0.114, blue: 0.114)
+    static let bmuxSeparatorSubtle = Color(red: 0.141, green: 0.141, blue: 0.141)
+    static let bmuxTextPrimary = Color(red: 0.91, green: 0.91, blue: 0.91)
+    static let bmuxTextSecondary = Color(red: 0.733, green: 0.733, blue: 0.733)
+    static let bmuxTextTertiary = Color(red: 0.533, green: 0.533, blue: 0.533)
+    static let bmuxTextMuted = Color(red: 0.333, green: 0.333, blue: 0.333)
+    static let bmuxTextDisabled = Color(red: 0.267, green: 0.267, blue: 0.267)
+    static let bmuxAccentGreen = Color(red: 0.416, green: 0.620, blue: 0.369)
+    static let bmuxAccentYellow = Color(red: 0.620, green: 0.620, blue: 0.416)
+    static let bmuxTurnAccent = Color(red: 0.290, green: 0.400, blue: 0.259)
+}
+
+private enum BmuxRadius {
+    static let appShell: CGFloat = 12
+}
+
 var fileDropOverlayKey: UInt8 = 0
 private var commandPaletteWindowOverlayKey: UInt8 = 0
 let commandPaletteOverlayContainerIdentifier = NSUserInterfaceItemIdentifier("bmux.commandPalette.overlay.container")
@@ -2492,6 +2515,118 @@ struct ContentView: View {
         )
     }
 
+    private var bmuxReferenceWorkspaceRail: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("WORKSPACES")
+                    .font(.system(size: 11, weight: .medium))
+                    .tracking(1.2)
+                    .foregroundStyle(Color.bmuxTextMuted)
+                Spacer()
+                Text(String(tabManager.tabs.count))
+                    .foregroundStyle(Color.bmuxTextDisabled)
+            }
+
+            ScrollView {
+                VStack(spacing: 8) {
+                    ForEach(tabManager.tabs, id: \.id) { workspace in
+                        let isSelected = workspace.id == tabManager.selectedTabId
+                        let workspaceDirectoryName = URL(fileURLWithPath: workspace.currentDirectory).lastPathComponent
+                        let workspaceStatus = "Ready"
+                        let workspaceStatusIcon = "checkmark"
+                        Button {
+                            tabManager.selectedTabId = workspace.id
+                        } label: {
+                            VStack(alignment: .leading, spacing: 7) {
+                                Text(workspaceDirectoryName)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(Color.bmuxTextTertiary)
+                                Text(workspace.title)
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(Color.bmuxTextPrimary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Label(
+                                    workspaceStatus,
+                                    systemImage: workspaceStatusIcon
+                                )
+                                .font(.system(size: 12))
+                                .foregroundStyle(Color.bmuxAccentGreen)
+                                Divider().overlay(Color.bmuxSeparatorSubtle)
+                                Text(workspace.currentDirectory)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(Color.bmuxTextSecondary)
+                                    .lineLimit(2)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .padding(12)
+                            .background(isSelected ? Color.bmuxCardSelected : Color.bmuxCard)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(
+                                isSelected ? Color.bmuxCardSelectedBorder : Color.bmuxCardBorder,
+                                lineWidth: 1
+                            ))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 16)
+        .frame(width: 340)
+        .background(Color.bmuxRail)
+        .overlay(alignment: .trailing) {
+            Rectangle().fill(Color.bmuxSeparator).frame(width: 1)
+        }
+    }
+
+    private func bmuxReferenceAppShell(appearance: WindowAppearanceSnapshot) -> some View {
+        ZStack {
+            Color.bmuxSurface.ignoresSafeArea()
+            VStack(spacing: 0) {
+                HStack {
+                    HStack(spacing: 8) {
+                        Text("bmux").font(.system(size: 21, weight: .bold, design: .rounded))
+                        Text("✳").font(.system(size: 18)).foregroundStyle(Color.bmuxTurnAccent)
+                        Text("CompanyCam").foregroundStyle(Color.bmuxTextTertiary)
+                    }
+                    Spacer()
+                    Text("Design concept · live workspace data")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.bmuxTextDisabled)
+                }
+                .padding(.horizontal, 24)
+                .frame(height: 44)
+                .overlay(alignment: .bottom) {
+                    Rectangle().fill(Color.bmuxSeparator).frame(height: 1)
+                }
+
+                HStack(spacing: 0) {
+                    bmuxReferenceWorkspaceRail
+                    AgentSessionFactualProjectionModeHost(
+                        showsSwitcher: true,
+                        showsModePicker: false,
+                        startsInSession: true,
+                        showsAppShell: false,
+                        workspaceLabel: tabManager.selectedWorkspace.map {
+                            "\($0.currentDirectory.split(separator: "/").last.map(String.init) ?? "Workspace") / Brian Busby"
+                        },
+                        sessionTitle: tabManager.selectedWorkspace?.title,
+                        sessionDescription: tabManager.selectedWorkspace?.customDescription,
+                        stableWorkspaceID: tabManager.selectedWorkspace?.stableId,
+                        workProvenanceRuntime: tabManager.workProvenanceRuntime,
+                        backgroundColor: appearance.compositedTerminalBackgroundColor
+                    ) { _ in
+                        Color.clear
+                    }
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: BmuxRadius.appShell))
+            .overlay(RoundedRectangle(cornerRadius: BmuxRadius.appShell).stroke(Color.bmuxSeparator, lineWidth: 1))
+            .padding(18)
+        }
+    }
+
     var body: some View {
 #if DEBUG
         let _ = { minimalModeInvalidationProbe.contentViewBody?() }()
@@ -2503,7 +2638,7 @@ struct ContentView: View {
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
 
-                contentAndSidebarLayout(appearance: appearance)
+                bmuxReferenceAppShell(appearance: appearance)
 
                 WorkspaceTitlebarModeLayer {
                     workspaceTitlebarBand(appearance: appearance)
