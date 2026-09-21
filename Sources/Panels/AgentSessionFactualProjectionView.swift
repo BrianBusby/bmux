@@ -111,6 +111,8 @@ enum AgentSessionFactualProjectionEvidenceRows {
 
 struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     let showsSwitcher: Bool
+    var showsModePicker = true
+    var startsInSession = false
     var chatContent: ((_ onTerminal: @escaping () -> Void) -> AnyView)? = nil
     let stableWorkspaceID: UUID?
     let workProvenanceRuntime: WorkProvenanceRuntime?
@@ -123,7 +125,7 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if showsSwitcher {
+            if showsSwitcher && showsModePicker {
                 modePicker
                 Divider()
             }
@@ -144,6 +146,9 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
             scheduleFactualProjectionRefreshIfNeeded()
         }
         .onAppear {
+            if startsInSession {
+                viewMode = .session
+            }
             scheduleFactualProjectionRefreshIfNeeded()
         }
         .task(id: factualProjectionTaskID) {
