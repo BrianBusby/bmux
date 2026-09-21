@@ -115,6 +115,7 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     var startsInSession = false
     var showsAppShell = false
     var fixturePreviewEnabled = false
+    var liveChatContent: ((@escaping () -> Void) -> AnyView)?
     var liveTerminalContent: AnyView?
     var onPrimaryTabChange: ((Bool) -> Void)?
     var workspaceLabel: String?
@@ -192,6 +193,7 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
                     },
                     showsAppShell: showsAppShell,
                     fixturePreviewEnabled: fixturePreviewEnabled,
+                    liveChatContent: liveChatContent,
                     liveTerminalContent: liveTerminalContent,
                     onPrimaryTabChange: onPrimaryTabChange,
                     workspaceLabel: workspaceLabel,
@@ -303,6 +305,7 @@ struct AgentSessionFactualProjectionView: View {
     let onRefresh: () -> Void
     var showsAppShell = false
     var fixturePreviewEnabled = false
+    var liveChatContent: ((@escaping () -> Void) -> AnyView)?
     var liveTerminalContent: AnyView?
     var onPrimaryTabChange: ((Bool) -> Void)?
     var workspaceLabel: String?
@@ -310,7 +313,7 @@ struct AgentSessionFactualProjectionView: View {
     var sessionDescription: String?
 
     @State private var expandedPriorTurnIDs: Set<String> = []
-    @State private var selectedPrimaryTab = "Session"
+    @State private var selectedPrimaryTab = AgentSessionFactualProjectionMode.session.rawValue
 
     var body: some View {
         if showsAppShell && fixturePreviewEnabled {
@@ -401,7 +404,16 @@ struct AgentSessionFactualProjectionView: View {
             Text(sessionDescription ?? String(localized: "agentSession.factual.sessionDescriptionUnavailable", defaultValue: "No session description is available."))
                 .font(.system(size: 13.5)).foregroundStyle(Color.bmuxTextTertiary).padding(.top, 4)
             primaryTabs.padding(.top, 16)
-            if selectedPrimaryTab == "Session" { sessionContent } else if selectedPrimaryTab == "Terminal" { terminalContentView } else { nativeContent }
+            switch selectedPrimaryTab {
+            case AgentSessionFactualProjectionMode.session.rawValue:
+                sessionContent
+            case AgentSessionFactualProjectionMode.chat.rawValue:
+                chatContentView
+            case AgentSessionFactualProjectionMode.terminal.rawValue:
+                terminalContentView
+            default:
+                emptyMessage(String(localized: "agentSession.factual.unavailable", defaultValue: "Session data unavailable"))
+            }
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 20)
@@ -412,16 +424,20 @@ struct AgentSessionFactualProjectionView: View {
 
     private var primaryTabs: some View {
         HStack(spacing: 24) {
-            ForEach(["Session", "Terminal", "Native"], id: \.self) { tab in
-                Button(tab) {
-                    selectedPrimaryTab = tab
-                    onPrimaryTabChange?(tab == "Terminal")
+            ForEach([
+                AgentSessionFactualProjectionMode.session,
+                AgentSessionFactualProjectionMode.chat,
+                AgentSessionFactualProjectionMode.terminal
+            ]) { mode in
+                Button(mode.title) {
+                    selectedPrimaryTab = mode.rawValue
+                    onPrimaryTabChange?(mode == .terminal)
                 }
                     .buttonStyle(.plain)
-                    .font(.system(size: 13.5, weight: selectedPrimaryTab == tab ? .medium : .regular))
-                    .foregroundStyle(selectedPrimaryTab == tab ? Color.bmuxTextPrimary : Color.bmuxTextTertiary)
+                    .font(.system(size: 13.5, weight: selectedPrimaryTab == mode.rawValue ? .medium : .regular))
+                    .foregroundStyle(selectedPrimaryTab == mode.rawValue ? Color.bmuxTextPrimary : Color.bmuxTextTertiary)
                     .padding(.bottom, 10)
-                    .overlay(alignment: .bottom) { if selectedPrimaryTab == tab { Rectangle().fill(Color.bmuxTabUnderline).frame(height: 2) } }
+                    .overlay(alignment: .bottom) { if selectedPrimaryTab == mode.rawValue { Rectangle().fill(Color.bmuxTabUnderline).frame(height: 2) } }
             }
             Spacer()
         }
@@ -438,11 +454,29 @@ struct AgentSessionFactualProjectionView: View {
 
     private var terminalContentView: some View {
         Group {
-            if selectedPrimaryTab == "Terminal", let liveTerminalContent {
+            if selectedPrimaryTab == AgentSessionFactualProjectionMode.terminal.rawValue,
+               let liveTerminalContent {
                 liveTerminalContent
                     .id("bmux-shell-terminal")
             } else {
                 Color.clear
+            }
+        }
+    }
+
+    private var chatContentView: some View {
+        Group {
+            if let liveChatContent {
+                liveChatContent {
+                    selectedPrimaryTab = AgentSessionFactualProjectionMode.terminal.rawValue
+                    onPrimaryTabChange?(true)
+                }
+                .id("bmux-shell-chat")
+            } else {
+                emptyMessage(String(
+                    localized: "agentSession.chat.chatUnavailable",
+                    defaultValue: "Conversation unavailable"
+                ))
             }
         }
     }

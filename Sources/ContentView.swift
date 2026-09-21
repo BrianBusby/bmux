@@ -2726,6 +2726,7 @@ struct ContentView: View {
                         showsModePicker: false,
                         startsInSession: true,
                         showsAppShell: false,
+                        liveChatContent: bmuxShellChatContent(),
                         liveTerminalContent: bmuxShellTerminalVisible
                             ? AnyView(
                                 terminalContent(appearance: appearance, shellTerminalVisible: true)
@@ -2752,6 +2753,26 @@ struct ContentView: View {
             .clipShape(RoundedRectangle(cornerRadius: BmuxRadius.appShell))
             .overlay(RoundedRectangle(cornerRadius: BmuxRadius.appShell).stroke(Color.bmuxSeparator, lineWidth: 1))
             .padding(18)
+        }
+    }
+
+    private func bmuxShellChatContent() -> ((@escaping () -> Void) -> AnyView)? {
+        guard let workspace = tabManager.selectedWorkspace,
+              let panel = workspace.focusedTerminalPanel,
+              let reader = tabManager.terminalChatReader else {
+            return nil
+        }
+
+        let appearance = PanelAppearance.fromConfig(GhosttyConfig.load())
+        return { onTerminal in
+            AnyView(
+                TerminalChatWebRenderer(
+                    panel: panel,
+                    reader: reader,
+                    appearance: appearance,
+                    onTerminal: onTerminal
+                )
+            )
         }
     }
 
