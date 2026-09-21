@@ -908,6 +908,7 @@ struct ContentView: View {
     @State private var titlebarText: String = ""
     @State private var isFullScreen: Bool = false
     @State private var observedWindow: NSWindow?
+    @State private var bmuxShellTerminalVisible = false
     @State private var sidebarRenderWorkerClient: RenderWorkerClient?
     @StateObject private var fullscreenControlsViewModel = TitlebarControlsViewModel()
     @StateObject private var fileExplorerStore = FileExplorerStore()
@@ -1751,7 +1752,7 @@ struct ContentView: View {
         return FullscreenControlsPlacement(leadingPadding: 10, topPadding: 2)
     }
 
-    private func terminalContent(appearance: WindowAppearanceSnapshot) -> some View {
+    private func terminalContent(appearance: WindowAppearanceSnapshot, shellTerminalVisible: Bool = true) -> some View {
         let mountedWorkspaceIdSet = Set(mountedWorkspaceIds)
         let mountedWorkspaces = tabManager.tabs.filter { mountedWorkspaceIdSet.contains($0.id) }
         let selectedWorkspaceId = tabManager.selectedTabId
@@ -1774,8 +1775,8 @@ struct ContentView: View {
                     let portalPriority = isSelectedWorkspace ? 2 : (isRetiringWorkspace ? 1 : 0)
                     WorkspaceContentView(
                         workspace: tab,
-                        isWorkspaceVisible: presentation.isPanelVisible,
-                        isWorkspaceInputActive: isInputActive,
+                        isWorkspaceVisible: presentation.isPanelVisible && shellTerminalVisible,
+                        isWorkspaceInputActive: isInputActive && shellTerminalVisible,
                         rightSidebarOwnsInputFocus: fileExplorerState.rightSidebarOwnsInputFocus,
                         isFullScreen: isFullScreen,
                         workspacePortalPriority: portalPriority,
@@ -2626,7 +2627,15 @@ struct ContentView: View {
                         showsModePicker: false,
                         startsInSession: true,
                         showsAppShell: false,
-                        liveTerminalContent: AnyView(terminalContent(appearance: appearance)),
+                        liveTerminalContent: bmuxShellTerminalVisible
+                            ? AnyView(
+                                terminalContent(appearance: appearance, shellTerminalVisible: true)
+                                    .environment(\.bmuxShellTerminalOnly, true)
+                            )
+                            : nil,
+                        onPrimaryTabChange: { isTerminal in
+                            bmuxShellTerminalVisible = isTerminal
+                        },
                         workspaceLabel: tabManager.selectedWorkspace.map {
                             $0.currentDirectory.split(separator: "/").last.map(String.init)
                                 ?? String(localized: "agentSession.factual.workspaceUnavailable", defaultValue: "Workspace unavailable")

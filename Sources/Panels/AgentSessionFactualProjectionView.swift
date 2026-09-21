@@ -116,6 +116,7 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     var showsAppShell = false
     var fixturePreviewEnabled = false
     var liveTerminalContent: AnyView?
+    var onPrimaryTabChange: ((Bool) -> Void)?
     var workspaceLabel: String?
     var sessionTitle: String?
     var sessionDescription: String?
@@ -192,6 +193,7 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
                     showsAppShell: showsAppShell,
                     fixturePreviewEnabled: fixturePreviewEnabled,
                     liveTerminalContent: liveTerminalContent,
+                    onPrimaryTabChange: onPrimaryTabChange,
                     workspaceLabel: workspaceLabel,
                     sessionTitle: sessionTitle,
                     sessionDescription: sessionDescription
@@ -302,6 +304,7 @@ struct AgentSessionFactualProjectionView: View {
     var showsAppShell = false
     var fixturePreviewEnabled = false
     var liveTerminalContent: AnyView?
+    var onPrimaryTabChange: ((Bool) -> Void)?
     var workspaceLabel: String?
     var sessionTitle: String?
     var sessionDescription: String?
@@ -413,7 +416,10 @@ struct AgentSessionFactualProjectionView: View {
     private var primaryTabs: some View {
         HStack(spacing: 24) {
             ForEach(["Session", "Terminal", "Native"], id: \.self) { tab in
-                Button(tab) { selectedPrimaryTab = tab }
+                Button(tab) {
+                    selectedPrimaryTab = tab
+                    onPrimaryTabChange?(tab == "Terminal")
+                }
                     .buttonStyle(.plain)
                     .font(.system(size: 13.5, weight: selectedPrimaryTab == tab ? .medium : .regular))
                     .foregroundStyle(selectedPrimaryTab == tab ? Color.bmuxTextPrimary : Color.bmuxTextTertiary)
@@ -435,13 +441,11 @@ struct AgentSessionFactualProjectionView: View {
 
     private var terminalContentView: some View {
         Group {
-            if let liveTerminalContent {
+            if selectedPrimaryTab == "Terminal", let liveTerminalContent {
                 liveTerminalContent
+                    .id("bmux-shell-terminal")
             } else {
-                emptyMessage(String(
-                    localized: "agentSession.factual.terminalUnavailable",
-                    defaultValue: "The live terminal is unavailable for this session."
-                ))
+                Color.clear
             }
         }
     }
