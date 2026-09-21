@@ -200905,6 +200905,23 @@
         }
       }
     },
+    "workspaceRail.pullRequestPrefix": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        }
+      }
+    },
     "sidebar.pullRequest.openTooltip": {
       "extractionState": "manual",
       "localizations": {
