@@ -3,7 +3,9 @@ import SwiftUI
 extension TerminalPanelView {
     var terminalBody: some View {
         AgentSessionFactualProjectionModeHost(
-            showsSwitcher: showsFactualSessionSwitcher || terminalChatReader != nil,
+            showsSwitcher: true,
+            showsModePicker: false,
+            startsInSession: true,
             chatContent: terminalChatReader.map { reader in
                 { onTerminal in AnyView(TerminalChatWebRenderer(
                     panel: panel, reader: reader, appearance: appearance, onStartConnectedSession: onStartConnectedSession, onTerminal: onTerminal
