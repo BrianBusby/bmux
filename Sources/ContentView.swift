@@ -2591,9 +2591,32 @@ struct ContentView: View {
                         Text("CompanyCam").foregroundStyle(Color.bmuxTextTertiary)
                     }
                     Spacer()
-                    Text("Design concept · live workspace data")
-                        .font(.system(size: 12))
-                        .foregroundStyle(Color.bmuxTextDisabled)
+                    HStack(spacing: 12) {
+                        Button {
+                            guard let anchorView = NSApp.keyWindow?.contentView
+                                ?? NSApp.mainWindow?.contentView,
+                                AppDelegate.shared?.showRepoAgentLauncherMenu(anchorView: anchorView) == true else {
+                                NSSound.beep()
+                                return
+                            }
+                        } label: {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(Color.bmuxTextSecondary)
+                                .frame(width: 28, height: 28)
+                                .background(Color.bmuxCard)
+                                .clipShape(RoundedRectangle(cornerRadius: 7))
+                                .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.bmuxCardBorder, lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("bmuxShell.repoAgentLauncher")
+                        .accessibilityLabel(String(localized: "titlebar.repoAgentLauncher.accessibilityLabel", defaultValue: "AI Repo Launcher"))
+                        .safeHelp(String(localized: "titlebar.repoAgentLauncher.tooltip", defaultValue: "Launch an AI session for a repo"))
+
+                        Text("Design concept · live workspace data")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color.bmuxTextDisabled)
+                    }
                 }
                 .padding(.horizontal, 24)
                 .frame(height: 44)
