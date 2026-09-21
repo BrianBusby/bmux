@@ -115,35 +115,10 @@ function SmartSessionSnapshotView({
     scope: "session",
     scopeId: snapshot.identity.sessionId,
   });
-  const currentTurnTitle = latestTurn?.prompt?.text || "One-off checklist flow";
-  const currentTurnDetail = currentActivity?.summary || currentActivity?.detail || "Build, validate, and hand off the mobile checklist changes.";
-  const completedSteps = latestTurn?.plan?.steps.filter((step) => step.status === "completed").length ?? 0;
 
   return h(
     "div",
     { className: "smart-session-content" },
-    h(
-      "div",
-      { className: "smart-session-hero" },
-      h("div", { className: "smart-session-breadcrumb" }, `${snapshot.identity.agentKind} / ${snapshot.identity.cwd ?? "Brian Busby"}`),
-      h("h1", null, currentTurnTitle),
-      h("p", null, currentTurnDetail),
-      h(
-        "div",
-        { className: "smart-session-subtabs", role: "tablist" },
-        h("button", { type: "button", className: "active", role: "tab", "aria-selected": true }, "Overview"),
-        h("button", { type: "button", role: "tab", "aria-selected": false }, "Related work  2"),
-        h("button", { type: "button", role: "tab", "aria-selected": false }, `Findings  ${snapshot.crossSessionAwareness.collisions.length}`),
-      ),
-      h(
-        "div",
-        { className: "smart-session-current-turn" },
-        h("div", { className: "smart-session-current-turn-label" }, h("span", null, "CURRENT TURN"), h("span", null, snapshot.identity.status)),
-        h("h2", null, currentTurnTitle),
-        h("p", null, currentTurnDetail),
-        h("div", { className: "smart-session-current-turn-meta" }, `${completedSteps} of ${latestTurn?.plan?.steps.length ?? 0} plan steps complete`, h("button", { type: "button" }, "View source")),
-      ),
-    ),
     h(
       "div",
       { className: "smart-session-grid" },

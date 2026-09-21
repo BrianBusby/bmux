@@ -2,6 +2,40 @@ import AppKit
 import SwiftUI
 import ProvenanceEngineContracts
 
+private extension Color {
+    static let bmuxSurface = Color(red: 0.067, green: 0.067, blue: 0.067)
+    static let bmuxRail = Color(red: 0.098, green: 0.098, blue: 0.098)
+    static let bmuxCard = Color(red: 0.110, green: 0.110, blue: 0.110)
+    static let bmuxCardBorder = Color(red: 0.145, green: 0.145, blue: 0.145)
+    static let bmuxCardSelected = Color(red: 0.137, green: 0.180, blue: 0.133)
+    static let bmuxCardSelectedBorder = Color(red: 0.227, green: 0.306, blue: 0.220)
+    static let bmuxSeparator = Color(red: 0.114, green: 0.114, blue: 0.114)
+    static let bmuxSeparatorSubtle = Color(red: 0.141, green: 0.141, blue: 0.141)
+    static let bmuxTextPrimary = Color(red: 0.91, green: 0.91, blue: 0.91)
+    static let bmuxTextSecondary = Color(red: 0.733, green: 0.733, blue: 0.733)
+    static let bmuxTextTertiary = Color(red: 0.533, green: 0.533, blue: 0.533)
+    static let bmuxTextMuted = Color(red: 0.333, green: 0.333, blue: 0.333)
+    static let bmuxTextDisabled = Color(red: 0.267, green: 0.267, blue: 0.267)
+    static let bmuxAccentGreen = Color(red: 0.416, green: 0.620, blue: 0.369)
+    static let bmuxAccentYellow = Color(red: 0.620, green: 0.620, blue: 0.416)
+    static let bmuxTurnAccent = Color(red: 0.290, green: 0.400, blue: 0.259)
+    static let bmuxLinkGreen = Color(red: 0.478, green: 0.620, blue: 0.416)
+    static let bmuxTabUnderline = Color(red: 0.878, green: 0.878, blue: 0.878)
+    static let bmuxAmberFill = Color(red: 0.137, green: 0.110, blue: 0.039)
+    static let bmuxAmberBorder = Color(red: 0.239, green: 0.180, blue: 0.039)
+    static let bmuxAmberText = Color(red: 0.784, green: 0.643, blue: 0.290)
+    static let bmuxUserMessage = Color(red: 0.118, green: 0.118, blue: 0.118)
+    static let bmuxActionRow = Color(red: 0.090, green: 0.090, blue: 0.090)
+    static let bmuxComposer = Color(red: 0.094, green: 0.094, blue: 0.094)
+    static let bmuxComposerBorder = Color(red: 0.165, green: 0.165, blue: 0.165)
+    static let bmuxPillActive = Color(red: 0.145, green: 0.145, blue: 0.145)
+    static let bmuxQueueFill = Color(red: 0.118, green: 0.180, blue: 0.110)
+}
+
+private enum BmuxRadius {
+    static let appShell: CGFloat = 12
+}
+
 private let agentSessionFactualProjectionAutoRefreshNanoseconds: UInt64 = 2_000_000_000
 
 enum AgentSessionFactualProjectionEvidenceRows {
@@ -250,20 +284,204 @@ struct AgentSessionFactualProjectionView: View {
     let onRefresh: () -> Void
 
     @State private var expandedPriorTurnIDs: Set<String> = []
+    @State private var selectedPrimaryTab = "Session"
+    @State private var selectedSecondaryTab = "Overview"
+    @State private var expandedDisclosureRows: Set<String> = []
+    @State private var composerText = ""
 
     var body: some View {
+        referenceShell
+    }
+
+    private var referenceShell: some View {
         ZStack {
-            backgroundColor.ignoresSafeArea()
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    header
-                    content
+            Color.bmuxSurface.ignoresSafeArea()
+            VStack(spacing: 0) {
+                HStack {
+                    HStack(spacing: 8) {
+                        Text("bmux").font(.system(size: 21, weight: .bold, design: .rounded))
+                        Text("✳").font(.system(size: 18)).foregroundStyle(Color.bmuxTurnAccent)
+                        Text("CompanyCam").foregroundStyle(Color.bmuxTextTertiary)
+                    }
+                    Spacer()
+                    Text("Design concept · illustrative data")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.bmuxTextDisabled)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(18)
+                .padding(.horizontal, 24)
+                .frame(height: 44)
+                .overlay(alignment: .bottom) { Rectangle().fill(Color.bmuxSeparator).frame(height: 1) }
+
+                HStack(spacing: 0) {
+                    workspaceRail
+                    contentPane
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: BmuxRadius.appShell))
+            .overlay(RoundedRectangle(cornerRadius: BmuxRadius.appShell).stroke(Color.bmuxSeparator, lineWidth: 1))
+            .padding(18)
+        }
+    }
+
+    private var workspaceRail: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("WORKSPACES").font(.system(size: 11, weight: .medium)).tracking(1.2).foregroundStyle(Color.bmuxTextMuted)
+                Spacer()
+                Text("3").foregroundStyle(Color.bmuxTextDisabled)
+            }
+            ScrollView {
+                VStack(spacing: 8) {
+                    workspaceCard(repo: "companycam-mobile", title: "One-off checklist flow", status: "Waiting for review", selected: true, links: ["INP-2228 · Build local draft checkbox row and retry-safe save", "PR #11279 · Update one-off checklist mobile flow · Open", "2.0: One off Advanced checklists creation (needed for Assistant + Walkthrough)"])
+                    workspaceCard(repo: "companycam-mobile", title: "Reorder checklist fields", status: "Working · related to this session", selected: false, links: ["INP-2341 · Reorder one-off checklist fields with a single-field move", "INP-2228 · Build local draft checkbox row and retry-safe save", "PR #11279 · Update one-off checklist mobile flow · Open", "2.0: One off Advanced checklists creation (needed for Assistant + Walkthrough)"])
+                    workspaceCard(repo: "Company-Cam-API", title: "Rename & duplicate checklists", status: "Merged", selected: false, links: ["INP-2331 · Let the assistant rename a whole checklist", "INP-2332 · Let the assistant duplicate a whole checklist"])
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 16)
+        .frame(width: 340)
+        .background(Color.bmuxRail)
+        .overlay(alignment: .trailing) { Rectangle().fill(Color.bmuxSeparator).frame(width: 1) }
+    }
+
+    private func workspaceCard(repo: String, title: String, status: String, selected: Bool, links: [String]) -> some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Text(repo).font(.system(size: 11)).foregroundStyle(Color.bmuxTextTertiary)
+            Text(title).font(.system(size: 14, weight: .semibold)).foregroundStyle(Color.bmuxTextPrimary)
+            Label(status, systemImage: status == "Merged" ? "checkmark" : "clock")
+                .font(.system(size: 12)).foregroundStyle(status == "Merged" ? Color.bmuxAccentGreen : Color.bmuxAccentYellow)
+            Divider().overlay(Color.bmuxSeparatorSubtle)
+            ForEach(links, id: \.self) { link in
+                Label(link, systemImage: link.hasPrefix("PR") ? "arrow.triangle.pull" : link.contains("2.0:") ? "folder" : "ticket")
+                    .font(.system(size: 11.5)).foregroundStyle(Color.bmuxTextSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Text("PR owner · BrianBusby").font(.system(size: 11)).foregroundStyle(Color.bmuxTextTertiary)
+        }
+        .padding(12)
+        .background(selected ? Color.bmuxCardSelected : Color.bmuxCard)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(selected ? Color.bmuxCardSelectedBorder : Color.bmuxCardBorder, lineWidth: 1))
+    }
+
+    private var contentPane: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("companycam-mobile / Brian Busby").font(.system(size: 12)).foregroundStyle(Color.bmuxTextTertiary)
+            Text("One-off checklist flow").font(.system(size: 26, weight: .bold)).foregroundStyle(Color.bmuxTextPrimary).padding(.top, 4)
+            Text("Build, validate, and hand off the mobile checklist changes.").font(.system(size: 13.5)).foregroundStyle(Color.bmuxTextTertiary).padding(.top, 4)
+            primaryTabs.padding(.top, 16)
+            if selectedPrimaryTab == "Session" { sessionContent } else if selectedPrimaryTab == "Terminal" { terminalContent } else { nativeContent }
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color.bmuxSurface)
+    }
+
+    private var primaryTabs: some View {
+        HStack(spacing: 24) {
+            ForEach(["Session", "Terminal", "Native"], id: \.self) { tab in
+                Button(tab) { selectedPrimaryTab = tab }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 13.5, weight: selectedPrimaryTab == tab ? .medium : .regular))
+                    .foregroundStyle(selectedPrimaryTab == tab ? Color.bmuxTextPrimary : Color.bmuxTextTertiary)
+                    .padding(.bottom, 10)
+                    .overlay(alignment: .bottom) { if selectedPrimaryTab == tab { Rectangle().fill(Color.bmuxTabUnderline).frame(height: 2) } }
+            }
+            Spacer()
+        }
+        .overlay(alignment: .bottom) { Rectangle().fill(Color.bmuxSeparatorSubtle).frame(height: 1) }
+    }
+
+    private var sessionContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                secondaryTabs.padding(.top, 20)
+                currentTurn.padding(.top, 20)
+                overlapNotice.padding(.top, 20)
+                disclosureRows.padding(.top, 20)
+                previousTurns.padding(.top, 26)
             }
         }
     }
+
+    private var secondaryTabs: some View {
+        HStack(spacing: 4) {
+            ForEach(["Overview", "Related work  2", "Findings  2"], id: \.self) { tab in
+                Button(tab) { selectedSecondaryTab = tab }
+                    .buttonStyle(.plain).font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(selectedSecondaryTab == tab ? Color.bmuxTextSecondary : Color.bmuxTextTertiary)
+                    .padding(.horizontal, 12).padding(.vertical, 5)
+                    .background(selectedSecondaryTab == tab ? Color.bmuxPillActive : .clear)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+            }
+        }
+    }
+
+    private var currentTurn: some View {
+        HStack(spacing: 0) {
+            Rectangle().fill(Color.bmuxTurnAccent).frame(width: 2)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack { Text("CURRENT TURN").font(.system(size: 10, weight: .medium)).tracking(1.4); Spacer(); Text("Codex · 28m 36s") }
+                    .foregroundStyle(Color.bmuxTextTertiary)
+                Text("Tickets ready. Reviews still running.").font(.system(size: 18, weight: .bold)).foregroundStyle(Color.bmuxTextPrimary)
+                Text("Four tickets are assigned and in review. The agent is waiting for review feedback before handing back the stack.")
+                    .font(.system(size: 13.5)).foregroundStyle(Color.bmuxTextTertiary).lineSpacing(4)
+                HStack(spacing: 6) { Text("Agent-reported"); Button("View source") { onRefresh() }.underline() }.font(.system(size: 12)).foregroundStyle(Color.bmuxLinkGreen)
+            }.padding(.leading, 16)
+        }
+    }
+
+    private var overlapNotice: some View {
+        HStack(spacing: 8) { Image(systemName: "square.on.square"); Text("Another session touched a file in this work."); Spacer(); Button("Inspect overlap") { onRefresh() }.underline() }
+            .font(.system(size: 13)).foregroundStyle(Color.bmuxAmberText).padding(.horizontal, 12).padding(.vertical, 10)
+            .background(Color.bmuxAmberFill).clipShape(RoundedRectangle(cornerRadius: 6)).overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.bmuxAmberBorder))
+    }
+
+    private var disclosureRows: some View {
+        VStack(spacing: 0) {
+            disclosureRow(id: "plan", icon: "list.bullet", title: "Plan & progress", meta: "3 of 4 steps complete")
+            disclosureRow(id: "checks", icon: "checkmark.circle", title: "Checks & changes", meta: "2 passed · 1 pending")
+            disclosureRow(id: "blockers", icon: "lock", title: "Blockers & approach changes", meta: "1 change")
+        }
+    }
+
+    private func disclosureRow(id: String, icon: String, title: String, meta: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Button { if expandedDisclosureRows.contains(id) { expandedDisclosureRows.remove(id) } else { expandedDisclosureRows.insert(id) } } label: {
+                HStack(spacing: 10) { Image(systemName: icon); Text(title); Text(meta).font(.system(size: 12.5)); Spacer(); Image(systemName: expandedDisclosureRows.contains(id) ? "minus" : "plus") }
+            }.buttonStyle(.plain).font(.system(size: 13.5)).foregroundStyle(Color.bmuxTextSecondary)
+            if expandedDisclosureRows.contains(id) { Text("Details will appear as the live session reports them.").font(.system(size: 12)).foregroundStyle(Color.bmuxTextTertiary).padding(.leading, 25) }
+        }.padding(.vertical, 14).overlay(alignment: .bottom) { Rectangle().fill(Color.bmuxSeparatorSubtle).frame(height: 1) }
+    }
+
+    private var previousTurns: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack { Text("Previous turns").font(.system(size: 14, weight: .semibold)); Spacer(); Text("Newest first").font(.system(size: 12)).foregroundStyle(Color.bmuxTextTertiary) }
+            previousTurn("Check CI across the PR stack", "4 minutes ago · completed")
+            previousTurn("Split implementation into six tickets", "19 minutes ago · completed")
+        }.foregroundStyle(Color.bmuxTextSecondary)
+    }
+
+    private func previousTurn(_ title: String, _ meta: String) -> some View {
+        HStack { VStack(alignment: .leading, spacing: 3) { Text(title); Text(meta).font(.system(size: 11.5)).foregroundStyle(Color.bmuxTextTertiary) }; Spacer(); Text("Tokens —  +").font(.system(size: 12)).foregroundStyle(Color.bmuxTextTertiary) }
+            .padding(.vertical, 12).overlay(alignment: .bottom) { Rectangle().fill(Color.bmuxSeparatorSubtle).frame(height: 1) }
+    }
+
+    private var terminalContent: some View {
+        VStack(spacing: 12) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) { HStack { Text("You").fontWeight(.semibold); Spacer(); Text("5:02 PM").foregroundStyle(Color.bmuxTextTertiary) }; Text("Assign all those new tickets to me and put them in review.") }.padding(16).background(Color.bmuxUserMessage).clipShape(RoundedRectangle(cornerRadius: 8))
+                    VStack(alignment: .leading, spacing: 12) { Text("✳  Codex").fontWeight(.semibold); Text("I'll update the four tickets, then check the PR stack for review feedback.").foregroundStyle(Color.bmuxTextTertiary); Text("✓  Updated four Linear tickets                                      Completed").padding(12).background(Color.bmuxActionRow).clipShape(RoundedRectangle(cornerRadius: 6)); Text("✓  Checked CI and review status                                      Completed").padding(12).background(Color.bmuxActionRow).clipShape(RoundedRectangle(cornerRadius: 6)); Text("Working · 28m 36s").foregroundStyle(Color.bmuxTextTertiary) }
+                }.padding(.top, 20)
+            }
+            VStack(alignment: .leading, spacing: 6) { Text("Follow up with Codex").foregroundStyle(Color.bmuxTextDisabled); TextField("Ask a follow-up, or steer the current work...", text: $composerText, axis: .vertical).textFieldStyle(.plain).frame(minHeight: 54); HStack { Text("Codex · medium effort").foregroundStyle(Color.bmuxTextTertiary); Spacer(); Button("Queue message ↑") { }.padding(.horizontal, 12).padding(.vertical, 7).background(Color.bmuxQueueFill).clipShape(RoundedRectangle(cornerRadius: 6)) } }.font(.system(size: 12)).padding(12).background(Color.bmuxComposer).clipShape(RoundedRectangle(cornerRadius: 8)).overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.bmuxComposerBorder))
+        }
+    }
+
+    private var nativeContent: some View { VStack(alignment: .leading, spacing: 12) { Text("Provider-native session").font(.system(size: 18, weight: .bold)); Text("Native preserves the provider’s own session identity and capabilities.").foregroundStyle(Color.bmuxTextTertiary); Text("Native tab content is intentionally a stub until the provider handoff contract is available.").foregroundStyle(Color.bmuxTextTertiary) }.padding(.top, 22) }
 
     private var header: some View {
         HStack(spacing: 10) {

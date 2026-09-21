@@ -55,7 +55,6 @@ import {
   type TranscriptEntry,
 } from "../shared/sessionModel";
 import type {
-  AppContext,
   AgentSessionAttachment,
   AgentSessionCopy,
   ComposerPermissionMode,
@@ -82,7 +81,7 @@ const SHELL_OUTPUT_BOTTOM_FADE_STYLE: React.CSSProperties = {
 };
 
 type ComposerMenuKind = "mention" | "skill" | null;
-type AgentSessionViewMode = "terminal" | "session" | "native";
+type AgentSessionViewMode = "terminal" | "session";
 
 type FooterControlSpec = {
   canHideLabel: boolean;
@@ -278,12 +277,6 @@ export function AgentSessionApp() {
   return h(
     "div",
     { className: "agent-view-root", "data-active-view": viewMode },
-    h(
-      "header",
-      { className: "agent-product-header" },
-      h("div", { className: "agent-product-brand" }, h("strong", null, "bmux"), h("span", null, "✳ CompanyCam")),
-      h("span", { className: "agent-product-context" }, "Design concept · illustrative data"),
-    ),
     h(AgentSessionViewSwitcher, {
       copy: state.context?.copy,
       mode: viewMode,
@@ -301,11 +294,6 @@ export function AgentSessionApp() {
         "div",
         { className: "agent-view-frame", hidden: viewMode !== "session" },
         h(SmartSessionSurface, { context: state.context, isActive: viewMode === "session" }),
-      ),
-      h(
-        "div",
-        { className: "agent-view-frame", hidden: viewMode !== "native" },
-        h(NativeSessionSurface, { context: state.context }),
       ),
     ),
   );
@@ -346,39 +334,6 @@ function AgentSessionViewSwitcher({
         onClick: () => onModeChange("session"),
       },
       copy?.sessionView ?? "Session",
-    ),
-    h(
-      "button",
-      {
-        className: "agent-view-switcher-button",
-        type: "button",
-        role: "tab",
-        "aria-selected": mode === "native",
-        "data-active": mode === "native" ? "true" : undefined,
-        onClick: () => onModeChange("native"),
-      },
-      "Native",
-    ),
-  );
-}
-
-function NativeSessionSurface({ context }: { context?: AppContext }) {
-  const providerName = context?.initialProviderId ?? "provider";
-  return h(
-    "section",
-    { className: "native-session-surface" },
-    h("div", { className: "native-session-eyebrow" }, "PROVIDER-NATIVE SURFACE"),
-    h("h1", null, `${providerName} session`),
-    h(
-      "p",
-      null,
-      "This view preserves the provider-native session identity and capabilities. Return to Terminal for bmux interaction or Session for the work summary.",
-    ),
-    h(
-      "dl",
-      { className: "native-session-details" },
-      h("div", null, h("dt", null, "Working directory"), h("dd", null, context?.workingDirectory ?? "Not available")),
-      h("div", null, h("dt", null, "Workspace"), h("dd", null, context?.workspaceId ?? "Not linked")),
     ),
   );
 }
