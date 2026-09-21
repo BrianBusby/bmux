@@ -3,19 +3,19 @@ import SwiftUI
 import ProvenanceEngineContracts
 
 private extension Color {
-    static let bmuxSurface = Color(red: 0.067, green: 0.067, blue: 0.067)
-    static let bmuxRail = Color(red: 0.098, green: 0.098, blue: 0.098)
-    static let bmuxCard = Color(red: 0.110, green: 0.110, blue: 0.110)
-    static let bmuxCardBorder = Color(red: 0.145, green: 0.145, blue: 0.145)
+    static let bmuxSurface = Color(red: 0.137, green: 0.141, blue: 0.157)
+    static let bmuxRail = Color(red: 0.098, green: 0.102, blue: 0.114)
+    static let bmuxCard = Color(red: 0.122, green: 0.125, blue: 0.137)
+    static let bmuxCardBorder = Color(red: 0.220, green: 0.224, blue: 0.247)
     static let bmuxCardSelected = Color(red: 0.137, green: 0.180, blue: 0.133)
     static let bmuxCardSelectedBorder = Color(red: 0.227, green: 0.306, blue: 0.220)
-    static let bmuxSeparator = Color(red: 0.114, green: 0.114, blue: 0.114)
-    static let bmuxSeparatorSubtle = Color(red: 0.141, green: 0.141, blue: 0.141)
-    static let bmuxTextPrimary = Color(red: 0.91, green: 0.91, blue: 0.91)
-    static let bmuxTextSecondary = Color(red: 0.733, green: 0.733, blue: 0.733)
-    static let bmuxTextTertiary = Color(red: 0.533, green: 0.533, blue: 0.533)
-    static let bmuxTextMuted = Color(red: 0.333, green: 0.333, blue: 0.333)
-    static let bmuxTextDisabled = Color(red: 0.267, green: 0.267, blue: 0.267)
+    static let bmuxSeparator = Color(red: 0.204, green: 0.212, blue: 0.239)
+    static let bmuxSeparatorSubtle = Color(red: 0.247, green: 0.255, blue: 0.286)
+    static let bmuxTextPrimary = Color(red: 0.949, green: 0.953, blue: 0.969)
+    static let bmuxTextSecondary = Color(red: 0.737, green: 0.753, blue: 0.792)
+    static let bmuxTextTertiary = Color(red: 0.635, green: 0.651, blue: 0.698)
+    static let bmuxTextMuted = Color(red: 0.522, green: 0.541, blue: 0.596)
+    static let bmuxTextDisabled = Color(red: 0.455, green: 0.475, blue: 0.529)
     static let bmuxAccentGreen = Color(red: 0.416, green: 0.620, blue: 0.369)
     static let bmuxAccentYellow = Color(red: 0.620, green: 0.620, blue: 0.416)
     static let bmuxTurnAccent = Color(red: 0.290, green: 0.400, blue: 0.259)
@@ -113,7 +113,9 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     let showsSwitcher: Bool
     var showsModePicker = true
     var startsInSession = false
-    var showsAppShell = true
+    var showsAppShell = false
+    var fixturePreviewEnabled = false
+    var liveTerminalContent: AnyView?
     var workspaceLabel: String?
     var sessionTitle: String?
     var sessionDescription: String?
@@ -188,6 +190,8 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
                         Task { await refreshFactualProjection() }
                     },
                     showsAppShell: showsAppShell,
+                    fixturePreviewEnabled: fixturePreviewEnabled,
+                    liveTerminalContent: liveTerminalContent,
                     workspaceLabel: workspaceLabel,
                     sessionTitle: sessionTitle,
                     sessionDescription: sessionDescription
@@ -295,7 +299,9 @@ struct AgentSessionFactualProjectionView: View {
     let isLoading: Bool
     let backgroundColor: Color
     let onRefresh: () -> Void
-    var showsAppShell = true
+    var showsAppShell = false
+    var fixturePreviewEnabled = false
+    var liveTerminalContent: AnyView?
     var workspaceLabel: String?
     var sessionTitle: String?
     var sessionDescription: String?
@@ -307,7 +313,7 @@ struct AgentSessionFactualProjectionView: View {
     @State private var composerText = ""
 
     var body: some View {
-        if showsAppShell {
+        if showsAppShell && fixturePreviewEnabled {
             referenceShell
         } else {
             contentPane
@@ -388,16 +394,20 @@ struct AgentSessionFactualProjectionView: View {
 
     private var contentPane: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(workspaceLabel ?? "companycam-mobile / Brian Busby").font(.system(size: 12)).foregroundStyle(Color.bmuxTextTertiary)
-            Text(sessionTitle ?? "One-off checklist flow").font(.system(size: 26, weight: .bold)).foregroundStyle(Color.bmuxTextPrimary).padding(.top, 4)
-            Text(sessionDescription ?? "Build, validate, and hand off the mobile checklist changes.").font(.system(size: 13.5)).foregroundStyle(Color.bmuxTextTertiary).padding(.top, 4)
+            Text(workspaceLabel ?? String(localized: "agentSession.factual.workspaceUnavailable", defaultValue: "Workspace unavailable"))
+                .font(.system(size: 12)).foregroundStyle(Color.bmuxTextTertiary)
+            Text(sessionTitle ?? String(localized: "agentSession.factual.sessionUnavailable", defaultValue: "Session unavailable"))
+                .font(.system(size: 26, weight: .bold)).foregroundStyle(Color.bmuxTextPrimary).padding(.top, 4)
+            Text(sessionDescription ?? String(localized: "agentSession.factual.sessionDescriptionUnavailable", defaultValue: "No session description is available."))
+                .font(.system(size: 13.5)).foregroundStyle(Color.bmuxTextTertiary).padding(.top, 4)
             primaryTabs.padding(.top, 16)
-            if selectedPrimaryTab == "Session" { sessionContent } else if selectedPrimaryTab == "Terminal" { terminalContent } else { nativeContent }
+            if selectedPrimaryTab == "Session" { sessionContent } else if selectedPrimaryTab == "Terminal" { terminalContentView } else { nativeContent }
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Color.bmuxSurface)
+        .foregroundStyle(Color.bmuxTextPrimary)
     }
 
     private var primaryTabs: some View {
@@ -418,11 +428,20 @@ struct AgentSessionFactualProjectionView: View {
     private var sessionContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                secondaryTabs.padding(.top, 20)
-                currentTurn.padding(.top, 20)
-                overlapNotice.padding(.top, 20)
-                disclosureRows.padding(.top, 20)
-                previousTurns.padding(.top, 26)
+                content.padding(.top, 20)
+            }
+        }
+    }
+
+    private var terminalContentView: some View {
+        Group {
+            if let liveTerminalContent {
+                liveTerminalContent
+            } else {
+                emptyMessage(String(
+                    localized: "agentSession.factual.terminalUnavailable",
+                    defaultValue: "The live terminal is unavailable for this session."
+                ))
             }
         }
     }
@@ -502,7 +521,15 @@ struct AgentSessionFactualProjectionView: View {
         }
     }
 
-    private var nativeContent: some View { VStack(alignment: .leading, spacing: 12) { Text("Provider-native session").font(.system(size: 18, weight: .bold)); Text("Native preserves the provider’s own session identity and capabilities.").foregroundStyle(Color.bmuxTextTertiary); Text("Native tab content is intentionally a stub until the provider handoff contract is available.").foregroundStyle(Color.bmuxTextTertiary) }.padding(.top, 22) }
+    private var nativeContent: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(String(localized: "agentSession.factual.nativeUnavailable.title", defaultValue: "Provider-native session unavailable"))
+                .font(.system(size: 18, weight: .bold))
+            Text(String(localized: "agentSession.factual.nativeUnavailable.message", defaultValue: "This provider does not expose a native session surface in this build."))
+                .foregroundStyle(Color.bmuxTextTertiary)
+        }
+        .padding(.top, 22)
+    }
 
     private var header: some View {
         HStack(spacing: 10) {

@@ -29,19 +29,19 @@ import UniformTypeIdentifiers
 import WebKit
 
 private extension Color {
-    static let bmuxSurface = Color(red: 0.067, green: 0.067, blue: 0.067)
-    static let bmuxRail = Color(red: 0.098, green: 0.098, blue: 0.098)
-    static let bmuxCard = Color(red: 0.110, green: 0.110, blue: 0.110)
-    static let bmuxCardBorder = Color(red: 0.145, green: 0.145, blue: 0.145)
+    static let bmuxSurface = Color(red: 0.137, green: 0.141, blue: 0.157)
+    static let bmuxRail = Color(red: 0.098, green: 0.102, blue: 0.114)
+    static let bmuxCard = Color(red: 0.122, green: 0.125, blue: 0.137)
+    static let bmuxCardBorder = Color(red: 0.220, green: 0.224, blue: 0.247)
     static let bmuxCardSelected = Color(red: 0.137, green: 0.180, blue: 0.133)
     static let bmuxCardSelectedBorder = Color(red: 0.227, green: 0.306, blue: 0.220)
-    static let bmuxSeparator = Color(red: 0.114, green: 0.114, blue: 0.114)
-    static let bmuxSeparatorSubtle = Color(red: 0.141, green: 0.141, blue: 0.141)
-    static let bmuxTextPrimary = Color(red: 0.91, green: 0.91, blue: 0.91)
-    static let bmuxTextSecondary = Color(red: 0.733, green: 0.733, blue: 0.733)
-    static let bmuxTextTertiary = Color(red: 0.533, green: 0.533, blue: 0.533)
-    static let bmuxTextMuted = Color(red: 0.333, green: 0.333, blue: 0.333)
-    static let bmuxTextDisabled = Color(red: 0.267, green: 0.267, blue: 0.267)
+    static let bmuxSeparator = Color(red: 0.204, green: 0.212, blue: 0.239)
+    static let bmuxSeparatorSubtle = Color(red: 0.247, green: 0.255, blue: 0.286)
+    static let bmuxTextPrimary = Color(red: 0.949, green: 0.953, blue: 0.969)
+    static let bmuxTextSecondary = Color(red: 0.737, green: 0.753, blue: 0.792)
+    static let bmuxTextTertiary = Color(red: 0.635, green: 0.651, blue: 0.698)
+    static let bmuxTextMuted = Color(red: 0.522, green: 0.541, blue: 0.596)
+    static let bmuxTextDisabled = Color(red: 0.455, green: 0.475, blue: 0.529)
     static let bmuxAccentGreen = Color(red: 0.416, green: 0.620, blue: 0.369)
     static let bmuxAccentYellow = Color(red: 0.620, green: 0.620, blue: 0.416)
     static let bmuxTurnAccent = Color(red: 0.290, green: 0.400, blue: 0.259)
@@ -2518,7 +2518,7 @@ struct ContentView: View {
     private var bmuxReferenceWorkspaceRail: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("WORKSPACES")
+                Text(String(localized: "workspaceRail.title", defaultValue: "Workspaces"))
                     .font(.system(size: 11, weight: .medium))
                     .tracking(1.2)
                     .foregroundStyle(Color.bmuxTextMuted)
@@ -2532,8 +2532,6 @@ struct ContentView: View {
                     ForEach(tabManager.tabs, id: \.id) { workspace in
                         let isSelected = workspace.id == tabManager.selectedTabId
                         let workspaceDirectoryName = URL(fileURLWithPath: workspace.currentDirectory).lastPathComponent
-                        let workspaceStatus = "Ready"
-                        let workspaceStatusIcon = "checkmark"
                         Button {
                             tabManager.selectedTabId = workspace.id
                         } label: {
@@ -2545,12 +2543,6 @@ struct ContentView: View {
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundStyle(Color.bmuxTextPrimary)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                Label(
-                                    workspaceStatus,
-                                    systemImage: workspaceStatusIcon
-                                )
-                                .font(.system(size: 12))
-                                .foregroundStyle(Color.bmuxAccentGreen)
                                 Divider().overlay(Color.bmuxSeparatorSubtle)
                                 Text(workspace.currentDirectory)
                                     .font(.system(size: 11))
@@ -2613,9 +2605,12 @@ struct ContentView: View {
                         .accessibilityLabel(String(localized: "titlebar.repoAgentLauncher.accessibilityLabel", defaultValue: "AI Repo Launcher"))
                         .safeHelp(String(localized: "titlebar.repoAgentLauncher.tooltip", defaultValue: "Launch an AI session for a repo"))
 
-                        Text("Design concept · live workspace data")
+                        Text(String(
+                            format: String(localized: "titlebar.workspaceCount", defaultValue: "%lld workspaces"),
+                            Int64(tabManager.tabs.count)
+                        ))
                             .font(.system(size: 12))
-                            .foregroundStyle(Color.bmuxTextDisabled)
+                            .foregroundStyle(Color.bmuxTextSecondary)
                     }
                 }
                 .padding(.horizontal, 24)
@@ -2631,8 +2626,10 @@ struct ContentView: View {
                         showsModePicker: false,
                         startsInSession: true,
                         showsAppShell: false,
+                        liveTerminalContent: AnyView(terminalContent(appearance: appearance)),
                         workspaceLabel: tabManager.selectedWorkspace.map {
-                            "\($0.currentDirectory.split(separator: "/").last.map(String.init) ?? "Workspace") / Brian Busby"
+                            $0.currentDirectory.split(separator: "/").last.map(String.init)
+                                ?? String(localized: "agentSession.factual.workspaceUnavailable", defaultValue: "Workspace unavailable")
                         },
                         sessionTitle: tabManager.selectedWorkspace?.title,
                         sessionDescription: tabManager.selectedWorkspace?.customDescription,

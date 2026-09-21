@@ -236752,6 +236752,62 @@
         }
       }
     },
+    "agentSession.factual.nativeUnavailable.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "This provider does not expose a native session surface in this build." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "このビルドでは、このプロバイダーのネイティブセッション画面を利用できません。" } }
+      }
+    },
+    "agentSession.factual.nativeUnavailable.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Provider-native session unavailable" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "プロバイダーのネイティブセッションを利用できません" } }
+      }
+    },
+    "agentSession.factual.sessionDescriptionUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No session description is available." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "セッションの説明はありません。" } }
+      }
+    },
+    "agentSession.factual.sessionUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Session unavailable" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "セッションを利用できません" } }
+      }
+    },
+    "agentSession.factual.terminalUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The live terminal is unavailable for this session." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "このセッションではライブターミナルを利用できません。" } }
+      }
+    },
+    "agentSession.factual.workspaceUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Workspace unavailable" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ワークスペースを利用できません" } }
+      }
+    },
+    "titlebar.workspaceCount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%lld workspaces" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%lld 個のワークスペース" } }
+      }
+    },
+    "workspaceRail.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Workspaces" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ワークスペース" } }
+      }
+    },
     "voiceInput.unavailable.title": {
       "extractionState": "manual",
       "localizations": {
