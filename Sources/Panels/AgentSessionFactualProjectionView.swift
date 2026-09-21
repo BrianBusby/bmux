@@ -311,9 +311,6 @@ struct AgentSessionFactualProjectionView: View {
 
     @State private var expandedPriorTurnIDs: Set<String> = []
     @State private var selectedPrimaryTab = "Session"
-    @State private var selectedSecondaryTab = "Overview"
-    @State private var expandedDisclosureRows: Set<String> = []
-    @State private var composerText = ""
 
     var body: some View {
         if showsAppShell && fixturePreviewEnabled {
@@ -450,81 +447,6 @@ struct AgentSessionFactualProjectionView: View {
         }
     }
 
-    private var secondaryTabs: some View {
-        HStack(spacing: 4) {
-            ForEach(["Overview", "Related work  2", "Findings  2"], id: \.self) { tab in
-                Button(tab) { selectedSecondaryTab = tab }
-                    .buttonStyle(.plain).font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(selectedSecondaryTab == tab ? Color.bmuxTextSecondary : Color.bmuxTextTertiary)
-                    .padding(.horizontal, 12).padding(.vertical, 5)
-                    .background(selectedSecondaryTab == tab ? Color.bmuxPillActive : .clear)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-            }
-        }
-    }
-
-    private var currentTurn: some View {
-        HStack(spacing: 0) {
-            Rectangle().fill(Color.bmuxTurnAccent).frame(width: 2)
-            VStack(alignment: .leading, spacing: 6) {
-                HStack { Text("CURRENT TURN").font(.system(size: 10, weight: .medium)).tracking(1.4); Spacer(); Text("Codex · 28m 36s") }
-                    .foregroundStyle(Color.bmuxTextTertiary)
-                Text("Tickets ready. Reviews still running.").font(.system(size: 18, weight: .bold)).foregroundStyle(Color.bmuxTextPrimary)
-                Text("Four tickets are assigned and in review. The agent is waiting for review feedback before handing back the stack.")
-                    .font(.system(size: 13.5)).foregroundStyle(Color.bmuxTextTertiary).lineSpacing(4)
-                HStack(spacing: 6) { Text("Agent-reported"); Button("View source") { onRefresh() }.underline() }.font(.system(size: 12)).foregroundStyle(Color.bmuxLinkGreen)
-            }.padding(.leading, 16)
-        }
-    }
-
-    private var overlapNotice: some View {
-        HStack(spacing: 8) { Image(systemName: "square.on.square"); Text("Another session touched a file in this work."); Spacer(); Button("Inspect overlap") { onRefresh() }.underline() }
-            .font(.system(size: 13)).foregroundStyle(Color.bmuxAmberText).padding(.horizontal, 12).padding(.vertical, 10)
-            .background(Color.bmuxAmberFill).clipShape(RoundedRectangle(cornerRadius: 6)).overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.bmuxAmberBorder))
-    }
-
-    private var disclosureRows: some View {
-        VStack(spacing: 0) {
-            disclosureRow(id: "plan", icon: "list.bullet", title: "Plan & progress", meta: "3 of 4 steps complete")
-            disclosureRow(id: "checks", icon: "checkmark.circle", title: "Checks & changes", meta: "2 passed · 1 pending")
-            disclosureRow(id: "blockers", icon: "lock", title: "Blockers & approach changes", meta: "1 change")
-        }
-    }
-
-    private func disclosureRow(id: String, icon: String, title: String, meta: String) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Button { if expandedDisclosureRows.contains(id) { expandedDisclosureRows.remove(id) } else { expandedDisclosureRows.insert(id) } } label: {
-                HStack(spacing: 10) { Image(systemName: icon); Text(title); Text(meta).font(.system(size: 12.5)); Spacer(); Image(systemName: expandedDisclosureRows.contains(id) ? "minus" : "plus") }
-            }.buttonStyle(.plain).font(.system(size: 13.5)).foregroundStyle(Color.bmuxTextSecondary)
-            if expandedDisclosureRows.contains(id) { Text("Details will appear as the live session reports them.").font(.system(size: 12)).foregroundStyle(Color.bmuxTextTertiary).padding(.leading, 25) }
-        }.padding(.vertical, 14).overlay(alignment: .bottom) { Rectangle().fill(Color.bmuxSeparatorSubtle).frame(height: 1) }
-    }
-
-    private var previousTurns: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack { Text("Previous turns").font(.system(size: 14, weight: .semibold)); Spacer(); Text("Newest first").font(.system(size: 12)).foregroundStyle(Color.bmuxTextTertiary) }
-            previousTurn("Check CI across the PR stack", "4 minutes ago · completed")
-            previousTurn("Split implementation into six tickets", "19 minutes ago · completed")
-        }.foregroundStyle(Color.bmuxTextSecondary)
-    }
-
-    private func previousTurn(_ title: String, _ meta: String) -> some View {
-        HStack { VStack(alignment: .leading, spacing: 3) { Text(title); Text(meta).font(.system(size: 11.5)).foregroundStyle(Color.bmuxTextTertiary) }; Spacer(); Text("Tokens —  +").font(.system(size: 12)).foregroundStyle(Color.bmuxTextTertiary) }
-            .padding(.vertical, 12).overlay(alignment: .bottom) { Rectangle().fill(Color.bmuxSeparatorSubtle).frame(height: 1) }
-    }
-
-    private var terminalContent: some View {
-        VStack(spacing: 12) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    VStack(alignment: .leading, spacing: 8) { HStack { Text("You").fontWeight(.semibold); Spacer(); Text("5:02 PM").foregroundStyle(Color.bmuxTextTertiary) }; Text("Assign all those new tickets to me and put them in review.") }.padding(16).background(Color.bmuxUserMessage).clipShape(RoundedRectangle(cornerRadius: 8))
-                    VStack(alignment: .leading, spacing: 12) { Text("✳  Codex").fontWeight(.semibold); Text("I'll update the four tickets, then check the PR stack for review feedback.").foregroundStyle(Color.bmuxTextTertiary); Text("✓  Updated four Linear tickets                                      Completed").padding(12).background(Color.bmuxActionRow).clipShape(RoundedRectangle(cornerRadius: 6)); Text("✓  Checked CI and review status                                      Completed").padding(12).background(Color.bmuxActionRow).clipShape(RoundedRectangle(cornerRadius: 6)); Text("Working · 28m 36s").foregroundStyle(Color.bmuxTextTertiary) }
-                }.padding(.top, 20)
-            }
-            VStack(alignment: .leading, spacing: 6) { Text("Follow up with Codex").foregroundStyle(Color.bmuxTextDisabled); TextField("Ask a follow-up, or steer the current work...", text: $composerText, axis: .vertical).textFieldStyle(.plain).frame(minHeight: 54); HStack { Text("Codex · medium effort").foregroundStyle(Color.bmuxTextTertiary); Spacer(); Button("Queue message ↑") { }.padding(.horizontal, 12).padding(.vertical, 7).background(Color.bmuxQueueFill).clipShape(RoundedRectangle(cornerRadius: 6)) } }.font(.system(size: 12)).padding(12).background(Color.bmuxComposer).clipShape(RoundedRectangle(cornerRadius: 8)).overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.bmuxComposerBorder))
-        }
-    }
-
     private var nativeContent: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(String(localized: "agentSession.factual.nativeUnavailable.title", defaultValue: "Provider-native session unavailable"))
@@ -533,32 +455,6 @@ struct AgentSessionFactualProjectionView: View {
                 .foregroundStyle(Color.bmuxTextTertiary)
         }
         .padding(.top, 22)
-    }
-
-    private var header: some View {
-        HStack(spacing: 10) {
-            Text(String(localized: "agentSession.factual.title", defaultValue: "Session"))
-                .font(.system(size: 16, weight: .semibold))
-            if isLoading {
-                ProgressView()
-                    .controlSize(.small)
-            }
-            Spacer(minLength: 0)
-            Button {
-                onRefresh()
-            } label: {
-                Label(
-                    String(localized: "agentSession.factual.refresh", defaultValue: "Refresh"),
-                    systemImage: "arrow.clockwise"
-                )
-                .labelStyle(.iconOnly)
-            }
-            .buttonStyle(.borderless)
-            .safeHelp(String(
-                localized: "agentSession.factual.refresh.tooltip",
-                defaultValue: "Refresh session facts"
-            ))
-        }
     }
 
     @ViewBuilder
