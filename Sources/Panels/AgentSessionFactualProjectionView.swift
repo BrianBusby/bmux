@@ -85,6 +85,15 @@ enum AgentSessionFactualProjectionEvidenceRows {
                 return .detail(detail)
             }
             return .reference(turn)
+        }.sorted { turnDate(for: $0) > turnDate(for: $1) }
+    }
+
+    static func turnDate(for item: PriorTurnItem) -> Date {
+        switch item {
+        case .detail(let turnSnapshot):
+            turnSnapshot.turn.completedAt ?? turnSnapshot.turn.updatedAt
+        case .reference(let turn):
+            turn.completedAt ?? turn.updatedAt
         }
     }
 
@@ -401,8 +410,12 @@ struct AgentSessionFactualProjectionView: View {
                 .font(.system(size: 12)).foregroundStyle(Color.bmuxTextTertiary)
             Text(sessionTitle ?? String(localized: "agentSession.factual.sessionUnavailable", defaultValue: "Session unavailable"))
                 .font(.system(size: 26, weight: .bold)).foregroundStyle(Color.bmuxTextPrimary).padding(.top, 4)
-            Text(sessionDescription ?? String(localized: "agentSession.factual.sessionDescriptionUnavailable", defaultValue: "No session description is available."))
-                .font(.system(size: 13.5)).foregroundStyle(Color.bmuxTextTertiary).padding(.top, 4)
+            if let sessionDescription, !sessionDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Text(sessionDescription)
+                    .font(.system(size: 13.5))
+                    .foregroundStyle(Color.bmuxTextTertiary)
+                    .padding(.top, 4)
+            }
             primaryTabs.padding(.top, 16)
             switch selectedPrimaryTab {
             case AgentSessionFactualProjectionMode.session.rawValue:
@@ -561,52 +574,214 @@ struct AgentSessionFactualProjectionView: View {
 
     private func availableContent(_ snapshot: ProvenanceFactualSessionProjectionSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            section(String(localized: "agentSession.factual.identity", defaultValue: "Identity")) {
-                factRow(String(localized: "agentSession.factual.sessionID", defaultValue: "Session ID"), snapshot.session.id)
-                factRow(String(localized: "agentSession.factual.provider", defaultValue: "Provider"), snapshot.session.agentKind)
-                factRow(String(localized: "agentSession.factual.status", defaultValue: "Status"), snapshot.session.status)
-                factRow(String(localized: "agentSession.factual.cwd", defaultValue: "Directory"), snapshot.session.cwd)
-                factRow(String(localized: "agentSession.factual.revision", defaultValue: "Revision"), snapshot.revision.map(String.init))
-            }
-
-            section(String(localized: "agentSession.factual.threads", defaultValue: "Threads")) {
-                if snapshot.providerThreadIdentities.isEmpty {
-                    mutedText(String(localized: "agentSession.factual.noThreads", defaultValue: "No provider threads observed."))
-                } else {
-                    ForEach(snapshot.providerThreadIdentities, id: \.threadID) { thread in
-                        threadRow(thread)
+            if let turn = snapshot.latestTurn {
+                currentTurnOverview(turn)
+                overviewDisclosure(
+                    title: String(localized: "agentSession.factual.plan", defaultValue: "Plan & progress"),
+                    detail: turn.currentPlan.map { planSummary($0) } ?? String(localized: "agentSession.factual.noPlan", defaultValue: "No plan data observed."),
+                    isAvailable: turn.currentPlan != nil
+                ) {
+                    if let plan = turn.currentPlan {
+                        planRows(plan)
                     }
                 }
-            }
-
-            section(String(localized: "agentSession.factual.latestTurn", defaultValue: "Latest turn")) {
-                if let turn = snapshot.latestTurn {
-                    AgentSessionFactualProjectionTurnDetailView(turnSnapshot: turn)
-                } else {
-                    mutedText(String(localized: "agentSession.factual.noTurns", defaultValue: "No turns observed."))
+                overviewDisclosure(
+                    title: String(localized: "agentSession.factual.checksAndChanges", defaultValue: "Checks & changes"),
+                    detail: checksAndChangesSummary(turn),
+                    isAvailable: !turn.completedCommands.isEmpty || !turn.fileChangeAttributions.isEmpty
+                ) {
+                    AgentSessionFactualProjectionTurnDetailView(turnSnapshot: turn, showsIdentity: false)
                 }
+                if !turn.visibleReasoningSummaries.isEmpty {
+                    overviewDisclosure(
+                        title: String(localized: "agentSession.factual.blockersAndApproach", defaultValue: "Blockers & approach changes"),
+                        detail: String.localizedStringWithFormat(
+                            String(localized: "agentSession.factual.reasoningCount", defaultValue: "%d change(s)"),
+                            turn.visibleReasoningSummaries.count
+                        ),
+                        isAvailable: true
+                    ) {
+                        reasoningRows(turn.visibleReasoningSummaries)
+                    }
+                }
+            } else {
+                mutedText(String(localized: "agentSession.factual.noTurns", defaultValue: "No turns observed."))
             }
 
-            section(String(localized: "agentSession.factual.priorTurns", defaultValue: "Prior turns")) {
-                if snapshot.priorTurns.isEmpty {
+            section(String(localized: "agentSession.factual.priorTurns", defaultValue: "Previous turns")) {
+                let items = AgentSessionFactualProjectionEvidenceRows.priorTurnItems(for: snapshot)
+                if items.isEmpty {
                     mutedText(String(localized: "agentSession.factual.noPriorTurns", defaultValue: "No prior turns."))
                 } else {
-                    ForEach(
-                        Array(AgentSessionFactualProjectionEvidenceRows.priorTurnItems(for: snapshot).enumerated()),
-                        id: \.element.id
-                    ) { offset, item in
+                    ForEach(Array(items.enumerated()), id: \.element.id) { offset, item in
                         AgentSessionFactualProjectionPriorTurnCardView(
                             item: item,
                             ordinal: offset + 1,
                             isExpanded: expandedPriorTurnIDs.contains(item.id),
-                            onToggle: {
-                                togglePriorTurnExpansion(item.id)
-                            }
+                            onToggle: { togglePriorTurnExpansion(item.id) }
                         )
                     }
                 }
             }
+
+            DisclosureGroup(String(localized: "agentSession.factual.identity", defaultValue: "Session details")) {
+                VStack(alignment: .leading, spacing: 8) {
+                    factRow(String(localized: "agentSession.factual.sessionID", defaultValue: "Session ID"), snapshot.session.id)
+                    factRow(String(localized: "agentSession.factual.provider", defaultValue: "Provider"), snapshot.session.agentKind)
+                    factRow(String(localized: "agentSession.factual.status", defaultValue: "Status"), snapshot.session.status)
+                    factRow(String(localized: "agentSession.factual.cwd", defaultValue: "Directory"), snapshot.session.cwd)
+                    factRow(String(localized: "agentSession.factual.revision", defaultValue: "Revision"), snapshot.revision.map(String.init))
+                    if !snapshot.providerThreadIdentities.isEmpty {
+                        ForEach(snapshot.providerThreadIdentities, id: \.threadID) { thread in
+                            threadRow(thread)
+                        }
+                    }
+                }
+                .padding(.top, 8)
+            }
+            .font(.system(size: 12, weight: .medium))
+            .foregroundStyle(Color.bmuxTextSecondary)
         }
+    }
+
+    private func currentTurnOverview(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(String(localized: "agentSession.factual.latestTurn", defaultValue: "Current turn"))
+                    .font(.system(size: 11, weight: .medium))
+                    .tracking(1.2)
+                    .foregroundStyle(Color.bmuxTextTertiary)
+                Spacer()
+                Text(turnElapsedText(turn))
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.bmuxTextTertiary)
+            }
+            Text(turnHeadline(turn))
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(Color.bmuxTextPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+            if let description = turnDescription(turn) {
+                Text(description)
+                    .font(.system(size: 13.5))
+                    .foregroundStyle(Color.bmuxTextSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            HStack(spacing: 8) {
+                Text(String(localized: "agentSession.factual.source", defaultValue: "Agent-reported"))
+                    .foregroundStyle(Color.bmuxTextTertiary)
+                DisclosureGroup(String(localized: "agentSession.factual.details", defaultValue: "View evidence")) {
+                    AgentSessionFactualProjectionTurnDetailView(turnSnapshot: turn)
+                        .padding(.top, 6)
+                }
+                .font(.system(size: 12))
+                .foregroundStyle(Color.bmuxLinkGreen)
+            }
+        }
+        .padding(.leading, 14)
+        .overlay(alignment: .leading) {
+            Rectangle().fill(Color.bmuxLinkGreen).frame(width: 2)
+        }
+    }
+
+    private func overviewDisclosure<Content: View>(title: String, detail: String, isAvailable: Bool, @ViewBuilder content: () -> Content) -> some View {
+        let contentView = content()
+        return DisclosureGroup {
+            if isAvailable {
+                contentView.padding(.top, 8)
+            } else {
+                mutedText(detail).padding(.top, 8)
+            }
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: title == String(localized: "agentSession.factual.plan", defaultValue: "Plan & progress") ? "checklist" : "checkmark.circle")
+                    .foregroundStyle(Color.bmuxTextSecondary)
+                Text(title).foregroundStyle(Color.bmuxTextPrimary)
+                Spacer()
+                Text(detail).foregroundStyle(Color.bmuxTextTertiary)
+            }
+            .font(.system(size: 13.5))
+        }
+        .padding(.vertical, 10)
+        .overlay(alignment: .bottom) { Rectangle().fill(Color.bmuxSeparatorSubtle).frame(height: 1) }
+    }
+
+    private func planSummary(_ plan: ProvenanceCodingAgentPlanUpdateRecord) -> String {
+        let completed = plan.steps.filter { $0.status.lowercased().contains("complete") }.count
+        return String.localizedStringWithFormat(
+            String(localized: "agentSession.factual.planProgress", defaultValue: "%d of %d steps complete"),
+            completed,
+            plan.steps.count
+        )
+    }
+
+    private func checksAndChangesSummary(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String {
+        String.localizedStringWithFormat(
+            String(localized: "agentSession.factual.checksSummary", defaultValue: "%d commands · %d files"),
+            turn.completedCommands.count,
+            turn.fileChangeAttributions.count
+        )
+    }
+
+    private func planRows(_ plan: ProvenanceCodingAgentPlanUpdateRecord) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(plan.steps.prefix(8), id: \.id) { step in
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Image(systemName: step.status.lowercased().contains("complete") ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(step.status.lowercased().contains("complete") ? Color.bmuxAccentGreen : Color.bmuxTextTertiary)
+                    Text(step.text)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.bmuxTextSecondary)
+                        .lineLimit(2)
+                }
+            }
+        }
+    }
+
+    private func reasoningRows(_ summaries: [ProvenanceCodingAgentReasoningSummaryRecord]) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(summaries, id: \.id) { summary in
+                Text(summary.text)
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.bmuxTextSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private func turnHeadline(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String {
+        let prompt = turn.submittedPrompt?.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let output = AgentSessionFactualProjectionEvidenceRows.finalAssistantMessageText(for: turn), !output.isEmpty {
+            if let prompt, output == prompt { return prompt }
+            return output.split(separator: ".", maxSplits: 1).first.map(String.init) ?? output
+        }
+        return prompt ?? String(localized: "agentSession.factual.noTurns", defaultValue: "No turns observed.")
+    }
+
+    private func turnDescription(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String? {
+        if let output = AgentSessionFactualProjectionEvidenceRows.finalAssistantMessageText(for: turn), !output.isEmpty {
+            let headline = turnHeadline(turn)
+            if output.trimmingCharacters(in: .whitespacesAndNewlines) == headline.trimmingCharacters(in: .whitespacesAndNewlines) {
+                return nil
+            }
+            return output
+        }
+        if let prompt = turn.submittedPrompt?.text.trimmingCharacters(in: .whitespacesAndNewlines), !prompt.isEmpty {
+            return prompt == turnHeadline(turn) ? nil : prompt
+        }
+        return nil
+    }
+
+    private func turnElapsedText(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String {
+        guard let started = turn.turn.startedAt else {
+            return String(localized: "agentSession.factual.unknown", defaultValue: "Unknown")
+        }
+        let end = turn.turn.completedAt ?? turn.turn.updatedAt
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.hour, .minute, .second]
+        formatter.unitsStyle = .abbreviated
+        formatter.maximumUnitCount = 2
+        return formatter.string(from: max(0, end.timeIntervalSince(started)))
+            ?? String(localized: "agentSession.factual.unknown", defaultValue: "Unknown")
     }
 
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {

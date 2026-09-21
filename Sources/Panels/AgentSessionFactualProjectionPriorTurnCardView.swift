@@ -3,6 +3,13 @@ import AppKit
 import SwiftUI
 import ProvenanceEngineContracts
 
+private extension Color {
+    static let bmuxCard = Color(red: 0.122, green: 0.125, blue: 0.137)
+    static let bmuxTextPrimary = Color(red: 0.949, green: 0.953, blue: 0.969)
+    static let bmuxTextSecondary = Color(red: 0.737, green: 0.753, blue: 0.792)
+    static let bmuxTextTertiary = Color(red: 0.635, green: 0.651, blue: 0.698)
+}
+
 struct AgentSessionFactualProjectionPriorTurnCardView: View {
     let item: AgentSessionFactualProjectionEvidenceRows.PriorTurnItem
     let ordinal: Int
@@ -18,14 +25,14 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
                     header
                     Text(prompt)
                         .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Color.bmuxTextPrimary)
                         .lineLimit(3)
                         .fixedSize(horizontal: false, vertical: true)
                     metadata
-                    labeledText(
-                        String(localized: "agentSession.factual.summary", defaultValue: "Summary"),
-                        summary,
-                        lineLimit: 3
-                    )
+                    Text(summary)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.bmuxTextSecondary)
+                        .lineLimit(2)
                 }
                 .contentShape(Rectangle())
             }
@@ -38,7 +45,7 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Color(nsColor: .controlBackgroundColor))
+                .fill(Color.bmuxCard)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
@@ -52,7 +59,7 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                 .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.bmuxTextSecondary)
                 .frame(width: 12)
             Text(String.localizedStringWithFormat(
                 String(localized: "agentSession.factual.turnOrdinal", defaultValue: "Turn %d"),
@@ -63,7 +70,7 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
             Spacer(minLength: 0)
             Text(dateText(finishedAt))
                 .font(.system(size: 11))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.bmuxTextTertiary)
         }
     }
 
@@ -98,7 +105,7 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
             Divider()
             Text(String(localized: "agentSession.factual.details", defaultValue: "Details"))
                 .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.bmuxTextTertiary)
             details
         }
         .padding(.top, 12)
@@ -124,14 +131,14 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
             Spacer(minLength: 0)
             Text(dateText(turn.completedAt ?? turn.updatedAt))
                 .font(.system(size: 11))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.bmuxTextTertiary)
         }
     }
 
     private func metadataLine(systemImage: String, text: String) -> some View {
         Label(text, systemImage: systemImage)
             .font(.system(size: 11))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.bmuxTextTertiary)
             .labelStyle(.titleAndIcon)
     }
 
@@ -229,7 +236,7 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label)
                 .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.bmuxTextTertiary)
             Text(nonEmpty(text))
                 .font(.system(size: 12))
                 .lineLimit(lineLimit)

@@ -2741,7 +2741,12 @@ struct ContentView: View {
                                 ?? String(localized: "agentSession.factual.workspaceUnavailable", defaultValue: "Workspace unavailable")
                         },
                         sessionTitle: tabManager.selectedWorkspace?.title,
-                        sessionDescription: tabManager.selectedWorkspace?.customDescription,
+                        sessionDescription: tabManager.selectedWorkspace.flatMap { workspace in
+                            guard let description = workspace.customDescription,
+                                  description.trimmingCharacters(in: .whitespacesAndNewlines) != workspace.title.trimmingCharacters(in: .whitespacesAndNewlines)
+                            else { return nil }
+                            return description
+                        },
                         stableWorkspaceID: tabManager.selectedWorkspace?.stableId,
                         workProvenanceRuntime: tabManager.workProvenanceRuntime,
                         backgroundColor: appearance.compositedTerminalBackgroundColor

@@ -1,6 +1,13 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "agentSession.factual.noPlan" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "No plan data observed."}}, "ja": {"stringUnit": {"state": "translated", "value": "計画データはありません。"}}}},
+    "agentSession.factual.checksAndChanges" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Checks & changes"}}, "ja": {"stringUnit": {"state": "translated", "value": "チェックと変更"}}}},
+    "agentSession.factual.blockersAndApproach" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Blockers & approach changes"}}, "ja": {"stringUnit": {"state": "translated", "value": "ブロッカーと方針変更"}}}},
+    "agentSession.factual.reasoningCount" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "%d change(s)"}}, "ja": {"stringUnit": {"state": "translated", "value": "%d 件の変更"}}}},
+    "agentSession.factual.planProgress" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "%d of %d steps complete"}}, "ja": {"stringUnit": {"state": "translated", "value": "%d/%d ステップ完了"}}}},
+    "agentSession.factual.checksSummary" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "%d commands · %d files"}}, "ja": {"stringUnit": {"state": "translated", "value": "コマンド %d 件 · ファイル %d 件"}}}},
+    "agentSession.factual.source" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Agent-reported"}}, "ja": {"stringUnit": {"state": "translated", "value": "エージェント報告"}}}},
     "agentSession.chat.connectedPrompt" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Message Codex"}}, "ja": {"stringUnit": {"state": "translated", "value": "Codex にメッセージ"}}}},
     "agentSession.chat.connectedQueue" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Send follow-up"}}, "ja": {"stringUnit": {"state": "translated", "value": "追加メッセージを送信"}}}},
     "agentSession.chat.connectedSteer" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Steer current turn"}}, "ja": {"stringUnit": {"state": "translated", "value": "現在のターンに指示を追加"}}}},

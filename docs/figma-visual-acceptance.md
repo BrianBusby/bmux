@@ -7,35 +7,34 @@ Updated: 2026-09-21
 - Approved Session reference: `/Users/brianbusby/Desktop/Screenshot 2026-09-20 at 6.25.55 PM.png`
 - Approved Terminal reference: `/Users/brianbusby/Desktop/Screenshot 2026-09-20 at 6.25.43 PM.png`
 - Approved Conversation reference: `/Users/brianbusby/Downloads/approved-conversation-design.png`
-- Current tagged build: `figma-production-integration`, build 638
-- Current live captures: `/tmp/figma-production-chat638-check.png`, `/tmp/figma-production-chat638-chat2.png`
+- Current tagged build: `figma-production-integration`, build 647
+- Current live captures: `/tmp/figma-production-session-647.png`, `/tmp/figma-production-chat-647.png`
 - Capture dimensions: live window 1000×700 logical points; native window capture includes title-bar/shadow pixels. The CUA capture is the reliable composite for the terminal portal; `screencapture -l` omits the portal-hosted terminal layer.
 
 ## Acceptance checklist
 
 | Area | Status | Evidence / remaining work |
 | --- | --- | --- |
-| Shell surfaces and colors | In review | Build 636 uses the corrected dark surface palette and app-shell border; compare at the reference scale again after the next build. |
-| Workspace rail and cards | In review | Live workspace names, paths, and provenance links render. Build 636 shows ticket, owner, project, PR, and PR-owner links for a live workspace. |
-| Typography, contrast, spacing, alignment | In review | Current capture is legible but uses a smaller 1000×700 window than the approved tall reference; perform one more component comparison. |
-| Header and navigation | In review | Header, repo-launcher shortcut, workspace count, and Session/Chat/Terminal navigation are present; no production “Design concept” label. Chat is now wired to the existing live renderer. |
-| Session summary, disclosures, history | Pending live-content audit | Empty/no-session workspaces honestly show unavailable state. A live session shows PE identity/latest-turn facts; confirm all reference-era controls are sourced or explicitly unavailable. |
-| Conversation, composer, buttons, footer | Pending functional audit | Chat now mounts `TerminalChatWebRenderer` from the selected workspace’s focused terminal panel. Queue/Stop/source/overlap behavior still needs end-to-end verification in an isolated session. |
-| Narrow-window behavior and existing functionality | Pending | Current 1000×700 capture is stable. Verify a no-session workspace and a second session workspace after the final rebuild. |
+| Shell surfaces and colors | Pass for native shell | Build 647 Session capture uses the approved dark shell surfaces and readable native foregrounds. Embedded Chat capture is retained below for independent review. |
+| Workspace rail and cards | Pass | Build 645 shows live workspace names, paths, and ticket/owner/project/PR/PR-owner links. |
+| Typography, contrast, spacing, alignment | In review | Session hierarchy is legible and compact at the available 1000×700 logical window. Chat contrast is under independent review after the corrected WebKit theme interpolation. |
+| Header and navigation | Pass | Header, repo-launcher shortcut, workspace count, and Session/Chat/Terminal navigation are present; production has no “Design concept” label. |
+| Session summary, disclosures, history | Pass | Build 645 shows real latest-turn content, command/file counts, reasoning count, truthful no-plan text, compact history, newest-first timestamps, and technical IDs behind Session details. |
+| Conversation, composer, buttons, footer | In review | Build 647 has Chat selected and live transcript rows/read-only status. Queue/Stop mutation acknowledgement remains unavailable for the selected read-only session. |
+| Narrow-window behavior and existing functionality | In review | Native shell remains stable at 1000×700. No-session evidence from the earlier tagged build remains valid; final-build no-session/Terminal captures still need a clean pass. |
 
-## Evidence for build 638
+## Evidence for build 647
 
-- Live Session composite: captured from the tagged build through CUA; it shows the real `companycam-mobile` workspace, PE session identity, thread IDs, latest turn, and prior-turn evidence.
-- Live no-session composite: captured after selecting workspace 2 through the tagged CLI; it shows the real `Company-Cam-API` workspace and the honest `No supported coding agent has been detected in this workspace.` state.
-- Live Terminal composite: captured from the tagged build through CUA; it shows the original Codex terminal surface inside the outer shell, with no nested Figma picker and the existing terminal input surface intact.
-- Build 638 compiles successfully with the new production Chat wiring; build output is recorded in the reload log at `/tmp/bmux-reload-figma-production-integration.log`.
-- `/tmp/figma-production-chat638-check.png` is a live session capture showing real workspace/session data and the three primary tabs. The attempted click capture `/tmp/figma-production-chat638-chat2.png` remained on Session because this environment’s native automation surface could not target the off-screen tagged window reliably; it is not Chat sign-off.
+- Live Session capture: `/tmp/figma-production-session-647.png` shows real `companycam-mobile` workspace content, PE latest-turn data, links, disclosures, and history.
+- Live Chat capture: `/tmp/figma-production-chat-647.png` has Chat selected in the exact final tagged app and shows real transcript rows plus the read-only status.
+- Build 647 compiles successfully; reload output is recorded in `/tmp/bmux-reload-figma-production-integration.log`.
+- Fixture evidence remains separate: the fixture-only reference shell is still guarded by `showsAppShell && fixturePreviewEnabled`; production `ContentView` does not pass preview fixtures.
 
 ## Findings and next actions
 
-1. Build 638 session capture matches the shell hierarchy: rail and content pane are siblings, and workspace resource links are visible in the live card.
-2. The production primary navigation is now Session / Chat / Terminal. Chat delegates to the existing renderer/coordinator rather than recreating a fixture composer; Terminal remains the native terminal path.
-3. The selected `Company-Cam-API` workspace has no linked PE session and correctly shows an unavailable state; this is live-data evidence, not a fixture.
-4. The fixture-only reference implementation remains behind explicit `showsAppShell && fixturePreviewEnabled` guards and is not passed by production `ContentView`.
-5. Independent visual sign-off is still pending: the native automation surface could not target the tagged app’s off-screen window, so Chat and Terminal interaction captures could not be completed in this pass.
-6. Queue/Stop/source/overlap controls are delegated to the existing live renderer path. No isolated live-session mutation was sent during this visual pass, so end-to-end command acknowledgement/failure handling remains unverified.
+1. Build 645 Session confirms the rail/content hierarchy and live workspace resource links.
+2. Production navigation is Session / Chat / Terminal; Chat delegates to the existing renderer/coordinator and Terminal remains the native terminal path.
+3. The selected live workspace has factual PE data; no-plan and other missing-data states are honest. Technical identity/evidence is disclosed rather than used as the overview.
+4. The fixture-only reference implementation remains behind explicit preview guards and is not passed by production `ContentView`.
+5. Independent reviewer found and source-confirmed a P1 theme interpolation defect; build 647 contains the correction. Final screenshot assessment is still recorded separately from source evidence.
+6. Queue/Stop/source/overlap remain delegated to the live renderer path. The selected session advertises read-only/no verified control connection, so no send/queue/stop mutation was falsely claimed as exercised.

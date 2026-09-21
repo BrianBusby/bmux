@@ -66,7 +66,11 @@ struct AgentSessionWebTheme: Equatable {
             .blended(withFraction: isDark ? 0.18 : 0.10, of: inverseOverlay)?
             .withAlphaComponent(inputAlpha)
             ?? base.withAlphaComponent(inputAlpha)
-        let foreground = appearance.foregroundColor
+        // Embedded session surfaces own their metadata palette. A user's terminal
+        // foreground may be transparent or system-dynamic; using it directly here
+        // can resolve to black against the dark session surface. Keep terminal
+        // settings intact while guaranteeing a readable web presentation.
+        let foreground = bmuxReadableForegroundNSColor(on: base, opacity: 1)
         let accent = bmuxAccentNSColor()
         let danger = (NSColor(hex: isDark ? "#FF8D7E" : "#B3261E") ?? .systemRed)
         return AgentSessionWebTheme(

@@ -50,7 +50,15 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
             workingDirectory: nil, theme: .resolve(appearance: appearance), isFocused: false
         )
         let webView = coordinator.ensureWebView(onPointerDown: {})
+        host.wantsLayer = true
+        host.layer?.backgroundColor = appearance.contentBackgroundColor.cgColor
+        host.layer?.isOpaque = appearance.contentBackgroundColor.alphaComponent >= 0.999
         webView.underPageBackgroundColor = appearance.contentBackgroundColor
+        webView.wantsLayer = true
+        webView.layer?.backgroundColor = appearance.contentBackgroundColor.cgColor
+        webView.layer?.isOpaque = appearance.contentBackgroundColor.alphaComponent >= 0.999
+        let webTheme = AgentSessionWebTheme.resolve(appearance: appearance)
+        webView.appearance = NSAppearance(named: webTheme.isDark ? .darkAqua : .aqua)
         host.attachWebView(webView)
         host.onDidMoveToWindow = { [weak coordinator] in coordinator?.loadShellIfNeeded() }
         host.onGeometryChanged = { [weak coordinator] in coordinator?.flushVisiblePaintIfReady() }
