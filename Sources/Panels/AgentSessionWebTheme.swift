@@ -90,4 +90,23 @@ struct AgentSessionWebTheme: Equatable {
             shadow: isDark ? "rgba(0, 0, 0, 0.20)" : "rgba(0, 0, 0, 0.10)"
         )
     }
+
+    static func figmaShell() -> AgentSessionWebTheme {
+        AgentSessionWebTheme(
+            isDark: true,
+            pageBackground: "#232428",
+            surfaceBackground: "#292b30",
+            surfaceElevatedBackground: "#303238",
+            inputBackground: "#191a1d",
+            border: "#454852",
+            borderStrong: "#5b606b",
+            text: "#f2f3f7",
+            mutedText: "#a2a6b2",
+            softText: "#c4c7d0",
+            accent: "#a8c8b0",
+            accentSoft: "rgba(168, 200, 176, 0.20)",
+            danger: "#ff8d7e",
+            shadow: "rgba(0, 0, 0, 0.20)"
+        )
+    }
 }

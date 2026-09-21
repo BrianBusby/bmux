@@ -47,7 +47,7 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
         coordinator.bind(
             panelId: panel.id, workspaceId: panel.workspaceId, stableWorkspaceId: panel.workspaceId,
             workProvenanceRuntime: nil, rendererKind: .react, initialProviderID: .codex,
-            workingDirectory: nil, theme: .resolve(appearance: appearance), isFocused: false
+            workingDirectory: nil, theme: .figmaShell(), isFocused: false
         )
         let webView = coordinator.ensureWebView(onPointerDown: {})
         host.wantsLayer = true
@@ -57,7 +57,7 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
         webView.wantsLayer = true
         webView.layer?.backgroundColor = appearance.contentBackgroundColor.cgColor
         webView.layer?.isOpaque = appearance.contentBackgroundColor.alphaComponent >= 0.999
-        let webTheme = AgentSessionWebTheme.resolve(appearance: appearance)
+        let webTheme = AgentSessionWebTheme.figmaShell()
         webView.appearance = NSAppearance(named: webTheme.isDark ? .darkAqua : .aqua)
         host.attachWebView(webView)
         host.onDidMoveToWindow = { [weak coordinator] in coordinator?.loadShellIfNeeded() }
