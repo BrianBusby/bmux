@@ -17,7 +17,7 @@ extension MenuBarProfilingProgressWindowController {
         textView.isEditable = editable
         textView.isSelectable = true
         textView.font = editable ? .systemFont(ofSize: 13) : .monospacedSystemFont(ofSize: 11, weight: .regular)
-        textView.textColor = .labelColor
+        textView.textColor = .white
         textView.backgroundColor = .textBackgroundColor
         textView.textContainerInset = NSSize(width: 8, height: 8)
         textView.isVerticallyResizable = true

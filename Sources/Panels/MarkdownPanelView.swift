@@ -172,7 +172,7 @@ struct MarkdownPanelView: View {
                 .foregroundColor(.secondary)
             Text(String(localized: "markdown.fileUnavailable.title", defaultValue: "File unavailable"))
                 .bmuxFont(.headline)
-                .foregroundColor(.primary)
+                .foregroundColor(.white)
             Text(panel.filePath)
                 .bmuxFont(size: 12, design: .monospaced)
                 .foregroundColor(.secondary)

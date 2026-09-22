@@ -242,7 +242,7 @@ struct ShortcutAnnotation: View {
     private var badge: some View {
         Text(text)
             .bmuxFont(size: 10, weight: .semibold, design: .rounded)
-            .foregroundStyle(.primary)
+            .foregroundStyle(.white)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(
@@ -290,7 +290,7 @@ struct NotificationRow: View, Equatable {
                         HStack {
                             Text(notification.title)
                                 .bmuxFont(.headline)
-                                .foregroundColor(.primary)
+                                .foregroundColor(.white)
                             Spacer()
                             Text(notification.createdAt.formatted(date: .omitted, time: .shortened))
                                 .bmuxFont(.caption)

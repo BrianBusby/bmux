@@ -8342,7 +8342,7 @@ private final class CloudTerminalReconnectOverlayView: NSView {
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.alignment = .center
         titleLabel.font = .systemFont(ofSize: 15, weight: .semibold)
-        titleLabel.textColor = .labelColor
+        titleLabel.textColor = .white
 
         detailLabel.translatesAutoresizingMaskIntoConstraints = false
         detailLabel.alignment = .center
@@ -9088,7 +9088,7 @@ final class GhosttySurfaceScrollView: NSView {
         )
         keyboardCopyModeBadgeIconView.contentTintColor = NSColor.secondaryLabelColor
         keyboardCopyModeBadgeLabel.translatesAutoresizingMaskIntoConstraints = false
-        keyboardCopyModeBadgeLabel.textColor = NSColor.labelColor
+        keyboardCopyModeBadgeLabel.textColor = NSColor.white
         applyKeyboardCopyModeBadgeFonts()
         keyboardCopyModeBadgeLabel.lineBreakMode = .byTruncatingTail
         keyboardCopyModeBadgeLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)

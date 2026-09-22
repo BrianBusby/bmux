@@ -54,7 +54,7 @@ struct ShortcutHintPill: View {
             .monospacedDigit()
             .lineLimit(1)
             .fixedSize(horizontal: true, vertical: false)
-            .foregroundColor(.primary)
+            .foregroundColor(.white)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(ShortcutHintPillBackground(emphasis: emphasis))

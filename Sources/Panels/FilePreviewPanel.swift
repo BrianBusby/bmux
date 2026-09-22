@@ -2811,7 +2811,7 @@ final class FilePreviewPDFContainerView: NSView, NSSplitViewDelegate, NSOutlineV
         chromeHost.interactiveOverlayViews = [sidebarChromeHost, zoomChromeHost]
 
         applyFloatingChromeFonts()
-        titleLabel.textColor = .labelColor
+        titleLabel.textColor = .white
         titleLabel.lineBreakMode = .byTruncatingMiddle
         titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 

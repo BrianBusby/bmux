@@ -839,7 +839,7 @@ extension AppDelegate {
         textView.isSelectable = true
         textView.drawsBackground = true
         textView.backgroundColor = NSColor.textBackgroundColor
-        textView.textColor = NSColor.labelColor
+        textView.textColor = NSColor.white
         textView.font = GlobalFontMagnification.monospacedSystemFont(ofSize: NSFont.smallSystemFontSize, weight: .regular)
         textView.textContainerInset = NSSize(width: 8, height: 8)
         textView.isHorizontallyResizable = false

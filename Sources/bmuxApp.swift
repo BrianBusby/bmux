@@ -3724,7 +3724,7 @@ private struct TabBarBackdropLabSample: View {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(variant.title)
                     .bmuxFont(.caption, weight: .semibold)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(.white)
                 Text(variant.detail)
                     .bmuxFont(.caption2)
                     .foregroundStyle(.secondary)

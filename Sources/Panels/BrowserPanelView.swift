@@ -1373,7 +1373,7 @@ struct BrowserPanelView: View {
                 Label(String(localized: "browser.screenshotPage.copied", defaultValue: "Copied"), systemImage: "checkmark")
                     .bmuxFont(size: 11, weight: .medium)
                     .labelStyle(.titleAndIcon)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(.white)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(.thinMaterial, in: Capsule())

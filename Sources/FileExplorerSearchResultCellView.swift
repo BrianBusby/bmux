@@ -27,7 +27,7 @@ final class FileExplorerSearchResultCellView: NSTableCellView {
 
     private func setupViews() {
         pathLabel.translatesAutoresizingMaskIntoConstraints = false
-        pathLabel.textColor = .labelColor
+        pathLabel.textColor = .white
         pathLabel.lineBreakMode = .byTruncatingMiddle
         pathLabel.maximumNumberOfLines = 1
 

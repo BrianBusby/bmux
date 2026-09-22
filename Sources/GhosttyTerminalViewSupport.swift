@@ -37,7 +37,7 @@ final class TerminalLinkHoverIndicatorView: NSView {
 
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .monospacedSystemFont(ofSize: 11, weight: .medium)
-        label.textColor = .labelColor
+        label.textColor = .white
         label.lineBreakMode = .byTruncatingMiddle
         label.maximumNumberOfLines = 1
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)

@@ -228,7 +228,7 @@ struct BMUXInstalledExtensionSidebarHostView: View {
                     VStack(spacing: 6) {
                         Text(emptyStateTitle)
                             .bmuxFont(size: 14, weight: .semibold)
-                            .foregroundStyle(.primary)
+                            .foregroundStyle(.white)
                             .multilineTextAlignment(.center)
                         Text(errorText ?? emptyStateDetail)
                             .bmuxFont(size: 12)
@@ -599,7 +599,7 @@ struct BMUXInstalledExtensionSidebarHostView: View {
                 .frame(width: 64, alignment: .leading)
             Text(value)
                 .bmuxFont(size: 11)
-                .foregroundStyle(.primary)
+                .foregroundStyle(.white)
                 .lineLimit(2)
                 .textSelection(.enabled)
         }
@@ -703,7 +703,7 @@ struct BMUXInstalledExtensionSidebarHostView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(String(localized: "sidebar.extensions.access.title", defaultValue: "Limited extension access"))
                 .bmuxFont(size: 12, weight: .semibold)
-                .foregroundStyle(.primary)
+                .foregroundStyle(.white)
             Text(String.localizedStringWithFormat(
                 String(localized: "sidebar.extensions.access.detail", defaultValue: "%@ will not receive workspace data or run actions until you grant its requested access."),
                 effectiveGrant.manifest.displayName
