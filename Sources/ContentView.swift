@@ -13983,12 +13983,8 @@ struct TabItemView: View, Equatable {
             RoundedRectangle(cornerRadius: 10)
                 .fill(backgroundColor)
                 .overlay {
-                    if workspaceSnapshot.hasActiveAIWork {
-                        SidebarWorkspaceWorkingBorder(cornerRadius: 6, lineWidth: 3)
-                    } else {
-                        RoundedRectangle(cornerRadius: 10)
-                            .strokeBorder(activeBorderColor, lineWidth: activeBorderLineWidth)
-                    }
+                    RoundedRectangle(cornerRadius: 10)
+                        .strokeBorder(activeBorderColor, lineWidth: activeBorderLineWidth)
                 }
                 .overlay(alignment: .leading) {
                     if showsLeadingRail {
