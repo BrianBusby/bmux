@@ -166,6 +166,22 @@ final class WorkProvenanceRuntime {
         startWorkspaceDisplayCurrentStateSubscriptionIfNeeded()
     }
 
+    func stop() {
+        directoryObservationTask?.cancel()
+        directoryObservationTask = nil
+        titleObservationTask?.cancel()
+        titleObservationTask = nil
+        displayMetadataObservationTask?.cancel()
+        displayMetadataObservationTask = nil
+        activationObservationTask?.cancel()
+        activationObservationTask = nil
+        workspaceDisplayCurrentStateSubscription?.stop()
+        workspaceDisplayCurrentStateStore?.cancelRefreshes()
+        executionTelemetryProjectionService?.stop()
+        executionTelemetryProjectionService = nil
+        tabManager = nil
+    }
+
     /// Starts projecting eligible live execution telemetry facts into provenance.
     func startExecutionTelemetryProjection(
         agentChatURL: URL,
