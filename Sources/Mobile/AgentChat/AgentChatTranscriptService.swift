@@ -14,7 +14,7 @@ final class AgentChatTranscriptService {
 
     let registry: AgentChatSessionRegistry
     let resolver: AgentChatTranscriptResolver
-    private let rawOutputStore: ChatRawTerminalOutputFileStore
+    let rawOutputStore: ChatRawTerminalOutputFileStore
     private let tokenOptimizationModeProvider: () -> TokenOptimizationMode
     private var tailers: [String: AgentChatTranscriptTailer] = [:]
     private struct ActiveSubsessionWorkspace {
@@ -27,9 +27,18 @@ final class AgentChatTranscriptService {
     private let hasEventSubscribers: @MainActor () -> Bool
     private let emitEventPayload: @MainActor ([String: Any]) -> Void
     private var recordSessionLifecycle: @MainActor (AgentSessionLifecycleChange, Date) -> Void
-    private var recordSessionPresence: @MainActor (AgentSessionPresenceChange, Date) -> Void
+    private var recordHookUserPromptSubmit: @MainActor (AgentChatSessionRecord, WorkstreamEvent) -> Void
+    private var recordTranscriptUserPrompts: @MainActor (AgentChatSessionRecord, [ChatMessage]) -> Void
+    private var promptEvidenceBackfillEnabled = true
+    private let promptEvidenceSeeder: @MainActor (
+        [AgentChatSessionRecord],
+        AgentChatTranscriptResolver,
+        TokenOptimizationMode,
+        @escaping @MainActor (AgentChatSessionRecord, [ChatMessage]) -> Void
+    ) -> Task<Void, Never>
     private let recordTaskWorkspaceDirectory: @MainActor (AgentChatSessionRecord, String) -> Void
     private let now: () -> Date
+    private var promptEvidenceTasks: [UUID: Task<Void, Never>] = [:]
     /// Drives the live agent-prose streaming preview.
     private var proseStreamer: AgentChatProseStreamer!
     /// Sessions whose transcript could not be resolved; skipped until an
@@ -69,7 +78,21 @@ final class AgentChatTranscriptService {
             MobileHostService.emitEvent(topic: AgentChatTranscriptService.eventTopic, payload: payload)
         },
         recordSessionLifecycle: @escaping @MainActor (AgentSessionLifecycleChange, Date) -> Void = { _, _ in },
-        recordSessionPresence: @escaping @MainActor (AgentSessionPresenceChange, Date) -> Void = { _, _ in },
+        recordHookUserPromptSubmit: @escaping @MainActor (AgentChatSessionRecord, WorkstreamEvent) -> Void = { _, _ in },
+        recordTranscriptUserPrompts: @escaping @MainActor (AgentChatSessionRecord, [ChatMessage]) -> Void = { _, _ in },
+        promptEvidenceSeeder: @escaping @MainActor (
+            [AgentChatSessionRecord],
+            AgentChatTranscriptResolver,
+            TokenOptimizationMode,
+            @escaping @MainActor (AgentChatSessionRecord, [ChatMessage]) -> Void
+        ) -> Task<Void, Never> = { records, resolver, tokenOptimizationMode, recordPrompts in
+            AgentChatTranscriptPromptEvidenceSeeder.seed(
+                records: records,
+                resolver: resolver,
+                tokenOptimizationMode: tokenOptimizationMode,
+                recordPrompts: recordPrompts
+            )
+        },
         recordTaskWorkspaceDirectory: @escaping @MainActor (AgentChatSessionRecord, String) -> Void =
             AgentChatTranscriptService.defaultRecordTaskWorkspaceDirectory,
         now: @escaping () -> Date = { Date() }
@@ -81,7 +104,9 @@ final class AgentChatTranscriptService {
         self.hasEventSubscribers = hasEventSubscribers
         self.emitEventPayload = emitEventPayload
         self.recordSessionLifecycle = recordSessionLifecycle
-        self.recordSessionPresence = recordSessionPresence
+        self.recordHookUserPromptSubmit = recordHookUserPromptSubmit
+        self.recordTranscriptUserPrompts = recordTranscriptUserPrompts
+        self.promptEvidenceSeeder = promptEvidenceSeeder
         self.recordTaskWorkspaceDirectory = recordTaskWorkspaceDirectory
         self.now = now
         registry.onRecordChanged = { [weak self] record, previous in
@@ -174,7 +199,8 @@ final class AgentChatTranscriptService {
     /// Seeds the session registry from the on-disk hook stores. Call once at
     /// app startup. Hook events stay authoritative for state and transcripts;
     /// observe-floor scans later add live agent presence even before hooks fire.
-    func start() {
+    @discardableResult
+    func start() -> Task<Void, Never> {
         Self.liveInstance = self
         // Apply resume re-binds buffered before the service was wired. The seed
         // only creates records that don't already exist, so an intent applied
@@ -194,16 +220,42 @@ final class AgentChatTranscriptService {
         // Seeding reads+parses the hook-store JSON off the main actor; kick it
         // off and return. Live hook events also populate the registry, and the
         // seed converges within milliseconds.
-        Task { [weak self] in await self?.registry.seedFromHookStores() }
+        return Task { @MainActor [weak self] in
+            guard let self else { return }
+            await self.registry.seedFromHookStores()
+            guard self.promptEvidenceBackfillEnabled else { return }
+            self.trackPromptEvidenceTask(self.promptEvidenceSeeder(
+                self.registry.sessions(workspaceID: nil),
+                self.resolver,
+                self.tokenOptimizationModeProvider(),
+                { [weak self] record, messages in self?.recordTranscriptUserPrompts(record, messages) }
+            ))
+        }
+    }
+
+    func waitForPromptEvidenceTasks() async {
+        while !promptEvidenceTasks.isEmpty {
+            let pending = promptEvidenceTasks
+            for task in pending.values {
+                await task.value
+            }
+            for id in pending.keys {
+                promptEvidenceTasks[id] = nil
+            }
+        }
     }
 
     /// Routes session lifecycle changes into the provenance runtime.
     func recordSessionLifecycleChanges(with runtime: WorkProvenanceRuntime) {
+        promptEvidenceBackfillEnabled = runtime.isEnabled
         recordSessionLifecycle = { change, timestamp in
             runtime.recordSessionLifecycleChange(change, timestamp: timestamp)
         }
-        recordSessionPresence = { change, timestamp in
-            runtime.recordSessionPresenceChange(change, timestamp: timestamp)
+        recordHookUserPromptSubmit = { record, event in
+            runtime.recordHookUserPromptSubmit(record: record, event: event)
+        }
+        recordTranscriptUserPrompts = { record, messages in
+            runtime.recordTranscriptUserPrompts(record: record, messages: messages)
         }
     }
 
@@ -235,6 +287,8 @@ final class AgentChatTranscriptService {
         // prompt starts the in-flight turn, Stop ends it.
         switch event.hookEventName {
         case .userPromptSubmit:
+            recordHookUserPromptSubmit(record, event)
+            recordLiveCodexPromptEvidenceFromTranscript(for: record)
             if record.state != .ended,
                let surfaceID = record.surfaceID.flatMap(UUID.init(uuidString:)) {
                 proseStreamer.turnStarted(
@@ -364,14 +418,18 @@ final class AgentChatTranscriptService {
     ///   - limit: Page size cap.
     /// - Returns: The page, or `nil` when the session or transcript is
     ///   unknown.
-    func history(sessionID: String, beforeSeq: Int?, limit: Int) async -> ChatHistoryPage? {
+    func history(sessionID: String, beforeSeq: Int?, limit: Int, refresh: Bool = false) async -> ChatHistoryPage? {
         guard let record = registry.record(sessionID: sessionID) else { return nil }
         // A user opening the chat is the right moment to retry a previously
         // failed transcript resolution.
         failedResolutions.remove(sessionID)
         guard let tailer = ensureTailer(for: record) else { return nil }
         await tailer.start()
-        let page = await tailer.history(beforeSeq: beforeSeq, limit: limit)
+        let page = if refresh {
+            await tailer.refreshHistory(beforeSeq: beforeSeq, limit: limit)
+        } else {
+            await tailer.history(beforeSeq: beforeSeq, limit: limit)
+        }
         if record.title == nil, let title = await tailer.title {
             registry.update(sessionID: sessionID) { $0.title = title }
         }
@@ -443,6 +501,36 @@ final class AgentChatTranscriptService {
         return tailer
     }
 
+    private func recordLiveCodexPromptEvidenceFromTranscript(for record: AgentChatSessionRecord) {
+        guard promptEvidenceBackfillEnabled else { return }
+        guard record.agentKind == .codex,
+              record.state != .ended else {
+            return
+        }
+        guard let tailer = ensureTailer(for: record) else { return }
+        trackPromptEvidenceTask(Task { @MainActor [weak self] in
+            await tailer.start()
+            guard let self else { return }
+            await promptEvidenceSeeder(
+                [record],
+                resolver,
+                tokenOptimizationModeProvider(),
+                { [weak self] record, messages in
+                    self?.recordTranscriptUserPrompts(record, messages)
+                }
+            ).value
+        })
+    }
+
+    private func trackPromptEvidenceTask(_ task: Task<Void, Never>) {
+        let id = UUID()
+        promptEvidenceTasks[id] = task
+        Task { @MainActor [weak self] in
+            await task.value
+            self?.promptEvidenceTasks[id] = nil
+        }
+    }
+
     private func publishBatch(_ batch: AgentChatTranscriptTailer.Batch, sessionID: String) {
         #if DEBUG
         bmuxDebugLog(
@@ -458,6 +546,9 @@ final class AgentChatTranscriptService {
             registry.update(sessionID: sessionID) { $0.title = title }
         }
         if !batch.appended.isEmpty {
+            if let record = registry.record(sessionID: sessionID) {
+                recordTranscriptUserPrompts(record, batch.appended)
+            }
             // The authoritative prose for the turn just landed: settle the live
             // preview so the committed message takes over with no duplicate.
             if Self.batchContainsAgentProse(batch.appended) {
@@ -502,7 +593,6 @@ final class AgentChatTranscriptService {
     }
 
     private func handleRecordChange(_ record: AgentChatSessionRecord, previous: AgentChatSessionRecord?) {
-        recordParentSessionPresenceIfNeeded(record, previous: previous)
         let endedRecordIsListable: Bool
         if record.state == .ended {
             endedRecordIsListable = record.agentKind == .codex
@@ -541,47 +631,6 @@ final class AgentChatTranscriptService {
         // descriptor changed beyond the activity timestamp.
         if Self.descriptorChangedMeaningfully(previous: previous, current: record) {
             emit(frame: ChatSessionEventFrame(sessionID: record.sessionID, event: .descriptorChanged(record.descriptor)))
-        }
-    }
-
-    private func recordParentSessionPresenceIfNeeded(
-        _ record: AgentChatSessionRecord,
-        previous: AgentChatSessionRecord?
-    ) {
-        let recordIsLive = record.state != .ended
-        let previousWasLive = previous.map { $0.state != .ended } ?? false
-        let bindingChanged = previous.map {
-            $0.workspaceID != record.workspaceID
-                || $0.surfaceID != record.surfaceID
-                || $0.workingDirectory != record.workingDirectory
-        } ?? false
-
-        if recordIsLive, previous == nil || !previousWasLive || bindingChanged {
-            recordSessionPresence(
-                AgentSessionPresenceChange(
-                    phase: .started,
-                    sessionID: record.sessionID,
-                    agentKind: record.agentKind,
-                    workspaceID: record.workspaceID,
-                    surfaceID: record.surfaceID,
-                    workingDirectory: record.workingDirectory,
-                    displayName: record.title
-                ),
-                record.lastActivityAt
-            )
-        } else if previousWasLive, !recordIsLive {
-            recordSessionPresence(
-                AgentSessionPresenceChange(
-                    phase: .stopped,
-                    sessionID: record.sessionID,
-                    agentKind: record.agentKind,
-                    workspaceID: record.workspaceID,
-                    surfaceID: record.surfaceID,
-                    workingDirectory: record.workingDirectory,
-                    displayName: record.title
-                ),
-                record.endedAt ?? record.lastActivityAt
-            )
         }
     }
 
