@@ -206,7 +206,6 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Semantic SessionWorkModel Projection (`semantic_session_work_model_projection`) - milestone; status: active; owner: Provenance Engine
 - Three-view Coding Session Experience (`three_view_coding_session_experience`) - phase; status: active; owner: Bmux
 - Coding Session View Surfaces (`coding_session_view_surfaces`) - milestone; status: active; owner: Bmux
-- Shared-session Chat and permanent Terminal (`shared_session_chat`) - slice; status: active; owner: Bmux
 - Cross-Session Work Awareness (`cross_session_work_awareness`) - program; status: active; owner: Provenance Engine
 - Cross-Session Retrieval and Context (`cross_session_awareness_retrieval_and_context`) - phase; status: active; owner: Provenance Engine
 - Cross-Session Retrieval and Presentation (`cross_session_retrieval_and_presentation`) - milestone; status: active; owner: Provenance Engine
