@@ -1,4 +1,5 @@
 import AppKit
+import BMUXAgentLaunch
 import BmuxAgentChat
 import Foundation
 import ProvenanceEngineContracts
@@ -70,6 +71,9 @@ final class WorkProvenanceRuntime {
     private weak var tabManager: TabManager?
     private let observationService: WorkProvenanceObservationService?
     private let workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore?
+    let workspaceCodingAgentSessionAssociationStore: WorkspaceCodingAgentSessionAssociationStore?
+    let agentSessionFactualProjectionStore: AgentSessionFactualProjectionStore?
+    let agentSessionSmartSessionStore: AgentSessionSmartSessionStore?
     private let workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription?
     private let sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder?
     private let codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder?
@@ -92,6 +96,9 @@ final class WorkProvenanceRuntime {
     init(
         observationService: WorkProvenanceObservationService?,
         workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore? = nil,
+        workspaceCodingAgentSessionAssociationStore: WorkspaceCodingAgentSessionAssociationStore? = nil,
+        agentSessionFactualProjectionStore: AgentSessionFactualProjectionStore? = nil,
+        agentSessionSmartSessionStore: AgentSessionSmartSessionStore? = nil,
         workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription? = nil,
         sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder? = nil,
         codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder? = nil,
@@ -100,6 +107,21 @@ final class WorkProvenanceRuntime {
     ) {
         self.observationService = observationService
         self.workspaceDisplayCurrentStateStore = workspaceDisplayCurrentStateStore
+        self.agentSessionFactualProjectionStore = agentSessionFactualProjectionStore
+        self.agentSessionSmartSessionStore = agentSessionSmartSessionStore
+        if let workspaceCodingAgentSessionAssociationStore {
+            self.workspaceCodingAgentSessionAssociationStore = workspaceCodingAgentSessionAssociationStore
+        } else if let agentSessionFactualProjectionStore {
+            self.workspaceCodingAgentSessionAssociationStore = WorkspaceCodingAgentSessionAssociationStore(
+                client: agentSessionFactualProjectionStore.client
+            )
+        } else if let agentSessionSmartSessionStore {
+            self.workspaceCodingAgentSessionAssociationStore = WorkspaceCodingAgentSessionAssociationStore(
+                client: agentSessionSmartSessionStore.client
+            )
+        } else {
+            self.workspaceCodingAgentSessionAssociationStore = nil
+        }
         self.workspaceDisplayCurrentStateSubscription = workspaceDisplayCurrentStateSubscription
         self.sessionLifecycleRecorder = sessionLifecycleRecorder
         self.codingAgentEvidenceRecorder = codingAgentEvidenceRecorder
@@ -124,6 +146,7 @@ final class WorkProvenanceRuntime {
         do {
             let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
                 try ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory: homeDirectory)
+            let workspaceDisplayCurrentStateStore = WorkspaceDisplayCurrentStateStore(client: client)
             NSLog("bmux provenance runtime using database: %@", location.databaseURL.path)
             return WorkProvenanceRuntime(
                 observationService: WorkProvenanceObservationService(
@@ -133,7 +156,10 @@ final class WorkProvenanceRuntime {
                         authorizationProvider: linearAuthorizationProvider
                     )
                 ),
-                workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore(client: client),
+                workspaceDisplayCurrentStateStore: workspaceDisplayCurrentStateStore,
+                workspaceCodingAgentSessionAssociationStore: WorkspaceCodingAgentSessionAssociationStore(client: client),
+                agentSessionFactualProjectionStore: AgentSessionFactualProjectionStore(client: client),
+                agentSessionSmartSessionStore: AgentSessionSmartSessionStore(client: client),
                 workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription(
                     databaseURL: location.databaseURL
                 ),
