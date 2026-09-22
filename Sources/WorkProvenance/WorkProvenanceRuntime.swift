@@ -307,6 +307,65 @@ final class WorkProvenanceRuntime {
         }
     }
 
+    /// Persists hook-observed prompt evidence when sidecar telemetry has not linked the workspace yet.
+    func recordHookUserPromptSubmit(record: AgentChatSessionRecord, event: WorkstreamEvent) {
+        guard let codingAgentEvidenceRecorder,
+              let workspaceID = provenanceWorkspaceID(
+                  workspaceID: record.workspaceID ?? event.workspaceId,
+                  surfaceID: record.surfaceID ?? event.surfaceId,
+                  workingDirectory: record.workingDirectory ?? event.cwd
+              ),
+              let stableWorkspaceID = UUID(uuidString: workspaceID) else {
+            return
+        }
+        Task { [weak self] in
+            do {
+                try await codingAgentEvidenceRecorder.recordHookUserPromptSubmit(
+                    record: record,
+                    event: event,
+                    stableWorkspaceID: stableWorkspaceID
+                )
+                await MainActor.run {
+                    self?.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: [stableWorkspaceID])
+                }
+            } catch {
+                StartupBreadcrumbLog.append("workProvenance.hookPrompt.recordFailed", fields: [
+                    "session": record.sessionID,
+                    "error": String(describing: error)
+                ])
+            }
+        }
+    }
+
+    /// Persists transcript-observed prompt evidence when sidecar telemetry did not project it.
+    func recordTranscriptUserPrompts(record: AgentChatSessionRecord, messages: [ChatMessage]) {
+        guard let codingAgentEvidenceRecorder, !messages.isEmpty else { return }
+        let stableWorkspaceID = provenanceWorkspaceID(
+            workspaceID: record.workspaceID,
+            surfaceID: record.surfaceID,
+            workingDirectory: record.workingDirectory
+        ).flatMap(UUID.init(uuidString:))
+        Task { [weak self] in
+            do {
+                try await codingAgentEvidenceRecorder.recordTranscriptUserPrompts(
+                    record: record,
+                    messages: messages,
+                    stableWorkspaceID: stableWorkspaceID
+                )
+                if let stableWorkspaceID {
+                    await MainActor.run {
+                        self?.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: [stableWorkspaceID])
+                    }
+                }
+            } catch {
+                StartupBreadcrumbLog.append("workProvenance.transcriptPrompt.recordFailed", fields: [
+                    "session": record.sessionID,
+                    "error": String(describing: error)
+                ])
+            }
+        }
+    }
+
     private func executionTelemetryWorkspaceAssociation(
         for summary: AgentChatSessionSummary
     ) -> ExecutionTelemetryWorkspaceAssociation {
