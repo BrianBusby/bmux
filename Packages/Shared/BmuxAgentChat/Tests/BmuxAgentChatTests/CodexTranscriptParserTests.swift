@@ -29,7 +29,7 @@ struct CodexTranscriptParserTests {
         #expect(prose.state.observedTurn?.state == .working)
         let late = parser.parse(lines: [line(type: "event_msg", payload: ["type": "task_complete", "turn_id": "older"])], startingSeq: 2, state: prose.state)
         #expect(late.state.observedTurn?.state == .working)
-        let completed = parser.parse(lines: [line(type: "event_msg", payload: ["type": "task_complete", "turn_id": "current"])], startingSeq: 3, state: late.state)
+        let completed = parser.parse(lines: [line(type: "event_msg", payload: ["type": "turn_complete", "turn_id": "current"])], startingSeq: 3, state: late.state)
         #expect(completed.state.observedTurn?.state == .completed)
         let replay = parser.parse(lines: [line(type: "event_msg", payload: ["type": "task_started", "turn_id": "current"])], startingSeq: 4, state: completed.state)
         #expect(replay.state.observedTurn?.state == .completed)

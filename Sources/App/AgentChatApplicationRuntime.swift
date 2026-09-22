@@ -7,7 +7,12 @@ final class AgentChatApplicationRuntime {
     lazy var terminal: TerminalChatRuntime = {
         let home = FileManager.default.homeDirectoryForCurrentUser
         let plan = try? AgentExecutableResolver().resolve(.codex)
-        let executable = plan?.executableURL ?? home.appendingPathComponent(".local/bin/codex")
+        // GUI launch environments commonly omit ~/.local/bin. Prefer the
+        // user-installed Codex binary when present; launch still fails closed
+        // below unless its exact empirically verified version is available.
+        let localCodex = home.appendingPathComponent(".local/bin/codex")
+        let executable = FileManager.default.isExecutableFile(atPath: localCodex.path)
+            ? localCodex : (plan?.executableURL ?? localCodex)
         let host = ConnectedCodexHostService(executable: executable,
             root: home.appendingPathComponent("Library/Application Support/bmux/connected-codex", isDirectory: true),
             environment: plan?.environment ?? ProcessInfo.processInfo.environment)

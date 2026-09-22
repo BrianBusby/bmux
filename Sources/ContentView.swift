@@ -9034,40 +9034,7 @@ struct ContentView: View {
 
 #if DEBUG
     private func debugCommandPaletteFocusIntent(_ intent: PanelFocusIntent) -> String {
-        switch intent {
-        case .panel:
-            return "panel"
-        case .terminal(.surface):
-            return "terminal.surface"
-        case .terminal(.findField):
-            return "terminal.findField"
-        case .terminal(.textBoxInput):
-            return "terminal.textBoxInput"
-        case .browser(.webView):
-            return "browser.webView"
-        case .browser(.addressBar):
-            return "browser.addressBar"
-        case .browser(.findField):
-            return "browser.findField"
-        case .filePreview(.textEditor):
-            return "filePreview.textEditor"
-        case .filePreview(.pdfCanvas):
-            return "filePreview.pdfCanvas"
-        case .filePreview(.pdfThumbnails):
-            return "filePreview.pdfThumbnails"
-        case .filePreview(.pdfOutline):
-            return "filePreview.pdfOutline"
-        case .filePreview(.imageCanvas):
-            return "filePreview.imageCanvas"
-        case .filePreview(.mediaPlayer):
-            return "filePreview.mediaPlayer"
-        case .filePreview(.quickLook):
-            return "filePreview.quickLook"
-        case .project(.navigator):
-            return "project.navigator"
-        case .project(.detail):
-            return "project.detail"
-        }
+        String(describing: intent)
     }
 
     private func debugCommandPaletteModeLabel(_ mode: CommandPaletteMode) -> String {

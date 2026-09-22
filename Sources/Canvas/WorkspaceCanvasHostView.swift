@@ -126,6 +126,9 @@ struct WorkspaceCanvasHostView: View {
                     panelId: panel.id,
                     in: NSApp.keyWindow ?? NSApp.mainWindow
                 )
+            },
+            onRequestTerminalChatFocus: { [weak workspace] in
+                workspace?.focusConnectedCodexChat(panelID: panel.id)
             }
         )
         let hosted = NSHostingView(rootView: AnyView(

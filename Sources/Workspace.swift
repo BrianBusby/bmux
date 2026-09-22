@@ -11155,7 +11155,7 @@ final class Workspace: Identifiable, ObservableObject {
                 terminalPanel.hostedView.setVisibleInUI(shouldBeVisible)
                 didChange = true
             }
-            let shouldBeActive = shouldBeVisible && focusedPanelId == terminalPanel.id && !rightSidebarOwnsFocus
+            let shouldBeActive = shouldBeVisible && focusedPanelId == terminalPanel.id && !rightSidebarOwnsFocus && !terminalPanel.isChatPresentationActive
             if terminalPanel.hostedView.debugPortalActive != shouldBeActive {
                 terminalPanel.hostedView.setActive(shouldBeActive)
                 didChange = true
@@ -12164,7 +12164,7 @@ extension Workspace: BonsplitDelegate {
         // Converge AppKit first responder with bonsplit's selected tab in the focused pane.
         // Without this, keyboard input can remain on a different terminal than the blue tab indicator.
         if reassertAppKitFocus, let terminalPanel = panel as? TerminalPanel {
-            if shouldMoveTerminalSurfaceFocus(for: activationIntent) {
+            if shouldMoveTerminalSurfaceFocus(for: activationIntent) && !terminalPanel.isChatPresentationActive {
                 if !terminalPanel.hostedView.isSurfaceViewFirstResponder() {
 #if DEBUG
                     let previousExists = previousTerminalHostedView != nil ? 1 : 0
@@ -12233,7 +12233,7 @@ extension Workspace: BonsplitDelegate {
         reassertAppKitFocus: Bool
     ) {
         if let terminalPanel = panel as? TerminalPanel {
-            let shouldFocusTerminalSurface = shouldMoveTerminalSurfaceFocus(for: focusIntent)
+            let shouldFocusTerminalSurface = shouldMoveTerminalSurfaceFocus(for: focusIntent) && !terminalPanel.isChatPresentationActive
             terminalPanel.surface.setFocus(shouldFocusTerminalSurface)
             terminalPanel.hostedView.setActive(true)
             if reassertAppKitFocus && shouldFocusTerminalSurface {
@@ -12286,7 +12286,7 @@ extension Workspace: BonsplitDelegate {
 
     private func shouldMoveTerminalSurfaceFocus(for intent: PanelFocusIntent) -> Bool {
         switch intent {
-        case .terminal(.findField), .terminal(.textBoxInput):
+        case .terminal(.findField), .terminal(.textBoxInput), .terminal(.chatComposer):
             return false
         default:
             return true
@@ -12313,7 +12313,7 @@ extension Workspace: BonsplitDelegate {
 
     private func shouldRestoreFocusIntentAfterActivation(_ intent: PanelFocusIntent) -> Bool {
         switch intent {
-        case .browser(.addressBar), .browser(.findField), .terminal(.findField), .terminal(.textBoxInput):
+        case .browser(.addressBar), .browser(.findField), .terminal(.findField), .terminal(.textBoxInput), .terminal(.chatComposer):
             return true
         case .panel, .browser(.webView), .terminal(.surface), .filePreview, .project:
             return false

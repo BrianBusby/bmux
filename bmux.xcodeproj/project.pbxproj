@@ -1512,6 +1512,7 @@
 		D0B10000A1B2C3D4E5F60001 /* TerminalPaneDropTargetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B10001A1B2C3D4E5F60001 /* TerminalPaneDropTargetView.swift */; };
 		CE0E06300000000000000001 /* TerminalPanel+Creation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E06300000000000000002 /* TerminalPanel+Creation.swift */; };
 		A5F100000000000000000007 /* TerminalPanel+NotificationScroll.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F100000000000000000008 /* TerminalPanel+NotificationScroll.swift */; };
+		A51160010000000000000001 /* TerminalPanel+PromptNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A51160010000000000000002 /* TerminalPanel+PromptNavigation.swift */; };
 		A500140D /* TerminalPanel+SocketInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = A500141D /* TerminalPanel+SocketInput.swift */; };
 		A5001401 /* TerminalPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001411 /* TerminalPanel.swift */; };
 		E8B3D5F71A2C49608B7D5E31 /* TerminalPanelCreationOutcome.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A6C8E40D5B17293C8F6A42 /* TerminalPanelCreationOutcome.swift */; };
@@ -3291,6 +3292,7 @@
 		D0B10001A1B2C3D4E5F60001 /* TerminalPaneDropTargetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalPaneDropTargetView.swift; sourceTree = "<group>"; };
 		CE0E06300000000000000002 /* TerminalPanel+Creation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/TerminalPanel+Creation.swift"; sourceTree = "<group>"; };
 		A5F100000000000000000008 /* TerminalPanel+NotificationScroll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/TerminalPanel+NotificationScroll.swift"; sourceTree = "<group>"; };
+		A51160010000000000000002 /* TerminalPanel+PromptNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/TerminalPanel+PromptNavigation.swift"; sourceTree = "<group>"; };
 		A500141D /* TerminalPanel+SocketInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/TerminalPanel+SocketInput.swift"; sourceTree = "<group>"; };
 		A5001411 /* TerminalPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/TerminalPanel.swift; sourceTree = "<group>"; };
 		F2A6C8E40D5B17293C8F6A42 /* TerminalPanelCreationOutcome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalPanelCreationOutcome.swift; sourceTree = "<group>"; };
@@ -4444,6 +4446,7 @@
 				A5001411 /* TerminalPanel.swift */,
 				CE0E06300000000000000002 /* TerminalPanel+Creation.swift */,
 				A5F100000000000000000008 /* TerminalPanel+NotificationScroll.swift */,
+				A51160010000000000000002 /* TerminalPanel+PromptNavigation.swift */,
 				A500141D /* TerminalPanel+SocketInput.swift */,
 				C0DE5A410000000000000002 /* TerminalPanelShellActivityModel.swift */,
 				C0DE6B420000000000000002 /* TerminalPanelTextBoxState.swift */,
@@ -6800,6 +6803,7 @@
 				D0B10000A1B2C3D4E5F60001 /* TerminalPaneDropTargetView.swift in Sources */,
 				CE0E06300000000000000001 /* TerminalPanel+Creation.swift in Sources */,
 				A5F100000000000000000007 /* TerminalPanel+NotificationScroll.swift in Sources */,
+				A51160010000000000000001 /* TerminalPanel+PromptNavigation.swift in Sources */,
 				A500140D /* TerminalPanel+SocketInput.swift in Sources */,
 				A5001401 /* TerminalPanel.swift in Sources */,
 				E8B3D5F71A2C49608B7D5E31 /* TerminalPanelCreationOutcome.swift in Sources */,

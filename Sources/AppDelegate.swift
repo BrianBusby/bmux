@@ -5517,16 +5517,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 #if DEBUG
         let before = firstResponder.map { String(describing: type(of: $0)) } ?? "nil"
         let target = terminalPanel.hostedView.preferredPanelFocusIntentForActivation()
-        let targetLabel: String = {
-            switch target {
-            case .surface:
-                return "surface"
-            case .findField:
-                return "searchField"
-            case .textBoxInput:
-                return "textBoxInput"
-            }
-        }()
+        let targetLabel = String(describing: target)
         let mode = normalizedFlags.contains(.command) ? "command" : "plain"
         bmuxDebugLog(
             "focus.keyRepair attempt window=\(ObjectIdentifier(window)) " +

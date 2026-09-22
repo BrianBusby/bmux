@@ -7,31 +7,39 @@ import { shouldSubmitConnectedChatOnEnter, type ConnectedAction, type ConnectedC
 export function ConnectedChatComposer({ context, control, enabled }: { context: AppContext; control: ConnectedControl; enabled: boolean }) {
   const [draft, setDraft] = useState(() => {
     const last = control.actions?.at(-1);
-    return control.draft ?? (last && last.delivery !== "accepted" ? last.text : "");
+    return control.draft?.text ?? (last && last.delivery !== "accepted" ? last.text : "");
   });
-  const [action, setAction] = useState<ConnectedAction>();
+  const revision = useRef(control.draft?.revision ?? crypto.randomUUID());
+  const [action, setAction] = useState<(ConnectedAction & { draftRevision?: string })>();
   const inFlight = useRef(false);
   const [sending, setSending] = useState(false);
   const copy = context.copy;
   const observed = action && control.actions?.find(item => item.id.toLowerCase() === action.id.toLowerCase());
   const latest = observed ?? action ?? control.actions?.at(-1);
+  const submittedRevision = action && latest && action.id.toLowerCase() === latest.id.toLowerCase() ? action.draftRevision : undefined;
+  const previousReceipt = useRef(latest);
   useEffect(() => {
-    if (latest?.delivery === "accepted") setDraft(current => current === latest.text ? "" : current);
-  }, [latest?.id, latest?.delivery, latest?.text]);
+    const previous = previousReceipt.current;
+    previousReceipt.current = latest;
+    // An accepted historical action must not erase a newly restored draft.
+    if (latest?.delivery === "accepted" && previous?.id === latest.id && previous.delivery !== "accepted") {
+      if (submittedRevision === revision.current) setDraft("");
+    }
+  }, [latest, submittedRevision]);
   const blocked = sending || latest?.delivery === "pending" || latest?.delivery === "uncertain";
   const slashCommand = draft.trimStart().startsWith("/");
   const submit = async (operation: "queue" | "steer") => {
     if (inFlight.current || !enabled || blocked || !draft.trim() || slashCommand) return;
-    const request: ConnectedAction = { id: crypto.randomUUID(), threadID: control.threadId, operation, text: draft,
+    const request: ConnectedAction & { draftRevision: string } = { id: crypto.randomUUID(), threadID: control.threadId, operation, text: draft, draftRevision: revision.current,
       expectedTurnID: operation === "steer" ? control.activeTurnId : undefined, delivery: "pending" };
     inFlight.current = true;
     setAction(request);
     setSending(true);
     try {
       const result = await callNative<ConnectedAction>("terminalChat.action", { requestId: request.id,
-        sessionId: request.threadID, text: request.text, expectedTurnId: request.expectedTurnID });
+        sessionId: request.threadID, draftRevision: request.draftRevision, text: request.text, expectedTurnId: request.expectedTurnID });
       setAction(result);
-      if (result.delivery === "accepted") setDraft(current => current === request.text ? "" : current);
+      if (result.delivery === "accepted" && revision.current === request.draftRevision) setDraft("");
     } catch {
       // A lost bridge reply is not proof of a failed native/provider mutation.
       setAction({ ...request, delivery: "uncertain" });
@@ -39,7 +47,8 @@ export function ConnectedChatComposer({ context, control, enabled }: { context: 
   };
   const updateDraft = (text: string) => {
     setDraft(text);
-    void callNative("terminalChat.draft", { sessionId: control.threadId, text }).catch(() => {
+    revision.current = crypto.randomUUID();
+    void callNative("terminalChat.draft", { sessionId: control.threadId, draftRevision: revision.current, text }).catch(() => {
       // Keep the local draft if the native consumer is unavailable.
     });
   };

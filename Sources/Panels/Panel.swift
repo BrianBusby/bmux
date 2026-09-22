@@ -58,6 +58,9 @@ public enum TerminalPanelFocusIntent: Equatable {
     case surface
     case findField
     case textBoxInput
+    /// A hosted Chat composer owns the responder while its terminal remains
+    /// the selected bmux panel.
+    case chatComposer
 }
 
 public enum BrowserPanelFocusIntent: Equatable {

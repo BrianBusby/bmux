@@ -80,6 +80,14 @@ final class AgentSessionWebHostView: NSView {
         webView.frame = bounds
         needsLayout = true
         layoutSubtreeIfNeeded()
+        // SwiftUI can call updateNSView after this host has already entered its
+        // window. A newly added child does not cause this host to receive a
+        // second viewDidMoveToWindow, so replay the lifecycle notification for
+        // the newly attached consumer. The coordinator still owns the
+        // no-window guard and deduplicates an already loaded shell.
+        if window != nil {
+            onDidMoveToWindow?()
+        }
     }
 
     func detachHostedWebViewIfOwned(_ webView: WKWebView?) {

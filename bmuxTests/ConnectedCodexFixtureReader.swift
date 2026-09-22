@@ -6,8 +6,10 @@ import Foundation
 #endif
 
 @MainActor final class ConnectedCodexFixtureReader: TerminalChatReading {
+    var response: [String: Any] = ["status": "unavailable", "reason": "historyUnavailable"]
+
     func terminalChatSnapshot(workspaceID: UUID, surfaceID: UUID) async -> [String: Any] {
-        ["status": "unavailable", "reason": "historyUnavailable"]
+        response
     }
     func terminalChatRawOutput(workspaceID: UUID, surfaceID: UUID, sessionID: String, messageID: String) async throws -> String? { nil }
 }
