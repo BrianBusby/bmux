@@ -338,7 +338,38 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
               let json = String(data: data, encoding: .utf8) else {
             return
         }
-        webView.evaluateJavaScript("window.bmuxAgentBridge?.applyTheme(\(json));") { _, error in
+        webView.evaluateJavaScript(
+            """
+            (() => {
+              const theme = \(json);
+              window.bmuxAgentBridge?.applyTheme(theme);
+              const root = document.documentElement;
+              const values = {
+                '--agent-page-bg': theme.pageBackground,
+                '--agent-surface': theme.surfaceBackground,
+                '--agent-surface-elevated': theme.surfaceElevatedBackground,
+                '--agent-input-bg': theme.inputBackground,
+                '--agent-border': theme.border,
+                '--agent-border-strong': theme.borderStrong,
+                '--agent-text': theme.text,
+                '--agent-muted': theme.mutedText,
+                '--agent-soft': theme.softText,
+                '--agent-accent': theme.accent,
+                '--agent-accent-soft': theme.accentSoft,
+                '--agent-danger': theme.danger,
+                '--agent-control': theme.surfaceElevatedBackground,
+                '--agent-control-hover': theme.surfaceBackground,
+                '--agent-shadow': theme.shadow
+              };
+              Object.entries(values).forEach(([key, value]) => root.style.setProperty(key, value));
+              root.style.colorScheme = theme.isDark ? 'dark' : 'light';
+              if (document.body) {
+                document.body.style.color = theme.text;
+                document.body.style.backgroundColor = theme.pageBackground;
+              }
+            })();
+            """
+        ) { _, error in
 #if DEBUG
             if let error {
                 bmuxDebugLog("agentSession.web.theme.failed error=\(error.localizedDescription)")

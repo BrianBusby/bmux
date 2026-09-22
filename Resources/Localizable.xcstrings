@@ -1,55 +1,822 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "hybrid.fixture.inMotion" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"IN MOTION"}},"ja":{"stringUnit":{"state":"translated","value":"進行中"}}}},
-    "hybrid.fixture.repo.mobile" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"companycam-mobile"}},"ja":{"stringUnit":{"state":"translated","value":"companycam-mobile"}}}},
-    "hybrid.fixture.repo.api" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Company-Cam-API"}},"ja":{"stringUnit":{"state":"translated","value":"Company-Cam-API"}}}},
-    "hybrid.fixture.title.oneOff" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"One-off checklist flow"}},"ja":{"stringUnit":{"state":"translated","value":"単発チェックリストのフロー"}}}},
-    "hybrid.fixture.title.reorder" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Reorder checklist fields"}},"ja":{"stringUnit":{"state":"translated","value":"チェックリスト項目の並べ替え"}}}},
-    "hybrid.fixture.title.graphQL" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Local GraphQL errors"}},"ja":{"stringUnit":{"state":"translated","value":"ローカル GraphQL エラー"}}}},
-    "hybrid.fixture.status.waiting" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Waiting for review"}},"ja":{"stringUnit":{"state":"translated","value":"レビュー待ち"}}}},
-    "hybrid.fixture.status.working" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Agent working"}},"ja":{"stringUnit":{"state":"translated","value":"エージェントが作業中"}}}},
-    "hybrid.fixture.status.input" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Needs your input"}},"ja":{"stringUnit":{"state":"translated","value":"入力が必要です"}}}},
-    "hybrid.fixture.project.checklists" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Advanced checklists"}},"ja":{"stringUnit":{"state":"translated","value":"高度なチェックリスト"}}}},
-    "hybrid.fixture.owner.brian" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"BrianBusby"}},"ja":{"stringUnit":{"state":"translated","value":"BrianBusby"}}}},
-    "hybrid.fixture.open" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Open"}},"ja":{"stringUnit":{"state":"translated","value":"オープン"}}}},
-    "hybrid.fixture.prOwner" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"PR owner"}},"ja":{"stringUnit":{"state":"translated","value":"PR オーナー"}}}},
-    "hybrid.fixture.activity.draft" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Build local draft checkbox row and retry-safe save"}},"ja":{"stringUnit":{"state":"translated","value":"ローカル下書きチェックボックス行と再試行可能な保存を構築"}}}},
-    "hybrid.fixture.activity.fields" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Update one-off checklist fields with a single-field move"}},"ja":{"stringUnit":{"state":"translated","value":"単一項目の移動で単発チェックリスト項目を更新"}}}},
-    "hybrid.fixture.currentTurn" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"CURRENT TURN"}},"ja":{"stringUnit":{"state":"translated","value":"現在のターン"}}}},
-    "hybrid.fixture.objective" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Move tickets into review"}},"ja":{"stringUnit":{"state":"translated","value":"チケットをレビューに移動"}}}},
-    "hybrid.fixture.waitingReviews" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Waiting on reviews"}},"ja":{"stringUnit":{"state":"translated","value":"レビュー待ち"}}}},
-    "hybrid.fixture.summary" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"The tickets are assigned to you and in review. I’m waiting for the final review checks before handing the stack back."}},"ja":{"stringUnit":{"state":"translated","value":"チケットはあなたに割り当てられ、レビュー中です。最終レビューの確認が終わるまでスタックを保留します。"}}}},
-    "hybrid.fixture.check.updated" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Four tickets updated"}},"ja":{"stringUnit":{"state":"translated","value":"4 件のチケットを更新"}}}},
-    "hybrid.fixture.check.lint" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Lint and TypeScript passed on all six PRs"}},"ja":{"stringUnit":{"state":"translated","value":"6 件すべての PR で Lint と TypeScript に成功"}}}},
-    "hybrid.fixture.check.running" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Review checks still running"}},"ja":{"stringUnit":{"state":"translated","value":"レビュー確認を実行中"}}}},
-    "hybrid.fixture.toolActivity" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Tool activity · inspect evidence"}},"ja":{"stringUnit":{"state":"translated","value":"ツールのアクティビティ・証拠を確認"}}}},
-    "hybrid.fixture.observedCommand" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Observed: gh pr checks --watch"}},"ja":{"stringUnit":{"state":"translated","value":"観測: gh pr checks --watch"}}}},
-    "hybrid.fixture.sourceTurn" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Source: terminal activity · current turn"}},"ja":{"stringUnit":{"state":"translated","value":"ソース: Terminal アクティビティ・現在のターン"}}}},
-    "hybrid.fixture.previousTurns" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"PREVIOUS TURNS · NEWEST FIRST"}},"ja":{"stringUnit":{"state":"translated","value":"過去のターン・新しい順"}}}},
-    "hybrid.fixture.tokenUsage" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"TOKEN USAGE*"}},"ja":{"stringUnit":{"state":"translated","value":"トークン使用量*"}}}},
-    "hybrid.fixture.knowledge" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Knowledge travels with the work."}},"ja":{"stringUnit":{"state":"translated","value":"知識は作業とともに移動します。"}}}},
-    "hybrid.fixture.exploreLearnings" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Explore 2 learnings"}},"ja":{"stringUnit":{"state":"translated","value":"2 件の学びを見る"}}}},
-    "hybrid.fixture.exampleTelemetry" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"* Example data, not live telemetry"}},"ja":{"stringUnit":{"state":"translated","value":"* 例示データであり、ライブテレメトリではありません"}}}},
-    "hybrid.fixture.history.ci" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Check CI across the PR stack"}},"ja":{"stringUnit":{"state":"translated","value":"PR スタック全体の CI を確認"}}}},
-    "hybrid.fixture.history.tickets" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Split implementation into six tickets"}},"ja":{"stringUnit":{"state":"translated","value":"実装を 6 件のチケットに分割"}}}},
-    "hybrid.fixture.history.ownership" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Confirm review ownership and rollout"}},"ja":{"stringUnit":{"state":"translated","value":"レビューの担当と展開を確認"}}}},
-    "hybrid.fixture.changed" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Changed  ·  scoped the implementation to the review stack"}},"ja":{"stringUnit":{"state":"translated","value":"変更・レビュー対象のスタックに実装を限定"}}}},
-    "hybrid.fixture.checked" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Checked  ·  targeted validation and source inspection"}},"ja":{"stringUnit":{"state":"translated","value":"確認・対象を絞った検証とソース確認"}}}},
-    "hybrid.fixture.remains" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Remains  ·  evidence-backed follow-up"}},"ja":{"stringUnit":{"state":"translated","value":"残り・証拠に基づくフォローアップ"}}}},
-    "agentSession.chat.connectedPrompt" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Message Codex"}}, "ja": {"stringUnit": {"state": "translated", "value": "Codex にメッセージ"}}}},
-    "agentSession.chat.connectedQueue" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Send follow-up"}}, "ja": {"stringUnit": {"state": "translated", "value": "追加メッセージを送信"}}}},
-    "agentSession.chat.connectedSteer" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Steer current turn"}}, "ja": {"stringUnit": {"state": "translated", "value": "現在のターンに指示を追加"}}}},
-    "agentSession.chat.connectedPending" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Awaiting provider acknowledgment…"}}, "ja": {"stringUnit": {"state": "translated", "value": "プロバイダーの確認を待っています…"}}}},
-    "agentSession.chat.connectedAccepted" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Accepted by Codex"}}, "ja": {"stringUnit": {"state": "translated", "value": "Codex が受信しました"}}}},
-    "agentSession.chat.connectedFailed" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Not accepted. Your draft is preserved."}}, "ja": {"stringUnit": {"state": "translated", "value": "受信されませんでした。下書きは保持されています。"}}}},
-    "agentSession.chat.connectedUncertain" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Delivery is uncertain. Check Terminal before sending again."}}, "ja": {"stringUnit": {"state": "translated", "value": "送信結果を確認できません。再送信する前に Terminal を確認してください。"}}}},
-    "agentSession.chat.connectedSlashCommands" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Use Terminal for Codex slash commands."}}, "ja": {"stringUnit": {"state": "translated", "value": "Codex のスラッシュコマンドは Terminal で実行してください。"}}}},
-    "agentSession.chat.connectedQueuePolicy" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Follow-ups join the Codex queue. Terminal starts them after the current turn and owns queue editing, approvals, settings, and interruption."}}, "ja": {"stringUnit": {"state": "translated", "value": "追加メッセージは Codex のキューに入ります。現在のターンが終わると Terminal が実行します。キューの編集、承認、設定、割り込みは Terminal で操作してください。"}}}},
-    "agentSession.chat.connectedUnavailable" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "The shared connection is unavailable. Continue in Terminal."}}, "ja": {"stringUnit": {"state": "translated", "value": "共有接続を利用できません。Terminal で続行してください。"}}}},
-    "agentSession.chat.connectedNewSession" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "New connected Codex session"}}, "ja": {"stringUnit": {"state": "translated", "value": "新しい接続済み Codex セッション"}}}},
-    "agentSession.chat.connectedStartFailed" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Could not start a connected session. This preview requires Codex 0.154.0; your existing terminal is unchanged."}}, "ja": {"stringUnit": {"state": "translated", "value": "接続済みセッションを開始できませんでした。このプレビューには Codex 0.154.0 が必要です。既存のターミナルは変更されていません。"}}}},
-
+    "hybrid.fixture.inMotion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IN MOTION"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "進行中"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.repo.mobile": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "companycam-mobile"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "companycam-mobile"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.repo.api": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Company-Cam-API"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Company-Cam-API"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.title.oneOff": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One-off checklist flow"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "単発チェックリストのフロー"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.title.reorder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reorder checklist fields"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チェックリスト項目の並べ替え"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.title.graphQL": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local GraphQL errors"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ローカル GraphQL エラー"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.status.waiting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for review"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "レビュー待ち"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.status.working": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent working"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エージェントが作業中"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.status.input": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs your input"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入力が必要です"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.project.checklists": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advanced checklists"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "高度なチェックリスト"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.owner.brian": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BrianBusby"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BrianBusby"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.open": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オープン"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.prOwner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR owner"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR オーナー"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.activity.draft": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build local draft checkbox row and retry-safe save"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ローカル下書きチェックボックス行と再試行可能な保存を構築"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.activity.fields": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update one-off checklist fields with a single-field move"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "単一項目の移動で単発チェックリスト項目を更新"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.currentTurn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CURRENT TURN"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在のターン"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.objective": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move tickets into review"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チケットをレビューに移動"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.waitingReviews": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting on reviews"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "レビュー待ち"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The tickets are assigned to you and in review. I’m waiting for the final review checks before handing the stack back."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チケットはあなたに割り当てられ、レビュー中です。最終レビューの確認が終わるまでスタックを保留します。"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.check.updated": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Four tickets updated"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4 件のチケットを更新"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.check.lint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lint and TypeScript passed on all six PRs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6 件すべての PR で Lint と TypeScript に成功"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.check.running": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review checks still running"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "レビュー確認を実行中"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.toolActivity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tool activity · inspect evidence"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ツールのアクティビティ・証拠を確認"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.observedCommand": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observed: gh pr checks --watch"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "観測: gh pr checks --watch"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.sourceTurn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: terminal activity · current turn"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ソース: Terminal アクティビティ・現在のターン"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.previousTurns": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PREVIOUS TURNS · NEWEST FIRST"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "過去のターン・新しい順"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.tokenUsage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TOKEN USAGE*"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "トークン使用量*"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.knowledge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Knowledge travels with the work."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "知識は作業とともに移動します。"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.exploreLearnings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explore 2 learnings"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 件の学びを見る"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.exampleTelemetry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "* Example data, not live telemetry"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "* 例示データであり、ライブテレメトリではありません"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.history.ci": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check CI across the PR stack"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR スタック全体の CI を確認"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.history.tickets": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split implementation into six tickets"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "実装を 6 件のチケットに分割"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.history.ownership": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm review ownership and rollout"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "レビューの担当と展開を確認"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.changed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changed  ·  scoped the implementation to the review stack"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更・レビュー対象のスタックに実装を限定"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.checked": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checked  ·  targeted validation and source inspection"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "確認・対象を絞った検証とソース確認"
+          }
+        }
+      }
+    },
+    "hybrid.fixture.remains": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remains  ·  evidence-backed follow-up"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "残り・証拠に基づくフォローアップ"
+          }
+        }
+      }
+    },
+    "agentSession.chat.connectedPrompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message Codex"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex にメッセージ"
+          }
+        }
+      }
+    },
+    "agentSession.chat.connectedQueue": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send follow-up"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加メッセージを送信"
+          }
+        }
+      }
+    },
+    "agentSession.chat.connectedSteer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steer current turn"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在のターンに指示を追加"
+          }
+        }
+      }
+    },
+    "agentSession.chat.connectedPending": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Awaiting provider acknowledgment…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プロバイダーの確認を待っています…"
+          }
+        }
+      }
+    },
+    "agentSession.chat.connectedAccepted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepted by Codex"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex が受信しました"
+          }
+        }
+      }
+    },
+    "agentSession.chat.connectedFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not accepted. Your draft is preserved."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "受信されませんでした。下書きは保持されています。"
+          }
+        }
+      }
+    },
+    "agentSession.chat.connectedUncertain": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delivery is uncertain. Check Terminal before sending again."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "送信結果を確認できません。再送信する前に Terminal を確認してください。"
+          }
+        }
+      }
+    },
+    "agentSession.chat.connectedSlashCommands": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Terminal for Codex slash commands."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex のスラッシュコマンドは Terminal で実行してください。"
+          }
+        }
+      }
+    },
+    "agentSession.chat.connectedQueuePolicy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Follow-ups join the Codex queue. Terminal starts them after the current turn and owns queue editing, approvals, settings, and interruption."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加メッセージは Codex のキューに入ります。現在のターンが終わると Terminal が実行します。キューの編集、承認、設定、割り込みは Terminal で操作してください。"
+          }
+        }
+      }
+    },
+    "agentSession.chat.connectedUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The shared connection is unavailable. Continue in Terminal."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共有接続を利用できません。Terminal で続行してください。"
+          }
+        }
+      }
+    },
+    "agentSession.chat.connectedNewSession": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New connected Codex session"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しい接続済み Codex セッション"
+          }
+        }
+      }
+    },
+    "agentSession.chat.connectedStartFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not start a connected session. This preview requires Codex 0.154.0; your existing terminal is unchanged."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続済みセッションを開始できませんでした。このプレビューには Codex 0.154.0 が必要です。既存のターミナルは変更されていません。"
+          }
+        }
+      }
+    },
     "agentSession.chat.chatLoading": {
       "extractionState": "manual",
       "localizations": {
@@ -237,22 +1004,52 @@
         }
       }
     },
-    "agentSession.web.endSession" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "End session" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "セッションを終了" } }
+    "agentSession.web.endSession": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End session"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッションを終了"
+          }
+        }
       }
     },
-    "agentSession.chat.chatInterrupted" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Turn interrupted" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ターンが中断されました" } }
+    "agentSession.chat.chatInterrupted": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn interrupted"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ターンが中断されました"
+          }
+        }
       }
     },
-    "agentSession.chat.chatAmbiguous" : {
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Multiple session bindings · select the conversation in Terminal" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "複数のセッションが関連付けられています · ターミナルで会話を選択してください" } }
+    "agentSession.chat.chatAmbiguous": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multiple session bindings · select the conversation in Terminal"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複数のセッションが関連付けられています · ターミナルで会話を選択してください"
+          }
+        }
       }
     },
     "agentSession.chat.chatActivity": {
@@ -3590,13 +4387,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Current turn"
+            "value": "Latest turn"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "現在のターン"
+            "value": "最新ターン"
           }
         }
       }
@@ -4100,13 +4897,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Focus"
+            "value": "Session"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "フォーカス"
+            "value": "セッション"
           }
         }
       }
@@ -10296,13 +11093,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Results"
+            "value": "Final output"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "結果"
+            "value": "最終出力"
           }
         }
       }
@@ -201063,121 +201860,596 @@
     "sidebar.pullRequest.label": {
       "extractionState": "manual",
       "localizations": {
-        "ar": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "bs": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "da": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "de": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "en": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "es": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "it": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "ko": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "nb": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "pl": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "pt-BR": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "ru": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "th": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "tr": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "uk": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "PR" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "PR" } }
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        }
       }
     },
     "sidebar.project.openTooltip": {
       "extractionState": "manual",
       "localizations": {
-        "ar": { "stringUnit": { "state": "translated", "value": "فتح %@" } },
-        "bs": { "stringUnit": { "state": "translated", "value": "Otvori %@" } },
-        "da": { "stringUnit": { "state": "translated", "value": "Åbn %@" } },
-        "de": { "stringUnit": { "state": "translated", "value": "%@ öffnen" } },
-        "en": { "stringUnit": { "state": "translated", "value": "Open %@" } },
-        "es": { "stringUnit": { "state": "translated", "value": "Abrir %@" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Ouvrir %@" } },
-        "it": { "stringUnit": { "state": "translated", "value": "Apri %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%@を開く" } },
-        "ko": { "stringUnit": { "state": "translated", "value": "%@ 열기" } },
-        "nb": { "stringUnit": { "state": "translated", "value": "Åpne %@" } },
-        "pl": { "stringUnit": { "state": "translated", "value": "Otwórz %@" } },
-        "pt-BR": { "stringUnit": { "state": "translated", "value": "Abrir %@" } },
-        "ru": { "stringUnit": { "state": "translated", "value": "Открыть %@" } },
-        "th": { "stringUnit": { "state": "translated", "value": "เปิด %@" } },
-        "tr": { "stringUnit": { "state": "translated", "value": "%@ Aç" } },
-        "uk": { "stringUnit": { "state": "translated", "value": "Відкрити %@" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "打开 %@" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "開啟 %@" } }
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح %@"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otvori %@"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åbn %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を開く"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 열기"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åpne %@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otwórz %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть %@"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิด %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Aç"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкрити %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟 %@"
+          }
+        }
       }
     },
     "sidebar.ticket.openTooltip": {
       "extractionState": "manual",
       "localizations": {
-        "ar": { "stringUnit": { "state": "translated", "value": "فتح %@" } },
-        "bs": { "stringUnit": { "state": "translated", "value": "Otvori %@" } },
-        "da": { "stringUnit": { "state": "translated", "value": "Åbn %@" } },
-        "de": { "stringUnit": { "state": "translated", "value": "%@ öffnen" } },
-        "en": { "stringUnit": { "state": "translated", "value": "Open %@" } },
-        "es": { "stringUnit": { "state": "translated", "value": "Abrir %@" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Ouvrir %@" } },
-        "it": { "stringUnit": { "state": "translated", "value": "Apri %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%@を開く" } },
-        "ko": { "stringUnit": { "state": "translated", "value": "%@ 열기" } },
-        "nb": { "stringUnit": { "state": "translated", "value": "Åpne %@" } },
-        "pl": { "stringUnit": { "state": "translated", "value": "Otwórz %@" } },
-        "pt-BR": { "stringUnit": { "state": "translated", "value": "Abrir %@" } },
-        "ru": { "stringUnit": { "state": "translated", "value": "Открыть %@" } },
-        "th": { "stringUnit": { "state": "translated", "value": "เปิด %@" } },
-        "tr": { "stringUnit": { "state": "translated", "value": "%@ Aç" } },
-        "uk": { "stringUnit": { "state": "translated", "value": "Відкрити %@" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "打开 %@" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "開啟 %@" } }
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح %@"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otvori %@"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åbn %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を開く"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 열기"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åpne %@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otwórz %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть %@"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิด %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Aç"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкрити %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟 %@"
+          }
+        }
       }
     },
     "sidebar.ticket.owner.openTooltip": {
       "extractionState": "manual",
       "localizations": {
-        "ar": { "stringUnit": { "state": "translated", "value": "فتح %@" } },
-        "bs": { "stringUnit": { "state": "translated", "value": "Otvori %@" } },
-        "da": { "stringUnit": { "state": "translated", "value": "Åbn %@" } },
-        "de": { "stringUnit": { "state": "translated", "value": "%@ öffnen" } },
-        "en": { "stringUnit": { "state": "translated", "value": "Open %@" } },
-        "es": { "stringUnit": { "state": "translated", "value": "Abrir %@" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Ouvrir %@" } },
-        "it": { "stringUnit": { "state": "translated", "value": "Apri %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%@を開く" } },
-        "ko": { "stringUnit": { "state": "translated", "value": "%@ 열기" } },
-        "nb": { "stringUnit": { "state": "translated", "value": "Åpne %@" } },
-        "pl": { "stringUnit": { "state": "translated", "value": "Otwórz %@" } },
-        "pt-BR": { "stringUnit": { "state": "translated", "value": "Abrir %@" } },
-        "ru": { "stringUnit": { "state": "translated", "value": "Открыть %@" } },
-        "th": { "stringUnit": { "state": "translated", "value": "เปิด %@" } },
-        "tr": { "stringUnit": { "state": "translated", "value": "%@ Aç" } },
-        "uk": { "stringUnit": { "state": "translated", "value": "Відкрити %@" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "打开 %@" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "開啟 %@" } }
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح %@"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otvori %@"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åbn %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を開く"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 열기"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åpne %@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otwórz %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть %@"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิด %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Aç"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкрити %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟 %@"
+          }
+        }
       }
     },
     "sidebar.pullRequest.owner.openTooltip": {
       "extractionState": "manual",
       "localizations": {
-        "ar": { "stringUnit": { "state": "translated", "value": "فتح %@ على GitHub" } },
-        "bs": { "stringUnit": { "state": "translated", "value": "Otvori %@ na GitHubu" } },
-        "da": { "stringUnit": { "state": "translated", "value": "Åbn %@ på GitHub" } },
-        "de": { "stringUnit": { "state": "translated", "value": "%@ auf GitHub öffnen" } },
-        "en": { "stringUnit": { "state": "translated", "value": "Open %@ on GitHub" } },
-        "es": { "stringUnit": { "state": "translated", "value": "Abrir %@ en GitHub" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Ouvrir %@ sur GitHub" } },
-        "it": { "stringUnit": { "state": "translated", "value": "Apri %@ su GitHub" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "GitHubで%@を開く" } },
-        "ko": { "stringUnit": { "state": "translated", "value": "GitHub에서 %@ 열기" } },
-        "nb": { "stringUnit": { "state": "translated", "value": "Åpne %@ på GitHub" } },
-        "pl": { "stringUnit": { "state": "translated", "value": "Otwórz %@ w GitHub" } },
-        "pt-BR": { "stringUnit": { "state": "translated", "value": "Abrir %@ no GitHub" } },
-        "ru": { "stringUnit": { "state": "translated", "value": "Открыть %@ на GitHub" } },
-        "th": { "stringUnit": { "state": "translated", "value": "เปิด %@ บน GitHub" } },
-        "tr": { "stringUnit": { "state": "translated", "value": "%@ adlı kullanıcıyı GitHub'da aç" } },
-        "uk": { "stringUnit": { "state": "translated", "value": "Відкрити %@ на GitHub" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "在 GitHub 上打开 %@" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "在 GitHub 上開啟 %@" } }
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح %@ على GitHub"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otvori %@ na GitHubu"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åbn %@ på GitHub"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ auf GitHub öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open %@ on GitHub"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir %@ en GitHub"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir %@ sur GitHub"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri %@ su GitHub"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHubで%@を開く"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub에서 %@ 열기"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åpne %@ på GitHub"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otwórz %@ w GitHub"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir %@ no GitHub"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть %@ на GitHub"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิด %@ บน GitHub"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ adlı kullanıcıyı GitHub'da aç"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкрити %@ на GitHub"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 GitHub 上打开 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 GitHub 上開啟 %@"
+          }
+        }
       }
     },
     "sidebar.pullRequest.statusClosed": {
@@ -232850,729 +234122,1769 @@
     "cli.contextEfficiency.error.asyncResultMissing": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "context-efficiency command did not produce a result" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "context-efficiency コマンドが結果を生成しませんでした" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "context-efficiency command did not produce a result"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "context-efficiency コマンドが結果を生成しませんでした"
+          }
+        }
       }
     },
     "cli.contextEfficiency.error.importRequiresPath": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Usage: bmux context-efficiency import <rollout-path> [--database <path>] [--codex-home <path>] [--json]" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "使用法: bmux context-efficiency import <rollout-path> [--database <path>] [--codex-home <path>] [--json]" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: bmux context-efficiency import <rollout-path> [--database <path>] [--codex-home <path>] [--json]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用法: bmux context-efficiency import <rollout-path> [--database <path>] [--codex-home <path>] [--json]"
+          }
+        }
       }
     },
     "cli.contextEfficiency.error.inspectRequiresThread": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Usage: bmux context-efficiency inspect-thread <thread-id> [--database <path>] [--json]" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "使用法: bmux context-efficiency inspect-thread <thread-id> [--database <path>] [--json]" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: bmux context-efficiency inspect-thread <thread-id> [--database <path>] [--json]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用法: bmux context-efficiency inspect-thread <thread-id> [--database <path>] [--json]"
+          }
+        }
       }
     },
     "cli.contextEfficiency.error.rolloutMissing": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "No rollout JSONL file found at %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%@ に rollout JSONL ファイルが見つかりません" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No rollout JSONL file found at %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ に rollout JSONL ファイルが見つかりません"
+          }
+        }
       }
     },
     "cli.contextEfficiency.error.summarizeRequiresDay": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Usage: bmux context-efficiency summarize-day YYYY-MM-DD [--database <path>] [--json]" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "使用法: bmux context-efficiency summarize-day YYYY-MM-DD [--database <path>] [--json]" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: bmux context-efficiency summarize-day YYYY-MM-DD [--database <path>] [--json]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用法: bmux context-efficiency summarize-day YYYY-MM-DD [--database <path>] [--json]"
+          }
+        }
       }
     },
     "cli.contextEfficiency.error.unexpectedArgument": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%@: unexpected argument '%@'" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%@: 予期しない引数 '%@'" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: unexpected argument '%@'"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: 予期しない引数 '%@'"
+          }
+        }
       }
     },
     "cli.contextEfficiency.error.unknownFlag": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%@: unknown flag '%@'" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%@: 不明なフラグ '%@'" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: unknown flag '%@'"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: 不明なフラグ '%@'"
+          }
+        }
       }
     },
     "cli.contextEfficiency.error.unknownSubcommand": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "context-efficiency: unknown subcommand '%@'\n\n%@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "context-efficiency: 不明なサブコマンド '%@'\n\n%@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "context-efficiency: unknown subcommand '%@'\n\n%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "context-efficiency: 不明なサブコマンド '%@'\n\n%@"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.cachedInput": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Cached input tokens: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "キャッシュ済み入力トークン: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cached input tokens: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャッシュ済み入力トークン: %@"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.compactions": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Compactions: %d" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "圧縮: %d" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compactions: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圧縮: %d"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.cursor": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Cursor: line %d, byte %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "カーソル: 行 %d、バイト %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursor: line %d, byte %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カーソル: 行 %d、バイト %@"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.cursorReset": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Cursor was reset because the source file shrank." } },
-        "ja": { "stringUnit": { "state": "translated", "value": "ソースファイルが縮小したためカーソルをリセットしました。" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursor was reset because the source file shrank."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ソースファイルが縮小したためカーソルをリセットしました。"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.cwd": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "CWD: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "CWD: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CWD: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CWD: %@"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.database": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Database: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "データベース: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Database: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "データベース: %@"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.dayTitle": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "# Context efficiency day %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "# コンテキスト効率の日別概要 %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "# Context efficiency day %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "# コンテキスト効率の日別概要 %@"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.duplicates": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Duplicate token telemetry skipped: %d" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "スキップした重複トークンテレメトリ: %d" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate token telemetry skipped: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スキップした重複トークンテレメトリ: %d"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.evidenceNote": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Raw rollout content was not copied; source path, line, and byte offsets are stored for recovery." } },
-        "ja": { "stringUnit": { "state": "translated", "value": "生の rollout 内容はコピーしていません。復元用にソースパス、行、バイトオフセットを保存しています。" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raw rollout content was not copied; source path, line, and byte offsets are stored for recovery."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "生の rollout 内容はコピーしていません。復元用にソースパス、行、バイトオフセットを保存しています。"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.importTitle": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "# Context efficiency import" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "# コンテキスト効率インポート" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "# Context efficiency import"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "# コンテキスト効率インポート"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.lines": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Lines imported: %d" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "インポートした行数: %d" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lines imported: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "インポートした行数: %d"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.model": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Model: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "モデル: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "モデル: %@"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.modelCallHeader": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Model-call evidence:" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "モデル呼び出しの証拠:" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model-call evidence:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "モデル呼び出しの証拠:"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.modelCallRow": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "  line %d byte %@ total %@ cached %@ output %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "  行 %d バイト %@ 合計 %@ キャッシュ %@ 出力 %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  line %d byte %@ total %@ cached %@ output %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  行 %d バイト %@ 合計 %@ キャッシュ %@ 出力 %@"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.modelCalls": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Model calls: %d" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "モデル呼び出し: %d" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model calls: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "モデル呼び出し: %d"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.outputTokens": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Output tokens: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "出力トークン: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Output tokens: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出力トークン: %@"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.parserErrorHeader": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Parser errors:" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "パーサーエラー:" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parser errors:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パーサーエラー:"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.parserErrorRow": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "  line %d byte %@ %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "  行 %d バイト %@ %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  line %d byte %@ %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  行 %d バイト %@ %@"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.parserErrors": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Parser errors: %d" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "パーサーエラー: %d" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parser errors: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パーサーエラー: %d"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.reasoning": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Reasoning: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "推論: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reasoning: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推論: %@"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.rollout": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Rollout: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "Rollout: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rollout: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rollout: %@"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.rolloutEvents": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Rollout events: %d" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "Rollout イベント: %d" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rollout events: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rollout イベント: %d"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.source": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Source: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "ソース: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ソース: %@"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.sourcesHeader": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "## Source evidence" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "## ソース証拠" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "## Source evidence"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "## ソース証拠"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.thread": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Thread: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "スレッド: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thread: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スレッド: %@"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.threadNotFound": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "No imported context-efficiency thread found." } },
-        "ja": { "stringUnit": { "state": "translated", "value": "インポート済みの context-efficiency スレッドが見つかりません。" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No imported context-efficiency thread found."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "インポート済みの context-efficiency スレッドが見つかりません。"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.threadTitle": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "# Context efficiency thread" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "# コンテキスト効率スレッド" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "# Context efficiency thread"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "# コンテキスト効率スレッド"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.threads": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Threads: %d" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "スレッド: %d" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Threads: %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スレッド: %d"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.toolCallHeader": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Tool-call evidence:" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "ツール呼び出しの証拠:" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tool-call evidence:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ツール呼び出しの証拠:"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.toolCallRow": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "  line %d byte %@ %@ args %@ bytes" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "  行 %d バイト %@ %@ 引数 %@ バイト" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  line %d byte %@ %@ args %@ bytes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  行 %d バイト %@ %@ 引数 %@ バイト"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.toolFacts": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Tool facts: %d calls, %d outputs" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "ツールファクト: 呼び出し %d、出力 %d" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tool facts: %d calls, %d outputs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ツールファクト: 呼び出し %d、出力 %d"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.toolOutputHeader": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Tool-output evidence:" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "ツール出力の証拠:" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tool-output evidence:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ツール出力の証拠:"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.toolOutputRow": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "  line %d byte %@ output %@ bytes estimated-original %@ tokens raw refs %d" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "  行 %d バイト %@ 出力 %@ バイト 推定元 %@ トークン 生参照 %d" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  line %d byte %@ output %@ bytes estimated-original %@ tokens raw refs %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  行 %d バイト %@ 出力 %@ バイト 推定元 %@ トークン 生参照 %d"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.totalTokens": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Total tokens: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "合計トークン: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total tokens: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合計トークン: %@"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.totals": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Totals: %@ tokens, %d model calls, %d compactions" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "合計: %@ トークン、モデル呼び出し %d、圧縮 %d" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Totals: %@ tokens, %d model calls, %d compactions"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合計: %@ トークン、モデル呼び出し %d、圧縮 %d"
+          }
+        }
       }
     },
     "cli.contextEfficiency.output.unknown": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "unknown" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "不明" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unknown"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不明"
+          }
+        }
       }
     },
     "cli.contextEfficiency.usage": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Usage:\n  bmux context-efficiency import <rollout-path> [--database <path>] [--codex-home <path>] [--json]\n  bmux context-efficiency inspect-thread <thread-id> [--database <path>] [--json]\n  bmux context-efficiency summarize-day YYYY-MM-DD [--database <path>] [--json]\n\nImport and inspect read-only Codex rollout telemetry without copying raw rollout payloads." } },
-        "ja": { "stringUnit": { "state": "translated", "value": "使用法:\n  bmux context-efficiency import <rollout-path> [--database <path>] [--codex-home <path>] [--json]\n  bmux context-efficiency inspect-thread <thread-id> [--database <path>] [--json]\n  bmux context-efficiency summarize-day YYYY-MM-DD [--database <path>] [--json]\n\n生の rollout ペイロードをコピーせずに、読み取り専用の Codex rollout テレメトリをインポートして検査します。" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage:\n  bmux context-efficiency import <rollout-path> [--database <path>] [--codex-home <path>] [--json]\n  bmux context-efficiency inspect-thread <thread-id> [--database <path>] [--json]\n  bmux context-efficiency summarize-day YYYY-MM-DD [--database <path>] [--json]\n\nImport and inspect read-only Codex rollout telemetry without copying raw rollout payloads."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用法:\n  bmux context-efficiency import <rollout-path> [--database <path>] [--codex-home <path>] [--json]\n  bmux context-efficiency inspect-thread <thread-id> [--database <path>] [--json]\n  bmux context-efficiency summarize-day YYYY-MM-DD [--database <path>] [--json]\n\n生の rollout ペイロードをコピーせずに、読み取り専用の Codex rollout テレメトリをインポートして検査します。"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.error.databaseClosed": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Codex session database is closed" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "Codex セッションデータベースは閉じています" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex session database is closed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex セッションデータベースは閉じています"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.error.databaseOrCodexHome": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Use --database or --codex-home, not both." } },
-        "ja": { "stringUnit": { "state": "translated", "value": "--database と --codex-home のどちらか一方だけを使用してください。" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use --database or --codex-home, not both."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "--database と --codex-home のどちらか一方だけを使用してください。"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.error.duplicateDatabase": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Use only one of --database or --db." } },
-        "ja": { "stringUnit": { "state": "translated", "value": "--database と --db のどちらか一方だけを使用してください。" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use only one of --database or --db."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "--database と --db のどちらか一方だけを使用してください。"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.error.invalidLimit": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "codex-token-audit --limit must be a positive integer or 'all'." } },
-        "ja": { "stringUnit": { "state": "translated", "value": "codex-token-audit --limit には正の整数または 'all' を指定してください。" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "codex-token-audit --limit must be a positive integer or 'all'."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "codex-token-audit --limit には正の整数または 'all' を指定してください。"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.error.noDatabase": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "No Codex session database found at %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%@ に Codex セッションデータベースが見つかりません" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Codex session database found at %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ に Codex セッションデータベースが見つかりません"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.error.openDatabaseFailed": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "failed to open Codex session database: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "Codex セッションデータベースを開けませんでした: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "failed to open Codex session database: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex セッションデータベースを開けませんでした: %@"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.error.openFailedFallback": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "open failed" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "開けませんでした" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "open failed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開けませんでした"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.error.unexpectedArgument": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "codex-token-audit: unexpected argument '%@'" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "codex-token-audit: 予期しない引数 '%@'" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "codex-token-audit: unexpected argument '%@'"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "codex-token-audit: 予期しない引数 '%@'"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.error.unknownFlag": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "codex-token-audit: unknown flag '%@'" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "codex-token-audit: 不明なフラグ '%@'" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "codex-token-audit: unknown flag '%@'"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "codex-token-audit: 不明なフラグ '%@'"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.error.unknownSQLiteError": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "unknown sqlite error" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "不明な sqlite エラー" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unknown sqlite error"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不明な sqlite エラー"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.note.providerBreakdownUnavailable": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Local Codex metadata does not expose cached-input, uncached-input, output, or reasoning-token splits." } },
-        "ja": { "stringUnit": { "state": "translated", "value": "ローカルの Codex メタデータには、キャッシュ済み入力、未キャッシュ入力、出力、推論トークンの内訳は含まれていません。" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local Codex metadata does not expose cached-input, uncached-input, output, or reasoning-token splits."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ローカルの Codex メタデータには、キャッシュ済み入力、未キャッシュ入力、出力、推論トークンの内訳は含まれていません。"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.note.rolloutAnalysis": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Rollout analysis uses local session JSONL files to estimate tool-output pressure, repeated commands, and likely waste drivers." } },
-        "ja": { "stringUnit": { "state": "translated", "value": "ロールアウト分析は、ローカルのセッション JSONL ファイルを使って、ツール出力の負荷、繰り返しコマンド、無駄の可能性が高い要因を推定します。" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rollout analysis uses local session JSONL files to estimate tool-output pressure, repeated commands, and likely waste drivers."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ロールアウト分析は、ローカルのセッション JSONL ファイルを使って、ツール出力の負荷、繰り返しコマンド、無駄の可能性が高い要因を推定します。"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.note.updatedDayGrouping": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Updated-day totals group each session's lifetime tokens by threads.updated_at; they are not provider billing day totals." } },
-        "ja": { "stringUnit": { "state": "translated", "value": "更新日別の合計は、各セッションの累計トークンを threads.updated_at でまとめたものです。プロバイダー請求日の合計ではありません。" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updated-day totals group each session's lifetime tokens by threads.updated_at; they are not provider billing day totals."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新日別の合計は、各セッションの累計トークンを threads.updated_at でまとめたものです。プロバイダー請求日の合計ではありません。"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.averageSession": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Average/session: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "セッション平均: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Average/session: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッション平均: %@"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.database": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Database: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "データベース: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Database: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "データベース: %@"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.cwdCountPlural": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%@ cwds" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%@ cwd" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ cwds"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ cwd"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.cwdCountSingular": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%@ cwd" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%@ cwd" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ cwd"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ cwd"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.cwdRow": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "  %@  %@ tokens  %@  %@ rollout  %@ tool output" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "  %@  %@ トークン  %@  %@ ロールアウト  %@ ツール出力" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@  %@ tokens  %@  %@ rollout  %@ tool output"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@  %@ トークン  %@  %@ ロールアウト  %@ ツール出力"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.cwdTotalsHeader": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "CWD totals:" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "CWD 別の合計:" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CWD totals:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CWD 別の合計:"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.dayCountPlural": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%@ days" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%@ 日" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ days"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 日"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.dayCountSingular": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%@ day" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%@ 日" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ day"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 日"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.dayRow": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "  %@  %@ tokens  %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "  %@  %@ トークン  %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@  %@ tokens  %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@  %@ トークン  %@"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.dayTotalsHeader": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Updated-day totals:" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "更新日別の合計:" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updated-day totals:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新日別の合計:"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.driver.largeRollout": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "large rollout" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "大きなロールアウト" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "large rollout"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大きなロールアウト"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.driver.largeToolOutput": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "large tool output" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "大きなツール出力" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "large tool output"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大きなツール出力"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.driver.longRunningSession": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "long session span" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "長いセッション期間" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "long session span"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "長いセッション期間"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.driver.manyRecoverableOutputs": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "many recoverable outputs" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "復元可能な出力が多い" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "many recoverable outputs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "復元可能な出力が多い"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.driver.manyTurns": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "many turns" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "ターン数が多い" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "many turns"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ターン数が多い"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.driver.repeatedCommands": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "repeated commands" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "繰り返しコマンド" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "repeated commands"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "繰り返しコマンド"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.durationHoursMinutes": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%@h %@m" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%@時間 %@分" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@h %@m"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@時間 %@分"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.durationMinutes": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%@m" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%@分" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@m"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@分"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.daysNoun": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "days" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "日" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "days"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.generatedAt": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Generated: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "生成日時: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generated: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "生成日時: %@"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.largestSession": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Largest session: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "最大セッション: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Largest session: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最大セッション: %@"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.modelCountPlural": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%@ models" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%@ モデル" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ models"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ モデル"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.modelCountSingular": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%@ model" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%@ モデル" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ model"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ モデル"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.modelRow": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "  %@  %@ tokens  %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "  %@  %@ トークン  %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@  %@ tokens  %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@  %@ トークン  %@"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.modelTotalsHeader": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Model totals:" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "モデル別の合計:" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model totals:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "モデル別の合計:"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.modelsNoun": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "models" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "モデル" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "models"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "モデル"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.noRows": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "  No rows." } },
-        "ja": { "stringUnit": { "state": "translated", "value": "  行はありません。" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  No rows."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  行はありません。"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.noTitle": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "(no title)" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "(タイトルなし)" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(no title)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(タイトルなし)"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.noteRow": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "  - %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "  - %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  - %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  - %@"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.notesHeader": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Notes:" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "注記:" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "注記:"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.omittedRow": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "  ... %@ omitted; use --limit all to show every row." } },
-        "ja": { "stringUnit": { "state": "translated", "value": "  ... %@ を省略しました。すべての行を表示するには --limit all を使用してください。" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  ... %@ omitted; use --limit all to show every row."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  ... %@ を省略しました。すべての行を表示するには --limit all を使用してください。"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.sessionCWDRow": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "      cwd: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "      cwd: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "      cwd: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "      cwd: %@"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.sessionDurationRow": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "      span: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "      期間: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "      span: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "      期間: %@"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.sessionDriversRow": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "      likely drivers: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "      可能性が高い要因: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "      likely drivers: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "      可能性が高い要因: %@"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.sessionIDRow": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "      id: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "      id: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "      id: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "      id: %@"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.sessionCountPlural": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%@ sessions" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%@ セッション" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ sessions"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ セッション"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.sessionCountSingular": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%@ session" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%@ セッション" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ session"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ セッション"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.sessionRepeatedCommandRow": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "      repeated: %@ x%@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "      繰り返し: %@ x%@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "      repeated: %@ x%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "      繰り返し: %@ x%@"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.sessionRow": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "  %@ tokens | %@ | %@ | %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "  %@ トークン | %@ | %@ | %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@ tokens | %@ | %@ | %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "  %@ トークン | %@ | %@ | %@"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.sessionSignalsRow": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "      signals: %@ rollout, %@ events, %@ tool calls, %@ tool output, %@ repeats, %@ span" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "      シグナル: %@ ロールアウト、%@ イベント、%@ ツール呼び出し、%@ ツール出力、%@ 繰り返し、期間 %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "      signals: %@ rollout, %@ events, %@ tool calls, %@ tool output, %@ repeats, %@ span"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "      シグナル: %@ ロールアウト、%@ イベント、%@ ツール呼び出し、%@ ツール出力、%@ 繰り返し、期間 %@"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.sessions": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Sessions: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "セッション: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessions: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッション: %@"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.sessionsHeader": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Highest-token sessions:" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "トークン数が多いセッション:" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Highest-token sessions:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "トークン数が多いセッション:"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.sessionsNoun": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "sessions" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "セッション" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sessions"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッション"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.title": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Codex token audit" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "Codex トークン監査" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex token audit"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex トークン監査"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.totalTokens": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Total tokens: %@" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "合計トークン: %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total tokens: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合計トークン: %@"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.output.unknown": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "unknown" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "不明" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unknown"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不明"
+          }
+        }
       }
     },
     "cli.codexTokenAudit.usage": {
@@ -236771,22 +239083,278 @@
         }
       }
     },
-    "agentSession.web.smartSession.focus": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Focus"}},"ja":{"stringUnit":{"state":"translated","value":"フォーカス"}}}},
-    "agentSession.web.smartSession.terminal": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Terminal"}},"ja":{"stringUnit":{"state":"translated","value":"ターミナル"}}}},
-    "agentSession.web.smartSession.learnings": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Learnings"}},"ja":{"stringUnit":{"state":"translated","value":"学び"}}}},
-    "agentSession.web.smartSession.workspace": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Workspace"}},"ja":{"stringUnit":{"state":"translated","value":"ワークスペース"}}}},
-    "agentSession.web.smartSession.current": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Current"}},"ja":{"stringUnit":{"state":"translated","value":"現在"}}}},
-    "agentSession.web.smartSession.relatedWork": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Related work"}},"ja":{"stringUnit":{"state":"translated","value":"関連作業"}}}},
-    "agentSession.web.smartSession.noCurrentTurn": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"No current turn. The latest supported outcome appears below."}},"ja":{"stringUnit":{"state":"translated","value":"現在のターンはありません。最後に確認できた結果を以下に表示します。"}}}},
-    "agentSession.web.smartSession.noLearnings": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"No learnings are available for this workspace yet."}},"ja":{"stringUnit":{"state":"translated","value":"このワークスペースではまだ学びを利用できません。"}}}},
-    "agentSession.web.smartSession.learningsUnavailable": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Learnings are unavailable for this workspace."}},"ja":{"stringUnit":{"state":"translated","value":"このワークスペースでは学びを利用できません。"}}}},
-    "agentSession.web.smartSession.learningsUnavailable.detail": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"This view is unavailable until learnings can be stored and reviewed."}},"ja":{"stringUnit":{"state":"translated","value":"学びを保存して確認できるようになるまで、このビューは利用できません。"}}}},
-    "agentSession.workspace.moreLinks": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"More links"}},"ja":{"stringUnit":{"state":"translated","value":"その他のリンク"}}}},
-    "agentSession.web.smartSession.changed": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Changed"}},"ja":{"stringUnit":{"state":"translated","value":"変更"}}}},
-    "agentSession.web.smartSession.checked": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Checked"}},"ja":{"stringUnit":{"state":"translated","value":"確認済み"}}}},
-    "agentSession.web.smartSession.remains": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Remains"}},"ja":{"stringUnit":{"state":"translated","value":"残り"}}}},
-    "agentSession.web.smartSession.validations": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Validation records remain scoped to this turn."}},"ja":{"stringUnit":{"state":"translated","value":"検証記録はこのターンの範囲に限定されます。"}}}},
-    "agentSession.web.smartSession.resume": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Resume point is unavailable unless captured by the producer."}},"ja":{"stringUnit":{"state":"translated","value":"記録されていない限り、再開地点は利用できません。"}}}},
+    "agentSession.web.smartSession.focus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フォーカス"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.terminal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminal"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ターミナル"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.learnings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learnings"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "学び"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.workspace": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workspace"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ワークスペース"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.current": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.relatedWork": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Related work"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "関連作業"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.noCurrentTurn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No current turn. The latest supported outcome appears below."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在のターンはありません。最後に確認できた結果を以下に表示します。"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.noLearnings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No learnings are available for this workspace yet."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このワークスペースではまだ学びを利用できません。"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.learningsUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learnings are unavailable for this workspace."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このワークスペースでは学びを利用できません。"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.learningsUnavailable.detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This view is unavailable until learnings can be stored and reviewed."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "学びを保存して確認できるようになるまで、このビューは利用できません。"
+          }
+        }
+      }
+    },
+    "agentSession.workspace.moreLinks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More links"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "その他のリンク"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.changed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.checked": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checked"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "確認済み"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.remains": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remains"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "残り"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.validations": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validation records remain scoped to this turn."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "検証記録はこのターンの範囲に限定されます。"
+          }
+        }
+      }
+    },
+    "agentSession.web.smartSession.resume": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume point is unavailable unless captured by the producer."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "記録されていない限り、再開地点は利用できません。"
+          }
+        }
+      }
+    },
     "voiceInput.unavailable.message": {
       "extractionState": "manual",
       "localizations": {
@@ -236817,6 +239385,363 @@
           "stringUnit": {
             "state": "translated",
             "value": "音声入力を使用できません"
+          }
+        }
+      }
+    },
+    "agentSession.factual.objective": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Objective"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目的"
+          }
+        }
+      }
+    },
+    "agentSession.factual.noAgentSummary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No agent summary observed."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エージェントの概要はありません。"
+          }
+        }
+      }
+    },
+    "agentSession.factual.evidenceSource": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observed evidence"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "観測された証拠"
+          }
+        }
+      }
+    },
+    "agentSession.factual.summaryLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summary"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "概要"
+          }
+        }
+      }
+    },
+    "workspaceRail.dirtySuffix": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " · uncommitted changes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " · 未コミットの変更"
+          }
+        }
+      }
+    },
+    "agentSession.factual.noPlan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No plan data observed."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "計画データはありません。"
+          }
+        }
+      }
+    },
+    "agentSession.factual.checksAndChanges": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checks & changes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チェックと変更"
+          }
+        }
+      }
+    },
+    "agentSession.factual.blockersAndApproach": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blockers & approach changes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ブロッカーと方針変更"
+          }
+        }
+      }
+    },
+    "agentSession.factual.reasoningCount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d change(s)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 件の変更"
+          }
+        }
+      }
+    },
+    "agentSession.factual.planProgress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d of %d steps complete"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d/%d ステップ完了"
+          }
+        }
+      }
+    },
+    "agentSession.factual.checksSummary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d commands · %d files"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コマンド %d 件 · ファイル %d 件"
+          }
+        }
+      }
+    },
+    "agentSession.factual.source": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent-reported"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エージェント報告"
+          }
+        }
+      }
+    },
+    "workspaceRail.pullRequestPrefix": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PR"
+          }
+        }
+      }
+    },
+    "agentSession.factual.nativeUnavailable.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This provider does not expose a native session surface in this build."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このビルドでは、このプロバイダーのネイティブセッション画面を利用できません。"
+          }
+        }
+      }
+    },
+    "agentSession.factual.nativeUnavailable.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provider-native session unavailable"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プロバイダーのネイティブセッションを利用できません"
+          }
+        }
+      }
+    },
+    "agentSession.factual.sessionDescriptionUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No session description is available."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッションの説明はありません。"
+          }
+        }
+      }
+    },
+    "agentSession.factual.sessionUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session unavailable"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッションを利用できません"
+          }
+        }
+      }
+    },
+    "agentSession.factual.terminalUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The live terminal is unavailable for this session."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このセッションではライブターミナルを利用できません。"
+          }
+        }
+      }
+    },
+    "agentSession.factual.workspaceUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workspace unavailable"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ワークスペースを利用できません"
+          }
+        }
+      }
+    },
+    "titlebar.workspaceCount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld workspaces"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 個のワークスペース"
+          }
+        }
+      }
+    },
+    "workspaceRail.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workspaces"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ワークスペース"
           }
         }
       }

@@ -51,7 +51,7 @@ struct RemoteTmuxPaneHeader: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color(nsColor: appearance.foregroundColor))
         .help(label)
         .accessibilityLabel(label)
     }

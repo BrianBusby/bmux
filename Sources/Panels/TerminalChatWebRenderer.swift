@@ -7,7 +7,7 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
     let reader: any TerminalChatReading
     let appearance: PanelAppearance
     var onStartConnectedSession: (() async throws -> Void)? = nil
-    let onRequestPanelFocus: () -> Void
+    var onRequestPanelFocus: () -> Void = {}
     let onTerminal: () -> Void
 
     func makeCoordinator() -> AgentSessionWebRendererCoordinator { panel.presentation.chatRenderer }

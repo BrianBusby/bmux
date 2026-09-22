@@ -10,6 +10,7 @@ import BmuxFoundation
 /// View for rendering a terminal panel
 struct TerminalPanelView: View {
     @ObservedObject var panel: TerminalPanel
+    @Environment(\.bmuxShellTerminalOnly) var bmuxShellTerminalOnly
     @AppStorage(NotificationPaneRingSettings.enabledKey)
     private var notificationPaneRingEnabled = NotificationPaneRingSettings.defaultEnabled
     @AppStorage(TerminalTextBoxInputSettings.maxLinesKey)
@@ -36,7 +37,13 @@ struct TerminalPanelView: View {
     let onTriggerFlash: () -> Void
 
     var body: some View {
-        if let hibernationState = panel.agentHibernationState {
+        if bmuxShellTerminalOnly && !isVisibleInUI {
+            // The shell owns the Session/Terminal switch. Do not leave a
+            // Ghostty portal mounted while the outer Session view is active;
+            // portal-hosted AppKit views can otherwise remain above SwiftUI
+            // after the terminal tab is removed from the view tree.
+            Color.clear
+        } else if let hibernationState = panel.agentHibernationState {
             hibernationBody(hibernationState)
         } else {
             terminalBody
@@ -103,6 +110,11 @@ struct TerminalPanelView: View {
             .id(panel.id)
             .background(Color.clear)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onDisappear {
+                if bmuxShellTerminalOnly {
+                    TerminalWindowPortalRegistry.hideHostedView(panel.surface.hostedView)
+                }
+            }
 #if DEBUG
             .reportTerminalViewportGeometryForUITest(panel: panel)
 #endif

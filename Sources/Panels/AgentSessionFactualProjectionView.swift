@@ -2,7 +2,59 @@ import AppKit
 import SwiftUI
 import ProvenanceEngineContracts
 
+private extension Color {
+    static let bmuxSurface = Color(red: 0.137, green: 0.141, blue: 0.157)
+    static let bmuxRail = Color(red: 0.098, green: 0.102, blue: 0.114)
+    static let bmuxCard = Color(red: 0.122, green: 0.125, blue: 0.137)
+    static let bmuxCardBorder = Color(red: 0.220, green: 0.224, blue: 0.247)
+    static let bmuxCardSelected = Color(red: 0.137, green: 0.180, blue: 0.133)
+    static let bmuxCardSelectedBorder = Color(red: 0.227, green: 0.306, blue: 0.220)
+    static let bmuxSeparator = Color(red: 0.204, green: 0.212, blue: 0.239)
+    static let bmuxSeparatorSubtle = Color(red: 0.247, green: 0.255, blue: 0.286)
+    static let bmuxTextPrimary = Color(red: 0.949, green: 0.953, blue: 0.969)
+    static let bmuxTextSecondary = Color(red: 0.737, green: 0.753, blue: 0.792)
+    static let bmuxTextTertiary = Color(red: 0.635, green: 0.651, blue: 0.698)
+    static let bmuxTextMuted = Color(red: 0.522, green: 0.541, blue: 0.596)
+    static let bmuxTextDisabled = Color(red: 0.455, green: 0.475, blue: 0.529)
+    static let bmuxAccentGreen = Color(red: 0.416, green: 0.620, blue: 0.369)
+    static let bmuxAccentYellow = Color(red: 0.620, green: 0.620, blue: 0.416)
+    static let bmuxTurnAccent = Color(red: 0.290, green: 0.400, blue: 0.259)
+    static let bmuxLinkGreen = Color(red: 0.478, green: 0.620, blue: 0.416)
+    static let bmuxTabUnderline = Color(red: 0.878, green: 0.878, blue: 0.878)
+    static let bmuxAmberFill = Color(red: 0.137, green: 0.110, blue: 0.039)
+    static let bmuxAmberBorder = Color(red: 0.239, green: 0.180, blue: 0.039)
+    static let bmuxAmberText = Color(red: 0.784, green: 0.643, blue: 0.290)
+    static let bmuxUserMessage = Color(red: 0.118, green: 0.118, blue: 0.118)
+    static let bmuxActionRow = Color(red: 0.090, green: 0.090, blue: 0.090)
+    static let bmuxComposer = Color(red: 0.094, green: 0.094, blue: 0.094)
+    static let bmuxComposerBorder = Color(red: 0.165, green: 0.165, blue: 0.165)
+    static let bmuxPillActive = Color(red: 0.145, green: 0.145, blue: 0.145)
+    static let bmuxQueueFill = Color(red: 0.118, green: 0.180, blue: 0.110)
+}
+
+private enum BmuxRadius {
+    static let appShell: CGFloat = 12
+}
+
 private let agentSessionFactualProjectionAutoRefreshNanoseconds: UInt64 = 2_000_000_000
+
+struct AgentSessionWorkspaceLink: Identifiable, Equatable {
+    let id: String
+    let label: String
+    let kind: String
+    let url: URL?
+    let state: String?
+    let owner: String?
+}
+
+struct AgentSessionWorkspaceChrome: Equatable {
+    let title: String
+    let repository: String?
+    let colorHex: String?
+    let status: String?
+    let activity: String?
+    let links: [AgentSessionWorkspaceLink]
+}
 
 enum AgentSessionFactualProjectionEvidenceRows {
     enum TurnProperty: Equatable {
@@ -51,6 +103,15 @@ enum AgentSessionFactualProjectionEvidenceRows {
                 return .detail(detail)
             }
             return .reference(turn)
+        }.sorted { turnDate(for: $0) > turnDate(for: $1) }
+    }
+
+    static func turnDate(for item: PriorTurnItem) -> Date {
+        switch item {
+        case .detail(let turnSnapshot):
+            turnSnapshot.turn.completedAt ?? turnSnapshot.turn.updatedAt
+        case .reference(let turn):
+            turn.completedAt ?? turn.updatedAt
         }
     }
 
@@ -75,45 +136,32 @@ enum AgentSessionFactualProjectionEvidenceRows {
     }
 }
 
-struct AgentSessionWorkspaceLink: Identifiable, Equatable {
-    let id: String
-    let label: String
-    let kind: String
-    let url: URL?
-    let state: String?
-    let owner: String?
-}
-
-struct AgentSessionWorkspaceChrome: Equatable {
-    let title: String
-    let repository: String?
-    let colorHex: String?
-    let status: String?
-    let activity: String?
-    let links: [AgentSessionWorkspaceLink]
-}
-
 struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     let showsSwitcher: Bool
+    var showsModePicker = true
+    var startsInSession = false
+    var showsAppShell = false
+    var fixturePreviewEnabled = false
+    var liveChatContent: ((@escaping () -> Void) -> AnyView)?
+    var liveTerminalContent: AnyView?
+    var onPrimaryTabChange: ((Bool) -> Void)?
+    var workspaceLabel: String?
+    var sessionTitle: String?
+    var sessionDescription: String?
     var chatContent: ((_ onTerminal: @escaping () -> Void) -> AnyView)? = nil
     let stableWorkspaceID: UUID?
     let workProvenanceRuntime: WorkProvenanceRuntime?
     let backgroundColor: NSColor
-    let workspaceChrome: AgentSessionWorkspaceChrome?
     @ViewBuilder let primaryContent: (_ isVisible: Bool) -> PrimaryContent
 
     @State private var viewMode: AgentSessionFactualProjectionMode = .terminal
     @State private var factualProjectionResult: AgentSessionFactualProjectionReadResult = .missingSession
     @State private var isLoadingFactualProjection = false
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(spacing: 0) {
-            if let workspaceChrome {
-                AgentSessionWorkspaceHeader(chrome: workspaceChrome)
-            }
-            if showsSwitcher {
-                viewNavigation
+            if showsSwitcher && showsModePicker {
+                modePicker
                 Divider()
             }
             selectedContent
@@ -133,16 +181,19 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
             scheduleFactualProjectionRefreshIfNeeded()
         }
         .onAppear {
+            if startsInSession {
+                viewMode = .session
+            }
             scheduleFactualProjectionRefreshIfNeeded()
         }
         .task(id: factualProjectionTaskID) {
             guard showsSwitcher,
-            viewMode == .focus else { return }
+            viewMode == .session else { return }
             await refreshFactualProjection()
         }
         .task(id: factualProjectionRefreshLoopTaskID) {
             guard showsSwitcher,
-                  viewMode == .focus else { return }
+                  viewMode == .session else { return }
             await runFactualProjectionRefreshLoop()
         }
     }
@@ -159,101 +210,56 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
                 chatContent { viewMode = .terminal }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            if showsFocusContent {
-                Group {
-#if DEBUG
-                    if showsHybridWorkbenchFixture {
-                        AgentSessionFixtureFocusView(backgroundColor: shellContentBackground)
-                    } else {
-                        AgentSessionFactualProjectionView(
-                            result: factualProjectionResult,
-                            isLoading: isLoadingFactualProjection,
-                            backgroundColor: shellContentBackground,
-                            onRefresh: {
-                                Task { await refreshFactualProjection() }
-                            }
-                        )
-                    }
-#else
-                    AgentSessionFactualProjectionView(
-                        result: factualProjectionResult,
-                        isLoading: isLoadingFactualProjection,
-                        backgroundColor: shellContentBackground,
-                        onRefresh: {
-                            Task { await refreshFactualProjection() }
-                        }
-                    )
-#endif
-                }
+            if showsSessionContent {
+                AgentSessionFactualProjectionView(
+                    result: factualProjectionResult,
+                    isLoading: isLoadingFactualProjection,
+                    backgroundColor: Color(nsColor: backgroundColor),
+                    onRefresh: {
+                        Task { await refreshFactualProjection() }
+                    },
+                    showsAppShell: showsAppShell,
+                    fixturePreviewEnabled: fixturePreviewEnabled,
+                    liveChatContent: liveChatContent,
+                    liveTerminalContent: liveTerminalContent,
+                    onPrimaryTabChange: onPrimaryTabChange,
+                    workspaceLabel: workspaceLabel,
+                    sessionTitle: sessionTitle,
+                    sessionDescription: sessionDescription
+                )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .onAppear {
                     scheduleFactualProjectionRefreshIfNeeded()
                 }
             }
-            if showsLearningsContent {
-                AgentSessionLearningsUnavailableView(backgroundColor: shellContentBackground)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
         }
     }
 
-    private var showsFocusContent: Bool {
-        showsSwitcher && viewMode == .focus
-    }
-
-    private var showsLearningsContent: Bool {
-        showsSwitcher && viewMode == .learnings
+    private var showsSessionContent: Bool {
+        showsSwitcher && viewMode == .session
     }
 
     private var primaryContentIsVisible: Bool {
-        !showsFocusContent && !showsLearningsContent && viewMode != .chat
+        !showsSessionContent && viewMode != .chat
     }
 
-    private var viewNavigation: some View {
-        HStack(spacing: 24) {
-            ForEach(AgentSessionFactualProjectionMode.displayOrder.filter { $0 != .chat || chatContent != nil }) { mode in
-                Button {
-                    viewMode = mode
-                } label: {
-                    Text(mode.title)
-                        .font(.system(size: 13, weight: viewMode == mode ? .semibold : .medium))
-                        .foregroundStyle(viewMode == mode ? .primary : .secondary)
-                        .padding(.vertical, 10)
-                        .overlay(alignment: .bottom) {
-                            if viewMode == mode {
-                                Rectangle()
-                                    .fill(shellAccent)
-                                    .frame(height: 2)
-                            }
-                        }
-                    .contentShape(Rectangle())
+    private var modePicker: some View {
+        HStack(spacing: 8) {
+            Picker("", selection: $viewMode) {
+                ForEach(AgentSessionFactualProjectionMode.allCases.filter { $0 != .chat || chatContent != nil }) { mode in
+                    Text(mode.title).tag(mode)
                 }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(viewMode == mode ? .isSelected : [])
             }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(width: chatContent == nil ? 180 : 260)
+
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 28)
-        .background(shellRail)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background(Color(nsColor: backgroundColor))
     }
-
-    private var shellRail: Color {
-        colorScheme == .dark ? Color(nsColor: NSColor(hex: "#191A1D") ?? .windowBackgroundColor) : Color(nsColor: NSColor(hex: "#F2F0F5") ?? .windowBackgroundColor)
-    }
-
-    private var shellAccent: Color {
-        colorScheme == .dark ? Color(nsColor: NSColor(hex: "#B9A3FF") ?? .systemPurple) : Color(nsColor: NSColor(hex: "#6542AD") ?? .systemPurple)
-    }
-
-    private var shellContentBackground: Color {
-        colorScheme == .dark ? Color(nsColor: NSColor(hex: "#222326") ?? backgroundColor) : Color(nsColor: NSColor(hex: "#FCFBFD") ?? backgroundColor)
-    }
-
-#if DEBUG
-    private var showsHybridWorkbenchFixture: Bool {
-        UserDefaults.standard.bool(forKey: "bmux.hybridFocus.fixture")
-    }
-#endif
 
     private var factualProjectionTaskID: String {
         "\(showsSwitcher):\(viewMode.rawValue):\(stableWorkspaceID?.uuidString ?? "no-workspace")"
@@ -295,295 +301,17 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     }
 
     private func scheduleFactualProjectionRefreshIfNeeded() {
-        guard showsSwitcher, viewMode == .focus else { return }
+        guard showsSwitcher, viewMode == .session else { return }
         Task { await refreshFactualProjection() }
-    }
-}
-
-#if DEBUG
-private func hybridFocusFixtureText(_ key: String, _ fallback: String) -> String {
-    Bundle.main.localizedString(forKey: key, value: fallback, table: nil)
-}
-
-/// Fixture-only Focus content used to review density and hierarchy with the
-/// native shell. It is intentionally separate from PE data and never appears
-/// unless the explicit Debug fixture flag is enabled.
-private struct AgentSessionFixtureFocusView: View {
-    let backgroundColor: Color
-    @State private var expandedIDs: Set<String> = []
-    @Environment(\.colorScheme) private var colorScheme
-
-    private let history = [
-        ("turn-3", hybridFocusFixtureText("hybrid.fixture.history.ci", "Check CI across the PR stack"), "4m ago · 8.2k"),
-        ("turn-2", hybridFocusFixtureText("hybrid.fixture.history.tickets", "Split implementation into six tickets"), "19m ago · 24.6k"),
-        ("turn-1", hybridFocusFixtureText("hybrid.fixture.history.ownership", "Confirm review ownership and rollout"), "42m ago · 11.4k")
-    ]
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    Text(hybridFocusFixtureText("hybrid.fixture.currentTurn", "CURRENT TURN"))
-                        .font(.system(size: 11, weight: .semibold))
-                        .tracking(1.1)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text(verbatim: "CODEX · 28M 36S")
-                        .font(.system(size: 11, weight: .medium).monospacedDigit())
-                        .foregroundStyle(.secondary)
-                }
-
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(hybridFocusFixtureText("hybrid.fixture.objective", "Move tickets into review"))
-                            .font(.system(size: 17, weight: .semibold))
-                        Spacer()
-                        Text(hybridFocusFixtureText("hybrid.fixture.waitingReviews", "Waiting on reviews"))
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(Color(nsColor: NSColor(hex: "#B9A3FF") ?? .systemPurple))
-                    }
-                    Text(hybridFocusFixtureText("hybrid.fixture.summary", "The tickets are assigned to you and in review. I’m waiting for the final review checks before handing the stack back."))
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    fixtureCheck(hybridFocusFixtureText("hybrid.fixture.check.updated", "Four tickets updated"), done: true)
-                    fixtureCheck(hybridFocusFixtureText("hybrid.fixture.check.lint", "Lint and TypeScript passed on all six PRs"), done: true)
-                    fixtureCheck(hybridFocusFixtureText("hybrid.fixture.check.running", "Review checks still running"), done: false)
-                    Divider().opacity(0.35)
-                    DisclosureGroup(hybridFocusFixtureText("hybrid.fixture.toolActivity", "Tool activity · inspect evidence")) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(hybridFocusFixtureText("hybrid.fixture.observedCommand", "Observed: gh pr checks --watch"))
-                            Text(hybridFocusFixtureText("hybrid.fixture.sourceTurn", "Source: terminal activity · current turn"))
-                        }
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 6)
-                    }
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
-                }
-                .padding(16)
-                .background(cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
-                .overlay { RoundedRectangle(cornerRadius: 11, style: .continuous).stroke(cardBorder, lineWidth: 1) }
-
-                HStack {
-                    Text(hybridFocusFixtureText("hybrid.fixture.previousTurns", "PREVIOUS TURNS · NEWEST FIRST"))
-                        .font(.system(size: 11, weight: .semibold))
-                        .tracking(1.1)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text(hybridFocusFixtureText("hybrid.fixture.tokenUsage", "TOKEN USAGE*"))
-                        .font(.system(size: 11, weight: .semibold))
-                        .tracking(1.1)
-                        .foregroundStyle(.secondary)
-                }
-
-                VStack(spacing: 0) {
-                    ForEach(history, id: \.0) { item in
-                        VStack(alignment: .leading, spacing: 8) {
-                            Button {
-                                if expandedIDs.contains(item.0) { expandedIDs.remove(item.0) } else { expandedIDs.insert(item.0) }
-                            } label: {
-                                HStack {
-                                    Text(item.1)
-                                        .font(.system(size: 13, weight: .medium))
-                                        .foregroundStyle(.primary)
-                                    Spacer()
-                                    Text(item.2)
-                                        .font(.system(size: 11).monospacedDigit())
-                                        .foregroundStyle(.secondary)
-                                }
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                            if expandedIDs.contains(item.0) {
-                                VStack(alignment: .leading, spacing: 5) {
-                                    Text(hybridFocusFixtureText("hybrid.fixture.changed", "Changed  ·  scoped the implementation to the review stack"))
-                                    Text(hybridFocusFixtureText("hybrid.fixture.checked", "Checked  ·  targeted validation and source inspection"))
-                                    Text(hybridFocusFixtureText("hybrid.fixture.remains", "Remains  ·  evidence-backed follow-up"))
-                                }
-                                .font(.system(size: 12))
-                                .foregroundStyle(.secondary)
-                                .padding(.bottom, 8)
-                            }
-                            Divider().opacity(0.25)
-                        }
-                        .padding(.vertical, 12)
-                    }
-                }
-
-                HStack(spacing: 9) {
-                    Image(systemName: "book.closed")
-                    Text(hybridFocusFixtureText("hybrid.fixture.knowledge", "Knowledge travels with the work."))
-                    Text(hybridFocusFixtureText("hybrid.fixture.exploreLearnings", "Explore 2 learnings"))
-                        .underline()
-                }
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.primary.opacity(0.86))
-                .padding(.horizontal, 14)
-                .padding(.vertical, 11)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(nsColor: NSColor(hex: "#342E4B") ?? .systemPurple))
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-
-                Text(hybridFocusFixtureText("hybrid.fixture.exampleTelemetry", "* Example data, not live telemetry"))
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: 780, alignment: .leading)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 28)
-            .padding(.vertical, 24)
-        }
-        .background(backgroundColor)
-    }
-
-    private func fixtureCheck(_ text: String, done: Bool) -> some View {
-        Label(text, systemImage: done ? "checkmark" : "circle")
-            .font(.system(size: 12))
-            .foregroundStyle(done ? Color(nsColor: NSColor(hex: "#7ED8B1") ?? .systemGreen) : .secondary)
-    }
-
-    private var cardBackground: Color {
-        colorScheme == .dark ? Color(nsColor: NSColor(hex: "#25262B") ?? .windowBackgroundColor) : Color(nsColor: NSColor(hex: "#F8F7FA") ?? .windowBackgroundColor)
-    }
-
-    private var cardBorder: Color {
-        colorScheme == .dark ? Color(nsColor: NSColor(hex: "#3B3D48") ?? .separatorColor) : Color(nsColor: NSColor(hex: "#D3CEDB") ?? .separatorColor)
-    }
-}
-#endif
-
-private struct AgentSessionWorkspaceHeader: View {
-    let chrome: AgentSessionWorkspaceChrome
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            Text(chrome.repository ?? chrome.title)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-            Text(chrome.title)
-                .font(.system(size: 24, weight: .semibold))
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-            if let activity = chrome.activity ?? chrome.status {
-                Text(activity)
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            if !chrome.links.isEmpty {
-                AgentSessionWorkspaceLinkFlow(links: chrome.links)
-            }
-        }
-        .padding(.horizontal, 28)
-        .padding(.top, 18)
-        .padding(.bottom, 14)
-        .fixedSize(horizontal: false, vertical: true)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(colorScheme == .dark ? Color(nsColor: NSColor(hex: "#222326") ?? .windowBackgroundColor) : Color(nsColor: NSColor(hex: "#FCFBFD") ?? .windowBackgroundColor))
-    }
-}
-
-private struct AgentSessionWorkspaceLinkFlow: View {
-    let links: [AgentSessionWorkspaceLink]
-
-    var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 8) {
-                visibleLinks
-            }
-            VStack(alignment: .leading, spacing: 6) {
-                visibleLinks
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var visibleLinks: some View {
-        ForEach(links.prefix(3)) { link in
-            linkView(link)
-        }
-        if links.count > 3 {
-            Menu {
-                ForEach(Array(links.dropFirst(3))) { link in
-                    linkView(link)
-                }
-            } label: {
-                Label(
-                    String(localized: "agentSession.workspace.moreLinks", defaultValue: "More links", comment: "Additional workspace links disclosure"),
-                    systemImage: "ellipsis"
-                )
-                .font(.system(size: 12, weight: .medium))
-            }
-            .menuStyle(.borderlessButton)
-        }
-    }
-
-    @ViewBuilder
-    private func linkView(_ link: AgentSessionWorkspaceLink) -> some View {
-        if let url = link.url {
-            Link(link.label, destination: url)
-                .font(.system(size: 12, weight: .medium))
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .background(Color.primary.opacity(0.05))
-                .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-        } else {
-            Text(link.label)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.secondary)
-        }
-    }
-}
-
-/// Learnings stays honest until a persisted producer and review lifecycle are
-/// available. Related-session history is evidence, not curated knowledge.
-private struct AgentSessionLearningsUnavailableView: View {
-    let backgroundColor: Color
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
-                Text(String(localized: "agentSession.web.smartSession.learnings", defaultValue: "Learnings"))
-                    .font(.system(size: 20, weight: .semibold))
-                Text(String(localized: "agentSession.web.smartSession.noLearnings", defaultValue: "No learnings are available for this workspace yet."))
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(.secondary)
-                VStack(alignment: .leading, spacing: 8) {
-                    Image(systemName: "tray")
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundStyle(.secondary)
-                    Text(String(localized: "agentSession.web.smartSession.learningsUnavailable", defaultValue: "Learnings are unavailable for this workspace."))
-                        .font(.system(size: 15, weight: .semibold))
-                    Text(String(localized: "agentSession.web.smartSession.learningsUnavailable.detail", defaultValue: "This view is unavailable until learnings can be stored and reviewed."))
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(18)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(nsColor: .windowBackgroundColor).opacity(0.55))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(22)
-        }
-        .background(backgroundColor)
     }
 }
 
 private enum AgentSessionFactualProjectionMode: String, CaseIterable, Identifiable {
     case terminal
     case chat
-    case focus
-    case learnings
+    case session
 
     var id: String { rawValue }
-
-    static let displayOrder: [Self] = [.focus, .chat, .terminal, .learnings]
 
     var title: String {
         switch self {
@@ -591,10 +319,8 @@ private enum AgentSessionFactualProjectionMode: String, CaseIterable, Identifiab
             String(localized: "agentSession.viewMode.terminal", defaultValue: "Terminal")
         case .chat:
             String(localized: "agentSession.viewMode.chat", defaultValue: "Chat")
-        case .focus:
-            String(localized: "agentSession.web.smartSession.focus", defaultValue: "Focus")
-        case .learnings:
-            String(localized: "agentSession.web.smartSession.learnings", defaultValue: "Learnings")
+        case .session:
+            String(localized: "agentSession.viewMode.session", defaultValue: "Session")
         }
     }
 }
@@ -604,48 +330,196 @@ struct AgentSessionFactualProjectionView: View {
     let isLoading: Bool
     let backgroundColor: Color
     let onRefresh: () -> Void
+    var showsAppShell = false
+    var fixturePreviewEnabled = false
+    var liveChatContent: ((@escaping () -> Void) -> AnyView)?
+    var liveTerminalContent: AnyView?
+    var onPrimaryTabChange: ((Bool) -> Void)?
+    var workspaceLabel: String?
+    var sessionTitle: String?
+    var sessionDescription: String?
 
     @State private var expandedPriorTurnIDs: Set<String> = []
-    @Environment(\.colorScheme) private var colorScheme
+    @State private var selectedPrimaryTab = AgentSessionFactualProjectionMode.session.rawValue
 
     var body: some View {
+        if showsAppShell && fixturePreviewEnabled {
+            referenceShell
+        } else {
+            contentPane
+        }
+    }
+
+    private var referenceShell: some View {
         ZStack {
-            backgroundColor.ignoresSafeArea()
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    header
-                    content
+            Color.bmuxSurface.ignoresSafeArea()
+            VStack(spacing: 0) {
+                HStack {
+                    HStack(spacing: 8) {
+                        Text("bmux").font(.system(size: 21, weight: .bold, design: .rounded)).foregroundStyle(Color.bmuxTextPrimary)
+                        Text("✳").font(.system(size: 18)).foregroundStyle(Color.bmuxTurnAccent)
+                        Text("CompanyCam").foregroundStyle(Color.bmuxTextTertiary)
+                    }
+                    Spacer()
+                    Text("Design concept · illustrative data")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.bmuxTextDisabled)
                 }
-                .frame(maxWidth: 780, alignment: .leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 28)
-                .padding(.vertical, 24)
+                .padding(.horizontal, 24)
+                .frame(height: 44)
+                .overlay(alignment: .bottom) { Rectangle().fill(Color.bmuxSeparator).frame(height: 1) }
+
+                HStack(spacing: 0) {
+                    workspaceRail
+                    contentPane
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: BmuxRadius.appShell))
+            .overlay(RoundedRectangle(cornerRadius: BmuxRadius.appShell).stroke(Color.bmuxSeparator, lineWidth: 1))
+            .padding(18)
+        }
+    }
+
+    private var workspaceRail: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("WORKSPACES").font(.system(size: 11, weight: .medium)).tracking(1.2).foregroundStyle(Color.bmuxTextMuted)
+                Spacer()
+                Text("3").foregroundStyle(Color.bmuxTextDisabled)
+            }
+            ScrollView {
+                VStack(spacing: 8) {
+                    workspaceCard(repo: "companycam-mobile", title: "One-off checklist flow", status: "Waiting for review", selected: true, links: ["INP-2228 · Build local draft checkbox row and retry-safe save", "PR #11279 · Update one-off checklist mobile flow · Open", "2.0: One off Advanced checklists creation (needed for Assistant + Walkthrough)"])
+                    workspaceCard(repo: "companycam-mobile", title: "Reorder checklist fields", status: "Working · related to this session", selected: false, links: ["INP-2341 · Reorder one-off checklist fields with a single-field move", "INP-2228 · Build local draft checkbox row and retry-safe save", "PR #11279 · Update one-off checklist mobile flow · Open", "2.0: One off Advanced checklists creation (needed for Assistant + Walkthrough)"])
+                    workspaceCard(repo: "Company-Cam-API", title: "Rename & duplicate checklists", status: "Merged", selected: false, links: ["INP-2331 · Let the assistant rename a whole checklist", "INP-2332 · Let the assistant duplicate a whole checklist"])
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 16)
+        .frame(width: 340)
+        .background(Color.bmuxRail)
+        .overlay(alignment: .trailing) { Rectangle().fill(Color.bmuxSeparator).frame(width: 1) }
+    }
+
+    private func workspaceCard(repo: String, title: String, status: String, selected: Bool, links: [String]) -> some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Text(repo).font(.system(size: 11)).foregroundStyle(Color.bmuxTextTertiary)
+            Text(title).font(.system(size: 14, weight: .semibold)).foregroundStyle(Color.bmuxTextPrimary)
+            Label(status, systemImage: status == "Merged" ? "checkmark" : "clock")
+                .font(.system(size: 12)).foregroundStyle(status == "Merged" ? Color.bmuxAccentGreen : Color.bmuxAccentYellow)
+            Divider().overlay(Color.bmuxSeparatorSubtle)
+            ForEach(links, id: \.self) { link in
+                Label(link, systemImage: link.hasPrefix("PR") ? "arrow.triangle.pull" : link.contains("2.0:") ? "folder" : "ticket")
+                    .font(.system(size: 11.5)).foregroundStyle(Color.bmuxTextSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Text("PR owner · BrianBusby").font(.system(size: 11)).foregroundStyle(Color.bmuxTextTertiary)
+        }
+        .padding(12)
+        .background(selected ? Color.bmuxCardSelected : Color.bmuxCard)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(selected ? Color.bmuxCardSelectedBorder : Color.bmuxCardBorder, lineWidth: 1))
+    }
+
+    private var contentPane: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(workspaceLabel ?? String(localized: "agentSession.factual.workspaceUnavailable", defaultValue: "Workspace unavailable"))
+                .font(.system(size: 12)).foregroundStyle(Color.bmuxTextTertiary)
+            Text(sessionTitle ?? String(localized: "agentSession.factual.sessionUnavailable", defaultValue: "Session unavailable"))
+                .font(.system(size: 26, weight: .bold)).foregroundStyle(Color.bmuxTextPrimary).padding(.top, 4)
+            if let sessionDescription, !sessionDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Text(sessionDescription)
+                    .font(.system(size: 13.5))
+                    .foregroundStyle(Color.bmuxTextTertiary)
+                    .padding(.top, 4)
+            }
+            primaryTabs.padding(.top, 16)
+            switch selectedPrimaryTab {
+            case AgentSessionFactualProjectionMode.session.rawValue:
+                sessionContent
+            case AgentSessionFactualProjectionMode.chat.rawValue:
+                chatContentView
+            case AgentSessionFactualProjectionMode.terminal.rawValue:
+                terminalContentView
+            default:
+                emptyMessage(String(localized: "agentSession.factual.unavailable", defaultValue: "Session data unavailable"))
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color.bmuxSurface)
+        .foregroundStyle(Color.bmuxTextPrimary)
+    }
+
+    private var primaryTabs: some View {
+        HStack(spacing: 24) {
+            ForEach([
+                AgentSessionFactualProjectionMode.session,
+                AgentSessionFactualProjectionMode.chat,
+                AgentSessionFactualProjectionMode.terminal
+            ]) { mode in
+                Button(mode.title) {
+                    selectedPrimaryTab = mode.rawValue
+                    onPrimaryTabChange?(mode == .terminal)
+                }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 13.5, weight: selectedPrimaryTab == mode.rawValue ? .medium : .regular))
+                    .foregroundStyle(selectedPrimaryTab == mode.rawValue ? Color.bmuxTextPrimary : Color.bmuxTextTertiary)
+                    .padding(.bottom, 10)
+                    .overlay(alignment: .bottom) { if selectedPrimaryTab == mode.rawValue { Rectangle().fill(Color.bmuxTabUnderline).frame(height: 2) } }
+            }
+            Spacer()
+        }
+        .overlay(alignment: .bottom) { Rectangle().fill(Color.bmuxSeparatorSubtle).frame(height: 1) }
+    }
+
+    private var sessionContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                content.padding(.top, 20)
             }
         }
     }
 
-    private var header: some View {
-        HStack(spacing: 10) {
-            if isLoading {
-                ProgressView()
-                    .controlSize(.small)
+    private var terminalContentView: some View {
+        Group {
+            if selectedPrimaryTab == AgentSessionFactualProjectionMode.terminal.rawValue,
+               let liveTerminalContent {
+                liveTerminalContent
+                    .id("bmux-shell-terminal")
+            } else {
+                Color.clear
             }
-            Spacer(minLength: 0)
-            Button {
-                onRefresh()
-            } label: {
-                Label(
-                    String(localized: "agentSession.factual.refresh", defaultValue: "Refresh"),
-                    systemImage: "arrow.clockwise"
-                )
-                .labelStyle(.iconOnly)
-            }
-            .buttonStyle(.borderless)
-            .safeHelp(String(
-                localized: "agentSession.factual.refresh.tooltip",
-                defaultValue: "Refresh session facts"
-            ))
         }
+    }
+
+    private var chatContentView: some View {
+        Group {
+            if let liveChatContent {
+                liveChatContent {
+                    selectedPrimaryTab = AgentSessionFactualProjectionMode.terminal.rawValue
+                    onPrimaryTabChange?(true)
+                }
+                .id("bmux-shell-chat")
+            } else {
+                emptyMessage(String(
+                    localized: "agentSession.chat.chatUnavailable",
+                    defaultValue: "Conversation unavailable"
+                ))
+            }
+        }
+    }
+
+    private var nativeContent: some View {
+        return VStack(alignment: .leading, spacing: 12) {
+            Text(String(localized: "agentSession.factual.nativeUnavailable.title", defaultValue: "Provider-native session unavailable"))
+                .font(.system(size: 18, weight: .bold))
+            Text(String(localized: "agentSession.factual.nativeUnavailable.message", defaultValue: "This provider does not expose a native session surface in this build."))
+                .foregroundStyle(Color.bmuxTextTertiary)
+        }
+        .padding(.top, 22)
     }
 
     @ViewBuilder
@@ -718,60 +592,222 @@ struct AgentSessionFactualProjectionView: View {
 
     private func availableContent(_ snapshot: ProvenanceFactualSessionProjectionSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            quietSection(String(localized: "agentSession.factual.latestTurn", defaultValue: "Current turn")) {
-                if let turn = snapshot.latestTurn {
-                    AgentSessionFactualProjectionCurrentTurnCardView(turnSnapshot: turn)
-                } else {
-                    mutedText(String(localized: "agentSession.factual.noTurns", defaultValue: "No turns observed."))
+            if let turn = snapshot.latestTurn {
+                currentTurnOverview(turn)
+                overviewDisclosure(
+                    title: String(localized: "agentSession.factual.plan", defaultValue: "Plan & progress"),
+                    detail: turn.currentPlan.map { planSummary($0) } ?? String(localized: "agentSession.factual.noPlan", defaultValue: "No plan data observed."),
+                    isAvailable: turn.currentPlan != nil
+                ) {
+                    if let plan = turn.currentPlan {
+                        planRows(plan)
+                    }
                 }
+                overviewDisclosure(
+                    title: String(localized: "agentSession.factual.checksAndChanges", defaultValue: "Checks & changes"),
+                    detail: checksAndChangesSummary(turn),
+                    isAvailable: !turn.completedCommands.isEmpty || !turn.fileChangeAttributions.isEmpty
+                ) {
+                    AgentSessionFactualProjectionTurnDetailView(turnSnapshot: turn, showsIdentity: false)
+                }
+                if !turn.visibleReasoningSummaries.isEmpty {
+                    overviewDisclosure(
+                        title: String(localized: "agentSession.factual.blockersAndApproach", defaultValue: "Blockers & approach changes"),
+                        detail: String.localizedStringWithFormat(
+                            String(localized: "agentSession.factual.reasoningCount", defaultValue: "%d change(s)"),
+                            turn.visibleReasoningSummaries.count
+                        ),
+                        isAvailable: true
+                    ) {
+                        reasoningRows(turn.visibleReasoningSummaries)
+                    }
+                }
+            } else {
+                mutedText(String(localized: "agentSession.factual.noTurns", defaultValue: "No turns observed."))
             }
 
-            // Completed turns stay quiet and newest-first. Their source detail
-            // remains behind the stable turn-ID disclosure in the row view.
-            quietSection(String(localized: "agentSession.factual.priorTurns", defaultValue: "Previous turns · newest first")) {
-                if snapshot.priorTurns.isEmpty {
+            section(String(localized: "agentSession.factual.priorTurns", defaultValue: "Previous turns")) {
+                let items = AgentSessionFactualProjectionEvidenceRows.priorTurnItems(for: snapshot)
+                if items.isEmpty {
                     mutedText(String(localized: "agentSession.factual.noPriorTurns", defaultValue: "No prior turns."))
                 } else {
-                    ForEach(
-                        Array(AgentSessionFactualProjectionEvidenceRows.priorTurnItems(for: snapshot).enumerated()),
-                        id: \.element.id
-                    ) { offset, item in
+                    ForEach(Array(items.enumerated()), id: \.element.id) { offset, item in
                         AgentSessionFactualProjectionPriorTurnCardView(
                             item: item,
                             ordinal: offset + 1,
                             isExpanded: expandedPriorTurnIDs.contains(item.id),
-                            onToggle: {
-                                togglePriorTurnExpansion(item.id)
-                            }
+                            onToggle: { togglePriorTurnExpansion(item.id) }
                         )
                     }
                 }
             }
 
-            DisclosureGroup(String(localized: "agentSession.factual.identity", defaultValue: "Identity")) {
-                VStack(alignment: .leading, spacing: 14) {
-                    section(String(localized: "agentSession.factual.identity", defaultValue: "Identity")) {
-                        factRow(String(localized: "agentSession.factual.sessionID", defaultValue: "Session ID"), snapshot.session.id)
-                        factRow(String(localized: "agentSession.factual.provider", defaultValue: "Provider"), snapshot.session.agentKind)
-                        factRow(String(localized: "agentSession.factual.status", defaultValue: "Status"), snapshot.session.status)
-                        factRow(String(localized: "agentSession.factual.cwd", defaultValue: "Directory"), snapshot.session.cwd)
-                        factRow(String(localized: "agentSession.factual.revision", defaultValue: "Revision"), snapshot.revision.map(String.init))
-                    }
-
-                    section(String(localized: "agentSession.factual.threads", defaultValue: "Threads")) {
-                        if snapshot.providerThreadIdentities.isEmpty {
-                            mutedText(String(localized: "agentSession.factual.noThreads", defaultValue: "No provider threads observed."))
-                        } else {
-                            ForEach(snapshot.providerThreadIdentities, id: \.threadID) { thread in
-                                threadRow(thread)
-                            }
+            DisclosureGroup(String(localized: "agentSession.factual.identity", defaultValue: "Session details")) {
+                VStack(alignment: .leading, spacing: 8) {
+                    factRow(String(localized: "agentSession.factual.sessionID", defaultValue: "Session ID"), snapshot.session.id)
+                    factRow(String(localized: "agentSession.factual.provider", defaultValue: "Provider"), snapshot.session.agentKind)
+                    factRow(String(localized: "agentSession.factual.status", defaultValue: "Status"), snapshot.session.status)
+                    factRow(String(localized: "agentSession.factual.cwd", defaultValue: "Directory"), snapshot.session.cwd)
+                    factRow(String(localized: "agentSession.factual.revision", defaultValue: "Revision"), snapshot.revision.map(String.init))
+                    if !snapshot.providerThreadIdentities.isEmpty {
+                        ForEach(snapshot.providerThreadIdentities, id: \.threadID) { thread in
+                            threadRow(thread)
                         }
                     }
                 }
+                .padding(.top, 8)
             }
             .font(.system(size: 12, weight: .medium))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.bmuxTextSecondary)
         }
+    }
+
+    private func currentTurnOverview(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> some View {
+        let objective = turnObjective(turn)
+        let summary = turnAgentSummary(turn)
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(String(localized: "agentSession.factual.latestTurn", defaultValue: "Current turn"))
+                    .font(.system(size: 11, weight: .medium))
+                    .tracking(1.2)
+                    .foregroundStyle(Color.bmuxTextTertiary)
+                Spacer()
+                Text(turnElapsedText(turn))
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.bmuxTextTertiary)
+            }
+            Text(summary ?? objective ?? String(localized: "agentSession.factual.noTurns", defaultValue: "No turns observed."))
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(Color.bmuxTextPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+            if let objective {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(String(localized: "agentSession.factual.objective", defaultValue: "Objective"))
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color.bmuxTextTertiary)
+                    Text(objective)
+                        .font(.system(size: 13.5))
+                        .foregroundStyle(Color.bmuxTextSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            if summary == nil {
+                Text(String(localized: "agentSession.factual.noAgentSummary", defaultValue: "No agent summary observed."))
+                    .font(.system(size: 13.5))
+                    .foregroundStyle(Color.bmuxTextTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            HStack(spacing: 8) {
+                Text(summary == nil
+                     ? String(localized: "agentSession.factual.evidenceSource", defaultValue: "Observed evidence")
+                     : String(localized: "agentSession.factual.source", defaultValue: "Agent-reported"))
+                    .foregroundStyle(Color.bmuxTextTertiary)
+                DisclosureGroup(String(localized: "agentSession.factual.details", defaultValue: "View evidence")) {
+                    AgentSessionFactualProjectionTurnDetailView(turnSnapshot: turn)
+                        .padding(.top, 6)
+                }
+                .font(.system(size: 12))
+                .foregroundStyle(Color.bmuxLinkGreen)
+            }
+        }
+        .padding(.leading, 14)
+        .overlay(alignment: .leading) {
+            Rectangle().fill(Color.bmuxLinkGreen).frame(width: 2)
+        }
+    }
+
+    private func overviewDisclosure<Content: View>(title: String, detail: String, isAvailable: Bool, @ViewBuilder content: () -> Content) -> some View {
+        let contentView = content()
+        return DisclosureGroup {
+            if isAvailable {
+                contentView.padding(.top, 8)
+            } else {
+                mutedText(detail).padding(.top, 8)
+            }
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: title == String(localized: "agentSession.factual.plan", defaultValue: "Plan & progress") ? "checklist" : "checkmark.circle")
+                    .foregroundStyle(Color.bmuxTextSecondary)
+                Text(title).foregroundStyle(Color.bmuxTextPrimary)
+                Spacer()
+                Text(detail).foregroundStyle(Color.bmuxTextTertiary)
+            }
+            .font(.system(size: 13.5))
+        }
+        .padding(.vertical, 10)
+        .overlay(alignment: .bottom) { Rectangle().fill(Color.bmuxSeparatorSubtle).frame(height: 1) }
+    }
+
+    private func planSummary(_ plan: ProvenanceCodingAgentPlanUpdateRecord) -> String {
+        let completed = plan.steps.filter { $0.status.lowercased().contains("complete") }.count
+        return String.localizedStringWithFormat(
+            String(localized: "agentSession.factual.planProgress", defaultValue: "%d of %d steps complete"),
+            completed,
+            plan.steps.count
+        )
+    }
+
+    private func checksAndChangesSummary(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String {
+        String.localizedStringWithFormat(
+            String(localized: "agentSession.factual.checksSummary", defaultValue: "%d commands · %d files"),
+            turn.completedCommands.count,
+            turn.fileChangeAttributions.count
+        )
+    }
+
+    private func planRows(_ plan: ProvenanceCodingAgentPlanUpdateRecord) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(plan.steps.prefix(8), id: \.id) { step in
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Image(systemName: step.status.lowercased().contains("complete") ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(step.status.lowercased().contains("complete") ? Color.bmuxAccentGreen : Color.bmuxTextTertiary)
+                    Text(step.text)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.bmuxTextSecondary)
+                        .lineLimit(2)
+                }
+            }
+        }
+    }
+
+    private func reasoningRows(_ summaries: [ProvenanceCodingAgentReasoningSummaryRecord]) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(summaries, id: \.id) { summary in
+                Text(summary.text)
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.bmuxTextSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private func turnObjective(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String? {
+        let prompt = turn.submittedPrompt?.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return prompt?.isEmpty == false ? prompt : nil
+    }
+
+    private func turnAgentSummary(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String? {
+        guard let output = AgentSessionFactualProjectionEvidenceRows.finalAssistantMessageText(for: turn)?
+            .trimmingCharacters(in: .whitespacesAndNewlines), !output.isEmpty else { return nil }
+        guard normalizeTurnText(output) != normalizeTurnText(turnObjective(turn) ?? "") else { return nil }
+        return output
+    }
+
+    private func normalizeTurnText(_ text: String) -> String {
+        text.split(whereSeparator: { $0.isWhitespace }).joined(separator: " ").lowercased()
+    }
+
+    private func turnElapsedText(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String {
+        guard let started = turn.turn.startedAt else {
+            return String(localized: "agentSession.factual.unknown", defaultValue: "Unknown")
+        }
+        let end = turn.turn.completedAt ?? turn.turn.updatedAt
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.hour, .minute, .second]
+        formatter.unitsStyle = .abbreviated
+        formatter.maximumUnitCount = 2
+        return formatter.string(from: max(0, end.timeIntervalSince(started)))
+            ?? String(localized: "agentSession.factual.unknown", defaultValue: "Unknown")
     }
 
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
@@ -781,24 +817,7 @@ struct AgentSessionFactualProjectionView: View {
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
             content()
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
-                .stroke(cardBorder, lineWidth: 1)
-        }
-    }
-
-    private func quietSection<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
-            content()
+            Divider()
         }
     }
 
@@ -856,141 +875,12 @@ struct AgentSessionFactualProjectionView: View {
             .font(.system(size: 13))
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-            .padding(24)
-            .background(cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
-    }
-
-    private var cardBackground: Color {
-        colorScheme == .dark
-            ? Color(nsColor: NSColor(hex: "#25262B") ?? .windowBackgroundColor)
-            : Color(nsColor: NSColor(hex: "#F8F7FA") ?? .windowBackgroundColor)
-    }
-
-    private var cardBorder: Color {
-        colorScheme == .dark
-            ? Color(nsColor: NSColor(hex: "#3B3D48") ?? .separatorColor)
-            : Color(nsColor: NSColor(hex: "#D3CEDB") ?? .separatorColor)
+            .padding(.top, 48)
     }
 
     private func nonEmpty(_ value: String?) -> String {
         let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if !trimmed.isEmpty { return trimmed }
         return String(localized: "agentSession.factual.unknown", defaultValue: "Unknown")
-    }
-}
-
-private struct AgentSessionFactualProjectionCurrentTurnCardView: View {
-    let turnSnapshot: ProvenanceFactualSessionProjectionTurnSnapshot
-    @State private var isEvidenceExpanded = false
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(prompt)
-                    .font(.system(size: 17, weight: .semibold))
-                    .lineLimit(3)
-                Spacer(minLength: 8)
-                Text(turnSnapshot.turn.status)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
-            }
-
-            if let output = AgentSessionFactualProjectionEvidenceRows.finalAssistantMessageText(for: turnSnapshot) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(String(localized: "agentSession.factual.finalOutput", defaultValue: "Results"))
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                        .textCase(.uppercase)
-                    Text(output)
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(5)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-
-            if let plan = turnSnapshot.currentPlan, !plan.steps.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(String(localized: "agentSession.web.smartSession.currentActivity", defaultValue: "Current activity"))
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                        .textCase(.uppercase)
-                    ForEach(plan.steps.prefix(5), id: \.id) { step in
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Image(systemName: planStepSymbol(step.status))
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(planStepColor(step.status))
-                                .frame(width: 14)
-                            Text(step.text)
-                                .font(.system(size: 12))
-                                .lineLimit(2)
-                        }
-                    }
-                }
-            }
-
-            DisclosureGroup(isExpanded: $isEvidenceExpanded) {
-                AgentSessionFactualProjectionTurnDetailView(turnSnapshot: turnSnapshot)
-                    .padding(.top, 8)
-            } label: {
-                Label(
-                    String(localized: "agentSession.factual.details", defaultValue: "Details"),
-                    systemImage: "chevron.right"
-                )
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.secondary)
-            }
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
-                .stroke(cardBorder, lineWidth: 1)
-        }
-    }
-
-    private var cardBackground: Color {
-        colorScheme == .dark
-            ? Color(nsColor: NSColor(hex: "#25262B") ?? .windowBackgroundColor)
-            : Color(nsColor: NSColor(hex: "#F8F7FA") ?? .windowBackgroundColor)
-    }
-
-    private var cardBorder: Color {
-        colorScheme == .dark
-            ? Color(nsColor: NSColor(hex: "#3B3D48") ?? .separatorColor)
-            : Color(nsColor: NSColor(hex: "#D3CEDB") ?? .separatorColor)
-    }
-
-    private var prompt: String {
-        let value = turnSnapshot.submittedPrompt?.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        return value?.isEmpty == false
-            ? value!
-            : String(localized: "agentSession.factual.prompt.missing", defaultValue: "No prompt captured")
-    }
-
-    private func planStepSymbol(_ status: String) -> String {
-        let normalized = status.lowercased()
-        if normalized.contains("complete") || normalized.contains("done") {
-            return "checkmark"
-        }
-        if normalized.contains("progress") || normalized.contains("running") {
-            return "circle.dotted"
-        }
-        return "circle"
-    }
-
-    private func planStepColor(_ status: String) -> Color {
-        let normalized = status.lowercased()
-        if normalized.contains("complete") || normalized.contains("done") {
-            return .green
-        }
-        if normalized.contains("progress") || normalized.contains("running") {
-            return .orange
-        }
-        return .secondary
     }
 }

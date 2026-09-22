@@ -114,4 +114,23 @@ struct AgentSessionWebTheme: Equatable {
         )
     }
 #endif
+
+    static func figmaShell() -> AgentSessionWebTheme {
+        AgentSessionWebTheme(
+            isDark: true,
+            pageBackground: "#1B1C20",
+            surfaceBackground: "rgba(37, 38, 43, 0.92)",
+            surfaceElevatedBackground: "rgba(48, 49, 56, 0.96)",
+            inputBackground: "rgba(20, 21, 24, 0.92)",
+            border: "rgba(255, 255, 255, 0.10)",
+            borderStrong: "rgba(255, 255, 255, 0.18)",
+            text: "#F4F2F8",
+            mutedText: "rgba(244, 242, 248, 0.62)",
+            softText: "rgba(244, 242, 248, 0.80)",
+            accent: "#B9A3FF",
+            accentSoft: "rgba(185, 163, 255, 0.20)",
+            danger: "#FF8D7E",
+            shadow: "rgba(0, 0, 0, 0.20)"
+        )
+    }
 }

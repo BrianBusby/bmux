@@ -1,16 +1,23 @@
 import SwiftUI
 import ProvenanceEngineContracts
 
+private extension Color {
+    static let bmuxTextTertiary = Color(red: 0.635, green: 0.651, blue: 0.698)
+}
+
 struct AgentSessionFactualProjectionTurnDetailView: View {
     let turnSnapshot: ProvenanceFactualSessionProjectionTurnSnapshot
+    var showsIdentity = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            ForEach(
-                Array(AgentSessionFactualProjectionEvidenceRows.turnProperties(for: turnSnapshot).enumerated()),
-                id: \.offset
-            ) { _, property in
-                turnPropertyRow(property)
+            if showsIdentity {
+                ForEach(
+                    Array(AgentSessionFactualProjectionEvidenceRows.turnProperties(for: turnSnapshot).enumerated()),
+                    id: \.offset
+                ) { _, property in
+                    turnPropertyRow(property)
+                }
             }
             if let plan = turnSnapshot.currentPlan {
                 planRows(plan)
@@ -45,7 +52,7 @@ struct AgentSessionFactualProjectionTurnDetailView: View {
         VStack(alignment: .leading, spacing: 5) {
             Text(String(localized: "agentSession.factual.plan", defaultValue: "Current plan"))
                 .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.bmuxTextTertiary)
             ForEach(plan.steps.prefix(6), id: \.id) { step in
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     badge(step.status)
@@ -125,7 +132,7 @@ struct AgentSessionFactualProjectionTurnDetailView: View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Text(label)
                 .font(.system(size: 11))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.bmuxTextTertiary)
                 .frame(width: 84, alignment: .leading)
             Text(nonEmpty(value))
                 .font(.system(size: 12))
@@ -138,7 +145,7 @@ struct AgentSessionFactualProjectionTurnDetailView: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label)
                 .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.bmuxTextTertiary)
             Text(nonEmpty(text))
                 .font(.system(size: 12))
                 .lineLimit(lineLimit)

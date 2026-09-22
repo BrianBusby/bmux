@@ -28,6 +28,29 @@ import ObjectiveC
 import UniformTypeIdentifiers
 import WebKit
 
+private extension Color {
+    static let bmuxSurface = Color(red: 0.137, green: 0.141, blue: 0.157)
+    static let bmuxRail = Color(red: 0.098, green: 0.102, blue: 0.114)
+    static let bmuxCard = Color(red: 0.122, green: 0.125, blue: 0.137)
+    static let bmuxCardBorder = Color(red: 0.220, green: 0.224, blue: 0.247)
+    static let bmuxCardSelected = Color(red: 0.137, green: 0.180, blue: 0.133)
+    static let bmuxCardSelectedBorder = Color(red: 0.227, green: 0.306, blue: 0.220)
+    static let bmuxSeparator = Color(red: 0.204, green: 0.212, blue: 0.239)
+    static let bmuxSeparatorSubtle = Color(red: 0.247, green: 0.255, blue: 0.286)
+    static let bmuxTextPrimary = Color(red: 0.949, green: 0.953, blue: 0.969)
+    static let bmuxTextSecondary = Color(red: 0.737, green: 0.753, blue: 0.792)
+    static let bmuxTextTertiary = Color(red: 0.635, green: 0.651, blue: 0.698)
+    static let bmuxTextMuted = Color(red: 0.522, green: 0.541, blue: 0.596)
+    static let bmuxTextDisabled = Color(red: 0.455, green: 0.475, blue: 0.529)
+    static let bmuxAccentGreen = Color(red: 0.416, green: 0.620, blue: 0.369)
+    static let bmuxAccentYellow = Color(red: 0.620, green: 0.620, blue: 0.416)
+    static let bmuxTurnAccent = Color(red: 0.290, green: 0.400, blue: 0.259)
+}
+
+private enum BmuxRadius {
+    static let appShell: CGFloat = 12
+}
+
 var fileDropOverlayKey: UInt8 = 0
 private var commandPaletteWindowOverlayKey: UInt8 = 0
 let commandPaletteOverlayContainerIdentifier = NSUserInterfaceItemIdentifier("bmux.commandPalette.overlay.container")
@@ -886,6 +909,7 @@ struct ContentView: View {
     @State private var titlebarText: String = ""
     @State private var isFullScreen: Bool = false
     @State private var observedWindow: NSWindow?
+    @State private var bmuxShellTerminalVisible = false
     @State private var sidebarRenderWorkerClient: RenderWorkerClient?
     @StateObject private var fullscreenControlsViewModel = TitlebarControlsViewModel()
     @StateObject private var fileExplorerStore = FileExplorerStore()
@@ -1729,7 +1753,7 @@ struct ContentView: View {
         return FullscreenControlsPlacement(leadingPadding: 10, topPadding: 2)
     }
 
-    private func terminalContent(appearance: WindowAppearanceSnapshot) -> some View {
+    private func terminalContent(appearance: WindowAppearanceSnapshot, shellTerminalVisible: Bool = true) -> some View {
         let mountedWorkspaceIdSet = Set(mountedWorkspaceIds)
         let mountedWorkspaces = tabManager.tabs.filter { mountedWorkspaceIdSet.contains($0.id) }
         let selectedWorkspaceId = tabManager.selectedTabId
@@ -1752,8 +1776,8 @@ struct ContentView: View {
                     let portalPriority = isSelectedWorkspace ? 2 : (isRetiringWorkspace ? 1 : 0)
                     WorkspaceContentView(
                         workspace: tab,
-                        isWorkspaceVisible: presentation.isPanelVisible,
-                        isWorkspaceInputActive: isInputActive,
+                        isWorkspaceVisible: presentation.isPanelVisible && shellTerminalVisible,
+                        isWorkspaceInputActive: isInputActive && shellTerminalVisible,
                         rightSidebarOwnsInputFocus: fileExplorerState.rightSidebarOwnsInputFocus,
                         isFullScreen: isFullScreen,
                         workspacePortalPriority: portalPriority,
@@ -2500,6 +2524,299 @@ struct ContentView: View {
         )
     }
 
+    private var bmuxReferenceWorkspaceRail: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text(String(localized: "workspaceRail.title", defaultValue: "Workspaces"))
+                    .font(.system(size: 11, weight: .medium))
+                    .tracking(1.2)
+                    .foregroundStyle(Color.bmuxTextMuted)
+                Spacer()
+                Text(String(tabManager.tabs.count))
+                    .foregroundStyle(Color.bmuxTextDisabled)
+            }
+
+            ScrollView {
+                VStack(spacing: 8) {
+                    ForEach(tabManager.tabs, id: \.id) { workspace in
+                        let isSelected = workspace.id == tabManager.selectedTabId
+                        let workspaceDirectoryName = URL(fileURLWithPath: workspace.currentDirectory).lastPathComponent
+                        let provenance = tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: workspace)
+                        VStack(alignment: .leading, spacing: 7) {
+                            Text(workspaceDirectoryName)
+                                .font(.system(size: 11))
+                                .foregroundStyle(Color.bmuxTextTertiary)
+                            Text(workspace.title)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(Color.bmuxTextPrimary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            if let status = bmuxReferenceWorkspaceStatus(provenance: provenance) {
+                                HStack(spacing: 5) {
+                                    Image(systemName: status.icon)
+                                        .font(.system(size: 9, weight: .medium))
+                                    Text(status.text)
+                                        .lineLimit(2)
+                                }
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(status.isDirty ? Color.bmuxAccentYellow : Color.bmuxTextSecondary)
+                            }
+                            Divider().overlay(Color.bmuxSeparatorSubtle)
+                            bmuxReferenceWorkspaceLinkRows(for: workspace)
+                            Text(workspace.currentDirectory)
+                                .font(.system(size: 11))
+                                .foregroundStyle(Color.bmuxTextSecondary)
+                                .lineLimit(2)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .padding(12)
+                        .background(isSelected ? Color.bmuxCardSelected : Color.bmuxCard)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(
+                            isSelected ? Color.bmuxCardSelectedBorder : Color.bmuxCardBorder,
+                            lineWidth: 1
+                        ))
+                        .contentShape(RoundedRectangle(cornerRadius: 8))
+                        .onTapGesture {
+                            tabManager.selectedTabId = workspace.id
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 16)
+        .frame(width: 340)
+        .background(Color.bmuxRail)
+        .overlay(alignment: .trailing) {
+            Rectangle().fill(Color.bmuxSeparator).frame(width: 1)
+        }
+    }
+
+    private func bmuxReferenceWorkspaceStatus(
+        provenance: WorkspaceDisplayCurrentStateSnapshot?
+    ) -> (icon: String, text: String, isDirty: Bool)? {
+        if let summary = provenance?.currentWorkSummary {
+            return ("waveform.path.ecg", summary, provenance?.isDirty == true)
+        }
+        if let branch = provenance?.branch {
+            let dirtySuffix = provenance?.isDirty == true
+                ? String(localized: "workspaceRail.dirtySuffix", defaultValue: " · uncommitted changes")
+                : ""
+            return ("arrow.triangle.branch", branch + dirtySuffix, provenance?.isDirty == true)
+        }
+        return nil
+    }
+
+    @ViewBuilder
+    private func bmuxReferenceWorkspaceLinkRows(for workspace: Workspace) -> some View {
+        let provenance = tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: workspace)
+        let livePullRequest = workspace.pullRequest
+        let pullRequest = livePullRequest.map { request in
+            (number: request.number, label: request.label, title: request.title, url: request.url, ownerLogin: request.ownerLogin, ownerURL: request.ownerURL)
+        } ?? provenance?.pullRequest.map { request in
+            (number: request.number, label: String(localized: "workspaceRail.pullRequestPrefix", defaultValue: "PR"), title: Optional<String>.none, url: request.url, ownerLogin: request.ownerLogin, ownerURL: request.ownerURL)
+        }
+        let ticketLinks = provenance?.ticketLinks ?? []
+        let projectLinks = provenance?.projectLinks ?? []
+        let fallbackTicket = ticketLinks.isEmpty ? workspace.sidebarMetadata.workContext.ticket : nil
+
+        VStack(alignment: .leading, spacing: 3) {
+            ForEach(ticketLinks) { ticket in
+                bmuxReferenceWorkspaceLinkRow(
+                    icon: "ticket",
+                    text: ticket.title.map { "\(ticket.id) · \($0)" } ?? ticket.id,
+                    url: ticket.url,
+                    workspace: workspace
+                )
+                if let ownerName = ticket.ownerName {
+                    bmuxReferenceWorkspaceLinkRow(
+                        icon: "person.crop.circle",
+                        text: ownerName,
+                        url: ticket.ownerURL,
+                        workspace: workspace
+                    )
+                }
+            }
+            if let fallbackTicket {
+                bmuxReferenceWorkspaceLinkRow(
+                    icon: "ticket",
+                    text: fallbackTicket.key,
+                    url: fallbackTicket.url,
+                    workspace: workspace
+                )
+            }
+            ForEach(projectLinks) { project in
+                bmuxReferenceWorkspaceLinkRow(
+                    icon: "folder",
+                    text: project.title ?? project.id,
+                    url: project.url,
+                    workspace: workspace
+                )
+            }
+            if let pullRequest {
+                bmuxReferenceWorkspaceLinkRow(
+                    icon: "arrow.triangle.pull",
+                    text: pullRequest.title.map { "\(pullRequest.label) #\(pullRequest.number) · \($0)" } ?? "\(pullRequest.label) #\(pullRequest.number)",
+                    url: pullRequest.url,
+                    workspace: workspace
+                )
+                if let ownerLogin = pullRequest.ownerLogin {
+                    bmuxReferenceWorkspaceLinkRow(
+                        icon: "person.crop.circle",
+                        text: ownerLogin,
+                        url: pullRequest.ownerURL,
+                        workspace: workspace
+                    )
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func bmuxReferenceWorkspaceLinkRow(
+        icon: String,
+        text: String,
+        url: URL?,
+        workspace: Workspace
+    ) -> some View {
+        let row = HStack(spacing: 5) {
+            Image(systemName: icon)
+                .font(.system(size: 9, weight: .medium))
+                .frame(width: 13)
+            Text(text)
+                .underline(url != nil)
+                .lineLimit(2)
+                .truncationMode(.tail)
+            Spacer(minLength: 0)
+        }
+        .font(.system(size: 11, weight: .medium))
+        .foregroundStyle(url == nil ? Color.bmuxTextSecondary : Color.bmuxTextPrimary)
+        .contentShape(Rectangle())
+
+        if let url {
+            Button {
+                tabManager.selectedTabId = workspace.id
+                BrowserExternalLinkOpener().openWebLink(url)
+            } label: {
+                row
+            }
+            .buttonStyle(.plain)
+        } else {
+            row
+        }
+    }
+
+    private func bmuxReferenceAppShell(appearance: WindowAppearanceSnapshot) -> some View {
+        ZStack {
+            Color.bmuxSurface.ignoresSafeArea()
+            VStack(spacing: 0) {
+                HStack {
+                    HStack(spacing: 8) {
+                        Text("bmux")
+                            .font(.system(size: 21, weight: .bold, design: .rounded))
+                            .foregroundStyle(Color.bmuxTextPrimary)
+                        Text("✳").font(.system(size: 18)).foregroundStyle(Color.bmuxTurnAccent)
+                        Text("CompanyCam").foregroundStyle(Color.bmuxTextTertiary)
+                    }
+                    Spacer()
+                    HStack(spacing: 12) {
+                        Button {
+                            guard let anchorView = NSApp.keyWindow?.contentView
+                                ?? NSApp.mainWindow?.contentView,
+                                AppDelegate.shared?.showRepoAgentLauncherMenu(anchorView: anchorView) == true else {
+                                NSSound.beep()
+                                return
+                            }
+                        } label: {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(Color.bmuxTextSecondary)
+                                .frame(width: 28, height: 28)
+                                .background(Color.bmuxCard)
+                                .clipShape(RoundedRectangle(cornerRadius: 7))
+                                .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.bmuxCardBorder, lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("bmuxShell.repoAgentLauncher")
+                        .accessibilityLabel(String(localized: "titlebar.repoAgentLauncher.accessibilityLabel", defaultValue: "AI Repo Launcher"))
+                        .safeHelp(String(localized: "titlebar.repoAgentLauncher.tooltip", defaultValue: "Launch an AI session for a repo"))
+
+                        Text(String(
+                            format: String(localized: "titlebar.workspaceCount", defaultValue: "%lld workspaces"),
+                            Int64(tabManager.tabs.count)
+                        ))
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color.bmuxTextSecondary)
+                    }
+                }
+                .padding(.horizontal, 24)
+                .frame(height: 44)
+                .overlay(alignment: .bottom) {
+                    Rectangle().fill(Color.bmuxSeparator).frame(height: 1)
+                }
+
+                HStack(spacing: 0) {
+                    bmuxReferenceWorkspaceRail
+                    AgentSessionFactualProjectionModeHost(
+                        showsSwitcher: true,
+                        showsModePicker: false,
+                        startsInSession: true,
+                        showsAppShell: false,
+                        liveChatContent: bmuxShellChatContent(),
+                        liveTerminalContent: bmuxShellTerminalVisible
+                            ? AnyView(
+                                terminalContent(appearance: appearance, shellTerminalVisible: true)
+                                    .environment(\.bmuxShellTerminalOnly, true)
+                            )
+                            : nil,
+                        onPrimaryTabChange: { isTerminal in
+                            bmuxShellTerminalVisible = isTerminal
+                        },
+                        workspaceLabel: tabManager.selectedWorkspace.map {
+                            $0.currentDirectory.split(separator: "/").last.map(String.init)
+                                ?? String(localized: "agentSession.factual.workspaceUnavailable", defaultValue: "Workspace unavailable")
+                        },
+                        sessionTitle: tabManager.selectedWorkspace?.title,
+                        sessionDescription: tabManager.selectedWorkspace.flatMap { workspace in
+                            guard let description = workspace.customDescription,
+                                  description.trimmingCharacters(in: .whitespacesAndNewlines) != workspace.title.trimmingCharacters(in: .whitespacesAndNewlines)
+                            else { return nil }
+                            return description
+                        },
+                        stableWorkspaceID: tabManager.selectedWorkspace?.stableId,
+                        workProvenanceRuntime: tabManager.workProvenanceRuntime,
+                        backgroundColor: appearance.compositedTerminalBackgroundColor
+                    ) { _ in
+                        Color.clear
+                    }
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: BmuxRadius.appShell))
+            .overlay(RoundedRectangle(cornerRadius: BmuxRadius.appShell).stroke(Color.bmuxSeparator, lineWidth: 1))
+            .padding(18)
+        }
+    }
+
+    private func bmuxShellChatContent() -> ((@escaping () -> Void) -> AnyView)? {
+        guard let workspace = tabManager.selectedWorkspace,
+              let panel = workspace.focusedTerminalPanel,
+              let reader = tabManager.terminalChatReader else {
+            return nil
+        }
+
+        let appearance = PanelAppearance.fromConfig(GhosttyConfig.load())
+        return { onTerminal in
+            AnyView(
+                TerminalChatWebRenderer(
+                    panel: panel,
+                    reader: reader,
+                    appearance: appearance,
+                    onTerminal: onTerminal
+                )
+            )
+        }
+    }
+
     var body: some View {
 #if DEBUG
         let _ = { minimalModeInvalidationProbe.contentViewBody?() }()
@@ -2511,7 +2828,7 @@ struct ContentView: View {
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
 
-                contentAndSidebarLayout(appearance: appearance)
+                bmuxReferenceAppShell(appearance: appearance)
 
                 WorkspaceTitlebarModeLayer {
                     workspaceTitlebarBand(appearance: appearance)

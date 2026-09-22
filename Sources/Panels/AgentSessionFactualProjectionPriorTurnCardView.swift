@@ -3,32 +3,26 @@ import AppKit
 import SwiftUI
 import ProvenanceEngineContracts
 
+private extension Color {
+    static let bmuxCard = Color(red: 0.122, green: 0.125, blue: 0.137)
+    static let bmuxTextPrimary = Color(red: 0.949, green: 0.953, blue: 0.969)
+    static let bmuxTextSecondary = Color(red: 0.737, green: 0.753, blue: 0.792)
+    static let bmuxTextTertiary = Color(red: 0.635, green: 0.651, blue: 0.698)
+}
+
 struct AgentSessionFactualProjectionPriorTurnCardView: View {
     let item: AgentSessionFactualProjectionEvidenceRows.PriorTurnItem
     let ordinal: Int
     let isExpanded: Bool
     let onToggle: () -> Void
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button {
                 onToggle()
             } label: {
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 12)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(prompt)
-                            .font(.system(size: 13, weight: .medium))
-                            .lineLimit(2)
-                    }
-                    Spacer(minLength: 8)
-                    Text(dateText(finishedAt))
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    header
                 }
                 .contentShape(Rectangle())
             }
@@ -38,12 +32,15 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
                 expandedDetails
             }
         }
-        .padding(.vertical, 12)
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(cardBorder)
-                .frame(height: 1)
-        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(Color.bmuxCard)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .stroke(Color.secondary.opacity(0.16))
+        )
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(prompt))
     }
@@ -52,19 +49,39 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                 .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.bmuxTextSecondary)
                 .frame(width: 12)
-            Text(String.localizedStringWithFormat(
-                String(localized: "agentSession.factual.turnOrdinal", defaultValue: "Turn %d"),
-                ordinal
-            ))
-            .font(.system(size: 12, weight: .semibold))
+            Text(compactTitle)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.bmuxTextPrimary)
+                .lineLimit(1)
+                .truncationMode(.tail)
             badge(status)
             Spacer(minLength: 0)
-            Text(dateText(finishedAt))
+            Text(compactDateText)
                 .font(.system(size: 11))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.bmuxTextTertiary)
         }
+    }
+
+    private var compactTitle: String {
+        let value = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !value.isEmpty, value != String(localized: "agentSession.factual.prompt.missing", defaultValue: "No prompt captured") {
+            let firstLine = value.components(separatedBy: .newlines).first ?? value
+            let sentence = firstLine.split(separator: ".", maxSplits: 1).first.map(String.init) ?? firstLine
+            let title = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+            if title.count <= 72 { return title }
+            return String(title.prefix(69)).trimmingCharacters(in: .whitespacesAndNewlines) + "…"
+        }
+        return String.localizedStringWithFormat(
+            String(localized: "agentSession.factual.turnOrdinal", defaultValue: "Turn %d"), ordinal
+        )
+    }
+
+    private var compactDateText: String {
+        let relative = RelativeDateTimeFormatter()
+        relative.unitsStyle = .abbreviated
+        return relative.localizedString(for: finishedAt, relativeTo: Date())
     }
 
     private var metadata: some View {
@@ -96,9 +113,20 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
     private var expandedDetails: some View {
         VStack(alignment: .leading, spacing: 10) {
             Divider()
+            labeledText(
+                String(localized: "agentSession.factual.objective", defaultValue: "Objective"),
+                prompt,
+                lineLimit: 8
+            )
+            labeledText(
+                String(localized: "agentSession.factual.summaryLabel", defaultValue: "Summary"),
+                summary,
+                lineLimit: 8
+            )
+            metadata
             Text(String(localized: "agentSession.factual.details", defaultValue: "Details"))
                 .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.bmuxTextTertiary)
             details
         }
         .padding(.top, 12)
@@ -124,14 +152,14 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
             Spacer(minLength: 0)
             Text(dateText(turn.completedAt ?? turn.updatedAt))
                 .font(.system(size: 11))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.bmuxTextTertiary)
         }
     }
 
     private func metadataLine(systemImage: String, text: String) -> some View {
         Label(text, systemImage: systemImage)
             .font(.system(size: 11))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.bmuxTextTertiary)
             .labelStyle(.titleAndIcon)
     }
 
@@ -225,23 +253,11 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
         )
     }
 
-    private var cardBackground: Color {
-        colorScheme == .dark
-            ? Color(nsColor: NSColor(hex: "#2B2C32") ?? .controlBackgroundColor)
-            : Color(nsColor: NSColor(hex: "#EEECF2") ?? .controlBackgroundColor)
-    }
-
-    private var cardBorder: Color {
-        colorScheme == .dark
-            ? Color(nsColor: NSColor(hex: "#3B3D48") ?? .separatorColor)
-            : Color(nsColor: NSColor(hex: "#D3CEDB") ?? .separatorColor)
-    }
-
     private func labeledText(_ label: String, _ text: String, lineLimit: Int) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label)
                 .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.bmuxTextTertiary)
             Text(nonEmpty(text))
                 .font(.system(size: 12))
                 .lineLimit(lineLimit)
