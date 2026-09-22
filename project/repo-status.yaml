@@ -3,7 +3,7 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-  state: none_selected
+  state: observation
 
 execution_telemetry:
   provider_neutral_contract: implemented
@@ -75,6 +75,7 @@ local_capabilities:
   react_smart_session_surface: under_observation
   react_smart_session_initial_work_model_consumer: implemented
   react_smart_session_work_model_consumer: planned
+  react_smart_session_hybrid_focus_workbench: under_observation
   three_view_session_navigation: planned
   richer_session_evidence_foundation: implemented
   workspace_display_projection: implemented
@@ -156,4 +157,6 @@ local_caveats:
   - id: normal_terminal_codex_rich_evidence_gap
     status: resolved
   - id: remote_mobile_open_architecture_decisions
+    status: open
+  - id: hybrid_focus_render_capture
     status: open

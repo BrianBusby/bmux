@@ -191,6 +191,19 @@ export type AgentSessionCopy = {
   smartSessionRevision: string;
   smartSessionThread: string;
   smartSessionTurn: string;
+  smartSessionFocus?: string;
+  smartSessionTerminal?: string;
+  smartSessionLearnings?: string;
+  smartSessionWorkspace?: string;
+  smartSessionCurrent?: string;
+  smartSessionRelatedWork?: string;
+  smartSessionNoCurrentTurn?: string;
+  smartSessionNoLearnings?: string;
+  smartSessionChanged?: string;
+  smartSessionChecked?: string;
+  smartSessionRemains?: string;
+  smartSessionValidations?: string;
+  smartSessionResume?: string;
 };
 
 export type SmartSessionReadStatus =

@@ -5,6 +5,7 @@ import type {
   SmartSessionSemanticField,
   SmartSessionSemanticMessage,
   SmartSessionSnapshot,
+  SmartSessionTurnReference,
 } from "./types";
 
 export const SMART_SESSION_SEMANTIC_KINDS = {
@@ -167,6 +168,18 @@ export function semanticFieldForKind(
     }
     return true;
   });
+}
+
+/** Orders completed turns by canonical turn time, not projection update time. */
+export function sortSmartSessionTurnReferencesNewestFirst(turns: SmartSessionTurnReference[]): SmartSessionTurnReference[] {
+  return [...turns].sort((left, right) => {
+    const timeDifference = turnTime(right) - turnTime(left);
+    return timeDifference || right.turnId.localeCompare(left.turnId);
+  });
+}
+
+function turnTime(turn: SmartSessionTurnReference): number {
+  return Date.parse(turn.completedAt ?? turn.startedAt ?? turn.updatedAt) || 0;
 }
 
 export function compareSmartSessionRevisions(left: SmartSessionRevision, right: SmartSessionRevision): number {

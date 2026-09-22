@@ -59,8 +59,8 @@ enum RightSidebarChromeMetrics {
 enum SidebarWorkspaceListMetrics {
     static let firstRowTopOffset: CGFloat = MinimalModeChromeMetrics.titlebarHeight + 2
     static let rowVerticalPadding: CGFloat = 8
-    static let rowOuterHorizontalPadding: CGFloat = 6
-    static let rowContentHorizontalPadding: CGFloat = 10
+    static let rowOuterHorizontalPadding: CGFloat = 8
+    static let rowContentHorizontalPadding: CGFloat = 12
     static let topScrimHeight: CGFloat = firstRowTopOffset + 20
     static let bottomScrimHeight: CGFloat = topScrimHeight
 

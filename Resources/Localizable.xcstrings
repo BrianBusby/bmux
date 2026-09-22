@@ -1,6 +1,42 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "hybrid.fixture.inMotion" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"IN MOTION"}},"ja":{"stringUnit":{"state":"translated","value":"進行中"}}}},
+    "hybrid.fixture.repo.mobile" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"companycam-mobile"}},"ja":{"stringUnit":{"state":"translated","value":"companycam-mobile"}}}},
+    "hybrid.fixture.repo.api" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Company-Cam-API"}},"ja":{"stringUnit":{"state":"translated","value":"Company-Cam-API"}}}},
+    "hybrid.fixture.title.oneOff" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"One-off checklist flow"}},"ja":{"stringUnit":{"state":"translated","value":"単発チェックリストのフロー"}}}},
+    "hybrid.fixture.title.reorder" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Reorder checklist fields"}},"ja":{"stringUnit":{"state":"translated","value":"チェックリスト項目の並べ替え"}}}},
+    "hybrid.fixture.title.graphQL" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Local GraphQL errors"}},"ja":{"stringUnit":{"state":"translated","value":"ローカル GraphQL エラー"}}}},
+    "hybrid.fixture.status.waiting" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Waiting for review"}},"ja":{"stringUnit":{"state":"translated","value":"レビュー待ち"}}}},
+    "hybrid.fixture.status.working" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Agent working"}},"ja":{"stringUnit":{"state":"translated","value":"エージェントが作業中"}}}},
+    "hybrid.fixture.status.input" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Needs your input"}},"ja":{"stringUnit":{"state":"translated","value":"入力が必要です"}}}},
+    "hybrid.fixture.project.checklists" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Advanced checklists"}},"ja":{"stringUnit":{"state":"translated","value":"高度なチェックリスト"}}}},
+    "hybrid.fixture.owner.brian" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"BrianBusby"}},"ja":{"stringUnit":{"state":"translated","value":"BrianBusby"}}}},
+    "hybrid.fixture.open" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Open"}},"ja":{"stringUnit":{"state":"translated","value":"オープン"}}}},
+    "hybrid.fixture.prOwner" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"PR owner"}},"ja":{"stringUnit":{"state":"translated","value":"PR オーナー"}}}},
+    "hybrid.fixture.activity.draft" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Build local draft checkbox row and retry-safe save"}},"ja":{"stringUnit":{"state":"translated","value":"ローカル下書きチェックボックス行と再試行可能な保存を構築"}}}},
+    "hybrid.fixture.activity.fields" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Update one-off checklist fields with a single-field move"}},"ja":{"stringUnit":{"state":"translated","value":"単一項目の移動で単発チェックリスト項目を更新"}}}},
+    "hybrid.fixture.currentTurn" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"CURRENT TURN"}},"ja":{"stringUnit":{"state":"translated","value":"現在のターン"}}}},
+    "hybrid.fixture.objective" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Move tickets into review"}},"ja":{"stringUnit":{"state":"translated","value":"チケットをレビューに移動"}}}},
+    "hybrid.fixture.waitingReviews" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Waiting on reviews"}},"ja":{"stringUnit":{"state":"translated","value":"レビュー待ち"}}}},
+    "hybrid.fixture.summary" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"The tickets are assigned to you and in review. I’m waiting for the final review checks before handing the stack back."}},"ja":{"stringUnit":{"state":"translated","value":"チケットはあなたに割り当てられ、レビュー中です。最終レビューの確認が終わるまでスタックを保留します。"}}}},
+    "hybrid.fixture.check.updated" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Four tickets updated"}},"ja":{"stringUnit":{"state":"translated","value":"4 件のチケットを更新"}}}},
+    "hybrid.fixture.check.lint" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Lint and TypeScript passed on all six PRs"}},"ja":{"stringUnit":{"state":"translated","value":"6 件すべての PR で Lint と TypeScript に成功"}}}},
+    "hybrid.fixture.check.running" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Review checks still running"}},"ja":{"stringUnit":{"state":"translated","value":"レビュー確認を実行中"}}}},
+    "hybrid.fixture.toolActivity" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Tool activity · inspect evidence"}},"ja":{"stringUnit":{"state":"translated","value":"ツールのアクティビティ・証拠を確認"}}}},
+    "hybrid.fixture.observedCommand" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Observed: gh pr checks --watch"}},"ja":{"stringUnit":{"state":"translated","value":"観測: gh pr checks --watch"}}}},
+    "hybrid.fixture.sourceTurn" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Source: terminal activity · current turn"}},"ja":{"stringUnit":{"state":"translated","value":"ソース: Terminal アクティビティ・現在のターン"}}}},
+    "hybrid.fixture.previousTurns" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"PREVIOUS TURNS · NEWEST FIRST"}},"ja":{"stringUnit":{"state":"translated","value":"過去のターン・新しい順"}}}},
+    "hybrid.fixture.tokenUsage" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"TOKEN USAGE*"}},"ja":{"stringUnit":{"state":"translated","value":"トークン使用量*"}}}},
+    "hybrid.fixture.knowledge" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Knowledge travels with the work."}},"ja":{"stringUnit":{"state":"translated","value":"知識は作業とともに移動します。"}}}},
+    "hybrid.fixture.exploreLearnings" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Explore 2 learnings"}},"ja":{"stringUnit":{"state":"translated","value":"2 件の学びを見る"}}}},
+    "hybrid.fixture.exampleTelemetry" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"* Example data, not live telemetry"}},"ja":{"stringUnit":{"state":"translated","value":"* 例示データであり、ライブテレメトリではありません"}}}},
+    "hybrid.fixture.history.ci" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Check CI across the PR stack"}},"ja":{"stringUnit":{"state":"translated","value":"PR スタック全体の CI を確認"}}}},
+    "hybrid.fixture.history.tickets" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Split implementation into six tickets"}},"ja":{"stringUnit":{"state":"translated","value":"実装を 6 件のチケットに分割"}}}},
+    "hybrid.fixture.history.ownership" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Confirm review ownership and rollout"}},"ja":{"stringUnit":{"state":"translated","value":"レビューの担当と展開を確認"}}}},
+    "hybrid.fixture.changed" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Changed  ·  scoped the implementation to the review stack"}},"ja":{"stringUnit":{"state":"translated","value":"変更・レビュー対象のスタックに実装を限定"}}}},
+    "hybrid.fixture.checked" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Checked  ·  targeted validation and source inspection"}},"ja":{"stringUnit":{"state":"translated","value":"確認・対象を絞った検証とソース確認"}}}},
+    "hybrid.fixture.remains" : {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Remains  ·  evidence-backed follow-up"}},"ja":{"stringUnit":{"state":"translated","value":"残り・証拠に基づくフォローアップ"}}}},
     "agentSession.chat.connectedPrompt" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Message Codex"}}, "ja": {"stringUnit": {"state": "translated", "value": "Codex にメッセージ"}}}},
     "agentSession.chat.connectedQueue" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Send follow-up"}}, "ja": {"stringUnit": {"state": "translated", "value": "追加メッセージを送信"}}}},
     "agentSession.chat.connectedSteer" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Steer current turn"}}, "ja": {"stringUnit": {"state": "translated", "value": "現在のターンに指示を追加"}}}},
@@ -3554,13 +3590,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Latest turn"
+            "value": "Current turn"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最新ターン"
+            "value": "現在のターン"
           }
         }
       }
@@ -4064,13 +4100,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Session"
+            "value": "Focus"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "セッション"
+            "value": "フォーカス"
           }
         }
       }
@@ -10260,13 +10296,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Final output"
+            "value": "Results"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最終出力"
+            "value": "結果"
           }
         }
       }
@@ -236735,6 +236771,22 @@
         }
       }
     },
+    "agentSession.web.smartSession.focus": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Focus"}},"ja":{"stringUnit":{"state":"translated","value":"フォーカス"}}}},
+    "agentSession.web.smartSession.terminal": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Terminal"}},"ja":{"stringUnit":{"state":"translated","value":"ターミナル"}}}},
+    "agentSession.web.smartSession.learnings": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Learnings"}},"ja":{"stringUnit":{"state":"translated","value":"学び"}}}},
+    "agentSession.web.smartSession.workspace": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Workspace"}},"ja":{"stringUnit":{"state":"translated","value":"ワークスペース"}}}},
+    "agentSession.web.smartSession.current": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Current"}},"ja":{"stringUnit":{"state":"translated","value":"現在"}}}},
+    "agentSession.web.smartSession.relatedWork": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Related work"}},"ja":{"stringUnit":{"state":"translated","value":"関連作業"}}}},
+    "agentSession.web.smartSession.noCurrentTurn": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"No current turn. The latest supported outcome appears below."}},"ja":{"stringUnit":{"state":"translated","value":"現在のターンはありません。最後に確認できた結果を以下に表示します。"}}}},
+    "agentSession.web.smartSession.noLearnings": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"No learnings are available for this workspace yet."}},"ja":{"stringUnit":{"state":"translated","value":"このワークスペースではまだ学びを利用できません。"}}}},
+    "agentSession.web.smartSession.learningsUnavailable": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Learnings are unavailable for this workspace."}},"ja":{"stringUnit":{"state":"translated","value":"このワークスペースでは学びを利用できません。"}}}},
+    "agentSession.web.smartSession.learningsUnavailable.detail": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"This view is unavailable until learnings can be stored and reviewed."}},"ja":{"stringUnit":{"state":"translated","value":"学びを保存して確認できるようになるまで、このビューは利用できません。"}}}},
+    "agentSession.workspace.moreLinks": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"More links"}},"ja":{"stringUnit":{"state":"translated","value":"その他のリンク"}}}},
+    "agentSession.web.smartSession.changed": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Changed"}},"ja":{"stringUnit":{"state":"translated","value":"変更"}}}},
+    "agentSession.web.smartSession.checked": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Checked"}},"ja":{"stringUnit":{"state":"translated","value":"確認済み"}}}},
+    "agentSession.web.smartSession.remains": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Remains"}},"ja":{"stringUnit":{"state":"translated","value":"残り"}}}},
+    "agentSession.web.smartSession.validations": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Validation records remain scoped to this turn."}},"ja":{"stringUnit":{"state":"translated","value":"検証記録はこのターンの範囲に限定されます。"}}}},
+    "agentSession.web.smartSession.resume": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Resume point is unavailable unless captured by the producer."}},"ja":{"stringUnit":{"state":"translated","value":"記録されていない限り、再開地点は利用できません。"}}}},
     "voiceInput.unavailable.message": {
       "extractionState": "manual",
       "localizations": {

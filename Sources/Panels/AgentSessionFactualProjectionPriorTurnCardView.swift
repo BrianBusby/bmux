@@ -8,24 +8,27 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
     let ordinal: Int
     let isExpanded: Bool
     let onToggle: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button {
                 onToggle()
             } label: {
-                VStack(alignment: .leading, spacing: 10) {
-                    header
-                    Text(prompt)
-                        .font(.system(size: 13, weight: .medium))
-                        .lineLimit(3)
-                        .fixedSize(horizontal: false, vertical: true)
-                    metadata
-                    labeledText(
-                        String(localized: "agentSession.factual.summary", defaultValue: "Summary"),
-                        summary,
-                        lineLimit: 3
-                    )
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 12)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(prompt)
+                            .font(.system(size: 13, weight: .medium))
+                            .lineLimit(2)
+                    }
+                    Spacer(minLength: 8)
+                    Text(dateText(finishedAt))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
                 }
                 .contentShape(Rectangle())
             }
@@ -35,15 +38,12 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
                 expandedDetails
             }
         }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Color(nsColor: .controlBackgroundColor))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .stroke(Color.secondary.opacity(0.16))
-        )
+        .padding(.vertical, 12)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(cardBorder)
+                .frame(height: 1)
+        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(prompt))
     }
@@ -223,6 +223,18 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
             String(localized: "agentSession.factual.duration.seconds", defaultValue: "%.0f sec"),
             duration
         )
+    }
+
+    private var cardBackground: Color {
+        colorScheme == .dark
+            ? Color(nsColor: NSColor(hex: "#2B2C32") ?? .controlBackgroundColor)
+            : Color(nsColor: NSColor(hex: "#EEECF2") ?? .controlBackgroundColor)
+    }
+
+    private var cardBorder: Color {
+        colorScheme == .dark
+            ? Color(nsColor: NSColor(hex: "#3B3D48") ?? .separatorColor)
+            : Color(nsColor: NSColor(hex: "#D3CEDB") ?? .separatorColor)
     }
 
     private func labeledText(_ label: String, _ text: String, lineLimit: Int) -> some View {

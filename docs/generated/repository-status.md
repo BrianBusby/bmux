@@ -14,7 +14,7 @@ Repository: `BrianBusby/bmux`
 ## Current Work
 
 - Active slice: none selected
-- Repository state: none selected
+- Repository state: observation
 
 ## Release
 
@@ -84,6 +84,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Workspace Display Projection Cursors | implemented |
 | Provenance Engine Workspace Display Ticket Link Facts | implemented |
 | Provenance Engine Workspace Display Ticket Title Facts | implemented |
+| React Smart Session Hybrid Focus Workbench | under observation |
 | React Smart Session Initial Work Model Consumer | implemented |
 | React Smart Session Surface | under observation |
 | React Smart Session Work Model Consumer | planned |
@@ -157,3 +158,4 @@ Repository: `BrianBusby/bmux`
 | `sidecar_disappearance_lifecycle_policy` | open |
 | `normal_terminal_codex_rich_evidence_gap` | resolved |
 | `remote_mobile_open_architecture_decisions` | open |
+| `hybrid_focus_render_capture` | open |

@@ -14,7 +14,8 @@ extension TerminalPanelView {
             },
             stableWorkspaceID: stableWorkspaceId,
             workProvenanceRuntime: workProvenanceRuntime,
-            backgroundColor: appearance.contentBackgroundColor
+            backgroundColor: appearance.contentBackgroundColor,
+            workspaceChrome: workspaceChrome
         ) { isVisibleForMode in
             terminalSurfaceBody(isVisibleForMode: isVisibleForMode)
         }
