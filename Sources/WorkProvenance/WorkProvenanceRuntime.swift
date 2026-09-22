@@ -63,6 +63,10 @@ enum WorkProvenanceSessionAssociationResolver {
 /// Main-actor runtime that wires workspace lifecycle to observe-only provenance storage.
 @MainActor
 final class WorkProvenanceRuntime {
+    static func disabledByComposition() -> WorkProvenanceRuntime {
+        WorkProvenanceRuntime(observationService: nil)
+    }
+
     private weak var tabManager: TabManager?
     private let observationService: WorkProvenanceObservationService?
     private let workspaceDisplayCurrentStateStore: WorkspaceDisplayCurrentStateStore?
