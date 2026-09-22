@@ -46,7 +46,7 @@ func sidebarActiveForegroundNSColor(
 ) -> NSColor {
     let clampedOpacity = max(0, min(opacity, 1))
     let bestMatch = appAppearance?.bestMatch(from: [.darkAqua, .aqua])
-    let baseColor: NSColor = (bestMatch == .darkAqua) ? .white : .black
+    let baseColor: NSColor = .white
     return baseColor.withAlphaComponent(clampedOpacity)
 }
 
@@ -169,7 +169,7 @@ func bmuxContrastRatio(foreground: NSColor, background: NSColor) -> CGFloat {
 }
 
 private func bmuxReadableForegroundBaseColor(on backgroundColor: NSColor) -> NSColor {
-    bmuxReadableColorScheme(for: backgroundColor) == .dark ? .white : .black
+    .white
 }
 
 private func bmuxRelativeLuminance(_ color: NSColor) -> CGFloat {

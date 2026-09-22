@@ -40,7 +40,7 @@ final class FileDropHintBadgeView: NSView {
 
         label.translatesAutoresizingMaskIntoConstraints = false
         applyFont()
-        label.textColor = .labelColor
+        label.textColor = .white
         label.alignment = .center
         label.lineBreakMode = .byClipping
         label.maximumNumberOfLines = 1

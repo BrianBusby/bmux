@@ -319,7 +319,7 @@ private struct ConfigSettingsTextView: NSViewRepresentable {
         textView.isEditable = isEditable
         textView.isSelectable = true
         textView.string = text
-        textView.textColor = .textColor
+        textView.textColor = .white
         textView.backgroundColor = .textBackgroundColor
         textView.insertionPointColor = .textColor
         textView.textContainerInset = NSSize(width: 10, height: 10)
@@ -350,7 +350,7 @@ private struct ConfigSettingsTextView: NSViewRepresentable {
         textView.isEditable = isEditable
         textView.isSelectable = true
         textView.backgroundColor = .textBackgroundColor
-        textView.textColor = .textColor
+        textView.textColor = .white
         textView.insertionPointColor = .textColor
         context.coordinator.applyGlobalFont(to: textView)
     }

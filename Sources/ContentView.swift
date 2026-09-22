@@ -4204,7 +4204,7 @@ struct ContentView: View {
             textView.backgroundColor = .clear
             textView.drawsBackground = false
             applyFonts()
-            textView.textColor = .labelColor
+            textView.textColor = .white
             textView.insertionPointColor = .labelColor
             textView.textContainerInset = Self.textInset
             textView.textContainer?.lineFragmentPadding = 0
@@ -5225,7 +5225,7 @@ struct ContentView: View {
 
     private static func commandPaletteHighlightedTitleText(_ title: String, matchedIndices: Set<Int>) -> Text {
         guard !matchedIndices.isEmpty else {
-            return Text(title).foregroundColor(.primary)
+            return Text(title).foregroundColor(.white)
         }
 
         let chars = Array(title)
@@ -5243,7 +5243,7 @@ struct ContentView: View {
             if isMatched {
                 result = result + Text(segment).foregroundColor(.blue)
             } else {
-                result = result + Text(segment).foregroundColor(.primary)
+                result = result + Text(segment).foregroundColor(.white)
             }
             index = end
         }

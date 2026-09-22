@@ -231,7 +231,7 @@ struct ProjectEmptyDetailView: View {
                 .foregroundStyle(.tertiary)
             Text(title)
                 .bmuxFont(size: 13, weight: .semibold)
-                .foregroundStyle(.primary)
+                .foregroundStyle(.white)
             Text(hint)
                 .bmuxFont(size: 11)
                 .foregroundStyle(.secondary)

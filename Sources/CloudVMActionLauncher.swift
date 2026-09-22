@@ -402,7 +402,7 @@ private final class CloudVMActionProgressController {
 
         let titleLabel = NSTextField(labelWithString: title)
         titleLabel.font = .systemFont(ofSize: 13, weight: .semibold)
-        titleLabel.textColor = .labelColor
+        titleLabel.textColor = .white
         titleLabel.lineBreakMode = .byTruncatingTail
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
 

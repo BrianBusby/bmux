@@ -487,7 +487,7 @@ private final class FeedTextEditorDebugAppKitHost: NSView {
         currentFont = font
         textView.font = font
         textView.textContainerInset = mode.textInset
-        textView.textColor = .labelColor
+        textView.textColor = .white
         textView.insertionPointColor = .controlAccentColor
         placeholderField.stringValue = placeholder
         placeholderField.font = font

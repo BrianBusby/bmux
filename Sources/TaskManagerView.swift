@@ -330,7 +330,7 @@ private struct BmuxTaskManagerLoadingView: View {
                 .accessibilityLabel(String(localized: "taskManager.loading.title", defaultValue: "Loading resource usage"))
             Text(String(localized: "taskManager.loading.title", defaultValue: "Loading resource usage"))
                 .bmuxFont(.headline)
-                .foregroundStyle(.primary)
+                .foregroundStyle(.white)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(32)

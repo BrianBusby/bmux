@@ -2757,7 +2757,7 @@ private struct QuestionActionArea: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(option.label)
                         .bmuxFont(size: 12, weight: .semibold)
-                        .foregroundColor(.primary)
+                        .foregroundColor(.white)
                     if let description = option.description, !description.isEmpty {
                         Text(description)
                             .bmuxFont(size: 11)
@@ -3242,7 +3242,7 @@ private final class FeedInlineTextEditorView: NSView {
             guard isEnabled != oldValue else { return }
             textView.isEditable = isEnabled
             textView.isSelectable = isEnabled
-            textView.textColor = isEnabled ? .labelColor : .disabledControlTextColor
+            textView.textColor = isEnabled ? .white : .disabledControlTextColor
             textView.insertionPointColor = .controlAccentColor
         }
     }
@@ -3316,7 +3316,7 @@ private final class FeedInlineTextEditorView: NSView {
             currentFont = font
             textView.font = font
             placeholderField.font = font
-            textView.textColor = self.isEnabled ? .labelColor : .disabledControlTextColor
+            textView.textColor = self.isEnabled ? .white : .disabledControlTextColor
             textView.insertionPointColor = .controlAccentColor
         }
         if enabledChanged {

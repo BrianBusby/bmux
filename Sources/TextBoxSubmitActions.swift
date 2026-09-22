@@ -361,7 +361,7 @@ extension TextBoxInputContainer {
                 .renderingMode(action.id == "codex" ? .template : .original)
                 .resizable()
                 .scaledToFit()
-                .foregroundStyle(Color.black)
+                .foregroundStyle(Color.white)
                 .opacity(iconOpacity)
                 .frame(
                     width: TextBoxSubmitActionImageSupport.iconSize,
@@ -369,7 +369,7 @@ extension TextBoxInputContainer {
                 )
         } else {
             Image(systemName: action.systemImage)
-                .foregroundStyle(Color.black)
+                .foregroundStyle(Color.white)
                 .opacity(iconOpacity)
                 .frame(
                     width: TextBoxSubmitActionImageSupport.iconSize,

@@ -2491,7 +2491,7 @@ private struct NotificationsPopoverView: View {
                 .foregroundColor(.secondary.opacity(0.7))
             Text(title)
                 .bmuxFont(size: 14, weight: .medium)
-                .foregroundColor(.primary)
+                .foregroundColor(.white)
             if let subtitle {
                 Text(subtitle)
                     .bmuxFont(size: 12)
@@ -2634,7 +2634,7 @@ struct NotificationPopoverRow: View, Equatable {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(notification.title)
                         .bmuxFont(size: 12.5, weight: .semibold)
-                        .foregroundColor(.primary)
+                        .foregroundColor(.white)
                         .lineLimit(1)
                     Spacer(minLength: 0)
                     Text(notification.createdAt.formatted(date: .omitted, time: .shortened))

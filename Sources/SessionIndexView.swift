@@ -756,7 +756,7 @@ private struct SessionTranscriptPreviewView: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(entry.displayTitle)
                     .bmuxFont(size: 13, weight: .semibold)
-                    .foregroundColor(.primary)
+                    .foregroundColor(.white)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 if let cwd = entry.cwdLabel {
@@ -2112,7 +2112,7 @@ private struct SectionPopoverView: View {
                 sectionIconView
                 Text(section.title)
                     .bmuxFont(size: 13, weight: .semibold)
-                    .foregroundColor(.primary)
+                    .foregroundColor(.white)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 Spacer(minLength: 0)

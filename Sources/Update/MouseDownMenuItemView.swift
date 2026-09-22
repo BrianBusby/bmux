@@ -15,7 +15,7 @@ final class MouseDownMenuItemView: NSView {
         didSet {
             guard oldValue != isHighlighted else { return }
             needsDisplay = true
-            titleLabel.textColor = isHighlighted ? .selectedMenuItemTextColor : .labelColor
+        titleLabel.textColor = isHighlighted ? .selectedMenuItemTextColor : .white
         }
     }
 
