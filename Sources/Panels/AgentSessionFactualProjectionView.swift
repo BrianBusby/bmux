@@ -338,7 +338,7 @@ struct AgentSessionFactualProjectionView: View {
             VStack(spacing: 0) {
                 HStack {
                     HStack(spacing: 8) {
-                        Text("bmux").font(.system(size: 21, weight: .bold, design: .rounded))
+                        Text("bmux").font(.system(size: 21, weight: .bold, design: .rounded)).foregroundStyle(Color.bmuxTextPrimary)
                         Text("✳").font(.system(size: 18)).foregroundStyle(Color.bmuxTurnAccent)
                         Text("CompanyCam").foregroundStyle(Color.bmuxTextTertiary)
                     }
@@ -495,7 +495,7 @@ struct AgentSessionFactualProjectionView: View {
     }
 
     private var nativeContent: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: 12) {
             Text(String(localized: "agentSession.factual.nativeUnavailable.title", defaultValue: "Provider-native session unavailable"))
                 .font(.system(size: 18, weight: .bold))
             Text(String(localized: "agentSession.factual.nativeUnavailable.message", defaultValue: "This provider does not expose a native session surface in this build."))
@@ -645,7 +645,9 @@ struct AgentSessionFactualProjectionView: View {
     }
 
     private func currentTurnOverview(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let objective = turnObjective(turn)
+        let summary = turnAgentSummary(turn)
+        return VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 Text(String(localized: "agentSession.factual.latestTurn", defaultValue: "Current turn"))
                     .font(.system(size: 11, weight: .medium))
@@ -656,18 +658,31 @@ struct AgentSessionFactualProjectionView: View {
                     .font(.system(size: 12))
                     .foregroundStyle(Color.bmuxTextTertiary)
             }
-            Text(turnHeadline(turn))
+            Text(summary ?? objective ?? String(localized: "agentSession.factual.noTurns", defaultValue: "No turns observed."))
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(Color.bmuxTextPrimary)
                 .fixedSize(horizontal: false, vertical: true)
-            if let description = turnDescription(turn) {
-                Text(description)
+            if let objective {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(String(localized: "agentSession.factual.objective", defaultValue: "Objective"))
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color.bmuxTextTertiary)
+                    Text(objective)
+                        .font(.system(size: 13.5))
+                        .foregroundStyle(Color.bmuxTextSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            if summary == nil {
+                Text(String(localized: "agentSession.factual.noAgentSummary", defaultValue: "No agent summary observed."))
                     .font(.system(size: 13.5))
-                    .foregroundStyle(Color.bmuxTextSecondary)
+                    .foregroundStyle(Color.bmuxTextTertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             HStack(spacing: 8) {
-                Text(String(localized: "agentSession.factual.source", defaultValue: "Agent-reported"))
+                Text(summary == nil
+                     ? String(localized: "agentSession.factual.evidenceSource", defaultValue: "Observed evidence")
+                     : String(localized: "agentSession.factual.source", defaultValue: "Agent-reported"))
                     .foregroundStyle(Color.bmuxTextTertiary)
                 DisclosureGroup(String(localized: "agentSession.factual.details", defaultValue: "View evidence")) {
                     AgentSessionFactualProjectionTurnDetailView(turnSnapshot: turn)
@@ -748,27 +763,20 @@ struct AgentSessionFactualProjectionView: View {
         }
     }
 
-    private func turnHeadline(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String {
+    private func turnObjective(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String? {
         let prompt = turn.submittedPrompt?.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let output = AgentSessionFactualProjectionEvidenceRows.finalAssistantMessageText(for: turn), !output.isEmpty {
-            if let prompt, output == prompt { return prompt }
-            return output.split(separator: ".", maxSplits: 1).first.map(String.init) ?? output
-        }
-        return prompt ?? String(localized: "agentSession.factual.noTurns", defaultValue: "No turns observed.")
+        return prompt?.isEmpty == false ? prompt : nil
     }
 
-    private func turnDescription(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String? {
-        if let output = AgentSessionFactualProjectionEvidenceRows.finalAssistantMessageText(for: turn), !output.isEmpty {
-            let headline = turnHeadline(turn)
-            if output.trimmingCharacters(in: .whitespacesAndNewlines) == headline.trimmingCharacters(in: .whitespacesAndNewlines) {
-                return nil
-            }
-            return output
-        }
-        if let prompt = turn.submittedPrompt?.text.trimmingCharacters(in: .whitespacesAndNewlines), !prompt.isEmpty {
-            return prompt == turnHeadline(turn) ? nil : prompt
-        }
-        return nil
+    private func turnAgentSummary(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String? {
+        guard let output = AgentSessionFactualProjectionEvidenceRows.finalAssistantMessageText(for: turn)?
+            .trimmingCharacters(in: .whitespacesAndNewlines), !output.isEmpty else { return nil }
+        guard normalizeTurnText(output) != normalizeTurnText(turnObjective(turn) ?? "") else { return nil }
+        return output
+    }
+
+    private func normalizeTurnText(_ text: String) -> String {
+        text.split(whereSeparator: { $0.isWhitespace }).joined(separator: " ").lowercased()
     }
 
     private func turnElapsedText(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String {

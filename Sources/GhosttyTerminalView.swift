@@ -1231,6 +1231,29 @@ class GhosttyApp {
             prefix: "bmux-titlebar-proxy-icon",
             logLabel: "titlebar proxy icon"
         )
+        // Surface reloads consume this C config directly, so the app-level
+        // appearance projection cannot repair an unreadable foreground after
+        // this point. Reconcile the actual renderer config against the same
+        // composited background used by the shell before handing it to Ghostty.
+        let rendererBackground = defaultBackgroundValues(from: config)
+        let compositedRendererBackground = GhosttyBackgroundTheme.color(
+            backgroundColor: rendererBackground.backgroundColor,
+            opacity: rendererBackground.backgroundOpacity
+        )
+        let readableForeground = bmuxReadableForegroundNSColor(
+            preferred: rendererBackground.foregroundColor,
+            on: compositedRendererBackground
+        )
+        let readableSelectionForeground = bmuxReadableForegroundNSColor(
+            preferred: rendererBackground.selectionForeground,
+            on: compositedRendererBackground
+        )
+        loadInlineGhosttyConfig(
+            "foreground = \(readableForeground.hexString())\nselection-foreground = \(readableSelectionForeground.hexString())",
+            into: config,
+            prefix: "bmux-readable-terminal-colors",
+            logLabel: "renderer foreground"
+        )
         // Save the user's preference before we force it to none.
         userGhosttyShellIntegrationMode = "detect"
         do {
@@ -2322,8 +2345,18 @@ class GhosttyApp {
         effectiveTerminalColorSchemePreference = Self.terminalRuntimeColorSchemePreference(
             forBackgroundColor: color
         )
+        let compositedBackground = GhosttyBackgroundTheme.color(
+            backgroundColor: color,
+            opacity: opacity
+        )
         if let foregroundColor {
-            defaultForegroundColor = foregroundColor
+            // Ghostty renders the terminal against the composited background. A
+            // translucent config background must not make a user-supplied black
+            // foreground pass contrast checks against the uncomposited color.
+            defaultForegroundColor = bmuxReadableForegroundNSColor(
+                preferred: foregroundColor,
+                on: compositedBackground
+            )
         }
         if let cursorColor {
             defaultCursorColor = cursorColor
@@ -2335,7 +2368,10 @@ class GhosttyApp {
             defaultSelectionBackground = selectionBackground
         }
         if let selectionForeground {
-            defaultSelectionForeground = selectionForeground
+            defaultSelectionForeground = bmuxReadableForegroundNSColor(
+                preferred: selectionForeground,
+                on: compositedBackground
+            )
         }
         let hasChanged = forceNotify ||
             previousHex != defaultBackgroundColor.hexString() ||

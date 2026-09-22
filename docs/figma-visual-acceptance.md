@@ -1,33 +1,34 @@
 # Figma shell visual acceptance checkpoint
 
-Updated: 2026-09-21
+Updated: 2026-09-22
 
 ## Authority and evidence
 
 - Approved Session reference: `/Users/brianbusby/Desktop/Screenshot 2026-09-20 at 6.25.55 PM.png`
 - Approved Terminal reference: `/Users/brianbusby/Desktop/Screenshot 2026-09-20 at 6.25.43 PM.png`
 - Approved Conversation reference: `/Users/brianbusby/Downloads/approved-conversation-design.png`
-- Current tagged build: `figma-production-integration`, build 649
-- Current live captures: `/tmp/figma-production-session-649.png`, `/tmp/figma-production-chat-649.png`
+- Current tagged build: `figma-production-integration`, build 652
+- Current live captures: build 649 captures remain the last successful app-window captures; build 652 compiled but its window was not exposed to the available native capture surface.
 - Capture dimensions: live window 1000×700 logical points; native window capture includes title-bar/shadow pixels. The CUA capture is the reliable composite for the terminal portal; `screencapture -l` omits the portal-hosted terminal layer.
 
 ## Acceptance checklist
 
 | Area | Status | Evidence / remaining work |
 | --- | --- | --- |
-| Shell surfaces and colors | Pass for native shell | Build 647 Session capture uses the approved dark shell surfaces and readable native foregrounds. Embedded Chat capture is retained below for independent review. |
+| Shell surfaces and colors | Partial | Figma shell and Chat were readable in build 649. Build 652 now reconciles readable foreground and selection colors in both Ghostty app appearance and the raw surface-reload config; a fresh Terminal capture is still required. |
 | Workspace rail and cards | Pass | Build 645 shows live workspace names, paths, and ticket/owner/project/PR/PR-owner links. |
-| Typography, contrast, spacing, alignment | Pass | Build 649 Session and Chat captures are readable at the available 1000×700 logical window and retain semantic transcript/status contrast. |
+| Typography, contrast, spacing, alignment | Partial | Build 649 Session and Chat captures are readable. Build 652 changes the outer bmux brand contrast and latest-turn hierarchy, but no fresh screenshot is available. |
 | Header and navigation | Pass | Header, repo-launcher shortcut, workspace count, and Session/Chat/Terminal navigation are present; production has no “Design concept” label. |
-| Session summary, disclosures, history | Pass | Build 645 shows real latest-turn content, command/file counts, reasoning count, truthful no-plan text, compact history, newest-first timestamps, and technical IDs behind Session details. |
+| Session summary, disclosures, history | Partial | Build 652 separates objective from a distinct agent summary and moves full prior-turn evidence behind expansion. The latest source is compiled, but the last screenshot predates these changes. |
 | Conversation, composer, buttons, footer | Pass with capability limitation | Build 649 has Chat selected, live transcript rows, readable controls, and truthful read-only status. Queue/Stop are unavailable because this selected session exposes no verified control connection; no inert controls are shown. |
-| Narrow-window behavior and existing functionality | In review | Native shell remains stable at 1000×700. No-session evidence from the earlier tagged build remains valid; final-build no-session/Terminal captures still need a clean pass. |
+| Narrow-window behavior and existing functionality | Blocked for final visual sign-off | Native shell remained stable at 1000×700 in build 649. Build 652 window capture was blocked because the tagged app window was not exposed to the available native automation surface. No-session, Terminal renderer, and connected-session mutation checks remain outstanding. |
 
-## Evidence for build 649
+## Evidence for build 649 and 652
 
 - Live Session capture: `/tmp/figma-production-session-649.png` shows real `companycam-mobile` workspace content, PE latest-turn data, links, disclosures, and history.
 - Live Chat capture: `/tmp/figma-production-chat-649.png` has Chat selected in the exact final tagged app and shows real transcript rows, readable controls, and the read-only status.
 - Build 649 compiles successfully; reload output is recorded in `/tmp/bmux-reload-figma-production-integration.log`.
+- Build 652 compiles successfully; the changes include renderer-boundary color reconciliation, compact prior-turn rows, objective/summary separation, and live provenance status rows.
 - Fixture evidence remains separate: the fixture-only reference shell is still guarded by `showsAppShell && fixturePreviewEnabled`; production `ContentView` does not pass preview fixtures.
 
 ## Findings and next actions

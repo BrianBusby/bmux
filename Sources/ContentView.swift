@@ -2533,6 +2533,7 @@ struct ContentView: View {
                     ForEach(tabManager.tabs, id: \.id) { workspace in
                         let isSelected = workspace.id == tabManager.selectedTabId
                         let workspaceDirectoryName = URL(fileURLWithPath: workspace.currentDirectory).lastPathComponent
+                        let provenance = tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: workspace)
                         VStack(alignment: .leading, spacing: 7) {
                             Text(workspaceDirectoryName)
                                 .font(.system(size: 11))
@@ -2541,6 +2542,16 @@ struct ContentView: View {
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(Color.bmuxTextPrimary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
+                            if let status = bmuxReferenceWorkspaceStatus(provenance: provenance) {
+                                HStack(spacing: 5) {
+                                    Image(systemName: status.icon)
+                                        .font(.system(size: 9, weight: .medium))
+                                    Text(status.text)
+                                        .lineLimit(2)
+                                }
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(status.isDirty ? Color.bmuxAccentYellow : Color.bmuxTextSecondary)
+                            }
                             Divider().overlay(Color.bmuxSeparatorSubtle)
                             bmuxReferenceWorkspaceLinkRows(for: workspace)
                             Text(workspace.currentDirectory)
@@ -2571,6 +2582,21 @@ struct ContentView: View {
         .overlay(alignment: .trailing) {
             Rectangle().fill(Color.bmuxSeparator).frame(width: 1)
         }
+    }
+
+    private func bmuxReferenceWorkspaceStatus(
+        provenance: WorkspaceDisplayCurrentStateSnapshot?
+    ) -> (icon: String, text: String, isDirty: Bool)? {
+        if let summary = provenance?.currentWorkSummary {
+            return ("waveform.path.ecg", summary, provenance?.isDirty == true)
+        }
+        if let branch = provenance?.branch {
+            let dirtySuffix = provenance?.isDirty == true
+                ? String(localized: "workspaceRail.dirtySuffix", defaultValue: " · uncommitted changes")
+                : ""
+            return ("arrow.triangle.branch", branch + dirtySuffix, provenance?.isDirty == true)
+        }
+        return nil
     }
 
     @ViewBuilder
@@ -2678,7 +2704,9 @@ struct ContentView: View {
             VStack(spacing: 0) {
                 HStack {
                     HStack(spacing: 8) {
-                        Text("bmux").font(.system(size: 21, weight: .bold, design: .rounded))
+                        Text("bmux")
+                            .font(.system(size: 21, weight: .bold, design: .rounded))
+                            .foregroundStyle(Color.bmuxTextPrimary)
                         Text("✳").font(.system(size: 18)).foregroundStyle(Color.bmuxTurnAccent)
                         Text("CompanyCam").foregroundStyle(Color.bmuxTextTertiary)
                     }

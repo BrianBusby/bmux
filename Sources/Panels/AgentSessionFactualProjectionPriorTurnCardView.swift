@@ -21,18 +21,8 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
             Button {
                 onToggle()
             } label: {
-                VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
                     header
-                    Text(prompt)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Color.bmuxTextPrimary)
-                        .lineLimit(3)
-                        .fixedSize(horizontal: false, vertical: true)
-                    metadata
-                    Text(summary)
-                        .font(.system(size: 12))
-                        .foregroundStyle(Color.bmuxTextSecondary)
-                        .lineLimit(2)
                 }
                 .contentShape(Rectangle())
             }
@@ -61,17 +51,37 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(Color.bmuxTextSecondary)
                 .frame(width: 12)
-            Text(String.localizedStringWithFormat(
-                String(localized: "agentSession.factual.turnOrdinal", defaultValue: "Turn %d"),
-                ordinal
-            ))
-            .font(.system(size: 12, weight: .semibold))
+            Text(compactTitle)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.bmuxTextPrimary)
+                .lineLimit(1)
+                .truncationMode(.tail)
             badge(status)
             Spacer(minLength: 0)
-            Text(dateText(finishedAt))
+            Text(compactDateText)
                 .font(.system(size: 11))
                 .foregroundStyle(Color.bmuxTextTertiary)
         }
+    }
+
+    private var compactTitle: String {
+        let value = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !value.isEmpty, value != String(localized: "agentSession.factual.prompt.missing", defaultValue: "No prompt captured") {
+            let firstLine = value.components(separatedBy: .newlines).first ?? value
+            let sentence = firstLine.split(separator: ".", maxSplits: 1).first.map(String.init) ?? firstLine
+            let title = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+            if title.count <= 72 { return title }
+            return String(title.prefix(69)).trimmingCharacters(in: .whitespacesAndNewlines) + "…"
+        }
+        return String.localizedStringWithFormat(
+            String(localized: "agentSession.factual.turnOrdinal", defaultValue: "Turn %d"), ordinal
+        )
+    }
+
+    private var compactDateText: String {
+        let relative = RelativeDateTimeFormatter()
+        relative.unitsStyle = .abbreviated
+        return relative.localizedString(for: finishedAt, relativeTo: Date())
     }
 
     private var metadata: some View {
@@ -103,6 +113,17 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
     private var expandedDetails: some View {
         VStack(alignment: .leading, spacing: 10) {
             Divider()
+            labeledText(
+                String(localized: "agentSession.factual.objective", defaultValue: "Objective"),
+                prompt,
+                lineLimit: 8
+            )
+            labeledText(
+                String(localized: "agentSession.factual.summaryLabel", defaultValue: "Summary"),
+                summary,
+                lineLimit: 8
+            )
+            metadata
             Text(String(localized: "agentSession.factual.details", defaultValue: "Details"))
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(Color.bmuxTextTertiary)

@@ -1,6 +1,11 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "agentSession.factual.objective" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Objective"}}, "ja": {"stringUnit": {"state": "translated", "value": "目的"}}}},
+    "agentSession.factual.noAgentSummary" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "No agent summary observed."}}, "ja": {"stringUnit": {"state": "translated", "value": "エージェントの概要はありません。"}}}},
+    "agentSession.factual.evidenceSource" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Observed evidence"}}, "ja": {"stringUnit": {"state": "translated", "value": "観測された証拠"}}}},
+    "agentSession.factual.summaryLabel" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Summary"}}, "ja": {"stringUnit": {"state": "translated", "value": "概要"}}}},
+    "workspaceRail.dirtySuffix" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": " · uncommitted changes"}}, "ja": {"stringUnit": {"state": "translated", "value": " · 未コミットの変更"}}}},
     "agentSession.factual.noPlan" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "No plan data observed."}}, "ja": {"stringUnit": {"state": "translated", "value": "計画データはありません。"}}}},
     "agentSession.factual.checksAndChanges" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Checks & changes"}}, "ja": {"stringUnit": {"state": "translated", "value": "チェックと変更"}}}},
     "agentSession.factual.blockersAndApproach" : {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": "Blockers & approach changes"}}, "ja": {"stringUnit": {"state": "translated", "value": "ブロッカーと方針変更"}}}},
