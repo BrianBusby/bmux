@@ -60,8 +60,11 @@ export function reconcileTerminalChat(previous: TerminalChatState, snapshot: Ter
     return { ...initialTerminalChat, status: "unavailable", reason: snapshot.reason, control, sessionId: control?.threadId };
   }
   if (!snapshot.history || !snapshot.sessionId || snapshot.status === "unavailable") {
-    const cached = control && previous.sessionId !== control.threadId ? initialTerminalChat : previous;
-    return { ...cached, control, sessionId: control?.threadId ?? cached.sessionId, status: cached.messages.length ? "stale" : "unavailable" };
+    // A known replacement identity is never allowed to inherit cached rows or
+    // expanded output from the previous terminal session.
+    const selectedSession = control?.threadId ?? snapshot.sessionId;
+    const cached = selectedSession && previous.sessionId !== selectedSession ? initialTerminalChat : previous;
+    return { ...cached, control, sessionId: selectedSession ?? cached.sessionId, status: cached.messages.length ? "stale" : "unavailable", reason: snapshot.reason };
   }
   if (snapshot.workspaceId !== scope.workspaceId || snapshot.surfaceId !== scope.panelId) {
     return { ...initialTerminalChat, status: "unavailable" };

@@ -142,6 +142,12 @@ private struct DockSplitContentView: View {
                         window: NSApp.keyWindow ?? NSApp.mainWindow
                     )
                 },
+                onRequestTerminalChatFocus: {
+                    store.requestPanelFocusForAction(
+                        panelId: panel.id,
+                        window: NSApp.keyWindow ?? NSApp.mainWindow
+                    )
+                },
                 onResumeAgentHibernation: {},
                 onAutoResumeAgentHibernation: {},
                 onTriggerFlash: {}

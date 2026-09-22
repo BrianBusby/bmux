@@ -16,7 +16,7 @@ export type ConnectedControl = {
   steerTurn?: boolean;
   activeTurnId?: string;
   actions?: ConnectedAction[];
-  draft?: string;
+  draft?: { revision: string; text: string };
 };
 
 export function shouldSubmitConnectedChatOnEnter(event: ComposingEnterEvent & { altKey?: boolean; shiftKey?: boolean }): boolean {

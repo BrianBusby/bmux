@@ -68,8 +68,16 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         self.initialProviderID = initialProviderID
         self.workingDirectory = workingDirectory
         isPanelFocused = isFocused
-        let themeChanged = self.theme != theme
-        self.theme = theme
+        let effectiveTheme: AgentSessionWebTheme
+#if DEBUG
+        effectiveTheme = UserDefaults.standard.bool(forKey: "bmux.acceptance.forceDarkAppearance")
+            ? theme.acceptanceDarkened
+            : theme
+#else
+        effectiveTheme = theme
+#endif
+        let themeChanged = self.theme != effectiveTheme
+        self.theme = effectiveTheme
         if themeChanged {
             applyThemeToLoadedPage()
         }
@@ -100,6 +108,7 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         let webView = AgentSessionWebView(frame: .zero, configuration: configuration)
         isClosed = false
         webView.onPointerDown = onPointerDown
+        webView.onDidMoveToWindow = { [weak self] in self?.loadShellIfNeeded() }
         webView.setValue(false, forKey: "drawsBackground")
         webView.allowsBackForwardNavigationGestures = false
         webView.allowsLinkPreview = false
@@ -123,6 +132,13 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         guard let webView, webView.window != nil else {
             return
         }
+#if DEBUG
+        // Apply after the child has entered its window so WebKit's effective
+        // appearance and prefers-color-scheme are updated for the shell load.
+        if UserDefaults.standard.bool(forKey: "bmux.acceptance.forceDarkAppearance") {
+            webView.appearance = NSAppearance(named: .darkAqua)
+        }
+#endif
         guard let resourceDirectoryURL = Bundle.main.resourceURL else {
             return
         }
@@ -149,6 +165,11 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         _ = webView.window?.makeFirstResponder(webView)
     }
 
+    func setTerminalChatVisible(_ visible: Bool) {
+        guard let webView else { return }
+        webView.evaluateJavaScript("window.dispatchEvent(new CustomEvent('bmux-terminal-chat-visibility', { detail: { visible: \(visible ? "true" : "false") } }));")
+    }
+
     func unfocus() {
         guard let webView,
               let window = webView.window,
@@ -171,6 +192,8 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             webView.navigationDelegate = nil
             webView.uiDelegate = nil
             webView.onPointerDown = nil
+            webView.onPointerUp = nil
+            webView.onDidMoveToWindow = nil
         }
         webView = nil
         loadedRendererKind = nil

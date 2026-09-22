@@ -9034,40 +9034,7 @@ struct ContentView: View {
 
 #if DEBUG
     private func debugCommandPaletteFocusIntent(_ intent: PanelFocusIntent) -> String {
-        switch intent {
-        case .panel:
-            return "panel"
-        case .terminal(.surface):
-            return "terminal.surface"
-        case .terminal(.findField):
-            return "terminal.findField"
-        case .terminal(.textBoxInput):
-            return "terminal.textBoxInput"
-        case .browser(.webView):
-            return "browser.webView"
-        case .browser(.addressBar):
-            return "browser.addressBar"
-        case .browser(.findField):
-            return "browser.findField"
-        case .filePreview(.textEditor):
-            return "filePreview.textEditor"
-        case .filePreview(.pdfCanvas):
-            return "filePreview.pdfCanvas"
-        case .filePreview(.pdfThumbnails):
-            return "filePreview.pdfThumbnails"
-        case .filePreview(.pdfOutline):
-            return "filePreview.pdfOutline"
-        case .filePreview(.imageCanvas):
-            return "filePreview.imageCanvas"
-        case .filePreview(.mediaPlayer):
-            return "filePreview.mediaPlayer"
-        case .filePreview(.quickLook):
-            return "filePreview.quickLook"
-        case .project(.navigator):
-            return "project.navigator"
-        case .project(.detail):
-            return "project.detail"
-        }
+        String(describing: intent)
     }
 
     private func debugCommandPaletteModeLabel(_ mode: CommandPaletteMode) -> String {
@@ -13954,7 +13921,7 @@ struct TabItemView: View, Equatable {
                             Text(portLabel)
                                 .underline()
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.plain).modifier(SidebarLinkCursor())
                         .safeHelp(portTooltip)
                     }
                     Spacer(minLength: 0)
@@ -15124,7 +15091,7 @@ struct TabItemView: View, Equatable {
                 .opacity(pullRequest.isStale ? 0.5 : 1)
                 if let url = pullRequest.url {
                     Button(action: { openPullRequestLink(url) }) { rowContent }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.plain).modifier(SidebarLinkCursor())
                         .safeHelp(String(
                             format: String(
                                 localized: "sidebar.pullRequest.openTooltip",
@@ -15163,7 +15130,7 @@ struct TabItemView: View, Equatable {
                 .foregroundColor(activeSecondaryColor(0.75))
                 if let url = pullRequest.ownerURL {
                     Button(action: { openPullRequestOwnerLink(url) }) { rowContent }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.plain).modifier(SidebarLinkCursor())
                         .safeHelp(String(
                             format: String(
                                 localized: "sidebar.pullRequest.owner.openTooltip",
@@ -15542,7 +15509,7 @@ private struct SidebarMetadataEntryRow: View {
                 } label: {
                     rowContent(underlined: true)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.plain).modifier(SidebarLinkCursor())
                 .safeHelp(url.absoluteString)
             } else {
                 rowContent(underlined: false)
