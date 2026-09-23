@@ -38,6 +38,18 @@ private enum BmuxRadius {
 
 private let agentSessionFactualProjectionAutoRefreshNanoseconds: UInt64 = 2_000_000_000
 
+struct AgentSessionFactualProjectionRefreshIdentity: Equatable, Sendable {
+    let workspaceID: UUID?
+    let generation: UInt64
+
+    func acceptsResult(
+        workspaceID: UUID?,
+        generation: UInt64
+    ) -> Bool {
+        self.workspaceID == workspaceID && self.generation == generation
+    }
+}
+
 enum AgentSessionFactualProjectionEvidenceRows {
     enum TurnProperty: Equatable {
         case prompt(String)
@@ -126,6 +138,7 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     @State private var viewMode: AgentSessionFactualProjectionMode = .terminal
     @State private var factualProjectionResult: AgentSessionFactualProjectionReadResult = .missingSession
     @State private var isLoadingFactualProjection = false
+    @State private var factualProjectionRefreshGeneration: UInt64 = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -147,6 +160,9 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
             scheduleFactualProjectionRefreshIfNeeded()
         }
         .onChange(of: stableWorkspaceID) { _, _ in
+            factualProjectionRefreshGeneration &+= 1
+            factualProjectionResult = .missingSession
+            isLoadingFactualProjection = false
             scheduleFactualProjectionRefreshIfNeeded()
         }
         .onAppear {
@@ -193,6 +209,7 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
                     sessionDescription: sessionDescription
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .id(stableWorkspaceID)
                 .onAppear {
                     scheduleFactualProjectionRefreshIfNeeded()
                 }
@@ -257,9 +274,19 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
             factualProjectionResult = .unavailable
             return
         }
+        let refreshIdentity = AgentSessionFactualProjectionRefreshIdentity(
+            workspaceID: stableWorkspaceID,
+            generation: factualProjectionRefreshGeneration
+        )
         let nextResult = await workProvenanceRuntime.agentSessionFactualProjection(
             stableWorkspaceID: stableWorkspaceID
         )
+        guard refreshIdentity.acceptsResult(
+            workspaceID: self.stableWorkspaceID,
+            generation: factualProjectionRefreshGeneration
+        ) else {
+            return
+        }
         if nextResult != factualProjectionResult {
             factualProjectionResult = nextResult
         }

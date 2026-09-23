@@ -212,6 +212,20 @@ struct AgentSessionFactualProjectionStoreTests {
         #expect(AgentSessionFactualProjectionEvidenceRows.finalAssistantMessageText(for: turn) == "Final.")
     }
 
+    @Test
+    func factualProjectionRefreshRejectsResultFromPreviousWorkspace() {
+        let firstWorkspace = UUID()
+        let secondWorkspace = UUID()
+        let firstRefresh = AgentSessionFactualProjectionRefreshIdentity(
+            workspaceID: firstWorkspace,
+            generation: 1
+        )
+
+        #expect(!firstRefresh.acceptsResult(workspaceID: secondWorkspace, generation: 2))
+        #expect(!firstRefresh.acceptsResult(workspaceID: firstWorkspace, generation: 2))
+        #expect(firstRefresh.acceptsResult(workspaceID: firstWorkspace, generation: 1))
+    }
+
     private static func snapshot(
         sessionID: String,
         revision: Int,
