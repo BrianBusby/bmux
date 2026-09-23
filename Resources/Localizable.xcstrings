@@ -1,6 +1,25 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "sidebar.workspaceFilter.heading": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"WORKSPACES"}},"ja":{"stringUnit":{"state":"translated","value":"ワークスペース"}}}},
+    "sidebar.workspaceFilter.search": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Search workspaces…"}},"ja":{"stringUnit":{"state":"translated","value":"ワークスペースを検索…"}}}},
+    "sidebar.workspaceFilter.title": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"FILTERS"}},"ja":{"stringUnit":{"state":"translated","value":"フィルター"}}}},
+    "sidebar.workspaceFilter.clearAll": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Clear all"}},"ja":{"stringUnit":{"state":"translated","value":"すべてクリア"}}}},
+    "sidebar.workspaceFilter.status": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"STATUS"}},"ja":{"stringUnit":{"state":"translated","value":"ステータス"}}}},
+    "sidebar.workspaceFilter.repository": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"REPOSITORY"}},"ja":{"stringUnit":{"state":"translated","value":"リポジトリ"}}}},
+    "sidebar.workspaceFilter.project": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"PROJECT"}},"ja":{"stringUnit":{"state":"translated","value":"プロジェクト"}}}},
+    "sidebar.workspaceFilter.hint": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Search also matches branch names, PR numbers, and ticket IDs"}},"ja":{"stringUnit":{"state":"translated","value":"ブランチ名、PR番号、チケットIDも検索できます"}}}},
+    "sidebar.workspaceFilter.results": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"%d of %d workspaces"}},"ja":{"stringUnit":{"state":"translated","value":"%d / %d ワークスペース"}}}},
+    "sidebar.workspaceFilter.hiddenSelection": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"%@ is selected but hidden by filters"}},"ja":{"stringUnit":{"state":"translated","value":"%@ は選択されていますが、フィルターで非表示です"}}}},
+    "sidebar.workspaceFilter.showIt": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Show it"}},"ja":{"stringUnit":{"state":"translated","value":"表示"}}}},
+    "sidebar.workspaceFilter.status.active": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Active"}},"ja":{"stringUnit":{"state":"translated","value":"アクティブ"}}}},
+    "sidebar.workspaceFilter.status.waiting": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Waiting"}},"ja":{"stringUnit":{"state":"translated","value":"待機中"}}}},
+    "sidebar.workspaceFilter.status.finished": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Finished"}},"ja":{"stringUnit":{"state":"translated","value":"完了"}}}},
+    "sidebar.workspaceFilter.status.error": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"Error"}},"ja":{"stringUnit":{"state":"translated","value":"エラー"}}}},
+    "sidebar.workspaceFilter.empty.title": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"No workspaces match"}},"ja":{"stringUnit":{"state":"translated","value":"一致するワークスペースはありません"}}}},
+    "sidebar.workspaceFilter.empty.query": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"No results for \"%@\". Try a branch name, PR number, or ticket ID."}},"ja":{"stringUnit":{"state":"translated","value":"\"%@\" の結果がありません。ブランチ名、PR番号、チケットIDを試してください。"}}}},
+    "sidebar.workspaceFilter.empty.combined": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"No results for \"%@\" with these filters."}},"ja":{"stringUnit":{"state":"translated","value":"これらのフィルターで \"%@\" の結果がありません。"}}}},
+    "sidebar.workspaceFilter.empty.filters": {"extractionState":"manual","localizations":{"en":{"stringUnit":{"state":"translated","value":"No workspaces match the selected filters."}},"ja":{"stringUnit":{"state":"translated","value":"選択したフィルターに一致するワークスペースはありません。"}}}},
     "hybrid.fixture.inMotion": {
       "extractionState": "manual",
       "localizations": {

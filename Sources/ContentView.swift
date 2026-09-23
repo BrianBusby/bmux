@@ -10356,6 +10356,8 @@ struct VerticalTabsSidebar: View {
     @State private var frozenShortcutHintsTabId: UUID?
     @State private var frozenShortcutHintsValue: Bool = false
     @State private var pendingSelectedWorkspaceScrollId: UUID?
+    @State private var workspaceFilters = WorkspaceFilters()
+    @State private var isWorkspaceFilterPanelPresented = false
     @State private var workspaceScrollContentMinHeight: CGFloat = 0
     @State private var collapsedExtensionSidebarSectionIds: Set<String> = []
     @State private var extensionSidebarWorktreeCreationInFlightSectionIds: Set<String> = []
@@ -10670,6 +10672,37 @@ struct VerticalTabsSidebar: View {
         )
     }
 
+    private func workspaceFilterItems(for tabs: [Workspace]) -> [WorkspaceFilterItem] {
+        tabs.map { tab in
+            let directory = tab.currentDirectory.trimmingCharacters(in: .whitespacesAndNewlines)
+            let repo = directory.isEmpty ? nil : URL(fileURLWithPath: directory).lastPathComponent
+            let projectPath = tab.extensionSidebarProjectRootPath?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let project = projectPath.flatMap { path in
+                path.isEmpty ? nil : URL(fileURLWithPath: path).lastPathComponent
+            }
+            let pullRequest = tab.pullRequest
+            let status: WorkspaceStatusKind
+            if tab.isRemoteWorkspace, tab.remoteConnectionState == .disconnected {
+                status = .error
+            } else if tab.isRemoteWorkspace,
+                      tab.remoteConnectionState == .connecting || tab.remoteConnectionState == .reconnecting {
+                status = .waiting
+            } else {
+                status = .active
+            }
+            return WorkspaceFilterItem(
+                id: tab.id,
+                title: tab.title,
+                status: status,
+                owner: pullRequest?.ownerLogin,
+                repo: repo,
+                project: project,
+                branch: tab.gitBranch?.branch,
+                links: pullRequest.map { ["\($0.label) \($0.number)"] } ?? []
+            )
+        }
+    }
+
     private func requestSelectedWorkspaceScrollAfterWorkspaceOrderChange(_ notification: Notification) {
         guard let manager = notification.object as? TabManager, manager === tabManager else {
             return
@@ -10914,9 +10947,29 @@ struct VerticalTabsSidebar: View {
 
     private func workspaceScrollArea(renderContext: WorkspaceListRenderContext) -> some View {
         let scrollInsets = SidebarWorkspaceScrollInsets.workspaceList
+        let filterItems = workspaceFilterItems(for: renderContext.tabs)
         return ScrollViewReader { scrollProxy in
-            ScrollView(.vertical) {
-                workspaceScrollContent(renderContext: renderContext, minHeight: workspaceScrollContentMinHeight)
+            VStack(spacing: 0) {
+                HStack {
+                    Text(String(localized: "sidebar.workspaceFilter.heading", defaultValue: "WORKSPACES"))
+                        .font(.system(size: 11, weight: .semibold))
+                        .tracking(1.2)
+                        .foregroundStyle(Color.white.opacity(0.34))
+                    Spacer()
+                    Text("\(renderContext.tabs.count)")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.white.opacity(0.3))
+                }
+                .padding(.horizontal, 14)
+                WorkspaceTabFilterBar(
+                    items: filterItems,
+                    selectedWorkspaceTitle: renderContext.tabs.first { $0.id == tabManager.selectedTabId }?.title,
+                    filters: $workspaceFilters,
+                    isPanelPresented: $isWorkspaceFilterPanelPresented
+                )
+                ScrollView(.vertical) {
+                    workspaceScrollContent(renderContext: renderContext, minHeight: workspaceScrollContentMinHeight)
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(
@@ -12184,7 +12237,21 @@ struct VerticalTabsSidebar: View {
         shouldCollectWorkspaceDropTargets: Bool
     ) -> some View {
         let signpost = SidebarProfilingSignposts.begin("sidebar-workspace-rows", "renderItems=\(renderContext.workspaceRenderItems.count) collectDropTargets=\(shouldCollectWorkspaceDropTargets)")
-        let renderItems = renderContext.workspaceRenderItems
+        let visibleWorkspaceIds = Set(
+            WorkspaceTabFilterProjection().visibleItems(
+                workspaceFilterItems(for: renderContext.tabs),
+                filters: workspaceFilters
+            ).map(\.id)
+        )
+        let renderItems = renderContext.workspaceRenderItems.filter { item in
+            switch item {
+            case .workspace(let tab):
+                return visibleWorkspaceIds.contains(tab.id)
+            case .groupHeader(let group, let memberWorkspaceIds):
+                return visibleWorkspaceIds.contains(group.anchorWorkspaceId) ||
+                    memberWorkspaceIds.contains(where: visibleWorkspaceIds.contains)
+            }
+        }
         // LazyVStack is safe here because `dragState` is @Observable:
         // drag mutations at 60fps invalidate only the rows/overlays that
         // read them, never this sidebar body. See SidebarDragState and
@@ -12210,6 +12277,15 @@ struct VerticalTabsSidebar: View {
         }
         .padding(.vertical, SidebarWorkspaceListMetrics.rowVerticalPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay {
+            if visibleWorkspaceIds.isEmpty, !workspaceFilters.isEmpty {
+                WorkspaceTabFilterEmptyState(
+                    query: workspaceFilters.query,
+                    hasCategoryFilters: workspaceFilters.categoryCount > 0,
+                    onClear: { workspaceFilters = WorkspaceFilters() }
+                )
+            }
+        }
         // No whole-content height measurement here: reading the LazyVStack's
         // total height (GeometryReader, or a custom Layout's sizeThatFits) fed a
         // non-converging relayout loop (#2586 / #5764 / #5845). Fill is handled
