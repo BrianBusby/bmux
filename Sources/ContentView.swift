@@ -52,14 +52,17 @@ private enum BmuxRadius {
 }
 
 @MainActor
-private func bmuxWorkspaceFilterItems(for tabs: [Workspace]) -> [WorkspaceFilterItem] {
+private func bmuxWorkspaceFilterItems(
+    for tabs: [Workspace],
+    workProvenanceRuntime: WorkProvenanceRuntime?
+) -> [WorkspaceFilterItem] {
     tabs.map { tab in
         let directory = tab.currentDirectory.trimmingCharacters(in: .whitespacesAndNewlines)
         let repo = directory.isEmpty ? nil : URL(fileURLWithPath: directory).lastPathComponent
-        let projectPath = tab.extensionSidebarProjectRootPath?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let project = projectPath.flatMap { path in
-            path.isEmpty ? nil : URL(fileURLWithPath: path).lastPathComponent
-        }
+        let projects = workProvenanceRuntime?
+            .workspaceDisplayCurrentStateSnapshot(for: tab)?
+            .projectLinks
+            .compactMap { $0.title ?? $0.id } ?? []
         let pullRequest = tab.pullRequest
         let status: WorkspaceStatusKind
         if tab.isRemoteWorkspace, tab.remoteConnectionState == .disconnected {
@@ -76,7 +79,7 @@ private func bmuxWorkspaceFilterItems(for tabs: [Workspace]) -> [WorkspaceFilter
             status: status,
             owner: pullRequest?.ownerLogin,
             repo: repo,
-            project: project,
+            projects: projects,
             branch: tab.gitBranch?.branch,
             links: pullRequest.map { ["\($0.label) \($0.number)"] } ?? []
         )
@@ -2559,7 +2562,10 @@ struct ContentView: View {
     }
 
     private var bmuxReferenceWorkspaceRail: some View {
-        let filterItems = bmuxWorkspaceFilterItems(for: tabManager.tabs)
+        let filterItems = bmuxWorkspaceFilterItems(
+            for: tabManager.tabs,
+            workProvenanceRuntime: tabManager.workProvenanceRuntime
+        )
         let visibleWorkspaceIDs = Set(
             WorkspaceTabFilterProjection().visibleItems(
                 filterItems,
@@ -10749,7 +10755,7 @@ struct VerticalTabsSidebar: View {
     }
 
     private func workspaceFilterItems(for tabs: [Workspace]) -> [WorkspaceFilterItem] {
-        bmuxWorkspaceFilterItems(for: tabs)
+        bmuxWorkspaceFilterItems(for: tabs, workProvenanceRuntime: tabManager.workProvenanceRuntime)
     }
 
     private func requestSelectedWorkspaceScrollAfterWorkspaceOrderChange(_ notification: Notification) {
@@ -17059,7 +17065,7 @@ private struct HybridWorkbenchFixtureRail: View {
                 status: index == 1 ? .active : .waiting,
                 owner: card.owner,
                 repo: card.repository,
-                project: card.project,
+                projects: card.project.map { [$0] } ?? [],
                 branch: nil,
                 links: [card.ticket, card.pullRequest].compactMap { $0 }
             )

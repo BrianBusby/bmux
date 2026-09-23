@@ -15,7 +15,7 @@ struct WorkspaceFilterItem: Identifiable, Equatable, Sendable {
     let status: WorkspaceStatusKind
     let owner: String?
     let repo: String?
-    let project: String?
+    let projects: [String]
     let branch: String?
     let links: [String]
 }
@@ -40,11 +40,11 @@ struct WorkspaceFilters: Equatable, Sendable {
         if !statuses.isEmpty, !statuses.contains(item.status) { return false }
         if !owners.isEmpty, item.owner.map({ !owners.contains($0) }) ?? true { return false }
         if !repos.isEmpty, item.repo.map({ !repos.contains($0) }) ?? true { return false }
-        if !projects.isEmpty, item.project.map({ !projects.contains($0) }) ?? true { return false }
+        if !projects.isEmpty, item.projects.allSatisfy({ !projects.contains($0) }) { return false }
 
         let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !normalizedQuery.isEmpty else { return true }
-        let haystack = ([item.title, item.owner, item.repo, item.project, item.branch] + item.links)
+        let haystack = ([item.title, item.owner, item.repo, item.branch] + item.projects + item.links)
             .compactMap { $0 }
             .joined(separator: " ")
             .lowercased()
@@ -89,6 +89,12 @@ struct WorkspaceTabFilterProjection {
         in items: [WorkspaceFilterItem]
     ) -> [String] {
         Set(items.compactMap { $0[keyPath: keyPath] }).sorted {
+            $0.localizedCaseInsensitiveCompare($1) == .orderedAscending
+        }
+    }
+
+    func projectValues(in items: [WorkspaceFilterItem]) -> [String] {
+        Set(items.flatMap(\.projects)).sorted {
             $0.localizedCaseInsensitiveCompare($1) == .orderedAscending
         }
     }
