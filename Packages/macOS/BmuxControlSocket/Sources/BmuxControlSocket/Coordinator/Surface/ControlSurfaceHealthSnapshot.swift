@@ -3,9 +3,9 @@ public import Foundation
 /// A read-only render-health snapshot of a workspace's surfaces for the
 /// `surface.health` payload.
 ///
-/// Mirrors the legacy `v2SurfaceHealth` payload: the workspace identity, the
-/// ordered health rows, and the (optional) enclosing window. The coordinator mints
-/// the workspace and window refs.
+/// Mirrors the `surface.health` payload: the workspace identity, the ordered
+/// health rows, and the (optional) enclosing window. The coordinator mints the
+/// workspace and window refs.
 public struct ControlSurfaceHealthSnapshot: Sendable, Equatable {
     /// The workspace's identifier.
     public let workspaceID: UUID
