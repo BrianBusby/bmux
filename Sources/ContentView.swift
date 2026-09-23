@@ -2836,6 +2836,16 @@ struct ContentView: View {
                             )
                             : nil,
                         onPrimaryTabChange: { isTerminal in
+                            if isTerminal {
+                                // The workspace filter is an AppKit text-field owner.
+                                // Yield it before revealing the terminal so the terminal
+                                // focus coordinator does not correctly preserve the stale
+                                // search responder and leave keystrokes beeping.
+                                let window = observedWindow ?? NSApp.keyWindow ?? NSApp.mainWindow
+                                if window?.firstResponder is NSText {
+                                    _ = window?.makeFirstResponder(nil)
+                                }
+                            }
                             bmuxShellTerminalVisible = isTerminal
                         },
                         workspaceLabel: tabManager.selectedWorkspace.map {
