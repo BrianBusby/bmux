@@ -57,7 +57,7 @@ function makeSession(activeTurn: boolean, withTelemetry = false): { sess: Sessio
 
 {
   const { sess, events, telemetryEvents } = makeSession(false, true);
-  emitClaudePromptSubmitted(sess, "hello Claude");
+  emitClaudePromptSubmitted(sess, "hello Claude", 1);
   claudeHandleLineForTest(sess, JSON.stringify({
     type: "system",
     subtype: "init",
@@ -73,7 +73,10 @@ function makeSession(activeTurn: boolean, withTelemetry = false): { sess: Sessio
   if (telemetryEvents[0].event.type !== "prompt.submitted" || telemetryEvents[0].source !== "sidecar") {
     throw new Error(`Claude prompt telemetry changed: ${JSON.stringify(telemetryEvents)}`);
   }
-  if (telemetryEvents[1].event.type !== "session.provider-linked" || telemetryEvents[1].providerEvent?.method !== "system/init") {
+  if (telemetryEvents[1].event.type !== "turn.started" || telemetryEvents[1].providerTurnId !== "bmux-turn-1") {
+    throw new Error(`Claude turn identity missing: ${JSON.stringify(telemetryEvents)}`);
+  }
+  if (telemetryEvents[2].event.type !== "session.provider-linked" || telemetryEvents[2].providerEvent?.method !== "system/init") {
     throw new Error(`Claude init telemetry changed: ${JSON.stringify(telemetryEvents)}`);
   }
 }
@@ -81,7 +84,7 @@ function makeSession(activeTurn: boolean, withTelemetry = false): { sess: Sessio
 {
   const { sess, events, telemetryEvents } = makeSession(true, true);
   sess.internal.providerSessionId = "claude-provider-session";
-  claudeHandleLineForTest(sess, JSON.stringify({ type: "result", subtype: "success", duration_ms: 1200, total_cost_usd: 0.012, num_turns: 1 }));
+  claudeHandleLineForTest(sess, JSON.stringify({ type: "result", subtype: "success", result: "Finished the task.", duration_ms: 1200, total_cost_usd: 0.012, num_turns: 1 }));
   claudeProcessCloseForTest(sess);
   const done = events.filter((evt) => evt.kind === "done");
   const errors = events.filter((evt) => evt.kind === "error");
@@ -90,10 +93,13 @@ function makeSession(activeTurn: boolean, withTelemetry = false): { sess: Sessio
   if (errors.length) throw new Error(`normal close after result should not emit an error, got ${JSON.stringify(events)}`);
   if (sess.status !== "idle") throw new Error(`normal close should leave session idle, got ${sess.status}`);
   if ((sess.internal.claude as any).activeTurns) throw new Error("normal result should clear claude active turn");
-  if (telemetryEvents.length !== 1 || telemetryEvents[0].event.type !== "turn.completed") {
+  if (telemetryEvents.length !== 2 || telemetryEvents[0].event.type !== "message.completed" || telemetryEvents[1].event.type !== "turn.completed") {
     throw new Error(`normal result should publish turn.completed telemetry, got ${JSON.stringify(telemetryEvents)}`);
   }
-  if (telemetryEvents[0].providerSessionId !== "claude-provider-session" || telemetryEvents[0].providerEvent?.method !== "result") {
+  if (telemetryEvents[0].providerTurnId !== "bmux-turn-1" || telemetryEvents[1].providerTurnId !== "bmux-turn-1") {
+    throw new Error(`Claude final output and turn identities diverged: ${JSON.stringify(telemetryEvents)}`);
+  }
+  if (telemetryEvents[1].providerSessionId !== "claude-provider-session" || telemetryEvents[1].providerEvent?.method !== "result") {
     throw new Error(`normal result telemetry identity changed, got ${JSON.stringify(telemetryEvents)}`);
   }
 }

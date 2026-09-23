@@ -414,6 +414,45 @@ final class SessionProvenanceTests: XCTestCase {
         XCTAssertEqual(fileAttribution.turnID, command.turnID)
     }
 
+    @MainActor
+    func testClaudeTelemetryProducesClaudeEvidenceAndDistinctProviderIDs() async throws {
+        let client = CapturingProvenanceEngineClient()
+        let recorder = WorkProvenanceCodingAgentEvidenceRecorder(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [:])
+        )
+        let decoder = JSONDecoder()
+        for provider in ["codex", "claude"] {
+            let summary = try decoder.decode(AgentChatSessionSummary.self, from: Data("""
+            {"id":"session-\(provider)","provider":"\(provider)","cwd":"/repo","status":"idle","createdAt":1725000000000}
+            """.utf8))
+            let events = """
+            [
+              {"schema":"execution.telemetry.v1","eventId":"\(provider)-thread","sessionId":"session-\(provider)","sequence":1,"capturedAtMs":1725000000000,"source":"provider","provider":"\(provider)","providerSessionId":"shared-thread","event":{"type":"session.provider-linked","providerSessionId":"shared-thread"}},
+              {"schema":"execution.telemetry.v1","eventId":"\(provider)-turn","sessionId":"session-\(provider)","sequence":2,"capturedAtMs":1725000001000,"source":"provider","provider":"\(provider)","providerSessionId":"shared-thread","providerTurnId":"shared-turn","event":{"type":"turn.started","turnId":"shared-turn"}},
+              {"schema":"execution.telemetry.v1","eventId":"\(provider)-prompt","sessionId":"session-\(provider)","sequence":3,"capturedAtMs":1725000002000,"source":"sidecar","provider":"\(provider)","providerSessionId":"shared-thread","providerTurnId":"shared-turn","event":{"type":"prompt.submitted","text":"Implement the change"}},
+              {"schema":"execution.telemetry.v1","eventId":"\(provider)-message","sessionId":"session-\(provider)","sequence":4,"capturedAtMs":1725000003000,"source":"provider","provider":"\(provider)","providerSessionId":"shared-thread","providerTurnId":"shared-turn","event":{"type":"message.completed","stream":"assistant","text":"Done."}}
+            ]
+            """
+            let envelopes = try decoder.decode([ExecutionTelemetryEventEnvelope].self, from: Data(events.utf8))
+            for envelope in envelopes {
+                try await recorder.record(summary: summary, envelope: envelope)
+            }
+        }
+        let appendedRequests = await client.appendedEventRequests
+        let requests = appendedRequests.map(\.event)
+        XCTAssertEqual(requests.count, 8)
+        let threads = requests.compactMap(\.payload.codingAgentThread)
+        let turns = requests.compactMap(\.payload.codingAgentTurn)
+        let messages = requests.compactMap(\.payload.codingAgentAssistantMessage)
+        XCTAssertEqual(Set(threads.map(\.provider)), ["codex", "claude"])
+        XCTAssertEqual(Set(threads.map(\.id)).count, 2)
+        XCTAssertEqual(Set(turns.map(\.id)).count, 2)
+        XCTAssertEqual(Set(messages.map(\.provider)), ["codex", "claude"])
+        XCTAssertEqual(requests.filter { $0.sessionID == "session-claude" }.map(\.evidenceOrigin),
+                       Array(repeating: .claudeSession, count: 4))
+    }
+
     private struct FakeGitInspector: WorkProvenanceGitInspecting {
         let snapshotsByDirectory: [String: WorkProvenanceGitSnapshot]
 

@@ -284,9 +284,9 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         let message = ProvenanceCodingAgentAssistantMessageRecord(
             id: "coding-agent-assistant-message-\(envelope.eventID)",
             sessionID: summary.id,
-            threadID: providerThreadID.map(threadRecordID(providerThreadID:)),
-            turnID: providerTurnID.map(turnRecordID(providerTurnID:)),
-            provider: "codex",
+            threadID: providerThreadID.map { threadRecordID(providerThreadID: $0, provider: normalizedProvider(summary.provider)) },
+            turnID: providerTurnID.map { turnRecordID(providerTurnID: $0, provider: normalizedProvider(summary.provider)) },
+            provider: normalizedProvider(summary.provider),
             itemID: trimmedNonEmpty(event.itemID),
             text: text,
             completedAt: observedAt,
@@ -322,10 +322,10 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         updatedAt: Date
     ) -> ProvenanceCodingAgentTurnRecord {
         ProvenanceCodingAgentTurnRecord(
-            id: turnRecordID(providerTurnID: providerTurnID),
+            id: turnRecordID(providerTurnID: providerTurnID, provider: normalizedProvider(summary.provider)),
             sessionID: summary.id,
-            threadID: providerThreadID.map(threadRecordID(providerThreadID:)),
-            provider: "codex",
+            threadID: providerThreadID.map { threadRecordID(providerThreadID: $0, provider: normalizedProvider(summary.provider)) },
+            provider: normalizedProvider(summary.provider),
             providerTurnID: providerTurnID,
             status: status,
             model: model,
@@ -377,7 +377,7 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
     ) -> ProvenanceSessionRecord {
         ProvenanceSessionRecord(
             id: summary.id,
-            agentKind: "codex",
+            agentKind: normalizedProvider(summary.provider),
             worktreeID: worktreeID,
             cwd: trimmedNonEmpty(summary.cwd),
             status: "active",
@@ -391,12 +391,13 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         sessionID: String,
         kind: String,
         externalID: String,
+        provider: String = "codex",
         observedAt: Date
     ) -> ProvenanceExternalIdentityRecord {
         ProvenanceExternalIdentityRecord(
             id: id,
             sessionID: sessionID,
-            system: "codex",
+            system: provider,
             kind: kind,
             externalID: externalID,
             source: .observed,
@@ -420,16 +421,16 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         firstNonEmpty(envelope.providerTurnID, envelope.providerEvent?.turnID, currentProviderTurnIDBySessionID[summary.id])
     }
 
-    func threadRecordID(providerThreadID: String) -> String {
-        stableIDFactory.id(prefix: "coding-agent-thread", value: "codex\n\(providerThreadID)")
+    func threadRecordID(providerThreadID: String, provider: String = "codex") -> String {
+        stableIDFactory.id(prefix: "coding-agent-thread", value: "\(provider)\n\(providerThreadID)")
     }
 
-    func turnRecordID(providerTurnID: String) -> String {
-        stableIDFactory.id(prefix: "coding-agent-turn", value: "codex\n\(providerTurnID)")
+    func turnRecordID(providerTurnID: String, provider: String = "codex") -> String {
+        stableIDFactory.id(prefix: "coding-agent-turn", value: "\(provider)\n\(providerTurnID)")
     }
 
-    func identityRecordID(sessionID: String, kind: String, externalID: String) -> String {
-        stableIDFactory.id(prefix: "identity", value: "\(sessionID)\ncodex\n\(kind)\n\(externalID)")
+    func identityRecordID(sessionID: String, kind: String, externalID: String, provider: String = "codex") -> String {
+        stableIDFactory.id(prefix: "identity", value: "\(sessionID)\n\(provider)\n\(kind)\n\(externalID)")
     }
 
     func toolKey(sessionID: String, operationID: String) -> String {

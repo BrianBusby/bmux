@@ -9,14 +9,14 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         providerThreadID: String
     ) async throws {
         let observedAt = timestamp(milliseconds: envelope.capturedAtMs)
-        let threadID = threadRecordID(providerThreadID: providerThreadID)
+        let threadID = threadRecordID(providerThreadID: providerThreadID, provider: normalizedProvider(summary.provider))
         providerThreadIDBySessionID[summary.id] = providerThreadID
         let gitContext = await gitContext(for: summary.cwd, observedAt: observedAt)
         let session = sessionRecord(summary: summary, worktreeID: gitContext?.worktreeID, updatedAt: observedAt)
         let thread = ProvenanceCodingAgentThreadRecord(
             id: threadID,
             sessionID: summary.id,
-            provider: "codex",
+            provider: normalizedProvider(summary.provider),
             providerThreadID: providerThreadID,
             worktreeID: gitContext?.worktreeID,
             source: .observed,
@@ -25,10 +25,11 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
             updatedAt: observedAt
         )
         let identity = externalIdentity(
-            id: identityRecordID(sessionID: summary.id, kind: "thread", externalID: providerThreadID),
+            id: identityRecordID(sessionID: summary.id, kind: "thread", externalID: providerThreadID, provider: normalizedProvider(summary.provider)),
             sessionID: summary.id,
             kind: "thread",
             externalID: providerThreadID,
+            provider: normalizedProvider(summary.provider),
             observedAt: observedAt
         )
         try await append(
@@ -71,15 +72,15 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
     ) async throws {
         let observedAt = timestamp(milliseconds: envelope.capturedAtMs)
         let providerThreadID = effectiveProviderThreadID(summary: summary, envelope: envelope)
-        let turnID = turnRecordID(providerTurnID: providerTurnID)
-        let threadID = providerThreadID.map(threadRecordID(providerThreadID:))
+        let turnID = turnRecordID(providerTurnID: providerTurnID, provider: normalizedProvider(summary.provider))
+        let threadID = providerThreadID.map { threadRecordID(providerThreadID: $0, provider: normalizedProvider(summary.provider)) }
         let gitContext = await gitContext(for: summary.cwd, observedAt: observedAt)
         let prompt = ProvenanceCodingAgentPromptRecord(
             id: "coding-agent-prompt-\(envelope.eventID)",
             sessionID: summary.id,
             threadID: threadID,
             turnID: turnID,
-            provider: "codex",
+            provider: normalizedProvider(summary.provider),
             text: text,
             submittedAt: observedAt,
             source: .observed,
@@ -128,10 +129,11 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         )
         let gitContext = await gitContext(for: summary.cwd, observedAt: observedAt)
         let identity = externalIdentity(
-            id: identityRecordID(sessionID: summary.id, kind: "turn", externalID: providerTurnID),
+            id: identityRecordID(sessionID: summary.id, kind: "turn", externalID: providerTurnID, provider: normalizedProvider(summary.provider)),
             sessionID: summary.id,
             kind: "turn",
             externalID: providerTurnID,
+            provider: normalizedProvider(summary.provider),
             observedAt: observedAt
         )
         try await append(
@@ -251,9 +253,9 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         let update = ProvenanceCodingAgentPlanUpdateRecord(
             id: "coding-agent-plan-\(envelope.eventID)",
             sessionID: summary.id,
-            threadID: providerThreadID.map(threadRecordID(providerThreadID:)),
-            turnID: providerTurnID.map(turnRecordID(providerTurnID:)),
-            provider: "codex",
+            threadID: providerThreadID.map { threadRecordID(providerThreadID: $0, provider: normalizedProvider(summary.provider)) },
+            turnID: providerTurnID.map { turnRecordID(providerTurnID: $0, provider: normalizedProvider(summary.provider)) },
+            provider: normalizedProvider(summary.provider),
             explanation: trimmedNonEmpty(event.explanation).map { bounded($0, limit: Self.summaryLimit) },
             steps: steps,
             observedAt: observedAt,
@@ -292,9 +294,9 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         let summaryRecord = ProvenanceCodingAgentReasoningSummaryRecord(
             id: "coding-agent-reasoning-summary-\(envelope.eventID)",
             sessionID: summary.id,
-            threadID: providerThreadID.map(threadRecordID(providerThreadID:)),
-            turnID: providerTurnID.map(turnRecordID(providerTurnID:)),
-            provider: "codex",
+            threadID: providerThreadID.map { threadRecordID(providerThreadID: $0, provider: normalizedProvider(summary.provider)) },
+            turnID: providerTurnID.map { turnRecordID(providerTurnID: $0, provider: normalizedProvider(summary.provider)) },
+            provider: normalizedProvider(summary.provider),
             itemID: trimmedNonEmpty(event.itemID),
             text: text,
             completedAt: observedAt,
@@ -352,9 +354,9 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         let commandRecord = ProvenanceCodingAgentCommandRecord(
             id: "coding-agent-command-\(envelope.eventID)",
             sessionID: summary.id,
-            threadID: providerThreadID.map(threadRecordID(providerThreadID:)),
-            turnID: providerTurnID.map(turnRecordID(providerTurnID:)),
-            provider: "codex",
+            threadID: providerThreadID.map { threadRecordID(providerThreadID: $0, provider: normalizedProvider(summary.provider)) },
+            turnID: providerTurnID.map { turnRecordID(providerTurnID: $0, provider: normalizedProvider(summary.provider)) },
+            provider: normalizedProvider(summary.provider),
             operationID: operationID,
             toolText: bounded(toolText, limit: Self.textLimit),
             cwd: cwd,
@@ -425,9 +427,9 @@ extension WorkProvenanceCodingAgentEvidenceRecorder {
         let attribution = ProvenanceCodingAgentFileChangeAttributionRecord(
             id: "coding-agent-file-change-\(envelope.eventID)",
             sessionID: summary.id,
-            threadID: providerThreadID.map(threadRecordID(providerThreadID:)),
-            turnID: providerTurnID.map(turnRecordID(providerTurnID:)),
-            provider: "codex",
+            threadID: providerThreadID.map { threadRecordID(providerThreadID: $0, provider: normalizedProvider(summary.provider)) },
+            turnID: providerTurnID.map { turnRecordID(providerTurnID: $0, provider: normalizedProvider(summary.provider)) },
+            provider: normalizedProvider(summary.provider),
             operationID: envelope.providerEvent?.itemID,
             changeSetID: changeSetID,
             fileChangeIDs: fileChangeRecords.map(\.id),

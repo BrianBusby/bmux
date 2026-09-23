@@ -38,8 +38,9 @@ actor WorkProvenanceCodingAgentEvidenceRecorder {
         summary: AgentChatSessionSummary,
         envelope: ExecutionTelemetryEventEnvelope
     ) async throws {
-        guard normalizedProvider(summary.provider) == "codex",
-              normalizedProvider(envelope.provider) == "codex",
+        let provider = normalizedProvider(summary.provider)
+        guard (provider == "codex" || provider == "claude"),
+              normalizedProvider(envelope.provider) == provider,
               envelope.sessionID == summary.id else {
             return
         }
@@ -90,7 +91,7 @@ actor WorkProvenanceCodingAgentEvidenceRecorder {
             worktreeID: worktreeID,
             sessionID: sessionID,
             source: .observed,
-            evidenceOrigin: .codexSession,
+            evidenceOrigin: normalizedProvider(envelope.provider) == "claude" ? .claudeSession : .codexSession,
             evidenceScope: ProvenanceEvidenceScope(level: .personal, id: "bmux-local"),
             confidence: confidence,
             payload: payload

@@ -2,14 +2,30 @@ import type { SessionCtx } from "../types";
 import type { TelemetryEventEnvelope } from "../executionTelemetryTypes";
 import { truncate } from "./lines";
 
-export function emitClaudePromptSubmitted(sess: SessionCtx, text: string): TelemetryEventEnvelope | undefined {
-  return sess.emitTelemetry?.({
+export function claudeTurnID(generation: number | undefined): string | undefined {
+  return generation === undefined ? undefined : `bmux-turn-${generation}`;
+}
+
+export function emitClaudePromptSubmitted(sess: SessionCtx, text: string, generation?: number): TelemetryEventEnvelope | undefined {
+  const providerTurnId = claudeTurnID(generation);
+  const prompt = sess.emitTelemetry?.({
     source: "sidecar",
+    providerTurnId,
     event: {
       type: "prompt.submitted",
       text,
     },
-  }) ?? (sess.emit({ kind: "user", text }), undefined);
+  });
+  if (!prompt) {
+    sess.emit({ kind: "user", text });
+    return undefined;
+  }
+  if (providerTurnId) sess.emitTelemetry?.({
+    source: "sidecar",
+    providerTurnId,
+    event: { type: "turn.started", turnId: providerTurnId },
+  });
+  return prompt;
 }
 
 export function emitClaudeProviderSessionLinked(
@@ -37,17 +53,19 @@ export function emitClaudeTurnCompleted(
   sess: SessionCtx,
   params: {
     providerSessionId?: string;
+    generation?: number;
     durationMs?: number;
     stats?: string;
-    generation?: number;
   },
 ): TelemetryEventEnvelope | undefined {
   return sess.emitTelemetry?.({
     source: "provider",
     providerSessionId: params.providerSessionId,
+    providerTurnId: claudeTurnID(params.generation),
     providerEvent: { method: "result" },
     event: {
       type: "turn.completed",
+      turnId: claudeTurnID(params.generation),
       durationMs: params.durationMs,
     },
   }, { doneGeneration: params.generation, doneStats: params.stats }) ?? (
@@ -60,11 +78,11 @@ export function emitClaudeTurnFailed(
   sess: SessionCtx,
   params: {
     providerSessionId?: string;
+    generation?: number;
     message: string;
     code?: string;
     durationMs?: number;
     stats?: string;
-    generation?: number;
     source?: "provider" | "sidecar";
     method?: string;
   },
@@ -73,9 +91,11 @@ export function emitClaudeTurnFailed(
   return sess.emitTelemetry?.({
     source: params.source ?? "provider",
     providerSessionId: params.providerSessionId,
+    providerTurnId: claudeTurnID(params.generation),
     providerEvent: params.method ? { method: params.method } : undefined,
     event: {
       type: "turn.failed",
+      turnId: claudeTurnID(params.generation),
       durationMs: params.durationMs,
       error: {
         message,

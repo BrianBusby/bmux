@@ -2,6 +2,7 @@ import type { Adapter, CommandEntry, OptionChoice, OptionValue, SessionCtx, Sess
 import { readLines, tryParse, truncate } from "./lines";
 import { prettifyModelLabel } from "./model-label";
 import {
+  claudeTurnID,
   emitClaudeProviderSessionLinked,
   emitClaudeTurnCompleted,
   emitClaudeTurnFailed,
@@ -231,12 +232,19 @@ function beginTurn(sess: SessionCtx, generation?: number) {
   st.activeGenerations.push(generation);
 }
 
-function finishTurn(sess: SessionCtx, params: { stats?: string; durationMs?: number; errorMessage?: string; errorCode?: string } = {}): number {
+function finishTurn(sess: SessionCtx, params: { stats?: string; durationMs?: number; errorMessage?: string; errorCode?: string; finalText?: string } = {}): number {
   const st = state(sess);
   if (st.activeTurns <= 0) return 0;
   st.activeTurns -= 1;
   const generation = st.activeGenerations.shift();
   const providerSessionId = typeof sess.internal.providerSessionId === "string" ? sess.internal.providerSessionId : undefined;
+  if (!params.errorMessage && params.finalText?.trim()) sess.emitTelemetry?.({
+    source: "provider",
+    providerSessionId,
+    providerTurnId: claudeTurnID(generation),
+    providerEvent: { method: "result" },
+    event: { type: "message.completed", stream: "assistant", text: params.finalText },
+  }, { skipAgentEventProjection: true });
   if (params.errorMessage) {
     emitClaudeTurnFailed(sess, {
       providerSessionId,
@@ -733,7 +741,7 @@ function handleLine(sess: SessionCtx, line: string) {
           sess.emit({ kind: "error", message: errorMessage ?? truncate(String(ev.subtype), 400) });
           sess.setStatus("idle");
         }
-      } else if (finishTurn(sess, { stats, durationMs }) === 0) {
+      } else if (finishTurn(sess, { stats, durationMs, finalText: typeof ev.result === "string" ? ev.result : undefined }) === 0) {
         sess.setStatus("idle");
       }
       break;

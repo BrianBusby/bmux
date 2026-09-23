@@ -25,6 +25,9 @@ public struct ProvenanceEvidenceOrigin: Codable, Equatable, Hashable, Sendable, 
     /// Evidence captured from a Codex session.
     public static let codexSession = Self(rawValue: "codex-session")
 
+    /// Evidence captured from a Claude Code session.
+    public static let claudeSession = Self(rawValue: "claude-session")
+
     /// Evidence captured from Git commit history.
     public static let git = Self(rawValue: "git")
 

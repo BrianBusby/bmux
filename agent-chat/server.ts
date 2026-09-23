@@ -487,7 +487,7 @@ function emitFilesChangedTelemetry(sess: Session, evt: AgentEvent, generation: n
 function sendPrompt(sess: Session, prompt: string) {
   const activeGeneration = activeAttributionGeneration(sess);
   if (adapterAttributionMode(sess) === "current-turn" && activeGeneration) {
-    emitPromptSubmitted(sess, prompt);
+    emitPromptSubmitted(sess, prompt, activeGeneration);
     Promise.resolve((sess.adapter.send as any)(sess, prompt, activeGeneration)).catch((err) => {
       console.error("[agent-chat] send failed", err);
       sess.emit({ kind: "error", message: safeErrorMessage("send", err) });
@@ -506,7 +506,7 @@ function sendPrompt(sess: Session, prompt: string) {
   }));
   baselines.set(generation, baseline);
   pruneTurnBaselines(baselines);
-  emitPromptSubmitted(sess, prompt);
+  emitPromptSubmitted(sess, prompt, generation);
   // Conscious tradeoff: the prompt dispatches IMMEDIATELY and the baseline
   // captures concurrently. Gating send on capture cost up to ~3.5s per
   // message in large dirty repos (the primary chat path); the price of not
@@ -523,13 +523,13 @@ function sendPrompt(sess: Session, prompt: string) {
   });
 }
 
-function emitPromptSubmitted(sess: Session, prompt: string) {
+function emitPromptSubmitted(sess: Session, prompt: string, generation: number) {
   if (sess.provider === "codex") {
     emitCodexPromptSubmitted(sess, prompt);
     return;
   }
   if (sess.provider === "claude") {
-    emitClaudePromptSubmitted(sess, prompt);
+    emitClaudePromptSubmitted(sess, prompt, generation);
     return;
   }
   sess.emit({ kind: "user", text: prompt });

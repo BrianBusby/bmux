@@ -24,7 +24,7 @@ public struct ExecutionTelemetryEventEnvelope: Sendable, Equatable, Decodable {
     /// Provider-native session or thread id, when known.
     public let providerSessionID: String?
 
-    /// Provider-native turn id, when known.
+    /// Provider turn id, or a session-scoped synthetic id when the provider does not expose one.
     public let providerTurnID: String?
 
     /// Provider event identity fields, when available.
