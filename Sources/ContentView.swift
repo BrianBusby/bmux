@@ -51,6 +51,37 @@ private enum BmuxRadius {
     static let appShell: CGFloat = 12
 }
 
+private func bmuxWorkspaceFilterItems(for tabs: [Workspace]) -> [WorkspaceFilterItem] {
+    tabs.map { tab in
+        let directory = tab.currentDirectory.trimmingCharacters(in: .whitespacesAndNewlines)
+        let repo = directory.isEmpty ? nil : URL(fileURLWithPath: directory).lastPathComponent
+        let projectPath = tab.extensionSidebarProjectRootPath?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let project = projectPath.flatMap { path in
+            path.isEmpty ? nil : URL(fileURLWithPath: path).lastPathComponent
+        }
+        let pullRequest = tab.pullRequest
+        let status: WorkspaceStatusKind
+        if tab.isRemoteWorkspace, tab.remoteConnectionState == .disconnected {
+            status = .error
+        } else if tab.isRemoteWorkspace,
+                  tab.remoteConnectionState == .connecting || tab.remoteConnectionState == .reconnecting {
+            status = .waiting
+        } else {
+            status = .active
+        }
+        return WorkspaceFilterItem(
+            id: tab.id,
+            title: tab.title,
+            status: status,
+            owner: pullRequest?.ownerLogin,
+            repo: repo,
+            project: project,
+            branch: tab.gitBranch?.branch,
+            links: pullRequest.map { ["\($0.label) \($0.number)"] } ?? []
+        )
+    }
+}
+
 var fileDropOverlayKey: UInt8 = 0
 private var commandPaletteWindowOverlayKey: UInt8 = 0
 let commandPaletteOverlayContainerIdentifier = NSUserInterfaceItemIdentifier("bmux.commandPalette.overlay.container")
@@ -910,6 +941,8 @@ struct ContentView: View {
     @State private var isFullScreen: Bool = false
     @State private var observedWindow: NSWindow?
     @State private var bmuxShellTerminalVisible = false
+    @State private var referenceWorkspaceFilters = WorkspaceFilters()
+    @State private var isReferenceWorkspaceFilterPanelPresented = false
     @State private var sidebarRenderWorkerClient: RenderWorkerClient?
     @StateObject private var fullscreenControlsViewModel = TitlebarControlsViewModel()
     @StateObject private var fileExplorerStore = FileExplorerStore()
@@ -2525,11 +2558,11 @@ struct ContentView: View {
     }
 
     private var bmuxReferenceWorkspaceRail: some View {
-        let filterItems = workspaceFilterItems(for: tabManager.tabs)
+        let filterItems = bmuxWorkspaceFilterItems(for: tabManager.tabs)
         let visibleWorkspaceIDs = Set(
             WorkspaceTabFilterProjection().visibleItems(
                 filterItems,
-                filters: workspaceFilters
+                filters: referenceWorkspaceFilters
             ).map(\.id)
         )
 
@@ -2544,11 +2577,11 @@ struct ContentView: View {
                 .foregroundStyle(Color.bmuxTextDisabled)
             }
 
-            WorkspaceTabFilterBar(
+                WorkspaceTabFilterBar(
                 items: filterItems,
                 selectedWorkspaceTitle: tabManager.selectedWorkspace?.title,
-                filters: $workspaceFilters,
-                isPanelPresented: $isWorkspaceFilterPanelPresented
+                filters: $referenceWorkspaceFilters,
+                isPanelPresented: $isReferenceWorkspaceFilterPanelPresented
             )
 
             ScrollView {
@@ -2597,11 +2630,11 @@ struct ContentView: View {
                         }
                     }
 
-                    if visibleWorkspaces.isEmpty, !workspaceFilters.isEmpty {
+                    if visibleWorkspaces.isEmpty, !referenceWorkspaceFilters.isEmpty {
                         WorkspaceTabFilterEmptyState(
-                            query: workspaceFilters.query,
-                            hasCategoryFilters: workspaceFilters.categoryCount > 0,
-                            onClear: { workspaceFilters = WorkspaceFilters() }
+                            query: referenceWorkspaceFilters.query,
+                            hasCategoryFilters: referenceWorkspaceFilters.categoryCount > 0,
+                            onClear: { referenceWorkspaceFilters = WorkspaceFilters() }
                         )
                     }
                 }
@@ -10697,34 +10730,7 @@ struct VerticalTabsSidebar: View {
     }
 
     private func workspaceFilterItems(for tabs: [Workspace]) -> [WorkspaceFilterItem] {
-        tabs.map { tab in
-            let directory = tab.currentDirectory.trimmingCharacters(in: .whitespacesAndNewlines)
-            let repo = directory.isEmpty ? nil : URL(fileURLWithPath: directory).lastPathComponent
-            let projectPath = tab.extensionSidebarProjectRootPath?.trimmingCharacters(in: .whitespacesAndNewlines)
-            let project = projectPath.flatMap { path in
-                path.isEmpty ? nil : URL(fileURLWithPath: path).lastPathComponent
-            }
-            let pullRequest = tab.pullRequest
-            let status: WorkspaceStatusKind
-            if tab.isRemoteWorkspace, tab.remoteConnectionState == .disconnected {
-                status = .error
-            } else if tab.isRemoteWorkspace,
-                      tab.remoteConnectionState == .connecting || tab.remoteConnectionState == .reconnecting {
-                status = .waiting
-            } else {
-                status = .active
-            }
-            return WorkspaceFilterItem(
-                id: tab.id,
-                title: tab.title,
-                status: status,
-                owner: pullRequest?.ownerLogin,
-                repo: repo,
-                project: project,
-                branch: tab.gitBranch?.branch,
-                links: pullRequest.map { ["\($0.label) \($0.number)"] } ?? []
-            )
-        }
+        bmuxWorkspaceFilterItems(for: tabs)
     }
 
     private func requestSelectedWorkspaceScrollAfterWorkspaceOrderChange(_ notification: Notification) {
