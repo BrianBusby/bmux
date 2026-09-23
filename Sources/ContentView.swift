@@ -2567,7 +2567,7 @@ struct ContentView: View {
             ).map(\.id)
         )
 
-        VStack(alignment: .leading, spacing: 14) {
+        return VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text(String(localized: "workspaceRail.title", defaultValue: "Workspaces"))
                     .font(.system(size: 11, weight: .medium))
