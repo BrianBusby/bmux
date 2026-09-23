@@ -2568,17 +2568,7 @@ struct ContentView: View {
         )
 
         return VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Text(String(localized: "workspaceRail.title", defaultValue: "Workspaces"))
-                    .font(.system(size: 11, weight: .medium))
-                    .tracking(1.2)
-                    .foregroundStyle(Color.bmuxTextMuted)
-                Spacer()
-                Text(String(tabManager.tabs.count))
-                .foregroundStyle(Color.bmuxTextDisabled)
-            }
-
-                WorkspaceTabFilterBar(
+            WorkspaceTabFilterBar(
                 items: filterItems,
                 selectedWorkspaceTitle: tabManager.selectedWorkspace?.title,
                 filters: $referenceWorkspaceFilters,
