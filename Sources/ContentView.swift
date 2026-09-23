@@ -16951,6 +16951,8 @@ private struct HybridWorkbenchFixtureRail: View {
     let selectedWorkspaceID: UUID?
     let onSelectWorkspace: (UUID) -> Void
     @State private var fallbackSelectedID = "companycam-mobile"
+    @State private var workspaceFilters = WorkspaceFilters()
+    @State private var isWorkspaceFilterPanelPresented = false
 
     private let cards = [
         HybridWorkbenchFixtureCard(
@@ -17000,7 +17002,25 @@ private struct HybridWorkbenchFixtureRail: View {
         )
     ]
 
+    private func filterItems(for workspaceIDs: [UUID]) -> [WorkspaceFilterItem] {
+        cards.enumerated().map { index, card in
+            WorkspaceFilterItem(
+                id: workspaceIDs.indices.contains(index) ? workspaceIDs[index] : UUID(),
+                title: card.title,
+                status: index == 1 ? .active : .waiting,
+                owner: card.owner,
+                repo: card.repository,
+                project: card.project,
+                branch: nil,
+                links: [card.ticket, card.pullRequest].compactMap { $0 }
+            )
+        }
+    }
+
     var body: some View {
+        let filterItems = filterItems(for: workspaceIDs)
+        let visibleItems = WorkspaceTabFilterProjection().visibleItems(filterItems, filters: workspaceFilters)
+        let visibleIDs = Set(visibleItems.map(\.id))
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
@@ -17016,7 +17036,26 @@ private struct HybridWorkbenchFixtureRail: View {
                 .padding(.horizontal, 14)
                 .padding(.top, 16)
 
-                ForEach(Array(cards.enumerated()), id: \.element.id) { index, card in
+                WorkspaceTabFilterBar(
+                    items: filterItems,
+                    selectedWorkspaceTitle: cards.indices.contains(workspaceIDs.firstIndex(of: selectedWorkspaceID ?? UUID()) ?? -1)
+                        ? cards[workspaceIDs.firstIndex(of: selectedWorkspaceID ?? UUID()) ?? 0].title
+                        : nil,
+                    filters: $workspaceFilters,
+                    isPanelPresented: $isWorkspaceFilterPanelPresented
+                )
+
+                if visibleItems.isEmpty, !workspaceFilters.isEmpty {
+                    WorkspaceTabFilterEmptyState(
+                        query: workspaceFilters.query,
+                        hasCategoryFilters: workspaceFilters.categoryCount > 0,
+                        onClear: { workspaceFilters = WorkspaceFilters() }
+                    )
+                }
+
+                ForEach(Array(cards.enumerated()).filter { index, _ in
+                    workspaceIDs.indices.contains(index) ? visibleIDs.contains(workspaceIDs[index]) : !workspaceFilters.isEmpty == false
+                }, id: \.element.id) { index, card in
                     let workspaceID = workspaceIDs.indices.contains(index) ? workspaceIDs[index] : nil
                     let isSelected = workspaceID.map { $0 == selectedWorkspaceID } ?? (fallbackSelectedID == card.id)
                     HybridWorkbenchFixtureCardView(
