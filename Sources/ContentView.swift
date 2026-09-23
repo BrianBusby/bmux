@@ -51,6 +51,7 @@ private enum BmuxRadius {
     static let appShell: CGFloat = 12
 }
 
+@MainActor
 private func bmuxWorkspaceFilterItems(for tabs: [Workspace]) -> [WorkspaceFilterItem] {
     tabs.map { tab in
         let directory = tab.currentDirectory.trimmingCharacters(in: .whitespacesAndNewlines)
