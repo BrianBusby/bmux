@@ -89,8 +89,8 @@ struct WorkspaceTabFilterBar: View {
 
     private var filterPills: some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 72), spacing: 5)], alignment: .leading, spacing: 5) {
-            ForEach(Array(filters.statuses).sorted { $0.rawValue < $1.rawValue }, id: \.self) { value in
-                pill(label: String(localized: value.localizedKey, defaultValue: value.rawValue.capitalized)) { filters = filters.removing(status: value) }
+            ForEach(Array(filters.statuses).sorted(by: { lhs, rhs in lhs.rawValue < rhs.rawValue }), id: \.self) { value in
+                pill(label: statusLabel(value)) { filters = filters.removing(status: value) }
             }
             ForEach(filters.owners.sorted(), id: \.self) { value in pill(label: value) { filters = filters.removing(owner: value) } }
             ForEach(filters.repos.sorted(), id: \.self) { value in pill(label: value) { filters = filters.removing(repo: value) } }
@@ -108,6 +108,15 @@ struct WorkspaceTabFilterBar: View {
         .foregroundStyle(Color.green.opacity(0.8))
         .padding(.horizontal, 7).padding(.vertical, 4)
         .background(Color.green.opacity(0.12), in: RoundedRectangle(cornerRadius: 6))
+    }
+
+    private func statusLabel(_ status: WorkspaceStatusKind) -> String {
+        switch status {
+        case .active: return String(localized: "sidebar.workspaceFilter.status.active", defaultValue: "Active")
+        case .waiting: return String(localized: "sidebar.workspaceFilter.status.waiting", defaultValue: "Waiting")
+        case .finished: return String(localized: "sidebar.workspaceFilter.status.finished", defaultValue: "Finished")
+        case .error: return String(localized: "sidebar.workspaceFilter.status.error", defaultValue: "Error")
+        }
     }
 }
 
@@ -166,7 +175,7 @@ private struct WorkspaceTabFilterPanel: View {
             }
             section(String(localized: "sidebar.workspaceFilter.status", defaultValue: "STATUS")) {
                 ForEach(WorkspaceStatusKind.allCases.filter { status in items.contains { item in item.status == status } }, id: \.self) { status in
-                    checkbox(String(localized: status.localizedKey, defaultValue: status.rawValue.capitalized), isOn: filters.statuses.contains(status)) {
+                    checkbox(statusLabel(status), isOn: filters.statuses.contains(status)) {
                         if filters.statuses.contains(status) { filters.statuses.remove(status) } else { filters.statuses.insert(status) }
                     }
                 }
@@ -191,5 +200,14 @@ private struct WorkspaceTabFilterPanel: View {
 
     private func checkbox(_ title: String, isOn: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) { Label(title, systemImage: isOn ? "checkmark.square.fill" : "square").font(.system(size: 12)).foregroundStyle(isOn ? Color.green.opacity(0.8) : Color.white.opacity(0.65)) }.buttonStyle(.plain)
+    }
+
+    private func statusLabel(_ status: WorkspaceStatusKind) -> String {
+        switch status {
+        case .active: return String(localized: "sidebar.workspaceFilter.status.active", defaultValue: "Active")
+        case .waiting: return String(localized: "sidebar.workspaceFilter.status.waiting", defaultValue: "Waiting")
+        case .finished: return String(localized: "sidebar.workspaceFilter.status.finished", defaultValue: "Finished")
+        case .error: return String(localized: "sidebar.workspaceFilter.status.error", defaultValue: "Error")
+        }
     }
 }
