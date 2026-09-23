@@ -2583,13 +2583,31 @@ struct ContentView: View {
                         let workspaceDirectoryName = URL(fileURLWithPath: workspace.currentDirectory).lastPathComponent
                         let provenance = tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: workspace)
                         VStack(alignment: .leading, spacing: 7) {
-                            Text(workspaceDirectoryName)
-                                .font(.system(size: 11))
-                                .foregroundStyle(Color.bmuxTextTertiary)
-                            Text(workspace.title)
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(Color.bmuxTextPrimary)
+                            HStack(alignment: .top, spacing: 8) {
+                                VStack(alignment: .leading, spacing: 7) {
+                                    Text(workspaceDirectoryName)
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(Color.bmuxTextTertiary)
+                                    Text(workspace.title)
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(Color.bmuxTextPrimary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
                                 .frame(maxWidth: .infinity, alignment: .leading)
+
+                                Button {
+                                    _ = tabManager.closeWorkspaceFromTabCloseButton(workspace)
+                                } label: {
+                                    Image(systemName: "xmark")
+                                        .font(.system(size: 10, weight: .medium))
+                                        .foregroundStyle(Color.bmuxTextSecondary)
+                                        .frame(width: 22, height: 22)
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                                .safeHelp(String(localized: "sidebar.closeWorkspace.tooltip", defaultValue: "Close Workspace"))
+                                .accessibilityLabel(String(localized: "sidebar.closeWorkspace.tooltip", defaultValue: "Close Workspace"))
+                            }
                             if let status = bmuxReferenceWorkspaceStatus(provenance: provenance) {
                                 HStack(spacing: 5) {
                                     Image(systemName: status.icon)
