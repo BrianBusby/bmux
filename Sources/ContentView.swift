@@ -2525,6 +2525,14 @@ struct ContentView: View {
     }
 
     private var bmuxReferenceWorkspaceRail: some View {
+        let filterItems = workspaceFilterItems(for: tabManager.tabs)
+        let visibleWorkspaceIDs = Set(
+            WorkspaceTabFilterProjection().visibleItems(
+                filterItems,
+                filters: workspaceFilters
+            ).map(\.id)
+        )
+
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text(String(localized: "workspaceRail.title", defaultValue: "Workspaces"))
@@ -2533,12 +2541,20 @@ struct ContentView: View {
                     .foregroundStyle(Color.bmuxTextMuted)
                 Spacer()
                 Text(String(tabManager.tabs.count))
-                    .foregroundStyle(Color.bmuxTextDisabled)
+                .foregroundStyle(Color.bmuxTextDisabled)
             }
 
+            WorkspaceTabFilterBar(
+                items: filterItems,
+                selectedWorkspaceTitle: tabManager.selectedWorkspace?.title,
+                filters: $workspaceFilters,
+                isPanelPresented: $isWorkspaceFilterPanelPresented
+            )
+
             ScrollView {
+                let visibleWorkspaces = tabManager.tabs.filter { visibleWorkspaceIDs.contains($0.id) }
                 VStack(spacing: 8) {
-                    ForEach(tabManager.tabs, id: \.id) { workspace in
+                    ForEach(visibleWorkspaces, id: \.id) { workspace in
                         let isSelected = workspace.id == tabManager.selectedTabId
                         let workspaceDirectoryName = URL(fileURLWithPath: workspace.currentDirectory).lastPathComponent
                         let provenance = tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: workspace)
@@ -2579,6 +2595,14 @@ struct ContentView: View {
                         .onTapGesture {
                             tabManager.selectedTabId = workspace.id
                         }
+                    }
+
+                    if visibleWorkspaces.isEmpty, !workspaceFilters.isEmpty {
+                        WorkspaceTabFilterEmptyState(
+                            query: workspaceFilters.query,
+                            hasCategoryFilters: workspaceFilters.categoryCount > 0,
+                            onClear: { workspaceFilters = WorkspaceFilters() }
+                        )
                     }
                 }
             }
