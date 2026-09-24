@@ -2893,8 +2893,12 @@ struct ContentView: View {
                     panel: panel,
                     reader: reader,
                     appearance: appearance,
+                    stableWorkspaceId: workspace.stableId,
+                    workProvenanceRuntime: tabManager.workProvenanceRuntime,
                     onTerminal: onTerminal
                 )
+                .id("bmux-shell-chat-\(workspace.id.uuidString)-\(panel.id.uuidString)")
+                .onDisappear { panel.isChatPresentationActive = false }
             )
         }
     }

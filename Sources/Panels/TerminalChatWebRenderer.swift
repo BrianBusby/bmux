@@ -6,6 +6,8 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
     let panel: TerminalPanel
     let reader: any TerminalChatReading
     let appearance: PanelAppearance
+    var stableWorkspaceId: UUID? = nil
+    var workProvenanceRuntime: WorkProvenanceRuntime? = nil
     var onStartConnectedSession: (() async throws -> Void)? = nil
     var onRequestPanelFocus: () -> Void = {}
     let onTerminal: () -> Void
@@ -51,8 +53,9 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
         }
         coordinator.onInteractInTerminal = onTerminal
         coordinator.bind(
-            panelId: panel.id, workspaceId: panel.workspaceId, stableWorkspaceId: panel.workspaceId,
-            workProvenanceRuntime: nil, rendererKind: .react, initialProviderID: .codex,
+            panelId: panel.id, workspaceId: panel.workspaceId,
+            stableWorkspaceId: stableWorkspaceId ?? panel.workspaceId,
+            workProvenanceRuntime: workProvenanceRuntime, rendererKind: .react, initialProviderID: .codex,
             workingDirectory: nil, theme: .resolve(appearance: appearance), isFocused: false
         )
         // The surrounding pane's SwiftUI tap gesture can reassert terminal
