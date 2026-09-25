@@ -20,7 +20,7 @@ private extension Color {
     static let bmuxAccentYellow = Color(red: 0.620, green: 0.620, blue: 0.416)
     static let bmuxTurnAccent = Color(red: 0.290, green: 0.400, blue: 0.259)
     static let bmuxLinkGreen = Color(red: 0.478, green: 0.620, blue: 0.416)
-    static let bmuxTabUnderline = Color(red: 0.878, green: 0.878, blue: 0.878)
+    static let bmuxTabSelected = Color(red: 0.471, green: 0.741, blue: 0.980)
     static let bmuxAmberFill = Color(red: 0.137, green: 0.110, blue: 0.039)
     static let bmuxAmberBorder = Color(red: 0.239, green: 0.180, blue: 0.039)
     static let bmuxAmberText = Color(red: 0.784, green: 0.643, blue: 0.290)
@@ -424,16 +424,6 @@ struct AgentSessionFactualProjectionView: View {
 
     private var contentPane: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(workspaceLabel ?? String(localized: "agentSession.factual.workspaceUnavailable", defaultValue: "Workspace unavailable"))
-                .font(.system(size: 12)).foregroundStyle(Color.bmuxTextTertiary)
-            Text(sessionTitle ?? String(localized: "agentSession.factual.sessionUnavailable", defaultValue: "Session unavailable"))
-                .font(.system(size: 26, weight: .bold)).foregroundStyle(Color.bmuxTextPrimary).padding(.top, 4)
-            if let sessionDescription, !sessionDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                Text(sessionDescription)
-                    .font(.system(size: 13.5))
-                    .foregroundStyle(Color.bmuxTextTertiary)
-                    .padding(.top, 4)
-            }
             primaryTabs.padding(.top, 16)
             switch selectedPrimaryTab {
             case AgentSessionFactualProjectionMode.session.rawValue:
@@ -466,9 +456,9 @@ struct AgentSessionFactualProjectionView: View {
                 }
                     .buttonStyle(.plain)
                     .font(.system(size: 13.5, weight: selectedPrimaryTab == mode.rawValue ? .medium : .regular))
-                    .foregroundStyle(selectedPrimaryTab == mode.rawValue ? Color.bmuxTextPrimary : Color.bmuxTextTertiary)
+                    .foregroundStyle(selectedPrimaryTab == mode.rawValue ? Color.bmuxTabSelected : Color.bmuxTextTertiary)
                     .padding(.bottom, 10)
-                    .overlay(alignment: .bottom) { if selectedPrimaryTab == mode.rawValue { Rectangle().fill(Color.bmuxTabUnderline).frame(height: 2) } }
+                    .overlay(alignment: .bottom) { if selectedPrimaryTab == mode.rawValue { Rectangle().fill(Color.bmuxTabSelected).frame(height: 2) } }
             }
             Spacer()
         }
