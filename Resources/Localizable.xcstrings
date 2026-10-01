@@ -239729,6 +239729,40 @@
         }
       }
     },
+    "sidebar.workspace.card.clean": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "clean"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クリーン"
+          }
+        }
+      }
+    },
+    "sidebar.workspace.card.uncommittedChanges": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "uncommitted changes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未コミットの変更"
+          }
+        }
+      }
+    },
     "workspaceRail.title": {
       "extractionState": "manual",
       "localizations": {
