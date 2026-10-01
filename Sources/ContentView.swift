@@ -13938,7 +13938,8 @@ struct TabItemView: View, Equatable {
         )
         let aiBusyTooltip = String(localized: "sidebar.aiBusy.tooltip", defaultValue: "AI is running or needs input")
         let rowView = VStack(alignment: .leading, spacing: 4) {
-            if !settings.hidesAllDetails {
+            // Option 1b is the full-detail workspace card presentation.
+            if true {
                 optionOneBWorkspaceCardContent(
                     snapshot: workspaceSnapshot,
                     closeButtonTooltip: closeButtonTooltip
