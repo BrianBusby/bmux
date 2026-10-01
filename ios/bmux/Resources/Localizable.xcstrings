@@ -6563,6 +6563,40 @@
         }
       }
     },
+    "mobile.workspace.card.clean": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clean"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更なし"
+          }
+        }
+      }
+    },
+    "mobile.workspace.card.uncommittedChanges": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uncommitted changes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未コミットの変更"
+          }
+        }
+      }
+    },
     "mobile.workspace.delete": {
       "extractionState": "manual",
       "localizations": {

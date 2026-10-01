@@ -39,6 +39,30 @@ public struct MobileSyncWorkspaceListResponse: Decodable, Sendable {
         /// Whether the workspace has unread activity on the Mac. `nil` on Macs
         /// old enough not to emit it (the row then shows no unread dot).
         public let hasUnread: Bool?
+        /// Ticket title associated with the workspace, when available.
+        public let ticketTitle: String?
+        /// Ticket identifier associated with the workspace, when available.
+        public let ticketID: String?
+        /// Project title associated with the workspace, when available.
+        public let projectTitle: String?
+        /// Current work summary, when available.
+        public let workSummary: String?
+        /// Pull request number, when available.
+        public let pullRequestNumber: Int?
+        /// Pull request title, when available.
+        public let pullRequestTitle: String?
+        /// Pull request URL, when available.
+        public let pullRequestURL: String?
+        /// Pull request or ticket owner display name, when available.
+        public let ownerName: String?
+        /// Pull request or ticket owner avatar URL, when available.
+        public let ownerAvatarURL: String?
+        /// Current branch, when available.
+        public let branch: String?
+        /// Whether the workspace has uncommitted changes, when known.
+        public let isDirty: Bool?
+        /// Most recently submitted prompt, when available.
+        public let lastPrompt: String?
         /// Terminals belonging to this workspace.
         public let terminals: [Terminal]
 
@@ -54,6 +78,18 @@ public struct MobileSyncWorkspaceListResponse: Decodable, Sendable {
             case previewAt = "preview_at"
             case lastActivityAt = "last_activity_at"
             case hasUnread = "has_unread"
+            case ticketTitle = "ticket_title"
+            case ticketID = "ticket_id"
+            case projectTitle = "project_title"
+            case workSummary = "work_summary"
+            case pullRequestNumber = "pull_request_number"
+            case pullRequestTitle = "pull_request_title"
+            case pullRequestURL = "pull_request_url"
+            case ownerName = "owner_name"
+            case ownerAvatarURL = "owner_avatar_url"
+            case branch
+            case isDirty = "is_dirty"
+            case lastPrompt = "last_prompt"
             case terminals
         }
     }

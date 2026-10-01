@@ -114,13 +114,8 @@ struct WorkspaceNavigationRow: View {
     private var rowLabel: some View {
         WorkspaceRow(
             workspace: workspace,
-            connectionStatus: connectionStatus,
             isSelected: navigationStyle == .sidebar && isSelected,
-            wrapWorkspaceTitles: wrapWorkspaceTitles,
-            previewLineLimit: previewLineLimit,
-            unreadIndicatorLeftShift: unreadIndicatorLeftShift,
-            profilePictureLeftShift: profilePictureLeftShift,
-            profilePictureSize: profilePictureSize
+            closeWorkspace: closeWorkspace.map { close in { close(workspace.id) } }
         )
     }
 

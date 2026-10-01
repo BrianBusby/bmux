@@ -108,7 +108,8 @@ extension TerminalController {
                     workspace: workspace,
                     windowID: v2ResolveWindowId(tabManager: tabManager),
                     isSelected: workspace.id == tabManager.selectedTabId,
-                    requestedTerminalID: requestedTerminalID
+                    requestedTerminalID: requestedTerminalID,
+                    workProvenanceRuntime: tabManager.workProvenanceRuntime
                 )
             }
             if let requestedTerminalID,
@@ -152,7 +153,8 @@ extension TerminalController {
                             workspace: workspace,
                             windowID: summary.windowId,
                             isSelected: workspace.id == selectedWorkspaceID,
-                            requestedTerminalID: requestedTerminalID
+                            requestedTerminalID: requestedTerminalID,
+                            workProvenanceRuntime: windowTabManager.workProvenanceRuntime
                         )
                     )
                 }
@@ -189,7 +191,8 @@ extension TerminalController {
         windowID: UUID? = nil,
         isSelected: Bool,
         requestedTerminalID: UUID?,
-        notificationStore: TerminalNotificationStore? = nil
+        notificationStore: TerminalNotificationStore? = nil,
+        workProvenanceRuntime: WorkProvenanceRuntime? = nil
     ) -> [String: Any] {
         let terminals = mobileTerminalPanels(in: workspace).compactMap { terminal -> [String: Any]? in
             if let requestedTerminalID, terminal.id != requestedTerminalID {
@@ -211,6 +214,18 @@ extension TerminalController {
         let store = notificationStore ?? AppDelegate.shared?.notificationStore
         let latestNotification = store?.latestNotification(forTabId: workspace.id)
         let preview = Self.mobileWorkspacePreview(latestNotification: latestNotification)
+        let display = workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: workspace)
+        let livePullRequest = workspace.sidebarPullRequestsInDisplayOrder(
+            orderedPanelIds: workspace.sidebarOrderedPanelIds()
+        ).first
+        let pullRequestSnapshot = display?.pullRequest
+        let ticket = display?.ticketLinks.first
+        let project = display?.projectLinks.first
+        let ownerName = ticket?.ownerName ?? livePullRequest?.ownerLogin ?? pullRequestSnapshot?.ownerLogin
+        let ownerAvatarURL = Self.mobileOwnerAvatarURL(
+            ownerLogin: livePullRequest?.ownerLogin ?? pullRequestSnapshot?.ownerLogin,
+            ownerURL: ticket?.ownerURL ?? livePullRequest?.ownerURL ?? pullRequestSnapshot?.ownerURL
+        )
         return [
             "id": workspace.id.uuidString,
             "window_id": v2OrNull(windowID?.uuidString),
@@ -236,8 +251,31 @@ extension TerminalController {
             // unread + manual/panel-derived/restored indicators) so the phone can
             // show an iMessage-style unread dot.
             "has_unread": store?.workspaceIsUnread(forTabId: workspace.id) ?? false,
+            "ticket_title": v2OrNull(ticket?.title),
+            "ticket_id": v2OrNull(ticket?.id),
+            "project_title": v2OrNull(project?.title ?? project?.id),
+            "work_summary": v2OrNull(display?.currentWorkSummary),
+            "pull_request_number": v2OrNull(livePullRequest?.number ?? pullRequestSnapshot?.number),
+            "pull_request_title": v2OrNull(livePullRequest?.title),
+            "pull_request_url": v2OrNull(livePullRequest?.url.absoluteString ?? pullRequestSnapshot?.url?.absoluteString),
+            "owner_name": v2OrNull(ownerName),
+            "owner_avatar_url": v2OrNull(ownerAvatarURL?.absoluteString),
+            "branch": v2OrNull(display?.branch ?? livePullRequest?.branch ?? pullRequestSnapshot?.branch),
+            "is_dirty": v2OrNull(display?.isDirty),
+            "last_prompt": v2OrNull(display?.lastSubmittedPrompt ?? workspace.latestSubmittedMessage),
             "terminals": terminals
         ]
+    }
+
+    /// Resolves a GitHub avatar URL from the owner login while preserving a
+    /// supplied owner URL as a fallback for providers that do not expose a
+    /// predictable avatar endpoint.
+    private static func mobileOwnerAvatarURL(ownerLogin: String?, ownerURL: URL?) -> URL? {
+        if let ownerLogin,
+           let url = URL(string: "https://github.com/\(ownerLogin).png") {
+            return url
+        }
+        return ownerURL
     }
 
     /// Mobile-gated close of one explicit workspace. The Mac remains
