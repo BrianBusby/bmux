@@ -17,7 +17,7 @@ virtualConsole.on("jsdomError", error => check.reject(error));
 const theme = { isDark: true, pageBackground: "#111", surfaceBackground: "#222", surfaceElevatedBackground: "#333",
   inputBackground: "#222", border: "#444", borderStrong: "#555", text: "#eee", mutedText: "#ccc",
   softText: "#aaa", accent: "#0af", accentSoft: "#08b", danger: "#f44", shadow: "#000" };
-const copy = { chatConversation: "Conversation", chatReadOnly: "Read-only", chatInteract: "Interact in Terminal",
+const copy = { chatConnected: "Connected to Codex", chatConversation: "Conversation", chatReadOnly: "Read-only", chatInteract: "Interact in Terminal",
   connectedNewSession: "New connected session", connectedStartFailed: "Connection failed", startingStatus: "Connecting",
   connectedPrompt: "Prompt", connectedQueue: "Send", connectedQueuePolicy: "Queued for this session",
   connectedAccepted: "Accepted", connectedUnavailable: "Disconnected" };
@@ -49,6 +49,9 @@ dom = new JSDOM(html, {
           const input = window.document.querySelector("textarea");
           if (!input) return;
           submitted = true;
+          if (scenario !== "disconnected") {
+            assert.equal(window.document.querySelector(".terminal-chat-header output")?.textContent, copy.chatConnected);
+          }
           assert.equal(window.document.querySelector("textarea")?.value, "Review the roof inspection");
           if (scenario === "keyboard") {
             for (const options of [{ shiftKey: true }, { altKey: true }, { isComposing: true }, { keyCode: 229 }]) {
