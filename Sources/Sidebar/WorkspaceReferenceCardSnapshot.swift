@@ -20,15 +20,15 @@ struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
 
     @MainActor
     init(workspace: Workspace, provenance: WorkspaceDisplayCurrentStateSnapshot?, workspaceTitle: String) {
-        let context = provenance?.confirmedWorkContext(for: workspace.presentedCurrentDirectory)
+        let context = provenance
         let titlePresentation = WorkspaceCardTitlePresentation(
             workspaceTitle: workspaceTitle, ticketTitle: context?.ticketLinks.first?.title
         )
         id = workspace.id
         title = titlePresentation.title
         prompt = provenance?.lastSubmittedPrompt ?? workspace.latestSubmittedMessage
-        branch = context?.branch
-        isDirty = branch == nil ? nil : context?.isDirty
+        branch = context?.agentWorktreeBranch
+        isDirty = branch == nil ? nil : context?.agentWorktree?.isDirty
         ticketID = context?.ticketLinks.first?.id
         ticketURL = context?.ticketLinks.first?.url
         projectTitle = provenance?.projectLinks.first.map { $0.title ?? $0.id }

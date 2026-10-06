@@ -173,25 +173,18 @@ import Testing
         #expect(card.isDirty == nil)
     }
 
-    @MainActor @Test func referenceRailHidesOldContextUntilPEConfirmsNewWorktree() throws {
+    @MainActor @Test func referenceRailUsesPEWorktreeContextWhenTerminalRemainsInMainCheckout() throws {
         let workspace = Workspace(title: "Review roof inspection")
-        workspace.currentDirectory = "/tmp/roof-gutter-worktree"
-        let old = try Self.referenceProvenance(
-            workspaceID: workspace.stableId, ticketTitle: "Repair flashing",
-            currentDirectory: "/tmp/roof-main-checkout", branch: "main"
-        )
-        let pending = Self.referenceCard(workspace: workspace, provenance: old)
-        #expect(pending.title == "Older roof overview")
-        #expect(pending.ticketID == nil)
-        #expect(pending.branch == nil)
-        #expect(pending.isDirty == nil)
+        workspace.currentDirectory = "/tmp/roof-main-checkout"
+        workspace.gitBranch = .init(branch: "main", isDirty: true)
         let confirmed = Self.referenceCard(workspace: workspace, provenance: try Self.referenceProvenance(
             workspaceID: workspace.stableId, ticketTitle: "Repair flashing",
-            currentDirectory: workspace.currentDirectory, branch: "roof-42-gutter-worktree"
+            currentDirectory: "/tmp/roof-gutter-worktree", branch: "roof-42-gutter-worktree"
         ))
         #expect(confirmed.title == "Repair flashing")
         #expect(confirmed.ticketID == "ROOF-42")
         #expect(confirmed.branch == "roof-42-gutter-worktree")
+        #expect(confirmed.isDirty == false)
     }
 
     @Test func peDisplayUsesInspectedWorktreeBranchInsteadOfCachedMainBranch() async throws {
@@ -225,21 +218,18 @@ import Testing
         #expect(cleared.display?.branch == nil)
     }
 
-    @Test func nativeCardWaitsForMatchedPEContextAndHonorsBranchVisibility() {
+    @Test func nativeCardWaitsForPEContextAndHonorsBranchVisibility() {
         let absent = Self.snapshot(hasProvenance: false)
-        let stale = Self.snapshot(currentDirectory: "/tmp/gutter-worktree")
-        let directoryUnknown = Self.snapshot(provenanceDirectory: nil)
-        for pending in [absent, stale, directoryUnknown] {
-            #expect(pending.cardHeadingTitle == "Review roof inspection")
-            #expect(pending.cardDescription == nil)
-            #expect(pending.cardWorkContext == nil)
-            #expect(pending.cardBranch == nil)
-        }
-        let branchUnknown = Self.snapshot(provenanceBranch: nil)
-        #expect(branchUnknown.cardBranch == nil)
-        #expect(branchUnknown.cardHeadingTitle == "Repair flashing")
+        #expect(absent.cardHeadingTitle == "Review roof inspection")
+        #expect(absent.cardDescription == nil)
+        #expect(absent.cardWorkContext == nil)
+        #expect(absent.cardBranch == nil)
+        #expect(Self.snapshot(hasAgentWorktree: false).cardBranch == nil)
+        let confirmed = Self.snapshot(provenanceDirectory: "/tmp/gutter-worktree")
+        #expect(confirmed.cardHeadingTitle == "Repair flashing")
+        #expect(confirmed.cardBranch == "roof-inspection")
+        #expect(Self.snapshot(provenanceBranch: nil).cardBranch == nil)
         #expect(Self.snapshot(showsGitBranch: false).cardBranch == nil)
-        #expect(Self.snapshot().cardBranch == "roof-inspection")
     }
 
     @MainActor @Test func cardCacheUsesPEAgentWorktreeInsteadOfTerminalBranch() async throws {
@@ -290,6 +280,20 @@ import Testing
         let updated = try #require(await store.refreshedSnapshot(stableWorkspaceID: stableID))
         #expect(updated.latestEventSequence == confirmed.latestEventSequence)
         #expect(Self.referenceCard(workspace: workspace, provenance: updated).branch == "gutter-installation-review")
+        let next = changed.addingTimeInterval(1)
+        _ = try await client.appendEvent(.init(event: .init(
+            eventType: .workspaceDisplayObserved, timestamp: next,
+            source: .observed, evidenceOrigin: .init(rawValue: "workspace-card-test"),
+            evidenceScope: .init(level: .personal, id: "workspace-card-test"), confidence: .high,
+            payload: .init(workspaceDisplay: .init(
+                id: initial.id, workspaceID: stableID.uuidString, title: "Review roof inspection",
+                lastSubmittedPrompt: "Review the updated flashing photographs", lastSubmittedPromptSubmittedAt: next,
+                lastSubmittedPromptSessionID: "new-roof-agent-session", observedAt: next, updatedAt: next
+            ))
+        )))
+        let pending = try #require(await store.refreshedSnapshot(stableWorkspaceID: stableID))
+        #expect(pending.lastSubmittedPromptSessionID == "new-roof-agent-session")
+        #expect(Self.referenceCard(workspace: workspace, provenance: pending).branch == nil)
     }
 
     private struct CardGitInspector: WorkProvenanceGitInspecting {
@@ -323,7 +327,10 @@ import Testing
             currentWorkSummary: "Check the latest inspection photos", lastSubmittedPrompt: prompt,
             observedAt: Date(timeIntervalSince1970: 900), updatedAt: Date(timeIntervalSince1970: 900)
         )
-        return try #require(WorkspaceDisplayCurrentStateSnapshot(record))
+        return try #require(WorkspaceDisplayCurrentStateSnapshot(record, agentWorktree: .init(
+            id: "roof-worktree", repositoryID: "roof-repository", path: currentDirectory ?? "/tmp/roof-worktree",
+            branch: branch, isDirty: false, status: "active", updatedAt: Date()
+        )))
     }
 
     private static func snapshot(
@@ -334,7 +341,7 @@ import Testing
         showsWorkspaceDescription: Bool = true,
         showsGitBranch: Bool = true,
         hasProvenance: Bool = true,
-        currentDirectory: String = "/tmp/roof-inspection",
+        hasAgentWorktree: Bool = true,
         provenanceDirectory: String? = "/tmp/roof-inspection",
         provenanceBranch: String? = "roof-inspection"
     ) -> SidebarWorkspaceSnapshotBuilder.Snapshot {
@@ -343,7 +350,10 @@ import Testing
             currentDirectory: provenanceDirectory, title: title, branch: provenanceBranch, isDirty: false,
             ticketLinks: ticketTitle.map { [.init(id: "ROOF-42", title: $0)] } ?? [],
             observedAt: Date(), updatedAt: Date()
-        ))
+        ), agentWorktree: hasAgentWorktree ? .init(
+            id: "roof-worktree", repositoryID: "roof-repository", path: provenanceDirectory ?? "/tmp/roof-worktree",
+            branch: provenanceBranch, isDirty: false, status: "active", updatedAt: Date()
+        ) : nil)
         #expect(provenance != nil)
         return SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: .init(
@@ -356,8 +366,7 @@ import Testing
                     showsBranchDirectory: true, showsPullRequests: true, showsPorts: true
                 ),
                 provenanceDisplaySnapshot: hasProvenance ? provenance : nil,
-                titleResolution: .init(liveTitle: title, liveTitleIsAuthoritative: true, provenanceTitle: nil),
-                currentDirectory: currentDirectory
+                titleResolution: .init(liveTitle: title, liveTitleIsAuthoritative: true, provenanceTitle: nil)
             ),
             title: title,
             customDescription: showsWorkspaceDescription ? customDescription : nil,

@@ -13712,8 +13712,7 @@ struct TabItemView: View, Equatable {
             usesViewportAwarePath: sidebarUsesLastSegmentPath,
             visibleAuxiliaryDetails: visibleAuxiliaryDetails,
             provenanceDisplaySnapshot: provenanceDisplaySnapshot,
-            titleResolution: tabManager.sidebarWorkspaceTitleResolution(for: tab, provenanceDisplaySnapshot: provenanceDisplaySnapshot),
-            currentDirectory: tab.presentedCurrentDirectory
+            titleResolution: tabManager.sidebarWorkspaceTitleResolution(for: tab, provenanceDisplaySnapshot: provenanceDisplaySnapshot)
         )
     }
 
@@ -15287,7 +15286,7 @@ struct TabItemView: View, Equatable {
         let branch = snapshot.cardBranch
         let closeButtonHitSize = max(16, 16 * fontScale)
         let closeButtonWidth = max(SidebarTrailingAccessoryWidthPolicy().closeButtonWidth, closeButtonHitSize)
-        let status: String? = (branch == nil ? nil : snapshot.cardWorkContext?.isDirty).map {
+        let status: String? = (branch == nil ? nil : snapshot.cardWorkContext?.agentWorktree?.isDirty).map {
             String(
                 localized: $0 ? "sidebar.workspace.card.uncommittedChanges" : "sidebar.workspace.card.clean",
                 defaultValue: $0 ? "uncommitted changes" : "clean"

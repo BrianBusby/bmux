@@ -60,7 +60,6 @@ struct SidebarWorkspaceSnapshotBuilder {
         let visibleAuxiliaryDetails: SidebarWorkspaceAuxiliaryDetailVisibility
         let provenanceDisplaySnapshot: WorkspaceDisplayCurrentStateSnapshot?
         let titleResolution: SidebarWorkspaceTitleResolution
-        var currentDirectory: String? = nil
     }
 
     struct VerticalBranchDirectoryLine: Equatable {
@@ -125,12 +124,12 @@ struct SidebarWorkspaceSnapshotBuilder {
 
     struct Snapshot: Equatable {
         var cardWorkContext: WorkspaceDisplayCurrentStateSnapshot? {
-            presentationKey.provenanceDisplaySnapshot?.confirmedWorkContext(for: presentationKey.currentDirectory)
+            presentationKey.provenanceDisplaySnapshot
         }
         var cardBranch: String? {
             guard presentationKey.showsGitBranch,
                   presentationKey.visibleAuxiliaryDetails.showsBranchDirectory else { return nil }
-            return cardWorkContext?.branch
+            return cardWorkContext?.agentWorktreeBranch
         }
         var cardHeadingTitle: String { cardTitlePresentation.title }
         var cardDescription: String? {
