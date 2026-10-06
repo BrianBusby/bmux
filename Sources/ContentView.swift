@@ -2572,113 +2572,113 @@ struct ContentView: View {
             ).map(\.id)
         )
 
-        return VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Text(String(localized: "workspaceRail.title", defaultValue: "Workspaces"))
-                    .font(.system(size: 11, weight: .medium))
-                    .tracking(1.2)
-                    .foregroundStyle(Color.bmuxTextMuted)
-                Spacer()
-                Text(String(tabManager.tabs.count))
-                    .foregroundStyle(Color.bmuxTextDisabled)
-            }
+        return WorkspaceRepositoryLabelScope(workspaces: tabManager.tabs) { repositoryNames in
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    Text(String(localized: "workspaceRail.title", defaultValue: "Workspaces"))
+                        .font(.system(size: 11, weight: .medium))
+                        .tracking(1.2)
+                        .foregroundStyle(Color.bmuxTextMuted)
+                    Spacer()
+                    Text(String(tabManager.tabs.count))
+                        .foregroundStyle(Color.bmuxTextDisabled)
+                }
 
-            WorkspaceTabFilterBar(
-                items: filterItems,
-                selectedWorkspaceTitle: tabManager.selectedWorkspace?.title,
-                filters: $referenceWorkspaceFilters,
-                isPanelPresented: $isReferenceWorkspaceFilterPanelPresented
-            )
+                WorkspaceTabFilterBar(
+                    items: filterItems,
+                    selectedWorkspaceTitle: tabManager.selectedWorkspace?.title,
+                    filters: $referenceWorkspaceFilters,
+                    isPanelPresented: $isReferenceWorkspaceFilterPanelPresented
+                )
 
-            ScrollView {
-                let visibleWorkspaces = tabManager.tabs.filter { visibleWorkspaceIDs.contains($0.id) }
-                VStack(spacing: 8) {
-                    ForEach(visibleWorkspaces, id: \.id) { workspace in
-                        let isSelected = workspace.id == tabManager.selectedTabId
-                        let provenance = tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: workspace)
-                        VStack(alignment: .leading, spacing: 12) {
-                            WorkspaceCardHeader(
-                                repositoryName: WorkspaceRepoBadgeAppearanceResolver.repositoryName(
-                                    repoRootPath: workspace.extensionSidebarProjectRootPath
-                                ),
-                                repositoryFont: .system(size: 10, weight: .medium),
-                                closeIcon: {
-                                    Image(systemName: "xmark").font(.system(size: 14, weight: .medium))
-                                },
-                                closeButtonColor: Color.bmuxTextSecondary,
-                                closeButtonSize: CGSize(width: 20, height: 20),
-                                canCloseWorkspace: tabManager.tabs.count > 1,
-                                showsCloseButton: true,
-                                closeButtonTooltip: String(localized: "sidebar.closeWorkspace.tooltip", defaultValue: "Close Workspace"),
-                                onClose: { tabManager.closeWorkspaceWithConfirmation(workspace) }
-                            ) {
-                                Text(provenance?.ticketLinks.first?.title ?? provenance?.title ?? workspace.title)
-                                    .font(.system(size: 16, weight: .bold))
-                                    .foregroundStyle(Color.bmuxTextPrimary)
-                                    .lineLimit(nil)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+                ScrollView {
+                    let visibleWorkspaces = tabManager.tabs.filter { visibleWorkspaceIDs.contains($0.id) }
+                    VStack(spacing: 8) {
+                        ForEach(visibleWorkspaces, id: \.id) { workspace in
+                            let isSelected = workspace.id == tabManager.selectedTabId
+                            let provenance = tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: workspace)
+                            VStack(alignment: .leading, spacing: 12) {
+                                WorkspaceCardHeader(
+                                    repositoryName: repositoryNames[workspace.id],
+                                    repositoryFont: .system(size: 10, weight: .medium),
+                                    closeIcon: {
+                                        Image(systemName: "xmark").font(.system(size: 14, weight: .medium))
+                                    },
+                                    closeButtonColor: Color.bmuxTextSecondary,
+                                    closeButtonSize: CGSize(width: 20, height: 20),
+                                    canCloseWorkspace: tabManager.tabs.count > 1,
+                                    showsCloseButton: true,
+                                    closeButtonTooltip: String(localized: "sidebar.closeWorkspace.tooltip", defaultValue: "Close Workspace"),
+                                    onClose: { tabManager.closeWorkspaceWithConfirmation(workspace) }
+                                ) {
+                                    Text(provenance?.ticketLinks.first?.title ?? provenance?.title ?? workspace.title)
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundStyle(Color.bmuxTextPrimary)
+                                        .lineLimit(nil)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+
+                                bmuxReferenceWorkspaceLinkRows(for: workspace)
+
+                                Divider().overlay(Color.bmuxSeparatorSubtle)
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    if let prompt = provenance?.lastSubmittedPrompt ?? workspace.latestSubmittedMessage {
+                                        Text(prompt)
+                                            .font(.system(size: 13))
+                                            .foregroundStyle(Color.bmuxTextSecondary)
+                                            .lineLimit(1)
+                                            .truncationMode(.tail)
+                                    }
+
+                                    let branch = provenance?.branch ?? workspace.presentedGitBranch?.branch
+                                    let isDirty = provenance?.isDirty ?? workspace.presentedGitBranch?.isDirty
+                                    let status = isDirty.map {
+                                        String(
+                                            localized: $0 ? "sidebar.workspace.card.uncommittedChanges" : "sidebar.workspace.card.clean",
+                                            defaultValue: $0 ? "uncommitted changes" : "clean"
+                                        )
+                                    }
+                                    if branch != nil || status != nil {
+                                        Text([branch, status].compactMap { $0 }.joined(separator: " · "))
+                                            .font(.system(size: 11, design: .monospaced))
+                                            .foregroundStyle(Color.bmuxTextSecondary)
+                                            .lineLimit(1)
+                                            .truncationMode(.tail)
+                                    }
+                                }
                             }
-
-                            bmuxReferenceWorkspaceLinkRows(for: workspace)
-
-                            Divider().overlay(Color.bmuxSeparatorSubtle)
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                if let prompt = provenance?.lastSubmittedPrompt ?? workspace.latestSubmittedMessage {
-                                    Text(prompt)
-                                        .font(.system(size: 13))
-                                        .foregroundStyle(Color.bmuxTextSecondary)
-                                        .lineLimit(1)
-                                        .truncationMode(.tail)
-                                }
-
-                                let branch = provenance?.branch ?? workspace.presentedGitBranch?.branch
-                                let isDirty = provenance?.isDirty ?? workspace.presentedGitBranch?.isDirty
-                                let status = isDirty.map {
-                                    String(
-                                        localized: $0 ? "sidebar.workspace.card.uncommittedChanges" : "sidebar.workspace.card.clean",
-                                        defaultValue: $0 ? "uncommitted changes" : "clean"
-                                    )
-                                }
-                                if branch != nil || status != nil {
-                                    Text([branch, status].compactMap { $0 }.joined(separator: " · "))
-                                        .font(.system(size: 11, design: .monospaced))
-                                        .foregroundStyle(Color.bmuxTextSecondary)
-                                        .lineLimit(1)
-                                        .truncationMode(.tail)
-                                }
+                            .padding(12)
+                            .background(isSelected ? Color.bmuxCardSelected : Color.bmuxCard)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(
+                                isSelected ? Color.bmuxCardSelectedBorder : Color.bmuxCardBorder,
+                                lineWidth: 1
+                            ))
+                            .contentShape(RoundedRectangle(cornerRadius: 8))
+                            .onTapGesture {
+                                tabManager.selectedTabId = workspace.id
                             }
                         }
-                        .padding(12)
-                        .background(isSelected ? Color.bmuxCardSelected : Color.bmuxCard)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(
-                            isSelected ? Color.bmuxCardSelectedBorder : Color.bmuxCardBorder,
-                            lineWidth: 1
-                        ))
-                        .contentShape(RoundedRectangle(cornerRadius: 8))
-                        .onTapGesture {
-                            tabManager.selectedTabId = workspace.id
-                        }
-                    }
 
-                    if visibleWorkspaces.isEmpty, !referenceWorkspaceFilters.isEmpty {
-                        WorkspaceTabFilterEmptyState(
-                            query: referenceWorkspaceFilters.query,
-                            hasCategoryFilters: referenceWorkspaceFilters.categoryCount > 0,
-                            onClear: { referenceWorkspaceFilters = WorkspaceFilters() }
-                        )
+                        if visibleWorkspaces.isEmpty, !referenceWorkspaceFilters.isEmpty {
+                            WorkspaceTabFilterEmptyState(
+                                query: referenceWorkspaceFilters.query,
+                                hasCategoryFilters: referenceWorkspaceFilters.categoryCount > 0,
+                                onClear: { referenceWorkspaceFilters = WorkspaceFilters() }
+                            )
+                        }
                     }
                 }
             }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 16)
-        .frame(width: 340)
-        .background(Color.bmuxRail)
-        .overlay(alignment: .trailing) {
-            Rectangle().fill(Color.bmuxSeparator).frame(width: 1)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 16)
+            .frame(width: 340)
+            .background(Color.bmuxRail)
+            .overlay(alignment: .trailing) {
+                Rectangle().fill(Color.bmuxSeparator).frame(width: 1)
+            }
         }
     }
 

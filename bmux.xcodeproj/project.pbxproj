@@ -1791,6 +1791,8 @@
 		44FF9EFEEF762BE6CF158E42 /* WorkspaceRemoteTmuxNonInteractiveCloseRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92CA6F2F239631988B2FB0C8 /* WorkspaceRemoteTmuxNonInteractiveCloseRoute.swift */; };
 		E3B7A4000000000000000023 /* WorkspaceRepoBadgeAppearanceResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3B7A4000000000000000024 /* WorkspaceRepoBadgeAppearanceResolver.swift */; };
 		DA672CB4598D47A1B6A8CF01 /* WorkspaceRepositoryLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA672CB4598D47A1B6A8CF00 /* WorkspaceRepositoryLabel.swift */; };
+		3271B91F28B749D0AF498F7A /* WorkspaceRepositoryLabelObservation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CFDFF3E10FE4C31AF79E95A /* WorkspaceRepositoryLabelObservation.swift */; };
+		FA97BA9534C34C60B45C13B0 /* WorkspaceRepositoryLabelScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42FCF73F16F549A299BA6F5E /* WorkspaceRepositoryLabelScope.swift */; };
 		619D509BC9B1EA946CBD6A8A /* WorkspaceRuntimeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9960CC3992F3C44489E7627C /* WorkspaceRuntimeSettings.swift */; };
 		6799A0016799A0016799A001 /* WorkspaceSidebarAgentRuntimeObservationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6799A0026799A0026799A002 /* WorkspaceSidebarAgentRuntimeObservationModel.swift */; };
 		5659B0015659B0015659B001 /* WorkspaceSidebarLogEntryLimitProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5659B0025659B0025659B002 /* WorkspaceSidebarLogEntryLimitProvider.swift */; };
@@ -3550,6 +3552,8 @@
 		92CA6F2F239631988B2FB0C8 /* WorkspaceRemoteTmuxNonInteractiveCloseRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceRemoteTmuxNonInteractiveCloseRoute.swift; sourceTree = "<group>"; };
 		E3B7A4000000000000000024 /* WorkspaceRepoBadgeAppearanceResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceRepoBadgeAppearanceResolver.swift; sourceTree = "<group>"; };
 		DA672CB4598D47A1B6A8CF00 /* WorkspaceRepositoryLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/WorkspaceRepositoryLabel.swift; sourceTree = "<group>"; };
+		2CFDFF3E10FE4C31AF79E95A /* WorkspaceRepositoryLabelObservation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/WorkspaceRepositoryLabelObservation.swift; sourceTree = "<group>"; };
+		42FCF73F16F549A299BA6F5E /* WorkspaceRepositoryLabelScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/WorkspaceRepositoryLabelScope.swift; sourceTree = "<group>"; };
 		9960CC3992F3C44489E7627C /* WorkspaceRuntimeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/WorkspaceRuntimeSettings.swift; sourceTree = "<group>"; };
 		6799A0026799A0026799A002 /* WorkspaceSidebarAgentRuntimeObservationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceSidebarAgentRuntimeObservationModel.swift; sourceTree = "<group>"; };
 		5659B0025659B0025659B002 /* WorkspaceSidebarLogEntryLimitProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceSidebarLogEntryLimitProvider.swift; sourceTree = "<group>"; };
@@ -4017,6 +4021,8 @@
 				F17A00000000000000000002 /* WorkspaceTabFilter.swift */,
 				F17A00000000000000000004 /* WorkspaceTabFilterBar.swift */,
 				DA672CB4598D47A1B6A8CF00 /* WorkspaceRepositoryLabel.swift */,
+				42FCF73F16F549A299BA6F5E /* WorkspaceRepositoryLabelScope.swift */,
+				2CFDFF3E10FE4C31AF79E95A /* WorkspaceRepositoryLabelObservation.swift */,
 				5FE4A89C7C324DC4A4210088 /* WorkspaceCardHeader.swift */,
 				D50D9BCE46701FBA91C2EFB6 /* SidebarWorkspaceSnapshotRefreshPolicy.swift */,
 				AABBCC00000000000000020B /* SidebarInlineRenameAction.swift */,
@@ -7013,6 +7019,8 @@
 				44FF9EFEEF762BE6CF158E42 /* WorkspaceRemoteTmuxNonInteractiveCloseRoute.swift in Sources */,
 				E3B7A4000000000000000023 /* WorkspaceRepoBadgeAppearanceResolver.swift in Sources */,
 				DA672CB4598D47A1B6A8CF01 /* WorkspaceRepositoryLabel.swift in Sources */,
+				3271B91F28B749D0AF498F7A /* WorkspaceRepositoryLabelObservation.swift in Sources */,
+				FA97BA9534C34C60B45C13B0 /* WorkspaceRepositoryLabelScope.swift in Sources */,
 				619D509BC9B1EA946CBD6A8A /* WorkspaceRuntimeSettings.swift in Sources */,
 				6799A0016799A0016799A001 /* WorkspaceSidebarAgentRuntimeObservationModel.swift in Sources */,
 				5659B0015659B0015659B001 /* WorkspaceSidebarLogEntryLimitProvider.swift in Sources */,
