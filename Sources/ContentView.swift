@@ -15283,7 +15283,7 @@ struct TabItemView: View, Equatable {
         let ticket = snapshot.ticketRows.first
         let pullRequest = snapshot.pullRequestRows.first
         let ownerName = ticket?.ownerName ?? pullRequest?.ownerLogin
-        let title = ticket?.title?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty ?? snapshot.title
+        let title = snapshot.cardHeadingTitle
         let branch = snapshot.compactGitBranchSummaryText
         let closeButtonHitSize = max(16, 16 * fontScale)
         let closeButtonWidth = max(SidebarTrailingAccessoryWidthPolicy().closeButtonWidth, closeButtonHitSize)
@@ -15378,7 +15378,7 @@ struct TabItemView: View, Equatable {
                 }
             }
 
-            if let summary = snapshot.customDescription?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty {
+            if let summary = snapshot.cardDescription {
                 Text(String(summary.prefix(125)))
                     .font(magnifiedFont(scaledFontSize(13)))
                     .foregroundColor(activeSecondaryColor(0.8))
