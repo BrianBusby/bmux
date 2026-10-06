@@ -636,13 +636,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Send follow-up"
+            "value": "Send"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "追加メッセージを送信"
+            "value": "送信"
           }
         }
       }
@@ -806,13 +806,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Could not start a connected session. This preview requires Codex 0.154.0; your existing terminal is unchanged."
+            "value": "Could not connect to Codex. Try again or continue in Terminal."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "接続済みセッションを開始できませんでした。このプレビューには Codex 0.154.0 が必要です。既存のターミナルは変更されていません。"
+            "value": "Codex に接続できませんでした。もう一度試すか、ターミナルで続行してください。"
           }
         }
       }

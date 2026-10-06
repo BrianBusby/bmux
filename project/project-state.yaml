@@ -3683,19 +3683,28 @@ roadmap:
       execution:
         assignment: current
         assigned_to: bmux
-        active_branch: connected-session-controls
-        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/shared-session-chat
+        active_branch: chat-first-session-684
+        active_worktree: /Users/brianbusby/repos/.bmux-worktrees/chat-first-session-684
         active_agent: codex
-        notes: User authorized opt-in newly connected Codex sessions after the shared-host proof. Existing ordinary CLI sessions remain read-only in Chat. Queue delivery and expected-turn steering passed live protocol verification with the original TUI. Native UI acceptance remains blocked by cgWindowNotFound; the existing dogfood build remains untouched.
-      delivery_status: draft
+        notes: User authorized Chat-first startup from a plain idle local shell. The shared connected-session path creates a new terminal; existing ordinary CLI sessions remain intact and offer explicit connected-session launch. Renderer-owned visibility restores Terminal focus after Chat teardown. Queue delivery and expected-turn steering retain their verified transport boundary; structured interruption remains disabled. Fresh startup, recovery and navigation remain under dogfood observation. Builds use a new isolated tag without replacing currently used builds.
+      delivery_status: open
       acceptance_status: under_observation
-      rationale: Preserve the original PTY and reuse transcript observation for Chat. Ordinary Codex 0.154.0 attachment via app-server proxy failed because no control socket exists; submit, steer, queue, interrupt, approvals, questions and settings remain gated. See docs/product/shared-session-control-decision.md. Read-only native UI, late output, view continuity and raw-terminal interruption were exercised; A separate new shared-host TUI probe accepted a second-client prompt but failed expected-turn interruption; an old turn ID interrupted a newer turn in Codex 0.154.0. Opt-in new shared-host queue and expected-turn steering are implemented with live native transport proof and automated ownership/delivery tests; corrected launch UI and broader recovery acceptance remain open. Shared-host interrupt remains disabled. Codex turn states use explicit provider events. Older-history paging, broader recovery acceptance and shared controls remain open. This does not complete React Chat productization or three-view control acceptance.
+      rationale: Preserve the original PTY and reuse transcript observation for Chat. Ordinary Codex 0.154.0 attachment via app-server proxy failed because no control socket exists; submit, steer, queue, interrupt, approvals, questions and settings remain gated. See docs/product/shared-session-control-decision.md. Read-only native UI, late output, view continuity and raw-terminal interruption were exercised; A separate new shared-host TUI probe accepted a second-client prompt but failed expected-turn interruption; an old turn ID interrupted a newer turn in Codex 0.154.0. New shared-host queue and expected-turn steering retain live native transport proof and automated ownership/delivery tests. Chat starts a new connected session automatically only from an idle unassociated local shell; ordinary sessions use explicit launch. Terminal focus and startup recovery have behavior-level regressions; broader recovery acceptance remains open. Shared-host interrupt remains disabled. Codex turn states use explicit provider events. Older-history paging, broader recovery acceptance and shared controls remain open. This does not complete React Chat productization or three-view control acceptance.
 
       evidence:
-        commits: []
+        commits:
+          - repository: BrianBusby/bmux
+            sha: afbc2082d2e8ad8d1379fac4833e0a658f4fcb93
         pull_requests:
           - repository: BrianBusby/bmux
             number: 116
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+            merged_at: '2026-09-22T14:14:53Z'
+            merge_commit_sha: afbc2082d2e8ad8d1379fac4833e0a658f4fcb93
+          - repository: BrianBusby/bmux
+            number: 126
             owner:
               login: BrianBusby
               profile_url: https://github.com/BrianBusby

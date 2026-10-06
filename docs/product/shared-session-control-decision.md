@@ -366,3 +366,42 @@ Terminal and Chat both displayed the marker. No second conversation or process
 restart occurred. This closes the basic UI delivery gate for build 572;
 focus/typing behavior, startup ambiguity, broader recovery, and later draft
 changes still need verification. The running app was not rebuilt or replaced.
+
+
+## Chat-first startup and Terminal focus follow-up
+
+Opening Chat on a plain local shell now starts a new connected Codex terminal
+through the same workspace launch action used by the explicit connected-session
+button. The launch remains bound to the source panel, pane, workspace and local
+working directory. It does not inject a command into the existing shell. A live
+terminal must positively identify an idle shell; unspawned terminals must have
+no deferred command, input, or hibernated agent. The native bridge rechecks
+that there is no associated thread, ambiguous history, or existing control owner
+before automatic launch. Startup occurs once per retained Chat renderer, with
+one native request in flight. Failed startup displays the localized error and
+permits an explicit retry.
+
+An ordinary running CLI remains read-only and untouched. Chat offers the
+existing **New connected Codex session** action rather than claiming an
+unverified attachment. The new TUI still creates its original thread, with no
+dummy prompt or empty-thread resume. Once that identity and control connection
+are verified, the existing queue action accepts the first prompt from Chat.
+Approvals, slash commands, settings and interruption retain their Terminal
+boundary.
+
+The retained renderer now owns whether Chat is visible. Only the WebKit host
+that currently owns the view may deactivate it on teardown. This restores
+Terminal focus when the outer shell switches tabs, while preserving focus
+suppression when a view is transferred to another live Chat host. The outer
+shell supplies the same launch and Chat focus callbacks as the inner panel and
+remounts against the selected terminal identity. A launch completing after the
+user leaves Chat, selects another workspace, or closes the source panel closes
+its prepared host instead of creating a late focused terminal.
+
+Regression coverage exercises actual native host teardown/transfer and the
+bundled React resource for fresh startup, ordinary-session fallback, first
+connected submission, and failed-start retry. Native bridge tests cover
+single-flight startup, one automatic attempt, hidden Chat, and existing
+thread/control ownership. Native dogfood and broader recovery remain under
+observation; this follow-up does not assert ordinary attachment or enable
+structured interruption.

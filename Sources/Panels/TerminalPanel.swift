@@ -46,7 +46,10 @@ final class TerminalPanel: Panel, ObservableObject {
     let stableSurfaceIdentity = PanelStableSurfaceIdentity()
     let panelType: PanelType = .terminal
     /// The retained Chat WebView owns keyboard input while Chat is displayed.
-    var isChatPresentationActive = false
+    var isChatPresentationActive: Bool {
+        get { presentation.chatRenderer.isTerminalChatVisible }
+        set { presentation.chatRenderer.setTerminalChatVisible(newValue) }
+    }
 
     /// The underlying terminal surface
     let surface: TerminalSurface

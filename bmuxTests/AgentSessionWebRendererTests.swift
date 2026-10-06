@@ -173,6 +173,75 @@ struct AgentSessionWebRendererTests {
 
 @Suite(.serialized) @MainActor
 struct ConnectedSessionBridgeTests {
+    @Test func automaticStartRequiresAnIdleUnassociatedTerminalAndRunsOnlyOnce() async throws {
+        let coordinator = AgentSessionWebRendererCoordinator()
+        defer { coordinator.close() }
+        coordinator.terminalChatSnapshot = { ["status": "unavailable"] }
+        coordinator.canAutomaticallyStartConnectedSession = { true }
+        coordinator.setTerminalChatVisible(true)
+        var starts = 0
+        coordinator.onStartConnectedSession = { starts += 1 }
+        let context = try await coordinator.handle(AgentSessionBridgeRequest(body: ["id": "context", "method": "app.context"])) as? [String: Any]
+        #expect(context?["canStartConnectedSession"] as? Bool == true)
+        #expect(context?["automaticallyStartConnectedSession"] as? Bool == true)
+        let request = try AgentSessionBridgeRequest(body: ["id": "start", "method": "terminalChat.startConnected", "params": ["automatic": true]])
+        let started = try await coordinator.handle(request) as? [String: Bool]
+        let repeated = try await coordinator.handle(request) as? [String: Bool]
+        #expect(started?["started"] == true)
+        #expect(repeated?["started"] == false)
+        #expect(starts == 1)
+    }
+
+    @Test(arguments: ["ordinary", "bound", "connecting", "hidden"])
+    func automaticStartNeverReplacesExistingSessionOrHiddenChat(scenario: String) async throws {
+        let coordinator = AgentSessionWebRendererCoordinator()
+        defer { coordinator.close() }
+        coordinator.setTerminalChatVisible(scenario != "hidden")
+        coordinator.canAutomaticallyStartConnectedSession = { scenario != "ordinary" }
+        coordinator.terminalChatSnapshot = {
+            switch scenario {
+            case "bound": return ["status": "unavailable", "sessionId": "existing-thread"]
+            case "connecting": return ["status": "unavailable", "control": ["status": "unavailable"]]
+            default: return ["status": "unavailable"]
+            }
+        }
+        var starts = 0
+        coordinator.onStartConnectedSession = { starts += 1 }
+        await #expect(throws: (any Error).self) {
+            try await coordinator.handle(AgentSessionBridgeRequest(body: ["id": "automatic", "method": "terminalChat.startConnected", "params": ["automatic": true]]))
+        }
+        #expect(starts == 0)
+        // An explicit action still offers a separate connected session.
+        _ = try await coordinator.handle(AgentSessionBridgeRequest(body: ["id": "manual", "method": "terminalChat.startConnected"]))
+        #expect(starts == 1)
+    }
+
+    @Test func simultaneousStartRequestsCreateOnlyOneConnectedSession() async throws {
+        let coordinator = AgentSessionWebRendererCoordinator()
+        defer { coordinator.close() }
+        let entered = AsyncStream<Void>.makeStream()
+        var release: CheckedContinuation<Void, Never>?
+        var starts = 0
+        coordinator.onStartConnectedSession = {
+            starts += 1
+            if starts == 1 {
+                await withCheckedContinuation { continuation in
+                    release = continuation
+                    entered.continuation.yield(())
+                }
+            }
+        }
+        let request = try AgentSessionBridgeRequest(body: ["id": "start", "method": "terminalChat.startConnected"])
+        let first = Task { try await coordinator.handle(request) }
+        var iterator = entered.stream.makeAsyncIterator()
+        _ = await iterator.next()
+        await #expect(throws: AgentSessionBridgeError.self) { try await coordinator.handle(request) }
+        #expect(starts == 1)
+        release?.resume()
+        _ = try await first.value
+        entered.continuation.finish()
+    }
+
     @Test func absentControlOwnerCannotAcceptAnAction() async throws {
         let coordinator = AgentSessionWebRendererCoordinator()
         coordinator.terminalChatSnapshot = { ["status": "unavailable"] }

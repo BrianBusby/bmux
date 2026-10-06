@@ -17,7 +17,6 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
     }
 
     func updateNSView(_ host: AgentSessionWebHostView, context: Context) {
-        panel.isChatPresentationActive = true
         let coordinator = context.coordinator
         coordinator.setTerminalChatVisible(true)
         coordinator.terminalChatSnapshot = { [weak reader, weak panel] in
@@ -31,6 +30,16 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
             )
         }
         coordinator.onStartConnectedSession = onStartConnectedSession
+        coordinator.canAutomaticallyStartConnectedSession = { [weak panel] in
+            guard let panel, !panel.isAgentHibernated,
+                  !panel.surface.hasDeferredStartupWorkForBackgroundStart() else { return false }
+            // A never-spawned plain shell has no process to attach to. A live
+            // terminal must positively identify an idle shell, not an agent.
+            guard panel.surface.surface != nil else { return true }
+            guard !panel.needsConfirmClose(), let pid = panel.surface.foregroundProcessID(),
+                  let executable = TerminalSSHSessionDetector.commandLineArguments(forPID: Int32(pid))?.first else { return false }
+            return TerminalForegroundCommandCapture.isShellProcessName((executable as NSString).lastPathComponent)
+        }
         coordinator.terminalChatDraft = { [weak reader, weak panel] request in
             guard let runtime = reader as? any TerminalChatConnecting, let panel,
                   let revision = UUID(uuidString: try request.requiredString("draftRevision")),
@@ -62,6 +71,7 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
         webView.onPointerDown = {}
         webView.onPointerUp = { [weak coordinator] in
             DispatchQueue.main.async {
+                guard coordinator?.isTerminalChatVisible == true else { return }
                 onRequestPanelFocus()
                 coordinator?.focus()
             }
@@ -79,7 +89,9 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
     }
 
     static func dismantleNSView(_ host: AgentSessionWebHostView, coordinator: AgentSessionWebRendererCoordinator) {
-        coordinator.setTerminalChatVisible(false)
+        if coordinator.webView?.superview === host {
+            coordinator.setTerminalChatVisible(false)
+        }
         host.detachHostedWebViewIfOwned(coordinator.webView)
         host.onDidMoveToWindow = nil
         host.onGeometryChanged = nil

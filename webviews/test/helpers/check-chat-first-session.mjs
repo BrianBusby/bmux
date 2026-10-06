@@ -21,6 +21,7 @@ const copy = { chatConversation: "Conversation", chatReadOnly: "Read-only", chat
   connectedPrompt: "Prompt", connectedQueue: "Send", connectedQueuePolicy: "Queued for this session",
   connectedAccepted: "Accepted", connectedUnavailable: "Disconnected" };
 let submitted = false;
+let retried = false;
 dom = new JSDOM(html, {
   url: "file:///bmux.app/Contents/Resources/agent-session-react/index.html", runScripts: "dangerously", virtualConsole,
   beforeParse(window) {
@@ -30,10 +31,13 @@ dom = new JSDOM(html, {
           assert.equal(calls.filter(call => call.method === "terminalChat.startConnected").length, 0);
           assert.equal(window.document.querySelector(".terminal-chat-launch button")?.textContent, copy.connectedNewSession);
           check.resolve();
-        } else if (scenario === "failed" && window.document.querySelector('[role="alert"]')) {
+        } else if (scenario === "failed" && !retried && window.document.querySelector('[role="alert"]')) {
           assert.equal(window.document.querySelector('[role="alert"]').textContent, copy.connectedStartFailed);
           assert.equal(calls.filter(call => call.method === "terminalChat.startConnected").length, 1);
-          check.resolve();
+          const retry = window.document.querySelector(".terminal-chat-launch button");
+          if (retry.disabled) return;
+          retried = true;
+          retry.click();
         } else if (connected && !submitted) {
           const send = window.document.querySelector(".terminal-chat-composer-actions button");
           if (!send || send.disabled) return;
@@ -57,13 +61,13 @@ dom = new JSDOM(html, {
             draft: { revision: "00000000-0000-0000-0000-000000000001", text: "Review the roof inspection" } },
         } : { status: "unavailable" } };
         case "terminalChat.startConnected":
-          if (scenario === "failed") return { ok: false, error: { code: "unavailable", userMessage: "Unavailable" } };
+          if (scenario === "failed" && !retried) return { ok: false, error: { code: "unavailable", userMessage: "Unavailable" } };
           connected = true;
           return { ok: true, value: { started: true } };
         case "terminalChat.action":
           assert.equal(request.params.sessionId, "new-thread");
           assert.equal(request.params.text, "Review the roof inspection");
-          assert.equal(calls.filter(call => call.method === "terminalChat.startConnected").length, scenario === "connected" ? 0 : 1);
+          assert.equal(calls.filter(call => call.method === "terminalChat.startConnected").length, scenario === "connected" ? 0 : scenario === "failed" ? 2 : 1);
           assert.equal(calls.filter(call => call.method === "terminalChat.action").length, 1);
           assert.equal(calls.some(call => call.method === "provider.writeLine" || call.method === "terminalChat.openTerminal"), false);
           check.resolve();

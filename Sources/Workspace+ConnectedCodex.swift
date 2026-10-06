@@ -19,11 +19,21 @@ extension Workspace {
     /// Creates a new terminal with a shared host; never injects a launch command
     /// into an existing shell or replaces an ordinary running agent.
     @MainActor
-    func startConnectedCodex(in paneID: PaneID, workingDirectory: String) async throws {
-        guard let runtime = owningTabManager?.terminalChatReader as? any TerminalChatConnecting,
+    func startConnectedCodex(from sourcePanelID: UUID) async throws {
+        guard let manager = owningTabManager,
+              let runtime = manager.terminalChatReader as? any TerminalChatConnecting,
+              let sourcePanel = panels[sourcePanelID] as? TerminalPanel,
+              let paneID = paneId(forPanelId: sourcePanelID),
               remoteConfiguration == nil, !isRemoteTmuxMirror else { throw CodexControlError.unsupported }
+        let workingDirectory = sourcePanel.directory.isEmpty ? currentDirectory : sourcePanel.directory
         let surfaceID = UUID()
         let command = try await runtime.prepareConnectedSession(workspaceID: id, surfaceID: surfaceID, workingDirectory: workingDirectory)
+        guard !Task.isCancelled, sourcePanel.isChatPresentationActive, manager.selectedWorkspace?.id == id,
+              panels[sourcePanelID] as? TerminalPanel === sourcePanel,
+              paneId(forPanelId: sourcePanelID) == paneID else {
+            await runtime.closeConnectedSession(surfaceID: surfaceID)
+            throw CodexControlError.disconnected
+        }
         let result = createTerminalSurfaceForAction(inPane: paneID, focus: true, workingDirectory: workingDirectory,
                                                     initialCommand: command, restoredSurfaceId: surfaceID)
         guard let panel = result.panel else {
