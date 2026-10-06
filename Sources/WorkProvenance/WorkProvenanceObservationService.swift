@@ -177,12 +177,16 @@ actor WorkProvenanceObservationService {
             ? nil
             : Self.normalizedCodingAgentSessionID(workspace.lastSubmittedPromptSessionID)
         let lastSubmittedPromptSubmittedAt = lastSubmittedPrompt == nil ? nil : workspace.lastSubmittedPromptSubmittedAt
+        let branch = gitSnapshot != nil ? gitSnapshot?.branch : workspace.branch
+        var clearedFields = Set(workspace.explicitlyClearedFields)
+        if gitSnapshot != nil, branch == nil { clearedFields.insert("branch") }
+        let explicitlyClearedFields = clearedFields.sorted()
         let fingerprint = stableIDFactory.workspaceDisplayFingerprint(
             stableWorkspaceID: workspace.stableWorkspaceID,
             title: workspace.title,
             titleSource: workspace.titleSource,
             currentDirectory: workspace.currentDirectory,
-            branch: workspace.branch,
+            branch: branch,
             pullRequestNumber: pullRequest?.number,
             pullRequestURL: pullRequest?.url,
             pullRequestOwnerLogin: pullRequest?.ownerLogin,
@@ -198,7 +202,7 @@ actor WorkProvenanceObservationService {
             lastSubmittedPrompt: lastSubmittedPrompt,
             lastSubmittedPromptSessionID: lastSubmittedPromptSessionID,
             lastSubmittedPromptSubmittedAt: lastSubmittedPromptSubmittedAt,
-            explicitlyClearedFields: workspace.explicitlyClearedFields
+            explicitlyClearedFields: explicitlyClearedFields
         )
         guard latestDisplayFingerprintByWorkspaceID[workspace.workspaceID] != fingerprint else {
             return
@@ -216,7 +220,7 @@ actor WorkProvenanceObservationService {
             currentDirectory: workspace.currentDirectory,
             title: workspace.title,
             titleSource: workspace.titleSource,
-            branch: workspace.branch ?? gitSnapshot?.branch,
+            branch: branch,
             pullRequestNumber: pullRequest?.number,
             pullRequestURL: pullRequest?.url,
             pullRequestOwnerLogin: pullRequest?.ownerLogin,
@@ -232,7 +236,7 @@ actor WorkProvenanceObservationService {
             lastSubmittedPrompt: lastSubmittedPrompt,
             lastSubmittedPromptSubmittedAt: lastSubmittedPromptSubmittedAt,
             lastSubmittedPromptSessionID: lastSubmittedPromptSessionID,
-            clearedFields: workspace.explicitlyClearedFields,
+            clearedFields: explicitlyClearedFields,
             observedAt: now,
             updatedAt: now
         )

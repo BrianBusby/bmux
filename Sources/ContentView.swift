@@ -13712,7 +13712,8 @@ struct TabItemView: View, Equatable {
             usesViewportAwarePath: sidebarUsesLastSegmentPath,
             visibleAuxiliaryDetails: visibleAuxiliaryDetails,
             provenanceDisplaySnapshot: provenanceDisplaySnapshot,
-            titleResolution: tabManager.sidebarWorkspaceTitleResolution(for: tab, provenanceDisplaySnapshot: provenanceDisplaySnapshot)
+            titleResolution: tabManager.sidebarWorkspaceTitleResolution(for: tab, provenanceDisplaySnapshot: provenanceDisplaySnapshot),
+            currentDirectory: tab.presentedCurrentDirectory
         )
     }
 
@@ -15279,14 +15280,14 @@ struct TabItemView: View, Equatable {
         snapshot: SidebarWorkspaceSnapshotBuilder.Snapshot,
         closeButtonTooltip: String
     ) -> some View {
-        let ticket = snapshot.ticketRows.first
+        let ticket = snapshot.cardWorkContext?.ticketLinks.first
         let pullRequest = snapshot.pullRequestRows.first
         let ownerName = ticket?.ownerName ?? pullRequest?.ownerLogin
         let title = snapshot.cardHeadingTitle
-        let branch = snapshot.compactGitBranchSummaryText
+        let branch = snapshot.cardBranch
         let closeButtonHitSize = max(16, 16 * fontScale)
         let closeButtonWidth = max(SidebarTrailingAccessoryWidthPolicy().closeButtonWidth, closeButtonHitSize)
-        let status: String? = snapshot.isDirty.map {
+        let status: String? = (branch == nil ? nil : snapshot.cardWorkContext?.isDirty).map {
             String(
                 localized: $0 ? "sidebar.workspace.card.uncommittedChanges" : "sidebar.workspace.card.clean",
                 defaultValue: $0 ? "uncommitted changes" : "clean"
@@ -15424,15 +15425,15 @@ struct TabItemView: View, Equatable {
                     Text(prompt)
                         .font(magnifiedFont(scaledFontSize(13)))
                         .foregroundColor(activeSecondaryColor(0.8))
-                        .lineLimit(1)
-                        .truncationMode(.tail)
+                        .lineLimit(nil)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 if branch != nil || status != nil {
                     Text([branch, status].compactMap { $0 }.joined(separator: " · "))
                         .font(magnifiedFont(scaledFontSize(11), design: .monospaced))
                         .foregroundColor(activeSecondaryColor(0.75))
-                        .lineLimit(1)
-                        .truncationMode(.tail)
+                        .lineLimit(nil)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }

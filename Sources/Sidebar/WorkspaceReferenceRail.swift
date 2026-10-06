@@ -77,8 +77,8 @@ struct WorkspaceReferenceRail: View {
                                         Text(prompt)
                                             .font(.system(size: 13))
                                             .foregroundStyle(Color.workspaceReferenceTextSecondary)
-                                            .lineLimit(1)
-                                            .truncationMode(.tail)
+                                            .lineLimit(nil)
+                                            .fixedSize(horizontal: false, vertical: true)
                                     }
 
                                     let branch = card.branch
@@ -93,8 +93,8 @@ struct WorkspaceReferenceRail: View {
                                         Text([branch, status].compactMap { $0 }.joined(separator: " · "))
                                             .font(.system(size: 11, design: .monospaced))
                                             .foregroundStyle(Color.workspaceReferenceTextSecondary)
-                                            .lineLimit(1)
-                                            .truncationMode(.tail)
+                                            .lineLimit(nil)
+                                            .fixedSize(horizontal: false, vertical: true)
                                     }
                                 }
                             }

@@ -20,16 +20,17 @@ struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
 
     @MainActor
     init(workspace: Workspace, provenance: WorkspaceDisplayCurrentStateSnapshot?, workspaceTitle: String) {
+        let context = provenance?.confirmedWorkContext(for: workspace.presentedCurrentDirectory)
         let titlePresentation = WorkspaceCardTitlePresentation(
-            workspaceTitle: workspaceTitle, ticketTitle: provenance?.ticketLinks.first?.title
+            workspaceTitle: workspaceTitle, ticketTitle: context?.ticketLinks.first?.title
         )
         id = workspace.id
         title = titlePresentation.title
         prompt = provenance?.lastSubmittedPrompt ?? workspace.latestSubmittedMessage
-        branch = provenance?.branch ?? workspace.presentedGitBranch?.branch
-        isDirty = provenance?.isDirty ?? workspace.presentedGitBranch?.isDirty
-        ticketID = provenance?.ticketLinks.first?.id ?? workspace.sidebarMetadata.workContext.ticket?.key
-        ticketURL = provenance?.ticketLinks.first?.url ?? workspace.sidebarMetadata.workContext.ticket?.url
+        branch = context?.branch
+        isDirty = branch == nil ? nil : context?.isDirty
+        ticketID = context?.ticketLinks.first?.id
+        ticketURL = context?.ticketLinks.first?.url
         projectTitle = provenance?.projectLinks.first.map { $0.title ?? $0.id }
         projectURL = provenance?.projectLinks.first?.url
         summary = titlePresentation.description
@@ -45,9 +46,9 @@ struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
         }
         let pullRequestOwner = workspace.pullRequest.map { (name: $0.ownerLogin, url: $0.ownerURL) }
             ?? provenance?.pullRequest.map { (name: $0.ownerLogin, url: $0.ownerURL) }
-        ownerName = provenance?.ticketLinks.first?.ownerName ?? pullRequestOwner?.name
-        ownerURL = provenance?.ticketLinks.first?.ownerName != nil
-            ? provenance?.ticketLinks.first?.ownerURL
+        ownerName = context?.ticketLinks.first?.ownerName ?? pullRequestOwner?.name
+        ownerURL = context?.ticketLinks.first?.ownerName != nil
+            ? context?.ticketLinks.first?.ownerURL
             : pullRequestOwner?.url
     }
 }

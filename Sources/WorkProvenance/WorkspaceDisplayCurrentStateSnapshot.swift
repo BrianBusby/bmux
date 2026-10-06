@@ -48,6 +48,15 @@ struct WorkspaceDisplayCurrentStateSnapshot: Equatable, Sendable {
         self.updatedAt = display.updatedAt
     }
 
+    /// Keeps ticket and branch facts hidden until PE confirms this directory's work context.
+    func confirmedWorkContext(for directory: String?) -> Self? {
+        guard let currentDirectory, let directory,
+              !directory.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              URL(fileURLWithPath: currentDirectory).standardizedFileURL.path
+                == URL(fileURLWithPath: directory).standardizedFileURL.path else { return nil }
+        return self
+    }
+
     func isNewerThan(_ existing: WorkspaceDisplayCurrentStateSnapshot?) -> Bool {
         guard let existing else { return true }
         switch (latestEventSequence, existing.latestEventSequence) {

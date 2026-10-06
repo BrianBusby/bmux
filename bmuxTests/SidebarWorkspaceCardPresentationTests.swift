@@ -99,7 +99,7 @@ import Testing
         let workspace = Workspace(title: "Terminal")
         workspace.setCustomTitle("Review roof inspection")
         workspace.setCustomDescription("Check the latest inspection photos")
-        let provenance = try Self.referenceProvenance(workspaceID: workspace.id, ticketTitle: ticketTitle)
+        let provenance = try Self.referenceProvenance(workspaceID: workspace.stableId, ticketTitle: ticketTitle, currentDirectory: workspace.currentDirectory)
         let card = Self.referenceCard(workspace: workspace, provenance: provenance)
         let normalizedTicket = ticketTitle?.trimmingCharacters(in: .whitespacesAndNewlines)
         #expect(card.title == (normalizedTicket.flatMap { $0.isEmpty ? nil : $0 } ?? "Review roof inspection"))
@@ -120,11 +120,11 @@ import Testing
         workspace.setCustomTitle("Review roof inspection")
         workspace.setCustomDescription("Check the latest inspection photos")
         let initial = Self.referenceCard(workspace: workspace, provenance: try Self.referenceProvenance(
-            workspaceID: workspace.id, ticketTitle: ticketTitle
+            workspaceID: workspace.stableId, ticketTitle: ticketTitle, currentDirectory: workspace.currentDirectory
         ))
         workspace.setCustomTitle("Review gutter installation")
         let updated = Self.referenceCard(workspace: workspace, provenance: try Self.referenceProvenance(
-            workspaceID: workspace.id, ticketTitle: ticketTitle, prompt: "Compare the new gutter photos"
+            workspaceID: workspace.stableId, ticketTitle: ticketTitle, currentDirectory: workspace.currentDirectory, prompt: "Compare the new gutter photos"
         ))
         #expect(updated.title == (ticketTitle ?? "Review gutter installation"))
         #expect(updated.summary == (ticketTitle == nil ? nil : "Review gutter installation"))
@@ -225,6 +225,23 @@ import Testing
         #expect(cleared.display?.branch == nil)
     }
 
+    @Test func nativeCardWaitsForMatchedPEContextAndHonorsBranchVisibility() {
+        let absent = Self.snapshot(hasProvenance: false)
+        let stale = Self.snapshot(currentDirectory: "/tmp/gutter-worktree")
+        let directoryUnknown = Self.snapshot(provenanceDirectory: nil)
+        for pending in [absent, stale, directoryUnknown] {
+            #expect(pending.cardHeadingTitle == "Review roof inspection")
+            #expect(pending.cardDescription == nil)
+            #expect(pending.cardWorkContext == nil)
+            #expect(pending.cardBranch == nil)
+        }
+        let branchUnknown = Self.snapshot(provenanceBranch: nil)
+        #expect(branchUnknown.cardBranch == nil)
+        #expect(branchUnknown.cardHeadingTitle == "Repair flashing")
+        #expect(Self.snapshot(showsGitBranch: false).cardBranch == nil)
+        #expect(Self.snapshot().cardBranch == "roof-inspection")
+    }
+
     private struct CardGitInspector: WorkProvenanceGitInspecting {
         let snapshot: WorkProvenanceGitSnapshot
         func snapshot(for directory: String) async -> WorkProvenanceGitSnapshot? {
@@ -242,8 +259,8 @@ import Testing
     }
 
     private static func referenceProvenance(
-        workspaceID: UUID, ticketTitle: String?, prompt: String = "Check the latest inspection photos",
-        currentDirectory: String? = nil, branch: String = "roof-inspection"
+        workspaceID: UUID, ticketTitle: String?, currentDirectory: String? = nil,
+        prompt: String = "Check the latest inspection photos", branch: String = "roof-inspection"
     ) throws -> WorkspaceDisplayCurrentStateSnapshot {
         let record = ProvenanceWorkspaceDisplayRecord(
             id: "roof-work", workspaceID: workspaceID.uuidString,
@@ -264,20 +281,33 @@ import Testing
         ticketTitle: String? = "Repair flashing",
         customDescription: String? = "Check the latest inspection photos",
         prompt: String? = "Check the latest inspection photos",
-        showsWorkspaceDescription: Bool = true
+        showsWorkspaceDescription: Bool = true,
+        showsGitBranch: Bool = true,
+        hasProvenance: Bool = true,
+        currentDirectory: String = "/tmp/roof-inspection",
+        provenanceDirectory: String? = "/tmp/roof-inspection",
+        provenanceBranch: String? = "roof-inspection"
     ) -> SidebarWorkspaceSnapshotBuilder.Snapshot {
-        SidebarWorkspaceSnapshotBuilder.Snapshot(
+        let provenance = WorkspaceDisplayCurrentStateSnapshot(.init(
+            id: "roof-work", workspaceID: "11111111-1111-1111-1111-111111111111",
+            currentDirectory: provenanceDirectory, title: title, branch: provenanceBranch, isDirty: false,
+            ticketLinks: ticketTitle.map { [.init(id: "ROOF-42", title: $0)] } ?? [],
+            observedAt: Date(), updatedAt: Date()
+        ))
+        #expect(provenance != nil)
+        return SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: .init(
                 showsWorkspaceDescription: showsWorkspaceDescription,
                 usesVerticalBranchLayout: true,
-                showsGitBranch: true,
+                showsGitBranch: showsGitBranch,
                 usesViewportAwarePath: false,
                 visibleAuxiliaryDetails: .init(
                     showsMetadata: true, showsLog: true, showsProgress: true,
                     showsBranchDirectory: true, showsPullRequests: true, showsPorts: true
                 ),
-                provenanceDisplaySnapshot: nil,
-                titleResolution: .init(liveTitle: title, liveTitleIsAuthoritative: true, provenanceTitle: nil)
+                provenanceDisplaySnapshot: hasProvenance ? provenance : nil,
+                titleResolution: .init(liveTitle: title, liveTitleIsAuthoritative: true, provenanceTitle: nil),
+                currentDirectory: currentDirectory
             ),
             title: title,
             customDescription: showsWorkspaceDescription ? customDescription : nil,
