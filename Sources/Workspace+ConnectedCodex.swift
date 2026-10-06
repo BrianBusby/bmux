@@ -29,6 +29,7 @@ extension Workspace {
         let surfaceID = UUID()
         let command = try await runtime.prepareConnectedSession(workspaceID: id, surfaceID: surfaceID, workingDirectory: workingDirectory)
         guard !Task.isCancelled, sourcePanel.isChatPresentationActive, manager.selectedWorkspace?.id == id,
+              focusedPanelId == sourcePanelID,
               panels[sourcePanelID] as? TerminalPanel === sourcePanel,
               paneId(forPanelId: sourcePanelID) == paneID else {
             await runtime.closeConnectedSession(surfaceID: surfaceID)

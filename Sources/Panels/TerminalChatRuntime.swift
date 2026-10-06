@@ -44,7 +44,10 @@ final class TerminalChatRuntime: TerminalChatConnecting {
 
     func terminalChatSnapshot(workspaceID: UUID, surfaceID: UUID) async -> [String: Any] {
         if let entry = connections[surfaceID], entry.workspaceID == workspaceID, entry.host.threadID == nil, terminalLiveness[surfaceID]?() == true,
-           let adopted = try? await hosts.adoptOriginalThread(entry.host), let thread = adopted.threadID {
+           let adopted = try? await hosts.adoptOriginalThread(entry.host), let thread = adopted.threadID,
+           let current = connections[surfaceID], current.workspaceID == workspaceID,
+           current.host.connection === entry.host.connection, current.host.threadID == nil,
+           terminalLiveness[surfaceID]?() == true {
             connections[surfaceID] = (workspaceID, entry.directory, adopted)
             bind(thread, workspaceID, surfaceID, entry.directory)
         }
@@ -108,6 +111,12 @@ final class TerminalChatRuntime: TerminalChatConnecting {
             }
         } catch {
             if terminalLiveness[surfaceID]?() == true, let replacement = try? await hosts.reconnect(host) {
+                guard let current = connections[surfaceID], current.workspaceID == workspaceID,
+                      current.host.connection === host.connection, current.host.threadID == threadID,
+                      terminalLiveness[surfaceID]?() == true else {
+                    await replacement.connection.disconnect()
+                    return snapshot
+                }
                 connections[surfaceID] = (workspaceID, entry.directory, replacement)
             }
         }
@@ -120,6 +129,8 @@ final class TerminalChatRuntime: TerminalChatConnecting {
             control["draft"] = ["revision": draft.revision.uuidString, "text": draft.text]
         }
         control["actions"] = (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(await actionOwner.actionSnapshot()))) ?? []
+        guard let current = connections[surfaceID], current.workspaceID == workspaceID,
+              current.host.threadID == threadID, current.host.control === actionOwner else { return snapshot }
         snapshot["control"] = control
         snapshot["sessionId"] = threadID
         snapshot["workspaceId"] = workspaceID.uuidString

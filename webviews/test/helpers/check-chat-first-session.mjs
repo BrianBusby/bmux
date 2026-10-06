@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { JSDOM, VirtualConsole } from "jsdom";
 
 const scenario = process.argv[2];
-const html = await readFile(new URL("../../../Resources/agent-session-react/index.html", import.meta.url), "utf8");
+const html = await readFile(process.argv[3] ?? new URL("../../../Resources/agent-session-react/index.html", import.meta.url), "utf8");
 const calls = [];
 let connected = scenario === "connected";
 let observer;
@@ -27,12 +27,7 @@ dom = new JSDOM(html, {
   beforeParse(window) {
     observer = new window.MutationObserver(() => {
       try {
-        if (scenario === "source" && calls.some(call => call.method === "terminalChat.startConnected") &&
-          window.document.querySelector(".terminal-chat-launch button")?.disabled === false) {
-          assert.equal(window.document.querySelector(".terminal-chat-footer")?.textContent, copy.chatReadOnly);
-          assert.equal(calls.filter(call => call.method === "terminalChat.startConnected").length, 1);
-          check.resolve();
-        } else if (scenario === "ordinary" && window.document.querySelector(".terminal-chat-footer")) {
+        if (scenario === "ordinary" && window.document.querySelector(".terminal-chat-footer")) {
           assert.equal(calls.filter(call => call.method === "terminalChat.startConnected").length, 0);
           assert.equal(window.document.querySelector(".terminal-chat-launch button")?.textContent, copy.connectedNewSession);
           check.resolve();
@@ -60,7 +55,17 @@ dom = new JSDOM(html, {
           automaticallyStartConnectedSession: scenario !== "ordinary", renderer: "react", initialProviderId: "codex",
           workspaceId: "workspace", panelId: "surface", theme, copy } };
         case "provider.list": return { ok: true, value: [] };
-        case "terminalChat.snapshot": return { ok: true, value: connected ? {
+        case "terminalChat.snapshot":
+          if (scenario === "source" && calls.some(call => call.method === "terminalChat.startConnected")) {
+            // A real subsequent bridge read signals that the launch reply was
+            // handled, even when the correct source DOM needs no mutation.
+            try {
+              assert.equal(window.document.querySelector(".terminal-chat-footer")?.textContent, copy.chatReadOnly);
+              assert.equal(calls.filter(call => call.method === "terminalChat.startConnected").length, 1);
+              check.resolve();
+            } catch (error) { check.reject(error); }
+          }
+          return { ok: true, value: connected ? {
           status: "unavailable", reason: "historyUnavailable", workspaceId: "workspace", surfaceId: "surface", sessionId: "new-thread",
           control: { status: "connected", threadId: "new-thread", queueFollowUp: true,
             draft: { revision: "00000000-0000-0000-0000-000000000001", text: "Review the roof inspection" } },

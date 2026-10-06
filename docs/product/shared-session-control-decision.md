@@ -395,13 +395,18 @@ Terminal focus when the outer shell switches tabs, while preserving focus
 suppression when a view is transferred to another live Chat host. The outer
 shell supplies the same launch and Chat focus callbacks as the inner panel and
 remounts against the selected terminal identity. A launch completing after the
-user leaves Chat, selects another workspace, or closes the source panel closes
-its prepared host instead of creating a late focused terminal.
+user leaves Chat, focuses another panel, selects another workspace, or closes
+the source panel closes its prepared host instead of creating a late focused
+terminal. Thread adoption and reconnect also recheck the same connection owner
+and terminal liveness after their provider awaits; a closed owner cannot be
+republished. A late reconnect closes its replacement connection instead.
 
 Regression coverage exercises actual native host teardown/transfer and the
 bundled React resource for fresh startup, ordinary-session fallback, first
 connected submission, and failed-start retry. Native bridge tests cover
-single-flight startup, one automatic attempt, hidden Chat, and existing
-thread/control ownership. Native dogfood and broader recovery remain under
-observation; this follow-up does not assert ordinary attachment or enable
-structured interruption.
+single-flight startup, one automatic attempt, hidden Chat, existing
+thread/control ownership, delayed launch after same-workspace pane navigation,
+and delayed adoption or reconnect after close. Returning to the original source
+shell shows its actual read-only state rather than an obsolete startup
+indicator. Native dogfood and broader recovery remain under observation; this
+follow-up does not assert ordinary attachment or enable structured interruption.
