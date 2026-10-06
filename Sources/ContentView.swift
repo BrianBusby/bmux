@@ -2509,10 +2509,9 @@ struct ContentView: View {
         WorkspaceReferenceRail(
             workspaces: tabManager.tabs,
             cards: tabManager.tabs.map { workspace in
-                WorkspaceReferenceCardSnapshot(
-                    workspace: workspace,
-                    provenance: tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: workspace)
-                )
+                let provenance = tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: workspace)
+                let title = tabManager.sidebarWorkspaceTitleResolution(for: workspace, provenanceDisplaySnapshot: provenance).title
+                return WorkspaceReferenceCardSnapshot(workspace: workspace, provenance: provenance, workspaceTitle: title)
             },
             selectedWorkspaceID: tabManager.selectedTabId,
             selectedWorkspaceTitle: tabManager.selectedWorkspace?.title,

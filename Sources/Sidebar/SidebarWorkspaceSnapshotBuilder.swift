@@ -123,18 +123,11 @@ struct SidebarWorkspaceSnapshotBuilder {
     }
 
     struct Snapshot: Equatable {
-        var cardHeadingTitle: String {
-            let ticketTitle = ticketRows.first?.title?.trimmingCharacters(in: .whitespacesAndNewlines)
-            return ticketTitle.flatMap { $0.isEmpty ? nil : $0 } ?? title
-        }
+        var cardHeadingTitle: String { cardTitlePresentation.title }
+        var cardDescription: String? { cardTitlePresentation.description }
 
-        var cardDescription: String? {
-            let workspaceTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !workspaceTitle.isEmpty,
-                  workspaceTitle != cardHeadingTitle.trimmingCharacters(in: .whitespacesAndNewlines) else {
-                return nil
-            }
-            return title
+        private var cardTitlePresentation: WorkspaceCardTitlePresentation {
+            WorkspaceCardTitlePresentation(workspaceTitle: title, ticketTitle: ticketRows.first?.title)
         }
 
         let presentationKey: PresentationKey

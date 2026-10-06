@@ -1740,6 +1740,7 @@
 		C0DEB0550000000000000003 /* WorkspaceBrowserActionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEB0550000000000000004 /* WorkspaceBrowserActionsTests.swift */; };
 		CA52B0160000000000000000 /* WorkspaceCanvasHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA52C0160000000000000000 /* WorkspaceCanvasHostView.swift */; };
 		5FE4A89C7C324DC4A4210089 /* WorkspaceCardHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE4A89C7C324DC4A4210088 /* WorkspaceCardHeader.swift */; };
+		0DE10753682147109ED3F6D1 /* WorkspaceCardTitlePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBCA5194B18149D9AE082ED1 /* WorkspaceCardTitlePresentation.swift */; };
 		D7AB3605C10DEF0000000003 /* WorkspaceCloseTabsBatching.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AB3605C10DEF0000000004 /* WorkspaceCloseTabsBatching.swift */; };
 		D7AB3605C10DEF0000000001 /* WorkspaceCloseTabsContextMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AB3605C10DEF0000000002 /* WorkspaceCloseTabsContextMenuTests.swift */; };
 		CE0E01090000000000000001 /* WorkspaceCodingAgentSessionAssociationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E01090000000000000002 /* WorkspaceCodingAgentSessionAssociationStore.swift */; };
@@ -3506,6 +3507,7 @@
 		C0DEB0550000000000000004 /* WorkspaceBrowserActionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceBrowserActionsTests.swift; sourceTree = "<group>"; };
 		CA52C0160000000000000000 /* WorkspaceCanvasHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceCanvasHostView.swift"; sourceTree = "<group>"; };
 		5FE4A89C7C324DC4A4210088 /* WorkspaceCardHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/WorkspaceCardHeader.swift; sourceTree = "<group>"; };
+		BBCA5194B18149D9AE082ED1 /* WorkspaceCardTitlePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/WorkspaceCardTitlePresentation.swift; sourceTree = "<group>"; };
 		D7AB3605C10DEF0000000004 /* WorkspaceCloseTabsBatching.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceCloseTabsBatching.swift; sourceTree = "<group>"; };
 		D7AB3605C10DEF0000000002 /* WorkspaceCloseTabsContextMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceCloseTabsContextMenuTests.swift; sourceTree = "<group>"; };
 		CE0E01090000000000000002 /* WorkspaceCodingAgentSessionAssociationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceCodingAgentSessionAssociationStore.swift; sourceTree = "<group>"; };
@@ -4028,6 +4030,7 @@
 				CE0E02040000000000000002 /* SidebarTabItemContextMenuState.swift */,
 				CE0E02050000000000000002 /* SidebarWorkspaceRowLineLimitPolicy.swift */,
 				CE0E02060000000000000002 /* SidebarWorkspaceSnapshotBuilder.swift */,
+				BBCA5194B18149D9AE082ED1 /* WorkspaceCardTitlePresentation.swift */,
 				F17A00000000000000000002 /* WorkspaceTabFilter.swift */,
 				F17A00000000000000000004 /* WorkspaceTabFilterBar.swift */,
 				DA672CB4598D47A1B6A8CF00 /* WorkspaceRepositoryLabel.swift */,
@@ -7001,6 +7004,7 @@
 				A5F0C0010000000000000002 /* WorkspaceAttentionFlashRingView.swift in Sources */,
 				CA52B0160000000000000000 /* WorkspaceCanvasHostView.swift in Sources */,
 				5FE4A89C7C324DC4A4210089 /* WorkspaceCardHeader.swift in Sources */,
+				0DE10753682147109ED3F6D1 /* WorkspaceCardTitlePresentation.swift in Sources */,
 				D7AB3605C10DEF0000000003 /* WorkspaceCloseTabsBatching.swift in Sources */,
 				CE0E01090000000000000001 /* WorkspaceCodingAgentSessionAssociationStore.swift in Sources */,
 				A5FB1203 /* WorkspaceConfigActionCapture.swift in Sources */,

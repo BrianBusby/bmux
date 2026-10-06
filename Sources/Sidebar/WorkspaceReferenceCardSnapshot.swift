@@ -19,9 +19,12 @@ struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
     let ownerURL: URL?
 
     @MainActor
-    init(workspace: Workspace, provenance: WorkspaceDisplayCurrentStateSnapshot?) {
+    init(workspace: Workspace, provenance: WorkspaceDisplayCurrentStateSnapshot?, workspaceTitle: String) {
+        let titlePresentation = WorkspaceCardTitlePresentation(
+            workspaceTitle: workspaceTitle, ticketTitle: provenance?.ticketLinks.first?.title
+        )
         id = workspace.id
-        title = provenance?.ticketLinks.first?.title ?? provenance?.title ?? workspace.title
+        title = titlePresentation.title
         prompt = provenance?.lastSubmittedPrompt ?? workspace.latestSubmittedMessage
         branch = provenance?.branch ?? workspace.presentedGitBranch?.branch
         isDirty = provenance?.isDirty ?? workspace.presentedGitBranch?.isDirty
@@ -29,7 +32,7 @@ struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
         ticketURL = provenance?.ticketLinks.first?.url ?? workspace.sidebarMetadata.workContext.ticket?.url
         projectTitle = provenance?.projectLinks.first.map { $0.title ?? $0.id }
         projectURL = provenance?.projectLinks.first?.url
-        summary = (provenance?.currentWorkSummary ?? workspace.customDescription)?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        summary = titlePresentation.description
         if let request = workspace.pullRequest {
             pullRequestText = "#\(request.number) · \(request.title ?? "")".trimmingCharacters(in: .whitespacesAndNewlines)
             pullRequestURL = request.url

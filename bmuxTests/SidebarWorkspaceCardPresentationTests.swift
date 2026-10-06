@@ -139,7 +139,10 @@ import Testing
     @MainActor private static func referenceCard(
         workspace: Workspace, provenance: WorkspaceDisplayCurrentStateSnapshot?
     ) -> WorkspaceReferenceCardSnapshot {
-        WorkspaceReferenceCardSnapshot(workspace: workspace, provenance: provenance)
+        let title = SidebarWorkspaceTitleResolution(
+            liveTitle: workspace.title, liveTitleIsAuthoritative: workspace.hasCustomTitle, provenanceTitle: provenance?.title
+        ).title
+        return WorkspaceReferenceCardSnapshot(workspace: workspace, provenance: provenance, workspaceTitle: title)
     }
 
     private static func referenceProvenance(
