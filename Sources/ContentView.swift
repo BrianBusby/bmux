@@ -2564,15 +2564,15 @@ struct ContentView: View {
     }
 
     private var bmuxReferenceWorkspaceRail: some View {
-        let filterItems = bmuxWorkspaceFilterItems(for: tabManager.tabs)
-        let visibleWorkspaceIDs = Set(
-            WorkspaceTabFilterProjection().visibleItems(
-                filterItems,
-                filters: referenceWorkspaceFilters
-            ).map(\.id)
-        )
+        WorkspaceRepositoryLabelScope(workspaces: tabManager.tabs) { repositoryNames in
+            let filterItems = bmuxWorkspaceFilterItems(for: tabManager.tabs)
+            let visibleWorkspaceIDs = Set(
+                WorkspaceTabFilterProjection().visibleItems(
+                    filterItems,
+                    filters: referenceWorkspaceFilters
+                ).map(\.id)
+            )
 
-        return WorkspaceRepositoryLabelScope(workspaces: tabManager.tabs) { repositoryNames in
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
                     Text(String(localized: "workspaceRail.title", defaultValue: "Workspaces"))
@@ -2658,7 +2658,7 @@ struct ContentView: View {
                             ))
                             .contentShape(RoundedRectangle(cornerRadius: 8))
                             .onTapGesture {
-                                tabManager.selectedTabId = workspace.id
+                                tabManager.selectWorkspaceIdForAction(workspace.id)
                             }
                         }
 
@@ -2717,7 +2717,7 @@ struct ContentView: View {
                 }
                 if let ticketURL {
                     Button {
-                        tabManager.selectedTabId = workspace.id
+                        tabManager.selectWorkspaceIdForAction(workspace.id)
                         BrowserExternalLinkOpener().openWebLink(ticketURL)
                     } label: {
                         ticketContent
@@ -2769,7 +2769,7 @@ struct ContentView: View {
                 }
                 if let ownerURL {
                     Button {
-                        tabManager.selectedTabId = workspace.id
+                        tabManager.selectWorkspaceIdForAction(workspace.id)
                         BrowserExternalLinkOpener().openWebLink(ownerURL)
                     } label: {
                         ownerContent
@@ -2806,7 +2806,7 @@ struct ContentView: View {
 
         if let url {
             Button {
-                tabManager.selectedTabId = workspace.id
+                tabManager.selectWorkspaceIdForAction(workspace.id)
                 BrowserExternalLinkOpener().openWebLink(url)
             } label: {
                 row
