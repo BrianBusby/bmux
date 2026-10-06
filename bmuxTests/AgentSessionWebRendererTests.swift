@@ -308,4 +308,47 @@ struct ConnectedSessionBridgeTests {
         #expect(actions == 1)
         coordinator.close()
     }
+    @Test(arguments: ["codex", "codex --sandbox read-only --model hidden-valid"])
+    @MainActor func configuredRepoWorkspaceStartsItsOwnConnectedChat(commandText: String) async throws {
+        let launched = AsyncStream<Void>.makeStream()
+        let connection = CodexRPCConnection(transport: ConnectedCodexFixtureTransport())
+        try await connection.start()
+        let host = ConnectedCodexFixtureHost(connection: connection, beforeLaunch: {
+            launched.continuation.yield(())
+        })
+        let runtime = TerminalChatRuntime(reader: ConnectedCodexFixtureReader(), hosts: host, bind: { _, _, _, _ in })
+        let manager = TabManager(initialWorkingDirectory: "/tmp", autoWelcomeIfNeeded: false)
+        manager.terminalChatReader = runtime
+        defer {
+            launched.continuation.finish()
+            for workspace in manager.tabs { for panel in workspace.panels.values { panel.close() } }
+        }
+        let definition = BmuxWorkspaceDefinition(name: "Maple Street Inspection", cwd: "/tmp",
+            layout: .pane(BmuxPaneDefinition(surfaces: [BmuxSurfaceDefinition(type: .terminal,
+                name: "Codex", command: commandText, focus: true)])))
+        let command = BmuxCommandDefinition(name: "Maple Street Inspection", workspace: definition)
+        #expect(BmuxConfigExecutor.execute(command: command, tabManager: manager, baseCwd: "/tmp",
+            configSourcePath: nil, globalConfigPath: "/isolated/bmux.json"))
+        let workspace = try #require(manager.selectedWorkspace)
+        let panel = try #require(workspace.focusedTerminalPanel)
+        #expect(panel.workspaceId == workspace.id)
+        // A real check deadline bounds the absent-launch regression; no polling or settling delay.
+        let didLaunch = await withTaskGroup(of: Bool.self) { group in
+            group.addTask {
+                var iterator = launched.stream.makeAsyncIterator()
+                return await iterator.next() != nil
+            }
+            group.addTask {
+                do { try await ContinuousClock().sleep(for: .seconds(2)) } catch { return false }
+                return false
+            }
+            let result = await group.next() ?? false
+            group.cancelAll()
+            return result
+        }
+        #expect(didLaunch)
+        #expect(workspace.panels.count == 1)
+        #expect(workspace.customTitle == "Maple Street Inspection")
+    }
+
 }
