@@ -233,7 +233,8 @@ import BMUXAgentLaunch
         #expect(Self.snapshot(showsGitBranch: false).cardBranch == nil)
     }
 
-    @MainActor @Test func cardCacheUsesPEAgentWorktreeInsteadOfTerminalBranch() async throws {
+    @MainActor @Test(arguments: ["/tmp/roof-gutter-worktree", "/tmp/roof-gutter-worktree/packages/ui"])
+    func cardCacheUsesPEAgentWorktreeInsteadOfTerminalBranch(agentDirectory: String) async throws {
         let home = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: home) }
         let client = try ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory: home)
@@ -252,7 +253,23 @@ import BMUXAgentLaunch
             lastSubmittedPromptSessionID: "roof-agent-session"
         ))
         let initial = try #require(try await client.workspaceDisplay(.init(workspaceID: stableID.uuidString)).display)
+        let store = WorkspaceDisplayCurrentStateStore(client: client)
+        let displayOnly = try #require(await store.refreshedSnapshot(stableWorkspaceID: stableID))
+        #expect(displayOnly.agentWorktree == nil)
         let now = Date()
+        _ = try await client.appendEvent(.init(event: .init(
+            eventType: .workspaceDisplayObserved, timestamp: now,
+            source: .observed, evidenceOrigin: .init(rawValue: "workspace-card-test"),
+            evidenceScope: .init(level: .personal, id: "workspace-card-test"), confidence: .high,
+            payload: .init(workspaceCodingAgentSessionAssociation: .init(
+                id: "roof-hook-association", workspaceID: stableID.uuidString,
+                sessionID: "roof-agent-session", agentKind: "codex",
+                repositoryID: initial.repositoryID, worktreeID: initial.worktreeID,
+                currentDirectory: agentDirectory, sourcePath: "hook",
+                stage: "workspace_session_association_persisted", firstObservedAt: now,
+                promptObservedAt: now, lastObservedAt: now, lastTransitionAt: now
+            ))
+        )))
         _ = try await client.appendEvent(.init(event: .init(
             eventType: .workspaceDisplayObserved, timestamp: now,
             source: .observed, evidenceOrigin: .init(rawValue: "workspace-card-test"),
@@ -263,7 +280,6 @@ import BMUXAgentLaunch
                 observedAt: now, updatedAt: now
             ))
         )))
-        let store = WorkspaceDisplayCurrentStateStore(client: client)
         let confirmed = try #require(await store.refreshedSnapshot(stableWorkspaceID: stableID))
         #expect(confirmed.currentDirectory == "/tmp/roof-main-checkout")
         #expect(Self.referenceCard(workspace: workspace, provenance: confirmed).branch == "roof-42-gutter-worktree")
