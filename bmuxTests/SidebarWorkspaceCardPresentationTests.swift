@@ -1,5 +1,6 @@
 import BmuxSidebar
 import Foundation
+import ProvenanceEngineContracts
 import Testing
 
 #if canImport(bmux_DEV)
@@ -77,6 +78,85 @@ import Testing
         #expect(displayed.projectRows == current.projectRows)
         #expect(displayed.pullRequestRows == current.pullRequestRows)
         #expect(displayed.compactGitBranchSummaryText == current.compactGitBranchSummaryText)
+    }
+
+    @MainActor @Test(arguments: [
+        (nil, nil),
+        ("Repair flashing", "Review roof inspection"),
+        ("Review roof inspection", nil),
+        (" ", nil),
+    ] as [(String?, String?)])
+    func referenceRailUsesAuthoritativeTitleAndPreservesContext(ticketTitle: String?, expectedSummary: String?) throws {
+        let workspace = Workspace(title: "Terminal")
+        workspace.setCustomTitle("Review roof inspection")
+        workspace.setCustomDescription("Check the latest inspection photos")
+        let provenance = try Self.referenceProvenance(workspaceID: workspace.id, ticketTitle: ticketTitle)
+        let card = Self.referenceCard(workspace: workspace, provenance: provenance)
+        let normalizedTicket = ticketTitle?.trimmingCharacters(in: .whitespacesAndNewlines)
+        #expect(card.title == (normalizedTicket.flatMap { $0.isEmpty ? nil : $0 } ?? "Review roof inspection"))
+        #expect(card.summary == expectedSummary)
+        #expect(card.prompt == "Check the latest inspection photos")
+        #expect(card.ticketID == (ticketTitle == nil ? nil : "ROOF-42"))
+        #expect(card.projectTitle == "Maple Street roof")
+        #expect(card.pullRequestText?.hasPrefix("#42") == true)
+        #expect(card.ownerName == (ticketTitle == nil ? "sam" : "Sam"))
+        #expect(card.branch == "roof-inspection")
+        #expect(card.isDirty == false)
+        #expect(workspace.customDescription == "Check the latest inspection photos")
+    }
+
+    @MainActor @Test(arguments: [nil, "Repair flashing"] as [String?])
+    func referenceRailTitleAndPromptUpdatesRemainSeparate(ticketTitle: String?) throws {
+        let workspace = Workspace(title: "Terminal")
+        workspace.setCustomTitle("Review roof inspection")
+        workspace.setCustomDescription("Check the latest inspection photos")
+        let initial = Self.referenceCard(workspace: workspace, provenance: try Self.referenceProvenance(
+            workspaceID: workspace.id, ticketTitle: ticketTitle
+        ))
+        workspace.setCustomTitle("Review gutter installation")
+        let updated = Self.referenceCard(workspace: workspace, provenance: try Self.referenceProvenance(
+            workspaceID: workspace.id, ticketTitle: ticketTitle, prompt: "Compare the new gutter photos"
+        ))
+        #expect(updated.title == (ticketTitle ?? "Review gutter installation"))
+        #expect(updated.summary == (ticketTitle == nil ? nil : "Review gutter installation"))
+        #expect(updated.prompt == "Compare the new gutter photos")
+        #expect(updated.summary != updated.prompt)
+        #expect(updated.projectTitle == initial.projectTitle)
+        #expect(updated.ownerName == initial.ownerName)
+        #expect(updated.branch == initial.branch)
+        #expect(workspace.customDescription == "Check the latest inspection photos")
+    }
+
+    @MainActor @Test func referenceRailWithoutProvenanceOmitsStoredPromptDescription() {
+        let workspace = Workspace(title: "Review roof inspection")
+        workspace.setCustomDescription("Check the latest inspection photos")
+        let card = Self.referenceCard(workspace: workspace, provenance: nil)
+        #expect(card.title == "Review roof inspection")
+        #expect(card.summary == nil)
+        #expect(workspace.customDescription == "Check the latest inspection photos")
+    }
+
+    @MainActor private static func referenceCard(
+        workspace: Workspace, provenance: WorkspaceDisplayCurrentStateSnapshot?
+    ) -> WorkspaceReferenceCardSnapshot {
+        WorkspaceReferenceCardSnapshot(workspace: workspace, provenance: provenance)
+    }
+
+    private static func referenceProvenance(
+        workspaceID: UUID, ticketTitle: String?, prompt: String = "Check the latest inspection photos"
+    ) throws -> WorkspaceDisplayCurrentStateSnapshot {
+        let record = ProvenanceWorkspaceDisplayRecord(
+            id: "roof-work", workspaceID: workspaceID.uuidString,
+            title: "Older roof overview", branch: "roof-inspection",
+            pullRequestNumber: 42, pullRequestOwnerLogin: "sam", pullRequestStatus: "open", isDirty: false,
+            ticketLinks: ticketTitle.map { [.init(
+                id: "ROOF-42", system: "linear", title: $0, ownerName: "Sam"
+            )] } ?? [],
+            projectLinks: [.init(id: "roof", system: "linear", title: "Maple Street roof")],
+            currentWorkSummary: "Check the latest inspection photos", lastSubmittedPrompt: prompt,
+            observedAt: Date(timeIntervalSince1970: 900), updatedAt: Date(timeIntervalSince1970: 900)
+        )
+        return try #require(WorkspaceDisplayCurrentStateSnapshot(record))
     }
 
     private static func snapshot(
