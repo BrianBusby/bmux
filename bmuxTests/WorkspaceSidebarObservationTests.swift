@@ -13,6 +13,65 @@ import BmuxSidebar
 
 @MainActor
 struct WorkspaceSidebarObservationTests {
+    @Test(.timeLimit(.minutes(1))) func lateRepositoryDiscoveryUpdatesLabelsWithoutParentRefresh() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let repository = directory.appendingPathComponent("maple-roof-inspection")
+        try FileManager.default.createDirectory(at: repository.appendingPathComponent(".git"), withIntermediateDirectories: true)
+
+        let workspace = Workspace()
+        workspace.currentDirectory = ""
+        let observation = WorkspaceRepositoryLabelObservation(workspaces: [workspace])
+        defer { observation.cancel() }
+        var labels = observation.updates.makeAsyncIterator()
+        #expect(await labels.next() == [:])
+
+        let (roots, continuation) = AsyncStream<String?>.makeStream()
+        let subscription = workspace.$extensionSidebarProjectRootPath.sink { continuation.yield($0) }
+        defer { subscription.cancel(); continuation.finish() }
+        workspace.currentDirectory = repository.path
+        for await root in roots where root == repository.path { break }
+
+        let refreshed = try #require(await labels.next())
+        #expect(refreshed[workspace.id] == "maple-roof-inspection")
+    }
+
+    @Test(.timeLimit(.minutes(1))) func repositoryLabelChangesAndClearsAsDirectoryChanges() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let firstRepository = directory.appendingPathComponent("maple-roof-inspection")
+        let secondRepository = directory.appendingPathComponent("oak-roof-inspection")
+        for repository in [firstRepository, secondRepository] {
+            try FileManager.default.createDirectory(at: repository.appendingPathComponent(".git"), withIntermediateDirectories: true)
+        }
+
+        let workspace = Workspace()
+        workspace.currentDirectory = ""
+        let (roots, continuation) = AsyncStream<String?>.makeStream()
+        let subscription = workspace.$extensionSidebarProjectRootPath.sink { continuation.yield($0) }
+        defer { subscription.cancel(); continuation.finish() }
+        workspace.currentDirectory = firstRepository.path
+        var rootChanges = roots.makeAsyncIterator()
+        while let root = await rootChanges.next(), root != firstRepository.path {}
+
+        let observation = WorkspaceRepositoryLabelObservation(workspaces: [workspace])
+        defer { observation.cancel() }
+        var labels = observation.updates.makeAsyncIterator()
+        #expect(await labels.next()?[workspace.id] == "maple-roof-inspection")
+
+        workspace.currentDirectory = secondRepository.path
+        while let root = await rootChanges.next(), root != secondRepository.path {}
+        let changed = try #require(await labels.next())
+        #expect(changed[workspace.id] == "oak-roof-inspection")
+
+        workspace.currentDirectory = directory.path
+        while let root = await rootChanges.next(), root != nil {}
+        #expect(await labels.next() == [:])
+
+        observation.cancel()
+        #expect(await labels.next() == nil)
+    }
+
     @Test func sidebarObservationPublisherEmitsForLateStatusSubscriber() {
         let workspace = Workspace()
         workspace.statusEntries["test_probe"] = SidebarStatusEntry(
