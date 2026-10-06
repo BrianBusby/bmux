@@ -10,15 +10,18 @@ struct ConnectedCodexFixtureHost: ConnectedCodexHosting {
     let connection: CodexRPCConnection
     let beforeLaunch: @MainActor @Sendable () async -> Void
     let beforeAdoption: @MainActor @Sendable () async -> Void
+    let beforeReconnect: @MainActor @Sendable () async -> Void
     let onEnd: @MainActor @Sendable (UUID) async -> Void
 
     init(connection: CodexRPCConnection,
          beforeLaunch: @escaping @MainActor @Sendable () async -> Void = {},
          beforeAdoption: @escaping @MainActor @Sendable () async -> Void = {},
+         beforeReconnect: @escaping @MainActor @Sendable () async -> Void = {},
          onEnd: @escaping @MainActor @Sendable (UUID) async -> Void = { _ in }) {
         self.connection = connection
         self.beforeLaunch = beforeLaunch
         self.beforeAdoption = beforeAdoption
+        self.beforeReconnect = beforeReconnect
         self.onEnd = onEnd
     }
     func launch(surfaceID: UUID, workingDirectory: String) async throws -> ConnectedCodexHost {
@@ -34,6 +37,9 @@ struct ConnectedCodexFixtureHost: ConnectedCodexHosting {
         result.control = CodexSharedControl(threadID: "thread-a", connection: connection)
         return result
     }
-    func reconnect(_ host: ConnectedCodexHost) async throws -> ConnectedCodexHost { host }
+    func reconnect(_ host: ConnectedCodexHost) async throws -> ConnectedCodexHost {
+        await beforeReconnect()
+        return host
+    }
     func endOwnedHost(surfaceID: UUID) async { await onEnd(surfaceID) }
 }
