@@ -25,6 +25,9 @@ extension Workspace {
               let sourcePanel = panels[sourcePanelID] as? TerminalPanel,
               let paneID = paneId(forPanelId: sourcePanelID),
               remoteConfiguration == nil, !isRemoteTmuxMirror else { throw CodexControlError.unsupported }
+        guard sourcePanel.presentation.configuredCodexLaunch?.isStarting != true else {
+            throw CodexControlError.duplicateRequest
+        }
         let workingDirectory = sourcePanel.directory.isEmpty ? currentDirectory : sourcePanel.directory
         let surfaceID = UUID()
         let command = try await runtime.prepareConnectedSession(workspaceID: id, surfaceID: surfaceID, workingDirectory: workingDirectory)

@@ -49,3 +49,30 @@ test("read-only Chat renders authoritative content without terminal action butto
     Object.assign(globalThis, { window: previousWindow, document: previousDocument, IS_REACT_ACT_ENVIRONMENT: false });
   }
 });
+
+
+test("configured startup shows loading without offering a second launch", async () => {
+  const dom = new JSDOM("<!doctype html><div id='root'></div>", { url: "https://example.test" });
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  Object.assign(globalThis, { window: dom.window, document: dom.window.document, IS_REACT_ACT_ENVIRONMENT: true });
+  const calls: string[] = [];
+  Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: { postMessage: async (request: { method: string }) => {
+    calls.push(request.method);
+    return { ok: true, value: { status: "loading" } };
+  } } } } });
+  const copy = { chatLoading: "Loading conversation", chatReadOnly: "Read-only", connectedNewSession: "New connected session" } as AgentSessionCopy;
+  const context = { workspaceId: "workspace", panelId: "surface", canStartConnectedSession: true,
+    automaticallyStartConnectedSession: false, copy } as AppContext;
+  const root = createRoot(dom.window.document.getElementById("root")!);
+  try {
+    await act(async () => root.render(<TerminalChatSurface context={context} />));
+    expect(dom.window.document.querySelector(".terminal-chat-footer")?.textContent).toBe("Loading conversation");
+    expect(dom.window.document.querySelector(".terminal-chat-launch")).toBeNull();
+    expect(calls).toEqual(["terminalChat.snapshot"]);
+  } finally {
+    await act(async () => root.unmount());
+    dom.window.close();
+    Object.assign(globalThis, { window: previousWindow, document: previousDocument, IS_REACT_ACT_ENVIRONMENT: false });
+  }
+});

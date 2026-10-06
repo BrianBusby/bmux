@@ -436,3 +436,22 @@ resource rather than calling React handlers directly. Native fresh-workspace Cha
 ChatGPT response with the catalog-default model at inherited xhigh effort,
 Terminal click/typing and return to the same conversation were verified in
 build 698. Broader recovery, light/narrow layouts and user dogfood remain open.
+
+
+### Configured repository launch ownership
+
+Repository workspace and new-tab actions share a connected startup path after
+existing command authorization. A fresh literal Codex launch reserves its host
+before the placeholder can mount a shell. Chat and Terminal show loading until
+the prepared command replaces the process through the existing respawn path,
+retaining surface/tab identity, custom title, canvas membership, tab order and
+current selection. The retained Chat renderer follows that logical surface.
+Closing the source cancels startup and retires the prepared host. This is a new
+owned session, not inferred control of an existing ordinary CLI.
+
+Supported literal launcher arguments and workspace/surface environment reach the
+host and original TUI. Explicit models retain precedence. Setup scripts, compound
+shell commands, resumed sessions, custom executable paths and commands sent to an
+existing terminal keep their shell behavior. No user configuration is rewritten.
+Configured-launch runtime dogfood remains pending; native regression coverage and
+both bundled consumers verify reservation, cancellation and loading behavior.

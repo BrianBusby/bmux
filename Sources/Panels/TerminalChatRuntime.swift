@@ -25,9 +25,9 @@ final class TerminalChatRuntime: TerminalChatConnecting {
         self.bind = bind
     }
 
-    func prepareConnectedSession(workspaceID: UUID, surfaceID: UUID, workingDirectory: String) async throws -> String {
+    func prepareConnectedSession(workspaceID: UUID, surfaceID: UUID, workingDirectory: String, configuration: ConnectedCodexLaunchConfiguration = .init()) async throws -> String {
         guard connections[surfaceID] == nil else { throw CodexControlError.duplicateRequest }
-        let host = try await hosts.launch(surfaceID: surfaceID, workingDirectory: workingDirectory)
+        let host = try await hosts.launch(surfaceID: surfaceID, workingDirectory: workingDirectory, configuration: configuration)
         connections[surfaceID] = (workspaceID, workingDirectory, host)
         return host.terminalCommand
     }

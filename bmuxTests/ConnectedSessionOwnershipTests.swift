@@ -41,10 +41,27 @@ import Testing
         }
     }
 
+    @Test func configuredLaunchRetainsExplicitOptionsAndHostEnvironment() async throws {
+        let configuration = try #require(ConnectedCodexLaunchConfiguration(
+            command: #"codex --model hidden-valid --sandbox read-only --add-dir 'Maple Street' --config 'approval_policy="never"'"#,
+            environment: ["INSPECTION_SCOPE": "Maple Street"]))
+        let arguments = try await launchedArguments(model: "unavailable-model", configuration: configuration)
+        #expect(Array(arguments.suffix(8)) == ["--model", "hidden-valid", "--sandbox", "read-only", "--add-dir", "Maple Street", "--config", #"approval_policy="never""#])
+    }
+
+    @Test func explicitConfigModelIsNotReplacedByTheAccountDefault() async throws {
+        let configuration = try #require(ConnectedCodexLaunchConfiguration(
+            command: #"codex --config 'model="chosen-model"'"#, environment: [:]))
+        let arguments = try await launchedArguments(model: "unavailable-model", configuration: configuration)
+        #expect(Array(arguments.suffix(2)) == ["--config", #"model="chosen-model""#])
+        #expect(!arguments.contains("--model"))
+    }
+
     /// Runs the real host launcher and its shell command with an isolated fake CLI.
     /// Model/account RPC replies are values; no user configuration or auth is read.
     private func launchedArguments(model: String, effort: String = "xhigh", accountType: String = "chatgpt",
-                                   provider: String = "openai", catalogOverride: String? = nil) async throws -> [String] {
+                                   provider: String = "openai", catalogOverride: String? = nil,
+                                   configuration: ConnectedCodexLaunchConfiguration = .init()) async throws -> [String] {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("connected-model-\(UUID())")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -54,6 +71,7 @@ import Testing
         case "$1" in
           --version) printf 'codex-cli 0.154.0\n';;
           app-server)
+            /usr/bin/python3 -c 'import json,os,sys; open(os.environ["HOST_CAPTURE"],"w").write(json.dumps({"args":sys.argv[1:],"scope":os.environ.get("INSPECTION_SCOPE")}))' "$@"
             printf 'listening on: ws://127.0.0.1:1\n'
             exec /usr/bin/python3 -c 'import signal; signal.pause()';;
           *) exec /usr/bin/python3 -c 'import json,sys; print(json.dumps(sys.argv[1:]))' "$@";;
@@ -75,17 +93,20 @@ import Testing
             "model/list": catalogOverride.map { Data($0.utf8) } ?? catalog])
         let connection = CodexRPCConnection(transport: transport)
         let service = ConnectedCodexHostService(executable: executable, root: directory.appendingPathComponent("hosts"),
-                                               environment: ["PATH": "/usr/bin:/bin"], connect: { _, _ in
+                                               environment: ["PATH": "/usr/bin:/bin", "HOST_CAPTURE": directory.appendingPathComponent("host.json").path], connect: { _, _ in
             try await connection.start()
             return connection
         })
         let surfaceID = UUID()
         do {
-            let host = try await service.launch(surfaceID: surfaceID, workingDirectory: directory.path)
+            let host = try await service.launch(surfaceID: surfaceID, workingDirectory: directory.path, configuration: configuration)
             let output = await CommandRunner(environment: ["PATH": "/usr/bin:/bin"]).runStandardOutput(
                 directory: directory.path, executable: "/bin/sh", arguments: ["-c", host.terminalCommand], timeout: 5)
             await service.endOwnedHost(surfaceID: surfaceID)
             await connection.disconnect()
+            let hostCapture = try JSONSerialization.jsonObject(with: Data(contentsOf: directory.appendingPathComponent("host.json"))) as? [String: Any]
+            #expect(Array((hostCapture?["args"] as? [String] ?? []).suffix(configuration.hostArguments.count)) == configuration.hostArguments)
+            if let scope = configuration.environment["INSPECTION_SCOPE"] { #expect(hostCapture?["scope"] as? String == scope) }
             let data = Data(try #require(output).utf8)
             return try JSONDecoder().decode([String].self, from: data)
         } catch {

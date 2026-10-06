@@ -52,7 +52,7 @@ closure. Failed startup offers an explicit retry; provider actions are never
 blindly resent. New ChatGPT startup checks the connected client catalog and uses its default
 only when the saved model is unavailable; valid hidden models and custom/API
 providers retain their configuration. This writes no global configuration.
-Chat has no Interact in Terminal or Send buttons. Enter queues a prompt;
+Configured repository and new-tab Codex launches now reserve their own connected host before creating the PTY. Startup shows loading in Chat and Terminal; replacement preserves the logical surface, tab, selection and canvas membership. Literal supported launch options and workspace environment values are preserved; setup scripts, compound/resume commands, custom executable paths and commands sent into an existing terminal keep their ordinary CLI behavior. Chat has no Interact in Terminal or Send buttons. Enter queues a prompt;
 Shift+Enter, composition, pending delivery and uncertain delivery retain their
 guards. Both bundled React consumers use the same composer. Queue and
 expected-turn steering retain their verified native transport boundary. Ordinary attachment, structured interruption, and broader

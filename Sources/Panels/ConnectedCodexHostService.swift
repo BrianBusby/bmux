@@ -21,8 +21,9 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
         self.connect = connect
     }
 
-    func launch(surfaceID: UUID, workingDirectory: String) async throws -> ConnectedCodexHost {
-        let version = await CommandRunner(environment: environment).runStandardOutput(
+    func launch(surfaceID: UUID, workingDirectory: String, configuration: ConnectedCodexLaunchConfiguration = .init()) async throws -> ConnectedCodexHost {
+        let launchEnvironment = environment.merging(configuration.environment) { _, configured in configured }
+        let version = await CommandRunner(environment: launchEnvironment).runStandardOutput(
             directory: workingDirectory, executable: executable.path, arguments: ["--version"], timeout: 5
         )
         // Capabilities are empirical and version-specific; fail closed on upgrades.
@@ -38,9 +39,9 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
         }
         let process = Process()
         process.executableURL = executable
-        process.arguments = ["app-server", "--listen", "ws://127.0.0.1:0", "--ws-auth", "capability-token", "--ws-token-file", tokenURL.path]
+        process.arguments = ["app-server", "--listen", "ws://127.0.0.1:0", "--ws-auth", "capability-token", "--ws-token-file", tokenURL.path] + configuration.hostArguments
         process.currentDirectoryURL = URL(fileURLWithPath: workingDirectory)
-        process.environment = environment.filter { !$0.key.hasPrefix("BMUX") && !$0.key.hasPrefix("CMUX") && $0.key != "CODEX_THREAD_ID" }
+        process.environment = launchEnvironment.filter { !$0.key.hasPrefix("BMUX") && !$0.key.hasPrefix("CMUX") && $0.key != "CODEX_THREAD_ID" }
         let output = Pipe()
         process.standardOutput = output
         process.standardError = output
@@ -78,7 +79,7 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
             guard let endpoint, process.isRunning else { throw CodexControlError.disconnected }
             let authenticated = try await connect(endpoint, token)
             connection = authenticated
-            let overrides = try await compatibleModelArguments(using: authenticated, workingDirectory: workingDirectory)
+            let overrides = (configuration.arguments + (try await compatibleModelArguments(using: authenticated, workingDirectory: workingDirectory, configuration: configuration)))
                 .map(Self.quote).joined(separator: " ")
             guard !Task.isCancelled, process.isRunning, processes[surfaceID] === process else {
                 throw CodexControlError.disconnected
@@ -145,7 +146,8 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
 
     /// Compatibility overrides belong only to this new TUI. Saved configuration
     /// and already-running threads retain their original model selection.
-    private func compatibleModelArguments(using connection: CodexRPCConnection, workingDirectory: String) async throws -> [String] {
+    private func compatibleModelArguments(using connection: CodexRPCConnection, workingDirectory: String, configuration: ConnectedCodexLaunchConfiguration) async throws -> [String] {
+        guard !configuration.hasExplicitModel else { return [] }
         let decoder = JSONDecoder()
         let account = try decoder.decode(AccountResponse.self, from: await connection.request(
             method: "account/read", params: Data(#"{"refreshToken":false}"#.utf8)))

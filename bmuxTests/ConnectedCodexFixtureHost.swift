@@ -27,7 +27,7 @@ struct ConnectedCodexFixtureHost: ConnectedCodexHosting {
         self.replacementForReconnect = replacementForReconnect
         self.onEnd = onEnd
     }
-    func launch(surfaceID: UUID, workingDirectory: String) async throws -> ConnectedCodexHost {
+    func launch(surfaceID: UUID, workingDirectory: String, configuration: ConnectedCodexLaunchConfiguration) async throws -> ConnectedCodexHost {
         await beforeLaunch()
         return ConnectedCodexHost(surfaceID: surfaceID, threadID: nil, processID: 0,
                            endpoint: URL(string: "ws://127.0.0.1:1")!, terminalCommand: "fixture",

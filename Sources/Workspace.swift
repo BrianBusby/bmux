@@ -8301,9 +8301,8 @@ final class Workspace: Identifiable, ObservableObject {
             bonsplitController.focusPane(paneId)
             bonsplitController.selectTab(tabId)
             focusPanel(panelId)
-        } else if selectedInPane {
-            bonsplitController.selectTab(tabId)
-            applyTabSelection(tabId: tabId, inPane: paneId)
+        } else if selectedInPane && paneWasFocused {
+            applyTabSelection(tabId: tabId, inPane: paneId, reassertAppKitFocus: false)
         } else {
             replacementPanel.unfocus()
         }
@@ -13244,12 +13243,7 @@ extension Workspace: BonsplitDelegate {
             case .currentTerminal:
                 self.selectedTerminalPanel(inPane: pane)?.sendInput(shellInput)
             case .newTabInCurrentPane:
-                _ = self.createTerminalSurfaceForAction(
-                    inPane: pane,
-                    focus: true,
-                    initialInput: shellInput,
-                    inheritWorkingDirectoryFallback: true
-                )
+                self.createConfiguredTerminalSurface(inPane: pane, shellInput: shellInput)
             }
         }
         guard didExecute else {

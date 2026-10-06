@@ -34,7 +34,7 @@ dom = new JSDOM(html, {
           window.document.querySelector("textarea").dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
           assert.equal(calls.filter(call => call.method === "terminalChat.action").length, 1);
           check.resolve();
-        } else if (scenario === "ordinary" && window.document.querySelector(".terminal-chat-footer")) {
+        } else if (scenario === "ordinary" && window.document.querySelector(".terminal-chat-footer")?.textContent === copy.chatReadOnly) {
           assert.equal(calls.filter(call => call.method === "terminalChat.startConnected").length, 0);
           assert.equal(window.document.querySelector(".terminal-chat-launch button")?.textContent, copy.connectedNewSession);
           check.resolve();

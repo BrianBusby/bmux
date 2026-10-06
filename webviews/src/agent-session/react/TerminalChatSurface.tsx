@@ -70,7 +70,7 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
     {state.control ? <ConnectedChatComposer context={context} control={state.control}
       enabled={canUseConnectedControl(state.control, state.sessionId)} /> :
       !capabilities.submitPrompt.available && <footer className="terminal-chat-footer">{state.status === "loading" ? copy.chatLoading : starting ? copy.startingStatus : copy.chatReadOnly}</footer>}
-    {context.canStartConnectedSession && !state.control && <div className="terminal-chat-launch">
+    {context.canStartConnectedSession && state.status !== "loading" && !state.control && <div className="terminal-chat-launch">
       <button disabled={starting} onClick={() => {
         setStarting(true); setStartFailed(false);
         void callNative("terminalChat.startConnected").catch(() => setStartFailed(true)).finally(() => setStarting(false));

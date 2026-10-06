@@ -27,7 +27,12 @@ extension TerminalPanelView {
             workProvenanceRuntime: workProvenanceRuntime,
             backgroundColor: appearance.contentBackgroundColor
         ) { isVisibleForMode in
-            terminalSurfaceBody(isVisibleForMode: isVisibleForMode)
+            if panel.presentation.configuredCodexLaunch?.isStarting == true {
+                ProgressView(String(localized: "agentSession.chat.chatLoading", defaultValue: "Loading conversation"))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                terminalSurfaceBody(isVisibleForMode: isVisibleForMode)
+            }
         }
     }
 

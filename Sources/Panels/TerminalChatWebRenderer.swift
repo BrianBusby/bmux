@@ -21,6 +21,7 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
         coordinator.setTerminalChatVisible(true)
         coordinator.terminalChatSnapshot = { [weak reader, weak panel] in
             guard let reader, let panel else { return ["status": "unavailable"] }
+            if panel.presentation.configuredCodexLaunch?.isStarting == true { return ["status": "loading"] }
             return await reader.terminalChatSnapshot(workspaceID: panel.workspaceId, surfaceID: panel.id)
         }
         coordinator.terminalChatRawOutput = { [weak reader, weak panel] sessionID, messageID in
@@ -31,7 +32,7 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
         }
         coordinator.onStartConnectedSession = onStartConnectedSession
         coordinator.canAutomaticallyStartConnectedSession = { [weak panel] in
-            guard let panel, !panel.isAgentHibernated,
+            guard let panel, panel.presentation.configuredCodexLaunch == nil, !panel.isAgentHibernated,
                   !panel.surface.hasDeferredStartupWorkForBackgroundStart() else { return false }
             // A never-spawned plain shell has no process to attach to. A live
             // terminal must positively identify an idle shell, not an agent.
