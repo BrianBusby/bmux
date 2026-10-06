@@ -12,7 +12,9 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
     private var processes: [UUID: Process] = [:]
 
     init(executable: URL, root: URL, environment: [String: String],
-         connect: @escaping @Sendable (URL, String) async throws -> CodexRPCConnection = ConnectedCodexHostService.authenticatedConnection) {
+         connect: @escaping @Sendable (URL, String) async throws -> CodexRPCConnection = { endpoint, token in
+             try await ConnectedCodexHostService.authenticatedConnection(endpoint, token: token)
+         }) {
         self.executable = executable
         self.root = root
         self.environment = environment
