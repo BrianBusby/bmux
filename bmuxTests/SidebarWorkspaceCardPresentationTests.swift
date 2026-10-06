@@ -29,6 +29,14 @@ import Testing
         #expect(snapshot.latestSubmittedMessage == "Check the latest inspection photos")
     }
 
+    @Test(arguments: [true, false])
+    func workspaceTitleDescriptionRespectsVisibilitySetting(showsDescription: Bool) {
+        let snapshot = Self.snapshot(showsWorkspaceDescription: showsDescription)
+        #expect(snapshot.cardHeadingTitle == "Repair flashing")
+        #expect(snapshot.cardDescription == (showsDescription ? "Review roof inspection" : nil))
+        #expect(snapshot.latestSubmittedMessage == "Check the latest inspection photos")
+    }
+
     @Test func workspaceTitleDoesNotDependOnStoredDescription() {
         let snapshot = Self.snapshot(customDescription: nil)
         #expect(snapshot.cardHeadingTitle == "Repair flashing")
@@ -166,11 +174,12 @@ import Testing
         title: String = "Review roof inspection",
         ticketTitle: String? = "Repair flashing",
         customDescription: String? = "Check the latest inspection photos",
-        prompt: String? = "Check the latest inspection photos"
+        prompt: String? = "Check the latest inspection photos",
+        showsWorkspaceDescription: Bool = true
     ) -> SidebarWorkspaceSnapshotBuilder.Snapshot {
         SidebarWorkspaceSnapshotBuilder.Snapshot(
             presentationKey: .init(
-                showsWorkspaceDescription: true,
+                showsWorkspaceDescription: showsWorkspaceDescription,
                 usesVerticalBranchLayout: true,
                 showsGitBranch: true,
                 usesViewportAwarePath: false,
@@ -182,7 +191,7 @@ import Testing
                 titleResolution: .init(liveTitle: title, liveTitleIsAuthoritative: true, provenanceTitle: nil)
             ),
             title: title,
-            customDescription: customDescription,
+            customDescription: showsWorkspaceDescription ? customDescription : nil,
             isPinned: false,
             customColorHex: nil,
             remoteWorkspaceSidebarText: nil,
