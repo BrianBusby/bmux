@@ -242,6 +242,56 @@ import Testing
         #expect(Self.snapshot().cardBranch == "roof-inspection")
     }
 
+    @MainActor @Test func cardCacheUsesPEAgentWorktreeInsteadOfTerminalBranch() async throws {
+        let home = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: home) }
+        let client = try ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory: home)
+        let workspace = Workspace(title: "Review roof inspection")
+        workspace.currentDirectory = "/tmp/roof-main-checkout"
+        let stableID = workspace.stableId
+        let directory = "/tmp/roof-gutter-worktree"
+        let git = WorkProvenanceGitSnapshot(
+            repositoryRoot: directory, commonDirectory: "/tmp/roof-main-checkout/.git", remoteSlug: nil,
+            branch: "roof-42-gutter-worktree", headCommit: "abc123", isDirty: false, statusEntries: []
+        )
+        let service = WorkProvenanceObservationService(client: client, gitInspector: CardGitInspector(snapshot: git))
+        await service.observeWorkspaceSnapshot(.init(
+            workspaceID: UUID(), stableWorkspaceID: stableID, title: "Review roof inspection",
+            currentDirectory: directory, lastSubmittedPrompt: "Compare the new gutter photos",
+            lastSubmittedPromptSessionID: "roof-agent-session"
+        ))
+        let initial = try #require(try await client.workspaceDisplay(.init(workspaceID: stableID.uuidString)).display)
+        let now = Date()
+        _ = try await client.appendEvent(.init(event: .init(
+            eventType: .workspaceDisplayObserved, timestamp: now,
+            source: .observed, evidenceOrigin: .init(rawValue: "workspace-card-test"),
+            evidenceScope: .init(level: .personal, id: "workspace-card-test"), confidence: .high,
+            payload: .init(workspaceDisplay: .init(
+                id: initial.id, workspaceID: stableID.uuidString,
+                currentDirectory: "/tmp/roof-main-checkout", title: "Review roof inspection", branch: "main",
+                observedAt: now, updatedAt: now
+            ))
+        )))
+        let store = WorkspaceDisplayCurrentStateStore(client: client)
+        let confirmed = try #require(await store.refreshedSnapshot(stableWorkspaceID: stableID))
+        #expect(confirmed.currentDirectory == "/tmp/roof-main-checkout")
+        #expect(Self.referenceCard(workspace: workspace, provenance: confirmed).branch == "roof-42-gutter-worktree")
+        let worktree = try #require(try await client.currentContext(.init(repositoryPath: directory)).worktree)
+        let changed = Date().addingTimeInterval(1)
+        _ = try await client.appendEvent(.init(event: .init(
+            eventType: .worktreeObserved, timestamp: changed, worktreeID: worktree.id,
+            source: .observed, evidenceOrigin: .init(rawValue: "workspace-card-test"),
+            evidenceScope: .init(level: .personal, id: "workspace-card-test"), confidence: .high,
+            payload: .init(worktree: .init(
+                id: worktree.id, repositoryID: worktree.repositoryID, path: worktree.path,
+                branch: "gutter-installation-review", isDirty: true, status: "active", updatedAt: changed
+            ))
+        )))
+        let updated = try #require(await store.refreshedSnapshot(stableWorkspaceID: stableID))
+        #expect(updated.latestEventSequence == confirmed.latestEventSequence)
+        #expect(Self.referenceCard(workspace: workspace, provenance: updated).branch == "gutter-installation-review")
+    }
+
     private struct CardGitInspector: WorkProvenanceGitInspecting {
         let snapshot: WorkProvenanceGitSnapshot
         func snapshot(for directory: String) async -> WorkProvenanceGitSnapshot? {
