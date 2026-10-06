@@ -5,7 +5,8 @@ import { JSDOM, VirtualConsole } from "jsdom";
 const scenario = process.argv[2];
 const html = await readFile(process.argv[3] ?? new URL("../../../Resources/agent-session-react/index.html", import.meta.url), "utf8");
 const calls = [];
-let connected = scenario === "connected";
+const keyboardScenario = ["keyboard", "queue-disabled", "disconnected", "uncertain"].includes(scenario);
+let connected = scenario === "connected" || keyboardScenario;
 let observer;
 let dom;
 let check;
@@ -22,12 +23,18 @@ const copy = { chatConversation: "Conversation", chatReadOnly: "Read-only", chat
   connectedAccepted: "Accepted", connectedUnavailable: "Disconnected" };
 let submitted = false;
 let retried = false;
+let acknowledge;
 dom = new JSDOM(html, {
   url: "file:///bmux.app/Contents/Resources/agent-session-react/index.html", runScripts: "dangerously", virtualConsole,
   beforeParse(window) {
     observer = new window.MutationObserver(() => {
       try {
-        if (scenario === "ordinary" && window.document.querySelector(".terminal-chat-footer")) {
+        if (scenario === "keyboard" && submitted && window.document.querySelector(".terminal-chat-composer output")?.textContent === copy.connectedAccepted) {
+          assert.equal(window.document.querySelector("textarea").value, "");
+          window.document.querySelector("textarea").dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+          assert.equal(calls.filter(call => call.method === "terminalChat.action").length, 1);
+          check.resolve();
+        } else if (scenario === "ordinary" && window.document.querySelector(".terminal-chat-footer")) {
           assert.equal(calls.filter(call => call.method === "terminalChat.startConnected").length, 0);
           assert.equal(window.document.querySelector(".terminal-chat-launch button")?.textContent, copy.connectedNewSession);
           check.resolve();
@@ -43,9 +50,26 @@ dom = new JSDOM(html, {
           if (!input) return;
           submitted = true;
           assert.equal(window.document.querySelector("textarea")?.value, "Review the roof inspection");
-          assert.equal(window.document.querySelector(".terminal-chat-header button"), null);
-          assert.equal(window.document.querySelector(".terminal-chat-composer-actions button"), null);
+          if (scenario === "keyboard") {
+            for (const options of [{ shiftKey: true }, { altKey: true }, { isComposing: true }, { keyCode: 229 }]) {
+              assert.equal(input.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true, ...options })), true);
+            }
+            assert.equal(calls.filter(call => call.method === "terminalChat.action").length, 0);
+          }
+          if (!["queue-disabled", "disconnected", "uncertain"].includes(scenario)) {
+            assert.equal(window.document.querySelector(".terminal-chat-header button"), null);
+            assert.equal(window.document.querySelector(".terminal-chat-composer-actions button"), null);
+          }
           input.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+          if (["queue-disabled", "disconnected", "uncertain"].includes(scenario)) {
+            assert.equal(calls.filter(call => call.method === "terminalChat.action").length, 0);
+            check.resolve();
+          } else if (scenario === "keyboard") {
+            input.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+            assert.equal(calls.filter(call => call.method === "terminalChat.action").length, 1);
+            assert.equal(input.value, "Review the roof inspection");
+            acknowledge();
+          }
         }
       } catch (error) { check.reject(error); }
     });
@@ -69,7 +93,8 @@ dom = new JSDOM(html, {
           }
           return { ok: true, value: connected ? {
           status: "unavailable", reason: "historyUnavailable", workspaceId: "workspace", surfaceId: "surface", sessionId: "new-thread",
-          control: { status: "connected", threadId: "new-thread", queueFollowUp: true,
+          control: { status: scenario === "disconnected" ? "disconnected" : "connected", threadId: "new-thread", queueFollowUp: scenario !== "queue-disabled",
+            actions: scenario === "uncertain" ? [{ id: "pending", threadID: "new-thread", operation: "queue", text: "Review the roof inspection", delivery: "uncertain" }] : [],
             draft: { revision: "00000000-0000-0000-0000-000000000001", text: "Review the roof inspection" } },
         } : { status: "unavailable" } };
         case "terminalChat.startConnected":
@@ -79,11 +104,14 @@ dom = new JSDOM(html, {
           connected = scenario !== "source";
           return { ok: true, value: { started: true } };
         case "terminalChat.action":
+          assert.equal(["queue-disabled", "disconnected", "uncertain"].includes(scenario), false, "unavailable control submitted a prompt");
           assert.equal(request.params.sessionId, "new-thread");
           assert.equal(request.params.text, "Review the roof inspection");
-          assert.equal(calls.filter(call => call.method === "terminalChat.startConnected").length, scenario === "connected" ? 0 : scenario === "failed" ? 2 : 1);
+          assert.equal(calls.filter(call => call.method === "terminalChat.startConnected").length, scenario === "connected" || keyboardScenario ? 0 : scenario === "failed" ? 2 : 1);
           assert.equal(calls.filter(call => call.method === "terminalChat.action").length, 1);
           assert.equal(calls.some(call => call.method === "provider.writeLine" || call.method === "terminalChat.openTerminal"), false);
+          if (scenario === "keyboard") return new Promise(resolve => { acknowledge = () => resolve({ ok: true,
+            value: { id: request.params.requestId, threadID: "new-thread", delivery: "accepted" } }); });
           check.resolve();
           return { ok: true, value: { id: request.params.requestId, threadID: "new-thread", delivery: "accepted" } };
         default: throw new Error(`Unexpected native request: ${request.method}`);
