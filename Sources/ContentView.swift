@@ -13797,12 +13797,12 @@ struct TabItemView: View, Equatable {
             }
 
             if let description = workspaceSnapshot.cardDescription {
-                SidebarWorkspaceDescriptionText(
-                    markdown: description,
-                    isActive: usesInvertedActiveForeground,
-                    activeForegroundColor: activeSecondaryColor(0.84),
-                    fontScale: fontScale
-                )
+                Text(verbatim: description.sidebarBoundedDisplayString(maxDisplayedLines: 12, maxDisplayedCharacters: 4096))
+                    .font(magnifiedFont(scaledFontSize(10.5)))
+                    .foregroundColor(usesInvertedActiveForeground ? activeSecondaryColor(0.84) : .secondary.opacity(0.95))
+                    .multilineTextAlignment(.leading).lineLimit(12).truncationMode(.tail)
+                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityIdentifier("SidebarWorkspaceDescriptionText")
             }
 
             if let subtitle {
