@@ -39,11 +39,13 @@ dom = new JSDOM(html, {
           retried = true;
           retry.click();
         } else if (connected && !submitted) {
-          const send = window.document.querySelector(".terminal-chat-composer-actions button");
-          if (!send || send.disabled) return;
+          const input = window.document.querySelector("textarea");
+          if (!input) return;
           submitted = true;
           assert.equal(window.document.querySelector("textarea")?.value, "Review the roof inspection");
-          send.click();
+          assert.equal(window.document.querySelector(".terminal-chat-header button"), null);
+          assert.equal(window.document.querySelector(".terminal-chat-composer-actions button"), null);
+          input.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
         }
       } catch (error) { check.reject(error); }
     });

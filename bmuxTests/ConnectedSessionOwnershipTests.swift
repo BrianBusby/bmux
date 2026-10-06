@@ -1,4 +1,5 @@
 import BmuxAgentChat
+import BmuxFoundation
 import Foundation
 import Testing
 #if canImport(bmux_DEV)
@@ -8,6 +9,93 @@ import Testing
 #endif
 
 @Suite @MainActor struct ConnectedSessionOwnershipTests {
+
+    @Test func unsupportedChatGPTModelUsesClientDefaultWithoutChangingValidReasoningEffort() async throws {
+        let arguments = try await launchedArguments(model: "unavailable-model", effort: "xhigh")
+        #expect(arguments.suffix(2) == ["--model", "catalog-default"])
+        #expect(!arguments.contains("-c"))
+    }
+
+    @Test func fallbackModelReplacesOnlyUnsupportedReasoningEffort() async throws {
+        let arguments = try await launchedArguments(model: "unavailable-model", effort: "unsupported-effort")
+        #expect(arguments.suffix(4) == ["--model", "catalog-default", "-c", "model_reasoning_effort=\"low\""])
+    }
+
+    @Test(arguments: ["chatgpt", "apiKey"])
+    func validOrCustomModelsRetainCLIConfiguration(accountType: String) async throws {
+        let arguments = try await launchedArguments(model: accountType == "chatgpt" ? "hidden-valid" : "custom-provider-model",
+                                                   accountType: accountType)
+        #expect(!arguments.contains("--model"))
+        #expect(!arguments.contains("-c"))
+    }
+
+    @Test func customProviderWithChatGPTLoginRetainsCLIConfiguration() async throws {
+        let arguments = try await launchedArguments(model: "local-model", provider: "local-provider")
+        #expect(!arguments.contains("--model"))
+    }
+
+    @Test(arguments: ["{\"data\":[],\"nextCursor\":null}", "{\"data\":[],\"nextCursor\":\"repeated\"}"])
+    func unavailableCatalogFailsClosedAndDisconnects(catalog: String) async throws {
+        await #expect(throws: CodexControlError.invalidResponse) {
+            _ = try await launchedArguments(model: "unavailable-model", catalogOverride: catalog)
+        }
+    }
+
+    /// Runs the real host launcher and its shell command with an isolated fake CLI.
+    /// Model/account RPC replies are values; no user configuration or auth is read.
+    private func launchedArguments(model: String, effort: String = "xhigh", accountType: String = "chatgpt",
+                                   provider: String = "openai", catalogOverride: String? = nil) async throws -> [String] {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("connected-model-\(UUID())")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let executable = directory.appendingPathComponent("codex fixture")
+        let script = """
+        #!/bin/sh
+        case "$1" in
+          --version) printf 'codex-cli 0.154.0\n';;
+          app-server)
+            printf 'listening on: ws://127.0.0.1:1\n'
+            exec /usr/bin/python3 -c 'import signal; signal.pause()';;
+          *) exec /usr/bin/python3 -c 'import json,sys; print(json.dumps(sys.argv[1:]))' "$@";;
+        esac
+        """
+        try Data(script.utf8).write(to: executable)
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: executable.path)
+        let config = try JSONSerialization.data(withJSONObject: ["config": ["model": model,
+            "model_reasoning_effort": effort, "model_provider": provider]])
+        let catalog = Data("""
+        {"data":[{"model":"catalog-default","hidden":false,"isDefault":true,"defaultReasoningEffort":"low",
+          "supportedReasoningEfforts":[{"reasoningEffort":"low"},{"reasoningEffort":"xhigh"}]},
+          {"model":"hidden-valid","hidden":true,"isDefault":false,"defaultReasoningEffort":"low",
+          "supportedReasoningEfforts":[{"reasoningEffort":"low"}]}],"nextCursor":null}
+        """.utf8)
+        let account = try JSONSerialization.data(withJSONObject: ["account": ["type": accountType]])
+        let transport = ConnectedCodexFixtureTransport(responses: [
+            "account/read": account, "config/read": config,
+            "model/list": catalogOverride.map { Data($0.utf8) } ?? catalog])
+        let connection = CodexRPCConnection(transport: transport)
+        let service = ConnectedCodexHostService(executable: executable, root: directory.appendingPathComponent("hosts"),
+                                               environment: ["PATH": "/usr/bin:/bin"], connect: { _, _ in
+            try await connection.start()
+            return connection
+        })
+        let surfaceID = UUID()
+        do {
+            let host = try await service.launch(surfaceID: surfaceID, workingDirectory: directory.path)
+            let output = await CommandRunner(environment: ["PATH": "/usr/bin:/bin"]).runStandardOutput(
+                directory: directory.path, executable: "/bin/sh", arguments: ["-c", host.terminalCommand], timeout: 5)
+            await service.endOwnedHost(surfaceID: surfaceID)
+            await connection.disconnect()
+            let data = Data(try #require(output).utf8)
+            return try JSONDecoder().decode([String].self, from: data)
+        } catch {
+            #expect(await transport.closeCount == 1)
+            await service.endOwnedHost(surfaceID: surfaceID)
+            await connection.disconnect()
+            throw error
+        }
+    }
+
     @Test func overlappingSnapshotReadsKeepOneReconnectAndUsableControl() async throws {
         let entered = AsyncStream<Void>.makeStream()
         var release: CheckedContinuation<Void, Never>?

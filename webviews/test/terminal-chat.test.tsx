@@ -5,7 +5,7 @@ import { createRoot } from "react-dom/client";
 import { TerminalChatSurface } from "../src/agent-session/react/TerminalChatSurface";
 import type { AgentSessionCopy, AppContext } from "../src/agent-session/shared/types";
 
-test("read-only Chat renders authoritative content and only opens its terminal", async () => {
+test("read-only Chat renders authoritative content without terminal action buttons", async () => {
   const dom = new JSDOM("<!doctype html><div id='root'></div>", { url: "https://example.test" });
   const previousWindow = globalThis.window;
   const previousDocument = globalThis.document;
@@ -41,9 +41,8 @@ test("read-only Chat renders authoritative content and only opens its terminal",
     await act(async () => root.render(<TerminalChatSurface context={{ ...context }} />));
     expect(dom.window.document.querySelector("pre")?.textContent?.length).toBe(8192);
     expect(dom.window.document.querySelectorAll("details")).toHaveLength(1);
-    const fallback = [...dom.window.document.querySelectorAll("button")].find(button => button.textContent === "Interact in Terminal")!;
-    await act(async () => fallback.click());
-    expect(calls).toEqual(["terminalChat.snapshot", "terminalChat.snapshot", "terminalChat.snapshot", "terminalChat.openTerminal"]);
+    expect([...dom.window.document.querySelectorAll("button")].some(button => button.textContent === "Interact in Terminal")).toBe(false);
+    expect(calls).toEqual(["terminalChat.snapshot", "terminalChat.snapshot", "terminalChat.snapshot"]);
   } finally {
     await act(async () => root.unmount());
     dom.window.close();
