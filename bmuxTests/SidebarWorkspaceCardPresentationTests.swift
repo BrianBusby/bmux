@@ -1,6 +1,7 @@
 import BmuxSidebar
 import Foundation
 import ProvenanceEngineContracts
+import ProvenanceEngineSDK
 import Testing
 
 #if canImport(bmux_DEV)
@@ -144,6 +145,93 @@ import Testing
         #expect(workspace.customDescription == "Check the latest inspection photos")
     }
 
+    @MainActor @Test func referenceRailWaitsForPEBeforeShowingAmbientTicketAndBranch() {
+        let workspace = Workspace(title: "Review roof inspection")
+        workspace.gitBranch = .init(branch: "roof-99-unrelated-main-checkout", isDirty: true)
+        #expect(workspace.sidebarMetadata.workContext.ticket?.key == "ROOF-99")
+        let card = Self.referenceCard(workspace: workspace, provenance: nil)
+        #expect(card.ticketID == nil)
+        #expect(card.ticketURL == nil)
+        #expect(card.branch == nil)
+        #expect(card.isDirty == nil)
+    }
+
+    @MainActor @Test func referenceRailWaitsForBranchConfirmationEvenWhenPEHasOtherFields() throws {
+        let workspace = Workspace(title: "Review roof inspection")
+        workspace.gitBranch = .init(branch: "roof-99-unrelated-main-checkout", isDirty: true)
+        #expect(workspace.sidebarMetadata.workContext.ticket?.key == "ROOF-99")
+        let provenance = try #require(WorkspaceDisplayCurrentStateSnapshot(.init(
+            id: "roof-work", workspaceID: workspace.stableId.uuidString,
+            currentDirectory: workspace.currentDirectory, title: "Review roof inspection",
+            lastSubmittedPrompt: "Compare the new gutter photos",
+            observedAt: Date(), updatedAt: Date()
+        )))
+        let card = Self.referenceCard(workspace: workspace, provenance: provenance)
+        #expect(card.prompt == "Compare the new gutter photos")
+        #expect(card.ticketID == nil)
+        #expect(card.branch == nil)
+        #expect(card.isDirty == nil)
+    }
+
+    @MainActor @Test func referenceRailHidesOldContextUntilPEConfirmsNewWorktree() throws {
+        let workspace = Workspace(title: "Review roof inspection")
+        workspace.currentDirectory = "/tmp/roof-gutter-worktree"
+        let old = try Self.referenceProvenance(
+            workspaceID: workspace.stableId, ticketTitle: "Repair flashing",
+            currentDirectory: "/tmp/roof-main-checkout", branch: "main"
+        )
+        let pending = Self.referenceCard(workspace: workspace, provenance: old)
+        #expect(pending.title == "Older roof overview")
+        #expect(pending.ticketID == nil)
+        #expect(pending.branch == nil)
+        #expect(pending.isDirty == nil)
+        let confirmed = Self.referenceCard(workspace: workspace, provenance: try Self.referenceProvenance(
+            workspaceID: workspace.stableId, ticketTitle: "Repair flashing",
+            currentDirectory: workspace.currentDirectory, branch: "roof-42-gutter-worktree"
+        ))
+        #expect(confirmed.title == "Repair flashing")
+        #expect(confirmed.ticketID == "ROOF-42")
+        #expect(confirmed.branch == "roof-42-gutter-worktree")
+    }
+
+    @Test func peDisplayUsesInspectedWorktreeBranchInsteadOfCachedMainBranch() async throws {
+        let home = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: home) }
+        let client = try ProvenanceEngineClientFactory().defaultSQLiteClient(homeDirectory: home)
+        let directory = "/tmp/roof-gutter-worktree"
+        let git = WorkProvenanceGitSnapshot(
+            repositoryRoot: directory, commonDirectory: "/tmp/roof-main-checkout/.git", remoteSlug: nil,
+            branch: "roof-42-gutter-worktree", headCommit: "abc123", isDirty: false, statusEntries: []
+        )
+        let service = WorkProvenanceObservationService(client: client, gitInspector: CardGitInspector(snapshot: git))
+        let workspace = WorkProvenanceWorkspaceSnapshot(
+            workspaceID: UUID(), stableWorkspaceID: UUID(), title: "Review roof inspection",
+            currentDirectory: directory, branch: "main"
+        )
+        await service.observeWorkspaceSnapshot(workspace)
+        let display = try await client.workspaceDisplay(.init(workspaceID: workspace.stableWorkspaceID.uuidString))
+        #expect(display.display?.currentDirectory == directory)
+        #expect(display.display?.branch == "roof-42-gutter-worktree")
+        #expect(display.display?.ticketIDs.isEmpty == true)
+        let detached = WorkProvenanceGitSnapshot(
+            repositoryRoot: directory, commonDirectory: git.commonDirectory, remoteSlug: nil,
+            branch: nil, headCommit: "def456", isDirty: false, statusEntries: []
+        )
+        let detachedService = WorkProvenanceObservationService(
+            client: client, gitInspector: CardGitInspector(snapshot: detached)
+        )
+        await detachedService.observeWorkspaceSnapshot(workspace)
+        let cleared = try await client.workspaceDisplay(.init(workspaceID: workspace.stableWorkspaceID.uuidString))
+        #expect(cleared.display?.branch == nil)
+    }
+
+    private struct CardGitInspector: WorkProvenanceGitInspecting {
+        let snapshot: WorkProvenanceGitSnapshot
+        func snapshot(for directory: String) async -> WorkProvenanceGitSnapshot? {
+            directory == snapshot.repositoryRoot ? snapshot : nil
+        }
+    }
+
     @MainActor private static func referenceCard(
         workspace: Workspace, provenance: WorkspaceDisplayCurrentStateSnapshot?
     ) -> WorkspaceReferenceCardSnapshot {
@@ -154,11 +242,12 @@ import Testing
     }
 
     private static func referenceProvenance(
-        workspaceID: UUID, ticketTitle: String?, prompt: String = "Check the latest inspection photos"
+        workspaceID: UUID, ticketTitle: String?, prompt: String = "Check the latest inspection photos",
+        currentDirectory: String? = nil, branch: String = "roof-inspection"
     ) throws -> WorkspaceDisplayCurrentStateSnapshot {
         let record = ProvenanceWorkspaceDisplayRecord(
             id: "roof-work", workspaceID: workspaceID.uuidString,
-            title: "Older roof overview", branch: "roof-inspection",
+            currentDirectory: currentDirectory, title: "Older roof overview", branch: branch,
             pullRequestNumber: 42, pullRequestOwnerLogin: "sam", pullRequestStatus: "open", isDirty: false,
             ticketLinks: ticketTitle.map { [.init(
                 id: "ROOF-42", system: "linear", title: $0, ownerName: "Sam"
