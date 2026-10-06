@@ -6,6 +6,7 @@ extension SidebarWorkspaceSnapshotBuilder.Snapshot {
         let customColorHex: String?
         let finderDirectoryPath: String?
         let repoBadgeAppearance: WorkspaceRepoBadgeAppearance?
+        let isDirty: Bool?
         let pullRequestRows: [SidebarWorkspaceSnapshotBuilder.PullRequestDisplay]
         let projectRows: [SidebarWorkspaceSnapshotBuilder.ProjectDisplay]
         let ticketRows: [SidebarWorkspaceSnapshotBuilder.TicketDisplay]
@@ -21,6 +22,7 @@ extension SidebarWorkspaceSnapshotBuilder.Snapshot {
             customColorHex: customColorHex,
             finderDirectoryPath: finderDirectoryPath,
             repoBadgeAppearance: repoBadgeAppearance,
+            isDirty: isDirty,
             pullRequestRows: pullRequestRows,
             projectRows: projectRows,
             ticketRows: ticketRows,
@@ -49,6 +51,7 @@ extension SidebarWorkspaceSnapshotBuilder.Snapshot {
             latestLog: latestLog,
             progress: progress,
             compactGitBranchSummaryText: compactGitBranchSummaryText,
+            isDirty: snapshot.isDirty,
             compactDirectoryCandidates: compactDirectoryCandidates,
             compactBranchDirectoryCandidates: compactBranchDirectoryCandidates,
             branchDirectoryLines: branchDirectoryLines,

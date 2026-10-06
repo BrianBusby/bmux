@@ -15,6 +15,18 @@ extension MobileWorkspacePreview {
             previewAt: remote.previewAt.map { Date(timeIntervalSince1970: $0) },
             lastActivityAt: remote.lastActivityAt.map { Date(timeIntervalSince1970: $0) },
             hasUnread: remote.hasUnread ?? false,
+            ticketTitle: remote.ticketTitle,
+            ticketID: remote.ticketID,
+            projectTitle: remote.projectTitle,
+            workSummary: remote.workSummary,
+            pullRequestNumber: remote.pullRequestNumber,
+            pullRequestTitle: remote.pullRequestTitle,
+            pullRequestURL: remote.pullRequestURL.flatMap(URL.init(string:)),
+            ownerName: remote.ownerName,
+            ownerAvatarURL: remote.ownerAvatarURL.flatMap(URL.init(string:)),
+            branch: remote.branch,
+            isDirty: remote.isDirty,
+            lastPrompt: remote.lastPrompt,
             terminals: remote.terminals.map { terminal in
                 MobileTerminalPreview(remote: terminal)
             }

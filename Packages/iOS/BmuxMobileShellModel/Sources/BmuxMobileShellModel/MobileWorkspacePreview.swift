@@ -73,6 +73,30 @@ public struct MobileWorkspacePreview: Identifiable, Equatable, Sendable {
     /// sidebar's workspace unread badge). Drives the iMessage-style unread dot.
     /// `false` when connected to a Mac old enough not to emit it.
     public var hasUnread: Bool
+    /// Ticket title associated with the workspace, when available.
+    public var ticketTitle: String?
+    /// Ticket identifier associated with the workspace, when available.
+    public var ticketID: String?
+    /// Project title associated with the workspace, when available.
+    public var projectTitle: String?
+    /// Summary of the current work, when available.
+    public var workSummary: String?
+    /// Pull request number associated with the workspace, when available.
+    public var pullRequestNumber: Int?
+    /// Pull request title associated with the workspace, when available.
+    public var pullRequestTitle: String?
+    /// Pull request URL associated with the workspace, when available.
+    public var pullRequestURL: URL?
+    /// Pull request or ticket owner display name, when available.
+    public var ownerName: String?
+    /// Pull request or ticket owner avatar URL, when available.
+    public var ownerAvatarURL: URL?
+    /// Current branch associated with the workspace, when available.
+    public var branch: String?
+    /// Whether the workspace has uncommitted changes, when known.
+    public var isDirty: Bool?
+    /// Most recently submitted prompt, when available.
+    public var lastPrompt: String?
     /// The terminals contained in the workspace, in display order.
     public var terminals: [MobileTerminalPreview]
     /// The owning Mac's DISTINCT color index in the aggregated list, stamped by
@@ -112,6 +136,18 @@ public struct MobileWorkspacePreview: Identifiable, Equatable, Sendable {
     ///   - previewAt: When the preview's activity happened. Defaults to `nil`.
     ///   - lastActivityAt: When the workspace last had activity. Defaults to `nil`.
     ///   - hasUnread: Whether the workspace has unread activity. Defaults to `false`.
+    ///   - ticketTitle: Associated ticket title. Defaults to `nil`.
+    ///   - ticketID: Associated ticket identifier. Defaults to `nil`.
+    ///   - projectTitle: Associated project title. Defaults to `nil`.
+    ///   - workSummary: Current work summary. Defaults to `nil`.
+    ///   - pullRequestNumber: Associated pull request number. Defaults to `nil`.
+    ///   - pullRequestTitle: Associated pull request title. Defaults to `nil`.
+    ///   - pullRequestURL: Associated pull request URL. Defaults to `nil`.
+    ///   - ownerName: Associated owner display name. Defaults to `nil`.
+    ///   - ownerAvatarURL: Associated owner avatar URL. Defaults to `nil`.
+    ///   - branch: Current branch. Defaults to `nil`.
+    ///   - isDirty: Whether the workspace has uncommitted changes. Defaults to `nil`.
+    ///   - lastPrompt: Most recently submitted prompt. Defaults to `nil`.
     ///   - terminals: The terminals contained in the workspace, in display order.
     public init(
         id: ID,
@@ -125,6 +161,18 @@ public struct MobileWorkspacePreview: Identifiable, Equatable, Sendable {
         previewAt: Date? = nil,
         lastActivityAt: Date? = nil,
         hasUnread: Bool = false,
+        ticketTitle: String? = nil,
+        ticketID: String? = nil,
+        projectTitle: String? = nil,
+        workSummary: String? = nil,
+        pullRequestNumber: Int? = nil,
+        pullRequestTitle: String? = nil,
+        pullRequestURL: URL? = nil,
+        ownerName: String? = nil,
+        ownerAvatarURL: URL? = nil,
+        branch: String? = nil,
+        isDirty: Bool? = nil,
+        lastPrompt: String? = nil,
         terminals: [MobileTerminalPreview]
     ) {
         self.id = id
@@ -139,6 +187,18 @@ public struct MobileWorkspacePreview: Identifiable, Equatable, Sendable {
         self.previewAt = previewAt
         self.lastActivityAt = lastActivityAt
         self.hasUnread = hasUnread
+        self.ticketTitle = ticketTitle
+        self.ticketID = ticketID
+        self.projectTitle = projectTitle
+        self.workSummary = workSummary
+        self.pullRequestNumber = pullRequestNumber
+        self.pullRequestTitle = pullRequestTitle
+        self.pullRequestURL = pullRequestURL
+        self.ownerName = ownerName
+        self.ownerAvatarURL = ownerAvatarURL
+        self.branch = branch
+        self.isDirty = isDirty
+        self.lastPrompt = lastPrompt
         self.terminals = terminals
     }
 }

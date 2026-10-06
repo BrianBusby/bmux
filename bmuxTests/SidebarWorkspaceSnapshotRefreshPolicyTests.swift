@@ -346,6 +346,7 @@ import Testing
             latestLog: nil,
             progress: nil,
             compactGitBranchSummaryText: nil,
+            isDirty: nil,
             compactDirectoryCandidates: [],
             compactBranchDirectoryCandidates: [],
             branchDirectoryLines: [],
