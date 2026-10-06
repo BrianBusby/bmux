@@ -27,7 +27,12 @@ dom = new JSDOM(html, {
   beforeParse(window) {
     observer = new window.MutationObserver(() => {
       try {
-        if (scenario === "ordinary" && window.document.querySelector(".terminal-chat-footer")) {
+        if (scenario === "source" && calls.some(call => call.method === "terminalChat.startConnected") &&
+          window.document.querySelector(".terminal-chat-launch button")?.disabled === false) {
+          assert.equal(window.document.querySelector(".terminal-chat-footer")?.textContent, copy.chatReadOnly);
+          assert.equal(calls.filter(call => call.method === "terminalChat.startConnected").length, 1);
+          check.resolve();
+        } else if (scenario === "ordinary" && window.document.querySelector(".terminal-chat-footer")) {
           assert.equal(calls.filter(call => call.method === "terminalChat.startConnected").length, 0);
           assert.equal(window.document.querySelector(".terminal-chat-launch button")?.textContent, copy.connectedNewSession);
           check.resolve();
@@ -62,7 +67,9 @@ dom = new JSDOM(html, {
         } : { status: "unavailable" } };
         case "terminalChat.startConnected":
           if (scenario === "failed" && !retried) return { ok: false, error: { code: "unavailable", userMessage: "Unavailable" } };
-          connected = true;
+          // Native launch selects a new panel. The retained source remains
+          // unconnected when the user returns to its original Chat view.
+          connected = scenario !== "source";
           return { ok: true, value: { started: true } };
         case "terminalChat.action":
           assert.equal(request.params.sessionId, "new-thread");

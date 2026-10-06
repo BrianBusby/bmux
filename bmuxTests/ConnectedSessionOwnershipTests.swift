@@ -8,6 +8,38 @@ import Testing
 #endif
 
 @Suite @MainActor struct ConnectedSessionOwnershipTests {
+    @Test func adoptionCompletingAfterCloseCannotRestoreRetiredControlOrBinding() async throws {
+        let entered = AsyncStream<Void>.makeStream()
+        var release: CheckedContinuation<Void, Never>?
+        var bindings: [String] = []
+        let connection = CodexRPCConnection(transport: ConnectedCodexFixtureTransport())
+        try await connection.start()
+        let hosts = ConnectedCodexFixtureHost(connection: connection, beforeAdoption: {
+            await withCheckedContinuation { continuation in
+                release = continuation
+                entered.continuation.yield(())
+            }
+        })
+        let runtime = TerminalChatRuntime(reader: ConnectedCodexFixtureReader(), hosts: hosts,
+                                         bind: { thread, _, _, _ in bindings.append(thread) })
+        let workspace = UUID(), surface = UUID()
+        _ = try await runtime.prepareConnectedSession(workspaceID: workspace, surfaceID: surface, workingDirectory: "/tmp")
+        runtime.attachConnectedTerminal(surfaceID: surface, isAlive: { true })
+        let read = Task { await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface) }
+        var iterator = entered.stream.makeAsyncIterator()
+        _ = await iterator.next()
+        await runtime.closeConnectedSession(surfaceID: surface)
+        release?.resume()
+        let snapshot = await read.value
+        #expect(bindings.isEmpty)
+        #expect(snapshot["control"] == nil)
+        #expect(snapshot["sessionId"] == nil)
+        await #expect(throws: (any Error).self) {
+            try runtime.updateConnectedDraft(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", revision: UUID(), text: "Retired session")
+        }
+        entered.continuation.finish()
+    }
+
     @Test func connectionAuthoritySurvivesMissingHistoryButCannotCrossWorkspaceOrThread() async throws {
         let transport = ConnectedCodexFixtureTransport()
         let connection = CodexRPCConnection(transport: transport)

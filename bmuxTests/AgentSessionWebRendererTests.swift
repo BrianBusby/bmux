@@ -1,4 +1,5 @@
 import AppKit
+import BmuxAgentChat
 import Foundation
 import Testing
 
@@ -239,6 +240,42 @@ struct ConnectedSessionBridgeTests {
         #expect(starts == 1)
         release?.resume()
         _ = try await first.value
+        entered.continuation.finish()
+    }
+
+    @Test func pendingStartupDoesNotStealFocusFromAnotherVisiblePane() async throws {
+        let entered = AsyncStream<Void>.makeStream()
+        var release: CheckedContinuation<Void, Never>?
+        var ended: [UUID] = []
+        let connection = CodexRPCConnection(transport: ConnectedCodexFixtureTransport())
+        let host = ConnectedCodexFixtureHost(connection: connection, beforeLaunch: {
+            await withCheckedContinuation { continuation in
+                release = continuation
+                entered.continuation.yield(())
+            }
+        }, onEnd: { ended.append($0) })
+        let runtime = TerminalChatRuntime(reader: ConnectedCodexFixtureReader(), hosts: host, bind: { _, _, _, _ in })
+        let manager = TabManager(initialWorkingDirectory: "/tmp", autoWelcomeIfNeeded: false)
+        manager.terminalChatReader = runtime
+        let workspace = try #require(manager.selectedWorkspace)
+        defer { for panel in workspace.panels.values { panel.close() } }
+        let source = try #require(workspace.focusedTerminalPanel)
+        let other = try #require(workspace.newTerminalSplit(from: source.id, orientation: .horizontal, focus: false))
+        source.isChatPresentationActive = true
+        let panelCount = workspace.panels.count
+        let startup = Task { try await workspace.startConnectedCodex(from: source.id) }
+        var iterator = entered.stream.makeAsyncIterator()
+        _ = await iterator.next()
+        workspace.focusPanel(other.id)
+        #expect(workspace.focusedPanelId == other.id)
+        #expect(source.isChatPresentationActive)
+        release?.resume()
+        var rejected = false
+        do { try await startup.value } catch { rejected = true }
+        #expect(rejected)
+        #expect(workspace.panels.count == panelCount)
+        #expect(workspace.focusedPanelId == other.id)
+        #expect(ended.count == 1)
         entered.continuation.finish()
     }
 
