@@ -98,6 +98,10 @@ struct SidebarWorkspaceSnapshotBuilder {
         let repoBadgeAppearance: WorkspaceRepoBadgeAppearance?
         let mediaActivity: BrowserMediaActivity
         let hasActiveAIWork: Bool
+
+        var cardDescription: String? {
+            customDescription
+        }
     }
 
     static func pullRequestDisplays(
