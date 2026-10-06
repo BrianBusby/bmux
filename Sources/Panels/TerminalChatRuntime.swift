@@ -116,6 +116,9 @@ final class TerminalChatRuntime: TerminalChatConnecting {
                 // Reserve the surface across that await so another read cannot
                 // disconnect the replacement that this owner is accepting.
                 defer { reconnectingSurfaces.remove(surfaceID) }
+                guard let current = connections[surfaceID], current.workspaceID == workspaceID,
+                      current.host.connection === host.connection, current.host.threadID == threadID,
+                      terminalLiveness[surfaceID]?() == true else { return snapshot }
                 if let replacement = try? await hosts.reconnect(host) {
                     guard let current = connections[surfaceID], current.workspaceID == workspaceID,
                           current.host.connection === host.connection, current.host.threadID == threadID,

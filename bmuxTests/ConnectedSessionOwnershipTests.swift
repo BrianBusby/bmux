@@ -82,7 +82,7 @@ import Testing
         let snapshot = await read.value
         #expect(snapshot["control"] == nil)
         #expect(snapshot["sessionId"] == nil)
-        await #expect(throws: (any Error).self) {
+        #expect(throws: (any Error).self) {
             try runtime.updateConnectedDraft(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", revision: UUID(), text: "Retired session")
         }
         let refreshed = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
@@ -117,7 +117,7 @@ import Testing
         #expect(bindings.isEmpty)
         #expect(snapshot["control"] == nil)
         #expect(snapshot["sessionId"] == nil)
-        await #expect(throws: (any Error).self) {
+        #expect(throws: (any Error).self) {
             try runtime.updateConnectedDraft(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", revision: UUID(), text: "Retired session")
         }
         entered.continuation.finish()
