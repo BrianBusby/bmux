@@ -101,17 +101,24 @@ final class WorkspaceDisplayCurrentStateStore {
         do {
             let response = try await client.workspaceCodingAgentSessionAssociation(.init(workspaceID: stableWorkspaceID.uuidString))
             if let association = response.association,
+               association.sourcePath != "display",
                UUID(uuidString: association.workspaceID) == stableWorkspaceID,
                let worktreeID = association.worktreeID, let directory = association.currentDirectory {
                 let expectedSession = display.lastSubmittedPromptSessionID?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
                 guard expectedSession == nil || [association.sessionID, association.canonicalSessionID, association.rawSessionID].contains(expectedSession) else {
                     return WorkspaceDisplayCurrentStateSnapshot(display)
                 }
-                let context = try await client.currentContext(.init(
-                    repositoryPath: directory, activeSessionLimit: 0, dirtyFileLimit: 0,
-                    unattributedChangeLimit: 0, recentCheckpointLimit: 0, validationRunLimit: 0, conflictLimit: 0
-                ))
-                if context.worktree?.id == worktreeID { agentWorktree = context.worktree }
+                // Session CWD can be below the Git root; only PE's associated ID can confirm a match.
+                var path = directory
+                while !path.isEmpty, !Task.isCancelled {
+                    let context = try await client.currentContext(.init(
+                        repositoryPath: path, activeSessionLimit: 0, dirtyFileLimit: 0,
+                        unattributedChangeLimit: 0, recentCheckpointLimit: 0, validationRunLimit: 0, conflictLimit: 0
+                    ))
+                    if context.worktree?.id == worktreeID { agentWorktree = context.worktree; break }
+                    guard path != "/", let separator = path.lastIndex(of: "/") else { break }
+                    path = separator == path.startIndex ? "/" : String(path[..<separator])
+                }
             }
         } catch {
             StartupBreadcrumbLog.append("workProvenance.displayCurrentState.agentWorktreeReadFailed", fields: [
