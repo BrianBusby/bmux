@@ -20,7 +20,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Active Implementation
 
-- Shared-session Chat and permanent Terminal (`shared_session_chat`) - maturity: active; status: active; selection: current; owner: Bmux
+- None.
 
 ### Selected Next
 
@@ -646,11 +646,10 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Execution notes: PR #49 is factual-only Swift/native UI and should not be counted as satisfying React Smart Session or clickable semantic explanation behavior.
           Evidence: BrianBusby/bmux@6fe54d5411fe, BrianBusby/bmux@1c1281d7b58d, BrianBusby/bmux#49 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Records the completed bmux factual Session view work as a prerequisite PE factual-projection consumer. The native view is useful inspection/debug scaffolding and data-access foundation, but the intended user-facing Smart Session surface is React and remains separate from the React Terminal transcript/live interaction surface.
-        - **Shared-session Chat and permanent Terminal** (`shared_session_chat`) - slice; status: active; owner: Bmux; repositories: Bmux; concept: execution telemetry; layer: consumer presentation; execution: current / Bmux; parallelism: serial; delivery: draft; acceptance: under observation; maturity: active
+        - **Shared-session Chat and permanent Terminal** (`shared_session_chat`) - slice; status: implemented; owner: Bmux; repositories: Bmux; concept: execution telemetry; layer: consumer presentation; execution: complete / Bmux; parallelism: serial; delivery: merged; acceptance: under observation; maturity: validated
           Worktree required: true
-          Active assignment: worktree: `/Users/brianbusby/repos/.bmux-worktrees/shared-session-chat`; branch: `connected-session-controls`; agent: `codex`
           Execution notes: User authorized opt-in newly connected Codex sessions after the shared-host proof. Existing ordinary CLI sessions remain read-only in Chat. Queue delivery and expected-turn steering passed live protocol verification with the original TUI. Native UI acceptance remains blocked by cgWindowNotFound; the existing dogfood build remains untouched.
-          Evidence: BrianBusby/bmux#116 by [BrianBusby](https://github.com/BrianBusby)
+          Evidence: BrianBusby/bmux@afbc2082d2e8, BrianBusby/bmux#116 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Preserve the original PTY and reuse transcript observation for Chat. Ordinary Codex 0.154.0 attachment via app-server proxy failed because no control socket exists; submit, steer, queue, interrupt, approvals, questions and settings remain gated. See docs/product/shared-session-control-decision.md. Read-only native UI, late output, view continuity and raw-terminal interruption were exercised; A separate new shared-host TUI probe accepted a second-client prompt but failed expected-turn interruption; an old turn ID interrupted a newer turn in Codex 0.154.0. Opt-in new shared-host queue and expected-turn steering are implemented with live native transport proof and automated ownership/delivery tests; corrected launch UI and broader recovery acceptance remain open. Shared-host interrupt remains disabled. Codex turn states use explicit provider events. Older-history paging, broader recovery acceptance and shared controls remain open. This does not complete React Chat productization or three-view control acceptance.
         - **React Chat live interaction productization** (`react_terminal_productization`) - slice; status: planned; owner: Bmux; repositories: Bmux; concept: execution telemetry; layer: consumer presentation; execution: planned / Bmux; parallelism: safe; delivery: proposed; acceptance: proposed; maturity: captured
           Enables: `three_view_session_navigation`
@@ -963,9 +962,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.
 
-| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Shared-session Chat and permanent Terminal (`shared_session_chat`) | serial | /Users/brianbusby/repos/.bmux-worktrees/shared-session-chat | connected-session-controls | codex | None | None | single active assignment |
+- Active implementation assignments: none selected.
 
 ### Dependency-Ready Preflight
 

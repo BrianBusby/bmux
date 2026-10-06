@@ -24,7 +24,7 @@ Regenerate with: ./scripts/project-docs generate
 
 ### Active Implementation
 
-- Shared-session Chat and permanent Terminal (`shared_session_chat`) - maturity: active; status: active; selection: current; owner: Bmux
+- None.
 
 ### Selected Next
 
