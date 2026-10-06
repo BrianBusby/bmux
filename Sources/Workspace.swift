@@ -5394,13 +5394,11 @@ final class Workspace: Identifiable, ObservableObject {
 
     @discardableResult
     func recordSubmittedMessage(_ message: String?, sessionID: String? = nil) -> Bool {
-        guard let preview = Self.conversationMessagePreview(from: message) else { return false }
-        latestSubmittedPromptMetadata = WorkspaceSubmittedPromptMetadata(
-            message: preview,
-            sessionID: sessionID,
-            submittedAt: Date()
-        )
-        _ = recordConversationMessage(preview)
+        guard let metadata = WorkspaceSubmittedPromptMetadata(
+            message: message, sessionID: sessionID, submittedAt: Date()
+        ) else { return false }
+        latestSubmittedPromptMetadata = metadata
+        _ = recordConversationMessage(metadata.message)
         markWorkspaceDisplayFieldsKnown(["last_submitted_prompt", "last_submitted_prompt_session_id"]); postWorkspaceDisplayMetadataDidChange()
         return true
     }
