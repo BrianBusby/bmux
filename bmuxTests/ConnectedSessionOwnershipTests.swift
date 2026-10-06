@@ -8,6 +8,54 @@ import Testing
 #endif
 
 @Suite @MainActor struct ConnectedSessionOwnershipTests {
+    @Test func overlappingSnapshotReadsKeepOneReconnectAndUsableControl() async throws {
+        let entered = AsyncStream<Void>.makeStream()
+        var release: CheckedContinuation<Void, Never>?
+        var reconnects = 0
+        let replacementTransport = ConnectedCodexFixtureTransport()
+        let connection = CodexRPCConnection(transport: ConnectedCodexFixtureTransport())
+        try await connection.start()
+        let hosts = ConnectedCodexFixtureHost(connection: connection, replacementForReconnect: { host in
+            reconnects += 1
+            if reconnects == 1 {
+                await withCheckedContinuation { continuation in
+                    release = continuation
+                    entered.continuation.yield(())
+                }
+            }
+            let replacement = CodexRPCConnection(transport: reconnects == 1 ? replacementTransport : ConnectedCodexFixtureTransport())
+            try await replacement.start()
+            // Match the real host service: rebinding disconnects the previous
+            // connection on the same retained control actor before returning.
+            await host.control?.reconnect(using: replacement)
+            var result = host
+            result.connection = replacement
+            return result
+        })
+        let runtime = TerminalChatRuntime(reader: ConnectedCodexFixtureReader(), hosts: hosts,
+                                         bind: { _, _, _, _ in })
+        let workspace = UUID(), surface = UUID()
+        _ = try await runtime.prepareConnectedSession(workspaceID: workspace, surfaceID: surface, workingDirectory: "/tmp")
+        runtime.attachConnectedTerminal(surfaceID: surface, isAlive: { true })
+        _ = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        await connection.disconnect()
+        let firstRead = Task { await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface) }
+        var iterator = entered.stream.makeAsyncIterator()
+        _ = await iterator.next()
+        _ = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        #expect(reconnects == 1)
+        release?.resume()
+        _ = await firstRead.value
+        let revision = UUID()
+        try runtime.updateConnectedDraft(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", revision: revision, text: "Continue the inspection")
+        let result = try? await runtime.performConnectedAction(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", requestID: UUID(), draftRevision: revision, text: "Continue the inspection", expectedTurnID: nil)
+        #expect(result?["delivery"] as? String == "accepted")
+        #expect(await replacementTransport.mutationThreads == ["thread-a"])
+        #expect(reconnects == 1)
+        await runtime.closeConnectedSession(surfaceID: surface)
+        entered.continuation.finish()
+    }
+
     @Test func reconnectCompletingAfterCloseCannotRestoreRetiredControl() async throws {
         let entered = AsyncStream<Void>.makeStream()
         var release: CheckedContinuation<Void, Never>?

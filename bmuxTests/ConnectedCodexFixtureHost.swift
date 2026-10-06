@@ -11,17 +11,20 @@ struct ConnectedCodexFixtureHost: ConnectedCodexHosting {
     let beforeLaunch: @MainActor @Sendable () async -> Void
     let beforeAdoption: @MainActor @Sendable () async -> Void
     let beforeReconnect: @MainActor @Sendable () async -> Void
+    let replacementForReconnect: (@MainActor @Sendable (ConnectedCodexHost) async throws -> ConnectedCodexHost)?
     let onEnd: @MainActor @Sendable (UUID) async -> Void
 
     init(connection: CodexRPCConnection,
          beforeLaunch: @escaping @MainActor @Sendable () async -> Void = {},
          beforeAdoption: @escaping @MainActor @Sendable () async -> Void = {},
          beforeReconnect: @escaping @MainActor @Sendable () async -> Void = {},
+         replacementForReconnect: (@MainActor @Sendable (ConnectedCodexHost) async throws -> ConnectedCodexHost)? = nil,
          onEnd: @escaping @MainActor @Sendable (UUID) async -> Void = { _ in }) {
         self.connection = connection
         self.beforeLaunch = beforeLaunch
         self.beforeAdoption = beforeAdoption
         self.beforeReconnect = beforeReconnect
+        self.replacementForReconnect = replacementForReconnect
         self.onEnd = onEnd
     }
     func launch(surfaceID: UUID, workingDirectory: String) async throws -> ConnectedCodexHost {
@@ -39,6 +42,7 @@ struct ConnectedCodexFixtureHost: ConnectedCodexHosting {
     }
     func reconnect(_ host: ConnectedCodexHost) async throws -> ConnectedCodexHost {
         await beforeReconnect()
+        if let replacementForReconnect { return try await replacementForReconnect(host) }
         return host
     }
     func endOwnedHost(surfaceID: UUID) async { await onEnd(surfaceID) }
