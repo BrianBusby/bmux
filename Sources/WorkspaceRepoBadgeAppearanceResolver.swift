@@ -61,13 +61,10 @@ struct WorkspaceRepoBadgeAppearanceResolver {
     }
 
     mutating func appearance(repoRootPath: String?) -> WorkspaceRepoBadgeAppearance? {
-        guard let normalizedPath = Self.normalizedRepoRootPath(repoRootPath) else {
+        guard let normalizedPath = Self.normalizedRepoRootPath(repoRootPath),
+              let repoName = Self.repositoryName(repoRootPath: normalizedPath) else {
             return nil
         }
-        let repoName = URL(fileURLWithPath: normalizedPath, isDirectory: true)
-            .lastPathComponent
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !repoName.isEmpty else { return nil }
 
         let colorHex: String
         if let existingColor = colorsByRepoRootPath[normalizedPath] {
@@ -78,6 +75,14 @@ struct WorkspaceRepoBadgeAppearanceResolver {
         }
 
         return WorkspaceRepoBadgeAppearance(name: repoName, colorHex: colorHex)
+    }
+
+    static func repositoryName(repoRootPath: String?) -> String? {
+        guard let normalizedPath = normalizedRepoRootPath(repoRootPath) else { return nil }
+        let name = URL(fileURLWithPath: normalizedPath, isDirectory: true)
+            .lastPathComponent
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return name.isEmpty ? nil : name
     }
 
     @MainActor static func sessionAppearance(repoRootPath: String?) -> WorkspaceRepoBadgeAppearance? {

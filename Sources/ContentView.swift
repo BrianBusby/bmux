@@ -2597,26 +2597,27 @@ struct ContentView: View {
                         let isSelected = workspace.id == tabManager.selectedTabId
                         let provenance = tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: workspace)
                         VStack(alignment: .leading, spacing: 12) {
-                            HStack(alignment: .top, spacing: 8) {
+                            WorkspaceCardHeader(
+                                repositoryName: WorkspaceRepoBadgeAppearanceResolver.repositoryName(
+                                    repoRootPath: workspace.extensionSidebarProjectRootPath
+                                ),
+                                repositoryFont: .system(size: 10, weight: .medium),
+                                closeIcon: {
+                                    Image(systemName: "xmark").font(.system(size: 14, weight: .medium))
+                                },
+                                closeButtonColor: Color.bmuxTextSecondary,
+                                closeButtonSize: CGSize(width: 20, height: 20),
+                                canCloseWorkspace: tabManager.tabs.count > 1,
+                                showsCloseButton: true,
+                                closeButtonTooltip: String(localized: "sidebar.closeWorkspace.tooltip", defaultValue: "Close Workspace"),
+                                onClose: { tabManager.closeWorkspaceWithConfirmation(workspace) }
+                            ) {
                                 Text(provenance?.ticketLinks.first?.title ?? provenance?.title ?? workspace.title)
                                     .font(.system(size: 16, weight: .bold))
                                     .foregroundStyle(Color.bmuxTextPrimary)
                                     .lineLimit(nil)
                                     .fixedSize(horizontal: false, vertical: true)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-
-                                if tabManager.tabs.count > 1 {
-                                    Button {
-                                        tabManager.closeWorkspaceWithConfirmation(workspace)
-                                    } label: {
-                                        Image(systemName: "xmark")
-                                            .font(.system(size: 14, weight: .medium))
-                                            .foregroundStyle(Color.bmuxTextSecondary)
-                                            .frame(width: 20, height: 20)
-                                    }
-                                    .buttonStyle(.plain)
-                                    .help(String(localized: "sidebar.closeWorkspace.tooltip", defaultValue: "Close Workspace"))
-                                }
                             }
 
                             bmuxReferenceWorkspaceLinkRows(for: workspace)
@@ -15580,7 +15581,19 @@ struct TabItemView: View, Equatable {
         }
 
         VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 8) {
+            WorkspaceCardHeader(
+                repositoryName: snapshot.repoBadgeAppearance?.name,
+                repositoryFont: magnifiedFont(scaledFontSize(10), weight: .medium),
+                closeIcon: {
+                    BmuxSystemSymbolImage(magnified: "xmark", pointSize: scaledFontSize(14), weight: .medium)
+                },
+                closeButtonColor: activeSecondaryColor(0.8),
+                closeButtonSize: CGSize(width: closeButtonWidth, height: closeButtonHitSize),
+                canCloseWorkspace: canCloseWorkspace,
+                showsCloseButton: showCloseButton,
+                closeButtonTooltip: closeButtonTooltip,
+                onClose: { tabManager.closeWorkspaceWithConfirmation(tab) }
+            ) {
                 if isEditing {
                     SidebarInlineRenameField(
                         initialText: renameDraft,
@@ -15608,21 +15621,6 @@ struct TabItemView: View, Equatable {
                         .lineLimit(nil)
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                if canCloseWorkspace {
-                    Button {
-                        tabManager.closeWorkspaceWithConfirmation(tab)
-                    } label: {
-                        BmuxSystemSymbolImage(magnified: "xmark", pointSize: scaledFontSize(14), weight: .medium)
-                            .foregroundColor(activeSecondaryColor(0.8))
-                            .frame(width: closeButtonWidth, height: closeButtonHitSize)
-                    }
-                    .buttonStyle(.plain)
-                    .safeHelp(closeButtonTooltip)
-                    .opacity(showCloseButton ? 1 : 0)
-                    .allowsHitTesting(showCloseButton)
-                    .accessibilityHidden(!showCloseButton)
                 }
             }
 
