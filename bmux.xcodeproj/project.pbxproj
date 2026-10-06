@@ -625,6 +625,7 @@
 		BF1BBD1CAA0B4C6085D912C4 /* ConnectedCodexHosting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EE4AC8AFBF0436E9471A73F /* ConnectedCodexHosting.swift */; };
 		BC188B04D3614140863909D9 /* ConnectedCodexHostService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37B74CF230B463F81761CF2 /* ConnectedCodexHostService.swift */; };
 		3DB9FEEA78FC494C986CE1F3 /* ConnectedCodexLaunchConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C275C4BB56AB48B7B607A01E /* ConnectedCodexLaunchConfiguration.swift */; };
+		D53100000000000000000002 /* ConnectedPromptResourceProjectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D53100000000000000000001 /* ConnectedPromptResourceProjectionTests.swift */; };
 		9AA539FE229D4351A3B477C9 /* ConnectedSessionOwnershipTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57501CAD10A841D3A645FE86 /* ConnectedSessionOwnershipTests.swift */; };
 		C0DE43000000000000000005 /* ContentView+AgentChatCommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE43000000000000000006 /* ContentView+AgentChatCommandPalette.swift */; };
 		C0DEA7710000000000000001 /* ContentView+AuthCommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEA7710000000000000002 /* ContentView+AuthCommandPalette.swift */; };
@@ -2455,6 +2456,7 @@
 		7EE4AC8AFBF0436E9471A73F /* ConnectedCodexHosting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/ConnectedCodexHosting.swift"; sourceTree = "<group>"; };
 		F37B74CF230B463F81761CF2 /* ConnectedCodexHostService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/ConnectedCodexHostService.swift"; sourceTree = "<group>"; };
 		C275C4BB56AB48B7B607A01E /* ConnectedCodexLaunchConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/ConnectedCodexLaunchConfiguration.swift"; sourceTree = "<group>"; };
+		D53100000000000000000001 /* ConnectedPromptResourceProjectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectedPromptResourceProjectionTests.swift; sourceTree = "<group>"; };
 		57501CAD10A841D3A645FE86 /* ConnectedSessionOwnershipTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConnectedSessionOwnershipTests.swift"; sourceTree = "<group>"; };
 		C0DE43000000000000000006 /* ContentView+AgentChatCommandPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+AgentChatCommandPalette.swift"; sourceTree = "<group>"; };
 		C0DEA7710000000000000002 /* ContentView+AuthCommandPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+AuthCommandPalette.swift"; sourceTree = "<group>"; };
@@ -5043,6 +5045,7 @@
 				5436ABEAD82F4817B6437058 /* ConnectedCodexFixtureHost.swift */,
 				78ED69FC9B7D45F682700F4E /* ConnectedCodexFixtureReader.swift */,
 				57501CAD10A841D3A645FE86 /* ConnectedSessionOwnershipTests.swift */,
+				D53100000000000000000001 /* ConnectedPromptResourceProjectionTests.swift */,
 				A9E050000000000000000001 /* AgentSessionWebRendererTests.swift */,
 				B9104AF3EF5C42D38F0EF5DE /* ConfiguredCodexLaunchTests.swift */,
 				A9E040000000000000000001 /* CodexAppServerSessionTests.swift */,
@@ -7430,6 +7433,7 @@
 				17F0C79216944827ABE256BF /* ConnectedCodexFixtureHost.swift in Sources */,
 				32FCFC7E0B1F419B9C42F2FC /* ConnectedCodexFixtureReader.swift in Sources */,
 				3EB014A178A44153B2AFBA25 /* ConnectedCodexFixtureTransport.swift in Sources */,
+				D53100000000000000000002 /* ConnectedPromptResourceProjectionTests.swift in Sources */,
 				9AA539FE229D4351A3B477C9 /* ConnectedSessionOwnershipTests.swift in Sources */,
 				C65930010000000000000002 /* CrashDiagnosticSessionPolicyTests.swift in Sources */,
 				DEBDADADADADADADAD000003 /* DebugDogfoodCredentialResolverTests.swift in Sources */,
