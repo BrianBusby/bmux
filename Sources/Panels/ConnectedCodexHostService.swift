@@ -8,12 +8,15 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
     private let executable: URL
     private let root: URL
     private let environment: [String: String]
+    private let connect: @Sendable (URL, String) async throws -> CodexRPCConnection
     private var processes: [UUID: Process] = [:]
 
-    init(executable: URL, root: URL, environment: [String: String]) {
+    init(executable: URL, root: URL, environment: [String: String],
+         connect: @escaping @Sendable (URL, String) async throws -> CodexRPCConnection = ConnectedCodexHostService.authenticatedConnection) {
         self.executable = executable
         self.root = root
         self.environment = environment
+        self.connect = connect
     }
 
     func launch(surfaceID: UUID, workingDirectory: String) async throws -> ConnectedCodexHost {
@@ -70,9 +73,7 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
             // Drain future diagnostics without retaining or logging provider output.
             output.fileHandleForReading.readabilityHandler = { handle in _ = handle.availableData }
             guard let endpoint, process.isRunning else { throw CodexControlError.disconnected }
-            try await verifyAuthenticationRequired(endpoint)
-            let connection = CodexRPCConnection(transport: try CodexLoopbackWebSocket(endpoint: endpoint, token: token))
-            try await connection.start()
+            let connection = try await connect(endpoint, token)
             // The credential never appears in argv or a renderer bridge payload.
             let shellCommand = "BMUX_CONNECTED_CODEX_TOKEN=$(cat \(Self.quote(tokenURL.path))) exec \(Self.quote(executable.path)) --remote \(Self.quote(endpoint.absoluteString)) --remote-auth-token-env BMUX_CONNECTED_CODEX_TOKEN"
             let command = "/bin/sh -c " + Self.quote(shellCommand)
@@ -131,7 +132,14 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
         try? FileManager.default.removeItem(at: root.appendingPathComponent(surfaceID.uuidString))
     }
 
-    private func verifyAuthenticationRequired(_ endpoint: URL) async throws {
+    private static func authenticatedConnection(_ endpoint: URL, token: String) async throws -> CodexRPCConnection {
+        try await verifyAuthenticationRequired(endpoint)
+        let connection = CodexRPCConnection(transport: try CodexLoopbackWebSocket(endpoint: endpoint, token: token))
+        try await connection.start()
+        return connection
+    }
+
+    private static func verifyAuthenticationRequired(_ endpoint: URL) async throws {
         var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false)!
         components.scheme = "http"
         var request = URLRequest(url: components.url!, timeoutInterval: 5)
