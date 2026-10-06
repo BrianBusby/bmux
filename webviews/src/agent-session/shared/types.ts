@@ -75,6 +75,7 @@ export type AgentSessionCopy = {
   chatStale?: string;
   chatUnavailable?: string;
   chatInteract?: string;
+  chatConnected?: string;
   chatConversation?: string;
   chatPartial?: string;
   chatReadOnly?: string;

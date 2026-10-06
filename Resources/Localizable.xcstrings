@@ -919,6 +919,23 @@
         }
       }
     },
+    "agentSession.chat.chatConnected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected to Codex"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex に接続済み"
+          }
+        }
+      }
+    },
     "agentSession.chat.chatConversation": {
       "extractionState": "manual",
       "localizations": {

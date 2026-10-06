@@ -57,8 +57,13 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
   const turnStatus = state.status === "observed" && state.observedTurn ? {
     working: copy.runningStatus, completed: copy.chatCompleted, interrupted: copy.chatInterrupted,
   }[state.observedTurn.state] : undefined;
+  // An owned session can be connected before its first transcript exists.
+  const connectedWithoutMessages = (state.status === "unavailable" || state.status === "observed") &&
+    state.messages.length === 0 && canUseConnectedControl(state.control, state.sessionId);
+  const statusLabel = state.reason === "ambiguous" ? copy.chatAmbiguous :
+    turnStatus ?? (connectedWithoutMessages ? copy.chatConnected ?? copy.chatConversation : statuses[state.status]);
   return <section className="terminal-chat">
-    <header className="terminal-chat-header"><output>{state.reason === "ambiguous" ? copy.chatAmbiguous : turnStatus ?? statuses[state.status]}</output>
+    <header className="terminal-chat-header"><output>{statusLabel}</output>
     </header>
     <section className="terminal-chat-history" ref={scroll} tabIndex={0} aria-label={copy.chatConversation}
       onScroll={() => { const node = scroll.current; if (node) following.current = node.scrollHeight - node.scrollTop - node.clientHeight < 48; }}>
