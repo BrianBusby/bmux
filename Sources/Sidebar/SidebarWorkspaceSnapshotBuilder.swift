@@ -100,7 +100,14 @@ struct SidebarWorkspaceSnapshotBuilder {
         let hasActiveAIWork: Bool
 
         var cardDescription: String? {
-            customDescription
+            guard presentationKey.showsWorkspaceDescription,
+                  let ticketTitle,
+                  !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  title.trimmingCharacters(in: .whitespacesAndNewlines)
+                    != ticketTitle.trimmingCharacters(in: .whitespacesAndNewlines) else {
+                return nil
+            }
+            return title
         }
     }
 

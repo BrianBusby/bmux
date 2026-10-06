@@ -13749,15 +13749,15 @@ struct TabItemView: View, Equatable {
                     VStack(alignment: .leading, spacing: 1) {
                         if let ticketTitle = workspaceSnapshot.ticketTitle {
                             SidebarWorkspaceTicketTitleText(title: ticketTitle, font: magnifiedFont(scaledFontSize(13.5), weight: .bold), color: activePrimaryTextColor, lineLimit: settings.wrapsWorkspaceTitles ? 2 : 1)
+                        } else {
+                            Text(workspaceSnapshot.title)
+                                .font(magnifiedFont(scaledFontSize(12.5), weight: titleFontWeight))
+                                .foregroundColor(activePrimaryTextColor)
+                                .lineLimit(titleLineLimit)
+                                .truncationMode(.tail)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .multilineTextAlignment(.leading)
                         }
-
-                        Text(workspaceSnapshot.title)
-                            .font(magnifiedFont(scaledFontSize(12.5), weight: titleFontWeight))
-                            .foregroundColor(activePrimaryTextColor)
-                            .lineLimit(titleLineLimit)
-                            .truncationMode(.tail)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .multilineTextAlignment(.leading)
 
                         if let repoBadgeAppearance = workspaceSnapshot.repoBadgeAppearance {
                             Text(repoBadgeAppearance.name)
