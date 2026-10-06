@@ -3,6 +3,7 @@ import Foundation
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
 import Testing
+import BMUXAgentLaunch
 
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
@@ -294,6 +295,30 @@ import Testing
         let pending = try #require(await store.refreshedSnapshot(stableWorkspaceID: stableID))
         #expect(pending.lastSubmittedPromptSessionID == "new-roof-agent-session")
         #expect(Self.referenceCard(workspace: workspace, provenance: pending).branch == nil)
+    }
+
+    @MainActor @Test(arguments: ["socket", "codex", "claude"])
+    func fullPromptSurvivesSharedSubmitPathAndCardProjection(source: String) throws {
+        let manager = TabManager()
+        let workspace = manager.tabs[0]
+        let prompt = String(repeating: "Review the gutter installation photographs and the flashing around the chimney. ", count: 5)
+            + "Keep the original inspection notes alongside the final recommendation."
+        let submitted: String?
+        if source == "socket" {
+            submitted = prompt
+        } else {
+            submitted = WorkstreamEvent(
+                sessionId: "roof-agent-session", hookEventName: .userPromptSubmit, source: source,
+                context: WorkstreamContext(lastUserMessage: prompt)
+            ).submittedPromptMessage
+        }
+        let outcome = try #require(manager.handlePromptSubmit(
+            workspaceId: workspace.id, message: submitted, iMessageModeEnabled: false
+        ))
+        #expect(outcome.messageRecorded)
+        #expect(workspace.latestSubmittedMessage == prompt)
+        #expect(Self.referenceCard(workspace: workspace, provenance: nil).prompt == prompt)
+        #expect(workspace.latestConversationMessage == Workspace.conversationMessagePreview(from: prompt))
     }
 
     private struct CardGitInspector: WorkProvenanceGitInspecting {
