@@ -16,6 +16,7 @@ final class TerminalChatRuntime: TerminalChatConnecting {
     private var submittedDraftRevisions: [UUID: UUID] = [:]
     private var terminalLiveness: [UUID: @MainActor () -> Bool] = [:]
     private var connections: [UUID: (workspaceID: UUID, directory: String, host: ConnectedCodexHost)] = [:]
+    private var reconnectingSurfaces: Set<UUID> = []
 
     init(reader: any TerminalChatReading, hosts: any ConnectedCodexHosting,
          bind: @escaping (String, UUID, UUID, String) -> Void) {
@@ -110,14 +111,20 @@ final class TerminalChatRuntime: TerminalChatConnecting {
                 snapshot["status"] = "observed"
             }
         } catch {
-            if terminalLiveness[surfaceID]?() == true, let replacement = try? await hosts.reconnect(host) {
-                guard let current = connections[surfaceID], current.workspaceID == workspaceID,
-                      current.host.connection === host.connection, current.host.threadID == threadID,
-                      terminalLiveness[surfaceID]?() == true else {
-                    await replacement.connection.disconnect()
-                    return snapshot
+            if terminalLiveness[surfaceID]?() == true, reconnectingSurfaces.insert(surfaceID).inserted {
+                // Reconnect rebinds the retained control actor before returning.
+                // Reserve the surface across that await so another read cannot
+                // disconnect the replacement that this owner is accepting.
+                defer { reconnectingSurfaces.remove(surfaceID) }
+                if let replacement = try? await hosts.reconnect(host) {
+                    guard let current = connections[surfaceID], current.workspaceID == workspaceID,
+                          current.host.connection === host.connection, current.host.threadID == threadID,
+                          terminalLiveness[surfaceID]?() == true else {
+                        await replacement.connection.disconnect()
+                        return snapshot
+                    }
+                    connections[surfaceID] = (workspaceID, entry.directory, replacement)
                 }
-                connections[surfaceID] = (workspaceID, entry.directory, replacement)
             }
         }
         let available = control["status"] as? String == "connected"

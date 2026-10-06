@@ -400,13 +400,16 @@ the source panel closes its prepared host instead of creating a late focused
 terminal. Thread adoption and reconnect also recheck the same connection owner
 and terminal liveness after their provider awaits; a closed owner cannot be
 republished. A late reconnect closes its replacement connection instead.
+Only one reconnect may rebind a terminal's retained control actor at a time;
+overlapping reads wait for the next refresh rather than launching a second one.
 
 Regression coverage exercises actual native host teardown/transfer and the
 bundled React resource for fresh startup, ordinary-session fallback, first
 connected submission, and failed-start retry. Native bridge tests cover
 single-flight startup, one automatic attempt, hidden Chat, existing
 thread/control ownership, delayed launch after same-workspace pane navigation,
-and delayed adoption or reconnect after close. Returning to the original source
+delayed adoption or reconnect after close, and overlapping reconnect reads
+followed by an accepted action. Returning to the original source
 shell shows its actual read-only state rather than an obsolete startup
 indicator. Native dogfood and broader recovery remain under observation; this
 follow-up does not assert ordinary attachment or enable structured interruption.
