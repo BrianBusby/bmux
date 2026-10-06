@@ -129,8 +129,12 @@ struct SidebarWorkspaceSnapshotBuilder {
         }
 
         var cardDescription: String? {
-            let description = customDescription?.trimmingCharacters(in: .whitespacesAndNewlines)
-            return description.flatMap { $0.isEmpty ? nil : $0 }
+            let workspaceTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !workspaceTitle.isEmpty,
+                  workspaceTitle != cardHeadingTitle.trimmingCharacters(in: .whitespacesAndNewlines) else {
+                return nil
+            }
+            return title
         }
 
         let presentationKey: PresentationKey
