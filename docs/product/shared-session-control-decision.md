@@ -432,5 +432,7 @@ still gate submission. Chat removes Interact in Terminal and Send buttons from
 both bundled React consumers; Terminal remains available through the native tab.
 Native command regression tests use an injected authenticated connection and a
 launched isolated CLI fixture. Bundled keyboard tests execute the actual HTML
-resource rather than calling React handlers directly. Native click/focus and
-first-prompt dogfood remain unverified by GUI automation.
+resource rather than calling React handlers directly. Native fresh-workspace Chat startup, Shift+Enter, Enter delivery, completed
+ChatGPT response with the catalog-default model at inherited xhigh effort,
+Terminal click/typing and return to the same conversation were verified in
+build 698. Broader recovery, light/narrow layouts and user dogfood remain open.

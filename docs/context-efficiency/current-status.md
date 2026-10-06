@@ -29,13 +29,15 @@ owning native workspace title, assigned color, source-supported activity, and
 all known PE-backed ticket, pull-request, project, and owner links. Token
 attribution and curated learning records remain unsupported data dependencies.
 A tagged build is reproducible with the pinned sources plus the local
-Ghostty/Bonsplit cache workaround. Current-build CUA capture remains
-unavailable: exact tagged-app attachment returns `cgWindowNotFound`, shell
-`screencapture` lacks Screen Recording authorization, and a ScreenCaptureKit
-attempt aborts in `CGS_REQUIRE_INIT`. The supplied build-612 Terminal screenshot
-is before-state evidence; the obsolete shared perimeter is now removed in
-source. Dark/light, narrow, Focus, and populated-history states remain visually
-unverified.
+Ghostty/Bonsplit cache workaround. Earlier tagged-app CUA capture returned
+`cgWindowNotFound`; shell `screencapture` lacked Screen Recording authorization
+and ScreenCaptureKit aborted in `CGS_REQUIRE_INIT`. Native inspection worked in
+Chat build 698: fresh-workspace Chat startup, Shift+Enter, Enter delivery and a
+completed ChatGPT response at the fallback model with inherited xhigh effort
+were verified. Terminal accepted click/typing after Chat, and Chat retained the
+same conversation on return. Light, narrow, Focus and broader recovery remain
+unverified. The supplied build-612 screenshot remains before-state evidence for
+the removed shared perimeter.
 
 The user-selected implementation is `shared_session_chat`, tracked in the root
 manifests. See [the shared-session control decision](../product/shared-session-control-decision.md)
