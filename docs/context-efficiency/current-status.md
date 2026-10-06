@@ -47,8 +47,13 @@ session instead of an inferred attachment. Renderer visibility owns Terminal
 focus eligibility, including retained WebKit host transfers. Startup is guarded
 against duplicate requests and late completion after navigation or source-panel
 closure. Failed startup offers an explicit retry; provider actions are never
-blindly resent. Queue and expected-turn steering retain their verified native
-transport boundary. Ordinary attachment, structured interruption, and broader
+blindly resent. New ChatGPT startup checks the connected client catalog and uses its default
+only when the saved model is unavailable; valid hidden models and custom/API
+providers retain their configuration. This writes no global configuration.
+Chat has no Interact in Terminal or Send buttons. Enter queues a prompt;
+Shift+Enter, composition, pending delivery and uncertain delivery retain their
+guards. Both bundled React consumers use the same composer. Queue and
+expected-turn steering retain their verified native transport boundary. Ordinary attachment, structured interruption, and broader
 recovery acceptance remain open. Do not rebuild a currently used tag; use a new
 isolated build for this slice. Process Integrity remains the broader frontier,
 and this assignment does not authorize unrelated cleanup.

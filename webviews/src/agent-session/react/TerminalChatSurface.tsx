@@ -59,7 +59,6 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
   }[state.observedTurn.state] : undefined;
   return <section className="terminal-chat">
     <header className="terminal-chat-header"><output>{state.reason === "ambiguous" ? copy.chatAmbiguous : turnStatus ?? statuses[state.status]}</output>
-      <button onClick={() => void callNative("terminalChat.openTerminal")}>{copy.chatInteract}</button>
     </header>
     <section className="terminal-chat-history" ref={scroll} tabIndex={0} aria-label={copy.chatConversation}
       onScroll={() => { const node = scroll.current; if (node) following.current = node.scrollHeight - node.scrollTop - node.clientHeight < 48; }}>

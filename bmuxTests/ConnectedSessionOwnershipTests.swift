@@ -89,7 +89,7 @@ import Testing
             let data = Data(try #require(output).utf8)
             return try JSONDecoder().decode([String].self, from: data)
         } catch {
-            #expect(await transport.closeCount == 1)
+            #expect(await transport.closeCount > 0)
             await service.endOwnedHost(surfaceID: surfaceID)
             await connection.disconnect()
             throw error

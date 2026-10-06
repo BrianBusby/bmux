@@ -413,3 +413,24 @@ followed by an accepted action. Returning to the original source
 shell shows its actual read-only state rather than an obsolete startup
 indicator. Native dogfood and broader recovery remain under observation; this
 follow-up does not assert ordinary attachment or enable structured interruption.
+
+
+### Chat-first startup compatibility and composer
+
+New connected ChatGPT sessions read the project-effective configuration and the
+installed client's complete model catalog, including hidden models. A configured
+model in that catalog is preserved. If it is absent, startup passes the visible
+catalog default to the original remote TUI and replaces reasoning effort only
+when the inherited effort is unsupported by that model. API accounts and custom
+providers retain CLI configuration. No global configuration or existing thread
+is rewritten. Missing defaults or invalid pagination fail startup and retire the
+owned connection and host.
+
+The shared composer submits on Enter and retains Shift+Enter, Alt+Enter and IME
+composition. Queue capability, current connection, pending and uncertain delivery
+still gate submission. Chat removes Interact in Terminal and Send buttons from
+both bundled React consumers; Terminal remains available through the native tab.
+Native command regression tests use an injected authenticated connection and a
+launched isolated CLI fixture. Bundled keyboard tests execute the actual HTML
+resource rather than calling React handlers directly. Native click/focus and
+first-prompt dogfood remain unverified by GUI automation.
