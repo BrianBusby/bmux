@@ -453,5 +453,11 @@ Supported literal launcher arguments and workspace/surface environment reach the
 host and original TUI. Explicit models retain precedence. Setup scripts, compound
 shell commands, resumed sessions, custom executable paths and commands sent to an
 existing terminal keep their shell behavior. No user configuration is rewritten.
-Configured-launch runtime dogfood remains pending; native regression coverage and
-both bundled consumers verify reservation, cancellation and loading behavior.
+Native build 700 verified actual bmux and companycam-mobile repository-menu
+launches, including launch from Terminal mode, first Chat-only prompts, completed
+responses, Terminal click/typing, and return to the same conversation. The latest
+submitted prompt reconciled once in the workspace card footer. Configured new-tab
+selection/canvas behavior is covered by native tests; the GUI action is not
+configured in the current user menu. Broader recovery and user dogfood remain
+open. Native regression coverage and both bundled consumers verify reservation,
+cancellation and loading behavior.
