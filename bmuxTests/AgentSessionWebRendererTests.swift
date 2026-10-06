@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Testing
 
@@ -36,6 +37,44 @@ struct AgentSessionWebRendererTests {
         coordinator.close()
     }
 #endif
+
+    @Test @MainActor
+    func leavingOuterChatRestoresTerminalFocusEligibility() throws {
+        let workspace = Workspace(title: "Review roof inspection")
+        let panel = try #require(workspace.focusedTerminalPanel)
+        defer { panel.close() }
+        let coordinator = panel.presentation.chatRenderer
+        let host = AgentSessionWebHostView()
+        host.attachWebView(coordinator.ensureWebView(onPointerDown: {}))
+        panel.isChatPresentationActive = true
+        coordinator.setTerminalChatVisible(true)
+
+        TerminalChatWebRenderer.dismantleNSView(host, coordinator: coordinator)
+
+        #expect(!panel.isChatPresentationActive)
+        #expect(coordinator.webView?.superview == nil)
+    }
+
+    @Test @MainActor
+    func dismantlingOldHostDoesNotDeactivateTransferredChat() throws {
+        let workspace = Workspace(title: "Review gutter installation")
+        let panel = try #require(workspace.focusedTerminalPanel)
+        defer { panel.close() }
+        let coordinator = panel.presentation.chatRenderer
+        let oldHost = AgentSessionWebHostView()
+        let currentHost = AgentSessionWebHostView()
+        let webView = coordinator.ensureWebView(onPointerDown: {})
+        oldHost.attachWebView(webView)
+        panel.isChatPresentationActive = true
+        coordinator.setTerminalChatVisible(true)
+        currentHost.attachWebView(webView)
+
+        TerminalChatWebRenderer.dismantleNSView(oldHost, coordinator: coordinator)
+        #expect(panel.isChatPresentationActive)
+        #expect(webView.superview === currentHost)
+        TerminalChatWebRenderer.dismantleNSView(currentHost, coordinator: coordinator)
+        #expect(!panel.isChatPresentationActive)
+    }
 
     @Test
     func testTrustedShellURLAcceptsOnlyMatchingFileURL() {
