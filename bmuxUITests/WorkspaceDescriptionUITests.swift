@@ -116,7 +116,7 @@ final class WorkspaceDescriptionUITests: XCTestCase {
         assertSavedDescription(description, in: app)
     }
 
-    func testSidebarRendersSavedDescriptionWithLineBreaks() {
+    func testSidebarOmitsDescriptionWhenWorkspaceTitleIsHeading() {
         let app = configuredSidebarApp()
         launchAndActivate(app)
 
@@ -150,11 +150,10 @@ final class WorkspaceDescriptionUITests: XCTestCase {
             .matching(NSPredicate(format: "label == %@", description))
             .firstMatch
 
-        XCTAssertTrue(
-            workspaceDescriptionPollUntil(timeout: 5.0) {
-                renderedDescription.exists
-            },
-            "Expected the sidebar to render the saved multiline description with a newline-preserving label"
+        assertSavedDescription(description, in: app)
+        XCTAssertFalse(
+            renderedDescription.exists,
+            "Expected the sidebar to omit the stored description when the heading displays the workspace title"
         )
     }
 
