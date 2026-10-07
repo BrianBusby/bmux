@@ -26,6 +26,7 @@ local_capabilities:
   ordinary_cli_shared_control: not_implemented
   connected_codex_shared_host_controls: under_observation
   connected_codex_workspace_hooks: under_observation
+  shell_mode_portal_visibility: under_observation
   connected_prompt_workspace_resource_projection: under_observation
   provenance_engine_public_in_process_sdk: implemented
   provenance_engine_sqlite_store: implemented
@@ -128,6 +129,8 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: shell_mode_portal_visibility_dogfood
+    status: open
   - id: connected_codex_workspace_hooks_dogfood
     status: open
   - id: pe_prompt_display_replay_chronology

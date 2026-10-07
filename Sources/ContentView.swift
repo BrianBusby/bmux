@@ -2574,6 +2574,7 @@ struct ContentView: View {
                             : nil,
                         onPrimaryTabChange: { isTerminal in
                             bmuxShellTerminalVisible = isTerminal
+                            reconcileMountedWorkspaceIds()
                         },
                         workspaceLabel: tabManager.selectedWorkspace.map {
                             $0.currentDirectory.split(separator: "/").last.map(String.init)
@@ -2597,25 +2598,6 @@ struct ContentView: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.workspaceReferenceSeparator, lineWidth: 1))
             .padding(18)
-        }
-    }
-
-    private func bmuxShellChatContent() -> ((@escaping () -> Void) -> AnyView)? {
-        guard let workspace = tabManager.selectedWorkspace,
-              let panel = workspace.focusedTerminalPanel,
-              let reader = tabManager.terminalChatReader else { return nil }
-        return { onTerminal in
-            AnyView(
-                TerminalChatWebRenderer(
-                    panel: panel, reader: reader, appearance: .fromConfig(GhosttyConfig.load()),
-                    onStartConnectedSession: workspace.remoteConfiguration == nil && !workspace.isRemoteTmuxMirror ? { [weak workspace, panelID = panel.id] in
-                        guard let workspace else { throw AgentSessionBridgeError.invalidRequest }
-                        try await workspace.startConnectedCodex(from: panelID)
-                    } : nil,
-                    onRequestPanelFocus: { [weak workspace, panelID = panel.id] in workspace?.focusConnectedCodexChat(panelID: panelID) },
-                    onTerminal: onTerminal
-                ).id(panel.id)
-            )
         }
     }
 
@@ -3414,7 +3396,8 @@ struct ContentView: View {
         let removedIds = previousMountedIds.filter { !mountedWorkspaceIds.contains($0) }
         let portalRenderingChanges = WorkspacePortalRenderingPlan(
             previousStatesByWorkspaceId: lastReconciledPortalRenderingStatesByWorkspaceId,
-            mountedWorkspaceIds: Set(mountedWorkspaceIds), orderedWorkspaceIds: orderedTabIds
+            mountedWorkspaceIds: Set(mountedWorkspaceIds), orderedWorkspaceIds: orderedTabIds,
+            contentVisible: bmuxShellTerminalVisible
         ).applying(to: &lastReconciledPortalRenderingStatesByWorkspaceId)
         let workspacesById = Dictionary(currentTabs.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         for change in portalRenderingChanges {

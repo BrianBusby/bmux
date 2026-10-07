@@ -3,9 +3,9 @@ public import Foundation
 /// Value object deciding which workspace portal-rendering transitions need to run.
 ///
 /// `WorkspaceMountPlan` decides which workspaces should stay mounted. This type
-/// compares that desired mounted set with the last portal-rendering state already
-/// applied to each workspace so callers can avoid repeating expensive portal hide
-/// work for workspaces that are already disabled.
+/// combines that mounted set with the visibility of its content, then compares
+/// the result with the last applied state. Chat and Session can retain mounted
+/// workspaces without allowing their terminal or browser portals to render.
 public struct WorkspacePortalRenderingPlan: Equatable {
     private let previousStatesByWorkspaceId: [UUID: Bool]
     private let mountedWorkspaceIds: Set<UUID>
@@ -16,15 +16,18 @@ public struct WorkspacePortalRenderingPlan: Equatable {
     /// - Parameters:
     ///   - previousStatesByWorkspaceId: The last portal-rendering state applied by
     ///     the caller, keyed by workspace id.
-    ///   - mountedWorkspaceIds: Workspaces that should have portal rendering enabled.
+    ///   - mountedWorkspaceIds: Workspaces eligible for portal rendering when content is visible.
     ///   - orderedWorkspaceIds: Existing workspaces in stable application order.
+    ///   - contentVisible: Whether the containing terminal content is displayed.
+    ///     False disables every portal without changing workspace mount lifetime.
     public init(
         previousStatesByWorkspaceId: [UUID: Bool],
         mountedWorkspaceIds: Set<UUID>,
-        orderedWorkspaceIds: [UUID]
+        orderedWorkspaceIds: [UUID],
+        contentVisible: Bool = true
     ) {
         self.previousStatesByWorkspaceId = previousStatesByWorkspaceId
-        self.mountedWorkspaceIds = mountedWorkspaceIds
+        self.mountedWorkspaceIds = contentVisible ? mountedWorkspaceIds : []
         self.orderedWorkspaceIds = orderedWorkspaceIds
     }
 

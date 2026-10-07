@@ -639,6 +639,7 @@
 		C0DEA7710000000000000003 /* ContentView+ProCommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEA7710000000000000004 /* ContentView+ProCommandPalette.swift */; };
 		C3408A000000000000000001 /* ContentView+RightSidebarCommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3408A000000000000000002 /* ContentView+RightSidebarCommandPalette.swift */; };
 		C0DE1A010000000000000001 /* ContentView+SavedLayoutCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE1A010000000000000002 /* ContentView+SavedLayoutCommands.swift */; };
+		233A591377B640CCAB391DF5 /* ContentView+TerminalChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC14DBDEE3B14B9A9443471D /* ContentView+TerminalChat.swift */; };
 		C3408A000000000000000005 /* ContentView+ViewCommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3408A000000000000000006 /* ContentView+ViewCommandPalette.swift */; };
 		A5001002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001012 /* ContentView.swift */; };
 		C0DE32470000000000000001 /* ContentViewIdentifierCopyCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE32470000000000000002 /* ContentViewIdentifierCopyCommands.swift */; };
@@ -2479,6 +2480,7 @@
 		C0DEA7710000000000000004 /* ContentView+ProCommandPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+ProCommandPalette.swift"; sourceTree = "<group>"; };
 		C3408A000000000000000002 /* ContentView+RightSidebarCommandPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+RightSidebarCommandPalette.swift"; sourceTree = "<group>"; };
 		C0DE1A010000000000000002 /* ContentView+SavedLayoutCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+SavedLayoutCommands.swift"; sourceTree = "<group>"; };
+		FC14DBDEE3B14B9A9443471D /* ContentView+TerminalChat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+TerminalChat.swift"; sourceTree = "<group>"; };
 		C3408A000000000000000006 /* ContentView+ViewCommandPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+ViewCommandPalette.swift"; sourceTree = "<group>"; };
 		A5001012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		C0DE32470000000000000002 /* ContentViewIdentifierCopyCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewIdentifierCopyCommands.swift; sourceTree = "<group>"; };
@@ -3976,6 +3978,7 @@
 					D36090020000000000000002 /* NSWindow+BmuxPeerWindow.swift */,
 					C0DE35860000000000000002 /* BackgroundWorkspacePrimeCoordinator.swift */,
 					A5001012 /* ContentView.swift */,
+					FC14DBDEE3B14B9A9443471D /* ContentView+TerminalChat.swift */,
 					CE0E02090000000000000002 /* TabItemView+ProjectRows.swift */,
 					CE0E02080000000000000002 /* TabItemView+TicketRows.swift */,
 					A5F100000000000000000006 /* TabItemView+WorkspaceNotificationsMenu.swift */,
@@ -6290,6 +6293,7 @@
 				C0DEA7710000000000000003 /* ContentView+ProCommandPalette.swift in Sources */,
 				C3408A000000000000000001 /* ContentView+RightSidebarCommandPalette.swift in Sources */,
 				C0DE1A010000000000000001 /* ContentView+SavedLayoutCommands.swift in Sources */,
+				233A591377B640CCAB391DF5 /* ContentView+TerminalChat.swift in Sources */,
 				C3408A000000000000000005 /* ContentView+ViewCommandPalette.swift in Sources */,
 				A5001002 /* ContentView.swift in Sources */,
 				C0DE32470000000000000001 /* ContentViewIdentifierCopyCommands.swift in Sources */,

@@ -107,6 +107,7 @@ Repository: `BrianBusby/bmux`
 | Richer Session Evidence Foundation | implemented |
 | Richer Session Work View | planned |
 | Session Work Model Consumer | planned |
+| Shell Mode Portal Visibility | under observation |
 | Test Determinism Allowlist Burndown | planned |
 | Three View Session Navigation | planned |
 | Work Provenance Runtime Lifecycle State | under observation |
@@ -144,6 +145,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `shell_mode_portal_visibility_dogfood` | open |
 | `connected_codex_workspace_hooks_dogfood` | open |
 | `pe_prompt_display_replay_chronology` | open |
 | `connected_session_worktree_context_verification` | open |
