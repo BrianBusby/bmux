@@ -5,6 +5,39 @@ import BmuxFoundation
 
 @Suite("Workspace portal-rendering plan")
 struct WorkspacePortalRenderingPlanTests {
+    @Test("Chat and Session disable retained portals until Terminal returns")
+    func hiddenTerminalContentStaysDisabledAcrossWorkspaceReconciliation() {
+        let first = UUID()
+        let second = UUID()
+        var previous = [first: true, second: false]
+
+        let leavingTerminal = WorkspacePortalRenderingPlan(
+            previousStatesByWorkspaceId: previous,
+            mountedWorkspaceIds: [first],
+            orderedWorkspaceIds: [first, second],
+            contentVisible: false
+        ).applying(to: &previous)
+        #expect(leavingTerminal == [WorkspacePortalRenderingChange(workspaceId: first, isEnabled: false)])
+
+        let switchingWorkspaceWhileHidden = WorkspacePortalRenderingPlan(
+            previousStatesByWorkspaceId: previous,
+            mountedWorkspaceIds: [second],
+            orderedWorkspaceIds: [first, second],
+            contentVisible: false
+        ).applying(to: &previous)
+        #expect(switchingWorkspaceWhileHidden.isEmpty)
+        #expect(previous == [first: false, second: false])
+
+        let returningToTerminal = WorkspacePortalRenderingPlan(
+            previousStatesByWorkspaceId: previous,
+            mountedWorkspaceIds: [second],
+            orderedWorkspaceIds: [first, second],
+            contentVisible: true
+        ).applying(to: &previous)
+        #expect(returningToTerminal == [WorkspacePortalRenderingChange(workspaceId: second, isEnabled: true)])
+        #expect(previous == [first: false, second: true])
+    }
+
     @Test("new unmounted workspaces are disabled once")
     func disablesNewUnmountedWorkspacesOnce() {
         let mounted = UUID()
