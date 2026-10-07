@@ -90,13 +90,8 @@ import BMUXAgentLaunch
         #expect(displayed.compactGitBranchSummaryText == current.compactGitBranchSummaryText)
     }
 
-    @MainActor @Test(arguments: [
-        (nil, nil),
-        ("Repair flashing", "Review roof inspection"),
-        ("Review roof inspection", nil),
-        (" ", nil),
-    ] as [(String?, String?)])
-    func referenceRailUsesAuthoritativeTitleAndPreservesContext(ticketTitle: String?, expectedSummary: String?) throws {
+    @MainActor @Test(arguments: [nil, "Repair flashing", "Review roof inspection", " "] as [String?])
+    func referenceRailUsesAuthoritativeTitleAndPreservesContext(ticketTitle: String?) throws {
         let workspace = Workspace(title: "Terminal")
         workspace.setCustomTitle("Review roof inspection")
         workspace.setCustomDescription("Check the latest inspection photos")
@@ -104,7 +99,6 @@ import BMUXAgentLaunch
         let card = Self.referenceCard(workspace: workspace, provenance: provenance)
         let normalizedTicket = ticketTitle?.trimmingCharacters(in: .whitespacesAndNewlines)
         #expect(card.title == (normalizedTicket.flatMap { $0.isEmpty ? nil : $0 } ?? "Review roof inspection"))
-        #expect(card.summary == expectedSummary)
         #expect(card.prompt == "Check the latest inspection photos")
         #expect(card.ticketID == (ticketTitle == nil ? nil : "ROOF-42"))
         #expect(card.projectTitle == "Maple Street roof")
@@ -128,9 +122,7 @@ import BMUXAgentLaunch
             workspaceID: workspace.stableId, ticketTitle: ticketTitle, currentDirectory: workspace.currentDirectory, prompt: "Compare the new gutter photos"
         ))
         #expect(updated.title == (ticketTitle ?? "Review gutter installation"))
-        #expect(updated.summary == (ticketTitle == nil ? nil : "Review gutter installation"))
         #expect(updated.prompt == "Compare the new gutter photos")
-        #expect(updated.summary != updated.prompt)
         #expect(updated.projectTitle == initial.projectTitle)
         #expect(updated.ownerName == initial.ownerName)
         #expect(updated.branch == initial.branch)
@@ -142,7 +134,6 @@ import BMUXAgentLaunch
         workspace.setCustomDescription("Check the latest inspection photos")
         let card = Self.referenceCard(workspace: workspace, provenance: nil)
         #expect(card.title == "Review roof inspection")
-        #expect(card.summary == nil)
         #expect(workspace.customDescription == "Check the latest inspection photos")
     }
 

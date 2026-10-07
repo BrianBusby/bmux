@@ -12,11 +12,21 @@ struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
     let ticketURL: URL?
     let projectTitle: String?
     let projectURL: URL?
-    let summary: String?
+    let projectFilterTitle: String?
     let pullRequestText: String?
     let pullRequestURL: URL?
     let ownerName: String?
     let ownerURL: URL?
+    let pullRequestOwnerLogin: String?
+
+    var ownerInitials: String? {
+        guard let words = ownerName?.split(whereSeparator: \.isWhitespace),
+              let first = words.first else { return nil }
+        if let last = words.last, words.count > 1 {
+            return (String(first.prefix(1)) + String(last.prefix(1))).uppercased()
+        }
+        return String(first.prefix(2)).uppercased()
+    }
 
     @MainActor
     init(workspace: Workspace, provenance: WorkspaceDisplayCurrentStateSnapshot?, workspaceTitle: String) {
@@ -31,9 +41,10 @@ struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
         isDirty = branch == nil ? nil : context?.agentWorktree?.isDirty
         ticketID = context?.ticketLinks.first?.id
         ticketURL = context?.ticketLinks.first?.url
-        projectTitle = provenance?.projectLinks.first.map { $0.title ?? $0.id }
-        projectURL = provenance?.projectLinks.first?.url
-        summary = titlePresentation.description
+        let project = provenance?.projectLinks.first
+        projectTitle = project.map { $0.title ?? $0.id }
+        projectURL = project?.url
+        projectFilterTitle = project?.title
         if let request = workspace.pullRequest {
             pullRequestText = "#\(request.number) · \(request.title ?? "")".trimmingCharacters(in: .whitespacesAndNewlines)
             pullRequestURL = request.url
@@ -44,8 +55,17 @@ struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
             pullRequestText = nil
             pullRequestURL = nil
         }
-        let pullRequestOwner = workspace.pullRequest.map { (name: $0.ownerLogin, url: $0.ownerURL) }
-            ?? provenance?.pullRequest.map { (name: $0.ownerLogin, url: $0.ownerURL) }
+        let pullRequestOwner: (name: String?, url: URL?)?
+        if let request = workspace.pullRequest, let login = request.ownerLogin {
+            pullRequestOwner = (login, request.ownerURL)
+        } else if let request = provenance?.pullRequest,
+                  workspace.pullRequest == nil || (workspace.pullRequest?.number == request.number
+                      && workspace.pullRequest?.url == request.url) {
+            pullRequestOwner = (request.ownerLogin, request.ownerURL)
+        } else {
+            pullRequestOwner = nil
+        }
+        pullRequestOwnerLogin = pullRequestOwner?.name
         ownerName = context?.ticketLinks.first?.ownerName ?? pullRequestOwner?.name
         ownerURL = context?.ticketLinks.first?.ownerName != nil
             ? context?.ticketLinks.first?.ownerURL

@@ -58,6 +58,8 @@ struct WorkspaceTabFilterBar: View {
                     WorkspaceTabFilterPanel(items: items, filters: $filters)
                         .frame(width: 260)
                         .padding(12)
+                        .background(Color.workspaceReferenceRail)
+                        .preferredColorScheme(.dark)
                 }
             }
 
@@ -182,6 +184,7 @@ private struct WorkspaceTabFilterPanel: View {
             }
             dynamicSection(String(localized: "sidebar.workspaceFilter.repository", defaultValue: "REPOSITORY"), values: WorkspaceTabFilterProjection().values(for: \.repo, in: items), selection: $filters.repos)
             dynamicSection(String(localized: "sidebar.workspaceFilter.project", defaultValue: "PROJECT"), values: WorkspaceTabFilterProjection().values(for: \.project, in: items), selection: $filters.projects)
+            dynamicSection(String(localized: "sidebar.workspaceFilter.prOwner", defaultValue: "PR OWNER"), values: WorkspaceTabFilterProjection().values(for: \.owner, in: items), selection: $filters.owners)
             Text(String(localized: "sidebar.workspaceFilter.hint", defaultValue: "Search also matches branch names, PR numbers, and ticket IDs"))
                 .font(.system(size: 10))
                 .foregroundStyle(Color.white.opacity(0.24))

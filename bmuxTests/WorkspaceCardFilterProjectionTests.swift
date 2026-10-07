@@ -72,7 +72,7 @@ import Testing
     }
 
     private func filterItems(_ fixtures: [(Workspace, WorkspaceReferenceCardSnapshot)]) -> [WorkspaceFilterItem] {
-        WorkspaceTabFilterProjection().items(for: fixtures.map { $0.0 })
+        WorkspaceTabFilterProjection().items(for: fixtures.map { $0.0 }, cards: fixtures.map { $0.1 })
     }
 
     private func fixture(
