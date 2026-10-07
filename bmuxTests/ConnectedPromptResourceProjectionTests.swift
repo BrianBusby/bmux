@@ -228,8 +228,11 @@ struct ConnectedPromptResourceProjectionTests {
         init(recordedPanelID: UUID? = nil) throws {
             root = FileManager.default.temporaryDirectory.appendingPathComponent("connected-prompt-\(getpid())-\(UUID().uuidString)")
             try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-            client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: root.appendingPathComponent("provenance.sqlite"))
-            recorderClient = PromptClient(backing: client)
+            recorderClient = PromptClient(
+                backing: try ProvenanceEngineClientFactory().sqliteClient(databaseURL: root.appendingPathComponent("provenance.sqlite")),
+                root: root
+            )
+            client = recorderClient
             displayStore = WorkspaceDisplayCurrentStateStore(client: recorderClient)
             let harness = SidebarGitPullRequestRuntimeTestHarness(promptMentionCommandRunner: runner)
             prRuntime = SidebarGitPullRequestObservationRuntimeService(isCapabilityEnabled: true, dependencies: harness.dependencies())
@@ -283,8 +286,8 @@ struct ConnectedPromptResourceProjectionTests {
         func remove() {
             runtime.stop()
             prRuntime.stop()
-            // The SDK has no close operation. The runner removes these isolated stores
-            // after the test process exits, when all SQLite clients are released.
+            // PromptClient releases the underlying SDK client before deleting its root
+            // when the final runtime/cache/task reference is gone.
         }
     }
 
@@ -329,31 +332,40 @@ struct ConnectedPromptResourceProjectionTests {
     }
 
     private actor PromptClient: ProvenanceEngineContracts.ProvenanceEngineClient {
-        private let backing: any ProvenanceEngineContracts.ProvenanceEngineClient
+        private var backing: (any ProvenanceEngineContracts.ProvenanceEngineClient)?
+        private let root: URL
         private var rejectsAppend = false
         private var rejectsRead = false
-        init(backing: any ProvenanceEngineContracts.ProvenanceEngineClient) { self.backing = backing }
+        init(backing: any ProvenanceEngineContracts.ProvenanceEngineClient, root: URL) {
+            self.backing = backing
+            self.root = root
+        }
+        deinit {
+            // This wrapper is the sole owner of the SDK client; deinitializing it closes SQLite.
+            backing = nil
+            try? FileManager.default.removeItem(at: root)
+        }
         func setRejectsAppend(_ value: Bool) { rejectsAppend = value }
         func setRejectsRead(_ value: Bool) { rejectsRead = value }
-        func health() async throws -> ProvenanceEngineHealth { try await backing.health() }
+        func health() async throws -> ProvenanceEngineHealth { try await backing!.health() }
         func appendEvent(_ request: ProvenanceEngineContracts.ProvenanceAppendEventRequest) async throws -> ProvenanceEngineContracts.ProvenanceAppendEventResponse {
-            if rejectsAppend { throw NSError(domain: "PromptPersistence", code: 1) }
-            return try await backing.appendEvent(request)
+            if rejectsAppend && request.event.eventType == .codingAgentPromptSubmitted { throw NSError(domain: "PromptPersistence", code: 1) }
+            return try await backing!.appendEvent(request)
         }
         func recordSessionLifecycle(_ request: ProvenanceEngineContracts.ProvenanceSessionLifecycleRequest) async -> ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse {
-            await backing.recordSessionLifecycle(request)
+            await backing!.recordSessionLifecycle(request)
         }
-        func sessionTree(_ request: ProvenanceEngineContracts.ProvenanceSessionTreeRequest) async throws -> ProvenanceEngineContracts.ProvenanceSessionTreeResponse { try await backing.sessionTree(request) }
-        func fileExplanation(_ request: ProvenanceEngineContracts.ProvenanceFileExplanationRequest) async throws -> ProvenanceEngineContracts.ProvenanceFileExplanationResponse { try await backing.fileExplanation(request) }
-        func worktrees(_ request: ProvenanceEngineContracts.ProvenanceWorktreeListRequest) async throws -> ProvenanceEngineContracts.ProvenanceWorktreeListResponse { try await backing.worktrees(request) }
-        func currentContext(_ request: ProvenanceEngineContracts.ProvenanceCurrentContextRequest) async throws -> ProvenanceEngineContracts.ProvenanceCurrentContextResponse { try await backing.currentContext(request) }
+        func sessionTree(_ request: ProvenanceEngineContracts.ProvenanceSessionTreeRequest) async throws -> ProvenanceEngineContracts.ProvenanceSessionTreeResponse { try await backing!.sessionTree(request) }
+        func fileExplanation(_ request: ProvenanceEngineContracts.ProvenanceFileExplanationRequest) async throws -> ProvenanceEngineContracts.ProvenanceFileExplanationResponse { try await backing!.fileExplanation(request) }
+        func worktrees(_ request: ProvenanceEngineContracts.ProvenanceWorktreeListRequest) async throws -> ProvenanceEngineContracts.ProvenanceWorktreeListResponse { try await backing!.worktrees(request) }
+        func currentContext(_ request: ProvenanceEngineContracts.ProvenanceCurrentContextRequest) async throws -> ProvenanceEngineContracts.ProvenanceCurrentContextResponse { try await backing!.currentContext(request) }
         func workspaceDisplay(_ request: ProvenanceEngineContracts.ProvenanceWorkspaceDisplayRequest) async throws -> ProvenanceEngineContracts.ProvenanceWorkspaceDisplayResponse {
             if rejectsRead { throw NSError(domain: "PromptDisplayRead", code: 1) }
-            return try await backing.workspaceDisplay(request)
+            return try await backing!.workspaceDisplay(request)
         }
         func workspaceCodingAgentSessionAssociation(_ request: ProvenanceEngineContracts.ProvenanceWorkspaceCodingAgentSessionAssociationRequest) async throws -> ProvenanceEngineContracts.ProvenanceWorkspaceCodingAgentSessionAssociationResponse {
-            try await backing.workspaceCodingAgentSessionAssociation(request)
+            try await backing!.workspaceCodingAgentSessionAssociation(request)
         }
-        func factualSessionProjection(_ request: ProvenanceEngineContracts.ProvenanceFactualSessionProjectionRequest) async throws -> ProvenanceEngineContracts.ProvenanceFactualSessionProjectionResponse { try await backing.factualSessionProjection(request) }
+        func factualSessionProjection(_ request: ProvenanceEngineContracts.ProvenanceFactualSessionProjectionRequest) async throws -> ProvenanceEngineContracts.ProvenanceFactualSessionProjectionResponse { try await backing!.factualSessionProjection(request) }
     }
 }
