@@ -1,3 +1,5 @@
+import AppKit
+import BmuxAgentChat
 import Foundation
 import Testing
 
@@ -36,6 +38,44 @@ struct AgentSessionWebRendererTests {
         coordinator.close()
     }
 #endif
+
+    @Test @MainActor
+    func leavingOuterChatRestoresTerminalFocusEligibility() throws {
+        let workspace = Workspace(title: "Review roof inspection")
+        let panel = try #require(workspace.focusedTerminalPanel)
+        defer { panel.close() }
+        let coordinator = panel.presentation.chatRenderer
+        let host = AgentSessionWebHostView()
+        host.attachWebView(coordinator.ensureWebView(onPointerDown: {}))
+        panel.isChatPresentationActive = true
+        coordinator.setTerminalChatVisible(true)
+
+        TerminalChatWebRenderer.dismantleNSView(host, coordinator: coordinator)
+
+        #expect(!panel.isChatPresentationActive)
+        #expect(coordinator.webView?.superview == nil)
+    }
+
+    @Test @MainActor
+    func dismantlingOldHostDoesNotDeactivateTransferredChat() throws {
+        let workspace = Workspace(title: "Review gutter installation")
+        let panel = try #require(workspace.focusedTerminalPanel)
+        defer { panel.close() }
+        let coordinator = panel.presentation.chatRenderer
+        let oldHost = AgentSessionWebHostView()
+        let currentHost = AgentSessionWebHostView()
+        let webView = coordinator.ensureWebView(onPointerDown: {})
+        oldHost.attachWebView(webView)
+        panel.isChatPresentationActive = true
+        coordinator.setTerminalChatVisible(true)
+        currentHost.attachWebView(webView)
+
+        TerminalChatWebRenderer.dismantleNSView(oldHost, coordinator: coordinator)
+        #expect(panel.isChatPresentationActive)
+        #expect(webView.superview === currentHost)
+        TerminalChatWebRenderer.dismantleNSView(currentHost, coordinator: coordinator)
+        #expect(!panel.isChatPresentationActive)
+    }
 
     @Test
     func testTrustedShellURLAcceptsOnlyMatchingFileURL() {
@@ -134,6 +174,111 @@ struct AgentSessionWebRendererTests {
 
 @Suite(.serialized) @MainActor
 struct ConnectedSessionBridgeTests {
+    @Test func automaticStartRequiresAnIdleUnassociatedTerminalAndRunsOnlyOnce() async throws {
+        let coordinator = AgentSessionWebRendererCoordinator()
+        defer { coordinator.close() }
+        coordinator.terminalChatSnapshot = { ["status": "unavailable"] }
+        coordinator.canAutomaticallyStartConnectedSession = { true }
+        coordinator.setTerminalChatVisible(true)
+        var starts = 0
+        coordinator.onStartConnectedSession = { starts += 1 }
+        let context = try await coordinator.handle(AgentSessionBridgeRequest(body: ["id": "context", "method": "app.context"])) as? [String: Any]
+        #expect(context?["canStartConnectedSession"] as? Bool == true)
+        #expect(context?["automaticallyStartConnectedSession"] as? Bool == true)
+        let request = try AgentSessionBridgeRequest(body: ["id": "start", "method": "terminalChat.startConnected", "params": ["automatic": true]])
+        let started = try await coordinator.handle(request) as? [String: Bool]
+        let repeated = try await coordinator.handle(request) as? [String: Bool]
+        #expect(started?["started"] == true)
+        #expect(repeated?["started"] == false)
+        #expect(starts == 1)
+    }
+
+    @Test(arguments: ["ordinary", "bound", "connecting", "hidden"])
+    func automaticStartNeverReplacesExistingSessionOrHiddenChat(scenario: String) async throws {
+        let coordinator = AgentSessionWebRendererCoordinator()
+        defer { coordinator.close() }
+        coordinator.setTerminalChatVisible(scenario != "hidden")
+        coordinator.canAutomaticallyStartConnectedSession = { scenario != "ordinary" }
+        coordinator.terminalChatSnapshot = {
+            switch scenario {
+            case "bound": return ["status": "unavailable", "sessionId": "existing-thread"]
+            case "connecting": return ["status": "unavailable", "control": ["status": "unavailable"]]
+            default: return ["status": "unavailable"]
+            }
+        }
+        var starts = 0
+        coordinator.onStartConnectedSession = { starts += 1 }
+        await #expect(throws: (any Error).self) {
+            try await coordinator.handle(AgentSessionBridgeRequest(body: ["id": "automatic", "method": "terminalChat.startConnected", "params": ["automatic": true]]))
+        }
+        #expect(starts == 0)
+        // An explicit action still offers a separate connected session.
+        _ = try await coordinator.handle(AgentSessionBridgeRequest(body: ["id": "manual", "method": "terminalChat.startConnected"]))
+        #expect(starts == 1)
+    }
+
+    @Test func simultaneousStartRequestsCreateOnlyOneConnectedSession() async throws {
+        let coordinator = AgentSessionWebRendererCoordinator()
+        defer { coordinator.close() }
+        let entered = AsyncStream<Void>.makeStream()
+        var release: CheckedContinuation<Void, Never>?
+        var starts = 0
+        coordinator.onStartConnectedSession = {
+            starts += 1
+            if starts == 1 {
+                await withCheckedContinuation { continuation in
+                    release = continuation
+                    entered.continuation.yield(())
+                }
+            }
+        }
+        let request = try AgentSessionBridgeRequest(body: ["id": "start", "method": "terminalChat.startConnected"])
+        let first = Task { try await coordinator.handle(request) }
+        var iterator = entered.stream.makeAsyncIterator()
+        _ = await iterator.next()
+        await #expect(throws: AgentSessionBridgeError.self) { try await coordinator.handle(request) }
+        #expect(starts == 1)
+        release?.resume()
+        _ = try await first.value
+        entered.continuation.finish()
+    }
+
+    @Test func pendingStartupDoesNotStealFocusFromAnotherVisiblePane() async throws {
+        let entered = AsyncStream<Void>.makeStream()
+        var release: CheckedContinuation<Void, Never>?
+        var ended: [UUID] = []
+        let connection = CodexRPCConnection(transport: ConnectedCodexFixtureTransport())
+        let host = ConnectedCodexFixtureHost(connection: connection, beforeLaunch: {
+            await withCheckedContinuation { continuation in
+                release = continuation
+                entered.continuation.yield(())
+            }
+        }, onEnd: { ended.append($0) })
+        let runtime = TerminalChatRuntime(reader: ConnectedCodexFixtureReader(), hosts: host, bind: { _, _, _, _ in })
+        let manager = TabManager(initialWorkingDirectory: "/tmp", autoWelcomeIfNeeded: false)
+        manager.terminalChatReader = runtime
+        let workspace = try #require(manager.selectedWorkspace)
+        defer { for panel in workspace.panels.values { panel.close() } }
+        let source = try #require(workspace.focusedTerminalPanel)
+        let other = try #require(workspace.newTerminalSplit(from: source.id, orientation: .horizontal, focus: false))
+        source.isChatPresentationActive = true
+        let panelCount = workspace.panels.count
+        let startup = Task { try await workspace.startConnectedCodex(from: source.id) }
+        var iterator = entered.stream.makeAsyncIterator()
+        _ = await iterator.next()
+        workspace.focusPanel(other.id)
+        #expect(workspace.focusedPanelId == other.id)
+        #expect(source.isChatPresentationActive)
+        release?.resume()
+        var rejected = false
+        do { try await startup.value } catch { rejected = true }
+        #expect(rejected)
+        #expect(workspace.panels.count == panelCount)
+        #expect(workspace.focusedPanelId == other.id)
+        #expect(ended.count == 1)
+        entered.continuation.finish()
+    }
+
     @Test func absentControlOwnerCannotAcceptAnAction() async throws {
         let coordinator = AgentSessionWebRendererCoordinator()
         coordinator.terminalChatSnapshot = { ["status": "unavailable"] }
@@ -163,4 +308,47 @@ struct ConnectedSessionBridgeTests {
         #expect(actions == 1)
         coordinator.close()
     }
+    @Test(arguments: ["codex", "codex --sandbox read-only --model hidden-valid"])
+    @MainActor func configuredRepoWorkspaceStartsItsOwnConnectedChat(commandText: String) async throws {
+        let launched = AsyncStream<Void>.makeStream()
+        let connection = CodexRPCConnection(transport: ConnectedCodexFixtureTransport())
+        try await connection.start()
+        let host = ConnectedCodexFixtureHost(connection: connection, beforeLaunch: {
+            launched.continuation.yield(())
+        })
+        let runtime = TerminalChatRuntime(reader: ConnectedCodexFixtureReader(), hosts: host, bind: { _, _, _, _ in })
+        let manager = TabManager(initialWorkingDirectory: "/tmp", autoWelcomeIfNeeded: false)
+        manager.terminalChatReader = runtime
+        defer {
+            launched.continuation.finish()
+            for workspace in manager.tabs { for panel in workspace.panels.values { panel.close() } }
+        }
+        let definition = BmuxWorkspaceDefinition(name: "Maple Street Inspection", cwd: "/tmp",
+            layout: .pane(BmuxPaneDefinition(surfaces: [BmuxSurfaceDefinition(type: .terminal,
+                name: "Codex", command: commandText, focus: true)])))
+        let command = BmuxCommandDefinition(name: "Maple Street Inspection", workspace: definition)
+        #expect(BmuxConfigExecutor.execute(command: command, tabManager: manager, baseCwd: "/tmp",
+            configSourcePath: nil, globalConfigPath: "/isolated/bmux.json"))
+        let workspace = try #require(manager.selectedWorkspace)
+        let panel = try #require(workspace.focusedTerminalPanel)
+        #expect(panel.workspaceId == workspace.id)
+        // A real check deadline bounds the absent-launch regression; no polling or settling delay.
+        let didLaunch = await withTaskGroup(of: Bool.self) { group in
+            group.addTask {
+                var iterator = launched.stream.makeAsyncIterator()
+                return await iterator.next() != nil
+            }
+            group.addTask {
+                do { try await ContinuousClock().sleep(for: .seconds(2)) } catch { return false }
+                return false
+            }
+            let result = await group.next() ?? false
+            group.cancelAll()
+            return result
+        }
+        #expect(didLaunch)
+        #expect(workspace.panels.count == 1)
+        #expect(workspace.customTitle == "Maple Street Inspection")
+    }
+
 }

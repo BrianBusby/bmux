@@ -29,28 +29,58 @@ owning native workspace title, assigned color, source-supported activity, and
 all known PE-backed ticket, pull-request, project, and owner links. Token
 attribution and curated learning records remain unsupported data dependencies.
 A tagged build is reproducible with the pinned sources plus the local
-Ghostty/Bonsplit cache workaround. Current-build CUA capture remains
-unavailable: exact tagged-app attachment returns `cgWindowNotFound`, shell
-`screencapture` lacks Screen Recording authorization, and a ScreenCaptureKit
-attempt aborts in `CGS_REQUIRE_INIT`. The supplied build-612 Terminal screenshot
-is before-state evidence; the obsolete shared perimeter is now removed in
-source. Dark/light, narrow, Focus, and populated-history states remain visually
-unverified.
+Ghostty/Bonsplit cache workaround. Earlier tagged-app CUA capture returned
+`cgWindowNotFound`; shell `screencapture` lacked Screen Recording authorization
+and ScreenCaptureKit aborted in `CGS_REQUIRE_INIT`. Native inspection worked in
+Chat build 698: fresh-workspace Chat startup, Shift+Enter, Enter delivery and a
+completed ChatGPT response at the fallback model with inherited xhigh effort
+were verified. Terminal accepted click/typing after Chat, and Chat retained the
+same conversation on return. Light, narrow, Focus and broader recovery remain
+unverified. The supplied build-612 screenshot remains before-state evidence for
+the removed shared perimeter.
 
 The user-selected implementation is `shared_session_chat`, tracked in the root
 manifests. See [the shared-session control decision](../product/shared-session-control-decision.md)
-for the capability matrix and evidence. Shared ordinary-CLI control remains
-unproven; read-only Chat is implemented and under observation, with local
-transport, transcript, native bridge and tagged macOS evidence in that decision.
-Broader provider/recovery acceptance and all shared controls remain open. A new
-shared-host TUI probe accepted a second-client prompt, but a stale interrupt
-with an old turn ID stopped a newer turn in Codex 0.154.0. This is a provider
-control gate failure. The user subsequently authorized opt-in newly connected
-sessions. Queue and expected-turn steering are implemented with live transport proof on
-`connected-session-controls`; build 572 now passed one acknowledged Chat-to-original-Terminal submission. A temporary startup ambiguity recovered without restart; its cause and broader UI acceptance remain open. Interrupt remains disabled. The original
-`shared-session-chat` dogfood build must remain running and untouched.
-Process Integrity remains the broader frontier and its completed slices remain
-unchanged. This assignment does not authorize unrelated cleanup.
+for the capability matrix and evidence. Chat-first startup uses the existing
+shared-host launch path: a plain idle local shell can start a new connected
+Codex terminal when Chat opens, and its first prompt can be sent from Chat.
+Existing ordinary CLI sessions stay intact and offer an explicit new connected
+session instead of an inferred attachment. Renderer visibility owns Terminal
+focus eligibility, including retained WebKit host transfers. Startup is guarded
+against duplicate requests and late completion after navigation or source-panel
+closure. Failed startup offers an explicit retry; provider actions are never
+blindly resent. New ChatGPT startup checks the connected client catalog and uses its default
+only when the saved model is unavailable; valid hidden models and custom/API
+providers retain their configuration. This writes no global configuration.
+Configured repository and new-tab Codex launches now reserve their own connected host before creating the PTY. Startup shows loading in Chat and Terminal; replacement preserves the logical surface, tab, selection and canvas membership. Native build 700 verified the actual bmux and companycam-mobile repository menus, first Chat-only prompts, completed replies, Terminal click/typing, return to the same conversation and latest-prompt footer reconciliation. Literal supported launch options and workspace environment values are preserved; setup scripts, compound/resume commands, custom executable paths and commands sent into an existing terminal keep their ordinary CLI behavior. Connected transcript prompts now replay resource acquisition through the existing
+prompt-mention PR resolver only after PE accepts the current prompt and the live
+registry session and exact terminal panel still match.
+Initial transcript discovery runs the existing bounded prompt seeder, including
+when a new Chat session's rollout appears only after its first turn starts.
+Tailer registration precedes registry publication; initial discovery and hook
+replay share one seeding path without duplicating the first scan.
+Resolved PR title/author
+feed the existing PE and Linear workspace-link projection; this does not write
+stored descriptions or trigger title-generation hooks. Fresh-read failures,
+replaced or ambiguous sessions, older/superseded batches and duplicate replay
+cannot initiate lookups. Resource authorization uses the prior accepted PE prompt
+and bounded in-flight request state, including overlapping persistence; it never
+feeds card/footer display or filters ledger capture.
+Authorization reads leave the UI cache unchanged; scheduled refresh owns cache
+publication and sidebar notification, including prompts without resource mentions.
+PE's retained arrival-order
+prompt merge can still regress the footer during historical replay; correcting
+that authoritative projection remains separate work.
+Branch presentation still requires PE's associated worktree; an uninspectable
+recorded checkout does not justify substituting a PR head branch or an unrelated
+local worktree. Connected-session worktree confirmation remains under observation.
+Chat has no Interact in Terminal or Send buttons. Enter queues a prompt;
+Shift+Enter, composition, pending delivery and uncertain delivery retain their
+guards. Both bundled React consumers use the same composer. Queue and
+expected-turn steering retain their verified native transport boundary. Ordinary attachment, structured interruption, and broader
+recovery acceptance remain open. Do not rebuild a currently used tag; use a new
+isolated build for this slice. Process Integrity remains the broader frontier,
+and this assignment does not authorize unrelated cleanup.
 
 The remaining patched-area audit backlog is now represented in Project Truth.
 The selected next Process Integrity slice is

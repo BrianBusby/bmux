@@ -4,12 +4,17 @@ import Foundation
 actor ConnectedCodexFixtureTransport: CodexRPCTransport {
     private let stream: AsyncThrowingStream<Data, any Error>
     private let continuation: AsyncThrowingStream<Data, any Error>.Continuation
+    private let responses: [String: Data]
     private var malformedQueueAcknowledgment = false
     private var acceptedClientID: String?
     private var loadedThreads = ["thread-a"]
+    private(set) var closeCount = 0
     private(set) var mutationThreads: [String] = []
 
-    init() { (stream, continuation) = AsyncThrowingStream.makeStream() }
+    init(responses: [String: Data] = [:]) {
+        self.responses = responses
+        (stream, continuation) = AsyncThrowingStream.makeStream()
+    }
     func omitQueueAcknowledgmentID() { malformedQueueAcknowledgment = true }
     func setLoadedThreads(_ threads: [String]) { loadedThreads = threads }
 
@@ -17,6 +22,11 @@ actor ConnectedCodexFixtureTransport: CodexRPCTransport {
         let request = try JSONSerialization.jsonObject(with: data) as! [String: Any]
         guard let id = request["id"] else { return }
         let parameters = request["params"] as? [String: Any] ?? [:]
+        if let method = request["method"] as? String, let response = responses[method] {
+            let result = try JSONSerialization.jsonObject(with: response)
+            continuation.yield(try JSONSerialization.data(withJSONObject: ["id": id, "result": result]))
+            return
+        }
         var result: [String: Any] = [:]
         switch request["method"] as? String {
         case "thread/loaded/list": result = ["data": loadedThreads, "nextCursor": NSNull()]
@@ -38,5 +48,5 @@ actor ConnectedCodexFixtureTransport: CodexRPCTransport {
         return data
     }
 
-    func close() { continuation.finish() }
+    func close() { closeCount += 1; continuation.finish() }
 }

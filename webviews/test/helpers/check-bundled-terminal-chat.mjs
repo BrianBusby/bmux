@@ -66,10 +66,8 @@ async function checkBundledChat(copy) {
     assert.equal(dom.window.document.querySelector(".terminal-chat-role")?.textContent, copy.user);
     assert.equal(dom.window.document.querySelector(".terminal-chat-footer")?.textContent, copy.readOnly);
     assert.equal(dom.window.document.querySelector("textarea,input,[contenteditable=true]"), null);
-    const terminal = dom.window.document.querySelector(".terminal-chat-header button");
-    assert.equal(terminal.textContent, copy.interact);
-    terminal.click();
-    assert.deepEqual(calls, ["app.context", "provider.list", "terminalChat.snapshot", "terminalChat.openTerminal"]);
+    assert.equal(dom.window.document.querySelector(".terminal-chat-header button"), null);
+    assert.deepEqual(calls, ["app.context", "provider.list", "terminalChat.snapshot"]);
   } finally {
     clearTimeout(deadline);
     observer?.disconnect();

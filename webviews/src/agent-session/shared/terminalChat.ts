@@ -26,7 +26,7 @@ export type ObservedMessage = {
 export type ObservedTurn = { id: string; state: "working" | "completed" | "interrupted" };
 export type TerminalChatSnapshot = {
   control?: ConnectedControl;
-  status: "observed" | "ended" | "unavailable";
+  status: "loading" | "observed" | "ended" | "unavailable";
   reason?: "ambiguous" | "unassociated" | "historyUnavailable";
   sessionId?: string;
   workspaceId?: string;
@@ -54,6 +54,7 @@ export function terminalCapabilities(historyAvailable: boolean): Record<SessionC
 }
 /** Full bounded snapshots replace the window, including after truncation; never append a replay. */
 export function reconcileTerminalChat(previous: TerminalChatState, snapshot: TerminalChatSnapshot, scope: { workspaceId: string; panelId: string }): TerminalChatState {
+  if (snapshot.status === "loading") return { ...initialTerminalChat };
   const control = snapshot.workspaceId === scope.workspaceId && snapshot.surfaceId === scope.panelId &&
     snapshot.control?.threadId === snapshot.sessionId ? snapshot.control : undefined;
   if (snapshot.reason === "ambiguous" || snapshot.reason === "unassociated") {

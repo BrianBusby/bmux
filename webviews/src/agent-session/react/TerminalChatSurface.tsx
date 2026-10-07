@@ -14,6 +14,7 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
   const [startFailed, setStartFailed] = useState(false);
   const scroll = useRef<HTMLDivElement>(null);
   const following = useRef(true);
+  const automaticStartAttempted = useRef(false);
   const copy = context.copy;
   useEffect(() => {
     let cancelled = false;
@@ -39,6 +40,15 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
     void refresh();
     return () => { cancelled = true; clearTimeout(timer); window.removeEventListener("bmux-terminal-chat-visibility", onVisibility); };
   }, [context]);
+  useEffect(() => {
+    if (!context.automaticallyStartConnectedSession || !context.canStartConnectedSession ||
+      state.status !== "unavailable" || state.control || state.sessionId || state.reason === "ambiguous" ||
+      automaticStartAttempted.current) return;
+    automaticStartAttempted.current = true;
+    setStarting(true);
+    void callNative("terminalChat.startConnected", { automatic: true })
+      .catch(() => setStartFailed(true)).finally(() => setStarting(false));
+  }, [context, state.status, state.control, state.sessionId, state.reason]);
   useLayoutEffect(() => {
     if (following.current && scroll.current) scroll.current.scrollTop = scroll.current.scrollHeight;
   }, [state.messages]);
@@ -47,9 +57,13 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
   const turnStatus = state.status === "observed" && state.observedTurn ? {
     working: copy.runningStatus, completed: copy.chatCompleted, interrupted: copy.chatInterrupted,
   }[state.observedTurn.state] : undefined;
+  // An owned session can be connected before its first transcript exists.
+  const connectedWithoutMessages = (state.status === "unavailable" || state.status === "observed") &&
+    state.messages.length === 0 && canUseConnectedControl(state.control, state.sessionId);
+  const statusLabel = state.reason === "ambiguous" ? copy.chatAmbiguous :
+    turnStatus ?? (connectedWithoutMessages ? copy.chatConnected ?? copy.chatConversation : statuses[state.status]);
   return <section className="terminal-chat">
-    <header className="terminal-chat-header"><output>{state.reason === "ambiguous" ? copy.chatAmbiguous : turnStatus ?? statuses[state.status]}</output>
-      <button onClick={() => void callNative("terminalChat.openTerminal")}>{copy.chatInteract}</button>
+    <header className="terminal-chat-header"><output>{statusLabel}</output>
     </header>
     <section className="terminal-chat-history" ref={scroll} tabIndex={0} aria-label={copy.chatConversation}
       onScroll={() => { const node = scroll.current; if (node) following.current = node.scrollHeight - node.scrollTop - node.clientHeight < 48; }}>
@@ -60,8 +74,8 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
     </section>
     {state.control ? <ConnectedChatComposer context={context} control={state.control}
       enabled={canUseConnectedControl(state.control, state.sessionId)} /> :
-      !capabilities.submitPrompt.available && <footer className="terminal-chat-footer">{copy.chatReadOnly}</footer>}
-    {context.canStartConnectedSession && <div className="terminal-chat-launch">
+      !capabilities.submitPrompt.available && <footer className="terminal-chat-footer">{state.status === "loading" ? copy.chatLoading : starting ? copy.startingStatus : copy.chatReadOnly}</footer>}
+    {context.canStartConnectedSession && state.status !== "loading" && !state.control && <div className="terminal-chat-launch">
       <button disabled={starting} onClick={() => {
         setStarting(true); setStartFailed(false);
         void callNative("terminalChat.startConnected").catch(() => setStartFailed(true)).finally(() => setStarting(false));

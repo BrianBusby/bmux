@@ -21,26 +21,31 @@ final class WorkspaceDisplayCurrentStateStore {
     }
 
     func refreshedSnapshot(stableWorkspaceID: UUID) async -> WorkspaceDisplayCurrentStateSnapshot? {
-        let response: ProvenanceWorkspaceDisplayResponse
         do {
-            response = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
-                workspaceID: stableWorkspaceID.uuidString
-            ))
+            if let snapshot = try await freshSnapshot(stableWorkspaceID: stableWorkspaceID),
+               snapshot.isNewerThan(snapshotsByStableWorkspaceID[stableWorkspaceID]) {
+                snapshotsByStableWorkspaceID[stableWorkspaceID] = snapshot
+            }
+            return snapshotsByStableWorkspaceID[stableWorkspaceID]
         } catch {
-            StartupBreadcrumbLog.append("workProvenance.displayCurrentState.refreshFailed", fields: [
-                "workspace": stableWorkspaceID.uuidString,
-                "error": String(describing: error)
-            ])
+            if !Task.isCancelled {
+                StartupBreadcrumbLog.append("workProvenance.displayCurrentState.refreshFailed", fields: [
+                    "workspace": stableWorkspaceID.uuidString, "error": String(describing: error)
+                ])
+            }
             return snapshotsByStableWorkspaceID[stableWorkspaceID]
         }
+    }
+
+    /// Requires a successful PE read; absence and failure stay distinct for resource authorization.
+    /// Leaves cache publication to refresh so authorization cannot consume its sidebar notification.
+    func freshSnapshot(stableWorkspaceID: UUID) async throws -> WorkspaceDisplayCurrentStateSnapshot? {
+        let response = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
+            workspaceID: stableWorkspaceID.uuidString
+        ))
         guard let display = response.display,
-              let snapshot = await displaySnapshot(display, stableWorkspaceID: stableWorkspaceID) else {
-            return snapshotsByStableWorkspaceID[stableWorkspaceID]
-        }
-        guard !Task.isCancelled, snapshot.isNewerThan(snapshotsByStableWorkspaceID[stableWorkspaceID]) else {
-            return snapshotsByStableWorkspaceID[stableWorkspaceID]
-        }
-        snapshotsByStableWorkspaceID[stableWorkspaceID] = snapshot
+              let snapshot = await displaySnapshot(display, stableWorkspaceID: stableWorkspaceID) else { return nil }
+        try Task.checkCancellation()
         return snapshot
     }
 

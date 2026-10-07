@@ -17,6 +17,11 @@ final class WorkProvenanceRuntime {
     private let workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription?
     private let sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder?
     private let codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder?
+    private lazy var promptEvidenceCoordinator = WorkProvenancePromptEvidenceCoordinator(
+        recorder: codingAgentEvidenceRecorder, displayStore: workspaceDisplayCurrentStateStore,
+        resolveWorkspace: { [weak self] in self?.promptWorkspaceActions(workspaceID: $0, surfaceID: $1) },
+        refreshDisplay: { [weak self] in self?.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: [$0]) }
+    )
     private var directoryObservationTask: Task<Void, Never>?
     private var titleObservationTask: Task<Void, Never>?
     private var displayMetadataObservationTask: Task<Void, Never>?
@@ -170,6 +175,7 @@ final class WorkProvenanceRuntime {
     func stop() {
         guard lifecycleState != .stopped else { return }
         lifecycleState = .stopping
+        promptEvidenceCoordinator.stop()
         directoryObservationTask?.cancel()
         directoryObservationTask = nil
         titleObservationTask?.cancel()
@@ -216,6 +222,7 @@ final class WorkProvenanceRuntime {
             "count": "\(workspaces.count)"
         ])
         guard acceptsObservationProducerWork else { return }
+        promptEvidenceCoordinator.prune()
         guard let observationService else { return }
         let snapshots = workspaces.map(WorkProvenanceWorkspaceSnapshot.init(workspace:))
         let stableWorkspaceIDs = snapshots.map(\.stableWorkspaceID)
@@ -269,54 +276,28 @@ final class WorkProvenanceRuntime {
 
     /// Persists hook-observed prompt evidence when sidecar telemetry has not linked the workspace yet.
     func recordHookUserPromptSubmit(record: AgentChatSessionRecord, event: WorkstreamEvent) {
-        guard acceptsLifecycleProducerWork, let codingAgentEvidenceRecorder,
-              let workspace = workspace(forRuntimeOrStableWorkspaceID: record.workspaceID ?? event.workspaceId) else {
-            return
-        }
+        guard acceptsLifecycleProducerWork, codingAgentEvidenceRecorder != nil,
+              let workspace = workspace(forRuntimeOrStableWorkspaceID: record.workspaceID ?? event.workspaceId) else { return }
         let stableWorkspaceID = workspace.stableId
         let fallbackPromptText = workspace.latestSubmittedMessage
-        trackBackgroundTask(Task { [weak self] in
-            do {
-                try await codingAgentEvidenceRecorder.recordHookUserPromptSubmit(
-                    record: record,
-                    event: event,
-                    stableWorkspaceID: stableWorkspaceID,
-                    fallbackPromptText: fallbackPromptText
-                )
-                await MainActor.run {
-                    self?.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: [stableWorkspaceID])
-                }
-            } catch {
-                StartupBreadcrumbLog.append("workProvenance.hookPrompt.recordFailed", fields: [
-                    "session": record.sessionID,
-                    "error": String(describing: error)
-                ])
-            }
+        trackBackgroundTask(Task { [promptEvidenceCoordinator] in
+            await promptEvidenceCoordinator.recordHook(
+                record: record, event: event, stableWorkspaceID: stableWorkspaceID, fallbackPromptText: fallbackPromptText
+            )
         })
     }
 
-    /// Persists transcript-observed prompt evidence when sidecar telemetry did not project it.
-    func recordTranscriptUserPrompts(record: AgentChatSessionRecord, messages: [ChatMessage]) {
-        guard acceptsLifecycleProducerWork, let codingAgentEvidenceRecorder, !messages.isEmpty else { return }
+    /// Persists transcript prompts before resolving resources for their verified live terminal session.
+    func recordTranscriptUserPrompts(
+        record: AgentChatSessionRecord, messages: [ChatMessage],
+        isCurrentSession: @escaping @MainActor () -> Bool = { false }
+    ) {
+        guard acceptsLifecycleProducerWork, codingAgentEvidenceRecorder != nil, !messages.isEmpty else { return }
         let stableWorkspaceID = workspace(forRuntimeOrStableWorkspaceID: record.workspaceID)?.stableId
-        trackBackgroundTask(Task { [weak self] in
-            do {
-                try await codingAgentEvidenceRecorder.recordTranscriptUserPrompts(
-                    record: record,
-                    messages: messages,
-                    stableWorkspaceID: stableWorkspaceID
-                )
-                if let stableWorkspaceID {
-                    await MainActor.run {
-                        self?.refreshWorkspaceDisplayCurrentState(stableWorkspaceIDs: [stableWorkspaceID])
-                    }
-                }
-            } catch {
-                StartupBreadcrumbLog.append("workProvenance.transcriptPrompt.recordFailed", fields: [
-                    "session": record.sessionID,
-                    "error": String(describing: error)
-                ])
-            }
+        trackBackgroundTask(Task { [promptEvidenceCoordinator] in
+            await promptEvidenceCoordinator.recordTranscript(
+                record: record, messages: messages, stableWorkspaceID: stableWorkspaceID, isCurrentSession: isCurrentSession
+            )
         })
     }
 
@@ -464,7 +445,7 @@ final class WorkProvenanceRuntime {
         Self.stableWorkspaceIDs(in: workspaceResolutionTabManagers(for: nil))
     }
 
-    private func workspaceResolutionTabManagers(for runtimeOrStableWorkspaceID: UUID?) -> [TabManager] {
+    func workspaceResolutionTabManagers(for runtimeOrStableWorkspaceID: UUID?) -> [TabManager] {
         var managers: [TabManager] = []
         var seenManagers: Set<ObjectIdentifier> = []
         func append(_ manager: TabManager?) {

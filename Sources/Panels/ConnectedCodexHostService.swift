@@ -8,16 +8,22 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
     private let executable: URL
     private let root: URL
     private let environment: [String: String]
+    private let connect: @Sendable (URL, String) async throws -> CodexRPCConnection
     private var processes: [UUID: Process] = [:]
 
-    init(executable: URL, root: URL, environment: [String: String]) {
+    init(executable: URL, root: URL, environment: [String: String],
+         connect: @escaping @Sendable (URL, String) async throws -> CodexRPCConnection = { endpoint, token in
+             try await ConnectedCodexHostService.authenticatedConnection(endpoint, token: token)
+         }) {
         self.executable = executable
         self.root = root
         self.environment = environment
+        self.connect = connect
     }
 
-    func launch(surfaceID: UUID, workingDirectory: String) async throws -> ConnectedCodexHost {
-        let version = await CommandRunner(environment: environment).runStandardOutput(
+    func launch(surfaceID: UUID, workingDirectory: String, configuration: ConnectedCodexLaunchConfiguration = .init()) async throws -> ConnectedCodexHost {
+        let launchEnvironment = environment.merging(configuration.environment) { _, configured in configured }
+        let version = await CommandRunner(environment: launchEnvironment).runStandardOutput(
             directory: workingDirectory, executable: executable.path, arguments: ["--version"], timeout: 5
         )
         // Capabilities are empirical and version-specific; fail closed on upgrades.
@@ -33,9 +39,9 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
         }
         let process = Process()
         process.executableURL = executable
-        process.arguments = ["app-server", "--listen", "ws://127.0.0.1:0", "--ws-auth", "capability-token", "--ws-token-file", tokenURL.path]
+        process.arguments = ["app-server", "--listen", "ws://127.0.0.1:0", "--ws-auth", "capability-token", "--ws-token-file", tokenURL.path] + configuration.hostArguments
         process.currentDirectoryURL = URL(fileURLWithPath: workingDirectory)
-        process.environment = environment.filter { !$0.key.hasPrefix("BMUX") && !$0.key.hasPrefix("CMUX") && $0.key != "CODEX_THREAD_ID" }
+        process.environment = launchEnvironment.filter { !$0.key.hasPrefix("BMUX") && !$0.key.hasPrefix("CMUX") && $0.key != "CODEX_THREAD_ID" }
         let output = Pipe()
         process.standardOutput = output
         process.standardError = output
@@ -53,6 +59,7 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
             continuation.finish()
         }
         defer { deadline.cancel() }
+        var connection: CodexRPCConnection?
         do {
             try process.run()
             processes[surfaceID] = process
@@ -70,16 +77,22 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
             // Drain future diagnostics without retaining or logging provider output.
             output.fileHandleForReading.readabilityHandler = { handle in _ = handle.availableData }
             guard let endpoint, process.isRunning else { throw CodexControlError.disconnected }
-            try await verifyAuthenticationRequired(endpoint)
-            let connection = CodexRPCConnection(transport: try CodexLoopbackWebSocket(endpoint: endpoint, token: token))
-            try await connection.start()
+            let authenticated = try await connect(endpoint, token)
+            connection = authenticated
+            let overrides = (configuration.arguments + (try await compatibleModelArguments(using: authenticated, workingDirectory: workingDirectory, configuration: configuration)))
+                .map(Self.quote).joined(separator: " ")
+            guard !Task.isCancelled, process.isRunning, processes[surfaceID] === process else {
+                throw CodexControlError.disconnected
+            }
             // The credential never appears in argv or a renderer bridge payload.
             let shellCommand = "BMUX_CONNECTED_CODEX_TOKEN=$(cat \(Self.quote(tokenURL.path))) exec \(Self.quote(executable.path)) --remote \(Self.quote(endpoint.absoluteString)) --remote-auth-token-env BMUX_CONNECTED_CODEX_TOKEN"
+                + (overrides.isEmpty ? "" : " " + overrides)
             let command = "/bin/sh -c " + Self.quote(shellCommand)
             return ConnectedCodexHost(surfaceID: surfaceID, threadID: nil, processID: process.processIdentifier,
-                                      endpoint: endpoint, terminalCommand: command, connection: connection,
+                                      endpoint: endpoint, terminalCommand: command, connection: authenticated,
                                       control: nil)
         } catch {
+            await connection?.disconnect()
             if process.isRunning { process.terminate() }
             processes.removeValue(forKey: surfaceID)
             output.fileHandleForReading.readabilityHandler = nil
@@ -131,7 +144,74 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
         try? FileManager.default.removeItem(at: root.appendingPathComponent(surfaceID.uuidString))
     }
 
-    private func verifyAuthenticationRequired(_ endpoint: URL) async throws {
+    /// Compatibility overrides belong only to this new TUI. Saved configuration
+    /// and already-running threads retain their original model selection.
+    private func compatibleModelArguments(using connection: CodexRPCConnection, workingDirectory: String, configuration: ConnectedCodexLaunchConfiguration) async throws -> [String] {
+        guard !configuration.hasExplicitModel else { return [] }
+        let decoder = JSONDecoder()
+        let account = try decoder.decode(AccountResponse.self, from: await connection.request(
+            method: "account/read", params: Data(#"{"refreshToken":false}"#.utf8)))
+        guard account.account?.type == "chatgpt" else { return [] }
+        let configParams = try JSONSerialization.data(withJSONObject: [
+            "includeLayers": false, "cwd": workingDirectory])
+        let config = try decoder.decode(ConfigResponse.self, from: await connection.request(method: "config/read", params: configParams)).config
+        guard config.model_provider == nil || config.model_provider == "openai" else { return [] }
+        var models: [CatalogModel] = []
+        var cursor: String?
+        var seenCursors: Set<String> = []
+        var complete = false
+        // The client catalog is finite; malformed/repeated pagination fails closed.
+        for _ in 0..<8 {
+            var params: [String: Any] = ["limit": 100, "includeHidden": true]
+            if let cursor { params["cursor"] = cursor }
+            let page = try decoder.decode(ModelPage.self, from: await connection.request(
+                method: "model/list", params: JSONSerialization.data(withJSONObject: params)))
+            models.append(contentsOf: page.data)
+            if let model = config.model, models.contains(where: { $0.model == model }) { return [] }
+            guard let next = page.nextCursor else { complete = true; break }
+            guard seenCursors.insert(next).inserted else { throw CodexControlError.invalidResponse }
+            cursor = next
+        }
+        let defaults = models.filter { $0.isDefault && !$0.hidden && !$0.model.isEmpty }
+        guard complete, defaults.count == 1, let selected = defaults.first else { throw CodexControlError.invalidResponse }
+        var arguments = ["--model", selected.model]
+        if let effort = config.model_reasoning_effort,
+           !selected.supportedReasoningEfforts.contains(where: { $0.reasoningEffort == effort }) {
+            guard selected.supportedReasoningEfforts.contains(where: { $0.reasoningEffort == selected.defaultReasoningEffort }) else {
+                throw CodexControlError.invalidResponse
+            }
+            let value = String(decoding: try JSONEncoder().encode(selected.defaultReasoningEffort), as: UTF8.self)
+            arguments += ["-c", "model_reasoning_effort=" + value]
+        }
+        return arguments
+    }
+
+    private struct AccountResponse: Decodable { let account: Account? }
+    private struct Account: Decodable { let type: String }
+    private struct ConfigResponse: Decodable { let config: ModelConfig }
+    private struct ModelConfig: Decodable {
+        let model: String?
+        let model_provider: String?
+        let model_reasoning_effort: String?
+    }
+    private struct ModelPage: Decodable { let data: [CatalogModel]; let nextCursor: String? }
+    private struct CatalogModel: Decodable {
+        let model: String
+        let hidden: Bool
+        let isDefault: Bool
+        let defaultReasoningEffort: String
+        let supportedReasoningEfforts: [ReasoningOption]
+    }
+    private struct ReasoningOption: Decodable { let reasoningEffort: String }
+
+    private static func authenticatedConnection(_ endpoint: URL, token: String) async throws -> CodexRPCConnection {
+        try await verifyAuthenticationRequired(endpoint)
+        let connection = CodexRPCConnection(transport: try CodexLoopbackWebSocket(endpoint: endpoint, token: token))
+        try await connection.start()
+        return connection
+    }
+
+    private static func verifyAuthenticationRequired(_ endpoint: URL) async throws {
         var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false)!
         components.scheme = "http"
         var request = URLRequest(url: components.url!, timeoutInterval: 5)

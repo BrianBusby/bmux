@@ -29,7 +29,7 @@ export function ConnectedChatComposer({ context, control, enabled }: { context: 
   const blocked = sending || latest?.delivery === "pending" || latest?.delivery === "uncertain";
   const slashCommand = draft.trimStart().startsWith("/");
   const submit = async (operation: "queue" | "steer") => {
-    if (inFlight.current || !enabled || blocked || !draft.trim() || slashCommand) return;
+    if (inFlight.current || !enabled || (operation === "queue" ? !control.queueFollowUp : !control.steerTurn) || blocked || !draft.trim() || slashCommand) return;
     const request: ConnectedAction & { draftRevision: string } = { id: crypto.randomUUID(), threadID: control.threadId, operation, text: draft, draftRevision: revision.current,
       expectedTurnID: operation === "steer" ? control.activeTurnId : undefined, delivery: "pending" };
     inFlight.current = true;
@@ -62,11 +62,9 @@ export function ConnectedChatComposer({ context, control, enabled }: { context: 
         event.preventDefault();
         void submit("queue");
       }} rows={2} maxLength={16000} />
-    <div className="terminal-chat-composer-actions">
-      <button disabled={!enabled || !control.queueFollowUp || blocked || !draft.trim() || slashCommand} onClick={() => void submit("queue")}>{copy.connectedQueue}</button>
-      {control.steerTurn && <button disabled={!enabled || blocked || !draft.trim() || slashCommand} onClick={() => void submit("steer")}>{copy.connectedSteer}</button>}
-      <button onClick={() => void callNative("terminalChat.openTerminal")}>{copy.chatInteract}</button>
-    </div>
+    {control.steerTurn && <div className="terminal-chat-composer-actions">
+      <button disabled={!enabled || blocked || !draft.trim() || slashCommand} onClick={() => void submit("steer")}>{copy.connectedSteer}</button>
+    </div>}
     {latest && <output aria-live="polite">{deliveryCopy[latest.delivery]}</output>}
     <p>{slashCommand ? copy.connectedSlashCommands : enabled ? copy.connectedQueuePolicy : copy.connectedUnavailable}</p>
   </footer>;

@@ -1,4 +1,5 @@
 import BmuxAgentChat
+import BmuxFoundation
 import Foundation
 import Testing
 #if canImport(bmux_DEV)
@@ -8,6 +9,229 @@ import Testing
 #endif
 
 @Suite @MainActor struct ConnectedSessionOwnershipTests {
+
+    @Test func unsupportedChatGPTModelUsesClientDefaultWithoutChangingValidReasoningEffort() async throws {
+        let arguments = try await launchedArguments(model: "unavailable-model", effort: "xhigh")
+        #expect(arguments.suffix(2) == ["--model", "catalog-default"])
+        #expect(!arguments.contains("-c"))
+    }
+
+    @Test func fallbackModelReplacesOnlyUnsupportedReasoningEffort() async throws {
+        let arguments = try await launchedArguments(model: "unavailable-model", effort: "unsupported-effort")
+        #expect(arguments.suffix(4) == ["--model", "catalog-default", "-c", "model_reasoning_effort=\"low\""])
+    }
+
+    @Test(arguments: ["chatgpt", "apiKey"])
+    func validOrCustomModelsRetainCLIConfiguration(accountType: String) async throws {
+        let arguments = try await launchedArguments(model: accountType == "chatgpt" ? "hidden-valid" : "custom-provider-model",
+                                                   accountType: accountType)
+        #expect(!arguments.contains("--model"))
+        #expect(!arguments.contains("-c"))
+    }
+
+    @Test func customProviderWithChatGPTLoginRetainsCLIConfiguration() async throws {
+        let arguments = try await launchedArguments(model: "local-model", provider: "local-provider")
+        #expect(!arguments.contains("--model"))
+    }
+
+    @Test(arguments: ["{\"data\":[],\"nextCursor\":null}", "{\"data\":[],\"nextCursor\":\"repeated\"}"])
+    func unavailableCatalogFailsClosedAndDisconnects(catalog: String) async throws {
+        await #expect(throws: CodexControlError.invalidResponse) {
+            _ = try await launchedArguments(model: "unavailable-model", catalogOverride: catalog)
+        }
+    }
+
+    @Test func configuredLaunchRetainsExplicitOptionsAndHostEnvironment() async throws {
+        let configuration = try #require(ConnectedCodexLaunchConfiguration(
+            command: #"codex --model hidden-valid --sandbox read-only --add-dir 'Maple Street' --config 'approval_policy="never"'"#,
+            environment: ["INSPECTION_SCOPE": "Maple Street"]))
+        let arguments = try await launchedArguments(model: "unavailable-model", configuration: configuration)
+        #expect(Array(arguments.suffix(8)) == ["--model", "hidden-valid", "--sandbox", "read-only", "--add-dir", "Maple Street", "--config", #"approval_policy="never""#])
+    }
+
+    @Test func explicitConfigModelIsNotReplacedByTheAccountDefault() async throws {
+        let configuration = try #require(ConnectedCodexLaunchConfiguration(
+            command: #"codex --config 'model="chosen-model"'"#, environment: [:]))
+        let arguments = try await launchedArguments(model: "unavailable-model", configuration: configuration)
+        #expect(Array(arguments.suffix(2)) == ["--config", #"model="chosen-model""#])
+        #expect(!arguments.contains("--model"))
+    }
+
+    /// Runs the real host launcher and its shell command with an isolated fake CLI.
+    /// Model/account RPC replies are values; no user configuration or auth is read.
+    private func launchedArguments(model: String, effort: String = "xhigh", accountType: String = "chatgpt",
+                                   provider: String = "openai", catalogOverride: String? = nil,
+                                   configuration: ConnectedCodexLaunchConfiguration = .init()) async throws -> [String] {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("connected-model-\(UUID())")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let executable = directory.appendingPathComponent("codex fixture")
+        let script = """
+        #!/bin/sh
+        case "$1" in
+          --version) printf 'codex-cli 0.154.0\n';;
+          app-server)
+            /usr/bin/python3 -c 'import json,os,sys; open(os.environ["HOST_CAPTURE"],"w").write(json.dumps({"args":sys.argv[1:],"scope":os.environ.get("INSPECTION_SCOPE")}))' "$@"
+            printf 'listening on: ws://127.0.0.1:1\n'
+            exec /usr/bin/python3 -c 'import signal; signal.pause()';;
+          *) exec /usr/bin/python3 -c 'import json,sys; print(json.dumps(sys.argv[1:]))' "$@";;
+        esac
+        """
+        try Data(script.utf8).write(to: executable)
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: executable.path)
+        let config = try JSONSerialization.data(withJSONObject: ["config": ["model": model,
+            "model_reasoning_effort": effort, "model_provider": provider]])
+        let catalog = Data("""
+        {"data":[{"model":"catalog-default","hidden":false,"isDefault":true,"defaultReasoningEffort":"low",
+          "supportedReasoningEfforts":[{"reasoningEffort":"low"},{"reasoningEffort":"xhigh"}]},
+          {"model":"hidden-valid","hidden":true,"isDefault":false,"defaultReasoningEffort":"low",
+          "supportedReasoningEfforts":[{"reasoningEffort":"low"}]}],"nextCursor":null}
+        """.utf8)
+        let account = try JSONSerialization.data(withJSONObject: ["account": ["type": accountType]])
+        let transport = ConnectedCodexFixtureTransport(responses: [
+            "account/read": account, "config/read": config,
+            "model/list": catalogOverride.map { Data($0.utf8) } ?? catalog])
+        let connection = CodexRPCConnection(transport: transport)
+        let service = ConnectedCodexHostService(executable: executable, root: directory.appendingPathComponent("hosts"),
+                                               environment: ["PATH": "/usr/bin:/bin", "HOST_CAPTURE": directory.appendingPathComponent("host.json").path], connect: { _, _ in
+            try await connection.start()
+            return connection
+        })
+        let surfaceID = UUID()
+        do {
+            let host = try await service.launch(surfaceID: surfaceID, workingDirectory: directory.path, configuration: configuration)
+            let output = await CommandRunner(environment: ["PATH": "/usr/bin:/bin"]).runStandardOutput(
+                directory: directory.path, executable: "/bin/sh", arguments: ["-c", host.terminalCommand], timeout: 5)
+            await service.endOwnedHost(surfaceID: surfaceID)
+            await connection.disconnect()
+            let hostCapture = try JSONSerialization.jsonObject(with: Data(contentsOf: directory.appendingPathComponent("host.json"))) as? [String: Any]
+            #expect(Array((hostCapture?["args"] as? [String] ?? []).suffix(configuration.hostArguments.count)) == configuration.hostArguments)
+            if let scope = configuration.environment["INSPECTION_SCOPE"] { #expect(hostCapture?["scope"] as? String == scope) }
+            let data = Data(try #require(output).utf8)
+            return try JSONDecoder().decode([String].self, from: data)
+        } catch {
+            #expect(await transport.closeCount > 0)
+            await service.endOwnedHost(surfaceID: surfaceID)
+            await connection.disconnect()
+            throw error
+        }
+    }
+
+    @Test func overlappingSnapshotReadsKeepOneReconnectAndUsableControl() async throws {
+        let entered = AsyncStream<Void>.makeStream()
+        var release: CheckedContinuation<Void, Never>?
+        var reconnects = 0
+        let replacementTransport = ConnectedCodexFixtureTransport()
+        let connection = CodexRPCConnection(transport: ConnectedCodexFixtureTransport())
+        try await connection.start()
+        let hosts = ConnectedCodexFixtureHost(connection: connection, replacementForReconnect: { host in
+            reconnects += 1
+            if reconnects == 1 {
+                await withCheckedContinuation { continuation in
+                    release = continuation
+                    entered.continuation.yield(())
+                }
+            }
+            let replacement = CodexRPCConnection(transport: reconnects == 1 ? replacementTransport : ConnectedCodexFixtureTransport())
+            try await replacement.start()
+            // Match the real host service: rebinding disconnects the previous
+            // connection on the same retained control actor before returning.
+            await host.control?.reconnect(using: replacement)
+            var result = host
+            result.connection = replacement
+            return result
+        })
+        let runtime = TerminalChatRuntime(reader: ConnectedCodexFixtureReader(), hosts: hosts,
+                                         bind: { _, _, _, _ in })
+        let workspace = UUID(), surface = UUID()
+        _ = try await runtime.prepareConnectedSession(workspaceID: workspace, surfaceID: surface, workingDirectory: "/tmp")
+        runtime.attachConnectedTerminal(surfaceID: surface, isAlive: { true })
+        _ = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        await connection.disconnect()
+        let firstRead = Task { await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface) }
+        var iterator = entered.stream.makeAsyncIterator()
+        _ = await iterator.next()
+        _ = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        #expect(reconnects == 1)
+        release?.resume()
+        _ = await firstRead.value
+        let revision = UUID()
+        try runtime.updateConnectedDraft(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", revision: revision, text: "Continue the inspection")
+        let result = try? await runtime.performConnectedAction(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", requestID: UUID(), draftRevision: revision, text: "Continue the inspection", expectedTurnID: nil)
+        #expect(result?["delivery"] as? String == "accepted")
+        #expect(await replacementTransport.mutationThreads == ["thread-a"])
+        #expect(reconnects == 1)
+        await runtime.closeConnectedSession(surfaceID: surface)
+        entered.continuation.finish()
+    }
+
+    @Test func reconnectCompletingAfterCloseCannotRestoreRetiredControl() async throws {
+        let entered = AsyncStream<Void>.makeStream()
+        var release: CheckedContinuation<Void, Never>?
+        let connection = CodexRPCConnection(transport: ConnectedCodexFixtureTransport())
+        try await connection.start()
+        let hosts = ConnectedCodexFixtureHost(connection: connection, beforeReconnect: {
+            await withCheckedContinuation { continuation in
+                release = continuation
+                entered.continuation.yield(())
+            }
+        })
+        let runtime = TerminalChatRuntime(reader: ConnectedCodexFixtureReader(), hosts: hosts,
+                                         bind: { _, _, _, _ in })
+        let workspace = UUID(), surface = UUID()
+        _ = try await runtime.prepareConnectedSession(workspaceID: workspace, surfaceID: surface, workingDirectory: "/tmp")
+        runtime.attachConnectedTerminal(surfaceID: surface, isAlive: { true })
+        _ = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        await connection.disconnect()
+        let read = Task { await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface) }
+        var iterator = entered.stream.makeAsyncIterator()
+        _ = await iterator.next()
+        await runtime.closeConnectedSession(surfaceID: surface)
+        release?.resume()
+        let snapshot = await read.value
+        #expect(snapshot["control"] == nil)
+        #expect(snapshot["sessionId"] == nil)
+        #expect(throws: (any Error).self) {
+            try runtime.updateConnectedDraft(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", revision: UUID(), text: "Retired session")
+        }
+        let refreshed = await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface)
+        #expect(refreshed["control"] == nil)
+        #expect(refreshed["sessionId"] == nil)
+        entered.continuation.finish()
+    }
+
+    @Test func adoptionCompletingAfterCloseCannotRestoreRetiredControlOrBinding() async throws {
+        let entered = AsyncStream<Void>.makeStream()
+        var release: CheckedContinuation<Void, Never>?
+        var bindings: [String] = []
+        let connection = CodexRPCConnection(transport: ConnectedCodexFixtureTransport())
+        try await connection.start()
+        let hosts = ConnectedCodexFixtureHost(connection: connection, beforeAdoption: {
+            await withCheckedContinuation { continuation in
+                release = continuation
+                entered.continuation.yield(())
+            }
+        })
+        let runtime = TerminalChatRuntime(reader: ConnectedCodexFixtureReader(), hosts: hosts,
+                                         bind: { thread, _, _, _ in bindings.append(thread) })
+        let workspace = UUID(), surface = UUID()
+        _ = try await runtime.prepareConnectedSession(workspaceID: workspace, surfaceID: surface, workingDirectory: "/tmp")
+        runtime.attachConnectedTerminal(surfaceID: surface, isAlive: { true })
+        let read = Task { await runtime.terminalChatSnapshot(workspaceID: workspace, surfaceID: surface) }
+        var iterator = entered.stream.makeAsyncIterator()
+        _ = await iterator.next()
+        await runtime.closeConnectedSession(surfaceID: surface)
+        release?.resume()
+        let snapshot = await read.value
+        #expect(bindings.isEmpty)
+        #expect(snapshot["control"] == nil)
+        #expect(snapshot["sessionId"] == nil)
+        #expect(throws: (any Error).self) {
+            try runtime.updateConnectedDraft(workspaceID: workspace, surfaceID: surface, sessionID: "thread-a", revision: UUID(), text: "Retired session")
+        }
+        entered.continuation.finish()
+    }
+
     @Test func connectionAuthoritySurvivesMissingHistoryButCannotCrossWorkspaceOrThread() async throws {
         let transport = ConnectedCodexFixtureTransport()
         let connection = CodexRPCConnection(transport: transport)

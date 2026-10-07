@@ -47,9 +47,7 @@ test("reload restores an uncertain draft without resending, then reconciles acce
   try {
     await act(async () => root.render(<ConnectedChatComposer context={context} control={control} enabled />));
     expect(dom.window.document.querySelector("textarea")?.value).toBe("Inspect the build");
-    const send = [...dom.window.document.querySelectorAll("button")].find(button => button.textContent === "Send follow-up")!;
-    expect(send.disabled).toBe(true);
-    await act(async () => send.click());
+    expect(dom.window.document.querySelectorAll("button")).toHaveLength(0);
     expect(calls).toEqual([]);
     expect(dom.window.document.body.textContent).toContain("Delivery uncertain");
     await act(async () => root.render(<ConnectedChatComposer context={context} control={{ ...control,
@@ -62,9 +60,8 @@ test("reload restores an uncertain draft without resending, then reconciles acce
     await act(async () => root.render(<ConnectedChatComposer context={context} control={{ ...control, draft: { revision: "restored-r1", text: "Inspect the build" },
       actions: control.actions!.map(action => ({ ...action, delivery: "accepted" })) }} enabled />));
     expect(dom.window.document.querySelector("textarea")?.value).toBe("Inspect the build");
-    const terminal = [...dom.window.document.querySelectorAll("button")].find(button => button.textContent === "Interact in Terminal")!;
-    await act(async () => terminal.click());
-    expect(calls).toEqual(["terminalChat.openTerminal"]);
+    expect(dom.window.document.querySelectorAll("button")).toHaveLength(0);
+    expect(calls).toEqual([]);
   } finally {
     await act(async () => root.unmount()); dom.window.close();
     Object.assign(globalThis, { window: previousWindow, document: previousDocument, IS_REACT_ACT_ENVIRONMENT: false });

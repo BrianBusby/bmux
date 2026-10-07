@@ -49,16 +49,16 @@ private struct WorkspacePanelContentHostView: View {
             workspaceChrome: workspaceChrome,
             hasUnreadNotification: hasUnreadNotification,
             terminalAgentContext: WorkspaceContentView.terminalAgentContext(panel: panel, workspace: workspace),
-            onStartConnectedSession: workspace.remoteConfiguration == nil ? {
-                let directory = (panel as? TerminalPanel)?.directory ?? ""
-                try await workspace.startConnectedCodex(in: paneId, workingDirectory: directory.isEmpty ? workspace.currentDirectory : directory)
+            onStartConnectedSession: workspace.remoteConfiguration == nil && !workspace.isRemoteTmuxMirror ? { [weak workspace, panelID = panel.id] in
+                guard let workspace else { throw AgentSessionBridgeError.invalidRequest }
+                try await workspace.startConnectedCodex(from: panelID)
             } : nil,
             terminalChatReader: workspace.owningTabManager?.terminalChatReader,
             workProvenanceRuntime: workspace.owningTabManager?.workProvenanceRuntime,
             onFocus: onFocus,
             onRequestPanelFocus: onRequestPanelFocus,
-            onRequestTerminalChatFocus: {
-                workspace.focusConnectedCodexChat(panelID: panel.id)
+            onRequestTerminalChatFocus: { [weak workspace, panelID = panel.id] in
+                workspace?.focusConnectedCodexChat(panelID: panelID)
             },
             onResumeAgentHibernation: onResumeAgentHibernation,
             onAutoResumeAgentHibernation: onAutoResumeAgentHibernation,

@@ -9,6 +9,10 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
     var terminalChatDraft: ((AgentSessionBridgeRequest) throws -> Void)?
     var terminalChatAction: ((AgentSessionBridgeRequest) async throws -> [String: Any])?
     var onStartConnectedSession: (() async throws -> Void)?
+    var canAutomaticallyStartConnectedSession: (() -> Bool)?
+    private(set) var isTerminalChatVisible = false
+    private var isConnectedStartPending = false
+    private var hasAttemptedAutomaticConnectedStart = false
     var onInteractInTerminal: (() -> Void)?
     var webView: AgentSessionWebView?
     var panelId = UUID()
@@ -166,6 +170,7 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
     }
 
     func setTerminalChatVisible(_ visible: Bool) {
+        isTerminalChatVisible = visible
         guard let webView else { return }
         webView.evaluateJavaScript("window.dispatchEvent(new CustomEvent('bmux-terminal-chat-visibility', { detail: { visible: \(visible ? "true" : "false") } }));")
     }
@@ -180,6 +185,7 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
     }
 
     func close() {
+        isTerminalChatVisible = false
         isClosed = true
         processStore.closeAll()
         if let webView {
@@ -434,7 +440,20 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             guard let terminalChatAction else { throw AgentSessionBridgeError.invalidRequest }
             return try await terminalChatAction(request)
         case "terminalChat.startConnected":
-            guard let onStartConnectedSession else { throw AgentSessionBridgeError.invalidRequest }
+            guard !isClosed, let onStartConnectedSession else { throw AgentSessionBridgeError.invalidRequest }
+            guard !isConnectedStartPending else { throw AgentSessionBridgeError.sessionAlreadyRunning }
+            isConnectedStartPending = true
+            defer { isConnectedStartPending = false }
+            if request.params["automatic"] as? Bool == true {
+                guard !hasAttemptedAutomaticConnectedStart else { return ["started": false] }
+                hasAttemptedAutomaticConnectedStart = true
+                let snapshot = await terminalChatSnapshot?()
+                guard isTerminalChatVisible, canAutomaticallyStartConnectedSession?() == true,
+                      snapshot?["status"] as? String == "unavailable", snapshot?["sessionId"] == nil,
+                      snapshot?["control"] == nil, snapshot?["reason"] as? String != "ambiguous" else {
+                    throw AgentSessionBridgeError.providerNotReady("codex")
+                }
+            }
             try await onStartConnectedSession()
             return ["started": true]
         case "terminalChat.snapshot":

@@ -3,12 +3,14 @@ import AppKit
 
 @MainActor
 final class TerminalPanelPresentationState {
-    let chatRenderer = AgentSessionWebRendererCoordinator()
+    var chatRenderer = AgentSessionWebRendererCoordinator()
+    var configuredCodexLaunch: ConfiguredCodexLaunchCoordinator?
     var onClose: (() -> Void)?
 
     func close(panel: TerminalPanel) {
         onClose?()
         onClose = nil
+        configuredCodexLaunch = nil
         chatRenderer.close()
         // The surface will be cleaned up by its deinit
         // Detach from the window portal on real close so stale hosted views

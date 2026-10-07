@@ -366,3 +366,98 @@ Terminal and Chat both displayed the marker. No second conversation or process
 restart occurred. This closes the basic UI delivery gate for build 572;
 focus/typing behavior, startup ambiguity, broader recovery, and later draft
 changes still need verification. The running app was not rebuilt or replaced.
+
+
+## Chat-first startup and Terminal focus follow-up
+
+Opening Chat on a plain local shell now starts a new connected Codex terminal
+through the same workspace launch action used by the explicit connected-session
+button. The launch remains bound to the source panel, pane, workspace and local
+working directory. It does not inject a command into the existing shell. A live
+terminal must positively identify an idle shell; unspawned terminals must have
+no deferred command, input, or hibernated agent. The native bridge rechecks
+that there is no associated thread, ambiguous history, or existing control owner
+before automatic launch. Startup occurs once per retained Chat renderer, with
+one native request in flight. Failed startup displays the localized error and
+permits an explicit retry.
+
+An ordinary running CLI remains read-only and untouched. Chat offers the
+existing **New connected Codex session** action rather than claiming an
+unverified attachment. The new TUI still creates its original thread, with no
+dummy prompt or empty-thread resume. Once that identity and control connection
+are verified, the existing queue action accepts the first prompt from Chat.
+Approvals, slash commands, settings and interruption retain their Terminal
+boundary.
+
+The retained renderer now owns whether Chat is visible. Only the WebKit host
+that currently owns the view may deactivate it on teardown. This restores
+Terminal focus when the outer shell switches tabs, while preserving focus
+suppression when a view is transferred to another live Chat host. The outer
+shell supplies the same launch and Chat focus callbacks as the inner panel and
+remounts against the selected terminal identity. A launch completing after the
+user leaves Chat, focuses another panel, selects another workspace, or closes
+the source panel closes its prepared host instead of creating a late focused
+terminal. Thread adoption and reconnect also recheck the same connection owner
+and terminal liveness after their provider awaits; a closed owner cannot be
+republished. A late reconnect closes its replacement connection instead.
+Only one reconnect may rebind a terminal's retained control actor at a time;
+overlapping reads wait for the next refresh rather than launching a second one.
+
+Regression coverage exercises actual native host teardown/transfer and the
+bundled React resource for fresh startup, ordinary-session fallback, first
+connected submission, and failed-start retry. Native bridge tests cover
+single-flight startup, one automatic attempt, hidden Chat, existing
+thread/control ownership, delayed launch after same-workspace pane navigation,
+delayed adoption or reconnect after close, and overlapping reconnect reads
+followed by an accepted action. Returning to the original source
+shell shows its actual read-only state rather than an obsolete startup
+indicator. Native dogfood and broader recovery remain under observation; this
+follow-up does not assert ordinary attachment or enable structured interruption.
+
+
+### Chat-first startup compatibility and composer
+
+New connected ChatGPT sessions read the project-effective configuration and the
+installed client's complete model catalog, including hidden models. A configured
+model in that catalog is preserved. If it is absent, startup passes the visible
+catalog default to the original remote TUI and replaces reasoning effort only
+when the inherited effort is unsupported by that model. API accounts and custom
+providers retain CLI configuration. No global configuration or existing thread
+is rewritten. Missing defaults or invalid pagination fail startup and retire the
+owned connection and host.
+
+The shared composer submits on Enter and retains Shift+Enter, Alt+Enter and IME
+composition. Queue capability, current connection, pending and uncertain delivery
+still gate submission. Chat removes Interact in Terminal and Send buttons from
+both bundled React consumers; Terminal remains available through the native tab.
+Native command regression tests use an injected authenticated connection and a
+launched isolated CLI fixture. Bundled keyboard tests execute the actual HTML
+resource rather than calling React handlers directly. Native fresh-workspace Chat startup, Shift+Enter, Enter delivery, completed
+ChatGPT response with the catalog-default model at inherited xhigh effort,
+Terminal click/typing and return to the same conversation were verified in
+build 698. Broader recovery, light/narrow layouts and user dogfood remain open.
+
+
+### Configured repository launch ownership
+
+Repository workspace and new-tab actions share a connected startup path after
+existing command authorization. A fresh literal Codex launch reserves its host
+before the placeholder can mount a shell. Chat and Terminal show loading until
+the prepared command replaces the process through the existing respawn path,
+retaining surface/tab identity, custom title, canvas membership, tab order and
+current selection. The retained Chat renderer follows that logical surface.
+Closing the source cancels startup and retires the prepared host. This is a new
+owned session, not inferred control of an existing ordinary CLI.
+
+Supported literal launcher arguments and workspace/surface environment reach the
+host and original TUI. Explicit models retain precedence. Setup scripts, compound
+shell commands, resumed sessions, custom executable paths and commands sent to an
+existing terminal keep their shell behavior. No user configuration is rewritten.
+Native build 700 verified actual bmux and companycam-mobile repository-menu
+launches, including launch from Terminal mode, first Chat-only prompts, completed
+responses, Terminal click/typing, and return to the same conversation. The latest
+submitted prompt reconciled once in the workspace card footer. Configured new-tab
+selection/canvas behavior is covered by native tests; the GUI action is not
+configured in the current user menu. Broader recovery and user dogfood remain
+open. Native regression coverage and both bundled consumers verify reservation,
+cancellation and loading behavior.
