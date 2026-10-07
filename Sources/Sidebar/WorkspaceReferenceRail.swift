@@ -10,6 +10,7 @@ struct WorkspaceReferenceRail: View {
     let onSelect: (UUID) -> Void
     let onClose: (UUID) -> Void
     let onOpenLink: (UUID, URL) -> Void
+    let onLaunchRepository: () -> Void
     @Binding var filters: WorkspaceFilters
     @Binding var isFilterPanelPresented: Bool
 
@@ -25,13 +26,30 @@ struct WorkspaceReferenceRail: View {
 
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Text(String(localized: "workspaceRail.title", defaultValue: "Workspaces"))
+                    Text(String(
+                        format: String(
+                            localized: workspaces.count == 1 ? "workspaceRail.count.one" : "workspaceRail.count.other",
+                            defaultValue: workspaces.count == 1 ? "%lld Workspace" : "%lld Workspaces"
+                        ),
+                        Int64(workspaces.count)
+                    ))
                         .font(.system(size: 11, weight: .medium))
                         .tracking(1.2)
                         .foregroundStyle(Color.workspaceReferenceTextMuted)
                     Spacer()
-                    Text(String(workspaces.count))
-                        .foregroundStyle(Color.workspaceReferenceTextDisabled)
+                    Button(action: onLaunchRepository) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(Color.workspaceReferenceTextSecondary)
+                            .frame(width: 28, height: 28)
+                            .background(Color.workspaceReferenceCard)
+                            .clipShape(RoundedRectangle(cornerRadius: 7))
+                            .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.workspaceReferenceCardBorder, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("bmuxShell.repoAgentLauncher")
+                    .accessibilityLabel(String(localized: "titlebar.repoAgentLauncher.accessibilityLabel", defaultValue: "AI Repo Launcher"))
+                    .safeHelp(String(localized: "titlebar.repoAgentLauncher.tooltip", defaultValue: "Launch an AI session for a repo"))
                 }
 
                 WorkspaceTabFilterBar(

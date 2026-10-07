@@ -23,10 +23,13 @@ struct WorkspaceTabFilterBar: View {
                         .foregroundStyle(Color.white.opacity(0.28))
                     TextField(
                         String(localized: "sidebar.workspaceFilter.search", defaultValue: "Search workspaces…"),
-                        text: $filters.query
+                        text: $filters.query,
+                        prompt: Text(String(localized: "sidebar.workspaceFilter.search", defaultValue: "Search workspaces…"))
+                            .foregroundStyle(Color.white)
                     )
                     .textFieldStyle(.plain)
                     .font(.system(size: 14))
+                    .foregroundStyle(Color.white)
                     if !filters.query.isEmpty {
                         Button { filters.query = "" } label: {
                             Image(systemName: "xmark.circle.fill")
@@ -85,7 +88,6 @@ struct WorkspaceTabFilterBar: View {
                 }
             }
         }
-        .padding(.horizontal, 10)
         .padding(.vertical, 8)
     }
 

@@ -53,20 +53,12 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
     if (following.current && scroll.current) scroll.current.scrollTop = scroll.current.scrollHeight;
   }, [state.messages]);
   const capabilities = terminalCapabilities(state.status === "observed" || state.status === "ended");
-  const statuses = { loading: copy.chatLoading, observed: copy.chatObserved, ended: copy.chatEnded, stale: copy.chatStale, unavailable: copy.chatUnavailable };
-  const turnStatus = state.status === "observed" && state.observedTurn ? {
-    working: copy.runningStatus, completed: copy.chatCompleted, interrupted: copy.chatInterrupted,
-  }[state.observedTurn.state] : undefined;
-  // An owned session can be connected before its first transcript exists.
-  const connectedWithoutMessages = (state.status === "unavailable" || state.status === "observed") &&
-    state.messages.length === 0 && canUseConnectedControl(state.control, state.sessionId);
-  const statusLabel = state.reason === "ambiguous" ? copy.chatAmbiguous :
-    turnStatus ?? (connectedWithoutMessages ? copy.chatConnected ?? copy.chatConversation : statuses[state.status]);
+  const historyNotice = state.reason === "ambiguous" ? copy.chatAmbiguous :
+    state.status === "stale" ? copy.chatStale : undefined;
   return <section className="terminal-chat">
-    <header className="terminal-chat-header"><output>{statusLabel}</output>
-    </header>
     <section className="terminal-chat-history" ref={scroll} tabIndex={0} aria-label={copy.chatConversation}
       onScroll={() => { const node = scroll.current; if (node) following.current = node.scrollHeight - node.scrollTop - node.clientHeight < 48; }}>
+      {historyNotice && <output className="terminal-chat-notice">{historyNotice}</output>}
       {state.partial && <p className="terminal-chat-notice">{copy.chatPartial}</p>}
       <div className="terminal-chat-messages" key={`${state.sessionId}:${state.sourceRevision}`}>
         {state.messages.map(message => <ObservedRow key={message.id} message={message} context={context} sessionId={state.sessionId!} />)}
