@@ -2525,10 +2525,8 @@ struct ContentView: View {
                 tabManager.selectWorkspaceIdForAction(id)
                 BrowserExternalLinkOpener().openWebLink(url)
             },
-            onLaunchRepository: {
-                guard let anchorView = NSApp.keyWindow?.contentView
-                    ?? NSApp.mainWindow?.contentView,
-                    AppDelegate.shared?.showRepoAgentLauncherMenu(anchorView: anchorView) == true else {
+            onLaunchRepository: { anchorView in
+                guard AppDelegate.shared?.showRepoAgentLauncherMenu(anchorView: anchorView) == true else {
                     NSSound.beep()
                     return
                 }

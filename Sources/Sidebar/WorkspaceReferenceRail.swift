@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Owns workspace-list projection above the card snapshot boundary.
@@ -10,9 +11,10 @@ struct WorkspaceReferenceRail: View {
     let onSelect: (UUID) -> Void
     let onClose: (UUID) -> Void
     let onOpenLink: (UUID, URL) -> Void
-    let onLaunchRepository: () -> Void
+    let onLaunchRepository: (NSView) -> Void
     @Binding var filters: WorkspaceFilters
     @Binding var isFilterPanelPresented: Bool
+    @State private var repoLauncherAnchorView: NSView?
 
     var body: some View {
         WorkspaceReferenceCardScope(workspaces: workspaces, project: projectCard) { cards in
@@ -43,7 +45,13 @@ struct WorkspaceReferenceRail: View {
                         .tracking(1.2)
                         .foregroundStyle(Color.workspaceReferenceTextMuted)
                     Spacer()
-                    Button(action: onLaunchRepository) {
+                    Button {
+                        guard let repoLauncherAnchorView else {
+                            NSSound.beep()
+                            return
+                        }
+                        onLaunchRepository(repoLauncherAnchorView)
+                    } label: {
                         Image(systemName: "sparkles")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(Color.workspaceReferenceTextSecondary)
@@ -53,6 +61,7 @@ struct WorkspaceReferenceRail: View {
                             .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.workspaceReferenceCardBorder, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
+                    .background(TitlebarControlAnchorView { repoLauncherAnchorView = $0 })
                     .accessibilityIdentifier("bmuxShell.repoAgentLauncher")
                     .accessibilityLabel(String(localized: "titlebar.repoAgentLauncher.accessibilityLabel", defaultValue: "AI Repo Launcher"))
                     .safeHelp(String(localized: "titlebar.repoAgentLauncher.tooltip", defaultValue: "Launch an AI session for a repo"))
