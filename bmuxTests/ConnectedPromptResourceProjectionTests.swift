@@ -228,8 +228,8 @@ struct ConnectedPromptResourceProjectionTests {
         #expect(fixture.workspace.panelPullRequests.isEmpty)
     }
 
-    @Test(arguments: [false, true])
-    func firstPromptInLateCreatedTranscriptSnapshotReachesPEAndResources(subscribed: Bool) async throws {
+    @Test(arguments: [false, true], [false, true])
+    func firstPromptInLateCreatedTranscriptSnapshotReachesPEAndResources(subscribed: Bool, throughHook: Bool) async throws {
         let fixture = try Fixture()
         defer { fixture.remove() }
         var seedRequests = 0
@@ -249,7 +249,9 @@ struct ConnectedPromptResourceProjectionTests {
         service.recordSessionLifecycleChanges(with: fixture.runtime)
         await service.start().value
         await service.waitForPromptEvidenceTasks()
-        #expect(await service.history(sessionID: fixture.record.sessionID, beforeSeq: nil, limit: 100) == nil)
+        if !throughHook {
+            #expect(await service.history(sessionID: fixture.record.sessionID, beforeSeq: nil, limit: 100) == nil)
+        }
 
         let prompt = "Review https://github.com/CompanyCam/companycam-mobile/pull/11713"
         let directory = fixture.root.appendingPathComponent("sessions/2026/10/06")
@@ -267,6 +269,12 @@ struct ConnectedPromptResourceProjectionTests {
             """
         ]
         try (lines.joined(separator: "\n") + "\n").write(to: path, atomically: true, encoding: .utf8)
+        let hook = WorkstreamEvent(
+            sessionId: fixture.record.sessionID, hookEventName: .userPromptSubmit, source: "codex",
+            workspaceId: fixture.workspace.id.uuidString, surfaceId: fixture.panelID.uuidString,
+            transcriptPath: path.path, cwd: fixture.root.path
+        )
+        if throughHook { service.noteHookEvent(hook) }
         let page = try #require(await service.history(sessionID: fixture.record.sessionID, beforeSeq: nil, limit: 100))
         #expect(page.messages.contains { if case .prose(let prose) = $0.kind { prose.text == prompt } else { false } })
         await service.waitForPromptEvidenceTasks()
@@ -277,6 +285,10 @@ struct ConnectedPromptResourceProjectionTests {
         #expect(fixture.workspace.panelPullRequests[fixture.panelID]?.number == 11713)
         await fixture.prRuntime.waitForSubmittedPullRequestMentionRefreshesForTesting()
         #expect(await fixture.runner.count == 1)
+        service.noteHookEvent(hook)
+        await service.waitForPromptEvidenceTasks()
+        await fixture.runtime.waitForBackgroundTasks()
+        #expect(seedRequests == 3)
     }
 
     @MainActor
