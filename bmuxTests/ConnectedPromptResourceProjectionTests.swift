@@ -44,7 +44,7 @@ struct ConnectedPromptResourceProjectionTests {
         #expect(card.branch == nil)
         #expect(fixture.workspace.latestSubmittedMessage == nil)
         #expect(fixture.workspace.customDescription == nil)
-        #expect(fixture.workspace.title == fixture.originalTitle)
+        #expect(fixture.workspace.customTitle == fixture.originalTitle)
     }
 
     @Test func replayAndOlderBackfillDoNotRepeatLookupOrReplaceNewerPrompt() async throws {
@@ -80,6 +80,41 @@ struct ConnectedPromptResourceProjectionTests {
         await fixture.runtime.waitForBackgroundTasks()
         #expect(fixture.workspace.panelPullRequests[fixture.panelID] == nil)
         #expect(await fixture.runner.count == 0)
+    }
+
+    @Test func ambiguousLiveSessionsCannotUseRecencyToAuthorizeResources() async throws {
+        let fixture = try Fixture()
+        defer { fixture.remove() }
+        fixture.registry.noteResumeInitiated(
+            sessionID: "sibling-session", source: "codex", surfaceID: fixture.panelID.uuidString,
+            workspaceID: fixture.workspace.id.uuidString, workingDirectory: fixture.root.path
+        )
+        // Make the original indexed session newest while retaining the ambiguity.
+        fixture.registry.update(sessionID: fixture.record.sessionID) { $0.lastActivityAt = Date().addingTimeInterval(1) }
+        await fixture.ingest("Review https://github.com/CompanyCam/companycam-mobile/pull/11713")
+        #expect(fixture.workspace.panelPullRequests.isEmpty)
+        #expect(await fixture.runner.count == 0)
+    }
+
+    @Test func overlappingOlderPersistenceCannotReplaceNewerResources() async throws {
+        let fixture = try Fixture()
+        defer { fixture.remove() }
+        await fixture.recorderGit.holdNextSnapshot()
+        fixture.pendingText = "Review https://github.com/CompanyCam/companycam-mobile/pull/11713"
+        await fixture.service.start().value
+        await fixture.service.waitForPromptEvidenceTasks()
+        await fixture.recorderGit.waitUntilHeld()
+        fixture.pendingText = "Review https://github.com/CompanyCam/companycam-mobile/pull/11714"
+        fixture.offset = 2
+        await fixture.service.start().value
+        await fixture.service.waitForPromptEvidenceTasks()
+        await fixture.runner.waitForInvocation()
+        await fixture.prRuntime.waitForSubmittedPullRequestMentionRefreshesForTesting()
+        await fixture.recorderGit.release()
+        await fixture.runtime.waitForBackgroundTasks()
+        await fixture.prRuntime.waitForSubmittedPullRequestMentionRefreshesForTesting()
+        #expect(fixture.workspace.panelPullRequests[fixture.panelID]?.number == 11714)
+        #expect(await fixture.runner.count == 1)
     }
 
     @Test func missingRecordedPanelNeverFallsBackToFocusedSibling() async throws {
@@ -165,7 +200,7 @@ struct ConnectedPromptResourceProjectionTests {
         let originalTitle: String
         let runtime: WorkProvenanceRuntime
         let record: AgentChatSessionRecord
-        let baseDate = Date()
+        let baseDate = Date(timeIntervalSinceReferenceDate: (812345678.1234567).nextUp)
         var pendingText = ""
         var offset: TimeInterval = 1
 
@@ -191,7 +226,7 @@ struct ConnectedPromptResourceProjectionTests {
         }()
 
         init(recordedPanelID: UUID? = nil) throws {
-            root = FileManager.default.temporaryDirectory.appendingPathComponent("connected-prompt-\(UUID().uuidString)")
+            root = FileManager.default.temporaryDirectory.appendingPathComponent("connected-prompt-\(getpid())-\(UUID().uuidString)")
             try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
             client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: root.appendingPathComponent("provenance.sqlite"))
             recorderClient = PromptClient(backing: client)
@@ -201,7 +236,8 @@ struct ConnectedPromptResourceProjectionTests {
             manager = TabManager(sidebarGitPullRequestObservation: prRuntime.tabManagerObservationServices())
             workspace = try #require(manager.selectedWorkspace)
             panelID = try #require(workspace.focusedPanelId)
-            originalTitle = workspace.title
+            workspace.setCustomTitle("CompanyCam mobile")
+            originalTitle = workspace.customTitle ?? workspace.title
             workspace.currentDirectory = root.path
             registry = AgentChatSessionRegistry(hookStore: AgentChatHookSessionStore(homeDirectory: root))
             registry.noteResumeInitiated(
@@ -247,7 +283,8 @@ struct ConnectedPromptResourceProjectionTests {
         func remove() {
             runtime.stop()
             prRuntime.stop()
-            try? FileManager.default.removeItem(at: root)
+            // The SDK has no close operation. The runner removes these isolated stores
+            // after the test process exits, when all SQLite clients are released.
         }
     }
 
@@ -276,8 +313,14 @@ struct ConnectedPromptResourceProjectionTests {
 
     private actor MetadataRunner: CommandRunning {
         private(set) var count = 0
+        private var invocationWaiter: CheckedContinuation<Void, Never>?
+        func waitForInvocation() async {
+            if count > 0 { return }
+            await withCheckedContinuation { invocationWaiter = $0 }
+        }
         func run(directory: String, executable: String, arguments: [String], timeout: TimeInterval?) async -> CommandResult {
             count += 1
+            invocationWaiter?.resume(); invocationWaiter = nil
             let number = arguments.contains(where: { $0.hasSuffix("11714") }) ? 11714 : 11713
             return .successJSON("""
             {"number":\(number),"state":"OPEN","title":"INP-2431 Follow-up controls","url":"https://github.com/CompanyCam/companycam-mobile/pull/\(number)","author":{"login":"BrianBusby","url":"https://github.com/BrianBusby"}}
