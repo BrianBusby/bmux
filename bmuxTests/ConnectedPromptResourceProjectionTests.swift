@@ -2,6 +2,7 @@ import BMUXAgentLaunch
 import BmuxAgentChat
 import BmuxFoundation
 import BmuxGit
+import Combine
 import Foundation
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
@@ -184,6 +185,42 @@ struct ConnectedPromptResourceProjectionTests {
         await fixture.recorderClient.setRejectsAppend(false)
         await fixture.ingest("Review https://github.com/CompanyCam/companycam-mobile/pull/11713")
         #expect(fixture.workspace.panelPullRequests[fixture.panelID]?.number == 11713)
+    }
+
+    @Test func authorizationReadLeavesPromptPublicationAndNotificationToRefresh() async throws {
+        let fixture = try Fixture()
+        defer { fixture.remove() }
+        // This store has no pending startup refresh, so the authorization read wins deterministically.
+        let store = WorkspaceDisplayCurrentStateStore(client: fixture.client)
+        defer { store.cancelRefreshes() }
+        _ = await store.refreshedSnapshot(stableWorkspaceID: fixture.workspace.stableId)
+        let prompt = "Compare the new gutter photos"
+        try await fixture.recordDirectly(prompt, offset: 1)
+        let fresh = try await store.freshSnapshot(stableWorkspaceID: fixture.workspace.stableId)
+        #expect(fresh?.lastSubmittedPrompt == prompt)
+        try #require(store.snapshot(stableWorkspaceID: fixture.workspace.stableId)?.lastSubmittedPrompt == nil)
+
+        var observationCount = 0
+        var publishedPrompt: String?
+        var publication: CheckedContinuation<Void, Never>?
+        let cancellable = fixture.workspace.sidebarImmediateObservationChangeSubject.sink {
+            observationCount += 1
+            publishedPrompt = store.snapshot(stableWorkspaceID: fixture.workspace.stableId)?.lastSubmittedPrompt
+            publication?.resume()
+            publication = nil
+        }
+        defer { cancellable.cancel() }
+        await withCheckedContinuation { continuation in
+            publication = continuation
+            store.refresh(stableWorkspaceID: fixture.workspace.stableId) { stableWorkspaceID in
+                #expect(WorkProvenanceRuntime.notifyWorkspaceDisplayCurrentStateDidChange(
+                    stableWorkspaceID: stableWorkspaceID, in: [fixture.manager]
+                ))
+            }
+        }
+        #expect(observationCount == 1)
+        #expect(publishedPrompt == prompt)
+        #expect(fixture.workspace.panelPullRequests.isEmpty)
     }
 
     @MainActor
