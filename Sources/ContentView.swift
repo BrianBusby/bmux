@@ -2561,7 +2561,7 @@ struct ContentView: View {
                     AgentSessionFactualProjectionModeHost(
                         showsSwitcher: true,
                         showsModePicker: false,
-                        startsInSession: true,
+                        initialPrimaryTab: .chat,
                         showsAppShell: false,
                         liveChatContent: bmuxShellChatContent(),
                         liveTerminalContent: bmuxShellTerminalVisible

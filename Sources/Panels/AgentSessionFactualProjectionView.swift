@@ -139,7 +139,7 @@ enum AgentSessionFactualProjectionEvidenceRows {
 struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     let showsSwitcher: Bool
     var showsModePicker = true
-    var startsInSession = false
+    var initialPrimaryTab: AgentSessionFactualProjectionMode?
     var showsAppShell = false
     var fixturePreviewEnabled = false
     var liveChatContent: ((@escaping () -> Void) -> AnyView)?
@@ -181,7 +181,7 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
             scheduleFactualProjectionRefreshIfNeeded()
         }
         .onAppear {
-            if startsInSession {
+            if initialPrimaryTab != nil {
                 viewMode = .session
             }
             scheduleFactualProjectionRefreshIfNeeded()
@@ -223,6 +223,8 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
                     liveChatContent: liveChatContent,
                     liveTerminalContent: liveTerminalContent,
                     onPrimaryTabChange: onPrimaryTabChange,
+                    initialPrimaryTab: initialPrimaryTab ?? .session,
+                    stableWorkspaceID: stableWorkspaceID,
                     workspaceLabel: workspaceLabel,
                     sessionTitle: sessionTitle,
                     sessionDescription: sessionDescription
@@ -306,25 +308,6 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     }
 }
 
-private enum AgentSessionFactualProjectionMode: String, CaseIterable, Identifiable {
-    case chat
-    case terminal
-    case session
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .terminal:
-            String(localized: "agentSession.viewMode.terminal", defaultValue: "Terminal")
-        case .chat:
-            String(localized: "agentSession.viewMode.chat", defaultValue: "Chat")
-        case .session:
-            String(localized: "agentSession.viewMode.session", defaultValue: "Session")
-        }
-    }
-}
-
 struct AgentSessionFactualProjectionView: View {
     let result: AgentSessionFactualProjectionReadResult
     let isLoading: Bool
@@ -335,12 +318,19 @@ struct AgentSessionFactualProjectionView: View {
     var liveChatContent: ((@escaping () -> Void) -> AnyView)?
     var liveTerminalContent: AnyView?
     var onPrimaryTabChange: ((Bool) -> Void)?
+    var initialPrimaryTab: AgentSessionFactualProjectionMode = .session
+    var stableWorkspaceID: UUID?
     var workspaceLabel: String?
     var sessionTitle: String?
     var sessionDescription: String?
 
     @State private var expandedPriorTurnIDs: Set<String> = []
-    @State private var selectedPrimaryTab = AgentSessionFactualProjectionMode.session.rawValue
+    @State private var selectedPrimaryTabs: [UUID?: AgentSessionFactualProjectionMode] = [:]
+
+    private var selectedPrimaryTab: AgentSessionFactualProjectionMode {
+        get { selectedPrimaryTabs[stableWorkspaceID] ?? initialPrimaryTab }
+        nonmutating set { selectedPrimaryTabs[stableWorkspaceID] = newValue }
+    }
 
     var body: some View {
         if showsAppShell && fixturePreviewEnabled {
@@ -436,14 +426,12 @@ struct AgentSessionFactualProjectionView: View {
             }
             primaryTabs.padding(.top, 16)
             switch selectedPrimaryTab {
-            case AgentSessionFactualProjectionMode.session.rawValue:
+            case .session:
                 sessionContent
-            case AgentSessionFactualProjectionMode.chat.rawValue:
+            case .chat:
                 chatContentView
-            case AgentSessionFactualProjectionMode.terminal.rawValue:
+            case .terminal:
                 terminalContentView
-            default:
-                emptyMessage(String(localized: "agentSession.factual.unavailable", defaultValue: "Session data unavailable"))
             }
         }
         .padding(.horizontal, 24)
@@ -451,20 +439,22 @@ struct AgentSessionFactualProjectionView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Color.bmuxSurface)
         .foregroundStyle(Color.bmuxTextPrimary)
+        .onChange(of: selectedPrimaryTab, initial: true) { _, tab in
+            onPrimaryTabChange?(tab == .terminal)
+        }
     }
 
     private var primaryTabs: some View {
         HStack(spacing: 24) {
             ForEach(AgentSessionFactualProjectionMode.allCases) { mode in
                 Button(mode.title) {
-                    selectedPrimaryTab = mode.rawValue
-                    onPrimaryTabChange?(mode == .terminal)
+                    selectedPrimaryTab = mode
                 }
                     .buttonStyle(.plain)
-                    .font(.system(size: 13.5, weight: selectedPrimaryTab == mode.rawValue ? .medium : .regular))
-                    .foregroundStyle(selectedPrimaryTab == mode.rawValue ? Color.bmuxTextPrimary : Color.bmuxTextTertiary)
+                    .font(.system(size: 13.5, weight: selectedPrimaryTab == mode ? .medium : .regular))
+                    .foregroundStyle(selectedPrimaryTab == mode ? Color.bmuxTextPrimary : Color.bmuxTextTertiary)
                     .padding(.bottom, 10)
-                    .overlay(alignment: .bottom) { if selectedPrimaryTab == mode.rawValue { Rectangle().fill(Color.bmuxTabUnderline).frame(height: 2) } }
+                    .overlay(alignment: .bottom) { if selectedPrimaryTab == mode { Rectangle().fill(Color.bmuxTabUnderline).frame(height: 2) } }
             }
             Spacer()
         }
@@ -481,7 +471,7 @@ struct AgentSessionFactualProjectionView: View {
 
     private var terminalContentView: some View {
         Group {
-            if selectedPrimaryTab == AgentSessionFactualProjectionMode.terminal.rawValue,
+            if selectedPrimaryTab == .terminal,
                let liveTerminalContent {
                 liveTerminalContent
                     .id("bmux-shell-terminal")
@@ -495,8 +485,7 @@ struct AgentSessionFactualProjectionView: View {
         Group {
             if let liveChatContent {
                 liveChatContent {
-                    selectedPrimaryTab = AgentSessionFactualProjectionMode.terminal.rawValue
-                    onPrimaryTabChange?(true)
+                    selectedPrimaryTab = .terminal
                 }
                 .id("bmux-shell-chat")
             } else {
