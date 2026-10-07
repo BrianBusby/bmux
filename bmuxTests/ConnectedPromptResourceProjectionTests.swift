@@ -203,7 +203,10 @@ struct ConnectedPromptResourceProjectionTests {
         var observationCount = 0
         var publishedPrompt: String?
         var publication: CheckedContinuation<Void, Never>?
+        var isPublishing = false
         let cancellable = fixture.workspace.sidebarImmediateObservationChangeSubject.sink {
+            // Other runtime refreshes use this subject; observe this store's synchronous publication.
+            guard isPublishing else { return }
             observationCount += 1
             publishedPrompt = store.snapshot(stableWorkspaceID: fixture.workspace.stableId)?.lastSubmittedPrompt
             publication?.resume()
@@ -213,9 +216,11 @@ struct ConnectedPromptResourceProjectionTests {
         await withCheckedContinuation { continuation in
             publication = continuation
             store.refresh(stableWorkspaceID: fixture.workspace.stableId) { stableWorkspaceID in
+                isPublishing = true
                 #expect(WorkProvenanceRuntime.notifyWorkspaceDisplayCurrentStateDidChange(
                     stableWorkspaceID: stableWorkspaceID, in: [fixture.manager]
                 ))
+                isPublishing = false
             }
         }
         #expect(observationCount == 1)
