@@ -60,7 +60,10 @@ stored descriptions or trigger title-generation hooks. Fresh-read failures,
 replaced or ambiguous sessions, older/superseded batches and duplicate replay
 cannot initiate lookups. Resource authorization uses the prior accepted PE prompt
 and bounded in-flight request state, including overlapping persistence; it never
-feeds card/footer display or filters ledger capture. PE's retained arrival-order
+feeds card/footer display or filters ledger capture.
+Authorization reads leave the UI cache unchanged; scheduled refresh owns cache
+publication and sidebar notification, including prompts without resource mentions.
+PE's retained arrival-order
 prompt merge can still regress the footer during historical replay; correcting
 that authoritative projection remains separate work.
 Branch presentation still requires PE's associated worktree; an uninspectable

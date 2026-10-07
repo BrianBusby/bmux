@@ -22,8 +22,11 @@ final class WorkspaceDisplayCurrentStateStore {
 
     func refreshedSnapshot(stableWorkspaceID: UUID) async -> WorkspaceDisplayCurrentStateSnapshot? {
         do {
-            return try await freshSnapshot(stableWorkspaceID: stableWorkspaceID)
-                ?? snapshotsByStableWorkspaceID[stableWorkspaceID]
+            if let snapshot = try await freshSnapshot(stableWorkspaceID: stableWorkspaceID),
+               snapshot.isNewerThan(snapshotsByStableWorkspaceID[stableWorkspaceID]) {
+                snapshotsByStableWorkspaceID[stableWorkspaceID] = snapshot
+            }
+            return snapshotsByStableWorkspaceID[stableWorkspaceID]
         } catch {
             if !Task.isCancelled {
                 StartupBreadcrumbLog.append("workProvenance.displayCurrentState.refreshFailed", fields: [
@@ -35,6 +38,7 @@ final class WorkspaceDisplayCurrentStateStore {
     }
 
     /// Requires a successful PE read; absence and failure stay distinct for resource authorization.
+    /// Leaves cache publication to refresh so authorization cannot consume its sidebar notification.
     func freshSnapshot(stableWorkspaceID: UUID) async throws -> WorkspaceDisplayCurrentStateSnapshot? {
         let response = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
             workspaceID: stableWorkspaceID.uuidString
@@ -42,10 +46,6 @@ final class WorkspaceDisplayCurrentStateStore {
         guard let display = response.display,
               let snapshot = await displaySnapshot(display, stableWorkspaceID: stableWorkspaceID) else { return nil }
         try Task.checkCancellation()
-        guard snapshot.isNewerThan(snapshotsByStableWorkspaceID[stableWorkspaceID]) else {
-            return snapshotsByStableWorkspaceID[stableWorkspaceID]
-        }
-        snapshotsByStableWorkspaceID[stableWorkspaceID] = snapshot
         return snapshot
     }
 
