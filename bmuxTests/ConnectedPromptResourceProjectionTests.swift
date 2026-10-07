@@ -228,6 +228,57 @@ struct ConnectedPromptResourceProjectionTests {
         #expect(fixture.workspace.panelPullRequests.isEmpty)
     }
 
+    @Test(arguments: [false, true])
+    func firstPromptInLateCreatedTranscriptSnapshotReachesPEAndResources(subscribed: Bool) async throws {
+        let fixture = try Fixture()
+        defer { fixture.remove() }
+        var seedRequests = 0
+        let service = AgentChatTranscriptService(
+            registry: fixture.registry,
+            resolver: AgentChatTranscriptResolver(homeDirectory: fixture.root, environment: ["CODEX_HOME": fixture.root.path]),
+            hasEventSubscribers: { subscribed }, emitEventPayload: { _ in },
+            promptEvidenceSeeder: { records, resolver, mode, recordPrompts in
+                seedRequests += 1
+                return AgentChatTranscriptPromptEvidenceSeeder.seed(
+                    records: records, resolver: resolver, tokenOptimizationMode: mode, recordPrompts: recordPrompts
+                )
+            },
+            recordTaskWorkspaceDirectory: { _, _ in }
+        )
+        defer { fixture.registry.update(sessionID: fixture.record.sessionID) { $0.state = .ended } }
+        service.recordSessionLifecycleChanges(with: fixture.runtime)
+        await service.start().value
+        await service.waitForPromptEvidenceTasks()
+        #expect(await service.history(sessionID: fixture.record.sessionID, beforeSeq: nil, limit: 100) == nil)
+
+        let prompt = "Review https://github.com/CompanyCam/companycam-mobile/pull/11713"
+        let directory = fixture.root.appendingPathComponent("sessions/2026/10/06")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let path = directory.appendingPathComponent("rollout-2026-10-06-\(fixture.record.sessionID).jsonl")
+        let lines = [
+            """
+            {"timestamp":"2026-10-06T20:30:00.123Z","type":"session_meta","payload":{"id":"\(fixture.record.sessionID)","cwd":"\(fixture.root.path)"}}
+            """,
+            """
+            {"timestamp":"2026-10-06T20:30:00.124Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"# AGENTS.md instructions for this repository"}]}}
+            """,
+            """
+            {"timestamp":"2026-10-06T20:30:00.125Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"\(prompt)"}]}}
+            """
+        ]
+        try (lines.joined(separator: "\n") + "\n").write(to: path, atomically: true, encoding: .utf8)
+        let page = try #require(await service.history(sessionID: fixture.record.sessionID, beforeSeq: nil, limit: 100))
+        #expect(page.messages.contains { if case .prose(let prose) = $0.kind { prose.text == prompt } else { false } })
+        await service.waitForPromptEvidenceTasks()
+        await fixture.runtime.waitForBackgroundTasks()
+        #expect(seedRequests == 2)
+        #expect(try await fixture.client.workspaceDisplay(.init(workspaceID: fixture.workspace.stableId.uuidString))
+            .display?.lastSubmittedPrompt == prompt)
+        #expect(fixture.workspace.panelPullRequests[fixture.panelID]?.number == 11713)
+        await fixture.prRuntime.waitForSubmittedPullRequestMentionRefreshesForTesting()
+        #expect(await fixture.runner.count == 1)
+    }
+
     @MainActor
     private final class Fixture {
         let root: URL
