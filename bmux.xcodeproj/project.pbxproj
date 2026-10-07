@@ -54,6 +54,7 @@
 		A9F20000000000000000000B /* AgentSessionBridgeError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F10000000000000000000B /* AgentSessionBridgeError.swift */; };
 		A9F20000000000000000000C /* AgentSessionBridgeRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F10000000000000000000C /* AgentSessionBridgeRequest.swift */; };
 		A9F200000000000000000003 /* AgentSessionDebugMenuButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000003 /* AgentSessionDebugMenuButtons.swift */; };
+		F3D907000000000000000001 /* AgentSessionFactualProjectionMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D907000000000000000002 /* AgentSessionFactualProjectionMode.swift */; };
 		F5350002A1B2C3D4E5F60718 /* AgentSessionFactualProjectionPriorTurnCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5350003A1B2C3D4E5F60718 /* AgentSessionFactualProjectionPriorTurnCardView.swift */; };
 		CE2F01040000000000000001 /* AgentSessionFactualProjectionReadResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F01040000000000000002 /* AgentSessionFactualProjectionReadResult.swift */; };
 		CE2F01030000000000000001 /* AgentSessionFactualProjectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F01030000000000000002 /* AgentSessionFactualProjectionStore.swift */; };
@@ -1959,6 +1960,7 @@
 		A9F10000000000000000000B /* AgentSessionBridgeError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionBridgeError.swift; sourceTree = "<group>"; };
 		A9F10000000000000000000C /* AgentSessionBridgeRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionBridgeRequest.swift; sourceTree = "<group>"; };
 		A9F100000000000000000003 /* AgentSessionDebugMenuButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionDebugMenuButtons.swift; sourceTree = "<group>"; };
+		F3D907000000000000000002 /* AgentSessionFactualProjectionMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionFactualProjectionMode.swift; sourceTree = "<group>"; };
 		F5350003A1B2C3D4E5F60718 /* AgentSessionFactualProjectionPriorTurnCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionFactualProjectionPriorTurnCardView.swift; sourceTree = "<group>"; };
 		CE2F01040000000000000002 /* AgentSessionFactualProjectionReadResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionFactualProjectionReadResult.swift; sourceTree = "<group>"; };
 		CE2F01030000000000000002 /* AgentSessionFactualProjectionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionFactualProjectionStore.swift; sourceTree = "<group>"; };
@@ -4642,6 +4644,7 @@
 				A9E010000000000000000004 /* AgentSessionPanelView.swift */,
 				F5350003A1B2C3D4E5F60718 /* AgentSessionFactualProjectionPriorTurnCardView.swift */,
 				F5340003A1B2C3D4E5F60718 /* AgentSessionFactualProjectionTurnDetailView.swift */,
+				F3D907000000000000000002 /* AgentSessionFactualProjectionMode.swift */,
 				CE2F01010000000000000002 /* AgentSessionFactualProjectionView.swift */,
 
 				B0A501000000000000000002 /* BrowserOmnibarAppKitBridge.swift */,
@@ -6014,6 +6017,7 @@
 				A9F20000000000000000000B /* AgentSessionBridgeError.swift in Sources */,
 				A9F20000000000000000000C /* AgentSessionBridgeRequest.swift in Sources */,
 				A9F200000000000000000003 /* AgentSessionDebugMenuButtons.swift in Sources */,
+				F3D907000000000000000001 /* AgentSessionFactualProjectionMode.swift in Sources */,
 				F5350002A1B2C3D4E5F60718 /* AgentSessionFactualProjectionPriorTurnCardView.swift in Sources */,
 				CE2F01040000000000000001 /* AgentSessionFactualProjectionReadResult.swift in Sources */,
 				CE2F01030000000000000001 /* AgentSessionFactualProjectionStore.swift in Sources */,

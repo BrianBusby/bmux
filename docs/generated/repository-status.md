@@ -18,8 +18,8 @@ Repository: `BrianBusby/bmux`
 
 ## Release
 
-- Latest tag: None
-- Release status: untagged
+- Latest tag: build-715
+- Release status: prerelease
 
 ## Local Capabilities
 

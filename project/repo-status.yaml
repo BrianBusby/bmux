@@ -120,8 +120,8 @@ local_capabilities:
   remote_general_internet_route: planned
 
 release:
-  latest_tag:
-  release_status: untagged
+  latest_tag: build-715
+  release_status: prerelease
 
 component_releases:
   provenance_engine:
