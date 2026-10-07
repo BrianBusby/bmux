@@ -239781,6 +239781,13 @@
         "ja": { "stringUnit": { "state": "translated", "value": "リポジトリ" } }
       }
     },
+    "sidebar.workspaceFilter.prOwner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "PR OWNER" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "PR の作成者" } }
+      }
+    },
     "sidebar.workspaceFilter.project": {
       "extractionState": "manual",
       "localizations": {

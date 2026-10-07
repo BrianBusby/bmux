@@ -37,7 +37,6 @@ struct ConnectedPromptResourceProjectionTests {
         )
         #expect(card.ticketID == "INP-2431")
         #expect(card.title == "Follow-up controls")
-        #expect(card.summary == "CompanyCam mobile")
         #expect(card.pullRequestURL?.absoluteString == "https://github.com/CompanyCam/companycam-mobile/pull/11713")
         #expect(display.pullRequestOwnerLogin == "BrianBusby")
         #expect(card.projectTitle == "Mobile workflows")

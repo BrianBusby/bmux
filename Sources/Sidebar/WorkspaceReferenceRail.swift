@@ -15,7 +15,7 @@ struct WorkspaceReferenceRail: View {
 
     var body: some View {
         WorkspaceRepositoryLabelScope(workspaces: workspaces) { repositoryNames in
-            let filterItems = WorkspaceTabFilterProjection().items(for: workspaces)
+            let filterItems = WorkspaceTabFilterProjection().items(for: workspaces, cards: cards)
             let visibleWorkspaceIDs = Set(
                 WorkspaceTabFilterProjection().visibleItems(
                     filterItems,
@@ -170,14 +170,6 @@ struct WorkspaceReferenceRail: View {
                 )
             }
 
-            if let summary = card.summary {
-                Text(String(summary.prefix(125)))
-                    .font(.system(size: 13))
-                    .foregroundStyle(Color.workspaceReferenceTextSecondary)
-                    .lineLimit(3)
-                    .truncationMode(.tail)
-            }
-
             if let pullRequestText = card.pullRequestText {
                 bmuxReferenceWorkspaceLinkRow(
                     icon: "arrow.triangle.pull",
@@ -190,7 +182,7 @@ struct WorkspaceReferenceRail: View {
 
             if let ownerName = card.ownerName {
                 let ownerContent = HStack(spacing: 8) {
-                    Text(ownerName.prefix(2).uppercased())
+                    Text(card.ownerInitials ?? "")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(Color.workspaceReferenceTextPrimary)
                         .frame(width: 24, height: 24)

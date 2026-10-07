@@ -1748,6 +1748,7 @@
 		A5F0C0010000000000000002 /* WorkspaceAttentionFlashRingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F0C0010000000000000001 /* WorkspaceAttentionFlashRingView.swift */; };
 		C0DEB0550000000000000003 /* WorkspaceBrowserActionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEB0550000000000000004 /* WorkspaceBrowserActionsTests.swift */; };
 		CA52B0160000000000000000 /* WorkspaceCanvasHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA52C0160000000000000000 /* WorkspaceCanvasHostView.swift */; };
+		D70500000000000000000002 /* WorkspaceCardFilterProjectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D70500000000000000000001 /* WorkspaceCardFilterProjectionTests.swift */; };
 		5FE4A89C7C324DC4A4210089 /* WorkspaceCardHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE4A89C7C324DC4A4210088 /* WorkspaceCardHeader.swift */; };
 		0DE10753682147109ED3F6D1 /* WorkspaceCardTitlePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBCA5194B18149D9AE082ED1 /* WorkspaceCardTitlePresentation.swift */; };
 		D7AB3605C10DEF0000000003 /* WorkspaceCloseTabsBatching.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AB3605C10DEF0000000004 /* WorkspaceCloseTabsBatching.swift */; };
@@ -3524,6 +3525,7 @@
 		A5F0C0010000000000000001 /* WorkspaceAttentionFlashRingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/WorkspaceAttentionFlashRingView.swift; sourceTree = "<group>"; };
 		C0DEB0550000000000000004 /* WorkspaceBrowserActionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceBrowserActionsTests.swift; sourceTree = "<group>"; };
 		CA52C0160000000000000000 /* WorkspaceCanvasHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceCanvasHostView.swift"; sourceTree = "<group>"; };
+		D70500000000000000000001 /* WorkspaceCardFilterProjectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceCardFilterProjectionTests.swift; sourceTree = "<group>"; };
 		5FE4A89C7C324DC4A4210088 /* WorkspaceCardHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/WorkspaceCardHeader.swift; sourceTree = "<group>"; };
 		BBCA5194B18149D9AE082ED1 /* WorkspaceCardTitlePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/WorkspaceCardTitlePresentation.swift; sourceTree = "<group>"; };
 		D7AB3605C10DEF0000000004 /* WorkspaceCloseTabsBatching.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceCloseTabsBatching.swift; sourceTree = "<group>"; };
@@ -5055,6 +5057,7 @@
 				78ED69FC9B7D45F682700F4E /* ConnectedCodexFixtureReader.swift */,
 				57501CAD10A841D3A645FE86 /* ConnectedSessionOwnershipTests.swift */,
 				D53100000000000000000001 /* ConnectedPromptResourceProjectionTests.swift */,
+				D70500000000000000000001 /* WorkspaceCardFilterProjectionTests.swift */,
 				A9E050000000000000000001 /* AgentSessionWebRendererTests.swift */,
 				B9104AF3EF5C42D38F0EF5DE /* ConfiguredCodexLaunchTests.swift */,
 				A9E040000000000000000001 /* CodexAppServerSessionTests.swift */,
@@ -7702,6 +7705,7 @@
 				D7AB00000000000000000011 /* WorkspaceAdjacentPaneMoveTests.swift in Sources */,
 				A11EAE000000000000000000 /* WorkspaceAppearanceConfigResolutionTests.swift in Sources */,
 				C0DEB0550000000000000003 /* WorkspaceBrowserActionsTests.swift in Sources */,
+				D70500000000000000000002 /* WorkspaceCardFilterProjectionTests.swift in Sources */,
 				D7AB3605C10DEF0000000001 /* WorkspaceCloseTabsContextMenuTests.swift in Sources */,
 				F7000000A1B2C3D4E5F60718 /* WorkspaceContentViewVisibilityTests.swift in Sources */,
 					281F3AEA52379AF45C5C1189 /* WorkspaceCustomSidebarPullRequestContextTests.swift in Sources */,
