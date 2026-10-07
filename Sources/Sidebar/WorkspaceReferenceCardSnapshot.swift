@@ -4,6 +4,7 @@ import ProvenanceEngineContracts
 /// Immutable presentation for one workspace card, projected before the list boundary.
 struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
     let id: UUID
+    let hasActiveAIWork: Bool
     let title: String
     let prompt: String?
     let branch: String?
@@ -35,6 +36,7 @@ struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
             workspaceTitle: workspaceTitle, ticketTitle: context?.ticketLinks.first?.title
         )
         id = workspace.id
+        hasActiveAIWork = workspace.hasActiveAIWork
         title = titlePresentation.title
         prompt = provenance?.lastSubmittedPrompt ?? workspace.latestSubmittedMessage
         branch = context?.agentWorktreeBranch

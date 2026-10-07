@@ -215,11 +215,13 @@
 			C0DE73000000000000000001 /* BMUXCLI+CodexTranscriptMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE73000000000000000002 /* BMUXCLI+CodexTranscriptMonitor.swift */; };
 		B90000D2A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B90000D1A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift */; };
 		B9000050A1B2C3D4E5F60719 /* BMUXCLI+Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000051A1B2C3D4E5F60719 /* BMUXCLI+Config.swift */; };
+		C64D3F7F225B4019890DAEBB /* BMUXCLI+ConnectedCodexHookBinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD2777A0B52F45C38C57707C /* BMUXCLI+ConnectedCodexHookBinding.swift */; };
 		C0DE72000000000000000001 /* BMUXCLI+ContextEfficiency.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE72000000000000000002 /* BMUXCLI+ContextEfficiency.swift */; };
 		B9000035A1B2C3D4E5F60719 /* BMUXCLI+DocsSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000031A1B2C3D4E5F60719 /* BMUXCLI+DocsSettings.swift */; };
 		B9000064A1B2C3D4E5F60719 /* BMUXCLI+Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000065A1B2C3D4E5F60719 /* BMUXCLI+Events.swift */; };
 		B9000046A1B2C3D4E5F60719 /* BMUXCLI+ExecutableResolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000047A1B2C3D4E5F60719 /* BMUXCLI+ExecutableResolution.swift */; };
 		B9000061A1B2C3D4E5F60719 /* BMUXCLI+HermesAgentHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000060A1B2C3D4E5F60719 /* BMUXCLI+HermesAgentHooks.swift */; };
+		9153A2AB186047D092B95BF1 /* BMUXCLI+HooksSocketDispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 300D153343C840E39DB13F1C /* BMUXCLI+HooksSocketDispatch.swift */; };
 		B9000052A1B2C3D4E5F60719 /* BMUXCLI+InstallPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000053A1B2C3D4E5F60719 /* BMUXCLI+InstallPreview.swift */; };
 		489F4CF9B768C42D87B5EB2F /* BMUXCLI+KimiHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3D532FF0A00E20DA31667F /* BMUXCLI+KimiHooks.swift */; };
 		B9000071A1B2C3D4E5F60719 /* BMUXCLI+Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000070A1B2C3D4E5F60719 /* BMUXCLI+Memory.swift */; };
@@ -1791,6 +1793,8 @@
 		1A1B2C3D4E5F607180000001 /* WorkspacePromptSubmit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1B2C3D4E5F607180000002 /* WorkspacePromptSubmit.swift */; };
 		1A1B2C3D4E5F607180000003 /* WorkspacePromptSubmitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1B2C3D4E5F607180000004 /* WorkspacePromptSubmitTests.swift */; };
 		DCC935C5F55C1DCB33E25521 /* WorkspacePullRequestSidebarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A7DC53B9CA33BE2A421711 /* WorkspacePullRequestSidebarTests.swift */; };
+		D0946273537B47C7A17B0A8D /* WorkspaceReferenceCardObservation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 004826DF28734316B2A96CE1 /* WorkspaceReferenceCardObservation.swift */; };
+		616B8098669749AC94A97691 /* WorkspaceReferenceCardScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 600CE3451D304760A19E041B /* WorkspaceReferenceCardScope.swift */; };
 		FD1EC84850F749FD84018879 /* WorkspaceReferenceCardSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ABB6D695C994D4CB0063608 /* WorkspaceReferenceCardSnapshot.swift */; };
 		C74BFCD03DC549C283F657F3 /* WorkspaceReferenceRail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 735FA00F67D64B6FB66FC6B7 /* WorkspaceReferenceRail.swift */; };
 		C73660030000000000000001 /* WorkspaceRemoteBadgeTruthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C73660030000000000000002 /* WorkspaceRemoteBadgeTruthTests.swift */; };
@@ -2102,11 +2106,13 @@
 			C0DE73000000000000000002 /* BMUXCLI+CodexTranscriptMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CodexTranscriptMonitor.swift"; sourceTree = "<group>"; };
 		B90000D1A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CommandSuggestions.swift"; sourceTree = "<group>"; };
 		B9000051A1B2C3D4E5F60719 /* BMUXCLI+Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Config.swift"; sourceTree = "<group>"; };
+		CD2777A0B52F45C38C57707C /* BMUXCLI+ConnectedCodexHookBinding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ConnectedCodexHookBinding.swift"; sourceTree = "<group>"; };
 		C0DE72000000000000000002 /* BMUXCLI+ContextEfficiency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ContextEfficiency.swift"; sourceTree = "<group>"; };
 		B9000031A1B2C3D4E5F60719 /* BMUXCLI+DocsSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+DocsSettings.swift"; sourceTree = "<group>"; };
 		B9000065A1B2C3D4E5F60719 /* BMUXCLI+Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Events.swift"; sourceTree = "<group>"; };
 		B9000047A1B2C3D4E5F60719 /* BMUXCLI+ExecutableResolution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ExecutableResolution.swift"; sourceTree = "<group>"; };
 		B9000060A1B2C3D4E5F60719 /* BMUXCLI+HermesAgentHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+HermesAgentHooks.swift"; sourceTree = "<group>"; };
+		300D153343C840E39DB13F1C /* BMUXCLI+HooksSocketDispatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+HooksSocketDispatch.swift"; sourceTree = "<group>"; };
 		B9000053A1B2C3D4E5F60719 /* BMUXCLI+InstallPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+InstallPreview.swift"; sourceTree = "<group>"; };
 		7A3D532FF0A00E20DA31667F /* BMUXCLI+KimiHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+KimiHooks.swift"; sourceTree = "<group>"; };
 		B9000070A1B2C3D4E5F60719 /* BMUXCLI+Memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Memory.swift"; sourceTree = "<group>"; };
@@ -3568,6 +3574,8 @@
 		1A1B2C3D4E5F607180000002 /* WorkspacePromptSubmit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePromptSubmit.swift; sourceTree = "<group>"; };
 		1A1B2C3D4E5F607180000004 /* WorkspacePromptSubmitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePromptSubmitTests.swift; sourceTree = "<group>"; };
 		14A7DC53B9CA33BE2A421711 /* WorkspacePullRequestSidebarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePullRequestSidebarTests.swift; sourceTree = "<group>"; };
+		004826DF28734316B2A96CE1 /* WorkspaceReferenceCardObservation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/WorkspaceReferenceCardObservation.swift; sourceTree = "<group>"; };
+		600CE3451D304760A19E041B /* WorkspaceReferenceCardScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/WorkspaceReferenceCardScope.swift; sourceTree = "<group>"; };
 		1ABB6D695C994D4CB0063608 /* WorkspaceReferenceCardSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/WorkspaceReferenceCardSnapshot.swift; sourceTree = "<group>"; };
 		735FA00F67D64B6FB66FC6B7 /* WorkspaceReferenceRail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/WorkspaceReferenceRail.swift; sourceTree = "<group>"; };
 		C73660030000000000000002 /* WorkspaceRemoteBadgeTruthTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceRemoteBadgeTruthTests.swift; sourceTree = "<group>"; };
@@ -4061,6 +4069,8 @@
 				735FA00F67D64B6FB66FC6B7 /* WorkspaceReferenceRail.swift */,
 				42FCF73F16F549A299BA6F5E /* WorkspaceRepositoryLabelScope.swift */,
 				2CFDFF3E10FE4C31AF79E95A /* WorkspaceRepositoryLabelObservation.swift */,
+				600CE3451D304760A19E041B /* WorkspaceReferenceCardScope.swift */,
+				004826DF28734316B2A96CE1 /* WorkspaceReferenceCardObservation.swift */,
 				5FE4A89C7C324DC4A4210088 /* WorkspaceCardHeader.swift */,
 				D50D9BCE46701FBA91C2EFB6 /* SidebarWorkspaceSnapshotRefreshPolicy.swift */,
 				AABBCC00000000000000020B /* SidebarInlineRenameAction.swift */,
@@ -4932,6 +4942,8 @@
 				5257257034CA4729B1211170 /* BMUXCLI+AgentHookPayload.swift */,
 				4CF59318F1D5B2195AC77C28 /* BMUXCLI+ClaudePushNotificationHook.swift */,
 				C6711B050000000000000001 /* BMUXCLI+AgentHookRestoreEvidence.swift */,
+				CD2777A0B52F45C38C57707C /* BMUXCLI+ConnectedCodexHookBinding.swift */,
+				300D153343C840E39DB13F1C /* BMUXCLI+HooksSocketDispatch.swift */,
 				5257257034CA4729B1211166 /* BMUXCLI+AutoNaming.swift */,
 				5257257034CA4729B121116A /* BMUXCLI+AutoNamingDispatch.swift */,
 				5257257034CA4729B1211167 /* BMUXCLI+AutoNamingGenericHooks.swift */,
@@ -7067,6 +7079,8 @@
 					5732A0105732A0105732A010 /* WorkspacePresentationModeRuntimeCache.swift in Sources */,
 				CE0E07300000000000000001 /* WorkspacePromptSubmit+SessionID.swift in Sources */,
 				1A1B2C3D4E5F607180000001 /* WorkspacePromptSubmit.swift in Sources */,
+				D0946273537B47C7A17B0A8D /* WorkspaceReferenceCardObservation.swift in Sources */,
+				616B8098669749AC94A97691 /* WorkspaceReferenceCardScope.swift in Sources */,
 				FD1EC84850F749FD84018879 /* WorkspaceReferenceCardSnapshot.swift in Sources */,
 				C74BFCD03DC549C283F657F3 /* WorkspaceReferenceRail.swift in Sources */,
 				E307B0000000000000000002 /* WorkspaceRemoteHostProbeOutcome.swift in Sources */,
@@ -7122,11 +7136,13 @@
 					C0DE73000000000000000001 /* BMUXCLI+CodexTranscriptMonitor.swift in Sources */,
 				B90000D2A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift in Sources */,
 				B9000050A1B2C3D4E5F60719 /* BMUXCLI+Config.swift in Sources */,
+				C64D3F7F225B4019890DAEBB /* BMUXCLI+ConnectedCodexHookBinding.swift in Sources */,
 				C0DE72000000000000000001 /* BMUXCLI+ContextEfficiency.swift in Sources */,
 				B9000035A1B2C3D4E5F60719 /* BMUXCLI+DocsSettings.swift in Sources */,
 				B9000064A1B2C3D4E5F60719 /* BMUXCLI+Events.swift in Sources */,
 				B9000046A1B2C3D4E5F60719 /* BMUXCLI+ExecutableResolution.swift in Sources */,
 				B9000061A1B2C3D4E5F60719 /* BMUXCLI+HermesAgentHooks.swift in Sources */,
+				9153A2AB186047D092B95BF1 /* BMUXCLI+HooksSocketDispatch.swift in Sources */,
 				B9000052A1B2C3D4E5F60719 /* BMUXCLI+InstallPreview.swift in Sources */,
 				489F4CF9B768C42D87B5EB2F /* BMUXCLI+KimiHooks.swift in Sources */,
 				B9000071A1B2C3D4E5F60719 /* BMUXCLI+Memory.swift in Sources */,

@@ -3781,26 +3781,14 @@ class TerminalController {
         v2MainSync {
             guard let workspace = tabManager.tabs.first(where: { $0.id == workspaceId }) else { return }
             found = true
-            let workspaceOutcome = tabManager.applyCustomTitle(tabId: workspaceId, title: title, source: source)
-            workspaceApplied = workspaceOutcome.applied
-            workspaceRejectionReason = workspaceOutcome.rejectionReason
-            if let panelId {
-                // Hook payloads carry surface ids; accept either a panel id
-                // or a surface id for the tab target.
-                let resolvedPanelId = workspace.panels[panelId] != nil
-                    ? panelId
-                    : workspace.panelIdFromSurfaceId(TabID(uuid: panelId))
-                if let resolvedPanelId,
-                   !(panelOnlyIfMultiple && workspace.panels.count < 2) {
-                    let panelOutcome = workspace.applyPanelCustomTitle(
-                        panelId: resolvedPanelId,
-                        title: title,
-                        source: source
-                    )
-                    panelApplied = panelOutcome.applied
-                    panelRejectionReason = panelOutcome.rejectionReason
-                }
-            }
+            let outcome = tabManager.applyAutomaticWorkspaceAndPanelTitle(
+                workspace: workspace, panelId: panelId, title: title,
+                source: source, panelOnlyIfMultiple: panelOnlyIfMultiple
+            )
+            workspaceApplied = outcome.workspace.applied
+            workspaceRejectionReason = outcome.workspace.rejectionReason
+            panelApplied = outcome.panel?.applied
+            panelRejectionReason = outcome.panel?.rejectionReason
         }
 
         guard found else {

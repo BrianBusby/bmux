@@ -2508,7 +2508,7 @@ struct ContentView: View {
     private var bmuxReferenceWorkspaceRail: some View {
         WorkspaceReferenceRail(
             workspaces: tabManager.tabs,
-            cards: tabManager.tabs.map { workspace in
+            projectCard: { workspace in
                 let provenance = tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: workspace)
                 let title = tabManager.sidebarWorkspaceTitleResolution(for: workspace, provenanceDisplaySnapshot: provenance).title
                 return WorkspaceReferenceCardSnapshot(workspace: workspace, provenance: provenance, workspaceTitle: title)
@@ -13537,17 +13537,6 @@ struct TabItemView: View, Equatable {
         usesInvertedActiveForeground ? activeSecondaryColor(0.8) : bmuxAccentColor()
     }
 
-    private var workspaceLoadingIndicatorColor: Color {
-        Color(nsColor: sidebarWorkspaceRowLoadingIndicatorNSColor(
-            activeTabIndicatorStyle: activeTabIndicatorStyle,
-            isActive: isActive,
-            isMultiSelected: isMultiSelected,
-            customColorHex: workspaceRowColorHex,
-            colorScheme: colorScheme,
-            sidebarSelectionColorHex: sidebarSelectionColorHex
-        ))
-    }
-
     private var shortcutHintEmphasis: Double {
         usesInvertedActiveForeground ? 1.0 : 0.9
     }
@@ -13738,7 +13727,6 @@ struct TabItemView: View, Equatable {
             SidebarTrailingAccessoryWidthPolicy().closeButtonWidth,
             scaledCloseButtonHitSize
         )
-        let aiBusyTooltip = String(localized: "sidebar.aiBusy.tooltip", defaultValue: "AI is running or needs input")
         let rowView = VStack(alignment: .leading, spacing: 4) {
             // Option 1b is the full-detail workspace card presentation.
             if true {
@@ -14125,13 +14113,6 @@ struct TabItemView: View, Equatable {
                 }
                 .shadow(color: activeElevationShadowColor, radius: 4, x: 0, y: 2)
         )
-        .overlay(alignment: .topTrailing) {
-            if workspaceSnapshot.hasActiveAIWork && !showCloseButton {
-                TronLoadingIndicator(size: scaledLoadingIndicatorSize, color: workspaceLoadingIndicatorColor, lineWidth: max(1.15, scaledLoadingIndicatorSize * 0.085))
-                    .safeHelp(aiBusyTooltip).accessibilityLabel(aiBusyTooltip).allowsHitTesting(false)
-                    .padding(.top, 6).padding(.trailing, 7)
-            }
-        }
         .sidebarShortcutHintOverlay(
             text: showsWorkspaceShortcutHint ? workspaceShortcutLabel : nil,
             emphasis: shortcutHintEmphasis,
@@ -15280,6 +15261,7 @@ struct TabItemView: View, Equatable {
                 },
                 closeButtonColor: activeSecondaryColor(0.8),
                 closeButtonSize: CGSize(width: closeButtonWidth, height: closeButtonHitSize),
+                hasActiveAIWork: snapshot.hasActiveAIWork,
                 canCloseWorkspace: canCloseWorkspace,
                 showsCloseButton: showCloseButton,
                 closeButtonTooltip: closeButtonTooltip,
@@ -15402,7 +15384,8 @@ struct TabItemView: View, Equatable {
                     Text(prompt)
                         .font(magnifiedFont(scaledFontSize(13)))
                         .foregroundColor(activeSecondaryColor(0.8))
-                        .lineLimit(nil)
+                        .lineLimit(3)
+                        .truncationMode(.tail)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if branch != nil || status != nil {

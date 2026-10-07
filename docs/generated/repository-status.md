@@ -35,6 +35,7 @@ Repository: `BrianBusby/bmux`
 | Bmux Proactive Cross Session Awareness | implemented |
 | Codex Historical Import Startup Boundary Guard | planned |
 | Connected Codex Shared Host Controls | under observation |
+| Connected Codex Workspace Hooks | under observation |
 | Connected Prompt Workspace Resource Projection | under observation |
 | Factual Agent Session View | implemented |
 | Knowledge Compiler Cross Session Bridge | planned |
@@ -143,6 +144,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `connected_codex_workspace_hooks_dogfood` | open |
 | `pe_prompt_display_replay_chronology` | open |
 | `connected_session_worktree_context_verification` | open |
 | `connected_codex_delivery_and_recovery_verification` | open |

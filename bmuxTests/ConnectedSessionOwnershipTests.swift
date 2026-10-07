@@ -44,7 +44,7 @@ import Testing
     @Test func configuredLaunchRetainsExplicitOptionsAndHostEnvironment() async throws {
         let configuration = try #require(ConnectedCodexLaunchConfiguration(
             command: #"codex --model hidden-valid --sandbox read-only --add-dir 'Maple Street' --config 'approval_policy="never"'"#,
-            environment: ["INSPECTION_SCOPE": "Maple Street"]))
+            environment: ["INSPECTION_SCOPE": "Maple Street", "BMUX_SOCKET_PATH": "/tmp/wrong.sock", "BMUX_WORKSPACE_ID": "unrelated-workspace", "BMUX_SURFACE_ID": "unrelated-surface"]))
         let arguments = try await launchedArguments(model: "unavailable-model", configuration: configuration)
         #expect(Array(arguments.suffix(8)) == ["--model", "hidden-valid", "--sandbox", "read-only", "--add-dir", "Maple Street", "--config", #"approval_policy="never""#])
     }
@@ -71,7 +71,7 @@ import Testing
         case "$1" in
           --version) printf 'codex-cli 0.154.0\n';;
           app-server)
-            /usr/bin/python3 -c 'import json,os,sys; open(os.environ["HOST_CAPTURE"],"w").write(json.dumps({"args":sys.argv[1:],"scope":os.environ.get("INSPECTION_SCOPE"),"hook_socket":os.environ.get("BMUX_SOCKET_PATH"),"hook_cli":os.environ.get("BMUX_BUNDLED_CLI_PATH"),"stale_context":os.environ.get("CMUX_SURFACE_ID")}))' "$@"
+            /usr/bin/python3 -c 'import json,os,sys; open(os.environ["HOST_CAPTURE"],"w").write(json.dumps({"args":sys.argv[1:],"scope":os.environ.get("INSPECTION_SCOPE"),"hook_socket":os.environ.get("BMUX_SOCKET_PATH"),"hook_cli":os.environ.get("BMUX_BUNDLED_CLI_PATH"),"stale_context":os.environ.get("CMUX_SURFACE_ID"),"workspace":os.environ.get("BMUX_WORKSPACE_ID"),"surface":os.environ.get("BMUX_SURFACE_ID"),"resume":os.environ.get("BMUX_AGENT_LAUNCH_ARGV_B64")}))' "$@"
             printf 'listening on: ws://127.0.0.1:1\n'
             exec /usr/bin/python3 -c 'import signal; signal.pause()';;
           *) exec /usr/bin/python3 -c 'import json,sys; print(json.dumps(sys.argv[1:]))' "$@";;
@@ -100,9 +100,9 @@ import Testing
             try await connection.start()
             return connection
         })
-        let surfaceID = UUID()
+        let workspaceID = UUID(), surfaceID = UUID()
         do {
-            let host = try await service.launch(surfaceID: surfaceID, workingDirectory: directory.path, configuration: configuration)
+            let host = try await service.launch(workspaceID: workspaceID, surfaceID: surfaceID, workingDirectory: directory.path, configuration: configuration)
             let output = await CommandRunner(environment: ["PATH": "/usr/bin:/bin"]).runStandardOutput(
                 directory: directory.path, executable: "/bin/sh", arguments: ["-c", host.terminalCommand], timeout: 5)
             await service.endOwnedHost(surfaceID: surfaceID)
@@ -112,6 +112,11 @@ import Testing
             #expect(hostCapture?["hook_socket"] as? String == "/tmp/roof-inspection.sock")
             #expect(hostCapture?["hook_cli"] as? String == "/Applications/Roof/bmux")
             #expect(hostCapture?["stale_context"] is NSNull)
+            #expect(hostCapture?["workspace"] as? String == workspaceID.uuidString)
+            #expect(hostCapture?["surface"] as? String == surfaceID.uuidString)
+            let resumeData = try #require((hostCapture?["resume"] as? String).flatMap { Data(base64Encoded: $0) })
+            let resumeArguments = String(decoding: resumeData, as: UTF8.self).split(separator: "\0").map(String.init)
+            #expect(resumeArguments == [executable.path] + configuration.arguments)
             if let scope = configuration.environment["INSPECTION_SCOPE"] { #expect(hostCapture?["scope"] as? String == scope) }
             let data = Data(try #require(output).utf8)
             return try JSONDecoder().decode([String].self, from: data)

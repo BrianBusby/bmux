@@ -13,6 +13,38 @@ import BmuxSidebar
 
 @MainActor
 struct WorkspaceSidebarObservationTests {
+    @Test(.timeLimit(.minutes(1))) func referenceCardsObserveRepeatedTitlesAndAgentActivity() async throws {
+        let workspace = Workspace(title: "Roof inspection")
+        let panelID = try #require(workspace.focusedPanelId)
+        let observation = WorkspaceReferenceCardObservation(workspaces: [workspace]) {
+            WorkspaceReferenceCardSnapshot(workspace: $0, provenance: nil, workspaceTitle: $0.title)
+        }
+        defer { observation.cancel() }
+        var snapshots = observation.updates.makeAsyncIterator()
+        #expect(await snapshots.next()?.first?.title == "Roof inspection")
+
+        for title in ["Review flashing", "Compare gutter photographs"] {
+            workspace.setCustomTitle(title, source: .autoSummary)
+            while true {
+                let cards = try #require(await snapshots.next())
+                if cards.first?.title == title { break }
+            }
+            #expect(workspace.title == title)
+        }
+        workspace.setAgentLifecycle(key: "codex", panelId: panelID, lifecycle: .running)
+        while true {
+            let cards = try #require(await snapshots.next())
+            if cards.first?.hasActiveAIWork == true { break }
+        }
+        workspace.setAgentLifecycle(key: "codex", panelId: panelID, lifecycle: .idle)
+        while true {
+            let cards = try #require(await snapshots.next())
+            if cards.first?.hasActiveAIWork == false { break }
+        }
+        observation.cancel()
+        #expect(await snapshots.next() == nil)
+    }
+
     @Test(.timeLimit(.minutes(1))) func lateRepositoryDiscoveryUpdatesLabelsWithoutParentRefresh() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

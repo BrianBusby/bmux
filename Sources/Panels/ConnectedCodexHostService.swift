@@ -6,22 +6,24 @@ import Foundation
 /// Existing ordinary CLI processes are never adopted or replaced.
 actor ConnectedCodexHostService: ConnectedCodexHosting {
     private let executable: URL
+    private let hookWrapper: URL?
     private let root: URL
     private let environment: [String: String]
     private let connect: @Sendable (URL, String) async throws -> CodexRPCConnection
     private var processes: [UUID: Process] = [:]
 
-    init(executable: URL, root: URL, environment: [String: String],
+    init(executable: URL, root: URL, environment: [String: String], hookWrapper: URL? = nil,
          connect: @escaping @Sendable (URL, String) async throws -> CodexRPCConnection = { endpoint, token in
              try await ConnectedCodexHostService.authenticatedConnection(endpoint, token: token)
          }) {
         self.executable = executable
+        self.hookWrapper = hookWrapper
         self.root = root
         self.environment = environment
         self.connect = connect
     }
 
-    func launch(surfaceID: UUID, workingDirectory: String, configuration: ConnectedCodexLaunchConfiguration = .init()) async throws -> ConnectedCodexHost {
+    func launch(workspaceID: UUID, surfaceID: UUID, workingDirectory: String, configuration: ConnectedCodexLaunchConfiguration = .init()) async throws -> ConnectedCodexHost {
         let launchEnvironment = environment.merging(configuration.environment) { _, configured in configured }
         let version = await CommandRunner(environment: launchEnvironment).runStandardOutput(
             directory: workingDirectory, executable: executable.path, arguments: ["--version"], timeout: 5
@@ -38,10 +40,24 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
             throw CodexControlError.disconnected
         }
         let process = Process()
-        process.executableURL = executable
+        process.executableURL = hookWrapper ?? executable
         process.arguments = ["app-server", "--listen", "ws://127.0.0.1:0", "--ws-auth", "capability-token", "--ws-token-file", tokenURL.path] + configuration.hostArguments
         process.currentDirectoryURL = URL(fileURLWithPath: workingDirectory)
-        process.environment = launchEnvironment.filter { !$0.key.hasPrefix("BMUX") && !$0.key.hasPrefix("CMUX") && $0.key != "CODEX_THREAD_ID" }
+        // Discard inherited agent identity, then route hooks only to this host's owner.
+        // App-supplied routing wins over configured workspace environment values.
+        var hostEnvironment = launchEnvironment.filter { !$0.key.hasPrefix("BMUX") && !$0.key.hasPrefix("CMUX") && $0.key != "CODEX_THREAD_ID" }
+        for key in ["BMUX_SOCKET_PATH", "BMUX_BUNDLED_CLI_PATH", "BMUX_BUNDLE_ID"] {
+            hostEnvironment[key] = environment[key]
+        }
+        hostEnvironment["BMUX_WORKSPACE_ID"] = workspaceID.uuidString
+        hostEnvironment["BMUX_SURFACE_ID"] = surfaceID.uuidString
+        hostEnvironment["BMUX_CUSTOM_CODEX_PATH"] = executable.path
+        hostEnvironment["BMUX_CODEX_CONNECTED_HOST"] = "1"
+        // Persist the original interactive launch, never the ephemeral host endpoint.
+        let resumeArguments = ([executable.path] + configuration.arguments).joined(separator: "\0") + "\0"
+        hostEnvironment["BMUX_AGENT_LAUNCH_ARGV_B64"] = Data(resumeArguments.utf8).base64EncodedString()
+        hostEnvironment["BMUX_CODEX_HOOKS_DISABLED"] = launchEnvironment["BMUX_CODEX_HOOKS_DISABLED"]
+        process.environment = hostEnvironment
         let output = Pipe()
         process.standardOutput = output
         process.standardError = output
