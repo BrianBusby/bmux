@@ -39,6 +39,7 @@ final class AgentChatTranscriptService {
     private let recordTaskWorkspaceDirectory: @MainActor (AgentChatSessionRecord, String) -> Void
     private let now: () -> Date
     private var promptEvidenceTasks: [UUID: Task<Void, Never>] = [:]
+    private var pendingPromptSeedSessions: Set<String> = []
     /// Drives the live agent-prose streaming preview.
     private var proseStreamer: AgentChatProseStreamer!
     /// Sessions whose transcript could not be resolved; skipped until an
@@ -477,9 +478,6 @@ final class AgentChatTranscriptService {
             + "file=\((path as NSString).lastPathComponent)"
         )
         #endif
-        if record.transcriptPath != path {
-            registry.update(sessionID: record.sessionID) { $0.transcriptPath = path }
-        }
         let sessionID = record.sessionID
         let agentKind = record.agentKind
         let tailer = AgentChatTranscriptTailer(
@@ -492,20 +490,27 @@ final class AgentChatTranscriptService {
             await self?.publishBatch(batch, sessionID: sessionID)
         }
         tailers[sessionID] = tailer
+        if record.transcriptPath != path {
+            registry.update(sessionID: record.sessionID) { $0.transcriptPath = path }
+        }
         Task { await tailer.start() }
+        seedLiveCodexPromptEvidence(for: record, tailer: tailer)
         return tailer
     }
 
     private func recordLiveCodexPromptEvidenceFromTranscript(for record: AgentChatSessionRecord) {
-        guard promptEvidenceBackfillEnabled else { return }
-        guard record.agentKind == .codex,
-              record.state != .ended else {
-            return
-        }
+        guard promptEvidenceBackfillEnabled, record.agentKind == .codex, record.state != .ended else { return }
         guard let tailer = ensureTailer(for: record) else { return }
+        seedLiveCodexPromptEvidence(for: record, tailer: tailer)
+    }
+
+    private func seedLiveCodexPromptEvidence(for record: AgentChatSessionRecord, tailer: AgentChatTranscriptTailer) {
+        guard promptEvidenceBackfillEnabled, record.agentKind == .codex, record.state != .ended else { return }
+        guard pendingPromptSeedSessions.insert(record.sessionID).inserted else { return }
         trackPromptEvidenceTask(Task { @MainActor [weak self] in
-            await tailer.start()
             guard let self else { return }
+            pendingPromptSeedSessions.remove(record.sessionID)
+            await tailer.start()
             await promptEvidenceSeeder(
                 [record],
                 resolver,

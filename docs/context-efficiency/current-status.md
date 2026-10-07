@@ -54,7 +54,12 @@ only when the saved model is unavailable; valid hidden models and custom/API
 providers retain their configuration. This writes no global configuration.
 Configured repository and new-tab Codex launches now reserve their own connected host before creating the PTY. Startup shows loading in Chat and Terminal; replacement preserves the logical surface, tab, selection and canvas membership. Native build 700 verified the actual bmux and companycam-mobile repository menus, first Chat-only prompts, completed replies, Terminal click/typing, return to the same conversation and latest-prompt footer reconciliation. Literal supported launch options and workspace environment values are preserved; setup scripts, compound/resume commands, custom executable paths and commands sent into an existing terminal keep their ordinary CLI behavior. Connected transcript prompts now replay resource acquisition through the existing
 prompt-mention PR resolver only after PE accepts the current prompt and the live
-registry session and exact terminal panel still match. Resolved PR title/author
+registry session and exact terminal panel still match.
+Initial transcript discovery runs the existing bounded prompt seeder, including
+when a new Chat session's rollout appears only after its first turn starts.
+Tailer registration precedes registry publication; initial discovery and hook
+replay share one seeding path without duplicating the first scan.
+Resolved PR title/author
 feed the existing PE and Linear workspace-link projection; this does not write
 stored descriptions or trigger title-generation hooks. Fresh-read failures,
 replaced or ambiguous sessions, older/superseded batches and duplicate replay
