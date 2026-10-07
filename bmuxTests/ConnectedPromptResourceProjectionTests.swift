@@ -82,11 +82,13 @@ struct ConnectedPromptResourceProjectionTests {
         #expect(await fixture.runner.count == 0)
     }
 
-    @Test func ambiguousLiveSessionsCannotUseRecencyToAuthorizeResources() async throws {
+    @Test(arguments: [false, true])
+    func ambiguousLiveSessionsCannotUseRecencyToAuthorizeResources(lowercaseSurface: Bool) async throws {
         let fixture = try Fixture()
         defer { fixture.remove() }
         fixture.registry.noteResumeInitiated(
-            sessionID: "sibling-session", source: "codex", surfaceID: fixture.panelID.uuidString,
+            sessionID: "sibling-session", source: "codex",
+            surfaceID: lowercaseSurface ? fixture.panelID.uuidString.lowercased() : fixture.panelID.uuidString,
             workspaceID: fixture.workspace.id.uuidString, workingDirectory: fixture.root.path
         )
         // Make the original indexed session newest while retaining the ambiguity.
