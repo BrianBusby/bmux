@@ -25,6 +25,7 @@ local_capabilities:
   ordinary_cli_read_only_chat: under_observation
   ordinary_cli_shared_control: not_implemented
   connected_codex_shared_host_controls: under_observation
+  connected_prompt_workspace_resource_projection: under_observation
   provenance_engine_public_in_process_sdk: implemented
   provenance_engine_sqlite_store: implemented
   provenance_engine_immutable_ledger: implemented
@@ -126,6 +127,10 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: pe_prompt_display_replay_chronology
+    status: open
+  - id: connected_session_worktree_context_verification
+    status: open
   - id: connected_codex_delivery_and_recovery_verification
     status: open
   - id: shared_host_codex_stale_interrupt

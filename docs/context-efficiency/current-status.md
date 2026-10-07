@@ -52,7 +52,21 @@ closure. Failed startup offers an explicit retry; provider actions are never
 blindly resent. New ChatGPT startup checks the connected client catalog and uses its default
 only when the saved model is unavailable; valid hidden models and custom/API
 providers retain their configuration. This writes no global configuration.
-Configured repository and new-tab Codex launches now reserve their own connected host before creating the PTY. Startup shows loading in Chat and Terminal; replacement preserves the logical surface, tab, selection and canvas membership. Native build 700 verified the actual bmux and companycam-mobile repository menus, first Chat-only prompts, completed replies, Terminal click/typing, return to the same conversation and latest-prompt footer reconciliation. Literal supported launch options and workspace environment values are preserved; setup scripts, compound/resume commands, custom executable paths and commands sent into an existing terminal keep their ordinary CLI behavior. Chat has no Interact in Terminal or Send buttons. Enter queues a prompt;
+Configured repository and new-tab Codex launches now reserve their own connected host before creating the PTY. Startup shows loading in Chat and Terminal; replacement preserves the logical surface, tab, selection and canvas membership. Native build 700 verified the actual bmux and companycam-mobile repository menus, first Chat-only prompts, completed replies, Terminal click/typing, return to the same conversation and latest-prompt footer reconciliation. Literal supported launch options and workspace environment values are preserved; setup scripts, compound/resume commands, custom executable paths and commands sent into an existing terminal keep their ordinary CLI behavior. Connected transcript prompts now replay resource acquisition through the existing
+prompt-mention PR resolver only after PE accepts the current prompt and the live
+registry session and exact terminal panel still match. Resolved PR title/author
+feed the existing PE and Linear workspace-link projection; this does not write
+stored descriptions or trigger title-generation hooks. Fresh-read failures,
+replaced or ambiguous sessions, older/superseded batches and duplicate replay
+cannot initiate lookups. Resource authorization uses the prior accepted PE prompt
+and bounded in-flight request state, including overlapping persistence; it never
+feeds card/footer display or filters ledger capture. PE's retained arrival-order
+prompt merge can still regress the footer during historical replay; correcting
+that authoritative projection remains separate work.
+Branch presentation still requires PE's associated worktree; an uninspectable
+recorded checkout does not justify substituting a PR head branch or an unrelated
+local worktree. Connected-session worktree confirmation remains under observation.
+Chat has no Interact in Terminal or Send buttons. Enter queues a prompt;
 Shift+Enter, composition, pending delivery and uncertain delivery retain their
 guards. Both bundled React consumers use the same composer. Queue and
 expected-turn steering retain their verified native transport boundary. Ordinary attachment, structured interruption, and broader

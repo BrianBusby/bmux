@@ -15,6 +15,7 @@
 		C7A531000000000000000002 /* AgentChatObservationHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A531000000000000000001 /* AgentChatObservationHandle.swift */; };
 		C7A532000000000000000002 /* AgentChatObservationInFlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A532000000000000000001 /* AgentChatObservationInFlight.swift */; };
 		C7A530000000000000000002 /* AgentChatObservationScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A530000000000000000001 /* AgentChatObservationScope.swift */; };
+		D53200000000000000000008 /* AgentChatPromptEvidenceBinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D53200000000000000000007 /* AgentChatPromptEvidenceBinding.swift */; };
 		CDFE000000000000000000A1 /* AgentChatProseStreamer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDFE000000000000000000A2 /* AgentChatProseStreamer.swift */; };
 		CDFE000000000000000000C1 /* AgentChatProseStreamerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDFE000000000000000000C2 /* AgentChatProseStreamerTests.swift */; };
 		ACA7C4A70000000000000001 /* AgentChatSessionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACA7C4A70000000000000002 /* AgentChatSessionRecord.swift */; };
@@ -1664,6 +1665,8 @@
 		36915A74F7AA3930F34DF634 /* WorkProvenanceObservationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D7DBCA37AB70E107E41EE5E /* WorkProvenanceObservationService.swift */; };
 			8DCF06522BB39B4A966FFC83 /* WorkProvenanceObserverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */; };
 			0B11704B4770CA402725B958 /* WorkProvenanceProcessGitCommandRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABC5AF6B03C2A9B1ADE669E4 /* WorkProvenanceProcessGitCommandRunner.swift */; };
+		D53200000000000000000004 /* WorkProvenancePromptEvidenceCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D53200000000000000000003 /* WorkProvenancePromptEvidenceCoordinator.swift */; };
+		D53200000000000000000002 /* WorkProvenancePromptWorkspaceActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D53200000000000000000001 /* WorkProvenancePromptWorkspaceActions.swift */; };
 		C0DE70110000000000000001 /* WorkProvenancePruneResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70110000000000000002 /* WorkProvenancePruneResult.swift */; };
 		CE0D10120000000000000001 /* WorkProvenancePruneResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70110000000000000002 /* WorkProvenancePruneResult.swift */; };
 		CE0E03030000000000000001 /* WorkProvenancePullRequestOwner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03030000000000000002 /* WorkProvenancePullRequestOwner.swift */; };
@@ -1672,6 +1675,7 @@
 		C0DE70120000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */; };
 		CE0D10140000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */; };
 		CE0E010B0000000000000001 /* WorkProvenanceRuntime+AgentSessionAssociation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E010B0000000000000002 /* WorkProvenanceRuntime+AgentSessionAssociation.swift */; };
+		D53200000000000000000006 /* WorkProvenanceRuntime+PromptResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = D53200000000000000000005 /* WorkProvenanceRuntime+PromptResources.swift */; };
 		756EB108F5337A59A8668D7C /* WorkProvenanceRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */; };
 		CE0E08060000000000000001 /* WorkProvenanceRuntimeLifecycleState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E08060000000000000002 /* WorkProvenanceRuntimeLifecycleState.swift */; };
 		CE0B00040000000000000001 /* WorkProvenanceSessionLifecycleRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00040000000000000002 /* WorkProvenanceSessionLifecycleRecorder.swift */; };
@@ -1911,6 +1915,7 @@
 		C7A531000000000000000001 /* AgentChatObservationHandle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "AgentChatObservationHandle.swift"; sourceTree = "<group>"; };
 		C7A532000000000000000001 /* AgentChatObservationInFlight.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "AgentChatObservationInFlight.swift"; sourceTree = "<group>"; };
 		C7A530000000000000000001 /* AgentChatObservationScope.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "AgentChatObservationScope.swift"; sourceTree = "<group>"; };
+		D53200000000000000000007 /* AgentChatPromptEvidenceBinding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AgentChatPromptEvidenceBinding.swift"; sourceTree = "<group>"; };
 		CDFE000000000000000000A2 /* AgentChatProseStreamer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "AgentChatProseStreamer.swift"; sourceTree = "<group>"; };
 		CDFE000000000000000000C2 /* AgentChatProseStreamerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentChatProseStreamerTests.swift; sourceTree = "<group>"; };
 		ACA7C4A70000000000000002 /* AgentChatSessionRecord.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "AgentChatSessionRecord.swift"; sourceTree = "<group>"; };
@@ -3451,12 +3456,15 @@
 		3D7DBCA37AB70E107E41EE5E /* WorkProvenanceObservationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceObservationService.swift; sourceTree = "<group>"; };
 			642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceObserverTests.swift; sourceTree = "<group>"; };
 			ABC5AF6B03C2A9B1ADE669E4 /* WorkProvenanceProcessGitCommandRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceProcessGitCommandRunner.swift; sourceTree = "<group>"; };
+		D53200000000000000000003 /* WorkProvenancePromptEvidenceCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkProvenancePromptEvidenceCoordinator.swift"; sourceTree = "<group>"; };
+		D53200000000000000000001 /* WorkProvenancePromptWorkspaceActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkProvenancePromptWorkspaceActions.swift"; sourceTree = "<group>"; };
 		C0DE70110000000000000002 /* WorkProvenancePruneResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePruneResult.swift; sourceTree = "<group>"; };
 		CE0E03030000000000000002 /* WorkProvenancePullRequestOwner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePullRequestOwner.swift; sourceTree = "<group>"; };
 			CE0E03190000000000000002 /* WorkProvenancePullRequestOwnerResolverDefaultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePullRequestOwnerResolverDefaultTests.swift; sourceTree = "<group>"; };
 		CE0E03040000000000000002 /* WorkProvenancePullRequestOwnerResolving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenancePullRequestOwnerResolving.swift; sourceTree = "<group>"; };
 		C0DE70120000000000000002 /* WorkProvenanceRetentionPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRetentionPolicy.swift; sourceTree = "<group>"; };
 		CE0E010B0000000000000002 /* WorkProvenanceRuntime+AgentSessionAssociation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkProvenanceRuntime+AgentSessionAssociation.swift"; sourceTree = "<group>"; };
+		D53200000000000000000005 /* WorkProvenanceRuntime+PromptResources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkProvenanceRuntime+PromptResources.swift"; sourceTree = "<group>"; };
 		B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRuntime.swift; sourceTree = "<group>"; };
 		CE0E08060000000000000002 /* WorkProvenanceRuntimeLifecycleState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRuntimeLifecycleState.swift; sourceTree = "<group>"; };
 		CE0B00040000000000000002 /* WorkProvenanceSessionLifecycleRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSessionLifecycleRecorder.swift; sourceTree = "<group>"; };
@@ -3796,6 +3804,7 @@
 		ACA7C4A70000000000000100 /* AgentChat */ = {
 			isa = PBXGroup;
 			children = (
+				D53200000000000000000007 /* AgentChatPromptEvidenceBinding.swift */,
 				ACA7C4A70000000000000002 /* AgentChatSessionRecord.swift */,
 				ACA7C4A70000000000000004 /* AgentChatHookSessionStore.swift */,
 				C7A531000000000000000001 /* AgentChatObservationHandle.swift */,
@@ -5484,7 +5493,10 @@
 					CE0E00040000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+Support.swift */,
 					CE0E010A0000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+SessionAssociation.swift */,
 					CE0E010B0000000000000002 /* WorkProvenanceRuntime+AgentSessionAssociation.swift */,
-					B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */,
+					D53200000000000000000001 /* WorkProvenancePromptWorkspaceActions.swift */,
+				D53200000000000000000003 /* WorkProvenancePromptEvidenceCoordinator.swift */,
+				D53200000000000000000005 /* WorkProvenanceRuntime+PromptResources.swift */,
+				B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */,
 					CE0E08060000000000000002 /* WorkProvenanceRuntimeLifecycleState.swift */,
 				CE0E01090000000000000002 /* WorkspaceCodingAgentSessionAssociationStore.swift */,
 				CE0E03100000000000000002 /* WorkProvenanceSettingsLinearAuthorizationProvider.swift */,
@@ -5960,6 +5972,7 @@
 				C7A531000000000000000002 /* AgentChatObservationHandle.swift in Sources */,
 				C7A532000000000000000002 /* AgentChatObservationInFlight.swift in Sources */,
 				C7A530000000000000000002 /* AgentChatObservationScope.swift in Sources */,
+				D53200000000000000000008 /* AgentChatPromptEvidenceBinding.swift in Sources */,
 				CDFE000000000000000000A1 /* AgentChatProseStreamer.swift in Sources */,
 					ACA7C4A70000000000000001 /* AgentChatSessionRecord.swift in Sources */,
 					C7A52D100000000000000002 /* AgentChatSessionRegistry+Lifecycle.swift in Sources */,
@@ -6965,12 +6978,15 @@
 				CE0E03020000000000000001 /* WorkProvenanceNoopPullRequestOwnerResolver.swift in Sources */,
 				36915A74F7AA3930F34DF634 /* WorkProvenanceObservationService.swift in Sources */,
 				0B11704B4770CA402725B958 /* WorkProvenanceProcessGitCommandRunner.swift in Sources */,
+				D53200000000000000000004 /* WorkProvenancePromptEvidenceCoordinator.swift in Sources */,
+					D53200000000000000000002 /* WorkProvenancePromptWorkspaceActions.swift in Sources */,
 				C0DE70110000000000000001 /* WorkProvenancePruneResult.swift in Sources */,
 				CE0E03030000000000000001 /* WorkProvenancePullRequestOwner.swift in Sources */,
 					CE0E03040000000000000001 /* WorkProvenancePullRequestOwnerResolving.swift in Sources */,
 					C0DE70120000000000000001 /* WorkProvenanceRetentionPolicy.swift in Sources */,
 					CE0E010B0000000000000001 /* WorkProvenanceRuntime+AgentSessionAssociation.swift in Sources */,
-					756EB108F5337A59A8668D7C /* WorkProvenanceRuntime.swift in Sources */,
+				D53200000000000000000006 /* WorkProvenanceRuntime+PromptResources.swift in Sources */,
+				756EB108F5337A59A8668D7C /* WorkProvenanceRuntime.swift in Sources */,
 					CE0E08060000000000000001 /* WorkProvenanceRuntimeLifecycleState.swift in Sources */,
 				CE0B00040000000000000001 /* WorkProvenanceSessionLifecycleRecorder.swift in Sources */,
 				A801809D8020AD996B4C0997 /* WorkProvenanceSessionRecord.swift in Sources */,

@@ -248,15 +248,10 @@ final class AgentChatTranscriptService {
     /// Routes session lifecycle changes into the provenance runtime.
     func recordSessionLifecycleChanges(with runtime: WorkProvenanceRuntime) {
         promptEvidenceBackfillEnabled = runtime.isEnabled
-        recordSessionLifecycle = { change, timestamp in
-            runtime.recordSessionLifecycleChange(change, timestamp: timestamp)
-        }
-        recordHookUserPromptSubmit = { record, event in
-            runtime.recordHookUserPromptSubmit(record: record, event: event)
-        }
-        recordTranscriptUserPrompts = { record, messages in
-            runtime.recordTranscriptUserPrompts(record: record, messages: messages)
-        }
+        let binding = AgentChatPromptEvidenceBinding(registry: registry, runtime: runtime)
+        recordSessionLifecycle = binding.recordLifecycle
+        recordHookUserPromptSubmit = binding.recordHook
+        recordTranscriptUserPrompts = binding.recordTranscript
     }
 
     /// Ingests one hook event (called from the socket dispatch path).
