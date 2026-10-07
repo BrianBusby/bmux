@@ -71,7 +71,7 @@ import Testing
         case "$1" in
           --version) printf 'codex-cli 0.154.0\n';;
           app-server)
-            /usr/bin/python3 -c 'import json,os,sys; open(os.environ["HOST_CAPTURE"],"w").write(json.dumps({"args":sys.argv[1:],"scope":os.environ.get("INSPECTION_SCOPE")}))' "$@"
+            /usr/bin/python3 -c 'import json,os,sys; open(os.environ["HOST_CAPTURE"],"w").write(json.dumps({"args":sys.argv[1:],"scope":os.environ.get("INSPECTION_SCOPE"),"hook_socket":os.environ.get("BMUX_SOCKET_PATH"),"hook_cli":os.environ.get("BMUX_BUNDLED_CLI_PATH"),"stale_context":os.environ.get("CMUX_SURFACE_ID")}))' "$@"
             printf 'listening on: ws://127.0.0.1:1\n'
             exec /usr/bin/python3 -c 'import signal; signal.pause()';;
           *) exec /usr/bin/python3 -c 'import json,sys; print(json.dumps(sys.argv[1:]))' "$@";;
@@ -93,7 +93,10 @@ import Testing
             "model/list": catalogOverride.map { Data($0.utf8) } ?? catalog])
         let connection = CodexRPCConnection(transport: transport)
         let service = ConnectedCodexHostService(executable: executable, root: directory.appendingPathComponent("hosts"),
-                                               environment: ["PATH": "/usr/bin:/bin", "HOST_CAPTURE": directory.appendingPathComponent("host.json").path], connect: { _, _ in
+                                               environment: ["PATH": "/usr/bin:/bin", "HOST_CAPTURE": directory.appendingPathComponent("host.json").path,
+                                                             "BMUX_SOCKET_PATH": "/tmp/roof-inspection.sock",
+                                                             "BMUX_BUNDLED_CLI_PATH": "/Applications/Roof/bmux",
+                                                             "CMUX_SURFACE_ID": "unrelated-surface"], connect: { _, _ in
             try await connection.start()
             return connection
         })
@@ -106,6 +109,9 @@ import Testing
             await connection.disconnect()
             let hostCapture = try JSONSerialization.jsonObject(with: Data(contentsOf: directory.appendingPathComponent("host.json"))) as? [String: Any]
             #expect(Array((hostCapture?["args"] as? [String] ?? []).suffix(configuration.hostArguments.count)) == configuration.hostArguments)
+            #expect(hostCapture?["hook_socket"] as? String == "/tmp/roof-inspection.sock")
+            #expect(hostCapture?["hook_cli"] as? String == "/Applications/Roof/bmux")
+            #expect(hostCapture?["stale_context"] is NSNull)
             if let scope = configuration.environment["INSPECTION_SCOPE"] { #expect(hostCapture?["scope"] as? String == scope) }
             let data = Data(try #require(output).utf8)
             return try JSONDecoder().decode([String].self, from: data)
