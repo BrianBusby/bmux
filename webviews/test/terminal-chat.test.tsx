@@ -96,7 +96,7 @@ test.each([
   { name: "ambiguous association", snapshot: { ...connectedSnapshot, reason: "ambiguous" }, expected: "Multiple session bindings" },
   { name: "completed turn", snapshot: { ...connectedSnapshot, status: "observed", history: { ...emptyHistory, observed_turn: { id: "turn", state: "completed" } } }, expected: "Completed" },
   { name: "ended session", snapshot: { ...connectedSnapshot, status: "ended", history: emptyHistory }, expected: "Session ended" },
-] satisfies { name: string; snapshot: import("../src/agent-session/shared/terminalChat").TerminalChatSnapshot; expected: string; connectedCopy?: string }[])("Chat heading: $name", async ({ snapshot, expected, connectedCopy }) => {
+] satisfies { name: string; snapshot: import("../src/agent-session/shared/terminalChat").TerminalChatSnapshot; expected: string; connectedCopy?: string }[])("Chat omits its status header: $name", async ({ snapshot, expected, connectedCopy }) => {
   const dom = new JSDOM("<!doctype html><div id='root'></div>", { url: "https://example.test" });
   const previousWindow = globalThis.window;
   const previousDocument = globalThis.document;
@@ -110,7 +110,12 @@ test.each([
   const root = createRoot(dom.window.document.getElementById("root")!);
   try {
     await act(async () => root.render(<TerminalChatSurface context={context} />));
-    expect(dom.window.document.querySelector(".terminal-chat-header output")?.textContent).toBe(expected);
+    expect(dom.window.document.querySelector("header")).toBeNull();
+    if (snapshot.reason === "ambiguous") {
+      expect(dom.window.document.querySelector(".terminal-chat-notice")?.textContent).toBe(expected);
+    } else {
+      expect(dom.window.document.body.textContent).not.toContain(expected);
+    }
   } finally {
     await act(async () => root.unmount());
     dom.window.close();
@@ -137,7 +142,8 @@ test("connected control does not hide a failed history refresh", async () => {
     expect(dom.window.document.body.textContent).toContain("Ready for review");
     snapshot = connectedSnapshot;
     await act(async () => root.render(<TerminalChatSurface context={{ ...context }} />));
-    expect(dom.window.document.querySelector(".terminal-chat-header output")?.textContent).toBe(copy.chatStale);
+    expect(dom.window.document.querySelector("header")).toBeNull();
+    expect(dom.window.document.querySelector(".terminal-chat-notice")?.textContent).toBe(copy.chatStale);
     expect(dom.window.document.body.textContent).toContain("Ready for review");
   } finally {
     await act(async () => root.unmount());
