@@ -3,9 +3,10 @@ public import Foundation
 /// Value object deciding which workspace portal-rendering transitions need to run.
 ///
 /// `WorkspaceMountPlan` decides which workspaces should stay mounted. This type
-/// combines that mounted set with the visibility of its content, then compares
-/// the result with the last applied state. Chat and Session can retain mounted
-/// workspaces without allowing their terminal or browser portals to render.
+/// combines that mounted set with selected/retiring presentation and content
+/// visibility, then compares the result with the last applied state. Chat and
+/// Session can retain mounted workspaces without allowing their terminal or
+/// browser portals to render.
 public struct WorkspacePortalRenderingPlan: Equatable {
     private let previousStatesByWorkspaceId: [UUID: Bool]
     private let mountedWorkspaceIds: Set<UUID>
@@ -16,18 +17,27 @@ public struct WorkspacePortalRenderingPlan: Equatable {
     /// - Parameters:
     ///   - previousStatesByWorkspaceId: The last portal-rendering state applied by
     ///     the caller, keyed by workspace id.
-    ///   - mountedWorkspaceIds: Workspaces eligible for portal rendering when content is visible.
+    ///   - mountedWorkspaceIds: Workspaces retained for rendering or background loading.
     ///   - orderedWorkspaceIds: Existing workspaces in stable application order.
+    ///   - selectedWorkspaceId: The workspace currently selected in the window.
+    ///   - retiringWorkspaceId: The workspace still visible during a selection handoff.
     ///   - contentVisible: Whether the containing terminal content is displayed.
     ///     False disables every portal without changing workspace mount lifetime.
     public init(
         previousStatesByWorkspaceId: [UUID: Bool],
         mountedWorkspaceIds: Set<UUID>,
         orderedWorkspaceIds: [UUID],
+        selectedWorkspaceId: UUID?,
+        retiringWorkspaceId: UUID? = nil,
         contentVisible: Bool = true
     ) {
         self.previousStatesByWorkspaceId = previousStatesByWorkspaceId
-        self.mountedWorkspaceIds = contentVisible ? mountedWorkspaceIds : []
+        self.mountedWorkspaceIds = contentVisible ? Set(mountedWorkspaceIds.filter { workspaceId in
+            MountedWorkspacePresentation.resolve(
+                isSelectedWorkspace: workspaceId == selectedWorkspaceId,
+                isRetiringWorkspace: workspaceId == retiringWorkspaceId
+            ).isPanelVisible
+        }) : []
         self.orderedWorkspaceIds = orderedWorkspaceIds
     }
 

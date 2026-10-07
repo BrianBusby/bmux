@@ -3397,6 +3397,7 @@ struct ContentView: View {
         let portalRenderingChanges = WorkspacePortalRenderingPlan(
             previousStatesByWorkspaceId: lastReconciledPortalRenderingStatesByWorkspaceId,
             mountedWorkspaceIds: Set(mountedWorkspaceIds), orderedWorkspaceIds: orderedTabIds,
+            selectedWorkspaceId: effectiveSelectedId, retiringWorkspaceId: retiringWorkspaceId,
             contentVisible: bmuxShellTerminalVisible
         ).applying(to: &lastReconciledPortalRenderingStatesByWorkspaceId)
         let workspacesById = Dictionary(currentTabs.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })

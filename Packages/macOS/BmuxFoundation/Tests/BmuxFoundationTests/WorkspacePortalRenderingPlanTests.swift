@@ -48,6 +48,7 @@ struct WorkspacePortalRenderingPlanTests {
             previousStatesByWorkspaceId: previous,
             mountedWorkspaceIds: [first],
             orderedWorkspaceIds: [first, second],
+            selectedWorkspaceId: first,
             contentVisible: false
         ).applying(to: &previous)
         #expect(leavingTerminal == [WorkspacePortalRenderingChange(workspaceId: first, isEnabled: false)])
@@ -56,6 +57,7 @@ struct WorkspacePortalRenderingPlanTests {
             previousStatesByWorkspaceId: previous,
             mountedWorkspaceIds: [second],
             orderedWorkspaceIds: [first, second],
+            selectedWorkspaceId: second,
             contentVisible: false
         ).applying(to: &previous)
         #expect(switchingWorkspaceWhileHidden.isEmpty)
@@ -65,6 +67,7 @@ struct WorkspacePortalRenderingPlanTests {
             previousStatesByWorkspaceId: previous,
             mountedWorkspaceIds: [second],
             orderedWorkspaceIds: [first, second],
+            selectedWorkspaceId: second,
             contentVisible: true
         ).applying(to: &previous)
         #expect(returningToTerminal == [WorkspacePortalRenderingChange(workspaceId: second, isEnabled: true)])
@@ -79,7 +82,8 @@ struct WorkspacePortalRenderingPlanTests {
         let initial = WorkspacePortalRenderingPlan(
             previousStatesByWorkspaceId: [:],
             mountedWorkspaceIds: [mounted],
-            orderedWorkspaceIds: [mounted, unmounted]
+            orderedWorkspaceIds: [mounted, unmounted],
+            selectedWorkspaceId: mounted
         )
 
         #expect(
@@ -92,7 +96,8 @@ struct WorkspacePortalRenderingPlanTests {
         let repeated = WorkspacePortalRenderingPlan(
             previousStatesByWorkspaceId: initial.nextStatesByWorkspaceId,
             mountedWorkspaceIds: [mounted],
-            orderedWorkspaceIds: [mounted, unmounted]
+            orderedWorkspaceIds: [mounted, unmounted],
+            selectedWorkspaceId: mounted
         )
 
         #expect(
@@ -114,7 +119,8 @@ struct WorkspacePortalRenderingPlanTests {
                 stale: false,
             ],
             mountedWorkspaceIds: [selected],
-            orderedWorkspaceIds: [previous, selected]
+            orderedWorkspaceIds: [previous, selected],
+            selectedWorkspaceId: selected
         )
 
         #expect(
@@ -137,7 +143,8 @@ struct WorkspacePortalRenderingPlanTests {
         let changes = WorkspacePortalRenderingPlan(
             previousStatesByWorkspaceId: previousStates,
             mountedWorkspaceIds: [mounted],
-            orderedWorkspaceIds: [mounted, unmounted]
+            orderedWorkspaceIds: [mounted, unmounted],
+            selectedWorkspaceId: mounted
         ).applying(to: &previousStates)
 
         #expect(
@@ -158,7 +165,8 @@ struct WorkspacePortalRenderingPlanTests {
         let plan = WorkspacePortalRenderingPlan(
             previousStatesByWorkspaceId: [:],
             mountedWorkspaceIds: [mounted],
-            orderedWorkspaceIds: [repeated, repeated, mounted]
+            orderedWorkspaceIds: [repeated, repeated, mounted],
+            selectedWorkspaceId: mounted
         )
 
         #expect(

@@ -20,6 +20,7 @@ import BmuxFoundation
                 previousStatesByWorkspaceId: previousStates,
                 mountedWorkspaceIds: [workspace.id],
                 orderedWorkspaceIds: [workspace.id],
+                selectedWorkspaceId: workspace.id,
                 contentVisible: visible
             ).applying(to: &previousStates)
             for change in changes {

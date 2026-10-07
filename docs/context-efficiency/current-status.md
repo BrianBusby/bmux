@@ -69,7 +69,9 @@ its list boundary; both card layouts cap prompts at three lines and replace the
 close control with the existing activity spinner. Shell mode changes now disable terminal and browser portal rendering while Chat
 or Session is selected, so later workspace layout reconciliation cannot reveal
 a retained terminal over those views. Returning to Terminal re-enables the
-existing layout reconciliation path; fresh-build mode-switch dogfood is pending.
+existing layout reconciliation path for selected/retiring workspaces; background-only
+mounts stay portal-disabled. Build 710 passed native mode-switch checks; the
+background-mount refinement still needs a fresh build and dogfood.
 Existing host processes retain their original environment until restarted. Fresh-host dogfood remains required. Fresh-read failures,
 replaced or ambiguous sessions, older/superseded batches and duplicate replay
 cannot initiate lookups. Resource authorization uses the prior accepted PE prompt
