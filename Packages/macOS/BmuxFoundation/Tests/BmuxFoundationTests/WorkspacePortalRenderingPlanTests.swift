@@ -5,6 +5,39 @@ import BmuxFoundation
 
 @Suite("Workspace portal-rendering plan")
 struct WorkspacePortalRenderingPlanTests {
+    @Test("Returning to Terminal keeps background-only mounts portal-disabled")
+    func returningToTerminalOnlyEnablesSelectedAndRetiringWorkspaces() {
+        let selected = UUID()
+        let retiring = UUID()
+        let background = UUID()
+        var previous = [selected: false, retiring: false, background: false]
+        let plan = WorkspacePortalRenderingPlan(
+            previousStatesByWorkspaceId: previous,
+            mountedWorkspaceIds: [selected, retiring, background],
+            orderedWorkspaceIds: [selected, retiring, background],
+            selectedWorkspaceId: selected,
+            retiringWorkspaceId: retiring,
+            contentVisible: true
+        )
+        #expect(plan.applying(to: &previous) == [
+            WorkspacePortalRenderingChange(workspaceId: selected, isEnabled: true),
+            WorkspacePortalRenderingChange(workspaceId: retiring, isEnabled: true)
+        ])
+        #expect(previous[background] == false)
+
+        let finishingHandoff = WorkspacePortalRenderingPlan(
+            previousStatesByWorkspaceId: previous,
+            mountedWorkspaceIds: [selected, retiring, background],
+            orderedWorkspaceIds: [selected, retiring, background],
+            selectedWorkspaceId: selected,
+            contentVisible: true
+        )
+        #expect(finishingHandoff.applying(to: &previous) == [
+            WorkspacePortalRenderingChange(workspaceId: retiring, isEnabled: false)
+        ])
+        #expect(previous[background] == false)
+    }
+
     @Test("Chat and Session disable retained portals until Terminal returns")
     func hiddenTerminalContentStaysDisabledAcrossWorkspaceReconciliation() {
         let first = UUID()
