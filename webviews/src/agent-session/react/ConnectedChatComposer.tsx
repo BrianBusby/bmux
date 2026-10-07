@@ -52,7 +52,7 @@ export function ConnectedChatComposer({ context, control, enabled }: { context: 
       // Keep the local draft if the native consumer is unavailable.
     });
   };
-  const deliveryCopy = { pending: copy.connectedPending, accepted: copy.connectedAccepted,
+  const deliveryCopy = { pending: copy.connectedPending,
     failed: copy.connectedFailed, uncertain: copy.connectedUncertain };
   return <footer className="terminal-chat-composer">
     <label htmlFor="connected-chat-draft">{copy.connectedPrompt}</label>
@@ -65,7 +65,7 @@ export function ConnectedChatComposer({ context, control, enabled }: { context: 
     {control.steerTurn && <div className="terminal-chat-composer-actions">
       <button disabled={!enabled || blocked || !draft.trim() || slashCommand} onClick={() => void submit("steer")}>{copy.connectedSteer}</button>
     </div>}
-    {latest && <output aria-live="polite">{deliveryCopy[latest.delivery]}</output>}
-    <p>{slashCommand ? copy.connectedSlashCommands : enabled ? copy.connectedQueuePolicy : copy.connectedUnavailable}</p>
+    {latest && latest.delivery !== "accepted" && <output aria-live="polite">{deliveryCopy[latest.delivery]}</output>}
+    {(slashCommand || !enabled) && <p>{slashCommand ? copy.connectedSlashCommands : copy.connectedUnavailable}</p>}
   </footer>;
 }

@@ -2525,6 +2525,14 @@ struct ContentView: View {
                 tabManager.selectWorkspaceIdForAction(id)
                 BrowserExternalLinkOpener().openWebLink(url)
             },
+            onLaunchRepository: {
+                guard let anchorView = NSApp.keyWindow?.contentView
+                    ?? NSApp.mainWindow?.contentView,
+                    AppDelegate.shared?.showRepoAgentLauncherMenu(anchorView: anchorView) == true else {
+                    NSSound.beep()
+                    return
+                }
+            },
             filters: $referenceWorkspaceFilters,
             isFilterPanelPresented: $isReferenceWorkspaceFilterPanelPresented
         )
@@ -2543,35 +2551,6 @@ struct ContentView: View {
                         Text("CompanyCam").foregroundStyle(Color.workspaceReferenceTextTertiary)
                     }
                     Spacer()
-                    HStack(spacing: 12) {
-                        Button {
-                            guard let anchorView = NSApp.keyWindow?.contentView
-                                ?? NSApp.mainWindow?.contentView,
-                                AppDelegate.shared?.showRepoAgentLauncherMenu(anchorView: anchorView) == true else {
-                                NSSound.beep()
-                                return
-                            }
-                        } label: {
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(Color.workspaceReferenceTextSecondary)
-                                .frame(width: 28, height: 28)
-                                .background(Color.workspaceReferenceCard)
-                                .clipShape(RoundedRectangle(cornerRadius: 7))
-                                .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.workspaceReferenceCardBorder, lineWidth: 1))
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier("bmuxShell.repoAgentLauncher")
-                        .accessibilityLabel(String(localized: "titlebar.repoAgentLauncher.accessibilityLabel", defaultValue: "AI Repo Launcher"))
-                        .safeHelp(String(localized: "titlebar.repoAgentLauncher.tooltip", defaultValue: "Launch an AI session for a repo"))
-
-                        Text(String(
-                            format: String(localized: "titlebar.workspaceCount", defaultValue: "%lld workspaces"),
-                            Int64(tabManager.tabs.count)
-                        ))
-                            .font(.system(size: 12))
-                            .foregroundStyle(Color.workspaceReferenceTextSecondary)
-                    }
                 }
                 .padding(.horizontal, 24)
                 .frame(height: 44)

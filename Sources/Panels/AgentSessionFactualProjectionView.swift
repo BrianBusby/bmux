@@ -307,8 +307,8 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
 }
 
 private enum AgentSessionFactualProjectionMode: String, CaseIterable, Identifiable {
-    case terminal
     case chat
+    case terminal
     case session
 
     var id: String { rawValue }
@@ -455,11 +455,7 @@ struct AgentSessionFactualProjectionView: View {
 
     private var primaryTabs: some View {
         HStack(spacing: 24) {
-            ForEach([
-                AgentSessionFactualProjectionMode.session,
-                AgentSessionFactualProjectionMode.chat,
-                AgentSessionFactualProjectionMode.terminal
-            ]) { mode in
+            ForEach(AgentSessionFactualProjectionMode.allCases) { mode in
                 Button(mode.title) {
                     selectedPrimaryTab = mode.rawValue
                     onPrimaryTabChange?(mode == .terminal)

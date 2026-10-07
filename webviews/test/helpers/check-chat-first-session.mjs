@@ -29,8 +29,10 @@ dom = new JSDOM(html, {
   beforeParse(window) {
     observer = new window.MutationObserver(() => {
       try {
-        if (scenario === "keyboard" && submitted && window.document.querySelector(".terminal-chat-composer output")?.textContent === copy.connectedAccepted) {
+        if (scenario === "keyboard" && submitted && window.document.querySelector("textarea")?.value === "") {
           assert.equal(window.document.querySelector("textarea").value, "");
+          assert.equal(window.document.querySelector(".terminal-chat-composer output"), null);
+          assert.equal(window.document.body.textContent.includes(copy.connectedQueuePolicy), false);
           window.document.querySelector("textarea").dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
           assert.equal(calls.filter(call => call.method === "terminalChat.action").length, 1);
           check.resolve();
@@ -50,7 +52,7 @@ dom = new JSDOM(html, {
           if (!input) return;
           submitted = true;
           if (scenario !== "disconnected") {
-            assert.equal(window.document.querySelector(".terminal-chat-header output")?.textContent, copy.chatConnected);
+            assert.equal(window.document.querySelector(".terminal-chat-header"), null);
           }
           assert.equal(window.document.querySelector("textarea")?.value, "Review the roof inspection");
           if (scenario === "keyboard") {
