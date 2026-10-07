@@ -5,6 +5,75 @@ import BmuxFoundation
 
 @Suite("Workspace portal-rendering plan")
 struct WorkspacePortalRenderingPlanTests {
+    @Test("Returning to Terminal keeps background-only mounts portal-disabled")
+    func returningToTerminalOnlyEnablesSelectedAndRetiringWorkspaces() {
+        let selected = UUID()
+        let retiring = UUID()
+        let background = UUID()
+        var previous = [selected: false, retiring: false, background: false]
+        let plan = WorkspacePortalRenderingPlan(
+            previousStatesByWorkspaceId: previous,
+            mountedWorkspaceIds: [selected, retiring, background],
+            orderedWorkspaceIds: [selected, retiring, background],
+            selectedWorkspaceId: selected,
+            retiringWorkspaceId: retiring,
+            contentVisible: true
+        )
+        #expect(plan.applying(to: &previous) == [
+            WorkspacePortalRenderingChange(workspaceId: selected, isEnabled: true),
+            WorkspacePortalRenderingChange(workspaceId: retiring, isEnabled: true)
+        ])
+        #expect(previous[background] == false)
+
+        let finishingHandoff = WorkspacePortalRenderingPlan(
+            previousStatesByWorkspaceId: previous,
+            mountedWorkspaceIds: [selected, retiring, background],
+            orderedWorkspaceIds: [selected, retiring, background],
+            selectedWorkspaceId: selected,
+            contentVisible: true
+        )
+        #expect(finishingHandoff.applying(to: &previous) == [
+            WorkspacePortalRenderingChange(workspaceId: retiring, isEnabled: false)
+        ])
+        #expect(previous[background] == false)
+    }
+
+    @Test("Chat and Session disable retained portals until Terminal returns")
+    func hiddenTerminalContentStaysDisabledAcrossWorkspaceReconciliation() {
+        let first = UUID()
+        let second = UUID()
+        var previous = [first: true, second: false]
+
+        let leavingTerminal = WorkspacePortalRenderingPlan(
+            previousStatesByWorkspaceId: previous,
+            mountedWorkspaceIds: [first],
+            orderedWorkspaceIds: [first, second],
+            selectedWorkspaceId: first,
+            contentVisible: false
+        ).applying(to: &previous)
+        #expect(leavingTerminal == [WorkspacePortalRenderingChange(workspaceId: first, isEnabled: false)])
+
+        let switchingWorkspaceWhileHidden = WorkspacePortalRenderingPlan(
+            previousStatesByWorkspaceId: previous,
+            mountedWorkspaceIds: [second],
+            orderedWorkspaceIds: [first, second],
+            selectedWorkspaceId: second,
+            contentVisible: false
+        ).applying(to: &previous)
+        #expect(switchingWorkspaceWhileHidden.isEmpty)
+        #expect(previous == [first: false, second: false])
+
+        let returningToTerminal = WorkspacePortalRenderingPlan(
+            previousStatesByWorkspaceId: previous,
+            mountedWorkspaceIds: [second],
+            orderedWorkspaceIds: [first, second],
+            selectedWorkspaceId: second,
+            contentVisible: true
+        ).applying(to: &previous)
+        #expect(returningToTerminal == [WorkspacePortalRenderingChange(workspaceId: second, isEnabled: true)])
+        #expect(previous == [first: false, second: true])
+    }
+
     @Test("new unmounted workspaces are disabled once")
     func disablesNewUnmountedWorkspacesOnce() {
         let mounted = UUID()
@@ -13,7 +82,8 @@ struct WorkspacePortalRenderingPlanTests {
         let initial = WorkspacePortalRenderingPlan(
             previousStatesByWorkspaceId: [:],
             mountedWorkspaceIds: [mounted],
-            orderedWorkspaceIds: [mounted, unmounted]
+            orderedWorkspaceIds: [mounted, unmounted],
+            selectedWorkspaceId: mounted
         )
 
         #expect(
@@ -26,7 +96,8 @@ struct WorkspacePortalRenderingPlanTests {
         let repeated = WorkspacePortalRenderingPlan(
             previousStatesByWorkspaceId: initial.nextStatesByWorkspaceId,
             mountedWorkspaceIds: [mounted],
-            orderedWorkspaceIds: [mounted, unmounted]
+            orderedWorkspaceIds: [mounted, unmounted],
+            selectedWorkspaceId: mounted
         )
 
         #expect(
@@ -48,7 +119,8 @@ struct WorkspacePortalRenderingPlanTests {
                 stale: false,
             ],
             mountedWorkspaceIds: [selected],
-            orderedWorkspaceIds: [previous, selected]
+            orderedWorkspaceIds: [previous, selected],
+            selectedWorkspaceId: selected
         )
 
         #expect(
@@ -71,7 +143,8 @@ struct WorkspacePortalRenderingPlanTests {
         let changes = WorkspacePortalRenderingPlan(
             previousStatesByWorkspaceId: previousStates,
             mountedWorkspaceIds: [mounted],
-            orderedWorkspaceIds: [mounted, unmounted]
+            orderedWorkspaceIds: [mounted, unmounted],
+            selectedWorkspaceId: mounted
         ).applying(to: &previousStates)
 
         #expect(
@@ -92,7 +165,8 @@ struct WorkspacePortalRenderingPlanTests {
         let plan = WorkspacePortalRenderingPlan(
             previousStatesByWorkspaceId: [:],
             mountedWorkspaceIds: [mounted],
-            orderedWorkspaceIds: [repeated, repeated, mounted]
+            orderedWorkspaceIds: [repeated, repeated, mounted],
+            selectedWorkspaceId: mounted
         )
 
         #expect(
