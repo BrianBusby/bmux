@@ -21,15 +21,20 @@ struct WorkspaceTabFilterBar: View {
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass")
                         .foregroundStyle(Color.white.opacity(0.28))
-                    TextField(
-                        String(localized: "sidebar.workspaceFilter.search", defaultValue: "Search workspaces…"),
-                        text: $filters.query,
-                        prompt: Text(String(localized: "sidebar.workspaceFilter.search", defaultValue: "Search workspaces…"))
-                            .foregroundStyle(Color.white)
-                    )
+                    TextField("", text: $filters.query)
                     .textFieldStyle(.plain)
                     .font(.system(size: 14))
                     .foregroundStyle(Color.white)
+                    .overlay(alignment: .leading) {
+                        if filters.query.isEmpty {
+                            Text(String(localized: "sidebar.workspaceFilter.search", defaultValue: "Search workspaces…"))
+                                .foregroundStyle(Color.white)
+                                .lineLimit(1)
+                                .allowsHitTesting(false)
+                                .accessibilityHidden(true)
+                        }
+                    }
+                    .accessibilityLabel(String(localized: "sidebar.workspaceFilter.search", defaultValue: "Search workspaces…"))
                     if !filters.query.isEmpty {
                         Button { filters.query = "" } label: {
                             Image(systemName: "xmark.circle.fill")
