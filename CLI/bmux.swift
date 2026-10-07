@@ -2809,7 +2809,7 @@ struct BMUXCLI {
         self.initialSIGPIPEInspectionPayload = initialSIGPIPEInspectionPayload
     }
 
-    private func captureSocketTransportError(telemetry: CLISocketSentryTelemetry, stage: String, error: Error, client: SocketClient) {
+    func captureSocketTransportError(telemetry: CLISocketSentryTelemetry, stage: String, error: Error, client: SocketClient) {
         if client.hasUnfinishedOperationTelemetry() {
             telemetry.captureError(stage: stage, error: error, data: client.operationTelemetryContext())
         }
@@ -3495,7 +3495,7 @@ struct BMUXCLI {
                 print("{}")
                 return
             }
-            if commandArgs.first?.lowercased() == "feed" {
+            if commandArgs.first?.lowercased() == "feed", processEnv["BMUX_CODEX_CONNECTED_HOST"] != "1" {
                 try runFeedHook(
                     commandArgs: Array(commandArgs.dropFirst()),
                     socketPath: resolvedSocketPath,
@@ -3505,7 +3505,7 @@ struct BMUXCLI {
                 return
             }
         }
-        if command == "feed-hook" {
+        if command == "feed-hook", processEnv["BMUX_CODEX_CONNECTED_HOST"] != "1" {
             try runFeedHook(
                 commandArgs: commandArgs,
                 socketPath: resolvedSocketPath,
@@ -24061,7 +24061,7 @@ struct BMUXCLI {
         }
     }
 
-    private func runClaudeHook(
+    func runClaudeHook(
         commandArgs: [String],
         client: SocketClient,
         telemetry: CLISocketSentryTelemetry,
@@ -30392,7 +30392,7 @@ export default BMUXSessionRestore;
         return normalizedHookValue(env["BMUX_SURFACE_ID"]) ?? ""
     }
 
-    private func runGenericAgentHook(
+    func runGenericAgentHook(
         def: AgentHookDef,
         commandArgs: [String],
         client: SocketClient,
@@ -30664,6 +30664,11 @@ export default BMUXSessionRestore;
             try? store.markNotificationEmitted(sessionId: sessionId, fingerprint: fingerprint)
         }
         func resolveAgentHookTarget(mapped: ClaudeHookSessionRecord?) -> (workspaceId: String, surfaceId: String)? {
+            if env["BMUX_CODEX_CONNECTED_HOST"] == "1" {
+                guard let workspaceId = resolvedDirectWorkspaceArg,
+                      let surfaceId = resolveAccessibleSurfaceId(directSurfaceArg, workspaceId: workspaceId) else { return nil }
+                return (workspaceId, surfaceId)
+            }
             guard !hasUnusableDirectBinding else {
 #if DEBUG
                 agentHookDebugLog(
@@ -34085,14 +34090,18 @@ export default BMUXSessionRestore;
     /// chained separately. For Claude, `hooks claude pre-tool-use` is
     /// async status-only telemetry; blocking decisions come through
     /// PermissionRequest.
-    private func runFeedHook(
+    func runFeedHook(
         commandArgs: [String],
         client: SocketClient? = nil,
         socketPath: String? = nil,
         socketPassword: String? = nil,
         telemetry: CLISocketSentryTelemetry
     ) throws {
-        _ = telemetry
+        if let client, !connectedCodexHookBindingIsCurrent(client: client, environment: ProcessInfo.processInfo.environment) {
+            telemetry.breadcrumb("hooks.connected-codex.binding-unavailable")
+            print("{}")
+            return
+        }
         let source = optionValue(commandArgs, name: "--source") ?? ""
         guard !source.isEmpty else {
             throw CLIError(message: "bmux hooks feed requires --source <agent-name>")
@@ -35056,59 +35065,6 @@ export default BMUXSessionRestore;
             return
         }
         try uninstallAgentHooks(def)
-    }
-
-    private func runHooksSocketCommand(
-        commandArgs: [String],
-        client: SocketClient,
-        telemetry: CLISocketSentryTelemetry,
-        socketPassword: String? = nil
-    ) async throws {
-        guard let first = commandArgs.first?.lowercased() else {
-            throw CLIError(message: "Usage: bmux hooks <setup|uninstall|feed|claude|agent>")
-        }
-        let rest = Array(commandArgs.dropFirst())
-
-        switch first {
-        case "setup", "install", "uninstall":
-            throw CLIError(message: "hooks \(first) must be handled before socket dispatch")
-
-        case "feed":
-            telemetry.breadcrumb("hooks.feed.dispatch")
-            do {
-                try runFeedHook(commandArgs: rest, client: client, telemetry: telemetry)
-                telemetry.breadcrumb("hooks.feed.completed")
-            } catch {
-                telemetry.breadcrumb("hooks.feed.failure")
-                captureSocketTransportError(telemetry: telemetry, stage: "hooks_feed_dispatch", error: error, client: client)
-                throw error
-            }
-
-        case "claude":
-            telemetry.breadcrumb("hooks.claude.dispatch")
-            do {
-                try runClaudeHook(commandArgs: rest, client: client, telemetry: telemetry, socketPassword: socketPassword)
-                telemetry.breadcrumb("hooks.claude.completed")
-            } catch {
-                telemetry.breadcrumb("hooks.claude.failure")
-                captureSocketTransportError(telemetry: telemetry, stage: "hooks_claude_dispatch", error: error, client: client)
-                throw error
-            }
-
-        default:
-            guard let def = Self.agentDef(named: first) else {
-                throw CLIError(message: "Unknown hooks target: \(first)")
-            }
-            telemetry.breadcrumb("hooks.\(def.name).dispatch")
-            do {
-                try await runGenericAgentHook(def: def, commandArgs: rest, client: client, telemetry: telemetry, socketPassword: socketPassword)
-                telemetry.breadcrumb("hooks.\(def.name).completed")
-            } catch {
-                telemetry.breadcrumb("hooks.\(def.name).failure")
-                captureSocketTransportError(telemetry: telemetry, stage: "hooks_\(def.name)_dispatch", error: error, client: client)
-                throw error
-            }
-        }
     }
 
     private static func hooksSetupPositionalAgentFilter(from args: [String]) throws -> String? {

@@ -1,12 +1,13 @@
 import SwiftUI
 
-/// Workspace title and repository identity, with its trailing close action.
+/// Workspace identity with a shared trailing activity indicator or close action.
 struct WorkspaceCardHeader<CloseIcon: View, TitleContent: View>: View {
     let repositoryName: String?
     let repositoryFont: Font
     let closeIcon: CloseIcon
     let closeButtonColor: Color
     let closeButtonSize: CGSize
+    let hasActiveAIWork: Bool
     let canCloseWorkspace: Bool
     let showsCloseButton: Bool
     let closeButtonTooltip: String
@@ -19,6 +20,7 @@ struct WorkspaceCardHeader<CloseIcon: View, TitleContent: View>: View {
         @ViewBuilder closeIcon: () -> CloseIcon,
         closeButtonColor: Color,
         closeButtonSize: CGSize,
+        hasActiveAIWork: Bool,
         canCloseWorkspace: Bool,
         showsCloseButton: Bool,
         closeButtonTooltip: String,
@@ -30,6 +32,7 @@ struct WorkspaceCardHeader<CloseIcon: View, TitleContent: View>: View {
         self.closeIcon = closeIcon()
         self.closeButtonColor = closeButtonColor
         self.closeButtonSize = closeButtonSize
+        self.hasActiveAIWork = hasActiveAIWork
         self.canCloseWorkspace = canCloseWorkspace
         self.showsCloseButton = showsCloseButton
         self.closeButtonTooltip = closeButtonTooltip
@@ -46,7 +49,14 @@ struct WorkspaceCardHeader<CloseIcon: View, TitleContent: View>: View {
                 titleContent
             }
 
-            if canCloseWorkspace {
+            if hasActiveAIWork {
+                let label = String(localized: "sidebar.aiBusy.tooltip", defaultValue: "AI is running or needs input")
+                TronLoadingIndicator(size: 18, color: closeButtonColor, lineWidth: 1.5)
+                    .frame(width: closeButtonSize.width, height: closeButtonSize.height)
+                    .safeHelp(label)
+                    .accessibilityLabel(label)
+                    .allowsHitTesting(false)
+            } else if canCloseWorkspace {
                 Button(action: onClose) {
                     closeIcon
                         .foregroundStyle(closeButtonColor)

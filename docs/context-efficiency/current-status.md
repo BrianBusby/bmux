@@ -61,7 +61,13 @@ Tailer registration precedes registry publication; initial discovery and hook
 replay share one seeding path without duplicating the first scan.
 Resolved PR title/author
 feed the existing PE and Linear workspace-link projection; this does not write
-stored descriptions or trigger title-generation hooks. Fresh-read failures,
+stored descriptions or trigger title-generation hooks. Newly launched connected
+Codex hosts now use the existing per-invocation wrapper with app-owned socket,
+workspace and surface routing, restoring the regular prompt/stop auto-naming and
+agent lifecycle hooks. The reference rail observes immutable card updates above
+its list boundary; both card layouts cap prompts at three lines and replace the
+close control with the existing activity spinner. Existing host processes retain
+their original environment until restarted. Fresh-host dogfood remains required. Fresh-read failures,
 replaced or ambiguous sessions, older/superseded batches and duplicate replay
 cannot initiate lookups. Resource authorization uses the prior accepted PE prompt
 and bounded in-flight request state, including overlapping persistence; it never

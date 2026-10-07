@@ -4,7 +4,7 @@ import SwiftUI
 @MainActor
 struct WorkspaceReferenceRail: View {
     let workspaces: [Workspace]
-    let cards: [WorkspaceReferenceCardSnapshot]
+    let projectCard: @MainActor (Workspace) -> WorkspaceReferenceCardSnapshot
     let selectedWorkspaceID: UUID?
     let selectedWorkspaceTitle: String?
     let onSelect: (UUID) -> Void
@@ -15,6 +15,12 @@ struct WorkspaceReferenceRail: View {
     @Binding var isFilterPanelPresented: Bool
 
     var body: some View {
+        WorkspaceReferenceCardScope(workspaces: workspaces, project: projectCard) { cards in
+            cardContent(cards: cards)
+        }
+    }
+
+    private func cardContent(cards: [WorkspaceReferenceCardSnapshot]) -> some View {
         WorkspaceRepositoryLabelScope(workspaces: workspaces) { repositoryNames in
             let filterItems = WorkspaceTabFilterProjection().items(for: workspaces, cards: cards)
             let visibleWorkspaceIDs = Set(
@@ -73,6 +79,7 @@ struct WorkspaceReferenceRail: View {
                                     },
                                     closeButtonColor: Color.workspaceReferenceTextSecondary,
                                     closeButtonSize: CGSize(width: 20, height: 20),
+                                    hasActiveAIWork: card.hasActiveAIWork,
                                     canCloseWorkspace: workspaces.count > 1,
                                     showsCloseButton: true,
                                     closeButtonTooltip: String(localized: "sidebar.closeWorkspace.tooltip", defaultValue: "Close Workspace"),
@@ -95,7 +102,8 @@ struct WorkspaceReferenceRail: View {
                                         Text(prompt)
                                             .font(.system(size: 13))
                                             .foregroundStyle(Color.workspaceReferenceTextSecondary)
-                                            .lineLimit(nil)
+                                            .lineLimit(3)
+                                            .truncationMode(.tail)
                                             .fixedSize(horizontal: false, vertical: true)
                                     }
 
