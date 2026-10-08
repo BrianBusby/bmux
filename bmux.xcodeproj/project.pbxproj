@@ -694,6 +694,25 @@
 		5732A0095732A0095732A009 /* EnvironmentValues+MinimalModeInvalidationProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5732B0095732B0095732B009 /* EnvironmentValues+MinimalModeInvalidationProbe.swift */; };
 		5732A0135732A0135732A013 /* EnvironmentValues+SidebarLazyContractProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5732B0135732B0135732B013 /* EnvironmentValues+SidebarLazyContractProbe.swift */; };
 		CE0E00010000000000000001 /* ExecutionTelemetryProvenanceProjectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E00010000000000000002 /* ExecutionTelemetryProvenanceProjectionService.swift */; };
+		C97A72DCD3B1AB7BAFBBA1A9 /* ExpandedTurnCommandCategory+Presentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CEDEA8EBD190A39E142D2F4 /* ExpandedTurnCommandCategory+Presentation.swift */; };
+		7E708C9BAB91CBB7DF9B122B /* ExpandedTurnCommandCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7AB04864E7B407465C18B5C /* ExpandedTurnCommandCategory.swift */; };
+		9C54BA8E1444BEEF84827AF9 /* ExpandedTurnCommandNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 233186C23A6B69BC1D30AF03 /* ExpandedTurnCommandNavigation.swift */; };
+		183670F2E47A9F328AF19E3D /* ExpandedTurnCommandPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADC279B823967F65A5E9E0BD /* ExpandedTurnCommandPresentation.swift */; };
+		07256A416F7741AB224DC572 /* ExpandedTurnCommandRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABAFE961193E4130E45BED73 /* ExpandedTurnCommandRow.swift */; };
+		538BA14EEEB90619B31C96B0 /* ExpandedTurnCommandRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C921EE0F2694E6A5CBB4B2EC /* ExpandedTurnCommandRowView.swift */; };
+		E65CE8A62C351C204C99E69D /* ExpandedTurnCommandsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19071F7F3F0FC8313315EA79 /* ExpandedTurnCommandsView.swift */; };
+		637FEF516A31E7EAC1CF8D7B /* ExpandedTurnDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B0D231F0EEFBD04A3C5D6C /* ExpandedTurnDetailView.swift */; };
+		C44A0B0ABA85FB27BAA44CFF /* ExpandedTurnEvidenceText.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA27AE2E9C76E7F18565C141 /* ExpandedTurnEvidenceText.swift */; };
+		8D9964105C3C1A5098B22E59 /* ExpandedTurnHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04E31453046B97C5F4394AB /* ExpandedTurnHistoryView.swift */; };
+		821B6F3CE2232C36345A5B5B /* ExpandedTurnPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FFC45B5EACBD7920AE1BAB1 /* ExpandedTurnPresentation.swift */; };
+		261087110719A628072AF8F1 /* ExpandedTurnPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98BA6BEC6AA4AB09F34D2B70 /* ExpandedTurnPresentationTests.swift */; };
+		7A41A87A5D5B3F5D18E33BA4 /* ExpandedTurnReferenceRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD181FB88A5B2F1DBA0F1C7 /* ExpandedTurnReferenceRow.swift */; };
+		31F1BB06BE2C6CB99FCA5859 /* ExpandedTurnRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D67BCD8B617E3EF5E85C06 /* ExpandedTurnRequest.swift */; };
+		D5B82910F3EAF00F600B0934 /* ExpandedTurnRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDB782856E2412AB2F60E986 /* ExpandedTurnRequestView.swift */; };
+		6511FFA9A30CE1B1C1087CF3 /* ExpandedTurnRunView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42F31A4630FB3B21B114D2C5 /* ExpandedTurnRunView.swift */; };
+		81C0D8B24B6D973FF81D8119 /* ExpandedTurnSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14B02F83B7A7BD83CD5EF388 /* ExpandedTurnSection.swift */; };
+		EAD6C05FBA6F5552E14B3726 /* ExpandedTurnShellTokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73B00E81E470C0605F74A433 /* ExpandedTurnShellTokenizer.swift */; };
+		FC08136FDC31ADED5DB31CEC /* ExpandedTurnStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AD9675124757813A4373918 /* ExpandedTurnStatus.swift */; };
 		E4C001000000000000000001 /* ExtensionSidebarWorkspaceRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C001000000000000000002 /* ExtensionSidebarWorkspaceRowView.swift */; };
 		E4C001000000000000000003 /* ExtensionWorktreePrototype.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C001000000000000000004 /* ExtensionWorktreePrototype.swift */; };
 		E50320010000000000000001 /* ExtensionWorktreeSpawnArgsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E50320010000000000000002 /* ExtensionWorktreeSpawnArgsTests.swift */; };
@@ -2536,6 +2555,25 @@
 		5732B0095732B0095732B009 /* EnvironmentValues+MinimalModeInvalidationProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Debug/EnvironmentValues+MinimalModeInvalidationProbe.swift"; sourceTree = "<group>"; };
 		5732B0135732B0135732B013 /* EnvironmentValues+SidebarLazyContractProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Debug/EnvironmentValues+SidebarLazyContractProbe.swift"; sourceTree = "<group>"; };
 		CE0E00010000000000000002 /* ExecutionTelemetryProvenanceProjectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecutionTelemetryProvenanceProjectionService.swift; sourceTree = "<group>"; };
+		9CEDEA8EBD190A39E142D2F4 /* ExpandedTurnCommandCategory+Presentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/ExpandedTurnCommandCategory+Presentation.swift"; sourceTree = "<group>"; };
+		F7AB04864E7B407465C18B5C /* ExpandedTurnCommandCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ExpandedTurnCommandCategory.swift; sourceTree = "<group>"; };
+		233186C23A6B69BC1D30AF03 /* ExpandedTurnCommandNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ExpandedTurnCommandNavigation.swift; sourceTree = "<group>"; };
+		ADC279B823967F65A5E9E0BD /* ExpandedTurnCommandPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ExpandedTurnCommandPresentation.swift; sourceTree = "<group>"; };
+		ABAFE961193E4130E45BED73 /* ExpandedTurnCommandRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ExpandedTurnCommandRow.swift; sourceTree = "<group>"; };
+		C921EE0F2694E6A5CBB4B2EC /* ExpandedTurnCommandRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ExpandedTurnCommandRowView.swift; sourceTree = "<group>"; };
+		19071F7F3F0FC8313315EA79 /* ExpandedTurnCommandsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ExpandedTurnCommandsView.swift; sourceTree = "<group>"; };
+		17B0D231F0EEFBD04A3C5D6C /* ExpandedTurnDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ExpandedTurnDetailView.swift; sourceTree = "<group>"; };
+		FA27AE2E9C76E7F18565C141 /* ExpandedTurnEvidenceText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ExpandedTurnEvidenceText.swift; sourceTree = "<group>"; };
+		D04E31453046B97C5F4394AB /* ExpandedTurnHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ExpandedTurnHistoryView.swift; sourceTree = "<group>"; };
+		3FFC45B5EACBD7920AE1BAB1 /* ExpandedTurnPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ExpandedTurnPresentation.swift; sourceTree = "<group>"; };
+		98BA6BEC6AA4AB09F34D2B70 /* ExpandedTurnPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandedTurnPresentationTests.swift; sourceTree = "<group>"; };
+		8CD181FB88A5B2F1DBA0F1C7 /* ExpandedTurnReferenceRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ExpandedTurnReferenceRow.swift; sourceTree = "<group>"; };
+		12D67BCD8B617E3EF5E85C06 /* ExpandedTurnRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ExpandedTurnRequest.swift; sourceTree = "<group>"; };
+		BDB782856E2412AB2F60E986 /* ExpandedTurnRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ExpandedTurnRequestView.swift; sourceTree = "<group>"; };
+		42F31A4630FB3B21B114D2C5 /* ExpandedTurnRunView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ExpandedTurnRunView.swift; sourceTree = "<group>"; };
+		14B02F83B7A7BD83CD5EF388 /* ExpandedTurnSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ExpandedTurnSection.swift; sourceTree = "<group>"; };
+		73B00E81E470C0605F74A433 /* ExpandedTurnShellTokenizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ExpandedTurnShellTokenizer.swift; sourceTree = "<group>"; };
+		0AD9675124757813A4373918 /* ExpandedTurnStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ExpandedTurnStatus.swift; sourceTree = "<group>"; };
 		E4C001000000000000000002 /* ExtensionSidebarWorkspaceRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionSidebarWorkspaceRowView.swift; sourceTree = "<group>"; };
 		E4C001000000000000000004 /* ExtensionWorktreePrototype.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionWorktreePrototype.swift; sourceTree = "<group>"; };
 		E50320010000000000000002 /* ExtensionWorktreeSpawnArgsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionWorktreeSpawnArgsTests.swift; sourceTree = "<group>"; };
@@ -4643,6 +4681,24 @@
 				A9E01000000000000000000D /* AgentSessionWebTheme.swift */,
 				A9E010000000000000000004 /* AgentSessionPanelView.swift */,
 				F5350003A1B2C3D4E5F60718 /* AgentSessionFactualProjectionPriorTurnCardView.swift */,
+				D04E31453046B97C5F4394AB /* ExpandedTurnHistoryView.swift */,
+				0AD9675124757813A4373918 /* ExpandedTurnStatus.swift */,
+				73B00E81E470C0605F74A433 /* ExpandedTurnShellTokenizer.swift */,
+				14B02F83B7A7BD83CD5EF388 /* ExpandedTurnSection.swift */,
+				42F31A4630FB3B21B114D2C5 /* ExpandedTurnRunView.swift */,
+				BDB782856E2412AB2F60E986 /* ExpandedTurnRequestView.swift */,
+				12D67BCD8B617E3EF5E85C06 /* ExpandedTurnRequest.swift */,
+				8CD181FB88A5B2F1DBA0F1C7 /* ExpandedTurnReferenceRow.swift */,
+				3FFC45B5EACBD7920AE1BAB1 /* ExpandedTurnPresentation.swift */,
+				FA27AE2E9C76E7F18565C141 /* ExpandedTurnEvidenceText.swift */,
+				17B0D231F0EEFBD04A3C5D6C /* ExpandedTurnDetailView.swift */,
+				19071F7F3F0FC8313315EA79 /* ExpandedTurnCommandsView.swift */,
+				C921EE0F2694E6A5CBB4B2EC /* ExpandedTurnCommandRowView.swift */,
+				ABAFE961193E4130E45BED73 /* ExpandedTurnCommandRow.swift */,
+				ADC279B823967F65A5E9E0BD /* ExpandedTurnCommandPresentation.swift */,
+				233186C23A6B69BC1D30AF03 /* ExpandedTurnCommandNavigation.swift */,
+				F7AB04864E7B407465C18B5C /* ExpandedTurnCommandCategory.swift */,
+				9CEDEA8EBD190A39E142D2F4 /* ExpandedTurnCommandCategory+Presentation.swift */,
 				F5340003A1B2C3D4E5F60718 /* AgentSessionFactualProjectionTurnDetailView.swift */,
 				F3D907000000000000000002 /* AgentSessionFactualProjectionMode.swift */,
 				CE2F01010000000000000002 /* AgentSessionFactualProjectionView.swift */,
@@ -5426,6 +5482,7 @@
 				B8B056D80000000000000002 /* MobileHostIdentityTests.swift */,
 				5E2701030000000000000002 /* SentryEventScrubberTests.swift */,
 				CE0E05100000000000000002 /* AgentSessionFactualProjectionStoreTests.swift */,
+				98BA6BEC6AA4AB09F34D2B70 /* ExpandedTurnPresentationTests.swift */,
 				CE2F03010000000000000002 /* AgentSessionSmartSessionStoreTests.swift */,
 
 					642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */,
@@ -6338,6 +6395,24 @@
 					5732A0095732A0095732A009 /* EnvironmentValues+MinimalModeInvalidationProbe.swift in Sources */,
 					5732A0135732A0135732A013 /* EnvironmentValues+SidebarLazyContractProbe.swift in Sources */,
 				CE0E00010000000000000001 /* ExecutionTelemetryProvenanceProjectionService.swift in Sources */,
+				C97A72DCD3B1AB7BAFBBA1A9 /* ExpandedTurnCommandCategory+Presentation.swift in Sources */,
+				7E708C9BAB91CBB7DF9B122B /* ExpandedTurnCommandCategory.swift in Sources */,
+				9C54BA8E1444BEEF84827AF9 /* ExpandedTurnCommandNavigation.swift in Sources */,
+				183670F2E47A9F328AF19E3D /* ExpandedTurnCommandPresentation.swift in Sources */,
+				07256A416F7741AB224DC572 /* ExpandedTurnCommandRow.swift in Sources */,
+				538BA14EEEB90619B31C96B0 /* ExpandedTurnCommandRowView.swift in Sources */,
+				E65CE8A62C351C204C99E69D /* ExpandedTurnCommandsView.swift in Sources */,
+				637FEF516A31E7EAC1CF8D7B /* ExpandedTurnDetailView.swift in Sources */,
+				C44A0B0ABA85FB27BAA44CFF /* ExpandedTurnEvidenceText.swift in Sources */,
+				8D9964105C3C1A5098B22E59 /* ExpandedTurnHistoryView.swift in Sources */,
+				821B6F3CE2232C36345A5B5B /* ExpandedTurnPresentation.swift in Sources */,
+				7A41A87A5D5B3F5D18E33BA4 /* ExpandedTurnReferenceRow.swift in Sources */,
+				31F1BB06BE2C6CB99FCA5859 /* ExpandedTurnRequest.swift in Sources */,
+				D5B82910F3EAF00F600B0934 /* ExpandedTurnRequestView.swift in Sources */,
+				6511FFA9A30CE1B1C1087CF3 /* ExpandedTurnRunView.swift in Sources */,
+				81C0D8B24B6D973FF81D8119 /* ExpandedTurnSection.swift in Sources */,
+				EAD6C05FBA6F5552E14B3726 /* ExpandedTurnShellTokenizer.swift in Sources */,
+				FC08136FDC31ADED5DB31CEC /* ExpandedTurnStatus.swift in Sources */,
 				E4C001000000000000000001 /* ExtensionSidebarWorkspaceRowView.swift in Sources */,
 				E4C001000000000000000003 /* ExtensionWorktreePrototype.swift in Sources */,
 				C0DEA7710000000000000007 /* FeatureFlags.swift in Sources */,
@@ -7489,6 +7564,7 @@
 				D7054D0C0000000000000001 /* DockTerminalReattachTests.swift in Sources */,
 				CE0E07200000000000000001 /* DockTerminalStableWorkspaceTests.swift in Sources */,
 				D3622100A1B2C3D4E5F60718 /* EditableTextViewArrowKeyForwardingTests.swift in Sources */,
+				261087110719A628072AF8F1 /* ExpandedTurnPresentationTests.swift in Sources */,
 				E50320010000000000000001 /* ExtensionWorktreeSpawnArgsTests.swift in Sources */,
 				FEEDC0DEC0DEC0DEC0DE0001 /* FeedCoordinatorTests.swift in Sources */,
 				FEED49850000000000000001 /* FeedEventClassificationTests.swift in Sources */,

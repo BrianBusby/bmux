@@ -72,6 +72,7 @@ local_capabilities:
   bmux_cross_session_context_assembly_experiment: planned
   knowledge_compiler_cross_session_bridge: planned
   factual_agent_session_view: implemented
+  readable_expanded_prior_turns: under_observation
   native_provider_session_view: implemented
   react_terminal_agent_chat_surface: implemented
   react_terminal_productization: planned
@@ -129,6 +130,8 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: expanded_prior_turn_visual_acceptance
+    status: open
   - id: shell_mode_portal_visibility_dogfood
     status: open
   - id: connected_codex_workspace_hooks_dogfood
