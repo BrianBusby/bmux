@@ -57,19 +57,35 @@ import Testing
         #expect(!arguments.contains("--model"))
     }
 
+    @Test(arguments: ["0.154.0", "0.161.0"])
+    func validatedVersionsRetainActualProviderMetadata(version: String) async throws {
+        _ = try await launchedArguments(model: "hidden-valid", version: version)
+    }
+
+    @Test func unvalidatedVersionDoesNotStartConnectedHost() async throws {
+        await #expect(throws: CodexControlError.unsupported) {
+            _ = try await launchedArguments(model: "hidden-valid", version: "0.162.0", expectsConnection: false)
+        }
+    }
+
     /// Runs the real host launcher and its shell command with an isolated fake CLI.
     /// Model/account RPC replies are values; no user configuration or auth is read.
     private func launchedArguments(model: String, effort: String = "xhigh", accountType: String = "chatgpt",
                                    provider: String = "openai", catalogOverride: String? = nil,
-                                   configuration: ConnectedCodexLaunchConfiguration = .init()) async throws -> [String] {
+                                   configuration: ConnectedCodexLaunchConfiguration = .init(),
+                                   version: String = "0.154.0", expectsConnection: Bool = true) async throws -> [String] {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("connected-model-\(UUID())")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
         let executable = directory.appendingPathComponent("codex fixture")
+        // Match npm/Bun CLIs whose shebang interpreter is selected through PATH.
+        let interpreter = directory.appendingPathComponent("bmux-fixture-interpreter")
+        try Data("#!/bin/sh\nexec /bin/sh \"$@\"\n".utf8).write(to: interpreter)
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: interpreter.path)
         let script = """
-        #!/bin/sh
+        #!/usr/bin/env bmux-fixture-interpreter
         case "$1" in
-          --version) printf 'codex-cli 0.154.0\n';;
+          --version) printf 'codex-cli \(version)\n';;
           app-server)
             /usr/bin/python3 -c 'import json,os,sys; open(os.environ["HOST_CAPTURE"],"w").write(json.dumps({"args":sys.argv[1:],"scope":os.environ.get("INSPECTION_SCOPE"),"hook_socket":os.environ.get("BMUX_SOCKET_PATH"),"hook_cli":os.environ.get("BMUX_BUNDLED_CLI_PATH"),"stale_context":os.environ.get("CMUX_SURFACE_ID"),"workspace":os.environ.get("BMUX_WORKSPACE_ID"),"surface":os.environ.get("BMUX_SURFACE_ID"),"resume":os.environ.get("BMUX_AGENT_LAUNCH_ARGV_B64")}))' "$@"
             printf 'listening on: ws://127.0.0.1:1\n'
@@ -93,7 +109,7 @@ import Testing
             "model/list": catalogOverride.map { Data($0.utf8) } ?? catalog])
         let connection = CodexRPCConnection(transport: transport)
         let service = ConnectedCodexHostService(executable: executable, root: directory.appendingPathComponent("hosts"),
-                                               environment: ["PATH": "/usr/bin:/bin", "HOST_CAPTURE": directory.appendingPathComponent("host.json").path,
+                                               environment: ["PATH": directory.path + ":/usr/bin:/bin", "HOST_CAPTURE": directory.appendingPathComponent("host.json").path,
                                                              "BMUX_SOCKET_PATH": "/tmp/roof-inspection.sock",
                                                              "BMUX_BUNDLED_CLI_PATH": "/Applications/Roof/bmux",
                                                              "CMUX_SURFACE_ID": "unrelated-surface"], connect: { _, _ in
@@ -103,6 +119,7 @@ import Testing
         let workspaceID = UUID(), surfaceID = UUID()
         do {
             let host = try await service.launch(workspaceID: workspaceID, surfaceID: surfaceID, workingDirectory: directory.path, configuration: configuration)
+            #expect(host.providerVersion == version)
             let output = await CommandRunner(environment: ["PATH": "/usr/bin:/bin"]).runStandardOutput(
                 directory: directory.path, executable: "/bin/sh", arguments: ["-c", host.terminalCommand], timeout: 5)
             await service.endOwnedHost(surfaceID: surfaceID)
@@ -121,7 +138,7 @@ import Testing
             let data = Data(try #require(output).utf8)
             return try JSONDecoder().decode([String].self, from: data)
         } catch {
-            #expect(await transport.closeCount > 0)
+            if expectsConnection { #expect(await transport.closeCount > 0) }
             await service.endOwnedHost(surfaceID: surfaceID)
             await connection.disconnect()
             throw error

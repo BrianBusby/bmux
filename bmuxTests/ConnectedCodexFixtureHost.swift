@@ -29,7 +29,7 @@ struct ConnectedCodexFixtureHost: ConnectedCodexHosting {
     }
     func launch(workspaceID: UUID, surfaceID: UUID, workingDirectory: String, configuration: ConnectedCodexLaunchConfiguration) async throws -> ConnectedCodexHost {
         await beforeLaunch()
-        return ConnectedCodexHost(surfaceID: surfaceID, threadID: nil, processID: 0,
+        return ConnectedCodexHost(providerVersion: "0.154.0", surfaceID: surfaceID, threadID: nil, processID: 0,
                            endpoint: URL(string: "ws://127.0.0.1:1")!, terminalCommand: "fixture",
                            connection: connection, control: nil)
     }

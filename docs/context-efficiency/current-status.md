@@ -4,6 +4,11 @@ This file is the live handoff index for context-efficiency, provenance, and
 handoff work. Volatile project-state facts are generated from manifests and must
 not be maintained here.
 
+The Codex updater/launch follow-up is recorded in
+[implementation notes](../implementation-notes/codex-update-workspace-exit.md) and
+[the shared-session control decision](../product/shared-session-control-decision.md#codex-01610-compatibility-and-launch-resolution-october-8-2026).
+It does not advance broader Session lifecycle or provider-parity milestones.
+
 ## Current Generated Truth
 
 - [Project status](../generated/project-status.md)
@@ -136,6 +141,13 @@ workspace tab-selection behavior are preserved; the original main-based build
 717 was rejected for omitting those changes. Provider telemetry gaps and live
 visual/accessibility acceptance remain open. It does not advance Claude rich
 parity, lifecycle correctness, semantic milestones or delivery proof.
+
+Build 720 dogfood exposed a white-on-white expanded evidence card when the
+system appearance was light but the workspace shell stayed dark. The
+[contrast follow-up](../implementation-notes/expanded-turn-contrast.md) has a
+rendered regression and a scoped palette fix. Isolated build 721 passed live
+contrast inspection on a new Codex 0.161.0 verification session; user acceptance
+and broader accessibility coverage remain open. This does not change evidence or provider lifecycle semantics.
 
 ## Current Boundary
 

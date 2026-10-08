@@ -53,8 +53,13 @@
 		A9E020000000000000000008 /* AgentSessionBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E010000000000000000008 /* AgentSessionBridge.swift */; };
 		A9F20000000000000000000B /* AgentSessionBridgeError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F10000000000000000000B /* AgentSessionBridgeError.swift */; };
 		A9F20000000000000000000C /* AgentSessionBridgeRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F10000000000000000000C /* AgentSessionBridgeRequest.swift */; };
+		D700956A58C9D40964E6B964 /* AgentSessionCurrentTurnOverview.swift in Sources */ = {isa = PBXBuildFile; fileRef = D938BFA54538DFF7283C66F3 /* AgentSessionCurrentTurnOverview.swift */; };
 		A9F200000000000000000003 /* AgentSessionDebugMenuButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000003 /* AgentSessionDebugMenuButtons.swift */; };
+		B9E45A7BC13378F0E93838A0 /* AgentSessionFactualProjectionEvidenceRows+PriorTurnItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64EE876416DB6F90C2D83DF3 /* AgentSessionFactualProjectionEvidenceRows+PriorTurnItem.swift */; };
+		A378B3F4834E1E3945768B09 /* AgentSessionFactualProjectionEvidenceRows+TurnProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3390649B1A5E169899A47D4 /* AgentSessionFactualProjectionEvidenceRows+TurnProperty.swift */; };
+		DBB8C7BA517806953EE5713F /* AgentSessionFactualProjectionEvidenceRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE42559509BCEB492E09FF50 /* AgentSessionFactualProjectionEvidenceRows.swift */; };
 		F3D907000000000000000001 /* AgentSessionFactualProjectionMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D907000000000000000002 /* AgentSessionFactualProjectionMode.swift */; };
+		A9690D5044EBDB930BE390EF /* AgentSessionFactualProjectionModeHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = D884128910C427B802738EEF /* AgentSessionFactualProjectionModeHost.swift */; };
 		F5350002A1B2C3D4E5F60718 /* AgentSessionFactualProjectionPriorTurnCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5350003A1B2C3D4E5F60718 /* AgentSessionFactualProjectionPriorTurnCardView.swift */; };
 		CE2F01040000000000000001 /* AgentSessionFactualProjectionReadResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F01040000000000000002 /* AgentSessionFactualProjectionReadResult.swift */; };
 		CE2F01030000000000000001 /* AgentSessionFactualProjectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F01030000000000000002 /* AgentSessionFactualProjectionStore.swift */; };
@@ -95,6 +100,8 @@
 		A9E050000000000000000002 /* AgentSessionWebRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E050000000000000000001 /* AgentSessionWebRendererTests.swift */; };
 		A9E02000000000000000000D /* AgentSessionWebTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E01000000000000000000D /* AgentSessionWebTheme.swift */; };
 		A9F200000000000000000014 /* AgentSessionWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000014 /* AgentSessionWebView.swift */; };
+		1B9E1E48F4D7C0DB68E86517 /* AgentSessionWorkspaceChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2024C63D9D32F0383CC75C3C /* AgentSessionWorkspaceChrome.swift */; };
+		2449E6E5FCE8096D5BF4A323 /* AgentSessionWorkspaceLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = C52592C7248AC72ED53FECC1 /* AgentSessionWorkspaceLink.swift */; };
 		REE0CA0000000000000000F2 /* AIAccountCredentialSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = REE0CA0000000000000000F1 /* AIAccountCredentialSources.swift */; };
 		REE0CA0000000000000000E2 /* AIAccountsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = REE0CA0000000000000000E1 /* AIAccountsClient.swift */; };
 		F4350A110000000000000001 /* AppBundleIconPersistencePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4350A130000000000000001 /* AppBundleIconPersistencePolicy.swift */; };
@@ -622,6 +629,8 @@
 		3023A1003023A1003023A100 /* ConfigSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3023B1003023B1003023B100 /* ConfigSource.swift */; };
 		9E3AD08BB54B444EA5732884 /* ConfiguredCodexLaunchCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CF456F425224E59A51FCDDE /* ConfiguredCodexLaunchCoordinator.swift */; };
 		C202527C3427412C87E5397A /* ConfiguredCodexLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9104AF3EF5C42D38F0EF5DE /* ConfiguredCodexLaunchTests.swift */; };
+		D790ABC150ED14E8B2B94FA9 /* ConnectedCodexExecutableResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933974DD4A1ECE0BACEE22D5 /* ConnectedCodexExecutableResolver.swift */; };
+		4866F6C10E9D4FD58501B475 /* ConnectedCodexExecutableResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C59567E28E56FC2326DE0EE8 /* ConnectedCodexExecutableResolverTests.swift */; };
 		17F0C79216944827ABE256BF /* ConnectedCodexFixtureHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5436ABEAD82F4817B6437058 /* ConnectedCodexFixtureHost.swift */; };
 		32FCFC7E0B1F419B9C42F2FC /* ConnectedCodexFixtureReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78ED69FC9B7D45F682700F4E /* ConnectedCodexFixtureReader.swift */; };
 		3EB014A178A44153B2AFBA25 /* ConnectedCodexFixtureTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A7C4B6F71424FD48EBF999A /* ConnectedCodexFixtureTransport.swift */; };
@@ -795,6 +804,7 @@
 		F17F00000000000000000003 /* FullWidthTabCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17F00000000000000000004 /* FullWidthTabCommandTests.swift */; };
 		F17F00000000000000000001 /* FullWidthTabPersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17F00000000000000000002 /* FullWidthTabPersistenceTests.swift */; };
 		D0B10012A1B2C3D4E5F60001 /* GhosttyApp+SurfaceConfigurationReload.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B10013A1B2C3D4E5F60001 /* GhosttyApp+SurfaceConfigurationReload.swift */; };
+		12FD81406C5B1FE173D91DCC /* GhosttyApp+TerminalChildExit.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D21E8915E326942DA5CB38 /* GhosttyApp+TerminalChildExit.swift */; };
 		EC010D01 /* GhosttyApp+TerminalCustomUpload.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC010D02 /* GhosttyApp+TerminalCustomUpload.swift */; };
 		1718C0DE1718C0DE17180002 /* GhosttyCommandShiftForwardingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1718C0DE1718C0DE17180001 /* GhosttyCommandShiftForwardingTests.swift */; };
 		A5001004 /* GhosttyConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001014 /* GhosttyConfig.swift */; };
@@ -1448,6 +1458,7 @@
 		8F6D1734D77049FC85A6C374 /* TabManager+SessionPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3355156EBE445F29A0B4B14 /* TabManager+SessionPresentation.swift */; };
 		C548600B0000000000000001 /* TabManager+SessionRestoreIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548600B0000000000000002 /* TabManager+SessionRestoreIdentity.swift */; };
 		C5B6A10000000000000000B1 /* TabManager+SidebarGitHosting.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B6A10000000000000000B2 /* TabManager+SidebarGitHosting.swift */; };
+		0329F115225D46A9E39A6557 /* TabManager+TerminalChildExit.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE646EDAD39BF1820732BBF2 /* TabManager+TerminalChildExit.swift */; };
 		604500100000000000000007 /* TabManager+WindowTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 604500100000000000000008 /* TabManager+WindowTitle.swift */; };
 		C0DECDA10000000000000001 /* TabManager+WorkspaceActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DECDA10000000000000002 /* TabManager+WorkspaceActions.swift */; };
 		736200000000000000000004 /* TabManager+WorkspaceCustomTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 736200000000000000000003 /* TabManager+WorkspaceCustomTitle.swift */; };
@@ -1978,8 +1989,13 @@
 		A9E010000000000000000008 /* AgentSessionBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionBridge.swift; sourceTree = "<group>"; };
 		A9F10000000000000000000B /* AgentSessionBridgeError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionBridgeError.swift; sourceTree = "<group>"; };
 		A9F10000000000000000000C /* AgentSessionBridgeRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionBridgeRequest.swift; sourceTree = "<group>"; };
+		D938BFA54538DFF7283C66F3 /* AgentSessionCurrentTurnOverview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionCurrentTurnOverview.swift; sourceTree = "<group>"; };
 		A9F100000000000000000003 /* AgentSessionDebugMenuButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionDebugMenuButtons.swift; sourceTree = "<group>"; };
+		64EE876416DB6F90C2D83DF3 /* AgentSessionFactualProjectionEvidenceRows+PriorTurnItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/AgentSessionFactualProjectionEvidenceRows+PriorTurnItem.swift"; sourceTree = "<group>"; };
+		D3390649B1A5E169899A47D4 /* AgentSessionFactualProjectionEvidenceRows+TurnProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/AgentSessionFactualProjectionEvidenceRows+TurnProperty.swift"; sourceTree = "<group>"; };
+		EE42559509BCEB492E09FF50 /* AgentSessionFactualProjectionEvidenceRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionFactualProjectionEvidenceRows.swift; sourceTree = "<group>"; };
 		F3D907000000000000000002 /* AgentSessionFactualProjectionMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionFactualProjectionMode.swift; sourceTree = "<group>"; };
+		D884128910C427B802738EEF /* AgentSessionFactualProjectionModeHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionFactualProjectionModeHost.swift; sourceTree = "<group>"; };
 		F5350003A1B2C3D4E5F60718 /* AgentSessionFactualProjectionPriorTurnCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionFactualProjectionPriorTurnCardView.swift; sourceTree = "<group>"; };
 		CE2F01040000000000000002 /* AgentSessionFactualProjectionReadResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionFactualProjectionReadResult.swift; sourceTree = "<group>"; };
 		CE2F01030000000000000002 /* AgentSessionFactualProjectionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionFactualProjectionStore.swift; sourceTree = "<group>"; };
@@ -2020,6 +2036,8 @@
 		A9E050000000000000000001 /* AgentSessionWebRendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionWebRendererTests.swift; sourceTree = "<group>"; };
 		A9E01000000000000000000D /* AgentSessionWebTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionWebTheme.swift; sourceTree = "<group>"; };
 		A9F100000000000000000014 /* AgentSessionWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionWebView.swift; sourceTree = "<group>"; };
+		2024C63D9D32F0383CC75C3C /* AgentSessionWorkspaceChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionWorkspaceChrome.swift; sourceTree = "<group>"; };
+		C52592C7248AC72ED53FECC1 /* AgentSessionWorkspaceLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionWorkspaceLink.swift; sourceTree = "<group>"; };
 		REE0CA0000000000000000F1 /* AIAccountCredentialSources.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AIAccountCredentialSources.swift; sourceTree = "<group>"; };
 		REE0CA0000000000000000E1 /* AIAccountsClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AIAccountsClient.swift; sourceTree = "<group>"; };
 		F4350A130000000000000001 /* AppBundleIconPersistencePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/AppBundleIconPersistencePolicy.swift; sourceTree = "<group>"; };
@@ -2483,6 +2501,8 @@
 		3023B1003023B1003023B100 /* ConfigSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings/ConfigSource.swift; sourceTree = "<group>"; };
 		8CF456F425224E59A51FCDDE /* ConfiguredCodexLaunchCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/ConfiguredCodexLaunchCoordinator.swift"; sourceTree = "<group>"; };
 		B9104AF3EF5C42D38F0EF5DE /* ConfiguredCodexLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConfiguredCodexLaunchTests.swift"; sourceTree = "<group>"; };
+		933974DD4A1ECE0BACEE22D5 /* ConnectedCodexExecutableResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/ConnectedCodexExecutableResolver.swift"; sourceTree = "<group>"; };
+		C59567E28E56FC2326DE0EE8 /* ConnectedCodexExecutableResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConnectedCodexExecutableResolverTests.swift"; sourceTree = "<group>"; };
 		5436ABEAD82F4817B6437058 /* ConnectedCodexFixtureHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConnectedCodexFixtureHost.swift"; sourceTree = "<group>"; };
 		78ED69FC9B7D45F682700F4E /* ConnectedCodexFixtureReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConnectedCodexFixtureReader.swift"; sourceTree = "<group>"; };
 		9A7C4B6F71424FD48EBF999A /* ConnectedCodexFixtureTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConnectedCodexFixtureTransport.swift"; sourceTree = "<group>"; };
@@ -2656,6 +2676,7 @@
 		F17F00000000000000000002 /* FullWidthTabPersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullWidthTabPersistenceTests.swift; sourceTree = "<group>"; };
 		A5001017 /* ghostty.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ghostty.h; sourceTree = "<group>"; };
 		D0B10013A1B2C3D4E5F60001 /* GhosttyApp+SurfaceConfigurationReload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GhosttyApp+SurfaceConfigurationReload.swift"; sourceTree = "<group>"; };
+		B4D21E8915E326942DA5CB38 /* GhosttyApp+TerminalChildExit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GhosttyApp+TerminalChildExit.swift"; sourceTree = "<group>"; };
 		EC010D02 /* GhosttyApp+TerminalCustomUpload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GhosttyApp+TerminalCustomUpload.swift"; sourceTree = "<group>"; };
 		1718C0DE1718C0DE17180001 /* GhosttyCommandShiftForwardingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhosttyCommandShiftForwardingTests.swift; sourceTree = "<group>"; };
 		A5001014 /* GhosttyConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhosttyConfig.swift; sourceTree = "<group>"; };
@@ -3275,6 +3296,7 @@
 		C3355156EBE445F29A0B4B14 /* TabManager+SessionPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TabManager+SessionPresentation.swift"; sourceTree = "<group>"; };
 		C548600B0000000000000002 /* TabManager+SessionRestoreIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TabManager+SessionRestoreIdentity.swift"; sourceTree = "<group>"; };
 		C5B6A10000000000000000B2 /* TabManager+SidebarGitHosting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TabManager+SidebarGitHosting.swift"; sourceTree = "<group>"; };
+		CE646EDAD39BF1820732BBF2 /* TabManager+TerminalChildExit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TabManager+TerminalChildExit.swift"; sourceTree = "<group>"; };
 		604500100000000000000008 /* TabManager+WindowTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TabManager+WindowTitle.swift"; sourceTree = "<group>"; };
 		C0DECDA10000000000000002 /* TabManager+WorkspaceActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TabManager+WorkspaceActions.swift"; sourceTree = "<group>"; };
 		736200000000000000000003 /* TabManager+WorkspaceCustomTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TabManager+WorkspaceCustomTitle.swift"; sourceTree = "<group>"; };
@@ -4669,6 +4691,9 @@
 				AE83FAFCB4E047268CC9FD79 /* TerminalPanelPresentationState.swift */,
 				A0411BDCC7CE47E4A35A9CE2 /* Workspace+ConfiguredCodex.swift */,
 				8CF456F425224E59A51FCDDE /* ConfiguredCodexLaunchCoordinator.swift */,
+				933974DD4A1ECE0BACEE22D5 /* ConnectedCodexExecutableResolver.swift */,
+				B4D21E8915E326942DA5CB38 /* GhosttyApp+TerminalChildExit.swift */,
+				CE646EDAD39BF1820732BBF2 /* TabManager+TerminalChildExit.swift */,
 				C275C4BB56AB48B7B607A01E /* ConnectedCodexLaunchConfiguration.swift */,
 				C3355156EBE445F29A0B4B14 /* TabManager+SessionPresentation.swift */,
 				8919823EF491494FA72F840E /* Workspace+ConnectedCodex.swift */,
@@ -4701,6 +4726,13 @@
 				9CEDEA8EBD190A39E142D2F4 /* ExpandedTurnCommandCategory+Presentation.swift */,
 				F5340003A1B2C3D4E5F60718 /* AgentSessionFactualProjectionTurnDetailView.swift */,
 				F3D907000000000000000002 /* AgentSessionFactualProjectionMode.swift */,
+				C52592C7248AC72ED53FECC1 /* AgentSessionWorkspaceLink.swift */,
+				2024C63D9D32F0383CC75C3C /* AgentSessionWorkspaceChrome.swift */,
+				D3390649B1A5E169899A47D4 /* AgentSessionFactualProjectionEvidenceRows+TurnProperty.swift */,
+				64EE876416DB6F90C2D83DF3 /* AgentSessionFactualProjectionEvidenceRows+PriorTurnItem.swift */,
+				EE42559509BCEB492E09FF50 /* AgentSessionFactualProjectionEvidenceRows.swift */,
+				D884128910C427B802738EEF /* AgentSessionFactualProjectionModeHost.swift */,
+				D938BFA54538DFF7283C66F3 /* AgentSessionCurrentTurnOverview.swift */,
 				CE2F01010000000000000002 /* AgentSessionFactualProjectionView.swift */,
 
 				B0A501000000000000000002 /* BrowserOmnibarAppKitBridge.swift */,
@@ -5134,6 +5166,7 @@
 				D70500000000000000000001 /* WorkspaceCardFilterProjectionTests.swift */,
 				A9E050000000000000000001 /* AgentSessionWebRendererTests.swift */,
 				B9104AF3EF5C42D38F0EF5DE /* ConfiguredCodexLaunchTests.swift */,
+				C59567E28E56FC2326DE0EE8 /* ConnectedCodexExecutableResolverTests.swift */,
 				A9E040000000000000000001 /* CodexAppServerSessionTests.swift */,
 				D72260010000000000000002 /* AgentHibernationPortalVisibilityTests.swift */,
 				D36A00020000000000000002 /* AgentHibernationTests.swift */,
@@ -6073,8 +6106,13 @@
 				A9E020000000000000000008 /* AgentSessionBridge.swift in Sources */,
 				A9F20000000000000000000B /* AgentSessionBridgeError.swift in Sources */,
 				A9F20000000000000000000C /* AgentSessionBridgeRequest.swift in Sources */,
+				D700956A58C9D40964E6B964 /* AgentSessionCurrentTurnOverview.swift in Sources */,
 				A9F200000000000000000003 /* AgentSessionDebugMenuButtons.swift in Sources */,
+				B9E45A7BC13378F0E93838A0 /* AgentSessionFactualProjectionEvidenceRows+PriorTurnItem.swift in Sources */,
+				A378B3F4834E1E3945768B09 /* AgentSessionFactualProjectionEvidenceRows+TurnProperty.swift in Sources */,
+				DBB8C7BA517806953EE5713F /* AgentSessionFactualProjectionEvidenceRows.swift in Sources */,
 				F3D907000000000000000001 /* AgentSessionFactualProjectionMode.swift in Sources */,
+				A9690D5044EBDB930BE390EF /* AgentSessionFactualProjectionModeHost.swift in Sources */,
 				F5350002A1B2C3D4E5F60718 /* AgentSessionFactualProjectionPriorTurnCardView.swift in Sources */,
 				CE2F01040000000000000001 /* AgentSessionFactualProjectionReadResult.swift in Sources */,
 				CE2F01030000000000000001 /* AgentSessionFactualProjectionStore.swift in Sources */,
@@ -6111,6 +6149,8 @@
 				A9E02000000000000000000C /* AgentSessionWebRendererSession.swift in Sources */,
 				A9E02000000000000000000D /* AgentSessionWebTheme.swift in Sources */,
 				A9F200000000000000000014 /* AgentSessionWebView.swift in Sources */,
+				1B9E1E48F4D7C0DB68E86517 /* AgentSessionWorkspaceChrome.swift in Sources */,
+				2449E6E5FCE8096D5BF4A323 /* AgentSessionWorkspaceLink.swift in Sources */,
 				REE0CA0000000000000000F2 /* AIAccountCredentialSources.swift in Sources */,
 				REE0CA0000000000000000E2 /* AIAccountsClient.swift in Sources */,
 				F4350A110000000000000001 /* AppBundleIconPersistencePolicy.swift in Sources */,
@@ -6341,6 +6381,7 @@
 				3023A1013023A1013023A101 /* ConfigSettingsView.swift in Sources */,
 				3023A1003023A1003023A100 /* ConfigSource.swift in Sources */,
 				9E3AD08BB54B444EA5732884 /* ConfiguredCodexLaunchCoordinator.swift in Sources */,
+				D790ABC150ED14E8B2B94FA9 /* ConnectedCodexExecutableResolver.swift in Sources */,
 				CFC9384B082B4748B7A8AF6D /* ConnectedCodexHost.swift in Sources */,
 				BF1BBD1CAA0B4C6085D912C4 /* ConnectedCodexHosting.swift in Sources */,
 				BC188B04D3614140863909D9 /* ConnectedCodexHostService.swift in Sources */,
@@ -6467,6 +6508,7 @@
 					C0DEFB100000000000000001 /* FocusSurfaceBroadcaster.swift in Sources */,
 				AA5269A0C0DE0002FACE0002 /* ForeignFirstResponderPolicy.swift in Sources */,
 				D0B10012A1B2C3D4E5F60001 /* GhosttyApp+SurfaceConfigurationReload.swift in Sources */,
+				12FD81406C5B1FE173D91DCC /* GhosttyApp+TerminalChildExit.swift in Sources */,
 				EC010D01 /* GhosttyApp+TerminalCustomUpload.swift in Sources */,
 				A5001004 /* GhosttyConfig.swift in Sources */,
 				C3873001C3873001C3873001 /* GhosttyCrashBreadcrumb.swift in Sources */,
@@ -6896,6 +6938,7 @@
 				8F6D1734D77049FC85A6C374 /* TabManager+SessionPresentation.swift in Sources */,
 				C548600B0000000000000001 /* TabManager+SessionRestoreIdentity.swift in Sources */,
 				C5B6A10000000000000000B1 /* TabManager+SidebarGitHosting.swift in Sources */,
+				0329F115225D46A9E39A6557 /* TabManager+TerminalChildExit.swift in Sources */,
 				604500100000000000000007 /* TabManager+WindowTitle.swift in Sources */,
 				C0DECDA10000000000000001 /* TabManager+WorkspaceActions.swift in Sources */,
 				736200000000000000000004 /* TabManager+WorkspaceCustomTitle.swift in Sources */,
@@ -7548,6 +7591,7 @@
 				C0DEF4120000000000000001 /* CommandPaletteSettingsToggleTests.swift in Sources */,
 				C1713006C1713006C1713006 /* CommandPaletteShortcutCustomizationTests.swift in Sources */,
 				C202527C3427412C87E5397A /* ConfiguredCodexLaunchTests.swift in Sources */,
+				4866F6C10E9D4FD58501B475 /* ConnectedCodexExecutableResolverTests.swift in Sources */,
 				17F0C79216944827ABE256BF /* ConnectedCodexFixtureHost.swift in Sources */,
 				32FCFC7E0B1F419B9C42F2FC /* ConnectedCodexFixtureReader.swift in Sources */,
 				3EB014A178A44153B2AFBA25 /* ConnectedCodexFixtureTransport.swift in Sources */,

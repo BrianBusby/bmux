@@ -2751,37 +2751,10 @@ class GhosttyApp {
         let callbackSurfaceId = callbackContext?.surfaceId
 
         if action.tag == GHOSTTY_ACTION_SHOW_CHILD_EXITED {
-            // The child (shell) exited. Ghostty will fall back to printing
-            // "Process exited. Press any key..." into the terminal unless the host
-            // handles this action. For bmux, the correct behavior is to close
-            // the panel immediately (no prompt).
-#if DEBUG
-            bmuxDebugLog(
-                "surface.action.showChildExited tab=\(callbackTabId?.uuidString.prefix(5) ?? "nil") " +
-                "surface=\(callbackSurfaceId?.uuidString.prefix(5) ?? "nil")"
-            )
-#endif
-#if DEBUG
-            TerminalChildExitProbe().write(
-                [
-                    "probeShowChildExitedTabId": callbackTabId?.uuidString ?? "",
-                    "probeShowChildExitedSurfaceId": callbackSurfaceId?.uuidString ?? "",
-                ],
-                increments: ["probeShowChildExitedCount": 1]
-            )
-#endif
-            // Keep host-close async to avoid re-entrant close/deinit while Ghostty is still
-            // dispatching this action callback.
-            DispatchQueue.main.async {
-                guard let app = AppDelegate.shared else { return }
-                if let callbackSurfaceId, app.closeWindowDockRuntimeSurface(surfaceId: callbackSurfaceId, force: true) { return }
-                if let callbackTabId, let callbackSurfaceId,
-                   let manager = app.tabManagerFor(tabId: callbackTabId) ?? app.tabManager {
-                    manager.closePanelAfterChildExited(tabId: callbackTabId, surfaceId: callbackSurfaceId)
-                }
+            return performOnMain {
+                handleChildExited(tabId: callbackTabId, surfaceId: callbackSurfaceId,
+                                  surface: callbackContext?.terminalSurface)
             }
-            // Always report handled so Ghostty doesn't print the fallback prompt.
-            return true
         }
 
         guard let surfaceView = callbackContext?.surfaceView else { return false }

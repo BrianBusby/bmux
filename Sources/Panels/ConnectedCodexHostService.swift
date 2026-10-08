@@ -5,14 +5,14 @@ import Foundation
 /// Owns new shared provider processes independently of all presentation views.
 /// Existing ordinary CLI processes are never adopted or replaced.
 actor ConnectedCodexHostService: ConnectedCodexHosting {
-    private let executable: URL
+    private let executable: URL?
     private let hookWrapper: URL?
     private let root: URL
     private let environment: [String: String]
     private let connect: @Sendable (URL, String) async throws -> CodexRPCConnection
     private var processes: [UUID: Process] = [:]
 
-    init(executable: URL, root: URL, environment: [String: String], hookWrapper: URL? = nil,
+    init(executable: URL? = nil, root: URL, environment: [String: String], hookWrapper: URL? = nil,
          connect: @escaping @Sendable (URL, String) async throws -> CodexRPCConnection = { endpoint, token in
              try await ConnectedCodexHostService.authenticatedConnection(endpoint, token: token)
          }) {
@@ -24,12 +24,21 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
     }
 
     func launch(workspaceID: UUID, surfaceID: UUID, workingDirectory: String, configuration: ConnectedCodexLaunchConfiguration = .init()) async throws -> ConnectedCodexHost {
-        let launchEnvironment = environment.merging(configuration.environment) { _, configured in configured }
+        let configuredEnvironment = environment.merging(configuration.environment) { _, configured in configured }
+        let plan: AgentSessionLaunchPlan
+        if let executable {
+            plan = AgentSessionLaunchPlan(provider: .codex, executableURL: executable, arguments: [], environment: configuredEnvironment)
+        } else {
+            plan = try await ConnectedCodexExecutableResolver(environment: configuredEnvironment).resolve(workingDirectory: workingDirectory)
+        }
+        let executable = plan.executableURL
+        let launchEnvironment = plan.environment
         let version = await CommandRunner(environment: launchEnvironment).runStandardOutput(
             directory: workingDirectory, executable: executable.path, arguments: ["--version"], timeout: 5
         )
         // Capabilities are empirical and version-specific; fail closed on upgrades.
-        guard version?.trimmingCharacters(in: .whitespacesAndNewlines) == "codex-cli 0.154.0" else {
+        guard let version = version?.trimmingCharacters(in: .whitespacesAndNewlines),
+              ["codex-cli 0.154.0", "codex-cli 0.161.0"].contains(version) else {
             throw CodexControlError.unsupported
         }
         let directory = root.appendingPathComponent(surfaceID.uuidString, isDirectory: true)
@@ -101,10 +110,13 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
                 throw CodexControlError.disconnected
             }
             // The credential never appears in argv or a renderer bridge payload.
-            let shellCommand = "BMUX_CONNECTED_CODEX_TOKEN=$(cat \(Self.quote(tokenURL.path))) exec \(Self.quote(executable.path)) --remote \(Self.quote(endpoint.absoluteString)) --remote-auth-token-env BMUX_CONNECTED_CODEX_TOKEN"
+            // GUI environments may lack the shebang runtime (e.g. node for a Bun install).
+            // The original TUI must use the same resolved PATH as its shared host.
+            let pathSetup = launchEnvironment["PATH"].map { "export PATH=\(Self.quote($0)); " } ?? ""
+            let shellCommand = pathSetup + "BMUX_CONNECTED_CODEX_TOKEN=$(cat \(Self.quote(tokenURL.path))) exec \(Self.quote(executable.path)) --remote \(Self.quote(endpoint.absoluteString)) --remote-auth-token-env BMUX_CONNECTED_CODEX_TOKEN"
                 + (overrides.isEmpty ? "" : " " + overrides)
             let command = "/bin/sh -c " + Self.quote(shellCommand)
-            return ConnectedCodexHost(surfaceID: surfaceID, threadID: nil, processID: process.processIdentifier,
+            return ConnectedCodexHost(providerVersion: String(version.dropFirst("codex-cli ".count)), surfaceID: surfaceID, threadID: nil, processID: process.processIdentifier,
                                       endpoint: endpoint, terminalCommand: command, connection: authenticated,
                                       control: nil)
         } catch {

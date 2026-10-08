@@ -3,6 +3,7 @@ import Foundation
 
 /// Identity of one deliberately created shared host and its original TUI.
 struct ConnectedCodexHost: Sendable {
+    let providerVersion: String
     let surfaceID: UUID
     var threadID: String?
     let processID: Int32

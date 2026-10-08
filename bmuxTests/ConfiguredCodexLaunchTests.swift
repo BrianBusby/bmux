@@ -121,6 +121,70 @@ struct ConfiguredCodexLaunchTests {
         entered.continuation.finish()
         ended.continuation.finish()
     }
+    @Test(arguments: [false, true])
+    func completedConfiguredCommandKeepsWorkspaceAndTerminal(hasSibling: Bool) throws {
+        let manager = TabManager(initialWorkingDirectory: "/tmp", autoWelcomeIfNeeded: false)
+        let workspace = manager.addWorkspace(placementOverride: .end)
+        let source = try #require(workspace.focusedTerminalPanel)
+        let panel = try #require(workspace.respawnTerminalSurface(panelId: source.id,
+            command: "codex", workingDirectory: "/tmp", focus: false, waitAfterCommand: true))
+        if hasSibling { _ = workspace.newTerminalSurfaceInFocusedPane(focus: false) }
+        manager.selectWorkspace(workspace)
+        let workspaceIDs = manager.tabs.map(\.id)
+        let panelIDs = Set(workspace.panels.keys)
+        defer { for item in manager.tabs { for panel in item.panels.values { panel.close() } } }
+
+        manager.closePanelAfterChildExited(tabId: workspace.id, surfaceId: panel.id)
+
+        #expect(manager.tabs.map(\.id) == workspaceIDs)
+        #expect(Set(workspace.panels.keys) == panelIDs)
+        #expect(workspace.terminalPanel(for: panel.id) === panel)
+        #expect(manager.selectedTabId == workspace.id)
+    }
+
+    @Test func ordinaryShellWithInheritedWaitPolicyStillClosesOnExit() throws {
+        let manager = TabManager(initialWorkingDirectory: "/tmp", autoWelcomeIfNeeded: false)
+        let workspace = manager.addWorkspace(placementOverride: .end)
+        let original = try #require(workspace.focusedTerminalPanel)
+        var inherited = BmuxSurfaceConfigTemplate()
+        inherited.waitAfterCommand = true
+        original.close()
+        let shell = workspace.makeStableTerminalPanel(id: original.id, workspaceId: workspace.id,
+            configTemplate: inherited, workingDirectory: "/tmp")
+        workspace.panels[shell.id] = shell
+        defer { for item in manager.tabs { for panel in item.panels.values { panel.close() } } }
+        #expect(shell.surface.initialCommand == nil)
+        #expect(shell.surface.debugWaitAfterCommand())
+
+        manager.closePanelAfterChildExited(tabId: workspace.id, surfaceId: shell.id)
+
+        #expect(!manager.tabs.contains(where: { $0.id == workspace.id }))
+    }
+
+    @Test func childExitCallbackDefersToGhosttyForHeldCommandAndIgnoresRetiredSurface() throws {
+        let originalDelegate = AppDelegate.shared
+        let delegate = AppDelegate()
+        AppDelegate.shared = delegate
+        let manager = TabManager(initialWorkingDirectory: "/tmp", autoWelcomeIfNeeded: false)
+        let windowID = delegate.registerMainWindowContextForTesting(tabManager: manager)
+        defer {
+            delegate.unregisterMainWindowContextForTesting(windowId: windowID)
+            AppDelegate.shared = originalDelegate
+            for workspace in manager.tabs { for panel in workspace.panels.values { panel.close() } }
+        }
+        let workspace = try #require(manager.selectedWorkspace)
+        let source = try #require(workspace.focusedTerminalPanel)
+        let panel = try #require(workspace.respawnTerminalSurface(panelId: source.id,
+            command: "codex", workingDirectory: "/tmp", focus: false, waitAfterCommand: true))
+        #expect(GhosttyApp.shared.handleChildExited(tabId: workspace.id, surfaceId: panel.id,
+            surface: panel.surface) == false)
+        GhosttyApp.terminalSurfaceRegistry.unregister(panel.surface)
+        defer { GhosttyApp.terminalSurfaceRegistry.register(panel.surface) }
+        #expect(GhosttyApp.shared.handleChildExited(tabId: workspace.id, surfaceId: panel.id,
+            surface: panel.surface) == true)
+        #expect(workspace.terminalPanel(for: panel.id) === panel)
+    }
+
     @Test(arguments: [NewTabPosition.current, .end], [WorkspaceLayoutMode.splits, .canvas])
     func replacementPreservesTabAndCanvasOwnership(position: NewTabPosition, layout: WorkspaceLayoutMode) async throws {
         let entered = AsyncStream<Void>.makeStream()
