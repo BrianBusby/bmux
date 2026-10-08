@@ -8,6 +8,21 @@ import Testing
     private let runner = CommandRunner()
     private let tempDir = FileManager.default.temporaryDirectory.path
 
+    @Test func passesConfiguredEnvironmentToChildProcess() async {
+        let runner = CommandRunner(environment: [
+            "PATH": "/usr/bin:/bin",
+            "BMUX_COMMAND_ENV_FIXTURE": "configured value",
+        ])
+        let result = await runner.run(
+            directory: tempDir,
+            executable: "/usr/bin/printenv",
+            arguments: ["BMUX_COMMAND_ENV_FIXTURE", "PATH"],
+            timeout: 5
+        )
+        #expect(result.exitStatus == 0)
+        #expect(result.stdout == "configured value\n/usr/bin:/bin\n")
+    }
+
     @Test func capturesStdoutAndCleanExit() async {
         let result = await runner.run(
             directory: tempDir,
