@@ -39,6 +39,56 @@ import Testing
         #expect(changed.executableURL == local.appendingPathComponent("codex"))
     }
 
+    @Test func capturedPathDoesNotFallBackToAnOmittedStandaloneInstall() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let local = root.appendingPathComponent(".local/bin")
+        try FileManager.default.createDirectory(at: local, withIntermediateDirectories: true)
+        let executable = local.appendingPathComponent("codex")
+        try Data("#!/bin/sh\nexit 0\n".utf8).write(to: executable)
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: executable.path)
+        let shell = root.appendingPathComponent("zsh")
+        try Data("#!/bin/sh\nprintf '\\000BMUX_CODEX_PATH\\000/usr/bin:/bin\\n'\n".utf8).write(to: shell)
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: shell.path)
+        let resolver = ConnectedCodexExecutableResolver(environment: ["HOME": root.path, "SHELL": shell.path])
+        await #expect(throws: AgentExecutableResolverError.self) {
+            _ = try await resolver.resolve(workingDirectory: root.path)
+        }
+    }
+
+    @Test(arguments: ["personal-shell", "ksh", "tcsh"])
+    func validShellNamesAreNotRejectedBeforeTheyCanResolvePath(name: String) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let executable = root.appendingPathComponent("codex")
+        try Data("#!/bin/sh\nexit 0\n".utf8).write(to: executable)
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: executable.path)
+        let shell = root.appendingPathComponent(name)
+        let script = "#!/bin/sh\nprintf '\\000BMUX_CODEX_PATH\\000%s\\n' \"$RESOLVED_PATH\"\n"
+        try Data(script.utf8).write(to: shell)
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: shell.path)
+        let resolver = ConnectedCodexExecutableResolver(environment: ["HOME": root.path,
+            "SHELL": shell.path, "RESOLVED_PATH": root.path])
+        let plan = try await resolver.resolve(workingDirectory: root.path)
+        #expect(plan.executableURL == executable)
+    }
+
+    @Test func tcshStartupConfigurationSuppliesExecutablePath() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let executable = root.appendingPathComponent("codex")
+        try Data("#!/bin/sh\nexit 0\n".utf8).write(to: executable)
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: executable.path)
+        try Data("setenv PATH \"\(root.path):/usr/bin:/bin\"\n".utf8)
+            .write(to: root.appendingPathComponent(".tcshrc"))
+        let resolver = ConnectedCodexExecutableResolver(environment: ["HOME": root.path,
+            "SHELL": "/bin/tcsh", "PATH": "/usr/bin:/bin"])
+        let plan = try await resolver.resolve(workingDirectory: root.path)
+        #expect(plan.executableURL == executable)
+    }
+
     @Test func failedShellProbeDoesNotSilentlySelectAnOldFallback() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
