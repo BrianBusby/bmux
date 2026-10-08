@@ -121,6 +121,27 @@ struct ConfiguredCodexLaunchTests {
         entered.continuation.finish()
         ended.continuation.finish()
     }
+    @Test(arguments: [false, true])
+    func completedConfiguredCommandKeepsWorkspaceAndTerminal(hasSibling: Bool) throws {
+        let manager = TabManager(initialWorkingDirectory: "/tmp", autoWelcomeIfNeeded: false)
+        let workspace = manager.addWorkspace(placementOverride: .end)
+        let source = try #require(workspace.focusedTerminalPanel)
+        let panel = try #require(workspace.respawnTerminalSurface(panelId: source.id,
+            command: "codex", workingDirectory: "/tmp", focus: false, waitAfterCommand: true))
+        if hasSibling { _ = workspace.newTerminalSurfaceInFocusedPane(focus: false) }
+        manager.selectWorkspace(workspace)
+        let workspaceIDs = manager.tabs.map(\.id)
+        let panelIDs = Set(workspace.panels.keys)
+        defer { for item in manager.tabs { for panel in item.panels.values { panel.close() } } }
+
+        manager.closePanelAfterChildExited(tabId: workspace.id, surfaceId: panel.id)
+
+        #expect(manager.tabs.map(\.id) == workspaceIDs)
+        #expect(Set(workspace.panels.keys) == panelIDs)
+        #expect(workspace.terminalPanel(for: panel.id) === panel)
+        #expect(manager.selectedTabId == workspace.id)
+    }
+
     @Test(arguments: [NewTabPosition.current, .end], [WorkspaceLayoutMode.splits, .canvas])
     func replacementPreservesTabAndCanvasOwnership(position: NewTabPosition, layout: WorkspaceLayoutMode) async throws {
         let entered = AsyncStream<Void>.makeStream()
