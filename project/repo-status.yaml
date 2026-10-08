@@ -134,7 +134,7 @@ local_caveats:
   - id: codex_update_workspace_exit_native_dogfood
     status: open
   - id: expanded_prior_turn_system_appearance_contrast
-    status: open
+    status: monitoring
   - id: expanded_prior_turn_visual_acceptance
     status: open
   - id: shell_mode_portal_visibility_dogfood

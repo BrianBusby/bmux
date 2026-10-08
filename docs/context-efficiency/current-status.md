@@ -145,8 +145,9 @@ parity, lifecycle correctness, semantic milestones or delivery proof.
 Build 720 dogfood exposed a white-on-white expanded evidence card when the
 system appearance was light but the workspace shell stayed dark. The
 [contrast follow-up](../implementation-notes/expanded-turn-contrast.md) has a
-rendered regression and a scoped palette fix; patched-app acceptance remains
-open. This does not change evidence or provider lifecycle semantics.
+rendered regression and a scoped palette fix. Isolated build 721 passed live
+contrast inspection on a new Codex 0.161.0 verification session; user acceptance
+and broader accessibility coverage remain open. This does not change evidence or provider lifecycle semantics.
 
 ## Current Boundary
 
