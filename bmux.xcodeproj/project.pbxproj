@@ -53,8 +53,13 @@
 		A9E020000000000000000008 /* AgentSessionBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E010000000000000000008 /* AgentSessionBridge.swift */; };
 		A9F20000000000000000000B /* AgentSessionBridgeError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F10000000000000000000B /* AgentSessionBridgeError.swift */; };
 		A9F20000000000000000000C /* AgentSessionBridgeRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F10000000000000000000C /* AgentSessionBridgeRequest.swift */; };
+		D700956A58C9D40964E6B964 /* AgentSessionCurrentTurnOverview.swift in Sources */ = {isa = PBXBuildFile; fileRef = D938BFA54538DFF7283C66F3 /* AgentSessionCurrentTurnOverview.swift */; };
 		A9F200000000000000000003 /* AgentSessionDebugMenuButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000003 /* AgentSessionDebugMenuButtons.swift */; };
+		B9E45A7BC13378F0E93838A0 /* AgentSessionFactualProjectionEvidenceRows+PriorTurnItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64EE876416DB6F90C2D83DF3 /* AgentSessionFactualProjectionEvidenceRows+PriorTurnItem.swift */; };
+		A378B3F4834E1E3945768B09 /* AgentSessionFactualProjectionEvidenceRows+TurnProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3390649B1A5E169899A47D4 /* AgentSessionFactualProjectionEvidenceRows+TurnProperty.swift */; };
+		DBB8C7BA517806953EE5713F /* AgentSessionFactualProjectionEvidenceRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE42559509BCEB492E09FF50 /* AgentSessionFactualProjectionEvidenceRows.swift */; };
 		F3D907000000000000000001 /* AgentSessionFactualProjectionMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D907000000000000000002 /* AgentSessionFactualProjectionMode.swift */; };
+		A9690D5044EBDB930BE390EF /* AgentSessionFactualProjectionModeHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = D884128910C427B802738EEF /* AgentSessionFactualProjectionModeHost.swift */; };
 		F5350002A1B2C3D4E5F60718 /* AgentSessionFactualProjectionPriorTurnCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5350003A1B2C3D4E5F60718 /* AgentSessionFactualProjectionPriorTurnCardView.swift */; };
 		CE2F01040000000000000001 /* AgentSessionFactualProjectionReadResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F01040000000000000002 /* AgentSessionFactualProjectionReadResult.swift */; };
 		CE2F01030000000000000001 /* AgentSessionFactualProjectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F01030000000000000002 /* AgentSessionFactualProjectionStore.swift */; };
@@ -95,6 +100,8 @@
 		A9E050000000000000000002 /* AgentSessionWebRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E050000000000000000001 /* AgentSessionWebRendererTests.swift */; };
 		A9E02000000000000000000D /* AgentSessionWebTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E01000000000000000000D /* AgentSessionWebTheme.swift */; };
 		A9F200000000000000000014 /* AgentSessionWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000014 /* AgentSessionWebView.swift */; };
+		1B9E1E48F4D7C0DB68E86517 /* AgentSessionWorkspaceChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2024C63D9D32F0383CC75C3C /* AgentSessionWorkspaceChrome.swift */; };
+		2449E6E5FCE8096D5BF4A323 /* AgentSessionWorkspaceLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = C52592C7248AC72ED53FECC1 /* AgentSessionWorkspaceLink.swift */; };
 		REE0CA0000000000000000F2 /* AIAccountCredentialSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = REE0CA0000000000000000F1 /* AIAccountCredentialSources.swift */; };
 		REE0CA0000000000000000E2 /* AIAccountsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = REE0CA0000000000000000E1 /* AIAccountsClient.swift */; };
 		F4350A110000000000000001 /* AppBundleIconPersistencePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4350A130000000000000001 /* AppBundleIconPersistencePolicy.swift */; };
@@ -1982,8 +1989,13 @@
 		A9E010000000000000000008 /* AgentSessionBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionBridge.swift; sourceTree = "<group>"; };
 		A9F10000000000000000000B /* AgentSessionBridgeError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionBridgeError.swift; sourceTree = "<group>"; };
 		A9F10000000000000000000C /* AgentSessionBridgeRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionBridgeRequest.swift; sourceTree = "<group>"; };
+		D938BFA54538DFF7283C66F3 /* AgentSessionCurrentTurnOverview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionCurrentTurnOverview.swift; sourceTree = "<group>"; };
 		A9F100000000000000000003 /* AgentSessionDebugMenuButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionDebugMenuButtons.swift; sourceTree = "<group>"; };
+		64EE876416DB6F90C2D83DF3 /* AgentSessionFactualProjectionEvidenceRows+PriorTurnItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/AgentSessionFactualProjectionEvidenceRows+PriorTurnItem.swift"; sourceTree = "<group>"; };
+		D3390649B1A5E169899A47D4 /* AgentSessionFactualProjectionEvidenceRows+TurnProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/AgentSessionFactualProjectionEvidenceRows+TurnProperty.swift"; sourceTree = "<group>"; };
+		EE42559509BCEB492E09FF50 /* AgentSessionFactualProjectionEvidenceRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionFactualProjectionEvidenceRows.swift; sourceTree = "<group>"; };
 		F3D907000000000000000002 /* AgentSessionFactualProjectionMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionFactualProjectionMode.swift; sourceTree = "<group>"; };
+		D884128910C427B802738EEF /* AgentSessionFactualProjectionModeHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionFactualProjectionModeHost.swift; sourceTree = "<group>"; };
 		F5350003A1B2C3D4E5F60718 /* AgentSessionFactualProjectionPriorTurnCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionFactualProjectionPriorTurnCardView.swift; sourceTree = "<group>"; };
 		CE2F01040000000000000002 /* AgentSessionFactualProjectionReadResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionFactualProjectionReadResult.swift; sourceTree = "<group>"; };
 		CE2F01030000000000000002 /* AgentSessionFactualProjectionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionFactualProjectionStore.swift; sourceTree = "<group>"; };
@@ -2024,6 +2036,8 @@
 		A9E050000000000000000001 /* AgentSessionWebRendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionWebRendererTests.swift; sourceTree = "<group>"; };
 		A9E01000000000000000000D /* AgentSessionWebTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionWebTheme.swift; sourceTree = "<group>"; };
 		A9F100000000000000000014 /* AgentSessionWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionWebView.swift; sourceTree = "<group>"; };
+		2024C63D9D32F0383CC75C3C /* AgentSessionWorkspaceChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionWorkspaceChrome.swift; sourceTree = "<group>"; };
+		C52592C7248AC72ED53FECC1 /* AgentSessionWorkspaceLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionWorkspaceLink.swift; sourceTree = "<group>"; };
 		REE0CA0000000000000000F1 /* AIAccountCredentialSources.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AIAccountCredentialSources.swift; sourceTree = "<group>"; };
 		REE0CA0000000000000000E1 /* AIAccountsClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AIAccountsClient.swift; sourceTree = "<group>"; };
 		F4350A130000000000000001 /* AppBundleIconPersistencePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/AppBundleIconPersistencePolicy.swift; sourceTree = "<group>"; };
@@ -4712,6 +4726,13 @@
 				9CEDEA8EBD190A39E142D2F4 /* ExpandedTurnCommandCategory+Presentation.swift */,
 				F5340003A1B2C3D4E5F60718 /* AgentSessionFactualProjectionTurnDetailView.swift */,
 				F3D907000000000000000002 /* AgentSessionFactualProjectionMode.swift */,
+				C52592C7248AC72ED53FECC1 /* AgentSessionWorkspaceLink.swift */,
+				2024C63D9D32F0383CC75C3C /* AgentSessionWorkspaceChrome.swift */,
+				D3390649B1A5E169899A47D4 /* AgentSessionFactualProjectionEvidenceRows+TurnProperty.swift */,
+				64EE876416DB6F90C2D83DF3 /* AgentSessionFactualProjectionEvidenceRows+PriorTurnItem.swift */,
+				EE42559509BCEB492E09FF50 /* AgentSessionFactualProjectionEvidenceRows.swift */,
+				D884128910C427B802738EEF /* AgentSessionFactualProjectionModeHost.swift */,
+				D938BFA54538DFF7283C66F3 /* AgentSessionCurrentTurnOverview.swift */,
 				CE2F01010000000000000002 /* AgentSessionFactualProjectionView.swift */,
 
 				B0A501000000000000000002 /* BrowserOmnibarAppKitBridge.swift */,
@@ -6085,8 +6106,13 @@
 				A9E020000000000000000008 /* AgentSessionBridge.swift in Sources */,
 				A9F20000000000000000000B /* AgentSessionBridgeError.swift in Sources */,
 				A9F20000000000000000000C /* AgentSessionBridgeRequest.swift in Sources */,
+				D700956A58C9D40964E6B964 /* AgentSessionCurrentTurnOverview.swift in Sources */,
 				A9F200000000000000000003 /* AgentSessionDebugMenuButtons.swift in Sources */,
+				B9E45A7BC13378F0E93838A0 /* AgentSessionFactualProjectionEvidenceRows+PriorTurnItem.swift in Sources */,
+				A378B3F4834E1E3945768B09 /* AgentSessionFactualProjectionEvidenceRows+TurnProperty.swift in Sources */,
+				DBB8C7BA517806953EE5713F /* AgentSessionFactualProjectionEvidenceRows.swift in Sources */,
 				F3D907000000000000000001 /* AgentSessionFactualProjectionMode.swift in Sources */,
+				A9690D5044EBDB930BE390EF /* AgentSessionFactualProjectionModeHost.swift in Sources */,
 				F5350002A1B2C3D4E5F60718 /* AgentSessionFactualProjectionPriorTurnCardView.swift in Sources */,
 				CE2F01040000000000000001 /* AgentSessionFactualProjectionReadResult.swift in Sources */,
 				CE2F01030000000000000001 /* AgentSessionFactualProjectionStore.swift in Sources */,
@@ -6123,6 +6149,8 @@
 				A9E02000000000000000000C /* AgentSessionWebRendererSession.swift in Sources */,
 				A9E02000000000000000000D /* AgentSessionWebTheme.swift in Sources */,
 				A9F200000000000000000014 /* AgentSessionWebView.swift in Sources */,
+				1B9E1E48F4D7C0DB68E86517 /* AgentSessionWorkspaceChrome.swift in Sources */,
+				2449E6E5FCE8096D5BF4A323 /* AgentSessionWorkspaceLink.swift in Sources */,
 				REE0CA0000000000000000F2 /* AIAccountCredentialSources.swift in Sources */,
 				REE0CA0000000000000000E2 /* AIAccountsClient.swift in Sources */,
 				F4350A110000000000000001 /* AppBundleIconPersistencePolicy.swift in Sources */,
