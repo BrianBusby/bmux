@@ -125,6 +125,15 @@ according to the generated Project Truth frontier.
 16. `docs/context-efficiency/adr-001-provenance-engine-extraction.md`
 17. Relevant bmux skills for Swift/package/build/test/localization work.
 
+## Readable expanded prior turns
+
+The user-selected native presentation slice is tracked in
+[implementation notes](../implementation-notes/readable-expanded-prior-turns.md).
+It preserves the factual projection, canonical identity and associated results;
+its scope is historical turn readability only. Provider telemetry gaps and live
+visual/accessibility acceptance remain open. It does not advance Claude rich
+parity, lifecycle correctness, semantic milestones or delivery proof.
+
 ## Current Boundary
 
 Do not add new provenance consumer behavior to bmux-local direct SQLite readers,

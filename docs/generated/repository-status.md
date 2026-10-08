@@ -92,6 +92,7 @@ Repository: `BrianBusby/bmux`
 | React Smart Session Work Model Consumer | planned |
 | React Terminal Agent Chat Surface | implemented |
 | React Terminal Productization | planned |
+| Readable Expanded Prior Turns | under observation |
 | Remote Device Identity Pairing | planned |
 | Remote First Transport | planned |
 | Remote General Internet Route | planned |
@@ -145,6 +146,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `expanded_prior_turn_visual_acceptance` | open |
 | `shell_mode_portal_visibility_dogfood` | open |
 | `connected_codex_workspace_hooks_dogfood` | open |
 | `pe_prompt_display_replay_chronology` | open |

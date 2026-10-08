@@ -16,6 +16,19 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
     let isExpanded: Bool
     let onToggle: () -> Void
 
+    @State private var detailPresentation: ExpandedTurnPresentation?
+    @State private var commands: [ExpandedTurnCommandRow] = []
+    @State private var navigation = ExpandedTurnCommandNavigation()
+
+    private var presentation: ExpandedTurnPresentation {
+        switch item {
+        case .detail(let detail):
+            ExpandedTurnPresentation(reference: .init(turn: detail.turn), detail: detail)
+        case .reference(let reference):
+            ExpandedTurnPresentation(reference: reference, detail: nil)
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button {
@@ -27,6 +40,9 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityValue(isExpanded
+                ? String(localized: "agentSession.expanded.expanded", defaultValue: "Expanded")
+                : String(localized: "agentSession.expanded.collapsed", defaultValue: "Collapsed"))
 
             if isExpanded {
                 expandedDetails
@@ -41,8 +57,23 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .stroke(Color.secondary.opacity(0.16))
         )
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(Text(prompt))
+        .onChange(of: item, initial: true) { _, item in
+            detailPresentation = presentation
+            let records: [ProvenanceCodingAgentCommandRecord]
+            if case .detail(let detail) = item { records = detail.completedCommands } else { records = [] }
+            let previous = Dictionary(commands.map { ($0.id, $0.presentation) }, uniquingKeysWith: { first, _ in first })
+            commands = records.map { record in
+                let cached = previous[record.id]
+                let display: ExpandedTurnCommandPresentation
+                if let cached, cached.raw == record.command { display = cached }
+                else { display = ExpandedTurnCommandPresentation(raw: record.command) }
+                return ExpandedTurnCommandRow(record: record, presentation: display)
+            }
+            if let selected = navigation.selected,
+               !commands.contains(where: { $0.presentation.category == selected }) {
+                navigation.select(nil)
+            }
+        }
     }
 
     private var header: some View {
@@ -84,83 +115,13 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
         return relative.localizedString(for: finishedAt, relativeTo: Date())
     }
 
-    private var metadata: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            metadataLine(
-                systemImage: "clock",
-                text: String.localizedStringWithFormat(
-                    String(localized: "agentSession.factual.started", defaultValue: "Started %@"),
-                    dateText(startedAt)
-                )
-            )
-            metadataLine(
-                systemImage: "checkmark.circle",
-                text: String.localizedStringWithFormat(
-                    String(localized: "agentSession.factual.finished", defaultValue: "Finished %@"),
-                    dateText(finishedAt)
-                )
-            )
-            metadataLine(
-                systemImage: "timer",
-                text: String.localizedStringWithFormat(
-                    String(localized: "agentSession.factual.duration", defaultValue: "Duration %@"),
-                    durationText
-                )
-            )
-        }
-    }
-
     private var expandedDetails: some View {
         VStack(alignment: .leading, spacing: 10) {
             Divider()
-            labeledText(
-                String(localized: "agentSession.factual.objective", defaultValue: "Objective"),
-                prompt,
-                lineLimit: 8
-            )
-            labeledText(
-                String(localized: "agentSession.factual.summaryLabel", defaultValue: "Summary"),
-                summary,
-                lineLimit: 8
-            )
-            metadata
-            Text(String(localized: "agentSession.factual.details", defaultValue: "Details"))
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(Color.bmuxTextTertiary)
-            details
-        }
-        .padding(.top, 12)
-    }
-
-    @ViewBuilder
-    private var details: some View {
-        switch item {
-        case .detail(let turnSnapshot):
-            AgentSessionFactualProjectionTurnDetailView(turnSnapshot: turnSnapshot)
-        case .reference(let turn):
-            referenceRow(turn)
-        }
-    }
-
-    private func referenceRow(_ turn: ProvenanceFactualSessionProjectionTurnReference) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-            badge(turn.status)
-            Text(turn.providerTurnID)
-                .font(.system(size: 12, design: .monospaced))
-                .lineLimit(1)
-                .truncationMode(.middle)
-            Spacer(minLength: 0)
-            Text(dateText(turn.completedAt ?? turn.updatedAt))
-                .font(.system(size: 11))
-                .foregroundStyle(Color.bmuxTextTertiary)
-        }
-    }
-
-    private func metadataLine(systemImage: String, text: String) -> some View {
-        Label(text, systemImage: systemImage)
-            .font(.system(size: 11))
-            .foregroundStyle(Color.bmuxTextTertiary)
-            .labelStyle(.titleAndIcon)
+            if let detailPresentation {
+                ExpandedTurnDetailView(presentation: detailPresentation, commands: commands, navigation: $navigation)
+            }
+        }.padding(.top, 12)
     }
 
     private var prompt: String {
@@ -176,38 +137,6 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
         }
     }
 
-    private var summary: String {
-        switch item {
-        case .detail(let turnSnapshot):
-            if let finalOutput = AgentSessionFactualProjectionEvidenceRows.finalAssistantMessageText(for: turnSnapshot) {
-                return finalOutput
-            }
-            if let summary = turnSnapshot.fileChangeAttributions.compactMap(\.summary).last?.trimmingCharacters(in: .whitespacesAndNewlines),
-               !summary.isEmpty {
-                return summary
-            }
-            if let summary = turnSnapshot.visibleReasoningSummaries.last?.text.trimmingCharacters(in: .whitespacesAndNewlines),
-               !summary.isEmpty {
-                return summary
-            }
-            if !turnSnapshot.completedCommands.isEmpty {
-                return String.localizedStringWithFormat(
-                    String(localized: "agentSession.factual.summary.commands", defaultValue: "Ran %d commands"),
-                    turnSnapshot.completedCommands.count
-                )
-            }
-            return String.localizedStringWithFormat(
-                String(localized: "agentSession.factual.summary.status", defaultValue: "Turn ended with status %@"),
-                turnSnapshot.turn.status
-            )
-        case .reference(let turn):
-            return String.localizedStringWithFormat(
-                String(localized: "agentSession.factual.summary.status", defaultValue: "Turn ended with status %@"),
-                turn.status
-            )
-        }
-    }
-
     private var status: String {
         switch item {
         case .detail(let turnSnapshot):
@@ -217,51 +146,12 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
         }
     }
 
-    private var startedAt: Date? {
-        switch item {
-        case .detail(let turnSnapshot):
-            turnSnapshot.turn.startedAt
-        case .reference(let turn):
-            turn.startedAt
-        }
-    }
-
     private var finishedAt: Date {
         switch item {
         case .detail(let turnSnapshot):
             turnSnapshot.turn.completedAt ?? turnSnapshot.turn.updatedAt
         case .reference(let turn):
             turn.completedAt ?? turn.updatedAt
-        }
-    }
-
-    private var durationText: String {
-        guard let startedAt else {
-            return String(localized: "agentSession.factual.unknown", defaultValue: "Unknown")
-        }
-        let duration = max(0, finishedAt.timeIntervalSince(startedAt))
-        let formatter = DateComponentsFormatter()
-        formatter.allowedUnits = duration >= 3_600 ? [.hour, .minute, .second] : [.minute, .second]
-        formatter.unitsStyle = .abbreviated
-        formatter.maximumUnitCount = 2
-        if let text = formatter.string(from: duration), !text.isEmpty {
-            return text
-        }
-        return String.localizedStringWithFormat(
-            String(localized: "agentSession.factual.duration.seconds", defaultValue: "%.0f sec"),
-            duration
-        )
-    }
-
-    private func labeledText(_ label: String, _ text: String, lineLimit: Int) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(label)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(Color.bmuxTextTertiary)
-            Text(nonEmpty(text))
-                .font(.system(size: 12))
-                .lineLimit(lineLimit)
-                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -279,14 +169,4 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
         return String(localized: "agentSession.factual.unknown", defaultValue: "Unknown")
     }
 
-    private func dateText(_ date: Date) -> String {
-        date.formatted(date: .abbreviated, time: .shortened)
-    }
-
-    private func dateText(_ date: Date?) -> String {
-        guard let date else {
-            return String(localized: "agentSession.factual.unknown", defaultValue: "Unknown")
-        }
-        return dateText(date)
-    }
 }

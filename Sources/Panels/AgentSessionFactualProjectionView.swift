@@ -324,7 +324,6 @@ struct AgentSessionFactualProjectionView: View {
     var sessionTitle: String?
     var sessionDescription: String?
 
-    @State private var expandedPriorTurnIDs: Set<String> = []
     @State private var selectedPrimaryTabs: [UUID?: AgentSessionFactualProjectionMode] = [:]
 
     private var selectedPrimaryTab: AgentSessionFactualProjectionMode {
@@ -612,19 +611,8 @@ struct AgentSessionFactualProjectionView: View {
             }
 
             section(String(localized: "agentSession.factual.priorTurns", defaultValue: "Previous turns")) {
-                let items = AgentSessionFactualProjectionEvidenceRows.priorTurnItems(for: snapshot)
-                if items.isEmpty {
-                    mutedText(String(localized: "agentSession.factual.noPriorTurns", defaultValue: "No prior turns."))
-                } else {
-                    ForEach(Array(items.enumerated()), id: \.element.id) { offset, item in
-                        AgentSessionFactualProjectionPriorTurnCardView(
-                            item: item,
-                            ordinal: offset + 1,
-                            isExpanded: expandedPriorTurnIDs.contains(item.id),
-                            onToggle: { togglePriorTurnExpansion(item.id) }
-                        )
-                    }
-                }
+                ExpandedTurnHistoryView(items: AgentSessionFactualProjectionEvidenceRows.priorTurnItems(for: snapshot))
+                    .id(snapshot.session.id)
             }
 
             DisclosureGroup(String(localized: "agentSession.factual.identity", defaultValue: "Session details")) {
@@ -817,14 +805,6 @@ struct AgentSessionFactualProjectionView: View {
                     badge(worktreeID)
                 }
             }
-        }
-    }
-
-    private func togglePriorTurnExpansion(_ id: String) {
-        if expandedPriorTurnIDs.contains(id) {
-            expandedPriorTurnIDs.remove(id)
-        } else {
-            expandedPriorTurnIDs.insert(id)
         }
     }
 
