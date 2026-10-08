@@ -33,9 +33,8 @@ behavior. Ordinary shell exit must still close its panel/workspace.
   explicitly prefers ~/.local, bypassing shell selection. Connected host permits
   only0.154.0. User explicitly requested connected0.161.0 validation. Retain an
   exact version gate; do not modify installed executables or global settings.
-- No fresh dogfood build/launch is currently authorized by the repository's
-  active-dogfood rule. Prepare a concrete tested patch first; request permission
-  for a separate tag if needed. Never replace build719.
+- The user approved a separate codex-update-fix build/launch after reviewing
+  the committed patch. Build719 must remain untouched.
 
 ## Implementation and verification
 
@@ -62,8 +61,10 @@ behavior. Ordinary shell exit must still close its panel/workspace.
   verifies Ghostty fallback and retired-surface suppression. The final three focused
   Swift Testing suites passed 29 tests (xcodebuild TEST SUCCEEDED); existing XCTest remote/close coverage
   ran 16 tests in the same run: 15 passed, one existing split-persistent-remote
-  test failed two assertions about the still-live sibling. A baseline reproduction
-  is in progress; this is not being labeled a green full run.
+  test failed two assertions about the still-live sibling. An exact-base attempt
+  stopped at the Ghostty CLI Zig linker before tests ran. Unchanged Workspace
+  disconnect code clears all sibling remote IDs, explaining the assertions by
+  source inspection; an empirical base test result remains unverified.
 - Exact provider version is retained on ConnectedCodexHost and projected into
   runtime control metadata. Fixture tests cover 0.154.0, 0.161.0, and fail-closed
   rejection of 0.162.0. Real 0.161.0 native transport and transcript parser
@@ -79,8 +80,8 @@ behavior. Ordinary shell exit must still close its panel/workspace.
   message keys. Uses Ghostty's existing process-exited renderer and existing
   localized startup errors. Provider version is literal evidence. English/
   Japanese UI rendering and native updater interaction remain unverified.
-- Build719 remains running unchanged. Fresh isolated tagged build and native
-  dogfood await explicit approval under CLAUDE.md's active-dogfood rule.
+- Build719 remains running unchanged. The user explicitly approved the isolated
+  tagged build and launch; native results are below.
 
 
 ## Reproduction commands and operational limits
@@ -109,3 +110,32 @@ behavior. Ordinary shell exit must still close its panel/workspace.
 - Existing compiler warnings include inconsistent XCTest implementation-only
   imports and the parser's unused index; no claim that broader warning debt is
   resolved. There are no new UI text keys or translations in this slice.
+
+
+## Native acceptance: build 720
+
+`reload.sh --tag codex-update-fix --launch --no-global-cli-links
+--swift-disable-global-isel` succeeded on runtime commit `00ce0570d`, using the
+existing resolved packages and `BMUX_SKIP_ZIG_BUILD=1`. The user approved this
+fresh isolated build. Its app, bundle ID, socket and derived data are distinct
+from build719; global CLI links were preserved.
+
+Using the real AI Repo Launcher → companycam-mobile (Codex) → Launch Normally:
+
+- New workspace reached connected Chat without an update prompt.
+- A Chat-only prompt (“Reply exactly: Ready. Do not use tools or change files.”)
+  completed with “Ready.”; the native Terminal showed Codex v0.161.0 and the
+  identical prompt/reply. Current workspace styling is retained.
+- `/exit` ended the original TUI. The workspace and terminal stayed present;
+  switching Chat/Terminal showed the retained provider output plus Ghostty's
+  “Process exited. Press any key to close the terminal.” message.
+- Chat retained the conversation and reported the shared connection unavailable
+  after exit. Tagged CLI input independently returned `process_exited`.
+- Tag log at13:06:37.256 recorded showChildExited then
+  `surface.exit.preserve ... reason=waitAfterCommand` for the exact same surface.
+
+Native accessibility trees and screenshots were inspected in CUA. No video,
+light/Japanese acceptance or actual package-manager update was performed. The
+installed CLI was already0.161.0; preserving the updater's exit path is covered
+by command-exit regression plus this native original-TUI exit check. Broader
+remote lifecycle and interrupt controls remain outside this acceptance.
