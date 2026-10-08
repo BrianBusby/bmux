@@ -142,6 +142,13 @@ workspace tab-selection behavior are preserved; the original main-based build
 visual/accessibility acceptance remain open. It does not advance Claude rich
 parity, lifecycle correctness, semantic milestones or delivery proof.
 
+Build 720 dogfood exposed a white-on-white expanded evidence card when the
+system appearance was light but the workspace shell stayed dark. The
+[contrast follow-up](../implementation-notes/expanded-turn-contrast.md) has a
+rendered regression and a scoped palette fix. Isolated build 721 passed live
+contrast inspection on a new Codex 0.161.0 verification session; user acceptance
+and broader accessibility coverage remain open. This does not change evidence or provider lifecycle semantics.
+
 ## Current Boundary
 
 Do not add new provenance consumer behavior to bmux-local direct SQLite readers,

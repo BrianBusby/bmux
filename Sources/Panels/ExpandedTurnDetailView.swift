@@ -38,7 +38,9 @@ struct ExpandedTurnDetailView: View {
             }
         }
         .padding(12)
-        .foregroundStyle(.primary)
-        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 6))
+        .foregroundStyle(Color.workspaceReferenceTextPrimary)
+        .background(Color.workspaceReferenceSurface, in: RoundedRectangle(cornerRadius: 6))
+        // Session uses the fixed dark workspace palette regardless of system appearance.
+        .environment(\.colorScheme, .dark)
     }
 }

@@ -95,7 +95,47 @@ import SwiftUI
         #expect(ExpandedTurnCommandPresentation(raw: huge).category == .other)
         #expect(ExpandedTurnCommandPresentation(raw: huge).raw == huge)
     }
-    #if canImport(bmux_DEV) || canImport(bmux)
+    #if canImport(bmux_DEV) || canImport(bmux) || canImport(TurnPresentationHarness)
+    @Test @MainActor func expandedEvidenceContrastsWithDarkWorkspaceUnderEitherSystemAppearance() throws {
+        let turn = ProvenanceCodingAgentTurnRecord(id: "roof-turn", sessionID: "roof-session", provider: "codex",
+            providerTurnID: "provider-turn", status: "started", updatedAt: Date(), source: .observed, confidence: .high)
+        let detail = ProvenanceFactualSessionProjectionTurnSnapshot(turn: turn, submittedPrompt: nil,
+            currentPlan: nil, completedCommands: [], visibleReasoningSummaries: [], fileChangeAttributions: [], assistantMessages: [])
+        for dark in [false, true] {
+            // The real workspace shell has a fixed dark palette even under Aqua.
+            let root = ExpandedTurnDetailView(presentation: .init(reference: .init(turn: turn), detail: detail),
+                commands: [], navigation: .constant(.init()))
+                .foregroundStyle(Color.white)
+                .environment(\.colorScheme, dark ? .dark : .light)
+                .frame(width: 640)
+            let host = NSHostingView(rootView: root)
+            host.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+            host.setFrameSize(host.fittingSize)
+            host.layoutSubtreeIfNeeded()
+            let bitmap = try #require(host.bitmapImageRepForCachingDisplay(in: host.bounds))
+            host.cacheDisplay(in: host.bounds, to: bitmap)
+            func luminance(_ color: NSColor) -> Double {
+                let rgb = color.usingColorSpace(.sRGB)!
+                func linear(_ value: CGFloat) -> Double {
+                    let x = Double(value)
+                    return x <= 0.04045 ? x / 12.92 : pow((x + 0.055) / 1.055, 2.4)
+                }
+                return 0.2126 * linear(rgb.redComponent) + 0.7152 * linear(rgb.greenComponent) + 0.0722 * linear(rgb.blueComponent)
+            }
+            let background = luminance(try #require(bitmap.colorAt(x: bitmap.pixelsWide - 20, y: 20)))
+            var brightestText = background
+            for y in 12..<min(70, bitmap.pixelsHigh) {
+                for x in 12..<min(400, bitmap.pixelsWide) {
+                    if let color = bitmap.colorAt(x: x, y: y) { brightestText = max(brightestText, luminance(color)) }
+                }
+            }
+            #expect(background < 0.2, "Expanded evidence must stay on the dark workspace surface (system dark: \(dark))")
+            #expect((brightestText + 0.05) / (background + 0.05) >= 4.5, "Evidence text must remain readable (system dark: \(dark))")
+            let png = try #require(bitmap.representation(using: .png, properties: [:]))
+            try png.write(to: URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("bmux-expanded-contrast-\(dark ? "dark" : "light").png"))
+        }
+    }
+
     @Test @MainActor func nativeFixtureLayoutsRemainWithinPanel() throws {
         let date = Date(timeIntervalSince1970: 1_800_000_000)
         let turn = ProvenanceCodingAgentTurnRecord(id: "fixture-pe-turn", sessionID: "fixture-session", threadID: "fixture-pe-thread", provider: "codex", providerTurnID: "fixture-provider-turn", status: "completed", model: "Recorded model", startedAt: date, completedAt: date.addingTimeInterval(2072), updatedAt: date, source: .observed, confidence: .high)
