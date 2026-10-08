@@ -7,7 +7,7 @@ What it did, Reference IDs order. Native SwiftUI; unchanged current-turn UI.
 
 - `AGENTS.md` / `CLAUDE.md`, `skills/bmux-{architecture,testing,dev-workflow,debugging,localization}/SKILL.md`, continuous-code-quality, Superpowers planning/test-first/verification guidance.
 - `docs/context-efficiency/current-status.md`, architecture overview and generated ownership/repository status: PE owns identity, evidence, reconciliation and projection; bmux owns presentation. User explicitly selected this presentation-only slice; broader Process Integrity frontier is unchanged.
-- Branch `readable-expanded-prior-turns`, based on `origin/main` ad34b6ad6, isolated worktree. Original dirty checkout and all running apps are untouched.
+- Branch `readable-expanded-prior-turns`, now based on verified build-715 source `db3c8c1c0`, isolated worktree. The initial `origin/main` base `ad34b6ad6` omitted the current styling and was rejected by the user. Original dirty checkout and all running apps are untouched.
 - `AgentSessionFactualProjectionStore` reads public `factualSessionProjection` (12 detailed turns). `AgentSessionFactualProjectionEvidenceRows.priorTurnItems` joins references to snapshots by canonical PE turn ID and preserves established order. Prior card is the only replacement boundary; existing `TurnDetailView` remains for current turns.
 - PE `factualTurnSnapshot` collects all recorded commands in canonical order by turn ID. No total/completeness/duration field or structured tool metadata exists here. Command `outputSummary` is the already-associated bounded/redacted result. Never retrieve hidden output.
 - Objective is currently the submitted prompt, not separate semantic intent. Existing Summary chooses final assistant output then file-attribution/reasoning evidence. Adapter preserves that hierarchy but suppresses literal contained/equal summary; never promotes those fallbacks to final output.
@@ -117,3 +117,43 @@ must not claim to have invoked a missing skill, merge, or rebuild the user's tag
   their Run counters remain intact, but the old detail blocks are not rendered
   in the new expanded history. This is a retained presentation limitation, not
   evidence that all historical detail remains inspectable.
+
+
+## Corrected build baseline (2026-10-08)
+
+- The existing `/Applications/bmux DEV chat-default-711.app` reports
+  `CFBundleVersion=715` and `BMUXCommit=db3c8c1c0`. The user explicitly requested
+  carrying this feature onto that verified source after rejecting build717's
+  missing styling. App directory/tag names are not authoritative build numbers.
+- Rebased only the two presentation commits onto `db3c8c1c0`. A backup branch
+  retains the original series. The PR is stacked on `new-workspace-chat-default`;
+  its only commit after the verified source records release metadata, with no
+  app-source change. Neither that branch nor its PR is modified.
+- The Session-host conflict preserves the build715 per-workspace primary-tab
+  selection and initial Chat behavior; only historical disclosure state moves
+  into the existing feature's session-keyed history view. Project metadata keeps
+  every baseline caveat and regenerates the derived document.
+- `git range-diff` confirms that rebasing changed only integration context.
+  Sidebar sources, ContentView, primary-tab mode, Session host caller, and terminal
+  portal are byte-identical to the verified baseline. The final Session-host diff
+  is limited to the three original prior-turn-history edits. This is source
+  preservation evidence, not live visual or interaction acceptance.
+- Use the fresh tag `readable-turns-build715`; both build715 and the now-running
+  build717 remain untouched. The rebase includes deferred command preparation
+  from the background follow-up. Existing visual/accessibility limitations above
+  still apply until live dogfood confirms them.
+- Corrected-baseline validation: all 21 focused presentation/projection tests
+  passed, including native fixture renders. Inspected the regenerated narrow
+  dark fixture; wrapping and stacked facts remain intact. The isolated tagged
+  build succeeded without launch. All six bundled React/Solid Chat assets are
+  byte-identical to the installed build715; SDK26.5 uses the reload script
+  documented Zig-helper skip. Wiring (427 test files), project normalization, package
+  policy/grouping, Project Truth validate/generate/check, whitespace, and all 35
+  English/Japanese message pairs passed on the corrected baseline. The inherited
+  Session-view size is now 851 lines versus 871 in build715; no budget exception
+  was added. The full length scan also flags 15 other files; byte comparisons
+  confirm all 15 and the budget file are unchanged from the verified baseline.
+
+- Independent integration review found no regressions in the corrected range;
+  per-workspace tab state, current-turn rendering and terminal portal callbacks
+  were inspected, with no claim of live visual or interaction acceptance.

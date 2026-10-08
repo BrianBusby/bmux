@@ -130,7 +130,10 @@ according to the generated Project Truth frontier.
 The user-selected native presentation slice is tracked in
 [implementation notes](../implementation-notes/readable-expanded-prior-turns.md).
 It preserves the factual projection, canonical identity and associated results;
-its scope is historical turn readability only. Provider telemetry gaps and live
+its scope is historical turn readability only. The feature now stacks on the
+verified build-715 source (`db3c8c1c0`) so the existing sidebar styling and
+workspace tab-selection behavior are preserved; the original main-based build
+717 was rejected for omitting those changes. Provider telemetry gaps and live
 visual/accessibility acceptance remain open. It does not advance Claude rich
 parity, lifecycle correctness, semantic milestones or delivery proof.
 
