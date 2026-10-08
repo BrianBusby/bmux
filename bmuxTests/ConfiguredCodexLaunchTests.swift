@@ -142,6 +142,25 @@ struct ConfiguredCodexLaunchTests {
         #expect(manager.selectedTabId == workspace.id)
     }
 
+    @Test func ordinaryShellWithInheritedWaitPolicyStillClosesOnExit() throws {
+        let manager = TabManager(initialWorkingDirectory: "/tmp", autoWelcomeIfNeeded: false)
+        let workspace = manager.addWorkspace(placementOverride: .end)
+        let original = try #require(workspace.focusedTerminalPanel)
+        var inherited = BmuxSurfaceConfigTemplate()
+        inherited.waitAfterCommand = true
+        original.close()
+        let shell = workspace.makeStableTerminalPanel(id: original.id, workspaceId: workspace.id,
+            configTemplate: inherited, workingDirectory: "/tmp")
+        workspace.panels[shell.id] = shell
+        defer { for item in manager.tabs { for panel in item.panels.values { panel.close() } } }
+        #expect(shell.surface.initialCommand == nil)
+        #expect(shell.surface.debugWaitAfterCommand())
+
+        manager.closePanelAfterChildExited(tabId: workspace.id, surfaceId: shell.id)
+
+        #expect(!manager.tabs.contains(where: { $0.id == workspace.id }))
+    }
+
     @Test func childExitCallbackDefersToGhosttyForHeldCommandAndIgnoresRetiredSurface() throws {
         let originalDelegate = AppDelegate.shared
         let delegate = AppDelegate()
