@@ -139,3 +139,32 @@ light/Japanese acceptance or actual package-manager update was performed. The
 installed CLI was already0.161.0; preserving the updater's exit path is covered
 by command-exit regression plus this native original-TUI exit check. Broader
 remote lifecycle and interrupt controls remain outside this acceptance.
+
+
+## Review follow-up after build 720
+
+Codex review identified two shell-resolution edge cases. A captured PATH that
+omits Codex must fail instead of searching stale home/runtime or system fallback
+directories. Connected launches now disable both fallback groups in the existing
+resolver; other resolver callers retain their existing defaults. A shell's
+basename is no longer an allowlist: ksh and renamed compatible shells can run
+the same fixed probe. csh/tcsh use interactive `-i -c` because macOS rejects
+login mode with a command; this reads their rc file, not their login-only file.
+Unknown incompatible shell command forms still fail closed, without selecting a
+different shell or an unrelated installation.
+
+The new runtime regressions reproduced all five expected failures before the fix:
+PATH omission selected the stale executable, and alternate/custom shell names
+were rejected (including a real macOS tcsh startup fixture). After the fix, all
+42 tests in ConnectedCodexExecutableResolverTests, ConnectedSessionOwnershipTests
+and AgentExecutableResolverTests passed. Project-docs validate/generate/check and
+diff checks passed. No new user-facing strings were introduced; existing localized
+resolution/startup errors are retained. Build 720 predates
+these follow-up changes; the review loop does not rebuild or replace it.
+
+CI's workflow guard failed on the inherited 851-line
+`AgentSessionFactualProjectionView.swift`, whose blob is identical to the stacked
+base 802f15cce. The review loop leaves PR132 and file budgets untouched. Claude
+review could not start because its GitHub App is not installed on this repository;
+Codex review supplied the two addressed findings. Project Truth and package
+conventions passed on b7755b36f.

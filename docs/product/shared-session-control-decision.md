@@ -492,8 +492,11 @@ were removed. Interrupt, approvals/questions, queue editing/cancellation,
 settings, restoration, ordinary-CLI attachment and GUI acceptance are not
 established by these probes and keep their previous capability boundaries.
 
-New connected launches resolve the login-interactive shell PATH per launch,
-reusing AgentExecutableResolver instead of preferring an older standalone CLI.
+New connected launches resolve the shell-initialized PATH per launch,
+reusing AgentExecutableResolver without fallback installation directories instead
+of preferring an older standalone CLI. Compatible shells use login-interactive
+startup; csh/tcsh use interactive startup because they reject login mode with a
+command. Their login-only files are outside that path probe.
 The shared host and original TUI receive the selected PATH, including the runtime
 needed by npm/Bun shebangs. Configured local command exits honor the existing
 wait-after-command flag, preserving the workspace and output. Ordinary shell
