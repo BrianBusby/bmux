@@ -7,7 +7,7 @@ extension TabManager {
               !workspace.shouldDemoteWorkspaceAfterChildExit(surfaceId: surfaceId),
               !workspace.shouldKeepPersistentRemoteSurfaceOpenAfterChildExit(surfaceId),
               let panel = workspace.terminalPanel(for: surfaceId) else { return false }
-        return panel.surface.waitsAfterCommand
+        return panel.surface.retainsConfiguredCommandOutput
     }
 
     /// Close a panel because its child process exited (e.g. the user hit Ctrl+D).

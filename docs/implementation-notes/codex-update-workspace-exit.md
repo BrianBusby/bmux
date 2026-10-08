@@ -168,3 +168,23 @@ base 802f15cce. The review loop leaves PR132 and file budgets untouched. Claude
 review could not start because its GitHub App is not installed on this repository;
 Codex review supplied the two addressed findings. Project Truth and package
 conventions passed on b7755b36f.
+
+
+A second review follow-up bounds retention to surfaces with an actual startup
+command (`initialCommand`, tmux startup, or template command). The raw inherited
+wait flag remains available to existing diagnostic/respawn callers. A runtime
+regression constructs a wait-only ordinary shell and verifies the real manager
+exit path closes its workspace; it failed before the fix. The pinned Ghostty
+`newSurfaceOptions` currently leaves wait at its default, so the review's exact
+native split-inheritance premise was not established by this test.
+
+The connected path adapter now anchors relative PATH components to the probed
+working directory and preserves empty components as that directory. This keeps
+workspace-local executables and their runtime PATH consistent for both host and
+original TUI. Three relative/empty-component cases failed before the fix. The
+four focused launch/ownership/resolver suites passed 53 tests after correction;
+the final focused resolver rerun passed all six tests, including four relative/
+empty-PATH parameter cases and a real tcsh startup configuration.
+These changes also postdate build720 and need fresh native validation. No
+running build was replaced, no control capability was added, and no new UI text
+or localization key was introduced.

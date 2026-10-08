@@ -89,10 +89,11 @@ import Testing
         #expect(plan.executableURL == executable)
     }
 
-    @Test(arguments: ["./bin", "bin", ""])
-    func relativeAndEmptyPathEntriesUseTheProbedWorkingDirectory(entry: String) async throws {
+    @Test(arguments: ["./bin:/usr/bin:/bin", "bin:/usr/bin:/bin", ":/usr/bin:/bin", ""])
+    func relativeAndEmptyPathEntriesUseTheProbedWorkingDirectory(path: String) async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        let executableDirectory = entry.isEmpty ? root : root.appendingPathComponent("bin")
+        let executableDirectory = path.hasPrefix("bin:") || path.hasPrefix("./bin:")
+            ? root.appendingPathComponent("bin") : root
         try FileManager.default.createDirectory(at: executableDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let executable = executableDirectory.appendingPathComponent("codex")
@@ -102,10 +103,10 @@ import Testing
         try Data("#!/bin/sh\nprintf '\\000BMUX_CODEX_PATH\\000%s\\n' \"$RESOLVED_PATH\"\n".utf8).write(to: shell)
         try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: shell.path)
         let resolver = ConnectedCodexExecutableResolver(environment: ["HOME": root.path,
-            "SHELL": shell.path, "RESOLVED_PATH": entry + ":/usr/bin:/bin"])
+            "SHELL": shell.path, "RESOLVED_PATH": path])
         let plan = try await resolver.resolve(workingDirectory: root.path)
         #expect(plan.executableURL.standardizedFileURL == executable.standardizedFileURL)
-        #expect(plan.environment["PATH"]?.hasPrefix(executableDirectory.standardizedFileURL.path + ":") == true)
+        #expect(plan.environment["PATH"]?.components(separatedBy: ":").first == executableDirectory.standardizedFileURL.path)
     }
 
     @Test func failedShellProbeDoesNotSilentlySelectAnOldFallback() async throws {

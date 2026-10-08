@@ -29,9 +29,15 @@ struct ConnectedCodexExecutableResolver: Sendable {
         }
         var path = String(output[marker.upperBound...])
         if path.hasSuffix("\n") { path.removeLast() }
-        guard !path.isEmpty, !path.contains("\n"), !path.contains("\0") else { throw CodexControlError.disconnected }
+        guard !path.contains("\n"), !path.contains("\0") else { throw CodexControlError.disconnected }
         var resolvedEnvironment = environment
-        resolvedEnvironment["PATH"] = path
+        // Shell PATH treats empty entries as cwd and relative entries relative to the launch directory.
+        let directory = URL(fileURLWithPath: workingDirectory, isDirectory: true)
+        resolvedEnvironment["PATH"] = path.components(separatedBy: ":").map { component in
+            if component.hasPrefix("/") { return component }
+            return component.isEmpty ? directory.standardizedFileURL.path
+                : directory.appendingPathComponent(component, isDirectory: true).standardizedFileURL.path
+        }.joined(separator: ":")
         return try AgentExecutableResolver(environment: resolvedEnvironment,
             includeStandardSearchDirectories: false, includeUserRuntimeSearchDirectories: false).resolve(.codex)
     }

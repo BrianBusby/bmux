@@ -497,9 +497,11 @@ reusing AgentExecutableResolver without fallback installation directories instea
 of preferring an older standalone CLI. Compatible shells use login-interactive
 startup; csh/tcsh use interactive startup because they reject login mode with a
 command. Their login-only files are outside that path probe.
+Relative and empty PATH entries are anchored to the workspace directory.
 The shared host and original TUI receive the selected PATH, including the runtime
 needed by npm/Bun shebangs. Configured local command exits honor the existing
-wait-after-command flag, preserving the workspace and output. Ordinary shell
+wait-after-command flag when a startup command is present, preserving the
+workspace and output. An inherited wait flag alone does not retain an ordinary shell. Ordinary shell
 exit and remote recovery retain their existing paths. The branch stacks on the
 actual build-719 source (`802f15cce`); no running dogfood build was replaced.
 See [implementation and verification notes](../implementation-notes/codex-update-workspace-exit.md)
