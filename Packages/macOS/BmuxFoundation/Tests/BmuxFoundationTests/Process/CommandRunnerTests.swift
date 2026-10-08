@@ -15,8 +15,8 @@ import Testing
         ])
         let result = await runner.run(
             directory: tempDir,
-            executable: "/usr/bin/printenv",
-            arguments: ["BMUX_COMMAND_ENV_FIXTURE", "PATH"],
+            executable: "/bin/sh",
+            arguments: ["-c", #"printf '%s\n%s\n' "$BMUX_COMMAND_ENV_FIXTURE" "$PATH""#],
             timeout: 5
         )
         #expect(result.exitStatus == 0)

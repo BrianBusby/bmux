@@ -463,11 +463,6 @@ public final class TerminalSurface: Identifiable, ObservableObject {
         }
     }
 
-    /// Whether the surface stays open after its startup command exits.
-    public func debugWaitAfterCommand() -> Bool {
-        configTemplate?.waitAfterCommand ?? false
-    }
-
     /// The ghostty launch context the surface was created with.
     public var launchContext: ghostty_surface_context_e {
         surfaceContext

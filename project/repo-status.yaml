@@ -25,6 +25,7 @@ local_capabilities:
   ordinary_cli_read_only_chat: under_observation
   ordinary_cli_shared_control: not_implemented
   connected_codex_shared_host_controls: under_observation
+  connected_codex_0161_launch_and_controls: under_observation
   connected_codex_workspace_hooks: under_observation
   shell_mode_portal_visibility: under_observation
   connected_prompt_workspace_resource_projection: under_observation
@@ -130,6 +131,8 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: codex_update_workspace_exit_native_dogfood
+    status: open
   - id: expanded_prior_turn_visual_acceptance
     status: open
   - id: shell_mode_portal_visibility_dogfood

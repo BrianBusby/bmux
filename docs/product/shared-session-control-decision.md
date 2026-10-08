@@ -252,7 +252,8 @@ app-server, then starts the original Codex TUI with `--remote`. It does not repl
 The TUI creates its new thread on that host; Chat binds only when the dedicated host reports exactly one loaded thread. Both clients use that same live owner.
 The provider process, TUI process, provider thread, and PE identity remain distinct.
 
-The implementation pins controls to empirically tested Codex 0.154.0. It uses a
+The implementation gates controls to exact empirically tested Codex versions
+0.154.0 and 0.161.0 (see the October 8 compatibility evidence below). It uses a
 random capability token in a private file, verifies that an unauthenticated
 WebSocket handshake receives HTTP 401, and only then initializes its native
 `URLSessionWebSocketTask`. The token is never sent through the webview bridge,
@@ -461,3 +462,42 @@ selection/canvas behavior is covered by native tests; the GUI action is not
 configured in the current user menu. Broader recovery and user dogfood remain
 open. Native regression coverage and both bundled consumers verify reservation,
 cancellation and loading behavior.
+
+
+### Codex 0.161.0 compatibility and launch resolution (October 8, 2026)
+
+The user requested validation of connected Chat against the updated Bun-installed
+Codex. Isolated probes exercised authenticated loopback initialization, account/
+config/model reads through the existing native Swift transport, and the full
+BmuxAgentChat parser against the resulting real provider transcript. Unauthenticated
+WebSocket access returned HTTP 401. The exact-version gate includes 0.161.0;
+this does not permit arbitrary newer versions.
+
+A second probe matched production's Chat-side ownership sequence without calling
+`thread/resume`, `turn/start`, or `turn/interrupt`: start an original blank remote
+TUI, adopt its sole loaded thread, queue the first prompt, queue another turn,
+reject steering with a stale turn ID, accept steering with the active ID, retain
+another queued prompt through connection replacement, and queue a new follow-up.
+All five accepted client IDs appeared exactly once across four completed turns;
+the rejected steering ID was absent. All expected responses appeared in both
+recorded assistant messages and the original TUI. Extra read-only history calls
+verified completion and IDs; they did not create subscriptions or change ownership.
+An auxiliary thread appeared after adoption without changing the bound identity.
+
+Sanitized local evidence is retained at
+`/private/tmp/bmux-codex161-compatibility/report-no-resume.json`, with the method
+log and results under `no-resume-qjfhqc95/`. Native transport/parser evidence is
+in the sibling `report.json`. Probe processes stopped and temporary credentials
+were removed. Interrupt, approvals/questions, queue editing/cancellation,
+settings, restoration, ordinary-CLI attachment and GUI acceptance are not
+established by these probes and keep their previous capability boundaries.
+
+New connected launches resolve the login-interactive shell PATH per launch,
+reusing AgentExecutableResolver instead of preferring an older standalone CLI.
+The shared host and original TUI receive the selected PATH, including the runtime
+needed by npm/Bun shebangs. Configured local command exits honor the existing
+wait-after-command flag, preserving the workspace and output. Ordinary shell
+exit and remote recovery retain their existing paths. The branch stacks on the
+actual build-719 source (`802f15cce`); no running dogfood build was replaced.
+See [implementation and verification notes](../implementation-notes/codex-update-workspace-exit.md)
+for regression results and remaining native acceptance.

@@ -132,7 +132,7 @@ final class TerminalChatRuntime: TerminalChatConnecting {
         }
         let available = control["status"] as? String == "connected"
         control["provider"] = "codex"
-        control["providerVersion"] = "0.154.0"
+        control["providerVersion"] = host.providerVersion
         control["capabilities"] = Self.capabilities(connected: available, activeTurn: control["activeTurnId"] != nil,
                                                    historyAvailable: snapshot["history"] != nil)
         if let draft = drafts[surfaceID] {

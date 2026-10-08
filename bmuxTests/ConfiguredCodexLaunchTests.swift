@@ -142,6 +142,30 @@ struct ConfiguredCodexLaunchTests {
         #expect(manager.selectedTabId == workspace.id)
     }
 
+    @Test func childExitCallbackDefersToGhosttyForHeldCommandAndIgnoresRetiredSurface() throws {
+        let originalDelegate = AppDelegate.shared
+        let delegate = AppDelegate()
+        AppDelegate.shared = delegate
+        let manager = TabManager(initialWorkingDirectory: "/tmp", autoWelcomeIfNeeded: false)
+        let windowID = delegate.registerMainWindowContextForTesting(tabManager: manager)
+        defer {
+            delegate.unregisterMainWindowContextForTesting(windowId: windowID)
+            AppDelegate.shared = originalDelegate
+            for workspace in manager.tabs { for panel in workspace.panels.values { panel.close() } }
+        }
+        let workspace = try #require(manager.selectedWorkspace)
+        let source = try #require(workspace.focusedTerminalPanel)
+        let panel = try #require(workspace.respawnTerminalSurface(panelId: source.id,
+            command: "codex", workingDirectory: "/tmp", focus: false, waitAfterCommand: true))
+        #expect(GhosttyApp.shared.handleChildExited(tabId: workspace.id, surfaceId: panel.id,
+            surface: panel.surface) == false)
+        GhosttyApp.terminalSurfaceRegistry.unregister(panel.surface)
+        defer { GhosttyApp.terminalSurfaceRegistry.register(panel.surface) }
+        #expect(GhosttyApp.shared.handleChildExited(tabId: workspace.id, surfaceId: panel.id,
+            surface: panel.surface) == true)
+        #expect(workspace.terminalPanel(for: panel.id) === panel)
+    }
+
     @Test(arguments: [NewTabPosition.current, .end], [WorkspaceLayoutMode.splits, .canvas])
     func replacementPreservesTabAndCanvasOwnership(position: NewTabPosition, layout: WorkspaceLayoutMode) async throws {
         let entered = AsyncStream<Void>.makeStream()

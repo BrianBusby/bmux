@@ -4,6 +4,11 @@ This file is the live handoff index for context-efficiency, provenance, and
 handoff work. Volatile project-state facts are generated from manifests and must
 not be maintained here.
 
+The Codex updater/launch follow-up is recorded in
+[implementation notes](../implementation-notes/codex-update-workspace-exit.md) and
+[the shared-session control decision](../product/shared-session-control-decision.md#codex-01610-compatibility-and-launch-resolution-october-8-2026).
+It does not advance broader Session lifecycle or provider-parity milestones.
+
 ## Current Generated Truth
 
 - [Project status](../generated/project-status.md)
