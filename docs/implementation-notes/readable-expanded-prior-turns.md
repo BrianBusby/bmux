@@ -94,3 +94,26 @@ Unsupported expansions/control flow/operators are Other. Never execute/decode ev
 The registered autoreview skill was not found in installed skills. The handoff
 uses the repository's bounded background CI/review instructions directly; it
 must not claim to have invoked a missing skill, merge, or rebuild the user's tag.
+
+## Background review follow-up
+
+- Deferred immutable evidence preparation until a card is expanded. Evidence
+  refreshes while collapsed no longer tokenize command arrays; reopening updates
+  the cache by canonical command ID/raw source and retains disclosure choices.
+- Follow-up validation: all 21 focused presentation/projection tests passed,
+  including native fixture rendering; Project Truth validate/check and diff
+  whitespace checks passed. No UI strings or project wiring changed. Live
+  collapsed-history performance and interaction still need dogfood verification.
+- The earlier tagged build 717 remains on `8b4014718`; the background loop does
+  not replace a user's build. Any later presentation commit needs a fresh
+  isolated build and renewed dogfood through the main agent.
+- CI confirmed the inherited missing Swift-length budget and additionally found
+  stale `shared_session_chat` roadmap delivery metadata for merged PR #116.
+  Downstream macOS test jobs were skipped by the preflight failure. No baseline
+  gates or broader milestone metadata were changed.
+- A review request to retain the former plan/reasoning/file-detail blocks remains
+  a design follow-up: the supplied layout specifies command detail under What
+  it did and a known-zero-command visibility rule. Those canonical records and
+  their Run counters remain intact, but the old detail blocks are not rendered
+  in the new expanded history. This is a retained presentation limitation, not
+  evidence that all historical detail remains inspectable.

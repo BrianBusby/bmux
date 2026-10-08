@@ -57,22 +57,27 @@ struct AgentSessionFactualProjectionPriorTurnCardView: View {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .stroke(Color.secondary.opacity(0.16))
         )
-        .onChange(of: item, initial: true) { _, item in
-            detailPresentation = presentation
-            let records: [ProvenanceCodingAgentCommandRecord]
-            if case .detail(let detail) = item { records = detail.completedCommands } else { records = [] }
-            let previous = Dictionary(commands.map { ($0.id, $0.presentation) }, uniquingKeysWith: { first, _ in first })
-            commands = records.map { record in
-                let cached = previous[record.id]
-                let display: ExpandedTurnCommandPresentation
-                if let cached, cached.raw == record.command { display = cached }
-                else { display = ExpandedTurnCommandPresentation(raw: record.command) }
-                return ExpandedTurnCommandRow(record: record, presentation: display)
-            }
-            if let selected = navigation.selected,
-               !commands.contains(where: { $0.presentation.category == selected }) {
-                navigation.select(nil)
-            }
+        .onChange(of: item, initial: true) { _, _ in refreshExpandedEvidence() }
+        .onChange(of: isExpanded) { _, _ in refreshExpandedEvidence() }
+    }
+
+    private func refreshExpandedEvidence() {
+        // Collapsed histories need no tokenization. Keep the cache and disclosure choices for reopening.
+        guard isExpanded else { return }
+        detailPresentation = presentation
+        let records: [ProvenanceCodingAgentCommandRecord]
+        if case .detail(let detail) = item { records = detail.completedCommands } else { records = [] }
+        let previous = Dictionary(commands.map { ($0.id, $0.presentation) }, uniquingKeysWith: { first, _ in first })
+        commands = records.map { record in
+            let cached = previous[record.id]
+            let display: ExpandedTurnCommandPresentation
+            if let cached, cached.raw == record.command { display = cached }
+            else { display = ExpandedTurnCommandPresentation(raw: record.command) }
+            return ExpandedTurnCommandRow(record: record, presentation: display)
+        }
+        if let selected = navigation.selected,
+           !commands.contains(where: { $0.presentation.category == selected }) {
+            navigation.select(nil)
         }
     }
 
