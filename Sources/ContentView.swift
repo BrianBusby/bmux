@@ -15238,6 +15238,14 @@ struct TabItemView: View, Equatable {
             WorkspaceCardHeader(
                 repositoryName: snapshot.repoBadgeAppearance?.name,
                 repositoryFont: magnifiedFont(scaledFontSize(10), weight: .medium),
+                ticketID: ticket?.id,
+                ticketFont: magnifiedFont(scaledFontSize(10), weight: .semibold, design: .monospaced),
+                ticketIcon: {
+                    BmuxSystemSymbolImage(magnified: "ticket", pointSize: scaledFontSize(11), weight: .medium)
+                },
+                ticketColor: activeSecondaryColor(0.9),
+                ticketBorderColor: activeSecondaryColor(0.35),
+                onOpenTicket: ticket?.url.map { url in { openTicketLink(url) } },
                 closeIcon: {
                     BmuxSystemSymbolImage(magnified: "xmark", pointSize: scaledFontSize(14), weight: .medium)
                 },
@@ -15276,27 +15284,6 @@ struct TabItemView: View, Equatable {
                         .lineLimit(nil)
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-
-            if let ticket {
-                let ticketContent = HStack(spacing: 6) {
-                    BmuxSystemSymbolImage(magnified: "ticket", pointSize: scaledFontSize(11), weight: .medium)
-                    Text(ticket.id)
-                        .font(magnifiedFont(scaledFontSize(12), weight: .semibold, design: .monospaced))
-                }
-                .foregroundColor(activeSecondaryColor(0.9))
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(activeSecondaryColor(0.35), lineWidth: 1)
-                }
-                if let url = ticket.url {
-                    Button { openTicketLink(url) } label: { ticketContent }
-                        .buttonStyle(.plain)
-                } else {
-                    ticketContent
                 }
             }
 
