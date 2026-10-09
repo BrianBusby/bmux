@@ -5,48 +5,12 @@ extension ProvenanceSQLiteRepository {
     static let sessionOutcomeRuleID = "deterministic_session_outcome"
     static let sessionOutcomeRuleVersion = "1"
 
-    func sessionOutcomeRecord(_ request: ProvenanceSessionOutcomeRequest) throws
-        -> ProvenanceSessionOutcomeResponse {
-        guard try session(id: request.sessionID) != nil else {
-            return ProvenanceSessionOutcomeResponse(
-                found: false,
-                reason: "no_session",
-                sessionID: request.sessionID,
-                outcome: nil
-            )
-        }
-
-        if let revisionID = request.revisionID {
-            return try sessionOutcomeRevisionResponse(
-                sessionID: request.sessionID,
-                revisionID: revisionID
-            )
-        }
-
-        try projectSessionOutcomeIfNeeded(
-            sessionID: request.sessionID,
-            latestEventSequence: sessionOutcomeLatestLedgerSequence()
-        )
-
-        guard let revisionID = try latestSessionOutcomeRevisionID(sessionID: request.sessionID) else {
-            return ProvenanceSessionOutcomeResponse(
-                found: false,
-                reason: "no_outcome",
-                sessionID: request.sessionID,
-                outcome: nil
-            )
-        }
-        return try sessionOutcomeRevisionResponse(
-            sessionID: request.sessionID,
-            revisionID: revisionID
-        )
-    }
-
     func refreshSessionOutcomes(
         affectedBy event: ProvenanceEvent,
+        invalidation: ProvenanceOutcomeInvalidation,
         latestEventSequence: Int?
     ) throws {
-        let sessionIDs = try affectedSessionOutcomeIDs(event: event)
+        let sessionIDs = try affectedSessionOutcomeIDs(event: event, invalidation: invalidation)
         for sessionID in sessionIDs.sorted() {
             try projectSessionOutcomeIfNeeded(
                 sessionID: sessionID,
@@ -55,30 +19,7 @@ extension ProvenanceSQLiteRepository {
         }
     }
 
-    private func sessionOutcomeRevisionResponse(
-        sessionID: String,
-        revisionID: String
-    ) throws -> ProvenanceSessionOutcomeResponse {
-        guard let outcome = try sessionOutcomeRevision(
-            sessionID: sessionID,
-            revisionID: revisionID
-        ) else {
-            return ProvenanceSessionOutcomeResponse(
-                found: false,
-                reason: "no_revision",
-                sessionID: sessionID,
-                outcome: nil
-            )
-        }
-        return ProvenanceSessionOutcomeResponse(
-            found: true,
-            reason: nil,
-            sessionID: sessionID,
-            outcome: outcome
-        )
-    }
-
-    private func projectSessionOutcomeIfNeeded(
+    func projectSessionOutcomeIfNeeded(
         sessionID: String,
         latestEventSequence: Int?
     ) throws {
@@ -785,44 +726,7 @@ extension ProvenanceSQLiteRepository {
         )
     }
 
-    private func sessionOutcomeRevision(
-        sessionID: String,
-        revisionID: String
-    ) throws -> ProvenanceSessionOutcome? {
-        let query = try database.prepare(
-            """
-            SELECT outcome_json
-            FROM provenance_coding_agent_session_outcome_revisions
-            WHERE session_id = ?
-              AND id = ?
-            """
-        )
-        defer { query.finalize() }
-        try query.bind(sessionID, at: 1)
-        try query.bind(revisionID, at: 2)
-        guard try query.step(),
-              let json = query.string(at: 0),
-              let data = json.data(using: .utf8) else {
-            return nil
-        }
-        return try payloadDecoder.decode(ProvenanceSessionOutcome.self, from: data)
-    }
-
-    private func latestSessionOutcomeRevisionID(sessionID: String) throws -> String? {
-        let query = try database.prepare(
-            """
-            SELECT latest_revision_id
-            FROM provenance_coding_agent_session_outcomes
-            WHERE session_id = ?
-            """
-        )
-        defer { query.finalize() }
-        try query.bind(sessionID, at: 1)
-        guard try query.step() else { return nil }
-        return query.string(at: 0)
-    }
-
-    private func sessionOutcomeLatestLedgerSequence() throws -> Int? {
+    func sessionOutcomeLatestLedgerSequence() throws -> Int? {
         let query = try database.prepare("SELECT MAX(sequence) FROM provenance_events")
         defer { query.finalize() }
         guard try query.step() else { return nil }
@@ -850,56 +754,7 @@ extension ProvenanceSQLiteRepository {
         }
     }
 
-    private func affectedSessionOutcomeIDs(event: ProvenanceEvent) throws -> Set<String> {
-        let payload = event.payload
-        var sessionIDs = Set<String>()
-        if let sessionID = event.sessionID {
-            sessionIDs.insert(sessionID)
-        }
-        if let session = payload.session {
-            sessionIDs.insert(session.id)
-        }
-        if let thread = payload.codingAgentThread {
-            sessionIDs.insert(thread.sessionID)
-        }
-        if let turn = payload.codingAgentTurn {
-            sessionIDs.insert(turn.sessionID)
-        }
-        if let prompt = payload.codingAgentPrompt {
-            sessionIDs.insert(prompt.sessionID)
-        }
-        if let plan = payload.codingAgentPlanUpdate {
-            sessionIDs.insert(plan.sessionID)
-        }
-        if let command = payload.codingAgentCommand {
-            sessionIDs.insert(command.sessionID)
-        }
-        if let summary = payload.codingAgentReasoningSummary {
-            sessionIDs.insert(summary.sessionID)
-        }
-        if let message = payload.codingAgentAssistantMessage {
-            sessionIDs.insert(message.sessionID)
-        }
-        if let attribution = payload.codingAgentFileChangeAttribution {
-            sessionIDs.insert(attribution.sessionID)
-        }
-        if let worktree = payload.worktree {
-            sessionIDs.formUnion(try sessionOutcomeSessionIDs(worktreeID: worktree.id))
-        }
-        if let repository = payload.repository {
-            sessionIDs.formUnion(try sessionOutcomeSessionIDs(repositoryID: repository.id))
-        }
-        if let changeSet = payload.changeSet {
-            sessionIDs.formUnion(try sessionOutcomeSessionIDs(changeSetID: changeSet.id))
-        }
-        for fileChange in payload.fileChanges {
-            sessionIDs.formUnion(try sessionOutcomeSessionIDs(fileChangeID: fileChange.id))
-            sessionIDs.formUnion(try sessionOutcomeSessionIDs(worktreeID: fileChange.worktreeID))
-        }
-        return sessionIDs
-    }
-
-    private func sessionOutcomeSessionIDs(worktreeID: String) throws -> [String] {
+    func sessionOutcomeSessionIDs(worktreeID: String) throws -> [String] {
         let query = try database.prepare(
             """
             SELECT DISTINCT sessions.id
@@ -917,7 +772,7 @@ extension ProvenanceSQLiteRepository {
         return try sessionOutcomeStringIDs(from: query)
     }
 
-    private func sessionOutcomeSessionIDs(repositoryID: String) throws -> [String] {
+    func sessionOutcomeSessionIDs(repositoryID: String) throws -> [String] {
         let query = try database.prepare(
             """
             SELECT DISTINCT sessions.id
@@ -939,7 +794,7 @@ extension ProvenanceSQLiteRepository {
         return try sessionOutcomeStringIDs(from: query)
     }
 
-    private func sessionOutcomeSessionIDs(changeSetID: String) throws -> [String] {
+    func sessionOutcomeSessionIDs(changeSetID: String) throws -> [String] {
         let query = try database.prepare(
             """
             SELECT DISTINCT session_id
@@ -953,7 +808,7 @@ extension ProvenanceSQLiteRepository {
         return try sessionOutcomeStringIDs(from: query)
     }
 
-    private func sessionOutcomeSessionIDs(fileChangeID: String) throws -> [String] {
+    func sessionOutcomeSessionIDs(fileChangeID: String) throws -> [String] {
         let query = try database.prepare(
             """
             SELECT DISTINCT session_id

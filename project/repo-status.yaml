@@ -103,6 +103,8 @@ local_capabilities:
   app_runtime_notification_push_lifecycle: under_observation
   app_runtime_menu_bar_presentation_lifecycle: under_observation
   workspace_display_file_watcher_churn_policy: planned
+  pe_materialized_outcome_reads_and_scoped_refresh: under_observation
+  workspace_display_failed_observation_retry: under_observation
   pe_shared_sqlite_writer_policy: planned
   codex_historical_import_startup_boundary_guard: planned
   workspace_launch_canonical_mutation_path: planned
