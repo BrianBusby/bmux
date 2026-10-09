@@ -1,9 +1,15 @@
 import SwiftUI
 
-/// Workspace identity with a shared trailing activity indicator or close action.
-struct WorkspaceCardHeader<CloseIcon: View, TitleContent: View>: View {
+/// Workspace repository and ticket identity, with its trailing activity or close action.
+struct WorkspaceCardHeader<TicketIcon: View, CloseIcon: View, TitleContent: View>: View {
     let repositoryName: String?
     let repositoryFont: Font
+    let ticketID: String?
+    let ticketFont: Font
+    let ticketIcon: TicketIcon
+    let ticketColor: Color
+    let ticketBorderColor: Color
+    let onOpenTicket: (() -> Void)?
     let closeIcon: CloseIcon
     let closeButtonColor: Color
     let closeButtonSize: CGSize
@@ -17,6 +23,12 @@ struct WorkspaceCardHeader<CloseIcon: View, TitleContent: View>: View {
     init(
         repositoryName: String?,
         repositoryFont: Font,
+        ticketID: String?,
+        ticketFont: Font,
+        @ViewBuilder ticketIcon: () -> TicketIcon,
+        ticketColor: Color,
+        ticketBorderColor: Color,
+        onOpenTicket: (() -> Void)?,
         @ViewBuilder closeIcon: () -> CloseIcon,
         closeButtonColor: Color,
         closeButtonSize: CGSize,
@@ -29,6 +41,12 @@ struct WorkspaceCardHeader<CloseIcon: View, TitleContent: View>: View {
     ) {
         self.repositoryName = repositoryName
         self.repositoryFont = repositoryFont
+        self.ticketID = ticketID
+        self.ticketFont = ticketFont
+        self.ticketIcon = ticketIcon()
+        self.ticketColor = ticketColor
+        self.ticketBorderColor = ticketBorderColor
+        self.onOpenTicket = onOpenTicket
         self.closeIcon = closeIcon()
         self.closeButtonColor = closeButtonColor
         self.closeButtonSize = closeButtonSize
@@ -43,8 +61,16 @@ struct WorkspaceCardHeader<CloseIcon: View, TitleContent: View>: View {
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
             VStack(alignment: .leading, spacing: 4) {
-                if let repositoryName {
-                    WorkspaceRepositoryLabel(name: repositoryName, font: repositoryFont)
+                if repositoryName != nil || ticketID != nil {
+                    HStack(spacing: 8) {
+                        if let repositoryName {
+                            WorkspaceRepositoryLabel(name: repositoryName, font: repositoryFont)
+                        }
+                        if let ticketID {
+                            ticketBadge(ticketID)
+                                .layoutPriority(1)
+                        }
+                    }
                 }
                 titleContent
             }
@@ -68,6 +94,39 @@ struct WorkspaceCardHeader<CloseIcon: View, TitleContent: View>: View {
                 .allowsHitTesting(showsCloseButton)
                 .accessibilityHidden(!showsCloseButton)
             }
+        }
+    }
+
+    @ViewBuilder
+    private func ticketBadge(_ ticketID: String) -> some View {
+        let label = HStack(spacing: 6) {
+            ticketIcon
+            Text(ticketID)
+                .font(ticketFont)
+                .lineLimit(1)
+                .truncationMode(.tail)
+        }
+        .foregroundStyle(ticketColor)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 2)
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(ticketBorderColor, lineWidth: 1)
+        }
+
+        if let onOpenTicket {
+            Button(action: onOpenTicket) { label }
+                .buttonStyle(.plain)
+                .safeHelp(String(
+                    format: String(localized: "sidebar.ticket.openTooltip", defaultValue: "Open %@"),
+                    locale: .current,
+                    ticketID
+                ))
+                .accessibilityIdentifier("SidebarTicketRow")
+        } else {
+            label
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("SidebarTicketRow")
         }
     }
 }

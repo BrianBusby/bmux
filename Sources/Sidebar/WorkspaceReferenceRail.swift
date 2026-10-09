@@ -83,6 +83,14 @@ struct WorkspaceReferenceRail: View {
                                 WorkspaceCardHeader(
                                     repositoryName: repositoryNames[card.id],
                                     repositoryFont: .system(size: 10, weight: .medium),
+                                    ticketID: card.ticketID,
+                                    ticketFont: .system(size: 10, weight: .semibold, design: .monospaced),
+                                    ticketIcon: {
+                                        Image(systemName: "ticket").font(.system(size: 11, weight: .medium))
+                                    },
+                                    ticketColor: Color.workspaceReferenceTextSecondary,
+                                    ticketBorderColor: Color.workspaceReferenceTextSecondary.opacity(0.35),
+                                    onOpenTicket: card.ticketURL.map { url in { onOpenLink(card.id, url) } },
                                     closeIcon: {
                                         Image(systemName: "xmark").font(.system(size: 14, weight: .medium))
                                     },
@@ -169,32 +177,6 @@ struct WorkspaceReferenceRail: View {
     @ViewBuilder
     private func bmuxReferenceWorkspaceLinkRows(for card: WorkspaceReferenceCardSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            if let ticketID = card.ticketID {
-                let ticketContent = HStack(spacing: 6) {
-                    Image(systemName: "ticket")
-                        .font(.system(size: 11, weight: .medium))
-                    Text(ticketID)
-                        .font(.system(size: 12, weight: .semibold, design: .monospaced))
-                }
-                .foregroundStyle(Color.workspaceReferenceTextSecondary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.workspaceReferenceTextSecondary.opacity(0.35), lineWidth: 1)
-                }
-                if let ticketURL = card.ticketURL {
-                    Button {
-                        onOpenLink(card.id, ticketURL)
-                    } label: {
-                        ticketContent
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    ticketContent
-                }
-            }
-
             if let projectTitle = card.projectTitle {
                 bmuxReferenceWorkspaceLinkRow(
                     icon: "folder",
