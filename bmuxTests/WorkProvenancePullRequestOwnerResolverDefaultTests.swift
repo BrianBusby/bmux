@@ -2,6 +2,7 @@ import Foundation
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
 import Testing
+import SQLite3
 
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
@@ -65,6 +66,45 @@ struct WorkProvenancePullRequestOwnerResolverDefaultTests {
         #expect(display.display?.pullRequestOwnerURL == nil)
         #expect(display.display?.pullRequestBranch == nil)
         #expect(display.display?.ticketIDs == [])
+    }
+
+    @Test
+    func failedTicketWriteCanRetryTheSameWorkspaceSnapshot() async throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-ticket-retry-\(UUID())/provenance.sqlite")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: url)
+        let git = WorkProvenanceGitSnapshot(
+            repositoryRoot: "/tmp/ticket-retry", commonDirectory: nil, remoteSlug: nil,
+            branch: "main", headCommit: nil, isDirty: false, statusEntries: []
+        )
+        let service = WorkProvenanceObservationService(
+            client: client, gitInspector: FakeGitInspector(gitSnapshot: git),
+            ticketLinkResolver: WorkProvenanceLinearTicketLinkResolver(
+                authorizationProvider: WorkProvenanceEnvironmentLinearAuthorizationProvider(environment: [:])
+            )
+        )
+        let snapshot = WorkProvenanceWorkspaceSnapshot(
+            workspaceID: UUID(), stableWorkspaceID: UUID(), title: "Review checklist builder",
+            currentDirectory: git.repositoryRoot,
+            pullRequest: .init(
+                number: 11712, title: "INP-2430 Add follow-up items to mobile checklist builder",
+                url: "https://github.com/CompanyCam/companycam-mobile/pull/11712",
+                ownerLogin: nil, ownerURL: nil, status: "open", branch: nil, isStale: false
+            )
+        )
+        var handle: OpaquePointer?
+        #expect(sqlite3_open(url.path, &handle) == SQLITE_OK)
+        let writer = try #require(handle)
+        defer { sqlite3_close(writer) }
+        #expect(sqlite3_exec(writer, "BEGIN IMMEDIATE", nil, nil, nil) == SQLITE_OK)
+        await service.observeWorkspaceSnapshot(snapshot)
+        #expect(await service.lastErrorDescription != nil)
+        #expect(sqlite3_exec(writer, "ROLLBACK", nil, nil, nil) == SQLITE_OK)
+        await service.observeWorkspaceSnapshot(snapshot)
+        let result = try await client.workspaceDisplay(.init(workspaceID: snapshot.stableWorkspaceID.uuidString))
+        #expect(result.display?.ticketIDs == ["INP-2430"])
+        #expect(result.display?.ticketLinks.first?.url == "https://linear.app/companycam/issue/INP-2430")
     }
 
     private struct FakeGitInspector: WorkProvenanceGitInspecting {
