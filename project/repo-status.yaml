@@ -26,6 +26,7 @@ local_capabilities:
   ordinary_cli_shared_control: not_implemented
   connected_codex_shared_host_controls: under_observation
   connected_codex_0161_launch_and_controls: under_observation
+  connected_codex_0162_launch_and_controls: under_observation
   connected_codex_workspace_hooks: under_observation
   shell_mode_portal_visibility: under_observation
   connected_prompt_workspace_resource_projection: under_observation

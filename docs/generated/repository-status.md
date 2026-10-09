@@ -35,6 +35,7 @@ Repository: `BrianBusby/bmux`
 | Bmux Proactive Cross Session Awareness | implemented |
 | Codex Historical Import Startup Boundary Guard | planned |
 | Connected Codex 0161 Launch And Controls | under observation |
+| Connected Codex 0162 Launch And Controls | under observation |
 | Connected Codex Shared Host Controls | under observation |
 | Connected Codex Workspace Hooks | under observation |
 | Connected Prompt Workspace Resource Projection | under observation |

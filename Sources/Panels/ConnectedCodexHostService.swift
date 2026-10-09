@@ -38,7 +38,7 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
         )
         // Capabilities are empirical and version-specific; fail closed on upgrades.
         guard let version = version?.trimmingCharacters(in: .whitespacesAndNewlines),
-              ["codex-cli 0.154.0", "codex-cli 0.161.0"].contains(version) else {
+              ["codex-cli 0.154.0", "codex-cli 0.161.0", "codex-cli 0.162.0"].contains(version) else {
             throw CodexControlError.unsupported
         }
         let directory = root.appendingPathComponent(surfaceID.uuidString, isDirectory: true)

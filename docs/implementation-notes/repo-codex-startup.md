@@ -59,3 +59,37 @@ app build requires user agreement under AGENTS.md's active-dogfood rule.
 No new user-facing text was added; existing localized loading/error UI stays
 in use. No Session roadmap gate, provider capability or persistence policy is
 advanced by this regression correction.
+
+
+## Installed-provider blocker found in native build 722
+
+The first isolated native build succeeded on `f347d4ebf`, but the real repo menu
+still failed before reaching the replacement path. Both the installed Bun CLI
+and the launcher's login-interactive zsh resolve `codex-cli 0.162.0`; the inherited
+host gate accepts only 0.154.0 and 0.161.0. A second test-only commit, `02e9c18a1`,
+adds 0.162.0 to the validated-version cases and moves the unsupported-version
+case to 0.163.0. This is a second launch blocker in the same reported workflow.
+
+The existing isolated compatibility probe was rerun against the installed
+0.162.0, starting a blank original TUI with no thread/resume request. Authless
+WebSocket access returned 401. Account/config/model reads and sole-thread
+adoption succeeded. Four turns delivered all five accepted client message IDs
+exactly once; stale steering was rejected, current steering succeeded, pending
+queue evidence survived reconnect, and all replies appeared in the original
+TUI. There were no turn/start or turn/interrupt requests. The original native
+Swift WebSocket/RPC probe also passed account, config, model and loaded-thread
+reads. Temporary auth/token copies were removed and both probe processes stopped.
+Sanitized logs live in `/private/tmp/bmux-codex162-compatibility/`.
+
+Ownership reassessment: keep the existing host service and exact version gate;
+add only this empirically verified release, preserving fail-closed handling for
+unverified versions. Do not broaden interrupt/approval/settings capabilities,
+downgrade the installed CLI, or alter user settings. Full native launcher
+acceptance remains pending the version-gate correction and refreshed isolated app.
+
+The 0.162.0 test-only case failed with `CodexControlError.unsupported` before the
+gate change. After it, all 29 focused launch and ownership tests pass, including
+actual provider-version metadata and rejection of 0.163.0. Version test logs:
+`/tmp/bmux-repo-codex162-red.log` and `/tmp/bmux-repo-codex162-green.log`.
+Project-docs validation, regeneration and freshness checks pass with 0.162.0
+recorded under observation. No new UI strings were introduced.
