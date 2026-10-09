@@ -291,7 +291,8 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.lastSubmittedPromptSessionID == "session-42")
         #expect(display.display?.lastSubmittedPromptSubmittedAt == Date(timeIntervalSince1970: 501))
         #expect(display.display?.latestEventID != nil)
-        #expect(display.display?.latestEventSequence == 3)
+        // Each display publishes known facts, then optional enrichment; Git is still recorded once.
+        #expect(display.display?.latestEventSequence == 5)
         #expect(display.display?.ticketIDs == ["STE-1964"])
         #expect(display.display?.ticketLinks == [
             Self.linearTicketLink()
@@ -652,7 +653,7 @@ struct WorkProvenanceObserverTests {
         await retryService.observeWorkspaceSnapshot(workspace)
 
         let display = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: stableWorkspaceID.uuidString))
-        let latestEvent = try #require(await client.appendedEvents().last?.payload.workspaceDisplay)
+        let latestEvent = try #require(await client.appendedEvents().compactMap(\.payload.workspaceDisplay).last)
 
         #expect(display.found)
         #expect(display.display?.ticketIDs == ["STE-1964"])

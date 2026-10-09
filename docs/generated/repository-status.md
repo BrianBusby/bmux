@@ -47,6 +47,7 @@ Repository: `BrianBusby/bmux`
 | Normal Coding Agent Evidence Ingestion | implemented |
 | Ordinary Cli Read Only Chat | under observation |
 | Ordinary Cli Shared Control | not implemented |
+| Pe Materialized Outcome Reads And Scoped Refresh | under observation |
 | Pe Shared Sqlite Writer Policy | planned |
 | Provenance Engine Agent Accessible Cross Session Retrieval | implemented |
 | Provenance Engine Blocker Approach Change Semantics | implemented |
@@ -117,10 +118,12 @@ Repository: `BrianBusby/bmux`
 | Workspace Coding Agent Session Linkage Hardening | under observation |
 | Workspace Display Current State Diagnostic | implemented |
 | Workspace Display Durable Context | implemented |
+| Workspace Display Failed Observation Retry | under observation |
 | Workspace Display File Watcher Churn Policy | planned |
 | Workspace Display Projection | implemented |
 | Workspace Display Prompt Resource Discovery | implemented |
 | Workspace Display Tab Projection | implemented |
+| Workspace Display Ticket Enrichment Independent | under observation |
 | Workspace Display Ticket Link Facts | implemented |
 | Workspace Display Ticket Title Sidebar | implemented |
 | Workspace Launch Canonical Mutation Path | planned |

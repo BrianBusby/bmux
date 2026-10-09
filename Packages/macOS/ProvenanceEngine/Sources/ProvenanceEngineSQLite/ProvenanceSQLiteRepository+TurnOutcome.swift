@@ -6,42 +6,12 @@ extension ProvenanceSQLiteRepository {
     static let turnOutcomeRuleVersion = "1"
     static let turnOutcomeCommandRuleVersion = "1"
 
-    func turnOutcomeRecord(_ request: ProvenanceTurnOutcomeRequest) throws
-        -> ProvenanceTurnOutcomeResponse {
-        guard try codingAgentTurn(id: request.turnID) != nil else {
-            return ProvenanceTurnOutcomeResponse(
-                found: false,
-                reason: "no_turn",
-                turnID: request.turnID,
-                outcome: nil
-            )
-        }
-
-        if let revisionID = request.revisionID {
-            return try turnOutcomeRevisionResponse(turnID: request.turnID, revisionID: revisionID)
-        }
-
-        try projectTurnOutcomeIfNeeded(
-            turnID: request.turnID,
-            latestEventSequence: turnOutcomeLatestLedgerSequence()
-        )
-
-        guard let revisionID = try latestTurnOutcomeRevisionID(turnID: request.turnID) else {
-            return ProvenanceTurnOutcomeResponse(
-                found: false,
-                reason: "no_outcome",
-                turnID: request.turnID,
-                outcome: nil
-            )
-        }
-        return try turnOutcomeRevisionResponse(turnID: request.turnID, revisionID: revisionID)
-    }
-
     func refreshTurnOutcomes(
         affectedBy event: ProvenanceEvent,
+        invalidation: ProvenanceOutcomeInvalidation,
         latestEventSequence: Int?
     ) throws {
-        let turnIDs = try affectedTurnOutcomeIDs(event: event)
+        let turnIDs = try affectedTurnOutcomeIDs(event: event, invalidation: invalidation)
         for turnID in turnIDs.sorted() {
             try projectTurnOutcomeIfNeeded(
                 turnID: turnID,
@@ -50,27 +20,7 @@ extension ProvenanceSQLiteRepository {
         }
     }
 
-    private func turnOutcomeRevisionResponse(
-        turnID: String,
-        revisionID: String
-    ) throws -> ProvenanceTurnOutcomeResponse {
-        guard let outcome = try turnOutcomeRevision(turnID: turnID, revisionID: revisionID) else {
-            return ProvenanceTurnOutcomeResponse(
-                found: false,
-                reason: "no_revision",
-                turnID: turnID,
-                outcome: nil
-            )
-        }
-        return ProvenanceTurnOutcomeResponse(
-            found: true,
-            reason: nil,
-            turnID: turnID,
-            outcome: outcome
-        )
-    }
-
-    private func projectTurnOutcomeIfNeeded(
+    func projectTurnOutcomeIfNeeded(
         turnID: String,
         latestEventSequence: Int?
     ) throws {
@@ -178,7 +128,7 @@ extension ProvenanceSQLiteRepository {
             timeColumn: "observed_at_seconds",
             turnID: turnID
         ).compactMap { try codingAgentFileChangeAttribution(id: $0) }
-        let evidenceIndex = try turnOutcomeEvidenceIndex(sessionID: turn.sessionID)
+        let evidenceIndex = try turnOutcomeEvidenceIndex(sessionID: turn.sessionID, throughSequence: latestEventSequence)
         let repositoryBoundary = try turnOutcomeRepositoryBoundary(
             turn: turn,
             session: session,
@@ -377,107 +327,6 @@ extension ProvenanceSQLiteRepository {
         )
     }
 
-    private func affectedTurnOutcomeIDs(event: ProvenanceEvent) throws -> Set<String> {
-        let payload = event.payload
-        var turnIDs = Set<String>()
-        var sessionIDs = Set<String>()
-
-        if let sessionID = event.sessionID {
-            sessionIDs.insert(sessionID)
-        }
-        if let session = payload.session {
-            sessionIDs.insert(session.id)
-        }
-        if let thread = payload.codingAgentThread {
-            sessionIDs.insert(thread.sessionID)
-        }
-        if let turn = payload.codingAgentTurn {
-            turnIDs.insert(turn.id)
-            sessionIDs.insert(turn.sessionID)
-        }
-        if let prompt = payload.codingAgentPrompt {
-            if let turnID = prompt.turnID {
-                turnIDs.insert(turnID)
-            }
-            sessionIDs.insert(prompt.sessionID)
-        }
-        if let plan = payload.codingAgentPlanUpdate {
-            if let turnID = plan.turnID {
-                turnIDs.insert(turnID)
-            }
-            sessionIDs.insert(plan.sessionID)
-        }
-        if let command = payload.codingAgentCommand {
-            if let turnID = command.turnID {
-                turnIDs.insert(turnID)
-            }
-            sessionIDs.insert(command.sessionID)
-        }
-        if let summary = payload.codingAgentReasoningSummary {
-            if let turnID = summary.turnID {
-                turnIDs.insert(turnID)
-            }
-            sessionIDs.insert(summary.sessionID)
-        }
-        if let attribution = payload.codingAgentFileChangeAttribution {
-            if let turnID = attribution.turnID {
-                turnIDs.insert(turnID)
-            }
-            sessionIDs.insert(attribution.sessionID)
-        }
-        for sessionID in sessionIDs {
-            turnIDs.formUnion(try turnOutcomeTurnIDs(sessionID: sessionID))
-        }
-        if let worktree = payload.worktree {
-            turnIDs.formUnion(try turnOutcomeTurnIDs(worktreeID: worktree.id))
-        }
-        if let repository = payload.repository {
-            turnIDs.formUnion(try turnOutcomeTurnIDs(repositoryID: repository.id))
-        }
-        if let changeSet = payload.changeSet {
-            turnIDs.formUnion(try turnOutcomeTurnIDs(changeSetID: changeSet.id))
-        }
-        for fileChange in payload.fileChanges {
-            turnIDs.formUnion(try turnOutcomeTurnIDs(fileChangeID: fileChange.id))
-            turnIDs.formUnion(try turnOutcomeTurnIDs(worktreeID: fileChange.worktreeID))
-        }
-        return turnIDs
-    }
-
-    private func turnOutcomeRevision(turnID: String, revisionID: String) throws -> ProvenanceTurnOutcome? {
-        let query = try database.prepare(
-            """
-            SELECT outcome_json
-            FROM provenance_coding_agent_turn_outcome_revisions
-            WHERE turn_id = ?
-              AND id = ?
-            """
-        )
-        defer { query.finalize() }
-        try query.bind(turnID, at: 1)
-        try query.bind(revisionID, at: 2)
-        guard try query.step(),
-              let json = query.string(at: 0),
-              let data = json.data(using: .utf8) else {
-            return nil
-        }
-        return try payloadDecoder.decode(ProvenanceTurnOutcome.self, from: data)
-    }
-
-    private func latestTurnOutcomeRevisionID(turnID: String) throws -> String? {
-        let query = try database.prepare(
-            """
-            SELECT latest_revision_id
-            FROM provenance_coding_agent_turn_outcomes
-            WHERE turn_id = ?
-            """
-        )
-        defer { query.finalize() }
-        try query.bind(turnID, at: 1)
-        guard try query.step() else { return nil }
-        return query.string(at: 0)
-    }
-
     private func turnOutcomeLatestPrompt(turnID: String) throws -> ProvenanceCodingAgentPromptRecord? {
         guard let id = try turnOutcomeLatestRecordID(
             tableName: "provenance_coding_agent_prompts",
@@ -534,7 +383,7 @@ extension ProvenanceSQLiteRepository {
         return try turnOutcomeStringIDs(from: query)
     }
 
-    private func turnOutcomeTurnIDs(sessionID: String) throws -> [String] {
+    func turnOutcomeTurnIDs(sessionID: String) throws -> [String] {
         let query = try database.prepare(
             """
             SELECT id
@@ -548,7 +397,7 @@ extension ProvenanceSQLiteRepository {
         return try turnOutcomeStringIDs(from: query)
     }
 
-    private func turnOutcomeTurnIDs(worktreeID: String) throws -> [String] {
+    func turnOutcomeTurnIDs(worktreeID: String) throws -> [String] {
         let query = try database.prepare(
             """
             SELECT DISTINCT turns.id
@@ -566,7 +415,7 @@ extension ProvenanceSQLiteRepository {
         return try turnOutcomeStringIDs(from: query)
     }
 
-    private func turnOutcomeTurnIDs(repositoryID: String) throws -> [String] {
+    func turnOutcomeTurnIDs(repositoryID: String) throws -> [String] {
         let query = try database.prepare(
             """
             SELECT DISTINCT turns.id
@@ -586,7 +435,7 @@ extension ProvenanceSQLiteRepository {
         return try turnOutcomeStringIDs(from: query)
     }
 
-    private func turnOutcomeTurnIDs(changeSetID: String) throws -> [String] {
+    func turnOutcomeTurnIDs(changeSetID: String) throws -> [String] {
         let query = try database.prepare(
             """
             SELECT DISTINCT turn_id
@@ -601,7 +450,7 @@ extension ProvenanceSQLiteRepository {
         return try turnOutcomeStringIDs(from: query)
     }
 
-    private func turnOutcomeTurnIDs(fileChangeID: String) throws -> [String] {
+    func turnOutcomeTurnIDs(fileChangeID: String) throws -> [String] {
         let query = try database.prepare(
             """
             SELECT DISTINCT turn_id
@@ -961,8 +810,8 @@ extension ProvenanceSQLiteRepository {
         )
     }
 
-    private func turnOutcomeEvidenceIndex(sessionID: String) throws -> TurnOutcomeEvidenceIndex {
-        let entries = try eventLedgerEntries(sessionID: sessionID)
+    private func turnOutcomeEvidenceIndex(sessionID: String, throughSequence: Int?) throws -> TurnOutcomeEvidenceIndex {
+        let entries = try eventLedgerEntries(sessionID: sessionID, throughSequence: throughSequence)
         guard !entries.isEmpty else { return TurnOutcomeEvidenceIndex(referencesByKey: [:]) }
         var referencesByKey: [TurnOutcomeEvidenceKey: [ProvenanceTurnOutcomeEvidenceReference]] = [:]
         for entry in entries {
@@ -1008,7 +857,7 @@ extension ProvenanceSQLiteRepository {
         return TurnOutcomeEvidenceIndex(referencesByKey: referencesByKey)
     }
 
-    private func turnOutcomeLatestLedgerSequence() throws -> Int? {
+    func turnOutcomeLatestLedgerSequence() throws -> Int? {
         let query = try database.prepare("SELECT MAX(sequence) FROM provenance_events")
         defer { query.finalize() }
         guard try query.step() else { return nil }

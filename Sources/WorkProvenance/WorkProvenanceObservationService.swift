@@ -9,6 +9,8 @@ actor WorkProvenanceObservationService {
     private let resourceLinker: WorkProvenanceWorkspaceDisplayResourceLinker
     private let stableIDFactory: WorkProvenanceStableIDFactory
     private let dateProvider: @Sendable () -> Date
+    private let retryDelay: @Sendable (Duration) async throws -> Void
+    private var observationsByWorkspaceID: [UUID: (id: UUID, snapshot: WorkProvenanceWorkspaceSnapshot)] = [:]
     private var latestFingerprintByWorkspaceID: [UUID: String] = [:]
     private var latestDisplayFingerprintByWorkspaceID: [UUID: String] = [:]
     private var resolvedPullRequestOwnersByURL: [String: WorkProvenancePullRequestOwner] = [:]
@@ -24,7 +26,10 @@ actor WorkProvenanceObservationService {
         ticketLinkResolver: any WorkProvenanceTicketLinkResolving = WorkProvenanceLinearTicketLinkResolver(),
         resourceDiscovery: WorkProvenanceWorkspaceResourceDiscovery = WorkProvenanceWorkspaceResourceDiscovery(),
         stableIDFactory: WorkProvenanceStableIDFactory = WorkProvenanceStableIDFactory(),
-        dateProvider: @escaping @Sendable () -> Date = { Date() }
+        dateProvider: @escaping @Sendable () -> Date = { Date() },
+        retryDelay: @escaping @Sendable (Duration) async throws -> Void = {
+            try await ContinuousClock().sleep(for: $0)
+        }
     ) {
         self.client = client
         self.gitInspector = gitInspector
@@ -35,12 +40,16 @@ actor WorkProvenanceObservationService {
         )
         self.stableIDFactory = stableIDFactory
         self.dateProvider = dateProvider
+        self.retryDelay = retryDelay
     }
 
     /// Observes each workspace snapshot and appends events when Git state changed.
     func observeWorkspaceSnapshots(_ snapshots: [WorkProvenanceWorkspaceSnapshot]) async {
-        for snapshot in snapshots {
-            await observeWorkspaceSnapshot(snapshot)
+        // One workspace's optional enrichment must not hold back another workspace's known facts.
+        await withTaskGroup(of: Void.self) { group in
+            for snapshot in snapshots {
+                group.addTask { await self.observeWorkspaceSnapshot(snapshot) }
+            }
         }
     }
 
@@ -51,25 +60,54 @@ actor WorkProvenanceObservationService {
 
     /// Observes one workspace snapshot and appends an event when Git state changed.
     func observeWorkspaceSnapshot(_ snapshot: WorkProvenanceWorkspaceSnapshot) async {
-        do {
-            try await appendObservationIfChanged(for: snapshot)
-            lastErrorDescription = nil
-        } catch {
-            let description = String(describing: error)
-            lastErrorDescription = description
-            NSLog("bmux provenance worktree observation failed: %@", description)
+        guard observationsByWorkspaceID[snapshot.workspaceID]?.snapshot != snapshot else { return }
+        let observationID = UUID()
+        observationsByWorkspaceID[snapshot.workspaceID] = (observationID, snapshot)
+        defer {
+            if observationsByWorkspaceID[snapshot.workspaceID]?.id == observationID {
+                observationsByWorkspaceID[snapshot.workspaceID] = nil
+            }
+        }
+        for attempt in 0..<3 {
+            guard !Task.isCancelled,
+                  observationsByWorkspaceID[snapshot.workspaceID]?.id == observationID else { return }
+            do {
+                try await appendObservationIfChanged(for: snapshot, observationID: observationID)
+                lastErrorDescription = nil
+                return
+            } catch {
+                guard !Task.isCancelled else { return }
+                let description = String(describing: error)
+                lastErrorDescription = description
+                NSLog("bmux provenance worktree observation failed: %@", description)
+                guard attempt < 2 else { return }
+                do {
+                    // Genuine bounded backoff gives the competing writer time to release its lock.
+                    try await retryDelay(.milliseconds(250 * (attempt + 1)))
+                } catch {
+                    return
+                }
+            }
         }
     }
 
-    private func appendObservationIfChanged(for workspace: WorkProvenanceWorkspaceSnapshot) async throws {
+    private func observationIsCurrent(_ workspaceID: UUID, _ observationID: UUID) -> Bool {
+        !Task.isCancelled && observationsByWorkspaceID[workspaceID]?.id == observationID
+    }
+
+    private func appendObservationIfChanged(
+        for workspace: WorkProvenanceWorkspaceSnapshot, observationID: UUID
+    ) async throws {
         let directory = workspace.currentDirectory.trimmingCharacters(in: .whitespacesAndNewlines)
         StartupBreadcrumbLog.append("workProvenance.observe.begin", fields: ["workspace": workspace.workspaceID.uuidString, "directory": directory])
         guard !directory.isEmpty else { return }
         guard let gitSnapshot = await gitInspector.snapshot(for: directory) else {
-            try await appendWorkspaceDisplayObservationIfChanged(
-                for: workspace,
-                gitSnapshot: nil
-            )
+            for includesEnrichment in [false, true] {
+                try await appendWorkspaceDisplayObservationIfChanged(
+                    for: workspace, gitSnapshot: nil, observationID: observationID,
+                    includesEnrichment: includesEnrichment
+                )
+            }
             let description = "no Git snapshot for workspace directory: \(directory)"
             lastErrorDescription = description
             NSLog("bmux provenance worktree observation skipped: %@", description)
@@ -77,11 +115,14 @@ actor WorkProvenanceObservationService {
             return
         }
 
-        try await appendWorkspaceDisplayObservationIfChanged(
-            for: workspace,
-            gitSnapshot: gitSnapshot
-        )
+        for includesEnrichment in [false, true] {
+            try await appendWorkspaceDisplayObservationIfChanged(
+                for: workspace, gitSnapshot: gitSnapshot, observationID: observationID,
+                includesEnrichment: includesEnrichment
+            )
+        }
 
+        guard observationIsCurrent(workspace.workspaceID, observationID) else { return }
         let fingerprint = stableIDFactory.fingerprint(for: gitSnapshot)
         guard latestFingerprintByWorkspaceID[workspace.workspaceID] != fingerprint else {
             return
@@ -151,23 +192,45 @@ actor WorkProvenanceObservationService {
             )
         )
 
-        let response = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(event: event))
-        StartupBreadcrumbLog.append("workProvenance.observe.appended", fields: ["workspace": workspace.workspaceID.uuidString, "eventID": response.eventID, "eventType": response.eventType, "database": "canonical"])
+        do {
+            let response = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(event: event))
+            StartupBreadcrumbLog.append("workProvenance.observe.appended", fields: ["workspace": workspace.workspaceID.uuidString, "eventID": response.eventID, "eventType": response.eventType, "database": "canonical"])
+        } catch {
+            // Preserve a newer in-flight observation while making this failed snapshot retryable.
+            if latestFingerprintByWorkspaceID[workspace.workspaceID] == fingerprint {
+                latestFingerprintByWorkspaceID[workspace.workspaceID] = nil
+            }
+            throw error
+        }
     }
 
     private func appendWorkspaceDisplayObservationIfChanged(
         for workspace: WorkProvenanceWorkspaceSnapshot,
-        gitSnapshot: WorkProvenanceGitSnapshot?
+        gitSnapshot: WorkProvenanceGitSnapshot?, observationID: UUID,
+        includesEnrichment: Bool
     ) async throws {
-        let pullRequest = await pullRequestWithResolvedOwner(workspace.pullRequest)
+        guard observationIsCurrent(workspace.workspaceID, observationID) else { return }
+        var pullRequest = await pullRequestWithResolvedOwner(workspace.pullRequest, allowsLookup: includesEnrichment)
+        guard observationIsCurrent(workspace.workspaceID, observationID) else { return }
         let existingDisplayResponse = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
             workspaceID: workspace.stableWorkspaceID.uuidString
         ))
+        guard observationIsCurrent(workspace.workspaceID, observationID) else { return }
+        if !includesEnrichment, let current = pullRequest,
+           let stored = existingDisplayResponse.display, stored.pullRequestURL == current.url {
+            pullRequest = current.replacingResolvedMetadata(
+                login: current.ownerLogin ?? stored.pullRequestOwnerLogin,
+                url: current.ownerURL ?? stored.pullRequestOwnerURL,
+                title: current.title, branch: current.branch ?? stored.pullRequestBranch
+            )
+        }
         let linkFacts = await resourceLinker.linkFacts(
             pullRequest: pullRequest,
             lastSubmittedPrompt: workspace.lastSubmittedPrompt,
-            existingDisplay: existingDisplayResponse.display
+            existingDisplay: existingDisplayResponse.display,
+            includesEnrichment: includesEnrichment
         )
+        guard observationIsCurrent(workspace.workspaceID, observationID) else { return }
         let ticketIDs = linkFacts.ticketIDs
         let ticketLinks = linkFacts.ticketLinks
         let projectLinks = linkFacts.projectLinks
@@ -207,7 +270,12 @@ actor WorkProvenanceObservationService {
         guard latestDisplayFingerprintByWorkspaceID[workspace.workspaceID] != fingerprint else {
             return
         }
+        let eventID = stableIDFactory.workspaceDisplayEventID(
+            stableWorkspaceID: workspace.stableWorkspaceID, fingerprint: fingerprint
+        )
         latestDisplayFingerprintByWorkspaceID[workspace.workspaceID] = fingerprint
+        // A new observer can encounter an identical baseline already committed by an earlier one.
+        guard existingDisplayResponse.display?.latestEventID != eventID else { return }
 
         let now = dateProvider()
         let repositoryID = gitSnapshot.map { stableIDFactory.repositoryID(repositoryRoot: $0.repositoryRoot) }
@@ -266,10 +334,7 @@ actor WorkProvenanceObservationService {
             )
         }
         let event = ProvenanceEngineContracts.ProvenanceEvent(
-            id: stableIDFactory.workspaceDisplayEventID(
-                stableWorkspaceID: workspace.stableWorkspaceID,
-                fingerprint: fingerprint
-            ),
+            id: eventID,
             eventType: .workspaceDisplayObserved,
             timestamp: now,
             repositoryID: repositoryID,
@@ -284,12 +349,20 @@ actor WorkProvenanceObservationService {
             )
         )
 
-        let response = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(event: event))
-        StartupBreadcrumbLog.append("workProvenance.observe.workspaceDisplayAppended", fields: ["workspace": workspace.workspaceID.uuidString, "eventID": response.eventID, "eventType": response.eventType, "database": "canonical"])
+        do {
+            let response = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(event: event))
+            StartupBreadcrumbLog.append("workProvenance.observe.workspaceDisplayAppended", fields: ["workspace": workspace.workspaceID.uuidString, "eventID": response.eventID, "eventType": response.eventType, "database": "canonical"])
+        } catch {
+            // Preserve a newer in-flight observation while making this failed snapshot retryable.
+            if latestDisplayFingerprintByWorkspaceID[workspace.workspaceID] == fingerprint {
+                latestDisplayFingerprintByWorkspaceID[workspace.workspaceID] = nil
+            }
+            throw error
+        }
     }
 
     private func pullRequestWithResolvedOwner(
-        _ pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest?
+        _ pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest?, allowsLookup: Bool
     ) async -> WorkProvenanceWorkspaceSnapshot.PullRequest? {
         guard let pullRequest else { return nil }
         let existingOwnerLogin = Self.normalizedNonEmpty(pullRequest.ownerLogin)
@@ -305,7 +378,7 @@ actor WorkProvenanceObservationService {
             (existingTitle == nil && Self.normalizedNonEmpty(resolvedMetadata?.title) == nil) ||
             (existingBranch == nil && Self.normalizedNonEmpty(resolvedMetadata?.branch) == nil)
         let fetchedMetadata: WorkProvenancePullRequestOwner?
-        if shouldFetchMetadata {
+        if shouldFetchMetadata && allowsLookup {
             fetchedMetadata = await pullRequestOwnerResolver.owner(for: pullRequest.url)
         } else {
             fetchedMetadata = nil

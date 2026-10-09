@@ -9,6 +9,11 @@ The Codex updater/launch follow-up is recorded in
 [the shared-session control decision](../product/shared-session-control-decision.md#codex-01610-compatibility-and-launch-resolution-october-8-2026).
 It does not advance broader Session lifecycle or provider-parity milestones.
 
+The workspace ticket-delay follow-up is recorded in
+[implementation notes](../implementation-notes/workspace-ticket-delay.md).
+It reduces outcome projection write contention and restores failed observation
+retry eligibility; the broader shared SQLite writer policy remains open.
+
 ## Current Generated Truth
 
 - [Project status](../generated/project-status.md)

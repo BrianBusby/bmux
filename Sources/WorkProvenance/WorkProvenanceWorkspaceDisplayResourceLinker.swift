@@ -17,7 +17,8 @@ struct WorkProvenanceWorkspaceDisplayResourceLinker: Sendable {
     func linkFacts(
         pullRequest: WorkProvenanceWorkspaceSnapshot.PullRequest?,
         lastSubmittedPrompt: String?,
-        existingDisplay: ProvenanceWorkspaceDisplayRecord?
+        existingDisplay: ProvenanceWorkspaceDisplayRecord?,
+        includesEnrichment: Bool = true
     ) async -> (
         ticketIDs: [String],
         ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord],
@@ -38,7 +39,18 @@ struct WorkProvenanceWorkspaceDisplayResourceLinker: Sendable {
                 discoveredIDs: explicitTicketIDs,
                 existingIDs: existingTicketFacts.ids
             )
-            let resolvedLinks = await ticketLinkResolver.workspaceLinks(for: explicitTicketIDs)
+            let resolvedLinks: WorkProvenanceWorkspaceLinkFacts
+            if includesEnrichment {
+                resolvedLinks = await ticketLinkResolver.workspaceLinks(for: explicitTicketIDs)
+            } else {
+                // Known identifiers already have usable URLs; credentials only enrich their details.
+                let existingByID = Self.ticketLinksByID(existingTicketFacts.links)
+                resolvedLinks = WorkProvenanceWorkspaceLinkFacts(ticketLinks: explicitTicketIDs.map { id in
+                    existingByID[id] ?? ProvenanceWorkspaceDisplayTicketLinkRecord(
+                        id: id, system: "linear", url: LinearWebLinkBuilder().issueURLString(for: id)
+                    )
+                })
+            }
             let incomingTicketLinks = Self.enrichedTicketLinks(
                 ticketIDs: explicitTicketIDs,
                 explicitLinks: resourceEvidence.explicitTicketLinks,
@@ -250,11 +262,24 @@ struct WorkProvenanceWorkspaceDisplayResourceLinker: Sendable {
                 id: id,
                 system: normalizedNonEmpty(incoming?.system) ?? normalizedNonEmpty(existing?.system),
                 title: normalizedNonEmpty(incoming?.title) ?? normalizedNonEmpty(existing?.title),
-                url: normalizedNonEmpty(incoming?.url) ?? normalizedNonEmpty(existing?.url),
+                url: Self.preferredTicketURL(incoming: incoming, existing: existing),
                 ownerName: normalizedNonEmpty(incoming?.ownerName) ?? normalizedNonEmpty(existing?.ownerName),
                 ownerURL: normalizedNonEmpty(incoming?.ownerURL) ?? normalizedNonEmpty(existing?.ownerURL)
             )
         }
+    }
+
+    /// A failed lookup's generated fallback must not replace an already resolved canonical URL.
+    private static func preferredTicketURL(
+        incoming: ProvenanceWorkspaceDisplayTicketLinkRecord?,
+        existing: ProvenanceWorkspaceDisplayTicketLinkRecord?
+    ) -> String? {
+        let incomingIsEnriched = incoming?.title != nil || incoming?.ownerName != nil || incoming?.ownerURL != nil
+        let existingIsEnriched = existing?.title != nil || existing?.ownerName != nil || existing?.ownerURL != nil
+        if !incomingIsEnriched, existingIsEnriched, let url = normalizedNonEmpty(existing?.url) {
+            return url
+        }
+        return normalizedNonEmpty(incoming?.url) ?? normalizedNonEmpty(existing?.url)
     }
 
     private static func ticketLinksByID(
