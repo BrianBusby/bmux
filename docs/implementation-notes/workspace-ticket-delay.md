@@ -25,6 +25,15 @@ retry without clearing a newer in-flight observation. Observation retries at mos
 three times with a short backoff, stops after cancellation or supersession, and
 returns through the existing runtime display refresh path.
 
+Fresh-build dogfood also caught ticket observation blocked in Linear credential
+lookup (`SecItemCopyMatching`). Observation now commits discovered ticket IDs and
+known URLs before optional title/owner/project enrichment. It reuses
+`LinearWebLinkBuilder` and preserves stored enriched facts. The existing PE
+Current State subscription publishes that first transaction while enrichment is
+pending; no additional UI source of ticket state is introduced. Supersession and
+cancellation guards apply to both phases. A gated resolver regression checks the
+ticket URL before enrichment completes and the richer title afterward.
+
 The broad multi-process SQLite writer policy remains unresolved. Already-running
 apps and CLI monitors retain their old code and can continue holding the shared
 writer lock. This slice neither rewrites existing history nor changes database
@@ -35,8 +44,9 @@ ownership, storage location, retention, or canonical ticket-link authority.
 Behavior tests reproduce locked materialized reads, identical snapshot retry after
 a failed ticket write, unchanged-context turn refresh, ledger replay, moved prompt
 ownership, and obsolete turn dependencies in session caches. The PE suite passes
-247 tests. The three affected app observer/resource suites pass 24 tests, including automatic
-retry, duplicate notification, cancellation, and supersession cases. A new isolated
+247 tests. The four affected app observer/resource/subscription suites pass 28 tests, including
+automatic retry, duplicate notification, cancellation, supersession, and early
+publication while enrichment remains blocked. A new isolated
 tagged build is required before handoff.
 A local 30-turn benchmark reduced command append from 489 ms to 84 ms and session
 read from 315 ms to 29 ms; this

@@ -105,6 +105,7 @@ local_capabilities:
   workspace_display_file_watcher_churn_policy: planned
   pe_materialized_outcome_reads_and_scoped_refresh: under_observation
   workspace_display_failed_observation_retry: under_observation
+  workspace_display_ticket_enrichment_independent: under_observation
   pe_shared_sqlite_writer_policy: planned
   codex_historical_import_startup_boundary_guard: planned
   workspace_launch_canonical_mutation_path: planned

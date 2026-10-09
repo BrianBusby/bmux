@@ -173,7 +173,8 @@ struct WorkProvenancePullRequestOwnerResolverDefaultTests {
         #expect(result.display?.currentDirectory == "/tmp/current-review")
     }
 
-    @Test
+    @MainActor
+    @Test(.timeLimit(.minutes(1)))
     func ticketIsPersistedBeforeOptionalEnrichmentCompletes() async throws {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-ticket-enrichment-\(UUID())/provenance.sqlite")
@@ -199,16 +200,38 @@ struct WorkProvenancePullRequestOwnerResolverDefaultTests {
                 ownerLogin: nil, ownerURL: nil, status: "open", branch: nil, isStale: false
             )
         )
+        let published = AsyncStream<Void>.makeStream()
+        defer { published.continuation.finish() }
+        let store = WorkspaceDisplayCurrentStateStore(client: client)
+        let subscription = WorkspaceDisplayCurrentStateSubscription(databaseURL: url)
+        subscription.start(stableWorkspaceIDs: { [snapshot.stableWorkspaceID] }, refresh: { ids in
+            store.refresh(stableWorkspaceIDs: ids) { id in
+                if store.snapshot(stableWorkspaceID: id)?.ticketLinks.first?.id == "INP-2430" {
+                    published.continuation.yield(())
+                }
+            }
+        })
+        defer { subscription.stop(); store.cancelRefreshes() }
         let observation = Task { await service.observeWorkspaceSnapshot(snapshot) }
         var entries = entered.stream.makeAsyncIterator()
         _ = await entries.next()
         let immediate = try await client.workspaceDisplay(.init(workspaceID: snapshot.stableWorkspaceID.uuidString))
         #expect(immediate.display?.ticketIDs == ["INP-2430"])
         #expect(immediate.display?.ticketLinks.first?.url == "https://linear.app/companycam/issue/INP-2430")
+        var publications = published.stream.makeAsyncIterator()
+        _ = await publications.next()
+        #expect(store.snapshot(stableWorkspaceID: snapshot.stableWorkspaceID)?.ticketLinks.first?.id == "INP-2430")
         release.continuation.yield(())
         await observation.value
         let enriched = try await client.workspaceDisplay(.init(workspaceID: snapshot.stableWorkspaceID.uuidString))
         #expect(enriched.display?.ticketLinks.first?.title == "Checklist follow-up items")
+        let laterService = WorkProvenanceObservationService(
+            client: client, gitInspector: FakeGitInspector(gitSnapshot: git),
+            ticketLinkResolver: WorkProvenanceLinearTicketLinkResolver(usesEnvironmentAuthorization: false)
+        )
+        await laterService.observeWorkspaceSnapshot(snapshot)
+        let retained = try await client.workspaceDisplay(.init(workspaceID: snapshot.stableWorkspaceID.uuidString))
+        #expect(retained.display?.ticketLinks == enriched.display?.ticketLinks)
     }
 
     private struct GatedTicketResolver: WorkProvenanceTicketLinkResolving {

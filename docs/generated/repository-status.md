@@ -123,6 +123,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Display Projection | implemented |
 | Workspace Display Prompt Resource Discovery | implemented |
 | Workspace Display Tab Projection | implemented |
+| Workspace Display Ticket Enrichment Independent | under observation |
 | Workspace Display Ticket Link Facts | implemented |
 | Workspace Display Ticket Title Sidebar | implemented |
 | Workspace Launch Canonical Mutation Path | planned |
