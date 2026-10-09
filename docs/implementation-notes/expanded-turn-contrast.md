@@ -74,7 +74,41 @@ issues, deprecated AppKit APIs, unused TabManager closePanel results, and test
 XCTest implementation-only import warnings; these files are unchanged here.
 No broad concurrency or lifecycle correctness claim follows from this run.
 
-Remaining: user-authorized fresh isolated tagged reload/native acceptance,
-then push/open the scoped stacked PR and background review under the normal
-workflow. The active dogfood restriction is AGENTS.md lines 197–207; this patch
-must not rebuild or replace codex-update-fix or readable-turns-build715.
+## Approved isolated build and live verification
+
+The user approved a fresh isolated build. Tagged reload succeeded and launched
+build 721, tag `expanded-turn-contrast`, runtime commit `fa7604487`. Subsequent
+changes record verification only; runtime source is unchanged. Command:
+
+```
+BMUX_SKIP_ZIG_BUILD=1 BMUX_SOURCE_PACKAGES_DIR=/Users/brianbusby/Library/Developer/Xcode/DerivedData/bmux-codex-update-tests/SourcePackages BMUX_DISABLE_AUTOMATIC_PACKAGE_RESOLUTION=1 ./scripts/reload.sh --tag expanded-turn-contrast --launch --no-global-cli-links --swift-disable-global-isel
+```
+
+App: `/Users/brianbusby/Library/Developer/Xcode/DerivedData/bmux-expanded-turn-contrast/Build/Products/Debug/bmux DEV expanded-turn-contrast.app`.
+Logs: `/tmp/bmux-expanded-turn-contrast-reload.log` and
+`/tmp/bmux-reload-expanded-turn-contrast.log`. The build log includes optional
+curl 404 warnings and existing compiler warnings; the build exited 0 and the
+app launched. An initial socket readiness race returned connection refused;
+the tag-bound helper connected successfully after app initialization.
+
+Native CUA and tagged CLI checks:
+- Build 721 shows the preserved workspace/sidebar styling and Chat/Terminal/
+  Session tabs. The new isolated workspace initially had no history.
+- The automatically launched terminal used Codex 0.161.0 without an update
+  prompt. Two short verification prompts requested fixed replies with no
+  tools or file edits. These are new live verification turns, not Brian's
+  original reported turn and not the build-708 example.
+- Expanded the first completed prior turn. Its final output, status/duration/
+  model/counts, timestamps, plain prompt and identical-source note are readable
+  on dark surfaces. The known zero-command turn correctly omits What it did.
+- The accessibility tree exposes the expanded row state, section headings,
+  raw-prompt and Reference IDs disclosures. Full keyboard/VoiceOver navigation
+  was not established by this inspection. Stopped UI actions after CUA detected
+  user interaction; raw/ID interaction remains part of user dogfood.
+- No currently used app was rebuilt, quit, replaced or navigated. Existing
+  build-719 PID 33737 and build-720 PID 67600 retained their original start times.
+  Existing global CLI links were preserved. Build 721 stays open for dogfood.
+
+Remaining: user dogfood approval; full keyboard/VoiceOver, Japanese live layout,
+and broader provider/partial-evidence acceptance. No provider parity, lifecycle
+correctness, delivery, or wider PE milestone is marked complete by this fix.

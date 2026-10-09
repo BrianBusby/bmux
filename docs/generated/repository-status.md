@@ -149,7 +149,7 @@ Repository: `BrianBusby/bmux`
 | --- | --- |
 | `configured_codex_placeholder_startup_dogfood` | open |
 | `codex_update_workspace_exit_native_dogfood` | open |
-| `expanded_prior_turn_system_appearance_contrast` | open |
+| `expanded_prior_turn_system_appearance_contrast` | monitoring |
 | `expanded_prior_turn_visual_acceptance` | open |
 | `shell_mode_portal_visibility_dogfood` | open |
 | `connected_codex_workspace_hooks_dogfood` | open |
