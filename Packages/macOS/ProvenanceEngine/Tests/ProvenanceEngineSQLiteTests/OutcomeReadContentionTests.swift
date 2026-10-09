@@ -31,6 +31,30 @@ struct OutcomeReadContentionTests {
         }
     }
 
+    @Test
+    func anotherTurnWithUnchangedGitContextDoesNotRewriteCompletedTurns() async throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("outcome-scope-\(UUID())/provenance.sqlite")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let fixture = TurnOutcomeFixture(suffix: "scoped")
+        for event in fixture.normalEvents { try await repository.appendEvent(event) }
+        let before = try await repository.turnOutcome(.init(turnID: fixture.turnCompleted.id))
+        let second = ProvenanceCodingAgentTurnRecord(
+            id: "second-turn", sessionID: fixture.session.id, threadID: fixture.thread.id,
+            provider: "codex", providerTurnID: "second-provider-turn", status: "started",
+            startedAt: fixture.time(20), updatedAt: fixture.time(20), source: .observed, confidence: .high
+        )
+        try await repository.appendEvent(fixture.event(
+            id: "second-turn-event", eventType: .codingAgentTurnObserved, timestamp: fixture.time(20),
+            payload: .init(repository: fixture.repository, worktree: fixture.worktree, codingAgentTurn: second)
+        ))
+        let after = try await repository.turnOutcome(.init(turnID: fixture.turnCompleted.id))
+        #expect(after.outcome == before.outcome)
+        let session = try await repository.sessionOutcome(.init(sessionID: fixture.session.id))
+        #expect(session.outcome?.constituentTurns.count == 2)
+    }
+
     @Test(arguments: [false, true])
     func oldProjectionRulesAreRecomputedOnRead(session: Bool) async throws {
         let url = FileManager.default.temporaryDirectory
