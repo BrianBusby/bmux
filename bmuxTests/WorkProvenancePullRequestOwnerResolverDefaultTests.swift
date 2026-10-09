@@ -173,6 +173,59 @@ struct WorkProvenancePullRequestOwnerResolverDefaultTests {
         #expect(result.display?.currentDirectory == "/tmp/current-review")
     }
 
+    @Test
+    func ticketIsPersistedBeforeOptionalEnrichmentCompletes() async throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-ticket-enrichment-\(UUID())/provenance.sqlite")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: url)
+        let entered = AsyncStream<Void>.makeStream()
+        let release = AsyncStream<Void>.makeStream()
+        defer { entered.continuation.finish(); release.continuation.finish() }
+        let git = WorkProvenanceGitSnapshot(
+            repositoryRoot: "/tmp/checklist-review", commonDirectory: nil, remoteSlug: nil,
+            branch: "main", headCommit: nil, isDirty: false, statusEntries: []
+        )
+        let service = WorkProvenanceObservationService(
+            client: client, gitInspector: FakeGitInspector(gitSnapshot: git),
+            ticketLinkResolver: GatedTicketResolver(entered: entered.continuation, release: release.stream)
+        )
+        let snapshot = WorkProvenanceWorkspaceSnapshot(
+            workspaceID: UUID(), stableWorkspaceID: UUID(), title: "Review checklist builder",
+            currentDirectory: git.repositoryRoot,
+            pullRequest: .init(
+                number: 11712, title: "INP-2430 Add follow-up items to mobile checklist builder",
+                url: "https://github.com/CompanyCam/companycam-mobile/pull/11712",
+                ownerLogin: nil, ownerURL: nil, status: "open", branch: nil, isStale: false
+            )
+        )
+        let observation = Task { await service.observeWorkspaceSnapshot(snapshot) }
+        var entries = entered.stream.makeAsyncIterator()
+        _ = await entries.next()
+        let immediate = try await client.workspaceDisplay(.init(workspaceID: snapshot.stableWorkspaceID.uuidString))
+        #expect(immediate.display?.ticketIDs == ["INP-2430"])
+        #expect(immediate.display?.ticketLinks.first?.url == "https://linear.app/companycam/issue/INP-2430")
+        release.continuation.yield(())
+        await observation.value
+        let enriched = try await client.workspaceDisplay(.init(workspaceID: snapshot.stableWorkspaceID.uuidString))
+        #expect(enriched.display?.ticketLinks.first?.title == "Checklist follow-up items")
+    }
+
+    private struct GatedTicketResolver: WorkProvenanceTicketLinkResolving {
+        let entered: AsyncStream<Void>.Continuation
+        let release: AsyncStream<Void>
+
+        func workspaceLinks(for ticketIDs: [String]) async -> WorkProvenanceWorkspaceLinkFacts {
+            entered.yield(())
+            var iterator = release.makeAsyncIterator()
+            _ = await iterator.next()
+            return .init(ticketLinks: [.init(
+                id: "INP-2430", system: "linear", title: "Checklist follow-up items",
+                url: "https://linear.app/companycam/issue/INP-2430/checklist-follow-up-items"
+            )])
+        }
+    }
+
     private struct GatedGitInspector: WorkProvenanceGitInspecting {
         let entered: AsyncStream<Void>.Continuation
         let release: AsyncStream<Void>
