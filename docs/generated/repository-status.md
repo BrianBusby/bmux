@@ -35,6 +35,7 @@ Repository: `BrianBusby/bmux`
 | Bmux Proactive Cross Session Awareness | implemented |
 | Codex Historical Import Startup Boundary Guard | planned |
 | Connected Codex 0161 Launch And Controls | under observation |
+| Connected Codex 0162 Launch And Controls | under observation |
 | Connected Codex Shared Host Controls | under observation |
 | Connected Codex Workspace Hooks | under observation |
 | Connected Prompt Workspace Resource Projection | under observation |
@@ -147,6 +148,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `configured_codex_placeholder_startup_dogfood` | monitoring |
 | `codex_update_workspace_exit_native_dogfood` | open |
 | `expanded_prior_turn_system_appearance_contrast` | monitoring |
 | `expanded_prior_turn_visual_acceptance` | open |

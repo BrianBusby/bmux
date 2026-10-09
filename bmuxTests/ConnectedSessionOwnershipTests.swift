@@ -57,14 +57,14 @@ import Testing
         #expect(!arguments.contains("--model"))
     }
 
-    @Test(arguments: ["0.154.0", "0.161.0"])
+    @Test(arguments: ["0.154.0", "0.161.0", "0.162.0"])
     func validatedVersionsRetainActualProviderMetadata(version: String) async throws {
         _ = try await launchedArguments(model: "hidden-valid", version: version)
     }
 
     @Test func unvalidatedVersionDoesNotStartConnectedHost() async throws {
         await #expect(throws: CodexControlError.unsupported) {
-            _ = try await launchedArguments(model: "hidden-valid", version: "0.162.0", expectsConnection: false)
+            _ = try await launchedArguments(model: "hidden-valid", version: "0.163.0", expectsConnection: false)
         }
     }
 

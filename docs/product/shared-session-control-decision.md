@@ -253,7 +253,7 @@ The TUI creates its new thread on that host; Chat binds only when the dedicated 
 The provider process, TUI process, provider thread, and PE identity remain distinct.
 
 The implementation gates controls to exact empirically tested Codex versions
-0.154.0 and 0.161.0 (see the October 8 compatibility evidence below). It uses a
+0.154.0, 0.161.0 and 0.162.0 (see the October 8 and 9 compatibility evidence below). It uses a
 random capability token in a private file, verifies that an unauthenticated
 WebSocket handshake receives HTTP 401, and only then initializes its native
 `URLSessionWebSocketTask`. The token is never sent through the webview bridge,
@@ -506,3 +506,22 @@ exit and remote recovery retain their existing paths. The branch stacks on the
 actual build-719 source (`802f15cce`); no running dogfood build was replaced.
 See [implementation and verification notes](../implementation-notes/codex-update-workspace-exit.md)
 for regression results and remaining native acceptance.
+
+
+### Codex 0.162.0 compatibility (October 9, 2026)
+
+Build 721 repo-launcher dogfood encountered an installed CLI upgrade to 0.162.0.
+The exact gate is extended to this empirically verified release; unverified
+versions still fail closed. An isolated blank-TUI probe passed authenticated
+startup, sole-thread adoption, queue delivery, expected-turn steering, rejection
+of stale steering and reconnect reconciliation. Five accepted message IDs appear
+once across four completed turns, with the corresponding responses in the original
+TUI. No thread/resume, turn/start or turn/interrupt request was sent. The existing
+native Swift transport/RPC probe also passed provider account, config, model and
+loaded-thread reads. Interrupt, approvals and settings capabilities are unchanged.
+
+See [the launcher follow-up](../implementation-notes/repo-codex-startup.md) for
+runtime acceptance and verification limits. User settings and installed executables
+are unchanged. The same follow-up corrects replacement of an eagerly started
+placeholder; the version gate and placeholder lifecycle are independent checks
+in the same configured launch path.

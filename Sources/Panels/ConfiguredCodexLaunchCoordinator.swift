@@ -40,12 +40,12 @@ final class ConfiguredCodexLaunchCoordinator {
                 guard !Task.isCancelled, let workspace = self.workspace, let source = self.panel,
                       workspace.id == workspaceID, source.workspaceId == workspaceID,
                       workspace.panels[source.id] as? TerminalPanel === source,
-                      source.surface.surface == nil,
                       workspace.paneId(forPanelId: source.id) != nil else {
                     await runtime.closeConnectedSession(surfaceID: surfaceID)
                     return
                 }
-                // Respawn fixes the command before PTY creation while preserving
+                // Workspace eager loading may already have started this owned placeholder.
+                // Respawn installs the connected command in a new PTY while preserving
                 // the logical surface, tab position, selection, and canvas membership.
                 guard let connected = workspace.respawnTerminalSurface(panelId: source.id,
                     command: command, workingDirectory: workingDirectory, focus: false, waitAfterCommand: true,
