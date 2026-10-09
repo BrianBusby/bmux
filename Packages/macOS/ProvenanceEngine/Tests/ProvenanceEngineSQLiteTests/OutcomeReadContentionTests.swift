@@ -93,6 +93,31 @@ struct OutcomeReadContentionTests {
     }
 
     @Test
+    func movingThreadRefreshesPreviousSession() async throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("outcome-thread-move-\(UUID())/provenance.sqlite")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let first = TurnOutcomeFixture(suffix: "thread-first")
+        let second = TurnOutcomeFixture(suffix: "thread-second")
+        for event in first.normalEvents + second.normalEvents { try await repository.appendEvent(event) }
+        let thread = ProvenanceCodingAgentThreadRecord(
+            id: first.thread.id, sessionID: second.session.id, provider: "codex",
+            providerThreadID: first.thread.providerThreadID, worktreeID: second.worktree.id,
+            source: .observed, confidence: .high, firstObservedAt: first.time(1), updatedAt: first.time(30)
+        )
+        try await repository.appendEvent(second.event(
+            id: "moved-thread-event", eventType: .codingAgentThreadObserved, timestamp: second.time(30),
+            payload: .init(codingAgentThread: thread)
+        ))
+        let previous = try await repository.sessionOutcome(.init(sessionID: first.session.id))
+        #expect(previous.outcome?.providerThreadIdentities.isEmpty == true)
+        _ = try await repository.rebuildProjectionsFromEventLedger()
+        let rebuilt = try await repository.sessionOutcome(.init(sessionID: first.session.id))
+        #expect(rebuilt.outcome == previous.outcome)
+    }
+
+    @Test
     func sessionReadRecoversObsoleteConstituentTurn() async throws {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("outcome-dependency-\(UUID())/provenance.sqlite")

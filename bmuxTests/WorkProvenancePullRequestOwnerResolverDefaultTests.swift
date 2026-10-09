@@ -68,8 +68,8 @@ struct WorkProvenancePullRequestOwnerResolverDefaultTests {
         #expect(display.display?.ticketIDs == [])
     }
 
-    @Test
-    func failedTicketWriteCanRetryTheSameWorkspaceSnapshot() async throws {
+    @Test(arguments: [false, true])
+    func failedTicketWriteCanRetryTheSameWorkspaceSnapshot(automatic: Bool) async throws {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-ticket-retry-\(UUID())/provenance.sqlite")
         defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
@@ -98,10 +98,21 @@ struct WorkProvenancePullRequestOwnerResolverDefaultTests {
         let writer = try #require(handle)
         defer { sqlite3_close(writer) }
         #expect(sqlite3_exec(writer, "BEGIN IMMEDIATE", nil, nil, nil) == SQLITE_OK)
-        await service.observeWorkspaceSnapshot(snapshot)
-        #expect(await service.lastErrorDescription != nil)
-        #expect(sqlite3_exec(writer, "ROLLBACK", nil, nil, nil) == SQLITE_OK)
-        await service.observeWorkspaceSnapshot(snapshot)
+        if automatic {
+            let observation = Task { await service.observeWorkspaceSnapshot(snapshot) }
+            let deadline = ContinuousClock.now.advanced(by: .seconds(15))
+            while await service.lastErrorDescription == nil, ContinuousClock.now < deadline {
+                try await Task.sleep(for: .milliseconds(10))
+            }
+            #expect(await service.lastErrorDescription != nil)
+            #expect(sqlite3_exec(writer, "ROLLBACK", nil, nil, nil) == SQLITE_OK)
+            await observation.value
+        } else {
+            await service.observeWorkspaceSnapshot(snapshot)
+            #expect(await service.lastErrorDescription != nil)
+            #expect(sqlite3_exec(writer, "ROLLBACK", nil, nil, nil) == SQLITE_OK)
+            await service.observeWorkspaceSnapshot(snapshot)
+        }
         let result = try await client.workspaceDisplay(.init(workspaceID: snapshot.stableWorkspaceID.uuidString))
         #expect(result.display?.ticketIDs == ["INP-2430"])
         #expect(result.display?.ticketLinks.first?.url == "https://linear.app/companycam/issue/INP-2430")
