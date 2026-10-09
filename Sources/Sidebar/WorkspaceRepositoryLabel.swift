@@ -11,6 +11,5 @@ struct WorkspaceRepositoryLabel: View {
             .foregroundStyle(Color(red: 57 / 255, green: 1, blue: 20 / 255))
             .lineLimit(1)
             .truncationMode(.tail)
-            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

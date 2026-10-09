@@ -62,7 +62,7 @@ struct WorkspaceCardHeader<TicketIcon: View, CloseIcon: View, TitleContent: View
         HStack(alignment: .top, spacing: 8) {
             VStack(alignment: .leading, spacing: 4) {
                 if repositoryName != nil || ticketID != nil {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 10) {
                         if let repositoryName {
                             WorkspaceRepositoryLabel(name: repositoryName, font: repositoryFont)
                         }
@@ -71,6 +71,7 @@ struct WorkspaceCardHeader<TicketIcon: View, CloseIcon: View, TitleContent: View
                                 .layoutPriority(1)
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 titleContent
             }
