@@ -87,6 +87,70 @@ struct ConfiguredCodexLaunchTests {
         }
     }
 
+    @Test(.timeLimit(.minutes(1))) func repoWorkspaceLaunchCompletesAfterPlaceholderStarts() async throws {
+        let entered = AsyncStream<Void>.makeStream()
+        let finished = AsyncStream<Void>.makeStream()
+        var release: CheckedContinuation<Void, Never>?
+        var endedSurfaces: [UUID] = []
+        let runtime = TerminalChatRuntime(reader: ConnectedCodexFixtureReader(),
+            hosts: ConnectedCodexFixtureHost(connection: CodexRPCConnection(transport: ConnectedCodexFixtureTransport()),
+                beforeLaunch: {
+                    await withCheckedContinuation { continuation in
+                        release = continuation
+                        entered.continuation.yield(())
+                    }
+                }, onEnd: { endedSurfaces.append($0) }), bind: { _, _, _, _ in })
+        let manager = TabManager(initialWorkingDirectory: "/tmp", autoWelcomeIfNeeded: false)
+        manager.terminalChatReader = runtime
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 360, height: 240),
+            styleMask: [.titled], backing: .buffered, defer: false)
+        defer {
+            release?.resume()
+            entered.continuation.finish()
+            finished.continuation.finish()
+            window.contentView = nil
+            window.orderOut(nil)
+            for workspace in manager.tabs { for panel in workspace.panels.values { panel.close() } }
+        }
+        let definition = BmuxWorkspaceDefinition(name: "Roof Inspection", cwd: "/tmp",
+            layout: .pane(BmuxPaneDefinition(surfaces: [
+                BmuxSurfaceDefinition(type: .terminal, command: "codex")
+            ])))
+        #expect(BmuxConfigExecutor.executeWorkspaceCommand(command: .init(name: "Roof Inspection", workspace: definition),
+            workspace: definition, tabManager: manager, baseCwd: "/tmp"))
+        let workspace = try #require(manager.selectedWorkspace)
+        let source = try #require(workspace.focusedTerminalPanel)
+        let coordinator = try #require(source.presentation.configuredCodexLaunch)
+        var enteredIterator = entered.stream.makeAsyncIterator()
+        _ = await enteredIterator.next()
+
+        let ready = NotificationCenter.default.notifications(named: .terminalSurfaceDidBecomeReady,
+            object: source.surface).map { _ in true }
+        var readyIterator = ready.makeAsyncIterator()
+        // The visible placeholder can attach before asynchronous host preparation finishes.
+        let content = try #require(window.contentView)
+        source.hostedView.frame = content.bounds
+        content.addSubview(source.hostedView)
+        content.layoutSubtreeIfNeeded()
+        if source.surface.surface == nil { _ = await readyIterator.next() }
+        try #require(source.surface.surface != nil)
+        let pane = try #require(workspace.paneId(forPanelId: source.id))
+        let tabs = workspace.bonsplitController.tabs(inPane: pane).map(\.id)
+        withObservationTracking { _ = coordinator.isStarting } onChange: { finished.continuation.yield(()) }
+        release?.resume()
+        release = nil
+        var finishedIterator = finished.stream.makeAsyncIterator()
+        _ = await finishedIterator.next()
+
+        let connected = try #require(workspace.terminalPanel(for: source.id))
+        #expect(connected !== source)
+        #expect(connected.surface.initialCommand != nil)
+        #expect(connected.presentation.configuredCodexLaunch === coordinator)
+        #expect(workspace.bonsplitController.tabs(inPane: pane).map(\.id) == tabs)
+        #expect(workspace.focusedPanelId == source.id)
+        #expect(endedSurfaces.isEmpty)
+    }
+
     @Test func configuredStartupIsReservedAndClosingItsSourceRollsBack() async throws {
         let entered = AsyncStream<Void>.makeStream()
         let ended = AsyncStream<UUID>.makeStream()
