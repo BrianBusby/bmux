@@ -148,7 +148,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
-| `configured_codex_placeholder_startup_dogfood` | open |
+| `configured_codex_placeholder_startup_dogfood` | monitoring |
 | `codex_update_workspace_exit_native_dogfood` | open |
 | `expanded_prior_turn_system_appearance_contrast` | monitoring |
 | `expanded_prior_turn_visual_acceptance` | open |

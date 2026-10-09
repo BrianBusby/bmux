@@ -133,7 +133,7 @@ component_releases:
 
 local_caveats:
   - id: configured_codex_placeholder_startup_dogfood
-    status: open
+    status: monitoring
   - id: codex_update_workspace_exit_native_dogfood
     status: open
   - id: expanded_prior_turn_system_appearance_contrast
