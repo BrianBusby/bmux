@@ -32,6 +32,21 @@ import Testing
             let result = await CommandRunner().runStandardOutput(directory: directory.path, executable: "/bin/sh",
                                                                arguments: ["-c", host.terminalCommand], timeout: 20)
             #expect(result?.trimmingCharacters(in: .whitespacesAndNewlines) == "accepted once; follow-up accepted")
+            let tokenURL = directory.appendingPathComponent("hosts/\(surfaceID.uuidString)/connection-token")
+            let token = try String(contentsOf: tokenURL, encoding: .utf8)
+            let chat = try CodexLoopbackWebSocket(endpoint: host.endpoint, token: token)
+            do {
+                try await chat.send(Data(#"{"method":"large-notification"}"#.utf8))
+                let notification = try await chat.receive()
+                let expectedSize = 24 * 1024 * 1024 + 17
+                #expect(notification.count == expectedSize)
+                try await chat.send(Data("follow-up".utf8))
+                #expect(try await chat.receive() == Data("connected".utf8))
+                await chat.close()
+            } catch {
+                await chat.close()
+                throw error
+            }
             await service.endOwnedHost(surfaceID: surfaceID)
             await connection.disconnect()
         } catch {
