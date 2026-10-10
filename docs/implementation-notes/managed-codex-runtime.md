@@ -56,7 +56,8 @@ checks failure presentation and stable-panel retry. Existing model-policy tests
 now assert reasoning preservation specifically while checking startup-update
 suppression. Log: `/tmp/bmux-managed-codex-final-tests.log`.
 
-Pending: final-commit tagged rebuild, independent review, stack integration and CI.
+Final-commit tagged build 731 also succeeded. Pending: independent review, stack
+integration and CI in PR #139.
 The initial focused build exposed incorrect Xcode source paths for the three new
 runtime files; the references were corrected before further verification.
 
@@ -87,3 +88,9 @@ Amplitude MCP needs OAuth reauthentication. No account settings were changed.
 The final tests add incomplete-cache rejection and the XCTest acquisition guard;
 all 44 pass. No warning originated in the new runtime files. The existing
 `ConnectedSessionOwnershipTests` unmutated `alive` variable warning is unchanged.
+
+Build 731 repeated the actual sidebar launcher path using the cached package and
+completed the same no-tools prompt in editable Chat. Terminal retained the same
+conversation. The repair is pushed in PR #139 with the accumulated worktree stack.
+Native acceptance was on Apple silicon; the Intel artifact pin is recorded but
+was not executed locally. No demo video was recorded.
