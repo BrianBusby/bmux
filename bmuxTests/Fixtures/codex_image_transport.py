@@ -86,6 +86,11 @@ def serve(token):
                     accept = base64.b64encode(hashlib.sha1(key + b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11").digest())
                     sock.sendall(b"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: " + accept + b"\r\n\r\n")
                     request = json.loads(message(sock, LIMIT))
+                    if request == {"method": "large-notification"}:
+                        frame(sock, b"a" * SIZE)
+                        assert message(sock, LIMIT) == b"follow-up"
+                        frame(sock, b"connected")
+                        continue
                     assert request == {"id": 1, "method": "turn/start", "params": {"threadId": "original", "image": "a" * SIZE}}
                     frame(sock, b'{"id":1,"result":"accepted once"}')
                     assert message(sock, LIMIT) == b'{"id":2,"method":"follow-up"}'
