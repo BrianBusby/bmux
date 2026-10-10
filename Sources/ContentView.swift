@@ -849,6 +849,7 @@ private final class SelectedWorkspaceDirectoryObserver: ObservableObject {
 struct ContentView: View {
     var updateViewModel: UpdateStateModel
     let windowId: UUID
+    let initialPrimaryTab: AgentSessionFactualProjectionMode
     @EnvironmentObject var tabManager: TabManager
     // ContentView observes the coalesced unread projection, NOT the notification
     // store. Reading `notificationStore` directly here would re-render the entire
@@ -972,6 +973,17 @@ struct ContentView: View {
     @FocusState private var isCommandPaletteSearchFocused: Bool
     @FocusState private var isCommandPaletteRenameFocused: Bool
     private let windowChrome = AppWindowChromeComposition()
+
+    init(
+        updateViewModel: UpdateStateModel,
+        windowId: UUID,
+        initialPrimaryTab: AgentSessionFactualProjectionMode = .chat
+    ) {
+        self.updateViewModel = updateViewModel
+        self.windowId = windowId
+        self.initialPrimaryTab = initialPrimaryTab
+        _bmuxShellTerminalVisible = State(initialValue: initialPrimaryTab == .terminal)
+    }
 
     private struct CommandPaletteRestoreFocusTarget {
         let workspaceId: UUID
@@ -2561,7 +2573,7 @@ struct ContentView: View {
                     AgentSessionFactualProjectionModeHost(
                         showsSwitcher: true,
                         showsModePicker: false,
-                        initialPrimaryTab: .chat,
+                        initialPrimaryTab: initialPrimaryTab,
                         showsAppShell: false,
                         liveChatContent: bmuxShellChatContent(),
                         liveTerminalContent: bmuxShellTerminalVisible

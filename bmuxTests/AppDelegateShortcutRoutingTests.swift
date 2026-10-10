@@ -6333,13 +6333,13 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
 #endif
     }
 
-    func testWindowSendEventRepairsLostFirstResponderForFocusedTerminalTyping() throws {
+    func testWindowSendEventRepairsLostFirstResponderForFocusedTerminalTyping() async throws {
         guard let appDelegate = AppDelegate.shared else {
             XCTFail("Expected AppDelegate.shared")
             return
         }
 
-        let windowId = appDelegate.createMainWindow()
+        let windowId = appDelegate.createMainWindow(initialPrimaryTab: .terminal)
         defer { closeWindow(withId: windowId) }
 
         guard let window = window(withId: windowId),
@@ -6352,7 +6352,7 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
             return
         }
 
-        focusHostedTerminalForRepairTesting(window: window, hostedView: terminalPanel.hostedView)
+        await focusHostedTerminalForRepairTesting(window: window, hostedView: terminalPanel.hostedView)
 
         let orphanResponder = FocusableTestView(frame: NSRect(x: 0, y: 0, width: 24, height: 24))
         installStrandedResponderDriftForTesting(orphanResponder, in: window, hostedView: terminalPanel.hostedView)
@@ -6858,13 +6858,13 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
 #endif
     }
 
-    func testWindowSendEventRepairsVisibleSameWindowResponderDriftForFocusedTerminalTyping() throws {
+    func testWindowSendEventRepairsVisibleSameWindowResponderDriftForFocusedTerminalTyping() async throws {
         guard let appDelegate = AppDelegate.shared else {
             XCTFail("Expected AppDelegate.shared")
             return
         }
 
-        let windowId = appDelegate.createMainWindow()
+        let windowId = appDelegate.createMainWindow(initialPrimaryTab: .terminal)
         defer { closeWindow(withId: windowId) }
 
         guard let window = window(withId: windowId),
@@ -6878,7 +6878,7 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
         }
 
         let strayView = FocusableTestView(frame: NSRect(x: 0, y: 0, width: 24, height: 24))
-        focusHostedTerminalForRepairTesting(window: window, hostedView: terminalPanel.hostedView)
+        await focusHostedTerminalForRepairTesting(window: window, hostedView: terminalPanel.hostedView)
         installVisibleResponderDriftForTesting(
             strayView,
             in: window,
@@ -10991,13 +10991,13 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
         )
     }
 
-    func testWindowSendEventRepairsFocusedTerminalSearchTypingAfterResponderDrift() throws {
+    func testWindowSendEventRepairsFocusedTerminalSearchTypingAfterResponderDrift() async throws {
         guard let appDelegate = AppDelegate.shared else {
             XCTFail("Expected AppDelegate.shared")
             return
         }
 
-        let windowId = appDelegate.createMainWindow()
+        let windowId = appDelegate.createMainWindow(initialPrimaryTab: .terminal)
         defer { closeWindow(withId: windowId) }
 
         guard let window = window(withId: windowId),
@@ -11009,12 +11009,12 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
             return
         }
 
-        focusHostedTerminalForRepairTesting(window: window, hostedView: terminalPanel.hostedView)
+        await focusHostedTerminalForRepairTesting(window: window, hostedView: terminalPanel.hostedView)
 
         let searchState = TerminalSurface.SearchState(needle: "")
         terminalPanel.surface.searchState = searchState
         terminalPanel.hostedView.setSearchOverlay(searchState: searchState)
-        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.05))
+        await waitForTerminalFixture(in: window) { self.findEditableTextField(in: terminalPanel.hostedView) != nil }
 
         guard let searchField = findEditableTextField(in: terminalPanel.hostedView) else {
             XCTFail("Expected mounted terminal search field")
@@ -12318,13 +12318,6 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
         let deadline = Date(timeIntervalSinceNow: timeout)
         while !condition(), Date() < deadline {
             RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.02))
-        }
-    }
-
-    private func waitUntil(timeout: TimeInterval, condition: () -> Bool) {
-        let deadline = Date(timeIntervalSinceNow: timeout)
-        while !condition(), Date() < deadline {
-            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.01))
         }
     }
 

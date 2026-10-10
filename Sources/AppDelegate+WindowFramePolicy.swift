@@ -1,6 +1,33 @@
 import AppKit
 
 extension AppDelegate {
+    func positionNewMainWindow(_ window: NSWindow, relativeTo sourceWindow: NSWindow) {
+        let sourceFrame = sourceWindow.frame
+        let sourceScreen = sourceWindow.screen
+            ?? NSScreen.screens.first(where: { $0.frame.intersects(sourceFrame) })
+        guard let visibleFrame = sourceScreen?.visibleFrame else {
+            window.center()
+            return
+        }
+
+        let cascadeOffset: CGFloat = 24
+        let minimumWindowSize = NSSize(width: 460, height: 360)
+        var frame = window.frame
+        frame.origin = NSPoint(
+            x: sourceFrame.minX + cascadeOffset,
+            y: sourceFrame.maxY - cascadeOffset - frame.height
+        )
+        window.setFrame(
+            Self.clampFrame(
+                frame,
+                within: visibleFrame,
+                minWidth: minimumWindowSize.width,
+                minHeight: minimumWindowSize.height
+            ),
+            display: false
+        )
+    }
+
     nonisolated static func shouldPreserveAccessibleFrame(
         frame: CGRect,
         targetDisplay: SessionDisplayGeometry

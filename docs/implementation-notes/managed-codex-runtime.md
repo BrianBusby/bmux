@@ -56,7 +56,8 @@ checks failure presentation and stable-panel retry. Existing model-policy tests
 now assert reasoning preservation specifically while checking startup-update
 suppression. Log: `/tmp/bmux-managed-codex-final-tests.log`.
 
-Final-commit tagged build 731 also succeeded. Pending: final copy-fix tagged build, stack integration and CI in PR #139.
+Tagged builds 731 and 732 succeeded, including the copy correction. Full-stack CI
+follow-up and remaining integration verification are recorded below.
 The initial focused build exposed incorrect Xcode source paths for the three new
 runtime files; the references were corrected before further verification.
 
@@ -104,8 +105,77 @@ configured failure view offered retry while its generic message promised Termina
 fallback. A dedicated English/Japanese message now describes the available retry.
 The ordinary Chat fallback remains unchanged. No further runtime findings remain.
 The review did not comprehensively reassess the prior accumulated stack, execute
-Intel or older macOS builds, or establish currently pending full-stack CI results.
+Intel or older macOS builds. Subsequent full-stack CI evidence is recorded below.
 Independent pbxproj normalization, 430-file test wiring, flag lint and catalog
 validation pass. No new test was added for a copy-only change.
 The existing ConfiguredCodexLaunchTests suite passes after the copy correction;
 log: `/tmp/bmux-managed-codex-review-tests.log`. No coordinator warning was introduced.
+
+## Full-stack CI follow-up
+
+CI run 38057575569 on 2c17c45a1 exposed terminal fixtures that still assumed a
+Terminal-first window. The product now starts in Chat, so those fixtures left
+Bonsplit geometry and terminal portals unmounted. Window composition now accepts
+an explicit `AgentSessionFactualProjectionMode` initial value, defaulting to Chat;
+four terminal-only fixtures opt into Terminal. The same initial value seeds both
+the shell tab and terminal visibility. The browser Cmd+D → Cmd+L → Cmd+F UI test
+selects the real Terminal button before exercising its original assertions.
+
+Local reproduction confirmed the zero-geometry/focus failures. After explicit
+Terminal construction, split equalization and responder ownership pass. Runtime
+logs exposed a second fixture precondition: input reached `keyDown.missingSurface`
+before asynchronous native surface creation, and the search overlay appeared after
+the fixture's fixed 50 ms check. The responder fixtures now await the existing
+surface-ready notification and actual search-field mounting, preserving the input
+forwarding and search assertions. The existing window positioning helper moved
+unchanged to its window-frame policy extension, and the browser test launch helper
+moved unchanged to a companion extension to respect the large-file growth limits.
+
+The CI result must not be summarized as all green. The display UI lane failed at
+`BrowserPaneNavigationKeybindUITests.swift:922` (omnibar missing). App-host shards 2
+and 3 reported success despite assertion failures: the unchanged workflow at
+`.github/workflows/ci.yml:675–680` accepts a summary containing `(0 unexpected)`.
+That text does not mean XCTest assertions passed. Both logs ended after a 45-second
+post-test timeout, and shard 2 restarted its test host twice. No gate was weakened
+or assertion suppressed in this repair.
+
+Bounded source attribution against origin/main found retained browser deferred-URL
+lifecycle and composited-color fixture failures, CLI hook/socket fixture failures,
+and stale shortcut/titlebar/command expectations. Material existing bugs include
+missing-cwd restore reintroducing the deleted directory in `Workspace.createPanel`,
+persistent-remote child exit clearing sibling surface tracking, and cloud proxy
+retry state changing to reconnecting despite clearing the retry error. The relevant
+owner chains are unchanged (or behavior-equivalent after extraction); baseline
+runtime reruns were not performed. Other input/portal/unread and process-fixture
+assertions remain incompletely classified. These existing risks are disclosed,
+not repaired or treated as passing, and this review is not a comprehensive audit of
+the accumulated stack.
+
+The changed UI test target builds successfully in the isolated managed-Codex test
+bundle (`/tmp/bmux-ci-terminal-ui-compile.log`). Local execution did not reach the
+test: XCTest timed out enabling automation mode after 60 seconds
+(`/tmp/bmux-ci-terminal-ui-run.log`). This is an unresolved local UI execution gap;
+the tagged native keyboard-path smoke and next CI run remain the verification
+routes. No user's or tagged app was quit for these test runs.
+
+The four terminal regressions and all 18 connected-session ownership tests pass
+with zero assertion failures (`/tmp/bmux-ci-terminal-ready-tests.log`, xcodebuild
+exit 0). The ready-notification wait allows the main actor to finish native
+surface initialization before tests inject input. An async RunLoop API warning
+found in the initial readiness helper was removed; the mounted-field helper now
+requests layout and cooperatively yields. The existing inconsistent XCTest-import
+warnings are unchanged. Xcode project parsing/normalization, 430-file test wiring,
+Swift file budgets against origin/main, and diff whitespace checks pass.
+
+The final warning-cleaned four-test rerun did not execute: Xcode became idle after
+app registration, and one fresh `test-without-building` retry likewise never
+launched a test host. Only those owned idle xcodebuild processes were stopped.
+The final helper source timestamp was 10:40:58, its compiled object 10:41:37, and
+bmuxTests executable 10:41:47 on October 10; the compile/link/sign log confirms the
+current helper was built without the async RunLoop warning. Logs are
+`/tmp/bmux-ci-terminal-final-tests.log` and
+`/tmp/bmux-ci-terminal-final-retry-tests.log`. Thus the preceding four-plus-18 raw
+pass is measured evidence, while final helper execution remains for CI; it is not
+reported as a passing rerun. A new tagged build and native acceptance are required
+before pushing these composition changes. At handoff, old-head app-host shards 1
+and 4 and Release were still running; their results remain unverified.
