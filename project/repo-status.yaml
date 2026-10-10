@@ -23,6 +23,7 @@ execution_telemetry:
 
 local_capabilities:
   matte_skin_theme_tokens: implemented
+  matte_skin_surface_styles: implemented
   managed_connected_codex_runtime: under_observation
   ordinary_cli_read_only_chat: under_observation
   ordinary_cli_shared_control: not_implemented

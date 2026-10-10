@@ -112,3 +112,74 @@ swift test --package-path Packages/macOS/BmuxAppKitSupportUI
 Reference CSS font weights and shadow blur/spread are preserved as data for the native
 surface renderer to map. Terminal typography is reference-only; the token API does not
 change the renderer or the user's terminal font.
+
+### Native surfaces
+
+Apply the semantic background to content whose layout is already established:
+
+```swift
+content
+    .padding(theme.layout.cardPadding)
+    .opacity(isEnabled ? 1 : theme.layout.disabledOpacity)
+    .matteSurface(.card, theme: theme, state: MatteSurfaceState(
+        isSelected: isSelected, isHovered: isHovered, isPressed: isPressed,
+        isFocused: isFocused, isEnabled: isEnabled
+    ))
+```
+
+`View.matteSurface(_:theme:state:)` accepts `.base`, `.card`, `.panel`, `.inset`,
+and `.overlay`. It only decorates the background; content keeps its identity,
+layout, hit testing, accessibility, clipping policy, and focus ownership. The
+modifier adds no padding, gestures, selection state, preferences, animations,
+hover lift, textures, or materials. All decorations disable hit testing and are
+hidden from accessibility. Interaction owners supply immutable values. No
+observable stores cross into these views and no per-frame work is scheduled.
+
+The base is a flat continuous fill. Cards and the panel rest at level 1; hovered
+cards rise visually to level 2; selected cards retain a ring and tinted fill at
+level 2, including on hover. Overlays use level 3. Each raised surface has an
+outer hairline (selection ring for selected cards), directional inner edges,
+one contact shadow and one ambient shadow. A pressed card keeps its resting
+contact shadow and drops the ambient shadow; selected pressed cards retain the
+selection ring and tint. This is distinct from pressed *control* inset styling,
+which is outside this API. Disabled cards suppress hover, press, and focus,
+retain selection semantics, and use resting elevation. Inactive cards use the
+resting state; foreground contrast remains the caller's responsibility.
+
+Disabled decoration is composited once before applying the token opacity so
+shadow casters do not become visible through the surface. The modifier never
+dims content: the example applies disabled content opacity **before** the surface
+modifier. Do not apply disabled opacity to the composed result a second time.
+An enabled surface remains opaque. A disabled surface is intentionally translucent
+according to the reference card opacity. Keyboard focus draws the token's
+2-point outline with a 2-point gap outside the surface without altering layout.
+
+The renderer uses native circular `RoundedRectangle` geometry with token radii.
+CSS shadow blur maps to SwiftUI shadow radius as `blur / 2`, an approximation of
+the reference blur extent. The contact and ambient shadows use independent
+native `.shadow` layers. Negative spread contracts only that layer's caster
+using `inset(by: -spread)`; the contact shadow retains the full surface edge.
+The opaque surface fill covers both caster interiors.
+
+Inner edges use `strokeBorder` gradients from upper left to lower right. Raised
+surfaces interpolate the reference highlight and shade over their token-derived
+edge width. The terminal inset approximates the reference inner blur with
+concentric strokes, each one contour-token wide, fading linearly inward across
+`max(abs(offsetX), abs(offsetY), abs(spread)) + blur / 2`. Its lower-right highlight
+and inner contour use their own shadow tokens. This is a lightweight native
+approximation, not pixel-identical CSS inset-shadow rasterization; it preserves
+a soft recess without a broad flat bevel. It casts no outward shadow.
+
+Surfaces introduce no transition, so Reduce Motion does not need a separate
+rendering path here. A later interaction owner that adds animation or hover lift
+must use `theme.motion(reduceMotion:)` and `theme.cardLift(...)` with the effective
+accessibility preference.
+
+`MatteSurfaceTests` renders the real SwiftUI modifier with `ImageRenderer` in
+both appearances, checking opaque interiors against plain token fills, retained
+size, lighting direction, inset falloff, separated focus outline, and disabled
+compositing without dimming content. Pure state-resolution tests exercise
+selection/hover/press/disable precedence. Live accessibility navigation and
+mouse/keyboard routing remain integration checks when these backgrounds are
+adopted by app controls. The surface API adds no user-visible strings; caller
+content must use the app's localized strings.

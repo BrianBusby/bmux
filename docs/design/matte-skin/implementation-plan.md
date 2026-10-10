@@ -15,8 +15,8 @@ Branch `matte-skin` starts from `origin/main` at `ce17e9888`.
 
 ## Stages
 
-1. Theme tokens for both appearances — implemented; awaiting stage review. Definitions and resolution only.
-2. Reusable base, card, panel, inset, and overlay styles.
+1. Theme tokens for both appearances — approved by Brian on 2026-10-10. Definitions and resolution only.
+2. Reusable base, card, panel, inset, and overlay styles — implemented; awaiting Brian’s review.
 3. Workspace cards and existing sidebar controls.
 4. Main panel and terminal chrome.
 5. Optional static texture behind a flag.
@@ -24,7 +24,7 @@ Branch `matte-skin` starts from `origin/main` at `ce17e9888`.
 One commit per stage, followed by focused checks, an isolated tagged build and
 launch, same-size dark/light captures, comparison, and user review. Do not
 advance automatically. Stage 1 captures are the existing UI baseline; palette
-verification precedes component integration in stage 2.
+verification precedes surface primitives in stage 2 and component adoption in stages 3–4.
 
 ## Governing sources and ownership
 
@@ -59,7 +59,7 @@ portal retain identity/focus/geometry; GhosttySurfaceScrollView retains search.
 - Homebrew submodule setup URL is unavailable; app-required Ghostty and Bonsplit
   initialize separately. Pinned GhosttyKit uses the existing legacy cache path.
 - Existing shell hard-codes dark colors even in light appearance. The stage 1
-  light baseline documents this; token integration must remove it in stages 2–4.
+  light baseline documents this; token integration must remove it in stages 3–4.
 - No native visual parity claim until the surfaces and components consume tokens.
 - Stage 1 adds no product strings. Later UI stages audit English/Japanese labels.
 
@@ -112,4 +112,72 @@ completed skin parity.
 | Prototype tooling | Top controls and bottom inspector absent from native app | Intentional: reference tooling is not product UI |
 
 Material mismatches above are explicitly pending integration stages, not changes
-introduced by stage 1. Do not proceed to stage 2 until Brian reviews this stage.
+introduced by stage 1. Brian approved stage 1 on 2026-10-10; stage 2 is now authorized.
+
+## Stage 2 ownership and verification plan
+
+Implement reusable, noninteractive SwiftUI surface drawing in the existing
+`BmuxAppKitSupportUI/Matte` concern. `MatteTheme` continues to own every design
+literal. Immutable role/state inputs resolve fills, radii, edges, contact and
+ambient shadows; the renderer owns native drawing only. Components keep all
+selection, actions, focus, gesture state, lifecycle, and terminal ownership.
+Stage 2 does not apply new styling to app views: sidebar adoption is stage 3,
+main panel/terminal-container adoption is stage 4. The preview is diagnostic,
+not another product screen or feature.
+
+Native shadow mapping uses the reference blur converted to the native radius,
+and contracted shadow-caster geometry for negative spread. Inner edges use
+`strokeBorder` gradients; no material, live blur view, or animated texture.
+Verify actual SwiftUI rendering in both schemes, including resting, hover,
+selected, selected+hover, pressed, focused, disabled, and inactive appearances.
+Package tests should exercise resolved state priority and rendered pixels/layout,
+not duplicate literal tables. Compare the native preview against reference
+inspection surfaces, and capture the unchanged app baseline at 1092 × 593 using
+an isolated stage 2 tag. Preserve the user's stage 1 tagged app if still in use.
+
+## Stage 2 verification
+
+- Added passive `View.matteSurface` drawing for all five roles, immutable
+  `MatteSurfaceState`, semantic appearance resolution and separate edge rendering.
+  No app view, navigation, store, terminal engine, font, or action routing changed.
+- `swift test --package-path Packages/macOS/BmuxAppKitSupportUI`: 32 tests in
+  nine suites passed. Seven new test functions cover state resolution and actual
+  SwiftUI pixels/layout in both schemes. Rendered checks caught and corrected a
+  uniform inset band and disabled caster bleed-through before final verification.
+- Actual native galleries rendered at 1092 × 593 points, 2× scale, using production
+  files. Both galleries were inspected against reference surfaces with texture off.
+- Independent spec and subsequent code-quality reviews found no remaining issue.
+  Reviewed full primitives, token ownership, tests, package patterns and README.
+- Tagged `matte-skin-stage2` reload passed; build 738 launched and tag-bound CLI
+  rename/screenshot commands succeeded. App captures are both 1092 × 593 points.
+  Only the stage 2 bundle's appearance preference changed. Stage 1 was untouched.
+- Existing app warnings were reviewed: deprecated APIs, Swift concurrency warnings,
+  unused values/results, icon assignments, absent AppIntents metadata and optional
+  command-palette FFI skipped because Cargo is unavailable. No Matte file emitted
+  a warning. Release download 404s fell back to the existing local artifact path;
+  the tagged build succeeded. Full app tests remain CI coverage, not a local claim.
+- Localization audit: production additions contain no user-visible strings or
+  accessibility labels. Diagnostic gallery text and engineering docs do not ship
+  in the app. No localization catalogs changed.
+- Live pointer routing, VoiceOver, keyboard behavior, list performance and older
+  macOS rendering remain integration checks. The surface modifier is noninteractive
+  and hidden from accessibility; that source contract is not a live app AX test.
+- Project Truth records surface primitives only. Component adoption remains pending.
+
+See [stage 2 comparison](verification-stage2/comparison.html) and its reproducible
+native gallery harness. Pause for Brian’s review before stage 3.
+
+### Stage 2 comparison deviations
+
+| Area | Deviation and reason |
+| --- | --- |
+| Shadow rasterization | Native blur radius is CSS blur / 2 and negative spread contracts the caster. SwiftUI and browser kernels differ; the spec's contact/ambient ingredients and geometry are retained. |
+| Inner edges | Raised diagonal gradient strokes and concentric fading inset strokes approximate CSS inner shadows without live blur. Exact browser shadow-pixel equality is not claimed. |
+| Gallery composition | Diagnostic text and specimen sizes differ from the HTML inspector; this verifies materials, not app layout/type. No prototype controls were added. |
+| Card semantics | Gallery shows state decoration only. Leading selection square, accessibility selected trait, close/link targets, hover lift and reduced-motion behavior belong to the existing components in stage 3. |
+| Texture | Off; static optional texture remains stage 5. Material hierarchy is visible without it. |
+| App integration | All baseline deviations listed above remain: legacy palette/divider/card geometry, header/sidebar/main spacing, terminal chrome. Stage 2 adds reusable drawing only; stages 3–4 adopt it. |
+| Capture content | Build badge is 738; fresh isolated session shows one workspace, current home directory/prompt and startup help in the dark capture. No original PR/session data was supplied. The OS capture badge occupies the traffic-light area. |
+
+No unexplained material mismatch remains within the stage 2 primitive scope.
+App parity and runtime performance are not yet accepted.
