@@ -9,20 +9,40 @@ import XCTest
 #endif
 
 extension AppDelegateShortcutRoutingTests {
+    func waitUntil(timeout: TimeInterval, condition: () -> Bool) {
+        let deadline = Date(timeIntervalSinceNow: timeout)
+        while !condition(), Date() < deadline {
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.01))
+        }
+    }
+
     func focusHostedTerminalForRepairTesting(
         window: NSWindow,
         hostedView: GhosttySurfaceScrollView
-    ) {
+    ) async {
         window.makeKeyAndOrderFront(nil)
         window.displayIfNeeded()
         hostedView.setVisibleInUI(true)
         hostedView.setActive(true)
+        if let surface = hostedView.surfaceView.terminalSurface, !surface.hasLiveSurface {
+            let ready = expectation(forNotification: .terminalSurfaceDidBecomeReady, object: surface)
+            await fulfillment(of: [ready], timeout: 3.0)
+        }
+        XCTAssertTrue(hostedView.surfaceView.terminalSurface?.hasLiveSurface == true, "Expected a live terminal surface")
         hostedView.moveFocus()
-        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.05))
+        waitUntil(timeout: 1.0) { hostedView.isSurfaceViewFirstResponder() }
         XCTAssertTrue(
             hostedView.isSurfaceViewFirstResponder(),
             "Expected terminal surface to own first responder before repair test"
         )
+    }
+
+    func waitForTerminalFixture(in window: NSWindow, condition: @escaping () -> Bool) async {
+        let deadline = Date(timeIntervalSinceNow: 3.0)
+        while !condition(), Date() < deadline {
+            window.contentView?.layoutSubtreeIfNeeded()
+            await Task.yield()
+        }
     }
 
     func installStrandedResponderDriftForTesting(

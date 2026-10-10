@@ -121,6 +121,7 @@ resolve_hook_bmux_bin() {
 codex_subcommand_starts_session() {
     case "$1" in
         exec|e|resume) return 0 ;;
+        app-server) [[ "${BMUX_CODEX_CONNECTED_HOST:-}" == "1" ]] ;;
         *) return 1 ;;
     esac
 }
@@ -273,17 +274,20 @@ export BMUX_CODEX_HOOK_BMUX_BIN="$(resolve_hook_bmux_bin)"
 export BMUX_AGENT_LAUNCH_KIND="codex"
 export BMUX_AGENT_LAUNCH_EXECUTABLE="$REAL_CODEX"
 export BMUX_AGENT_LAUNCH_CWD="$PWD"
-{
-    bmux_codex_argv_b64="$(
-        {
-            printf '%s\0' "$REAL_CODEX"
-            if (( $# > 0 )); then
-                printf '%s\0' "$@"
-            fi
-        } | base64 | tr -d '\n'
-    )"
-    [[ -n "$bmux_codex_argv_b64" ]] && export BMUX_AGENT_LAUNCH_ARGV_B64="$bmux_codex_argv_b64"
-}
+# Owned hosts supply the original interactive argv; app-server itself is not resumable.
+if [[ "${BMUX_CODEX_CONNECTED_HOST:-}" != "1" || "${1:-}" != "app-server" || -z "${BMUX_AGENT_LAUNCH_ARGV_B64:-}" ]]; then
+    {
+        bmux_codex_argv_b64="$(
+            {
+                printf '%s\0' "$REAL_CODEX"
+                if (( $# > 0 )); then
+                    printf '%s\0' "$@"
+                fi
+            } | base64 | tr -d '\n'
+        )"
+        [[ -n "$bmux_codex_argv_b64" ]] && export BMUX_AGENT_LAUNCH_ARGV_B64="$bmux_codex_argv_b64"
+    }
+fi
 
 # On a FRESH launch, no wrapper-fired session-start: codex's own injected
 # SessionStart hook (below) fires within ~1s carrying codex's REAL session_id, so

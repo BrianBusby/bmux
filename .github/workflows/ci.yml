@@ -1182,6 +1182,15 @@ jobs:
           set -euo pipefail
           ./scripts/select-ci-xcode.sh
 
+      - name: Prepare workspace churn accessibility helper
+        id: workspace_churn_ax
+        run: |
+          set -euo pipefail
+          AX_HELPER="$RUNNER_TEMP/bmux-benchmark-select-terminal"
+          swiftc -parse-as-library scripts/benchmark-select-terminal.swift -o "$AX_HELPER" 2>&1 | tee /tmp/bmux-ci-lag-helper.log
+          "$AX_HELPER" --check-trust 2>&1 | tee -a /tmp/bmux-ci-lag-helper.log
+          echo "BMUX_LAG_AX_HELPER=$AX_HELPER" >> "$GITHUB_ENV"
+
       - name: Prepare isolated DerivedData
         run: |
           set -euo pipefail
@@ -1394,6 +1403,7 @@ jobs:
           ./scripts/verify-main-thread-ca-transactions.sh "$APP"
 
       - name: Run workspace churn typing-lag regression
+        id: workspace_churn_lag
         run: |
           set -euo pipefail
 
@@ -1414,7 +1424,7 @@ jobs:
           rm -f "$SOCK" "/tmp/bmux-${TAG}.sock" || true
           defaults write "$BUNDLE_ID" socketControlMode -string full >/dev/null 2>&1 || true
 
-          BMUX_TAG="$TAG" BMUX_SOCKET_PATH="$SOCK" BMUX_UI_TEST_MODE=1 "$APP/Contents/MacOS/bmux DEV" >/tmp/bmux-ci-lag.log 2>&1 &
+          BMUX_TAG="$TAG" BMUX_SOCKET_PATH="$SOCK" BMUX_UI_TEST_MODE=1 "$APP/Contents/MacOS/bmux DEV" -AppleLanguages '(en)' -AppleLocale en_US >/tmp/bmux-ci-lag.log 2>&1 &
           APP_PID=$!
           trap 'kill "$APP_PID" >/dev/null 2>&1 || true' EXIT
 
@@ -1425,6 +1435,7 @@ jobs:
           [ -S "$SOCK" ] || { echo "Socket not ready at $SOCK" >&2; exit 1; }
 
           BMUX_SOCKET_PATH="$SOCK" \
+          BMUX_LAG_APP_PID="$APP_PID" \
           BMUX_LAG_MAX_P95_RATIO=1.75 \
           BMUX_LAG_MAX_AVG_RATIO=1.70 \
           BMUX_LAG_MIN_BASELINE_P95_MS_FOR_RATIO=12.0 \
@@ -1433,7 +1444,18 @@ jobs:
           BMUX_LAG_MAX_AVG_DELTA_MS=12.0 \
           BMUX_LAG_MAX_CHURN_P95_MS=35 \
           BMUX_LAG_KEY_EVENTS=180 \
-          python3 tests/test_workspace_churn_up_arrow_lag.py
+          python3 tests/test_workspace_churn_up_arrow_lag.py 2>&1 | tee /tmp/bmux-ci-lag-results.log
+
+      - name: Upload workspace churn failure diagnostics
+        if: ${{ failure() && (steps.workspace_churn_ax.outcome == 'failure' || steps.workspace_churn_lag.outcome == 'failure') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace-churn-failure-${{ github.run_attempt }}
+          path: |
+            /tmp/bmux-ci-lag-results.log
+            /tmp/bmux-ci-lag-helper.log
+            /tmp/bmux_workspace_churn_up_arrow_*.txt
+          retention-days: 7
 
       - name: Cleanup virtual display
         if: always()

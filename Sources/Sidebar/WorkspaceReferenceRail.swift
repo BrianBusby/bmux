@@ -1,21 +1,30 @@
+import AppKit
 import SwiftUI
 
 /// Owns workspace-list projection above the card snapshot boundary.
 @MainActor
 struct WorkspaceReferenceRail: View {
     let workspaces: [Workspace]
-    let cards: [WorkspaceReferenceCardSnapshot]
+    let projectCard: @MainActor (Workspace) -> WorkspaceReferenceCardSnapshot
     let selectedWorkspaceID: UUID?
     let selectedWorkspaceTitle: String?
     let onSelect: (UUID) -> Void
     let onClose: (UUID) -> Void
     let onOpenLink: (UUID, URL) -> Void
+    let onLaunchRepository: (NSView) -> Void
     @Binding var filters: WorkspaceFilters
     @Binding var isFilterPanelPresented: Bool
+    @State private var repoLauncherAnchorView: NSView?
 
     var body: some View {
+        WorkspaceReferenceCardScope(workspaces: workspaces, project: projectCard) { cards in
+            cardContent(cards: cards)
+        }
+    }
+
+    private func cardContent(cards: [WorkspaceReferenceCardSnapshot]) -> some View {
         WorkspaceRepositoryLabelScope(workspaces: workspaces) { repositoryNames in
-            let filterItems = WorkspaceTabFilterProjection().items(for: workspaces)
+            let filterItems = WorkspaceTabFilterProjection().items(for: workspaces, cards: cards)
             let visibleWorkspaceIDs = Set(
                 WorkspaceTabFilterProjection().visibleItems(
                     filterItems,
@@ -25,13 +34,37 @@ struct WorkspaceReferenceRail: View {
 
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Text(String(localized: "workspaceRail.title", defaultValue: "Workspaces"))
+                    Text(String(
+                        format: String(
+                            localized: workspaces.count == 1 ? "workspaceRail.count.one" : "workspaceRail.count.other",
+                            defaultValue: workspaces.count == 1 ? "%lld Workspace" : "%lld Workspaces"
+                        ),
+                        Int64(workspaces.count)
+                    ))
                         .font(.system(size: 11, weight: .medium))
                         .tracking(1.2)
                         .foregroundStyle(Color.workspaceReferenceTextMuted)
                     Spacer()
-                    Text(String(workspaces.count))
-                        .foregroundStyle(Color.workspaceReferenceTextDisabled)
+                    Button {
+                        guard let repoLauncherAnchorView else {
+                            NSSound.beep()
+                            return
+                        }
+                        onLaunchRepository(repoLauncherAnchorView)
+                    } label: {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(Color.workspaceReferenceTextSecondary)
+                            .frame(width: 28, height: 28)
+                            .background(Color.workspaceReferenceCard)
+                            .clipShape(RoundedRectangle(cornerRadius: 7))
+                            .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.workspaceReferenceCardBorder, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    .background(TitlebarControlAnchorView { repoLauncherAnchorView = $0 })
+                    .accessibilityIdentifier("bmuxShell.repoAgentLauncher")
+                    .accessibilityLabel(String(localized: "titlebar.repoAgentLauncher.accessibilityLabel", defaultValue: "AI Repo Launcher"))
+                    .safeHelp(String(localized: "titlebar.repoAgentLauncher.tooltip", defaultValue: "Launch an AI session for a repo"))
                 }
 
                 WorkspaceTabFilterBar(
@@ -50,11 +83,20 @@ struct WorkspaceReferenceRail: View {
                                 WorkspaceCardHeader(
                                     repositoryName: repositoryNames[card.id],
                                     repositoryFont: .system(size: 10, weight: .medium),
+                                    ticketID: card.ticketID,
+                                    ticketFont: .system(size: 10, weight: .semibold, design: .monospaced),
+                                    ticketIcon: {
+                                        Image(systemName: "ticket").font(.system(size: 11, weight: .medium))
+                                    },
+                                    ticketColor: Color.workspaceReferenceTextSecondary,
+                                    ticketBorderColor: Color.workspaceReferenceTextSecondary.opacity(0.35),
+                                    onOpenTicket: card.ticketURL.map { url in { onOpenLink(card.id, url) } },
                                     closeIcon: {
                                         Image(systemName: "xmark").font(.system(size: 14, weight: .medium))
                                     },
                                     closeButtonColor: Color.workspaceReferenceTextSecondary,
                                     closeButtonSize: CGSize(width: 20, height: 20),
+                                    hasActiveAIWork: card.hasActiveAIWork,
                                     canCloseWorkspace: workspaces.count > 1,
                                     showsCloseButton: true,
                                     closeButtonTooltip: String(localized: "sidebar.closeWorkspace.tooltip", defaultValue: "Close Workspace"),
@@ -77,8 +119,9 @@ struct WorkspaceReferenceRail: View {
                                         Text(prompt)
                                             .font(.system(size: 13))
                                             .foregroundStyle(Color.workspaceReferenceTextSecondary)
-                                            .lineLimit(1)
+                                            .lineLimit(3)
                                             .truncationMode(.tail)
+                                            .fixedSize(horizontal: false, vertical: true)
                                     }
 
                                     let branch = card.branch
@@ -93,8 +136,8 @@ struct WorkspaceReferenceRail: View {
                                         Text([branch, status].compactMap { $0 }.joined(separator: " · "))
                                             .font(.system(size: 11, design: .monospaced))
                                             .foregroundStyle(Color.workspaceReferenceTextSecondary)
-                                            .lineLimit(1)
-                                            .truncationMode(.tail)
+                                            .lineLimit(nil)
+                                            .fixedSize(horizontal: false, vertical: true)
                                     }
                                 }
                             }
@@ -134,32 +177,6 @@ struct WorkspaceReferenceRail: View {
     @ViewBuilder
     private func bmuxReferenceWorkspaceLinkRows(for card: WorkspaceReferenceCardSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            if let ticketID = card.ticketID {
-                let ticketContent = HStack(spacing: 6) {
-                    Image(systemName: "ticket")
-                        .font(.system(size: 11, weight: .medium))
-                    Text(ticketID)
-                        .font(.system(size: 12, weight: .semibold, design: .monospaced))
-                }
-                .foregroundStyle(Color.workspaceReferenceTextSecondary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.workspaceReferenceTextSecondary.opacity(0.35), lineWidth: 1)
-                }
-                if let ticketURL = card.ticketURL {
-                    Button {
-                        onOpenLink(card.id, ticketURL)
-                    } label: {
-                        ticketContent
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    ticketContent
-                }
-            }
-
             if let projectTitle = card.projectTitle {
                 bmuxReferenceWorkspaceLinkRow(
                     icon: "folder",
@@ -168,14 +185,6 @@ struct WorkspaceReferenceRail: View {
                     card: card,
                     color: Color.workspaceReferenceTextPrimary
                 )
-            }
-
-            if let summary = card.summary {
-                Text(String(summary.prefix(125)))
-                    .font(.system(size: 13))
-                    .foregroundStyle(Color.workspaceReferenceTextSecondary)
-                    .lineLimit(3)
-                    .truncationMode(.tail)
             }
 
             if let pullRequestText = card.pullRequestText {
@@ -190,7 +199,7 @@ struct WorkspaceReferenceRail: View {
 
             if let ownerName = card.ownerName {
                 let ownerContent = HStack(spacing: 8) {
-                    Text(ownerName.prefix(2).uppercased())
+                    Text(card.ownerInitials ?? "")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(Color.workspaceReferenceTextPrimary)
                         .frame(width: 24, height: 24)

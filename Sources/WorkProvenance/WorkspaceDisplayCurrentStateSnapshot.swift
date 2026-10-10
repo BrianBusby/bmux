@@ -8,6 +8,12 @@ struct WorkspaceDisplayCurrentStateSnapshot: Equatable, Sendable {
     let title: String?
     let currentDirectory: String?
     let branch: String?
+    let agentWorktree: ProvenanceWorktreeRecord?
+
+    /// Branch confirmed through PE's workspace-to-agent worktree association.
+    var agentWorktreeBranch: String? {
+        agentWorktree?.branch?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+    }
     let pullRequest: WorkspaceDisplayCurrentStatePullRequestSnapshot?
     let isDirty: Bool?
     let ticketLinks: [WorkspaceDisplayCurrentStateTicketLinkSnapshot]
@@ -22,7 +28,7 @@ struct WorkspaceDisplayCurrentStateSnapshot: Equatable, Sendable {
     let latestEventSequence: Int?
     let updatedAt: Date
 
-    init?(_ display: ProvenanceWorkspaceDisplayRecord) {
+    init?(_ display: ProvenanceWorkspaceDisplayRecord, agentWorktree: ProvenanceWorktreeRecord? = nil) {
         guard let stableWorkspaceID = UUID(uuidString: display.workspaceID) else {
             return nil
         }
@@ -30,6 +36,7 @@ struct WorkspaceDisplayCurrentStateSnapshot: Equatable, Sendable {
         self.title = display.title?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         self.currentDirectory = display.currentDirectory?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         self.branch = display.branch?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        self.agentWorktree = agentWorktree
         self.pullRequest = WorkspaceDisplayCurrentStatePullRequestSnapshot(display)
         self.isDirty = display.isDirty
         self.ticketLinks = WorkspaceDisplayCurrentStateTicketLinkSnapshot.links(

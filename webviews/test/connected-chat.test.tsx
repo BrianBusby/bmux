@@ -5,7 +5,7 @@ import { createRoot } from "react-dom/client";
 import { ConnectedChatComposer } from "../src/agent-session/react/ConnectedChatComposer";
 import type { AgentSessionCopy, AppContext } from "../src/agent-session/shared/types";
 import type { ConnectedControl } from "../src/agent-session/shared/connectedChat";
-test("initial connected control without action or receipt mounts before a later receipt", async () => {
+test("connected composer stays compact before and after acceptance", async () => {
   const dom = new JSDOM("<!doctype html><div id='root'></div>", { url: "https://example.test" });
   const previousWindow = globalThis.window;
   const previousDocument = globalThis.document;
@@ -20,9 +20,12 @@ test("initial connected control without action or receipt mounts before a later 
     await act(async () => root.render(<ConnectedChatComposer context={context} control={control} enabled />));
     expect(dom.window.document.querySelector("textarea")?.getAttribute("aria-label")).toBe("Message Codex");
     expect(dom.window.document.body.textContent).not.toContain("Accepted");
+    expect(dom.window.document.body.textContent).not.toContain("Provider queue");
     await act(async () => root.render(<ConnectedChatComposer context={context} control={{ ...control,
       actions: [{ id: "receipt-1", threadID: "original", operation: "queue", text: "Later receipt", delivery: "accepted" }] }} enabled />));
-    expect(dom.window.document.body.textContent).toContain("Accepted");
+    expect(dom.window.document.body.textContent).not.toContain("Accepted");
+    expect(dom.window.document.body.textContent).not.toContain("Provider queue");
+    expect(dom.window.document.querySelector("output")).toBeNull();
   } finally {
     await act(async () => root.unmount()); dom.window.close();
     Object.assign(globalThis, { window: previousWindow, document: previousDocument, IS_REACT_ACT_ENVIRONMENT: false });
@@ -47,24 +50,23 @@ test("reload restores an uncertain draft without resending, then reconciles acce
   try {
     await act(async () => root.render(<ConnectedChatComposer context={context} control={control} enabled />));
     expect(dom.window.document.querySelector("textarea")?.value).toBe("Inspect the build");
-    const send = [...dom.window.document.querySelectorAll("button")].find(button => button.textContent === "Send follow-up")!;
-    expect(send.disabled).toBe(true);
-    await act(async () => send.click());
+    expect(dom.window.document.querySelectorAll("button")).toHaveLength(0);
     expect(calls).toEqual([]);
     expect(dom.window.document.body.textContent).toContain("Delivery uncertain");
     await act(async () => root.render(<ConnectedChatComposer context={context} control={{ ...control,
       actions: control.actions!.map(action => ({ ...action, delivery: "accepted" })) }} enabled />));
     expect(dom.window.document.querySelector("textarea")?.value).toBe("Inspect the build");
-    expect(dom.window.document.body.textContent).toContain("Accepted");
+    expect(dom.window.document.body.textContent).not.toContain("Accepted");
+    expect(dom.window.document.body.textContent).not.toContain("Provider queue");
+    expect(dom.window.document.querySelector("output")).toBeNull();
     expect(calls).toEqual([]);
     await act(async () => root.unmount());
     root = createRoot(dom.window.document.getElementById("root")!);
     await act(async () => root.render(<ConnectedChatComposer context={context} control={{ ...control, draft: { revision: "restored-r1", text: "Inspect the build" },
       actions: control.actions!.map(action => ({ ...action, delivery: "accepted" })) }} enabled />));
     expect(dom.window.document.querySelector("textarea")?.value).toBe("Inspect the build");
-    const terminal = [...dom.window.document.querySelectorAll("button")].find(button => button.textContent === "Interact in Terminal")!;
-    await act(async () => terminal.click());
-    expect(calls).toEqual(["terminalChat.openTerminal"]);
+    expect(dom.window.document.querySelectorAll("button")).toHaveLength(0);
+    expect(calls).toEqual([]);
   } finally {
     await act(async () => root.unmount()); dom.window.close();
     Object.assign(globalThis, { window: previousWindow, document: previousDocument, IS_REACT_ACT_ENVIRONMENT: false });

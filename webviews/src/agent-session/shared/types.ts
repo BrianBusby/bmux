@@ -33,6 +33,7 @@ export type AgentSessionTheme = {
 export type AppContext = {
   readOnlyTerminalChat?: boolean;
   canStartConnectedSession?: boolean;
+  automaticallyStartConnectedSession?: boolean;
   panelId: string;
   workspaceId: string;
   stableWorkspaceId?: string;
@@ -74,6 +75,7 @@ export type AgentSessionCopy = {
   chatStale?: string;
   chatUnavailable?: string;
   chatInteract?: string;
+  chatConnected?: string;
   chatConversation?: string;
   chatPartial?: string;
   chatReadOnly?: string;

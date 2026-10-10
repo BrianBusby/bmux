@@ -52,6 +52,7 @@ struct AgentExecutableResolver {
     var bundleResourceURL: URL?
     var extraSearchDirectories: [String]
     var includeStandardSearchDirectories: Bool
+    var includeUserRuntimeSearchDirectories: Bool
     var configuredExecutablePaths: [AgentSessionProviderID: String]
 
     init(
@@ -60,6 +61,7 @@ struct AgentExecutableResolver {
         bundleResourceURL: URL? = Bundle.main.resourceURL,
         extraSearchDirectories: [String] = [],
         includeStandardSearchDirectories: Bool = true,
+        includeUserRuntimeSearchDirectories: Bool = true,
         configuredExecutablePaths: [AgentSessionProviderID: String] = [:]
     ) {
         self.environment = environment
@@ -67,6 +69,7 @@ struct AgentExecutableResolver {
         self.bundleResourceURL = bundleResourceURL
         self.extraSearchDirectories = extraSearchDirectories
         self.includeStandardSearchDirectories = includeStandardSearchDirectories
+        self.includeUserRuntimeSearchDirectories = includeUserRuntimeSearchDirectories
         self.configuredExecutablePaths = configuredExecutablePaths
     }
 
@@ -110,7 +113,7 @@ struct AgentExecutableResolver {
         let pathValue = environment["PATH"] ?? ""
         directories.append(contentsOf: pathValue.split(separator: ":").map(String.init))
         directories.append(contentsOf: extraSearchDirectories)
-        if let home = environment["HOME"], !home.isEmpty {
+        if includeUserRuntimeSearchDirectories, let home = environment["HOME"], !home.isEmpty {
             directories.append(contentsOf: userRuntimeSearchDirectories(home: home))
         }
         if includeStandardSearchDirectories {

@@ -16,6 +16,7 @@ final class TerminalChatRuntime: TerminalChatConnecting {
     private var submittedDraftRevisions: [UUID: UUID] = [:]
     private var terminalLiveness: [UUID: @MainActor () -> Bool] = [:]
     private var connections: [UUID: (workspaceID: UUID, directory: String, host: ConnectedCodexHost)] = [:]
+    private var reconnectingSurfaces: Set<UUID> = []
 
     init(reader: any TerminalChatReading, hosts: any ConnectedCodexHosting,
          bind: @escaping (String, UUID, UUID, String) -> Void) {
@@ -24,9 +25,9 @@ final class TerminalChatRuntime: TerminalChatConnecting {
         self.bind = bind
     }
 
-    func prepareConnectedSession(workspaceID: UUID, surfaceID: UUID, workingDirectory: String) async throws -> String {
+    func prepareConnectedSession(workspaceID: UUID, surfaceID: UUID, workingDirectory: String, configuration: ConnectedCodexLaunchConfiguration = .init()) async throws -> String {
         guard connections[surfaceID] == nil else { throw CodexControlError.duplicateRequest }
-        let host = try await hosts.launch(surfaceID: surfaceID, workingDirectory: workingDirectory)
+        let host = try await hosts.launch(workspaceID: workspaceID, surfaceID: surfaceID, workingDirectory: workingDirectory, configuration: configuration)
         connections[surfaceID] = (workspaceID, workingDirectory, host)
         return host.terminalCommand
     }
@@ -44,7 +45,10 @@ final class TerminalChatRuntime: TerminalChatConnecting {
 
     func terminalChatSnapshot(workspaceID: UUID, surfaceID: UUID) async -> [String: Any] {
         if let entry = connections[surfaceID], entry.workspaceID == workspaceID, entry.host.threadID == nil, terminalLiveness[surfaceID]?() == true,
-           let adopted = try? await hosts.adoptOriginalThread(entry.host), let thread = adopted.threadID {
+           let adopted = try? await hosts.adoptOriginalThread(entry.host), let thread = adopted.threadID,
+           let current = connections[surfaceID], current.workspaceID == workspaceID,
+           current.host.connection === entry.host.connection, current.host.threadID == nil,
+           terminalLiveness[surfaceID]?() == true {
             connections[surfaceID] = (workspaceID, entry.directory, adopted)
             bind(thread, workspaceID, surfaceID, entry.directory)
         }
@@ -107,19 +111,36 @@ final class TerminalChatRuntime: TerminalChatConnecting {
                 snapshot["status"] = "observed"
             }
         } catch {
-            if terminalLiveness[surfaceID]?() == true, let replacement = try? await hosts.reconnect(host) {
-                connections[surfaceID] = (workspaceID, entry.directory, replacement)
+            if terminalLiveness[surfaceID]?() == true, reconnectingSurfaces.insert(surfaceID).inserted {
+                // Reconnect rebinds the retained control actor before returning.
+                // Reserve the surface across that await so another read cannot
+                // disconnect the replacement that this owner is accepting.
+                defer { reconnectingSurfaces.remove(surfaceID) }
+                guard let current = connections[surfaceID], current.workspaceID == workspaceID,
+                      current.host.connection === host.connection, current.host.threadID == threadID,
+                      terminalLiveness[surfaceID]?() == true else { return snapshot }
+                if let replacement = try? await hosts.reconnect(host) {
+                    guard let current = connections[surfaceID], current.workspaceID == workspaceID,
+                          current.host.connection === host.connection, current.host.threadID == threadID,
+                          terminalLiveness[surfaceID]?() == true else {
+                        await replacement.connection.disconnect()
+                        return snapshot
+                    }
+                    connections[surfaceID] = (workspaceID, entry.directory, replacement)
+                }
             }
         }
         let available = control["status"] as? String == "connected"
         control["provider"] = "codex"
-        control["providerVersion"] = "0.154.0"
+        control["providerVersion"] = host.providerVersion
         control["capabilities"] = Self.capabilities(connected: available, activeTurn: control["activeTurnId"] != nil,
                                                    historyAvailable: snapshot["history"] != nil)
         if let draft = drafts[surfaceID] {
             control["draft"] = ["revision": draft.revision.uuidString, "text": draft.text]
         }
         control["actions"] = (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(await actionOwner.actionSnapshot()))) ?? []
+        guard let current = connections[surfaceID], current.workspaceID == workspaceID,
+              current.host.threadID == threadID, current.host.control === actionOwner else { return snapshot }
         snapshot["control"] = control
         snapshot["sessionId"] = threadID
         snapshot["workspaceId"] = workspaceID.uuidString

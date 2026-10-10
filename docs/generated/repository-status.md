@@ -34,15 +34,21 @@ Repository: `BrianBusby/bmux`
 | Bmux Cross Session Context Assembly Experiment | planned |
 | Bmux Proactive Cross Session Awareness | implemented |
 | Codex Historical Import Startup Boundary Guard | planned |
+| Connected Codex 0161 Launch And Controls | under observation |
+| Connected Codex 0162 Launch And Controls | under observation |
 | Connected Codex Shared Host Controls | under observation |
+| Connected Codex Workspace Hooks | under observation |
+| Connected Prompt Workspace Resource Projection | under observation |
 | Factual Agent Session View | implemented |
 | Knowledge Compiler Cross Session Bridge | planned |
 | Legacy Bmux Provenance Retirement | planned |
+| Managed Connected Codex Runtime | under observation |
 | Monorepo Migration Ledger Closure | planned |
 | Native Provider Session View | implemented |
 | Normal Coding Agent Evidence Ingestion | implemented |
 | Ordinary Cli Read Only Chat | under observation |
 | Ordinary Cli Shared Control | not implemented |
+| Pe Materialized Outcome Reads And Scoped Refresh | under observation |
 | Pe Shared Sqlite Writer Policy | planned |
 | Provenance Engine Agent Accessible Cross Session Retrieval | implemented |
 | Provenance Engine Blocker Approach Change Semantics | implemented |
@@ -90,6 +96,7 @@ Repository: `BrianBusby/bmux`
 | React Smart Session Work Model Consumer | planned |
 | React Terminal Agent Chat Surface | implemented |
 | React Terminal Productization | planned |
+| Readable Expanded Prior Turns | under observation |
 | Remote Device Identity Pairing | planned |
 | Remote First Transport | planned |
 | Remote General Internet Route | planned |
@@ -105,16 +112,19 @@ Repository: `BrianBusby/bmux`
 | Richer Session Evidence Foundation | implemented |
 | Richer Session Work View | planned |
 | Session Work Model Consumer | planned |
+| Shell Mode Portal Visibility | under observation |
 | Test Determinism Allowlist Burndown | planned |
 | Three View Session Navigation | planned |
 | Work Provenance Runtime Lifecycle State | under observation |
 | Workspace Coding Agent Session Linkage Hardening | under observation |
 | Workspace Display Current State Diagnostic | implemented |
 | Workspace Display Durable Context | implemented |
+| Workspace Display Failed Observation Retry | under observation |
 | Workspace Display File Watcher Churn Policy | planned |
 | Workspace Display Projection | implemented |
 | Workspace Display Prompt Resource Discovery | implemented |
 | Workspace Display Tab Projection | implemented |
+| Workspace Display Ticket Enrichment Independent | under observation |
 | Workspace Display Ticket Link Facts | implemented |
 | Workspace Display Ticket Title Sidebar | implemented |
 | Workspace Launch Canonical Mutation Path | planned |
@@ -142,6 +152,14 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `configured_codex_placeholder_startup_dogfood` | open |
+| `codex_update_workspace_exit_native_dogfood` | open |
+| `expanded_prior_turn_system_appearance_contrast` | monitoring |
+| `expanded_prior_turn_visual_acceptance` | open |
+| `shell_mode_portal_visibility_dogfood` | open |
+| `connected_codex_workspace_hooks_dogfood` | open |
+| `pe_prompt_display_replay_chronology` | open |
+| `connected_session_worktree_context_verification` | open |
 | `connected_codex_delivery_and_recovery_verification` | open |
 | `shared_host_codex_stale_interrupt` | open |
 | `ordinary_cli_shared_control_unverified` | open |

@@ -134,7 +134,10 @@ struct BmuxConfigExecutor {
                 targetTerminal?.sendInput(shellInput)
             case .newTabInCurrentPane:
                 targetWorkspace?.clearSplitZoom()
-                targetWorkspace?.newTerminalSurfaceInFocusedPane(focus: true, initialInput: shellInput)
+                if let targetWorkspace, let panel = targetWorkspace.newTerminalSurfaceInFocusedPane(focus: true) {
+                    targetWorkspace.sendConfiguredTerminalInput(shellInput, to: panel,
+                        workingDirectory: panel.requestedWorkingDirectory ?? targetWorkspace.currentDirectory)
+                }
             }
             onExecuted?()
         }

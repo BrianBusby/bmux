@@ -220,6 +220,8 @@ extension AgentSessionWebRendererCoordinator {
                 "copy": copy
             ]
             context["canStartConnectedSession"] = onStartConnectedSession != nil
+            context["automaticallyStartConnectedSession"] = onStartConnectedSession != nil
+                && canAutomaticallyStartConnectedSession?() == true
             context["readOnlyTerminalChat"] = terminalChatSnapshot != nil
             if let workingDirectory {
                 context["workingDirectory"] = workingDirectory

@@ -252,7 +252,8 @@ app-server, then starts the original Codex TUI with `--remote`. It does not repl
 The TUI creates its new thread on that host; Chat binds only when the dedicated host reports exactly one loaded thread. Both clients use that same live owner.
 The provider process, TUI process, provider thread, and PE identity remain distinct.
 
-The implementation pins controls to empirically tested Codex 0.154.0. It uses a
+The implementation gates controls to exact empirically tested Codex versions
+0.154.0, 0.161.0 and 0.162.0 (see the October 8 and 9 compatibility evidence below). It uses a
 random capability token in a private file, verifies that an unauthenticated
 WebSocket handshake receives HTTP 401, and only then initializes its native
 `URLSessionWebSocketTask`. The token is never sent through the webview bridge,
@@ -366,3 +367,175 @@ Terminal and Chat both displayed the marker. No second conversation or process
 restart occurred. This closes the basic UI delivery gate for build 572;
 focus/typing behavior, startup ambiguity, broader recovery, and later draft
 changes still need verification. The running app was not rebuilt or replaced.
+
+
+## Chat-first startup and Terminal focus follow-up
+
+Opening Chat on a plain local shell now starts a new connected Codex terminal
+through the same workspace launch action used by the explicit connected-session
+button. The launch remains bound to the source panel, pane, workspace and local
+working directory. It does not inject a command into the existing shell. A live
+terminal must positively identify an idle shell; unspawned terminals must have
+no deferred command, input, or hibernated agent. The native bridge rechecks
+that there is no associated thread, ambiguous history, or existing control owner
+before automatic launch. Startup occurs once per retained Chat renderer, with
+one native request in flight. Failed startup displays the localized error and
+permits an explicit retry.
+
+An ordinary running CLI remains read-only and untouched. Chat offers the
+existing **New connected Codex session** action rather than claiming an
+unverified attachment. The new TUI still creates its original thread, with no
+dummy prompt or empty-thread resume. Once that identity and control connection
+are verified, the existing queue action accepts the first prompt from Chat.
+Approvals, slash commands, settings and interruption retain their Terminal
+boundary.
+
+The retained renderer now owns whether Chat is visible. Only the WebKit host
+that currently owns the view may deactivate it on teardown. This restores
+Terminal focus when the outer shell switches tabs, while preserving focus
+suppression when a view is transferred to another live Chat host. The outer
+shell supplies the same launch and Chat focus callbacks as the inner panel and
+remounts against the selected terminal identity. A launch completing after the
+user leaves Chat, focuses another panel, selects another workspace, or closes
+the source panel closes its prepared host instead of creating a late focused
+terminal. Thread adoption and reconnect also recheck the same connection owner
+and terminal liveness after their provider awaits; a closed owner cannot be
+republished. A late reconnect closes its replacement connection instead.
+Only one reconnect may rebind a terminal's retained control actor at a time;
+overlapping reads wait for the next refresh rather than launching a second one.
+
+Regression coverage exercises actual native host teardown/transfer and the
+bundled React resource for fresh startup, ordinary-session fallback, first
+connected submission, and failed-start retry. Native bridge tests cover
+single-flight startup, one automatic attempt, hidden Chat, existing
+thread/control ownership, delayed launch after same-workspace pane navigation,
+delayed adoption or reconnect after close, and overlapping reconnect reads
+followed by an accepted action. Returning to the original source
+shell shows its actual read-only state rather than an obsolete startup
+indicator. Native dogfood and broader recovery remain under observation; this
+follow-up does not assert ordinary attachment or enable structured interruption.
+
+
+### Chat-first startup compatibility and composer
+
+New connected ChatGPT sessions read the project-effective configuration and the
+installed client's complete model catalog, including hidden models. A configured
+model in that catalog is preserved. If it is absent, startup passes the visible
+catalog default to the original remote TUI and replaces reasoning effort only
+when the inherited effort is unsupported by that model. API accounts and custom
+providers retain CLI configuration. No global configuration or existing thread
+is rewritten. Missing defaults or invalid pagination fail startup and retire the
+owned connection and host.
+
+The shared composer submits on Enter and retains Shift+Enter, Alt+Enter and IME
+composition. Queue capability, current connection, pending and uncertain delivery
+still gate submission. Chat removes Interact in Terminal and Send buttons from
+both bundled React consumers; Terminal remains available through the native tab.
+Native command regression tests use an injected authenticated connection and a
+launched isolated CLI fixture. Bundled keyboard tests execute the actual HTML
+resource rather than calling React handlers directly. Native fresh-workspace Chat startup, Shift+Enter, Enter delivery, completed
+ChatGPT response with the catalog-default model at inherited xhigh effort,
+Terminal click/typing and return to the same conversation were verified in
+build 698. Broader recovery, light/narrow layouts and user dogfood remain open.
+
+
+### Configured repository launch ownership
+
+Repository workspace and new-tab actions share a connected startup path after
+existing command authorization. A fresh literal Codex launch reserves its host
+before the placeholder can mount a shell. Chat and Terminal show loading until
+the prepared command replaces the process through the existing respawn path,
+retaining surface/tab identity, custom title, canvas membership, tab order and
+current selection. The retained Chat renderer follows that logical surface.
+Closing the source cancels startup and retires the prepared host. This is a new
+owned session, not inferred control of an existing ordinary CLI.
+
+Supported literal launcher arguments and workspace/surface environment reach the
+host and original TUI. Explicit models retain precedence. Setup scripts, compound
+shell commands, resumed sessions, custom executable paths and commands sent to an
+existing terminal keep their shell behavior. No user configuration is rewritten.
+Native build 700 verified actual bmux and companycam-mobile repository-menu
+launches, including launch from Terminal mode, first Chat-only prompts, completed
+responses, Terminal click/typing, and return to the same conversation. The latest
+submitted prompt reconciled once in the workspace card footer. Configured new-tab
+selection/canvas behavior is covered by native tests; the GUI action is not
+configured in the current user menu. Broader recovery and user dogfood remain
+open. Native regression coverage and both bundled consumers verify reservation,
+cancellation and loading behavior.
+
+
+### Codex 0.161.0 compatibility and launch resolution (October 8, 2026)
+
+The user requested validation of connected Chat against the updated Bun-installed
+Codex. Isolated probes exercised authenticated loopback initialization, account/
+config/model reads through the existing native Swift transport, and the full
+BmuxAgentChat parser against the resulting real provider transcript. Unauthenticated
+WebSocket access returned HTTP 401. The exact-version gate includes 0.161.0;
+this does not permit arbitrary newer versions.
+
+A second probe matched production's Chat-side ownership sequence without calling
+`thread/resume`, `turn/start`, or `turn/interrupt`: start an original blank remote
+TUI, adopt its sole loaded thread, queue the first prompt, queue another turn,
+reject steering with a stale turn ID, accept steering with the active ID, retain
+another queued prompt through connection replacement, and queue a new follow-up.
+All five accepted client IDs appeared exactly once across four completed turns;
+the rejected steering ID was absent. All expected responses appeared in both
+recorded assistant messages and the original TUI. Extra read-only history calls
+verified completion and IDs; they did not create subscriptions or change ownership.
+An auxiliary thread appeared after adoption without changing the bound identity.
+
+Sanitized local evidence is retained at
+`/private/tmp/bmux-codex161-compatibility/report-no-resume.json`, with the method
+log and results under `no-resume-qjfhqc95/`. Native transport/parser evidence is
+in the sibling `report.json`. Probe processes stopped and temporary credentials
+were removed. Interrupt, approvals/questions, queue editing/cancellation,
+settings, restoration, ordinary-CLI attachment and GUI acceptance are not
+established by these probes and keep their previous capability boundaries.
+
+New connected launches resolve the shell-initialized PATH per launch,
+reusing AgentExecutableResolver without fallback installation directories instead
+of preferring an older standalone CLI. Compatible shells use login-interactive
+startup; csh/tcsh use interactive startup because they reject login mode with a
+command. Their login-only files are outside that path probe.
+Relative and empty PATH entries are anchored to the workspace directory.
+The shared host and original TUI receive the selected PATH, including the runtime
+needed by npm/Bun shebangs. Configured local command exits honor the existing
+wait-after-command flag when a startup command is present, preserving the
+workspace and output. An inherited wait flag alone does not retain an ordinary shell. Ordinary shell
+exit and remote recovery retain their existing paths. The branch stacks on the
+actual build-719 source (`802f15cce`); no running dogfood build was replaced.
+See [implementation and verification notes](../implementation-notes/codex-update-workspace-exit.md)
+for regression results and remaining native acceptance.
+
+
+### Codex 0.162.0 compatibility (October 9, 2026)
+
+Build 721 repo-launcher dogfood encountered an installed CLI upgrade to 0.162.0.
+The exact gate is extended to this empirically verified release; unverified
+versions still fail closed. An isolated blank-TUI probe passed authenticated
+startup, sole-thread adoption, queue delivery, expected-turn steering, rejection
+of stale steering and reconnect reconciliation. Five accepted message IDs appear
+once across four completed turns, with the corresponding responses in the original
+TUI. No thread/resume, turn/start or turn/interrupt request was sent. The existing
+native Swift transport/RPC probe also passed provider account, config, model and
+loaded-thread reads. Interrupt, approvals and settings capabilities are unchanged.
+
+See [the launcher follow-up](../implementation-notes/repo-codex-startup.md) for
+runtime acceptance and verification limits. User settings and installed executables
+are unchanged. The same follow-up corrects replacement of an eagerly started
+placeholder; the version gate and placeholder lifecycle are independent checks
+in the same configured launch path.
+
+
+### Managed runtime after Codex 0.162.1 update (October 10, 2026)
+
+The user authorized replacing global-PATH provider selection for new connected
+sessions with a bmux-owned, checksum-verified 0.162.0 package. The global 0.162.1
+update had again tripped the exact-version gate before the placeholder terminal
+received a launch command. Both shared host and original TUI now use the same
+immutable versioned runtime path; shell PATH still supplies ordinary subprocess
+tools. An application-owned installer acquires the full release once, atomically
+publishes it, and reuses it offline. Explicit custom PATH and ordinary shell
+commands keep their prior behavior. Shared-control capabilities remain gated;
+new runtime pins require compatibility proof, not a semantic-version assumption.
+See [implementation and verification notes](../implementation-notes/managed-codex-runtime.md).

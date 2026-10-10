@@ -1,6 +1,86 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "agentSession.chat.configuredStartFailed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not connect to Codex. Retry the launch."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex に接続できませんでした。起動を再試行してください。"
+          }
+        }
+      }
+    },
+    "agentSession.chat.runtimeDownloadFailed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not download bmux’s managed Codex runtime. Check your connection and retry."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmux 管理の Codex ランタイムをダウンロードできませんでした。接続を確認して再試行してください。"
+          }
+        }
+      }
+    },
+    "agentSession.chat.runtimePackageInvalid": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Codex runtime download could not be verified. Retry to download a fresh copy."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダウンロードした Codex ランタイムを検証できませんでした。再試行してダウンロードし直してください。"
+          }
+        }
+      }
+    },
+    "agentSession.chat.runtimeInstallationInvalid": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmux’s managed Codex runtime is damaged. Close connected sessions, remove its folder in ~/Library/Application Support/bmux/runtimes/codex, then retry."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmux 管理の Codex ランタイムが破損しています。接続中のセッションを閉じ、~/Library/Application Support/bmux/runtimes/codex 内のフォルダを削除してから再試行してください。"
+          }
+        }
+      }
+    },
+    "agentSession.chat.retryManagedLaunch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry Codex launch"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex の起動を再試行"
+          }
+        }
+      }
+    },
     "hybrid.fixture.inMotion": {
       "extractionState": "manual",
       "localizations": {
@@ -636,13 +716,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Send follow-up"
+            "value": "Send"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "追加メッセージを送信"
+            "value": "送信"
           }
         }
       }
@@ -806,13 +886,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Could not start a connected session. This preview requires Codex 0.154.0; your existing terminal is unchanged."
+            "value": "Could not connect to Codex. Try again or continue in Terminal."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "接続済みセッションを開始できませんでした。このプレビューには Codex 0.154.0 が必要です。既存のターミナルは変更されていません。"
+            "value": "Codex に接続できませんでした。もう一度試すか、ターミナルで続行してください。"
           }
         }
       }
@@ -915,6 +995,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "ターミナルで操作"
+          }
+        }
+      }
+    },
+    "agentSession.chat.chatConnected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected to Codex"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex に接続済み"
           }
         }
       }
@@ -239764,6 +239861,13 @@
         "ja": { "stringUnit": { "state": "translated", "value": "リポジトリ" } }
       }
     },
+    "sidebar.workspaceFilter.prOwner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "PR OWNER" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "PR の作成者" } }
+      }
+    },
     "sidebar.workspaceFilter.project": {
       "extractionState": "manual",
       "localizations": {
@@ -239889,6 +239993,40 @@
         }
       }
     },
+    "workspaceRail.count.one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Workspace"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 個のワークスペース"
+          }
+        }
+      }
+    },
+    "workspaceRail.count.other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Workspaces"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 個のワークスペース"
+          }
+        }
+      }
+    },
     "workspaceRail.title": {
       "extractionState": "manual",
       "localizations": {
@@ -239902,6 +240040,601 @@
           "stringUnit": {
             "state": "translated",
             "value": "ワークスペース"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.run": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "実行情報"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.durationLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duration"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所要時間"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.reasoningSteps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reasoning steps"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "記録された推論ステップ"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.outputsFiles": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outputs · Files"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出力 · ファイル"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.category.git": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Git"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Git"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.category.read": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read / search"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "読み取り / 検索"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.category.edit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "編集"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.category.build": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build / test"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ビルド / テスト"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.category.bmux": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmux"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmux"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.category.other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "その他"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.did": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What it did"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "実行内容"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.commandsUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command evidence is unavailable for this turn."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このターンのコマンド証拠は利用できません。"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.recordedOnly": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counts describe recorded evidence; unrecorded activity is unavailable."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "件数は記録された証拠を示します。未記録の活動は確認できません。"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.moreCommands": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show more (%d remaining)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "さらに表示（残り%d件）"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.all": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべて"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.detailUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detailed evidence is unavailable for this turn."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このターンの詳細な証拠は利用できません。"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.noFinal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No final output recorded."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最終出力は記録されていません。"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.referenceIDs": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reference IDs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "参照ID"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.proxy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run command via bmux proxy"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmuxプロキシ経由でコマンドを実行"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.expanded": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expanded"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "展開済み"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.collapsed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapsed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "折りたたみ済み"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.result": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded result"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "記録された結果"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.noError": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No error output recorded."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エラー出力は記録されていません。"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コピー"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コピーしました"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.copiedLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@をコピーしました"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.copyLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@をコピー"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.asked": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What was asked"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "依頼内容"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.rawPrompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show raw prompt"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "元のプロンプトを表示"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.identical": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The objective and the prompt were identical for this turn, so the text is shown once."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このターンでは目的とプロンプトが同一だったため、テキストを一度だけ表示しています。"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.type": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "種類"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.question": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Question"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "質問"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.answer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your answer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あなたの回答"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.showLess": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show less"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表示を減らす"
+          }
+        }
+      }
+    },
+    "agentSession.expanded.showMore": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show more"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "さらに表示"
           }
         }
       }

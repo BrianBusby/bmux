@@ -2866,10 +2866,9 @@ actor ProvenanceSQLiteRepository {
     }
 
     private func applyProjectionUpdates(
-        from event: ProvenanceEvent,
-        latestEventSequence: Int? = nil
-    ) throws {
+        from event: ProvenanceEvent, latestEventSequence: Int? = nil) throws {
         let payload = event.payload
+        let invalidation = try outcomeInvalidation(before: event)
         if let repository = payload.repository {
             try upsertRepository(repository)
         }
@@ -2941,8 +2940,8 @@ actor ProvenanceSQLiteRepository {
         if let codingAgentFileChangeAttribution = payload.codingAgentFileChangeAttribution {
             try upsertCodingAgentFileChangeAttribution(codingAgentFileChangeAttribution)
         }
-        try refreshTurnOutcomes(affectedBy: event, latestEventSequence: latestEventSequence)
-        try refreshSessionOutcomes(affectedBy: event, latestEventSequence: latestEventSequence)
+        try refreshTurnOutcomes(affectedBy: event, invalidation: invalidation, latestEventSequence: latestEventSequence)
+        try refreshSessionOutcomes(affectedBy: event, invalidation: invalidation, latestEventSequence: latestEventSequence)
     }
 
     private func clearProjectionTables() throws {

@@ -1,4 +1,5 @@
 import Foundation
+import Bonsplit
 
 extension TabManager {
     /// Applies a user-facing workspace rename. Empty input is rejected instead
@@ -131,6 +132,30 @@ extension TabManager {
             )
         }
         return outcome
+    }
+
+    /// Applies a detached naming result only while its original panel still belongs
+    /// to the workspace, then uses the shared workspace and panel title mutations.
+    func applyAutomaticWorkspaceAndPanelTitle(
+        workspace: Workspace,
+        panelId: UUID?,
+        title: String,
+        source: Workspace.CustomTitleSource,
+        panelOnlyIfMultiple: Bool
+    ) -> (workspace: Workspace.CustomTitleApplyOutcome, panel: Workspace.CustomTitleApplyOutcome?) {
+        // Hook payloads can identify either a panel or its bonsplit surface.
+        let resolvedPanelId = panelId.flatMap {
+            workspace.panels[$0] != nil ? $0 : workspace.panelIdFromSurfaceId(TabID(uuid: $0))
+        }
+        guard panelId == nil || resolvedPanelId != nil else {
+            return (.rejected(.targetMissing), .rejected(.targetMissing))
+        }
+        let workspaceOutcome = applyCustomTitle(tabId: workspace.id, title: title, source: source)
+        var panelOutcome: Workspace.CustomTitleApplyOutcome?
+        if let resolvedPanelId, !(panelOnlyIfMultiple && workspace.panels.count < 2) {
+            panelOutcome = workspace.applyPanelCustomTitle(panelId: resolvedPanelId, title: title, source: source)
+        }
+        return (workspaceOutcome, panelOutcome)
     }
 
     func clearCustomTitle(tabId: UUID) {

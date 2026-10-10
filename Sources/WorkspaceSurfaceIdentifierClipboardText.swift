@@ -3,9 +3,10 @@ import Foundation
 
 enum WorkspaceSurfaceIdentifierClipboardText {
     @MainActor
-    static func copy(_ text: String, to pasteboard: NSPasteboard = .general) {
+    @discardableResult
+    static func copy(_ text: String, to pasteboard: NSPasteboard = .general) -> Bool {
         pasteboard.clearContents()
-        pasteboard.setString(text, forType: .string)
+        return pasteboard.setString(text, forType: .string)
     }
 
     @MainActor

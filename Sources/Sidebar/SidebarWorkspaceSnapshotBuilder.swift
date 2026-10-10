@@ -123,6 +123,24 @@ struct SidebarWorkspaceSnapshotBuilder {
     }
 
     struct Snapshot: Equatable {
+        var cardWorkContext: WorkspaceDisplayCurrentStateSnapshot? {
+            presentationKey.provenanceDisplaySnapshot
+        }
+        var cardBranch: String? {
+            guard presentationKey.showsGitBranch,
+                  presentationKey.visibleAuxiliaryDetails.showsBranchDirectory else { return nil }
+            return cardWorkContext?.agentWorktreeBranch
+        }
+        var cardHeadingTitle: String { cardTitlePresentation.title }
+        var cardDescription: String? {
+            guard presentationKey.showsWorkspaceDescription else { return nil }
+            return cardTitlePresentation.description
+        }
+
+        private var cardTitlePresentation: WorkspaceCardTitlePresentation {
+            WorkspaceCardTitlePresentation(workspaceTitle: title, ticketTitle: cardWorkContext?.ticketLinks.first?.title)
+        }
+
         let presentationKey: PresentationKey
         let title: String
         let customDescription: String?

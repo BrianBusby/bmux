@@ -22,9 +22,15 @@ execution_telemetry:
   live_codex_evidence_convergence_correctness: implemented
 
 local_capabilities:
+  managed_connected_codex_runtime: under_observation
   ordinary_cli_read_only_chat: under_observation
   ordinary_cli_shared_control: not_implemented
   connected_codex_shared_host_controls: under_observation
+  connected_codex_0161_launch_and_controls: under_observation
+  connected_codex_0162_launch_and_controls: under_observation
+  connected_codex_workspace_hooks: under_observation
+  shell_mode_portal_visibility: under_observation
+  connected_prompt_workspace_resource_projection: under_observation
   provenance_engine_public_in_process_sdk: implemented
   provenance_engine_sqlite_store: implemented
   provenance_engine_immutable_ledger: implemented
@@ -69,6 +75,7 @@ local_capabilities:
   bmux_cross_session_context_assembly_experiment: planned
   knowledge_compiler_cross_session_bridge: planned
   factual_agent_session_view: implemented
+  readable_expanded_prior_turns: under_observation
   native_provider_session_view: implemented
   react_terminal_agent_chat_surface: implemented
   react_terminal_productization: planned
@@ -97,6 +104,9 @@ local_capabilities:
   app_runtime_notification_push_lifecycle: under_observation
   app_runtime_menu_bar_presentation_lifecycle: under_observation
   workspace_display_file_watcher_churn_policy: planned
+  pe_materialized_outcome_reads_and_scoped_refresh: under_observation
+  workspace_display_failed_observation_retry: under_observation
+  workspace_display_ticket_enrichment_independent: under_observation
   pe_shared_sqlite_writer_policy: planned
   codex_historical_import_startup_boundary_guard: planned
   workspace_launch_canonical_mutation_path: planned
@@ -126,6 +136,22 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: configured_codex_placeholder_startup_dogfood
+    status: open
+  - id: codex_update_workspace_exit_native_dogfood
+    status: open
+  - id: expanded_prior_turn_system_appearance_contrast
+    status: monitoring
+  - id: expanded_prior_turn_visual_acceptance
+    status: open
+  - id: shell_mode_portal_visibility_dogfood
+    status: open
+  - id: connected_codex_workspace_hooks_dogfood
+    status: open
+  - id: pe_prompt_display_replay_chronology
+    status: open
+  - id: connected_session_worktree_context_verification
+    status: open
   - id: connected_codex_delivery_and_recovery_verification
     status: open
   - id: shared_host_codex_stale_interrupt

@@ -305,7 +305,7 @@ extension TerminalController: ControlWorkspaceContext {
         ) else {
             return .notFound
         }
-        let preview = tabManager.tabs.first(where: { $0.id == workspaceID })?.latestSubmittedMessage
+        let preview = Workspace.conversationMessagePreview(from: tabManager.tabs.first(where: { $0.id == workspaceID })?.latestSubmittedMessage)
         let windowId = AppDelegate.shared?.windowId(for: tabManager)
         return .resolved(
             windowID: windowId,

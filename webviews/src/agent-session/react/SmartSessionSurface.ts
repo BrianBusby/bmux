@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useReducer, useState } from "react";
 import { initialSmartSessionState, loadSmartSessionSnapshot, reduceSmartSession, semanticFieldForKind, sortSmartSessionTurnReferencesNewestFirst, SMART_SESSION_SEMANTIC_KINDS, type SmartSessionState } from "../shared/smartSessionModel";
-import type { AgentSessionCopy, AppContext, SmartSessionPlanStep, SmartSessionSemanticField, SmartSessionSnapshot, SmartSessionTurn, SmartSessionTurnReference } from "../shared/types";
+import type { AgentSessionCopy, AppContext, SmartSessionSemanticField, SmartSessionSnapshot, SmartSessionTurn, SmartSessionTurnReference } from "../shared/types";
 
 const h = React.createElement;
 

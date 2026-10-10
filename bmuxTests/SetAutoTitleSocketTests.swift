@@ -263,6 +263,24 @@ import Testing
         }
     }
 
+    @Test func detachedTitleResultCannotRenameWorkspaceAfterPanelLeaves() throws {
+        try withAutoNamingSetting(true) {
+            try withManager { _, workspace in
+                workspace.setCustomTitle("Review flashing", source: .autoSummary)
+                let envelope = try call(method: "workspace.set_auto_title", params: [
+                    "workspace_id": workspace.id.uuidString,
+                    "panel_id": UUID().uuidString,
+                    "title": "Compare gutter photographs"
+                ])
+                let result = try #require(envelope["result"] as? [String: Any])
+                #expect(result["workspace_applied"] as? Bool == false)
+                #expect(result["workspace_rejection_reason"] as? String == "target_missing")
+                #expect(result["panel_applied"] as? Bool == false)
+                #expect(workspace.title == "Review flashing")
+            }
+        }
+    }
+
     @Test func panelOnlyIfMultipleSuppressesSinglePanelWorkspace() throws {
         try withAutoNamingSetting(true) {
             try withManager { _, workspace in

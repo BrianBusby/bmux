@@ -138,7 +138,8 @@ extension Workspace {
     private static func dequeueInitialTerminalInput(
         pendingSetup: inout String?,
         command: String?
-    ) -> String? {
+    ) -> (text: String, allowsConnectedLaunch: Bool)? {
+        let allowsConnectedLaunch = pendingSetup == nil && command != nil
         var lines: [String] = []
         if let setup = pendingSetup {
             lines.append(setup)
@@ -148,7 +149,7 @@ extension Workspace {
             lines.append(command)
         }
         guard !lines.isEmpty else { return nil }
-        return lines.map { $0 + "\n" }.joined()
+        return (lines.map { $0 + "\n" }.joined(), allowsConnectedLaunch)
     }
 
     private func configureExistingSurface(
@@ -173,7 +174,9 @@ extension Workspace {
                 if let name = surface.name { setPanelCustomTitle(panelId: panel.id, title: name) }
                 if surface.focus == true { focusPanelId = panel.id }
                 if let input = Self.dequeueInitialTerminalInput(pendingSetup: &pendingSetup, command: surface.command) {
-                    sendInputWhenReady(input, to: panel)
+                    sendConfiguredTerminalInput(input.text, to: panel,
+                        workingDirectory: resolvedCwd, environment: surface.env ?? [:],
+                        allowsConnectedLaunch: input.allowsConnectedLaunch)
                 }
             }
 
@@ -182,7 +185,9 @@ extension Workspace {
             if surface.focus == true { focusPanelId = panelId }
             if let input = Self.dequeueInitialTerminalInput(pendingSetup: &pendingSetup, command: surface.command),
                let terminal = terminalPanel(for: panelId) {
-                sendInputWhenReady(input, to: terminal)
+                sendConfiguredTerminalInput(input.text, to: terminal,
+                    workingDirectory: baseCwd, environment: surface.env ?? [:],
+                    allowsConnectedLaunch: input.allowsConnectedLaunch)
             }
 
         case .browser:
@@ -230,7 +235,9 @@ extension Workspace {
                 if let name = surface.name { setPanelCustomTitle(panelId: panel.id, title: name) }
                 if surface.focus == true { focusPanelId = panel.id }
                 if let input = Self.dequeueInitialTerminalInput(pendingSetup: &pendingSetup, command: surface.command) {
-                    sendInputWhenReady(input, to: panel)
+                    sendConfiguredTerminalInput(input.text, to: panel,
+                        workingDirectory: resolvedCwd, environment: surface.env ?? [:],
+                        allowsConnectedLaunch: input.allowsConnectedLaunch)
                 }
             }
 

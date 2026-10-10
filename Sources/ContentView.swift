@@ -849,6 +849,7 @@ private final class SelectedWorkspaceDirectoryObserver: ObservableObject {
 struct ContentView: View {
     var updateViewModel: UpdateStateModel
     let windowId: UUID
+    let initialPrimaryTab: AgentSessionFactualProjectionMode
     @EnvironmentObject var tabManager: TabManager
     // ContentView observes the coalesced unread projection, NOT the notification
     // store. Reading `notificationStore` directly here would re-render the entire
@@ -972,6 +973,17 @@ struct ContentView: View {
     @FocusState private var isCommandPaletteSearchFocused: Bool
     @FocusState private var isCommandPaletteRenameFocused: Bool
     private let windowChrome = AppWindowChromeComposition()
+
+    init(
+        updateViewModel: UpdateStateModel,
+        windowId: UUID,
+        initialPrimaryTab: AgentSessionFactualProjectionMode = .chat
+    ) {
+        self.updateViewModel = updateViewModel
+        self.windowId = windowId
+        self.initialPrimaryTab = initialPrimaryTab
+        _bmuxShellTerminalVisible = State(initialValue: initialPrimaryTab == .terminal)
+    }
 
     private struct CommandPaletteRestoreFocusTarget {
         let workspaceId: UUID
@@ -2508,11 +2520,10 @@ struct ContentView: View {
     private var bmuxReferenceWorkspaceRail: some View {
         WorkspaceReferenceRail(
             workspaces: tabManager.tabs,
-            cards: tabManager.tabs.map { workspace in
-                WorkspaceReferenceCardSnapshot(
-                    workspace: workspace,
-                    provenance: tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: workspace)
-                )
+            projectCard: { workspace in
+                let provenance = tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: workspace)
+                let title = tabManager.sidebarWorkspaceTitleResolution(for: workspace, provenanceDisplaySnapshot: provenance).title
+                return WorkspaceReferenceCardSnapshot(workspace: workspace, provenance: provenance, workspaceTitle: title)
             },
             selectedWorkspaceID: tabManager.selectedTabId,
             selectedWorkspaceTitle: tabManager.selectedWorkspace?.title,
@@ -2525,6 +2536,12 @@ struct ContentView: View {
             onOpenLink: { id, url in
                 tabManager.selectWorkspaceIdForAction(id)
                 BrowserExternalLinkOpener().openWebLink(url)
+            },
+            onLaunchRepository: { anchorView in
+                guard AppDelegate.shared?.showRepoAgentLauncherMenu(anchorView: anchorView) == true else {
+                    NSSound.beep()
+                    return
+                }
             },
             filters: $referenceWorkspaceFilters,
             isFilterPanelPresented: $isReferenceWorkspaceFilterPanelPresented
@@ -2544,35 +2561,6 @@ struct ContentView: View {
                         Text("CompanyCam").foregroundStyle(Color.workspaceReferenceTextTertiary)
                     }
                     Spacer()
-                    HStack(spacing: 12) {
-                        Button {
-                            guard let anchorView = NSApp.keyWindow?.contentView
-                                ?? NSApp.mainWindow?.contentView,
-                                AppDelegate.shared?.showRepoAgentLauncherMenu(anchorView: anchorView) == true else {
-                                NSSound.beep()
-                                return
-                            }
-                        } label: {
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundStyle(Color.workspaceReferenceTextSecondary)
-                                .frame(width: 28, height: 28)
-                                .background(Color.workspaceReferenceCard)
-                                .clipShape(RoundedRectangle(cornerRadius: 7))
-                                .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.workspaceReferenceCardBorder, lineWidth: 1))
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier("bmuxShell.repoAgentLauncher")
-                        .accessibilityLabel(String(localized: "titlebar.repoAgentLauncher.accessibilityLabel", defaultValue: "AI Repo Launcher"))
-                        .safeHelp(String(localized: "titlebar.repoAgentLauncher.tooltip", defaultValue: "Launch an AI session for a repo"))
-
-                        Text(String(
-                            format: String(localized: "titlebar.workspaceCount", defaultValue: "%lld workspaces"),
-                            Int64(tabManager.tabs.count)
-                        ))
-                            .font(.system(size: 12))
-                            .foregroundStyle(Color.workspaceReferenceTextSecondary)
-                    }
                 }
                 .padding(.horizontal, 24)
                 .frame(height: 44)
@@ -2585,7 +2573,7 @@ struct ContentView: View {
                     AgentSessionFactualProjectionModeHost(
                         showsSwitcher: true,
                         showsModePicker: false,
-                        startsInSession: true,
+                        initialPrimaryTab: initialPrimaryTab,
                         showsAppShell: false,
                         liveChatContent: bmuxShellChatContent(),
                         liveTerminalContent: bmuxShellTerminalVisible
@@ -2596,6 +2584,7 @@ struct ContentView: View {
                             : nil,
                         onPrimaryTabChange: { isTerminal in
                             bmuxShellTerminalVisible = isTerminal
+                            reconcileMountedWorkspaceIds()
                         },
                         workspaceLabel: tabManager.selectedWorkspace.map {
                             $0.currentDirectory.split(separator: "/").last.map(String.init)
@@ -2619,26 +2608,6 @@ struct ContentView: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.workspaceReferenceSeparator, lineWidth: 1))
             .padding(18)
-        }
-    }
-
-    private func bmuxShellChatContent() -> ((@escaping () -> Void) -> AnyView)? {
-        guard let workspace = tabManager.selectedWorkspace,
-              let panel = workspace.focusedTerminalPanel,
-              let reader = tabManager.terminalChatReader else {
-            return nil
-        }
-
-        let appearance = PanelAppearance.fromConfig(GhosttyConfig.load())
-        return { onTerminal in
-            AnyView(
-                TerminalChatWebRenderer(
-                    panel: panel,
-                    reader: reader,
-                    appearance: appearance,
-                    onTerminal: onTerminal
-                )
-            )
         }
     }
 
@@ -3437,7 +3406,9 @@ struct ContentView: View {
         let removedIds = previousMountedIds.filter { !mountedWorkspaceIds.contains($0) }
         let portalRenderingChanges = WorkspacePortalRenderingPlan(
             previousStatesByWorkspaceId: lastReconciledPortalRenderingStatesByWorkspaceId,
-            mountedWorkspaceIds: Set(mountedWorkspaceIds), orderedWorkspaceIds: orderedTabIds
+            mountedWorkspaceIds: Set(mountedWorkspaceIds), orderedWorkspaceIds: orderedTabIds,
+            selectedWorkspaceId: effectiveSelectedId, retiringWorkspaceId: retiringWorkspaceId,
+            contentVisible: bmuxShellTerminalVisible
         ).applying(to: &lastReconciledPortalRenderingStatesByWorkspaceId)
         let workspacesById = Dictionary(currentTabs.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         for change in portalRenderingChanges {
@@ -13560,17 +13531,6 @@ struct TabItemView: View, Equatable {
         usesInvertedActiveForeground ? activeSecondaryColor(0.8) : bmuxAccentColor()
     }
 
-    private var workspaceLoadingIndicatorColor: Color {
-        Color(nsColor: sidebarWorkspaceRowLoadingIndicatorNSColor(
-            activeTabIndicatorStyle: activeTabIndicatorStyle,
-            isActive: isActive,
-            isMultiSelected: isMultiSelected,
-            customColorHex: workspaceRowColorHex,
-            colorScheme: colorScheme,
-            sidebarSelectionColorHex: sidebarSelectionColorHex
-        ))
-    }
-
     private var shortcutHintEmphasis: Double {
         usesInvertedActiveForeground ? 1.0 : 0.9
     }
@@ -13761,7 +13721,6 @@ struct TabItemView: View, Equatable {
             SidebarTrailingAccessoryWidthPolicy().closeButtonWidth,
             scaledCloseButtonHitSize
         )
-        let aiBusyTooltip = String(localized: "sidebar.aiBusy.tooltip", defaultValue: "AI is running or needs input")
         let rowView = VStack(alignment: .leading, spacing: 4) {
             // Option 1b is the full-detail workspace card presentation.
             if true {
@@ -14148,13 +14107,6 @@ struct TabItemView: View, Equatable {
                 }
                 .shadow(color: activeElevationShadowColor, radius: 4, x: 0, y: 2)
         )
-        .overlay(alignment: .topTrailing) {
-            if workspaceSnapshot.hasActiveAIWork && !showCloseButton {
-                TronLoadingIndicator(size: scaledLoadingIndicatorSize, color: workspaceLoadingIndicatorColor, lineWidth: max(1.15, scaledLoadingIndicatorSize * 0.085))
-                    .safeHelp(aiBusyTooltip).accessibilityLabel(aiBusyTooltip).allowsHitTesting(false)
-                    .padding(.top, 6).padding(.trailing, 7)
-            }
-        }
         .sidebarShortcutHintOverlay(
             text: showsWorkspaceShortcutHint ? workspaceShortcutLabel : nil,
             emphasis: shortcutHintEmphasis,
@@ -15280,14 +15232,14 @@ struct TabItemView: View, Equatable {
         snapshot: SidebarWorkspaceSnapshotBuilder.Snapshot,
         closeButtonTooltip: String
     ) -> some View {
-        let ticket = snapshot.ticketRows.first
+        let ticket = snapshot.cardWorkContext?.ticketLinks.first
         let pullRequest = snapshot.pullRequestRows.first
         let ownerName = ticket?.ownerName ?? pullRequest?.ownerLogin
-        let title = ticket?.title?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty ?? snapshot.title
-        let branch = snapshot.compactGitBranchSummaryText
+        let title = snapshot.cardHeadingTitle
+        let branch = snapshot.cardBranch
         let closeButtonHitSize = max(16, 16 * fontScale)
         let closeButtonWidth = max(SidebarTrailingAccessoryWidthPolicy().closeButtonWidth, closeButtonHitSize)
-        let status: String? = snapshot.isDirty.map {
+        let status: String? = (branch == nil ? nil : snapshot.cardWorkContext?.agentWorktree?.isDirty).map {
             String(
                 localized: $0 ? "sidebar.workspace.card.uncommittedChanges" : "sidebar.workspace.card.clean",
                 defaultValue: $0 ? "uncommitted changes" : "clean"
@@ -15298,11 +15250,20 @@ struct TabItemView: View, Equatable {
             WorkspaceCardHeader(
                 repositoryName: snapshot.repoBadgeAppearance?.name,
                 repositoryFont: magnifiedFont(scaledFontSize(10), weight: .medium),
+                ticketID: ticket?.id,
+                ticketFont: magnifiedFont(scaledFontSize(10), weight: .semibold, design: .monospaced),
+                ticketIcon: {
+                    BmuxSystemSymbolImage(magnified: "ticket", pointSize: scaledFontSize(11), weight: .medium)
+                },
+                ticketColor: activeSecondaryColor(0.9),
+                ticketBorderColor: activeSecondaryColor(0.35),
+                onOpenTicket: ticket?.url.map { url in { openTicketLink(url) } },
                 closeIcon: {
                     BmuxSystemSymbolImage(magnified: "xmark", pointSize: scaledFontSize(14), weight: .medium)
                 },
                 closeButtonColor: activeSecondaryColor(0.8),
                 closeButtonSize: CGSize(width: closeButtonWidth, height: closeButtonHitSize),
+                hasActiveAIWork: snapshot.hasActiveAIWork,
                 canCloseWorkspace: canCloseWorkspace,
                 showsCloseButton: showCloseButton,
                 closeButtonTooltip: closeButtonTooltip,
@@ -15338,27 +15299,6 @@ struct TabItemView: View, Equatable {
                 }
             }
 
-            if let ticket {
-                let ticketContent = HStack(spacing: 6) {
-                    BmuxSystemSymbolImage(magnified: "ticket", pointSize: scaledFontSize(11), weight: .medium)
-                    Text(ticket.id)
-                        .font(magnifiedFont(scaledFontSize(12), weight: .semibold, design: .monospaced))
-                }
-                .foregroundColor(activeSecondaryColor(0.9))
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(activeSecondaryColor(0.35), lineWidth: 1)
-                }
-                if let url = ticket.url {
-                    Button { openTicketLink(url) } label: { ticketContent }
-                        .buttonStyle(.plain)
-                } else {
-                    ticketContent
-                }
-            }
-
             if let project = snapshot.projectRows.first {
                 let projectContent = HStack(spacing: 8) {
                     BmuxSystemSymbolImage(magnified: "folder", pointSize: scaledFontSize(13), weight: .medium)
@@ -15378,7 +15318,7 @@ struct TabItemView: View, Equatable {
                 }
             }
 
-            if let summary = snapshot.customDescription?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty {
+            if let summary = snapshot.cardDescription {
                 Text(String(summary.prefix(125)))
                     .font(magnifiedFont(scaledFontSize(13)))
                     .foregroundColor(activeSecondaryColor(0.8))
@@ -15425,15 +15365,16 @@ struct TabItemView: View, Equatable {
                     Text(prompt)
                         .font(magnifiedFont(scaledFontSize(13)))
                         .foregroundColor(activeSecondaryColor(0.8))
-                        .lineLimit(1)
+                        .lineLimit(3)
                         .truncationMode(.tail)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 if branch != nil || status != nil {
                     Text([branch, status].compactMap { $0 }.joined(separator: " · "))
                         .font(magnifiedFont(scaledFontSize(11), design: .monospaced))
                         .foregroundColor(activeSecondaryColor(0.75))
-                        .lineLimit(1)
-                        .truncationMode(.tail)
+                        .lineLimit(nil)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }

@@ -29,7 +29,7 @@ export const FEATURE_FLAGS = {
     owner: "lawrencecchen",
     description:
       "Shows public Pro/pricing navigation and in-app upgrade entrypoints. Off in release until checkout dogfood is approved.",
-    reviewBy: "2026-10-01",
+    reviewBy: "2026-11-01",
     defaultWhenUnavailable: false,
   },
   proCheckout: {
@@ -37,7 +37,7 @@ export const FEATURE_FLAGS = {
     owner: "lawrencecchen",
     description:
       "Points the pricing page Pro CTA at /api/billing/checkout (Stack hosted purchase) instead of the download link. Off until prod Stripe Connect is live.",
-    reviewBy: "2026-10-01",
+    reviewBy: "2026-11-01",
     defaultWhenUnavailable: false,
   },
 } as const satisfies Record<string, FeatureFlagDefinition>;

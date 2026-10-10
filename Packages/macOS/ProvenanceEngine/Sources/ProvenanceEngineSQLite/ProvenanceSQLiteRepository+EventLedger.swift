@@ -5,7 +5,7 @@ extension ProvenanceSQLiteRepository {
     ///
     /// Turn-outcome projection uses this path so appending evidence for one active
     /// session does not decode the full local PE ledger.
-    func eventLedgerEntries(sessionID: String) throws -> [ProvenanceEventLedgerEntry] {
+    func eventLedgerEntries(sessionID: String, throughSequence: Int?) throws -> [ProvenanceEventLedgerEntry] {
         let query = try database.prepare(
             """
             SELECT
@@ -24,13 +24,14 @@ extension ProvenanceSQLiteRepository {
                 evidence_origin,
                 evidence_scope_json
             FROM provenance_events
-            WHERE session_id = ?
+            WHERE session_id = ? AND sequence <= ?
             ORDER BY sequence ASC
             """
         )
         defer { query.finalize() }
 
         try query.bind(sessionID, at: 1)
+        try query.bind(throughSequence ?? Int.max, at: 2)
         var entries: [ProvenanceEventLedgerEntry] = []
         while try query.step() {
             guard let id = query.string(at: 1) else {

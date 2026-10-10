@@ -901,10 +901,15 @@ final class BrowserPaneNavigationKeybindUITests: XCTestCase {
     func testCmdFOpensBrowserFindAfterCmdDCmdLNavigation() {
         let app = XCUIApplication()
         configureSocketLaunch(app)
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launchEnvironment["BMUX_UI_TEST_GOTO_SPLIT_RECORD_ONLY"] = "1"
         app.launchEnvironment["BMUX_UI_TEST_GOTO_SPLIT_PATH"] = dataPath
         launchAndEnsureForeground(app)
         XCTAssertTrue(waitForSocketPong(timeout: 12.0), socketReadinessFailureMessage())
+
+        let terminalTab = app.buttons["Terminal"].firstMatch
+        XCTAssertTrue(terminalTab.waitForExistence(timeout: 8.0))
+        terminalTab.click()
 
         app.typeKey("d", modifierFlags: [.command])
         XCTAssertTrue(
@@ -1468,30 +1473,6 @@ final class BrowserPaneNavigationKeybindUITests: XCTestCase {
 
     private var zoomRoundTripPageURL: String {
         "data:text/html,%3Ctitle%3EIssue%201144%3C/title%3E%3Cbody%20style%3D%22margin:0;background:%231d1f24;color:white;font-family:system-ui;height:2200px%22%3E%3Cmain%20style%3D%22padding:32px%22%3E%3Ch1%3EIssue%201144%20Regression%20Page%3C/h1%3E%3Cp%3EZoom%20should%20not%20leave%20stale%20split%20chrome%20above%20the%20browser%20omnibar.%3C/p%3E%3C/main%3E%3C/body%3E"
-    }
-
-    private func launchAndEnsureForeground(_ app: XCUIApplication, timeout: TimeInterval = 12.0) {
-        // On headless CI runners (no GUI session), XCUIApplication.launch()
-        // blocks ~60s then fails with "Failed to activate application
-        // (current state: Running Background)". Mark this as an expected
-        // failure so the test can continue — keyboard and element APIs work
-        // via accessibility even when the app is in .runningBackground.
-        let options = XCTExpectedFailure.Options()
-        options.isStrict = false
-        XCTExpectFailure("App activation may fail on headless CI runners", options: options) {
-            app.launch()
-        }
-
-        if app.state == .runningForeground { return }
-
-        if app.state == .runningBackground {
-            // App launched but couldn't activate — continue in background.
-            // XCUIElement queries and keyboard input work through the
-            // accessibility framework regardless of activation state.
-            return
-        }
-
-        XCTFail("App failed to start. state=\(app.state.rawValue)")
     }
 
     private func waitForData(keys: [String], timeout: TimeInterval) -> Bool {

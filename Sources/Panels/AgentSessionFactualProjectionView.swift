@@ -19,310 +19,11 @@ private extension Color {
     static let bmuxAccentGreen = Color(red: 0.416, green: 0.620, blue: 0.369)
     static let bmuxAccentYellow = Color(red: 0.620, green: 0.620, blue: 0.416)
     static let bmuxTurnAccent = Color(red: 0.290, green: 0.400, blue: 0.259)
-    static let bmuxLinkGreen = Color(red: 0.478, green: 0.620, blue: 0.416)
     static let bmuxTabUnderline = Color(red: 0.878, green: 0.878, blue: 0.878)
-    static let bmuxAmberFill = Color(red: 0.137, green: 0.110, blue: 0.039)
-    static let bmuxAmberBorder = Color(red: 0.239, green: 0.180, blue: 0.039)
-    static let bmuxAmberText = Color(red: 0.784, green: 0.643, blue: 0.290)
-    static let bmuxUserMessage = Color(red: 0.118, green: 0.118, blue: 0.118)
-    static let bmuxActionRow = Color(red: 0.090, green: 0.090, blue: 0.090)
-    static let bmuxComposer = Color(red: 0.094, green: 0.094, blue: 0.094)
-    static let bmuxComposerBorder = Color(red: 0.165, green: 0.165, blue: 0.165)
-    static let bmuxPillActive = Color(red: 0.145, green: 0.145, blue: 0.145)
-    static let bmuxQueueFill = Color(red: 0.118, green: 0.180, blue: 0.110)
 }
 
 private enum BmuxRadius {
     static let appShell: CGFloat = 12
-}
-
-private let agentSessionFactualProjectionAutoRefreshNanoseconds: UInt64 = 2_000_000_000
-
-struct AgentSessionWorkspaceLink: Identifiable, Equatable {
-    let id: String
-    let label: String
-    let kind: String
-    let url: URL?
-    let state: String?
-    let owner: String?
-}
-
-struct AgentSessionWorkspaceChrome: Equatable {
-    let title: String
-    let repository: String?
-    let colorHex: String?
-    let status: String?
-    let activity: String?
-    let links: [AgentSessionWorkspaceLink]
-}
-
-enum AgentSessionFactualProjectionEvidenceRows {
-    enum TurnProperty: Equatable {
-        case prompt(String)
-        case providerTurnID(String)
-        case peTurnID(String)
-        case peThreadID(String?)
-        case status(String)
-        case model(String?)
-    }
-
-    enum PriorTurnItem: Equatable {
-        case detail(ProvenanceFactualSessionProjectionTurnSnapshot)
-        case reference(ProvenanceFactualSessionProjectionTurnReference)
-
-        var id: String {
-            switch self {
-            case .detail(let turnSnapshot):
-                turnSnapshot.turn.id
-            case .reference(let turn):
-                turn.turnID
-            }
-        }
-    }
-
-    static func turnProperties(for turnSnapshot: ProvenanceFactualSessionProjectionTurnSnapshot) -> [TurnProperty] {
-        var rows: [TurnProperty] = []
-        if let prompt = turnSnapshot.submittedPrompt?.text {
-            rows.append(.prompt(prompt))
-        }
-        rows.append(.providerTurnID(turnSnapshot.turn.providerTurnID))
-        rows.append(.peTurnID(turnSnapshot.turn.id))
-        rows.append(.peThreadID(turnSnapshot.turn.threadID))
-        rows.append(.status(turnSnapshot.turn.status))
-        rows.append(.model(turnSnapshot.turn.model))
-        return rows
-    }
-
-    static func priorTurnItems(for snapshot: ProvenanceFactualSessionProjectionSnapshot) -> [PriorTurnItem] {
-        var detailedTurnsByID: [String: ProvenanceFactualSessionProjectionTurnSnapshot] = [:]
-        for turn in snapshot.turns {
-            detailedTurnsByID[turn.turn.id] = turn
-        }
-        return snapshot.priorTurns.map { turn in
-            if let detail = detailedTurnsByID[turn.turnID] {
-                return .detail(detail)
-            }
-            return .reference(turn)
-        }.sorted { turnDate(for: $0) > turnDate(for: $1) }
-    }
-
-    static func turnDate(for item: PriorTurnItem) -> Date {
-        switch item {
-        case .detail(let turnSnapshot):
-            turnSnapshot.turn.completedAt ?? turnSnapshot.turn.updatedAt
-        case .reference(let turn):
-            turn.completedAt ?? turn.updatedAt
-        }
-    }
-
-    static func latestRows<Value>(_ values: [Value], limit: Int) -> [Value] {
-        guard limit > 0 else { return [] }
-        guard values.count > limit else { return values }
-        return Array(values.suffix(limit))
-    }
-
-    static func finalAssistantMessageText(for turnSnapshot: ProvenanceFactualSessionProjectionTurnSnapshot) -> String? {
-        turnSnapshot.assistantMessages.reversed().compactMap { message in
-            trimmedNonEmpty(message.text)
-        }.first
-    }
-
-    private static func trimmedNonEmpty(_ value: String?) -> String? {
-        guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !trimmed.isEmpty else {
-            return nil
-        }
-        return trimmed
-    }
-}
-
-struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
-    let showsSwitcher: Bool
-    var showsModePicker = true
-    var startsInSession = false
-    var showsAppShell = false
-    var fixturePreviewEnabled = false
-    var liveChatContent: ((@escaping () -> Void) -> AnyView)?
-    var liveTerminalContent: AnyView?
-    var onPrimaryTabChange: ((Bool) -> Void)?
-    var workspaceLabel: String?
-    var sessionTitle: String?
-    var sessionDescription: String?
-    var chatContent: ((_ onTerminal: @escaping () -> Void) -> AnyView)? = nil
-    let stableWorkspaceID: UUID?
-    let workProvenanceRuntime: WorkProvenanceRuntime?
-    let backgroundColor: NSColor
-    @ViewBuilder let primaryContent: (_ isVisible: Bool) -> PrimaryContent
-
-    @State private var viewMode: AgentSessionFactualProjectionMode = .terminal
-    @State private var factualProjectionResult: AgentSessionFactualProjectionReadResult = .missingSession
-    @State private var isLoadingFactualProjection = false
-
-    var body: some View {
-        VStack(spacing: 0) {
-            if showsSwitcher && showsModePicker {
-                modePicker
-                Divider()
-            }
-            selectedContent
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onChange(of: showsSwitcher) { _, isVisible in
-            if !isVisible {
-                viewMode = .terminal
-            } else {
-                scheduleFactualProjectionRefreshIfNeeded()
-            }
-        }
-        .onChange(of: viewMode) { _, _ in
-            scheduleFactualProjectionRefreshIfNeeded()
-        }
-        .onChange(of: stableWorkspaceID) { _, _ in
-            scheduleFactualProjectionRefreshIfNeeded()
-        }
-        .onAppear {
-            if startsInSession {
-                viewMode = .session
-            }
-            scheduleFactualProjectionRefreshIfNeeded()
-        }
-        .task(id: factualProjectionTaskID) {
-            guard showsSwitcher,
-            viewMode == .session else { return }
-            await refreshFactualProjection()
-        }
-        .task(id: factualProjectionRefreshLoopTaskID) {
-            guard showsSwitcher,
-                  viewMode == .session else { return }
-            await runFactualProjectionRefreshLoop()
-        }
-    }
-
-    @ViewBuilder
-    private var selectedContent: some View {
-        ZStack {
-            primaryContent(primaryContentIsVisible)
-                .opacity(primaryContentIsVisible ? 1 : 0)
-                .allowsHitTesting(primaryContentIsVisible)
-                .accessibilityHidden(!primaryContentIsVisible)
-
-            if let chatContent, viewMode == .chat {
-                chatContent { viewMode = .terminal }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-            if showsSessionContent {
-                AgentSessionFactualProjectionView(
-                    result: factualProjectionResult,
-                    isLoading: isLoadingFactualProjection,
-                    backgroundColor: Color(nsColor: backgroundColor),
-                    onRefresh: {
-                        Task { await refreshFactualProjection() }
-                    },
-                    showsAppShell: showsAppShell,
-                    fixturePreviewEnabled: fixturePreviewEnabled,
-                    liveChatContent: liveChatContent,
-                    liveTerminalContent: liveTerminalContent,
-                    onPrimaryTabChange: onPrimaryTabChange,
-                    workspaceLabel: workspaceLabel,
-                    sessionTitle: sessionTitle,
-                    sessionDescription: sessionDescription
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .onAppear {
-                    scheduleFactualProjectionRefreshIfNeeded()
-                }
-            }
-        }
-    }
-
-    private var showsSessionContent: Bool {
-        showsSwitcher && viewMode == .session
-    }
-
-    private var primaryContentIsVisible: Bool {
-        !showsSessionContent && viewMode != .chat
-    }
-
-    private var modePicker: some View {
-        HStack(spacing: 8) {
-            Picker("", selection: $viewMode) {
-                ForEach(AgentSessionFactualProjectionMode.allCases.filter { $0 != .chat || chatContent != nil }) { mode in
-                    Text(mode.title).tag(mode)
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(width: chatContent == nil ? 180 : 260)
-
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 7)
-        .background(Color(nsColor: backgroundColor))
-    }
-
-    private var factualProjectionTaskID: String {
-        "\(showsSwitcher):\(viewMode.rawValue):\(stableWorkspaceID?.uuidString ?? "no-workspace")"
-    }
-
-    private var factualProjectionRefreshLoopTaskID: String {
-        "\(factualProjectionTaskID):loop"
-    }
-
-    private func runFactualProjectionRefreshLoop() async {
-        while !Task.isCancelled {
-            try? await Task.sleep(nanoseconds: agentSessionFactualProjectionAutoRefreshNanoseconds)
-            guard !Task.isCancelled else { return }
-            await refreshFactualProjection(showLoading: false)
-        }
-    }
-
-    private func refreshFactualProjection(showLoading: Bool = true) async {
-        guard !isLoadingFactualProjection else { return }
-        if showLoading {
-            isLoadingFactualProjection = true
-        }
-        defer {
-            if showLoading {
-                isLoadingFactualProjection = false
-            }
-        }
-        guard let stableWorkspaceID,
-              let workProvenanceRuntime else {
-            factualProjectionResult = .unavailable
-            return
-        }
-        let nextResult = await workProvenanceRuntime.agentSessionFactualProjection(
-            stableWorkspaceID: stableWorkspaceID
-        )
-        if nextResult != factualProjectionResult {
-            factualProjectionResult = nextResult
-        }
-    }
-
-    private func scheduleFactualProjectionRefreshIfNeeded() {
-        guard showsSwitcher, viewMode == .session else { return }
-        Task { await refreshFactualProjection() }
-    }
-}
-
-private enum AgentSessionFactualProjectionMode: String, CaseIterable, Identifiable {
-    case terminal
-    case chat
-    case session
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .terminal:
-            String(localized: "agentSession.viewMode.terminal", defaultValue: "Terminal")
-        case .chat:
-            String(localized: "agentSession.viewMode.chat", defaultValue: "Chat")
-        case .session:
-            String(localized: "agentSession.viewMode.session", defaultValue: "Session")
-        }
-    }
 }
 
 struct AgentSessionFactualProjectionView: View {
@@ -335,12 +36,18 @@ struct AgentSessionFactualProjectionView: View {
     var liveChatContent: ((@escaping () -> Void) -> AnyView)?
     var liveTerminalContent: AnyView?
     var onPrimaryTabChange: ((Bool) -> Void)?
+    var initialPrimaryTab: AgentSessionFactualProjectionMode = .session
+    var stableWorkspaceID: UUID?
     var workspaceLabel: String?
     var sessionTitle: String?
     var sessionDescription: String?
 
-    @State private var expandedPriorTurnIDs: Set<String> = []
-    @State private var selectedPrimaryTab = AgentSessionFactualProjectionMode.session.rawValue
+    @State private var selectedPrimaryTabs: [UUID?: AgentSessionFactualProjectionMode] = [:]
+
+    private var selectedPrimaryTab: AgentSessionFactualProjectionMode {
+        get { selectedPrimaryTabs[stableWorkspaceID] ?? initialPrimaryTab }
+        nonmutating set { selectedPrimaryTabs[stableWorkspaceID] = newValue }
+    }
 
     var body: some View {
         if showsAppShell && fixturePreviewEnabled {
@@ -436,14 +143,12 @@ struct AgentSessionFactualProjectionView: View {
             }
             primaryTabs.padding(.top, 16)
             switch selectedPrimaryTab {
-            case AgentSessionFactualProjectionMode.session.rawValue:
+            case .session:
                 sessionContent
-            case AgentSessionFactualProjectionMode.chat.rawValue:
+            case .chat:
                 chatContentView
-            case AgentSessionFactualProjectionMode.terminal.rawValue:
+            case .terminal:
                 terminalContentView
-            default:
-                emptyMessage(String(localized: "agentSession.factual.unavailable", defaultValue: "Session data unavailable"))
             }
         }
         .padding(.horizontal, 24)
@@ -451,24 +156,22 @@ struct AgentSessionFactualProjectionView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Color.bmuxSurface)
         .foregroundStyle(Color.bmuxTextPrimary)
+        .onChange(of: selectedPrimaryTab, initial: true) { _, tab in
+            onPrimaryTabChange?(tab == .terminal)
+        }
     }
 
     private var primaryTabs: some View {
         HStack(spacing: 24) {
-            ForEach([
-                AgentSessionFactualProjectionMode.session,
-                AgentSessionFactualProjectionMode.chat,
-                AgentSessionFactualProjectionMode.terminal
-            ]) { mode in
+            ForEach(AgentSessionFactualProjectionMode.allCases) { mode in
                 Button(mode.title) {
-                    selectedPrimaryTab = mode.rawValue
-                    onPrimaryTabChange?(mode == .terminal)
+                    selectedPrimaryTab = mode
                 }
                     .buttonStyle(.plain)
-                    .font(.system(size: 13.5, weight: selectedPrimaryTab == mode.rawValue ? .medium : .regular))
-                    .foregroundStyle(selectedPrimaryTab == mode.rawValue ? Color.bmuxTextPrimary : Color.bmuxTextTertiary)
+                    .font(.system(size: 13.5, weight: selectedPrimaryTab == mode ? .medium : .regular))
+                    .foregroundStyle(selectedPrimaryTab == mode ? Color.bmuxTextPrimary : Color.bmuxTextTertiary)
                     .padding(.bottom, 10)
-                    .overlay(alignment: .bottom) { if selectedPrimaryTab == mode.rawValue { Rectangle().fill(Color.bmuxTabUnderline).frame(height: 2) } }
+                    .overlay(alignment: .bottom) { if selectedPrimaryTab == mode { Rectangle().fill(Color.bmuxTabUnderline).frame(height: 2) } }
             }
             Spacer()
         }
@@ -485,7 +188,7 @@ struct AgentSessionFactualProjectionView: View {
 
     private var terminalContentView: some View {
         Group {
-            if selectedPrimaryTab == AgentSessionFactualProjectionMode.terminal.rawValue,
+            if selectedPrimaryTab == .terminal,
                let liveTerminalContent {
                 liveTerminalContent
                     .id("bmux-shell-terminal")
@@ -499,8 +202,7 @@ struct AgentSessionFactualProjectionView: View {
         Group {
             if let liveChatContent {
                 liveChatContent {
-                    selectedPrimaryTab = AgentSessionFactualProjectionMode.terminal.rawValue
-                    onPrimaryTabChange?(true)
+                    selectedPrimaryTab = .terminal
                 }
                 .id("bmux-shell-chat")
             } else {
@@ -593,7 +295,7 @@ struct AgentSessionFactualProjectionView: View {
     private func availableContent(_ snapshot: ProvenanceFactualSessionProjectionSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             if let turn = snapshot.latestTurn {
-                currentTurnOverview(turn)
+                AgentSessionCurrentTurnOverview(turn: turn)
                 overviewDisclosure(
                     title: String(localized: "agentSession.factual.plan", defaultValue: "Plan & progress"),
                     detail: turn.currentPlan.map { planSummary($0) } ?? String(localized: "agentSession.factual.noPlan", defaultValue: "No plan data observed."),
@@ -627,19 +329,8 @@ struct AgentSessionFactualProjectionView: View {
             }
 
             section(String(localized: "agentSession.factual.priorTurns", defaultValue: "Previous turns")) {
-                let items = AgentSessionFactualProjectionEvidenceRows.priorTurnItems(for: snapshot)
-                if items.isEmpty {
-                    mutedText(String(localized: "agentSession.factual.noPriorTurns", defaultValue: "No prior turns."))
-                } else {
-                    ForEach(Array(items.enumerated()), id: \.element.id) { offset, item in
-                        AgentSessionFactualProjectionPriorTurnCardView(
-                            item: item,
-                            ordinal: offset + 1,
-                            isExpanded: expandedPriorTurnIDs.contains(item.id),
-                            onToggle: { togglePriorTurnExpansion(item.id) }
-                        )
-                    }
-                }
+                ExpandedTurnHistoryView(items: AgentSessionFactualProjectionEvidenceRows.priorTurnItems(for: snapshot))
+                    .id(snapshot.session.id)
             }
 
             DisclosureGroup(String(localized: "agentSession.factual.identity", defaultValue: "Session details")) {
@@ -659,60 +350,6 @@ struct AgentSessionFactualProjectionView: View {
             }
             .font(.system(size: 12, weight: .medium))
             .foregroundStyle(Color.bmuxTextSecondary)
-        }
-    }
-
-    private func currentTurnOverview(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> some View {
-        let objective = turnObjective(turn)
-        let summary = turnAgentSummary(turn)
-        return VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(String(localized: "agentSession.factual.latestTurn", defaultValue: "Current turn"))
-                    .font(.system(size: 11, weight: .medium))
-                    .tracking(1.2)
-                    .foregroundStyle(Color.bmuxTextTertiary)
-                Spacer()
-                Text(turnElapsedText(turn))
-                    .font(.system(size: 12))
-                    .foregroundStyle(Color.bmuxTextTertiary)
-            }
-            Text(summary ?? objective ?? String(localized: "agentSession.factual.noTurns", defaultValue: "No turns observed."))
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(Color.bmuxTextPrimary)
-                .fixedSize(horizontal: false, vertical: true)
-            if let objective {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(String(localized: "agentSession.factual.objective", defaultValue: "Objective"))
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Color.bmuxTextTertiary)
-                    Text(objective)
-                        .font(.system(size: 13.5))
-                        .foregroundStyle(Color.bmuxTextSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            if summary == nil {
-                Text(String(localized: "agentSession.factual.noAgentSummary", defaultValue: "No agent summary observed."))
-                    .font(.system(size: 13.5))
-                    .foregroundStyle(Color.bmuxTextTertiary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            HStack(spacing: 8) {
-                Text(summary == nil
-                     ? String(localized: "agentSession.factual.evidenceSource", defaultValue: "Observed evidence")
-                     : String(localized: "agentSession.factual.source", defaultValue: "Agent-reported"))
-                    .foregroundStyle(Color.bmuxTextTertiary)
-                DisclosureGroup(String(localized: "agentSession.factual.details", defaultValue: "View evidence")) {
-                    AgentSessionFactualProjectionTurnDetailView(turnSnapshot: turn)
-                        .padding(.top, 6)
-                }
-                .font(.system(size: 12))
-                .foregroundStyle(Color.bmuxLinkGreen)
-            }
-        }
-        .padding(.leading, 14)
-        .overlay(alignment: .leading) {
-            Rectangle().fill(Color.bmuxLinkGreen).frame(width: 2)
         }
     }
 
@@ -781,35 +418,6 @@ struct AgentSessionFactualProjectionView: View {
         }
     }
 
-    private func turnObjective(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String? {
-        let prompt = turn.submittedPrompt?.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        return prompt?.isEmpty == false ? prompt : nil
-    }
-
-    private func turnAgentSummary(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String? {
-        guard let output = AgentSessionFactualProjectionEvidenceRows.finalAssistantMessageText(for: turn)?
-            .trimmingCharacters(in: .whitespacesAndNewlines), !output.isEmpty else { return nil }
-        guard normalizeTurnText(output) != normalizeTurnText(turnObjective(turn) ?? "") else { return nil }
-        return output
-    }
-
-    private func normalizeTurnText(_ text: String) -> String {
-        text.split(whereSeparator: { $0.isWhitespace }).joined(separator: " ").lowercased()
-    }
-
-    private func turnElapsedText(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String {
-        guard let started = turn.turn.startedAt else {
-            return String(localized: "agentSession.factual.unknown", defaultValue: "Unknown")
-        }
-        let end = turn.turn.completedAt ?? turn.turn.updatedAt
-        let formatter = DateComponentsFormatter()
-        formatter.allowedUnits = [.hour, .minute, .second]
-        formatter.unitsStyle = .abbreviated
-        formatter.maximumUnitCount = 2
-        return formatter.string(from: max(0, end.timeIntervalSince(started)))
-            ?? String(localized: "agentSession.factual.unknown", defaultValue: "Unknown")
-    }
-
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
@@ -832,14 +440,6 @@ struct AgentSessionFactualProjectionView: View {
                     badge(worktreeID)
                 }
             }
-        }
-    }
-
-    private func togglePriorTurnExpansion(_ id: String) {
-        if expandedPriorTurnIDs.contains(id) {
-            expandedPriorTurnIDs.remove(id)
-        } else {
-            expandedPriorTurnIDs.insert(id)
         }
     }
 
