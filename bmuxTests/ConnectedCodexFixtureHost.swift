@@ -8,14 +8,14 @@ import Foundation
 
 struct ConnectedCodexFixtureHost: ConnectedCodexHosting {
     let connection: CodexRPCConnection
-    let beforeLaunch: @MainActor @Sendable () async -> Void
+    let beforeLaunch: @MainActor @Sendable () async throws -> Void
     let beforeAdoption: @MainActor @Sendable () async -> Void
     let beforeReconnect: @MainActor @Sendable () async -> Void
     let replacementForReconnect: (@MainActor @Sendable (ConnectedCodexHost) async throws -> ConnectedCodexHost)?
     let onEnd: @MainActor @Sendable (UUID) async -> Void
 
     init(connection: CodexRPCConnection,
-         beforeLaunch: @escaping @MainActor @Sendable () async -> Void = {},
+         beforeLaunch: @escaping @MainActor @Sendable () async throws -> Void = {},
          beforeAdoption: @escaping @MainActor @Sendable () async -> Void = {},
          beforeReconnect: @escaping @MainActor @Sendable () async -> Void = {},
          replacementForReconnect: (@MainActor @Sendable (ConnectedCodexHost) async throws -> ConnectedCodexHost)? = nil,
@@ -28,7 +28,7 @@ struct ConnectedCodexFixtureHost: ConnectedCodexHosting {
         self.onEnd = onEnd
     }
     func launch(workspaceID: UUID, surfaceID: UUID, workingDirectory: String, configuration: ConnectedCodexLaunchConfiguration) async throws -> ConnectedCodexHost {
-        await beforeLaunch()
+        try await beforeLaunch()
         return ConnectedCodexHost(providerVersion: "0.154.0", surfaceID: surfaceID, threadID: nil, processID: 0,
                            endpoint: URL(string: "ws://127.0.0.1:1")!, terminalCommand: "fixture",
                            connection: connection, control: nil)

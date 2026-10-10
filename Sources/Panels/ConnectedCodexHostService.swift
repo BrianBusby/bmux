@@ -5,18 +5,19 @@ import Foundation
 /// Owns new shared provider processes independently of all presentation views.
 /// Existing ordinary CLI processes are never adopted or replaced.
 actor ConnectedCodexHostService: ConnectedCodexHosting {
-    private let executable: URL?
+    private let resolveExecutable: @Sendable (String, [String: String]) async throws -> AgentSessionLaunchPlan
     private let hookWrapper: URL?
     private let root: URL
     private let environment: [String: String]
     private let connect: @Sendable (URL, String) async throws -> CodexRPCConnection
     private var processes: [UUID: Process] = [:]
 
-    init(executable: URL? = nil, root: URL, environment: [String: String], hookWrapper: URL? = nil,
+    init(resolveExecutable: @escaping @Sendable (String, [String: String]) async throws -> AgentSessionLaunchPlan,
+         root: URL, environment: [String: String], hookWrapper: URL? = nil,
          connect: @escaping @Sendable (URL, String) async throws -> CodexRPCConnection = { endpoint, token in
              try await ConnectedCodexHostService.authenticatedConnection(endpoint, token: token)
          }) {
-        self.executable = executable
+        self.resolveExecutable = resolveExecutable
         self.hookWrapper = hookWrapper
         self.root = root
         self.environment = environment
@@ -25,20 +26,16 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
 
     func launch(workspaceID: UUID, surfaceID: UUID, workingDirectory: String, configuration: ConnectedCodexLaunchConfiguration = .init()) async throws -> ConnectedCodexHost {
         let configuredEnvironment = environment.merging(configuration.environment) { _, configured in configured }
-        let plan: AgentSessionLaunchPlan
-        if let executable {
-            plan = AgentSessionLaunchPlan(provider: .codex, executableURL: executable, arguments: [], environment: configuredEnvironment)
-        } else {
-            plan = try await ConnectedCodexExecutableResolver(environment: configuredEnvironment).resolve(workingDirectory: workingDirectory)
-        }
+        let plan = try await resolveExecutable(workingDirectory, configuredEnvironment)
+        try Task.checkCancellation()
         let executable = plan.executableURL
         let launchEnvironment = plan.environment
         let version = await CommandRunner(environment: launchEnvironment).runStandardOutput(
             directory: workingDirectory, executable: executable.path, arguments: ["--version"], timeout: 5
         )
-        // Capabilities are empirical and version-specific; fail closed on upgrades.
+        // The pin is promoted only after shared-control compatibility is verified.
         guard let version = version?.trimmingCharacters(in: .whitespacesAndNewlines),
-              ["codex-cli 0.154.0", "codex-cli 0.161.0", "codex-cli 0.162.0"].contains(version) else {
+              version == "codex-cli " + ManagedCodexRelease.validated.version else {
             throw CodexControlError.unsupported
         }
         let directory = root.appendingPathComponent(surfaceID.uuidString, isDirectory: true)
@@ -104,7 +101,7 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
             guard let endpoint, process.isRunning else { throw CodexControlError.disconnected }
             let authenticated = try await connect(endpoint, token)
             connection = authenticated
-            let overrides = (configuration.arguments + (try await compatibleModelArguments(using: authenticated, workingDirectory: workingDirectory, configuration: configuration)))
+            let overrides = (["-c", "check_for_update_on_startup=false"] + configuration.arguments + (try await compatibleModelArguments(using: authenticated, workingDirectory: workingDirectory, configuration: configuration)))
                 .map(Self.quote).joined(separator: " ")
             guard !Task.isCancelled, process.isRunning, processes[surfaceID] === process else {
                 throw CodexControlError.disconnected

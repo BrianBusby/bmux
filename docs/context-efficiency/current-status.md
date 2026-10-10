@@ -14,6 +14,10 @@ The workspace ticket-delay follow-up is recorded in
 It reduces outcome projection write contention and restores failed observation
 retry eligibility; the broader shared SQLite writer policy remains open.
 
+The managed provider-runtime follow-up is recorded in
+[implementation notes](../implementation-notes/managed-codex-runtime.md). It isolates
+connected Codex launches from global CLI updates without widening control capabilities.
+
 ## Current Generated Truth
 
 - [Project status](../generated/project-status.md)

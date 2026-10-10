@@ -42,6 +42,7 @@ Repository: `BrianBusby/bmux`
 | Factual Agent Session View | implemented |
 | Knowledge Compiler Cross Session Bridge | planned |
 | Legacy Bmux Provenance Retirement | planned |
+| Managed Connected Codex Runtime | under observation |
 | Monorepo Migration Ledger Closure | planned |
 | Native Provider Session View | implemented |
 | Normal Coding Agent Evidence Ingestion | implemented |

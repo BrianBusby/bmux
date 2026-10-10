@@ -1,6 +1,70 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "agentSession.chat.runtimeDownloadFailed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not download bmux’s managed Codex runtime. Check your connection and retry."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmux 管理の Codex ランタイムをダウンロードできませんでした。接続を確認して再試行してください。"
+          }
+        }
+      }
+    },
+    "agentSession.chat.runtimePackageInvalid": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Codex runtime download could not be verified. Retry to download a fresh copy."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダウンロードした Codex ランタイムを検証できませんでした。再試行してダウンロードし直してください。"
+          }
+        }
+      }
+    },
+    "agentSession.chat.runtimeInstallationInvalid": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmux’s managed Codex runtime is damaged. Close connected sessions, remove its folder in ~/Library/Application Support/bmux/runtimes/codex, then retry."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmux 管理の Codex ランタイムが破損しています。接続中のセッションを閉じ、~/Library/Application Support/bmux/runtimes/codex 内のフォルダを削除してから再試行してください。"
+          }
+        }
+      }
+    },
+    "agentSession.chat.retryManagedLaunch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry Codex launch"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex の起動を再試行"
+          }
+        }
+      }
+    },
     "hybrid.fixture.inMotion": {
       "extractionState": "manual",
       "localizations": {

@@ -7,12 +7,19 @@ final class AgentChatApplicationRuntime {
     let transcript = AgentChatTranscriptService()
     lazy var terminal: TerminalChatRuntime = {
         let home = FileManager.default.homeDirectoryForCurrentUser
-        // Resolve the selected CLI afresh through the login shell for each new host.
+        // The shared host and its TUI use one verified runtime, unaffected by global CLI updates.
         var environment = ProcessInfo.processInfo.environment
         environment["BMUX_SOCKET_PATH"] = TerminalController.shared.activeSocketPath(preferredPath: SocketControlSettings.socketPath())
         environment["BMUX_BUNDLED_CLI_PATH"] = Bundle.main.resourceURL?.appendingPathComponent("bin/bmux").path
         environment["BMUX_BUNDLE_ID"] = Bundle.main.bundleIdentifier
+        let runtime = ManagedCodexRuntime(root: home.appendingPathComponent("Library/Application Support/bmux/runtimes/codex", isDirectory: true))
         let host = ConnectedCodexHostService(
+            resolveExecutable: { directory, environment in
+                let executable = try await runtime.executable()
+                try Task.checkCancellation()
+                return try await ConnectedCodexExecutableResolver(environment: environment)
+                    .resolve(workingDirectory: directory, managedExecutable: executable)
+            },
             root: home.appendingPathComponent("Library/Application Support/bmux/connected-codex", isDirectory: true),
             environment: environment,
             hookWrapper: Bundle.main.resourceURL?.appendingPathComponent("bin/bmux-codex-wrapper"))

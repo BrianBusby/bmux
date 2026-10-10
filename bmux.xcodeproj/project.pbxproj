@@ -904,6 +904,11 @@
 		A6D1F0100000000000000002 /* MainWindowVisibilityLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D1F0100000000000000001 /* MainWindowVisibilityLifecycleTests.swift */; };
 		730600000000000000000001 /* MainWindowVisibleFrameFitCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 730600010000000000000001 /* MainWindowVisibleFrameFitCoreTests.swift */; };
 		730600020000000000000002 /* MainWindowVisibleFrameFitRescue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 730600020000000000000001 /* MainWindowVisibleFrameFitRescue.swift */; };
+		5E380B9351E24110A01CA392 /* ManagedCodexDownloadFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51819639FC2F40309D04291E /* ManagedCodexDownloadFixture.swift */; };
+		F6C77B7A53C64E2892401FA9 /* ManagedCodexRelease.swift in Sources */ = {isa = PBXBuildFile; fileRef = 919F8B78C49E4A04A0476A3D /* ManagedCodexRelease.swift */; };
+		67752F5C979F4E65A7A9D5DF /* ManagedCodexRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40BC923C3EC142C8A924777F /* ManagedCodexRuntime.swift */; };
+		474F90F423114F9A9D6A7F94 /* ManagedCodexRuntimeError.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4B4FA4FC33B475396984771 /* ManagedCodexRuntimeError.swift */; };
+		F6BCA12F3F234A4CA1BA6A8A /* ManagedCodexRuntimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EAEC7433DF04AC8A922C0CA /* ManagedCodexRuntimeTests.swift */; };
 		A9D9000000000000000F0017 /* markdown-viewer in Resources */ = {isa = PBXBuildFile; fileRef = A9D9000000000000000F0016 /* markdown-viewer */; };
 		F5168A040000000000000001 /* MarkdownFontFamily.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5168A040000000000000002 /* MarkdownFontFamily.swift */; };
 		F5168A070000000000000001 /* MarkdownFontFamilyCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5168A070000000000000002 /* MarkdownFontFamilyCache.swift */; };
@@ -2773,6 +2778,11 @@
 		A6D1F0100000000000000001 /* MainWindowVisibilityLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowVisibilityLifecycleTests.swift; sourceTree = "<group>"; };
 		730600010000000000000001 /* MainWindowVisibleFrameFitCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowVisibleFrameFitCoreTests.swift; sourceTree = "<group>"; };
 		730600020000000000000001 /* MainWindowVisibleFrameFitRescue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MainWindowVisibleFrameFitRescue.swift; sourceTree = "<group>"; };
+		51819639FC2F40309D04291E /* ManagedCodexDownloadFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedCodexDownloadFixture.swift; sourceTree = "<group>"; };
+		919F8B78C49E4A04A0476A3D /* ManagedCodexRelease.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ManagedCodexRelease.swift; sourceTree = "<group>"; };
+		40BC923C3EC142C8A924777F /* ManagedCodexRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ManagedCodexRuntime.swift; sourceTree = "<group>"; };
+		B4B4FA4FC33B475396984771 /* ManagedCodexRuntimeError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ManagedCodexRuntimeError.swift; sourceTree = "<group>"; };
+		0EAEC7433DF04AC8A922C0CA /* ManagedCodexRuntimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedCodexRuntimeTests.swift; sourceTree = "<group>"; };
 		A9D9000000000000000F0016 /* markdown-viewer */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder; path = "markdown-viewer"; sourceTree = "<group>"; };
 		F5168A040000000000000002 /* MarkdownFontFamily.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownFontFamily.swift; sourceTree = "<group>"; };
 		F5168A070000000000000002 /* MarkdownFontFamilyCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownFontFamilyCache.swift; sourceTree = "<group>"; };
@@ -4686,6 +4696,9 @@
 				6AAC63003FCA4E7BA84C99A7 /* AgentSessionWebRendererCoordinator+Context.swift */,
 				19CF5F32E5994585B2D1E80B /* ConnectedCodexHost.swift */,
 				F37B74CF230B463F81761CF2 /* ConnectedCodexHostService.swift */,
+				B4B4FA4FC33B475396984771 /* ManagedCodexRuntimeError.swift */,
+				40BC923C3EC142C8A924777F /* ManagedCodexRuntime.swift */,
+				919F8B78C49E4A04A0476A3D /* ManagedCodexRelease.swift */,
 				D897C53BD8244824A6564088 /* TerminalChatConnecting.swift */,
 				8CE96FB6159C46769BF4723B /* TerminalChatRuntime.swift */,
 				AE83FAFCB4E047268CC9FD79 /* TerminalPanelPresentationState.swift */,
@@ -5167,6 +5180,8 @@
 				A9E050000000000000000001 /* AgentSessionWebRendererTests.swift */,
 				B9104AF3EF5C42D38F0EF5DE /* ConfiguredCodexLaunchTests.swift */,
 				C59567E28E56FC2326DE0EE8 /* ConnectedCodexExecutableResolverTests.swift */,
+				51819639FC2F40309D04291E /* ManagedCodexDownloadFixture.swift */,
+				0EAEC7433DF04AC8A922C0CA /* ManagedCodexRuntimeTests.swift */,
 				A9E040000000000000000001 /* CodexAppServerSessionTests.swift */,
 				D72260010000000000000002 /* AgentHibernationPortalVisibilityTests.swift */,
 				D36A00020000000000000002 /* AgentHibernationTests.swift */,
@@ -6569,6 +6584,9 @@
 				A6D1F0300000000000000002 /* MainWindowVisibilityController+Lifecycle.swift in Sources */,
 				2F0C06000000000000000002 /* MainWindowVisibilityController.swift in Sources */,
 				730600020000000000000002 /* MainWindowVisibleFrameFitRescue.swift in Sources */,
+				F6C77B7A53C64E2892401FA9 /* ManagedCodexRelease.swift in Sources */,
+				67752F5C979F4E65A7A9D5DF /* ManagedCodexRuntime.swift in Sources */,
+				474F90F423114F9A9D6A7F94 /* ManagedCodexRuntimeError.swift in Sources */,
 				F5168A040000000000000001 /* MarkdownFontFamily.swift in Sources */,
 				F5168A070000000000000001 /* MarkdownFontFamilyCache.swift in Sources */,
 				F5168A030000000000000001 /* MarkdownFontSizeSettings.swift in Sources */,
@@ -7663,6 +7681,8 @@
 				17C9F5BA0DD14EDC8C3E5001 /* MainWindowVisibilityControllerTests.swift in Sources */,
 				A6D1F0100000000000000002 /* MainWindowVisibilityLifecycleTests.swift in Sources */,
 				730600000000000000000001 /* MainWindowVisibleFrameFitCoreTests.swift in Sources */,
+				5E380B9351E24110A01CA392 /* ManagedCodexDownloadFixture.swift in Sources */,
+				F6BCA12F3F234A4CA1BA6A8A /* ManagedCodexRuntimeTests.swift in Sources */,
 				D7470002D7470002D7470002 /* MarkdownLinkBoundaryRegressionTests.swift in Sources */,
 				D6069002D6069002D6069002 /* MarkdownMermaidZoomTests.swift in Sources */,
 				D3664002D3664002D3664002 /* MarkdownPanelTests.swift in Sources */,

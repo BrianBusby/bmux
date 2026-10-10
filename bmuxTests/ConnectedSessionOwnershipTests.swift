@@ -13,7 +13,8 @@ import Testing
     @Test func unsupportedChatGPTModelUsesClientDefaultWithoutChangingValidReasoningEffort() async throws {
         let arguments = try await launchedArguments(model: "unavailable-model", effort: "xhigh")
         #expect(arguments.suffix(2) == ["--model", "catalog-default"])
-        #expect(!arguments.contains("-c"))
+        #expect(!arguments.contains { $0.hasPrefix("model_reasoning_effort=") })
+        #expect(arguments.contains("check_for_update_on_startup=false"))
     }
 
     @Test func fallbackModelReplacesOnlyUnsupportedReasoningEffort() async throws {
@@ -26,7 +27,8 @@ import Testing
         let arguments = try await launchedArguments(model: accountType == "chatgpt" ? "hidden-valid" : "custom-provider-model",
                                                    accountType: accountType)
         #expect(!arguments.contains("--model"))
-        #expect(!arguments.contains("-c"))
+        #expect(!arguments.contains { $0.hasPrefix("model_reasoning_effort=") })
+        #expect(arguments.contains("check_for_update_on_startup=false"))
     }
 
     @Test func customProviderWithChatGPTLoginRetainsCLIConfiguration() async throws {
@@ -57,8 +59,8 @@ import Testing
         #expect(!arguments.contains("--model"))
     }
 
-    @Test(arguments: ["0.154.0", "0.161.0", "0.162.0"])
-    func validatedVersionsRetainActualProviderMetadata(version: String) async throws {
+    @Test func validatedVersionRetainsActualProviderMetadata() async throws {
+        let version = "0.162.0"
         _ = try await launchedArguments(model: "hidden-valid", version: version)
     }
 
@@ -73,7 +75,7 @@ import Testing
     private func launchedArguments(model: String, effort: String = "xhigh", accountType: String = "chatgpt",
                                    provider: String = "openai", catalogOverride: String? = nil,
                                    configuration: ConnectedCodexLaunchConfiguration = .init(),
-                                   version: String = "0.154.0", expectsConnection: Bool = true) async throws -> [String] {
+                                   version: String = "0.162.0", expectsConnection: Bool = true) async throws -> [String] {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("connected-model-\(UUID())")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -108,7 +110,9 @@ import Testing
             "account/read": account, "config/read": config,
             "model/list": catalogOverride.map { Data($0.utf8) } ?? catalog])
         let connection = CodexRPCConnection(transport: transport)
-        let service = ConnectedCodexHostService(executable: executable, root: directory.appendingPathComponent("hosts"),
+        let service = ConnectedCodexHostService(resolveExecutable: { _, environment in
+            AgentSessionLaunchPlan(provider: .codex, executableURL: executable, arguments: [], environment: environment)
+        }, root: directory.appendingPathComponent("hosts"),
                                                environment: ["PATH": directory.path + ":/usr/bin:/bin", "HOST_CAPTURE": directory.appendingPathComponent("host.json").path,
                                                              "BMUX_SOCKET_PATH": "/tmp/roof-inspection.sock",
                                                              "BMUX_BUNDLED_CLI_PATH": "/Applications/Roof/bmux",

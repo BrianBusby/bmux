@@ -12,6 +12,40 @@ import Testing
 
 @Suite(.serialized) @MainActor
 struct ConfiguredCodexLaunchTests {
+    @Test(.timeLimit(.minutes(1))) func failedAcquisitionShowsItsCauseAndRetryStartsTheSamePanel() async throws {
+        let failed = AsyncStream<Void>.makeStream()
+        let started = AsyncStream<Void>.makeStream()
+        var attempts = 0
+        let runtime = TerminalChatRuntime(reader: ConnectedCodexFixtureReader(),
+            hosts: ConnectedCodexFixtureHost(connection: CodexRPCConnection(transport: ConnectedCodexFixtureTransport()),
+                beforeLaunch: {
+                    attempts += 1
+                    if attempts == 1 { throw ManagedCodexRuntimeError.downloadFailed }
+                    started.continuation.yield(())
+                }), bind: { _, _, _, _ in })
+        let manager = TabManager(initialWorkingDirectory: "/tmp", autoWelcomeIfNeeded: false)
+        let workspace = try #require(manager.selectedWorkspace)
+        let panel = try #require(workspace.focusedTerminalPanel)
+        defer { for panel in workspace.panels.values { panel.close() } }
+        let launch = ConfiguredCodexLaunchCoordinator(workspace: workspace, panel: panel, runtime: runtime,
+            workingDirectory: "/tmp", configuration: .init(), onFailure: { message in
+                #expect(message == ManagedCodexRuntimeError.downloadFailed.errorDescription)
+                failed.continuation.yield(())
+            })
+        launch.start()
+        var failureEvents = failed.stream.makeAsyncIterator()
+        _ = await failureEvents.next()
+        #expect(launch.failureMessage != nil)
+        #expect(!launch.isStarting)
+        launch.retry()
+        var startEvents = started.stream.makeAsyncIterator()
+        _ = await startEvents.next()
+        #expect(attempts == 2)
+        #expect(launch.failureMessage == nil)
+        #expect(workspace.panels[panel.id] != nil)
+        launch.close()
+    }
+
     @Test(arguments: [
         (#"codex --add-dir 'Maple Street'"#, ["--add-dir", "Maple Street"]),
         (#"codex --add-dir "a\q""#, ["--add-dir", #"a\q"#]),

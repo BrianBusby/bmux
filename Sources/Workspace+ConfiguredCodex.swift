@@ -27,11 +27,10 @@ extension Workspace {
         let workspaceID = id
         let sourceID = panel.id
         let coordinator = ConfiguredCodexLaunchCoordinator(workspace: self, panel: panel,
-            runtime: runtime, workingDirectory: workingDirectory, configuration: configuration) {
+            runtime: runtime, workingDirectory: workingDirectory, configuration: configuration) { message in
             TerminalNotificationStore.shared.addNotification(tabId: workspaceID, surfaceId: sourceID,
                 title: String(localized: "agentSession.chat.connectedNewSession", defaultValue: "New connected Codex session"), subtitle: "",
-                body: String(localized: "agentSession.chat.connectedStartFailed",
-                    defaultValue: "Could not connect to Codex. Try again or continue in Terminal."))
+                body: message)
         }
         panel.presentation.configuredCodexLaunch = coordinator
         panel.presentation.onClose = { [weak coordinator] in coordinator?.close() }

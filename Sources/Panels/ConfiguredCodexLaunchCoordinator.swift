@@ -10,15 +10,16 @@ final class ConfiguredCodexLaunchCoordinator {
     private let workspaceID: UUID
     private let surfaceID: UUID
     private(set) var isStarting = true
+    private(set) var failureMessage: String?
     private let runtime: any TerminalChatConnecting
     private let workingDirectory: String
     private let configuration: ConnectedCodexLaunchConfiguration
-    private let onFailure: @MainActor () -> Void
+    private let onFailure: @MainActor (String) -> Void
     private var startup: Task<Void, Never>?
 
     init(workspace: Workspace, panel: TerminalPanel, runtime: any TerminalChatConnecting,
          workingDirectory: String, configuration: ConnectedCodexLaunchConfiguration,
-         onFailure: @escaping @MainActor () -> Void) {
+         onFailure: @escaping @MainActor (String) -> Void) {
         self.workspaceID = workspace.id
         self.surfaceID = panel.id
         self.workspace = workspace
@@ -51,7 +52,7 @@ final class ConfiguredCodexLaunchCoordinator {
                     command: command, workingDirectory: workingDirectory, focus: false, waitAfterCommand: true,
                     allowTextBoxFocusDefault: false) else {
                     await runtime.closeConnectedSession(surfaceID: surfaceID)
-                    onFailure()
+                    reportFailure(CodexControlError.disconnected)
                     return
                 }
                 self.panel = connected
@@ -70,9 +71,24 @@ final class ConfiguredCodexLaunchCoordinator {
                 guard !Task.isCancelled, let workspace = self.workspace, let panel = self.panel,
                       workspace.panels[panel.id] as? TerminalPanel === panel,
                       panel.workspaceId == workspaceID else { return }
-                onFailure()
+                reportFailure(error)
             }
         }
+    }
+
+    func retry() {
+        guard !isStarting, failureMessage != nil else { return }
+        startup = nil
+        failureMessage = nil
+        isStarting = true
+        start()
+    }
+
+    private func reportFailure(_ error: Error) {
+        let message = (error as? ManagedCodexRuntimeError)?.errorDescription
+            ?? String(localized: "agentSession.chat.connectedStartFailed", defaultValue: "Could not connect to Codex. Try again or continue in Terminal.")
+        failureMessage = message
+        onFailure(message)
     }
 
     func close() {

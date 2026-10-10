@@ -2,7 +2,7 @@ import BmuxAgentChat
 import BmuxFoundation
 import Foundation
 
-/// Resolves each new host through the user's shell-initialized PATH without adding other installations.
+/// Preserves shell tool discovery while allowing a connected session to use its managed provider.
 struct ConnectedCodexExecutableResolver: Sendable {
     let environment: [String: String]
     let commands: any CommandRunning
@@ -12,7 +12,7 @@ struct ConnectedCodexExecutableResolver: Sendable {
         self.commands = commands ?? CommandRunner(environment: environment)
     }
 
-    func resolve(workingDirectory: String) async throws -> AgentSessionLaunchPlan {
+    func resolve(workingDirectory: String, managedExecutable: URL? = nil) async throws -> AgentSessionLaunchPlan {
         let shell = environment["SHELL"] ?? "/bin/zsh"
         guard shell.hasPrefix("/") else {
             throw CodexControlError.unsupported
@@ -38,6 +38,9 @@ struct ConnectedCodexExecutableResolver: Sendable {
             return component.isEmpty ? directory.standardizedFileURL.path
                 : directory.appendingPathComponent(component, isDirectory: true).standardizedFileURL.path
         }.joined(separator: ":")
+        if let managedExecutable {
+            return AgentSessionLaunchPlan(provider: .codex, executableURL: managedExecutable, arguments: [], environment: resolvedEnvironment)
+        }
         return try AgentExecutableResolver(environment: resolvedEnvironment,
             includeStandardSearchDirectories: false, includeUserRuntimeSearchDirectories: false).resolve(.codex)
     }

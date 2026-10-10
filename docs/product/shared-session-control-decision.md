@@ -525,3 +525,17 @@ runtime acceptance and verification limits. User settings and installed executab
 are unchanged. The same follow-up corrects replacement of an eagerly started
 placeholder; the version gate and placeholder lifecycle are independent checks
 in the same configured launch path.
+
+
+### Managed runtime after Codex 0.162.1 update (October 10, 2026)
+
+The user authorized replacing global-PATH provider selection for new connected
+sessions with a bmux-owned, checksum-verified 0.162.0 package. The global 0.162.1
+update had again tripped the exact-version gate before the placeholder terminal
+received a launch command. Both shared host and original TUI now use the same
+immutable versioned runtime path; shell PATH still supplies ordinary subprocess
+tools. An application-owned installer acquires the full release once, atomically
+publishes it, and reuses it offline. Explicit custom PATH and ordinary shell
+commands keep their prior behavior. Shared-control capabilities remain gated;
+new runtime pins require compatibility proof, not a semantic-version assumption.
+See [implementation and verification notes](../implementation-notes/managed-codex-runtime.md).
