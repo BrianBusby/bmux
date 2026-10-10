@@ -43,6 +43,7 @@ Repository: `BrianBusby/bmux`
 | Knowledge Compiler Cross Session Bridge | planned |
 | Legacy Bmux Provenance Retirement | planned |
 | Managed Connected Codex Runtime | under observation |
+| Matte Skin Theme Tokens | implemented |
 | Monorepo Migration Ledger Closure | planned |
 | Native Provider Session View | implemented |
 | Normal Coding Agent Evidence Ingestion | implemented |

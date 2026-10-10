@@ -2,7 +2,7 @@
 
 AppKit/SwiftUI support pieces for the macOS app, grouped by concern. Each top-level folder is
 one concern: `WindowChrome/` (this is what the ContentView extraction added), plus the
-pre-existing `AboutTitlebarDebug/`, `Mouse/`, `Popover/`, and `Scroll/`. Most types are small
+`Matte/` design tokens and pre-existing `AboutTitlebarDebug/`, `Mouse/`, `Popover/`, and `Scroll/`. Most types are small
 `Sendable` value types or narrow `@MainActor` controllers, so resolution logic can be unit
 tested without a live window.
 
@@ -84,3 +84,31 @@ How an individual terminal surface paints its own background.
 Where window-level overlays are inserted in the AppKit hierarchy.
 - `WindowContentOverlayInstallationTarget.swift`: the container/reference pair to install into.
 - `WindowContentOverlayTargetResolver.swift`: resolves the insertion point for a window.
+
+## Matte/
+
+`MatteTheme` owns the graphite and porcelain design values. It receives the effective
+SwiftUI color scheme or AppKit appearance after the app's existing appearance override
+resolves. It does not read preferences, apply surfaces, or configure the terminal.
+Supporting immutable types describe semantic colors, typography, layout, motion,
+texture, and shadow ingredients; all token literals live in `MatteTheme.swift`.
+
+```swift
+let theme = MatteTheme(colorScheme: .dark)
+let panelColor = Color(nsColor: theme.color(.panel))
+let motion = theme.motion(reduceMotion: true)
+let dynamicPanelColor = MatteTheme.dynamicColor(.panel)
+```
+
+Tests inject `.dark`/`.light`, explicit `NSAppearance` values, and the Reduce Motion
+Boolean without launching the app or touching user defaults. `MatteThemeTests` exercises
+dynamic color reuse across appearances, text/focus contrast, opaque surface colors,
+card-lift eligibility, and shadow semantics. Run the package suite with:
+
+```sh
+swift test --package-path Packages/macOS/BmuxAppKitSupportUI
+```
+
+Reference CSS font weights and shadow blur/spread are preserved as data for the native
+surface renderer to map. Terminal typography is reference-only; the token API does not
+change the renderer or the user's terminal font.

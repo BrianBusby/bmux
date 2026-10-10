@@ -1,0 +1,115 @@
+# Matte skin implementation record
+
+Visual-only native skin, authorized by Brian on 2026-10-10. Preserve navigation,
+workspace data, action routing, terminal rendering, and terminal fonts.
+
+## References and base
+
+The three PNGs here are verbatim conversation attachments. No PDF or original
+pre-redesign screenshots were attached. The spec image is 444 × 2048; the two
+targets are 1183 × 2048, including prototype tooling outside the simulated app.
+That tooling is not product UI. Palette labels are cross-checked against raw
+RGBA pixels in solid spec swatches, without display color conversion.
+
+Branch `matte-skin` starts from `origin/main` at `ce17e9888`.
+
+## Stages
+
+1. Theme tokens for both appearances — implemented; awaiting stage review. Definitions and resolution only.
+2. Reusable base, card, panel, inset, and overlay styles.
+3. Workspace cards and existing sidebar controls.
+4. Main panel and terminal chrome.
+5. Optional static texture behind a flag.
+
+One commit per stage, followed by focused checks, an isolated tagged build and
+launch, same-size dark/light captures, comparison, and user review. Do not
+advance automatically. Stage 1 captures are the existing UI baseline; palette
+verification precedes component integration in stage 2.
+
+## Governing sources and ownership
+
+Read AGENTS.md, continuous-code-quality, and bmux architecture, debugging,
+testing, dev-workflow, and localization skills. Apply installed Superpowers
+implementation/review/verification workflows with repository rules taking priority.
+
+Tokens belong to the existing BmuxAppKitSupportUI appearance area. MatteTheme
+owns all numeric style values. Supporting value types have separate files.
+No new package, service, mutable state, or settings owner. Existing
+WindowAppearanceResolver/Snapshot and AppearanceSettings remain the integration
+boundaries. The active `WorkspaceReferenceRail` consumes card and repository scopes; rows must retain immutable presentation snapshots. The older `TabItemView` equality boundary remains intact.
+Bonsplit appearance owns terminal tab chrome. TerminalPanelView and the AppKit
+portal retain identity/focus/geometry; GhosttySurfaceScrollView retains search.
+
+## Constraints and pending verification
+
+- Live verification corrected the initial source-search miss: the reference shell
+  exists in `ContentView.bmuxReferenceAppShell`; its sidebar is
+  `Sources/Sidebar/WorkspaceReferenceRail.swift`, search/filter is
+  `WorkspaceTabFilterBar.swift`, and heading/navigation comes through
+  `Sources/Panels/AgentSessionFactualProjectionModeHost.swift` and
+  `AgentSessionFactualProjectionView.swift`. Existing hard-coded colors live in
+  `Sources/Sidebar/Color+WorkspaceReference.swift`. Preserve action ownership.
+- The current PR-link closure in ContentView selects the workspace before opening
+  the link. Stage 3 must address the explicit requested no-selection interaction
+  without creating a second selection or URL-opening path.
+- Existing terminal horizontal scrolling is disabled. Adding it would change
+  behavior, outside this skin. The spec terminal font is reference-only.
+- CSS negative spread requires a documented native approximation. Native menus,
+  window shadows, and font rasterization are not browser-pixel-identical.
+- Homebrew submodule setup URL is unavailable; app-required Ghostty and Bonsplit
+  initialize separately. Pinned GhosttyKit uses the existing legacy cache path.
+- Existing shell hard-codes dark colors even in light appearance. The stage 1
+  light baseline documents this; token integration must remove it in stages 2–4.
+- No native visual parity claim until the surfaces and components consume tokens.
+- Stage 1 adds no product strings. Later UI stages audit English/Japanese labels.
+
+## Stage 1 verification
+
+- `swift test --package-path Packages/macOS/BmuxAppKitSupportUI`: 25 tests in
+  eight suites passed, including six new parameterized test functions.
+- Independent spec review: all 48 opaque palette values match raw reference
+  swatches; translucent colors, dimensions, typography, shadows, motion, and
+  texture match the enlarged spec. Native token swatches were rendered from the
+  production Swift files. No color or token deviations found.
+- Independent code review: one README test-seam omission corrected. Complete
+  types, tests, existing appearance owners, and concurrency boundaries reviewed.
+- `BMUX_RELOAD_NO_GLOBAL_CLI_LINKS=1 ./scripts/reload.sh --tag matte-skin-stage1`:
+  passed; isolated app launched and tag-bound socket commands succeeded.
+- Baselines use the existing debug viewport recorder at 1092 × 593 points and
+  `debug.window.screenshot` at nominal resolution. Only the tagged bundle's
+  `appearanceMode` was changed. No main-app preferences or global CLI links changed.
+- `./scripts/project-docs validate`, `generate`, and `check`: passed.
+  `repo-status.yaml` records the token capability; no unrelated roadmap slice
+  was reassigned. Explicit user authorization governs this separate visual task.
+- Localization audit: no product labels, accessibility strings, menus, settings,
+  or localization catalogs changed. Added prose is internal engineering/design
+  documentation and diagnostic comparison labels, not shipped app UI.
+- Existing full-app warnings include AppIcon unassigned children, AppDelegate
+  deprecated AppKit calls, BrowserPanel actor-isolation/preconcurrency warnings,
+  ContentView existential syntax, and a WebKit conformance warning. No changed
+  token file emitted a warning. The app test target and entire repo test suite
+  were not run locally; package tests are the focused stage 1 coverage.
+
+See [comparison.html](verification-stage1/comparison.html) for reference/baseline
+pairs and native token swatches. These are stage 1 evidence, not acceptance of
+completed skin parity.
+
+## Baseline deviations and stage ownership
+
+| Area | Observed deviation in both baselines unless stated | Reason / owning stage |
+| --- | --- | --- |
+| Palette | Cool dark shell and saturated selected fill; light mode remains dark | Existing fixed reference colors; stages 2–4 consume dynamic tokens |
+| Base / separation | Inset outer framed shell, darker sidebar, strong vertical divider, no 14pt floating gutter | Existing shell layout; stage 2 and integration in 3–4 |
+| Elevation | Flat card/panel; no contact/ambient pair, directional inner edges, or floating main panel | Surface styles deferred to stage 2 |
+| Header | Wordmark shape, brand spacing, top margin, icon size/spacing, count casing differ | Existing native header/control styles; stages 3–4 |
+| Sidebar | 340pt fixed rail, larger search/filter, different gaps and card padding/radius/type | Existing rail metrics; stage 3 |
+| Card states | Existing selected blue border; no square marker or specified hover/focus/press styles | Stage 3; state behavior not integrated yet |
+| Main heading / tabs | Main title and metadata positioned differently; tab indicator/color and margins differ | Existing projection chrome; stage 4 |
+| Terminal | No recessed container; different tab silhouette/indicator; fonts, prompt and engine theme differ | Container/tab styling stage 4; terminal fonts/renderer preserved |
+| Texture | No grain | Optional stage 5; off is required to remain usable |
+| Content | One fresh workspace; no second PR/author card; current home-directory label and shell prompt | Isolated baseline has no original workspace session/data; do not fabricate product data |
+| Native titlebar | Current build 736, native folder icon, macOS capture/share badge in traffic-light area | Runtime/OS chrome and version; not prototype controls, no removal of existing features |
+| Prototype tooling | Top controls and bottom inspector absent from native app | Intentional: reference tooling is not product UI |
+
+Material mismatches above are explicitly pending integration stages, not changes
+introduced by stage 1. Do not proceed to stage 2 until Brian reviews this stage.
