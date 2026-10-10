@@ -11,6 +11,7 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
     private let environment: [String: String]
     private let connect: @Sendable (URL, String) async throws -> CodexRPCConnection
     private var processes: [UUID: Process] = [:]
+    private var relays: [UUID: CodexWebSocketRelay] = [:]
 
     init(resolveExecutable: @escaping @Sendable (String, [String: String]) async throws -> AgentSessionLaunchPlan,
          root: URL, environment: [String: String], hookWrapper: URL? = nil,
@@ -74,7 +75,10 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
             let data = handle.availableData
             if data.isEmpty { continuation.finish() } else { continuation.yield(data) }
         }
-        process.terminationHandler = { _ in continuation.finish() }
+        process.terminationHandler = { [weak self] process in
+            continuation.finish()
+            Task { await self?.processDidExit(surfaceID: surfaceID, processID: process.processIdentifier) }
+        }
         // Genuine startup deadline, canceled immediately after readiness or failure.
         let deadline = Task {
             do { try await ContinuousClock().sleep(for: .seconds(15)) } catch { return }
@@ -101,6 +105,9 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
             guard let endpoint, process.isRunning else { throw CodexControlError.disconnected }
             let authenticated = try await connect(endpoint, token)
             connection = authenticated
+            let relay = try CodexWebSocketRelay(endpoint: endpoint)
+            relays[surfaceID] = relay
+            let terminalEndpoint = try await relay.start()
             let overrides = (["-c", "check_for_update_on_startup=false"] + configuration.arguments + (try await compatibleModelArguments(using: authenticated, workingDirectory: workingDirectory, configuration: configuration)))
                 .map(Self.quote).joined(separator: " ")
             guard !Task.isCancelled, process.isRunning, processes[surfaceID] === process else {
@@ -110,7 +117,7 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
             // GUI environments may lack the shebang runtime (e.g. node for a Bun install).
             // The original TUI must use the same resolved PATH as its shared host.
             let pathSetup = launchEnvironment["PATH"].map { "export PATH=\(Self.quote($0)); " } ?? ""
-            let shellCommand = pathSetup + "BMUX_CONNECTED_CODEX_TOKEN=$(cat \(Self.quote(tokenURL.path))) exec \(Self.quote(executable.path)) --remote \(Self.quote(endpoint.absoluteString)) --remote-auth-token-env BMUX_CONNECTED_CODEX_TOKEN"
+            let shellCommand = pathSetup + "BMUX_CONNECTED_CODEX_TOKEN=$(cat \(Self.quote(tokenURL.path))) exec \(Self.quote(executable.path)) --remote \(Self.quote(terminalEndpoint.absoluteString)) --remote-auth-token-env BMUX_CONNECTED_CODEX_TOKEN"
                 + (overrides.isEmpty ? "" : " " + overrides)
             let command = "/bin/sh -c " + Self.quote(shellCommand)
             return ConnectedCodexHost(providerVersion: String(version.dropFirst("codex-cli ".count)), surfaceID: surfaceID, threadID: nil, processID: process.processIdentifier,
@@ -118,6 +125,7 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
                                       control: nil)
         } catch {
             await connection?.disconnect()
+            await relays.removeValue(forKey: surfaceID)?.stop()
             if process.isRunning { process.terminate() }
             processes.removeValue(forKey: surfaceID)
             output.fileHandleForReading.readabilityHandler = nil
@@ -164,9 +172,16 @@ actor ConnectedCodexHostService: ConnectedCodexHosting {
     }
 
     /// Explicit owning-terminal close or rollback before a terminal is delivered.
-    func endOwnedHost(surfaceID: UUID) {
+    func endOwnedHost(surfaceID: UUID) async {
+        let relay = relays.removeValue(forKey: surfaceID)
         if let process = processes.removeValue(forKey: surfaceID), process.isRunning { process.terminate() }
         try? FileManager.default.removeItem(at: root.appendingPathComponent(surfaceID.uuidString))
+        await relay?.stop()
+    }
+
+    private func processDidExit(surfaceID: UUID, processID: Int32) async {
+        guard processes[surfaceID]?.processIdentifier == processID else { return }
+        await endOwnedHost(surfaceID: surfaceID)
     }
 
     /// Compatibility overrides belong only to this new TUI. Saved configuration

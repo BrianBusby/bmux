@@ -136,6 +136,8 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: connected_codex_image_frame_compatibility
+    status: monitoring
   - id: configured_codex_placeholder_startup_dogfood
     status: open
   - id: codex_update_workspace_exit_native_dogfood
