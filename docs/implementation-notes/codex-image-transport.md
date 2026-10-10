@@ -55,9 +55,15 @@ This does not recover or replay an already uncertain submission in build 733.
   times before its existing HTTP fallback completed the image turn. The local
   TUI/provider connection stayed usable. This adapter does not change that
   upstream retry policy or promise faster large-image inference.
-- Tagged build 734 compiled; native repo launcher -> new workspace -> Terminal
-  text prompt completed. In-app three-image submission and final pushed-head
-  build/CI/review remain pending.
+- Tagged build 734: native repo launcher -> new workspace -> Terminal text
+  prompt completed. Three quoted PNG paths pasted into that Terminal composer
+  became three attachments; the ~25 MB submission completed with “Ready.” Chat
+  displayed that reply and accepted a subsequent “Still ready.” prompt, which
+  completed on the same workspace. The disposable test workspace was closed
+  through its tag-bound CLI. Builds 729/733 and their workspaces were untouched.
+- Final 32-test app-host run also passes wrong-token/Origin rejection through the
+  adapter. Frame tests pass again after final protocol/diagnostic changes.
+- Final pushed-head build and independent CI/review remain pending.
 - The focused run retains an unchanged test-only `alive` variable warning in
   ConnectedSessionOwnershipTests. No affected production-source warning was found.
 
