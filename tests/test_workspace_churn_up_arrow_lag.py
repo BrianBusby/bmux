@@ -14,11 +14,18 @@ Scenario B (churn):
 4) Seed shell history.
 5) Measure Up-arrow latency again.
 
+Each visited workspace explicitly selects Terminal through its accessibility
+button. Native visibility, surface readiness and focus are required before each
+latency burst. Build scripts/benchmark-select-terminal.swift with swiftc
+-parse-as-library and set BMUX_LAG_AX_HELPER to its executable; launch the target
+app with -AppleLanguages '(en)' -AppleLocale en_US.
+
 The test fails when churn latency regresses too far relative to baseline.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import select
 import socket
@@ -157,6 +164,16 @@ def compute_stats(values_ms: list[float]) -> LatencyStats:
 
 
 def get_bmux_pid_for_socket(socket_path: Optional[str]) -> Optional[int]:
+    launched_pid = os.environ.get("BMUX_LAG_APP_PID")
+    if launched_pid:
+        try:
+            pid = int(launched_pid)
+            if pid <= 0:
+                return None
+            os.kill(pid, 0)
+            return pid
+        except (ValueError, OSError):
+            return None
     if socket_path and os.path.exists(socket_path):
         result = subprocess.run(["lsof", "-t", socket_path], capture_output=True, text=True)
         if result.returncode == 0:
@@ -171,15 +188,7 @@ def get_bmux_pid_for_socket(socket_path: Optional[str]) -> Optional[int]:
                 if pid != os.getpid():
                     return pid
 
-    result = subprocess.run(
-        ["pgrep", "-f", r"bmux DEV.*\.app/Contents/MacOS/bmux DEV"],
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        return None
-    lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
-    return int(lines[0]) if lines else None
+    return None
 
 
 def resolve_target_socket() -> str:
@@ -258,11 +267,12 @@ def create_workspaces(client: bmux, count: int) -> list[str]:
     return created
 
 
-def cycle_all_workspaces(client: bmux, passes: int, delay_s: float) -> list[str]:
+def cycle_all_workspaces(client: bmux, passes: int, delay_s: float, pid: int, ax_helper: str) -> list[str]:
     ids = [wid for _idx, wid, _title, _selected in sorted(client.list_workspaces(), key=lambda row: row[0])]
     for _ in range(passes):
         for wid in ids:
             client.select_workspace(wid)
+            prepare_visible_terminal(client, pid, ax_helper)
             time.sleep(delay_s)
     return ids
 
@@ -277,6 +287,47 @@ def focused_terminal_panel(client: bmux) -> str:
         client.focus_surface(idx)
         return sid
     return focused[1]
+
+
+def prepare_visible_terminal(client: bmux, pid: int, ax_helper: str) -> str:
+    client.activate_app()
+    try:
+        result = subprocess.run([ax_helper, str(pid)], capture_output=True, text=True, timeout=12)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise bmuxError(f"Unable to select the benchmark Terminal tab: {error}") from error
+    if result.returncode != 0:
+        raise bmuxError(f"Terminal selection failed: {result.stderr.strip()}")
+
+    panel_id = focused_terminal_panel(client)
+    wait_for_visible_terminal(client, panel_id)
+    return panel_id
+
+
+def wait_for_visible_terminal(client: bmux, panel_id: str) -> None:
+    required = ("runtime_surface_ready", "hosted_view_in_window", "hosted_view_visible_in_ui")
+    rejected = ("hosted_view_hidden_or_ancestor_hidden", "hosted_view_in_headless_bootstrap_window")
+    last_state: dict = {}
+    with RawSocketClient(client.socket_path) as raw:
+        def visible() -> bool:
+            nonlocal last_state
+            response = json.loads(raw.command(json.dumps({
+                "id": "lag-terminal-precondition", "method": "debug.terminals", "params": {},
+            })))
+            if response.get("ok") is not True:
+                raise bmuxError("debug.terminals failed while verifying the benchmark Terminal")
+            terminals = response.get("result", {}).get("terminals", [])
+            terminal = next((item for item in terminals
+                             if str(item.get("surface_id", "")).lower() == panel_id.lower()), {})
+            last_state = {key: terminal.get(key) for key in required + rejected}
+            return (all(last_state[key] is True for key in required)
+                    and all(last_state[key] is False for key in rejected))
+
+        try:
+            wait_for(visible, timeout_s=10)
+            client.focus_surface(panel_id)
+            wait_for(lambda: visible() and client.is_terminal_focused(panel_id), timeout_s=5)
+        except bmuxError as error:
+            raise bmuxError(f"Terminal {panel_id} is not ready, visible and focused: {last_state}") from error
 
 
 def seed_history(client: bmux, lines: int) -> None:
@@ -317,6 +368,7 @@ def best_of_n_burst(
     count: int,
     delay_s: float,
     repeats: int,
+    verify_terminal: Callable[[], None],
 ) -> LatencyStats:
     """Run the latency burst `repeats` times and return the best (lowest-p95) run.
 
@@ -327,6 +379,7 @@ def best_of_n_burst(
     """
     best: Optional[LatencyStats] = None
     for _ in range(repeats):
+        verify_terminal()
         latencies = run_shortcut_latency_burst(
             socket_path=socket_path,
             combo=combo,
@@ -383,10 +436,10 @@ def latency_failures(baseline: LatencyStats, churn: LatencyStats, cpu_max: float
     return failures
 
 
-def run_baseline_scenario(client: bmux, socket_path: str) -> tuple[str, LatencyStats]:
+def run_baseline_scenario(client: bmux, socket_path: str, pid: int, ax_helper: str) -> tuple[str, LatencyStats]:
     first_workspace_id = keep_only_first_workspace(client)
     client.select_workspace(first_workspace_id)
-    panel_id = focused_terminal_panel(client)
+    panel_id = prepare_visible_terminal(client, pid, ax_helper)
     seed_history(client, HISTORY_SEED_LINES)
     stats = best_of_n_burst(
         socket_path=socket_path,
@@ -394,21 +447,24 @@ def run_baseline_scenario(client: bmux, socket_path: str) -> tuple[str, LatencyS
         count=KEY_EVENTS,
         delay_s=KEY_DELAY_S,
         repeats=BURST_REPEATS,
+        verify_terminal=lambda: wait_for_visible_terminal(client, panel_id),
     )
     return panel_id, stats
 
 
-def run_churn_scenario(client: bmux, socket_path: str, first_workspace_id: str) -> tuple[str, LatencyStats]:
+def run_churn_scenario(
+    client: bmux, socket_path: str, first_workspace_id: str, pid: int, ax_helper: str,
+) -> tuple[str, LatencyStats]:
     first_workspace_id = keep_only_first_workspace(client)
     _ = create_workspaces(client, NEW_WORKSPACES)
-    ordered_ids = cycle_all_workspaces(client, SWITCH_PASSES, SWITCH_DELAY_S)
+    ordered_ids = cycle_all_workspaces(client, SWITCH_PASSES, SWITCH_DELAY_S, pid, ax_helper)
 
     if first_workspace_id in ordered_ids:
         client.select_workspace(first_workspace_id)
     elif ordered_ids:
         client.select_workspace(ordered_ids[0])
 
-    panel_id = focused_terminal_panel(client)
+    panel_id = prepare_visible_terminal(client, pid, ax_helper)
     seed_history(client, HISTORY_SEED_LINES)
     stats = best_of_n_burst(
         socket_path=socket_path,
@@ -416,6 +472,7 @@ def run_churn_scenario(client: bmux, socket_path: str, first_workspace_id: str) 
         count=KEY_EVENTS,
         delay_s=KEY_DELAY_S,
         repeats=BURST_REPEATS,
+        verify_terminal=lambda: wait_for_visible_terminal(client, panel_id),
     )
     return panel_id, stats
 
@@ -431,23 +488,25 @@ def main() -> int:
 
     try:
         target_socket = resolve_target_socket()
+        ax_helper = os.environ.get("BMUX_LAG_AX_HELPER", "")
+        if not ax_helper or not os.access(ax_helper, os.X_OK):
+            raise bmuxError("BMUX_LAG_AX_HELPER must point to the compiled benchmark-select-terminal helper")
         client = bmux(socket_path=target_socket)
         client.connect()
         print(f"Using socket: {client.socket_path}")
 
         pid = get_bmux_pid_for_socket(client.socket_path)
         if pid is None:
-            print("SKIP: bmux process not found for socket")
-            return 0
+            raise bmuxError("No benchmark app PID: use its socket or pass the launcher's BMUX_LAG_APP_PID")
 
         cpu_monitor = CPUMonitor(pid)
         cpu_monitor.start()
 
         first_workspace_id = keep_only_first_workspace(client)
-        baseline_panel_id, baseline = run_baseline_scenario(client, client.socket_path)
+        baseline_panel_id, baseline = run_baseline_scenario(client, client.socket_path, pid, ax_helper)
         print(f"Baseline panel: {baseline_panel_id}")
 
-        churn_panel_id, churn = run_churn_scenario(client, client.socket_path, first_workspace_id)
+        churn_panel_id, churn = run_churn_scenario(client, client.socket_path, first_workspace_id, pid, ax_helper)
         print(f"Churn panel:    {churn_panel_id}")
 
         cpu_monitor.stop()

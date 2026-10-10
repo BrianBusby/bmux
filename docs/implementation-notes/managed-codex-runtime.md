@@ -215,3 +215,41 @@ All six constructor-only follow-up cases therefore require final-head CI executi
 The preceding four-plus-18 passing run does not cover these six additional cases.
 This follow-up changes only tests and these notes; production build 733 remains
 applicable. File budgets and diff whitespace checks pass.
+
+Final-head CI on `e20b2dadf` passed the universal Release build and the repaired
+browser Cmd+D → Cmd+L → Cmd+F UI test (18.096 s). All ten corrected terminal
+fixtures and all six managed-runtime installer tests passed in raw logs. App-host
+shards still normalized assertions/crashes to success; interrupted Swift Testing
+suites are not counted as passes.
+
+The subsequent typing-lag gate failed its absolute churn p95 limit: 37.03 ms
+against 35 ms, with baseline 28.84 ms, ratio 1.28× against 1.75×, and delta 8.19 ms
+against 20 ms. This is an unresolved measured failure, not evidence that Chat
+caused that latency. Bounded inspection found a separate benchmark setup defect:
+its unchanged socket actions selected model surfaces but never selected the
+now-default-Chat shell's visible Terminal tab. It therefore did not establish the
+visible-terminal typing precondition. No same-head rerun was performed.
+
+The benchmark now presses the existing Terminal button through public native AX,
+then requires the selected native surface to be ready, visible in the real window,
+not hidden/headless, and focused before each timing burst. Each visited workspace
+selects Terminal. A small external helper follows the public AX pattern in
+`scripts/bench-window-visibility.swift`; no product API or global test mode was
+added. The benchmark targets only its launcher's explicit PID or the PID owning
+its selected socket, and fails instead of skipping if no target exists. CI pins
+English only for this app launch and preserves failure output and process samples
+as artifacts. All thresholds, event counts and burst repeats remain unchanged.
+
+Validation: the AX helper compiles without warnings; Python syntax, existing lag
+threshold tests, focused readiness acceptance/rejection checks, and macOS workflow
+runner/Release guards pass. Native AX selection and the updated benchmark have not
+executed locally or on CI yet. AX trust is a remaining setup risk: the existing
+activation benchmark's CG-visibility path bypasses AX trust and is not evidence
+for this helper. The helper fails explicitly without prompting or modifying
+permissions. Its local `--check-trust` invocation exited 1 with “Accessibility
+trust is required”; no app interaction or permission change occurred. CI compiles
+and checks that same helper's AX trust before the lengthy
+app build, and records setup failures in the same diagnostic artifact. This
+preflight does not select a tab or replace the benchmark's runtime checks.
+A compile pass does not resolve either this execution gap or the
+measured typing-lag failure.
