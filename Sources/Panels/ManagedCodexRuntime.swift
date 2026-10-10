@@ -9,6 +9,14 @@ actor ManagedCodexRuntime {
     private let commands: any CommandRunning
     private let download: @Sendable (URL) async throws -> URL
     private var installation: Task<URL, Error>?
+    private struct PackageMetadata: Decodable {
+        let layoutVersion: Int
+        let version: String
+        let target: String
+        let entrypoint: String
+        let resourcesDir: String
+        let pathDir: String
+    }
 
     init(root: URL, release: ManagedCodexRelease = .validated,
          commands: any CommandRunning = CommandRunner(environment: ["PATH": "/usr/bin:/bin"]),
@@ -76,7 +84,15 @@ actor ManagedCodexRuntime {
 
     private func validatedExecutable(in directory: URL) async throws -> URL {
         let executable = directory.appendingPathComponent("bin/codex")
-        guard FileManager.default.isExecutableFile(atPath: executable.path),
+        let metadata = try? JSONDecoder().decode(PackageMetadata.self,
+            from: Data(contentsOf: directory.appendingPathComponent("codex-package.json")))
+        guard metadata?.layoutVersion == 1, metadata?.version == release.version,
+              metadata?.target == release.target, metadata?.entrypoint == "bin/codex",
+              metadata?.resourcesDir == "codex-resources", metadata?.pathDir == "codex-path",
+              FileManager.default.fileExists(atPath: directory.appendingPathComponent("codex-resources").path),
+              FileManager.default.fileExists(atPath: directory.appendingPathComponent("codex-path").path),
+              FileManager.default.isExecutableFile(atPath: directory.appendingPathComponent("bin/codex-code-mode-host").path),
+              FileManager.default.isExecutableFile(atPath: executable.path),
               (try? String(contentsOf: directory.appendingPathComponent(".bmux-verified-archive"), encoding: .utf8)) == release.archiveSHA256 else {
             throw ManagedCodexRuntimeError.invalidInstallation
         }

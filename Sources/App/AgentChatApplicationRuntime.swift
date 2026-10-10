@@ -1,3 +1,4 @@
+import BmuxAgentChat
 import BmuxSettings
 import Foundation
 
@@ -13,8 +14,10 @@ final class AgentChatApplicationRuntime {
         environment["BMUX_BUNDLED_CLI_PATH"] = Bundle.main.resourceURL?.appendingPathComponent("bin/bmux").path
         environment["BMUX_BUNDLE_ID"] = Bundle.main.bundleIdentifier
         let runtime = ManagedCodexRuntime(root: home.appendingPathComponent("Library/Application Support/bmux/runtimes/codex", isDirectory: true))
+        let allowsProviderLaunch = BmuxAppRuntimeConfiguration.currentProcess().processKind == .productionApp
         let host = ConnectedCodexHostService(
             resolveExecutable: { directory, environment in
+                guard allowsProviderLaunch else { throw BmuxAgentChat.CodexControlError.unsupported }
                 let executable = try await runtime.executable()
                 try Task.checkCancellation()
                 return try await ConnectedCodexExecutableResolver(environment: environment)

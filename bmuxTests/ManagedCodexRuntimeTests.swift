@@ -32,6 +32,19 @@ import Testing
         #expect(try FileManager.default.contentsOfDirectory(atPath: installed.path) == [release.directoryName])
     }
 
+    @Test func incompleteCachedPackageIsRejectedWithoutTrustingItsMarker() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let (archive, release) = try await fixture(in: root)
+        let downloads = ManagedCodexDownloadFixture(archive: archive)
+        let installed = root.appendingPathComponent("managed")
+        let runtime = ManagedCodexRuntime(root: installed, release: release, download: { try await downloads.download($0) })
+        let executable = try await runtime.executable()
+        try FileManager.default.removeItem(at: executable.deletingLastPathComponent().appendingPathComponent("codex-code-mode-host"))
+        await #expect(throws: ManagedCodexRuntimeError.invalidInstallation) { _ = try await runtime.executable() }
+        #expect(await downloads.attempts == 1)
+    }
+
     @Test func failedDownloadLeavesNoPublishedRuntimeAndCanRetry() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -89,6 +102,10 @@ import Testing
         let resources = package.appendingPathComponent("codex-resources")
         try FileManager.default.createDirectory(at: bin, withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: resources, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: package.appendingPathComponent("codex-path"), withIntermediateDirectories: true)
+        let metadata = try JSONSerialization.data(withJSONObject: ["layoutVersion": 1, "version": actualVersion,
+            "target": "fixture", "entrypoint": "bin/codex", "resourcesDir": "codex-resources", "pathDir": "codex-path"])
+        try metadata.write(to: package.appendingPathComponent("codex-package.json"))
         for name in ["codex", "codex-code-mode-host"] {
             let executable = bin.appendingPathComponent(name)
             try Data("#!/bin/sh\necho codex-cli \(actualVersion)\n".utf8).write(to: executable)

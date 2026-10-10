@@ -12,6 +12,13 @@ import Testing
 
 @Suite(.serialized) @MainActor
 struct ConfiguredCodexLaunchTests {
+    @Test func applicationTestHostNeverAcquiresOrLaunchesARealProvider() async throws {
+        let runtime = AgentChatApplicationRuntime().terminal
+        await #expect(throws: CodexControlError.unsupported) {
+            _ = try await runtime.prepareConnectedSession(workspaceID: UUID(), surfaceID: UUID(), workingDirectory: "/tmp")
+        }
+    }
+
     @Test(.timeLimit(.minutes(1))) func failedAcquisitionShowsItsCauseAndRetryStartsTheSamePanel() async throws {
         let failed = AsyncStream<Void>.makeStream()
         let started = AsyncStream<Void>.makeStream()
