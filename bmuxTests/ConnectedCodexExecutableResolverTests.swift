@@ -8,6 +8,31 @@ import Testing
 #endif
 
 @Suite struct ConnectedCodexExecutableResolverTests {
+    @Test func managedRuntimeSurvivesGlobalUpdateAndRemoval() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let managed = root.appendingPathComponent("managed codex")
+        let global = root.appendingPathComponent("codex")
+        let shell = root.appendingPathComponent("zsh")
+        for executable in [managed, global, shell] {
+            let script = executable == shell
+                ? "#!/bin/sh\nprintf '\\000BMUX_CODEX_PATH\\000%s\\n' \"$RESOLVED_PATH\"\n"
+                : "#!/bin/sh\nexit 0\n"
+            try Data(script.utf8).write(to: executable)
+            try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: executable.path)
+        }
+        let resolver = ConnectedCodexExecutableResolver(environment: ["HOME": root.path,
+            "SHELL": shell.path, "RESOLVED_PATH": root.path + ":/usr/bin:/bin"])
+        let first = try await resolver.resolve(workingDirectory: root.path, managedExecutable: managed)
+        try Data("#!/bin/sh\necho codex-cli 0.999.0\n".utf8).write(to: global)
+        let updated = try await resolver.resolve(workingDirectory: root.path, managedExecutable: managed)
+        try FileManager.default.removeItem(at: global)
+        let removed = try await resolver.resolve(workingDirectory: root.path, managedExecutable: managed)
+        #expect([first, updated, removed].allSatisfy { $0.executableURL == managed })
+        #expect(removed.environment["PATH"]?.contains("/usr/bin:/bin") == true)
+    }
+
     @Test func newLaunchResolvesUpdatedShellSelectionInsteadOfOldStandalone() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
