@@ -36,7 +36,14 @@ def header(sock):
 
 
 def frame(sock, payload, masked=False):
-    prefix = bytes([0x81, (0x80 if masked else 0) | 127]) + struct.pack("!Q", len(payload))
+    size = len(payload)
+    mask_bit = 0x80 if masked else 0
+    if size < 126:
+        prefix = bytes([0x81, mask_bit | size])
+    elif size <= 65535:
+        prefix = bytes([0x81, mask_bit | 126]) + struct.pack("!H", size)
+    else:
+        prefix = bytes([0x81, mask_bit | 127]) + struct.pack("!Q", size)
     if masked:
         # Deterministic fixture mask; production clients choose random masks.
         prefix += b"\0\0\0\0"
@@ -82,6 +89,9 @@ def serve(token):
                     if fields.get(b"Authorization", b"").strip() != b"Bearer " + token:
                         sock.sendall(b"HTTP/1.1 401 Unauthorized\r\nContent-Length: 0\r\n\r\n")
                         continue
+                    if b"Origin" in fields:
+                        sock.sendall(b"HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n")
+                        continue
                     key = fields[b"Sec-WebSocket-Key"].strip()
                     accept = base64.b64encode(hashlib.sha1(key + b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11").digest())
                     sock.sendall(b"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: " + accept + b"\r\n\r\n")
@@ -101,6 +111,10 @@ def serve(token):
 
 def client(endpoint, token):
     port = int(endpoint.rsplit(":", 1)[1])
+    for credential, origin, status in [(b"wrong", b"", b"401"), (token, b"Origin: https://invalid.example\r\n", b"403")]:
+        with socket.create_connection(("127.0.0.1", port), timeout=15) as denied:
+            denied.sendall(b"GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nAuthorization: Bearer " + credential + b"\r\n" + origin + b"\r\n")
+            assert header(denied).split(b" ")[1] == status
     with socket.create_connection(("127.0.0.1", port), timeout=15) as sock:
         key = base64.b64encode(os.urandom(16))
         sock.sendall(b"GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: " + key + b"\r\nAuthorization: Bearer " + token + b"\r\n\r\n")
