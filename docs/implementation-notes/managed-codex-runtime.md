@@ -117,7 +117,7 @@ CI run 38057575569 on 2c17c45a1 exposed terminal fixtures that still assumed a
 Terminal-first window. The product now starts in Chat, so those fixtures left
 Bonsplit geometry and terminal portals unmounted. Window composition now accepts
 an explicit `AgentSessionFactualProjectionMode` initial value, defaulting to Chat;
-four terminal-only fixtures opt into Terminal. The same initial value seeds both
+ten terminal-only fixtures opt into Terminal. The same initial value seeds both
 the shell tab and terminal visibility. The browser Cmd+D → Cmd+L → Cmd+F UI test
 selects the real Terminal button before exercising its original assertions.
 
@@ -179,3 +179,39 @@ pass is measured evidence, while final helper execution remains for CI; it is no
 reported as a passing rerun. A new tagged build and native acceptance are required
 before pushing these composition changes. At handoff, old-head app-host shards 1
 and 4 and Release were still running; their results remain unverified.
+
+
+A subsequent scan of all four old-head shard failure inventories found four more
+terminal-specific methods in `AppDelegateShortcutRoutingTests` with default-Chat
+window construction: `testFindShortcutFromTerminalOpensTerminalFind`,
+`testFocusTextBoxShortcutMovesFocusBackToTerminalWhenTextBoxIsFirstResponder`,
+`testPerformSplitShortcutSplitsFocusedTerminalSurfaceWhenSelectedWorkspaceIsStale`,
+and `testTextBoxSecondEscapeHidesWhenTerminalSurfaceOwnsFocus`. Their raw failures
+were terminal first-responder loss or zero pane geometry, matching the changed
+Chat visibility/portal contract. Only those four constructors now explicitly
+request Terminal; assertions and production code are unchanged.
+
+The remaining standalone CJK/IME/input and offscreen/portal fixtures construct
+`NSWindow` and `TerminalSurface` directly, with no ContentView or main-window
+presentation path. Several wait for a view but not native surface readiness;
+unchanged creation owners await asynchronous shim setup. These remain unresolved
+readiness/environment failures, not proven successful baseline runs or additional
+Chat-default defects. The main-window fake-inspector-close test mounts its own
+webview and passes its show assertions, so its close failure is not attributed to
+Chat without further evidence. No speculative fixes were applied to these cases.
+
+The inventory scan also includes Swift Testing issue/failure output, not only
+XCTest method failures. It found two additional constructor-only corrections in
+`MainWindowFocusRestoreTests`: `windowKeyRestoreRefocusesFocusedTerminalAfterResponderClears`
+and `windowKeyRestoreIgnoresSameWindowStrayResponderForFocusedTerminal`. Both need
+visible Terminal content to test responder restoration. Their execution is pending
+CI; they were added after the bounded four-test local attempt had started. Ten
+terminal-specific fixtures in total now explicitly select their presentation.
+
+The single bounded local attempt for the additional four XCTest fixtures timed
+out after 150 seconds without reaching test execution; its owned xcodebuild was
+stopped and was not retried. Log: `/tmp/bmux-ci-additional-terminal-fixtures.log`.
+All six constructor-only follow-up cases therefore require final-head CI execution.
+The preceding four-plus-18 passing run does not cover these six additional cases.
+This follow-up changes only tests and these notes; production build 733 remains
+applicable. File budgets and diff whitespace checks pass.

@@ -2026,7 +2026,7 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
             return
         }
 
-        let windowId = appDelegate.createMainWindow()
+        let windowId = appDelegate.createMainWindow(initialPrimaryTab: .terminal)
         defer { closeWindow(withId: windowId) }
 
         guard let window = window(withId: windowId),
@@ -6935,7 +6935,7 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
             return
         }
 
-        let windowId = appDelegate.createMainWindow()
+        let windowId = appDelegate.createMainWindow(initialPrimaryTab: .terminal)
         defer { closeWindow(withId: windowId) }
 
         guard let window = window(withId: windowId),
@@ -7112,7 +7112,7 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
             return
         }
 
-        let windowId = appDelegate.createMainWindow()
+        let windowId = appDelegate.createMainWindow(initialPrimaryTab: .terminal)
         defer { closeWindow(withId: windowId) }
 
         guard let window = window(withId: windowId),
@@ -10852,7 +10852,7 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
             return
         }
 
-        let windowId = appDelegate.createMainWindow()
+        let windowId = appDelegate.createMainWindow(initialPrimaryTab: .terminal)
         defer { closeWindow(withId: windowId) }
 
         guard let window = window(withId: windowId),
