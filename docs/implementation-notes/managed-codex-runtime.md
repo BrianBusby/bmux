@@ -56,14 +56,13 @@ checks failure presentation and stable-panel retry. Existing model-policy tests
 now assert reasoning preservation specifically while checking startup-update
 suppression. Log: `/tmp/bmux-managed-codex-final-tests.log`.
 
-Final-commit tagged build 731 also succeeded. Pending: independent review, stack
-integration and CI in PR #139.
+Final-commit tagged build 731 also succeeded. Pending: final copy-fix tagged build, stack integration and CI in PR #139.
 The initial focused build exposed incorrect Xcode source paths for the three new
 runtime files; the references were corrected before further verification.
 
 Project-docs validation/generation/freshness, Xcode project normalization and
 430-file test wiring, Swift file-length budgets and diff whitespace checks pass.
-Localization: all four new inline/notification/action messages have English and
+Localization: all five new inline/notification/action messages have English and
 Japanese translations; the catalog parses. No new UI strings are bare literals.
 The test host emitted the existing WebKit pasteboard connection diagnostic.
 
@@ -94,3 +93,19 @@ completed the same no-tools prompt in editable Chat. Terminal retained the same
 conversation. The repair is pushed in PR #139 with the accumulated worktree stack.
 Native acceptance was on Apple silicon; the Intel artifact pin is recorded but
 was not executed locally. No demo video was recorded.
+
+## Independent review
+
+A bounded independent review covered the complete managed installer, release/error
+values, resolver, host, configured coordinator, composition root and shared launch/
+runtime callers against the governing architecture, testing, localization, shared
+behavior and development guidance. It found one recovery-copy mismatch: the
+configured failure view offered retry while its generic message promised Terminal
+fallback. A dedicated English/Japanese message now describes the available retry.
+The ordinary Chat fallback remains unchanged. No further runtime findings remain.
+The review did not comprehensively reassess the prior accumulated stack, execute
+Intel or older macOS builds, or establish currently pending full-stack CI results.
+Independent pbxproj normalization, 430-file test wiring, flag lint and catalog
+validation pass. No new test was added for a copy-only change.
+The existing ConfiguredCodexLaunchTests suite passes after the copy correction;
+log: `/tmp/bmux-managed-codex-review-tests.log`. No coordinator warning was introduced.

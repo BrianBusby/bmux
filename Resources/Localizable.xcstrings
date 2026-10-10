@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "agentSession.chat.configuredStartFailed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not connect to Codex. Retry the launch."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex に接続できませんでした。起動を再試行してください。"
+          }
+        }
+      }
+    },
     "agentSession.chat.runtimeDownloadFailed": {
       "localizations": {
         "en": {

@@ -86,7 +86,7 @@ final class ConfiguredCodexLaunchCoordinator {
 
     private func reportFailure(_ error: Error) {
         let message = (error as? ManagedCodexRuntimeError)?.errorDescription
-            ?? String(localized: "agentSession.chat.connectedStartFailed", defaultValue: "Could not connect to Codex. Try again or continue in Terminal.")
+            ?? String(localized: "agentSession.chat.configuredStartFailed", defaultValue: "Could not connect to Codex. Retry the launch.")
         failureMessage = message
         onFailure(message)
     }
