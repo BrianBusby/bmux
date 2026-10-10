@@ -46,7 +46,7 @@ final class BmuxFeatureFlags {
     static var allFlags: [BmuxFeatureFlagDefinition] {
         [
             // FLAG(key: pro-upgrade-ui-enabled-release, owner: lawrencecchen,
-            //      reviewBy: 2026-10-01, defaultWhenUnavailable: false)
+            //      reviewBy: 2026-11-01, defaultWhenUnavailable: false)
             // Shows the Pro upgrade entrypoints (sidebar badge, Settings Account
             // card, palette command, Help menu item). Release builds hide them until
             // the PostHog flag is enabled; DEBUG keeps them visible for dogfood.
@@ -61,7 +61,7 @@ final class BmuxFeatureFlags {
             ),
 
             // FLAG(key: mobile-connect-button-enabled-release, owner: lawrencecchen,
-            //      reviewBy: 2026-10-01, defaultWhenUnavailable: true)
+            //      reviewBy: 2026-11-01, defaultWhenUnavailable: true)
             // Shows the top-right iPhone button that opens the Mobile Connect
             // (phone pairing) window. Default keeps it visible when flags are
             // unavailable; the window it opens ships in every build.
