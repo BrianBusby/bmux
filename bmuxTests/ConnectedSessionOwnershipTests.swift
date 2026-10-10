@@ -10,6 +10,37 @@ import Testing
 
 @Suite @MainActor struct ConnectedSessionOwnershipTests {
 
+    @Test func terminalImagePromptLargerThanProviderFrameLimitPreservesSession() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("connected-images-\(UUID())")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let fixture = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .appendingPathComponent("Fixtures/codex_image_transport.py")
+        let executable = directory.appendingPathComponent("codex")
+        try Data("#!/bin/sh\nexec /usr/bin/python3 '\(fixture.path)' \"$@\"\n".utf8).write(to: executable)
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: executable.path)
+        let connection = CodexRPCConnection(transport: ConnectedCodexFixtureTransport())
+        let service = ConnectedCodexHostService(resolveExecutable: { _, environment in
+            AgentSessionLaunchPlan(provider: .codex, executableURL: executable, arguments: [], environment: environment)
+        }, root: directory.appendingPathComponent("hosts"), environment: ["PATH": "/usr/bin:/bin"], connect: { _, _ in
+            try await connection.start()
+            return connection
+        })
+        let surfaceID = UUID()
+        do {
+            let host = try await service.launch(workspaceID: UUID(), surfaceID: surfaceID, workingDirectory: directory.path)
+            let result = await CommandRunner().runStandardOutput(directory: directory.path, executable: "/bin/sh",
+                                                               arguments: ["-c", host.terminalCommand], timeout: 20)
+            #expect(result?.trimmingCharacters(in: .whitespacesAndNewlines) == "accepted once; follow-up accepted")
+            await service.endOwnedHost(surfaceID: surfaceID)
+            await connection.disconnect()
+        } catch {
+            await service.endOwnedHost(surfaceID: surfaceID)
+            await connection.disconnect()
+            throw error
+        }
+    }
+
     @Test func unsupportedChatGPTModelUsesClientDefaultWithoutChangingValidReasoningEffort() async throws {
         let arguments = try await launchedArguments(model: "unavailable-model", effort: "xhigh")
         #expect(arguments.suffix(2) == ["--model", "catalog-default"])
