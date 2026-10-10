@@ -1,13 +1,22 @@
 import Foundation
 import Network
 
-/// Compatibility adapter for Codex clients that emit image inputs in a single
-/// frame larger than the provider's 16 MiB limit. Streams masked data frames in
-/// 1 MiB fragments; preserves the HTTP authorization header and every RPC byte.
+/// Adapts large image frames to the pinned Codex provider's WebSocket limits.
+///
+/// Codex clients can emit image inputs in one frame larger than the provider's
+/// 16 MiB limit. This adapter streams masked data frames in 1 MiB fragments,
+/// preserving the HTTP authorization header and every RPC byte.
 ///
 /// The host owner must call ``stop()`` on rollback, process exit, or workspace
 /// close. No credential is stored here, no message is replayed, and no external
 /// network address is accepted. Tests can inject a loopback provider fixture.
+///
+/// ```swift
+/// let relay = try CodexWebSocketRelay(endpoint: providerEndpoint)
+/// let terminalEndpoint = try await relay.start()
+/// // Give terminalEndpoint to the owning TUI, retaining relay for its lifetime.
+/// await relay.stop()
+/// ```
 public actor CodexWebSocketRelay {
     private let port: NWEndpoint.Port
     private let handshakeTimeout: Duration
@@ -37,6 +46,7 @@ public actor CodexWebSocketRelay {
 
     /// Starts once and returns a loopback URL for the original TUI's `--remote`.
     /// The provider, not the adapter, validates authentication and Origin.
+    /// - Returns: The newly bound loopback endpoint, valid until ``stop()``.
     /// - Throws: A listener error or cancellation if startup cannot complete.
     public func start() async throws -> URL {
         guard listener == nil, !stopped else { throw URLError(.cancelled) }

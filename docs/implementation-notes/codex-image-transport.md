@@ -63,7 +63,15 @@ This does not recover or replay an already uncertain submission in build 733.
   through its tag-bound CLI. Builds 729/733 and their workspaces were untouched.
 - Final 32-test app-host run also passes wrong-token/Origin rejection through the
   adapter. Frame tests pass again after final protocol/diagnostic changes.
-- Final pushed-head build and independent CI/review remain pending.
+- Final pushed runtime head `82c21c90a` built successfully as tagged build 735
+  (`codex-image-transport`); build 733 and its queued prompt remain untouched.
+- Independent review covered the complete frame/stream/session/relay owners,
+  host launch and teardown, Chat receive budget, both launch entrypoints, and
+  the maintained remote relay pattern. The six frame tests (with parameterized
+  cases) passed again; Swift file budgets and diff checks passed. No runtime
+  defect was established. CI remains pending, and its broad app-host job can
+  normalize assertion failures or interrupted suites; final check status alone
+  must not be described as a clean raw full-suite result.
 - The focused run retains an unchanged test-only `alive` variable warning in
   ConnectedSessionOwnershipTests. No affected production-source warning was found.
 
