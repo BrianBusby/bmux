@@ -796,8 +796,8 @@ checks and exact-head CI are still required before a merge decision.
 
 ### Popover routing, terminal inset paint, and readiness follow-up
 
-The completed616e app-host run (38159675610, shard3 job114530497925)
-passed all12 native config cases and the seven original native suites. IME and
+The completed 616e app-host run (38159675610, shard 3 job114530497925)
+passed all 12 native config cases and the seven original native suites. IME and
 printable-repeat also passed. Detached recovery and closed recovery failed their
 initial runtime-surface precondition; the focused failure skipped the later full
 legacy invocation. This is partial passing coverage, not full-suite green.
@@ -808,7 +808,7 @@ Find Escape route now inspect the child responder while retaining the existing
 parent-owned WorkspaceChromeFocusOwner. Its exact registered-host ownership and
 revocation rules are unchanged. Native caller tests exercise actual AppDelegate
 contexts with distinct parent/child responders, unrelated child focus, and open
-terminal Find. Against616e, two tests complete with three expected assertions.
+terminal Find. Against 616e, two tests complete with three expected assertions.
 The fixture restores shared app/active manager and the registry's route-retirer,
 and closes its terminal panels. No new production state owner is introduced.
 
@@ -826,7 +826,7 @@ color/opacity cases fail on616e, while both default matte palette cases pass.
 ImageRenderer cannot capture an NSViewRepresentable and was not used as proof.
 
 The two recovery tests are incrementally migrated to Swift Testing, preserving
-the release/detach and closed-lifecycle behavior assertions. Their fixed50ms setup
+the release/detach and closed-lifecycle behavior assertions. Their fixed 50ms setup
 could release nil while asynchronous Claude shim installation was pending; its
 later completion could create the headless bootstrap window after detachment.
 They now subscribe to terminalSurfaceDidBecomeReady before mounting, following
@@ -844,21 +844,32 @@ routing guidance. Complete callers, owner, config/panel composition and maintain
 native render/launch fixtures were inspected. Independent review identified the
 fixture route-retirer cleanup and it was corrected; no remaining production blocker
 was found in that scoped review. No shipped strings are added (test diagnostics and
-contributor docs only). The test-only commits are a96772a22 and5ddefd5ce. Native red
-runs and warning-free test-file compilation are recorded. The fixed766 production
-dylib passes16 tests across four suites (popover, six inset parameter cases,12
+contributor docs only). The test-only commits are a96772a22 and 5ddefd5ce. Native red
+runs and warning-free test-file compilation are recorded. The fixed 766 production
+dylib passes 16 tests across four suites (popover, six inset parameter cases, 12
 config cases, and existing native matte surface tests); recovery separately passes
 2/2. Parent-owned isolated tagged reload succeeded. Test wiring, source length,
 diff and Project Truth gates pass. Actual app-host CI
 remains pending; existing full-suite caveats remain open.
 
-Parent live verification on isolated build766 passed in both appearances: the
+Parent live verification on isolated build 766 passed in both appearances: the
 explicit Tango Dark terminal background now stays dark with readable white text;
 reloading configuration preserves it. With terminal Find open and workspace filter
 popover focused, the first Escape dismisses only the popover and keeps Find open;
-the second Escape closes Find. System appearance was restored. New1092×593 captures
+the second Escape closes Find. System appearance was restored. New 1092×593 captures
 are verification-final/custom-theme-graphite.png and custom-theme-porcelain.png.
 Their terminal intentionally differs from the default reference because the user
-explicitly configured Tango Dark and opacity0.88; no preferences were edited. The
-earlier default captures/walkthrough remain labeled build763. The configured-inset
+explicitly configured Tango Dark and opacity 0.88; no preferences were edited. The
+earlier default captures/walkthrough remain labeled build 763. The configured-inset
 visual caveat is resolved; exact-commit tagged build and actual CI remain gates.
+
+The test-only 5ddefd5ce app-host job 114567585239 (run 38172199110)
+completed both popover tests with the expected three assertions, and all six inset
+cases: four custom-color failures and two passing default palettes. All 12 config
+cases and the original seven native suites passed. IME repeat passed; printable
+repeat again failed its initial runtime-surface precondition (it passed on 616e),
+and the old detached/closed fixtures failed as before. This preserves actual CI
+red evidence for both fixes and confirms that the readiness issue varies across
+runs. The exact 7ce43151c tagged reload succeeded as build 767; production source
+is unchanged by this documentation update. Fixed-head app-host results remain
+pending, including the migrated recovery cases and existing printable-repeat case.
