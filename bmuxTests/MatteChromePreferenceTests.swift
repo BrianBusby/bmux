@@ -1,6 +1,8 @@
 import AppKit
 import BmuxAppKitSupportUI
 import BmuxTerminalCore
+import BmuxFoundation
+import BmuxSettingsUI
 import SwiftUI
 import Testing
 
@@ -12,6 +14,29 @@ import Testing
 
 @MainActor
 @Suite(.serialized) struct MatteChromePreferenceTests {
+    @Test func unsetAndResetUseApprovedDefaultWithMagnification() {
+        let setting = NoopSettingsHostActions().surfaceTabBarFontSize()
+        #expect(setting.points == 13)
+        #expect(setting.defaultValue == 13)
+        #expect(GhosttyConfig().surfaceTabBarFontSize == 13)
+        let editor = BmuxGhosttyConfigSettingEditor()
+        let reset = editor.updatedContents("surface-tab-bar-font-size = 12.5\nfont-size = 16\n",
+                                           setting: BmuxGhosttyConfigSettingEditor.surfaceTabBarFontSizeKey,
+                                           value: editor.formattedSurfaceTabBarFontSize(setting.defaultValue))
+        var config = GhosttyConfig()
+        config.parse(reset)
+        #expect(config.surfaceTabBarFontSize == 13)
+        #expect(config.fontSize == 16)
+        let magnified = GhosttyConfig.load(useCache: false, globalFontMagnificationPercent: 150,
+                                          loadFromDisk: { _ in config })
+        #expect(magnified.surfaceTabBarFontSize == 19.5)
+        let workspace = Workspace()
+        defer { for panel in workspace.panels.values { panel.close() } }
+        workspace.applyGhosttyChrome(from: magnified)
+        #expect(workspace.bonsplitController.configuration.appearance.tabTitleFontSize == 19.5)
+        #expect(DockSplitStore.makeAppearance(from: magnified).tabTitleFontSize == 19.5)
+    }
+
     @Test func configReloadKeepsResolvedTabSizeIncludingClampingAndMagnification() {
         let workspace = Workspace()
         defer { for panel in workspace.panels.values { panel.close() } }
