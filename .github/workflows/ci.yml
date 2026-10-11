@@ -614,6 +614,11 @@ jobs:
             -destination "platform=macOS" \
             BMUX_SKIP_ZIG_BUILD=1 \
             -only-testing:bmuxTests/MatteTitlebarContrastTests \
+            -only-testing:bmuxTests/MatteTerminalConfigurationTests \
+            -only-testing:bmuxTests/TerminalNotificationDirectInteractionTests/testIMECommittedKeyRepeatDoesNotForceSurfaceRefresh \
+            -only-testing:bmuxTests/TerminalNotificationDirectInteractionTests/testKeyDownRecoversReleasedSurfaceWhileHostedViewIsDetached \
+            -only-testing:bmuxTests/TerminalNotificationDirectInteractionTests/testKeyDownRecoveryDoesNotRecreateClosedSurface \
+            -only-testing:bmuxTests/TerminalNotificationDirectInteractionTests/testPrintableKeyRepeatDoesNotForceSurfaceRefresh \
             -only-testing:bmuxTests/MatteTitlebarDragRoutingTests \
             -only-testing:bmuxTests/ForeignFirstResponderPolicyTests \
             -only-testing:bmuxTests/KeyboardFocusOwnerViewTests \
