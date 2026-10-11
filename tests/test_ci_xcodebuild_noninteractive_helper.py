@@ -111,11 +111,11 @@ def main() -> int:
         timeout=5,
         env=post_test_env,
     )
-    if passing_post_test_result.returncode != 0:
+    if passing_post_test_result.returncode != 124:
         print(passing_post_test_result.stdout, end="")
         print(passing_post_test_result.stderr, end="", file=sys.stderr)
         print(
-            "FAIL: expected post-test timeout after passing Selected tests summary to exit 0, "
+            "FAIL: expected post-test timeout after partial Selected tests summary to exit 124, "
             f"got {passing_post_test_result.returncode}"
         )
         return 1
@@ -142,12 +142,12 @@ def main() -> int:
         env=post_test_env,
     )
     noisy_elapsed = time.monotonic() - noisy_started
-    if noisy_post_test_result.returncode != 0:
+    if noisy_post_test_result.returncode != 124:
         print(noisy_post_test_result.stdout, end="")
         print(noisy_post_test_result.stderr, end="", file=sys.stderr)
         print(
             "FAIL: expected noisy post-test timeout after passing Selected tests summary "
-            f"to exit 0, got {noisy_post_test_result.returncode}"
+            f"to exit 124, got {noisy_post_test_result.returncode}"
         )
         return 1
     if noisy_elapsed > 1.5:
@@ -155,6 +155,24 @@ def main() -> int:
         print(noisy_post_test_result.stderr, end="", file=sys.stderr)
         print(f"FAIL: noisy post-test timeout was rearmed; elapsed {noisy_elapsed:.2f}s")
         return 1
+
+    # An early XCTest summary may precede Swift Testing. Neither that summary
+    # nor a printed success marker replaces the native process exit status.
+    for trailing_output in ["Swift Testing recorded an issue", "** TEST SUCCEEDED **"]:
+        child = (
+            "import time\n"
+            "print(\"Test Suite 'Selected tests' passed at now\", flush=True)\n"
+            f"print({trailing_output!r}, flush=True)\n"
+            "time.sleep(10)\n"
+        )
+        result = subprocess.run(
+            [sys.executable, str(HELPER), sys.executable, "-c", child],
+            cwd=ROOT, text=True, capture_output=True, timeout=5, env=post_test_env,
+        )
+        if result.returncode != 124:
+            print(result.stdout, end="")
+            print(f"FAIL: expected incomplete native run to exit 124, got {result.returncode}")
+            return 1
 
     failing_post_test_child = textwrap.dedent(
         """
