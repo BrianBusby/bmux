@@ -160,6 +160,14 @@ struct MatteControlTests {
         #expect(try #require(disabled.colorAt(x: 40, y: 38)) == #require(resting.colorAt(x: 40, y: 38)))
     }
 
+    @Test(arguments: [ColorScheme.dark, .light])
+    func linkHoverDoesNotDrawAFlatControlBackground(scheme: ColorScheme) throws {
+        let theme = MatteTheme(colorScheme: scheme)
+        let resting = try render(role: .link, theme: theme)
+        let hovered = try render(role: .link, theme: theme, state: .init(isHovered: true))
+        #expect(try #require(resting.colorAt(x: 40, y: 38)) == #require(hovered.colorAt(x: 40, y: 38)))
+    }
+
     private func render(role: MatteControlRole, theme: MatteTheme,
                         state: MatteSurfaceState = .init()) throws -> NSBitmapImageRep {
         let renderer = ImageRenderer(content: MatteControlDecoration(role: role, theme: theme, state: state)
