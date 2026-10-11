@@ -670,3 +670,49 @@ light preview was inspected with texture off, preserving its window/workspaces.
 A separate matte-skin-no-texture tagged build validates the reverted source
 without replacing the user's active preview. Full app-host CI caveats above
 remain unresolved and are not hidden by this revert.
+
+
+## Truthful CI reporting and matte test follow-up
+
+Brian authorized the reporting fix and base comparison after the texture revert.
+The reporting change is isolated in PR142 (`ci-test-result-reporting`, based on
+`ce17e9888`); it must preserve nonzero runner/timeout status instead of accepting
+XCTest's `(0 unexpected)` text. No merge is authorized. The existing
+`matte_skin_full_app_host_verification` caveat remains open.
+
+Comparison of XCTest case-result lines from current run38143802312 and base
+run38072470965 found 133 current failed cases, 114 also failed on the base,
+14 passed on the base, and 5 were absent from the base log. These counts cover
+observed XCTest cases only, not all Swift Testing cases or a clean complete run.
+Five of the 14 pass in another sampled matte run: AX insertion, initial git
+metadata coalescing, mouse unread dismissal, detach reconciliation and relay
+ZDOTDIR history. That establishes intermittency, not an acceptable green gate.
+Six terminal-runtime initialization checks and the active-surface queued-submit
+check remain unresolved; no environment-only or pre-existing claim is made.
+
+Two deterministic failures were stale presentation expectations. The titlebar
+test required pure black rather than the approved secondary-text token. Its
+replacement checks the token and >=4.5 contrast against the actual matte base
+in both appearances. The drag test's fixed x=240 point is inside a 28pt button;
+the replacement checks all actual button centers, inter-button gaps and trailing
+whitespace for all five existing titlebar styles. Only these tests migrate to
+Swift Testing; both new files are wired into the existing Xcode test target.
+
+Seven parameter cases pass in a native harness using the production foreground,
+hit-region registry, range calculations and drag-capture code. Application-only
+Bonsplit/minimal-mode fallback and telemetry are absent in that harness, so it
+does not replace full app-host compilation and execution. No production code,
+user-facing strings, terminal code or active preview changes in this follow-up.
+Localization audit: the diff contains test names/assertions only, no UI strings.
+
+The five color failures absent from the base log expect translucent #1122337F.
+An isolated native probe of the byte-identical base/current bonsplitChromeHex
+function and WindowAppearanceSnapshot produces opaque composited colors in both
+appearances, reproducing that expectation mismatch without matte changes.
+This is focused source/runtime evidence, not a complete baseline app-host run.
+
+Governing sources: root AGENTS.md; continuous-code-quality; bmux-testing and its
+Swift Testing migration rule; bmux-debugging's routing/hot-path boundaries;
+bmux-dev-workflow's Xcode test wiring and normalization requirements. Ownership
+remains the existing semantic theme and drag registry. Full CI evidence and
+the seven unresolved cases above remain required before merge readiness.
