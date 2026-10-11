@@ -31,7 +31,7 @@ The [selected-card comparison](selected-card-comparison.html) isolates that deta
 - Native negative-spread shadow/inner-edge rasterization uses the reviewed stage
   2 approximation. Native hovered-link underline is 1pt and selection mark 4pt,
   both explicitly approved.
-- Texture is intentionally absent until stage 5.
+- Texture is intentionally absent: stage 5 was rejected and reverted at Brian’s request.
 
 ## Pointer-selection follow-up
 
@@ -92,3 +92,38 @@ Reproduce using the tagged reload and `scripts/launch-tagged-automation.sh`,
 `BMUX_UI_TEST_TERMINAL_VIEWPORT_WINDOW_SIZE=1092x593`. Use the tag-bound CLI for
 fixture setup and `rpc debug.window.screenshot` for nominal-resolution PNGs.
 Only the isolated tag's settings and disposable workspaces were changed.
+
+
+## Final untextured verification
+
+Build 763 (`matte-skin-no-texture`) was launched separately for final checks;
+Brian's stage5 preview was not rebuilt, quit or replaced. App production source
+remains byte-identical to approved `2f0181b3c`; subsequent commits change tests,
+CI and verification records only.
+
+Fresh [graphite](../verification-final/graphite.png) and
+[porcelain](../verification-final/porcelain.png) captures are 1092 × 593.
+The [final comparison](../verification-final/comparison.html) pairs each with
+the target app crop at the same dimensions. The deviations above remain:
+no texture, native font/symbol/shadow rasterization, retained terminal font and
+wrapping, build/privacy chrome, two fixture workspaces rather than six, and
+retained metadata truncation/link behavior. No new material layout mismatch
+was observed; these are not pixel-identical browser renders.
+
+Live checks: pointer-selected Chat and Terminal cards retain the thin ring;
+[keyboard focus](../verification-final/keyboard-focus.png) adds the separate
+outline without selecting the focused card. At
+[802 × 593](../verification-final/narrow.png), the long heading wraps and the
+close controls, navigation and toolbar remain usable. An eight-workspace
+[scrolling check](../verification-final/scrolling.png) keeps search/filter fixed
+and the selected card accessible at the bottom. Six disposable workspaces were
+then removed; the two reference workspaces and 1092 × 593 size were restored.
+The isolated app's original System appearance preference was restored and
+visually verified. System appearance, Reduce Motion and VoiceOver settings were
+not changed by this final check.
+
+Full app-host verification remains open. The seven titlebar parameter cases
+compiled and started on `20bf68591`, but none completed before the old runner
+cutoff; this is not counted as a pass. The reporting fix and a focused native
+CI gate now accompany the feature branch. CI result details remain in the
+implementation plan and PR; visual verification does not waive that gate.

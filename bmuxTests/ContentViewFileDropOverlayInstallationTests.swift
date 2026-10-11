@@ -41,8 +41,13 @@ import Testing
         window.makeKeyAndOrderFront(nil)
         for _ in 0..<3 {
             window.displayIfNeeded()
-            window.contentView?.layoutSubtreeIfNeeded()
-            await Task.yield()
+            // Match the native attachment drain used by the visibility fixture.
+            // Installation can retry on DispatchQueue.main while AppKit attaches.
+            for _ in 0..<20 {
+                window.contentView?.layoutSubtreeIfNeeded()
+                _ = RunLoop.main.run(mode: .default, before: Date(timeIntervalSinceNow: 0.001))
+                await Task.yield()
+            }
         }
 
         let themeFrame = try #require(window.contentView?.superview)

@@ -716,3 +716,35 @@ Swift Testing migration rule; bmux-debugging's routing/hot-path boundaries;
 bmux-dev-workflow's Xcode test wiring and normalization requirements. Ownership
 remains the existing semantic theme and drag registry. Full CI evidence and
 the seven unresolved cases above remain required before merge readiness.
+
+
+### Final verification and native CI isolation follow-up
+
+Final build763 was inspected in both appearances at1092×593, then at802×593
+with the long reference heading and an eight-workspace scrolling sidebar.
+Fresh images and the side-by-side comparison are in `verification-final/`;
+`verification-stage4/README.md` records differences and exact live coverage.
+Only the newly launched no-texture tag was manipulated; the user's stage5
+preview remained untouched. Original System appearance was restored afterward.
+No app source or shipped strings changed; production source still matches2f0181b3c.
+
+Actual20bf68591 app-host logs show all7 titlebar parameter cases starting but no
+completions before the45-second post-XCTest cutoff. Shard2 also crashes from a
+ContentView fixture missing SidebarUnreadModel. That root omission predates the
+skin, but directly obstructs verification. The one affected file-drop test now
+uses the maintained root composition (the notification store's own unread
+projection), detaches its content at teardown, and migrates to Swift Testing.
+Review identified that Task.yield alone does not drain AppKit attachment work;
+the final test uses the existing visibility fixture's bounded main-run-loop
+drain. Both affected files typecheck against the actual built app module without
+warnings. Full runtime execution remains required.
+
+PR142's three reporting commits are cherry-picked as a prerequisite onto this
+branch, without merging either PR to main. Project Truth conflict resolution
+retains both matte and CI capabilities/caveats and regenerates derived documentation.
+A focused shard3 invocation runs all seven affected native suites before legacy
+full-suite fixtures. It uses the same console-session/serialized app-host runner
+and authoritative exit status; no timeout is extended and no full-suite tests
+are removed. This separates feature evidence from later unrelated failures.
+The shared package's47 tests passed on20bf68591; all remaining app-host failures
+and incomplete runs still block a clean full-suite claim.

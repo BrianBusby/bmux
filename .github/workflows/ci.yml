@@ -432,6 +432,7 @@ jobs:
       BMUX_APP_HOST_SPLIT_THEME_REGRESSION_SHARD: "3"
       BMUX_APP_HOST_BROWSER_PROXY_REGRESSION_SHARD: "1"
       BMUX_APP_HOST_OPTION_ALT_REGRESSION_SHARD: "2"
+      BMUX_APP_HOST_MATTE_REGRESSION_SHARD: "3"
       BMUX_APP_HOST_THEME_PICKER_REGRESSION_SHARD: "4"
       BMUX_APP_HOST_CLI_NO_SOCKET_REGRESSION_SHARD: "4"
       # XCTest app-host crashes can leave xcodebuild waiting in Swift's crash
@@ -595,6 +596,30 @@ jobs:
             -destination "platform=macOS" \
             BMUX_SKIP_ZIG_BUILD=1 \
             -only-testing:bmuxTests/GhosttyOptionAsAltModsTests \
+            test
+
+      - name: Run matte chrome native regressions
+        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_MATTE_REGRESSION_SHARD) }}
+        run: |
+          # Run the affected native suites before unrelated legacy fixtures.
+          # Full-suite coverage below remains intact; incomplete runs fail.
+          set -euo pipefail
+          SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
+          scripts/ci/run-in-console-session.sh \
+            scripts/ci/run-app-host-xcodebuild.sh \
+            -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
+            -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
+            -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
+            -disableAutomaticPackageResolution \
+            -destination "platform=macOS" \
+            BMUX_SKIP_ZIG_BUILD=1 \
+            -only-testing:bmuxTests/MatteTitlebarContrastTests \
+            -only-testing:bmuxTests/MatteTitlebarDragRoutingTests \
+            -only-testing:bmuxTests/ForeignFirstResponderPolicyTests \
+            -only-testing:bmuxTests/KeyboardFocusOwnerViewTests \
+            -only-testing:bmuxTests/RightSidebarHeaderChromeMetricsTests \
+            -only-testing:bmuxTests/SidebarWorkspaceGroupHeaderMetricsTests \
+            -only-testing:bmuxTests/ContentViewFileDropOverlayInstallationTests \
             test
 
       - name: Run unit tests
