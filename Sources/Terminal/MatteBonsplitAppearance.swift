@@ -39,14 +39,12 @@ struct MatteBonsplitAppearance {
             borderHex: PaneChromeSettings.resolvedPaneBorderHex(configuredHex: paneBorderColorHex, fallback: edge))
         let nextBackdrop = BonsplitConfiguration.Appearance.SplitButtonBackdropEffect(
             style: .opaqueBarBackground, fadeWidth: 0, contentFadeWidth: 0, masksTabContent: false)
-        let nextFontSize = theme.typography(.body).pointSize
         guard appearance.tabChromePresentation != nextPresentation || appearance.chromeColors != nextColors ||
-                appearance.usesSharedBackdrop || appearance.tabTitleFontSize != nextFontSize ||
+                appearance.usesSharedBackdrop ||
                 appearance.tabBarHeight != metrics.terminalTabBarHeight ||
                 appearance.splitButtonBackdropEffect != nextBackdrop else { return }
         appearance.chromeColors = nextColors
         appearance.usesSharedBackdrop = false
-        appearance.tabTitleFontSize = nextFontSize
         appearance.tabBarHeight = metrics.terminalTabBarHeight
         appearance.splitButtonBackdropEffect = nextBackdrop
         appearance.tabChromePresentation = nextPresentation

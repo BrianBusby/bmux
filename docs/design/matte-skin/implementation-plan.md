@@ -932,3 +932,72 @@ then focusing the filter popover's Active control, leaves Find open when the fir
 Escape dismisses the popover; the second Escape closes Find. Existing user previews
 were untouched. This verifies the independent focus/border slice; the configured
 tab-size fix and actual CI gates are still pending.
+
+
+### Approved 13pt tab default and configured-size preservation
+
+The user selected 13pt when unset. BmuxGhosttyConfigSettingEditor remains the
+single configuration-policy owner for the default, minimum and maximum; Settings,
+reset, GhosttyConfig, browser tabs and dock tabs consume that existing shared
+owner. The Settings fallback host now consumes it too, replacing its duplicated
+11pt defaults. MatteTheme.body remains a separate authoritative design token:
+general body typography and a configurable tab preference have different reasons
+to change, although both approved defaults are currently 13pt. No dependency
+reversal, parser duplication, provenance flag, or new preference is introduced.
+
+Workspace initialization already receives the resolved config size. The matte
+mapper now leaves that size intact. A config reload applies the config's already
+clamped and magnified size; background-only and appearance mapper calls preserve
+it. Terminal rendering and terminal font-size ownership are untouched. The web
+configuration example explicitly choosing 11pt is still a valid custom value and
+is not documented as the default; it remains unchanged.
+
+Actual test-only CI run 38182296127, job 114597724777, completed 44 Swift Testing
+functions across 12 suites with precisely the expected 14 assertions: two
+automatic-focus, four configured-size, and eight pane-border assertions. Both
+original popover tests passed, confirming the attachment-order fixture correction.
+This supplies actual CI red evidence before focus/border fix 510da7df8 was pushed,
+and for the pending font mapper fix. PR replies link the focus/border correction.
+
+Test-only 3b0251604 additionally covers the newly approved default/reset policy:
+config and Settings fallback agree on 13pt; resetting a custom value preserves the
+terminal font; magnification produces 19.5pt and reaches workspace/dock chrome.
+Against build 768, the native suite completes seven functions with 11 expected
+font assertions (seven default/reset plus four configured-size). The package suite
+runs 11 cases and fails its expected default-13 assertion. After the scoped source
+change, the same package command passes all 11 cases with exit 0. The initial red
+package invocation also printed existing GhosttyKit static-library naming errors;
+the green invocation did not. Unused-public-import and unused-try warnings remain
+in unchanged TerminalCore files; no changed source has a new diagnostic.
+
+Independent review found no blocker in the four-file font patch, including full
+mapper/reload consumers, Settings/reset ownership and the existing package DAG.
+Wiring (441 files), source budgets and diff checks pass. Existing English/Japanese
+font-setting, subtitle, reset and value localization entries were audited; there
+are no new shipped strings. Parent-owned final tagged build, native combined-suite
+execution, live default/custom-size checks and fixed-head CI are pending.
+
+
+Final font build 769 succeeded under the new isolated matte-skin-font-default tag.
+The combined native harness then passed 23 Swift Testing functions across six
+suites: preference/default/reset/magnification, popover routing, terminal inset
+pixels, configuration precedence, runtime recovery, and existing matte surface
+coverage. Compilation emitted no diagnostics. An earlier compile was terminated
+by SIGTERM before producing an executable (zero tests); only the completed rerun
+is counted. The native log is /tmp/matte-font-final-native-green.log. The 11 package
+font cases also passed with exit 0. Actual 438a0fd24 CI red already covers the font
+mapper regression; the additional 3b0251604 expectations pin the newly approved
+13pt policy rather than treating the former documented 11pt default as a bug.
+Live verification and final fixed-head CI remain pending.
+
+
+Parent live build 769 verification passed in the isolated tag's own config file:
+CLI reported unset/configured:false at 13pt, a temporary 12.5pt override reloaded
+and appeared as 12.5pt in Terminal Settings, and the native Reset control restored
+13pt. Removing only that owned override and reloading returned configured:false
+at 13pt. User configuration and existing previews were untouched. CUA checks at
+1092×593 in both appearances found no new material mismatch; system appearance
+was restored. Default layout matches the approved 13pt matte treatment, while the
+user's explicit Tango Dark terminal stays readable in the light appearance. The
+existing native chrome, text truncation and texture-off deviations remain as
+previously documented. These live checks do not replace final fixed-head CI.

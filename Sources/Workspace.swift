@@ -2768,7 +2768,7 @@ final class Workspace: Identifiable, ObservableObject {
     private static func bonsplitAppearance(
         from backgroundColor: NSColor,
         backgroundOpacity: Double,
-        tabTitleFontSize: CGFloat = 11
+        tabTitleFontSize: CGFloat = GhosttyConfig.defaultSurfaceTabBarFontSize
     ) -> BonsplitConfiguration.Appearance {
         let sharesWindowBackdrop = usesWindowRootTerminalBackdrop()
         let renderingMode = WindowAppearanceSnapshot.terminalRenderingMode(
@@ -2795,6 +2795,7 @@ final class Workspace: Identifiable, ObservableObject {
     }
 
     func applyGhosttyChrome(from config: GhosttyConfig, reason: String = "unspecified") {
+        bonsplitController.configuration.appearance.tabTitleFontSize = config.surfaceTabBarFontSize
         MatteBonsplitAppearance().apply(to: &bonsplitController.configuration.appearance)
     }
 
