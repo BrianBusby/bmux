@@ -16871,6 +16871,7 @@ private extension NSApplication {
     }
 
     @objc func bmux_applicationSendEvent(_ event: NSEvent) {
+        WindowKeyboardFocusRouting(appDelegate: AppDelegate.shared, window: event.window ?? keyWindow).recordChromeInput(event)
 #if DEBUG
         let typingTimingStart = event.type == .keyDown ? BmuxTypingTiming.start() : nil
         let phaseTotalStart = event.type == .keyDown ? ProcessInfo.processInfo.systemUptime : 0

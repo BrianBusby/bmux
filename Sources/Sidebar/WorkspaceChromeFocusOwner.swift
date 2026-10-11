@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 
 /// Owns native focus inside the explicitly registered workspace chrome hosts.
 ///
@@ -9,6 +10,7 @@ import AppKit
 @MainActor
 final class WorkspaceChromeFocusOwner {
     enum Scope: Sendable { case rail, filterPopover, primaryTabs }
+    private(set) var showsKeyboardFocus = true
 
     private weak var railHost: NSView?
     private weak var primaryTabsHost: NSView?
@@ -33,6 +35,7 @@ final class WorkspaceChromeFocusOwner {
             parentObservation = nil
             owningWindow = window
         }
+        (host as? WorkspaceChromeHostingView<AnyView>)?.showsKeyboardFocus = showsKeyboardFocus
         switch scope {
         case .rail:
             guard railHost !== host else { return }
@@ -56,6 +59,21 @@ final class WorkspaceChromeFocusOwner {
                 }
             }
         }
+    }
+
+    /// Input changes presentation only; native responder ownership is untouched.
+    func recordInput(_ type: NSEvent.EventType) {
+        let visible: Bool
+        switch type {
+        case .keyDown: visible = true
+        case .leftMouseDown, .rightMouseDown, .otherMouseDown: visible = false
+        default: return
+        }
+        guard visible != showsKeyboardFocus else { return }
+        showsKeyboardFocus = visible
+        (railHost as? WorkspaceChromeHostingView<AnyView>)?.showsKeyboardFocus = visible
+        (primaryTabsHost as? WorkspaceChromeHostingView<AnyView>)?.showsKeyboardFocus = visible
+        (popoverHost as? WorkspaceChromeHostingView<AnyView>)?.showsKeyboardFocus = visible
     }
 
     func unregister(_ host: NSView, scope: Scope) {

@@ -9,12 +9,13 @@ struct WorkspaceReferenceCardButtonStyle: ButtonStyle {
     let isFocused: Bool
     let isEnabled: Bool
     @Binding var isPressed: Bool
+    @Environment(\.matteKeyboardFocusVisible) private var keyboardFocusVisible
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .matteSurface(.card, theme: theme, state: .init(
                 isSelected: isSelected, isHovered: isHovered, isPressed: configuration.isPressed,
-                isFocused: isFocused, isEnabled: isEnabled))
+                isFocused: isFocused && keyboardFocusVisible, isEnabled: isEnabled))
             .onChange(of: configuration.isPressed) { _, value in isPressed = value }
     }
 }

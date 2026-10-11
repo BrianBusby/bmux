@@ -186,6 +186,40 @@ import Testing
         #expect(!owner.owns(responder, in: window))
     }
 
+    @Test func inputModalityOnlyChangesFocusDecorationInTheOwningWindow() {
+        let window = makeWindow()
+        let owner = WorkspaceChromeFocusOwner()
+        let otherOwner = WorkspaceChromeFocusOwner()
+        let host = WorkspaceChromeHostingView(rootView: AnyView(Color.clear))
+        let responder = SidebarTestResponder()
+        window.contentView?.addSubview(host)
+        host.addSubview(responder)
+        owner.register(host, scope: .rail, in: window)
+        owner.synchronize(responder: responder, in: window)
+        var visibility: [Bool] = []
+        host.onKeyboardFocusVisibilityChange = { visibility.append($0) }
+        owner.recordInput(.leftMouseDown)
+        owner.recordInput(.leftMouseDown) // Clicking the same responder must stay pointer-styled.
+        #expect(!host.showsKeyboardFocus)
+        #expect(owner.owns(responder, in: window))
+        #expect(otherOwner.showsKeyboardFocus)
+        owner.recordInput(.mouseMoved)
+        owner.recordInput(.flagsChanged)
+        #expect(visibility == [false])
+        owner.recordInput(.keyDown)
+        owner.recordInput(.keyDown)
+        #expect(host.showsKeyboardFocus)
+        #expect(owner.owns(responder, in: window))
+        #expect(visibility == [false, true])
+        owner.recordInput(.leftMouseDown)
+        let tabs = WorkspaceChromeHostingView(rootView: AnyView(Color.clear))
+        window.contentView?.addSubview(tabs)
+        owner.register(tabs, scope: .primaryTabs, in: window)
+        #expect(!tabs.showsKeyboardFocus)
+        owner.recordInput(.keyDown)
+        #expect(tabs.showsKeyboardFocus)
+    }
+
     @Test func nativeHostReportsDetachBeforeLosingItsWindow() {
         let first = makeWindow()
         let second = makeWindow()
@@ -206,7 +240,7 @@ import Testing
 
     @Test func hostingBoundaryPreservesLocalStateEnvironmentAndIntrinsicResize() throws {
         let window = makeWindow()
-        var snapshots: [(UUID, ColorScheme, Bool, LayoutDirection, String)] = []
+        var snapshots: [(UUID, ColorScheme, Bool, LayoutDirection, String, Bool)] = []
         var nativeHosts: [NSView] = []
         func root(height: CGFloat, enabled: Bool) -> some View {
             WorkspaceChromeFocusScope(usesIntrinsicSize: true, onAttachmentChange: { host, attached in
@@ -226,6 +260,16 @@ import Testing
         let host = try #require(nativeHosts.last)
         #expect(first.1 == .dark && first.2 && first.3 == .rightToLeft && first.4 == "ja")
         #expect(host.fittingSize.height == 40)
+        let chrome = try #require(host as? WorkspaceChromeHostingView<AnyView>)
+        #expect(first.5)
+        chrome.showsKeyboardFocus = false
+        chrome.layoutSubtreeIfNeeded()
+        let pointer = try #require(snapshots.last)
+        #expect(!pointer.5)
+        #expect(pointer.0 == first.0)
+        chrome.showsKeyboardFocus = true
+        chrome.layoutSubtreeIfNeeded()
+        #expect(try #require(snapshots.last).5)
         outer.rootView = root(height: 80, enabled: false)
         outer.layoutSubtreeIfNeeded()
         let updated = try #require(snapshots.last)

@@ -32,7 +32,7 @@ struct MatteControlDecoration: View {
                             .strokeBorder(Color(nsColor: shadow.color), lineWidth: shadow.spread)
                     }
                 }
-            } else if state.isEnabled && (pressed || hovered) {
+            } else if state.isEnabled && (pressed || (role == .flat && hovered)) {
                 shape.fill(color(pressed ? .pressWash : .hoverWash))
             }
             if state.isFocused && state.isEnabled {

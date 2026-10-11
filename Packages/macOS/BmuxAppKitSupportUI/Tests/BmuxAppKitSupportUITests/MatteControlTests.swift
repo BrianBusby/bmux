@@ -166,6 +166,29 @@ struct MatteControlTests {
         let resting = try render(role: .link, theme: theme)
         let hovered = try render(role: .link, theme: theme, state: .init(isHovered: true))
         #expect(try #require(resting.colorAt(x: 40, y: 38)) == #require(hovered.colorAt(x: 40, y: 38)))
+        let pressed = try render(role: .link, theme: theme, state: .init(isHovered: true, isPressed: true))
+        #expect(try #require(pressed.colorAt(x: 40, y: 38)) != #require(hovered.colorAt(x: 40, y: 38)))
+    }
+
+    @Test(arguments: [ColorScheme.dark, .light])
+    func pointerFocusSuppressesOnlyTheOutline(scheme: ColorScheme) throws {
+        let theme = MatteTheme(colorScheme: scheme)
+        func image(keyboard: Bool) throws -> NSBitmapImageRep {
+            let renderer = ImageRenderer(content: Button {} label: {
+                Color.clear.frame(width: 40, height: 36)
+            }
+            .buttonStyle(MatteButtonStyle(theme: theme))
+            .environment(\.matteButtonIsFocused, true)
+            .environment(\.matteKeyboardFocusVisible, keyboard)
+            .padding(20)
+            .background(Color(nsColor: theme.color(.base))))
+            renderer.scale = 1
+            return NSBitmapImageRep(cgImage: try #require(renderer.cgImage))
+        }
+        let pointer = try image(keyboard: false)
+        let keyboard = try image(keyboard: true)
+        #expect(try #require(pointer.colorAt(x: 40, y: 17)) != #require(keyboard.colorAt(x: 40, y: 17)))
+        #expect(try #require(pointer.colorAt(x: 40, y: 38)) == #require(keyboard.colorAt(x: 40, y: 38)))
     }
 
     private func render(role: MatteControlRole, theme: MatteTheme,

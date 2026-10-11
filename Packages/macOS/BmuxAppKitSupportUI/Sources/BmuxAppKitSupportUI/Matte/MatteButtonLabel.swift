@@ -10,6 +10,7 @@ struct MatteButtonLabel: View {
     let forcesHover: Bool
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.isFocused) private var isFocused
+    @Environment(\.matteKeyboardFocusVisible) private var keyboardFocusVisible
     @Environment(\.matteButtonHitExpansion) private var hitExpansion
     @Environment(\.matteButtonIsFocused) private var matteButtonIsFocused
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -25,7 +26,7 @@ struct MatteButtonLabel: View {
             .background {
                 MatteControlDecoration(role: role, theme: theme, state: .init(
                     isSelected: isSelected, isHovered: showsHover, isPressed: configuration.isPressed,
-                    isFocused: isFocused || matteButtonIsFocused, isEnabled: isEnabled))
+                    isFocused: keyboardFocusVisible && (isFocused || matteButtonIsFocused), isEnabled: isEnabled))
             }
             .padding(hitExpansion)
             .contentShape(Rectangle())

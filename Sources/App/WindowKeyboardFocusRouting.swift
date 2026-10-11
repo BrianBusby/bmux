@@ -24,6 +24,17 @@ struct WindowKeyboardFocusRouting {
         })
     }
 
+    /// Receives the existing application event dispatch before native focus changes.
+    func recordChromeInput(_ event: NSEvent) {
+        switch event.type {
+        case .keyDown, .leftMouseDown, .rightMouseDown, .otherMouseDown: break
+        default: return
+        }
+        let coordinator = appDelegate?.keyboardFocusCoordinator(for: window)
+            ?? window?.parent.flatMap { appDelegate?.keyboardFocusCoordinator(for: $0) }
+        coordinator?.workspaceChromeFocusOwner.recordInput(event.type)
+    }
+
     func synchronizeAfterResponderChange() {
         if let coordinator = appDelegate?.keyboardFocusCoordinator(for: window) {
             coordinator.syncAfterResponderChange()

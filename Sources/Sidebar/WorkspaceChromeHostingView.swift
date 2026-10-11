@@ -5,6 +5,12 @@ import SwiftUI
 @MainActor
 final class WorkspaceChromeHostingView<Content: View>: NSHostingView<Content> {
     var isFocusScopeEnabled = true
+    var onKeyboardFocusVisibilityChange: ((Bool) -> Void)?
+    var showsKeyboardFocus = true {
+        didSet {
+            if showsKeyboardFocus != oldValue { onKeyboardFocusVisibilityChange?(showsKeyboardFocus) }
+        }
+    }
     var onAttachmentChange: (@MainActor (NSView, Bool) -> Void)?
 
     override func viewWillMove(toWindow newWindow: NSWindow?) {

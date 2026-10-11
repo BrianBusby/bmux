@@ -571,3 +571,54 @@ disposable selected workspace; the fixture was restored afterward. Shared UI
 45 tests, source parse, length budget and diff checks passed. Independent review
 of the complete card/rail/focus path found no new state or ownership change.
 No localized strings changed. Full app-host/CI remains a separate pending gate.
+
+
+## Pointer-selected card consistency follow-up
+
+Brian supplied two porcelain screenshots showing a thin selection ring on the
+terminal workspace and an extra outer ring on the Chat workspace. Reproduced
+on running build 757 with real pointer clicks: Terminal receives native focus
+after selection, while Chat leaves the clicked card focused. Raw FocusState
+incorrectly drove keyboard decoration for both input methods. This is a visual
+state issue; native focus, navigation and activation must remain unchanged.
+
+The existing application event dispatch now reports input modality through
+WindowKeyboardFocusRouting to the per-window WorkspaceChromeFocusOwner. Only
+modality transitions update the registered hosts' value-only environment.
+No new event monitor, gesture, observable row dependency, responder change,
+view-tree scan, or per-frame work is introduced. The hosting root keeps its
+content identity; callbacks capture hosts weakly and are cleared at teardown.
+Actual focus still controls close visibility and accessibility. Both button
+and card decoration gate the whole focus expression, preserving keyboard rings.
+
+The PR-link hover wash was also incorrectly shared with flat icon controls.
+Links now retain only their existing token color and native underline on hover;
+flat icon controls retain the wash. No new color, metric, or string is added.
+
+Guidance: AGENTS.md snapshot/hot-path/file-budget requirements; continuous-code-
+quality; bmux-architecture, debugging and testing skills. Existing patterns:
+WorkspaceChromeFocusOwner/Scope/HostingView, WindowKeyboardFocusRouting and
+NSApplication.bmux_applicationSendEvent; MatteButtonLabel/ControlDecoration.
+Independent complete-path review found no blocking ownership/lifecycle issue.
+AppDelegate remains smaller than the feature base; the exact base-aware source
+length gate passes.
+
+Regression evidence: the link-hover rendered-pixel test failed in both themes
+before the fix (test-only e32a72f94). CI previously omitted BmuxAppKitSupportUI,
+so test-only 75528c0b2 adds the confirmed standalone package to its existing job.
+The fix passes 47 shared UI tests and 19 native focus-harness tests, including
+modality deduplication, unchanged responder ownership, separate-window state,
+new-host propagation, and actual outline/interior pixel comparisons. Test-host
+compilation/full app suites remain CI gates. No new localization strings.
+Live build 759 passes the exact pointer sequence in both appearances. Tab and
+Shift-Tab restore the outline, Return retains the selected workspace, and clicking
+an already-focused card suppresses only decoration while retaining its actual
+accessibility focus. The first live pass exposed inherited EnvironmentValues
+overwriting the semantic Boolean; ordering is corrected and the hosting-boundary
+test now asserts the actual subtree value and unchanged local-state UUID.
+Brian explicitly approved retaining the existing pressed-link background while
+removing only its hover background. The rendered test distinguishes both states.
+The paired selected-card captures show build 759 (before that pressed-only
+restoration, which does not affect these unpressed captures). Final committed
+source reload and CI are reported in the PR/handoff. Direct VoiceOver visual
+behavior after pointer input is not claimed.

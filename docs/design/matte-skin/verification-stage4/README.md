@@ -33,6 +33,24 @@ The [selected-card comparison](selected-card-comparison.html) isolates that deta
   both explicitly approved.
 - Texture is intentionally absent until stage 5.
 
+## Pointer-selection follow-up
+
+Build 759 reproduces and fixes the two-card discrepancy: a pointer-selected Chat
+workspace keeps the same thin selection ring as a Terminal workspace, even when
+native focus remains on the card. The extra outline appears for keyboard input.
+Tab/Shift-Tab, Return and clicking the already-focused card were checked live.
+[Graphite selected second card](graphite-selected-card-focus.png) and
+[porcelain selected second card](porcelain-selected-card-focus.png) use the same
+1092 × 593 window. This corrects state presentation without changing geometry,
+focus ownership, navigation or actions. Existing deviations listed above remain.
+
+Links no longer use the flat-icon hover wash. Brian approved retaining their
+existing background while pressed; unpressed captures are unchanged by that
+restoration. Tests verify link hover/pressed pixels and outline-only changes in
+both appearances. Shared UI now passes 47 tests; native focus harness passes 19,
+including the actual environment value inside the hosting boundary and preserved
+local state. CI now explicitly runs the shared UI package. No strings changed.
+
 ## Runtime evidence
 
 Build 756 passed the corrected card’s dark/light visual check at 1092 × 593,
