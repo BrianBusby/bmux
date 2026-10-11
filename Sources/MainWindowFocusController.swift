@@ -47,6 +47,8 @@ final class MainWindowFocusController {
         }
     }
 
+    let workspaceSidebarFocusOwner = WorkspaceSidebarFocusOwner()
+
     let windowId: UUID
 
     private weak var window: NSWindow?
@@ -325,6 +327,8 @@ final class MainWindowFocusController {
                selectedFocusedPanelRequest(owning: responder) == nil,
                shouldRespectForeignFirstResponder(responder, in: window, isRightSidebarOwner: {
                    liveRightSidebarModeOwning($0, in: window) != nil
+               }, isWorkspaceSidebarOwner: {
+                   workspaceSidebarFocusOwner.owns($0, in: window)
                }) {
                 return false
             }
@@ -384,6 +388,7 @@ final class MainWindowFocusController {
 #endif
 
     private func syncAfterResponderChange(responder: NSResponder?) {
+        if let window { workspaceSidebarFocusOwner.synchronize(responder: responder, in: window) }
         guard let responder else {
             publishFeedFocusSnapshot()
             return

@@ -2533,8 +2533,7 @@ struct ContentView: View {
                     tabManager.closeWorkspaceWithConfirmation(workspace)
                 }
             },
-            onOpenLink: { id, url in
-                tabManager.selectWorkspaceIdForAction(id)
+            onOpenLink: { _, url in
                 BrowserExternalLinkOpener().openWebLink(url)
             },
             onLaunchRepository: { anchorView in
@@ -2543,71 +2542,57 @@ struct ContentView: View {
                     return
                 }
             },
+            onFocusHostChange: { host, scope, isAttached in
+                guard let window = observedWindow,
+                      let owner = AppDelegate.shared?.keyboardFocusCoordinator(for: window)?.workspaceSidebarFocusOwner else { return }
+                if isAttached {
+                    owner.register(host, scope: scope, in: window)
+                } else {
+                    owner.unregister(host, scope: scope)
+                }
+            },
             filters: $referenceWorkspaceFilters,
             isFilterPanelPresented: $isReferenceWorkspaceFilterPanelPresented
         )
     }
 
     private func bmuxReferenceAppShell(appearance: WindowAppearanceSnapshot) -> some View {
-        ZStack {
-            Color.workspaceReferenceSurface.ignoresSafeArea()
-            VStack(spacing: 0) {
-                HStack {
-                    HStack(spacing: 8) {
-                        Text("bmux")
-                            .font(.system(size: 21, weight: .bold, design: .rounded))
-                            .foregroundStyle(Color.workspaceReferenceTextPrimary)
-                        Text("✳").font(.system(size: 18)).foregroundStyle(Color.workspaceReferenceTurnAccent)
-                        Text("CompanyCam").foregroundStyle(Color.workspaceReferenceTextTertiary)
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, 24)
-                .frame(height: 44)
-                .overlay(alignment: .bottom) {
-                    Rectangle().fill(Color.workspaceReferenceSeparator).frame(height: 1)
-                }
-
-                HStack(spacing: 0) {
-                    bmuxReferenceWorkspaceRail
-                    AgentSessionFactualProjectionModeHost(
-                        showsSwitcher: true,
-                        showsModePicker: false,
-                        initialPrimaryTab: initialPrimaryTab,
-                        showsAppShell: false,
-                        liveChatContent: bmuxShellChatContent(),
-                        liveTerminalContent: bmuxShellTerminalVisible
-                            ? AnyView(
-                                terminalContent(appearance: appearance, shellTerminalVisible: true)
-                                    .environment(\.bmuxShellTerminalOnly, true)
-                            )
-                            : nil,
-                        onPrimaryTabChange: { isTerminal in
-                            bmuxShellTerminalVisible = isTerminal
-                            reconcileMountedWorkspaceIds()
-                        },
-                        workspaceLabel: tabManager.selectedWorkspace.map {
-                            $0.currentDirectory.split(separator: "/").last.map(String.init)
-                                ?? String(localized: "agentSession.factual.workspaceUnavailable", defaultValue: "Workspace unavailable")
-                        },
-                        sessionTitle: tabManager.selectedWorkspace?.title,
-                        sessionDescription: tabManager.selectedWorkspace.flatMap { workspace in
-                            guard let description = workspace.customDescription,
-                                  description.trimmingCharacters(in: .whitespacesAndNewlines) != workspace.title.trimmingCharacters(in: .whitespacesAndNewlines)
-                            else { return nil }
-                            return description
-                        },
-                        stableWorkspaceID: tabManager.selectedWorkspace?.stableId,
-                        workProvenanceRuntime: tabManager.workProvenanceRuntime,
-                        backgroundColor: appearance.compositedTerminalBackgroundColor
-                    ) { _ in
-                        Color.clear
-                    }
-                }
+        WorkspaceReferenceAppShell {
+            bmuxReferenceWorkspaceRail
+        } content: {
+            AgentSessionFactualProjectionModeHost(
+                showsSwitcher: true,
+                showsModePicker: false,
+                initialPrimaryTab: initialPrimaryTab,
+                showsAppShell: false,
+                liveChatContent: bmuxShellChatContent(),
+                liveTerminalContent: bmuxShellTerminalVisible
+                    ? AnyView(
+                        terminalContent(appearance: appearance, shellTerminalVisible: true)
+                            .environment(\.bmuxShellTerminalOnly, true)
+                    )
+                    : nil,
+                onPrimaryTabChange: { isTerminal in
+                    bmuxShellTerminalVisible = isTerminal
+                    reconcileMountedWorkspaceIds()
+                },
+                workspaceLabel: tabManager.selectedWorkspace.map {
+                    $0.currentDirectory.split(separator: "/").last.map(String.init)
+                        ?? String(localized: "agentSession.factual.workspaceUnavailable", defaultValue: "Workspace unavailable")
+                },
+                sessionTitle: tabManager.selectedWorkspace?.title,
+                sessionDescription: tabManager.selectedWorkspace.flatMap { workspace in
+                    guard let description = workspace.customDescription,
+                          description.trimmingCharacters(in: .whitespacesAndNewlines) != workspace.title.trimmingCharacters(in: .whitespacesAndNewlines)
+                    else { return nil }
+                    return description
+                },
+                stableWorkspaceID: tabManager.selectedWorkspace?.stableId,
+                workProvenanceRuntime: tabManager.workProvenanceRuntime,
+                backgroundColor: appearance.compositedTerminalBackgroundColor
+            ) { _ in
+                Color.clear
             }
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.workspaceReferenceSeparator, lineWidth: 1))
-            .padding(18)
         }
     }
 

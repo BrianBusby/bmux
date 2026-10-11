@@ -5487,9 +5487,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         // never re-route the keystroke to the terminal. Symmetric with
         // applyFirstResponderIfNeeded's foreign focus guard.
         if let firstResponder,
-           shouldRespectForeignFirstResponder(firstResponder, in: window, isRightSidebarOwner: {
-               isRightSidebarFocusResponder($0, in: window)
-           }) {
+           WindowKeyboardFocusRouting(appDelegate: self, window: window).respects(firstResponder) {
             return
         }
         guard let context = contextForMainWindow(window) ?? contextForMainTerminalWindow(window),
@@ -6852,7 +6850,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     func syncKeyboardFocusAfterFirstResponderChange(in window: NSWindow?) {
-        keyboardFocusCoordinator(for: window)?.syncAfterResponderChange()
+        WindowKeyboardFocusRouting(appDelegate: self, window: window).synchronizeAfterResponderChange()
     }
 
     @discardableResult

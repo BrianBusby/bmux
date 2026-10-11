@@ -5,8 +5,9 @@ import AppKit
 /// find-overlay focus apply).
 ///
 /// A terminal yields only to a *legitimate* in-window focus owner: a focused text editor
-/// (`NSText` field editor) or a right-sidebar / dock / feed host. Crucially it must also still
-/// belong to `window`. bmux hosts terminal surfaces through a portal that reparents views between
+/// (`NSText` field editor), an explicitly focused workspace-sidebar control, or a
+/// right-sidebar / dock / feed host. It must still belong to `window`, except an
+/// explicitly registered workspace-popover responder in that window's direct child. bmux hosts terminal surfaces through a portal that reparents views between
 /// windows; a focus owner can be reparented out of a window without resigning, leaving
 /// `window.firstResponder` pointing at a view that no longer belongs to the window (a "stranded"
 /// responder, see issue #5269). The previous guard checked responder *type* only, so it treated a
@@ -20,8 +21,10 @@ import AppKit
 ///   - window: The window whose focus is being reconciled.
 ///   - isRightSidebarOwner: Predicate identifying right-sidebar / dock / feed focus hosts (injected
 ///     so this policy is testable without `AppDelegate`).
+///   - isWorkspaceSidebarOwner: Predicate identifying an explicitly focused, attached workspace control.
 /// - Returns: `true` only when `firstResponder` is a legitimate focus owner that genuinely belongs
-///   to `window`; `false` when the terminal should reclaim first responder (including when the
+///   to `window` or its explicitly registered native popover; `false` when the terminal
+///   should reclaim first responder (including when the
 ///   responder is stranded in another window or detached).
 ///
 /// ```swift
@@ -37,10 +40,18 @@ import AppKit
 func shouldRespectForeignFirstResponder(
     _ firstResponder: NSResponder,
     in window: NSWindow,
-    isRightSidebarOwner: (NSResponder) -> Bool
+    isRightSidebarOwner: (NSResponder) -> Bool,
+    isWorkspaceSidebarOwner: (NSResponder) -> Bool = { _ in false }
 ) -> Bool {
     // A stranded responder (detached, or reparented into another window without resigning) no longer
     // belongs to this window and must not block the terminal from reclaiming first responder.
-    guard (firstResponder as? NSView)?.window === window else { return false }
-    return firstResponder is NSText || isRightSidebarOwner(firstResponder)
+    guard let responderWindow = (firstResponder as? NSView)?.window else { return false }
+    if responderWindow === window {
+        return firstResponder is NSText || isRightSidebarOwner(firstResponder)
+            || isWorkspaceSidebarOwner(firstResponder)
+    }
+    // SwiftUI popovers can keep a main-window firstResponder proxy in their
+    // attached child window. Only an explicitly registered control may use this
+    // exception; generic text/sidebar responders stranded elsewhere still yield.
+    return responderWindow.parent === window && isWorkspaceSidebarOwner(firstResponder)
 }

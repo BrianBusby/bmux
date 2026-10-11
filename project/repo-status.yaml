@@ -22,6 +22,9 @@ execution_telemetry:
   live_codex_evidence_convergence_correctness: implemented
 
 local_capabilities:
+  matte_skin_theme_tokens: implemented
+  matte_skin_surface_styles: implemented
+  matte_skin_sidebar: implemented
   managed_connected_codex_runtime: under_observation
   ordinary_cli_read_only_chat: under_observation
   ordinary_cli_shared_control: not_implemented
@@ -136,6 +139,8 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: matte_skin_ci_compiler_compatibility
+    status: open
   - id: configured_codex_placeholder_startup_dogfood
     status: open
   - id: codex_update_workspace_exit_native_dogfood
