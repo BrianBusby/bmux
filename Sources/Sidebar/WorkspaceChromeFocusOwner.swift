@@ -129,6 +129,13 @@ final class WorkspaceChromeFocusOwner {
         responderWindow = nil
     }
 
+    /// Automatic focus repair must respect a live grant in a registered child
+    /// popover as well as chrome inside the main window.
+    func ownsCurrentFocus(in window: NSWindow) -> Bool {
+        guard let responder, responderWindow?.firstResponder === responder else { return false }
+        return owns(responder, in: window)
+    }
+
     func owns(_ responder: NSResponder, in window: NSWindow) -> Bool {
         guard owningWindow === window, let hostWindow,
               focusedHost?.window === hostWindow,

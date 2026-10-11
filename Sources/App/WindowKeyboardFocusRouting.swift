@@ -9,9 +9,9 @@ struct WindowKeyboardFocusRouting {
     let window: NSWindow?
 
     var workspaceSidebarOwnsFocus: Bool {
-        guard let window, let responder = window.firstResponder else { return false }
+        guard let window else { return false }
         return appDelegate?.keyboardFocusCoordinator(for: window)?
-            .workspaceChromeFocusOwner.owns(responder, in: window) == true
+            .workspaceChromeFocusOwner.ownsCurrentFocus(in: window) == true
     }
 
     func respects(_ responder: NSResponder) -> Bool {

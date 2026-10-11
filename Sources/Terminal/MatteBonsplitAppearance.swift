@@ -6,9 +6,14 @@ import BmuxAppKitSupportUI
 /// Maps shared theme values onto Bonsplit's optional presentation seam.
 struct MatteBonsplitAppearance {
     let theme: MatteTheme
+    let paneBorderColorHex: String?
 
-    init(theme: MatteTheme = MatteTheme(colorScheme: GhosttyConfig.currentColorSchemePreference() == .dark ? .dark : .light)) {
+    init(
+        theme: MatteTheme = MatteTheme(colorScheme: GhosttyConfig.currentColorSchemePreference() == .dark ? .dark : .light),
+        paneBorderColorHex: String? = PaneChromeSettings.paneBorderColorHex()
+    ) {
         self.theme = theme
+        self.paneBorderColorHex = paneBorderColorHex
     }
 
     func apply(to appearance: inout BonsplitConfiguration.Appearance) {
@@ -30,7 +35,8 @@ struct MatteBonsplitAppearance {
         )
         let nextColors = BonsplitConfiguration.Appearance.ChromeColors(
             backgroundHex: panel, tabBarBackgroundHex: panel,
-            splitButtonBackdropHex: panel, paneBackgroundHex: panel, borderHex: edge)
+            splitButtonBackdropHex: panel, paneBackgroundHex: panel,
+            borderHex: PaneChromeSettings.resolvedPaneBorderHex(configuredHex: paneBorderColorHex, fallback: edge))
         let nextBackdrop = BonsplitConfiguration.Appearance.SplitButtonBackdropEffect(
             style: .opaqueBarBackground, fadeWidth: 0, contentFadeWidth: 0, masksTabContent: false)
         let nextFontSize = theme.typography(.body).pointSize

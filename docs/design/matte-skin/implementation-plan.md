@@ -873,3 +873,62 @@ red evidence for both fixes and confirms that the readiness issue varies across
 runs. The exact 7ce43151c tagged reload succeeded as build 767; production source
 is unchanged by this documentation update. Fixed-head app-host results remain
 pending, including the migrated recovery cases and existing printable-repeat case.
+
+
+### Follow-up: automatic popover focus and chrome preferences
+
+Read the root AGENTS instructions, continuous-code-quality, architecture file/API
+and concurrency references, native runtime pitfalls, Swift Testing/regression and
+validation references, shared-behavior, dev workflow, and localization guidance.
+Reviewed complete WorkspaceChromeFocusOwner, routing, native responder hook and
+hosting attachment lifecycle; both automatic Ghostty focus guards; the Bonsplit
+mapper and Workspace initialization/config/background/appearance reload callers;
+and the existing pane settings and config font parsing/magnification owners.
+
+Actual fixed-head CI run 38174191168, job 114573655856, completed all 12 config
+cases, six inset cases, two migrated recovery cases, and both unchanged IME and
+printable repeat cases successfully. Its 40 Swift Testing functions finished with
+four issues in the two popover fixtures. Native app-host makeFirstResponder hooks
+observed focus before the fixture registered its host, recording the responder
+identity without a grant. Later synchronization correctly deduplicated that same
+identity. Production registers on host attachment before focus. The fixture now
+matches that ordering; detach/reparent revocation semantics are unchanged. The
+standalone dylib harness does not install full app startup hooks, explaining why
+it did not expose this fixture ordering defect. Actual app-host rerun remains a
+gate; the broader legacy suite remains separately unresolved.
+
+Test-only commit 438a0fd24 adds automatic guard ownership/revocation assertions
+and configuration preference coverage. Against build 767, eight parameter cases
+across six test functions produce 14 assertions: two focus, four tab font size,
+and eight pane border assertions. The new preference fixture uses a synchronous
+MainActor volatile argument-domain override, restores nesting, closes panels,
+and never writes persistent preferences. Test wiring now covers 441 files.
+
+The automatic guard now asks the existing focus owner for its validated current
+grant, including a registered child popover; the owner validates current native
+first responder and existing weak host/window identities. Both existing automatic
+terminal/Find guard callers benefit without renderer or per-key traversal changes.
+Explicit focus actions and unrelated child windows retain their previous policy.
+The matte mapper resolves the existing paneBorderColor preference through
+PaneChromeSettings, with the theme edge as fallback. Initialization, configuration,
+background-only and appearance changes share this mapper, including clearing an
+override. No independent setting or persistent state is introduced.
+
+Independent review found no blocker in the bounded focus/border changes. The
+parent-owned isolated tagged build matte-skin-preferences-focus succeeded as build
+768. Compiled native tests against its actual dylib pass five test functions /
+seven cases for focus and border (/tmp/matte-focus-border-native-green.log).
+Running the full new suite still reports precisely the four expected font-size
+assertions; this is not described as a complete green run. The font default choice
+remains pending: the shared config/Settings/reset default is 11pt while the matte
+prototype is 13pt. The explicit configured-size regression stays in the focused CI
+gate. No font production code has changed yet. No shipped strings changed; the
+localization audit found only contributor notes, test fixtures, and code comments.
+Actual new CI run 38182296127 is pending on test-only head 438a0fd24; fixes must
+retain actual red evidence before their push. Source budgets and diff checks pass.
+
+Parent live verification of isolated build 768 also passed: opening terminal Find,
+then focusing the filter popover's Active control, leaves Find open when the first
+Escape dismisses the popover; the second Escape closes Find. Existing user previews
+were untouched. This verifies the independent focus/border slice; the configured
+tab-size fix and actual CI gates are still pending.
