@@ -35,6 +35,7 @@ import Testing
     private func expectTerminalFill(appearance: PanelAppearance, isDark: Bool) throws {
         let manager = TabManager(autoWelcomeIfNeeded: false)
         let panel = try #require(manager.selectedTerminalPanel)
+        defer { panel.close() }
         let view = TerminalPanelView(
             panel: panel, paneId: PaneID(id: UUID()), isFocused: false,
             isVisibleInUI: true, portalPriority: 0, isSplit: false, appearance: appearance,

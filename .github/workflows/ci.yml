@@ -617,9 +617,8 @@ jobs:
             -only-testing:bmuxTests/MatteTerminalConfigurationTests \
             -only-testing:bmuxTests/WorkspacePopoverFocusRoutingTests \
             -only-testing:bmuxTests/MatteTerminalInsetRenderingTests \
+            -only-testing:bmuxTests/TerminalSurfaceRecoveryTests \
             -only-testing:bmuxTests/TerminalNotificationDirectInteractionTests/testIMECommittedKeyRepeatDoesNotForceSurfaceRefresh \
-            -only-testing:bmuxTests/TerminalNotificationDirectInteractionTests/testKeyDownRecoversReleasedSurfaceWhileHostedViewIsDetached \
-            -only-testing:bmuxTests/TerminalNotificationDirectInteractionTests/testKeyDownRecoveryDoesNotRecreateClosedSurface \
             -only-testing:bmuxTests/TerminalNotificationDirectInteractionTests/testPrintableKeyRepeatDoesNotForceSurfaceRefresh \
             -only-testing:bmuxTests/MatteTitlebarDragRoutingTests \
             -only-testing:bmuxTests/ForeignFirstResponderPolicyTests \

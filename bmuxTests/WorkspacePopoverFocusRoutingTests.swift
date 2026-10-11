@@ -73,6 +73,7 @@ import Testing
             bmuxConfigStore: nil, window: parent
         )
         defer {
+            for workspace in manager.tabs { for panel in workspace.panels.values { panel.close() } }
             child.parent?.removeChildWindow(child)
             child.contentView = nil
             parent.contentView = nil
@@ -82,6 +83,7 @@ import Testing
             app.tabManager = nil
             TerminalController.shared.setActiveTabManager(previousActiveManager)
             AppDelegate.shared = previousApp
+            if let previousApp { GhosttyApp.terminalSurfaceRegistry.attachRouteRetirer(previousApp) }
         }
         let parentResponder = NSTextView(frame: .zero)
         parent.contentView?.addSubview(parentResponder)
