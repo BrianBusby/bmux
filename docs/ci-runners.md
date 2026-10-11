@@ -162,3 +162,39 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+## Native test result reporting
+
+The macOS unit-test steps in `ci.yml`, `ci-macos-compat.yml`, `test-depot.yml`
+and `tmux-corpus.yml` preserve the native runner's exit status. A zero exit is
+success; assertion failures, crashes and timeouts remain failures. Pipelines
+use `pipefail` so a failed log writer also fails the step. Existing bounded
+SwiftPM dependency retries remain; the final attempt determines the result.
+
+`xcodebuild_noninteractive.py` owns PTY output, crash-prompt dismissal and timeout
+cleanup. Only an actual child exit of zero establishes success. A post-test
+watchdog timeout returns 125 after a failed Selected-tests summary, otherwise
+124. A passed XCTest summary can precede Swift Testing and cannot establish
+completion. Even a printed `TEST SUCCEEDED` marker cannot override a timeout.
+The app-host wrapper retains its existing retry budget. The separately scoped
+strict zero-failure cleanup fallback in `test-ios.yml` is unchanged.
+
+Ordinary XCTest assertions can produce `(0 unexpected)` in summaries. Earlier
+workflows treated that text as success even with failed assertions; their green
+job statuses are not evidence of a clean app-host suite. `native_app_host_full_suite_failures`
+in Project Truth remains open until real failures are separately triaged.
+
+`tests/test_ci_xcodebuild_exit_reporting.py` executes all four workflow shell
+steps in isolated subprocess sandboxes with controlled native-runner outcomes.
+It verifies failure/signal/timeout propagation, misleading later zero-test
+summaries, successful expected-failure runs, bounded retries and log-writer
+failures. Native PTY tests execute real child processes, including incomplete
+XCTest/Swift Testing runs and timeouts; no app or GUI is launched.
+
+The test-only commit `6f46d5f22` failed the actual Linux guard with 40 assertions
+([run38152397961](https://github.com/BrianBusby/bmux/actions/runs/38152397961/job/114508355015)).
+The reporting fix passes the focused workflow and native-runner tests locally.
+Final CI and broad app-host results remain verification gates, not assumptions.
+This work follows root AGENTS, continuous-code-quality, bmux-testing and
+bmux-shared-behavior: workflow steps own pipeline status; the existing shared
+runner owns process lifecycle; no app test expectations are relaxed.

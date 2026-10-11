@@ -17,7 +17,6 @@ SWIFT_CRASH_PROMPT = b"Press space to interact, D to debug, or any other key to 
 TIMEOUT_EXIT_CODE = 124
 POST_TEST_FAILED_EXIT_CODE = 125
 SELECTED_TESTS_DONE_RE = re.compile(rb"Test Suite 'Selected tests' (passed|failed) at ")
-SUCCESS_MARKER = b"** TEST SUCCEEDED **"
 
 
 def child_exit_code(status: int) -> int:
@@ -131,7 +130,6 @@ def main() -> int:
     deadline = time.monotonic() + timeout if timeout else None
     post_test_deadline: float | None = None
     selected_tests_result: str | None = None
-    saw_passing_terminal_summary = False
     log_path = os.environ.get("BMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH")
     log_file: BinaryIO | None = None
     if log_path:
@@ -207,8 +205,6 @@ def main() -> int:
         if post_test_timeout and selected_match and post_test_deadline is None:
             selected_tests_result = selected_match.group(1).decode("ascii")
             post_test_deadline = time.monotonic() + post_test_timeout
-        if SUCCESS_MARKER in prompt_window:
-            saw_passing_terminal_summary = True
         if SWIFT_CRASH_PROMPT in prompt_window:
             # The Swift crash backtracer asks for one key. Send q to choose the
             # noninteractive quit path and let xcodebuild continue reporting.
@@ -237,8 +233,8 @@ def main() -> int:
             log_file.write(f"{message}\n".encode())
             log_file.close()
         terminate_child(pid)
-        if selected_tests_result == "passed" or saw_passing_terminal_summary:
-            return 0
+        # XCTest may finish before Swift Testing. Even a success marker cannot
+        # establish the native process result when the runner must kill it.
         if selected_tests_result == "failed":
             return POST_TEST_FAILED_EXIT_CODE
         return TIMEOUT_EXIT_CODE
