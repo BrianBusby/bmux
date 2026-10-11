@@ -1,16 +1,17 @@
 import AppKit
 
-/// Owns native focus inside the two explicitly registered workspace-sidebar hosts.
+/// Owns native focus inside the explicitly registered workspace chrome hosts.
 ///
 /// Membership is resolved synchronously at AppKit responder changes, before
 /// SwiftUI's focus rendering. Per-key queries compare weak identities only.
 /// A detached or reparented popover must receive a fresh native focus change;
 /// merely reattaching its window never resurrects the previous grant.
 @MainActor
-final class WorkspaceSidebarFocusOwner {
-    enum Scope { case rail, filterPopover }
+final class WorkspaceChromeFocusOwner {
+    enum Scope: Sendable { case rail, filterPopover, primaryTabs }
 
     private weak var railHost: NSView?
+    private weak var primaryTabsHost: NSView?
     private weak var popoverHost: NSView?
     private weak var owningWindow: NSWindow?
     private weak var focusedHost: NSView?
@@ -27,6 +28,7 @@ final class WorkspaceSidebarFocusOwner {
         if owningWindow !== window {
             clearFocus()
             railHost = nil
+            primaryTabsHost = nil
             popoverHost = nil
             parentObservation = nil
             owningWindow = window
@@ -36,6 +38,10 @@ final class WorkspaceSidebarFocusOwner {
             guard railHost !== host else { return }
             if focusedHost === railHost { clearFocus() }
             railHost = host
+        case .primaryTabs:
+            guard primaryTabsHost !== host else { return }
+            if focusedHost === primaryTabsHost { clearFocus() }
+            primaryTabsHost = host
         case .filterPopover:
             guard popoverHost !== host else { return }
             if focusedHost === popoverHost { clearFocus() }
@@ -57,6 +63,8 @@ final class WorkspaceSidebarFocusOwner {
         switch scope {
         case .rail:
             if railHost === host { railHost = nil }
+        case .primaryTabs:
+            if primaryTabsHost === host { primaryTabsHost = nil }
         case .filterPopover:
             if popoverHost === host {
                 popoverHost = nil
@@ -79,6 +87,9 @@ final class WorkspaceSidebarFocusOwner {
         if let railHost, railHost.window === window,
            responderWindow === window, view.isDescendant(of: railHost) {
             host = railHost
+        } else if let primaryTabsHost, primaryTabsHost.window === window,
+                  responderWindow === window, view.isDescendant(of: primaryTabsHost) {
+            host = primaryTabsHost
         } else if let popoverHost, let popoverWindow = popoverHost.window,
                   popoverWindow.parent === window, responderWindow === popoverWindow,
                   view.isDescendant(of: popoverHost) {

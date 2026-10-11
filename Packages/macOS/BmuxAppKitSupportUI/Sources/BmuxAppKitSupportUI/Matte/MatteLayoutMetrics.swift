@@ -26,6 +26,60 @@ public struct MatteLayoutMetrics: Sendable {
     /// Side, bottom, and sidebar-to-panel gutter in points.
     public let windowGutter: Double
 
+    /// Header inset measured from the reference wordmark's leading ink edge.
+    public let brandHeaderHorizontalInset: Double
+
+    /// Visual header baseline offset, preserving the sidebar's existing layout position.
+    public let brandHeaderVerticalOffset: Double
+
+    /// Preserved native brand-group spacing; the reference does not specify this gap.
+    public let brandHeaderContentGap: Double
+
+    /// Preserved decorative brand glyph size, independent of terminal typography.
+    public let brandDecorationSize: Double
+
+    /// Preserved native header height, keeping the sidebar's placement stable.
+    public let brandHeaderHeight: Double
+
+    /// Preserved shell top inset beneath window chrome.
+    public let shellTopInset: Double
+
+    /// Preserved native spacing between the proxy folder icon and window title.
+    public let titlebarContentGap: Double
+
+    /// Preserved native build-badge content insets.
+    public let titlebarBadgePadding: EdgeInsets
+
+    /// Preserved native build-badge distance from the trailing window edge.
+    public let titlebarTrailingInset: Double
+
+    /// Gap between primary navigation controls, retained from the approved composition.
+    public let primaryNavigationGap: Double
+
+    /// Thickness of the active primary navigation underline.
+    public let primaryNavigationIndicatorWidth: Double
+
+    /// Main panel top inset beneath the brand header, measured from the reference crop.
+    public let mainPanelTopInset: Double
+
+    /// Native heading baseline correction for SF's different line-box leading.
+    public let workspaceHeadingTopAdjustment: Double
+
+    /// Gap above the primary navigation after native heading baseline alignment.
+    public let primaryNavigationTopGap: Double
+
+    /// Space below primary navigation labels and above their selection marker.
+    public let primaryNavigationBottomGap: Double
+
+    /// Gap between embedded primary navigation and terminal tabs, replacing window-titlebar padding.
+    public let embeddedTerminalTopGap: Double
+
+    /// Terminal tab strip height measured between its top and the terminal inset.
+    public let terminalTabBarHeight: Double
+
+    /// Additional space around the native terminal portal, measured against the reference ink bounds.
+    public let terminalContentPadding: EdgeInsets
+
     /// Minimum sidebar width in points.
     public let sidebarMinimumWidth: Double
 
@@ -64,6 +118,9 @@ public struct MatteLayoutMetrics: Sendable {
 
     /// Additional invisible control hit-area expansion in points.
     public let invisibleHitExpansion: Double
+
+    /// Hairline surface and selected terminal-tab edge thickness in points.
+    public let hairlineWidth: Double
 
     /// Keyboard focus outline width in points.
     public let focusOutlineWidth: Double

@@ -13,7 +13,7 @@ struct WorkspaceReferenceRail: View {
     let onClose: (UUID) -> Void
     let onOpenLink: (UUID, URL) -> Void
     let onLaunchRepository: (NSView) -> Void
-    let onFocusHostChange: @MainActor (NSView, WorkspaceSidebarFocusOwner.Scope, Bool) -> Void
+    let onFocusHostChange: @MainActor (NSView, WorkspaceChromeFocusOwner.Scope, Bool) -> Void
     @Environment(\.colorScheme) private var colorScheme
     private var theme: MatteTheme { MatteTheme(colorScheme: colorScheme) }
 
@@ -22,7 +22,7 @@ struct WorkspaceReferenceRail: View {
     @State private var repoLauncherAnchorView: NSView?
 
     var body: some View {
-        WorkspaceSidebarFocusScope(usesIntrinsicSize: false, onAttachmentChange: {
+        WorkspaceChromeFocusScope(usesIntrinsicSize: false, onAttachmentChange: {
             onFocusHostChange($0, .rail, $1)
         }) {
             WorkspaceReferenceCardScope(workspaces: workspaces, project: projectCard) { cards in

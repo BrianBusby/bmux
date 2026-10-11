@@ -17,8 +17,8 @@ Branch `matte-skin` starts from `origin/main` at `ce17e9888`.
 
 1. Theme tokens for both appearances — approved by Brian on 2026-10-10. Definitions and resolution only.
 2. Reusable base, card, panel, inset, and overlay styles — approved by Brian on 2026-10-10.
-3. Workspace cards and existing sidebar controls — current; authorized by stage 2 approval.
-4. Main panel and terminal chrome.
+3. Workspace cards and existing sidebar controls — visually approved by Brian; CI compatibility follow-up remains separately tracked.
+4. Main panel and terminal chrome — current; authorized by Brian’s “looks good keep going.”
 5. Optional static texture behind a flag.
 
 One commit per stage, followed by focused checks, an isolated tagged build and
@@ -383,3 +383,158 @@ The `matte_skin_ci_compiler_compatibility` caveat remains open until actual
 Xcode 26.3 CI passes. Localization audit: this expression-only repair adds no
 user-facing strings, labels, keys or translations; the prior sidebar audit is
 unchanged. The checked-in visual evidence and user's build 749 remain unchanged.
+
+## Stage 4 ownership and verification plan
+
+Brian approved the stage 3 visual build and authorized continuing. The parent
+reviewed the pushed stage 3 shell/focus extractions and the explicitly typed
+line-spacing fix (`24b555192`); no formula, terminal renderer or ownership
+regression was found in those deltas. Exact-head Xcode 26.3 CI remains monitored.
+The running stage 3 build 749 must remain untouched. Stage 4 uses a new isolated
+tag and pauses after its one stage commit and dual-appearance review.
+
+- `WorkspaceReferenceAppShell` owns the continuous base, brand header and rail/main
+  layout. Existing sidebar snapshots/actions remain unchanged. Header/titlebar
+  foreground must use the effective matte appearance instead of terminal luminance.
+- `AgentSessionFactualProjectionView` retains selected-primary-tab state, identity,
+  refresh and existing content routing. Extract passive panel heading/navigation
+  presentation as needed; apply shared panel surface and semantic typography.
+  Preserve Chat/Session content and explicit terminal identity.
+- Bonsplit owns the existing terminal tabs, close/menu/drag behavior and toolbar.
+  Its current public API lacks exact state palette, selected-tab geometry and
+  28pt control-target hooks. A minimal optional presentation API must preserve
+  existing defaults and actions; bmux supplies values from MatteTheme. Initial
+  appearance and both Ghostty/resolved-chrome updates must share one mapper.
+- Bonsplit is pinned to `fb5307f`; upstream main is 243 commits ahead and is not
+  writable from this account. Do not upgrade it wholesale or leave an unreachable
+  submodule commit. Prepare the scoped patch against the pinned source for review;
+  resolve reachable remote-main delivery before committing the parent pointer.
+- Terminal foreground/background colors are permitted presentation inputs in the
+  request. Use existing native/configuration seams only if fonts, renderer, ANSI
+  colors, lifecycle and global user configuration remain intact. MatteTheme owns
+  the values; no duplicate palette in terminal core. Do not edit Ghostty itself.
+- Terminal views live in the AppKit portal, so a SwiftUI rounded clip alone is
+  insufficient. Keep stable panel identity, native Find/accessory layering and
+  pointer-only portal routing. Use the shared SwiftUI inset outside a padded, unchanged native portal footprint;
+  no per-frame work or new rendering loop.
+- Files over the 900-line hard cap may not grow versus the PR base; existing
+  tracked files below that cap retain the guard’s 25-line incidental allowance
+  (`scripts/swift_file_length_budget.py`). New files stay below 500 lines. Use
+  coherent extraction with explicit inputs, not compressed code or budget changes.
+
+For header/tab gaps absent from the token image, Brian was asked whether to use
+screenshot measurements or retain existing spacing. After ample opportunity to
+answer this optional preference, the parent stated the assumption that measurements
+from the authoritative screenshots will be used and recorded as semantic tokens.
+This follows the requested visual match; it is not claimed as an explicit answer
+or permission to invent values. Actual native comparison still precedes geometry edits.
+
+Verification includes focused native rendering/state coverage, actual CI compiler
+compatibility, app-host compilation, new-tag build/run, 1092 × 593 dark/light
+comparison, native keyboard focus and separate tab/close targets, Find, terminal
+input, split/resize/narrow-window usability and localization audit. Record every
+remaining reference difference. Texture stays off until stage 5.
+
+### Stage 3 CI compiler evidence
+
+On `24b555192`, the Xcode 26.3 activation-session workflow successfully completed
+its tagged app build at 2026-10-11 03:28:49 UTC. This resolves the specific older
+compiler failure in the typography line-spacing expression. Evidence: [run
+38107446173, job 114375911325](https://github.com/BrianBusby/bmux/actions/runs/38107446173/job/114375911325).
+The activation benchmark, package tests, build-and-lag job and app-host shard 4
+subsequently passed. The other shards and release check remain monitored; this
+is not a claim that all CI passed. Stage 4 has separate new changes
+that still need its own build, test and runtime verification.
+
+### Stage 4 first-pass checks
+
+The initial app build caught a duplicate Xcode object identifier; the scoped fix
+was verified by reproducing the failing project load and then obtaining a successful
+`xcodebuild -list`, plus checking all 1,887 build-phase references. A subsequent
+compile caught a missing shared-UI import, now fixed. Package and native-harness
+passes alone had not exercised these app-target issues.
+
+The independent specification review identified titlebar split controls below
+28pt, a duplicated accessory hover wash, and missing passive terminal-tab hover
+motion. Those were corrected before visual review. Its initial inactive-tab weight
+finding was retracted after direct inspection of the authoritative image: both
+active and inactive tabs are 14pt / 500. No conflicting typography change was made.
+The updated checks pass 44 shared-UI tests, 175 Bonsplit tests (155 XCTest plus
+20 Swift Testing), and 18 native focus harness tests. The latest full app build
+and runtime comparison remain pending.
+
+### Stage 4 measured geometry and ownership checkpoint
+
+The 1092 × 593 native preview was measured against the reference app crop. Theme
+metrics now record brand inset 8 and vertical offset 24, main-panel top inset 28,
+heading native-baseline adjustment -3, navigation gaps 12/4, embedded terminal
+gap 18, terminal strip height 32 and terminal interior padding 13 horizontal /
+12 vertical. Exact type/color/material tokens remain unchanged. Native text
+rasterization is not corrected by shrinking authoritative font sizes.
+
+The first inset experiment exposed stacked inner-edge siblings as horizontal
+bands. The final composition removes the native edge attachment/hosting API
+entirely: `TerminalInsetContainer` pads the unchanged native portal and places
+the existing shared inset outside its footprint. The shared inset has dark/light
+pixel coverage for a continuous interior. Find remains owned by the native portal.
+`WorkspaceTitlebarPresentation` owns only centered title/folder and badge drawing;
+the folder's existing drag/menu actions remain in `DetachedFolderDragIcon`.
+
+The final quality fixes propagate the 28pt toolbar minimum into width reservations
+and narrow-pane caps (nil presentation retains 22pt), extract `PanelAppearance`
+coherently, and replace the moved styling namespace with an immutable appearance
+value. The file-budget guard passes without changing budgets; its explicit
+incidental allowance covers +5 focus-controller and +2 workspace-content lines.
+Project loading, normalization, 433-test wiring, duplicate-ID audit, Swift parsing
+and diff checks pass. Existing package unused-import and vendor deprecation/actor
+warnings were inspected; no new warning was identified in focused test logs.
+
+### Stage 4 native preview and dependency delivery
+
+Tagged build 753 passed. At 1092 × 593, the main panel begins at approximately
+(314,90), matching the reference (313,90); the terminal inset begins at (339,247)
+versus (336,246). The remaining few points follow exact native padding/rounding.
+Live checks passed search-to-filter-to-primary-tab keyboard traversal, selected
+Terminal focus retention, Session activation, native Find above the terminal,
+shell input/output, split-right creation and closing the temporary split with
+Cmd-W. At 802 × 593 a long workspace title wraps while the close button, primary
+tabs and four terminal tools remain visible. Fullscreen entry/exit retained the
+centered title and terminal. Appearance changed light→dark in place through the
+tagged app’s Settings. No user build or global appearance was changed.
+
+The light Chat preview exposed white text on the new porcelain backing. The
+correction uses the renderer’s existing explicit theme-input seam, scoped to the
+shell Chat caller. It changes semantic colors only, with no web layout, content,
+action or lifecycle changes. This correction still requires a fresh app build
+and light/dark live check. Final token review also centralizes retained native
+titlebar/header metrics and fixes the affected Japanese build-badge translation.
+
+Bonsplit’s reviewed optional presentation patch is commit
+`306a7424d93259ddc1728634e237947d2c4ede13`, pushed to `main` in the owned dependency
+repository https://github.com/BrianBusby/bonsplit. It preserves the pinned
+`fb5307f` history and MIT license rather than taking 243 unrelated upstream commits.
+Remote-main reachability was verified before the parent pointer update. The
+parent submodule URL now points to this reachable copy; local `upstream` retains
+https://github.com/manaflow-ai/bonsplit.git. HTTPS publication lacked workflow
+scope, so publication used the existing GitHub SSH identity. GitHub’s large-file
+warning concerns inherited `.build` history, not this source/test-only patch.
+
+### Stage 4 final source and preview check
+
+Build 754 passes after the Chat contrast correction and token centralization.
+The porcelain Chat preview now shows readable ink text, metadata and its existing
+button without changing content/layout. Its diagnostic capture is included.
+Independent final specification and quality reviews have no remaining findings.
+Shared UI now passes 45 tests, including native magnified-title rendering;
+Bonsplit remains 175 tests and native focus harness 18. Catalog JSON parses;
+the moved badge’s English/Japanese placeholder parity is verified.
+
+The main-presentation capability is implemented, with the requested user review
+gate still pending before texture. App-host and full suite results on the stage 4
+commit remain CI evidence, not inferred from the successful app build.
+
+The open 754 preview changed during automation, so it is treated as potentially
+in use and will not be quit/replaced. Final pushed-commit dogfood uses the
+separate `matte-skin-stage4-review` tag. The committed graphite/porcelain pair
+records builds 753/754; the final review build uses the same production sources
+with no further geometry changes. Full suite and app-host CI stay pending.

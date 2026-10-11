@@ -1073,28 +1073,6 @@ class GhosttyApp {
         #endif
     }
 
-    private func loadInlineGhosttyConfig(
-        _ contents: String,
-        into config: ghostty_config_t,
-        prefix: String,
-        logLabel _: String
-    ) {
-        let trimmed = contents.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-
-        let syntheticPath = "/__bmux_inline__/\(prefix).conf"
-        trimmed.withCString { contents in
-            syntheticPath.withCString { path in
-                ghostty_config_load_string(
-                    config,
-                    contents,
-                    UInt(trimmed.lengthOfBytes(using: .utf8)),
-                    path
-                )
-            }
-        }
-    }
-
     private func loadBmuxDefaultAppearanceConfig(
         _ config: ghostty_config_t,
         preferredColorScheme: GhosttyConfig.ColorSchemePreference
@@ -1209,6 +1187,10 @@ class GhosttyApp {
         #else
         loadRealUserGhosttyConfig(config, preferredColorScheme: preferredColorScheme, themeColorScheme: themeColorScheme)
         #endif
+        loadInlineGhosttyConfig(
+            MatteTerminalConfiguration(colorScheme: themeColorScheme).contents,
+            into: config, prefix: "bmux-matte-terminal", logLabel: "matte terminal colors"
+        )
         loadCJKFontFallbackIfNeeded(config)
         let renderingModeChanged = setUsesHostLayerBackground(
             true,

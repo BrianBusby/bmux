@@ -360,6 +360,7 @@ struct WorkspaceContentView: View {
             updateAgentHibernationPresentationVisibility()
             syncBonsplitNotificationBadges()
             refreshGhosttyAppearanceConfig(reason: "onAppear")
+            MatteBonsplitAppearance(theme: MatteTheme(colorScheme: colorScheme)).apply(to: &workspace.bonsplitController.configuration.appearance)
         }
         .onChange(of: isWorkspaceVisible) { _, isVisible in
             updateAgentHibernationPresentationVisibility()
@@ -394,6 +395,7 @@ struct WorkspaceContentView: View {
             workspace.applyGhosttyChrome(from: config, reason: "paneChromeSettingsDidChange")
         }
         .onChange(of: colorScheme) { oldValue, newValue in
+            MatteBonsplitAppearance(theme: MatteTheme(colorScheme: newValue)).apply(to: &workspace.bonsplitController.configuration.appearance)
             // Keep split overlay color/opacity in sync with light/dark theme transitions.
             refreshGhosttyAppearanceConfig(reason: "colorSchemeChanged:\(oldValue)->\(newValue)")
         }

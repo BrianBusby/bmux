@@ -10,6 +10,7 @@ import BmuxFoundation
 /// View for rendering a terminal panel
 struct TerminalPanelView: View {
     @ObservedObject var panel: TerminalPanel
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.bmuxShellTerminalOnly) var bmuxShellTerminalOnly
     @AppStorage(NotificationPaneRingSettings.enabledKey)
     private var notificationPaneRingEnabled = NotificationPaneRingSettings.defaultEnabled
@@ -118,6 +119,7 @@ struct TerminalPanelView: View {
 #if DEBUG
             .reportTerminalViewportGeometryForUITest(panel: panel)
 #endif
+            .modifier(TerminalInsetContainer(isEnabled: bmuxShellTerminalOnly, theme: MatteTheme(colorScheme: colorScheme)))
             .layoutPriority(1)
 
             if panel.isTextBoxActive {
@@ -441,59 +443,3 @@ private func terminalViewportFormat(_ value: CGFloat) -> String {
     String(format: "%.3f", Double(value))
 }
 #endif
-
-/// Shared appearance settings for panels
-struct PanelAppearance {
-    let backgroundColor: NSColor
-    let foregroundColor: NSColor
-    let dividerColor: Color
-    let unfocusedOverlayNSColor: NSColor
-    let unfocusedOverlayOpacity: Double
-    let usesClearContentBackground: Bool
-
-    var contentBackgroundColor: NSColor {
-        usesClearContentBackground ? .clear : backgroundColor
-    }
-
-    var drawsContentBackground: Bool {
-        !usesClearContentBackground
-    }
-
-    static func fromConfig(_ config: GhosttyConfig) -> PanelAppearance {
-        fromConfig(
-            config,
-            usesTransparentWindow: WindowBackgroundComposition.policy
-                .shouldUseTransparentBackgroundWindow(glassEffectAvailable: false)
-        )
-    }
-
-    static func fromConfig(_ config: GhosttyConfig, usesTransparentWindow: Bool) -> PanelAppearance {
-        let backgroundColor = GhosttyBackgroundTheme.color(
-            backgroundColor: config.backgroundColor,
-            opacity: config.backgroundOpacity
-        )
-        return PanelAppearance(
-            backgroundColor: backgroundColor,
-            foregroundColor: bmuxReadableForegroundNSColor(
-                preferred: config.foregroundColor,
-                on: backgroundColor
-            ),
-            dividerColor: Color(nsColor: config.resolvedSplitDividerColor),
-            unfocusedOverlayNSColor: config.unfocusedSplitOverlayFill,
-            unfocusedOverlayOpacity: config.unfocusedSplitOverlayOpacity,
-            usesClearContentBackground: shouldUseClearContentBackground(
-                opacity: config.backgroundOpacity,
-                usesGhosttyGlassStyle: config.backgroundBlur.isMacOSGlassStyle,
-                usesTransparentWindow: usesTransparentWindow
-            )
-        )
-    }
-
-    static func shouldUseClearContentBackground(
-        opacity: Double,
-        usesGhosttyGlassStyle: Bool,
-        usesTransparentWindow: Bool
-    ) -> Bool {
-        usesTransparentWindow || usesGhosttyGlassStyle || opacity < 0.999
-    }
-}

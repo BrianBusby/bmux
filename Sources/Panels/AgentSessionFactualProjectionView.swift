@@ -1,25 +1,26 @@
 import AppKit
 import SwiftUI
+import BmuxAppKitSupportUI
 import ProvenanceEngineContracts
 
 private extension Color {
-    static let bmuxSurface = Color(red: 0.137, green: 0.141, blue: 0.157)
-    static let bmuxRail = Color(red: 0.098, green: 0.102, blue: 0.114)
-    static let bmuxCard = Color(red: 0.122, green: 0.125, blue: 0.137)
-    static let bmuxCardBorder = Color(red: 0.220, green: 0.224, blue: 0.247)
-    static let bmuxCardSelected = Color(red: 0.137, green: 0.180, blue: 0.133)
-    static let bmuxCardSelectedBorder = Color(red: 0.227, green: 0.306, blue: 0.220)
-    static let bmuxSeparator = Color(red: 0.204, green: 0.212, blue: 0.239)
-    static let bmuxSeparatorSubtle = Color(red: 0.247, green: 0.255, blue: 0.286)
-    static let bmuxTextPrimary = Color(red: 0.949, green: 0.953, blue: 0.969)
-    static let bmuxTextSecondary = Color(red: 0.737, green: 0.753, blue: 0.792)
-    static let bmuxTextTertiary = Color(red: 0.635, green: 0.651, blue: 0.698)
-    static let bmuxTextMuted = Color(red: 0.522, green: 0.541, blue: 0.596)
-    static let bmuxTextDisabled = Color(red: 0.455, green: 0.475, blue: 0.529)
-    static let bmuxAccentGreen = Color(red: 0.416, green: 0.620, blue: 0.369)
-    static let bmuxAccentYellow = Color(red: 0.620, green: 0.620, blue: 0.416)
-    static let bmuxTurnAccent = Color(red: 0.290, green: 0.400, blue: 0.259)
-    static let bmuxTabUnderline = Color(red: 0.878, green: 0.878, blue: 0.878)
+    static let bmuxSurface = Color(nsColor: MatteTheme.dynamicColor(.panel))
+    static let bmuxRail = Color(nsColor: MatteTheme.dynamicColor(.base))
+    static let bmuxCard = Color(nsColor: MatteTheme.dynamicColor(.card))
+    static let bmuxCardBorder = Color(nsColor: MatteTheme.dynamicColor(.edge))
+    static let bmuxCardSelected = Color(nsColor: MatteTheme.dynamicColor(.cardSelected))
+    static let bmuxCardSelectedBorder = Color(nsColor: MatteTheme.dynamicColor(.selectionRing))
+    static let bmuxSeparator = Color(nsColor: MatteTheme.dynamicColor(.edge))
+    static let bmuxSeparatorSubtle = Color(nsColor: MatteTheme.dynamicColor(.edge))
+    static let bmuxTextPrimary = Color(nsColor: MatteTheme.dynamicColor(.textPrimary))
+    static let bmuxTextSecondary = Color(nsColor: MatteTheme.dynamicColor(.textSecondary))
+    static let bmuxTextTertiary = Color(nsColor: MatteTheme.dynamicColor(.textTertiary))
+    static let bmuxTextMuted = Color(nsColor: MatteTheme.dynamicColor(.textTertiary))
+    static let bmuxTextDisabled = Color(nsColor: MatteTheme.dynamicColor(.textTertiary))
+    static let bmuxAccentGreen = Color(nsColor: MatteTheme.dynamicColor(.success))
+    static let bmuxAccentYellow = Color(nsColor: MatteTheme.dynamicColor(.warning))
+    static let bmuxTurnAccent = Color(nsColor: MatteTheme.dynamicColor(.sage))
+    static let bmuxTabUnderline = Color(nsColor: MatteTheme.dynamicColor(.textPrimary))
 }
 
 private enum BmuxRadius {
@@ -36,11 +37,15 @@ struct AgentSessionFactualProjectionView: View {
     var liveChatContent: ((@escaping () -> Void) -> AnyView)?
     var liveTerminalContent: AnyView?
     var onPrimaryTabChange: ((Bool) -> Void)?
+    var onPrimaryTabsHostChange: (@MainActor (NSView, Bool) -> Void)?
     var initialPrimaryTab: AgentSessionFactualProjectionMode = .session
     var stableWorkspaceID: UUID?
     var workspaceLabel: String?
     var sessionTitle: String?
     var sessionDescription: String?
+
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: MatteTheme { MatteTheme(colorScheme: colorScheme) }
 
     @State private var selectedPrimaryTabs: [UUID?: AgentSessionFactualProjectionMode] = [:]
 
@@ -132,16 +137,19 @@ struct AgentSessionFactualProjectionView: View {
     private var contentPane: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(workspaceLabel ?? String(localized: "agentSession.factual.workspaceUnavailable", defaultValue: "Workspace unavailable"))
-                .font(.system(size: 12)).foregroundStyle(Color.bmuxTextTertiary)
+                .matteTypography(.body, theme: theme).foregroundStyle(Color.bmuxTextTertiary)
             Text(sessionTitle ?? String(localized: "agentSession.factual.sessionUnavailable", defaultValue: "Session unavailable"))
-                .font(.system(size: 26, weight: .bold)).foregroundStyle(Color.bmuxTextPrimary).padding(.top, 4)
+                .matteTypography(.workspaceHeading, theme: theme).foregroundStyle(Color.bmuxTextPrimary)
+                .padding(.top, theme.layout.workspaceHeadingTopAdjustment)
             if let sessionDescription, !sessionDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 Text(sessionDescription)
-                    .font(.system(size: 13.5))
+                    .matteTypography(.body, theme: theme)
                     .foregroundStyle(Color.bmuxTextTertiary)
                     .padding(.top, 4)
             }
-            primaryTabs.padding(.top, 16)
+            AgentSessionPrimaryTabs(selected: selectedPrimaryTab, onSelect: { selectedPrimaryTab = $0 },
+                                    onHostChange: onPrimaryTabsHostChange)
+                .padding(.top, theme.layout.primaryNavigationTopGap)
             switch selectedPrimaryTab {
             case .session:
                 sessionContent
@@ -151,31 +159,13 @@ struct AgentSessionFactualProjectionView: View {
                 terminalContentView
             }
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 20)
+        .padding(theme.layout.panelPadding)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Color.bmuxSurface)
+        .matteSurface(.panel, theme: theme)
         .foregroundStyle(Color.bmuxTextPrimary)
         .onChange(of: selectedPrimaryTab, initial: true) { _, tab in
             onPrimaryTabChange?(tab == .terminal)
         }
-    }
-
-    private var primaryTabs: some View {
-        HStack(spacing: 24) {
-            ForEach(AgentSessionFactualProjectionMode.allCases) { mode in
-                Button(mode.title) {
-                    selectedPrimaryTab = mode
-                }
-                    .buttonStyle(.plain)
-                    .font(.system(size: 13.5, weight: selectedPrimaryTab == mode ? .medium : .regular))
-                    .foregroundStyle(selectedPrimaryTab == mode ? Color.bmuxTextPrimary : Color.bmuxTextTertiary)
-                    .padding(.bottom, 10)
-                    .overlay(alignment: .bottom) { if selectedPrimaryTab == mode { Rectangle().fill(Color.bmuxTabUnderline).frame(height: 2) } }
-            }
-            Spacer()
-        }
-        .overlay(alignment: .bottom) { Rectangle().fill(Color.bmuxSeparatorSubtle).frame(height: 1) }
     }
 
     private var sessionContent: some View {

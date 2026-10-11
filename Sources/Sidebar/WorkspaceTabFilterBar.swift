@@ -76,7 +76,7 @@ struct WorkspaceTabFilterBar: View {
                 .accessibilityLabel(String(localized: "sidebar.workspaceFilter.title", defaultValue: "FILTERS"))
                 .accessibilityValue(String(format: String(localized: "sidebar.workspaceFilter.activeCount", defaultValue: "%d active filters"), filters.categoryCount))
                 .popover(isPresented: $isPanelPresented, arrowEdge: .bottom) {
-                    WorkspaceSidebarFocusScope(usesIntrinsicSize: true, onAttachmentChange: onFocusHostChange) {
+                    WorkspaceChromeFocusScope(usesIntrinsicSize: true, onAttachmentChange: onFocusHostChange) {
                         WorkspaceTabFilterPanel(items: items, filters: $filters)
                             .frame(width: 260)
                             .padding(12)

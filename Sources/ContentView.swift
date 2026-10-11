@@ -1984,12 +1984,6 @@ struct ContentView: View {
         )
     }
 
-    private func fakeTitlebarTextColor(appearance: WindowAppearanceSnapshot) -> Color {
-        let ghosttyBackground = appearance.terminalBackgroundColor
-        return ghosttyBackground.isLightColor
-            ? Color.black.opacity(0.78)
-            : Color.white.opacity(0.82)
-    }
     private var fullscreenControls: some View {
         TitlebarControlsView(
             notificationStore: TerminalNotificationStore.shared,
@@ -2082,63 +2076,15 @@ struct ContentView: View {
             )
                 .allowsHitTesting(false)
 
-            HStack(spacing: 8) {
-                if isFullScreen && !sidebarState.isVisible {
-                    // Reserve the controls' width so the title flows to their right.
-                    // The visible controls are rendered once in the band overlay (see
-                    // `workspaceTitlebarBand`) so their position never depends on
-                    // sidebar visibility.
-                    Color.clear
-                        .frame(width: fullscreenControlsWidth, height: titlebarContentHeight)
-                        .allowsHitTesting(false)
-                }
-
-                // Draggable folder icon + focused command name
-                if let directory = focusedDirectory {
-                    DetachedFolderDragIcon(directory: directory)
-                        .frame(width: 16, height: 16)
-                        .padding(.leading, -6)
-                }
-
-                Text(titlebarText)
-                    .bmuxFont(size: 13, weight: .bold)
-                    .foregroundColor(fakeTitlebarTextColor(appearance: appearance))
-                    .lineLimit(1)
-                    .allowsHitTesting(false)
-
-                Spacer()
-
-                if let buildNumber = AppBuildIdentityFormatter.buildNumber() {
-                    Text(buildNumber)
-                        .bmuxFont(size: 10.5, weight: .semibold)
-                        .foregroundColor(fakeTitlebarTextColor(appearance: appearance).opacity(0.86))
-                        .lineLimit(1)
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 2)
-                        .background(
-                            Capsule(style: .continuous)
-                                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.58))
-                        )
-                        .overlay(
-                            Capsule(style: .continuous)
-                                .stroke(Color(nsColor: .separatorColor).opacity(0.35), lineWidth: 1)
-                        )
-                        .allowsHitTesting(false)
-                        .accessibilityLabel(
-                            Text(
-                                String(
-                                    format: String(localized: "titlebar.buildIndicator.accessibilityLabel", defaultValue: "Build %@"),
-                                    locale: .current,
-                                    buildNumber
-                                )
-                            )
-                        )
-                }
-            }
+            WorkspaceTitlebarPresentation(
+                directory: focusedDirectory,
+                title: titlebarText,
+                buildNumber: AppBuildIdentityFormatter.buildNumber(),
+                reservedControlWidth: leadingPadding + (isFullScreen && !sidebarState.isVisible ? fullscreenControlsWidth : 0),
+                theme: MatteTheme(colorScheme: colorScheme)
+            )
             .frame(height: titlebarContentHeight)
             .padding(.top, 2)
-            .padding(.leading, leadingPadding)
-            .padding(.trailing, 8)
         }
         .frame(height: WindowChromeMetrics.appTitlebarHeight)
         .frame(maxWidth: .infinity)
@@ -2544,7 +2490,7 @@ struct ContentView: View {
             },
             onFocusHostChange: { host, scope, isAttached in
                 guard let window = observedWindow,
-                      let owner = AppDelegate.shared?.keyboardFocusCoordinator(for: window)?.workspaceSidebarFocusOwner else { return }
+                      let owner = AppDelegate.shared?.keyboardFocusCoordinator(for: window)?.workspaceChromeFocusOwner else { return }
                 if isAttached {
                     owner.register(host, scope: scope, in: window)
                 } else {
@@ -2565,7 +2511,7 @@ struct ContentView: View {
                 showsModePicker: false,
                 initialPrimaryTab: initialPrimaryTab,
                 showsAppShell: false,
-                liveChatContent: bmuxShellChatContent(),
+                liveChatContent: bmuxShellChatContent(theme: MatteTheme(colorScheme: colorScheme)),
                 liveTerminalContent: bmuxShellTerminalVisible
                     ? AnyView(
                         terminalContent(appearance: appearance, shellTerminalVisible: true)
@@ -2575,6 +2521,12 @@ struct ContentView: View {
                 onPrimaryTabChange: { isTerminal in
                     bmuxShellTerminalVisible = isTerminal
                     reconcileMountedWorkspaceIds()
+                },
+                onPrimaryTabsHostChange: { host, attached in
+                    guard let window = host.window ?? observedWindow,
+                          let owner = AppDelegate.shared?.keyboardFocusCoordinator(for: window)?.workspaceChromeFocusOwner else { return }
+                    if attached { owner.register(host, scope: .primaryTabs, in: window) }
+                    else { owner.unregister(host, scope: .primaryTabs) }
                 },
                 workspaceLabel: tabManager.selectedWorkspace.map {
                     $0.currentDirectory.split(separator: "/").last.map(String.init)

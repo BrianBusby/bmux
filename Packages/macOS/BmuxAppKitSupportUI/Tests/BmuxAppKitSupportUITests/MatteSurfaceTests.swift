@@ -94,6 +94,17 @@ struct MatteSurfaceTests {
         #expect(try #require(NSBitmapImageRep(cgImage: image).colorAt(x: 60, y: 40)).alphaComponent == 1)
     }
 
+    @Test(arguments: [ColorScheme.dark, .light])
+    func insetHasOneContinuousInteriorWithoutHorizontalBands(scheme: ColorScheme) throws {
+        let image = try render(role: .inset, scheme: scheme, padding: 0)
+        let center = try #require(image.colorAt(x: 60, y: 40))
+        for y in 8..<72 {
+            let sample = try #require(image.colorAt(x: 60, y: y))
+            #expect(sample.alphaComponent == 1)
+            #expect(distance(sample, center) < 0.01)
+        }
+    }
+
     private func render(
         role: MatteSurfaceRole, scheme: ColorScheme, state: MatteSurfaceState = .init(), padding: Double
     ) throws -> NSBitmapImageRep {

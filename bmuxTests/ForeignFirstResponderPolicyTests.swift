@@ -73,13 +73,14 @@ import Testing
         #expect(!shouldRespectForeignFirstResponder(view, in: window, isRightSidebarOwner: neverSidebarOwner))
     }
 
-    @Test func dedicatedHostMembershipIsSynchronousBeforeSwiftUIFocusRendering() throws {
+    @Test(arguments: [WorkspaceChromeFocusOwner.Scope.rail, .primaryTabs])
+    func dedicatedHostMembershipIsSynchronousBeforeSwiftUIFocusRendering(scope: WorkspaceChromeFocusOwner.Scope) throws {
         let window = makeWindow()
-        let owner = WorkspaceSidebarFocusOwner()
+        let owner = WorkspaceChromeFocusOwner()
         let host = NSHostingView(rootView:
-            WorkspaceSidebarFocusScope(usesIntrinsicSize: false, onAttachmentChange: { view, attached in
-                if attached { owner.register(view, scope: .rail, in: window) }
-                else { owner.unregister(view, scope: .rail) }
+            WorkspaceChromeFocusScope(usesIntrinsicSize: false, onAttachmentChange: { view, attached in
+                if attached { owner.register(view, scope: scope, in: window) }
+                else { owner.unregister(view, scope: scope) }
             }) {
                 VStack {
                     Button("Filters") {}.buttonStyle(.plain).focusable()
@@ -103,17 +104,18 @@ import Testing
         }
     }
 
-    @Test func exactHostMembershipRejectsUnrelatedAndStrandedResponders() {
+    @Test(arguments: [WorkspaceChromeFocusOwner.Scope.rail, .primaryTabs])
+    func exactHostMembershipRejectsUnrelatedAndStrandedResponders(scope: WorkspaceChromeFocusOwner.Scope) {
         let window = makeWindow()
         let otherWindow = makeWindow()
-        let owner = WorkspaceSidebarFocusOwner()
+        let owner = WorkspaceChromeFocusOwner()
         let host = NSView()
         let responder = SidebarTestResponder()
         let unrelated = SidebarTestResponder()
         window.contentView?.addSubview(host)
         host.addSubview(responder)
         window.contentView?.addSubview(unrelated)
-        owner.register(host, scope: .rail, in: window)
+        owner.register(host, scope: scope, in: window)
         owner.synchronize(responder: responder, in: window)
         #expect(owner.owns(responder, in: window))
         #expect(!owner.owns(unrelated, in: window))
@@ -130,7 +132,7 @@ import Testing
         let window = makeWindow()
         let otherWindow = makeWindow()
         let popover = makeWindow()
-        let owner = WorkspaceSidebarFocusOwner()
+        let owner = WorkspaceChromeFocusOwner()
         let host = NSView()
         let responder = SidebarTestResponder()
         let unrelated = SidebarTestResponder()
@@ -163,30 +165,31 @@ import Testing
             isRightSidebarOwner: alwaysSidebarOwner, isWorkspaceSidebarOwner: { owner.owns($0, in: window) }))
     }
 
-    @Test func oldHostTeardownCannotClearAReplacementAndDisabledScopeRevokesFocus() {
+    @Test(arguments: [WorkspaceChromeFocusOwner.Scope.rail, .primaryTabs])
+    func oldHostTeardownCannotClearAReplacementAndDisabledScopeRevokesFocus(scope: WorkspaceChromeFocusOwner.Scope) {
         let window = makeWindow()
-        let owner = WorkspaceSidebarFocusOwner()
+        let owner = WorkspaceChromeFocusOwner()
         let oldHost = NSView()
         let host = NSView()
         let responder = SidebarTestResponder()
         window.contentView?.addSubview(oldHost)
         window.contentView?.addSubview(host)
         host.addSubview(responder)
-        owner.register(oldHost, scope: .rail, in: window)
-        owner.register(host, scope: .rail, in: window)
+        owner.register(oldHost, scope: scope, in: window)
+        owner.register(host, scope: scope, in: window)
         owner.synchronize(responder: responder, in: window)
-        owner.unregister(oldHost, scope: .rail)
+        owner.unregister(oldHost, scope: scope)
         #expect(owner.owns(responder, in: window))
-        owner.unregister(host, scope: .rail) // Scope disable uses this same path.
+        owner.unregister(host, scope: scope) // Scope disable uses this same path.
         #expect(!owner.owns(responder, in: window))
-        owner.register(host, scope: .rail, in: window)
+        owner.register(host, scope: scope, in: window)
         #expect(!owner.owns(responder, in: window))
     }
 
     @Test func nativeHostReportsDetachBeforeLosingItsWindow() {
         let first = makeWindow()
         let second = makeWindow()
-        let host = WorkspaceSidebarHostingView(rootView: AnyView(Color.clear))
+        let host = WorkspaceChromeHostingView(rootView: AnyView(Color.clear))
         var events: [(NSWindow?, Bool)] = []
         host.onAttachmentChange = { view, attached in events.append((view.window, attached)) }
         first.contentView?.addSubview(host)
@@ -196,7 +199,7 @@ import Testing
         #expect(events.first?.1 == false)
         #expect(events.last?.0 === second)
         #expect(events.last?.1 == true)
-        WorkspaceSidebarFocusScope<Color>.dismantleNSView(host, coordinator: ())
+        WorkspaceChromeFocusScope<Color>.dismantleNSView(host, coordinator: ())
         #expect(events.last?.1 == false)
         #expect(host.onAttachmentChange == nil)
     }
@@ -206,7 +209,7 @@ import Testing
         var snapshots: [(UUID, ColorScheme, Bool, LayoutDirection, String)] = []
         var nativeHosts: [NSView] = []
         func root(height: CGFloat, enabled: Bool) -> some View {
-            WorkspaceSidebarFocusScope(usesIntrinsicSize: true, onAttachmentChange: { host, attached in
+            WorkspaceChromeFocusScope(usesIntrinsicSize: true, onAttachmentChange: { host, attached in
                 if attached { nativeHosts.append(host) }
             }) {
                 SidebarScopeFixture(height: height) { snapshots.append($0) }
@@ -237,7 +240,7 @@ import Testing
         var nativeHost: NSView?
         let gutter: CGFloat = 14
         let outer = NSHostingView(rootView:
-            WorkspaceSidebarFocusScope(usesIntrinsicSize: false, onAttachmentChange: { host, attached in
+            WorkspaceChromeFocusScope(usesIntrinsicSize: false, onAttachmentChange: { host, attached in
                 if attached { nativeHost = host }
             }) {
                 Color.clear.frame(height: 40).padding(.horizontal, gutter)
@@ -260,7 +263,7 @@ import Testing
         let host = NSView()
         popover.contentView?.addSubview(host)
         window.addChildWindow(popover, ordered: .above)
-        var owner: WorkspaceSidebarFocusOwner? = WorkspaceSidebarFocusOwner()
+        var owner: WorkspaceChromeFocusOwner? = WorkspaceChromeFocusOwner()
         let released = { [weak owner] in owner == nil }
         owner?.register(host, scope: .filterPopover, in: window)
         owner = nil

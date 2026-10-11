@@ -1,8 +1,9 @@
 import SwiftUI
+import BmuxAppKitSupportUI
 import ProvenanceEngineContracts
 
 private extension Color {
-    static let bmuxTextTertiary = Color(red: 0.635, green: 0.651, blue: 0.698)
+    static let bmuxTextTertiary = Color(nsColor: MatteTheme.dynamicColor(.textTertiary))
 }
 
 struct AgentSessionFactualProjectionTurnDetailView: View {

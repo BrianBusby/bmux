@@ -1,9 +1,9 @@
 import AppKit
 import SwiftUI
 
-/// Reports the lifetime of one dedicated sidebar host, independently of rendering.
+/// Reports the lifetime of one dedicated workspace chrome host, independently of rendering.
 @MainActor
-final class WorkspaceSidebarHostingView<Content: View>: NSHostingView<Content> {
+final class WorkspaceChromeHostingView<Content: View>: NSHostingView<Content> {
     var isFocusScopeEnabled = true
     var onAttachmentChange: (@MainActor (NSView, Bool) -> Void)?
 

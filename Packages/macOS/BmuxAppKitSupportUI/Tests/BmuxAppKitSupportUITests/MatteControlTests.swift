@@ -70,6 +70,22 @@ struct MatteControlTests {
         #expect(abs(try #require(image.colorAt(x: 20, y: 18)).alphaComponent - theme.layout.disabledOpacity) < 0.02)
     }
 
+    @Test(arguments: [MatteTypographyRole.windowTitle, .buildBadge])
+    func callerResolvedPointSizePreservesNativeTitlebarMagnification(role: MatteTypographyRole) throws {
+        let theme = MatteTheme(colorScheme: .light)
+        let size = theme.typography(role).pointSize
+        let normal = ImageRenderer(content: Text("Maple Street Roof")
+            .matteTypography(role, theme: theme))
+        let magnified = ImageRenderer(content: Text("Maple Street Roof")
+            .matteTypography(role, theme: theme, pointSize: size * 1.5))
+        normal.scale = 1
+        magnified.scale = 1
+        let normalImage = try #require(normal.cgImage)
+        let magnifiedImage = try #require(magnified.cgImage)
+        #expect(Double(magnifiedImage.width) > Double(normalImage.width) * 1.4)
+        #expect(Double(magnifiedImage.height) > Double(normalImage.height) * 1.3)
+    }
+
     @Test
     func multilineTitlesUseTheTokenBaselineRatherThanAddingItToNativeLeading() throws {
         let theme = MatteTheme(colorScheme: .light)
@@ -119,6 +135,29 @@ struct MatteControlTests {
         let focused = try image(focused: true)
         #expect(try #require(resting.colorAt(x: 40, y: 17)) != #require(focused.colorAt(x: 40, y: 17)))
         #expect(try #require(resting.colorAt(x: 40, y: 38)) == #require(focused.colorAt(x: 40, y: 38)))
+    }
+
+    @Test(arguments: [ColorScheme.dark, .light])
+    func forcedNativeHoverPreviewUsesTheSharedWashAndHonorsDisabledState(scheme: ColorScheme) throws {
+        let theme = MatteTheme(colorScheme: scheme)
+        func image(forced: Bool, enabled: Bool) throws -> NSBitmapImageRep {
+            let renderer = ImageRenderer(content: Button {} label: {
+                Color.clear.frame(width: 40, height: 36)
+            }
+            .buttonStyle(MatteButtonStyle(.flat, theme: theme, forcesHover: forced))
+            .disabled(!enabled)
+            .padding(20)
+            .background(Color(nsColor: theme.color(.base))))
+            renderer.scale = 1
+            return NSBitmapImageRep(cgImage: try #require(renderer.cgImage))
+        }
+        let resting = try image(forced: false, enabled: true)
+        let hovered = try image(forced: true, enabled: true)
+        let expected = try render(role: .flat, theme: theme, state: .init(isHovered: true))
+        let disabled = try image(forced: true, enabled: false)
+        #expect(try #require(hovered.colorAt(x: 40, y: 38)) == #require(expected.colorAt(x: 40, y: 38)))
+        #expect(try #require(hovered.colorAt(x: 40, y: 38)) != #require(resting.colorAt(x: 40, y: 38)))
+        #expect(try #require(disabled.colorAt(x: 40, y: 38)) == #require(resting.colorAt(x: 40, y: 38)))
     }
 
     private func render(role: MatteControlRole, theme: MatteTheme,

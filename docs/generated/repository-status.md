@@ -43,6 +43,7 @@ Repository: `BrianBusby/bmux`
 | Knowledge Compiler Cross Session Bridge | planned |
 | Legacy Bmux Provenance Retirement | planned |
 | Managed Connected Codex Runtime | under observation |
+| Matte Skin Main Panel | implemented |
 | Matte Skin Sidebar | implemented |
 | Matte Skin Surface Styles | implemented |
 | Matte Skin Theme Tokens | implemented |
@@ -155,7 +156,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
-| `matte_skin_ci_compiler_compatibility` | open |
+| `matte_skin_ci_compiler_compatibility` | resolved |
 | `configured_codex_placeholder_startup_dogfood` | open |
 | `codex_update_workspace_exit_native_dogfood` | open |
 | `expanded_prior_turn_system_appearance_contrast` | monitoring |

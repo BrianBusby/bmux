@@ -47,7 +47,7 @@ final class MainWindowFocusController {
         }
     }
 
-    let workspaceSidebarFocusOwner = WorkspaceSidebarFocusOwner()
+    let workspaceChromeFocusOwner = WorkspaceChromeFocusOwner()
 
     let windowId: UUID
 
@@ -328,7 +328,7 @@ final class MainWindowFocusController {
                shouldRespectForeignFirstResponder(responder, in: window, isRightSidebarOwner: {
                    liveRightSidebarModeOwning($0, in: window) != nil
                }, isWorkspaceSidebarOwner: {
-                   workspaceSidebarFocusOwner.owns($0, in: window)
+                   workspaceChromeFocusOwner.owns($0, in: window)
                }) {
                 return false
             }
@@ -388,7 +388,7 @@ final class MainWindowFocusController {
 #endif
 
     private func syncAfterResponderChange(responder: NSResponder?) {
-        if let window { workspaceSidebarFocusOwner.synchronize(responder: responder, in: window) }
+        if let window { workspaceChromeFocusOwner.synchronize(responder: responder, in: window) }
         guard let responder else {
             publishFeedFocusSnapshot()
             return

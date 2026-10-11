@@ -82,13 +82,21 @@ public struct MatteTheme: Sendable {
             controlRadius: 10, compactControlRadius: 8,
             controlHeight: 36, compactControlHeight: 28,
             windowGutter: 14,
+            brandHeaderHorizontalInset: 8, brandHeaderVerticalOffset: 24,
+            brandHeaderContentGap: 8, brandDecorationSize: 18, brandHeaderHeight: 44, shellTopInset: 18,
+            titlebarContentGap: 8, titlebarBadgePadding: EdgeInsets(top: 2, leading: 7, bottom: 2, trailing: 7),
+            titlebarTrailingInset: 8, primaryNavigationGap: 24, primaryNavigationIndicatorWidth: 2,
+            mainPanelTopInset: 28,
+            workspaceHeadingTopAdjustment: -3, primaryNavigationTopGap: 12,
+            primaryNavigationBottomGap: 4, embeddedTerminalTopGap: 18, terminalTabBarHeight: 32,
+            terminalContentPadding: EdgeInsets(top: 12, leading: 13, bottom: 12, trailing: 13),
             sidebarMinimumWidth: 260, sidebarPreferredFraction: 0.27, sidebarMaximumWidth: 320,
             cardPadding: EdgeInsets(top: 13, leading: 16, bottom: 14, trailing: 16),
             cardContentGap: 7, cardGap: 12,
             panelPadding: EdgeInsets(top: 20, leading: 24, bottom: 24, trailing: 24),
             iconSize: 16, smallIconSize: 14, iconStroke: 1.7,
             minimumHitSize: 28, raisedHitSize: 36, invisibleHitExpansion: 4,
-            focusOutlineWidth: 2, focusOutlineOffset: 2, linkUnderlineWidth: 2, selectedMarkerSize: 4, disabledOpacity: 0.5
+            hairlineWidth: 1, focusOutlineWidth: 2, focusOutlineOffset: 2, linkUnderlineWidth: 2, selectedMarkerSize: 4, disabledOpacity: 0.5
         )
     }
 
@@ -97,6 +105,8 @@ public struct MatteTheme: Sendable {
     /// - Returns: Reference metrics; numeric weights are retained for native font mapping.
     public func typography(_ role: MatteTypographyRole) -> MatteTypographyMetrics {
         switch role {
+        case .windowTitle: font(13, weight: 700)
+        case .buildBadge: font(10.5, weight: 600)
         case .wordmark: font(22, weight: 750, tracking: -0.025)
         case .workspaceHeading: font(26, weight: 650, tracking: -0.015)
         case .cardTitle: font(15, weight: 600, lineHeight: 1.32)

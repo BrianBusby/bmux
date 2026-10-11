@@ -8,6 +8,7 @@ public struct MatteButtonStyle: ButtonStyle {
     private let theme: MatteTheme
     private let dimsWhenDisabled: Bool
     private let isSelected: Bool
+    private let forcesHover: Bool
 
     /// Creates a raised, flat, or link control using the caller's effective theme.
     /// - Parameters:
@@ -16,17 +17,19 @@ public struct MatteButtonStyle: ButtonStyle {
     ///   - dimsWhenDisabled: Whether this control owns disabled opacity. Pass false
     ///     when an enclosing disabled card already dims its content.
     ///   - isSelected: Whether a raised toggle remains active, including while pressed.
-    public init(_ role: MatteControlRole = .raised, theme: MatteTheme, dimsWhenDisabled: Bool = true, isSelected: Bool = false) {
+    ///   - forcesHover: Whether a native debug preview requests the hover treatment.
+    public init(_ role: MatteControlRole = .raised, theme: MatteTheme, dimsWhenDisabled: Bool = true, isSelected: Bool = false, forcesHover: Bool = false) {
         self.role = role
         self.theme = theme
         self.dimsWhenDisabled = dimsWhenDisabled
         self.isSelected = isSelected
+        self.forcesHover = forcesHover
     }
 
     /// Builds native button feedback from SwiftUI's press state.
     /// - Parameter configuration: The original label and native press state.
     /// - Returns: A decorated label that retains native button activation.
     public func makeBody(configuration: Configuration) -> some View {
-        MatteButtonLabel(configuration: configuration, role: role, theme: theme, dimsWhenDisabled: dimsWhenDisabled, isSelected: isSelected)
+        MatteButtonLabel(configuration: configuration, role: role, theme: theme, dimsWhenDisabled: dimsWhenDisabled, isSelected: isSelected, forcesHover: forcesHover)
     }
 }
