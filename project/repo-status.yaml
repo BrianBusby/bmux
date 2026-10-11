@@ -141,6 +141,8 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: matte_skin_full_app_host_verification
+    status: open
   - id: matte_skin_ci_compiler_compatibility
     status: resolved
   - id: configured_codex_placeholder_startup_dogfood

@@ -157,6 +157,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `matte_skin_full_app_host_verification` | open |
 | `matte_skin_ci_compiler_compatibility` | resolved |
 | `configured_codex_placeholder_startup_dogfood` | open |
 | `codex_update_workspace_exit_native_dogfood` | open |

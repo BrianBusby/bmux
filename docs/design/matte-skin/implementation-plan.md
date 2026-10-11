@@ -666,3 +666,34 @@ pass. Review caught and resolved resource lookup in body; final ownership review
 is clean. Existing app-host/full CI remains a separate gate, and an apparent
 pre-existing Settings Cmd-W routing caveat is documented without a behavior fix.
 Stage5 is implemented and awaits Brian's visual review before merge.
+
+
+### CI follow-up on stage 5
+
+Exact-source CI at `16e9e6a4e` passes all 51 shared UI tests, the package suite,
+activation checks, and build/typing-lag checks. Full app-host verification remains
+blocked: run `38113835880`, shard 3 (`114395249842`) fails, while completed shards
+1 and 4 contain assertion failures despite successful job statuses. The existing
+workflow accepts any XCTest summary containing `(0 unexpected)`; that text does
+not mean assertion failures are approved expected failures. The feature-base run
+`38072470965` also contains many failed tests. Some current cases did not execute
+in its logs, so a clean baseline or wholly pre-existing failure set is not claimed.
+
+The bounded follow-up corrects two metric tests: retained right-sidebar controls
+must use their own shared 20pt owner instead of the new 28pt matte titlebar value;
+the group/row alignment test already had stale 10/6 padding expectations on the
+feature base and now checks the existing 12/8 padding and 20/28 edge/center offsets.
+All alignment, scaling, icon and radius assertions remain. The touched XCTest
+method moves to a same-file Swift Testing suite; the oversized file shrinks one
+line. No production behavior changes and no preview is rebuilt.
+
+Seven focused compiled metric tests pass with actual production definitions and
+shared-package dependencies. Full app-host compilation remains a CI gate. The
+standalone harness emits an actor-isolation warning in unchanged header-icon
+code; no new warning is introduced in repository source. Test wiring, Swift parse,
+base-aware file budget and diff checks pass. No user-facing strings change.
+Source rules remain root AGENTS, continuous-code-quality and bmux-testing's
+incremental Swift Testing migration; CI ownership stays separate from dogfood.
+The app-host masking rule and unrelated baseline failures are reported rather
+than broadened into this visual change. `matte_skin_full_app_host_verification`
+records the unresolved acceptance gate in Project Truth.
