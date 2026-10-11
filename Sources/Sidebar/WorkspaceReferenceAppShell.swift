@@ -4,14 +4,13 @@ import BmuxAppKitSupportUI
 /// Presents the continuous matte base and sidebar/main gutter without owning their state.
 struct WorkspaceReferenceAppShell<Rail: View, Content: View>: View {
     @Environment(\.colorScheme) private var colorScheme
-    @AppStorage(AppearanceSettings.matteTextureEnabledKey) private var textureEnabled = false
     @ViewBuilder let rail: () -> Rail
     @ViewBuilder let content: () -> Content
 
     var body: some View {
         let theme = MatteTheme(colorScheme: colorScheme)
         ZStack {
-            Color.clear.matteSurface(.base, theme: theme).ignoresSafeArea()
+            Color(nsColor: theme.color(.base)).ignoresSafeArea()
             VStack(spacing: 0) {
                 HStack {
                     HStack(spacing: theme.layout.brandHeaderContentGap) {
@@ -40,6 +39,5 @@ struct WorkspaceReferenceAppShell<Rail: View, Content: View>: View {
             .padding(.bottom, theme.layout.windowGutter)
             .padding(.top, theme.layout.shellTopInset)
         }
-        .matteTexture(enabled: textureEnabled)
     }
 }

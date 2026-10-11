@@ -72,7 +72,6 @@ enum AppearanceSettings {
     typealias SystemAppearance = TerminalSystemAppearance
 
     static let appearanceModeKey = "appearanceMode"
-    static let matteTextureEnabledKey = "matteTextureEnabled"
     static let defaultMode: AppearanceMode = .system
 
     static func mode(for rawValue: String?) -> AppearanceMode {

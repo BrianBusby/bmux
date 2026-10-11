@@ -2,7 +2,6 @@ import SwiftUI
 
 /// Paints native surface ingredients behind content without affecting layout or input.
 struct MatteSurfaceDecoration: View {
-    @Environment(\.matteTextureImage) private var textureImage
     let role: MatteSurfaceRole
     let theme: MatteTheme
     let state: MatteSurfaceState
@@ -14,12 +13,6 @@ struct MatteSurfaceDecoration: View {
             castShadow(appearance.ambient, shape: shape, fill: appearance.fill)
             castShadow(appearance.contact, shape: shape, fill: appearance.fill)
             shape.fill(Color(nsColor: theme.color(appearance.fill)))
-                .overlay {
-                    if let textureImage {
-                        MatteSurfaceTexture(role: role, tokens: theme.texture, image: textureImage)
-                            .clipShape(shape)
-                    }
-                }
             if let contour = appearance.contour {
                 ForEach(Array(theme.shadows(contour).enumerated()), id: \.offset) { _, shadow in
                     shape.inset(by: -shadow.spread)

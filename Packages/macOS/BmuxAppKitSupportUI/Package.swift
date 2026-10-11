@@ -24,7 +24,6 @@ let package = Package(
                 "BmuxFoundation",
                 "BmuxWorkspaces",
             ],
-            resources: [.process("Resources")],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
                 .enableUpcomingFeature("ExistentialAny"),
