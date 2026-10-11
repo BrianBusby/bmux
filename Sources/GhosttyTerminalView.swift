@@ -10410,19 +10410,7 @@ final class GhosttySurfaceScrollView: NSView {
             return mountedSearchField
         }
 
-        if let editor = responder as? NSTextView,
-           editor.isFieldEditor {
-            var current = editor.nextResponder
-            while let next = current {
-                if let view = next as? NSView {
-                    return view
-                }
-                current = next.nextResponder
-            }
-            return editor.superview ?? editor
-        }
-
-        return responder as? NSView
+        return responder.keyboardFocusOwnerView
     }
 
     private func canApplyMountedSearchFieldFocusRequest() -> Bool {
@@ -11169,6 +11157,14 @@ final class GhosttySurfaceScrollView: NSView {
             return
         }
 
+        // Automatic reconciliation must not restore an open terminal Find field
+        // over an explicitly focused workspace control. Explicit terminal focus
+        // requests pass false and retain their existing behavior.
+        if respectForeignFirstResponder,
+           WindowKeyboardFocusRouting(appDelegate: AppDelegate.shared, window: window).workspaceSidebarOwnsFocus {
+            return
+        }
+
         if let terminalSurface = surfaceView.terminalSurface,
            terminalSurface.focusPlacement == .rightSidebarDock {
             guard AppDelegate.shared?.allowsTerminalKeyboardFocus(
@@ -11199,11 +11195,9 @@ final class GhosttySurfaceScrollView: NSView {
             }
             if respectForeignFirstResponder,
                let firstResponder = window.firstResponder,
-               shouldRespectForeignFirstResponder(firstResponder, in: window, isRightSidebarOwner: {
-               AppDelegate.shared?.isRightSidebarFocusResponder($0, in: window) == true
-           }) {
+               WindowKeyboardFocusRouting(appDelegate: AppDelegate.shared, window: window).respects(firstResponder) {
 #if DEBUG
-                let reason = firstResponder is NSText ? "textEditorFocused" : "rightSidebarFocused"
+                let reason = firstResponder is NSText ? "textEditorFocused" : "foreignControlFocused"
                 dlog("focus.ensure.skip surface=\(surfaceView.terminalSurface?.id.uuidString.prefix(5) ?? "nil") reason=dock.\(reason)")
 #endif
                 return
@@ -11275,11 +11269,9 @@ final class GhosttySurfaceScrollView: NSView {
         // surface already owns focus.
         if respectForeignFirstResponder,
            let firstResponder = window.firstResponder,
-           shouldRespectForeignFirstResponder(firstResponder, in: window, isRightSidebarOwner: {
-               AppDelegate.shared?.isRightSidebarFocusResponder($0, in: window) == true
-           }) {
+           WindowKeyboardFocusRouting(appDelegate: AppDelegate.shared, window: window).respects(firstResponder) {
 #if DEBUG
-            let reason = firstResponder is NSText ? "textEditorFocused" : "rightSidebarFocused"
+            let reason = firstResponder is NSText ? "textEditorFocused" : "foreignControlFocused"
             dlog("focus.ensure.skip surface=\(surfaceView.terminalSurface?.id.uuidString.prefix(5) ?? "nil") reason=\(reason)")
 #endif
             return
@@ -11624,6 +11616,10 @@ final class GhosttySurfaceScrollView: NSView {
 #endif
             return
         }
+        // This is a deferred visibility apply, not an explicit Find focus action.
+        if WindowKeyboardFocusRouting(appDelegate: AppDelegate.shared, window: window).workspaceSidebarOwnsFocus {
+            return
+        }
         if surfaceView.terminalSurface?.searchState != nil {
             // Find bar is open. Restore focus based on what the user last intended.
             restoreSearchFocus(window: window)
@@ -11645,11 +11641,9 @@ final class GhosttySurfaceScrollView: NSView {
         // own GhosttyNSView for input, so NSText and the feed focus host are always foreign focus
         // owners that should survive deferred terminal visibility applies.
         if let firstResponder = window.firstResponder,
-           shouldRespectForeignFirstResponder(firstResponder, in: window, isRightSidebarOwner: {
-               AppDelegate.shared?.isRightSidebarFocusResponder($0, in: window) == true
-           }) {
+           WindowKeyboardFocusRouting(appDelegate: AppDelegate.shared, window: window).respects(firstResponder) {
 #if DEBUG
-            let reason = firstResponder is NSText ? "textEditorFocused" : "rightSidebarFocused"
+            let reason = firstResponder is NSText ? "textEditorFocused" : "foreignControlFocused"
             bmuxDebugLog("find.applyFirstResponder SKIP surface=\(surfaceShort) reason=\(reason)")
 #endif
             return

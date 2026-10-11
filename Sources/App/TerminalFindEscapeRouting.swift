@@ -12,6 +12,17 @@ func bmuxCloseFocusedTerminalFindForEscape(event: NSEvent, appDelegate: AppDeleg
     if shortcutWindow?.firstResponder is TextBoxInputTextView {
         return false
     }
+    // An active workspace control (including its native popover) owns Escape.
+    // Let AppKit dismiss that interaction before considering terminal Find.
+    if let shortcutWindow {
+        let mainWindow = appDelegate.keyboardFocusCoordinator(for: shortcutWindow) != nil
+            ? shortcutWindow : shortcutWindow.parent
+        if let mainWindow, let responder = mainWindow.firstResponder,
+           appDelegate.keyboardFocusCoordinator(for: mainWindow)?
+               .workspaceSidebarFocusOwner.owns(responder, in: mainWindow) == true {
+            return false
+        }
+    }
     let terminalFindFieldOwnsResponder = bmuxFindTextFieldOwner(for: shortcutWindow?.firstResponder)?
         .identifier?.rawValue == "TerminalFindSearchTextField"
     let targetTabManager = appDelegate.synchronizeActiveMainWindowContext(preferredWindow: shortcutWindow)

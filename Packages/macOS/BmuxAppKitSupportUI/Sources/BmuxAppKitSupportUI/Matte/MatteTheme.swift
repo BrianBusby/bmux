@@ -88,7 +88,7 @@ public struct MatteTheme: Sendable {
             panelPadding: EdgeInsets(top: 20, leading: 24, bottom: 24, trailing: 24),
             iconSize: 16, smallIconSize: 14, iconStroke: 1.7,
             minimumHitSize: 28, raisedHitSize: 36, invisibleHitExpansion: 4,
-            focusOutlineWidth: 2, focusOutlineOffset: 2, linkUnderlineWidth: 2, disabledOpacity: 0.5
+            focusOutlineWidth: 2, focusOutlineOffset: 2, linkUnderlineWidth: 2, selectedMarkerSize: 4, disabledOpacity: 0.5
         )
     }
 

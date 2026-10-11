@@ -74,6 +74,9 @@ public struct MatteLayoutMetrics: Sendable {
     /// Hovered-link underline thickness in points.
     public let linkUnderlineWidth: Double
 
+    /// Leading square identifying the selected workspace, in points.
+    public let selectedMarkerSize: Double
+
     /// Disabled workspace-card opacity.
     public let disabledOpacity: Double
 }

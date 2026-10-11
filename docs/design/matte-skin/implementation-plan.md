@@ -16,8 +16,8 @@ Branch `matte-skin` starts from `origin/main` at `ce17e9888`.
 ## Stages
 
 1. Theme tokens for both appearances — approved by Brian on 2026-10-10. Definitions and resolution only.
-2. Reusable base, card, panel, inset, and overlay styles — implemented; awaiting Brian’s review.
-3. Workspace cards and existing sidebar controls.
+2. Reusable base, card, panel, inset, and overlay styles — approved by Brian on 2026-10-10.
+3. Workspace cards and existing sidebar controls — current; authorized by stage 2 approval.
 4. Main panel and terminal chrome.
 5. Optional static texture behind a flag.
 
@@ -181,3 +181,205 @@ native gallery harness. Pause for Brian’s review before stage 3.
 
 No unexplained material mismatch remains within the stage 2 primitive scope.
 App parity and runtime performance are not yet accepted.
+
+
+## Stage 3 — sidebar ownership and verification
+
+Stage 2 was approved by Brian; its full CI on `27e5101e7` passed, including all
+four app-host test shards and release build. Stage 3 is implemented and awaits
+user review. Do not advance to stage 4 before that review.
+
+### Ownership and native mapping
+
+- `MatteTheme` owns colors, metrics, typography, motion and surface/control values.
+  New shared `MatteButton` presentation uses native SwiftUI Button actions and
+  local hover/focus/press state. Decorative layers are noninteractive.
+- `WorkspaceReferenceRail` retains projection/observation above the list boundary.
+  `WorkspaceReferenceCardView` receives immutable snapshots and action closures.
+  Selection/close remain existing TabManager actions; busy state and final-card
+  close eligibility are preserved. PR/author links retain BrowserExternalLinkOpener
+  and no longer incidentally select the card, as explicitly requested.
+- Cards, search, filter, filter popover and count consume semantic tokens. The
+  continuous base and 14pt gutter are integrated; main panel, title/navigation,
+  terminal chrome and final brand-header metrics remain stage 4. Chat/Session
+  content, terminal engine, fonts, models and rendering are unchanged.
+- Brian approved the 4pt selection square and native 1pt hovered-link underline.
+  The spec's 2pt underline remains documented as the native adaptation.
+- The native control target expands by the existing 4pt token with outer layout
+  compensation. The rail's explicit native host includes the existing 14pt gutter,
+  also compensated, to retain out-of-face clicks and room for card shadows.
+
+### Keyboard integration and evidence
+
+Live testing found the existing terminal focus-repair policy reclaimed Space,
+Return and Escape from newly keyboard-focusable sidebar buttons. A render-driven
+per-button focus callback lagged rapid Tab input; a native timing harness proved
+that retaining a SwiftUI FocusState binding had the same delay. Those approaches
+were removed. No private SwiftUI class exemption, per-key tree scan, layout flush,
+deprecated focus callback or delayed race workaround is present.
+
+`WorkspaceSidebarFocusScope` and `WorkspaceSidebarHostingView` give the rail and
+filter popover explicit native identity/lifecycle boundaries. They forward the
+entire inherited environment (including appearance, accessibility and locale),
+preserve stable SwiftUI local state, and use flexible rail/intrinsic popover size.
+`MainWindowFocusController` owns `WorkspaceSidebarFocusOwner`; it resolves native
+membership synchronously through the existing first-responder-change hook and
+keeps weak identities. Per-key ownership checks are constant-time comparisons.
+Detach/reparent/unregister revoke grants; reattachment requires fresh focus.
+An AppKit `NSKeyValueObservation` token revokes child-window ownership synchronously
+before parenting changes, under the documented native-boundary carve-out.
+
+The shared foreign-responder policy and existing terminal restoration paths honor
+only these explicitly owned controls. The terminal-Find Escape helper leaves an
+active sidebar popover to native dispatch. Explicit terminal/Find focus requests
+retain their existing precedence. These are narrow focus-integration changes,
+including in GhosttyTerminalView; they are not terminal rendering changes.
+
+### Checks completed before the final candidate
+
+- Package suite: 42 tests, including rendered native control/surface pixels,
+  state priority, keyboard action and environment-sensitive drawing.
+- Production-source native harness: 14 focus/hosting tests, including rapid Tab
+  before layout, exact main/child ownership, detach/reparent/weak lifetimes,
+  environment/state continuity and the 3pt outside-face native hit area. This
+  temporary harness uses the actual production sources; it does not establish
+  that the full Xcode app-host test target compiles. That remains a CI gate.
+- Build 747 live: rapid search → Tab → Space opens filter with Terminal visible,
+  both with Find closed and open; Return toggles once and exposes selected AX
+  state; Escape dismisses filter while preserving Find; explicit Find close
+  returns to terminal. Tab reaches cards, close buttons and metadata links and
+  continues outside the sidebar host. Unselected close appears on keyboard focus.
+- Prior live candidate: Shift-Tab returns to search; Return selects a card through
+  the existing action. Closing a focused disposable workspace uses the existing
+  confirmation and returns to the remaining terminal. Last-workspace close is
+  AX-disabled and clicking is a no-op. PR activation does not select its workspace.
+  Explicit Command-F from sidebar focus and terminal shell input both work.
+- Narrow fixture at 802 × 593: eight workspaces, a six-line title and scrolling
+  preserve search/filter/close usability (`graphite-narrow.png`, build 743).
+- Build 748 passed the final native out-of-face test: clicking 3pt beyond the
+  filter face opens the popover. Rapid Tab/Space with Find open, Return toggle,
+  Escape preserving Find and explicit Command-F were repeated successfully.
+  Temporary DEBUG focus probes are removed.
+- English/Japanese audit covers 30 sidebar labels, including three new localized
+  accessibility labels. No user-facing bare English was added; engineering notes
+  and comparison labels are not shipped UI.
+- Independent spec and quality reviews cover full affected modules, prior surface
+  primitives, focus callers and lifecycle tests. Final corrections are re-reviewed.
+
+Desktop sleep interrupted native automation twice (`cgWindowNotFound` affected
+both this app and the unchanged stage 2 app). Waking restored access; a bounded
+display-awake assertion supports the test run without changing persistent settings.
+
+### Final stage evidence
+
+Build 748 succeeded and ran in both appearances. The final PNGs are exactly
+1092 × 593 points; `verification-stage3/comparison.html` places them beside the
+same-size target crop. The captures include the two reference card titles and PR
+metadata, a Codex-named real terminal tab, and no texture. The temporary fixture's
+local Git refresh can clear manually reported PR metadata; metadata was restored
+through the existing API immediately before each capture. No production data was
+copied or changed.
+
+No unexplained material mismatch remains within the sidebar scope. Differences
+and ownership are enumerated in `verification-stage3/README.md`. In particular,
+the main panel is still dark in light appearance and titlebar controls retain
+the existing terminal-derived foreground, making them low contrast on the new
+light base. These remain explicit stage 4 header/panel integration gates; this
+stage does not establish whole-app visual or accessibility acceptance.
+
+The final build retained existing warnings (deprecated AppKit/SwiftUI APIs,
+concurrency diagnostics in unrelated owners, unused values/results, asset and
+AppIntents notices). No new Matte, sidebar, native-host or focus-owner source
+warning was emitted. Optional helper downloads fell back to existing local
+artifacts; no dependency or toolchain change was made.
+
+Final checks: 42 package tests and 14 production-source native tests pass;
+Xcode normalization/test wiring and diff checks pass. Localization audit parsed
+the catalog, checked all 30 sidebar/control keys in English/Japanese (including
+dynamic status labels), and scanned added/moved view strings. Existing product
+names remain literal; three new accessibility labels have both translations.
+Project Truth validation/generation/freshness checks complete the stage manifest.
+Independent spec and quality review covered accumulated primitives, controls,
+sidebar snapshot boundaries, focus ownership/callers and lifecycle corrections.
+
+Hover and Reduce Motion have source/render coverage; direct live hover/system
+setting verification, VoiceOver and older-macOS behavior are not claimed. The
+full Xcode app-host test target remains a CI gate. Stage 3 is one commit; the
+new lifecycle regression has local failing-before/passing-after evidence within
+that stage, honoring Brian's explicit one-commit-per-stage instruction.
+
+After commit/push: update the draft PR, build the pushed HEAD under the same
+isolated verification tag, perform a short smoke check, then pause for stage review.
+The checked-in captures document build 748; a build-number-only change in the
+post-commit verification does not require replacing them.
+
+### Stage 3 CI file-budget repair
+
+The first stage 3 CI preflight found positive growth in three files already above
+900 lines. The repair follows `AGENTS.md`, `continuous-code-quality`, and the
+architecture file/API discipline: extract cohesive native presentation and focus
+responsibilities, without changing the budget, compressing code, or adding state.
+
+- `WorkspaceReferenceAppShell` owns only the continuous-base/header/gutter layout.
+  Its generic builders preserve the existing hierarchy, metrics and inherited
+  appearance. ContentView retains workspace projection, Chat/Terminal content,
+  navigation state and terminal lifecycle callbacks. Stage 4 header tuning is
+  still deferred.
+- `WindowKeyboardFocusRouting` binds an injected optional AppDelegate/window to
+  the existing foreign-responder policy and native focus owner. It consolidates
+  repeated lookup wiring and the native child-window dispatch path. The shared
+  policy, nil-delegate NSText fallback, explicit terminal/Find bypass, and
+  automatic sidebar ownership checks retain their prior semantics.
+- `NSResponder.keyboardFocusOwnerView` owns the existing field-editor responder
+  chain fallback. The terminal surface still resolves its mounted Find field
+  first. Its four existing focus/search callers use the same wrapper and traversal;
+  no renderer, font, hot-path scan, or navigation behavior was added.
+
+Against PR base `ce17e9888`, ContentView is 17,017 versus 17,032 lines,
+AppDelegate is 18,183 versus 18,185, and GhosttyTerminalView is 13,451 versus
+13,457. The read-only file-budget guard passes with new/uncommitted files included;
+no budget file changed. Normalization and test wiring pass (433 test files).
+The package suite passes 42 tests. The native production-source harness passes
+18 tests, including four new owning-view/no-owner/field-editor fallback cases.
+The test uses the maintained bmux_DEV/bmux conditional import for app-host CI.
+
+A separate `matte-skin-stage3-ci` tagged build (750) compiled all extracted sources
+successfully without launching or replacing Brian's stage 3 build 749. No new
+helper emitted a warning. Existing unrelated warnings remain. The checked-in
+screenshots still document builds 748/743; no new visual claim is made from the
+compile-only repair. App-host test compilation/execution remains a CI gate.
+
+Localization audit: the shell moves the existing bmux/CompanyCam product names
+and decorative mark unchanged; no labels, keys or translations were added.
+The English/Japanese catalog parses, and moved/added views were scanned for text.
+The prior 30-key sidebar audit remains applicable.
+
+A separate CI blocker remains outside this bounded repair: the activation-session
+benchmark on Xcode 26.3 reports optional type inference at
+`View+MatteTypography.swift:27`. The local Xcode 26.5 build passes; it does not prove
+compatibility with that older CI compiler. Typography is unchanged by this repair.
+
+### Stage 3 typography compiler compatibility follow-up
+
+The Xcode 26.3 activation-session benchmark and app-host CI shards still failed
+on `7c5f3450a` because the compiler inferred optional `Double` for the local
+line-spacing expression. The bounded follow-up replaces optional `map`/coalescing
+with an explicitly nonoptional `Double` and `if let`/`else`. It preserves exactly
+`max(0, pointSize * lineHeightMultiple - nativeLineHeight)` when configured and
+zero otherwise. Native ascent/descent rounding, font selection, weights, tracking,
+all token values, and terminal preferences are unchanged. No new state or caller
+responsibility was introduced.
+
+Local Swift 6.3.3 verification: 42 package tests pass, including the rendered
+multiline-title baseline check, and Release package compilation passes. The
+Release build retains existing unused-public-import, Bonsplit deprecation/actor
+isolation and NotificationCenter-isolation warnings; the typography file emits
+no warning. The installed toolchain is newer than CI, so this local result does
+not establish Xcode 26.3 compatibility or full app-host test success.
+
+The isolated incremental `matte-skin-stage3-ci` reload (build 751) also passes,
+without launching or replacing the user's build. Global CLI links were preserved.
+The `matte_skin_ci_compiler_compatibility` caveat remains open until actual
+Xcode 26.3 CI passes. Localization audit: this expression-only repair adds no
+user-facing strings, labels, keys or translations; the prior sidebar audit is
+unchanged. The checked-in visual evidence and user's build 749 remain unchanged.

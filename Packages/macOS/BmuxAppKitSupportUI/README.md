@@ -183,3 +183,68 @@ selection/hover/press/disable precedence. Live accessibility navigation and
 mouse/keyboard routing remain integration checks when these backgrounds are
 adopted by app controls. The surface API adds no user-visible strings; caller
 content must use the app's localized strings.
+
+### Native controls
+
+`MatteButtonStyle` retains SwiftUI button activation while applying raised, flat,
+or link chrome. It owns only pointer feedback, reads native press/focus/enabled
+state, and respects Reduce Motion. Labels supply their own layout with the token
+minimum hit size. Control shadows use the same native blur conversion and inner
+edge renderer as surfaces. Disabled controls composite once before dimming.
+`matteField(theme:isFocused:)` adds recessed field decoration; callers keep text
+bindings and focus ownership. `matteTypography(_:theme:)` maps semantic metrics
+to system fonts without changing terminal fonts.
+
+```swift
+MatteButton(hitExpansion: theme.layout.invisibleHitExpansion, action: filter) {
+    Image(systemName: "line.3.horizontal.decrease")
+        .frame(width: theme.layout.raisedHitSize, height: theme.layout.raisedHitSize)
+}
+.buttonStyle(MatteButtonStyle(theme: theme))
+```
+
+The workspace-card owner uses a full-card native selection button behind sibling
+links and close buttons. No nested controls or parent tap gesture participate in
+link routing. Its snapshot and callbacks carry all workspace state across the
+list boundary; the package has no workspace or navigation owner.
+
+Disabled cards own their content opacity. Pass `dimsWhenDisabled: false` to nested
+button styles when that enclosing owner has already dimmed them; individually
+disabled controls in an enabled card retain the default control dimming. Render
+coverage checks both cases. Multiline card titles subtract measured native font
+line metrics from the requested baseline, rather than adding the entire reference
+leading to the native line height.
+
+The reference hover underline token remains 2 points. The approved native
+adaptation uses SwiftUI's 1-point underline to retain its native multiline text
+layout; it does not claim to render that token's thickness. No custom text renderer
+is installed. The selected-card square is the user-approved 4-point layout token.
+
+`MatteButton` owns transient native keyboard focus and forwards Space, Return, and
+pointer activation to one supplied action. Its internal focus Boolean reaches the
+visual style through a local environment value; it carries no model or service.
+An optional focus callback lets the containing card reveal its close control.
+The button checks the enabled environment for all activation paths. Selected
+raised controls receive immutable `isSelected` feedback and retain their semantic
+ring and tint during press. Flat and raised controls expand their input shape by
+the 4-point token without changing visible geometry. The card selection target
+itself remains confined to the card.
+
+
+FocusState drives only local decoration and close-button visibility. The package
+never claims first responder or defines workspace/terminal focus policy. The app
+hosts the rail and its filter popover in dedicated native hosting views and
+registers their weak identities with its existing window focus coordinator.
+The existing synchronous AppKit responder-change hook resolves membership at the
+focus transition, before SwiftUI renders; per-key policy checks compare exact
+responder and window identities without walking view trees. Host teardown and
+popover parenting changes revoke ownership. Reattaching a popover requires a
+fresh native focus transition. The app forwards inherited environment values
+across the hosting boundary and updates each stable host's root view in place.
+Modified Space/Return events remain available to the app's shortcut routing.
+
+For controls using `MatteButtonStyle`, pass the token `hitExpansion` to `MatteButton`:
+the style adds invisible padding to native bounds after painting its chrome, and the
+wrapper compensates outside the button to preserve visible geometry and layout.
+Standalone styled Buttons default to no expansion. Whole-card selection retains
+zero expansion so its target does not extend beyond the card.
