@@ -17,7 +17,7 @@ func bmuxCloseFocusedTerminalFindForEscape(event: NSEvent, appDelegate: AppDeleg
     if let shortcutWindow {
         let mainWindow = appDelegate.keyboardFocusCoordinator(for: shortcutWindow) != nil
             ? shortcutWindow : shortcutWindow.parent
-        if let mainWindow, let responder = mainWindow.firstResponder,
+        if let mainWindow, let responder = shortcutWindow.firstResponder,
            appDelegate.keyboardFocusCoordinator(for: mainWindow)?
                .workspaceChromeFocusOwner.owns(responder, in: mainWindow) == true {
             return false

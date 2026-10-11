@@ -5,14 +5,16 @@ struct MatteSurfaceDecoration: View {
     let role: MatteSurfaceRole
     let theme: MatteTheme
     let state: MatteSurfaceState
+    var fill: Color? = nil
 
     var body: some View {
         let appearance = MatteSurfaceAppearance(role: role, state: state)
+        let resolvedFill = fill ?? Color(nsColor: theme.color(appearance.fill))
         let shape = RoundedRectangle(cornerRadius: appearance.radius(in: theme, role: role), style: .circular)
         ZStack {
-            castShadow(appearance.ambient, shape: shape, fill: appearance.fill)
-            castShadow(appearance.contact, shape: shape, fill: appearance.fill)
-            shape.fill(Color(nsColor: theme.color(appearance.fill)))
+            castShadow(appearance.ambient, shape: shape, fill: resolvedFill)
+            castShadow(appearance.contact, shape: shape, fill: resolvedFill)
+            shape.fill(resolvedFill)
             if let contour = appearance.contour {
                 ForEach(Array(theme.shadows(contour).enumerated()), id: \.offset) { _, shadow in
                     shape.inset(by: -shadow.spread)
@@ -32,11 +34,11 @@ struct MatteSurfaceDecoration: View {
     }
 
     @ViewBuilder
-    private func castShadow(_ role: MatteShadowRole?, shape: RoundedRectangle, fill: MatteColorRole) -> some View {
+    private func castShadow(_ role: MatteShadowRole?, shape: RoundedRectangle, fill: Color) -> some View {
         if let role {
             ForEach(Array(theme.shadows(role).enumerated()), id: \.offset) { _, shadow in
                 shape.inset(by: -shadow.spread)
-                    .fill(Color(nsColor: theme.color(fill)))
+                    .fill(fill)
                     .shadow(color: Color(nsColor: shadow.color), radius: shadow.blur / 2,
                             x: shadow.offsetX, y: shadow.offsetY)
             }

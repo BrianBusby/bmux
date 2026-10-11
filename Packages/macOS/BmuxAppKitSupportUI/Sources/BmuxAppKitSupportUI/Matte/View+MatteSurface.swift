@@ -15,12 +15,14 @@ extension View {
     ///   - role: The surface's role in the elevation hierarchy.
     ///   - theme: Tokens resolved from the caller's effective appearance.
     ///   - state: Immutable interaction values; defaults to stationary and enabled.
+    ///   - fill: An already-resolved content background, such as a configured terminal
+    ///     color. When omitted, the semantic surface token supplies the fill.
     /// - Returns: The original content with a noninteractive decorative background.
     public func matteSurface(
-        _ role: MatteSurfaceRole, theme: MatteTheme, state: MatteSurfaceState = .init()
+        _ role: MatteSurfaceRole, theme: MatteTheme, state: MatteSurfaceState = .init(), fill: Color? = nil
     ) -> some View {
         background {
-            MatteSurfaceDecoration(role: role, theme: theme, state: state)
+            MatteSurfaceDecoration(role: role, theme: theme, state: state, fill: fill)
                 .compositingGroup()
                 .opacity(role == .card && !state.isEnabled ? theme.layout.disabledOpacity : 1)
         }

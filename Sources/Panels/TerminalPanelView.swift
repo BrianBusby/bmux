@@ -119,7 +119,10 @@ struct TerminalPanelView: View {
 #if DEBUG
             .reportTerminalViewportGeometryForUITest(panel: panel)
 #endif
-            .modifier(TerminalInsetContainer(isEnabled: bmuxShellTerminalOnly, theme: MatteTheme(colorScheme: colorScheme)))
+            .modifier(TerminalInsetContainer(
+                isEnabled: bmuxShellTerminalOnly, theme: MatteTheme(colorScheme: colorScheme),
+                backgroundColor: appearance.backgroundColor
+            ))
             .layoutPriority(1)
 
             if panel.isTextBoxActive {

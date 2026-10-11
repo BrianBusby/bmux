@@ -5,12 +5,13 @@ import BmuxAppKitSupportUI
 struct TerminalInsetContainer: ViewModifier {
     let isEnabled: Bool
     let theme: MatteTheme
+    let backgroundColor: NSColor
 
     func body(content: Content) -> some View {
         if isEnabled {
             content
                 .padding(theme.layout.terminalContentPadding)
-                .matteSurface(.inset, theme: theme)
+                .matteSurface(.inset, theme: theme, fill: Color(nsColor: backgroundColor))
         } else {
             content
         }

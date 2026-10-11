@@ -42,7 +42,7 @@ struct WindowKeyboardFocusRouting {
                   let coordinator = appDelegate?.keyboardFocusCoordinator(for: parent) {
             // Child-window notifications update only the explicitly registered
             // workspace popover; other focus-intent owners remain unchanged.
-            coordinator.workspaceChromeFocusOwner.synchronize(responder: parent.firstResponder, in: parent)
+            coordinator.workspaceChromeFocusOwner.synchronize(responder: window?.firstResponder, in: parent)
         }
     }
 }
