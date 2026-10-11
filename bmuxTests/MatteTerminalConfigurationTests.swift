@@ -35,6 +35,18 @@ import Testing
         let contents = try #require(profile.previewConfigContents(preferredColorScheme: scheme))
         try withNativeConfig { expected in
             try load(contents, into: expected)
+            // The existing renderer loader reconciles foreground before Ghostty finalizes
+            // theme files. Preserve that policy while checking that matte defaults do not
+            // overwrite the user's appearance afterward.
+            let background = try #require(NSColor(hex: color("background", in: expected)))
+            let foreground = try #require(NSColor(hex: color("foreground", in: expected)))
+            var opacity = 1.0
+            #expect(ghostty_config_get(expected, &opacity, "background-opacity", 18))
+            let readableForeground = bmuxReadableForegroundNSColor(
+                preferred: foreground,
+                on: GhosttyBackgroundTheme.color(backgroundColor: background, opacity: opacity)
+            )
+            try load("foreground = \(readableForeground.hexString())", into: expected)
             ghostty_config_finalize(expected)
             try withLoadedPreview(profile, scheme: scheme) { actual in
                 #expect(color("background", in: actual) == color("background", in: expected))
@@ -77,6 +89,8 @@ import Testing
         // This existing preview override is process-wide. Stay synchronous on the main actor,
         // and restore both values without publishing a config reload or touching live surfaces.
         let app = GhosttyApp.shared
+        try #require(app.usesHostLayerBackground)
+        let previousShellIntegration = app.userGhosttyShellIntegrationMode
         let previousProfile = GhosttyStartupAppearancePreviewState.profile
         let previousOverride = TerminalStartupAppearancePreviewOverride.installed
         defer {
@@ -85,7 +99,10 @@ import Testing
         }
         GhosttyStartupAppearancePreviewState.profile = profile
         try withNativeConfig { config in
+            try load("shell-integration = \(previousShellIntegration)", into: config)
             _ = app.loadDefaultConfigFilesWithLegacyFallback(config, preferredColorScheme: scheme)
+            #expect(app.userGhosttyShellIntegrationMode == previousShellIntegration)
+            #expect(app.usesHostLayerBackground)
             try body(config)
         }
     }

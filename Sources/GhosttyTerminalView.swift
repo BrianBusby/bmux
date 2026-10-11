@@ -1081,14 +1081,17 @@ class GhosttyApp {
             url.path.withCString { path in
                 ghostty_config_load_file(config, path)
             }
-            return
+        } else {
+            loadInlineGhosttyConfig(
+                GhosttyConfig.bmuxDefaultThemeConfigContents(preferredColorScheme: preferredColorScheme),
+                into: config,
+                prefix: "bmux-default-appearance",
+                logLabel: "default appearance fallback"
+            )
         }
-
         loadInlineGhosttyConfig(
-            GhosttyConfig.bmuxDefaultThemeConfigContents(preferredColorScheme: preferredColorScheme),
-            into: config,
-            prefix: "bmux-default-appearance",
-            logLabel: "default appearance fallback"
+            MatteTerminalConfiguration(colorScheme: preferredColorScheme).contents,
+            into: config, prefix: "bmux-matte-terminal", logLabel: "matte terminal colors"
         )
     }
 
@@ -1187,10 +1190,6 @@ class GhosttyApp {
         #else
         loadRealUserGhosttyConfig(config, preferredColorScheme: preferredColorScheme, themeColorScheme: themeColorScheme)
         #endif
-        loadInlineGhosttyConfig(
-            MatteTerminalConfiguration(colorScheme: themeColorScheme).contents,
-            into: config, prefix: "bmux-matte-terminal", logLabel: "matte terminal colors"
-        )
         loadCJKFontFallbackIfNeeded(config)
         let renderingModeChanged = setUsesHostLayerBackground(
             true,

@@ -141,6 +141,8 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: matte_skin_terminal_preference_precedence
+    status: resolved
   - id: matte_skin_full_app_host_verification
     status: open
   - id: matte_skin_ci_compiler_compatibility

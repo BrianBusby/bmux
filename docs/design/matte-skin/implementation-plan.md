@@ -748,3 +748,48 @@ and authoritative exit status; no timeout is extended and no full-suite tests
 are removed. This separates feature evidence from later unrelated failures.
 The shared package's47 tests passed on20bf68591; all remaining app-host failures
 and incomplete runs still block a clean full-suite claim.
+
+
+### Terminal preference precedence review correction
+
+Review of PR141 found the post-user-config matte override replaced explicit
+Ghostty themes, colors and opacity. Matte foreground/background now enter through
+the existing managed-default loader, before user files and recursive includes.
+Explicit themes retain their existing default-suppression rule; individual colors
+override only the matching default. Matte no longer writes background-opacity,
+so opacity-only user configuration survives the existing stale-legacy reassertion.
+Startup, app reload, surface reload and preview profiles retain the same loader.
+Renderer code, fonts, input handling and the existing readable-foreground policy
+are unchanged. Production source therefore no longer matches2f0181b3c exactly.
+
+The test-only commit edf7fa0b7 adds a native C-config/full-loader suite and the four
+unresolved terminal cases to the existing focused CI invocation. The corrected
+identical suite completes all12 parameter cases against both compiled app dylibs:
+the previous build fails14 assertions; the fixed isolated build passes all12 cases.
+It covers both default palettes, explicit colors, single/paired themes, independent
+color overrides and opacity0.88. Expected theme foreground retains the pre-existing
+contrast reconciliation rather than changing the renderer. The synchronous
+MainActor fixture restores preview state and preserves shared shell/host modes.
+Both test compiles are warning-free. Existing config-policy package tests complete
+11/11 cases, but SwiftPM exits nonzero with existing binary-name diagnostics; this
+is not counted as a clean package command. Independent review found no blocker.
+
+Fresh baseline app/test source ce17e9888 now reproduces three of the seven disputed
+failures: queued-submit, direct-first-responder refresh and visibility restore.
+IME repeat, printable repeat, detached-surface recovery and closed-surface recovery
+pass on base but previously failed on matte at their initial runtime-surface
+precondition after a fixed50ms drain. Both suites show readiness instability;
+matte resource discovery occurs after one failed readiness assertion. This is a
+timing hypothesis, not proof those four failures are unrelated. They remain in
+the focused native gate. The five static chrome-color failures use literal colors
+and opacity through unchanged compositing functions; they do not read Ghostty
+configuration and remain separate stale alpha expectations. Baseline shards1/4
+correctly fail with exit124; required comparison logs are retained and remaining
+baseline jobs were cancelled after evidence capture. Full-suite green is not claimed.
+
+Governing sources remain root AGENTS, continuous-code-quality, bmux-architecture,
+bmux-debugging and bmux-testing. Existing default-config ownership and discovery
+patterns are reused; no new config store, parser or test-only app branch is added.
+No shipped strings change. The explicit-preference regression is resolved in
+Project Truth; full app-host verification remains open. New default/custom visual
+checks and exact-head CI are still required before a merge decision.
