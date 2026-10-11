@@ -44,6 +44,7 @@ Repository: `BrianBusby/bmux`
 | Legacy Bmux Provenance Retirement | planned |
 | Managed Connected Codex Runtime | under observation |
 | Monorepo Migration Ledger Closure | planned |
+| Native Ci Exit Status Reporting | implemented |
 | Native Provider Session View | implemented |
 | Normal Coding Agent Evidence Ingestion | implemented |
 | Ordinary Cli Read Only Chat | under observation |
@@ -152,6 +153,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `native_app_host_full_suite_failures` | open |
 | `configured_codex_placeholder_startup_dogfood` | monitoring |
 | `codex_update_workspace_exit_native_dogfood` | open |
 | `expanded_prior_turn_system_appearance_contrast` | monitoring |
