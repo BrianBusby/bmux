@@ -615,6 +615,7 @@ jobs:
             BMUX_SKIP_ZIG_BUILD=1 \
             -only-testing:bmuxTests/MatteTitlebarContrastTests \
             -only-testing:bmuxTests/MatteTerminalConfigurationTests \
+            -only-testing:bmuxTests/WorkspacePopoverFocusRoutingTests \
             -only-testing:bmuxTests/TerminalNotificationDirectInteractionTests/testIMECommittedKeyRepeatDoesNotForceSurfaceRefresh \
             -only-testing:bmuxTests/TerminalNotificationDirectInteractionTests/testKeyDownRecoversReleasedSurfaceWhileHostedViewIsDetached \
             -only-testing:bmuxTests/TerminalNotificationDirectInteractionTests/testKeyDownRecoveryDoesNotRecreateClosedSurface \
