@@ -118,6 +118,9 @@ jobs:
       - name: Validate unit-test SwiftPM retry guard
         run: ./tests/test_ci_unit_test_spm_retry.sh
 
+      - name: Validate xcodebuild workflow exit reporting
+        run: python3 tests/test_ci_xcodebuild_exit_reporting.py
+
       - name: Validate xcodebuild noninteractive crash prompt guard
         run: python3 tests/test_ci_xcodebuild_noninteractive_helper.py
 
