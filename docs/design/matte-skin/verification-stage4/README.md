@@ -3,16 +3,17 @@
 Main panel, native primary tabs, terminal tab strip/toolbar, terminal inset,
 window title and header now consume the shared matte theme. Texture is off.
 The [comparison](comparison.html) places each target app crop beside the native
-1092 × 593 capture (graphite build 753; porcelain build 754 after non-geometric
-token centralization and the Chat contrast fix). Prototype controls and inspection tooling are excluded.
+1092 × 593 captures from build 756, including the corrected selected-card header.
+The [selected-card comparison](selected-card-comparison.html) isolates that detail. Prototype controls and inspection tooling are excluded.
 
 ## Observed deviations and reasons
 
 - Main panel begins at approximately (314,90), versus (313,90) in the target;
   inset begins at (339,247), versus (336,246). Exact native 24pt padding, layout
   rounding and font metrics account for the remaining small offsets.
-- SF text rasterization and the native 650/750 weight interpolation differ from
-  the browser screenshot. Exact specified font sizes/weights remain authoritative.
+- Native SF rasterization differs from the browser screenshot. Intermediate
+  650/750 weights quantize on this macOS; browser equivalence is unverified.
+  The card’s specified 600 weight resolves to native semibold.
 - Terminal font, cursor, shell output, ANSI colors and wrapping remain native. The
   reference uses an HTML text fixture. Existing horizontal terminal scrolling is
   disabled; adding it would change behavior and is outside this approved skin.
@@ -25,14 +26,22 @@ token centralization and the Chat contrast fix). Prototype controls and inspecti
 - Two fixture workspaces are shown rather than the reference count of six. The
   second card lacks the original prompt preview, so it is shorter. Native PR
   text retains its existing two-line limit; the author remains its existing link.
-  The selected card is about 68pt versus 74pt, using the approved stage 3 native
-  type/spacing mapping. The sidebar is about 288pt versus 290pt.
+  The selected card now measures about 74pt, matching the reference after its
+  compressed header was corrected to 20pt. The sidebar is about 288pt versus 290pt.
 - Native negative-spread shadow/inner-edge rasterization uses the reviewed stage
   2 approximation. Native hovered-link underline is 1pt and selection mark 4pt,
   both explicitly approved.
 - Texture is intentionally absent until stage 5.
 
 ## Runtime evidence
+
+Build 756 passed the corrected card’s dark/light visual check at 1092 × 593,
+search → filter → selected-card keyboard traversal, and the separate close
+control. Closing the disposable selected workspace removed only that workspace;
+the remaining workspace stayed usable. The comparison fixture was then restored.
+Keyboard focus adds its specified outline without shifting or resizing the card.
+The 28pt close target is retained in source; pointer-edge hit coverage is not claimed.
+No user-facing strings changed in this geometry follow-up.
 
 Build 753 passed native keyboard traversal from search/filter through card
 controls to Chat/Terminal/Session, selected-button focus retention, Session

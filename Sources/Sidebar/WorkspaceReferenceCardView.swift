@@ -51,10 +51,10 @@ struct WorkspaceReferenceCardView: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: theme.layout.cardContentGap) {
-            HStack(alignment: .top, spacing: 4) {
-                VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .center, spacing: theme.layout.workspaceCardHeaderGap) {
+                VStack(alignment: .leading, spacing: theme.layout.workspaceCardHeaderGap) {
                     if repositoryName != nil || isSelected {
-                        HStack(spacing: 4) {
+                        HStack(spacing: theme.layout.workspaceCardHeaderGap) {
                             if isSelected {
                                 Rectangle()
                                     .frame(width: theme.layout.selectedMarkerSize, height: theme.layout.selectedMarkerSize)
@@ -78,7 +78,8 @@ struct WorkspaceReferenceCardView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 if card.hasActiveAIWork {
                     let label = String(localized: "sidebar.aiBusy.tooltip", defaultValue: "AI is running or needs input")
-                    TronLoadingIndicator(size: 18, color: color(.textSecondary), lineWidth: 1.5)
+                    TronLoadingIndicator(size: theme.layout.workspaceCardActivitySize, color: color(.textSecondary),
+                                         lineWidth: theme.layout.workspaceCardActivityStroke)
                         .frame(width: theme.layout.minimumHitSize, height: theme.layout.minimumHitSize)
                         .safeHelp(label)
                         .accessibilityLabel(label)
@@ -90,7 +91,7 @@ struct WorkspaceReferenceCardView: View {
                         .frame(width: theme.layout.minimumHitSize, height: theme.layout.minimumHitSize)
                 }
                 .buttonStyle(MatteButtonStyle(.flat, theme: theme, dimsWhenDisabled: isEnabled))
-                .frame(height: theme.layout.smallIconSize)
+                .frame(height: theme.layout.workspaceCardHeaderHeight)
                 .disabled(!canCloseWorkspace || card.hasActiveAIWork)
                 .opacity(showsClose ? 1 : 0)
                 .allowsHitTesting(showsClose)
@@ -98,6 +99,7 @@ struct WorkspaceReferenceCardView: View {
                 .safeHelp(String(localized: "sidebar.closeWorkspace.tooltip", defaultValue: "Close Workspace"))
                 .accessibilityIdentifier("WorkspaceReferenceCard.close.\(card.id)")
             }
+            .frame(minHeight: theme.layout.workspaceCardHeaderHeight)
             Text(card.title)
                 .matteTypography(.cardTitle, theme: theme)
                 .foregroundStyle(color(.textPrimary))

@@ -538,3 +538,36 @@ in use and will not be quit/replaced. Final pushed-commit dogfood uses the
 separate `matte-skin-stage4-review` tag. The committed graphite/porcelain pair
 records builds 753/754; the final review build uses the same production sources
 with no further geometry changes. Full suite and app-host CI stay pending.
+
+## Selected-card visual follow-up
+
+Brian explicitly confirmed using screenshot measurements for unspecified spacing,
+and identified the selected sidebar card as still unlike the reference. Stage 4
+commit `00d3d13b8` had already been pushed and its isolated build 755 passed; this
+follow-up corrects the specific sidebar discrepancy before the next visual gate.
+
+Read-only comparison found a concrete header-line-box error: the close button’s
+outer 14pt frame collapsed the header, producing a roughly 68pt card versus 74pt
+in the reference. The title sat about 6pt too high and repository label about
+3–4pt too high. A measured 20pt, vertically centered header corrects this while
+preserving the authoritative 13/16/14 padding, 7pt gap, 15pt/600 title, and 28pt
+close target. Rich metadata can still increase row height. The semantic selected
+fill, 1pt ring, inner edges and level-2 shadows were already applied. The separate
+keyboard-focus outline must remain accessible; it is not the ordinary selection
+ring. Texture remains deferred.
+
+The selected card’s 600 weight correctly resolves to native semibold. Native
+650/750 requests quantize on this macOS, but that observation alone does not prove
+a browser-reference mismatch; no typography substitution or whole-UI scaling is
+authorized or introduced in this follow-up. Verification remains actual native
+card geometry in both appearances and close/focus targets, plus focused checks.
+
+
+Follow-up verification: tagged build 756 passed. Both 1092 × 593 captures now
+show the corrected approximately 74pt selected card. Live keyboard traversal
+reaches its selected accessibility element and adds a separate focus outline
+without a geometry change. Its independent close control removed only the
+disposable selected workspace; the fixture was restored afterward. Shared UI
+45 tests, source parse, length budget and diff checks passed. Independent review
+of the complete card/rail/focus path found no new state or ownership change.
+No localized strings changed. Full app-host/CI remains a separate pending gate.

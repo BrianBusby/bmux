@@ -92,6 +92,18 @@ public struct MatteLayoutMetrics: Sendable {
     /// Card content padding in points.
     public let cardPadding: EdgeInsets
 
+    /// Minimum workspace-card header height measured from the reference; rich metadata may grow taller.
+    public let workspaceCardHeaderHeight: Double
+
+    /// Preserved spacing between workspace-card header metadata and controls.
+    public let workspaceCardHeaderGap: Double
+
+    /// Preserved size of the active-AI indicator in the workspace-card header.
+    public let workspaceCardActivitySize: Double
+
+    /// Preserved stroke width of the active-AI indicator in the workspace-card header.
+    public let workspaceCardActivityStroke: Double
+
     /// Gap within card content in points.
     public let cardContentGap: Double
 

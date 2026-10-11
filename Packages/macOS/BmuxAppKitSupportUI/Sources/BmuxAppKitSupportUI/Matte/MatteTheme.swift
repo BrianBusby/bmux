@@ -92,6 +92,8 @@ public struct MatteTheme: Sendable {
             terminalContentPadding: EdgeInsets(top: 12, leading: 13, bottom: 12, trailing: 13),
             sidebarMinimumWidth: 260, sidebarPreferredFraction: 0.27, sidebarMaximumWidth: 320,
             cardPadding: EdgeInsets(top: 13, leading: 16, bottom: 14, trailing: 16),
+            workspaceCardHeaderHeight: 20, workspaceCardHeaderGap: 4,
+            workspaceCardActivitySize: 18, workspaceCardActivityStroke: 1.5,
             cardContentGap: 7, cardGap: 12,
             panelPadding: EdgeInsets(top: 20, leading: 24, bottom: 24, trailing: 24),
             iconSize: 16, smallIconSize: 14, iconStroke: 1.7,
