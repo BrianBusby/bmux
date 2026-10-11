@@ -622,3 +622,47 @@ The paired selected-card captures show build 759 (before that pressed-only
 restoration, which does not affect these unpressed captures). Final committed
 source reload and CI are reported in the PR/handoff. Direct VoiceOver visual
 behavior after pointer input is not claimed.
+
+## Stage 5: optional static micrograin (current)
+
+Brian approved build 760 and continuing to the final texture stage. Existing
+stages remain approved; do not rebuild or replace his running card-focus preview.
+
+Ownership: AppearanceSettings names the default-off `matteTextureEnabled` flag;
+WorkspaceReferenceAppShell reads it once above the list boundary and injects a
+texture scope. The scope loads once on enable, retains its immutable NSImage,
+and injects that value; surfaces never perform bundle lookup. BmuxAppKitSupportUI
+owns the bundled 1×/2× alpha tile
+and paints it inside the existing surface decoration, after fill and before
+edges/content. Base uses the same primitive. Insets and controls receive no
+texture. No store references enter rows, and no renderer or terminal font changes.
+
+The offline SVG preserves the spec generator (fractalNoise .9, two octaves, seed7,
+stitchTiles, alpha4R−1.6). librsvg renders 128/256px RGBA PNGs, eight bits/channel;
+SwiftUI tiles the template image and applies theme white/black tint and exact
+surface opacity. No runtime generation, live blur, timer, or animation is added.
+Guidance: root AGENTS; continuous-code-quality; bmux-architecture file/API and
+concurrency rules; bmux-dev-workflow and bmux-testing. Existing patterns:
+MatteSurfaceDecoration, value-only focus environment, WorkspaceReferenceAppShell.
+
+Pending: native resource loading/tile/clip tests in both scales and appearances;
+flag-off comparison; tagged stage5 build and four same-size app captures; live
+Reduce Motion and VoiceOver checks; scoped review, CI, project-state update.
+
+The first native image test caught the named SwiftUI image provider rendering
+no grain in ImageRenderer. Explicit Bundle image loading renders correctly, but
+independent review identified repeated uncached lookup from body. MatteTextureScope
+now owns that one-time load outside body; cards receive only the retained image
+through inherited EnvironmentValues. Off/on retains the resource. No global cache.
+
+Stage 5 verification: tagged build761 succeeds; 51 shared UI tests pass. Native
+runtime confirms one-time resource load, dynamic off/on flag changes, inherited
+texture on base/card/panel, and unchanged terminal pixels (both appearances).
+Four1092×593 captures and exhaustive observed deviations are in verification-stage5.
+Reduce Motion and VoiceOver were temporarily enabled for live selection/Tab checks,
+then both verified restored off; speech and VoiceOver-cursor traversal remain
+unverified. Source length, diff, localization/no-new-text and Project Truth checks
+pass. Review caught and resolved resource lookup in body; final ownership review
+is clean. Existing app-host/full CI remains a separate gate, and an apparent
+pre-existing Settings Cmd-W routing caveat is documented without a behavior fix.
+Stage5 is implemented and awaits Brian's visual review before merge.

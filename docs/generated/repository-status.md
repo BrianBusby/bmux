@@ -44,6 +44,7 @@ Repository: `BrianBusby/bmux`
 | Legacy Bmux Provenance Retirement | planned |
 | Managed Connected Codex Runtime | under observation |
 | Matte Skin Main Panel | implemented |
+| Matte Skin Optional Texture | implemented |
 | Matte Skin Sidebar | implemented |
 | Matte Skin Surface Styles | implemented |
 | Matte Skin Theme Tokens | implemented |
