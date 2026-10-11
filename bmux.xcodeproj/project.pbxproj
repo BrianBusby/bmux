@@ -934,6 +934,7 @@
 		A50014F5 /* MarkdownWebRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50014F4 /* MarkdownWebRenderer.swift */; };
 		A50014F9 /* MarkdownWebSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50014F8 /* MarkdownWebSupport.swift */; };
 		A44000000000000000000006 /* MatteBonsplitAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = A44000000000000000001006 /* MatteBonsplitAppearance.swift */; };
+		AA5269A0C0DE0026FACE0026 /* MatteChromePreferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5269A0C0DE0025FACE0025 /* MatteChromePreferenceTests.swift */; };
 		A44000000000000000000004 /* MatteTerminalConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A44000000000000000001004 /* MatteTerminalConfiguration.swift */; };
 		AA5269A0C0DE0018FACE0018 /* MatteTerminalConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5269A0C0DE0017FACE0017 /* MatteTerminalConfigurationTests.swift */; };
 		AA5269A0C0DE0022FACE0022 /* MatteTerminalInsetRenderingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5269A0C0DE0021FACE0021 /* MatteTerminalInsetRenderingTests.swift */; };
@@ -2836,6 +2837,7 @@
 		A50014F4 /* MarkdownWebRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownWebRenderer.swift; sourceTree = "<group>"; };
 		A50014F8 /* MarkdownWebSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownWebSupport.swift; sourceTree = "<group>"; };
 		A44000000000000000001006 /* MatteBonsplitAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Terminal/MatteBonsplitAppearance.swift"; sourceTree = "<group>"; };
+		AA5269A0C0DE0025FACE0025 /* MatteChromePreferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatteChromePreferenceTests.swift; sourceTree = "<group>"; };
 		A44000000000000000001004 /* MatteTerminalConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Terminal/MatteTerminalConfiguration.swift"; sourceTree = "<group>"; };
 		AA5269A0C0DE0017FACE0017 /* MatteTerminalConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatteTerminalConfigurationTests.swift; sourceTree = "<group>"; };
 		AA5269A0C0DE0021FACE0021 /* MatteTerminalInsetRenderingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatteTerminalInsetRenderingTests.swift; sourceTree = "<group>"; };
@@ -5323,6 +5325,7 @@
 				AA5269A0C0DE0019FACE0019 /* WorkspacePopoverFocusRoutingTests.swift */,
 				AA5269A0C0DE0023FACE0023 /* TerminalSurfaceRecoveryTests.swift */,
 				AA5269A0C0DE0021FACE0021 /* MatteTerminalInsetRenderingTests.swift */,
+				AA5269A0C0DE0025FACE0025 /* MatteChromePreferenceTests.swift */,
 				AA5269A0C0DE0013FACE0013 /* MatteTitlebarDragRoutingTests.swift */,
 				AA5269A0C0DE0015FACE0015 /* ContentViewFileDropOverlayInstallationTests.swift */,
 				AA5269A0C0DE0003FACE0003 /* ForeignFirstResponderPolicyTests.swift */,
@@ -7794,6 +7797,7 @@
 				D7470002D7470002D7470002 /* MarkdownLinkBoundaryRegressionTests.swift in Sources */,
 				D6069002D6069002D6069002 /* MarkdownMermaidZoomTests.swift in Sources */,
 				D3664002D3664002D3664002 /* MarkdownPanelTests.swift in Sources */,
+				AA5269A0C0DE0026FACE0026 /* MatteChromePreferenceTests.swift in Sources */,
 				AA5269A0C0DE0018FACE0018 /* MatteTerminalConfigurationTests.swift in Sources */,
 				AA5269A0C0DE0022FACE0022 /* MatteTerminalInsetRenderingTests.swift in Sources */,
 				AA5269A0C0DE0012FACE0012 /* MatteTitlebarContrastTests.swift in Sources */,

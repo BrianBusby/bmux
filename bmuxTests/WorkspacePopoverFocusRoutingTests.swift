@@ -13,7 +13,6 @@ import Testing
     @Test func childResponderChangeGrantsOnlyRegisteredPopoverOwnership() throws {
         try withPopoverContext { app, _, parent, child, host, responder in
             let owner = try #require(app.keyboardFocusCoordinator(for: parent)?.workspaceChromeFocusOwner)
-            owner.register(host, scope: .filterPopover, in: parent)
             app.syncKeyboardFocusAfterFirstResponderChange(in: child)
             #expect(owner.owns(responder, in: parent))
             let parentResponder = try #require(parent.firstResponder)
@@ -31,7 +30,6 @@ import Testing
     @Test func escapeInRegisteredPopoverLeavesTerminalFindOpen() throws {
         try withPopoverContext { app, manager, parent, child, host, responder in
             let owner = try #require(app.keyboardFocusCoordinator(for: parent)?.workspaceChromeFocusOwner)
-            owner.register(host, scope: .filterPopover, in: parent)
             // Isolate Escape routing from the separate responder-change regression.
             owner.synchronize(responder: responder, in: parent)
             #expect(owner.owns(responder, in: parent))
@@ -47,6 +45,31 @@ import Testing
             #expect(!bmuxCloseFocusedTerminalFindForEscape(event: event, appDelegate: app))
             #expect(panel.searchState != nil)
             #expect(child.firstResponder === responder)
+        }
+    }
+
+    @Test func automaticFocusGuardRespectsOnlyLivePopoverGrant() throws {
+        try withPopoverContext { app, _, parent, child, _, responder in
+            let routing = WindowKeyboardFocusRouting(appDelegate: app, window: parent)
+            app.syncKeyboardFocusAfterFirstResponderChange(in: child)
+            #expect(routing.workspaceSidebarOwnsFocus)
+            let other = makeWindow()
+            #expect(!WindowKeyboardFocusRouting(appDelegate: app, window: other).workspaceSidebarOwnsFocus)
+            parent.removeChildWindow(child)
+            #expect(!routing.workspaceSidebarOwnsFocus)
+            parent.addChildWindow(child, ordered: .above)
+            app.syncKeyboardFocusAfterFirstResponderChange(in: child)
+            #expect(!routing.workspaceSidebarOwnsFocus)
+            #expect(child.makeFirstResponder(nil))
+            app.syncKeyboardFocusAfterFirstResponderChange(in: child)
+            #expect(child.makeFirstResponder(responder))
+            app.syncKeyboardFocusAfterFirstResponderChange(in: child)
+            #expect(routing.workspaceSidebarOwnsFocus)
+            let unrelated = NSTextView(frame: .zero)
+            child.contentView?.addSubview(unrelated)
+            #expect(child.makeFirstResponder(unrelated))
+            app.syncKeyboardFocusAfterFirstResponderChange(in: child)
+            #expect(!routing.workspaceSidebarOwnsFocus)
         }
     }
 
@@ -93,6 +116,10 @@ import Testing
         child.contentView?.addSubview(host)
         host.addSubview(responder)
         parent.addChildWindow(child, ordered: .above)
+        // Production registers on host attachment, before native focus. The app
+        // host's makeFirstResponder hook observes this transition synchronously.
+        let owner = try #require(app.keyboardFocusCoordinator(for: parent)?.workspaceChromeFocusOwner)
+        owner.register(host, scope: .filterPopover, in: parent)
         #expect(child.makeFirstResponder(responder))
         #expect(parent.firstResponder === parentResponder)
         #expect(child.firstResponder === responder)
