@@ -5835,6 +5835,11 @@ policies:
     selected_for_implementation: false
 
 caveats:
+  - id: workspace_fallback_regression_verification
+    title: Workspace fallback regression test red and production fix verification pending
+    status: open
+    owner: bmux
+
   - id: broad_legacy_storage_migration
     title: Broad legacy bmux-local storage migration
     status: open

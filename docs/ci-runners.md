@@ -162,3 +162,40 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+
+## Rejected ambient workspace fallback regression
+
+`WorkspaceFallbackContractTests` replaces only the legacy trigger-flash stale
+caller test. Eighteen actual CLI cases cover trigger-flash and notify with an
+explicit surface shorthand: stale/absent/valid ambient identity, validated TTY
+recovery, explicit valid/invalid workspace targets, window targeting, missing
+current selection and selection RPC failure. The socket fixture accepts exactly
+the intended workspace/surface pair and notification payload, rejects unexpected
+commands (including focus mutations), and checks explicit invalid requests fail
+without falling back to a different target. The reviewed shared CLISocketFixture
+is reused byte-for-byte, with owned file capture and joined socket cleanup.
+
+On unchanged build 773, six cases fail with 18 assertions: the two stale-ambient
+success paths and their missing-current/server-error controls. Twelve controls
+pass. Compilation is warning-free. The shared fallback owner rejects the stale
+workspace through surface.list and tries a validated TTY binding, but then calls
+resolveWorkspaceId(nil), which rereads that rejected BMUX_WORKSPACE_ID. The
+planned correction belongs only at this exhausted fallback boundary, reusing the
+current-workspace query owner without changing generic omitted-selector policy.
+Explicit target and window routing must remain authoritative.
+
+This first commit contains tests only. Actual CI red, the production correction,
+focused fixed-artifact execution and a tagged build remain required before the
+fix can ship. The focused suite joins the existing browser app-host step without
+an additional runner, tracked by matching canonical/local Project Truth caveats.
+Broader legacy CI is not claimed green. Other WorkspaceRemoteConnectionTests
+methods remain byte-identical.
+
+Guidance: root/personal AGENTS, continuous-code-quality, architecture ownership,
+file/API/concurrency rules, Swift Testing migration/behavior/local-CI guidance,
+shared behavior and socket threading/focus policy. Relevant inspected owners are
+both command branches, workspace/surface normalization, fallback selection,
+validated TTY lookup and current-workspace query. No global environment mutation,
+app focus operation, renderer edit or user app action is part of this slice.
+No shipped strings or localization catalogs change in the test-only commit.
