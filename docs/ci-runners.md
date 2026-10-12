@@ -162,3 +162,35 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+## Codex rejected ambient identity regression
+
+The focused `CodexRejectedAmbientTests` gate runs before the broad app-host suite
+on shard 2. It migrates only the two legacy invalid-surface / foreign-workspace
+prompt-submit cases. The native CLI fixture owns a short temporary socket,
+isolated HOME and session store, joined socket lifecycle, and file-backed process
+I/O. Its `CLISocketFixture` is identical to the separately reviewed cleanup and
+Claude notification fixtures, allowing one shared file when those branches merge.
+
+Current test-only evidence: unchanged build 773 fails the four rejected-identity
+cases with 22 wrong-target command / persisted-state assertions. Eight controls
+pass: verified PID/TTY recovery, invalid explicit flags, valid ambient identity
+without local process evidence, and workspace-only saved mapping. The negative
+cases supply either a valid empty process topology or an unlisted PID-bound
+surface; unsupported mock methods are not responsible for the failure.
+
+The existing shared generic-hook resolver discarded rejected ambient provenance,
+then guessed a focused surface or reused a saved mapping when process attribution
+failed. `5b6325ddf` intentionally enabled stale ambient recovery through verified
+PID/TTY binding; that recovery must remain. The bounded repair belongs in this
+shared target resolver, before prompt persistence and resume/status publication,
+not in separate Codex mutation guards or the receiving app's socket handlers.
+
+Source requirements: root/personal `AGENTS.md`, `continuous-code-quality`, and
+`bmux-architecture`, `bmux-testing`, `bmux-shared-behavior`, `bmux-socket-policy`,
+`bmux-dev-workflow` and `bmux-localization` skills. Reference patterns are
+`CLIGenericHookPersistenceTests.testCodexHookRecoversFromStaleEnvSurfaceViaProcessTTYBinding`
+and the joined `CLISocketFixture` plus owned-file CLI capture. The test change
+adds no shipped strings or localization keys. Actual CI red, the resolver fix,
+fixed native execution, an isolated tagged build and final CI remain pending;
+this focused evidence is not a claim that the broad baseline suite passes.
