@@ -181,7 +181,7 @@ payload and add a permission payload to each of the same two routing scenarios.
 Both status and notification must address the exact target workspace and surface;
 stale and focused workspaces remain forbidden mutation targets.
 
-Only these two methods migrate to `ClaudeNotificationTargetTests` (Swift Testing).
+The two routing methods migrate to `ClaudeNotificationTargetTests` (Swift Testing).
 `ClaudeNotificationTargetFixture` owns each short temporary root, state file,
 input/output files and isolated process environment. The shared `CLISocketFixture`
 is byte-identical to the SSH cleanup maintenance fixture, with the same project
@@ -204,7 +204,31 @@ Evidence against unchanged tagged build 773:
   assertions (12 issues), `/tmp/claude-target-misroute.log`. The checked-in fixture
   is unchanged by this control.
 
-The existing app-host shard 2 now runs this suite explicitly before broad legacy
+The dedicated `ClaudeNotificationStatusLifecycleTests` now reuses the same async
+fixture with an explicit agent PID and caller workspace/surface configuration.
+Its heartbeat case expects `Idle`; its permission case expects `Needs input`.
+Both require exactly one status with the exact target and PID, plus the matching
+lifecycle command. The fixture reports an empty process inventory for the CLI's
+PID lookup, leaving the explicit caller IDs responsible for routing. The original
+four routing cases and their forbidden stale/focused target assertions remain.
+
+The old lifecycle harness used blocking process/semaphore waits and a socket
+responder that acknowledged even id-less telemetry; retained full-suite evidence
+in `/tmp/matte-stage5-apphost4.log` (2026-10-11 05:44:39Z, lines 199587–199594)
+records a socket wait timeout, process status 15 and missing status. Reusing the
+joined async socket and owned-file capture removes those fixture paths without
+increasing the five-second process deadline. This local proof does not establish
+the cause of every historical full-suite timeout.
+
+On unchanged build 773, the temporary old heartbeat expectation fails exactly
+once with `Idle` and `--pid=42424` in the actual command; permission and all four
+routing controls pass (`/tmp/claude-pid-native-old-expectation.log`). Corrected
+source passes six parallel cases across three test functions in two suites
+(`/tmp/claude-pid-native-green.log`), with warning-free native compilation. This
+verifies PID metadata required by stale sweeping; it does not run the sweep or
+claim full app-host execution.
+
+The existing app-host shard 2 now runs both suites explicitly before broad legacy
 tests. Actual focused app-host CI and broader suite results remain pending;
 Project Truth caveat `claude_notification_target_fixture_verification` stays open.
 No reload or app launch is needed for this test-only correction.

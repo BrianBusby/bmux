@@ -4,17 +4,19 @@ import Testing
 
 /// Owns one notification hook's socket, session state and process I/O.
 final class ClaudeNotificationTargetFixture {
-    enum Routing: Sendable { case staleSession, explicitWorkspaceRef }
+    enum Routing: Sendable { case staleSession, explicitWorkspaceRef, callerEnvironment }
 
     let root: URL
     let routing: Routing
+    let agentPID: Int?
     let targetWorkspaceID = "22222222-2222-2222-2222-222222222222"
     let targetSurfaceID = "33333333-3333-3333-3333-333333333333"
     let staleWorkspaceID = "11111111-1111-1111-1111-111111111111"
     let focusedWorkspaceID = "99999999-9999-9999-9999-999999999999"
 
-    init(routing: Routing) throws {
+    init(routing: Routing, agentPID: Int? = nil) throws {
         self.routing = routing
+        self.agentPID = agentPID
         root = URL(fileURLWithPath: "/tmp").appendingPathComponent("claude-target-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     }
@@ -49,8 +51,9 @@ final class ClaudeNotificationTargetFixture {
             "BMUX_CLAUDE_HOOK_STATE_PATH": stateURL.path,
             "BMUX_CLI_SENTRY_DISABLED": "1", "BMUX_CLAUDE_HOOK_SENTRY_DISABLED": "1",
         ]
+        if let agentPID { environment["BMUX_CLAUDE_PID"] = String(agentPID) }
         var arguments = ["hooks", "claude", "notification"]
-        if routing == .staleSession {
+        if routing != .explicitWorkspaceRef {
             environment["BMUX_WORKSPACE_ID"] = targetWorkspaceID
             environment["BMUX_SURFACE_ID"] = targetSurfaceID
         } else {
@@ -101,6 +104,8 @@ final class ClaudeNotificationTargetFixture {
                 } else {
                     error = ["code": "not_found", "message": "workspace not found"]
                 }
+            // No live process inventory: PID remains metadata, and caller IDs resolve the target.
+            case "system.top": result = ["windows": []]
             case "debug.terminals": result = ["terminals": []]
             case "workspace.current": result = ["workspace_id": focused]
             case "feed.push": break

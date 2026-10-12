@@ -609,7 +609,8 @@ jobs:
             -disableAutomaticPackageResolution \
             -destination "platform=macOS" \
             BMUX_SKIP_ZIG_BUILD=1 \
-            -only-testing:bmuxTests/ClaudeNotificationTargetTests test
+            -only-testing:bmuxTests/ClaudeNotificationTargetTests \
+            -only-testing:bmuxTests/ClaudeNotificationStatusLifecycleTests test
 
       - name: Run unit tests
         run: |

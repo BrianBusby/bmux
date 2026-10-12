@@ -128,6 +128,7 @@ Regenerate with: ./scripts/project-docs generate
 
 | Caveat | Owner | Status | Issue |
 | --- | --- | --- | --- |
+| Focused Claude notification target and PID lifecycle suites pending actual app-host verification (`claude_notification_target_fixture_verification`) | Bmux | open |  |
 | Broad legacy bmux-local storage migration (`broad_legacy_storage_migration`) | Bmux | open |  |
 | Residual app-runtime lifecycle ownership outside BmuxAppRuntimeServices (`residual_app_runtime_lifecycle_ownership`) | Bmux | open |  |
 | Workspace Display file-watcher SQLite churn (`workspace_display_file_watcher_churn`) | Bmux | open |  |
