@@ -621,6 +621,7 @@ jobs:
             -only-testing:bmuxTests/MatteChromePreferenceTests \
             -only-testing:bmuxTests/TerminalSurfaceRecoveryTests \
             -only-testing:bmuxTests/TerminalKeyRepeatDeliveryTests \
+            -only-testing:bmuxTests/TerminalNativeInputDeliveryTests \
             -only-testing:bmuxTests/MatteTitlebarDragRoutingTests \
             -only-testing:bmuxTests/ForeignFirstResponderPolicyTests \
             -only-testing:bmuxTests/KeyboardFocusOwnerViewTests \

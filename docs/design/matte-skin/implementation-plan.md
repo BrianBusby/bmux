@@ -1230,3 +1230,57 @@ Current earlier-head CI evidence (bcad95a88): focused matte regressions passed
 input/CLI cases and other recorded evidence gaps remain unresolved. Release,
 package, build/lag and Project Truth checks passed. This rollback does not claim
 to repair those separate full-suite failures.
+
+### Native input fixture readiness follow-up (2026-10-12)
+
+The user approved build 773 and authorized merge after remaining CI and review
+findings are resolved. The parent resolved eight addressed review threads. This
+follow-up changes tests only; the approved app binary and runtime behavior remain
+unchanged, and the full app-host gate remains open.
+
+Completed CI 38251646944 exposed four baseline-pass/current-fail native input
+cases: Korean post-composition Left/Right delivery, synthetic Space release,
+direct ESC insertion, and accessibility insertion. All four fixtures waited a
+fixed 50 ms after attachment without requiring a live terminal surface. The
+maintained TerminalKeyRepeatDeliveryTests and TerminalSurfaceRecoveryTests instead
+subscribe before attachment and await terminalSurfaceDidBecomeReady.
+
+Controlled execution against the unchanged build 773 proves the setup problem:
+withholding readiness reproduces all seven observed assertions; awaiting the
+existing signal passes all four cases. The migrated Swift Testing suite retains
+the Korean window.sendEvent route and exact original precomposed Hangul UTF-16
+text, synthetic press/release fields, raw direct ESC text, and sanitized
+accessibility text plus Return. Global probes are installed and restored within a
+synchronous MainActor closure after readiness; each owned window/surface is torn
+down, detached and closed. No renderer, input owner, timeout or app setting is changed. The new suite is
+added to the existing focused native CI step, preserving the full suite and all
+other selectors. Existing failed cases provide CI red evidence; this is a
+fixture correction, not a new production bug hidden by weaker assertions.
+
+All three complete affected test files compile together against build 773 without
+warnings. The final native execution passes three Swift Testing functions (four
+cases) in one suite. The negative control exits 1 with exactly seven issues;
+its intentionally unused readiness iterator produces a diagnostic only in the
+external /tmp probe. Evidence: /tmp/matte-input-ready-compile.log,
+/tmp/matte-input-ready-native.log and /tmp/matte-input-early-native.log. The exact
+d809dcf8e CI run 38278253830 also reproduces both insertion failures in completed
+job 114910088185; its focused matte step separately passed 49 tests in 14 suites.
+Full test-target compilation and execution of the migrated suite remain CI gates.
+
+The separate Codex non-restorable exec timeout is not a terminal-readiness case.
+An owned mock socket and the exact subprocess inputs against build 773 complete in
+0.26 seconds with exit 0, a rejected launch marker and no persisted CODEX_HOME.
+The prior CI timeout cause remains unproved; that fixture and production CLI are
+unchanged. Other recorded full-suite failures and baseline evidence gaps remain
+open rather than being classified as fixed by this migration.
+
+Guidance reassessed: root AGENTS.md, continuous-code-quality, bmux-testing
+(regression quality, incremental Swift Testing migration and target wiring),
+bmux-architecture (lifecycle ownership and signal-based synchronization),
+bmux-debugging (native input paths), shared behavior and development workflow.
+Localization audit: no shipped strings, labels, settings or translation keys
+change; additions are internal test descriptions and contributor evidence only.
+
+Independent review found no blocker after checking original assertions, exact
+Hangul codepoints, shared probe lifecycle and Xcode wiring. The new suite also
+runs in the focused native step before the broad legacy test run.
