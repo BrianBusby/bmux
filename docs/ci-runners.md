@@ -312,3 +312,37 @@ the live @AppStorage path clamps its 290pt fallback through the configured
 the current persistence and static-clamp contracts, not live resize/default
 consistency. Resolving that policy discrepancy would require a separate runtime
 change and visual verification.
+### Browser remote store profile fixture maintenance
+
+Three `BrowserPanelRemoteStoreTests` assertions assumed every local browser used
+`WKWebsiteDataStore.default()`. The current profile policy instead resolves an
+unspecified profile from the selected/workspace/last-used profile. Moving out of
+a remote workspace restores that panel's retained profile store. Actual baseline
+CI failed only the hardcoded default assertions at GhosttyConfigTests lines 2357,
+2487 and 2551; the surrounding remote sharing and move isolation assertions passed.
+
+`BrowserRemoteStoreScopeTests` migrates exactly those three methods and executes
+both an explicit built-in default and a deliberately selected named profile.
+It preserves the original sharing, move-in replacement and move-out isolation
+checks, and checks panel/profile identity, different remote workspace isolation,
+and absent navigation. The fixture owns its profiles and unmounted panels,
+snapshots/restores profile defaults and selection synchronously on the main actor,
+and configures remote workspaces with `autoConnect: false`; no remote controller,
+network navigation, user socket, or app launch is needed. Unrelated remote URL,
+navigation and terminal tests remain byte-identical.
+
+Unchanged build 773 passes all six parameter cases (three functions/one suite)
+with warning-free native compilation. Reinstating the old always-default-store
+expectation fails exactly the three named-profile cases while explicit-default
+controls pass. This establishes fixture state omission, not a production fix.
+The existing focused app-host browser gate includes the new suite without adding
+a runner. Actual app-host CI remains pending, and the broader suite is not claimed
+green. Canonical and local Project Truth caveats retain that verification gap.
+
+Guidance and inspected owners: root/personal AGENTS, continuous-code-quality,
+bmux-testing migration/behavioral/local-vs-CI references, architecture file/API/
+concurrency guidance and shared-behavior. BrowserProfileRepository owns persisted
+selection and profile stores; BrowserPanel init/reattach owns the active WebKit
+store; Workspace's existing new-browser and detach/attach paths retain panel
+identity and choose the destination scope. No production files, shipped strings,
+or localization catalogs change; this is contributor test documentation only.
