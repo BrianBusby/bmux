@@ -438,6 +438,7 @@
 		BABA2500000000000000000B /* BrowserHTTPBasicAuthProtectionSpaceKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = BABA2500000000000000000C /* BrowserHTTPBasicAuthProtectionSpaceKey.swift */; };
 		FA100000A1B2C3D4E5F60718 /* BrowserImportMappingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA100001A1B2C3D4E5F60718 /* BrowserImportMappingTests.swift */; };
 		FB100000A1B2C3D4E5F60718 /* BrowserImportProfilesUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB100001A1B2C3D4E5F60718 /* BrowserImportProfilesUITests.swift */; };
+		BA1500010000000000000001 /* BrowserInitialLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA1500010000000000000002 /* BrowserInitialLifecycleTests.swift */; };
 		B1F0C0010000000000000001 /* BrowserInspectorFocusHandoff.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0C0010000000000000002 /* BrowserInspectorFocusHandoff.swift */; };
 		B1F0C0020000000000000001 /* BrowserInspectorFocusHandoffTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0C0020000000000000002 /* BrowserInspectorFocusHandoffTests.swift */; };
 		BCBC0A0E0000000000000F01 /* BrowserMediaActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCBC0A0E0000000000000F02 /* BrowserMediaActivity.swift */; };
@@ -2338,6 +2339,7 @@
 		BABA2500000000000000000C /* BrowserHTTPBasicAuthProtectionSpaceKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserHTTPBasicAuthProtectionSpaceKey.swift; sourceTree = "<group>"; };
 		FA100001A1B2C3D4E5F60718 /* BrowserImportMappingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserImportMappingTests.swift; sourceTree = "<group>"; };
 		FB100001A1B2C3D4E5F60718 /* BrowserImportProfilesUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserImportProfilesUITests.swift; sourceTree = "<group>"; };
+		BA1500010000000000000002 /* BrowserInitialLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserInitialLifecycleTests.swift; sourceTree = "<group>"; };
 		B1F0C0010000000000000002 /* BrowserInspectorFocusHandoff.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BrowserInspectorFocusHandoff.swift; sourceTree = "<group>"; };
 		B1F0C0020000000000000002 /* BrowserInspectorFocusHandoffTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserInspectorFocusHandoffTests.swift; sourceTree = "<group>"; };
 		BCBC0A0E0000000000000F02 /* BrowserMediaActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserMediaActivity.swift; sourceTree = "<group>"; };
@@ -5299,6 +5301,7 @@
 				BABA25000000000000000004 /* BrowserHTTPBasicAuthPromptTests.swift */,
 				8D828DA0070335773EBAE83F /* BrowserSystemProxyMirrorTests.swift */,
 				FCF9645364AB46BEAA6939E4 /* BrowserThemeSettingsTests.swift */,
+				BA1500010000000000000002 /* BrowserInitialLifecycleTests.swift */,
 				C59240010000000000000004 /* BrowserDownloadFilenameResolverTests.swift */,
 				C0DE58990000000000000002 /* BmuxWebViewKeyDownReentryTests.swift */,
 				C0DE49870000000000000002 /* BrowserWebContentProcessTests.swift */,
@@ -7587,6 +7590,7 @@
 				BABA25000000000000000005 /* BrowserHTTPBasicAuthPromptCoordinatorTests.swift in Sources */,
 				BABA25000000000000000003 /* BrowserHTTPBasicAuthPromptTests.swift in Sources */,
 				FA100000A1B2C3D4E5F60718 /* BrowserImportMappingTests.swift in Sources */,
+				BA1500010000000000000001 /* BrowserInitialLifecycleTests.swift in Sources */,
 				B1F0C0020000000000000001 /* BrowserInspectorFocusHandoffTests.swift in Sources */,
 				BCBC0A0E0000000000000E11 /* BrowserMediaActivityAggregationTests.swift in Sources */,
 				BCBC0A0E0000000000000E21 /* BrowserMediaPlaybackAudioActivityTests.swift in Sources */,
