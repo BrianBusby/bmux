@@ -975,6 +975,7 @@ class GhosttyApp {
                 return
             }
 
+            loadBmuxDefaultAppearanceConfig(fallbackConfig, preferredColorScheme: initialColorScheme)
             loadInlineGhosttyConfig(
                 "macos-background-from-layer = true",
                 into: fallbackConfig,

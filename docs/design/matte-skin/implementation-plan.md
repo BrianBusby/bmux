@@ -1382,3 +1382,22 @@ records the executable helper pass, four wrapper tests and zero strict-determini
 findings. The ANSI review thread was replied to with this evidence and resolved.
 Combined matte native CI and the separately authorized broader maintenance PRs
 remain open gates; no full-suite green or merge is claimed.
+
+
+### Rejected-config recovery appearance follow-up
+
+Review r4250878434 identified that `ghostty_app_new` recovery built its minimal
+fallback without loading bmux's default appearance. The fallback now invokes the
+existing `loadBmuxDefaultAppearanceConfig` with the captured startup appearance
+before applying its existing renderer/titlebar/shell and managed settings. It
+still excludes rejected user files and leaves allocation, finalization, app
+creation and error reporting in their current lifecycle owner. Normal user
+configuration precedence and the terminal engine are unchanged.
+
+The native `MatteTerminalConfigurationTests` cover the reused loader's dark/light
+colors and explicit configuration precedence. They do not force
+`ghostty_app_new(primary)` rejection; no source-shape test or test-only public API
+is added. Review of the actual recovery call site is the integration evidence
+for that edge path. An isolated tagged build, focused native suite, fresh preview
+approval and CI remain required. Build 773 remains untouched and its earlier
+approval does not cover this new runtime correction. No shipped strings change.
