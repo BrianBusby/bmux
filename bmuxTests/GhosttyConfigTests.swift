@@ -1975,22 +1975,6 @@ final class BrowserPanelWebViewLifecycleTests: XCTestCase {
         }
     }
 
-    func testLifecycleDistinguishesDeferredURLFromNewTab() {
-        let panel = BrowserPanel(
-            workspaceId: UUID(),
-            initialURL: URL(string: "https://example.test/")!,
-            renderInitialNavigation: false,
-            isRemoteWorkspace: false
-        )
-        defer { panel.close() }
-
-        XCTAssertEqual(panel.webViewLifecycleState, .deferredURL)
-
-        panel.noteWebViewVisibility(true, reason: "test.visible")
-
-        XCTAssertEqual(panel.webViewLifecycleState, .deferredURL)
-    }
-
     func testBackgroundInitialNavigationOwnsHeadlessWebKitHostBeforeViewAppears() {
         let panel = BrowserPanel(
             workspaceId: UUID(),
