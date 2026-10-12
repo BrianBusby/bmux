@@ -194,3 +194,7 @@ The separate manual-reconnect fixture has the same stale request, but correcting
 it exposes a real integration gap: its shell prompt cannot invoke the current
 workspace respawn owner. That test and production repair are deliberately outside
 this fixture-only PR; their failures remain unresolved, not waived.
+
+The expanded ten-case focused gate is recorded in Project Truth as
+`ssh_startup_lifecycle_focused_gate_verification`, open until pushed-head app-host
+CI confirms the corrected fixtures. Local native success does not close it.

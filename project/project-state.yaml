@@ -5887,3 +5887,8 @@ caveats:
     issue:
       repository: BrianBusby/bmux
       number: 8
+
+  - id: ssh_startup_lifecycle_focused_gate_verification
+    title: CI app-host Option/Alt step now selects ten SSH startup lifecycle cases; native baseline passes and pushed-head CI remains pending
+    status: open
+    owner: bmux
