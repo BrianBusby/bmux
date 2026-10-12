@@ -1927,54 +1927,6 @@ final class BrowserPanelPopupContextTests: XCTestCase {
 
 @MainActor
 final class BrowserPanelWebViewLifecycleTests: XCTestCase {
-    func testHiddenDiscardPolicyReadsUserDefaults() throws {
-        let suiteName = "bmux.browserHiddenDiscardPolicyTests.\(UUID().uuidString)"
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
-        defer {
-            defaults.removePersistentDomain(forName: suiteName)
-        }
-        let hasEnabledEnvironmentOverride =
-            ProcessInfo.processInfo.environment["BMUX_BROWSER_HIDDEN_WEBVIEW_DISCARD_ENABLED"] != nil
-        let hasDelayEnvironmentOverride =
-            ProcessInfo.processInfo.environment["BMUX_BROWSER_HIDDEN_WEBVIEW_DISCARD_DELAY_SECONDS"] != nil
-
-        if !hasEnabledEnvironmentOverride {
-            XCTAssertEqual(
-                BrowserHiddenWebViewDiscardPolicy.isEnabled(defaults: defaults),
-                BrowserHiddenWebViewDiscardPolicy.defaultEnabled
-            )
-        }
-        if !hasDelayEnvironmentOverride {
-            XCTAssertEqual(
-                BrowserHiddenWebViewDiscardPolicy.hiddenDelay(defaults: defaults),
-                BrowserHiddenWebViewDiscardPolicy.defaultHiddenDelay
-            )
-        }
-
-        defaults.set(false, forKey: BrowserHiddenWebViewDiscardPolicy.enabledKey)
-        defaults.set(42.5, forKey: BrowserHiddenWebViewDiscardPolicy.hiddenDelayKey)
-
-        if !hasEnabledEnvironmentOverride {
-            XCTAssertEqual(defaults.object(forKey: BrowserHiddenWebViewDiscardPolicy.enabledKey) as? Bool, false)
-            XCTAssertFalse(BrowserHiddenWebViewDiscardPolicy.isEnabled(defaults: defaults))
-        }
-        if !hasDelayEnvironmentOverride {
-            XCTAssertEqual(BrowserHiddenWebViewDiscardPolicy.hiddenDelay(defaults: defaults), 42.5)
-
-            defaults.set(7200, forKey: BrowserHiddenWebViewDiscardPolicy.hiddenDelayKey)
-            XCTAssertEqual(
-                BrowserHiddenWebViewDiscardPolicy.hiddenDelay(defaults: defaults),
-                BrowserHiddenWebViewDiscardPolicy.maximumHiddenDelay
-            )
-
-            defaults.set(-1, forKey: BrowserHiddenWebViewDiscardPolicy.hiddenDelayKey)
-            XCTAssertEqual(
-                BrowserHiddenWebViewDiscardPolicy.hiddenDelay(defaults: defaults),
-                BrowserHiddenWebViewDiscardPolicy.defaultHiddenDelay
-            )
-        }
-    }
-
     func testLifecycleDistinguishesDeferredURLFromNewTab() {
         let panel = BrowserPanel(
             workspaceId: UUID(),

@@ -162,3 +162,31 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+
+## Hidden browser discard policy test maintenance
+
+The baseline `BrowserPanelWebViewLifecycleTests.testHiddenDiscardPolicyReadsUserDefaults`
+expected a stored 7200-second delay to clamp to 3600. The policy introduced in
+`69e6393db` deliberately rejects oversized values, and the JSON settings path
+uses the same `resolvedHiddenDelay` validation. The native baseline log reports
+300 versus 3600; this is a stale expectation, not a requested product change.
+
+`BrowserHiddenWebViewDiscardPolicyTests` replaces only that touched XCTest case
+with Swift Testing. It preserves enabled/default/valid-value checks and covers
+both accepted endpoints, negative/oversized values, and nonfinite rejection.
+Each defaults test owns a unique suite and removes it; environment overrides
+explicitly disable the corresponding persisted-preference test, while pure
+validation always runs. No process-wide environment mutation or app behavior
+changes are introduced. The existing focused browser gate runs the new suite
+without adding a runner, so an unrelated legacy app-host abort cannot conceal it.
+
+Guidance: `AGENTS.md`, `skills/bmux-testing/SKILL.md` and its Swift Testing,
+regression/quality, and local/CI references; `skills/bmux-architecture/SKILL.md`;
+and the personal continuous-code-quality skill. Ownership stays in
+`BrowserHiddenWebViewDiscardPolicy`, with the maintained JSON caller in
+`KeyboardShortcutSettingsFileStore` and boundary coverage in `WorkspaceUnitTests`
+as contract evidence. Native execution against build 774 passed four functions
+and fourteen cases, with warning-free test compilation. This change adds no
+shipped strings or localization keys. Actual focused CI and independent review
+remain required; local success does not establish full-suite health.
