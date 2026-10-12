@@ -584,6 +584,7 @@ jobs:
             -only-testing:bmuxTests/BrowserHiddenWebViewDiscardPolicyTests \
             -only-testing:bmuxTests/GhosttyBackgroundThemeTests \
             -only-testing:bmuxTests/BrowserUnderPageBackgroundTests \
+            -only-testing:bmuxTests/BrowserDiscardReadinessTests \
             test
 
       - name: Run Option/Alt sided-modifier regression

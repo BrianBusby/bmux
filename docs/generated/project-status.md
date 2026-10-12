@@ -141,6 +141,7 @@ Regenerate with: ./scripts/project-docs generate
 | Focused browser app-host gate includes discard policy tests; local native cases pass and pushed-head CI remains pending (`browser_discard_policy_focused_gate_verification`) | Bmux | open |  |
 | Focused browser app-host gate includes background compositing tests; local native cases pass and pushed-head CI remains pending (`browser_background_compositing_focused_gate_verification`) | Bmux | open |  |
 | Right sidebar shortcut fixture repair passes local flag-state coverage; focused app-host CI verification remains pending (`right_sidebar_shortcut_fixture_app_host_verification`) | Bmux | open |  |
+| Focused browser app-host gate includes discard and history restore readiness tests; local native cases pass and pushed-head CI remains pending (`browser_discard_restore_focused_gate_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

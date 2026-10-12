@@ -5900,3 +5900,7 @@ caveats:
     title: Right sidebar shortcut fixture repair passes local flag-state coverage; focused app-host CI verification remains pending
     status: open
     owner: bmux
+  - id: browser_discard_restore_focused_gate_verification
+    title: Focused browser app-host gate includes discard and history restore readiness tests; local native cases pass and pushed-head CI remains pending
+    status: open
+    owner: bmux
