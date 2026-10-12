@@ -162,3 +162,60 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+## Codex monitor lease fixture (2026-10-12)
+
+The existing Option/Alt invocation also selects `CodexMonitorLeaseTests` before
+unchanged full coverage. Canonical and local Project Truth caveat
+`codex_monitor_lease_fixture_verification` tracks actual pushed-head app-host
+verification as pending. No runner, retry or deadline policy changes.
+
+The old `testCodexPromptSubmitRetiresPreviousMonitorLeaseForSameSession` submitted
+two unfinished turns and expected the second to replace the first lease. That
+fixture predates the nested-turn stack policy: lease coverage arrived in
+`92c8229d6`, then `e43ac6dd3` made unfinished overlapping turns nested. Default
+subagent suppression intentionally preserves the parent lease. Baseline CI
+`/tmp/matte-base-apphost4.log:73562` records the stale expectation.
+
+Only that method migrates to Swift Testing. A sequential case supplies an
+authentic prior-turn `task_complete` transcript, verifies one new active lease,
+exact session/workspace/surface/turn, depth one, and retirement of the former
+lease. The monitor may already remove its retired record; if the record remains,
+`retiredAt` must be set. Record removal is normal retirement completion, not a
+persistence requirement. A separate unfinished nested case preserves the exact
+first lease while recording depth two and both turn IDs.
+
+`CodexMonitorLeaseFixture` owns the protocol, isolated child environment, files,
+lease snapshots and detached monitor cleanup. It reuses the reviewed async
+`CLISocketFixture`, including listener-inherited SIGPIPE protection, readiness
+sources, partial writes and awaited descriptor teardown. `CommandRunner` uses
+owned positional stdin/stdout/stderr files with the original five-second process
+deadline. Snapshots occur after native hook completion; there is no test polling
+or arbitrary accept count. Cleanup matches only the actual CLI plus this
+fixture's unique lease path, including the transient nohup command, and joins
+native process-exit observation before deleting owned files. DispatchSource
+process observation is a narrow OS-lifecycle bridge behind an async method;
+Foundation has no Process handle for these CLI-owned detached descendants.
+No real app socket, user configuration or preferences are used.
+
+Unchanged build 773 passes both cases in the native harness. A temporary control
+replaces `task_complete` with `task_started` and produces five sequential-case
+failures, including `retiredAt`; another disables subagent suppression and
+produces two nested-lease failures. Logs are
+`/tmp/codex-monitor-lease-native-green.log`,
+`/tmp/codex-monitor-lease-negative-completion.log`, and
+`/tmp/codex-monitor-lease-negative-nesting.log`. The earlier five-scenario native
+diagnosis and history are in `/tmp/codex-monitor-lease-diagnosis.md`.
+These are focused local results, not full app-host green. This correction changes
+no production code, shipped strings or localization catalogs and requires no app
+build or launch.
+
+Guidance: root/personal AGENTS, continuous-code-quality, testing migration and
+behavioral quality, architecture file/concurrency rules, shared behavior, socket
+policy and Xcode wiring. Maintained behavioral references are
+`testNestedCodexPromptAndStopDoNotReplaceParentResumeBinding` and
+`testCodexStopAfterInterruptedPriorTurnStillNotifies`; lease mutation stays in the
+CLI session/monitor owners. All other legacy methods remain byte-identical. Project normalization/wiring
+(433 files), strict determinism (zero findings), base-aware source budgets, shard
+coverage (2,006 selectors), shard tests, runner-policy guards and Project Truth
+validation/generation/freshness pass. New fixture compilation is warning-free.

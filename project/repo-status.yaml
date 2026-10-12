@@ -186,3 +186,5 @@ local_caveats:
     status: open
   - id: hybrid_focus_render_capture
     status: open
+  - id: codex_monitor_lease_fixture_verification
+    status: open
