@@ -938,6 +938,7 @@
 		A6D1F0100000000000000002 /* MainWindowVisibilityLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D1F0100000000000000001 /* MainWindowVisibilityLifecycleTests.swift */; };
 		730600000000000000000001 /* MainWindowVisibleFrameFitCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 730600010000000000000001 /* MainWindowVisibleFrameFitCoreTests.swift */; };
 		730600020000000000000002 /* MainWindowVisibleFrameFitRescue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 730600020000000000000001 /* MainWindowVisibleFrameFitRescue.swift */; };
+		DA9021000000000000000001 /* ManagedAppearanceStartupContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9021000000000000000002 /* ManagedAppearanceStartupContractTests.swift */; };
 		5E380B9351E24110A01CA392 /* ManagedCodexDownloadFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51819639FC2F40309D04291E /* ManagedCodexDownloadFixture.swift */; };
 		F6C77B7A53C64E2892401FA9 /* ManagedCodexRelease.swift in Sources */ = {isa = PBXBuildFile; fileRef = 919F8B78C49E4A04A0476A3D /* ManagedCodexRelease.swift */; };
 		67752F5C979F4E65A7A9D5DF /* ManagedCodexRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40BC923C3EC142C8A924777F /* ManagedCodexRuntime.swift */; };
@@ -2882,6 +2883,7 @@
 		A6D1F0100000000000000001 /* MainWindowVisibilityLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowVisibilityLifecycleTests.swift; sourceTree = "<group>"; };
 		730600010000000000000001 /* MainWindowVisibleFrameFitCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowVisibleFrameFitCoreTests.swift; sourceTree = "<group>"; };
 		730600020000000000000001 /* MainWindowVisibleFrameFitRescue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MainWindowVisibleFrameFitRescue.swift; sourceTree = "<group>"; };
+		DA9021000000000000000002 /* ManagedAppearanceStartupContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedAppearanceStartupContractTests.swift; sourceTree = "<group>"; };
 		51819639FC2F40309D04291E /* ManagedCodexDownloadFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedCodexDownloadFixture.swift; sourceTree = "<group>"; };
 		919F8B78C49E4A04A0476A3D /* ManagedCodexRelease.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ManagedCodexRelease.swift; sourceTree = "<group>"; };
 		40BC923C3EC142C8A924777F /* ManagedCodexRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ManagedCodexRuntime.swift; sourceTree = "<group>"; };
@@ -5460,6 +5462,7 @@
 				8D828DA0070335773EBAE83F /* BrowserSystemProxyMirrorTests.swift */,
 				FCF9645364AB46BEAA6939E4 /* BrowserThemeSettingsTests.swift */,
 				BA1500010000000000000002 /* BrowserInitialLifecycleTests.swift */,
+				DA9021000000000000000002 /* ManagedAppearanceStartupContractTests.swift */,
 				C59240010000000000000004 /* BrowserDownloadFilenameResolverTests.swift */,
 				C0DE58990000000000000002 /* BmuxWebViewKeyDownReentryTests.swift */,
 				C0DE49870000000000000002 /* BrowserWebContentProcessTests.swift */,
@@ -7945,6 +7948,7 @@
 				17C9F5BA0DD14EDC8C3E5001 /* MainWindowVisibilityControllerTests.swift in Sources */,
 				A6D1F0100000000000000002 /* MainWindowVisibilityLifecycleTests.swift in Sources */,
 				730600000000000000000001 /* MainWindowVisibleFrameFitCoreTests.swift in Sources */,
+				DA9021000000000000000001 /* ManagedAppearanceStartupContractTests.swift in Sources */,
 				5E380B9351E24110A01CA392 /* ManagedCodexDownloadFixture.swift in Sources */,
 				F6BCA12F3F234A4CA1BA6A8A /* ManagedCodexRuntimeTests.swift in Sources */,
 				D7470002D7470002D7470002 /* MarkdownLinkBoundaryRegressionTests.swift in Sources */,

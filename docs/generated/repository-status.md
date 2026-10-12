@@ -172,6 +172,7 @@ Repository: `BrianBusby/bmux`
 | `matte_skin_full_app_host_verification` | open |
 | `matte_skin_ci_compiler_compatibility` | resolved |
 | `cloud_attach_retry_fixture_verification` | open |
+| `managed_appearance_startup_fixture_verification` | open |
 | `configured_codex_placeholder_startup_dogfood` | open |
 | `codex_update_workspace_exit_native_dogfood` | open |
 | `expanded_prior_turn_system_appearance_contrast` | monitoring |

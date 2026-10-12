@@ -1110,3 +1110,46 @@ contains the reviewed but still unpublished PR155 runtime correction, whereas
 the local composition still includes that PR's test-only published head. No app
 was built, launched, reloaded or quit. Complete combined compilation/runtime and
 authoritative CI/artifact gates remain open.
+
+
+## Managed appearance startup fixture contract
+
+Three legacy `KeyboardShortcutSettingsFileStoreStartupTests` methods expected
+neither application appearance nor terminal synchronization during launch and
+reload. The retained base app-host log reports 18 assertion failures across
+those methods. Commit `e788e5606` intentionally applies application appearance
+at launch while withholding terminal synchronization, then synchronizes on a
+changed reload. The former global environment override also allowed unrelated
+appearance observers to enter the fixture's recorded calls.
+
+`ManagedAppearanceStartupContractTests` replaces only those three methods with
+constructor-injected effects, a private notification center, disabled watchers
+and an owned settings file. Each synchronous MainActor case restores the exact
+three touched application-domain defaults values (including absent keys, without
+promoting registered/global fallbacks); no global environment provider or settings-store
+replacement is used. Dark, light and system launch cases assert one application
+appearance, zero startup terminal synchronization, an inert deferred drain and
+unchanged reload, then one changed-mode application and synchronization with the
+exact source. Repeated reload/deferred calls add no effects. System startup uses
+the injected system appearance; switching back to system clears the app override.
+All other legacy methods remain byte-identical.
+
+Focused Swift 6 compilation is warning-free against unchanged build 777. All
+three native cases pass. An additional native runner registers a system fallback
+and verifies all three originally absent application-domain keys stay absent
+after the suite, while the registered fallback remains visible. Each case seeds
+the legacy auto value before import so host registration cannot skip the import.
+A temporary negative control reinstating the obsolete
+no-launch-appearance and no-reload-sync expectations fails exactly six assertions
+across those three cases. No app build, launch, user settings change or production
+edit is required. Actual app-host execution remains pending; the existing focused
+browser app-host step includes the suite, tracked by matching canonical/local
+Project Truth caveats. Broader legacy CI is not claimed green.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing migration,
+behavior and local/CI references, architecture ownership/file/concurrency rules,
+and shared behavior. Reviewed owners are the file store's init/reload/managed
+side-effect pipeline and AppearanceSettings' injected launch/live application.
+The existing UserDefaults-backed production storage remains unchanged; synchronous
+ownership avoids yielding while test defaults are installed. No shipped copy or
+localization catalog changes are introduced.
