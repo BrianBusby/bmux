@@ -185,3 +185,4 @@ Repository: `BrianBusby/bmux`
 | `sidebar_minimum_default_and_configured_range_consistency` | open |
 | `sidebar_width_persistence_focused_gate_verification` | open |
 | `managed_appearance_startup_fixture_verification` | open |
+| `native_app_host_full_suite_failures` | open |
