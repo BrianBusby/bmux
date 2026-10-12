@@ -158,7 +158,7 @@ Repository: `BrianBusby/bmux`
 | Caveat | Status |
 | --- | --- |
 | `matte_skin_chrome_preference_verification` | open |
-| `matte_skin_custom_terminal_inset_verification` | open |
+| `matte_skin_custom_terminal_inset_verification` | resolved |
 | `matte_skin_terminal_preference_precedence` | resolved |
 | `matte_skin_full_app_host_verification` | open |
 | `matte_skin_ci_compiler_compatibility` | resolved |

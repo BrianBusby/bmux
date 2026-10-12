@@ -13047,7 +13047,7 @@ class TerminalController {
         return "OK \(screenshotId) \(outputPath.path)"
     }
 
-    private func captureCompositedWindowPNGData(_ window: NSWindow) -> Data? {
+    func captureCompositedWindowPNGData(_ window: NSWindow) -> Data? {
         guard let cgImage = CGWindowListCreateImage(
             .null,
             .optionIncludingWindow,

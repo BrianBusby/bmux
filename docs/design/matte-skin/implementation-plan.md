@@ -1096,3 +1096,78 @@ legacy coverage. Sources: /tmp/matte-final-head-shard2.log,
 Test-only CI run 38189232267 targets 36a1500b1; focused shard 3 is job
 114618756680 and was queued at this checkpoint. Production fixes must not be
 pushed until its actual regression assertions are captured.
+
+### Unlocked native composition proof
+
+Actual test-only CI run 38189232267, shard 3 job 114618756680, completed 46 Swift
+Testing functions across 12 suites with exactly the six intended assertions: four
+pane-background ownership assertions and two translucent inset assertions. Both
+legacy repeat XCTest cases passed in that run. This preserves actual CI red
+evidence before the transparency fix is pushed.
+
+After unlock, the fixture exposed two setup/capture mistakes rather than a
+production regression. Bonsplit deliberately hides its native split view when
+isInteractive is false, so a visible fixture must also be input-active. Reference
+colors and real composition must use the same window-server color pipeline.
+AppKit cacheDisplay flattens destination-out/native-backed content differently;
+it is not a valid compositor oracle. ScreenCaptureKit was also tested in /tmp but
+requires TCC capture permission in that harness and was not adopted.
+
+The fixture now reuses the app's existing DEBUG composited-window PNG helper
+through @testable access (private becomes internal; implementation unchanged).
+It awaits a real Core Animation transaction completion, creates only its own
+offscreen windows, and detaches/closes them at teardown. It sets the independently
+tested inactive-split opacity to 1 so both panes measure backdrop ownership.
+Opaque/default coverage, native tab chrome, panel margin, sidebar base, two pane
+centers, and same-host hidden/remounted state remain asserted with the original
+color tolerance. No permission prompt, sleep, polling, or assertion relaxation is
+added. The existing AppKit fallback screenshot path is not validated here; it
+already cannot represent all native/Metal compositing.
+
+Before changing the helper visibility, an identical-method /tmp harness against
+build 771 passed 10 Swift Testing functions across four suites. A negative control
+that removed only the outer aperture preference failed exactly 16 terminal-center
+and remount assertions; opaque/chrome/margin/sidebar/hidden checks continued to
+pass. Thus the new full composition coverage detects the missing-ancestor-hole
+regression through real NSSplitView hosting roots. Logs are
+/tmp/matte-transparency-unlocked-same-pipeline.log and
+/tmp/matte-transparency-disabled-aperture.log. The temporary duplicate helper
+emitted the same deprecated window-capture API warning as the existing app helper;
+the committed fixture calls the maintained owner and does not duplicate that API.
+Final compiled execution through the newly exposed helper completed successfully
+against build 772, as recorded below.
+
+Parent live build 771 verification passed at 1092×593 in both appearances. Its
+own comment-only configuration preserves the previous single-pane layout; a
+temporary tag-only opacity 0.25/blur 0 override reloads to a visibly transparent
+canvas in both panes while tabs, sidebar and panel margins remain opaque. The
+dark inactive-pane overlay remains the existing configured behavior. Session
+removes the terminal aperture; Terminal remount restores it. The extra fixture
+split was closed, the tag-only file restored exactly, configuration reloaded, and
+System appearance restored. Real user config and build 769 were untouched.
+Composited PNGs from the existing debug.window.screenshot RPC are preserved as
+verification-final/build-771-custom-theme-graphite.png and
+verification-final/build-771-custom-theme-porcelain.png. These are explicitly
+build-771 custom-theme captures, not replacements for the historical default
+design comparisons. No new material deviation was observed.
+
+Final isolated build 772 (matte-skin-transparency-verified) succeeded without
+replacing the user's running build 771. The final fixture linked to that actual
+app dylib passes all 27 Swift Testing functions across eight suites, including
+six full composition cases, configuration precedence, preferences, popover focus,
+inset pixels, repeat delivery, recovery, and shared surfaces. Compilation and
+execution exit 0; the test compile emits no diagnostics. Logs:
+/tmp/matte-transparency-final-green-compile.log and
+/tmp/matte-transparency-final-green.log. The one-line DEBUG access change leaves
+release/runtime drawing behavior identical to the live-verified build 771.
+Independent review found no blocker in the final fixture/helper lifecycle and
+coverage. The existing conditional-cast and deprecated capture warnings in
+TerminalController remain unchanged; no new warning or suppression was added.
+
+Local inset/composition/live verification is resolved. Full fixed-head app-host CI
+remains a separate open gate, with the previously classified full-suite failures
+and four missing-baseline cases retained above. Test wiring (443 files),
+feature-base source budgets, project normalization, diff checks, and Project Truth
+validate/generate/check pass. Localization audit found no new shipped labels,
+menus, preferences, messages, or translation keys; this follow-up changes internal
+fixture descriptions, contributor evidence, and existing screenshot access only.
