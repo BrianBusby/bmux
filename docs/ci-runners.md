@@ -162,3 +162,38 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+
+### Browser discard fixture readiness (2026-10-12)
+
+Two legacy `BrowserPanelWebViewLifecycleTests` cases attempted discard after
+polling only `WKWebView.isLoading`. Discard eligibility also checks the model's
+loading/provisional state. A native probe against unchanged build 774 observed a
+loading blocker at the old boundary; awaiting the model's loading-complete event
+produced no blockers and allowed discard. Both complete discard/restore and
+restored-history assertions pass against the unchanged artifact with that event
+boundary. This proves the corrected fixture's behavior locally; it is not proof
+that every earlier CI failure had the same timing.
+
+`BrowserDiscardReadinessTests` migrates only those two cases to Swift Testing,
+awaits the existing model publisher's async sequence, confirms WebKit completion,
+and keeps the original one-second failure deadline. The deadline is injected as
+a duration and canceled with the task group. The inherited synchronous lifecycle
+subscription remains confined to tests: it captures every transient state during
+synchronous restore and history navigation, which an unbuffered async sequence
+could miss. No production propagation API, state owner or discard policy changes.
+Panels close and subscriptions cancel through scoped cleanup.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing (migration,
+regression quality and wiring), bmux-architecture (legacy boundary/concurrency),
+and bmux-dev-workflow (project normalization). Owners inspected:
+`BrowserPanel.noteWebViewVisibility`, `discardHiddenWebViewForMemory`,
+`restoreDiscardedWebViewIfNeeded`, `goBack`, and
+`BrowserHiddenWebViewDiscardManager.blockers`. Verification runs in an
+isolated HOME against a native app artifact, without launching or replacing the
+user's preview. The existing ReactGrab prefetch can still perform background
+network activity; this fixture does not add it or claim a network-free app.
+All prior webview identity, lifecycle, timestamp/reason, visibility and transient
+new-tab assertions remain. The focused browser CI invocation includes the new
+wired suite. No shipped text changed; English test diagnostics and contributor
+verification notes are the only new prose. App-host CI remains required.
