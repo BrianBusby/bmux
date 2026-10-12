@@ -54,9 +54,12 @@ import Testing
         let image = try #require(host.bitmapImageRepForCachingDisplay(in: host.bounds))
         host.cacheDisplay(in: host.bounds, to: image)
         let actual = try #require(image.colorAt(x: image.pixelsWide / 2, y: image.pixelsHigh / 2)?.usingColorSpace(.sRGB))
-        // Compare with the existing panel composition, which is also the input
-        // to readable-foreground reconciliation; raw config opacity stays intact.
-        let reference = NSHostingView(rootView: Color(nsColor: appearance.backgroundColor).frame(width: 1, height: 1))
+        // A translucent terminal leaves backdrop painting to the existing window
+        // owner. Its leaf must reveal the parent, not paint an opaque composite.
+        // Full shell/split coverage separately verifies which parent is visible.
+        let expectedColor = appearance.usesClearContentBackground
+            ? MatteTheme(colorScheme: scheme).color(.panel) : appearance.backgroundColor
+        let reference = NSHostingView(rootView: Color(nsColor: expectedColor).frame(width: 1, height: 1))
         reference.frame = NSRect(x: 0, y: 0, width: 1, height: 1)
         reference.layoutSubtreeIfNeeded()
         let expectedImage = try #require(reference.bitmapImageRepForCachingDisplay(in: reference.bounds))
@@ -65,6 +68,6 @@ import Testing
         let distance = abs(actual.redComponent - expected.redComponent)
             + abs(actual.greenComponent - expected.greenComponent)
             + abs(actual.blueComponent - expected.blueComponent)
-        #expect(distance < 0.02, "Terminal interior must paint the resolved configuration, including opacity composition")
+        #expect(distance < 0.02, "Terminal interior must respect the existing content-background owner")
     }
 }

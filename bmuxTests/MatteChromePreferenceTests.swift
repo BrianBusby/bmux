@@ -14,6 +14,19 @@ import Testing
 
 @MainActor
 @Suite(.serialized) struct MatteChromePreferenceTests {
+    @Test func terminalPaneBackdropStaysOwnedByWindowAcrossReloads() {
+        let workspace = Workspace()
+        defer { for panel in workspace.panels.values { panel.close() } }
+        for opacity in [1.0, 0.5] {
+            var config = GhosttyConfig()
+            config.backgroundOpacity = opacity
+            workspace.applyGhosttyChrome(from: config)
+            #expect(workspace.bonsplitController.configuration.appearance.chromeColors.paneBackgroundHex == "#00000000")
+            workspace.applyGhosttyChrome(backgroundColor: .black, backgroundOpacity: opacity)
+            #expect(workspace.bonsplitController.configuration.appearance.chromeColors.paneBackgroundHex == "#00000000")
+        }
+    }
+
     @Test func unsetAndResetUseApprovedDefaultWithMagnification() {
         let setting = NoopSettingsHostActions().surfaceTabBarFontSize()
         #expect(setting.points == 13)
