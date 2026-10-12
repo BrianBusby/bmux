@@ -5887,3 +5887,8 @@ caveats:
     issue:
       repository: BrianBusby/bmux
       number: 8
+
+  - id: right_sidebar_shortcut_fixture_app_host_verification
+    title: Right sidebar shortcut fixture repair passes local flag-state coverage; focused app-host CI verification remains pending
+    status: open
+    owner: bmux
