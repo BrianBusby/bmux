@@ -91,15 +91,15 @@ def check_test_progress_watchdog() -> None:
             for _ in range(40):
                 print("unrelated app diagnostic", flush=True)
                 time.sleep(0.05)
+            print("cleanup-child-finished", flush=True)
         """)
-        started = time.monotonic()
         result = subprocess.run(
             [sys.executable, str(HELPER), sys.executable, "-c", child],
             cwd=ROOT, text=True, capture_output=True, timeout=5, env=env,
         )
         expected = 125 if failed_summary else 124
         assert result.returncode == expected, result.stdout + result.stderr
-        assert time.monotonic() - started < 1.5, "App noise must not refresh test progress"
+        assert "cleanup-child-finished" not in result.stdout, "Cleanup must terminate despite app noise"
 
     # Active Swift Testing retains the existing general output-idle deadline.
     child = (
