@@ -1423,3 +1423,11 @@ The stock Bonsplit differences already accepted for build773 remain; no texture
 or dependency styling has returned. The preview is restored to System appearance.
 Fresh user approval and combined CI remain pending; forced app-creation rejection
 is still covered by call-site inspection rather than a fault-injected runtime.
+
+Brian approved build775 after the live check: “Build 775 looks good; merge when
+all gates pass.” It replaces build773 as the approved matte runtime. The rejected-
+config appearance verification caveat is resolved by the tagged build, shared
+loader tests, independent call-site review and fresh dogfood approval; the stated
+fault-injection and exact-size capture limitations remain documented above.
+The full app-host gate and separate maintenance repairs are still open. Approval
+is not a waiver of those gates, and no merge has occurred.
