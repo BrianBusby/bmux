@@ -560,6 +560,7 @@ jobs:
           fi
 
       - name: Run browser proxy and discard policy regressions
+      - name: Run browser proxy and background regressions
         if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_BROWSER_PROXY_REGRESSION_SHARD) }}
         run: |
           # Focused gate for https://github.com/manaflow-ai/bmux/issues/5888.
@@ -568,6 +569,7 @@ jobs:
           # otherwise be skipped by an app-host abort that still reports
           # "(0 unexpected)". Keep this targeted only-testing invocation as a
           # non-tolerant guard for browser proxy and discard policy regressions.
+          # non-tolerant guard for browser proxy and background regressions.
           set -euo pipefail
           SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
           scripts/ci/run-in-console-session.sh \
@@ -580,6 +582,8 @@ jobs:
             BMUX_SKIP_ZIG_BUILD=1 \
             -only-testing:bmuxTests/BrowserSystemProxyMirrorTests \
             -only-testing:bmuxTests/BrowserHiddenWebViewDiscardPolicyTests \
+            -only-testing:bmuxTests/GhosttyBackgroundThemeTests \
+            -only-testing:bmuxTests/BrowserUnderPageBackgroundTests \
             test
 
       - name: Run Option/Alt sided-modifier regression
