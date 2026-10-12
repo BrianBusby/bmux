@@ -200,3 +200,5 @@ local_caveats:
     status: open
   - id: sidebar_width_persistence_focused_gate_verification
     status: open
+  - id: managed_appearance_startup_fixture_verification
+    status: open

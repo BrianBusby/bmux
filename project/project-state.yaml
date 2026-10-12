@@ -5913,3 +5913,7 @@ caveats:
     title: Focused app-host gate includes default and configured sidebar width policy tests; local native cases pass and pushed-head CI remains pending
     status: open
     owner: bmux
+  - id: managed_appearance_startup_fixture_verification
+    title: Focused managed appearance startup suite pending actual app-host verification
+    status: open
+    owner: bmux

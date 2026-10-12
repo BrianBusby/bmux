@@ -405,4 +405,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Right sidebar shortcut fixture repair passes local flag-state coverage; focused app-host CI verification remains pending (`right_sidebar_shortcut_fixture_app_host_verification`) - owner: Bmux; status: open
 - Focused browser app-host gate includes discard and history restore readiness tests; local native cases pass and pushed-head CI remains pending (`browser_discard_restore_focused_gate_verification`) - owner: Bmux; status: open
 - Focused app-host gate includes default and configured sidebar width policy tests; local native cases pass and pushed-head CI remains pending (`sidebar_width_persistence_focused_gate_verification`) - owner: Bmux; status: open
+- Focused managed appearance startup suite pending actual app-host verification (`managed_appearance_startup_fixture_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
