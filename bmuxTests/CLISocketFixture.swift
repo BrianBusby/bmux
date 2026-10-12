@@ -112,10 +112,11 @@ struct CLISocketFixture: Sendable {
     private func readiness(
         descriptor: Int32, token: Int, continuation: AsyncStream<Int>.Continuation
     ) throws -> any DispatchSourceRead {
+        // Accepted sockets inherit this option; re-setting it after peer close fails with EINVAL on Darwin.
         var noSignal: Int32 = 1
         guard fcntl(descriptor, F_SETFL, O_NONBLOCK) == 0,
               fcntl(descriptor, F_SETFD, FD_CLOEXEC) == 0,
-              setsockopt(descriptor, SOL_SOCKET, SO_NOSIGPIPE, &noSignal, socklen_t(MemoryLayout<Int32>.size)) == 0 else {
+              (token != 0 || setsockopt(descriptor, SOL_SOCKET, SO_NOSIGPIPE, &noSignal, socklen_t(MemoryLayout<Int32>.size)) == 0) else {
             let error = POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
             Darwin.close(descriptor)
             throw error

@@ -5944,7 +5944,7 @@ caveats:
     owner: bmux
 
   - id: ssh_startup_lifecycle_focused_gate_verification
-    title: CI app-host Option/Alt step now selects ten SSH startup lifecycle cases; native baseline passes and pushed-head CI remains pending
+    title: CI app-host Option/Alt step selects nine SSH lifecycle tests plus managed attach cleanup fixture; pushed-head verification pending
     status: open
     owner: bmux
 

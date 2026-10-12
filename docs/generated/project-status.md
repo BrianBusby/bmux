@@ -149,7 +149,7 @@ Regenerate with: ./scripts/project-docs generate
 | Browser legacy theme startup migration focused gate awaits fixed app-host CI (`browser_legacy_theme_startup_migration_verification`) | Bmux | open |  |
 | Focused browser app-host gate includes background compositing tests; local native cases pass and pushed-head CI remains pending (`browser_background_compositing_focused_gate_verification`) | Bmux | open |  |
 | Right sidebar shortcut fixture repair passes local flag-state coverage; focused app-host CI verification remains pending (`right_sidebar_shortcut_fixture_app_host_verification`) | Bmux | open |  |
-| CI app-host Option/Alt step now selects ten SSH startup lifecycle cases; native baseline passes and pushed-head CI remains pending (`ssh_startup_lifecycle_focused_gate_verification`) | Bmux | open |  |
+| CI app-host Option/Alt step selects nine SSH lifecycle tests plus managed attach cleanup fixture; pushed-head verification pending (`ssh_startup_lifecycle_focused_gate_verification`) | Bmux | open |  |
 | SSH manual reconnect has a failing native handoff regression; shell prompt and native respawn ownership repair remain pending (`ssh_manual_reconnect_handoff_regression`) | Bmux | open |  |
 | Focused browser app-host gate includes discard and history restore readiness tests; local native cases pass and pushed-head CI remains pending (`browser_discard_restore_focused_gate_verification`) | Bmux | open |  |
 | Focused app-host gate includes default and configured sidebar width policy tests; local native cases pass and pushed-head CI remains pending (`sidebar_width_persistence_focused_gate_verification`) | Bmux | open |  |
