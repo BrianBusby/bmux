@@ -145,6 +145,7 @@ Regenerate with: ./scripts/project-docs generate
 | SSH PTY closure and acknowledged-resize fixture verification (`ssh_pty_lifecycle_fixture_verification`) | Bmux | open |  |
 | Codex Stop fixture repair passes 13 local scenarios; focused app-host CI verification remains pending (`codex_stop_fixture_app_host_verification`) | Bmux | open |  |
 | CommandRunner blocking pipe readers can exhaust the cooperative executor during parallel socket tests (`command_runner_parallel_pipe_capture`) | Bmux | open |  |
+| Focused Claude notification target and PID lifecycle suites pending actual app-host verification (`claude_notification_target_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

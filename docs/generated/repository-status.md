@@ -184,3 +184,4 @@ Repository: `BrianBusby/bmux`
 | `ssh_pty_lifecycle_fixture_verification` | open |
 | `codex_stop_fixture_app_host_verification` | open |
 | `command_runner_parallel_pipe_capture` | open |
+| `claude_notification_target_fixture_verification` | open |

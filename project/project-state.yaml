@@ -5917,3 +5917,7 @@ caveats:
     title: CommandRunner blocking pipe readers can exhaust the cooperative executor during parallel socket tests
     status: open
     owner: bmux
+  - id: claude_notification_target_fixture_verification
+    title: Focused Claude notification target and PID lifecycle suites pending actual app-host verification
+    status: open
+    owner: bmux

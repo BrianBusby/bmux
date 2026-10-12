@@ -200,3 +200,5 @@ local_caveats:
     status: open
   - id: command_runner_parallel_pipe_capture
     status: open
+  - id: claude_notification_target_fixture_verification
+    status: open

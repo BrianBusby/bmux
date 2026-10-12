@@ -1,52 +1,28 @@
-import Dispatch
-import Foundation
 import Testing
 
-@Suite(.serialized)
-struct ClaudeNotificationStatusLifecycleTests {
-    @Test func claudeNotificationStatusCarriesPIDForStaleSweep() throws {
-        let harness = ClaudeHookSurfaceResolutionSwiftTests()
-        let context = try harness.makeClaudeHookContext(name: "claude-notify-pid")
-        defer { context.cleanup() }
-
+@Suite
+final class ClaudeNotificationStatusLifecycleTests {
+    @Test(arguments: [false, true])
+    func claudeNotificationStatusCarriesPIDForStaleSweep(permission: Bool) async throws {
         let claudePID = 42_424
-        let serverHandled = harness.startClaudeSurfaceResolutionServer(
-            context: context,
-            surfaces: [(context.surfaceId, "surface:1", true)],
-            ttyName: "ttys-claude-notify-pid",
-            ttySurfaceId: context.surfaceId
-        )
-
-        var environment = harness.claudeHookEnvironment(
-            context: context,
-            surfaceId: context.surfaceId,
-            ttyName: "ttys-claude-notify-pid",
-            storeURL: context.root.appendingPathComponent("claude-hook-sessions.json")
-        )
-        environment["BMUX_CLAUDE_PID"] = "\(claudePID)"
-
-        let result = harness.runProcess(
-            executablePath: context.cliPath,
-            arguments: ["hooks", "claude", "notification"],
-            environment: environment,
-            standardInput: #"{"session_id":"claude-notify-pid-session","cwd":"\#(context.root.path)","hook_event_name":"Notification","message":"Claude needs your input"}"#,
-            timeout: 5
-        )
-
-        #expect(serverHandled.wait(timeout: .now() + 5) == .success)
-        harness.assertSuccessfulHook(result)
-
-        let statusCommand = try #require(
-            context.state.snapshot().first {
-                $0.hasPrefix("set_status claude_code Needs input ")
-                    && $0.contains("--tab=\(context.workspaceId)")
-                    && $0.contains("--panel=\(context.surfaceId)")
-            },
-            "Expected Claude notification to set a Needs input status, saw \(context.state.snapshot())"
-        )
+        let fixture = try ClaudeNotificationTargetFixture(routing: .callerEnvironment, agentPID: claudePID)
+        let cli = try BundledCLITestSupport.bundledCLIPath(for: Self.self)
+        let commands = try await fixture.run(cli: cli, permission: permission)
+        let status = permission ? "Needs input" : "Idle"
+        let statusCommands = commands.filter { $0.hasPrefix("set_status ") }
+        #expect(statusCommands.count == 1)
+        let statusCommand = try #require(statusCommands.first)
+        #expect(statusCommand.hasPrefix("set_status claude_code \(status) "), "\(commands)")
+        let options = statusCommand.split(separator: " ")
+        #expect(options.contains("--tab=\(fixture.targetWorkspaceID)"))
+        #expect(options.contains("--panel=\(fixture.targetSurfaceID)"))
         #expect(
-            statusCommand.contains("--pid=\(claudePID)"),
-            "Claude notification status must be PID-backed so the stale PID sweep can clear it after abrupt agent exit; command=\(statusCommand)"
+            options.contains("--pid=\(claudePID)"),
+            "The status must carry the agent PID so stale sweeping can clear it after abrupt exit: \(statusCommand)"
         )
+        let lifecycle = permission ? "needsInput" : "idle"
+        #expect(commands.filter { $0.hasPrefix("set_agent_lifecycle ") } == [
+            "set_agent_lifecycle claude_code \(lifecycle) --tab=\(fixture.targetWorkspaceID) --panel=\(fixture.targetSurfaceID)"
+        ])
     }
 }
