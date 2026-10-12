@@ -22,6 +22,8 @@ execution_telemetry:
   live_codex_evidence_convergence_correctness: implemented
 
 local_capabilities:
+  native_ci_exit_status_reporting: implemented
+  native_ci_framework_completion_watchdog: implemented
   managed_connected_codex_runtime: under_observation
   ordinary_cli_read_only_chat: under_observation
   ordinary_cli_shared_control: not_implemented
@@ -136,6 +138,8 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: native_app_host_full_suite_failures
+    status: open
   - id: configured_codex_placeholder_startup_dogfood
     status: open
   - id: codex_update_workspace_exit_native_dogfood
