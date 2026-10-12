@@ -1,7 +1,8 @@
 import SwiftUI
+import BmuxAppKitSupportUI
 
 extension ContentView {
-    func bmuxShellChatContent() -> ((@escaping () -> Void) -> AnyView)? {
+    func bmuxShellChatContent(theme: MatteTheme) -> ((@escaping () -> Void) -> AnyView)? {
         guard let workspace = tabManager.selectedWorkspace,
               let panel = workspace.focusedTerminalPanel,
               let reader = tabManager.terminalChatReader else { return nil }
@@ -9,6 +10,7 @@ extension ContentView {
             AnyView(
                 TerminalChatWebRenderer(
                     panel: panel, reader: reader, appearance: .fromConfig(GhosttyConfig.load()),
+                    matteTheme: theme,
                     onStartConnectedSession: workspace.remoteConfiguration == nil && !workspace.isRemoteTmuxMirror ? { [weak workspace, panelID = panel.id] in
                         guard let workspace else { throw AgentSessionBridgeError.invalidRequest }
                         try await workspace.startConnectedCodex(from: panelID)

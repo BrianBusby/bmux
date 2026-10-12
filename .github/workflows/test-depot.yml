@@ -162,15 +162,9 @@ jobs:
           fi
 
           echo "$OUTPUT"
-          if [ "$EXIT_CODE" -ne 0 ]; then
-            SUMMARY=$(echo "$OUTPUT" | grep "Executed.*tests.*with.*failures" | tail -1)
-            if echo "$SUMMARY" | grep -q "(0 unexpected)"; then
-              echo "All failures are expected, treating as pass"
-            else
-              echo "Unexpected test failures detected"
-              exit 1
-            fi
-          fi
+          # XCTest handles genuine expected failures in the native exit status.
+          # A partial log summary cannot turn a failure or timeout into success.
+          exit "$EXIT_CODE"
 
       - name: Run UI tests
         if: ${{ !inputs.skip_ui_tests }}

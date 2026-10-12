@@ -1,11 +1,13 @@
 import AppKit
 import SwiftUI
+import BmuxAppKitSupportUI
 
 /// Retains the styled consumer on the terminal panel; it never owns the PTY.
 struct TerminalChatWebRenderer: NSViewRepresentable {
     let panel: TerminalPanel
     let reader: any TerminalChatReading
     let appearance: PanelAppearance
+    var matteTheme: MatteTheme? = nil
     var onStartConnectedSession: (() async throws -> Void)? = nil
     var onRequestPanelFocus: () -> Void = {}
     let onTerminal: () -> Void
@@ -63,7 +65,7 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
         coordinator.bind(
             panelId: panel.id, workspaceId: panel.workspaceId, stableWorkspaceId: panel.workspaceId,
             workProvenanceRuntime: nil, rendererKind: .react, initialProviderID: .codex,
-            workingDirectory: nil, theme: .resolve(appearance: appearance), isFocused: false
+            workingDirectory: nil, theme: matteTheme.map(AgentSessionWebTheme.matte) ?? .resolve(appearance: appearance), isFocused: false
         )
         // The surrounding pane's SwiftUI tap gesture can reassert terminal
         // focus after WebKit handles mouseDown. Reclaim panel/WebKit focus on
@@ -77,7 +79,7 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
                 coordinator?.focus()
             }
         }
-        webView.underPageBackgroundColor = appearance.contentBackgroundColor
+        webView.underPageBackgroundColor = matteTheme?.color(.panel) ?? appearance.contentBackgroundColor
         host.onDidMoveToWindow = { [weak coordinator] in coordinator?.loadShellIfNeeded() }
         host.onGeometryChanged = { [weak coordinator] in coordinator?.flushVisiblePaintIfReady() }
         // Installing lifecycle callbacks before attachment is required when a

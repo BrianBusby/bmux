@@ -1,4 +1,5 @@
 import Foundation
+import BmuxFoundation
 
 /// Host-supplied callbacks the package's section views invoke for
 /// actions that live outside the catalog — clearing browser history,
@@ -206,7 +207,12 @@ public extension SettingsHostActions {
     func setSidebarFontSize(_ points: Double) async -> Bool { true }
 
     func surfaceTabBarFontSize() -> SettingsFontSize {
-        SettingsFontSize(points: 11, minimum: 8, maximum: 14, defaultValue: 11)
+        SettingsFontSize(
+            points: BmuxGhosttyConfigSettingEditor.defaultSurfaceTabBarFontSize,
+            minimum: BmuxGhosttyConfigSettingEditor.minSurfaceTabBarFontSize,
+            maximum: BmuxGhosttyConfigSettingEditor.maxSurfaceTabBarFontSize,
+            defaultValue: BmuxGhosttyConfigSettingEditor.defaultSurfaceTabBarFontSize
+        )
     }
 
     func setSurfaceTabBarFontSize(_ points: Double) async -> Bool { true }

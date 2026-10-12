@@ -43,7 +43,13 @@ Repository: `BrianBusby/bmux`
 | Knowledge Compiler Cross Session Bridge | planned |
 | Legacy Bmux Provenance Retirement | planned |
 | Managed Connected Codex Runtime | under observation |
+| Matte Skin Main Panel | implemented |
+| Matte Skin Sidebar | implemented |
+| Matte Skin Surface Styles | implemented |
+| Matte Skin Theme Tokens | implemented |
 | Monorepo Migration Ledger Closure | planned |
+| Native Ci Exit Status Reporting | implemented |
+| Native Ci Framework Completion Watchdog | implemented |
 | Native Provider Session View | implemented |
 | Normal Coding Agent Evidence Ingestion | implemented |
 | Ordinary Cli Read Only Chat | under observation |
@@ -152,6 +158,14 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `matte_skin_bonsplit_custom_styling_deferred` | open |
+| `matte_skin_chrome_preference_verification` | open |
+| `matte_skin_custom_terminal_inset_verification` | resolved |
+| `matte_skin_terminal_preference_precedence` | resolved |
+| `matte_skin_rejected_config_appearance_verification` | resolved |
+| `matte_skin_full_app_host_verification` | open |
+| `matte_skin_ci_compiler_compatibility` | resolved |
+| `native_app_host_full_suite_failures` | open |
 | `configured_codex_placeholder_startup_dogfood` | open |
 | `codex_update_workspace_exit_native_dogfood` | open |
 | `expanded_prior_turn_system_appearance_contrast` | monitoring |

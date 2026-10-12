@@ -1,11 +1,12 @@
 import SwiftUI
+import BmuxAppKitSupportUI
 import AppKit
 import BmuxSettings
 
 enum TitlebarNewWorkspaceCloudSplitButtonMetrics {
-    static func primaryWidth(config: TitlebarControlsStyleConfig) -> CGFloat { max(config.iconSize + 4, config.buttonSize - 3) }
+    static func primaryWidth(config: TitlebarControlsStyleConfig) -> CGFloat { max(MatteTheme(colorScheme: .dark).layout.minimumHitSize, config.buttonSize - 3) }
 
-    static func dropdownWidth(config: TitlebarControlsStyleConfig) -> CGFloat { max(14, floor(config.buttonSize * 0.70)) }
+    static func dropdownWidth(config: TitlebarControlsStyleConfig) -> CGFloat { max(MatteTheme(colorScheme: .dark).layout.minimumHitSize, floor(config.buttonSize * 0.70)) }
 
     static func dropdownIconSize(config: TitlebarControlsStyleConfig) -> CGFloat { max(6, config.iconSize - 6) }
 
@@ -62,7 +63,8 @@ struct TitlebarNewWorkspaceCloudSplitButton: View {
     let foregroundColor: Color
     let onNewTab: () -> Void
     @State private var cloudMenuAnchorView: NSView?
-    @State private var hoveredSegment: TitlebarNewWorkspaceCloudSplitButtonSegment?
+    @Environment(\.colorScheme) private var colorScheme
+    private var theme: MatteTheme { MatteTheme(colorScheme: colorScheme) }
 #if DEBUG
     @AppStorage(TitlebarNewWorkspaceCloudSplitButtonDebugSettings.alwaysHoverKey)
     private var debugAlwaysHover = TitlebarNewWorkspaceCloudSplitButtonDebugSettings.defaultAlwaysHover
@@ -94,7 +96,7 @@ struct TitlebarNewWorkspaceCloudSplitButton: View {
         let baseWidth = TitlebarNewWorkspaceCloudSplitButtonMetrics.dropdownWidth(config: config)
 #if DEBUG
         return max(
-            TitlebarNewWorkspaceCloudSplitButtonMetrics.dropdownIconSize(config: config) + 4,
+            theme.layout.minimumHitSize,
             baseWidth + CGFloat(debugCaretWidthOffset)
         )
 #else
@@ -105,27 +107,10 @@ struct TitlebarNewWorkspaceCloudSplitButton: View {
     private var primaryWidth: CGFloat {
         let baseWidth = TitlebarNewWorkspaceCloudSplitButtonMetrics.primaryWidth(config: config)
 #if DEBUG
-        return max(config.iconSize + 4, baseWidth + CGFloat(debugPlusWidthOffset))
+        return max(theme.layout.minimumHitSize, baseWidth + CGFloat(debugPlusWidthOffset))
 #else
         return baseWidth
 #endif
-    }
-
-    private var isHovering: Bool {
-#if DEBUG
-        if debugAlwaysHover {
-            return true
-        }
-#endif
-        return hoveredSegment != nil
-    }
-
-    private var foregroundOpacity: Double {
-        titlebarControlForegroundOpacity(isHovering: isHovering, isPressed: false, isEnabled: true)
-    }
-
-    private var borderOpacity: Double {
-        titlebarControlBorderOpacity(config: config, isHovering: isHovering, isPressed: false, isEnabled: true)
     }
 
 #if DEBUG
@@ -168,7 +153,7 @@ struct TitlebarNewWorkspaceCloudSplitButton: View {
                     .padding(plusIconPadding)
                     .frame(width: primaryWidth, height: config.buttonSize)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(MatteButtonStyle(config.buttonBackground ? .raised : .flat, theme: theme, forcesHover: segmentForcesHover(.newTab)))
             .frame(width: primaryWidth, height: config.buttonSize)
             .contentShape(Rectangle())
             .accessibilityElement(children: .ignore)
@@ -178,10 +163,6 @@ struct TitlebarNewWorkspaceCloudSplitButton: View {
                 TitlebarSplitButtonRightClickView { anchorView, event in
                     _ = AppDelegate.shared?.showNewWorkspaceContextMenu(anchorView: anchorView, event: event)
                 }
-            }
-            .background(foregroundColor.opacity(segmentBackgroundOpacity(for: .newTab)))
-            .onHover { hovering in
-                updateHoveredSegment(.newTab, hovering: hovering)
             }
             .safeHelp(KeyboardShortcutSettings.Action.newTab.tooltip(String(localized: "titlebar.newWorkspace.tooltip", defaultValue: "New workspace")))
 
@@ -210,7 +191,7 @@ struct TitlebarNewWorkspaceCloudSplitButton: View {
                 .frame(width: dropdownWidth, height: config.buttonSize)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(MatteButtonStyle(config.buttonBackground ? .raised : .flat, theme: theme, forcesHover: segmentForcesHover(.cloudMenu)))
             .frame(width: dropdownWidth, height: config.buttonSize)
             .contentShape(Rectangle())
             .accessibilityElement(children: .ignore)
@@ -226,75 +207,22 @@ struct TitlebarNewWorkspaceCloudSplitButton: View {
                     )
                 }
             }
-            .background(foregroundColor.opacity(segmentBackgroundOpacity(for: .cloudMenu)))
-            .onHover { hovering in
-                updateHoveredSegment(.cloudMenu, hovering: hovering)
-            }
             .safeHelp(String(localized: "titlebar.cloudVM.menu.tooltip", defaultValue: "Cloud VM actions"))
         }
-        .foregroundStyle(foregroundColor.opacity(foregroundOpacity))
         .frame(width: primaryWidth + dropdownWidth, height: config.buttonSize)
-        .background {
-            if config.buttonBackground && !isHovering {
-                RoundedRectangle(cornerRadius: config.buttonCornerRadius, style: .continuous)
-                    .fill(Color(nsColor: .controlBackgroundColor).opacity(0.45))
-            }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: config.buttonCornerRadius, style: .continuous))
-        .overlay {
-            if borderOpacity > 0 {
-                RoundedRectangle(cornerRadius: config.buttonCornerRadius, style: .continuous)
-                    .stroke(foregroundColor.opacity(borderOpacity), lineWidth: 0.5)
-            }
-        }
         .contentShape(Rectangle())
-        .animation(.easeInOut(duration: 0.12), value: hoveredSegment)
         .background(TitlebarChromeGeometryReporter(keyPrefix: "titlebarControl_newTabCloudSplit"))
         .titlebarInteractiveControl()
     }
 
-    private func segmentBackgroundOpacity(for segment: TitlebarNewWorkspaceCloudSplitButtonSegment) -> Double {
+    private func segmentForcesHover(_ segment: TitlebarNewWorkspaceCloudSplitButtonSegment) -> Bool {
 #if DEBUG
-        if debugAlwaysHover {
-            if debugForcedHoverSegment.includes(segment) {
-                return titlebarControlActiveHoverBackgroundOpacity(
-                    isHovering: true,
-                    isPressed: false,
-                    isEnabled: true
-                )
-            }
-            return titlebarControlPassiveHoverBackgroundOpacity(
-                isHovering: true,
-                isPressed: false,
-                isEnabled: true
-            )
-        }
+        debugAlwaysHover && debugForcedHoverSegment.includes(segment)
+#else
+        false
 #endif
-        if hoveredSegment == segment {
-            return titlebarControlActiveHoverBackgroundOpacity(
-                isHovering: isHovering,
-                isPressed: false,
-                isEnabled: true
-            )
-        }
-        return titlebarControlPassiveHoverBackgroundOpacity(
-            isHovering: isHovering,
-            isPressed: false,
-            isEnabled: true
-        )
     }
 
-    private func updateHoveredSegment(
-        _ segment: TitlebarNewWorkspaceCloudSplitButtonSegment,
-        hovering: Bool
-    ) {
-        guard titlebarControlsShouldTrackButtonHover(config: config) else { return }
-        if hovering {
-            hoveredSegment = segment
-        } else if hoveredSegment == segment {
-            hoveredSegment = nil
-        }
-    }
 }
 
 private enum TitlebarNewWorkspaceCloudSplitButtonSegment: Equatable {

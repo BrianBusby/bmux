@@ -72,11 +72,11 @@ import Testing
         let closeButtonWidth = SidebarTrailingAccessoryWidthPolicy().closeButtonWidth
         let metrics = SidebarWorkspaceGroupHeaderMetrics(fontScale: 1)
 
-        #expect(SidebarWorkspaceListMetrics.rowContentHorizontalPadding == 10)
-        #expect(SidebarWorkspaceListMetrics.rowOuterHorizontalPadding == 6)
+        #expect(SidebarWorkspaceListMetrics.rowContentHorizontalPadding == 12)
+        #expect(SidebarWorkspaceListMetrics.rowOuterHorizontalPadding == 8)
         #expect(metrics.plusFrame == closeButtonWidth)
-        #expect(SidebarWorkspaceListMetrics.trailingAccessoryRightEdgeOffset == 16)
-        #expect(SidebarWorkspaceListMetrics.trailingAccessoryCenterOffset(controlWidth: metrics.plusFrame) == 24)
+        #expect(SidebarWorkspaceListMetrics.trailingAccessoryRightEdgeOffset == 20)
+        #expect(SidebarWorkspaceListMetrics.trailingAccessoryCenterOffset(controlWidth: metrics.plusFrame) == 28)
         #expect(
             SidebarWorkspaceListMetrics.trailingAccessoryCenterOffset(controlWidth: metrics.plusFrame)
                 == SidebarWorkspaceListMetrics.trailingAccessoryCenterOffset(controlWidth: closeButtonWidth)
