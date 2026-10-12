@@ -620,6 +620,8 @@
 		A9F200000000000000000016 /* CodexAppServerQueuedInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000016 /* CodexAppServerQueuedInput.swift */; };
 		A9E02000000000000000000E /* CodexAppServerSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E01000000000000000000E /* CodexAppServerSession.swift */; };
 		A9E040000000000000000002 /* CodexAppServerSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E040000000000000000001 /* CodexAppServerSessionTests.swift */; };
+		D33A912E16C53A8AF2B9AA4B /* CodexRejectedAmbientFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A8679C50A0E07FA9D5B592 /* CodexRejectedAmbientFixture.swift */; };
+		12A544D5266A33F06D4ABE0F /* CodexRejectedAmbientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC77452333507F58CDC2C89 /* CodexRejectedAmbientTests.swift */; };
 		6C7E826EEE2845C8B8EC7907 /* CodexStopHookFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9C446F48F56479E8DA8F918 /* CodexStopHookFixture.swift */; };
 		A2790029E7E4498DB7B836B5 /* CodexStopMockResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3CCD688D38484994B9A532 /* CodexStopMockResponse.swift */; };
 		ABA6069ACB4744E38DC0BFB3 /* CodexStopMockServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA4A18660A4547B8B092B75D /* CodexStopMockServer.swift */; };
@@ -2517,6 +2519,8 @@
 		A9F100000000000000000016 /* CodexAppServerQueuedInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/CodexAppServerQueuedInput.swift; sourceTree = "<group>"; };
 		A9E01000000000000000000E /* CodexAppServerSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/CodexAppServerSession.swift; sourceTree = "<group>"; };
 		A9E040000000000000000001 /* CodexAppServerSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexAppServerSessionTests.swift; sourceTree = "<group>"; };
+		C5A8679C50A0E07FA9D5B592 /* CodexRejectedAmbientFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexRejectedAmbientFixture.swift; sourceTree = "<group>"; };
+		1EC77452333507F58CDC2C89 /* CodexRejectedAmbientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexRejectedAmbientTests.swift; sourceTree = "<group>"; };
 		B9C446F48F56479E8DA8F918 /* CodexStopHookFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopHookFixture.swift; sourceTree = "<group>"; };
 		BE3CCD688D38484994B9A532 /* CodexStopMockResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopMockResponse.swift; sourceTree = "<group>"; };
 		EA4A18660A4547B8B092B75D /* CodexStopMockServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopMockServer.swift; sourceTree = "<group>"; };
@@ -5534,6 +5538,9 @@
 				A5D41233A1B2C3D4E5F60718 /* ClaudeBackgroundWorkNotifyTests.swift */,
 				C72280000000000000000003 /* CLINotifyClaudeHookWorkspaceRoutingTests.swift */,
 				A5D41204A1B2C3D4E5F60718 /* CLINotifyProcessIntegrationRegressionTests.swift */,
+				1EC77452333507F58CDC2C89 /* CodexRejectedAmbientTests.swift */,
+				C5A8679C50A0E07FA9D5B592 /* CodexRejectedAmbientFixture.swift */,
+				CE4411000000000000000002 /* CLISocketFixture.swift */,
 				6379A0026379A0026379A002 /* CLISSHPTYResizeInputTests.swift */,
 				C0F16B000000000000000002 /* CLIRemoteShellStartupPerformanceTests.swift */,
 				A5D41331A1B2C3D4E5F60718 /* CLIMockSocketServerSupport.swift */,
@@ -7667,6 +7674,8 @@
 				7375A0037375A0037375A003 /* ClosedMainWindowRoutingTests.swift in Sources */,
 				C75740010000000000000001 /* CloudVMMenuItemMetricsTests.swift in Sources */,
 				A9E040000000000000000002 /* CodexAppServerSessionTests.swift in Sources */,
+				D33A912E16C53A8AF2B9AA4B /* CodexRejectedAmbientFixture.swift in Sources */,
+				12A544D5266A33F06D4ABE0F /* CodexRejectedAmbientTests.swift in Sources */,
 				6C7E826EEE2845C8B8EC7907 /* CodexStopHookFixture.swift in Sources */,
 				A2790029E7E4498DB7B836B5 /* CodexStopMockResponse.swift in Sources */,
 				ABA6069ACB4744E38DC0BFB3 /* CodexStopMockServer.swift in Sources */,
