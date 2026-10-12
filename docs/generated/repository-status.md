@@ -181,3 +181,5 @@ Repository: `BrianBusby/bmux`
 | `browser_background_compositing_focused_gate_verification` | open |
 | `right_sidebar_shortcut_fixture_app_host_verification` | open |
 | `browser_discard_restore_focused_gate_verification` | open |
+| `sidebar_minimum_default_and_configured_range_consistency` | open |
+| `sidebar_width_persistence_focused_gate_verification` | open |

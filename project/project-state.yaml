@@ -5904,3 +5904,7 @@ caveats:
     title: Focused browser app-host gate includes discard and history restore readiness tests; local native cases pass and pushed-head CI remains pending
     status: open
     owner: bmux
+  - id: sidebar_width_persistence_focused_gate_verification
+    title: Focused app-host gate includes default and configured sidebar width policy tests; local native cases pass and pushed-head CI remains pending
+    status: open
+    owner: bmux
