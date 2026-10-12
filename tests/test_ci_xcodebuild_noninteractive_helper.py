@@ -17,6 +17,82 @@ HELPER = ROOT / "scripts" / "ci" / "xcodebuild_noninteractive.py"
 PROMPT = "Press space to interact, D to debug, or any other key to quit"
 
 
+def check_test_progress_watchdog() -> None:
+    # The real app-host output runs Swift Testing after Selected tests finishes.
+    # The child workload includes a silent test longer than the cleanup deadline;
+    # execution belongs to the existing general idle watchdog until run completion.
+    env = {
+        **os.environ,
+        "BMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS": "3",
+        "BMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS": "0.4",
+    }
+    for status in [0, 65]:
+        child = textwrap.dedent(f"""
+            import os, sys, time
+            print("Test Suite 'Selected tests' passed at now", flush=True)
+            print("◇ Test run started.", flush=True)
+            time.sleep(0.6)
+            for index in range(10):
+                print(f"◇ Test case passing 1 argument value → {{index}} to example(value:) started.", flush=True)
+                time.sleep(0.08)
+                print(f"✔ Test example(value:) passed after 0.08 seconds.", flush=True)
+            # Real PTY reads may split a lifecycle line, including UTF-8 glyphs.
+            summary = "{'✔' if status == 0 else '✘'} Test run with 10 tests {'passed' if status == 0 else 'failed'} after 0.8 seconds.\\n".encode()
+            os.write(1, summary[:1])
+            os.write(1, summary[1:19])
+            os.write(1, summary[19:])
+            raise SystemExit({status})
+        """)
+        result = subprocess.run(
+            [sys.executable, str(HELPER), sys.executable, "-c", child],
+            cwd=ROOT, text=True, capture_output=True, timeout=5, env=env,
+        )
+        assert result.returncode == status, (
+            f"Active Swift Testing must reach native exit {status}, got {result.returncode}\n"
+            + result.stdout + result.stderr
+        )
+        assert "Test run with 10 tests" in result.stdout
+
+    # Later passed summaries must not erase a prior failure, including restarts.
+    # A completed run marker followed by chatter must not be repeatedly rediscovered
+    # in the rolling buffer and keep stalled cleanup alive.
+    for failed_summary in [False, True]:
+        child = textwrap.dedent(f"""
+            import time
+            print("Test Suite 'Selected tests' {'failed' if failed_summary else 'passed'} at now", flush=True)
+            print("◇ Test run started.", flush=True)
+            print("✔ Test run with 1 test passed after 0.01 seconds.", flush=True)
+            print("Test Suite 'Selected tests' passed at later", flush=True)
+            for _ in range(40):
+                print("unrelated app diagnostic", flush=True)
+                time.sleep(0.05)
+        """)
+        started = time.monotonic()
+        result = subprocess.run(
+            [sys.executable, str(HELPER), sys.executable, "-c", child],
+            cwd=ROOT, text=True, capture_output=True, timeout=5, env=env,
+        )
+        expected = 125 if failed_summary else 124
+        assert result.returncode == expected, result.stdout + result.stderr
+        assert time.monotonic() - started < 1.5, "App noise must not refresh test progress"
+
+    # Active Swift Testing retains the existing general output-idle deadline.
+    child = (
+        "import time\n"
+        "print(\"Test Suite 'Selected tests' passed at now\", flush=True)\n"
+        "print('◇ Test run started.', flush=True)\n"
+        "time.sleep(10)\n"
+    )
+    result = subprocess.run(
+        [sys.executable, str(HELPER), sys.executable, "-c", child],
+        cwd=ROOT, text=True, capture_output=True, timeout=5,
+        env={**env, "BMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS": "0.6"},
+    )
+    assert result.returncode == 124, result.stdout + result.stderr
+    assert "Idle timed out after 0.6s" in result.stderr, result.stderr
+
+
+
 def main() -> int:
     child = textwrap.dedent(
         f"""
@@ -246,6 +322,8 @@ def main() -> int:
             print(log_result.stderr, end="", file=sys.stderr)
             print("FAIL: helper did not write child output to log path")
             return 1
+
+    check_test_progress_watchdog()
 
     print("PASS: xcodebuild noninteractive helper dismisses crash prompts and idle-times out stuck children")
     return 0
