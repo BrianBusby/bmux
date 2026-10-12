@@ -427,7 +427,7 @@ relaxing assertions or excluding a test.
   maintained launcher prefers absolute executable argv[0] over that fallback
   (`CLI/BMUXCLI+AutoNamingHooks.swift:168`). This does not establish failed caching.
 - Tmux compat builds a 108-byte socket path against 104-byte `sun_path` and gets
-  bind/listen -1. The legacy helper asserts length then continues copying; fix
+  bind/listen result -1. The legacy helper asserts length then continues copying; fix
   fixture path ownership and fail invalid prerequisites before memory writes.
 
 ### Lifecycle/process candidates (13)
@@ -440,7 +440,7 @@ blocks on global user-initiated workers without joined listener cancellation.
 output drains on utility workers, then blocks on a semaphore. Some tests read
 `state.commands` outside its lock instead of `snapshot()`.
 
-Antigravity's baseline has repeated timedOut=true with empty stdout and status0
+Antigravity's baseline has repeated timedOut=true with empty stdout and status 0
 (no status assertion failure), suggesting waiter/drain scheduling rather than
 proving a child hang. This requires a controlled reproduction/stack capture;
 do not increase deadlines. `startMockServer` fulfills on the first disconnect,
@@ -455,16 +455,16 @@ That is **not** proof of the legacy GCD helper hypothesis above.
 
 - **Confirmed sanitizer defect:** cleanup locally creates `persistent SSH PTY
   session is no longer running` at `CLI/bmux.swift:12101`, then sanitizes it again
-  at12208. Both CLI and app sanitizers only match `not running`, which does not
+  at 12208. Both CLI and app sanitizers only match `not running`, which does not
   match `no longer running`; the CLI reports generic failure. Baseline apphost1
-  at2026-10-10T18:05:24.777 fails line5291, while exit1, no close and session-ID
+  at 2026-10-10T18:05:24.777 fails line 5291, while exit 1, no close and session-ID
   assertions pass. Other canonical diagnostics also need round-trip coverage.
 - Cloud retry mock returns typed `vm_cloud_service_unavailable`, but classifier
-  at10925 recognizes other text/codes; one RPC instead of two is observed. Inspect
+  at 10925 recognizes other text/codes; one RPC instead of two is observed. Inspect
   the documented typed retry contract before changing any retry policy.
 - Invalid/foreign Codex surface cases actually set running/resume metadata on
-  focused/mapped surfaces. `resolveAgentHookTarget` at30666 falls through preferred,
-  mapped and default surface; stale-ambient recovery documentation at30460 says
+  focused/mapped surfaces. `resolveAgentHookTarget` at 30666 falls through preferred,
+  mapped and default surface; stale-ambient recovery documentation at 30460 says
   TTY/PID ground truth. Preserve wrong-target assertions and empirically inspect
   identity provenance before correcting the shared resolver.
 - Stale Claude SessionEnd clears the consumed stale workspace. The fixture seeds
@@ -531,18 +531,37 @@ under `/tmp` in the retained audit environment.
 
 ### Authorized next bounded slice
 
+The parent separately owns the eight startup protocol fixture repairs.
 Only the cleanup error idempotency repair is selected for this branch; other
 categories remain diagnosis and separately owned maintenance work. Proposed owner:
 pure Sendable remote-error value in `BmuxCore/Remote`, with existing app/CLI adapters
 and unchanged stable protocol diagnostics. Preserve CLI-only capability aliases
 and allocation-detail disclosure policy. No retry or routing change in this slice.
 Parent confirmed this plan. The new executable Swift Testing regression runs
-against unchanged build773 CLI and records seven expected diagnostic failures
+against unchanged build 773 CLI and records seven expected diagnostic failures
 across fourteen parameter cases; native compile is warning-free. The shared
-`CLISocketFixture` follows the reviewed PR146 readiness/cancel-join design, with
+`CLISocketFixture` follows the reviewed PR 146 readiness/cancel-join design, with
 checked socket flags, unique readiness tokens, partial writes, owned file output,
-and joined cleanup. Test-only CI red, shared Core implementation/package tests,
-parent isolated build and final native/CI green remain pending.
+and joined cleanup. Test-only commit `606e4e8b0` is pushed in PR 148. The local shared Core classifier
+and adapters have independent review with no blockers; all 44 BmuxCore test
+functions in nine suites pass, including 29 new parameter cases. Exact canonical
+messages also survive the existing `remote_pty_error:` envelope. CLI-only aliases
+and allocation-detail passthrough remain outside Core; the app retains its
+stricter disclosure policy. The app's existing string adapter is internal solely
+for direct native policy verification. Source budget, strict test determinism,
+pbx wiring and Project Truth checks pass. The parent-built isolated tag `ssh-cleanup-idempotency`, build 776, succeeds
+without launch. All 27 native parameter cases (five functions, two suites) pass
+against that artifact's real bundled CLI and app dylib; fixture compilation is
+warning-free. Evidence: `/tmp/ssh-cleanup-native-green.log` and
+`/tmp/ssh-cleanup-native-fixed-compile.log`. Actual test-only CI job 114953934391 on commit 606e4e8b0 completed the
+SSHCleanupErrorTests suite with the seven expected diagnostic issues before its
+legacy wrapper truncated later output. The job badge incorrectly reports success
+because of that separately repaired PR 142 reporting defect; the completed suite
+log is the red evidence, not the badge. The production fix can now be pushed;
+fixed app-host CI and the full-suite gate remain pending.
+Localization/disclosure audit confirms all nine protocol diagnostics are
+byte-identical to the pre-existing CLI strings. No new UI wording or catalog keys
+are introduced; existing protocol text and CLI presentation remain English.
 Project Truth caveat `ssh_cleanup_error_idempotency_verification` stays open.
 
 Guidance: root/personal AGENTS, continuous-code-quality, bmux-shared-behavior,
@@ -551,7 +570,7 @@ bmux-socket-policy, bmux-dev-workflow and bmux-localization. Existing remote cor
 value `RemoteDropUploadError` separates protocol values from app-localized display;
 actual ownership/localization decisions must remain explicit during implementation.
 No active user build may be rebuilt or replaced; parent owns a new isolated tag
-before a production push. PR144 packaging artifact verification is separate and
+before a production push. PR 144 packaging artifact verification is separate and
 still awaits real dynamic Debug plus unsigned Release CI proof.
 
 ## Right sidebar shortcut fixture coverage
