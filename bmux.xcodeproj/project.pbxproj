@@ -411,6 +411,7 @@
 		CE0E0A020000000000000001 /* BrowserDevToolsRuntimeOperationResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0A020000000000000002 /* BrowserDevToolsRuntimeOperationResult.swift */; };
 		CE0E0A030000000000000001 /* BrowserDevToolsRuntimeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0A030000000000000002 /* BrowserDevToolsRuntimeService.swift */; };
 		CE0E0A040000000000000001 /* BrowserDevToolsRuntimeServiceDependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0A040000000000000002 /* BrowserDevToolsRuntimeServiceDependencies.swift */; };
+		BA1540010000000000000001 /* BrowserDiscardReadinessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA1540010000000000000002 /* BrowserDiscardReadinessTests.swift */; };
 		C42660030000000000000001 /* BrowserDownloadDelegate+PDFPreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C42660030000000000000002 /* BrowserDownloadDelegate+PDFPreviewData.swift */; };
 		C59240010000000000000001 /* BrowserDownloadFilenameResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C59240010000000000000002 /* BrowserDownloadFilenameResolver.swift */; };
 		C59240010000000000000003 /* BrowserDownloadFilenameResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C59240010000000000000004 /* BrowserDownloadFilenameResolverTests.swift */; };
@@ -2314,6 +2315,7 @@
 		CE0E0A020000000000000002 /* BrowserDevToolsRuntimeOperationResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BrowserDevToolsRuntimeOperationResult.swift; sourceTree = "<group>"; };
 		CE0E0A030000000000000002 /* BrowserDevToolsRuntimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BrowserDevToolsRuntimeService.swift; sourceTree = "<group>"; };
 		CE0E0A040000000000000002 /* BrowserDevToolsRuntimeServiceDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/BrowserDevToolsRuntimeServiceDependencies.swift; sourceTree = "<group>"; };
+		BA1540010000000000000002 /* BrowserDiscardReadinessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserDiscardReadinessTests.swift; sourceTree = "<group>"; };
 		C42660030000000000000002 /* BrowserDownloadDelegate+PDFPreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/BrowserDownloadDelegate+PDFPreviewData.swift"; sourceTree = "<group>"; };
 		C59240010000000000000002 /* BrowserDownloadFilenameResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserDownloadFilenameResolver.swift; sourceTree = "<group>"; };
 		C59240010000000000000004 /* BrowserDownloadFilenameResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserDownloadFilenameResolverTests.swift; sourceTree = "<group>"; };
@@ -5162,6 +5164,7 @@
 				C0F16A000000000000000002 /* ShellStartupMatrixTests.swift */,
 				C0F16C000000000000000002 /* ShellStartupMissingBundleTests.swift */,
 				C0F674600000000000000002 /* RemoteShellCWDRelayTests.swift */,
+				BA1540010000000000000002 /* BrowserDiscardReadinessTests.swift */,
 				F4000001A1B2C3D4E5F60718 /* GhosttyConfigTests.swift */,
 				B8E9500A0000000000000002 /* PostHogAnalyticsPropertiesTests.swift */,
 				604100010000000000000002 /* GhosttyDrawableSizeRetryTests.swift */,
@@ -7588,6 +7591,7 @@
 				B1F0C0070000000000000001 /* BrowserDeveloperToolsLifecycleTests.swift in Sources */,
 				B1F0D1030000000000000001 /* BrowserDeveloperToolsTestSupport.swift in Sources */,
 					CE0E0A060000000000000001 /* BrowserDevToolsRuntimeCompositionTests.swift in Sources */,
+				BA1540010000000000000001 /* BrowserDiscardReadinessTests.swift in Sources */,
 				C59240010000000000000003 /* BrowserDownloadFilenameResolverTests.swift in Sources */,
 				A5008381 /* BrowserFindJavaScriptTests.swift in Sources */,
 				B6585001B6585001B6585001 /* BrowserHiddenWebViewDiscardMemoryPressureTests.swift in Sources */,
