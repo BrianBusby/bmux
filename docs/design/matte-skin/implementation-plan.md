@@ -1171,3 +1171,62 @@ feature-base source budgets, project normalization, diff checks, and Project Tru
 validate/generate/check pass. Localization audit found no new shipped labels,
 menus, preferences, messages, or translation keys; this follow-up changes internal
 fixture descriptions, contributor evidence, and existing screenshot access only.
+
+
+### User-directed rollback of Bonsplit customization (2026-10-12)
+
+The user declined publishing the styling extension to manaflow-ai/bonsplit and
+requested abandoning that dependency customization for now. Restore the exact
+pre-feature submodule commit fb5307f9599753bdf10bf15a407a16e5f7519ad7 and original
+organization URL. No upstream publication or deletion of the preserved personal
+fork is required. This supersedes the earlier custom TabChromePresentation plan.
+
+Bmux retains its own semantic tokens, sidebar cards, main panel, inset and
+transparent-terminal background ownership. MatteBonsplitAppearance now uses only
+existing upstream ChromeColors, tabBarHeight and SplitButtonBackdropEffect APIs.
+The existing no-op guard compares fields because the original dependency does not
+provide the added Equatable conformances. Configured tab font sizes and pane
+borders remain owned by their existing settings paths.
+
+Intentional visual deviation: native terminal tabs and toolbar buttons return to
+Bonsplit's original shape, selected/hover/focus treatments and motion. The custom
+matte terminal-tab outline, corners and control presentation are deferred; this
+is user-approved reduced scope, not an exact match to the HTML prototype. The
+sidebar workspace cards and main Chat/Terminal/Session navigation are unaffected.
+
+Rules/patterns: root AGENTS.md and continuous-code-quality; bmux-architecture
+(file/API discipline), bmux-testing (behavioral native coverage), bmux-dev-workflow
+(isolated tagged builds), and bmux-debugging (native hosting and hot paths).
+No new state owner, rendering engine change, setting, label or localization key.
+No existing user preview was replaced. Isolated build 773
+(matte-skin-stock-bonsplit) succeeds. All 27 focused Swift Testing functions across
+eight suites pass against its actual app dylib, including six composition cases,
+preferences, repeat/recovery and matte surface coverage. The native runner must
+be in its own .app bundle for UserNotifications; a direct /tmp executable launch
+was rejected by AppKit before test completion. The bundled run exits 0 without
+assertion failures. No new compiler warnings; existing disabled-Sentry diagnostic
+messages remain in the standalone harness. Logs: /tmp/matte-stock-bonsplit-build.log,
+/tmp/matte-stock-bonsplit-compile.log and /tmp/matte-stock-bonsplit-native.log.
+
+Live light/dark review passed at 1092x593, including split-right and closing the
+temporary split. Both captures are in verification-final/build-773-stock-bonsplit-
+{graphite,porcelain}.png. The preview is restored to System appearance and a single
+terminal pane. Relative to the target, stock tabs now have square corners, native
+selected fills and the native brighter blue top indicator, plus stock toolbar
+hover/focus/hit-area behavior. These are the explicitly deferred dependency
+customizations. Existing terminal preference, OS titlebar, text-rasterization,
+metadata-truncation and texture-off differences remain documented above; this
+rollback does not change those owners. No other material layout change observed.
+
+Independent source review found no remaining blocker after restoring comparisons
+for every stock backdrop field. Test wiring (443 files), diff checks and Project
+Truth validate/generate/check pass. Localization audit: no shipped strings or
+translation keys changed; only internal documentation and dependency configuration.
+The ownership comment is addressed by restoring both URL and exact original pin;
+no modifications need to be published to the organization dependency.
+
+Current earlier-head CI evidence (bcad95a88): focused matte regressions passed
+49 tests across 14 suites. Full app-host shards failed; baseline-pass/current-fail
+input/CLI cases and other recorded evidence gaps remain unresolved. Release,
+package, build/lag and Project Truth checks passed. This rollback does not claim
+to repair those separate full-suite failures.
