@@ -1073,8 +1073,8 @@ reviewed production fixes remain excluded until actual red CI is captured. The
 PR150 managed-attach fixture follow-up is included with its listener-only
 SO_NOSIGPIPE correction in the one shared socket fixture. Ten lifecycle checks
 pass on both 773 and 779, and missing-attach and unprotected-write negative
-controls establish sensitivity. Combined cross-suite native execution remains
-pending. Existing user builds 773 and 775 remain untouched.
+controls establish sensitivity. The targeted combined-source transport batch described below passes.
+Existing user builds 773 and 775 remain untouched.
 
 Local checks pass: framework-aware PTY helper behavior, four exit-reporting tests,
 app-host retry/attempt guards, sharding coverage, Xcode normalization, test wiring
@@ -1092,3 +1092,21 @@ retain existing browser theme resolution, matte appearance ownership and the
 shared safe PTY diagnostic classifier. Held initializer, reconnect and rejected
 ambient-target changes have not been accepted implicitly through conflicts.
 There are no new shipped strings in this integration-only resolution.
+
+### Shared socket fixture integration check
+
+The exact merged sources at `7e0a5f667` compile without warnings against the
+existing isolated build 778 module and CLI. The batch passes 43 parameter cases
+across nine test functions and five suites: Claude notification routing and PID
+lifecycle, Codex rejected ambient recovery, Claude SessionEnd scope, and Cloud
+attach retry contracts. The shared listener-only SO_NOSIGPIPE correction is used
+by every case; no helper implementation is substituted. The only standalone
+harness seams select the existing CLI path and invoke Swift Testing.
+
+Logs: `/tmp/maintenance-shared-socket-compile.log` and
+`/tmp/maintenance-shared-socket-native.log` (exit 0, 0.647 seconds). This is
+combined test-source/transport proof, not full integration proof: build 778
+contains the reviewed but still unpublished PR155 runtime correction, whereas
+the local composition still includes that PR's test-only published head. No app
+was built, launched, reloaded or quit. Complete combined compilation/runtime and
+authoritative CI/artifact gates remain open.
