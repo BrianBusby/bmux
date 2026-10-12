@@ -1,5 +1,6 @@
 import AppKit
 import BmuxTerminal
+import SwiftUI
 import Testing
 
 #if canImport(bmux_DEV)
@@ -71,6 +72,62 @@ import Testing
             app.syncKeyboardFocusAfterFirstResponderChange(in: child)
             #expect(!routing.workspaceSidebarOwnsFocus)
         }
+    }
+
+    @Test(arguments: [false, true])
+    func nativeSearchFieldEditorKeepsEscapeAndFocus(inPopover: Bool) throws {
+        try withPopoverContext { app, manager, parent, child, popoverHost, _ in
+            let owner = try #require(app.keyboardFocusCoordinator(for: parent)?.workspaceChromeFocusOwner)
+            let window = inPopover ? child : parent
+            let host: NSView
+            if inPopover {
+                host = popoverHost
+            } else {
+                host = NSView(frame: parent.contentView?.bounds ?? .zero)
+                parent.contentView?.addSubview(host)
+                owner.register(host, scope: .rail, in: parent)
+            }
+            let search = NSHostingView(rootView:
+                TextField("", text: .constant("")).textFieldStyle(.plain)
+            )
+            search.frame = host.bounds
+            host.addSubview(search)
+            search.layoutSubtreeIfNeeded()
+            let field = try #require(nativeTextField(in: search))
+            #expect(window.makeFirstResponder(field))
+            field.selectText(nil)
+            let editor = try #require(window.firstResponder as? NSTextView)
+            #expect(editor.isFieldEditor)
+            app.syncKeyboardFocusAfterFirstResponderChange(in: window)
+            #expect(owner.owns(editor, in: parent))
+            let routing = WindowKeyboardFocusRouting(appDelegate: app, window: parent)
+            #expect(routing.workspaceSidebarOwnsFocus)
+
+            let panel = try #require(manager.selectedTerminalPanel)
+            panel.searchState = TerminalSurface.SearchState(needle: "")
+            defer { panel.searchState = nil }
+            let event = try #require(NSEvent.keyEvent(
+                with: .keyDown, location: .zero, modifierFlags: [], timestamp: 0,
+                windowNumber: window.windowNumber, context: nil, characters: "\u{1b}",
+                charactersIgnoringModifiers: "\u{1b}", isARepeat: false, keyCode: 53
+            ))
+            #expect(!bmuxCloseFocusedTerminalFindForEscape(event: event, appDelegate: app))
+            #expect(panel.searchState != nil)
+            #expect(window.firstResponder === editor)
+
+            // Moving to a text field outside the chrome must revoke ownership.
+            let unrelated = NSTextField(frame: NSRect(x: 0, y: 0, width: 150, height: 28))
+            window.contentView?.addSubview(unrelated)
+            #expect(window.makeFirstResponder(unrelated))
+            unrelated.selectText(nil)
+            app.syncKeyboardFocusAfterFirstResponderChange(in: window)
+            #expect(!routing.workspaceSidebarOwnsFocus)
+        }
+    }
+
+    private func nativeTextField(in view: NSView) -> NSTextField? {
+        if let field = view as? NSTextField { return field }
+        return view.subviews.lazy.compactMap { nativeTextField(in: $0) }.first
     }
 
     private func withPopoverContext(

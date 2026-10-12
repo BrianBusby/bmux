@@ -1284,3 +1284,33 @@ change; additions are internal test descriptions and contributor evidence only.
 Independent review found no blocker after checking original assertions, exact
 Hangul codepoints, shared probe lifecycle and Xcode wiring. The new suite also
 runs in the focused native step before the broad legacy test run.
+
+### Native search field-editor review evidence (2026-10-12)
+
+Review discussion r4250589357 proposed resolving a shared field editor through
+keyboardFocusOwnerView before checking workspace-chrome membership. Native
+AppKit and SwiftUI probes on macOS 26.3 (25D2125) show the editor is a descendant
+of the edited text field via its keyboard-focus clip view. The helper returns
+that same clip view, which has the same chrome membership. The hypothesized
+Escape failure is not reproduced; no runtime change is justified by this evidence.
+
+The existing wired WorkspacePopoverFocusRoutingTests now mount a real SwiftUI
+TextField, select it through AppKit, require an actual field-editor NSTextView,
+and exercise both the rail and child-popover routes. Both cases verify ownership,
+the automatic-focus guard, Escape leaving terminal Find open, retention of the
+native responder, and revocation on focus moving to an unrelated text field.
+These pass against unchanged approved build 773: 28 functions across eight suites,
+including two new parameterized cases; compilation has no warnings. The native
+harness retains its known disabled-Sentry diagnostics. Evidence:
+/tmp/matte-field-editor-native.log and /tmp/matte-stock-bonsplit-compile.log.
+
+This is added behavior coverage, not a bug fix with an unproved red/green claim.
+No production files, renderer, native focus lifecycle, settings or visible copy
+change. No new localization entries are needed. Other macOS versions remain
+unmeasured locally; the committed test will exercise the existing CI environment.
+The full app-host gate and unrelated failure classification remain open.
+
+Independent review checked the complete focus owner, responder helper, routing
+callers and fixture lifecycle and found no blocker in this test-only addition.
+It confirms the evidence does not justify changing production focus behavior;
+interactive popover presentation and older macOS remain outside this new test.
