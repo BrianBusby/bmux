@@ -138,6 +138,7 @@ Regenerate with: ./scripts/project-docs generate
 | Monorepo migration ledger pending dispositions (`monorepo_migration_ledger_pending_dispositions`) | Bmux | open |  |
 | Observability trace API boundary (`observability_trace_api`) | Provenance Engine | open |  |
 | GitHub Actions runner reliability (`github_actions_runner_reliability`) | Bmux | open | BrianBusby/bmux#8 |
+| Focused app-host gate includes default and configured sidebar width policy tests; local native cases pass and pushed-head CI remains pending (`sidebar_width_persistence_focused_gate_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

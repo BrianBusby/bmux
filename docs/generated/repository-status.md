@@ -178,3 +178,4 @@ Repository: `BrianBusby/bmux`
 | `remote_mobile_open_architecture_decisions` | open |
 | `hybrid_focus_render_capture` | open |
 | `sidebar_minimum_default_and_configured_range_consistency` | open |
+| `sidebar_width_persistence_focused_gate_verification` | open |
