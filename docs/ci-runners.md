@@ -162,3 +162,30 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+
+## Browser background compositing test maintenance
+
+Commit `379033c4bf` made `GhosttyBackgroundTheme` use the shared opaque window
+compositing policy, but three theme tests and two WebKit under-page tests still
+expected uncomposited RGB plus partial alpha. Baseline CI records those exact
+component/alpha mismatches. The replacement Swift Testing suites preserve the
+payload/fallback and native-notification assertions, exercise Aqua and Dark Aqua,
+and check clamped endpoints against window/terminal colors. Payload tests compare
+the wrapper with its shared compositing owner; under-page tests check the native
+WebKit result after the real notification path, including NSNumber opacity.
+
+The under-page fixture supplies a deferred `.test` page URL without navigation.
+A blank page can correctly be clear when the window owns a transparent backdrop,
+so it is not a reliable fixture for a real website's native fill. Each panel closes
+synchronously on the main actor; drawing appearance is scoped to AppKit's native
+`performAsCurrentDrawingAppearance`. Tests do not change user preferences, global
+Ghostty settings, or terminal rendering. No app code or shipped strings change.
+
+Governing sources: `AGENTS.md`, `skills/bmux-testing/SKILL.md` and its migration,
+regression/quality and local/CI references; `skills/bmux-architecture/SKILL.md`;
+continuous-code-quality. Ownership remains in `GhosttyBackgroundTheme`,
+`WindowAppearanceSnapshot`/`WindowChromeColorResolver`, and BrowserPanel's existing
+notification/background path. Native execution against build 774 passed four
+functions/fourteen cases. The focused existing browser CI invocation runs both
+suites; actual CI and independent review remain verification gates.
