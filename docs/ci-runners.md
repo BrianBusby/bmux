@@ -201,3 +201,10 @@ accepting cancellation does not remove positive resize coverage. The focused
 browser-proxy app-host invocation includes this suite. Actual app-host CI
 execution remains pending under `ssh_pty_lifecycle_fixture_verification`;
 these local results do not establish full-suite acceptance.
+
+The output-channel fixture resolves each PTY path with `ttyname_r` and an owned
+buffer so parallel cases cannot race over `ttyname` static storage. A temporary
+concurrent native probe retained eight PTYs at once across eight batches and
+verified distinct paths plus exact marker delivery to each corresponding master.
+The sixteen CLI cases and constructor-failure cleanup proof also pass after
+this correction; app-host CI remains pending.

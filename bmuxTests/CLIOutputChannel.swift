@@ -13,11 +13,14 @@ final class CLIOutputChannel {
             var master: Int32 = -1, child: Int32 = -1
             var size = winsize(ws_row: 43, ws_col: 132, ws_xpixel: 0, ws_ypixel: 0)
             guard openpty(&master, &child, nil, nil, &size) == 0 else { throw POSIXError(.EIO) }
-            guard let name = ttyname(child) else {
+            var name = [CChar](repeating: 0, count: Int(MAXPATHLEN))
+            guard ttyname_r(child, &name, name.count) == 0 else {
                 Darwin.close(master); Darwin.close(child)
                 throw POSIXError(.EIO)
             }
-            descriptor = master; slave = child; path = String(cString: name); pipePath = nil
+            descriptor = master; slave = child
+            path = String(decoding: name.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self)
+            pipePath = nil
         } else {
             path = root.appendingPathComponent("stdout.pipe").path
             guard mkfifo(path, 0o600) == 0 else { throw POSIXError(.EIO) }
