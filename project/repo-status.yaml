@@ -202,3 +202,5 @@ local_caveats:
     status: open
   - id: claude_notification_target_fixture_verification
     status: open
+  - id: resume_policy_execution_fixture_verification
+    status: open

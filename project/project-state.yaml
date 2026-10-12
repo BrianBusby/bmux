@@ -5921,3 +5921,7 @@ caveats:
     title: Focused Claude notification target and PID lifecycle suites pending actual app-host verification
     status: open
     owner: bmux
+  - id: resume_policy_execution_fixture_verification
+    title: Focused Hermes startup and stale-PID suites pending actual app-host verification
+    status: open
+    owner: bmux

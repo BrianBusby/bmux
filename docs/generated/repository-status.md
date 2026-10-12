@@ -185,3 +185,4 @@ Repository: `BrianBusby/bmux`
 | `codex_stop_fixture_app_host_verification` | open |
 | `command_runner_parallel_pipe_capture` | open |
 | `claude_notification_target_fixture_verification` | open |
+| `resume_policy_execution_fixture_verification` | open |
