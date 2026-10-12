@@ -173,8 +173,12 @@ recovery, explicit valid/invalid workspace targets, window targeting, missing
 current selection and selection RPC failure. The socket fixture accepts exactly
 the intended workspace/surface pair and notification payload, rejects unexpected
 commands (including focus mutations), and checks explicit invalid requests fail
-without falling back to a different target. The reviewed shared CLISocketFixture
-is reused byte-for-byte, with owned file capture and joined socket cleanup.
+without falling back to a different target. Valid ambient and TTY recovery cases
+return the intended identity at index 0 unfocused, alongside a different focused
+surface at index 1. Flash must retain the identity surface; notify's explicit
+`--surface 0` must retain index selection. Other fallback scenarios keep their
+actual target focused. The reviewed shared CLISocketFixture is reused
+byte-for-byte, with owned file capture and joined socket cleanup.
 
 On unchanged build 773, six cases fail with 18 assertions: the two stale-ambient
 success paths and their missing-current/server-error controls. Twelve controls
@@ -185,9 +189,14 @@ planned correction belongs only at this exhausted fallback boundary, reusing the
 current-workspace query owner without changing generic omitted-selector policy.
 Explicit target and window routing must remain authoritative.
 
-This first commit contains tests only. Actual CI red, the production correction,
-focused fixed-artifact execution and a tagged build remain required before the
-fix can ship. The focused suite joins the existing browser app-host step without
+The published branch still contains tests only; the production correction is held
+separately pending actual CI red. Its existing build 780 CLI passes all 18 cases
+with the focused decoys; unchanged 773 still fails only the six known fallback
+cases. A temporary input-only negative control selects decoy index 1 in the four
+ambient/TTY cases and fails exactly their target-identity assertions. This proves
+assertion sensitivity without mutating production code. Both native compiles are
+warning-free. Actual fixed-head app-host CI remains required before shipping.
+The focused suite joins the existing browser app-host step without
 an additional runner, tracked by matching canonical/local Project Truth caveats.
 Broader legacy CI is not claimed green. Other WorkspaceRemoteConnectionTests
 methods remain byte-identical.
