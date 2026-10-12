@@ -713,3 +713,41 @@ failed the exact-head workflow guard (run `38283073852`, job `114924791841`)
 by killing an active Swift Testing run with exit 124. Local subprocess verification
 passes with phase-aware cleanup; full native app-host completion remains subject
 to the separately tracked suite failures.
+
+
+### Consolidated agent session fixtures review boundary
+
+This branch consolidates #146, #152, #157, #159, #162, #165, #166, preserving each published source commit in
+its ancestry. Original branches remain available; superseded pull requests
+link to their replacement. This changes review organization, not application
+behavior. The preserved source heads are:
+
+- #146: `7f48a469821734062ad0c8de95da690cea3e5f4c`
+- #152: `637ae2ede4f18445487574e29988b1aa1befca04`
+- #157: `78cbde9b63acb7ea92929ca17ce9e4bc73fd68fb`
+- #159: `994e34f6512abf871b839b7957d56f2739671314`
+- #162: `90503d88c5f4cb0f69745dfb6b886755fe3ece12`
+- #165: `34f10e69b8fc9b554014ff830d775648dc0cb368`
+- #166: `971a35dfc91986d943ca74a8485139c7f31d8ae7`
+
+The native-settings and SSH replacement PRs depend on #142 for authoritative
+CI exit reporting. The agent-session replacement stacks on SSH to share one
+reviewed socket fixture. Existing focused selectors, full-suite coverage and
+canonical/local verification caveats remain intact. No failed, incomplete or
+cancelled run is treated as green. The original combined validation branch
+remains unchanged and does not verify these new heads.
+
+Local consolidation checks cover source ancestry, test-content preservation,
+Xcode wiring, selector discovery, determinism, file budgets and generated state.
+Full app-host compilation/execution and required checks on the replacement heads
+remain pending. No app build, launch, settings or localization catalog changes
+are part of this consolidation.
+
+A combined native run of the SSH and agent fixture sources against existing
+build 773 executed 22 test functions in 14 suites and failed with three
+fixture errors: one immediate-close SSH PTY case returned POSIX EIO; two Codex
+Stop cases returned POSIX EINVAL. These are unresolved concurrency-sensitive
+verification failures, not a green combined result. Compilation succeeded with
+a non-Sendable callback warning inherited from the unchanged PR150
+SSHExitedPTYClient fixture, whose callback crosses a legacy queue boundary. Prior isolated passes remain source-level
+evidence only; neither the warning nor the new combined failures is waived.
