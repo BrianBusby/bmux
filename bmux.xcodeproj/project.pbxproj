@@ -5410,7 +5410,6 @@
 				75C4E949E27369D4A18BA47A /* SSHStaleControlSocketTests.swift */,
 				D5930098AEC1801F9A0AEA1F /* SSHStaleControlSocketFixture.swift */,
 				C5BC91FB8249F2BFC3F8B23B /* SSHExitedPTYClient.swift */,
-				CE4411000000000000000002 /* CLISocketFixture.swift */,
 				F6120001A1B2C3D4E5F60718 /* WorkspaceSSHFishShellTests.swift */,
 				F7000001A1B2C3D4E5F60718 /* WorkspaceContentViewVisibilityTests.swift */,
 				F8000001A1B2C3D4E5F60718 /* SocketControlPasswordStoreTests.swift */,
