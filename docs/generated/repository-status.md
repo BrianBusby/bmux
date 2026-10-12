@@ -182,3 +182,5 @@ Repository: `BrianBusby/bmux`
 | `ssh_workspace_creation_fixture_focused_gate_verification` | open |
 | `ssh_agent_environment_fixture_focused_gate_verification` | open |
 | `ssh_pty_lifecycle_fixture_verification` | open |
+| `codex_stop_fixture_app_host_verification` | open |
+| `command_runner_parallel_pipe_capture` | open |

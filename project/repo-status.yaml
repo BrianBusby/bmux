@@ -196,4 +196,7 @@ local_caveats:
     status: open
   - id: ssh_pty_lifecycle_fixture_verification
     status: open
-
+  - id: codex_stop_fixture_app_host_verification
+    status: open
+  - id: command_runner_parallel_pipe_capture
+    status: open
