@@ -170,12 +170,12 @@ that have them registered (runner-side, needs org/runner admin).
 old 240pt minimum constant even after commit `2c783a9ee` deliberately made the
 unconfigured minimum 290pt. The policy's default width is 340pt, maximum 600pt;
 explicit minimum overrides retain their separate 120...260pt allowed range.
-`SidebarWidthPolicyTests` now exercises those observable defaults, numeric and
+`SidebarWidthPersistencePolicyTests` now exercises those observable defaults, numeric and
 string overrides, finite clamping, and nil/nonfinite/invalid-value fallbacks with
 unique UserDefaults suites and scoped persistent-domain cleanup. It replaces only
-the obsolete test; production policy, geometry and configuration remain unchanged.
+the three obsolete persistence/default-clamp tests; production policy, geometry and configuration remain unchanged.
 
-Seventeen parameter cases pass against unchanged native build 774 in an isolated
+Eighteen cases pass against unchanged native build 774 in an isolated
 HOME, with warning-free focused compilation. The source owner is unchanged from
 main. Xcode wiring, normalization, strict determinism, runner policy and Project
 Truth checks pass. The existing focused browser invocation also runs this small
@@ -185,3 +185,14 @@ quality references, bmux-architecture, bmux-dev-workflow and normalization.
 Complete `SessionPersistencePolicy` and its width consumers were inspected; the
 resolved minimum remains owned by persistence policy. No shipped text changes;
 new prose is limited to test names and contributor verification notes.
+
+The rest of the existing `SidebarWidthPolicyTests.swift` remains unchanged,
+including right-sidebar, settings, titlebar and selection-color coverage. Two
+additional baseline failures in that file had the same stale 240pt assumption;
+the new suite preserves their default-constant and ContentView static-clamp
+assertions at 290pt. A separate existing inconsistency remains unverified here:
+the live @AppStorage path clamps its 290pt fallback through the configured
+120...260pt range, unlike persistence's absent-key branch. These tests establish
+the current persistence and static-clamp contracts, not live resize/default
+consistency. Resolving that policy discrepancy would require a separate runtime
+change and visual verification.
