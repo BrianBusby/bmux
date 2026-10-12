@@ -5912,3 +5912,8 @@ caveats:
     title: Browser legacy theme startup migration focused gate awaits fixed app-host CI
     status: open
     owner: bmux
+
+  - id: browser_background_compositing_focused_gate_verification
+    title: Focused browser app-host gate includes background compositing tests; local native cases pass and pushed-head CI remains pending
+    status: open
+    owner: bmux

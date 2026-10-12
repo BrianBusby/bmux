@@ -404,4 +404,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Codex Stop fixture repair passes 13 local scenarios; focused app-host CI verification remains pending (`codex_stop_fixture_app_host_verification`) - owner: Bmux; status: open
 - CommandRunner blocking pipe readers can exhaust the cooperative executor during parallel socket tests (`command_runner_parallel_pipe_capture`) - owner: Bmux; status: open
 - Browser legacy theme startup migration focused gate awaits fixed app-host CI (`browser_legacy_theme_startup_migration_verification`) - owner: Bmux; status: open
+- Focused browser app-host gate includes background compositing tests; local native cases pass and pushed-head CI remains pending (`browser_background_compositing_focused_gate_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
