@@ -5917,3 +5917,8 @@ caveats:
     title: Focused browser app-host gate includes background compositing tests; local native cases pass and pushed-head CI remains pending
     status: open
     owner: bmux
+
+  - id: right_sidebar_shortcut_fixture_app_host_verification
+    title: Right sidebar shortcut fixture repair passes local flag-state coverage; focused app-host CI verification remains pending
+    status: open
+    owner: bmux

@@ -553,3 +553,36 @@ actual ownership/localization decisions must remain explicit during implementati
 No active user build may be rebuilt or replaced; parent owns a new isolated tag
 before a production push. PR144 packaging artifact verification is separate and
 still awaits real dynamic Debug plus unsigned Release CI proof.
+
+## Right sidebar shortcut fixture coverage
+
+Shard 3 runs `RightSidebarModeAvailabilityShortcutTests` and the remaining
+`RightSidebarModeShortcutHintTests` before the unchanged full app-host suite.
+The focused invocation uses the existing console-session and app-host wrappers;
+it does not change runner selection, retries, deadlines, or full-suite coverage.
+Expect four Swift Testing tests containing thirteen cases, plus three XCTest
+methods. Full app-host CI verification remains pending for this fixture repair.
+
+The original three failing shortcut fixtures expected Feed/Dock routes without
+enabling their beta flags. `RightSidebarMode.modeShortcut` correctly checks
+`RightSidebarMode+Availability`, whose Feed and Dock defaults are disabled.
+The corrected tests retain default/custom-file binding and action-gate assertions,
+exercise each flag independently, and cover absent flags. They use the same real
+shortcut owner as AppDelegate; no production shortcut behavior changes.
+
+Fixture setup, assertions, and cleanup stay in one synchronous MainActor turn.
+An owned JSON file, disabled fallbacks/watchers, and temporary removal of managed
+settings bookkeeping prevent unrelated settings discovery or restoration. Cleanup
+restores the original settings store and the exact persisted/registered defaults,
+then notifies observers and removes the owned directory. This follows the
+constructor pattern in `KeyboardShortcutTestSettingsIsolation` and the explicit
+beta ownership in `RightSidebarCommandPaletteTests`, with the incremental Swift
+Testing migration required by `skills/bmux-testing`.
+
+Local verification used unchanged build 773 (`bcad95a88`) in an isolated native
+executable with its own bundle ID and home; the six relevant production owners
+match base `ce17e9888`. All thirteen cases and the three retained XCTest methods
+passed. Removing only beta setup reproduced failures in the same three test
+families. A seeded preservation probe also verified exact effective, persistent,
+and registered defaults, store identity, and owned-directory cleanup. These
+results do not establish that the broader app-host suite is green.

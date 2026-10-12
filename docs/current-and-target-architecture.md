@@ -405,4 +405,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - CommandRunner blocking pipe readers can exhaust the cooperative executor during parallel socket tests (`command_runner_parallel_pipe_capture`) - owner: Bmux; status: open
 - Browser legacy theme startup migration focused gate awaits fixed app-host CI (`browser_legacy_theme_startup_migration_verification`) - owner: Bmux; status: open
 - Focused browser app-host gate includes background compositing tests; local native cases pass and pushed-head CI remains pending (`browser_background_compositing_focused_gate_verification`) - owner: Bmux; status: open
+- Right sidebar shortcut fixture repair passes local flag-state coverage; focused app-host CI verification remains pending (`right_sidebar_shortcut_fixture_app_host_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
