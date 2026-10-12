@@ -868,6 +868,9 @@
 		C1ADE10002A1B2C3D4E5F719 /* grok in Copy CLI */ = {isa = PBXBuildFile; fileRef = C1ADE10001A1B2C3D4E5F719 /* grok */; };
 		C0DE34020000000000000005 /* HelpMenuUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE34020000000000000006 /* HelpMenuUITests.swift */; };
 		F5320000A1B2C3D4E5F60718 /* HermesAgentIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5320001A1B2C3D4E5F60718 /* HermesAgentIndex.swift */; };
+		7A3D51F31BA38CFAB319B453 /* HermesResumeExecutionFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9FF1801ED937365CA2FDB8E /* HermesResumeExecutionFixture.swift */; };
+		C39DC1708CDAD8C98F6B9D1C /* HermesResumeExecutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A89504BA534AB741618C22A /* HermesResumeExecutionTests.swift */; };
+		3514DB7D5AC7EC7C82671AC7 /* HermesResumeInvocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA331BDC535E245C89570D10 /* HermesResumeInvocation.swift */; };
 		4931A11B0000000000000002 /* HiddenRightSidebarContentMountingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4931A11B0000000000000001 /* HiddenRightSidebarContentMountingTests.swift */; };
 		CD0CFE6000000000CD0CFE60 /* HostAccountFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0CFE6100000000CD0CFE61 /* HostAccountFlow.swift */; };
 		B1F0C0030000000000000001 /* HostedInspectorDockControlScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0C0030000000000000002 /* HostedInspectorDockControlScript.swift */; };
@@ -2767,6 +2770,9 @@
 		C1ADE10001A1B2C3D4E5F719 /* grok */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = Resources/bin/grok; sourceTree = SOURCE_ROOT; };
 		C0DE34020000000000000006 /* HelpMenuUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpMenuUITests.swift; sourceTree = "<group>"; };
 		F5320001A1B2C3D4E5F60718 /* HermesAgentIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesAgentIndex.swift; sourceTree = "<group>"; };
+		A9FF1801ED937365CA2FDB8E /* HermesResumeExecutionFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesResumeExecutionFixture.swift; sourceTree = "<group>"; };
+		3A89504BA534AB741618C22A /* HermesResumeExecutionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesResumeExecutionTests.swift; sourceTree = "<group>"; };
+		AA331BDC535E245C89570D10 /* HermesResumeInvocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesResumeInvocation.swift; sourceTree = "<group>"; };
 		4931A11B0000000000000001 /* HiddenRightSidebarContentMountingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HiddenRightSidebarContentMountingTests.swift; sourceTree = "<group>"; };
 		CD0CFE6100000000CD0CFE61 /* HostAccountFlow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HostAccountFlow.swift; sourceTree = "<group>"; };
 		B1F0C0030000000000000002 /* HostedInspectorDockControlScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/HostedInspectorDockControlScript.swift; sourceTree = "<group>"; };
@@ -5193,6 +5199,9 @@
 					F6572003A1B2C3D4E5F60718 /* SessionPersistenceResumeBindingTests.swift */,
 					F6572013A1B2C3D4E5F60718 /* SurfaceResumeBindingCodexUpdateCheckTests.swift */,
 					F5000001A1B2C3D4E5F60718 /* SessionPersistenceTests.swift */,
+				3A89504BA534AB741618C22A /* HermesResumeExecutionTests.swift */,
+				A9FF1801ED937365CA2FDB8E /* HermesResumeExecutionFixture.swift */,
+				AA331BDC535E245C89570D10 /* HermesResumeInvocation.swift */,
 					F17F00000000000000000002 /* FullWidthTabPersistenceTests.swift */,
 					FD21AD844E5D4D50A6DFC442 /* AppDelegateWindowFrameReconcileTests.swift */,
 					A1B2C3D4E5F600000000CF02 /* AppDelegateDisplayConfigRestoreTests.swift */,
@@ -7750,6 +7759,9 @@
 				C13519000000000000000003 /* GhosttyTerminalStartupEnvironmentTests.swift in Sources */,
 				D7AB34400000000000000003 /* GhosttyTerminalViewVisibilityPolicyTests.swift in Sources */,
 				3865A0053865A0053865A005 /* GlobalSearchShortcutSettingsTests.swift in Sources */,
+				7A3D51F31BA38CFAB319B453 /* HermesResumeExecutionFixture.swift in Sources */,
+				C39DC1708CDAD8C98F6B9D1C /* HermesResumeExecutionTests.swift in Sources */,
+				3514DB7D5AC7EC7C82671AC7 /* HermesResumeInvocation.swift in Sources */,
 				4931A11B0000000000000002 /* HiddenRightSidebarContentMountingTests.swift in Sources */,
 				B1F0C0040000000000000001 /* HostedInspectorDockControlScriptTests.swift in Sources */,
 				F1C1AA21B7E84D10A1C10001 /* InactivePaneFirstClickFocusTests.swift in Sources */,

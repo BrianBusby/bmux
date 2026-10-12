@@ -146,6 +146,8 @@ local_caveats:
     status: open
   - id: codex_rejected_ambient_identity_verification
     status: open
+  - id: resume_policy_execution_fixture_verification
+    status: open
   - id: configured_codex_placeholder_startup_dogfood
     status: open
   - id: codex_update_workspace_exit_native_dogfood
