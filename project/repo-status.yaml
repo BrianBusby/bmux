@@ -186,3 +186,5 @@ local_caveats:
     status: open
   - id: hybrid_focus_render_capture
     status: open
+  - id: ssh_workspace_creation_fixture_focused_gate_verification
+    status: open
