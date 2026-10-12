@@ -45,6 +45,7 @@ Repository: `BrianBusby/bmux`
 | Managed Connected Codex Runtime | under observation |
 | Monorepo Migration Ledger Closure | planned |
 | Native Ci Exit Status Reporting | implemented |
+| Native Ci Framework Completion Watchdog | implemented |
 | Native Provider Session View | implemented |
 | Normal Coding Agent Evidence Ingestion | implemented |
 | Ordinary Cli Read Only Chat | under observation |
