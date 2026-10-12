@@ -1401,3 +1401,25 @@ is added. Review of the actual recovery call site is the integration evidence
 for that edge path. An isolated tagged build, focused native suite, fresh preview
 approval and CI remain required. Build 773 remains untouched and its earlier
 approval does not cover this new runtime correction. No shipped strings change.
+
+Build 775 (`matte-skin-config-fallback`) now builds from runtime HEAD 08c317bf5.
+The actual app dylib passes all 28 native Swift Testing functions across eight
+suites (2.328 seconds); focused test compilation is warning-free. Build retains
+149 existing warning lines, including the already-recorded terminal cast and
+nil-coalescing warnings; no warning-free app-build claim is made.
+
+Live dark/light inspection succeeds after the machine was unlocked. Captures
+`verification-final/build-775-fallback-{graphite,porcelain}.png` are both 1000x700.
+CUA window dragging repeatedly reports `windowNotFoundAtPosition`, so these are
+not a new exact-1092x593 comparison. Existing approved build773 captures retain
+that exact-size evidence. Runtime content differs: actual shell date/prompt,
+and temporary PR metadata expires through the existing background refresh.
+The user's global Ghostty `Builtin Tango Dark` theme and 0.88 opacity are still
+respected, so the terminal is dark even in porcelain. A comment-only config in
+this preview's own bundle directory removes release-channel overrides but does
+not suppress the user's explicit global Ghostty theme. No user config was edited.
+Native loader/precedence tests verify the matte default colors separately.
+The stock Bonsplit differences already accepted for build773 remain; no texture
+or dependency styling has returned. The preview is restored to System appearance.
+Fresh user approval and combined CI remain pending; forced app-creation rejection
+is still covered by call-site inspection rather than a fault-injected runtime.
