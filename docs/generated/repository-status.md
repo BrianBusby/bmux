@@ -177,3 +177,4 @@ Repository: `BrianBusby/bmux`
 | `normal_terminal_codex_rich_evidence_gap` | resolved |
 | `remote_mobile_open_architecture_decisions` | open |
 | `hybrid_focus_render_capture` | open |
+| `respawn_window_protocol_fixture_focused_gate_verification` | open |

@@ -162,3 +162,30 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+### Respawn window option protocol fixture
+
+The legacy window-option regression expected `surface.send_text`; the maintained
+`respawn-pane` path uses `surface.respawn` with both a shell command and the
+original `tmux_start_command`. Consequently the old mock rejected the valid RPC
+before it could check that `--window` stayed out of the command text.
+
+The migrated Swift Testing case covers the window option before and after a
+positional command, plus explicit `--command`. It preserves window lookup,
+focused-surface targeting, request order and successful completion checks. It
+asserts the original command is exactly `echo fresh`, then executes the emitted
+shell command in the owned fixture environment and checks its output. Every
+other legacy test remains unchanged. There is no runtime or terminal change.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing migration/wiring and
+local-vs-CI references, architecture/file discipline, shared-behavior and socket
+focus policy. The CLI option parser, respawn owner and shell-command builder were
+inspected. The test owns temporary files/process state; the shared reviewed
+CLISocketFixture provides joined asynchronous transport. No real app socket,
+preference, window or surface is targeted.
+
+All three cases pass unchanged build 773 with warning-free focused compilation.
+A temporary negative control restoring the obsolete send-text mock fails all
+three cases. Actual app-host CI and combined full-suite validation remain
+pending under the canonical/local focused-gate caveat. Localization audit: no
+shipped strings or catalogs change; contributor verification notes only.

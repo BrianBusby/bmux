@@ -5887,3 +5887,8 @@ caveats:
     issue:
       repository: BrianBusby/bmux
       number: 8
+
+  - id: respawn_window_protocol_fixture_focused_gate_verification
+    title: Respawn window protocol fixture focused gate awaits app-host CI
+    status: open
+    owner: bmux
