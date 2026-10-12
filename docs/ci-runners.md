@@ -323,8 +323,12 @@ pbx wiring and Project Truth checks pass. The parent-built isolated tag `ssh-cle
 without launch. All 27 native parameter cases (five functions, two suites) pass
 against that artifact's real bundled CLI and app dylib; fixture compilation is
 warning-free. Evidence: `/tmp/ssh-cleanup-native-green.log` and
-`/tmp/ssh-cleanup-native-fixed-compile.log`. Actual test-only CI red and final CI
-remain pending; the production fix must not be pushed before the red gate runs.
+`/tmp/ssh-cleanup-native-fixed-compile.log`. Actual test-only CI job 114953934391 on commit 606e4e8b0 completed the
+SSHCleanupErrorTests suite with the seven expected diagnostic issues before its
+legacy wrapper truncated later output. The job badge incorrectly reports success
+because of that separately repaired PR 142 reporting defect; the completed suite
+log is the red evidence, not the badge. The production fix can now be pushed;
+fixed app-host CI and the full-suite gate remain pending.
 Localization/disclosure audit confirms all nine protocol diagnostics are
 byte-identical to the pre-existing CLI strings. No new UI wording or catalog keys
 are introduced; existing protocol text and CLI presentation remain English.
