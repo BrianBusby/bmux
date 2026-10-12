@@ -5887,3 +5887,8 @@ caveats:
     issue:
       repository: BrianBusby/bmux
       number: 8
+
+  - id: ssh_agent_environment_fixture_focused_gate_verification
+    title: SSH agent environment fixture focused gate awaits app-host CI
+    status: open
+    owner: bmux

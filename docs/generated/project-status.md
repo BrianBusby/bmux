@@ -138,6 +138,7 @@ Regenerate with: ./scripts/project-docs generate
 | Monorepo migration ledger pending dispositions (`monorepo_migration_ledger_pending_dispositions`) | Bmux | open |  |
 | Observability trace API boundary (`observability_trace_api`) | Provenance Engine | open |  |
 | GitHub Actions runner reliability (`github_actions_runner_reliability`) | Bmux | open | BrianBusby/bmux#8 |
+| SSH agent environment fixture focused gate awaits app-host CI (`ssh_agent_environment_fixture_focused_gate_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
