@@ -921,3 +921,38 @@ selection and profile stores; BrowserPanel init/reattach owns the active WebKit
 store; Workspace's existing new-browser and detach/attach paths retain panel
 identity and choose the destination scope. No production files, shipped strings,
 or localization catalogs change; this is contributor test documentation only.
+
+### Claude SessionEnd replacement scope fixture
+
+The legacy consumed-workspace test seeded the active session in a sibling pane
+while expecting it to suppress cleanup in the exiting pane. The maintained
+ClaudeHookSessionStore.isCurrent policy explicitly permits independent sibling
+panes (upstream issue 5908) and suppresses a replaced session in the same pane.
+Actual baseline app-host logs fail only the two visible cleanup assertions;
+consumption already succeeds. An isolated unchanged build 773 CLI probe reproduces
+the distinction with both explicit session IDs and surface fallback routing.
+
+The migrated Swift Testing suite seeds a replacement in the same pane. Its old
+record is most recently updated, so fallback consumes that record; the explicit
+active boundary still controls cleanup. Four cases cover legacy workspace-only
+active state and current per-surface state, with and without an explicit session
+ID. They retain the different caller/consumed workspace, consumed-record deletion,
+and no PID/status/notification cleanup assertions, and add preservation of the
+active record and both active boundaries plus exact resume-clear targeting.
+The sibling-pane and stale-turn tests remain unchanged. No production policy or
+routing changes are included; workspace-wide notification semantics are not
+redesigned by this fixture repair.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing and migration/wiring
+references, bmux-architecture, bmux-shared-behavior and bmux-socket-policy. Complete
+consume/isCurrent/fallback/active-slot migration and SessionEnd caller paths were
+inspected. The fixture owns temporary state and process I/O; it uses the shared
+async CLISocketFixture transport from the notification fixture maintenance and
+owned output files to avoid blocking cooperative pipe readers. It contacts no
+real app socket and does not modify real preferences or hook state.
+
+All four native cases pass against unchanged build 773, with warning-free focused
+compilation. A temporary negative control restores the erroneous sibling-pane
+active record and fails all four cases, preserving the protection being tested. Actual app-host CI and broad-suite integration remain pending in the
+canonical/local focused-gate caveat. There are no shipped strings or catalog
+changes; changed text is contributor verification documentation only.

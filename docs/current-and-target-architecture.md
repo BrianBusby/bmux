@@ -413,4 +413,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - SSH manual reconnect has a failing native handoff regression; shell prompt and native respawn ownership repair remain pending (`ssh_manual_reconnect_handoff_regression`) - owner: Bmux; status: open
 - Focused browser app-host gate includes discard and history restore readiness tests; local native cases pass and pushed-head CI remains pending (`browser_discard_restore_focused_gate_verification`) - owner: Bmux; status: open
 - Focused app-host gate includes default and configured sidebar width policy tests; local native cases pass and pushed-head CI remains pending (`sidebar_width_persistence_focused_gate_verification`) - owner: Bmux; status: open
+- Claude replaced-session cleanup fixture focused gate awaits app-host CI (`claude_session_end_scope_focused_gate_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
