@@ -190,3 +190,4 @@ Repository: `BrianBusby/bmux`
 | `browser_background_compositing_focused_gate_verification` | open |
 | `right_sidebar_shortcut_fixture_app_host_verification` | open |
 | `ssh_startup_lifecycle_focused_gate_verification` | open |
+| `ssh_manual_reconnect_handoff_regression` | open |

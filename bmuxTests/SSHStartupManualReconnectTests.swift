@@ -37,7 +37,7 @@ struct SSHStartupManualReconnectTests {
         }
     }
 
-    @Test func manualReconnectReentersConnectLoop() throws {
+    @Test func manualReconnectHandsOffToNativeOwner() throws {
         let fileManager = FileManager.default
         let root = fileManager.temporaryDirectory
             .appendingPathComponent("bmux-ssh-manual-retry-\(UUID().uuidString)", isDirectory: true)
@@ -86,14 +86,19 @@ struct SSHStartupManualReconnectTests {
         #expect(!result.timedOut, Comment(rawValue: result.stderr))
         #expect(result.status == 0, Comment(rawValue: result.stderr))
         #expect(
-            (try? String(contentsOf: attemptFile, encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines) == "2",
-            "manual `r` retry must re-run the SSH connect loop a second time"
+            (try? String(contentsOf: attemptFile, encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines) == "1",
+            "manual reconnect must hand off to the native owner without launching SSH again"
         )
         let recordedCalls = (try? String(contentsOf: logFile, encoding: .utf8)) ?? ""
-        let sessionEndCalls = recordedCalls
-            .split(separator: "\n")
-            .filter { $0.contains("ssh-session-end") }
-        #expect(sessionEndCalls.count == 2, Comment(rawValue: result.stderr))
+        let calls = recordedCalls.split(separator: "\n")
+        let sessionEndCalls = calls.filter { $0.contains("ssh-session-end") }
+        let reconnectCalls = calls.filter { $0.contains("rpc workspace.remote.reconnect ") }
+        #expect(sessionEndCalls.count == 1, Comment(rawValue: recordedCalls))
+        #expect(reconnectCalls.count == 1, Comment(rawValue: recordedCalls))
+        if let sessionEndIndex = calls.firstIndex(where: { $0.contains("ssh-session-end") }),
+           let reconnectIndex = calls.firstIndex(where: { $0.contains("rpc workspace.remote.reconnect ") }) {
+            #expect(sessionEndIndex < reconnectIndex, "old session cleanup must precede the replacement grant")
+        }
         #expect(
             recordedCalls.contains("rpc workspace.remote.reconnect {\"workspace_id\":\"11111111-1111-1111-1111-111111111111\",\"surface_id\":\"22222222-2222-2222-2222-222222222222\"}"),
             Comment(rawValue: recordedCalls)
@@ -224,11 +229,11 @@ struct SSHStartupManualReconnectTests {
             }
 
             switch method {
-            case "vm.attach_info":
+            case "vm.ssh_info":
                 let params = payload["params"] as? [String: Any] ?? [:]
                 guard params["id"] as? String == vmID,
-                      params["require_daemon"] as? Bool == true else {
-                    return v2Response(id: id, ok: false, error: ["code": "invalid_params", "message": "unexpected attach params"])
+                      Set(params.keys) == ["id"] else {
+                    return v2Response(id: id, ok: false, error: ["code": "invalid_params", "message": "unexpected SSH info params"])
                 }
                 return v2Response(
                     id: id,
@@ -245,7 +250,7 @@ struct SSHStartupManualReconnectTests {
                     ]
                 )
             case "workspace.create":
-                return v2Response(id: id, ok: true, result: ["workspace_id": workspaceID])
+                return v2Response(id: id, ok: true, result: ["workspace_id": workspaceID, "surface_id": "22222222-2222-2222-2222-222222222222"])
             case "workspace.rename":
                 return v2Response(id: id, ok: true, result: ["workspace_id": workspaceID])
             case "workspace.remote.configure":

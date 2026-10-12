@@ -408,4 +408,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Focused browser app-host gate includes background compositing tests; local native cases pass and pushed-head CI remains pending (`browser_background_compositing_focused_gate_verification`) - owner: Bmux; status: open
 - Right sidebar shortcut fixture repair passes local flag-state coverage; focused app-host CI verification remains pending (`right_sidebar_shortcut_fixture_app_host_verification`) - owner: Bmux; status: open
 - CI app-host Option/Alt step now selects ten SSH startup lifecycle cases; native baseline passes and pushed-head CI remains pending (`ssh_startup_lifecycle_focused_gate_verification`) - owner: Bmux; status: open
+- SSH manual reconnect has a failing native handoff regression; shell prompt and native respawn ownership repair remain pending (`ssh_manual_reconnect_handoff_regression`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

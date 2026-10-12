@@ -5932,3 +5932,8 @@ caveats:
     title: CI app-host Option/Alt step now selects ten SSH startup lifecycle cases; native baseline passes and pushed-head CI remains pending
     status: open
     owner: bmux
+
+  - id: ssh_manual_reconnect_handoff_regression
+    title: SSH manual reconnect has a failing native handoff regression; shell prompt and native respawn ownership repair remain pending
+    status: open
+    owner: bmux
