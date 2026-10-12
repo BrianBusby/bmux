@@ -162,3 +162,56 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+## Claude notification target fixture maintenance
+
+Two baseline failures were stale status expectations, not wrong-target mutations:
+`testClaudeNotificationFallsBackToLiveWorkspaceInsteadOfFocusedTab` and
+`testClaudeNotificationHonorsExplicitWorkspaceHandleRef` in
+`CLINotifyClaudeHookWorkspaceRoutingTests.swift`. Baseline logs
+`/tmp/matte-base-apphost2.log` (2026-10-10 18:07:09Z) and
+`/tmp/matte-base-apphost3.log` (18:01:58Z) show the correct target workspace/surface,
+but `Idle` instead of the old expected `Needs input`.
+
+Commit `f62cae83f` deliberately stopped treating generic Claude notification
+heartbeats as blocked input. The maintained `classifyClaudeNotification` and
+notification lifecycle owner keep plain heartbeats idle while explicit permission
+prompts remain `Needs input`. The repaired fixtures retain the original generic
+payload and add a permission payload to each of the same two routing scenarios.
+Both status and notification must address the exact target workspace and surface;
+stale and focused workspaces remain forbidden mutation targets.
+
+Only these two methods migrate to `ClaudeNotificationTargetTests` (Swift Testing).
+`ClaudeNotificationTargetFixture` owns each short temporary root, state file,
+input/output files and isolated process environment. The shared `CLISocketFixture`
+is byte-identical to the SSH cleanup maintenance fixture, with the same project
+identity for later integration. Its native readiness stream joins descriptor
+cancellation before removing files. The responder drains id-less `feed.push`
+telemetry without replying, matching the production frame at `CLI/bmux.swift`.
+Unexpected command mutations fail the test. No app or CLI production code changes.
+
+Evidence against unchanged tagged build 773:
+
+- The original `Needs input` expectation reproduces exactly two failures, one
+  per generic-heartbeat routing case; permission variants and original forbidden
+  target assertions pass. `/tmp/claude-target-native-old-expectation.log` preserves
+  actual command traces.
+- Corrected expectations pass all four payload/routing combinations in two test
+  functions. `/tmp/claude-target-native-green.log`; compilation is warning-free.
+- A separate temporary misrouting control redirects resolution to the focused
+  workspace to verify the exact-target and forbidden-target assertions remain
+  effective: all four combinations fail their exact-target and forbidden-target
+  assertions (12 issues), `/tmp/claude-target-misroute.log`. The checked-in fixture
+  is unchanged by this control.
+
+The existing app-host shard 2 now runs this suite explicitly before broad legacy
+tests. Actual focused app-host CI and broader suite results remain pending;
+Project Truth caveat `claude_notification_target_fixture_verification` stays open.
+No reload or app launch is needed for this test-only correction.
+
+Guidance applied: root/personal AGENTS, continuous-code-quality,
+bmux-testing (incremental Swift Testing, behavioral coverage, wiring and native
+versus CI proof), architecture (file ownership and concurrency), shared-behavior,
+socket-policy and dev-workflow. Independent review found no blocker. Localization
+audit: test data and contributor diagnostics only; no shipped wording or catalogs
+changed. The legacy ambiguous-TTY and active-pointer tests remain untouched.
