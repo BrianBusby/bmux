@@ -178,7 +178,9 @@ watchdog timeout returns 125 after a failed Selected-tests summary, otherwise
 completion. The cleanup deadline starts at the Selected-tests summary, suspends
 when a fresh Swift Testing run (or restarted XCTest run) starts, and restarts at
 the final framework summary. Lifecycle lines are consumed once, including lines
-split across PTY reads; unrelated app output cannot extend cleanup. A failed
+split across PTY reads. ANSI SGR styling is removed only from parser input, so
+colored Swift Testing glyphs preserve the same lifecycle handling while stdout
+and saved logs retain their original bytes. Unrelated app output cannot extend cleanup. A failed
 Selected-tests result remains recorded across later successful restart summaries.
 During active tests, the existing general output-idle watchdog and native test/job
 time limits apply, so an individual test may legitimately exceed the cleanup
