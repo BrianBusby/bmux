@@ -757,5 +757,5 @@ fixture errors: one immediate-close SSH PTY case returned POSIX EIO; two Codex
 Stop cases returned POSIX EINVAL. These are unresolved concurrency-sensitive
 verification failures, not a green combined result. Compilation succeeded with
 a non-Sendable callback warning inherited from the unchanged PR150
-SSHExitedPTYClient fixture, whose callback crosses a legacy queue boundary. Prior isolated passes remain source-level
-evidence only; neither the warning nor the new combined failures is waived.
+SSHExitedPTYClient fixture, whose callback crosses a legacy queue boundary. Prior isolated passes apply to their individual fixtures and artifacts;
+they do not establish combined-suite success; neither the warning nor the new combined failures is waived.
