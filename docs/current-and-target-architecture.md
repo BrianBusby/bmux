@@ -389,6 +389,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Open Caveats
 
+- Focused Hermes startup and stale-PID suites pending actual app-host verification (`resume_policy_execution_fixture_verification`) - owner: Bmux; status: open
 - Broad legacy bmux-local storage migration (`broad_legacy_storage_migration`) - owner: Bmux; status: open
 - Residual app-runtime lifecycle ownership outside BmuxAppRuntimeServices (`residual_app_runtime_lifecycle_ownership`) - owner: Bmux; status: open
 - Workspace Display file-watcher SQLite churn (`workspace_display_file_watcher_churn`) - owner: Bmux; status: open

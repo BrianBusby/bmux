@@ -162,3 +162,42 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+## Resume policy executable fixture maintenance
+
+Five obsolete `SessionPersistenceTests` expectations are reconciled with current
+shared owners. Commit `9374b139e1` deliberately retains a restorable/forkable
+session when its saved PID has died, while clearing live process evidence. The
+existing `RestorableAgentSessionStalePIDTests` already verifies that behavior and
+live-record precedence, so the contradictory nil-snapshot test is removed rather
+than duplicated with a different expected value.
+
+Four Hermes tests previously compared raw shell substrings that changed when the
+startup command acquired nested environment quoting. `HermesResumeExecutionTests`
+executes the actual `Workspace.surfaceResumeStartupInput` output with owned fake
+executables, a temporary HOME/configuration and an isolated inherited cwd. A
+NUL-delimited recorder verifies exact argv and order, captured versus PATH
+executable identity, cwd before every bootstrap step, provider/base URL/API mode/
+model configuration, stale-provider rewrite, and explicit-provider no-bootstrap.
+The guarded relative executable uses a directory containing spaces and an
+apostrophe. A separate owned PATH executable catches captured-path substitution.
+No network request or real Hermes process is involved.
+
+Actual unchanged build 773 native execution passes four Hermes cases plus the two
+existing stale-PID cases (three functions/two suites), with warning-free focused
+compilation. The original five expectations have retained actual baseline CI red
+logs; no synthetic production regression or link-policy change is introduced.
+The existing focused browser gate also runs these two suites, without adding a
+runner. Final app-host CI remains pending and the broad baseline is not claimed
+green. The deleted-agent-cwd metadata test is untouched: its terminal-runtime
+metadata policy remains a separate unresolved question, even though prior shell
+execution probes passed.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing and its
+migration/behavioral/local-vs-CI references, architecture ownership/file/API/
+concurrency guidance, shared-behavior and dev-workflow. Inspected owners include
+Workspace's restore-policy composition, WorkspaceSessionRestorePolicyService,
+WorkspaceHermesAgentCommandBootstrapper, SurfaceResumeBindingSnapshot/environment
+rendering, HermesAgentCodexEnvironment and RestorableAgentSessionIndex. No shipped
+strings, settings, production source, or localization catalogs change. All other
+SessionPersistenceTests methods remain byte-identical to the feature baseline.
