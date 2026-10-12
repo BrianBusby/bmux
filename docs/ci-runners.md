@@ -181,13 +181,20 @@ success paths and their missing-current/server-error controls. Twelve controls
 pass. Compilation is warning-free. The shared fallback owner rejects the stale
 workspace through surface.list and tries a validated TTY binding, but then calls
 resolveWorkspaceId(nil), which rereads that rejected BMUX_WORKSPACE_ID. The
-planned correction belongs only at this exhausted fallback boundary, reusing the
-current-workspace query owner without changing generic omitted-selector policy.
-Explicit target and window routing must remain authoritative.
+correction at this exhausted fallback boundary reuses currentWorkspaceId with an
+optional window context; the general omitted-selector policy stays unchanged.
+Explicit target and window routing remain authoritative.
 
-This first commit contains tests only. Actual CI red, the production correction,
-focused fixed-artifact execution and a tagged build remain required before the
-fix can ship. The focused suite joins the existing browser app-host step without
+The first pushed commit contains tests only. Local isolated build 780
+(workspace-fallback-recovery, never launched) passes all 18 cases against its
+actual CLI. A temporary negative control supplies the wrong current workspace
+and fails exactly the flash and notification target assertions, demonstrating
+that the fixture rejects arbitrary targets. The changed CLI file has no compiler
+warnings. Existing app concurrency/deprecation, optional cargo and asset warnings
+remain outside this repair. The new missing-selection callsite preserves English
+wording and has parsed English/Japanese catalog entries; all existing entries are
+unchanged. Actual test-only CI red is still required before the production fix is
+pushed, followed by exact fixed-HEAD app-host verification. The focused suite joins the existing browser app-host step without
 an additional runner, tracked by matching canonical/local Project Truth caveats.
 Broader legacy CI is not claimed green. Other WorkspaceRemoteConnectionTests
 methods remain byte-identical.
@@ -198,4 +205,4 @@ shared behavior and socket threading/focus policy. Relevant inspected owners are
 both command branches, workspace/surface normalization, fallback selection,
 validated TTY lookup and current-workspace query. No global environment mutation,
 app focus operation, renderer edit or user app action is part of this slice.
-No shipped strings or localization catalogs change in the test-only commit.
+No shipped strings or localization catalogs changed in the test-only commit.
