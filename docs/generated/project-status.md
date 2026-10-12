@@ -147,6 +147,7 @@ Regenerate with: ./scripts/project-docs generate
 | CommandRunner blocking pipe readers can exhaust the cooperative executor during parallel socket tests (`command_runner_parallel_pipe_capture`) | Bmux | open |  |
 | Focused Claude notification target and PID lifecycle suites pending actual app-host verification (`claude_notification_target_fixture_verification`) | Bmux | open |  |
 | Focused Hermes startup and stale-PID suites pending actual app-host verification (`resume_policy_execution_fixture_verification`) | Bmux | open |  |
+| Claude replaced-session cleanup fixture focused gate awaits app-host CI (`claude_session_end_scope_focused_gate_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

@@ -5925,3 +5925,7 @@ caveats:
     title: Focused Hermes startup and stale-PID suites pending actual app-host verification
     status: open
     owner: bmux
+  - id: claude_session_end_scope_focused_gate_verification
+    title: Claude replaced-session cleanup fixture focused gate awaits app-host CI
+    status: open
+    owner: bmux

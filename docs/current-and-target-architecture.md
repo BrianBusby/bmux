@@ -408,4 +408,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - CommandRunner blocking pipe readers can exhaust the cooperative executor during parallel socket tests (`command_runner_parallel_pipe_capture`) - owner: Bmux; status: open
 - Focused Claude notification target and PID lifecycle suites pending actual app-host verification (`claude_notification_target_fixture_verification`) - owner: Bmux; status: open
 - Focused Hermes startup and stale-PID suites pending actual app-host verification (`resume_policy_execution_fixture_verification`) - owner: Bmux; status: open
+- Claude replaced-session cleanup fixture focused gate awaits app-host CI (`claude_session_end_scope_focused_gate_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

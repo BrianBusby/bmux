@@ -186,3 +186,4 @@ Repository: `BrianBusby/bmux`
 | `command_runner_parallel_pipe_capture` | open |
 | `claude_notification_target_fixture_verification` | open |
 | `resume_policy_execution_fixture_verification` | open |
+| `claude_session_end_scope_focused_gate_verification` | open |
