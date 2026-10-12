@@ -1044,7 +1044,7 @@ checkpoint, not a merge into main, a published CI result, or an app build.
 | #147 | `537681592de0f1a51b00308a2fa3834f31959b49` |
 | #148 | `bcdee5e1638ba65e6c1d2af7bad6df533f6e0226` |
 | #149 | `2b8592920ed58232e9506c14ba6e4842d2982f14` |
-| #150 | `b54a9f57b8a4eacd8661c1ab7c1096d1d182e668` |
+| #150 | `cf9e78dcb5df8dbc4dbadd82df673492ad33cbdf` |
 | #151 | `6e366325cbcc173a2ae2f1ec58bb4979feccae3d` |
 | #152 | `637ae2ede4f18445487574e29988b1aa1befca04` |
 | #153 | `36114abc088693f49a5162089461e8eb76560a00` |
@@ -1063,22 +1063,25 @@ generated documents are regenerated. Repeated group references to the single
 shared CLISocketFixture are removed without duplicating its source build entry.
 
 The published PR143 and PR148 fixes follow actual test-only CI failures: browser
-startup migration produced four issues in job114950761885; SSH cleanup produced
-seven diagnostic issues in job114953934391. The latter suite completed before the
+startup migration produced four issues in job 114950761885; SSH cleanup produced
+seven diagnostic issues in job 114953934391. The latter suite completed before the
 old runner terminated other active Swift Testing work and incorrectly returned
 success. Its green job badge is not a passing-suite claim.
 
 PR151, PR153 and PR155 contain only their published failing tests here. Their
 reviewed production fixes remain excluded until actual red CI is captured. The
-PR150 managed-attach fixture follow-up is independently reviewed but not yet
-included at this checkpoint. Existing user builds773 and775 remain untouched.
+PR150 managed-attach fixture follow-up is included with its listener-only
+SO_NOSIGPIPE correction in the one shared socket fixture. Ten lifecycle checks
+pass on both 773 and 779, and missing-attach and unprotected-write negative
+controls establish sensitivity. Combined cross-suite native execution remains
+pending. Existing user builds 773 and 775 remain untouched.
 
 Local checks pass: framework-aware PTY helper behavior, four exit-reporting tests,
 app-host retry/attempt guards, sharding coverage, Xcode normalization, test wiring
-(475 files), strict determinism (zero findings), source budget against ce17, YAML
+(478 files), strict determinism (zero findings), source budget against ce17, YAML
 parsing, and focused-selector preservation across every listed input. The source
 budget permits existing incidental growth of five MainWindowFocusController
-lines and two SSHStartupSignalLifecycleTests lines; no budget waiver was added.
+lines; no budget waiver was added.
 No combined test-target compilation, native execution, dynamic/Release artifact
 verification, or complete authoritative CI run has occurred yet. These remain
 required gates; separate local native results do not substitute for them.
