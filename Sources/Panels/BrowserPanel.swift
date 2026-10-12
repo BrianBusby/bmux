@@ -3887,6 +3887,7 @@ final class BrowserPanel: Panel, ObservableObject {
     /// Pure with respect to the injected `defaults`, so it is unit-testable against
     /// a scratch `UserDefaults(suiteName:)` without touching `UserDefaults.standard`.
     static func normalizeBrowserDefaults(defaults: UserDefaults) {
+        // Resolve the theme fallback in its owner so registration cannot mask legacy migration.
         defaults.register(defaults: [
             BrowserSearchSettingsStore.searchEngineKey: BrowserSearchSettingsStore.defaultSearchEngine.rawValue,
             BrowserSearchSettingsStore.customSearchEngineNameKey: BrowserSearchSettingsStore.defaultCustomSearchEngineName,
@@ -3895,7 +3896,6 @@ final class BrowserPanel: Panel, ObservableObject {
             BrowserToolbarAccessorySpacingDebugSettings.key: BrowserToolbarAccessorySpacingDebugSettings.defaultSpacing,
             BrowserProfilePopoverDebugSettings.horizontalPaddingKey: BrowserProfilePopoverDebugSettings.defaultHorizontalPadding,
             BrowserProfilePopoverDebugSettings.verticalPaddingKey: BrowserProfilePopoverDebugSettings.defaultVerticalPadding,
-            BrowserThemeSettings.modeKey: BrowserThemeSettings.defaultMode.rawValue,
         ])
 
         let resolvedThemeMode = BrowserThemeSettings.mode(defaults: defaults)

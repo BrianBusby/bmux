@@ -503,6 +503,7 @@
 		4BBF42E8A86EAAB94BC9EA16 /* BrowserSystemProxyMirror.swift in Sources */ = {isa = PBXBuildFile; fileRef = 048DACB3F8147BCBDD266297 /* BrowserSystemProxyMirror.swift */; };
 		C7B800062D4202A13C962D2D /* BrowserSystemProxyMirrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D828DA0070335773EBAE83F /* BrowserSystemProxyMirrorTests.swift */; };
 		0796994CA7CCA25DB990BFEF /* BrowserSystemProxyWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 326E7A5E13C6DF650B9F8971 /* BrowserSystemProxyWatcher.swift */; };
+		0705EFE509924363A547F502 /* BrowserThemeSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF9645364AB46BEAA6939E4 /* BrowserThemeSettingsTests.swift */; };
 		A50100000000000000000002 /* BrowserWebAuthnAssertionExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50100000000000000000001 /* BrowserWebAuthnAssertionExtensions.swift */; };
 		A50100000000000000000004 /* BrowserWebAuthnAssertionPublicKeyOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50100000000000000000003 /* BrowserWebAuthnAssertionPublicKeyOptions.swift */; };
 		A50100000000000000000006 /* BrowserWebAuthnAssertionRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50100000000000000000005 /* BrowserWebAuthnAssertionRequest.swift */; };
@@ -2389,6 +2390,7 @@
 		048DACB3F8147BCBDD266297 /* BrowserSystemProxyMirror.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserSystemProxyMirror.swift; sourceTree = "<group>"; };
 		8D828DA0070335773EBAE83F /* BrowserSystemProxyMirrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserSystemProxyMirrorTests.swift; sourceTree = "<group>"; };
 		326E7A5E13C6DF650B9F8971 /* BrowserSystemProxyWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserSystemProxyWatcher.swift; sourceTree = "<group>"; };
+		FCF9645364AB46BEAA6939E4 /* BrowserThemeSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserThemeSettingsTests.swift; sourceTree = "<group>"; };
 		A50100000000000000000001 /* BrowserWebAuthnAssertionExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserWebAuthnAssertionExtensions.swift; sourceTree = "<group>"; };
 		A50100000000000000000003 /* BrowserWebAuthnAssertionPublicKeyOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserWebAuthnAssertionPublicKeyOptions.swift; sourceTree = "<group>"; };
 		A50100000000000000000005 /* BrowserWebAuthnAssertionRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserWebAuthnAssertionRequest.swift; sourceTree = "<group>"; };
@@ -5270,6 +5272,7 @@
 				BABA25000000000000000006 /* BrowserHTTPBasicAuthPromptCoordinatorTests.swift */,
 				BABA25000000000000000004 /* BrowserHTTPBasicAuthPromptTests.swift */,
 				8D828DA0070335773EBAE83F /* BrowserSystemProxyMirrorTests.swift */,
+				FCF9645364AB46BEAA6939E4 /* BrowserThemeSettingsTests.swift */,
 				C59240010000000000000004 /* BrowserDownloadFilenameResolverTests.swift */,
 				C0DE58990000000000000002 /* BmuxWebViewKeyDownReentryTests.swift */,
 				C0DE49870000000000000002 /* BrowserWebContentProcessTests.swift */,
@@ -7557,6 +7560,7 @@
 				B6585001B6585001B658PW01 /* BrowserPrewarmedWebViewPoolTests.swift in Sources */,
 				C2035A060000000000000001 /* BrowserSSLTrustBypassStateTests.swift in Sources */,
 				C7B800062D4202A13C962D2D /* BrowserSystemProxyMirrorTests.swift in Sources */,
+				0705EFE509924363A547F502 /* BrowserThemeSettingsTests.swift in Sources */,
 				C0DE49870000000000000001 /* BrowserWebContentProcessTests.swift in Sources */,
 				C0DE62600000000000000001 /* BrowserWindowPortalRegistryNotificationTests.swift in Sources */,
 				C0DE35530000000000000101 /* BundledCLILinkageTests.swift in Sources */,

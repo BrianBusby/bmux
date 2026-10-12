@@ -25,17 +25,13 @@ import BmuxSidebar
 
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
-// The app target still declares a legacy duplicate of BrowserThemeMode; with
-// BmuxSettings imported unconditionally the name is ambiguous. Pin the app
-// type for theme tests and the package type for browser search settings.
-private typealias BrowserThemeMode = bmux_DEV.BrowserThemeMode
+// Browser search settings are owned by the extracted package.
 private typealias BrowserSearchEngine = BmuxSettings.BrowserSearchEngine
 private typealias StoredShortcut = bmux_DEV.StoredShortcut
 // Internal unique-named alias: cross-file helpers can't expose the private alias above.
 typealias BrowserConfigStoredShortcut = bmux_DEV.StoredShortcut
 #elseif canImport(bmux)
 @testable import bmux
-private typealias BrowserThemeMode = bmux.BrowserThemeMode
 private typealias BrowserSearchEngine = BmuxSettings.BrowserSearchEngine
 private typealias StoredShortcut = bmux.StoredShortcut
 typealias BrowserConfigStoredShortcut = bmux.StoredShortcut
@@ -1778,48 +1774,6 @@ final class BrowserDevToolsButtonDebugSettingsTests: XCTestCase {
 }
 
 
-final class BrowserThemeSettingsTests: XCTestCase {
-    private func makeIsolatedDefaults() -> UserDefaults {
-        let suiteName = "BrowserThemeSettingsTests.\(UUID().uuidString)"
-        guard let defaults = UserDefaults(suiteName: suiteName) else {
-            fatalError("Failed to create defaults suite")
-        }
-        defaults.removePersistentDomain(forName: suiteName)
-        addTeardownBlock {
-            defaults.removePersistentDomain(forName: suiteName)
-        }
-        return defaults
-    }
-
-    func testDefaultsMatchConfiguredFallbacks() {
-        let defaults = makeIsolatedDefaults()
-        XCTAssertEqual(
-            BrowserThemeSettings.mode(defaults: defaults),
-            BrowserThemeSettings.defaultMode
-        )
-    }
-
-    func testModeReadsPersistedValue() {
-        let defaults = makeIsolatedDefaults()
-        defaults.set(BrowserThemeMode.dark.rawValue, forKey: BrowserThemeSettings.modeKey)
-        XCTAssertEqual(BrowserThemeSettings.mode(defaults: defaults), .dark)
-
-        defaults.set(BrowserThemeMode.light.rawValue, forKey: BrowserThemeSettings.modeKey)
-        XCTAssertEqual(BrowserThemeSettings.mode(defaults: defaults), .light)
-    }
-
-    func testModeMigratesLegacyForcedDarkModeFlag() {
-        let defaults = makeIsolatedDefaults()
-        defaults.set(true, forKey: BrowserThemeSettings.legacyForcedDarkModeEnabledKey)
-        XCTAssertEqual(BrowserThemeSettings.mode(defaults: defaults), .dark)
-        XCTAssertEqual(defaults.string(forKey: BrowserThemeSettings.modeKey), BrowserThemeMode.dark.rawValue)
-
-        let otherDefaults = makeIsolatedDefaults()
-        otherDefaults.set(false, forKey: BrowserThemeSettings.legacyForcedDarkModeEnabledKey)
-        XCTAssertEqual(BrowserThemeSettings.mode(defaults: otherDefaults), .system)
-        XCTAssertEqual(otherDefaults.string(forKey: BrowserThemeSettings.modeKey), BrowserThemeMode.system.rawValue)
-    }
-}
 
 
 final class BrowserDeveloperToolsShortcutDefaultsTests: XCTestCase {
