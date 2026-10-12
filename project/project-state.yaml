@@ -5933,3 +5933,7 @@ caveats:
     title: Agent launch environment fixture focused gate awaits app-host CI
     status: open
     owner: bmux
+  - id: codex_monitor_lease_fixture_verification
+    title: CI Option/Alt step selects CodexMonitorLeaseTests sequential and nested controls; actual app-host verification pending
+    status: open
+    owner: bmux

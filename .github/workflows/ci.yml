@@ -614,6 +614,7 @@ jobs:
             -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHSignalDuringReconnectDelayDoesNotStartAnotherSSH \
             -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupPrintsFinalErrorBannerWhenStderrIsCaptured \
             -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupForwardsStdinToBackgroundedSSH \
+            -only-testing:bmuxTests/CodexMonitorLeaseTests \
             test
 
       - name: Run Codex Stop hook fixture regressions

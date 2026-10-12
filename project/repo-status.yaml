@@ -208,3 +208,5 @@ local_caveats:
     status: open
   - id: agent_launch_environment_fixture_focused_gate_verification
     status: open
+  - id: codex_monitor_lease_fixture_verification
+    status: open

@@ -149,6 +149,7 @@ Regenerate with: ./scripts/project-docs generate
 | Focused Hermes startup and stale-PID suites pending actual app-host verification (`resume_policy_execution_fixture_verification`) | Bmux | open |  |
 | Claude replaced-session cleanup fixture focused gate awaits app-host CI (`claude_session_end_scope_focused_gate_verification`) | Bmux | open |  |
 | Agent launch environment fixture focused gate awaits app-host CI (`agent_launch_environment_fixture_focused_gate_verification`) | Bmux | open |  |
+| CI Option/Alt step selects CodexMonitorLeaseTests sequential and nested controls; actual app-host verification pending (`codex_monitor_lease_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
