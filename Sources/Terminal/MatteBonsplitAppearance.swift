@@ -35,7 +35,7 @@ struct MatteBonsplitAppearance {
         )
         let nextColors = BonsplitConfiguration.Appearance.ChromeColors(
             backgroundHex: panel, tabBarBackgroundHex: panel,
-            splitButtonBackdropHex: panel, paneBackgroundHex: panel,
+            splitButtonBackdropHex: panel, paneBackgroundHex: NSColor.clear.hexString(includeAlpha: true),
             borderHex: PaneChromeSettings.resolvedPaneBorderHex(configuredHex: paneBorderColorHex, fallback: edge))
         let nextBackdrop = BonsplitConfiguration.Appearance.SplitButtonBackdropEffect(
             style: .opaqueBarBackground, fadeWidth: 0, contentFadeWidth: 0, masksTabContent: false)

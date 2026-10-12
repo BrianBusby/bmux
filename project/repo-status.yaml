@@ -144,7 +144,7 @@ local_caveats:
   - id: matte_skin_chrome_preference_verification
     status: open
   - id: matte_skin_custom_terminal_inset_verification
-    status: resolved
+    status: open
   - id: matte_skin_terminal_preference_precedence
     status: resolved
   - id: matte_skin_full_app_host_verification

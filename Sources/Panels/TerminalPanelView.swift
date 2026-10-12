@@ -121,7 +121,7 @@ struct TerminalPanelView: View {
 #endif
             .modifier(TerminalInsetContainer(
                 isEnabled: bmuxShellTerminalOnly, theme: MatteTheme(colorScheme: colorScheme),
-                backgroundColor: appearance.backgroundColor
+                backgroundColor: appearance.contentBackgroundColor
             ))
             .layoutPriority(1)
 

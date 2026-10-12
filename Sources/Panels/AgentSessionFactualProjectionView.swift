@@ -161,7 +161,7 @@ struct AgentSessionFactualProjectionView: View {
         }
         .padding(theme.layout.panelPadding)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .matteSurface(.panel, theme: theme)
+        .modifier(TerminalBackdropSurface(role: .panel, theme: theme))
         .foregroundStyle(Color.bmuxTextPrimary)
         .onChange(of: selectedPrimaryTab, initial: true) { _, tab in
             onPrimaryTabChange?(tab == .terminal)

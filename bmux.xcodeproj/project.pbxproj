@@ -935,6 +935,7 @@
 		A50014F9 /* MarkdownWebSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50014F8 /* MarkdownWebSupport.swift */; };
 		A44000000000000000000006 /* MatteBonsplitAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = A44000000000000000001006 /* MatteBonsplitAppearance.swift */; };
 		AA5269A0C0DE0026FACE0026 /* MatteChromePreferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5269A0C0DE0025FACE0025 /* MatteChromePreferenceTests.swift */; };
+		7EAB93599808431C8694005E /* MatteTerminalBackdropCompositionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C12A914BAAC46DB802A18DE /* MatteTerminalBackdropCompositionTests.swift */; };
 		A44000000000000000000004 /* MatteTerminalConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A44000000000000000001004 /* MatteTerminalConfiguration.swift */; };
 		AA5269A0C0DE0018FACE0018 /* MatteTerminalConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5269A0C0DE0017FACE0017 /* MatteTerminalConfigurationTests.swift */; };
 		AA5269A0C0DE0022FACE0022 /* MatteTerminalInsetRenderingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5269A0C0DE0021FACE0021 /* MatteTerminalInsetRenderingTests.swift */; };
@@ -1501,6 +1502,8 @@
 		C7A502000000000000000002 /* TaskManagerWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A502000000000000000001 /* TaskManagerWindowController.swift */; };
 		7490C00F7490C00F7490C00F /* TaskVMInfoMemoryPressureFootprintSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7490D00F7490D00F7490D00F /* TaskVMInfoMemoryPressureFootprintSampler.swift */; };
 		46F6AC15863EC84DCD3770A2 /* TerminalAndGhosttyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02FC74F2C27127CC565B3E8C /* TerminalAndGhosttyTests.swift */; };
+		4B57BDAE71414BE0BBD528F7 /* TerminalBackdropRegionPreference.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF35A8DCE3754E7D8EAF0E26 /* TerminalBackdropRegionPreference.swift */; };
+		1E63242F0BE54DCD9D75B3E1 /* TerminalBackdropSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5905C1A3C654E1CA4EB55B6 /* TerminalBackdropSurface.swift */; };
 		F6A2A5B5034E47ECA1C83B3B /* TerminalChatConnecting.swift in Sources */ = {isa = PBXBuildFile; fileRef = D897C53BD8244824A6564088 /* TerminalChatConnecting.swift */; };
 		C03ABC7C0E01431B8F098A76 /* TerminalChatReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E52856BFF4141E18CFD6EB1 /* TerminalChatReading.swift */; };
 		648543ABE062475A94187561 /* TerminalChatRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE96FB6159C46769BF4723B /* TerminalChatRuntime.swift */; };
@@ -1844,6 +1847,7 @@
 		CA52B0180000000000000000 /* WorkspaceLayoutMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA52C0180000000000000000 /* WorkspaceLayoutMode.swift */; };
 		0F2C25F9170130F8DC09DD1B /* WorkspaceManualUnreadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D301919B10F22B8708E8883 /* WorkspaceManualUnreadTests.swift */; };
 		C1AC71080000000000000001 /* WorkspaceMoveToTopActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1AC71080000000000000002 /* WorkspaceMoveToTopActionTests.swift */; };
+		CD465201BC6B4E328A393EA8 /* WorkspacePanelContentHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9359BAC13CE47928469F07A /* WorkspacePanelContentHostView.swift */; };
 		E3B7A4000000000000000005 /* WorkspacePlacement+Resolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3B7A4000000000000000006 /* WorkspacePlacement+Resolution.swift */; };
 		AA5269A0C0DE0020FACE0020 /* WorkspacePopoverFocusRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5269A0C0DE0019FACE0019 /* WorkspacePopoverFocusRoutingTests.swift */; };
 		D0B10004A1B2C3D4E5F60001 /* WorkspacePortalPaneDrop.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B10005A1B2C3D4E5F60001 /* WorkspacePortalPaneDrop.swift */; };
@@ -2838,6 +2842,7 @@
 		A50014F8 /* MarkdownWebSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownWebSupport.swift; sourceTree = "<group>"; };
 		A44000000000000000001006 /* MatteBonsplitAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Terminal/MatteBonsplitAppearance.swift"; sourceTree = "<group>"; };
 		AA5269A0C0DE0025FACE0025 /* MatteChromePreferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatteChromePreferenceTests.swift; sourceTree = "<group>"; };
+		1C12A914BAAC46DB802A18DE /* MatteTerminalBackdropCompositionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MatteTerminalBackdropCompositionTests.swift"; sourceTree = "<group>"; };
 		A44000000000000000001004 /* MatteTerminalConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Terminal/MatteTerminalConfiguration.swift"; sourceTree = "<group>"; };
 		AA5269A0C0DE0017FACE0017 /* MatteTerminalConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatteTerminalConfigurationTests.swift; sourceTree = "<group>"; };
 		AA5269A0C0DE0021FACE0021 /* MatteTerminalInsetRenderingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatteTerminalInsetRenderingTests.swift; sourceTree = "<group>"; };
@@ -3374,6 +3379,8 @@
 		C7A502000000000000000001 /* TaskManagerWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManagerWindowController.swift; sourceTree = "<group>"; };
 		7490D00F7490D00F7490D00F /* TaskVMInfoMemoryPressureFootprintSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/TaskVMInfoMemoryPressureFootprintSampler.swift; sourceTree = "<group>"; };
 		02FC74F2C27127CC565B3E8C /* TerminalAndGhosttyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalAndGhosttyTests.swift; sourceTree = "<group>"; };
+		DF35A8DCE3754E7D8EAF0E26 /* TerminalBackdropRegionPreference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Terminal/TerminalBackdropRegionPreference.swift"; sourceTree = "<group>"; };
+		E5905C1A3C654E1CA4EB55B6 /* TerminalBackdropSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Terminal/TerminalBackdropSurface.swift"; sourceTree = "<group>"; };
 		D897C53BD8244824A6564088 /* TerminalChatConnecting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/TerminalChatConnecting.swift"; sourceTree = "<group>"; };
 		5E52856BFF4141E18CFD6EB1 /* TerminalChatReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/TerminalChatReading.swift; sourceTree = "<group>"; };
 		8CE96FB6159C46769BF4723B /* TerminalChatRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/TerminalChatRuntime.swift"; sourceTree = "<group>"; };
@@ -3692,6 +3699,7 @@
 		CA52C0180000000000000000 /* WorkspaceLayoutMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceLayoutMode.swift"; sourceTree = "<group>"; };
 		1D301919B10F22B8708E8883 /* WorkspaceManualUnreadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceManualUnreadTests.swift; sourceTree = "<group>"; };
 		C1AC71080000000000000002 /* WorkspaceMoveToTopActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceMoveToTopActionTests.swift; sourceTree = "<group>"; };
+		A9359BAC13CE47928469F07A /* WorkspacePanelContentHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/WorkspacePanelContentHostView.swift"; sourceTree = "<group>"; };
 		E3B7A4000000000000000006 /* WorkspacePlacement+Resolution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspacePlacement+Resolution.swift"; sourceTree = "<group>"; };
 		AA5269A0C0DE0019FACE0019 /* WorkspacePopoverFocusRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePopoverFocusRoutingTests.swift; sourceTree = "<group>"; };
 		D0B10005A1B2C3D4E5F60001 /* WorkspacePortalPaneDrop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePortalPaneDrop.swift; sourceTree = "<group>"; };
@@ -4814,6 +4822,9 @@
 				A44000000000000000001005 /* GhosttyApp+InlineConfiguration.swift */,
 				A44000000000000000001006 /* MatteBonsplitAppearance.swift */,
 				B394A61577AD4E88B9AD49D2 /* TerminalInsetContainer.swift */,
+				A9359BAC13CE47928469F07A /* WorkspacePanelContentHostView.swift */,
+				DF35A8DCE3754E7D8EAF0E26 /* TerminalBackdropRegionPreference.swift */,
+				E5905C1A3C654E1CA4EB55B6 /* TerminalBackdropSurface.swift */,
 				E453895175294805B29AC607 /* WorkspaceTitlebarPresentation.swift */,
 				E3641CC7118244CDA8C8D26E /* AgentSessionWebTheme+Matte.swift */,
 				C9FAB95533E84083840CA98A /* PanelAppearance.swift */,
@@ -5325,6 +5336,7 @@
 				AA5269A0C0DE0019FACE0019 /* WorkspacePopoverFocusRoutingTests.swift */,
 				AA5269A0C0DE0023FACE0023 /* TerminalSurfaceRecoveryTests.swift */,
 				AA5269A0C0DE0021FACE0021 /* MatteTerminalInsetRenderingTests.swift */,
+				1C12A914BAAC46DB802A18DE /* MatteTerminalBackdropCompositionTests.swift */,
 				AA5269A0C0DE0025FACE0025 /* MatteChromePreferenceTests.swift */,
 				AA5269A0C0DE0013FACE0013 /* MatteTitlebarDragRoutingTests.swift */,
 				AA5269A0C0DE0015FACE0015 /* ContentViewFileDropOverlayInstallationTests.swift */,
@@ -7065,6 +7077,8 @@
 				C7A506000000000000000002 /* TaskManagerView.swift in Sources */,
 				C7A502000000000000000002 /* TaskManagerWindowController.swift in Sources */,
 				7490C00F7490C00F7490C00F /* TaskVMInfoMemoryPressureFootprintSampler.swift in Sources */,
+				4B57BDAE71414BE0BBD528F7 /* TerminalBackdropRegionPreference.swift in Sources */,
+				1E63242F0BE54DCD9D75B3E1 /* TerminalBackdropSurface.swift in Sources */,
 				F6A2A5B5034E47ECA1C83B3B /* TerminalChatConnecting.swift in Sources */,
 				C03ABC7C0E01431B8F098A76 /* TerminalChatReading.swift in Sources */,
 				648543ABE062475A94187561 /* TerminalChatRuntime.swift in Sources */,
@@ -7318,6 +7332,7 @@
 				C9A57206C9A57206C9A57206 /* WorkspaceGroupMoveToMenuState.swift in Sources */,
 				E3B7A4000000000000000007 /* WorkspaceIndicatorStyle+Display.swift in Sources */,
 				CA52B0180000000000000000 /* WorkspaceLayoutMode.swift in Sources */,
+				CD465201BC6B4E328A393EA8 /* WorkspacePanelContentHostView.swift in Sources */,
 				E3B7A4000000000000000005 /* WorkspacePlacement+Resolution.swift in Sources */,
 				D0B10004A1B2C3D4E5F60001 /* WorkspacePortalPaneDrop.swift in Sources */,
 					5732A0055732A0055732A005 /* WorkspacePresentationModeChangeObserver.swift in Sources */,
@@ -7798,6 +7813,7 @@
 				D6069002D6069002D6069002 /* MarkdownMermaidZoomTests.swift in Sources */,
 				D3664002D3664002D3664002 /* MarkdownPanelTests.swift in Sources */,
 				AA5269A0C0DE0026FACE0026 /* MatteChromePreferenceTests.swift in Sources */,
+				7EAB93599808431C8694005E /* MatteTerminalBackdropCompositionTests.swift in Sources */,
 				AA5269A0C0DE0018FACE0018 /* MatteTerminalConfigurationTests.swift in Sources */,
 				AA5269A0C0DE0022FACE0022 /* MatteTerminalInsetRenderingTests.swift in Sources */,
 				AA5269A0C0DE0012FACE0012 /* MatteTitlebarContrastTests.swift in Sources */,

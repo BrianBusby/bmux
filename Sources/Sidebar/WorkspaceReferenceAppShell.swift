@@ -10,7 +10,6 @@ struct WorkspaceReferenceAppShell<Rail: View, Content: View>: View {
     var body: some View {
         let theme = MatteTheme(colorScheme: colorScheme)
         ZStack {
-            Color(nsColor: theme.color(.base)).ignoresSafeArea()
             VStack(spacing: 0) {
                 HStack {
                     HStack(spacing: theme.layout.brandHeaderContentGap) {
@@ -39,5 +38,6 @@ struct WorkspaceReferenceAppShell<Rail: View, Content: View>: View {
             .padding(.bottom, theme.layout.windowGutter)
             .padding(.top, theme.layout.shellTopInset)
         }
+        .modifier(TerminalBackdropSurface(role: .base, theme: theme))
     }
 }

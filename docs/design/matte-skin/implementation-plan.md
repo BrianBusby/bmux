@@ -1001,3 +1001,98 @@ was restored. Default layout matches the approved 13pt matte treatment, while th
 user's explicit Tango Dark terminal stays readable in the light appearance. The
 existing native chrome, text truncation and texture-off deviations remain as
 previously documented. These live checks do not replace final fixed-head CI.
+
+### Terminal transparency and native test readiness follow-up
+
+Final font HEAD 7f5121e00 completed CI run 38186042753. Its focused native step
+passed 45 Swift Testing functions across 12 suites, but the two legacy printable
+and IME repeat XCTest fixtures failed during their fixed-50ms initial surface
+setup. All four full app-host shards and the aggregate failed; package, build/lag
+and workflow guards passed. This is not a green full-suite result.
+
+Review r4243798941 identified a separate visible-opacity regression: the correct
+configured terminal background was still occluded by the inset's opaque composite,
+Bonsplit pane fill, main panel, and base. The earlier inset pixel test verified
+readable color but incorrectly expected the opaque composite for translucent
+content; configuration precedence tests did not exercise these drawing layers.
+Test-only commit 36a1500b1 corrects the established clear-content contract while
+retaining opaque/default coverage. Against unchanged build 769, seven native test
+functions complete with six expected assertions (four pane-owner and two
+translucent-leaf assertions). Actual CI red evidence remains pending.
+
+The existing WindowAppearanceSnapshot/PanelAppearance policy continues to own
+terminal opacity and glass. A bounds preference originates above Bonsplit's native
+NSHostingView boundaries, only for visible terminal content that delegates its
+backdrop to the window. Base and main-panel decorations subtract that region from
+their own fills and shadows, without masking content or the root backdrop. Native
+tab chrome remains opaque; the pane canvas and terminal inset respect their
+existing clear-content ownership. No renderer, font, typing path, blur, persistent
+state, polling, or global geometry owner changes. Default opaque matte surfaces
+publish no aperture.
+
+WorkspaceContentView's existing appearance resolver is constructor-injected for
+real visible composition coverage, including both initial state and subsequent
+refreshes with the same reason/background override. Its unchanged panel-content
+host moved into its own cohesive file to keep the workspace file below its
+feature-base budget (802 lines versus 822). The integration fixture uses real
+NSSplitView child hosting roots and checks both pane centers, tab chrome, panel
+margin, sidebar, and hidden/remounted visibility. Native bitmap capture across
+those layer-backed roots is still under investigation; compilation alone is not
+pixel proof. The initial standalone /tmp harness aborted in UserNotifications
+because it lacked an app bundle; a uniquely identified test bundle removes that
+harness limitation without changing production initialization.
+
+The two touched repeat fixtures are incrementally migrated to Swift Testing. They
+subscribe to the maintained terminalSurfaceDidBecomeReady signal before mounting
+and require successful setup before dispatch. Each retains three forwarded repeat
+events, exact committed text, and zero forced refreshes; temporary hooks are
+installed/restored synchronously after readiness. Both cases pass against unchanged
+build 769. This changes test synchronization, not terminal behavior.
+
+Source budgets, test wiring (443 files), and diff checks pass. Independent review
+assessed the native hosting boundary, visibility lifetime, configuration refresh
+owner, and repeat-hook cleanup without a remaining source blocker. No shipped
+strings are added; localization scope is unchanged. Full composition execution,
+parent-owned fresh build/live transparency checks, actual red/fixed CI, and
+remaining baseline classifications must be recorded before final handoff.
+
+Parent-owned isolated build 771 succeeds with the explicit opaque structural
+mask. The supported native regression run against that exact dylib passes eight
+Swift Testing functions across three suites (pane/configured chrome, six inset
+pixel cases, and both signal-ready repeat cases), with compilation exit 0 and no
+diagnostics. Logs: /tmp/matte-transparency-focused-green-compile.log and
+/tmp/matte-transparency-focused-green.log. Existing Sentry-not-started diagnostics
+from the standalone harness remain visible; they are not app-runtime failures.
+The app build has no diagnostics in the changed production files; retained
+deprecations/concurrency warnings occur in unchanged owners, alongside optional
+cargo and AppIntents extraction notices.
+
+The native full-composition fixture compiles, but its standalone capture does not
+yet provide valid child-host pixels. A window-server diagnostic does render the
+ancestor aperture and sentinel, while omitting native Bonsplit child content. The
+parent independently confirmed the Mac session is locked and live capture is
+unavailable. No tolerance was widened and no production change was made to fit
+this artifact. Full composition pixel/visibility assertions and final live
+transparency checks remain pending an unlocked desktop. The parent owns build
+771 and all visual work; the user's build 769 and older previews are untouched.
+
+Bounded shard-2 comparison found 42 failing XCTest methods: 37 have the same
+reason on captured baseline executions; four passed baseline and fail now; one
+has no captured baseline execution. Two of those four are the initial-readiness
+repeat fixtures repaired here. The other two Bash/Zsh prompt-refresh fixtures
+stop polling on any nonempty log, potentially observing report_pwd before
+ports_kick; that is a supported race hypothesis, not proof of a baseline failure.
+WorkspacePanelGitBranchTests.testUpdatingFocusedPanelGitBranchWithSameStateDoesNotRepublishWorkspace
+has no captured baseline execution. Three Swift Testing failures likewise remain
+unclassified: webDownloadQuarantineMetadataMarksRemoteDownloads,
+attachReportsPTYSizeChangeBeforeForwardingInput, and
+claudeNotificationStatusCarriesPIDForStaleSweep. No further matte production
+regression is confirmed by this comparison. Full-suite red status and those
+baseline evidence gaps remain open; this follow-up does not repair unrelated
+legacy coverage. Sources: /tmp/matte-final-head-shard2.log,
+/tmp/matte-base-apphost{1..4}.log, and
+/tmp/ci-reporting-baseline-apphost{1,4}.log.
+
+Test-only CI run 38189232267 targets 36a1500b1; focused shard 3 is job
+114618756680 and was queued at this checkpoint. Production fixes must not be
+pushed until its actual regression assertions are captured.

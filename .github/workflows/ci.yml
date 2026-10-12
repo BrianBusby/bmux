@@ -617,6 +617,7 @@ jobs:
             -only-testing:bmuxTests/MatteTerminalConfigurationTests \
             -only-testing:bmuxTests/WorkspacePopoverFocusRoutingTests \
             -only-testing:bmuxTests/MatteTerminalInsetRenderingTests \
+            -only-testing:bmuxTests/MatteTerminalBackdropCompositionTests \
             -only-testing:bmuxTests/MatteChromePreferenceTests \
             -only-testing:bmuxTests/TerminalSurfaceRecoveryTests \
             -only-testing:bmuxTests/TerminalNotificationDirectInteractionTests/testIMECommittedKeyRepeatDoesNotForceSurfaceRefresh \
