@@ -165,36 +165,68 @@ that have them registered (runner-side, needs org/runner admin).
 
 ## SSH startup lifecycle fixture repair (2026-10-12)
 
-The ten existing signal, retry, stdin and control-socket lifecycle checks now
-exercise the maintained CLI protocol. `vm ssh` requests `vm.ssh_info` with only
-`id`; it no longer requests `vm.attach_info` with `require_daemon`. Workspace
-creation replies also include the created `surface_id`, as the real endpoint
-does. The old fixture rejected the first request or forced terminal discovery
-and rollback before reaching the behavior under test. Test bodies and expected
-lifecycle behavior are unchanged; no production code changes.
+The signal, retry, stdin and control-socket checks use the maintained CLI
+protocol. `vm ssh` requests `vm.ssh_info` with only `id`, and workspace-create
+replies include the created `surface_id`. The original mock rejected that
+request or forced discovery/rollback before reaching the behavior under test.
 
-Ownership stays in the existing mock helpers in
-`bmuxTests/SSHStartupSignalLifecycleTests.swift`. The actual CLI remains the
-boundary under test. Applicable rules: `AGENTS.md`, `skills/bmux-testing/`,
-`skills/bmux-shared-behavior/`, and the continuous-code-quality skill. The
-maintained request/response owners are `BMUXCLI.vmOpenShell` / `runSSHWithOptions`
-and the workspace-create socket handler. Only the shared fixture helpers change;
-untouched legacy XCTest methods are not bulk-migrated.
+Build 779 exposed a second fixture defect hidden by build 773's reusable-shell
+exit-status bug: the stale control-socket test selected managed PTY attach but
+mocked only shell SSH. Its generated command invoked the real `ssh-pty-attach`
+against a nonexistent socket. Stale-path removal succeeded; attach failed.
+The old wrapper masked that failure as exit 0, so the earlier ten-check baseline
+pass (`/tmp/ssh-startup-lifecycle-green.log`) did not prove successful attach.
+The observed build-779 failure is in `/tmp/ssh-lifecycle-779-native.log`, with the
+actual generated attach command in `/tmp/ssh-stale-control-779-generated.sh`.
 
-Native execution against the unchanged approved build 773 CLI passes all ten
-checks (12.59 seconds). `/tmp/ssh-startup-lifecycle-green.log` retains the result;
-`/tmp/ssh-startup-native-compile.log` records the existing redundant Void discard
-warning in shared `CLINotifyProcessTestSupport.swift:54`, outside this patch.
-A protocol negative control reproduces the old unexpected `vm.ssh_info` failure.
-The existing Option/Alt app-host invocation includes these ten explicit selectors
-without another runner. Actual focused CI and the broader suite remain pending.
-No shipped UI, CLI help text, or localized message keys change.
+Only this touched case migrates to `SSHStaleControlSocketTests` (Swift Testing).
+The other nine XCTest methods keep their existing assertions. The new
+`SSHStaleControlSocketFixture` owns a short temporary home, stale UNIX socket,
+fake SSH preflight, CLI command generation, owned output files and explicit
+workspace/surface protocol replies. `SSHExitedPTYClient` supplies one exited
+remote session to the existing production `RemotePTYBridgeServer`; no separate
+TCP bridge implementation is introduced. Raw-SSH mode would skip the managed
+attach boundary that exposed the false pass, so the fixture retains it.
 
-The separate manual-reconnect fixture has the same stale request, but correcting
-it exposes a real integration gap: its shell prompt cannot invoke the current
-workspace respawn owner. That test and production repair are deliberately outside
-this fixture-only PR; their failures remain unresolved, not waived.
+The real bridge owns token validation, ready/EOF delivery and network lifetime.
+Its legacy blocking listener-start API runs on a dedicated thread behind a
+checked continuation; it never blocks Swift's cooperative executor. The fixture
+awaits the bridge's stop signal and shared `CLISocketFixture` descriptor teardown
+before deleting its owned files. Process output uses positional shell redirects
+with existing `CommandRunner`; no new process transport or timeout is added.
 
-The expanded ten-case focused gate is recorded in Project Truth as
-`ssh_startup_lifecycle_focused_gate_verification`, open until pushed-head app-host
-CI confirms the corrected fixtures. Local native success does not close it.
+`CLISocketFixture` is shared with notification fixtures. This use exposed a Darwin
+peer-close edge: setting `SO_NOSIGPIPE` again on an accepted socket after its peer
+has disconnected returns EINVAL. A native local probe confirmed accepted sockets
+inherit the listener's value for live and closed peers. Set it on the listener
+before accepting clients; keep nonblocking/CLOEXEC flags on every descriptor.
+`/tmp/ssh-control-779-flags-trace.log` retains the original readiness failure.
+`/tmp/ssh-control-nosigpipe-probe.log` also proves a closed-peer write returns
+EPIPE with inherited protection, while its unprotected subprocess dies from
+SIGPIPE; the correction does not disable signal protection.
+
+The test retains exit 0, no timeout, stale-file removal and `-G`/`-O check`
+assertions. It additionally requires removal before the managed attach request,
+a successful real bridge attachment, and the exact ordered target-specific
+bridge/session-query/attach-end/terminal-session-end requests. These checks catch
+an omitted attach mock even when an older wrapper masks the native exit status.
+
+All ten checks pass against both unchanged build 773 and fixed build 779
+(`/tmp/ssh-lifecycle-repaired-773.log`, `/tmp/ssh-lifecycle-repaired-779.log`).
+A temporary missing-attach mock control on 773 retains the misleading native
+exit 0 but fails the new stderr, bridge-attachment and cleanup-sequence assertions
+(`/tmp/ssh-control-773-missing-attach.log`). Actual pushed-head app-host CI remains
+pending. The existing Option/Alt invocation selects the nine
+legacy lifecycle methods and new managed cleanup suite without another runner
+or changing full coverage. Canonical and local Project Truth caveat
+`ssh_startup_lifecycle_focused_gate_verification` remains open.
+
+Guidance: root/personal AGENTS, continuous-code-quality, testing (migration,
+behavioral quality and wiring), architecture (file ownership and concurrency),
+shared-behavior, socket policy and dev workflow. Maintained owners include
+`BMUXCLI.runSSHWithOptions`, `runSSHPTYAttach`, `handleSSHPTYBridgeEOF`,
+`RemotePTYBridgeServer`, `AppRemotePTYBridgeStrings` and the shared socket fixture.
+The retained redundant Void-discard warning in `CLINotifyProcessTestSupport:54`
+is outside this patch. No production code, shipped strings, localization catalogs,
+app launches, builds or real app/socket state changes are part of this repair.
+The separate manual reconnect production repair remains outside this PR.

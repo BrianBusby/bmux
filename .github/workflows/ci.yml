@@ -598,7 +598,7 @@ jobs:
             -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHPaneCloseSignalDoesNotReportSessionEndToSharedTransport \
             -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHPaneCloseSignalDoesNotTerminateWrappedSSHChild \
             -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupRetriesTransientSSHExitBeforeReportingSessionEnd \
-            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupRemovesStaleBmuxControlSocketBeforeLaunchingPaneSSH \
+            -only-testing:bmuxTests/SSHStaleControlSocketTests \
             -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupStopsAtConfiguredReconnectLimit \
             -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupDoesNotRetryNonTransientSSHExit \
             -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHSignalDerivedChildExitReportsSessionEnd \

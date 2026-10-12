@@ -138,7 +138,7 @@ Regenerate with: ./scripts/project-docs generate
 | Monorepo migration ledger pending dispositions (`monorepo_migration_ledger_pending_dispositions`) | Bmux | open |  |
 | Observability trace API boundary (`observability_trace_api`) | Provenance Engine | open |  |
 | GitHub Actions runner reliability (`github_actions_runner_reliability`) | Bmux | open | BrianBusby/bmux#8 |
-| CI app-host Option/Alt step now selects ten SSH startup lifecycle cases; native baseline passes and pushed-head CI remains pending (`ssh_startup_lifecycle_focused_gate_verification`) | Bmux | open |  |
+| CI app-host Option/Alt step selects nine SSH lifecycle tests plus managed attach cleanup fixture; pushed-head verification pending (`ssh_startup_lifecycle_focused_gate_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
