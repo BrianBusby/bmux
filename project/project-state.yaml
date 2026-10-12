@@ -5835,6 +5835,11 @@ policies:
     selected_for_implementation: false
 
 caveats:
+  - id: cloud_attach_retry_fixture_verification
+    title: Focused Cloud attach retry contract suite pending actual app-host verification
+    status: open
+    owner: bmux
+
   - id: broad_legacy_storage_migration
     title: Broad legacy bmux-local storage migration
     status: open
