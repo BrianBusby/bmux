@@ -12,6 +12,7 @@ struct ManagedAppearanceStartupContractTests {
         let defaults = UserDefaults.standard
         let keys = [
             AppearanceSettings.appearanceModeKey,
+            SidebarMatchTerminalBackgroundSettings.legacyAppliedSettingsFileDefaultKey,
             "bmux.settingsFile.backups.v1",
             "bmux.settingsFile.importedManagedDefaults.v1",
         ]

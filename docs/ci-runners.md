@@ -177,7 +177,7 @@ appearance observers to enter the fixture's recorded calls.
 `ManagedAppearanceStartupContractTests` replaces only those three methods with
 constructor-injected effects, a private notification center, disabled watchers
 and an owned settings file. Each synchronous MainActor case restores the exact
-three touched application-domain defaults values (including absent keys, without
+four touched application-domain defaults values (including absent keys, without
 promoting registered/global fallbacks); no global environment provider or settings-store
 replacement is used. Dark, light and system launch cases assert one application
 appearance, zero startup terminal synchronization, an inert deferred drain and
@@ -187,9 +187,15 @@ the injected system appearance; switching back to system clears the app override
 All other legacy methods remain byte-identical.
 
 Focused Swift 6 compilation is warning-free against unchanged build 777. All
-three native cases pass. An additional native runner registers a system fallback
-and verifies all three originally absent application-domain keys stay absent
-after the suite, while the registered fallback remains visible. Each case seeds
+three native cases pass. Additional isolated-home native probes verify a persisted
+legacy sidebar migration marker survives the suite and all four originally absent
+application-domain keys stay absent when appearance and migration-marker
+registration fallbacks exist. Registered fallbacks remain visible. The same seeded
+marker probe against the uncorrected fixture exits 1: all three appearance cases
+pass, but the persisted marker is removed by `saveImportedManagedDefaults`.
+The temporary runner explicitly establishes each initial state in its own process
+preferences domain and cleans it afterward; a fresh HOME alone does not clear
+macOS preferences-daemon caching. Each case seeds
 the legacy auto value before import so host registration cannot skip the import.
 A temporary negative control reinstating the obsolete
 no-launch-appearance and no-reload-sync expectations fails exactly six assertions
