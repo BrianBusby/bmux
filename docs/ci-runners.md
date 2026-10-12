@@ -162,3 +162,42 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+### Cloud attach retry fixture contract
+
+The old `testDefaultFreestyleSSHAttachHonorsGenericCloudRetryEnvironment` failed
+because it promoted the backend's `vm_cloud_service_unavailable` to a top-level
+socket error and expected obsolete `0s` wording. The current chain is HTTP 502
+from the VM route, `VMClientError.httpStatus` formatting, then
+`TerminalController.v2VmCall` wrapping that description with socket code
+`vm_error`. HTTP status remains in the description and the CLI already retries
+it. The introducing commit `bd0b24b74` also used the localized zero-delay label
+`now`; this slice changes no retry or presentation policy.
+
+`CloudAttachRetryContractTests` replaces only that legacy method. Its fixture
+uses the actual native formatter and reviewed shared `CLISocketFixture` with
+owned file capture. Twenty-one cases exercise SSH, PTY and session-PTY attach:
+generic environment precedence, legacy fallback, zero retry limit, non-default
+attach, reconnect notice suppression, permanent failure and missing VM. Requests
+retain exact VM/session/attachment parameters; retries get fresh request IDs;
+final errors and exit 1 remain observable. Missing VMs never trigger creation or
+another mutation. Responses always fail, so no SSH or WebSocket connection starts.
+All other methods in VMDefaultCloudCommandTests remain byte-identical.
+
+Actual unchanged build 773 passes all 21 cases with warning-free focused compile.
+A temporary negative-control fixture sets the generic limit to zero for the three
+override cases: exactly those cases fail their count/notice assertions while the
+other 18 pass. The original baseline failure and independent socket diagnosis are
+retained. Actual app-host execution of the new suite remains pending; the broader
+baseline suite is not claimed green. The existing focused browser app-host step
+includes this suite without adding a runner; canonical/local Project Truth
+caveats track the open verification gate.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing migration/
+behavior/local-CI references, architecture file/API/concurrency rules, shared
+behavior, socket focus policy and observability error propagation/safe logging.
+Inspected boundaries include both shared CLI attach retry loops, SocketClient
+error formatting, VMClient HTTP errors, the socket VM adapter and VM route error
+policy. Bare typed socket errors remain unsupported by the current classifier;
+no new typed socket contract or production classifier expansion is introduced.
+No shipped strings, localization catalogs, app settings or runtime files change.
