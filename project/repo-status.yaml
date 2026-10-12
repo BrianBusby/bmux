@@ -246,3 +246,5 @@ local_caveats:
     status: open
   - id: claude_session_end_scope_focused_gate_verification
     status: open
+  - id: maintenance_combined_validation_pending
+    status: open

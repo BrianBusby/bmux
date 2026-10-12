@@ -154,6 +154,7 @@ Regenerate with: ./scripts/project-docs generate
 | Focused browser app-host gate includes discard and history restore readiness tests; local native cases pass and pushed-head CI remains pending (`browser_discard_restore_focused_gate_verification`) | Bmux | open |  |
 | Focused app-host gate includes default and configured sidebar width policy tests; local native cases pass and pushed-head CI remains pending (`sidebar_width_persistence_focused_gate_verification`) | Bmux | open |  |
 | Claude replaced-session cleanup fixture focused gate awaits app-host CI (`claude_session_end_scope_focused_gate_verification`) | Bmux | open |  |
+| Published maintenance heads are composed locally; held fixes and full authoritative native and artifact gates remain pending (`maintenance_combined_validation_pending`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

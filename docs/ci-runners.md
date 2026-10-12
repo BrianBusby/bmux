@@ -995,3 +995,66 @@ error formatting, VMClient HTTP errors, the socket VM adapter and VM route error
 policy. Bare typed socket errors remain unsupported by the current classifier;
 no new typed socket contract or production classifier expansion is introduced.
 No shipped strings, localization catalogs, app settings or runtime files change.
+
+## Local maintenance integration checkpoint (2026-10-12)
+
+The isolated `maintenance-validation` branch composes the following published
+heads from `ce17e9888a6dce4d2e5755795946b68cf52f0329`. This is a local validation
+checkpoint, not a merge into main, a published CI result, or an app build.
+
+| PR | Published source commit |
+| --- | --- |
+| #141 | `00b4a21d4069f53857fb0b87a17a347b4668d06e` |
+| #142 | `5117031ee1f6054f5246de3f76ba6a5153bd2101` |
+| #143 | `81cfc3b0369a74a0a42d92f1b84e1393eeaa2716` |
+| #144 | `4b3c2a5314aad630c1429a32dac8a557b3c047b5` |
+| #145 | `b275c76c3d1a14aec865f07de8d7b2cfa96c92cc` |
+| #146 | `7f48a469821734062ad0c8de95da690cea3e5f4c` |
+| #147 | `537681592de0f1a51b00308a2fa3834f31959b49` |
+| #148 | `bcdee5e1638ba65e6c1d2af7bad6df533f6e0226` |
+| #149 | `2b8592920ed58232e9506c14ba6e4842d2982f14` |
+| #150 | `b54a9f57b8a4eacd8661c1ab7c1096d1d182e668` |
+| #151 | `6e366325cbcc173a2ae2f1ec58bb4979feccae3d` |
+| #152 | `637ae2ede4f18445487574e29988b1aa1befca04` |
+| #153 | `36114abc088693f49a5162089461e8eb76560a00` |
+| #154 | `b25ad79c66f064dfad82754642666b5fcf22a2a8` |
+| #155 | `950d8bbd4be55e5f31c09606a5997faf5c5ab039` |
+| #156 | `d5350d19b490fc1d3505dfeb635513be0d672c49` |
+| #157 | `78cbde9b63acb7ea92929ca17ce9e4bc73fd68fb` |
+| #158 | `83ff7d17c9cefb5be4ca644c558ea60251b67073` |
+| #159 | `994e34f6512abf871b839b7957d56f2739671314` |
+| #160 | `d58ea8aaa63284b48302763446964f74cbd94524` |
+
+PR142's authoritative framework-aware test runner is integrated before the
+maintenance suites. All source-head focused selectors and the full legacy suite
+remain enabled. Merge resolution unions test wiring and canonical/local caveats;
+generated documents are regenerated. Repeated group references to the single
+shared CLISocketFixture are removed without duplicating its source build entry.
+
+The published PR143 and PR148 fixes follow actual test-only CI failures: browser
+startup migration produced four issues in job114950761885; SSH cleanup produced
+seven diagnostic issues in job114953934391. The latter suite completed before the
+old runner terminated other active Swift Testing work and incorrectly returned
+success. Its green job badge is not a passing-suite claim.
+
+PR151, PR153 and PR155 contain only their published failing tests here. Their
+reviewed production fixes remain excluded until actual red CI is captured. The
+PR150 managed-attach fixture follow-up is independently reviewed but not yet
+included at this checkpoint. Existing user builds773 and775 remain untouched.
+
+Local checks pass: framework-aware PTY helper behavior, four exit-reporting tests,
+app-host retry/attempt guards, sharding coverage, Xcode normalization, test wiring
+(475 files), strict determinism (zero findings), source budget against ce17, YAML
+parsing, and focused-selector preservation across every listed input. The source
+budget permits existing incidental growth of five MainWindowFocusController
+lines and two SSHStartupSignalLifecycleTests lines; no budget waiver was added.
+No combined test-target compilation, native execution, dynamic/Release artifact
+verification, or complete authoritative CI run has occurred yet. These remain
+required gates; separate local native results do not substitute for them.
+
+Reassessment follows root/personal AGENTS, continuous-code-quality, bmux-testing,
+architecture and shared-behavior guidance. The accumulated production changes
+retain existing browser theme resolution, matte appearance ownership and the
+shared safe PTY diagnostic classifier. Held initializer, reconnect and rejected
+ambient-target changes have not been accepted implicitly through conflicts.
+There are no new shipped strings in this integration-only resolution.

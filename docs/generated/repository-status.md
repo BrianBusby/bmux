@@ -210,3 +210,4 @@ Repository: `BrianBusby/bmux`
 | `sidebar_minimum_default_and_configured_range_consistency` | open |
 | `sidebar_width_persistence_focused_gate_verification` | open |
 | `claude_session_end_scope_focused_gate_verification` | open |
+| `maintenance_combined_validation_pending` | open |

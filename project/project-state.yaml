@@ -5967,3 +5967,8 @@ caveats:
     title: Claude replaced-session cleanup fixture focused gate awaits app-host CI
     status: open
     owner: bmux
+
+  - id: maintenance_combined_validation_pending
+    title: Published maintenance heads are composed locally; held fixes and full authoritative native and artifact gates remain pending
+    status: open
+    owner: bmux
