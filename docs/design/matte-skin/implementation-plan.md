@@ -1314,3 +1314,41 @@ Independent review checked the complete focus owner, responder helper, routing
 callers and fixture lifecycle and found no blocker in this test-only addition.
 It confirms the evidence does not justify changing production focus behavior;
 interactive popover presentation and older macOS remain outside this new test.
+
+### Native CI framework completion follow-up (2026-10-12)
+
+Full app-host logs showed the shared runner terminating active Swift Testing
+because its 45-second cleanup deadline began at the earlier Selected XCTest
+summary. In run 38251646944, one shard was killed only four seconds after fresh
+Swift Testing cases started; another retained the earlier deadline across a
+restarted test host. This was a runner lifecycle problem, separate from assertion
+failures and the fixture readiness changes above.
+
+The bounded repair lives in prerequisite PR142 and is integrated here. Test-only
+6d25320ae failed the actual workflow guard in run 38283073852, job 114924791841:
+active Swift Testing was killed with exit 124 instead of reaching native exit 0.
+Fix 38eaa2e4e suspends the cleanup deadline when a fresh Swift Testing or restarted
+XCTest run begins and rearms it at framework completion. Complete output lines
+are consumed once, including split UTF-8 markers; unrelated app noise cannot
+extend cleanup. Earlier failed XCTest summaries stay recorded across restarts.
+The existing general idle watchdog, native test deadlines and job timeout bound
+active execution. No configured timeout, retry budget or test assertion was
+relaxed, and only the real child exit establishes success.
+
+All 15 executable PTY cases pass, including an active test longer than the cleanup
+allowance, native exits 0 and 65, split lifecycle markers, noisy stalled cleanup,
+active idle timeout, and restarted XCTest execution. A negative control removing
+only the XCTest-start suspension fails the restarted-run case. The shell-wrapper
+suite passes four tests containing 51 subprocess scenarios; retry/attempt guards,
+Python compilation and Project Truth checks pass. Independent review inspected
+complete runner/caller ownership and found no blocker. Actual fixed-head PR142 CI
+and combined matte full-suite results remain separate gates; this does not claim
+to resolve the recorded baseline failures or the unproved Codex timeout.
+
+This integration also retains the parent's test-only real SwiftUI field-editor
+coverage: rail and popover ownership, Escape preserving terminal Find, automatic
+focus grant and outside-chrome revocation pass on unchanged build 773. No app
+runtime correction was supported by that measured repro on macOS 26. Earlier
+macOS behavior remains unverified. No build, reload, user preference change or
+merge is performed by this follow-up. Localization audit: only internal runner
+messages and contributor/test evidence changed; no shipped UI or translation key.
