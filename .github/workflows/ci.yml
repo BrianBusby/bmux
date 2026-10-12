@@ -620,8 +620,7 @@ jobs:
             -only-testing:bmuxTests/MatteTerminalBackdropCompositionTests \
             -only-testing:bmuxTests/MatteChromePreferenceTests \
             -only-testing:bmuxTests/TerminalSurfaceRecoveryTests \
-            -only-testing:bmuxTests/TerminalNotificationDirectInteractionTests/testIMECommittedKeyRepeatDoesNotForceSurfaceRefresh \
-            -only-testing:bmuxTests/TerminalNotificationDirectInteractionTests/testPrintableKeyRepeatDoesNotForceSurfaceRefresh \
+            -only-testing:bmuxTests/TerminalKeyRepeatDeliveryTests \
             -only-testing:bmuxTests/MatteTitlebarDragRoutingTests \
             -only-testing:bmuxTests/ForeignFirstResponderPolicyTests \
             -only-testing:bmuxTests/KeyboardFocusOwnerViewTests \
