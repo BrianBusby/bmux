@@ -447,3 +447,32 @@ failed the exact-head workflow guard (run `38283073852`, job `114924791841`)
 by killing an active Swift Testing run with exit 124. Local subprocess verification
 passes with phase-aware cleanup; full native app-host completion remains subject
 to the separately tracked suite failures.
+
+
+### Consolidated native settings fixtures review boundary
+
+This branch consolidates #145, #147, #149, #154, #156, #158, #161, preserving each published source commit in
+its ancestry. Original branches remain available; superseded pull requests
+link to their replacement. This changes review organization, not application
+behavior. The preserved source heads are:
+
+- #145: `b275c76c3d1a14aec865f07de8d7b2cfa96c92cc`
+- #147: `537681592de0f1a51b00308a2fa3834f31959b49`
+- #149: `2b8592920ed58232e9506c14ba6e4842d2982f14`
+- #154: `b25ad79c66f064dfad82754642666b5fcf22a2a8`
+- #156: `d5350d19b490fc1d3505dfeb635513be0d672c49`
+- #158: `83ff7d17c9cefb5be4ca644c558ea60251b67073`
+- #161: `c3644da9c64d4498dbe5d7cae855c17029773457`
+
+The native-settings and SSH replacement PRs depend on #142 for authoritative
+CI exit reporting. The agent-session replacement stacks on SSH to share one
+reviewed socket fixture. Existing focused selectors, full-suite coverage and
+canonical/local verification caveats remain intact. No failed, incomplete or
+cancelled run is treated as green. The original combined validation branch
+remains unchanged and does not verify these new heads.
+
+Local consolidation checks cover source ancestry, test-content preservation,
+Xcode wiring, selector discovery, determinism, file budgets and generated state.
+Full app-host compilation/execution and required checks on the replacement heads
+remain pending. No app build, launch, settings or localization catalog changes
+are part of this consolidation.
