@@ -140,6 +140,8 @@ component_releases:
 local_caveats:
   - id: native_app_host_full_suite_failures
     status: open
+  - id: ssh_cleanup_error_idempotency_verification
+    status: open
   - id: configured_codex_placeholder_startup_dogfood
     status: open
   - id: codex_update_workspace_exit_native_dogfood
