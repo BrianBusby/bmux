@@ -180,3 +180,4 @@ Repository: `BrianBusby/bmux`
 | `hybrid_focus_render_capture` | open |
 | `ssh_startup_lifecycle_focused_gate_verification` | open |
 | `ssh_workspace_creation_fixture_focused_gate_verification` | open |
+| `ssh_agent_environment_fixture_focused_gate_verification` | open |

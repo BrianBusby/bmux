@@ -293,3 +293,32 @@ rejected lookup fails both cases on the original observable assertions.
 App-host CI and combined full-suite verification remain pending under the
 canonical/local focused-gate caveat. Localization audit: no shipped strings or
 catalogs change; contributor verification documentation only.
+### SSH agent environment fixtures
+
+Two legacy SSH agent tests relied on obsolete fixture assumptions. The tilde
+case changed `HOME` but not Foundation's home override, so the owned candidate
+was not found and the inherited agent path won. The caller-socket case required
+all `ssh_options` to be absent, although the CLI now adds multiplexing defaults.
+Neither failure demonstrates a production forwarding defect.
+
+The migrated Swift Testing cases own both `HOME` and `CFFIXED_USER_HOME`, the
+caller agent path and the optional tilde candidate. They verify the exact path
+in both workspace initial environment and remote configuration, preserve the
+explicit tilde option, and check that the no-option path adds no ForwardAgent
+override while permitting other defaults. A missing-candidate control verifies
+fallback to the owned caller path. Every other legacy method remains unchanged.
+The existence-only lookup uses owned empty files; no agent traffic is sent.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing with migration,
+wiring and local-vs-CI references, architecture/file discipline and shared/socket
+policy. Complete SSHAgentSocketResolver path resolution and the CLI forwarding
+selection/create/configure owners were inspected. Process environment, outputs
+and mock socket are isolated; transport uses the reviewed CLISocketFixture.
+No production, OpenSSH policy, terminal renderer or running app changes.
+
+Three native cases pass unchanged build 773 with warning-free compilation. A
+temporary negative control restoring HOME-only isolation and the nil-options
+assertion reproduces both original failures; the missing-candidate control
+still passes. Actual app-host CI and combined full-suite verification remain
+pending under the canonical/local focused-gate caveat. Localization audit: no
+shipped strings or catalogs change; contributor verification notes only.

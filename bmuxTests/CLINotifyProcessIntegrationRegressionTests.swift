@@ -3568,23 +3568,6 @@ final class CLINotifyProcessIntegrationRegressionTests: XCTestCase {
         XCTAssertNil(configureParams["ssh_auth_sock"])
     }
 
-    func testSSHPreservesCallerAgentSocketForOpenSSHConfigResolution() throws {
-        let agentSocketPath = try makeExistingAgentSocketPath()
-        let run = try runMockedSSH(
-            arguments: [],
-            environmentOverrides: [
-                "SSH_AUTH_SOCK": agentSocketPath,
-            ]
-        )
-        let createParams = try XCTUnwrap(params(for: "workspace.create", in: run.requests))
-        let configureParams = try XCTUnwrap(params(for: "workspace.remote.configure", in: run.requests))
-        let initialEnv = try XCTUnwrap(createParams["initial_env"] as? [String: String])
-
-        XCTAssertNil(configureParams["ssh_options"])
-        XCTAssertEqual(initialEnv["SSH_AUTH_SOCK"], agentSocketPath)
-        XCTAssertEqual(configureParams["ssh_auth_sock"] as? String, agentSocketPath)
-    }
-
     func testSSHForwardAgentLiteralSocketPathPropagatesSocketPath() throws {
         let agentSocketPath = try makeExistingAgentSocketPath()
         let run = try runMockedSSH(
@@ -3598,27 +3581,6 @@ final class CLINotifyProcessIntegrationRegressionTests: XCTestCase {
         XCTAssertTrue(sshOptions.contains("ForwardAgent=\(agentSocketPath)"), "ssh_options: \(sshOptions)")
         XCTAssertEqual(initialEnv["SSH_AUTH_SOCK"], agentSocketPath)
         XCTAssertEqual(configureParams["ssh_auth_sock"] as? String, agentSocketPath)
-    }
-
-    func testSSHForwardAgentTildeSocketPathExpandsSocketPath() throws {
-        let homeURL = try makeTemporaryDirectory(prefix: "bmux-ssh-home")
-        let tildeSocketPath = "~/.ssh/bmux-test-agent.sock"
-        let expandedSocketURL = homeURL.appendingPathComponent(".ssh/bmux-test-agent.sock")
-        try createExistingFile(at: expandedSocketURL)
-        let run = try runMockedSSH(
-            arguments: ["--ssh-option", "ForwardAgent=\(tildeSocketPath)"],
-            environmentOverrides: [
-                "HOME": homeURL.path,
-            ]
-        )
-        let createParams = try XCTUnwrap(params(for: "workspace.create", in: run.requests))
-        let configureParams = try XCTUnwrap(params(for: "workspace.remote.configure", in: run.requests))
-        let sshOptions = try XCTUnwrap(configureParams["ssh_options"] as? [String])
-        let initialEnv = try XCTUnwrap(createParams["initial_env"] as? [String: String])
-
-        XCTAssertTrue(sshOptions.contains("ForwardAgent=\(tildeSocketPath)"), "ssh_options: \(sshOptions)")
-        XCTAssertEqual(initialEnv["SSH_AUTH_SOCK"], expandedSocketURL.path)
-        XCTAssertEqual(configureParams["ssh_auth_sock"] as? String, expandedSocketURL.path)
     }
 
     func testSSHForwardAgentAskDoesNotPropagateInvalidSocketPath() throws {
