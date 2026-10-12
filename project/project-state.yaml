@@ -5887,3 +5887,8 @@ caveats:
     issue:
       repository: BrianBusby/bmux
       number: 8
+
+  - id: browser_discard_restore_focused_gate_verification
+    title: Focused browser app-host gate includes discard and history restore readiness tests; local native cases pass and pushed-head CI remains pending
+    status: open
+    owner: bmux
