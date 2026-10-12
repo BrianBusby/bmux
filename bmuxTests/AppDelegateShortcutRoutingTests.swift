@@ -1,4 +1,5 @@
 import XCTest
+import Testing
 import BmuxTerminal
 import AppKit
 import Carbon.HIToolbox
@@ -3101,30 +3102,6 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
         XCTAssertEqual(WindowChromeMetrics.clampedTitlebarHeight(12), 28)
         XCTAssertEqual(WindowChromeMetrics.clampedTitlebarHeight(32), 32)
         XCTAssertEqual(WindowChromeMetrics.clampedTitlebarHeight(96), 72)
-    }
-
-    func testRightSidebarHeaderChromeUsesSharedButtonsWithCompactIcons() {
-        let titlebarConfig = TitlebarControlsStyle.classic.config
-
-        XCTAssertEqual(HeaderChromeControlMetrics.buttonSize, titlebarConfig.buttonSize, accuracy: 0.001)
-        XCTAssertEqual(HeaderChromeControlMetrics.iconSize, titlebarConfig.iconSize, accuracy: 0.001)
-        XCTAssertEqual(HeaderChromeControlMetrics.cornerRadius, titlebarConfig.buttonCornerRadius, accuracy: 0.001)
-        XCTAssertEqual(RightSidebarChromeMetrics.headerControlSize, titlebarConfig.buttonSize, accuracy: 0.001)
-        XCTAssertEqual(RightSidebarChromeMetrics.headerIconSize, 10, accuracy: 0.001)
-        XCTAssertEqual(
-            RightSidebarChromeMetrics.headerIconFrameSize,
-            RightSidebarChromeMetrics.headerIconSize,
-            accuracy: 0.001
-        )
-        XCTAssertLessThan(RightSidebarChromeMetrics.headerIconSize, titlebarConfig.iconSize)
-        XCTAssertLessThan(
-            RightSidebarChromeMetrics.headerIconFrameSize,
-            HeaderChromeIconStyle.iconFrameSize(forIconSize: titlebarConfig.iconSize)
-        )
-        XCTAssertEqual(RightSidebarChromeMetrics.headerControlCornerRadius, titlebarConfig.buttonCornerRadius, accuracy: 0.001)
-        XCTAssertEqual(RightSidebarChromeMetrics.controlHeight, RightSidebarChromeMetrics.headerControlSize, accuracy: 0.001)
-        XCTAssertEqual(RightSidebarChromeMetrics.barVerticalPadding, 4, accuracy: 0.001)
-        XCTAssertEqual(RightSidebarChromeMetrics.headerControlCenterAlignmentAdjustment, 0, accuracy: 0.001)
     }
 
     func testRightSidebarPillChromeUsesHeaderIconColorAndWeight() {
@@ -12339,5 +12316,27 @@ private final class CommandPaletteMarkedTextFieldEditor: NSTextView {
 
     override func hasMarkedText() -> Bool {
         hasMarkedTextForTesting
+    }
+}
+
+@MainActor
+@Suite struct RightSidebarHeaderChromeMetricsTests {
+    @Test func usesSharedHeaderButtonsWithCompactIcons() {
+        let titlebarConfig = TitlebarControlsStyle.classic.config
+
+        // Matte titlebar hit targets are independent of the retained right-sidebar chrome.
+        #expect(titlebarConfig.buttonSize == 28)
+        #expect(HeaderChromeControlMetrics.buttonSize == 20)
+        #expect(HeaderChromeControlMetrics.iconSize == titlebarConfig.iconSize)
+        #expect(HeaderChromeControlMetrics.cornerRadius == titlebarConfig.buttonCornerRadius)
+        #expect(RightSidebarChromeMetrics.headerControlSize == HeaderChromeControlMetrics.buttonSize)
+        #expect(RightSidebarChromeMetrics.headerIconSize == 10)
+        #expect(RightSidebarChromeMetrics.headerIconFrameSize == RightSidebarChromeMetrics.headerIconSize)
+        #expect(RightSidebarChromeMetrics.headerIconSize < titlebarConfig.iconSize)
+        #expect(RightSidebarChromeMetrics.headerIconFrameSize < HeaderChromeIconStyle.iconFrameSize(forIconSize: titlebarConfig.iconSize))
+        #expect(RightSidebarChromeMetrics.headerControlCornerRadius == titlebarConfig.buttonCornerRadius)
+        #expect(RightSidebarChromeMetrics.controlHeight == RightSidebarChromeMetrics.headerControlSize)
+        #expect(RightSidebarChromeMetrics.barVerticalPadding == 4)
+        #expect(RightSidebarChromeMetrics.headerControlCenterAlignmentAdjustment == 0)
     }
 }

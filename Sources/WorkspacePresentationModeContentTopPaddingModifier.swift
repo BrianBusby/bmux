@@ -1,6 +1,9 @@
 import SwiftUI
+import BmuxAppKitSupportUI
 
 struct WorkspacePresentationModeContentTopPaddingModifier: ViewModifier {
+    @Environment(\.bmuxShellTerminalOnly) private var isEmbeddedTerminal
+    @Environment(\.colorScheme) private var colorScheme
     let isFullScreen: Bool
     let titlebarPadding: CGFloat
     let hostingSafeAreaTop: CGFloat
@@ -13,7 +16,9 @@ struct WorkspacePresentationModeContentTopPaddingModifier: ViewModifier {
     }
 
     func body(content: Content) -> some View {
-        content.padding(.top, ContentView.effectiveTitlebarPadding(
+        content.padding(.top, isEmbeddedTerminal
+            ? MatteTheme(colorScheme: colorScheme).layout.embeddedTerminalTopGap
+            : ContentView.effectiveTitlebarPadding(
             isMinimalMode: isMinimalMode,
             isFullScreen: isFullScreen,
             titlebarPadding: titlebarPadding,

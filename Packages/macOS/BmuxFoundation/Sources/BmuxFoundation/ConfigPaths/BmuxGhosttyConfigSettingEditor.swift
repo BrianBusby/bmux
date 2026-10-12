@@ -21,7 +21,7 @@ public struct BmuxGhosttyConfigSettingEditor {
     /// The config key for the surface-tab-bar font size.
     public static let surfaceTabBarFontSizeKey = "surface-tab-bar-font-size"
     /// The default surface-tab-bar font size in points.
-    public static let defaultSurfaceTabBarFontSize = 11.0
+    public static let defaultSurfaceTabBarFontSize = 13.0
     /// The smallest surface-tab-bar font size bmux allows.
     public static let minSurfaceTabBarFontSize = 8.0
     /// The largest surface-tab-bar font size bmux allows.
