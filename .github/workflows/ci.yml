@@ -563,7 +563,7 @@ jobs:
             echo "::warning::Passwordless sudo unavailable; XCTest will use its default automation-mode setup"
           fi
 
-      - name: Run browser proxy and discard policy regressions
+      - name: Run browser settings and system proxy regressions
         if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_BROWSER_PROXY_REGRESSION_SHARD) }}
         run: |
           # Focused gate for https://github.com/manaflow-ai/bmux/issues/5888.
@@ -581,6 +581,7 @@ jobs:
             BMUX_SKIP_ZIG_BUILD=1 \
             -only-testing:bmuxTests/BrowserSystemProxyMirrorTests \
             -only-testing:bmuxTests/BrowserHiddenWebViewDiscardPolicyTests \
+            -only-testing:bmuxTests/BrowserThemeSettingsTests \
             test
 
       - name: Run Option/Alt sided-modifier regression

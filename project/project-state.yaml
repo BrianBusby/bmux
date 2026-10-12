@@ -5907,3 +5907,8 @@ caveats:
     title: CommandRunner blocking pipe readers can exhaust the cooperative executor during parallel socket tests
     status: open
     owner: bmux
+
+  - id: browser_legacy_theme_startup_migration_verification
+    title: Browser legacy theme startup migration focused gate awaits fixed app-host CI
+    status: open
+    owner: bmux
