@@ -5887,3 +5887,8 @@ caveats:
     issue:
       repository: BrianBusby/bmux
       number: 8
+
+  - id: ssh_manual_reconnect_handoff_regression
+    title: SSH manual reconnect has a failing native handoff regression; shell prompt and native respawn ownership repair remain pending
+    status: open
+    owner: bmux

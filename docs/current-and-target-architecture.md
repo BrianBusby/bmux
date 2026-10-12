@@ -399,4 +399,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Monorepo migration ledger pending dispositions (`monorepo_migration_ledger_pending_dispositions`) - owner: Bmux; status: open
 - Observability trace API boundary (`observability_trace_api`) - owner: Provenance Engine; status: open
 - GitHub Actions runner reliability (`github_actions_runner_reliability`) - owner: Bmux; status: open; issue: BrianBusby/bmux#8
+- SSH manual reconnect has a failing native handoff regression; shell prompt and native respawn ownership repair remain pending (`ssh_manual_reconnect_handoff_regression`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
