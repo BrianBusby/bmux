@@ -189,3 +189,4 @@ Repository: `BrianBusby/bmux`
 | `claude_session_end_scope_focused_gate_verification` | open |
 | `agent_launch_environment_fixture_focused_gate_verification` | open |
 | `codex_monitor_lease_fixture_verification` | open |
+| `respawn_window_protocol_fixture_focused_gate_verification` | open |

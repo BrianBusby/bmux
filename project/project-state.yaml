@@ -5937,3 +5937,7 @@ caveats:
     title: CI Option/Alt step selects CodexMonitorLeaseTests sequential and nested controls; actual app-host verification pending
     status: open
     owner: bmux
+  - id: respawn_window_protocol_fixture_focused_gate_verification
+    title: Respawn window protocol fixture focused gate awaits app-host CI
+    status: open
+    owner: bmux

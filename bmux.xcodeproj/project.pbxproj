@@ -1236,6 +1236,7 @@
 		C0DEAA060000000000000101 /* RepoAgentLauncherParameterRowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEAA060000000000000001 /* RepoAgentLauncherParameterRowController.swift */; };
 		C0DEAA070000000000000101 /* RepoAgentLauncherParameterSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEAA070000000000000001 /* RepoAgentLauncherParameterSelection.swift */; };
 		C0DEAA080000000000000101 /* RepoAgentLauncherParameterValueKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEAA080000000000000001 /* RepoAgentLauncherParameterValueKind.swift */; };
+		E77094E44ACC4652940E9722 /* RespawnWindowProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7B7CD350DB14FB7AD00BE08 /* RespawnWindowProtocolTests.swift */; };
 		F5410004A1B2C3D4E5F60718 /* RestorableAgentHookProviderHermesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5410005A1B2C3D4E5F60718 /* RestorableAgentHookProviderHermesTests.swift */; };
 		F5410000A1B2C3D4E5F60718 /* RestorableAgentHookProviderResumeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5410001A1B2C3D4E5F60718 /* RestorableAgentHookProviderResumeTests.swift */; };
 		C6711A040000000000000001 /* RestorableAgentHookSessionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6711B040000000000000001 /* RestorableAgentHookSessionRecord.swift */; };
@@ -3120,6 +3121,7 @@
 		C0DEAA060000000000000001 /* RepoAgentLauncherParameterRowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoAgentLauncherParameterRowController.swift; sourceTree = "<group>"; };
 		C0DEAA070000000000000001 /* RepoAgentLauncherParameterSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoAgentLauncherParameterSelection.swift; sourceTree = "<group>"; };
 		C0DEAA080000000000000001 /* RepoAgentLauncherParameterValueKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoAgentLauncherParameterValueKind.swift; sourceTree = "<group>"; };
+		E7B7CD350DB14FB7AD00BE08 /* RespawnWindowProtocolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RespawnWindowProtocolTests.swift; sourceTree = "<group>"; };
 		F5410005A1B2C3D4E5F60718 /* RestorableAgentHookProviderHermesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestorableAgentHookProviderHermesTests.swift; sourceTree = "<group>"; };
 		F5410001A1B2C3D4E5F60718 /* RestorableAgentHookProviderResumeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestorableAgentHookProviderResumeTests.swift; sourceTree = "<group>"; };
 		C6711B040000000000000001 /* RestorableAgentHookSessionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestorableAgentHookSessionRecord.swift; sourceTree = "<group>"; };
@@ -5496,6 +5498,7 @@
 					CE4411000000000000000002 /* CLISocketFixture.swift */,
 					56851DBE797C46F5ADDAAEC6 /* AgentLaunchEnvironmentTests.swift */,
 					9960810488AB4C6EAF7B5662 /* AgentLaunchEnvironmentFixture.swift */,
+				E7B7CD350DB14FB7AD00BE08 /* RespawnWindowProtocolTests.swift */,
 				CE4411000000000000000002 /* CLISocketFixture.swift */,
 					B1F0D1040000000000000002 /* TabManagerSidebarGitTestSupport.swift */,
 					C0DE1A080000000000000002 /* SavedLayoutDefinitionTests.swift */,
@@ -7869,6 +7872,7 @@
 				FA00C0DE0001BEEF0001CAFE /* RemoteTmuxWindowRegistryTests.swift in Sources */,
 				C58410010000000000000001 /* RenderableSystemSymbolTests.swift in Sources */,
 				D36A00050000000000000001 /* RendererRealizationPlannerTests.swift in Sources */,
+				E77094E44ACC4652940E9722 /* RespawnWindowProtocolTests.swift in Sources */,
 					F5410004A1B2C3D4E5F60718 /* RestorableAgentHookProviderHermesTests.swift in Sources */,
 					F5410000A1B2C3D4E5F60718 /* RestorableAgentHookProviderResumeTests.swift in Sources */,
 					F5410002A1B2C3D4E5F60718 /* RestorableAgentNonInteractiveTests.swift in Sources */,

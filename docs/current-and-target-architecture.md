@@ -411,4 +411,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Claude replaced-session cleanup fixture focused gate awaits app-host CI (`claude_session_end_scope_focused_gate_verification`) - owner: Bmux; status: open
 - Agent launch environment fixture focused gate awaits app-host CI (`agent_launch_environment_fixture_focused_gate_verification`) - owner: Bmux; status: open
 - CI Option/Alt step selects CodexMonitorLeaseTests sequential and nested controls; actual app-host verification pending (`codex_monitor_lease_fixture_verification`) - owner: Bmux; status: open
+- Respawn window protocol fixture focused gate awaits app-host CI (`respawn_window_protocol_fixture_focused_gate_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
