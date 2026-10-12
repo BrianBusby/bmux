@@ -550,3 +550,30 @@ compilation. A temporary negative control restores the erroneous sibling-pane
 active record and fails all four cases, preserving the protection being tested. Actual app-host CI and broad-suite integration remain pending in the
 canonical/local focused-gate caveat. There are no shipped strings or catalog
 changes; changed text is contributor verification documentation only.
+### Agent launch environment persistence fixture
+
+The legacy session-start fixture rejected every socket request, including the
+current `surface.list` identity validation. Its persisted-record assertion failed
+on the base branch because the hook correctly ignored that inaccessible target.
+The replacement models an accessible workspace and surface through the actual
+bundled CLI. Two Swift Testing cases preserve the exact environment allowlist
+assertion: `CODEX_HOME` survives, while `PATH`, `SHELL` and other fixture state do
+not. A home path with spaces remains covered. Captured executable, launch cwd,
+source and sanitized arguments are also checked.
+
+This is a test-only baseline repair for the matte integration. Runtime routing,
+launch capture trust and the environment policy are unchanged. All other legacy
+tests in WorkspaceRemoteConnectionTests remain byte-for-byte unchanged. The
+fixture owns its temporary directory, process environment, output files and
+mock socket; shared CLISocketFixture owns asynchronous transport and cleanup.
+No real app socket, preferences or running build is touched.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing with migration,
+regression/wiring and local-vs-CI references, bmux-architecture file/API discipline,
+and bmux-shared-behavior/socket policy. The session-start target validation,
+AgentLaunchCaptureTrust, launch sanitizer and environment policy paths were
+inspected. Both native cases pass unchanged build 773 with warning-free focused
+compilation. A temporary negative control restoring the old rejecting mock fails
+both persisted-session assertions. Actual app-host CI and combined full-suite
+validation remain pending in the canonical/local focused-gate caveat. No shipped
+strings or catalogs change; localization audit covers contributor notes only.

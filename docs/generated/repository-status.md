@@ -187,3 +187,4 @@ Repository: `BrianBusby/bmux`
 | `claude_notification_target_fixture_verification` | open |
 | `resume_policy_execution_fixture_verification` | open |
 | `claude_session_end_scope_focused_gate_verification` | open |
+| `agent_launch_environment_fixture_focused_gate_verification` | open |

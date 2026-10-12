@@ -5929,3 +5929,7 @@ caveats:
     title: Claude replaced-session cleanup fixture focused gate awaits app-host CI
     status: open
     owner: bmux
+  - id: agent_launch_environment_fixture_focused_gate_verification
+    title: Agent launch environment fixture focused gate awaits app-host CI
+    status: open
+    owner: bmux
