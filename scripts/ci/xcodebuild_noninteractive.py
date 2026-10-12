@@ -17,6 +17,7 @@ SWIFT_CRASH_PROMPT = b"Press space to interact, D to debug, or any other key to 
 TIMEOUT_EXIT_CODE = 124
 POST_TEST_FAILED_EXIT_CODE = 125
 SELECTED_TESTS_DONE_RE = re.compile(rb"Test Suite 'Selected tests' (passed|failed) at ")
+ANSI_SGR_RE = re.compile(rb"\x1b\[[0-9;:]*m")
 SELECTED_TESTS_STARTED = b"Test Suite 'Selected tests' started at "
 SWIFT_TESTING_STARTED = "◇ Test run started.".encode()
 SWIFT_TESTING_DONE_RE = re.compile(
@@ -214,6 +215,8 @@ def main() -> int:
         lines = (pending_line + chunk).split(b"\n")
         pending_line = lines.pop()[-4096:]
         for line in lines:
+            # Swift Testing styles glyphs on this PTY; normalize only parser input.
+            line = ANSI_SGR_RE.sub(b"", line)
             selected_match = SELECTED_TESTS_DONE_RE.search(line)
             if selected_match:
                 selected_tests_failed |= selected_match.group(1) == b"failed"
