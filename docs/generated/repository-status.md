@@ -179,3 +179,4 @@ Repository: `BrianBusby/bmux`
 | `hybrid_focus_render_capture` | open |
 | `browser_discard_policy_focused_gate_verification` | open |
 | `browser_background_compositing_focused_gate_verification` | open |
+| `right_sidebar_shortcut_fixture_app_host_verification` | open |
