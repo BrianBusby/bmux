@@ -1352,3 +1352,27 @@ runtime correction was supported by that measured repro on macOS 26. Earlier
 macOS behavior remains unverified. No build, reload, user preference change or
 merge is performed by this follow-up. Localization audit: only internal runner
 messages and contributor/test evidence changed; no shipped UI or translation key.
+
+The first fixed-head reporting CI run (38283791179, workflow guard 114927169830)
+passed the executable helper cases but rejected a newly introduced elapsed-time
+assertion under the strict test-determinism guard. Follow-up 130ab5a30 replaces that
+measurement with observable child lifecycle: cleanup must return timeout 124/125
+before the child prints its natural-completion sentinel. No allowlist, tolerance
+or helper behavior was changed. External negative controls that disable final
+cleanup or refresh its deadline on unrelated output both fail with native exit 0
+and the completion sentinel. All 15 PTY cases, 51 wrapper scenarios, retry guards,
+strict determinism (zero active findings) and documentation gates pass locally.
+Exact corrected-head CI remains pending; the failed guard is not counted as green.
+
+ANSI-colored Swift Testing output exposed a separate supported PTY variant: the
+installed Testing 1902 runtime emits styling between its glyph and lifecycle text
+under TERM=xterm-256color. Retained earlier CI logs have plain markers, so this is
+not claimed as their historical cause. Test-only 0f0a8162c failed the actual guard
+in run 38285242111, job 114932287953, with colored-start exit 124 instead of 0.
+Fix 5117031ee strips SGR styling only from complete parser lines; raw stdout and
+saved log bytes remain unchanged. Four cases independently exercise colored
+start and completion, fragmented ANSI/UTF-8, native success/failure and bounded
+cleanup. All 19 PTY cases, 51 wrapper scenarios and strict determinism pass locally;
+a start-only normalization control fails the completion case as expected.
+Independent review found no blocker. The final corrected-head workflow guard
+and combined native full suite remain CI gates. No application source changed.
