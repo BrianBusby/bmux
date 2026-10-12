@@ -118,6 +118,53 @@ def check_test_progress_watchdog() -> None:
 
 
 
+def check_colored_test_progress_watchdog() -> None:
+    # Swift Testing emits SGR around its glyphs when stdout is this wrapper's PTY.
+    # Start and completion are independent cases: a plain start isolates whether
+    # the colored final summary actually rearms cleanup.
+    for phase, expected in [("start", 0), ("start", 65), ("completion", 124), ("completion", 125)]:
+        marker = ("\x1b[90m◇\x1b[0m Test run started." if phase == "start" else
+                  "\x1b[92m✔\x1b[0m Test run with 1 test in 0 suites passed after 0.01 seconds.")
+        child = textwrap.dedent(f"""
+            import os, time
+            print("Test Suite 'Selected tests' {'failed' if expected == 125 else 'passed'} at now", flush=True)
+            if {phase!r} == "completion":
+                print("◇ Test run started.", flush=True)
+            marker = {marker!r}.encode() + b"\\n"
+            offset = 0
+            # Fragment both ANSI escape sequences and the UTF-8 status glyph.
+            for end in [1, 3, 6, 9, len(marker)]:
+                os.write(1, marker[offset:end])
+                offset = end
+                time.sleep(0.01)
+            if {phase!r} == "start":
+                time.sleep(0.6)
+                print("✔ Test run with 1 test passed after 0.6 seconds.", flush=True)
+                raise SystemExit({expected})
+            for _ in range(40):
+                print("unrelated app diagnostic", flush=True)
+                time.sleep(0.05)
+            print("cleanup-child-finished", flush=True)
+        """)
+        with tempfile.TemporaryDirectory() as temporary:
+            log_path = Path(temporary) / "colored.log"
+            result = subprocess.run(
+                [sys.executable, str(HELPER), sys.executable, "-c", child],
+                cwd=ROOT, text=True, capture_output=True, timeout=5,
+                env={**os.environ,
+                     "BMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS": "3",
+                     "BMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS": "0.4",
+                     "BMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH": str(log_path)},
+            )
+            assert result.returncode == expected, (
+                f"Colored {phase} must exit {expected}, got {result.returncode}\n"
+                + result.stdout + result.stderr
+            )
+            assert marker in result.stdout, "Parser normalization must preserve raw stdout styling"
+            assert marker.encode() in log_path.read_bytes(), "Keep ANSI bytes in the saved log"
+            assert "cleanup-child-finished" not in result.stdout
+
+
 def main() -> int:
     child = textwrap.dedent(
         f"""
@@ -349,6 +396,7 @@ def main() -> int:
             return 1
 
     check_test_progress_watchdog()
+    check_colored_test_progress_watchdog()
 
     print("PASS: xcodebuild noninteractive helper dismisses crash prompts and idle-times out stuck children")
     return 0
