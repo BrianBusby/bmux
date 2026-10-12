@@ -1055,6 +1055,7 @@ checkpoint, not a merge into main, a published CI result, or an app build.
 | #158 | `83ff7d17c9cefb5be4ca644c558ea60251b67073` |
 | #159 | `994e34f6512abf871b839b7957d56f2739671314` |
 | #160 | `d58ea8aaa63284b48302763446964f74cbd94524` |
+| #161 | `93abeaa9bc8560190dc40b0464bfa1901eff73b7` |
 
 PR142's authoritative framework-aware test runner is integrated before the
 maintenance suites. All source-head focused selectors and the full legacy suite
@@ -1078,12 +1079,12 @@ Existing user builds 773 and 775 remain untouched.
 
 Local checks pass: framework-aware PTY helper behavior, four exit-reporting tests,
 app-host retry/attempt guards, sharding coverage, Xcode normalization, test wiring
-(478 files), strict determinism (zero findings), source budget against ce17, YAML
+(479 files), strict determinism (zero findings), source budget against ce17, YAML
 parsing, and focused-selector preservation across every listed input. The source
 budget permits existing incidental growth of five MainWindowFocusController
 lines; no budget waiver was added.
-No combined test-target compilation, native execution, dynamic/Release artifact
-verification, or complete authoritative CI run has occurred yet. These remain
+No full combined test-target compilation or suite execution, dynamic/Release
+artifact verification, or complete authoritative CI run has occurred yet. These remain
 required gates; separate local native results do not substitute for them.
 
 Reassessment follows root/personal AGENTS, continuous-code-quality, bmux-testing,
@@ -1153,3 +1154,10 @@ side-effect pipeline and AppearanceSettings' injected launch/live application.
 The existing UserDefaults-backed production storage remains unchanged; synchronous
 ownership avoids yielding while test defaults are installed. No shipped copy or
 localization catalog changes are introduced.
+
+The reviewed PR161 fixture is now included: the same appearance owner is checked
+through constructor-injected effects, with exact application-domain defaults
+restored after each synchronous case. All 21 source-head selector sets remain
+present; the final local wiring count is 479. Determinism, source budget, sharding,
+normalization and Project Truth checks pass again after this addition. This
+test-only integration does not alter the earlier shared-socket runtime result.
