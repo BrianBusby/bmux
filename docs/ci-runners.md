@@ -1056,6 +1056,7 @@ checkpoint, not a merge into main, a published CI result, or an app build.
 | #159 | `994e34f6512abf871b839b7957d56f2739671314` |
 | #160 | `d58ea8aaa63284b48302763446964f74cbd94524` |
 | #161 | `93abeaa9bc8560190dc40b0464bfa1901eff73b7` |
+| #162 | `90503d88c5f4cb0f69745dfb6b886755fe3ece12` |
 
 PR142's authoritative framework-aware test runner is integrated before the
 maintenance suites. All source-head focused selectors and the full legacy suite
@@ -1189,3 +1190,23 @@ compilation. A temporary negative control restoring the old rejecting mock fails
 both persisted-session assertions. Actual app-host CI and combined full-suite
 validation remain pending in the canonical/local focused-gate caveat. No shipped
 strings or catalogs change; localization audit covers contributor notes only.
+
+### First combined CI dispatch boundary
+
+PR162's reviewed session-start environment fixture is included with the existing
+shared socket helper. The composition now preserves all focused selectors from
+22 exact published heads and wires 481 test files. The conflicting adjacent
+legacy launch-environment and Codex Stop methods were both already migrated;
+resolution removes only the former from the prior integrated file.
+
+One ordinary push of this validation branch and manual dispatch of CI and
+Project Truth is authorized. No PR or main merge is created, and no source PR
+branch changes. The existing workflow runs all four full native shards, focused
+gates, package tests, build/lag, Release and unchanged-artifact relocation checks.
+It adds eight macOS jobs and ten Linux CI jobs, plus one Linux Project Truth job;
+queue time and execution results are unknown. The dispatch uses its own branch
+concurrency group with cancellation disabled. No existing run is canceled.
+Held PR151/153/155 production fixes remain excluded; expected regression failures
+are evidence to inspect, not a reason to weaken gates. Subsequent new PRs do not
+supersede or silently rerun this exact batch. The separate native proof above
+remains limited to its recorded source/artifact pairing.

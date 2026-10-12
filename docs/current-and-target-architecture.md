@@ -416,6 +416,6 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Focused browser app-host gate includes discard and history restore readiness tests; local native cases pass and pushed-head CI remains pending (`browser_discard_restore_focused_gate_verification`) - owner: Bmux; status: open
 - Focused app-host gate includes default and configured sidebar width policy tests; local native cases pass and pushed-head CI remains pending (`sidebar_width_persistence_focused_gate_verification`) - owner: Bmux; status: open
 - Claude replaced-session cleanup fixture focused gate awaits app-host CI (`claude_session_end_scope_focused_gate_verification`) - owner: Bmux; status: open
-- Published maintenance heads are composed locally; held fixes and full authoritative native and artifact gates remain pending (`maintenance_combined_validation_pending`) - owner: Bmux; status: open
+- Published maintenance heads are composed for CI; held fixes and full authoritative native and artifact gates remain pending (`maintenance_combined_validation_pending`) - owner: Bmux; status: open
 - Agent launch environment fixture focused gate awaits app-host CI (`agent_launch_environment_fixture_focused_gate_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
