@@ -216,3 +216,7 @@ local_caveats:
     status: open
   - id: browser_discard_restore_focused_gate_verification
     status: open
+  - id: sidebar_minimum_default_and_configured_range_consistency
+    status: open
+  - id: sidebar_width_persistence_focused_gate_verification
+    status: open

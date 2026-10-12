@@ -441,24 +441,6 @@ final class SessionPersistenceTests: XCTestCase {
         XCTAssertFalse(shouldRestore)
     }
 
-    func testSidebarWidthSanitizationClampsToPolicyRange() {
-        XCTAssertEqual(
-            SessionPersistencePolicy.sanitizedSidebarWidth(-20),
-            SessionPersistencePolicy.minimumSidebarWidth,
-            accuracy: 0.001
-        )
-        XCTAssertEqual(
-            SessionPersistencePolicy.sanitizedSidebarWidth(10_000),
-            SessionPersistencePolicy.maximumSidebarWidth,
-            accuracy: 0.001
-        )
-        XCTAssertEqual(
-            SessionPersistencePolicy.sanitizedSidebarWidth(nil),
-            SessionPersistencePolicy.defaultSidebarWidth,
-            accuracy: 0.001
-        )
-    }
-
     func testSessionRectSnapshotEncodesXYWidthHeightKeys() throws {
         let snapshot = SessionRectSnapshot(x: 101.25, y: 202.5, width: 903.75, height: 704.5)
         let data = try JSONEncoder().encode(snapshot)

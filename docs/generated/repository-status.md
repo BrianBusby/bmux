@@ -193,3 +193,5 @@ Repository: `BrianBusby/bmux`
 | `ssh_startup_lifecycle_focused_gate_verification` | open |
 | `ssh_manual_reconnect_handoff_regression` | open |
 | `browser_discard_restore_focused_gate_verification` | open |
+| `sidebar_minimum_default_and_configured_range_consistency` | open |
+| `sidebar_width_persistence_focused_gate_verification` | open |
