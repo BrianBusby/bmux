@@ -118,6 +118,9 @@ jobs:
       - name: Validate unit-test SwiftPM retry guard
         run: ./tests/test_ci_unit_test_spm_retry.sh
 
+      - name: Validate xcodebuild workflow exit reporting
+        run: python3 tests/test_ci_xcodebuild_exit_reporting.py
+
       - name: Validate xcodebuild noninteractive crash prompt guard
         run: python3 tests/test_ci_xcodebuild_noninteractive_helper.py
 
@@ -563,11 +566,8 @@ jobs:
         if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_BROWSER_PROXY_REGRESSION_SHARD) }}
         run: |
           # Focused gate for https://github.com/manaflow-ai/bmux/issues/5888.
-          # The full "Run unit tests" step tolerates app-host crashes by
-          # parsing only the last test summary, so suites that run late can
-          # otherwise be skipped by an app-host abort that still reports
-          # "(0 unexpected)". Keep this targeted only-testing invocation as a
-          # non-tolerant guard for the system proxy mirror regression.
+          # Keep this isolated invocation so a failure or abort in another
+          # app-host suite cannot prevent the proxy mirror regression running.
           set -euo pipefail
           SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
           scripts/ci/run-in-console-session.sh \
@@ -661,11 +661,11 @@ jobs:
           }
 
           # Stream output via tee so CI logs are visible in real time, while still
-          # capturing for post-run analysis of expected vs unexpected failures.
+          # retaining output for the bounded SwiftPM dependency retry.
           TEST_OUTPUT="$RUNNER_TEMP/bmux-unit-output-shard-${{ matrix.shard }}.txt"
           set +e
           run_unit_tests | tee "$TEST_OUTPUT"
-          EXIT_CODE=${PIPESTATUS[0]}
+          EXIT_CODE=$?
           OUTPUT=$(cat "$TEST_OUTPUT")
           set -e
 
@@ -680,20 +680,14 @@ jobs:
             mkdir -p "$BMUX_DERIVED_DATA_PATH"
             set +e
             run_unit_tests | tee "$TEST_OUTPUT"
-            EXIT_CODE=${PIPESTATUS[0]}
+            EXIT_CODE=$?
             OUTPUT=$(cat "$TEST_OUTPUT")
             set -e
           fi
 
-          if [ "$EXIT_CODE" -ne 0 ]; then
-            SUMMARY=$(echo "$OUTPUT" | grep -E "Executed.*tests.*, with .* failures?" | tail -1)
-            if echo "$SUMMARY" | grep -q "(0 unexpected)"; then
-              echo "All failures are expected, treating as pass"
-            else
-              echo "Unexpected test failures detected"
-              exit 1
-            fi
-          fi
+          # XCTest handles genuine expected failures in the native exit status.
+          # A partial log summary cannot turn a failure or timeout into success.
+          exit "$EXIT_CODE"
 
       - name: Run bundled Ghostty theme picker helper regression
         if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_THEME_PICKER_REGRESSION_SHARD) }}

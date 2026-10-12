@@ -5909,4 +5909,3 @@ caveats:
     title: SSH PTY closure and acknowledged-resize fixture verification
     status: open
     owner: bmux
-
