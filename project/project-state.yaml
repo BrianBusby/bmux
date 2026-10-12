@@ -5887,3 +5887,8 @@ caveats:
     issue:
       repository: BrianBusby/bmux
       number: 8
+
+  - id: browser_legacy_theme_startup_migration_verification
+    title: Browser legacy theme startup migration focused gate awaits fixed app-host CI
+    status: open
+    owner: bmux

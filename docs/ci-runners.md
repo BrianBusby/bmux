@@ -179,7 +179,7 @@ of the legacy broad-suite summary handling.
 Ownership remains unchanged: BrowserPanel owns process-once defaults bootstrap;
 BrowserThemeSettings owns legacy migration, canonical values and its System
 fallback; BrowserPanelView's AppStorage owns the same declared fallback for view
-binding. The bounded proposed correction removes the redundant theme fallback
+binding. The bounded correction removes the redundant theme fallback
 registration that masks migration. Explicit System/Light/Dark choices must retain
 precedence. Other normalization keys and browser behavior are outside this fix.
 No new package, state owner, setting or UI string is needed.
@@ -192,7 +192,11 @@ BrowserPanel bootstrap/normalization and BrowserPanelView's AppStorage consumers
 existing BrowserDefaultsNormalizationTests retain separate canonicalization
 coverage. Local test-only evidence on macOS 26.3 is six functions (ten cases),
 with four expected migration assertions failing and all other checks passing.
-Full test-target CI, fixed native proof, a fresh isolated tagged build and
-runtime verification remain required. Build 773 and real user defaults are
-untouched; the probe uses a unique temporary defaults suite. No shipped text or
+Actual test-only CI job 114950761885 reproduced those four expected assertions
+on commit 9a9b2e1cb. The isolated tagged build 774 succeeds, and the same six
+functions (ten cases) pass against its native app module with no focused compiler
+warnings. This exercises startup normalization and persistence in unique temporary
+defaults suites. Fixed app-host CI and the full suite remain pending; the canonical
+and local verification caveat stays open. Build 773 and real user defaults are
+untouched. No shipped text or
 translation keys change. Other baseline failures remain separate maintenance PRs.
