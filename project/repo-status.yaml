@@ -186,3 +186,7 @@ local_caveats:
     status: open
   - id: hybrid_focus_render_capture
     status: open
+  - id: codex_stop_fixture_app_host_verification
+    status: open
+  - id: command_runner_parallel_pipe_capture
+    status: open

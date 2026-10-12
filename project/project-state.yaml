@@ -5887,3 +5887,13 @@ caveats:
     issue:
       repository: BrianBusby/bmux
       number: 8
+
+  - id: codex_stop_fixture_app_host_verification
+    title: Codex Stop fixture repair passes 13 local scenarios; focused app-host CI verification remains pending
+    status: open
+    owner: bmux
+
+  - id: command_runner_parallel_pipe_capture
+    title: CommandRunner blocking pipe readers can exhaust the cooperative executor during parallel socket tests
+    status: open
+    owner: bmux

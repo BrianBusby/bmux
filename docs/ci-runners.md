@@ -162,3 +162,39 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+## Codex Stop hook fixture coverage
+
+App-host shard 4 runs `CodexStopPayloadFailureTests`,
+`CodexStopTranscriptFailureTests`, and `CodexStopTurnScopeTests` in a focused
+invocation before the unchanged full shard coverage. These cover 13 existing
+Stop-hook scenarios (nine Swift Testing methods, one with five parameterized
+payload cases). The focused invocation uses the same app-host wrapper, runner,
+and deadlines as its sibling regression steps. Its native CI result remains
+pending; local executable verification is not a full app-host pass.
+
+The fixtures describe a live workspace/surface membership response instead of
+returning an empty object to every JSON-RPC request. They preserve the original
+transcript/payload, notification, status, and output assertions, including
+current-turn error suppression. Notification assertions use the current
+`notify_target_async` command. Unknown mock methods fail the test.
+
+Each fixture owns its HOME, CFFIXED_USER_HOME, CODEX_HOME, hook-state directory,
+Unix socket, and input/output files. `CodexStopMockServer` bridges nonblocking
+socket readiness into one async capture task; it awaits descriptor cancellation
+before removing the socket. `CodexStopHookFixture` uses the existing
+`CommandRunner` for exit/deadline handling and positional shell `exec`
+redirection for exact non-TTY input/output. It reads captured output only after
+a native process exit. These fixtures do not build, launch, or contact a user's
+running app.
+
+A controlled local comparison exposed a separate existing limitation in
+`CommandRunner`: its detached blocking stdout/stderr readers can exhaust the
+cooperative executor while parallel socket fixtures await responses. Stack
+sampling confirmed workers in `CommandRunner.readToEnd`; the unchanged pipe
+variant passed serially, while owned-file capture passed all 13 cases in
+parallel. The production runner remains unchanged and that concurrency risk
+is recorded as an open Project Truth caveat. Restoring the empty topology in
+the file-capture variant still fails all 13 scenarios, independently confirming
+the routing repair. Local checks also preserved a child's native exit 65 and
+exercised socket disconnection cleanup without ignoring SIGPIPE globally.

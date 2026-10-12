@@ -399,4 +399,6 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Monorepo migration ledger pending dispositions (`monorepo_migration_ledger_pending_dispositions`) - owner: Bmux; status: open
 - Observability trace API boundary (`observability_trace_api`) - owner: Provenance Engine; status: open
 - GitHub Actions runner reliability (`github_actions_runner_reliability`) - owner: Bmux; status: open; issue: BrianBusby/bmux#8
+- Codex Stop fixture repair passes 13 local scenarios; focused app-host CI verification remains pending (`codex_stop_fixture_app_host_verification`) - owner: Bmux; status: open
+- CommandRunner blocking pipe readers can exhaust the cooperative executor during parallel socket tests (`command_runner_parallel_pipe_capture`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
