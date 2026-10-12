@@ -595,6 +595,16 @@ jobs:
             -destination "platform=macOS" \
             BMUX_SKIP_ZIG_BUILD=1 \
             -only-testing:bmuxTests/GhosttyOptionAsAltModsTests \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHPaneCloseSignalDoesNotReportSessionEndToSharedTransport \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHPaneCloseSignalDoesNotTerminateWrappedSSHChild \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupRetriesTransientSSHExitBeforeReportingSessionEnd \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupRemovesStaleBmuxControlSocketBeforeLaunchingPaneSSH \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupStopsAtConfiguredReconnectLimit \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupDoesNotRetryNonTransientSSHExit \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHSignalDerivedChildExitReportsSessionEnd \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHSignalDuringReconnectDelayDoesNotStartAnotherSSH \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupPrintsFinalErrorBannerWhenStderrIsCaptured \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupForwardsStdinToBackgroundedSSH \
             test
 
       - name: Run unit tests

@@ -656,6 +656,7 @@ extension CLINotifyProcessIntegrationRegressionTests {
                     ok: true,
                     result: [
                         "workspace_id": workspaceID,
+                        "surface_id": "22222222-2222-2222-2222-222222222222",
                     ]
                 )
             case "workspace.remote.configure":
@@ -740,10 +741,10 @@ extension CLINotifyProcessIntegrationRegressionTests {
             }
 
             switch method {
-            case "vm.attach_info":
+            case "vm.ssh_info":
                 let params = payload["params"] as? [String: Any] ?? [:]
                 XCTAssertEqual(params["id"] as? String, vmID)
-                XCTAssertEqual(params["require_daemon"] as? Bool, true)
+                XCTAssertEqual(Set(params.keys), ["id"])
                 return self.v2Response(
                     id: id,
                     ok: true,
@@ -764,6 +765,7 @@ extension CLINotifyProcessIntegrationRegressionTests {
                     ok: true,
                     result: [
                         "workspace_id": workspaceID,
+                        "surface_id": "22222222-2222-2222-2222-222222222222",
                     ]
                 )
             case "workspace.rename":

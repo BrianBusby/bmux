@@ -162,3 +162,35 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+## SSH startup lifecycle fixture repair (2026-10-12)
+
+The ten existing signal, retry, stdin and control-socket lifecycle checks now
+exercise the maintained CLI protocol. `vm ssh` requests `vm.ssh_info` with only
+`id`; it no longer requests `vm.attach_info` with `require_daemon`. Workspace
+creation replies also include the created `surface_id`, as the real endpoint
+does. The old fixture rejected the first request or forced terminal discovery
+and rollback before reaching the behavior under test. Test bodies and expected
+lifecycle behavior are unchanged; no production code changes.
+
+Ownership stays in the existing mock helpers in
+`bmuxTests/SSHStartupSignalLifecycleTests.swift`. The actual CLI remains the
+boundary under test. Applicable rules: `AGENTS.md`, `skills/bmux-testing/`,
+`skills/bmux-shared-behavior/`, and the continuous-code-quality skill. The
+maintained request/response owners are `BMUXCLI.vmOpenShell` / `runSSHWithOptions`
+and the workspace-create socket handler. Only the shared fixture helpers change;
+untouched legacy XCTest methods are not bulk-migrated.
+
+Native execution against the unchanged approved build 773 CLI passes all ten
+checks (12.59 seconds). `/tmp/ssh-startup-lifecycle-green.log` retains the result;
+`/tmp/ssh-startup-native-compile.log` records the existing redundant Void discard
+warning in shared `CLINotifyProcessTestSupport.swift:54`, outside this patch.
+A protocol negative control reproduces the old unexpected `vm.ssh_info` failure.
+The existing Option/Alt app-host invocation includes these ten explicit selectors
+without another runner. Actual focused CI and the broader suite remain pending.
+No shipped UI, CLI help text, or localized message keys change.
+
+The separate manual-reconnect fixture has the same stale request, but correcting
+it exposes a real integration gap: its shell prompt cannot invoke the current
+workspace respawn owner. That test and production repair are deliberately outside
+this fixture-only PR; their failures remain unresolved, not waived.
