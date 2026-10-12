@@ -45,6 +45,8 @@
 		C1AC71040000000000000001 /* AgentHibernationMobileInputTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1AC71040000000000000002 /* AgentHibernationMobileInputTests.swift */; };
 		D72260010000000000000001 /* AgentHibernationPortalVisibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D72260010000000000000002 /* AgentHibernationPortalVisibilityTests.swift */; };
 		D36A00020000000000000001 /* AgentHibernationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D36A00020000000000000002 /* AgentHibernationTests.swift */; };
+		8E2FA523B68D41BF93DFD14F /* AgentLaunchEnvironmentFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9960810488AB4C6EAF7B5662 /* AgentLaunchEnvironmentFixture.swift */; };
+		43E7AAC68DED444892228344 /* AgentLaunchEnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56851DBE797C46F5ADDAAEC6 /* AgentLaunchEnvironmentTests.swift */; };
 		A5D41234A1B2C3D4E5F60718 /* AgentNotificationGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5D41235A1B2C3D4E5F60718 /* AgentNotificationGate.swift */; };
 		A5D41230A1B2C3D4E5F60718 /* AgentNotificationGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5D41231A1B2C3D4E5F60718 /* AgentNotificationGateTests.swift */; };
 		C3744E030000000000000001 /* AgentPIDProcessIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3744E040000000000000001 /* AgentPIDProcessIdentity.swift */; };
@@ -2058,6 +2060,8 @@
 		C1AC71040000000000000002 /* AgentHibernationMobileInputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentHibernationMobileInputTests.swift; sourceTree = "<group>"; };
 		D72260010000000000000002 /* AgentHibernationPortalVisibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentHibernationPortalVisibilityTests.swift; sourceTree = "<group>"; };
 		D36A00020000000000000002 /* AgentHibernationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentHibernationTests.swift; sourceTree = "<group>"; };
+		9960810488AB4C6EAF7B5662 /* AgentLaunchEnvironmentFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentLaunchEnvironmentFixture.swift; sourceTree = "<group>"; };
+		56851DBE797C46F5ADDAAEC6 /* AgentLaunchEnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentLaunchEnvironmentTests.swift; sourceTree = "<group>"; };
 		A5D41235A1B2C3D4E5F60718 /* AgentNotificationGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentNotificationGate.swift; sourceTree = "<group>"; };
 		A5D41231A1B2C3D4E5F60718 /* AgentNotificationGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentNotificationGateTests.swift; sourceTree = "<group>"; };
 		C3744E040000000000000001 /* AgentPIDProcessIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentPIDProcessIdentity.swift; sourceTree = "<group>"; };
@@ -5609,6 +5613,8 @@
 					42092CDB2109E250F7F2A76E /* TabManagerUnitTests.swift */,
 					9BF41FFE8DA22514668B6E1B /* ClaudeSessionEndScopeTests.swift */,
 					654A89AA139BAE899DD77C8C /* ClaudeSessionEndFixture.swift */,
+					56851DBE797C46F5ADDAAEC6 /* AgentLaunchEnvironmentTests.swift */,
+					9960810488AB4C6EAF7B5662 /* AgentLaunchEnvironmentFixture.swift */,
 					B1F0D1040000000000000002 /* TabManagerSidebarGitTestSupport.swift */,
 					C0DE1A080000000000000002 /* SavedLayoutDefinitionTests.swift */,
 				C0DE1A070000000000000002 /* SavedLayoutStoreTests.swift */,
@@ -7702,6 +7708,8 @@
 				C1AC71040000000000000001 /* AgentHibernationMobileInputTests.swift in Sources */,
 				D72260010000000000000001 /* AgentHibernationPortalVisibilityTests.swift in Sources */,
 				D36A00020000000000000001 /* AgentHibernationTests.swift in Sources */,
+					8E2FA523B68D41BF93DFD14F /* AgentLaunchEnvironmentFixture.swift in Sources */,
+					43E7AAC68DED444892228344 /* AgentLaunchEnvironmentTests.swift in Sources */,
 				A5D41230A1B2C3D4E5F60718 /* AgentNotificationGateTests.swift in Sources */,
 				D3610B010000000000000001 /* AgentSessionAutoResumeSettingsTests.swift in Sources */,
 				D3610B020000000000000001 /* AgentSessionAutoResumeSwiftTests.swift in Sources */,

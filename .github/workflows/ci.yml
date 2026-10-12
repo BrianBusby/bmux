@@ -595,6 +595,7 @@ jobs:
             -only-testing:bmuxTests/ClaudeSessionEndScopeTests \
             -only-testing:bmuxTests/CloudAttachRetryContractTests \
             -only-testing:bmuxTests/ManagedAppearanceStartupContractTests \
+            -only-testing:bmuxTests/AgentLaunchEnvironmentTests \
             test
 
       - name: Run Option/Alt sided-modifier regression
