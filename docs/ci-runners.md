@@ -175,7 +175,15 @@ SwiftPM dependency retries remain; the final attempt determines the result.
 cleanup. Only an actual child exit of zero establishes success. A post-test
 watchdog timeout returns 125 after a failed Selected-tests summary, otherwise
 124. A passed XCTest summary can precede Swift Testing and cannot establish
-completion. Even a printed `TEST SUCCEEDED` marker cannot override a timeout.
+completion. The cleanup deadline starts at the Selected-tests summary, suspends
+when a fresh Swift Testing run (or restarted XCTest run) starts, and restarts at
+the final framework summary. Lifecycle lines are consumed once, including lines
+split across PTY reads; unrelated app output cannot extend cleanup. A failed
+Selected-tests result remains recorded across later successful restart summaries.
+During active tests, the existing general output-idle watchdog and native test/job
+time limits apply, so an individual test may legitimately exceed the cleanup
+allowance. A noisy active test remains bounded by the native test/job limits.
+Even a printed `TEST SUCCEEDED` marker cannot override a timeout.
 The app-host wrapper retains its existing retry budget. The separately scoped
 strict zero-failure cleanup fallback in `test-ios.yml` is unchanged.
 
@@ -198,3 +206,12 @@ Final CI and broad app-host results remain verification gates, not assumptions.
 This work follows root AGENTS, continuous-code-quality, bmux-testing and
 bmux-shared-behavior: workflow steps own pipeline status; the existing shared
 runner owns process lifecycle; no app test expectations are relaxed.
+
+The framework-completion regression in the PTY helper test executes real child
+processes: a silent Swift Testing test longer than the cleanup allowance must
+reach its native success/failure exit, active silence must reach the existing idle
+deadline, and completed-run chatter must still time out. Test-only `6d25320ae`
+failed the exact-head workflow guard (run `38283073852`, job `114924791841`)
+by killing an active Swift Testing run with exit 124. Local subprocess verification
+passes with phase-aware cleanup; full native app-host completion remains subject
+to the separately tracked suite failures.
