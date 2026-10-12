@@ -487,6 +487,8 @@
 		B4245003000000000000PW01 /* BrowserPrewarmedWebViewPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4245004000000000000PW01 /* BrowserPrewarmedWebViewPool.swift */; };
 		B6585001B6585001B658PW01 /* BrowserPrewarmedWebViewPoolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6585002B6585002B658PW02 /* BrowserPrewarmedWebViewPoolTests.swift */; };
 		7B5F1A2E9C0D4B6A8E217304 /* BrowserReliabilityRegressionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5F1A2E9C0D4B6A8E217303 /* BrowserReliabilityRegressionUITests.swift */; };
+		12E6C748D4B3360A1F943193 /* BrowserRemoteStoreFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DE536D7D98EFD0388659FF /* BrowserRemoteStoreFixture.swift */; };
+		63A58D33579D61A06BE184A0 /* BrowserRemoteStoreScopeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D25ADA5410B1A70A0FFC090 /* BrowserRemoteStoreScopeTests.swift */; };
 		BFBAC1A77CEE7A2DF91DA02C /* BrowserRemoteWorkspaceStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 109D0E38E29A8779FA0BAE82 /* BrowserRemoteWorkspaceStatus.swift */; };
 		4472A0014472A0014472A001 /* BrowserScreenshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4472B0014472B0014472B001 /* BrowserScreenshot.swift */; };
 		4472A0024472A0024472A002 /* BrowserScreenshotPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4472B0024472B0024472B002 /* BrowserScreenshotPipeline.swift */; };
@@ -2373,6 +2375,8 @@
 		B4245004000000000000PW01 /* BrowserPrewarmedWebViewPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserPrewarmedWebViewPool.swift; sourceTree = "<group>"; };
 		B6585002B6585002B658PW02 /* BrowserPrewarmedWebViewPoolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserPrewarmedWebViewPoolTests.swift; sourceTree = "<group>"; };
 		7B5F1A2E9C0D4B6A8E217303 /* BrowserReliabilityRegressionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserReliabilityRegressionUITests.swift; sourceTree = "<group>"; };
+		A3DE536D7D98EFD0388659FF /* BrowserRemoteStoreFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserRemoteStoreFixture.swift; sourceTree = "<group>"; };
+		6D25ADA5410B1A70A0FFC090 /* BrowserRemoteStoreScopeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserRemoteStoreScopeTests.swift; sourceTree = "<group>"; };
 		109D0E38E29A8779FA0BAE82 /* BrowserRemoteWorkspaceStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserRemoteWorkspaceStatus.swift; sourceTree = "<group>"; };
 		4472B0014472B0014472B001 /* BrowserScreenshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserScreenshot.swift; sourceTree = "<group>"; };
 		4472B0024472B0024472B002 /* BrowserScreenshotPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserScreenshotPipeline.swift; sourceTree = "<group>"; };
@@ -5206,6 +5210,8 @@
 				F54100B1A1B2C3D4E5F60718 /* RestorableCodexForkTagTests.swift */,
 				F5410007A1B2C3D4E5F60718 /* RestorableAgentSessionIndexTests.swift */,
 				F54100A1A1B2C3D4E5F60718 /* RestorableAgentSessionStalePIDTests.swift */,
+				6D25ADA5410B1A70A0FFC090 /* BrowserRemoteStoreScopeTests.swift */,
+				A3DE536D7D98EFD0388659FF /* BrowserRemoteStoreFixture.swift */,
 				F5300001A1B2C3D4E5F60718 /* RovoDevSessionIndexTests.swift */,
 				3865B0043865B0043865B004 /* SearchIndexTests.swift */,
 				F5300003A1B2C3D4E5F60718 /* RovoDevTranscriptPreviewTests.swift */,
@@ -7555,6 +7561,8 @@
 				C42660040000000000000001 /* BrowserPDFPreviewActionRegressionTests.swift in Sources */,
 				C42660050000000000000001 /* BrowserPDFPreviewActionUnitTests.swift in Sources */,
 				B6585001B6585001B658PW01 /* BrowserPrewarmedWebViewPoolTests.swift in Sources */,
+					12E6C748D4B3360A1F943193 /* BrowserRemoteStoreFixture.swift in Sources */,
+					63A58D33579D61A06BE184A0 /* BrowserRemoteStoreScopeTests.swift in Sources */,
 				C2035A060000000000000001 /* BrowserSSLTrustBypassStateTests.swift in Sources */,
 				C7B800062D4202A13C962D2D /* BrowserSystemProxyMirrorTests.swift in Sources */,
 				C0DE49870000000000000001 /* BrowserWebContentProcessTests.swift in Sources */,
