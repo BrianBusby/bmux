@@ -1376,3 +1376,9 @@ cleanup. All 19 PTY cases, 51 wrapper scenarios and strict determinism pass loca
 a start-only normalization control fails the completion case as expected.
 Independent review found no blocker. The final corrected-head workflow guard
 and combined native full suite remain CI gates. No application source changed.
+
+Actual final reporting guard is now green: run 38285593460, job 114933074554,
+records the executable helper pass, four wrapper tests and zero strict-determinism
+findings. The ANSI review thread was replied to with this evidence and resolved.
+Combined matte native CI and the separately authorized broader maintenance PRs
+remain open gates; no full-suite green or merge is claimed.
