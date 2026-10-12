@@ -5922,3 +5922,8 @@ caveats:
     title: Right sidebar shortcut fixture repair passes local flag-state coverage; focused app-host CI verification remains pending
     status: open
     owner: bmux
+
+  - id: ssh_startup_lifecycle_focused_gate_verification
+    title: CI app-host Option/Alt step now selects ten SSH startup lifecycle cases; native baseline passes and pushed-head CI remains pending
+    status: open
+    owner: bmux

@@ -586,3 +586,39 @@ passed. Removing only beta setup reproduced failures in the same three test
 families. A seeded preservation probe also verified exact effective, persistent,
 and registered defaults, store identity, and owned-directory cleanup. These
 results do not establish that the broader app-host suite is green.
+
+## SSH startup lifecycle fixture repair (2026-10-12)
+
+The ten existing signal, retry, stdin and control-socket lifecycle checks now
+exercise the maintained CLI protocol. `vm ssh` requests `vm.ssh_info` with only
+`id`; it no longer requests `vm.attach_info` with `require_daemon`. Workspace
+creation replies also include the created `surface_id`, as the real endpoint
+does. The old fixture rejected the first request or forced terminal discovery
+and rollback before reaching the behavior under test. Test bodies and expected
+lifecycle behavior are unchanged; no production code changes.
+
+Ownership stays in the existing mock helpers in
+`bmuxTests/SSHStartupSignalLifecycleTests.swift`. The actual CLI remains the
+boundary under test. Applicable rules: `AGENTS.md`, `skills/bmux-testing/`,
+`skills/bmux-shared-behavior/`, and the continuous-code-quality skill. The
+maintained request/response owners are `BMUXCLI.vmOpenShell` / `runSSHWithOptions`
+and the workspace-create socket handler. Only the shared fixture helpers change;
+untouched legacy XCTest methods are not bulk-migrated.
+
+Native execution against the unchanged approved build 773 CLI passes all ten
+checks (12.59 seconds). `/tmp/ssh-startup-lifecycle-green.log` retains the result;
+`/tmp/ssh-startup-native-compile.log` records the existing redundant Void discard
+warning in shared `CLINotifyProcessTestSupport.swift:54`, outside this patch.
+A protocol negative control reproduces the old unexpected `vm.ssh_info` failure.
+The existing Option/Alt app-host invocation includes these ten explicit selectors
+without another runner. Actual focused CI and the broader suite remain pending.
+No shipped UI, CLI help text, or localized message keys change.
+
+The separate manual-reconnect fixture has the same stale request, but correcting
+it exposes a real integration gap: its shell prompt cannot invoke the current
+workspace respawn owner. That test and production repair are deliberately outside
+this fixture-only PR; their failures remain unresolved, not waived.
+
+The expanded ten-case focused gate is recorded in Project Truth as
+`ssh_startup_lifecycle_focused_gate_verification`, open until pushed-head app-host
+CI confirms the corrected fixtures. Local native success does not close it.

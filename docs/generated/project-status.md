@@ -145,6 +145,7 @@ Regenerate with: ./scripts/project-docs generate
 | Browser legacy theme startup migration focused gate awaits fixed app-host CI (`browser_legacy_theme_startup_migration_verification`) | Bmux | open |  |
 | Focused browser app-host gate includes background compositing tests; local native cases pass and pushed-head CI remains pending (`browser_background_compositing_focused_gate_verification`) | Bmux | open |  |
 | Right sidebar shortcut fixture repair passes local flag-state coverage; focused app-host CI verification remains pending (`right_sidebar_shortcut_fixture_app_host_verification`) | Bmux | open |  |
+| CI app-host Option/Alt step now selects ten SSH startup lifecycle cases; native baseline passes and pushed-head CI remains pending (`ssh_startup_lifecycle_focused_gate_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
