@@ -659,3 +659,57 @@ A temporary negative control restoring the obsolete send-text mock fails all
 three cases. Actual app-host CI and combined full-suite validation remain
 pending under the canonical/local focused-gate caveat. Localization audit: no
 shipped strings or catalogs change; contributor verification notes only.
+## Native test result reporting
+
+The macOS unit-test steps in `ci.yml`, `ci-macos-compat.yml`, `test-depot.yml`
+and `tmux-corpus.yml` preserve the native runner's exit status. A zero exit is
+success; assertion failures, crashes and timeouts remain failures. Pipelines
+use `pipefail` so a failed log writer also fails the step. Existing bounded
+SwiftPM dependency retries remain; the final attempt determines the result.
+
+`xcodebuild_noninteractive.py` owns PTY output, crash-prompt dismissal and timeout
+cleanup. Only an actual child exit of zero establishes success. A post-test
+watchdog timeout returns 125 after a failed Selected-tests summary, otherwise
+124. A passed XCTest summary can precede Swift Testing and cannot establish
+completion. The cleanup deadline starts at the Selected-tests summary, suspends
+when a fresh Swift Testing run (or restarted XCTest run) starts, and restarts at
+the final framework summary. Lifecycle lines are consumed once, including lines
+split across PTY reads. ANSI SGR styling is removed only from parser input, so
+colored Swift Testing glyphs preserve the same lifecycle handling while stdout
+and saved logs retain their original bytes. Unrelated app output cannot extend cleanup. A failed
+Selected-tests result remains recorded across later successful restart summaries.
+During active tests, the existing general output-idle watchdog and native test/job
+time limits apply, so an individual test may legitimately exceed the cleanup
+allowance. A noisy active test remains bounded by the native test/job limits.
+Even a printed `TEST SUCCEEDED` marker cannot override a timeout.
+The app-host wrapper retains its existing retry budget. The separately scoped
+strict zero-failure cleanup fallback in `test-ios.yml` is unchanged.
+
+Ordinary XCTest assertions can produce `(0 unexpected)` in summaries. Earlier
+workflows treated that text as success even with failed assertions; their green
+job statuses are not evidence of a clean app-host suite. `native_app_host_full_suite_failures`
+in Project Truth remains open until real failures are separately triaged.
+
+`tests/test_ci_xcodebuild_exit_reporting.py` executes all four workflow shell
+steps in isolated subprocess sandboxes with controlled native-runner outcomes.
+It verifies failure/signal/timeout propagation, misleading later zero-test
+summaries, successful expected-failure runs, bounded retries and log-writer
+failures. Native PTY tests execute real child processes, including incomplete
+XCTest/Swift Testing runs and timeouts; no app or GUI is launched.
+
+The test-only commit `6f46d5f22` failed the actual Linux guard with 40 assertions
+([run38152397961](https://github.com/BrianBusby/bmux/actions/runs/38152397961/job/114508355015)).
+The reporting fix passes the focused workflow and native-runner tests locally.
+Final CI and broad app-host results remain verification gates, not assumptions.
+This work follows root AGENTS, continuous-code-quality, bmux-testing and
+bmux-shared-behavior: workflow steps own pipeline status; the existing shared
+runner owns process lifecycle; no app test expectations are relaxed.
+
+The framework-completion regression in the PTY helper test executes real child
+processes: a silent Swift Testing test longer than the cleanup allowance must
+reach its native success/failure exit, active silence must reach the existing idle
+deadline, and completed-run chatter must still time out. Test-only `6d25320ae`
+failed the exact-head workflow guard (run `38283073852`, job `114924791841`)
+by killing an active Swift Testing run with exit 124. Local subprocess verification
+passes with phase-aware cleanup; full native app-host completion remains subject
+to the separately tracked suite failures.

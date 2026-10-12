@@ -212,3 +212,5 @@ local_caveats:
     status: open
   - id: respawn_window_protocol_fixture_focused_gate_verification
     status: open
+  - id: native_app_host_full_suite_failures
+    status: open

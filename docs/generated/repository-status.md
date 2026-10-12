@@ -190,3 +190,4 @@ Repository: `BrianBusby/bmux`
 | `agent_launch_environment_fixture_focused_gate_verification` | open |
 | `codex_monitor_lease_fixture_verification` | open |
 | `respawn_window_protocol_fixture_focused_gate_verification` | open |
+| `native_app_host_full_suite_failures` | open |
