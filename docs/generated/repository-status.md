@@ -156,6 +156,7 @@ Repository: `BrianBusby/bmux`
 | --- | --- |
 | `native_app_host_full_suite_failures` | open |
 | `ssh_cleanup_error_idempotency_verification` | open |
+| `claude_notification_target_fixture_verification` | open |
 | `configured_codex_placeholder_startup_dogfood` | open |
 | `codex_update_workspace_exit_native_dogfood` | open |
 | `expanded_prior_turn_system_appearance_contrast` | monitoring |

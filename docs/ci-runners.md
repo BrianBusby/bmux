@@ -650,3 +650,80 @@ Rules: `AGENTS.md`, continuous-code-quality, `skills/bmux-architecture/` and
 `skills/bmux-testing/`. Complete initializer, state projection, visibility and
 socket payload callers are the review boundary. Existing discard/restore and
 WebKit portal failures remain separate unresolved gates. No shipped text changes.
+
+## Claude notification target fixture maintenance
+
+Two baseline failures were stale status expectations, not wrong-target mutations:
+`testClaudeNotificationFallsBackToLiveWorkspaceInsteadOfFocusedTab` and
+`testClaudeNotificationHonorsExplicitWorkspaceHandleRef` in
+`CLINotifyClaudeHookWorkspaceRoutingTests.swift`. Baseline logs
+`/tmp/matte-base-apphost2.log` (2026-10-10 18:07:09Z) and
+`/tmp/matte-base-apphost3.log` (18:01:58Z) show the correct target workspace/surface,
+but `Idle` instead of the old expected `Needs input`.
+
+Commit `f62cae83f` deliberately stopped treating generic Claude notification
+heartbeats as blocked input. The maintained `classifyClaudeNotification` and
+notification lifecycle owner keep plain heartbeats idle while explicit permission
+prompts remain `Needs input`. The repaired fixtures retain the original generic
+payload and add a permission payload to each of the same two routing scenarios.
+Both status and notification must address the exact target workspace and surface;
+stale and focused workspaces remain forbidden mutation targets.
+
+The two routing methods migrate to `ClaudeNotificationTargetTests` (Swift Testing).
+`ClaudeNotificationTargetFixture` owns each short temporary root, state file,
+input/output files and isolated process environment. The shared `CLISocketFixture`
+is byte-identical to the SSH cleanup maintenance fixture, with the same project
+identity for later integration. Its native readiness stream joins descriptor
+cancellation before removing files. The responder drains id-less `feed.push`
+telemetry without replying, matching the production frame at `CLI/bmux.swift`.
+Unexpected command mutations fail the test. No app or CLI production code changes.
+
+Evidence against unchanged tagged build 773:
+
+- The original `Needs input` expectation reproduces exactly two failures, one
+  per generic-heartbeat routing case; permission variants and original forbidden
+  target assertions pass. `/tmp/claude-target-native-old-expectation.log` preserves
+  actual command traces.
+- Corrected expectations pass all four payload/routing combinations in two test
+  functions. `/tmp/claude-target-native-green.log`; compilation is warning-free.
+- A separate temporary misrouting control redirects resolution to the focused
+  workspace to verify the exact-target and forbidden-target assertions remain
+  effective: all four combinations fail their exact-target and forbidden-target
+  assertions (12 issues), `/tmp/claude-target-misroute.log`. The checked-in fixture
+  is unchanged by this control.
+
+The dedicated `ClaudeNotificationStatusLifecycleTests` now reuses the same async
+fixture with an explicit agent PID and caller workspace/surface configuration.
+Its heartbeat case expects `Idle`; its permission case expects `Needs input`.
+Both require exactly one status with the exact target and PID, plus the matching
+lifecycle command. The fixture reports an empty process inventory for the CLI's
+PID lookup, leaving the explicit caller IDs responsible for routing. The original
+four routing cases and their forbidden stale/focused target assertions remain.
+
+The old lifecycle harness used blocking process/semaphore waits and a socket
+responder that acknowledged even id-less telemetry; retained full-suite evidence
+in `/tmp/matte-stage5-apphost4.log` (2026-10-11 05:44:39Z, lines 199587–199594)
+records a socket wait timeout, process status 15 and missing status. Reusing the
+joined async socket and owned-file capture removes those fixture paths without
+increasing the five-second process deadline. This local proof does not establish
+the cause of every historical full-suite timeout.
+
+On unchanged build 773, the temporary old heartbeat expectation fails exactly
+once with `Idle` and `--pid=42424` in the actual command; permission and all four
+routing controls pass (`/tmp/claude-pid-native-old-expectation.log`). Corrected
+source passes six parallel cases across three test functions in two suites
+(`/tmp/claude-pid-native-green.log`), with warning-free native compilation. This
+verifies PID metadata required by stale sweeping; it does not run the sweep or
+claim full app-host execution.
+
+The existing app-host shard 2 now runs both suites explicitly before broad legacy
+tests. Actual focused app-host CI and broader suite results remain pending;
+Project Truth caveat `claude_notification_target_fixture_verification` stays open.
+No reload or app launch is needed for this test-only correction.
+
+Guidance applied: root/personal AGENTS, continuous-code-quality,
+bmux-testing (incremental Swift Testing, behavioral coverage, wiring and native
+versus CI proof), architecture (file ownership and concurrency), shared-behavior,
+socket-policy and dev-workflow. Independent review found no blocker. Localization
+audit: test data and contributor diagnostics only; no shipped wording or catalogs
+changed. The legacy ambiguous-TTY and active-pointer tests remain untouched.
