@@ -609,7 +609,8 @@ jobs:
             -disableAutomaticPackageResolution \
             -destination "platform=macOS" \
             BMUX_SKIP_ZIG_BUILD=1 \
-            -only-testing:bmuxTests/SSHCleanupErrorTests test
+            -only-testing:bmuxTests/SSHCleanupErrorTests \
+            -only-testing:bmuxTests/RemotePTYErrorPolicyTests test
 
       - name: Run unit tests
         run: |
