@@ -162,3 +162,42 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+
+### SSH PTY bridge lifecycle fixtures
+
+Four legacy CLI tests expected an initial resize before every bridge EOF/reset,
+but their mock accepted only one RPC connection. Since `643906256`, resize uses
+an independent bounded connection and pending resize may be cancelled by EOF.
+The baseline app-host logs fail only that method-array expectation; the exit,
+error, detach and local attach-end assertions pass.
+
+`SSHPTYLifecycleContractTests` migrates those four methods to sixteen real-CLI
+cases: running session, gone session, absent surface and reset, each with a pipe
+(80×24) or PTY (132×43), and immediate or resize-acknowledged bridge closure.
+Immediate closure preserves the exact lifecycle sequence and validates any
+resize that wins cancellation. The second path closes only after the RPC mock
+writes the complete resize reply and requires exactly one resize with the exact
+workspace/session/attachment/token/dimensions before session reconciliation.
+Running sessions still return 254 and detach; gone/reset sessions return zero
+and clear the local surface; absent surfaces never detach or clear one.
+
+Ownership follows `AGENTS.md`, the continuous-code-quality skill, bmux testing
+migration/behavior/local-vs-CI references, architecture concurrency/file rules,
+and socket focus policy. The maintained `643906256` adjacent cleanup test and
+`CLISSHPTYResizeInputTests` establish the separate connection and native PTY
+contracts. The shared `CLISocketFixture` retains its reviewed transport and
+adds an optional response-written AsyncStream signal; the bridge and output
+channel own and join their native readiness sources. These tests use only
+owned loopback sockets, temporary homes, subprocesses and descriptors. No
+production or renderer behavior changes, global settings, app launches or
+new user-facing copy are involved.
+
+Local native compilation against unchanged build 773 is warning-free; all
+sixteen cases pass. A transport negative control suppressing resize requests
+fails all eight acknowledgement-gated cases at the bounded process deadline,
+while the eight immediate-close cases still pass. This demonstrates that
+accepting cancellation does not remove positive resize coverage. The focused
+browser-proxy app-host invocation includes this suite. Actual app-host CI
+execution remains pending under `ssh_pty_lifecycle_fixture_verification`;
+these local results do not establish full-suite acceptance.
