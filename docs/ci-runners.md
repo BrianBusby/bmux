@@ -718,6 +718,9 @@ to the separately tracked suite failures.
 ### Consolidated agent session fixtures review boundary
 
 This branch consolidates #146, #152, #157, #159, #162, #165, #166, preserving each published source commit in
+### Consolidated ssh transport fixtures review boundary
+
+This branch consolidates #150, #160, #164, #167, #168, preserving each published source commit in
 its ancestry. Original branches remain available; superseded pull requests
 link to their replacement. This changes review organization, not application
 behavior. The preserved source heads are:
@@ -729,6 +732,11 @@ behavior. The preserved source heads are:
 - #162: `90503d88c5f4cb0f69745dfb6b886755fe3ece12`
 - #165: `34f10e69b8fc9b554014ff830d775648dc0cb368`
 - #166: `971a35dfc91986d943ca74a8485139c7f31d8ae7`
+- #150: `cf9e78dcb5df8dbc4dbadd82df673492ad33cbdf`
+- #160: `d58ea8aaa63284b48302763446964f74cbd94524`
+- #164: `d10e0deaa2e8d34e6f2f17057f43dd8a3d3021b5`
+- #167: `0d1223d04ad3f65f95c280d8d60050f11b808a21`
+- #168: `a289576a0c25890594493b489e43b8a0047c89cb`
 
 The native-settings and SSH replacement PRs depend on #142 for authoritative
 CI exit reporting. The agent-session replacement stacks on SSH to share one
