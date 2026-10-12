@@ -5887,3 +5887,8 @@ caveats:
     issue:
       repository: BrianBusby/bmux
       number: 8
+
+  - id: claude_session_end_scope_focused_gate_verification
+    title: Claude replaced-session cleanup fixture focused gate awaits app-host CI
+    status: open
+    owner: bmux
