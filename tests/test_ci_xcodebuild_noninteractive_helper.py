@@ -30,16 +30,21 @@ def check_test_progress_watchdog() -> None:
         child = textwrap.dedent(f"""
             import os, sys, time
             print("Test Suite 'Selected tests' passed at now", flush=True)
-            print("◇ Test run started.", flush=True)
+            start = "◇ Test run started.\\n".encode()
+            os.write(1, start[:1])
+            time.sleep(0.02)
+            os.write(1, start[1:])
             time.sleep(0.6)
             for index in range(10):
                 print(f"◇ Test case passing 1 argument value → {{index}} to example(value:) started.", flush=True)
                 time.sleep(0.08)
                 print(f"✔ Test example(value:) passed after 0.08 seconds.", flush=True)
             # Real PTY reads may split a lifecycle line, including UTF-8 glyphs.
-            summary = "{'✔' if status == 0 else '✘'} Test run with 10 tests {'passed' if status == 0 else 'failed'} after 0.8 seconds.\\n".encode()
+            summary = "{'✔' if status == 0 else '✘'} Test run with 10 tests{' in 1 suite' if status == 0 else ''} {'passed' if status == 0 else 'failed'} after 0.8 seconds.\\n".encode()
             os.write(1, summary[:1])
+            time.sleep(0.02)
             os.write(1, summary[1:19])
+            time.sleep(0.02)
             os.write(1, summary[19:])
             raise SystemExit({status})
         """)
@@ -53,16 +58,36 @@ def check_test_progress_watchdog() -> None:
         )
         assert "Test run with 10 tests" in result.stdout
 
+    # xcodebuild may restart an XCTest host after an unexpected exit. Its active
+    # work must not inherit the previous host's cleanup deadline either.
+    child = textwrap.dedent("""
+        import time
+        print("Test Suite 'Selected tests' failed at previous", flush=True)
+        print("Test Suite 'Selected tests' started at restarted", flush=True)
+        time.sleep(0.6)
+        print("Test Suite 'Selected tests' passed at finished", flush=True)
+        raise SystemExit(65)
+    """)
+    result = subprocess.run(
+        [sys.executable, str(HELPER), sys.executable, "-c", child],
+        cwd=ROOT, text=True, capture_output=True, timeout=5, env=env,
+    )
+    assert result.returncode == 65, result.stdout + result.stderr
+
     # Later passed summaries must not erase a prior failure, including restarts.
     # A completed run marker followed by chatter must not be repeatedly rediscovered
     # in the rolling buffer and keep stalled cleanup alive.
     for failed_summary in [False, True]:
         child = textwrap.dedent(f"""
-            import time
+            import os, time
             print("Test Suite 'Selected tests' {'failed' if failed_summary else 'passed'} at now", flush=True)
-            print("◇ Test run started.", flush=True)
-            print("✔ Test run with 1 test passed after 0.01 seconds.", flush=True)
+            print("Test Suite 'Selected tests' started at later", flush=True)
             print("Test Suite 'Selected tests' passed at later", flush=True)
+            print("◇ Test run started.", flush=True)
+            summary = "✔ Test run with 1 test passed after 0.01 seconds.\\n".encode()
+            os.write(1, summary[:1])
+            time.sleep(0.02)
+            os.write(1, summary[1:])
             for _ in range(40):
                 print("unrelated app diagnostic", flush=True)
                 time.sleep(0.05)

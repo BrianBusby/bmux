@@ -17,6 +17,11 @@ SWIFT_CRASH_PROMPT = b"Press space to interact, D to debug, or any other key to 
 TIMEOUT_EXIT_CODE = 124
 POST_TEST_FAILED_EXIT_CODE = 125
 SELECTED_TESTS_DONE_RE = re.compile(rb"Test Suite 'Selected tests' (passed|failed) at ")
+SELECTED_TESTS_STARTED = b"Test Suite 'Selected tests' started at "
+SWIFT_TESTING_STARTED = "◇ Test run started.".encode()
+SWIFT_TESTING_DONE_RE = re.compile(
+    r"[✔✘] Test run with \d+ tests?(?: in \d+ suites?)? (?:passed|failed)\b".encode()
+)
 
 
 def child_exit_code(status: int) -> int:
@@ -129,7 +134,7 @@ def main() -> int:
     post_test_timeout = post_test_timeout_seconds()
     deadline = time.monotonic() + timeout if timeout else None
     post_test_deadline: float | None = None
-    selected_tests_result: str | None = None
+    selected_tests_failed = False
     log_path = os.environ.get("BMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH")
     log_file: BinaryIO | None = None
     if log_path:
@@ -164,6 +169,7 @@ def main() -> int:
         os.execvp(sys.argv[1], sys.argv[1:])
 
     prompt_window = b""
+    pending_line = b""
     timed_out = False
     post_test_timed_out = False
     while True:
@@ -201,10 +207,22 @@ def main() -> int:
         if timeout:
             deadline = time.monotonic() + timeout
         prompt_window = (prompt_window + chunk)[-4096:]
-        selected_match = SELECTED_TESTS_DONE_RE.search(prompt_window)
-        if post_test_timeout and selected_match and post_test_deadline is None:
-            selected_tests_result = selected_match.group(1).decode("ascii")
-            post_test_deadline = time.monotonic() + post_test_timeout
+        # XCTest's Selected-tests summary precedes Swift Testing. The cleanup
+        # watchdog applies between frameworks and after completion, never while
+        # a framework is executing; the general idle watchdog still applies.
+        # Consume complete lines once so noise cannot rediscover old markers.
+        lines = (pending_line + chunk).split(b"\n")
+        pending_line = lines.pop()[-4096:]
+        for line in lines:
+            selected_match = SELECTED_TESTS_DONE_RE.search(line)
+            if selected_match:
+                selected_tests_failed |= selected_match.group(1) == b"failed"
+                if post_test_timeout:
+                    post_test_deadline = time.monotonic() + post_test_timeout
+            elif SELECTED_TESTS_STARTED in line or SWIFT_TESTING_STARTED in line:
+                post_test_deadline = None
+            elif post_test_timeout and SWIFT_TESTING_DONE_RE.search(line):
+                post_test_deadline = time.monotonic() + post_test_timeout
         if SWIFT_CRASH_PROMPT in prompt_window:
             # The Swift crash backtracer asks for one key. Send q to choose the
             # noninteractive quit path and let xcodebuild continue reporting.
@@ -226,7 +244,7 @@ def main() -> int:
         assert post_test_timeout is not None
         message = (
             f"Post-test timed out after {post_test_timeout:g}s; terminating "
-            f"xcodebuild after terminal XCTest summary"
+            f"xcodebuild after test framework completion"
         )
         print(message, file=sys.stderr)
         if log_file is not None:
@@ -235,7 +253,7 @@ def main() -> int:
         terminate_child(pid)
         # XCTest may finish before Swift Testing. Even a success marker cannot
         # establish the native process result when the runner must kill it.
-        if selected_tests_result == "failed":
+        if selected_tests_failed:
             return POST_TEST_FAILED_EXIT_CODE
         return TIMEOUT_EXIT_CODE
 
