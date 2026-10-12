@@ -597,6 +597,34 @@ jobs:
             -only-testing:bmuxTests/GhosttyOptionAsAltModsTests \
             test
 
+      - name: Verify bundled CLI artifact and native test
+        if: ${{ matrix.shard == 3 }}
+        run: |
+          set -euo pipefail
+          python3 tests/test_bundled_cli_artifact.py
+          scripts/ci/run-in-console-session.sh \
+            scripts/ci/run-app-host-xcodebuild.sh \
+            -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
+            -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
+            -clonedSourcePackagesDirPath "$PWD/.ci-source-packages" \
+            -disableAutomaticPackageResolution \
+            -destination "platform=macOS" \
+            BMUX_SKIP_ZIG_BUILD=1 \
+            -only-testing:bmuxTests/BundledCLILinkageTests test
+          python3 scripts/verify-bundled-cli.py \
+            "$BMUX_DERIVED_DATA_PATH/Build/Products/Debug/bmux DEV.app" \
+            --archive "$RUNNER_TEMP/bmux-cli-debug.tar.gz"
+          du -h "$RUNNER_TEMP/bmux-cli-debug.tar.gz"
+
+      - name: Upload Debug CLI dependency closure
+        if: ${{ matrix.shard == 3 }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: bmux-cli-debug
+          path: ${{ runner.temp }}/bmux-cli-debug.tar.gz
+          if-no-files-found: error
+          retention-days: 3
+
       - name: Run unit tests
         run: |
           set -euo pipefail
@@ -1606,6 +1634,49 @@ jobs:
           lipo "$HELPER_BINARY" -verify_arch arm64 x86_64
           [[ "$SDK_VERSION" == 26.* ]]
 
+      - name: Verify and archive unsigned Release CLI
+        run: |
+          set -euo pipefail
+          python3 scripts/verify-bundled-cli.py \
+            build-universal/Build/Products/Release/bmux.app \
+            --archive "$RUNNER_TEMP/bmux-cli-release.tar.gz"
+          du -h "$RUNNER_TEMP/bmux-cli-release.tar.gz"
+
+      - name: Upload Release CLI dependency closure
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: bmux-cli-release
+          path: ${{ runner.temp }}/bmux-cli-release.tar.gz
+          if-no-files-found: error
+          retention-days: 3
+
+  bundled-cli-artifacts:
+    needs: [changes, app-host-unit-tests, release-build]
+    # Consume uploaded artifacts even if later, unrelated app-host tests fail.
+    if: ${{ !cancelled() && needs.changes.result == 'success' && needs.changes.outputs.macos == 'true' }}
+    runs-on: ${{ vars.MACOS_RUNNER_26 || 'blacksmith-6vcpu-macos-26' }}
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Download unmodified CLI artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: bmux-cli-*
+          path: cli-artifacts
+          merge-multiple: true
+
+      - name: Verify relocated Debug and Release artifacts without builder paths
+        run: |
+          set -euo pipefail
+          for configuration in debug release; do
+            mkdir "cli-artifacts/$configuration"
+            tar -xzf "cli-artifacts/bmux-cli-$configuration.tar.gz" -C "cli-artifacts/$configuration"
+            python3 scripts/verify-bundled-cli.py "cli-artifacts/$configuration/bmux.app" \
+              --require-absent-external-rpaths
+          done
+
   ci-status:
     needs:
       - changes
@@ -1621,6 +1692,7 @@ jobs:
       - agent-session-web-resources
       - tests-build-and-lag
       - release-build
+      - bundled-cli-artifacts
     if: ${{ always() }}
     runs-on: ${{ vars.LINUX_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }}
     steps:

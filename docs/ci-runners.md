@@ -217,3 +217,49 @@ failed the exact-head workflow guard (run `38283073852`, job `114924791841`)
 by killing an active Swift Testing run with exit 124. Local subprocess verification
 passes with phase-aware cleanup; full native app-host completion remains subject
 to the separately tracked suite failures.
+
+## Bundled CLI artifact verification
+
+The CLI is distributed inside the app (including the installed CLI symlink).
+Private dynamic frameworks are permitted only when their complete dependency
+closure is shipped at helper-visible bundle paths. The historical Sentry dyld
+regression must still fail; a blanket ban on every private `@rpath` framework
+also rejects valid Xcode app-host products.
+
+`scripts/verify-bundled-cli.py` is the shared artifact check used by
+`BundledCLILinkageTests`, the existing unsigned universal `release-build`, and
+`bundled-cli-artifacts`. It inspects every architecture's dependency closure,
+rejects private dependencies outside the app, verifies present CLI/framework
+signatures, copies that closure without changing executable bytes, and runs
+`--version` with a temporary home and no ambient socket or dyld environment.
+The final release signing script retains its separate deep/strict signed-app
+verification. Pre-sign Release CI legitimately permits unsigned objects; this
+check does not claim Developer ID or notarization verification.
+
+One app-host shard and the Release lane upload three-day artifacts containing
+only the CLI, Info.plist, and dependency frameworks. The separate macOS 26 job
+uses the existing `MACOS_RUNNER_26` routing and downloads both artifacts; it does
+not build an app. Before launching, it fails if any original external private
+runpath still exists. This explicit check matters even on a new job because
+self-hosted runners may reuse build directories. No source directory is renamed,
+no binary is patched or re-signed, and no running app is touched. `ci-status`
+requires this gate. A same-runner launch alone is not proof that dyld avoided a
+build-directory fallback.
+
+`tests/test_bundled_cli_artifact.py` builds small real Mach-O fixtures. It checks
+static and transitive dynamic relocation, preserved archived bytes, missing
+direct/transitive dependencies (including a live original-build fallback),
+missing architecture slices, invalid existing signatures, unsigned pre-sign inspection, native exit failure,
+missing CLI, and rejection of surviving original runpaths.
+
+Maintenance record: base `ce17e9888`, historical contract commits `d3695c102`
+and `915c01f9d`; retained baseline CI run `38072470965` shard 3 actually failed
+`testBundledCLIDoesNotDependOnPrivateRPathFrameworks` on six frameworks that the
+same build embedded and signed. This is the existing red evidence for correcting
+the fixture policy, rather than introducing another known-wrong assertion.
+Ownership follows AGENTS.md, continuous-code-quality, bmux-testing's executable
+artifact policy, bmux-architecture's test ownership rules, and the existing
+`sign-bmux-bundle.sh` signing lifecycle. No production linking policy changes.
+Local ten-case fixture verification and static build 773 relocation pass;
+its minimum archive is 16 MB. Actual dynamic app-host and unsigned Release
+artifact results, transfer size/time, and final CI remain pending.
