@@ -5905,4 +5905,8 @@ caveats:
     title: SSH agent environment fixture focused gate awaits app-host CI
     status: open
     owner: bmux
+  - id: ssh_pty_lifecycle_fixture_verification
+    title: SSH PTY closure and acknowledged-resize fixture verification
+    status: open
+    owner: bmux
 

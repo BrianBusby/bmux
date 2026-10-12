@@ -4,11 +4,13 @@ import Foundation
 /// Owns one test's socket lifetime; all capture state stays inside its I/O task.
 struct CLISocketFixture: Sendable {
     let path: String
+    var responseWritten: AsyncStream<String>.Continuation? = nil
     let response: @Sendable (String) throws -> String?
 
     func capture<T: Sendable>(
         operation: () async throws -> T
     ) async throws -> (result: T, commands: [String]) {
+        defer { responseWritten?.finish() }
         let listener = try bind()
         defer { unlink(path) }
         let (events, continuation) = AsyncStream<Int>.makeStream()
@@ -97,6 +99,7 @@ struct CLISocketFixture: Sendable {
                         commands.append(line)
                         if let response = try response(line) {
                             try await write(response + "\n", to: connection.descriptor)
+                            responseWritten?.yield(line)
                         }
                     }
                 }

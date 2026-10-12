@@ -9,7 +9,7 @@
 13398	Sources/Workspace.swift
 12350	bmuxTests/AppDelegateShortcutRoutingTests.swift
 11380	Sources/Panels/BrowserPanel.swift
-9619	bmuxTests/CLINotifyProcessIntegrationRegressionTests.swift
+9223	bmuxTests/CLINotifyProcessIntegrationRegressionTests.swift
 8016	CLI/bmux_open.swift
 7850	Sources/Panels/BrowserPanelView.swift
 7736	Packages/iOS/BmuxMobileShell/Sources/BmuxMobileShell/MobileShellComposite.swift
