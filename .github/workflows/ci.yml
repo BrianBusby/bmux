@@ -580,6 +580,7 @@ jobs:
             BMUX_SKIP_ZIG_BUILD=1 \
             -only-testing:bmuxTests/BrowserSystemProxyMirrorTests \
             -only-testing:bmuxTests/CloudAttachRetryContractTests \
+            -only-testing:bmuxTests/SSHWorkspaceCreationTests \
             test
 
       - name: Run Option/Alt sided-modifier regression

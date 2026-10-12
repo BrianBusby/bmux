@@ -140,6 +140,7 @@ Regenerate with: ./scripts/project-docs generate
 | Observability trace API boundary (`observability_trace_api`) | Provenance Engine | open |  |
 | GitHub Actions runner reliability (`github_actions_runner_reliability`) | Bmux | open | BrianBusby/bmux#8 |
 | CI app-host Option/Alt step selects nine SSH lifecycle tests plus managed attach cleanup fixture; pushed-head verification pending (`ssh_startup_lifecycle_focused_gate_verification`) | Bmux | open |  |
+| SSH workspace creation fixture focused gate awaits app-host CI (`ssh_workspace_creation_fixture_focused_gate_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

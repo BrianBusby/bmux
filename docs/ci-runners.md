@@ -268,3 +268,28 @@ error formatting, VMClient HTTP errors, the socket VM adapter and VM route error
 policy. Bare typed socket errors remain unsupported by the current classifier;
 no new typed socket contract or production classifier expansion is introduced.
 No shipped strings, localization catalogs, app settings or runtime files change.
+### SSH workspace creation fixture
+
+The legacy SSH creation test omitted the terminal surface ID from its
+`workspace.create` response and rejected `surface.list`. Persistent SSH PTY
+startup therefore correctly failed target resolution and attempted rollback,
+instead of reaching the configuration assertions. The fixture now represents
+the current create response. A second case exercises the supported fallback
+where an older create response omits the surface but `surface.list` supplies it.
+
+Both Swift Testing cases retain the original exit/output, ordered requests,
+window selection, SSH destination/port/identity/options, relay/auth metadata and
+nonempty startup-command assertions. Every other legacy test remains unchanged.
+No production code, terminal rendering, network service or running app changes.
+The fixture owns its process environment, state/output files and mock socket;
+the reviewed shared CLISocketFixture owns asynchronous transport and cleanup.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing and migration/wiring/
+local-vs-CI references, architecture file/API discipline and socket focus policy.
+The complete workspace create/resolve/configure/select/rollback owner was
+inspected. Both cases pass unchanged build 773 with warning-free focused
+compilation. A temporary negative control restoring the omitted surface and
+rejected lookup fails both cases on the original observable assertions.
+App-host CI and combined full-suite verification remain pending under the
+canonical/local focused-gate caveat. Localization audit: no shipped strings or
+catalogs change; contributor verification documentation only.
