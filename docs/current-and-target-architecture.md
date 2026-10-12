@@ -401,4 +401,6 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - GitHub Actions runner reliability (`github_actions_runner_reliability`) - owner: Bmux; status: open; issue: BrianBusby/bmux#8
 - Bundled CLI dynamic and Release artifact relocation verification (`bundled_cli_artifact_relocation_verification`) - owner: Bmux; status: open
 - Focused browser app-host gate includes discard policy tests; local native cases pass and pushed-head CI remains pending (`browser_discard_policy_focused_gate_verification`) - owner: Bmux; status: open
+- Codex Stop fixture repair passes 13 local scenarios; focused app-host CI verification remains pending (`codex_stop_fixture_app_host_verification`) - owner: Bmux; status: open
+- CommandRunner blocking pipe readers can exhaust the cooperative executor during parallel socket tests (`command_runner_parallel_pipe_capture`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
