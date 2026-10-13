@@ -138,6 +138,7 @@ Regenerate with: ./scripts/project-docs generate
 | Monorepo migration ledger pending dispositions (`monorepo_migration_ledger_pending_dispositions`) | Bmux | open |  |
 | Observability trace API boundary (`observability_trace_api`) | Provenance Engine | open |  |
 | GitHub Actions runner reliability (`github_actions_runner_reliability`) | Bmux | open | BrianBusby/bmux#8 |
+| Focused browser inspector window ownership and lifecycle observation cases await app-host verification (`browser_inspector_window_ownership_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

@@ -579,6 +579,7 @@ jobs:
             -destination "platform=macOS" \
             BMUX_SKIP_ZIG_BUILD=1 \
             -only-testing:bmuxTests/BrowserSystemProxyMirrorTests \
+            -only-testing:bmuxTests/BrowserInspectorWindowOwnershipTests \
             test
 
       - name: Run Option/Alt sided-modifier regression
