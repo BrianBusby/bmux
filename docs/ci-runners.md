@@ -851,3 +851,17 @@ only the resize acknowledgement event fails the eight acknowledgement cases and
 passes the eight immediate-close cases; diagnostics show the actual resize request,
 handshake and missing observation. That demonstrates diagnostic sensitivity, not
 that CI lost the same event. Actual CI traces and a causal correction remain required.
+
+Normal completion now drains the finished response-observation stream before
+finishing the bridge event stream. The sole caller joins and finishes its socket
+producer before returning; canceling the consumer first could discard queued
+observations from the diagnostic snapshot. Errors still cancel and join the
+consumer, so a throw before producer startup cannot hang cleanup. This preserves
+the existing bridge-close predicate and five-second CLI deadline. It guarantees
+only consumed or queued observations, not delivery of every kernel EOF event.
+
+All sixteen native CLI cases still pass, as do temporary finished-response and
+pre-producer-error cleanup controls, with warning-free Swift 6 compilation. The
+old race cannot be forced deterministically through the current fixture boundary
+without an artificial scheduling hook; no source-shape test or timing assumption
+was added. This diagnostic correction does not establish the CI timeout cause.
