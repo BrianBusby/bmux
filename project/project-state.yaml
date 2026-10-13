@@ -5918,7 +5918,7 @@ caveats:
     status: open
     owner: bmux
   - id: claude_notification_target_fixture_verification
-    title: Focused Claude notification target and PID lifecycle suites pending actual app-host verification
+    title: Claude notification full-suite process timeouts remain unresolved despite focused app-host completion
     status: open
     owner: bmux
   - id: resume_policy_execution_fixture_verification

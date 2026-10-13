@@ -406,7 +406,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - SSH PTY closure and acknowledged-resize fixture verification (`ssh_pty_lifecycle_fixture_verification`) - owner: Bmux; status: open
 - Codex Stop fixture repair passes 13 local scenarios; focused app-host CI verification remains pending (`codex_stop_fixture_app_host_verification`) - owner: Bmux; status: open
 - CommandRunner blocking pipe readers can exhaust the cooperative executor during parallel socket tests (`command_runner_parallel_pipe_capture`) - owner: Bmux; status: open
-- Focused Claude notification target and PID lifecycle suites pending actual app-host verification (`claude_notification_target_fixture_verification`) - owner: Bmux; status: open
+- Claude notification full-suite process timeouts remain unresolved despite focused app-host completion (`claude_notification_target_fixture_verification`) - owner: Bmux; status: open
 - Focused Hermes startup and stale-PID suites pending actual app-host verification (`resume_policy_execution_fixture_verification`) - owner: Bmux; status: open
 - Claude replaced-session cleanup fixture focused gate awaits app-host CI (`claude_session_end_scope_focused_gate_verification`) - owner: Bmux; status: open
 - Agent launch environment fixture focused gate awaits app-host CI (`agent_launch_environment_fixture_focused_gate_verification`) - owner: Bmux; status: open

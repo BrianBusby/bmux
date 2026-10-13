@@ -805,3 +805,24 @@ for diagnosis. No deadline or behavior expectation is relaxed. The combined
 warning-free compilation after these corrections. Broader app-host assertions,
 crashes and deadlines remain unresolved until new exact-head CI demonstrates
 completion. No application or terminal-engine code changes.
+
+
+### Notification timeout evidence on the replacement head
+
+Run 38416355276, job 115363087236, completed the focused Claude notification
+suite in 0.256 seconds. In the full Swift Testing wave, three of its four cases
+then failed the unchanged five-second process deadline; that suite took 19.129
+seconds. Many unrelated process tests timed out in the same wave. Earlier
+session-start failures occurred in a focused invocation, so broad concurrency
+alone is not an established explanation for both failures.
+
+Controlled native execution against unchanged build 773 passed the six launch
+and notification cases, the same cases alongside seven original caller/Sentry
+cases, and a MainActor caller control. These results do not reproduce the CI
+failure or justify changing scheduling, process ownership, or deadlines. The
+notification fixture now retains its owned request trace and output-file read
+results on timeout. All success-path assertions remain unchanged. Four actual
+notification cases pass locally; an owned fake child intentionally exceeding the
+existing deadline fails all four cases and reports both output markers. This is
+diagnostic coverage, not a timeout repair or a full-suite pass. No app behavior,
+user preferences, localization strings, or active app builds changed.
