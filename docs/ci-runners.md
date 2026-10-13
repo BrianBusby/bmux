@@ -472,10 +472,12 @@ source passes six parallel cases across three test functions in two suites
 verifies PID metadata required by stale sweeping; it does not run the sweep or
 claim full app-host execution.
 
-The existing app-host shard 2 now runs both suites explicitly before broad legacy
-tests. Actual focused app-host CI and broader suite results remain pending;
-Project Truth caveat `claude_notification_target_fixture_verification` stays open.
-No reload or app launch is needed for this test-only correction.
+The existing app-host shard 2 runs both suites explicitly before broad legacy
+tests. Run 38416355276, job 115363087236, completed the focused notification
+suite in 0.256 seconds; its broader execution subsequently hit process deadlines,
+as recorded below. Project Truth caveat
+`claude_notification_target_fixture_verification` stays open for those unresolved
+full-suite timeouts. No reload or app launch is needed for this test-only correction.
 
 Guidance applied: root/personal AGENTS, continuous-code-quality,
 bmux-testing (incremental Swift Testing, behavioral coverage, wiring and native
