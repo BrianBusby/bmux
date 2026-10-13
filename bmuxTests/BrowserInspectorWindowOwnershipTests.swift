@@ -137,10 +137,34 @@ struct BrowserInspectorWindowOwnershipTests {
         #expect(inspectorView.superview === sourceSlot, "The portal must not reparent WKInspector frontend views; WebKit owns their window/controller lifecycle")
     }
     @Test
-    func windowCloseClosesContainedBrowserInspectorBeforeWindowWillClose() {
+    func windowCloseClosesContainedBrowserInspectorBeforeWindowWillClose() throws {
         guard let appDelegate = AppDelegate.shared else {
             Issue.record("Expected AppDelegate.shared")
             return
+        }
+
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-inspector-window-close-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer {
+            do { try FileManager.default.removeItem(at: directory) }
+            catch { Issue.record(error) }
+        }
+        // XCTest disables browser runtime capabilities by default; opt in only for this close path.
+        let composition = BmuxAppRuntimeComposition(
+            configFileURL: directory.appendingPathComponent("bmux.json"),
+            secretBaseDirectory: directory.appendingPathComponent("secrets"),
+            bundleIdentifier: "com.bmux.tests.inspector-window-close",
+            runtimeConfiguration: .test(
+                enabledCapabilities: [.browserAndDevTools],
+                workProvenanceHomeDirectory: directory
+            )
+        )
+        let services = composition.makeRuntimeServices(workProvenanceRuntime: .disabledByComposition())
+        let previousServices = appDelegate.appRuntimeServices
+        defer {
+            services.stop()
+            appDelegate.appRuntimeServices = previousServices
         }
 
         let windowId = appDelegate.createMainWindow()
@@ -189,6 +213,7 @@ struct BrowserInspectorWindowOwnershipTests {
         }
         defer { NotificationCenter.default.removeObserver(observer) }
 
+        appDelegate.appRuntimeServices = services
         window.performClose(nil)
 
         #expect(closeCountObservedAtWillClose == 1)

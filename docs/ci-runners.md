@@ -537,6 +537,18 @@ Seven observation cases pass in an owned native harness with isolated HOME and
 app activation prohibited. This exercises the actual built lifecycle owner; it
 is not execution of the seventeen window/UI cases or full app-host coverage.
 
+The focused app-host job `115430721439` ran 71 test functions across nine suites
+and completed with exactly three issues in the window-close observer case: no
+inspector close before `willClose`, no close count, and retained visible state.
+XCTest composition disables `.browserAndDevTools`,
+so this case now installs an explicitly enabled, scoped runtime only for the
+synchronous close action and restores the original runtime after owned teardown.
+It starts no background services and retains every original assertion. An owned,
+offscreen control against the same built owner fails with the default disabled
+capability, still fails after responder-swizzle installation, and passes when only
+the browser capability is enabled. The actual main-window case still needs the
+next app-host run; this control does not claim that foreground UI verification.
+
 Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing migration,
 behavior and local/CI references, architecture ownership/file/concurrency rules,
 debugging runtime pitfalls, shared behavior and native project wiring. No shipped
