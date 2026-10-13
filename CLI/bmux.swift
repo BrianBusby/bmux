@@ -17328,8 +17328,8 @@ struct BMUXCLI {
         }
     }
 
-    private func currentWorkspaceId(windowHandle: String, client: SocketClient) throws -> String? {
-        let payload = try client.sendV2(method: "workspace.current", params: ["window_id": windowHandle])
+    private func currentWorkspaceId(windowHandle: String?, client: SocketClient) throws -> String? {
+        let payload = try client.sendV2(method: "workspace.current", params: windowHandle.map { ["window_id": $0] } ?? [:])
         let workspaceId = (payload["workspace_id"] as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard let workspaceId, !workspaceId.isEmpty else { return nil }
@@ -25562,7 +25562,10 @@ struct BMUXCLI {
         if let callerWorkspaceId = resolveCallerWorkspaceIdForClaudeHook(client: client) {
             return callerWorkspaceId
         }
-        return try resolveWorkspaceId(nil, client: client)
+        guard let current = try currentWorkspaceId(windowHandle: nil, client: client) else {
+            throw CLIError(message: String(localized: "cli.workspace.error.noSelection", defaultValue: "No workspace selected"))
+        }
+        return current
     }
 
     struct ClaudeHookResolvedSurface {

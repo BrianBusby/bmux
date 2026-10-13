@@ -81,6 +81,22 @@
         }
       }
     },
+    "cli.workspace.error.noSelection": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No workspace selected"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ワークスペースが選択されていません"
+          }
+        }
+      }
+    },
     "hybrid.fixture.inMotion": {
       "extractionState": "manual",
       "localizations": {

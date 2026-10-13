@@ -219,3 +219,4 @@ Repository: `BrianBusby/bmux`
 | `codex_monitor_lease_fixture_verification` | open |
 | `respawn_window_protocol_fixture_focused_gate_verification` | open |
 | `browser_deferred_initial_lifecycle_verification` | open |
+| `workspace_fallback_regression_verification` | open |

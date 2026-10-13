@@ -599,11 +599,8 @@ jobs:
             -only-testing:bmuxTests/SSHWorkspaceCreationTests \
             -only-testing:bmuxTests/SSHAgentEnvironmentTests \
             -only-testing:bmuxTests/SSHPTYLifecycleContractTests \
-            -only-testing:bmuxTests/HermesResumeExecutionTests \
-            -only-testing:bmuxTests/RestorableAgentSessionStalePIDTests \
-            -only-testing:bmuxTests/ClaudeSessionEndScopeTests \
-            -only-testing:bmuxTests/AgentLaunchEnvironmentTests \
             -only-testing:bmuxTests/RespawnWindowProtocolTests \
+            -only-testing:bmuxTests/WorkspaceFallbackContractTests \
             test
 
       - name: Run Option/Alt sided-modifier regression

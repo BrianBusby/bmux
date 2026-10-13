@@ -6002,3 +6002,7 @@ caveats:
     title: Respawn window protocol fixture focused gate awaits app-host CI
     status: open
     owner: bmux
+  - id: workspace_fallback_regression_verification
+    title: Workspace fallback regression test red and production fix verification pending
+    status: open
+    owner: bmux
