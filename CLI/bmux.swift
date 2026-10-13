@@ -25541,14 +25541,6 @@ struct BMUXCLI {
         return name.isEmpty ? String(path.suffix(30)) : name
     }
 
-    private func resolveSurfaceIdForClaudeHook(
-        _ raw: String?,
-        workspaceId: String,
-        client: SocketClient
-    ) throws -> String {
-        try resolveSurfaceIdAllowingFallback(raw, workspaceId: workspaceId, client: client)
-    }
-
     private func resolveWorkspaceIdAllowingFallback(
         _ raw: String?,
         client: SocketClient
