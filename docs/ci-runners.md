@@ -759,3 +759,28 @@ verification failures, not a green combined result. Compilation succeeded with
 a non-Sendable callback warning inherited from the unchanged PR150
 SSHExitedPTYClient fixture, whose callback crosses a legacy queue boundary. Prior isolated passes apply to their individual fixtures and artifacts;
 they do not establish combined-suite success; neither the warning nor the new combined failures is waived.
+
+
+### Consolidated socket cancellation follow-up
+
+The first replacement run completed all four app-host jobs with failures; the
+full-suite assertions and deadlines remain authoritative. The shared fixture
+error was reproduced locally with the same 22 test functions and 14 suites:
+operation-labelled diagnostics identified `EPIPE` when replying to a
+`workspace.remote.pty_resize` that the CLI canceled after bridge closure. The
+fixture now closes only that client connection, preserves the captured request,
+and emits no response-written acknowledgment for the canceled reply. Other
+write errors still fail. The eight resize-acknowledged cases and all lifecycle
+assertions are unchanged.
+
+The legacy RPC callback fixture now documents and narrows its immutable transfer
+to the protocol-supplied delivery queue, matching the existing subscription
+ownership contract. Swift 6 compilation is warning-free. The combined native
+batch passes against the existing build 773 artifact after the shared fix and
+the agent branch's duplicate-server removal. This is focused fixture evidence,
+not proof that all replacement-head app-host tests pass.
+
+Both inherited CI reporting capabilities are restored in Project Truth. The
+new exact-head checks remain required. Existing broad failures, including
+inspector crashes, terminal readiness assertions and a stale-control-socket
+process deadline, are not waived by the focused result.

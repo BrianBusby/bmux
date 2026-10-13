@@ -80,7 +80,7 @@ struct CLISocketFixture: Sendable {
                     }
                     continue
                 }
-                while true {
+                readConnection: while true {
                     var buffer = [UInt8](repeating: 0, count: 4096)
                     let count = Darwin.read(connection.descriptor, &buffer, buffer.count)
                     if count < 0, errno == EINTR { continue }
@@ -98,7 +98,12 @@ struct CLISocketFixture: Sendable {
                         pending[token]!.removeSubrange(...newline)
                         commands.append(line)
                         if let response = try response(line) {
-                            try await write(response + "\n", to: connection.descriptor)
+                            guard try await write(response + "\n", to: connection.descriptor) else {
+                                sources.removeValue(forKey: token)
+                                pending.removeValue(forKey: token)
+                                await close(connection.source, descriptor: connection.descriptor)
+                                break readConnection
+                            }
                             responseWritten?.yield(line)
                         }
                     }
@@ -151,7 +156,7 @@ struct CLISocketFixture: Sendable {
         }
     }
 
-    private func write(_ text: String, to descriptor: Int32) async throws {
+    private func write(_ text: String, to descriptor: Int32) async throws -> Bool {
         let bytes = Array(text.utf8)
         var offset = 0
         while offset < bytes.count {
@@ -163,8 +168,12 @@ struct CLISocketFixture: Sendable {
                 await writable(descriptor)
                 continue
             }
-            guard count > 0 else { throw POSIXError(.EIO) }
+            // A CLI can cancel an in-flight resize after its bridge closes. This is EOF for
+            // that connection, not an acknowledged response or a failure of the listener.
+            if count < 0, errno == EPIPE { return false }
+            guard count > 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
             offset += count
         }
+        return true
     }
 }
