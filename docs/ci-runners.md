@@ -482,3 +482,23 @@ Both inherited CI reporting capabilities are restored in Project Truth. The
 new exact-head checks remain required. Existing broad failures, including
 inspector crashes, terminal readiness assertions and a stale-control-socket
 process deadline, are not waived by the focused result.
+
+
+### Initial resize acknowledgement diagnosis
+
+Run 38415496749, focused app-host job 115360361616, completed 35 test functions
+in five suites with eight failures: every acknowledged-resize SSH PTY case hit
+its existing five-second process deadline. All eight immediate-close variants
+passed. This is a remaining failure after the earlier per-client EPIPE fix.
+The maintained CLI still requests its initial resize, using a single RPC with a
+50-millisecond deadline; failure of that request is a candidate, not an established
+cause. The run exposes no tested CLI artifact for an exact-binary local replay.
+
+The fixture now reports its owned requests, handshake, bridge completion, existing
+resize-observed/input-ended flags and output on failure. It adds no mutable state,
+retry, signal, deadline or scheduling change. Sixteen cases pass against unchanged
+build 773 with warning-free Swift 6 compilation. A temporary control suppressing
+only the resize acknowledgement event fails the eight acknowledgement cases and
+passes the eight immediate-close cases; diagnostics show the actual resize request,
+handshake and missing observation. That demonstrates diagnostic sensitivity, not
+that CI lost the same event. Actual CI traces and a causal correction remain required.

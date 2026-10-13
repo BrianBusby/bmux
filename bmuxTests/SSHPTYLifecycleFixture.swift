@@ -88,7 +88,12 @@ final class SSHPTYLifecycleFixture {
             }
         }
         let ((result, stdout), lines) = captured.result
-        try #require(!result.timedOut && result.executionError == nil, "CLI did not complete: \(result)")
+        if result.timedOut || result.executionError != nil {
+            // These traces and output files belong only to this test's transports and child.
+            let errors = Result { try String(contentsOf: stderr, encoding: .utf8) }
+            try #require(!result.timedOut && result.executionError == nil,
+                         "CLI did not complete: \(result); requests: \(lines); handshake: \(captured.handshake); resize acknowledgement observed: \(captured.resized); input ended: \(captured.inputEnded); bridge closed: \(captured.closed); stdout: \(stdout); stderr: \(errors)")
+        }
         let errors = try String(contentsOf: stderr, encoding: .utf8)
         #expect(result.exitStatus == (scenario == .running ? 254 : 0), "\(errors)")
         #expect(stdout.isEmpty, "\(stdout)")

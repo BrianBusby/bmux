@@ -142,7 +142,7 @@ Regenerate with: ./scripts/project-docs generate
 | CI app-host Option/Alt step selects nine SSH lifecycle tests plus managed attach cleanup fixture; pushed-head verification pending (`ssh_startup_lifecycle_focused_gate_verification`) | Bmux | open |  |
 | SSH workspace creation fixture focused gate awaits app-host CI (`ssh_workspace_creation_fixture_focused_gate_verification`) | Bmux | open |  |
 | SSH agent environment fixture focused gate awaits app-host CI (`ssh_agent_environment_fixture_focused_gate_verification`) | Bmux | open |  |
-| SSH PTY closure and acknowledged-resize fixture verification (`ssh_pty_lifecycle_fixture_verification`) | Bmux | open |  |
+| SSH PTY initial resize acknowledgement CI timeouts remain unresolved (`ssh_pty_lifecycle_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

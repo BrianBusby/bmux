@@ -403,5 +403,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - CI app-host Option/Alt step selects nine SSH lifecycle tests plus managed attach cleanup fixture; pushed-head verification pending (`ssh_startup_lifecycle_focused_gate_verification`) - owner: Bmux; status: open
 - SSH workspace creation fixture focused gate awaits app-host CI (`ssh_workspace_creation_fixture_focused_gate_verification`) - owner: Bmux; status: open
 - SSH agent environment fixture focused gate awaits app-host CI (`ssh_agent_environment_fixture_focused_gate_verification`) - owner: Bmux; status: open
-- SSH PTY closure and acknowledged-resize fixture verification (`ssh_pty_lifecycle_fixture_verification`) - owner: Bmux; status: open
+- SSH PTY initial resize acknowledgement CI timeouts remain unresolved (`ssh_pty_lifecycle_fixture_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

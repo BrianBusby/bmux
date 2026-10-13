@@ -5906,6 +5906,6 @@ caveats:
     status: open
     owner: bmux
   - id: ssh_pty_lifecycle_fixture_verification
-    title: SSH PTY closure and acknowledged-resize fixture verification
+    title: SSH PTY initial resize acknowledgement CI timeouts remain unresolved
     status: open
     owner: bmux
