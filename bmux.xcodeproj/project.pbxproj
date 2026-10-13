@@ -625,7 +625,6 @@
 		BA725DCA94CE06AF2DB27886 /* CodexMonitorLeaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFC748EC2172953F16171141 /* CodexMonitorLeaseTests.swift */; };
 		6C7E826EEE2845C8B8EC7907 /* CodexStopHookFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9C446F48F56479E8DA8F918 /* CodexStopHookFixture.swift */; };
 		A2790029E7E4498DB7B836B5 /* CodexStopMockResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3CCD688D38484994B9A532 /* CodexStopMockResponse.swift */; };
-		ABA6069ACB4744E38DC0BFB3 /* CodexStopMockServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA4A18660A4547B8B092B75D /* CodexStopMockServer.swift */; };
 		8C76018C5D434343A5ED4DF0 /* CodexStopPayloadFailureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FE6635E74147BBAFFAA236 /* CodexStopPayloadFailureTests.swift */; };
 		5351A89A303843779A715253 /* CodexStopTranscriptFailureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F432108B1FD14EB0AB540516 /* CodexStopTranscriptFailureTests.swift */; };
 		0E4B570EA4564121AE262C4C /* CodexStopTurnScopeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1183571B13194D39A4E2DEE6 /* CodexStopTurnScopeTests.swift */; };
@@ -2535,7 +2534,6 @@
 		DFC748EC2172953F16171141 /* CodexMonitorLeaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexMonitorLeaseTests.swift; sourceTree = "<group>"; };
 		B9C446F48F56479E8DA8F918 /* CodexStopHookFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopHookFixture.swift; sourceTree = "<group>"; };
 		BE3CCD688D38484994B9A532 /* CodexStopMockResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopMockResponse.swift; sourceTree = "<group>"; };
-		EA4A18660A4547B8B092B75D /* CodexStopMockServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopMockServer.swift; sourceTree = "<group>"; };
 		B4FE6635E74147BBAFFAA236 /* CodexStopPayloadFailureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopPayloadFailureTests.swift; sourceTree = "<group>"; };
 		F432108B1FD14EB0AB540516 /* CodexStopTranscriptFailureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopTranscriptFailureTests.swift; sourceTree = "<group>"; };
 		1183571B13194D39A4E2DEE6 /* CodexStopTurnScopeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopTurnScopeTests.swift; sourceTree = "<group>"; };
@@ -5597,7 +5595,6 @@
 				A5D41208A1B2C3D4E5F60718 /* CLIGenericHookPersistenceTests.swift */,
 				B9C446F48F56479E8DA8F918 /* CodexStopHookFixture.swift */,
 				BE3CCD688D38484994B9A532 /* CodexStopMockResponse.swift */,
-				EA4A18660A4547B8B092B75D /* CodexStopMockServer.swift */,
 				B4FE6635E74147BBAFFAA236 /* CodexStopPayloadFailureTests.swift */,
 				F432108B1FD14EB0AB540516 /* CodexStopTranscriptFailureTests.swift */,
 				1183571B13194D39A4E2DEE6 /* CodexStopTurnScopeTests.swift */,
@@ -7718,7 +7715,6 @@
 				BA725DCA94CE06AF2DB27886 /* CodexMonitorLeaseTests.swift in Sources */,
 				6C7E826EEE2845C8B8EC7907 /* CodexStopHookFixture.swift in Sources */,
 				A2790029E7E4498DB7B836B5 /* CodexStopMockResponse.swift in Sources */,
-				ABA6069ACB4744E38DC0BFB3 /* CodexStopMockServer.swift in Sources */,
 				8C76018C5D434343A5ED4DF0 /* CodexStopPayloadFailureTests.swift in Sources */,
 				5351A89A303843779A715253 /* CodexStopTranscriptFailureTests.swift in Sources */,
 				0E4B570EA4564121AE262C4C /* CodexStopTurnScopeTests.swift in Sources */,

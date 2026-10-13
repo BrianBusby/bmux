@@ -31,13 +31,13 @@ final class AgentLaunchEnvironmentFixture {
             "BMUX_CLI_SENTRY_DISABLED": "1",
         ])
         let server = CLISocketFixture(path: socket, response: responder())
-        let (result, _) = try await server.capture {
+        let (result, commands) = try await server.capture {
             await runner.run(directory: root.path, executable: "/bin/sh", arguments: [
                 "-c", "exec \"$1\" hooks codex session-start </dev/null >\"$2\" 2>\"$3\"",
                 "launch-env", cli, stdout.path, stderr.path,
             ], timeout: 5)
         }
-        try #require(!result.timedOut)
+        try #require(!result.timedOut, "Session-start timed out after requests: \(commands)")
         try #require(result.executionError == nil)
         let errors = try String(contentsOf: stderr, encoding: .utf8)
         #expect(result.exitStatus == 0, "\(errors)")

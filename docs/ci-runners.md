@@ -784,3 +784,24 @@ Both inherited CI reporting capabilities are restored in Project Truth. The
 new exact-head checks remain required. Existing broad failures, including
 inspector crashes, terminal readiness assertions and a stale-control-socket
 process deadline, are not waived by the focused result.
+
+
+### Agent fixtures after shared transport correction
+
+Codex Stop now uses `CLISocketFixture` with its existing response model and
+unchanged transcript, status and notification assertions. The duplicate server
+was removed from the test target. Controlled native diagnostics reproduced
+`EINVAL` while that duplicate configured an accepted socket after its peer had
+closed; the shared transport configures the inherited option only on its listener.
+The corrected SSH transport and both inherited CI capability entries are merged
+from the SSH replacement once.
+
+The first agent replacement's focused invocation failed five issues across 41
+test functions in 10 suites: two session-start process deadlines and three SSH
+PTY fixture errors. The timeout cases do not reproduce in the focused native
+batch; their existing deadline assertion now includes the owned request trace
+for diagnosis. No deadline or behavior expectation is relaxed. The combined
+22-function, 14-suite native batch against existing build 773 passes with
+warning-free compilation after these corrections. Broader app-host assertions,
+crashes and deadlines remain unresolved until new exact-head CI demonstrates
+completion. No application or terminal-engine code changes.
