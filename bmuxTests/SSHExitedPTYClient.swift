@@ -16,8 +16,10 @@ final class SSHExitedPTYClient: RemotePTYBridgeRPCClient {
         onEvent: @escaping (RemotePTYBridgeEvent) -> Void
     ) throws -> RemotePTYBridgeAttachment {
         continuation.yield("attach \(sessionID) \(attachmentID)")
-        // The legacy RPC protocol requires event delivery on its supplied queue.
-        queue.async { onEvent(.exit) }
+        // The legacy protocol transfers this callback to its supplied queue; this
+        // immutable local is invoked only there, matching PTYSubscription ownership.
+        nonisolated(unsafe) let deliverEvent = onEvent
+        queue.async { deliverEvent(.exit) }
         return RemotePTYBridgeAttachment(attachmentID: attachmentID, token: "control-cleanup-attachment")
     }
 
