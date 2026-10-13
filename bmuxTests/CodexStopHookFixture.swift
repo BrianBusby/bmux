@@ -34,9 +34,8 @@ final class CodexStopHookFixture {
         let stdoutURL = root.appendingPathComponent("stdout")
         let stderrURL = root.appendingPathComponent("stderr")
         let socketPath = root.appendingPathComponent("socket").path
-        let server = CodexStopMockServer(path: socketPath, responder: CodexStopMockResponse(
-            workspaceID: workspaceID, surfaceID: surfaceID
-        ))
+        let responder = CodexStopMockResponse(workspaceID: workspaceID, surfaceID: surfaceID)
+        let server = CLISocketFixture(path: socketPath) { try responder.response(to: $0) }
         let cli = try BundledCLITestSupport.bundledCLIPath(for: BundledCLILinkageTests.self)
         let runner = CommandRunner(environment: [
             "HOME": root.path, "CFFIXED_USER_HOME": root.path,

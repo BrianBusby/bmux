@@ -1368,3 +1368,107 @@ Both inherited CI reporting capabilities are restored in Project Truth. The
 new exact-head checks remain required. Existing broad failures, including
 inspector crashes, terminal readiness assertions and a stale-control-socket
 process deadline, are not waived by the focused result.
+## Codex monitor lease fixture (2026-10-12)
+
+The existing Option/Alt invocation also selects `CodexMonitorLeaseTests` before
+unchanged full coverage. Canonical and local Project Truth caveat
+`codex_monitor_lease_fixture_verification` tracks actual pushed-head app-host
+verification as pending. No runner, retry or deadline policy changes.
+
+The old `testCodexPromptSubmitRetiresPreviousMonitorLeaseForSameSession` submitted
+two unfinished turns and expected the second to replace the first lease. That
+fixture predates the nested-turn stack policy: lease coverage arrived in
+`92c8229d6`, then `e43ac6dd3` made unfinished overlapping turns nested. Default
+subagent suppression intentionally preserves the parent lease. Baseline CI
+`/tmp/matte-base-apphost4.log:73562` records the stale expectation.
+
+Only that method migrates to Swift Testing. A sequential case supplies an
+authentic prior-turn `task_complete` transcript, verifies one new active lease,
+exact session/workspace/surface/turn, depth one, and retirement of the former
+lease. The monitor may already remove its retired record; if the record remains,
+`retiredAt` must be set. Record removal is normal retirement completion, not a
+persistence requirement. A separate unfinished nested case preserves the exact
+first lease while recording depth two and both turn IDs.
+
+`CodexMonitorLeaseFixture` owns the protocol, isolated child environment, files,
+lease snapshots and detached monitor cleanup. It reuses the reviewed async
+`CLISocketFixture`, including listener-inherited SIGPIPE protection, readiness
+sources, partial writes and awaited descriptor teardown. `CommandRunner` uses
+owned positional stdin/stdout/stderr files with the original five-second process
+deadline. Snapshots occur after native hook completion; there is no test polling
+or arbitrary accept count. Cleanup matches only the actual CLI plus this
+fixture's unique lease path, including the transient nohup command, and joins
+native process-exit observation before deleting owned files. DispatchSource
+process observation is a narrow OS-lifecycle bridge behind an async method;
+Foundation has no Process handle for these CLI-owned detached descendants.
+No real app socket, user configuration or preferences are used.
+
+Unchanged build 773 passes both cases in the native harness. A temporary control
+replaces `task_complete` with `task_started` and produces five sequential-case
+failures, including `retiredAt`; another disables subagent suppression and
+produces two nested-lease failures. Logs are
+`/tmp/codex-monitor-lease-native-green.log`,
+`/tmp/codex-monitor-lease-negative-completion.log`, and
+`/tmp/codex-monitor-lease-negative-nesting.log`. The earlier five-scenario native
+diagnosis and history are in `/tmp/codex-monitor-lease-diagnosis.md`.
+These are focused local results, not full app-host green. This correction changes
+no production code, shipped strings or localization catalogs and requires no app
+build or launch.
+
+Guidance: root/personal AGENTS, continuous-code-quality, testing migration and
+behavioral quality, architecture file/concurrency rules, shared behavior, socket
+policy and Xcode wiring. Maintained behavioral references are
+`testNestedCodexPromptAndStopDoNotReplaceParentResumeBinding` and
+`testCodexStopAfterInterruptedPriorTurnStillNotifies`; lease mutation stays in the
+CLI session/monitor owners. All other legacy methods remain byte-identical. Project normalization/wiring
+(433 files), strict determinism (zero findings), base-aware source budgets, shard
+coverage (2,006 selectors), shard tests, runner-policy guards and Project Truth
+validation/generation/freshness pass. New fixture compilation is warning-free.
+### Respawn window option protocol fixture
+
+The legacy window-option regression expected `surface.send_text`; the maintained
+`respawn-pane` path uses `surface.respawn` with both a shell command and the
+original `tmux_start_command`. Consequently the old mock rejected the valid RPC
+before it could check that `--window` stayed out of the command text.
+
+The migrated Swift Testing case covers the window option before and after a
+positional command, plus explicit `--command`. It preserves window lookup,
+focused-surface targeting, request order and successful completion checks. It
+asserts the original command is exactly `echo fresh`, then executes the emitted
+shell command in the owned fixture environment and checks its output. Every
+other legacy test remains unchanged. There is no runtime or terminal change.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing migration/wiring and
+local-vs-CI references, architecture/file discipline, shared-behavior and socket
+focus policy. The CLI option parser, respawn owner and shell-command builder were
+inspected. The test owns temporary files/process state; the shared reviewed
+CLISocketFixture provides joined asynchronous transport. No real app socket,
+preference, window or surface is targeted.
+
+All three cases pass unchanged build 773 with warning-free focused compilation.
+A temporary negative control restoring the obsolete send-text mock fails all
+three cases. Actual app-host CI and combined full-suite validation remain
+pending under the canonical/local focused-gate caveat. Localization audit: no
+shipped strings or catalogs change; contributor verification notes only.
+### Consolidated agent session fixtures review boundary
+
+This branch consolidates #146, #152, #157, #159, #162, #165, #166, preserving each published source commit in
+### Agent fixtures after shared transport correction
+
+Codex Stop now uses `CLISocketFixture` with its existing response model and
+unchanged transcript, status and notification assertions. The duplicate server
+was removed from the test target. Controlled native diagnostics reproduced
+`EINVAL` while that duplicate configured an accepted socket after its peer had
+closed; the shared transport configures the inherited option only on its listener.
+The corrected SSH transport and both inherited CI capability entries are merged
+from the SSH replacement once.
+
+The first agent replacement's focused invocation failed five issues across 41
+test functions in 10 suites: two session-start process deadlines and three SSH
+PTY fixture errors. The timeout cases do not reproduce in the focused native
+batch; their existing deadline assertion now includes the owned request trace
+for diagnosis. No deadline or behavior expectation is relaxed. The combined
+22-function, 14-suite native batch against existing build 773 passes with
+warning-free compilation after these corrections. Broader app-host assertions,
+crashes and deadlines remain unresolved until new exact-head CI demonstrates
+completion. No application or terminal-engine code changes.

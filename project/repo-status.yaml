@@ -258,3 +258,7 @@ local_caveats:
     status: open
   - id: ssh_pty_lifecycle_fixture_verification
     status: open
+  - id: codex_monitor_lease_fixture_verification
+    status: open
+  - id: respawn_window_protocol_fixture_focused_gate_verification
+    status: open

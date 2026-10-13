@@ -632,11 +632,12 @@
 		A9F200000000000000000016 /* CodexAppServerQueuedInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000016 /* CodexAppServerQueuedInput.swift */; };
 		A9E02000000000000000000E /* CodexAppServerSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E01000000000000000000E /* CodexAppServerSession.swift */; };
 		A9E040000000000000000002 /* CodexAppServerSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E040000000000000000001 /* CodexAppServerSessionTests.swift */; };
+		BFDECAF433606DDF43C5C9E9 /* CodexMonitorLeaseFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E9551C306FED32C2E511E /* CodexMonitorLeaseFixture.swift */; };
+		BA725DCA94CE06AF2DB27886 /* CodexMonitorLeaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFC748EC2172953F16171141 /* CodexMonitorLeaseTests.swift */; };
 		D33A912E16C53A8AF2B9AA4B /* CodexRejectedAmbientFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A8679C50A0E07FA9D5B592 /* CodexRejectedAmbientFixture.swift */; };
 		12A544D5266A33F06D4ABE0F /* CodexRejectedAmbientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC77452333507F58CDC2C89 /* CodexRejectedAmbientTests.swift */; };
 		6C7E826EEE2845C8B8EC7907 /* CodexStopHookFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9C446F48F56479E8DA8F918 /* CodexStopHookFixture.swift */; };
 		A2790029E7E4498DB7B836B5 /* CodexStopMockResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3CCD688D38484994B9A532 /* CodexStopMockResponse.swift */; };
-		ABA6069ACB4744E38DC0BFB3 /* CodexStopMockServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA4A18660A4547B8B092B75D /* CodexStopMockServer.swift */; };
 		8C76018C5D434343A5ED4DF0 /* CodexStopPayloadFailureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FE6635E74147BBAFFAA236 /* CodexStopPayloadFailureTests.swift */; };
 		5351A89A303843779A715253 /* CodexStopTranscriptFailureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F432108B1FD14EB0AB540516 /* CodexStopTranscriptFailureTests.swift */; };
 		0E4B570EA4564121AE262C4C /* CodexStopTurnScopeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1183571B13194D39A4E2DEE6 /* CodexStopTurnScopeTests.swift */; };
@@ -1263,6 +1264,7 @@
 		C0DEAA060000000000000101 /* RepoAgentLauncherParameterRowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEAA060000000000000001 /* RepoAgentLauncherParameterRowController.swift */; };
 		C0DEAA070000000000000101 /* RepoAgentLauncherParameterSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEAA070000000000000001 /* RepoAgentLauncherParameterSelection.swift */; };
 		C0DEAA080000000000000101 /* RepoAgentLauncherParameterValueKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEAA080000000000000001 /* RepoAgentLauncherParameterValueKind.swift */; };
+		E77094E44ACC4652940E9722 /* RespawnWindowProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7B7CD350DB14FB7AD00BE08 /* RespawnWindowProtocolTests.swift */; };
 		F5410004A1B2C3D4E5F60718 /* RestorableAgentHookProviderHermesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5410005A1B2C3D4E5F60718 /* RestorableAgentHookProviderHermesTests.swift */; };
 		F5410000A1B2C3D4E5F60718 /* RestorableAgentHookProviderResumeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5410001A1B2C3D4E5F60718 /* RestorableAgentHookProviderResumeTests.swift */; };
 		C6711A040000000000000001 /* RestorableAgentHookSessionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6711B040000000000000001 /* RestorableAgentHookSessionRecord.swift */; };
@@ -2590,11 +2592,12 @@
 		A9F100000000000000000016 /* CodexAppServerQueuedInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/CodexAppServerQueuedInput.swift; sourceTree = "<group>"; };
 		A9E01000000000000000000E /* CodexAppServerSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/CodexAppServerSession.swift; sourceTree = "<group>"; };
 		A9E040000000000000000001 /* CodexAppServerSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexAppServerSessionTests.swift; sourceTree = "<group>"; };
+		F84E9551C306FED32C2E511E /* CodexMonitorLeaseFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexMonitorLeaseFixture.swift; sourceTree = "<group>"; };
+		DFC748EC2172953F16171141 /* CodexMonitorLeaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexMonitorLeaseTests.swift; sourceTree = "<group>"; };
 		C5A8679C50A0E07FA9D5B592 /* CodexRejectedAmbientFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexRejectedAmbientFixture.swift; sourceTree = "<group>"; };
 		1EC77452333507F58CDC2C89 /* CodexRejectedAmbientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexRejectedAmbientTests.swift; sourceTree = "<group>"; };
 		B9C446F48F56479E8DA8F918 /* CodexStopHookFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopHookFixture.swift; sourceTree = "<group>"; };
 		BE3CCD688D38484994B9A532 /* CodexStopMockResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopMockResponse.swift; sourceTree = "<group>"; };
-		EA4A18660A4547B8B092B75D /* CodexStopMockServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopMockServer.swift; sourceTree = "<group>"; };
 		B4FE6635E74147BBAFFAA236 /* CodexStopPayloadFailureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopPayloadFailureTests.swift; sourceTree = "<group>"; };
 		F432108B1FD14EB0AB540516 /* CodexStopTranscriptFailureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopTranscriptFailureTests.swift; sourceTree = "<group>"; };
 		1183571B13194D39A4E2DEE6 /* CodexStopTurnScopeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopTurnScopeTests.swift; sourceTree = "<group>"; };
@@ -3196,6 +3199,7 @@
 		C0DEAA060000000000000001 /* RepoAgentLauncherParameterRowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoAgentLauncherParameterRowController.swift; sourceTree = "<group>"; };
 		C0DEAA070000000000000001 /* RepoAgentLauncherParameterSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoAgentLauncherParameterSelection.swift; sourceTree = "<group>"; };
 		C0DEAA080000000000000001 /* RepoAgentLauncherParameterValueKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoAgentLauncherParameterValueKind.swift; sourceTree = "<group>"; };
+		E7B7CD350DB14FB7AD00BE08 /* RespawnWindowProtocolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RespawnWindowProtocolTests.swift; sourceTree = "<group>"; };
 		F5410005A1B2C3D4E5F60718 /* RestorableAgentHookProviderHermesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestorableAgentHookProviderHermesTests.swift; sourceTree = "<group>"; };
 		F5410001A1B2C3D4E5F60718 /* RestorableAgentHookProviderResumeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestorableAgentHookProviderResumeTests.swift; sourceTree = "<group>"; };
 		C6711B040000000000000001 /* RestorableAgentHookSessionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestorableAgentHookSessionRecord.swift; sourceTree = "<group>"; };
@@ -5420,6 +5424,9 @@
 				F6001001A1B2C3D4E5F60718 /* ShortcutUnbindingTests.swift */,
 				C73660030000000000000002 /* WorkspaceRemoteBadgeTruthTests.swift */,
 				F6100001A1B2C3D4E5F60718 /* WorkspaceRemoteConnectionTests.swift */,
+				DFC748EC2172953F16171141 /* CodexMonitorLeaseTests.swift */,
+				F84E9551C306FED32C2E511E /* CodexMonitorLeaseFixture.swift */,
+				CE4411000000000000000002 /* CLISocketFixture.swift */,
 				7277B0017277B0017277B001 /* WorkspaceRemoteDirectoryProvenanceTests.swift */,
 				F6357301A1B2C3D4E5F60718 /* WorkspaceRemoteReconnectPolicyTests.swift */,
 				0C4AD348F196FBBEE52D53A7 /* SSHPTYAttachReconnectInputFilterTests.swift */,
@@ -5637,6 +5644,13 @@
 				0D81319A11775559D7D2F13F /* SSHPTYLifecycleBridge.swift */,
 				6427199662BD7433C6FE8723 /* CLIOutputChannel.swift */,
 				CE4411000000000000000002 /* CLISocketFixture.swift */,
+					9BF41FFE8DA22514668B6E1B /* ClaudeSessionEndScopeTests.swift */,
+					654A89AA139BAE899DD77C8C /* ClaudeSessionEndFixture.swift */,
+					CE4411000000000000000002 /* CLISocketFixture.swift */,
+					56851DBE797C46F5ADDAAEC6 /* AgentLaunchEnvironmentTests.swift */,
+					9960810488AB4C6EAF7B5662 /* AgentLaunchEnvironmentFixture.swift */,
+				E7B7CD350DB14FB7AD00BE08 /* RespawnWindowProtocolTests.swift */,
+				CE4411000000000000000002 /* CLISocketFixture.swift */,
 					B1F0D1040000000000000002 /* TabManagerSidebarGitTestSupport.swift */,
 					C0DE1A080000000000000002 /* SavedLayoutDefinitionTests.swift */,
 				C0DE1A070000000000000002 /* SavedLayoutStoreTests.swift */,
@@ -5736,7 +5750,6 @@
 				A5D41208A1B2C3D4E5F60718 /* CLIGenericHookPersistenceTests.swift */,
 				B9C446F48F56479E8DA8F918 /* CodexStopHookFixture.swift */,
 				BE3CCD688D38484994B9A532 /* CodexStopMockResponse.swift */,
-				EA4A18660A4547B8B092B75D /* CodexStopMockServer.swift */,
 				B4FE6635E74147BBAFFAA236 /* CodexStopPayloadFailureTests.swift */,
 				F432108B1FD14EB0AB540516 /* CodexStopTranscriptFailureTests.swift */,
 				1183571B13194D39A4E2DEE6 /* CodexStopTurnScopeTests.swift */,
@@ -7874,6 +7887,7 @@
 					C0F16B000000000000000001 /* CLIRemoteShellStartupPerformanceTests.swift in Sources */,
 				A5D41209A1B2C3D4E5F60718 /* CLIRovoDevHookPersistenceTests.swift in Sources */,
 				CE4411000000000000000001 /* CLISocketFixture.swift in Sources */,
+					CE4411000000000000000001 /* CLISocketFixture.swift in Sources */,
 				A8D837B3AA85F4353C493DE1 /* CLISSHPTYAttachProbeReplyRegressionTests.swift in Sources */,
 				C73660020000000000000001 /* CLISSHPTYAttachSessionLostRespawnTests.swift in Sources */,
 				6379A0016379A0016379A001 /* CLISSHPTYResizeInputTests.swift in Sources */,
@@ -7884,11 +7898,12 @@
 					586DF57C2A451DD08047FC9F /* CloudAttachRetryFixture.swift in Sources */,
 				C75740010000000000000001 /* CloudVMMenuItemMetricsTests.swift in Sources */,
 				A9E040000000000000000002 /* CodexAppServerSessionTests.swift in Sources */,
+				BFDECAF433606DDF43C5C9E9 /* CodexMonitorLeaseFixture.swift in Sources */,
+				BA725DCA94CE06AF2DB27886 /* CodexMonitorLeaseTests.swift in Sources */,
 				D33A912E16C53A8AF2B9AA4B /* CodexRejectedAmbientFixture.swift in Sources */,
 				12A544D5266A33F06D4ABE0F /* CodexRejectedAmbientTests.swift in Sources */,
 				6C7E826EEE2845C8B8EC7907 /* CodexStopHookFixture.swift in Sources */,
 				A2790029E7E4498DB7B836B5 /* CodexStopMockResponse.swift in Sources */,
-				ABA6069ACB4744E38DC0BFB3 /* CodexStopMockServer.swift in Sources */,
 				8C76018C5D434343A5ED4DF0 /* CodexStopPayloadFailureTests.swift in Sources */,
 				5351A89A303843779A715253 /* CodexStopTranscriptFailureTests.swift in Sources */,
 				0E4B570EA4564121AE262C4C /* CodexStopTurnScopeTests.swift in Sources */,
@@ -8053,6 +8068,7 @@
 				FA00C0DE0001BEEF0001CAFE /* RemoteTmuxWindowRegistryTests.swift in Sources */,
 				C58410010000000000000001 /* RenderableSystemSymbolTests.swift in Sources */,
 				D36A00050000000000000001 /* RendererRealizationPlannerTests.swift in Sources */,
+				E77094E44ACC4652940E9722 /* RespawnWindowProtocolTests.swift in Sources */,
 					F5410004A1B2C3D4E5F60718 /* RestorableAgentHookProviderHermesTests.swift in Sources */,
 					F5410000A1B2C3D4E5F60718 /* RestorableAgentHookProviderResumeTests.swift in Sources */,
 					F5410002A1B2C3D4E5F60718 /* RestorableAgentNonInteractiveTests.swift in Sources */,

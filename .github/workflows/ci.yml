@@ -599,6 +599,11 @@ jobs:
             -only-testing:bmuxTests/SSHWorkspaceCreationTests \
             -only-testing:bmuxTests/SSHAgentEnvironmentTests \
             -only-testing:bmuxTests/SSHPTYLifecycleContractTests \
+            -only-testing:bmuxTests/HermesResumeExecutionTests \
+            -only-testing:bmuxTests/RestorableAgentSessionStalePIDTests \
+            -only-testing:bmuxTests/ClaudeSessionEndScopeTests \
+            -only-testing:bmuxTests/AgentLaunchEnvironmentTests \
+            -only-testing:bmuxTests/RespawnWindowProtocolTests \
             test
 
       - name: Run Option/Alt sided-modifier regression
@@ -625,6 +630,7 @@ jobs:
             -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHSignalDuringReconnectDelayDoesNotStartAnotherSSH \
             -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupPrintsFinalErrorBannerWhenStderrIsCaptured \
             -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupForwardsStdinToBackgroundedSSH \
+            -only-testing:bmuxTests/CodexMonitorLeaseTests \
             test
 
       - name: Verify bundled CLI artifact and native test
