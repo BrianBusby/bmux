@@ -68,7 +68,13 @@ final class ClaudeNotificationTargetFixture {
                 "claude-notification", cli, input.path, stdout.path, stderr.path,
             ] + arguments, timeout: 5)
         }
-        try #require(!result.timedOut)
+        if result.timedOut {
+            // Only fixture-owned output is recorded; retain file-read failures in the diagnostic.
+            let output = Result { try String(contentsOf: stdout, encoding: .utf8) }
+            let errors = Result { try String(contentsOf: stderr, encoding: .utf8) }
+            try #require(!result.timedOut,
+                         "Notification timed out after requests: \(commands); stdout: \(output); stderr: \(errors)")
+        }
         try #require(result.executionError == nil)
         let errorText = try String(contentsOf: stderr, encoding: .utf8)
         #expect(result.exitStatus == 0, "\(errorText)")
