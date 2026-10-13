@@ -601,6 +601,7 @@ jobs:
             -only-testing:bmuxTests/SSHPTYLifecycleContractTests \
             -only-testing:bmuxTests/RespawnWindowProtocolTests \
             -only-testing:bmuxTests/WorkspaceFallbackContractTests \
+            -only-testing:bmuxTests/BrowserInspectorWindowOwnershipTests \
             test
 
       - name: Run Option/Alt sided-modifier regression

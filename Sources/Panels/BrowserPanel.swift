@@ -3101,6 +3101,9 @@ final class BrowserPanel: Panel, ObservableObject {
     private let usesTransparentBackground: Bool
     private let developerToolsDetachedOpenGracePeriod: TimeInterval = 0.35
     var developerToolsDetachedOpenGraceDeadline: Date?
+#if DEBUG
+    let developerToolsLifecycleObservation = BrowserDeveloperToolsLifecycleObservation()
+#endif
     var developerToolsTransitionTargetVisible: Bool?
     var pendingDeveloperToolsTransitionTargetVisible: Bool?
     var developerToolsTransitionSettleWorkItem: DispatchWorkItem?
@@ -5345,6 +5348,9 @@ final class BrowserPanel: Panel, ObservableObject {
     }
 
     func close() {
+#if DEBUG
+        defer { developerToolsLifecycleObservation.finish() }
+#endif
         cancelHiddenWebViewDiscard()
         isClosingWebViewLifecycle = true
         refreshWebViewLifecycleState()
@@ -6105,6 +6111,9 @@ extension BrowserPanel {
     }
 
     func resetForWorkspaceContextChange(reason: String) {
+#if DEBUG
+        defer { developerToolsLifecycleObservation.publish() }
+#endif
         guard needsWorkspaceContextReset else {
             resetWebViewLifecycleMetadata()
 #if DEBUG
@@ -6635,6 +6644,9 @@ extension BrowserPanel {
     }
 
     private func finishDeveloperToolsTransition(source: String) {
+#if DEBUG
+        defer { developerToolsLifecycleObservation.publish() }
+#endif
         let pendingTargetVisible = pendingDeveloperToolsTransitionTargetVisible
         pendingDeveloperToolsTransitionTargetVisible = nil
         developerToolsTransitionTargetVisible = nil
@@ -6649,6 +6661,9 @@ extension BrowserPanel {
         to targetVisible: Bool,
         source: String
     ) -> Bool {
+#if DEBUG
+        defer { developerToolsLifecycleObservation.publish() }
+#endif
         if isDeveloperToolsTransitionInFlight {
             pendingDeveloperToolsTransitionTargetVisible = targetVisible
             setPreferredDeveloperToolsVisible(targetVisible)
@@ -6782,6 +6797,9 @@ extension BrowserPanel {
 
     @discardableResult
     func closeDeveloperToolsForTeardown() -> Bool {
+#if DEBUG
+        defer { developerToolsLifecycleObservation.publish() }
+#endif
         developerToolsTransitionSettleWorkItem?.cancel()
         developerToolsTransitionSettleWorkItem = nil
         pendingDeveloperToolsTransitionTargetVisible = nil
@@ -7923,35 +7941,6 @@ extension BrowserPanel {
         )
     }
 
-    private static func debugRectDescription(_ rect: NSRect) -> String {
-        String(
-            format: "%.1f,%.1f %.1fx%.1f",
-            rect.origin.x,
-            rect.origin.y,
-            rect.size.width,
-            rect.size.height
-        )
-    }
-
-    private static func debugObjectToken(_ object: AnyObject?) -> String {
-        guard let object else { return "nil" }
-        return String(describing: Unmanaged.passUnretained(object).toOpaque())
-    }
-
-    private static func debugInspectorSubviewCount(in root: NSView) -> Int {
-        var stack: [NSView] = [root]
-        var count = 0
-        while let current = stack.popLast() {
-            for subview in current.subviews {
-                if bmuxIsWebInspectorObject(subview) {
-                    count += 1
-                }
-                stack.append(subview)
-            }
-        }
-        return count
-    }
-
     func debugDeveloperToolsStateSummary() -> String {
         let preferred = preferredDeveloperToolsVisible ? 1 : 0
         let visible = isDeveloperToolsVisible() ? 1 : 0
@@ -7965,19 +7954,6 @@ extension BrowserPanel {
         let presentation = preferredDeveloperToolsPresentation == .attached ? "attached" : "detached"
         return "pref=\(preferred) vis=\(visible) inspector=\(inspector) attached=\(attached) inWindow=\(inWindow) presentation=\(presentation) restoreRetry=\(developerToolsRestoreRetryAttempt) forceRefresh=\(forceRefresh) tx=\(transitionTarget) pending=\(pendingTarget) closeResolution=\(closeResolution)"
     }
-
-    func debugDeveloperToolsGeometrySummary() -> String {
-        let container = webView.superview
-        let containerBounds = container?.bounds ?? .zero
-        let webFrame = webView.frame
-        let inspectorInsets = max(0, containerBounds.height - webFrame.height)
-        let inspectorOverflow = max(0, webFrame.maxY - containerBounds.maxY)
-        let inspectorHeightApprox = max(inspectorInsets, inspectorOverflow)
-        let inspectorSubviews = container.map { Self.debugInspectorSubviewCount(in: $0) } ?? 0
-        let containerType = container.map { String(describing: type(of: $0)) } ?? "nil"
-        return "webFrame=\(Self.debugRectDescription(webFrame)) webBounds=\(Self.debugRectDescription(webView.bounds)) webWin=\(webView.window?.windowNumber ?? -1) super=\(Self.debugObjectToken(container)) superType=\(containerType) superBounds=\(Self.debugRectDescription(containerBounds)) inspectorHApprox=\(String(format: "%.1f", inspectorHeightApprox)) inspectorInsets=\(String(format: "%.1f", inspectorInsets)) inspectorOverflow=\(String(format: "%.1f", inspectorOverflow)) inspectorSubviews=\(inspectorSubviews)"
-    }
-
 }
 #endif
 

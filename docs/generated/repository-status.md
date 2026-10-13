@@ -221,3 +221,4 @@ Repository: `BrianBusby/bmux`
 | `browser_deferred_initial_lifecycle_verification` | open |
 | `workspace_fallback_regression_verification` | open |
 | `ssh_manual_reconnect_nonzero_regression` | open |
+| `browser_inspector_window_ownership_verification` | open |

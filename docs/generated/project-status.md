@@ -163,6 +163,7 @@ Regenerate with: ./scripts/project-docs generate
 | CI Option/Alt step selects CodexMonitorLeaseTests sequential and nested controls; actual app-host verification pending (`codex_monitor_lease_fixture_verification`) | Bmux | open |  |
 | Respawn window protocol fixture focused gate awaits app-host CI (`respawn_window_protocol_fixture_focused_gate_verification`) | Bmux | open |  |
 | Workspace fallback regression test red and production fix verification pending (`workspace_fallback_regression_verification`) | Bmux | open |  |
+| Focused browser inspector window ownership and lifecycle observation cases await app-host verification (`browser_inspector_window_ownership_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
