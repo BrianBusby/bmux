@@ -1575,6 +1575,16 @@ validated TTY lookup and current-workspace query. No global environment mutation
 app focus operation, renderer edit or user app action is part of this slice.
 No shipped strings or localization catalogs changed in the test-only commit.
 
+The final source-budget check found the fallback repair grew the already oversized
+CLI by three lines. The adjacent unused `resolveSurfaceIdForClaudeHook` private
+forwarder was removed; repository-wide search confirmed it had no callers. The
+shared `resolveSurfaceIdAllowingFallback` owner remains unchanged. This reduces
+source size without moving responsibilities or raising the legacy budget.
+Independent review cleared the removal. Final isolated build 782 succeeds, and
+its actual bundled CLI passes all eighteen routing cases. Warning-free native
+fixture compilation, the source budget and Project Truth validation/freshness
+checks pass. Exact published-head app-host CI remains pending.
+
 ### Notification timeout evidence on the replacement head
 
 Run 38416355276, job 115363087236, completed the focused Claude notification
