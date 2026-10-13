@@ -188,3 +188,5 @@ local_caveats:
     status: open
   - id: ssh_manual_reconnect_handoff_regression
     status: open
+  - id: ssh_manual_reconnect_nonzero_regression
+    status: open

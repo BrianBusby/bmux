@@ -6,7 +6,7 @@ The manual reconnect repair is isolated from the SSH lifecycle fixture and error
 
 On the unchanged build 773 CLI, the updated `manualReconnectHandsOffToNativeOwner` test runs one generated VM SSH startup command. It records one SSH attempt and one session-end notification, but pressing `r` exits with status 1 and sends no reconnect RPC. The local executable test fails three expectations. The fixture now answers current `vm.ssh_info` requests and includes the created surface ID, so it reaches the actual startup script.
 
-The focused app-host gate runs this method on existing shard 3 before unchanged full-suite coverage. Actual CI red is pending. No production fix is included in the first commit. The fake CLI acceptance tests shell handoff only; it does not prove native replacement succeeds. Native owner and socket failure coverage remain required.
+The focused app-host gate selects the full suite on existing shard 3 before unchanged full-suite coverage. Job 114964414611 selected a Swift Testing method without its callable suffix and reported zero tests; that green status is not regression evidence. The suite selector corrects this coverage gap. Actual nonzero CI red is still pending. No production fix is included in the first commit. The fake CLI acceptance tests shell handoff only; it does not prove native replacement succeeds. Native owner and socket failure coverage remain required.
 
 ## Ownership and verification remaining
 
