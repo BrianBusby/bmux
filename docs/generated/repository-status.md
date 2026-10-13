@@ -218,3 +218,4 @@ Repository: `BrianBusby/bmux`
 | `ssh_pty_lifecycle_fixture_verification` | open |
 | `codex_monitor_lease_fixture_verification` | open |
 | `respawn_window_protocol_fixture_focused_gate_verification` | open |
+| `browser_deferred_initial_lifecycle_verification` | open |

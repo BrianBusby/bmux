@@ -1499,3 +1499,18 @@ Xcode wiring, selector discovery, determinism, file budgets and generated state.
 Full app-host compilation/execution and required checks on the replacement heads
 remain pending. No app build, launch, settings or localization catalog changes
 are part of this consolidation.
+### Deferred browser initialization verification (2026-10-12)
+
+PR 151 test-only CI job 114962906951 reproduced all four deferred-state
+assertions and ended with TEST FAILED. The one-line fix refreshes the existing lifecycle projection at
+initializer exit, covering deferred URL and URLRequest early returns without
+starting navigation or adding a state owner. Tagged build 777
+(`browser-initial-lifecycle`) succeeds without launching or replacing an active
+preview. The four focused cases pass against that native artifact in an isolated
+HOME (two deferred constructors and two empty-panel controls); the same tests
+report four initial-state issues against unchanged build 774. Focused compilation
+is warning-free. The app build retains 149 warning lines, matching the previous
+build, so this is not an app-wide warning-free claim. Unrelated discard/portal gates are outside this maintenance slice. Existing prewarmed adoption was inspected but not separately exercised by
+these four cases. The same four cases were revalidated on October 13 against
+the unchanged build 777 artifact. Exact fixed-head app-host CI remains pending.
+No shipped strings changed.
