@@ -377,12 +377,25 @@ marker probe against the uncorrected fixture exits 1: all three appearance cases
 pass, but the persisted marker is removed by `saveImportedManagedDefaults`.
 The temporary runner explicitly establishes each initial state in its own process
 preferences domain and cleans it afterward; a fresh HOME alone does not clear
-macOS preferences-daemon caching. Each case seeds
-the legacy auto value before import so host registration cannot skip the import.
+macOS preferences-daemon caching.
+
+The first consolidated app-host run (`115049483591`) passed dark and light but
+reported four missing initial-application callback assertions for system mode.
+The fixture had seeded legacy `auto`, which the appearance owner normalizes to
+`system`; that makes the subsequent system import a legitimate no-op. A controlled
+native 777 probe calling the real resolver after the old seed reproduces the same
+four failures. The fixture now seeds a different canonical mode and asserts that
+resolution preserves it before importing the requested mode. All original
+callback, terminal synchronization and no-op assertions remain. Both persisted
+marker and registration-only native probes pass all three cases and preserve the
+four application-domain keys. These controls establish the normalization cause;
+they do not identify which live app-host reader normalized the original value.
+Corrected app-host verification remains pending.
+
 A temporary negative control reinstating the obsolete
 no-launch-appearance and no-reload-sync expectations fails exactly six assertions
 across those three cases. No app build, launch, user settings change or production
-edit is required. Actual app-host execution remains pending; the existing focused
+edit is required. The existing focused
 browser app-host step includes the suite, tracked by matching canonical/local
 Project Truth caveats. Broader legacy CI is not claimed green.
 
