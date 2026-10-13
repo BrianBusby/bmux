@@ -736,7 +736,7 @@ jobs:
             -disableAutomaticPackageResolution \
             -destination "platform=macOS" \
             BMUX_SKIP_ZIG_BUILD=1 \
-            -only-testing:bmuxTests/SSHStartupManualReconnectTests/manualReconnectHandsOffToNativeOwner \
+            -only-testing:bmuxTests/SSHStartupManualReconnectTests \
             test
 
       - name: Run Codex rejected ambient routing regressions

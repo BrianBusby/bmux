@@ -220,3 +220,4 @@ Repository: `BrianBusby/bmux`
 | `respawn_window_protocol_fixture_focused_gate_verification` | open |
 | `browser_deferred_initial_lifecycle_verification` | open |
 | `workspace_fallback_regression_verification` | open |
+| `ssh_manual_reconnect_nonzero_regression` | open |
