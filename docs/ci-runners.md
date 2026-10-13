@@ -166,44 +166,40 @@ that have them registered (runner-side, needs org/runner admin).
 ## Codex rejected ambient identity regression
 
 The focused `CodexRejectedAmbientTests` gate runs before the broad app-host suite
-on shard 2. It migrates only the two legacy invalid-surface / foreign-workspace
-prompt-submit cases. The native CLI fixture owns a short temporary socket,
-isolated HOME and session store, joined socket lifecycle, and file-backed process
-I/O. Its `CLISocketFixture` is identical to the separately reviewed cleanup and
-Claude notification fixtures, allowing one shared file when those branches merge.
+on shard 2. The shared generic-hook target resolver now retains rejected ambient
+provenance: a rejected workspace or surface requires verified PID/TTY attribution
+before any session, resume, status or feed mutation. Explicit invalid flags still
+stop routing; valid remote-like ambient identity and valid saved mappings remain
+supported. The stop branch also suppresses deferred generic feed telemetry when
+target resolution rejects the event, so that fallback cannot resurrect a rejected
+workspace. Successful stop publication and lease retirement keep their existing
+owners and ordering.
 
-Current test-only evidence: unchanged build 773 fails the four rejected-identity
-cases with 22 wrong-target command / persisted-state assertions. Eight controls
-pass: verified PID/TTY recovery, invalid explicit flags, valid ambient identity
-without local process evidence, and workspace-only saved mapping. The negative
-cases supply either a valid empty process topology or an unlisted PID-bound
-surface; unsupported mock methods are not responsible for the failure.
+The fixture owns an isolated HOME/session store, temporary socket, joined socket
+lifecycle and file-backed process I/O. Its shared `CLISocketFixture` is the exact
+reviewed PR 169 transport. Tests preserve every earlier assertion and cover sixteen
+parameter cases: four prompt rejections, four stop rejections and eight recovery,
+explicit-flag and valid-identity controls. No timing or assertion is relaxed.
 
-The existing shared generic-hook resolver discarded rejected ambient provenance,
-then guessed a focused surface or reused a saved mapping when process attribution
-failed. `5b6325ddf` intentionally enabled stale ambient recovery through verified
-PID/TTY binding; that recovery must remain. The bounded repair belongs in this
-shared target resolver, before prompt persistence and resume/status publication,
-not in separate Codex mutation guards or the receiving app's socket handlers.
+Original actual CI job 114969430201 reproduced wrong-target commands and persisted
+running state, alongside the accepted-socket EINVAL fixture race. Unchanged build
+773 fails the four prompt cases with 22 assertions. Build 778, containing the held
+prompt correction, passes twelve cases but fails the four new stop cases on
+unexpected feed.push. Test-only commit 6968859d9 publishes that additional regression;
+its actual app-host red remains required before publishing the complete fix.
+
+Fresh isolated build 781 (`codex-routing-stop-recovery`) succeeds without launching
+the app. Its actual bundled CLI passes all sixteen routing cases with warning-free
+Swift 6 fixture compilation, plus thirteen valid stop payload/transcript/turn-scope
+cases across nine functions. Independent review checked the resolver, stop path,
+deferred telemetry and unchanged lifecycle ordering. The production correction is
+committed locally and held for the regression gate. Full fixed-head app-host CI and
+combined validation remain pending; these focused results are not broad-suite green.
+The local Project Truth verification caveat stays open.
 
 Source requirements: root/personal `AGENTS.md`, `continuous-code-quality`, and
 `bmux-architecture`, `bmux-testing`, `bmux-shared-behavior`, `bmux-socket-policy`,
-`bmux-dev-workflow` and `bmux-localization` skills. Reference patterns are
-`CLIGenericHookPersistenceTests.testCodexHookRecoversFromStaleEnvSurfaceViaProcessTTYBinding`
-and the joined `CLISocketFixture` plus owned-file CLI capture. The test change
-adds no shipped strings or localization keys. Actual CI red, the resolver fix,
-fixed native execution, an isolated tagged build and final CI remain pending;
-this focused evidence is not a claim that the broad baseline suite passes.
-
-
-### Stop-hook negative coverage (2026-10-13)
-
-The prompt-submit regression has actual CI red at job 114969430201. A review
-found that the same rejected-target path in stop could still reach deferred
-feed telemetry. Four added stop cases reproduce four feed.push violations
-against build 778, which contains the held prompt-submit correction; all twelve
-existing routing cases pass against that artifact. The test-only follow-up
-preserves every prior assertion and reuses the exact PR 169 shared transport
-fixture to remove the measured accepted-socket EINVAL race. The production
-correction remains held pending the regression gate; neither the new tests nor
-local focused results establish broad CI success. No shipped strings changed.
+`bmux-dev-workflow` and `bmux-localization`. Maintained references are the verified
+PID/TTY recovery regression, sibling rejected-target telemetry guards, joined
+`CLISocketFixture`, and owned-file CLI capture. Localization audit: no shipped
+strings or catalogs change. Running builds 773/775 remain untouched.
