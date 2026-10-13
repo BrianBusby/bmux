@@ -194,3 +194,16 @@ and the joined `CLISocketFixture` plus owned-file CLI capture. The test change
 adds no shipped strings or localization keys. Actual CI red, the resolver fix,
 fixed native execution, an isolated tagged build and final CI remain pending;
 this focused evidence is not a claim that the broad baseline suite passes.
+
+
+### Stop-hook negative coverage (2026-10-13)
+
+The prompt-submit regression has actual CI red at job 114969430201. A review
+found that the same rejected-target path in stop could still reach deferred
+feed telemetry. Four added stop cases reproduce four feed.push violations
+against build 778, which contains the held prompt-submit correction; all twelve
+existing routing cases pass against that artifact. The test-only follow-up
+preserves every prior assertion and reuses the exact PR 169 shared transport
+fixture to remove the measured accepted-socket EINVAL race. The production
+correction remains held pending the regression gate; neither the new tests nor
+local focused results establish broad CI success. No shipped strings changed.

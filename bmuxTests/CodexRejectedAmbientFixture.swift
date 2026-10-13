@@ -42,11 +42,11 @@ final class CodexRejectedAmbientFixture {
         return sessions[sessionID] as? [String: Any]
     }
 
-    func run(cli: String, binding: Binding, explicit: Bool = false) async throws -> [String] {
+    func run(cli: String, binding: Binding, explicit: Bool = false, stop: Bool = false) async throws -> [String] {
         let input = root.appendingPathComponent("input")
         try JSONSerialization.data(withJSONObject: [
             "session_id": sessionID, "cwd": root.path,
-            "hook_event_name": "UserPromptSubmit", "prompt": "continue",
+            "hook_event_name": stop ? "Stop" : "UserPromptSubmit", "prompt": "continue",
         ]).write(to: input)
         let stdout = root.appendingPathComponent("stdout"), stderr = root.appendingPathComponent("stderr")
         let socketPath = root.appendingPathComponent("socket").path
@@ -62,7 +62,7 @@ final class CodexRejectedAmbientFixture {
             environment["BMUX_SURFACE_ID"] = identity == .validAmbient ? liveSurfaceID : invalidSurfaceID
         }
         if binding == .tty { environment["BMUX_CLI_TTY_NAME"] = "routing-probe" }
-        var arguments = ["hooks", "codex", "prompt-submit"]
+        var arguments = ["hooks", "codex", stop ? "stop" : "prompt-submit"]
         if explicit {
             arguments += ["--workspace", try #require(environment["BMUX_WORKSPACE_ID"]),
                           "--surface", try #require(environment["BMUX_SURFACE_ID"])]

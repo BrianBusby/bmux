@@ -4,11 +4,13 @@ import Foundation
 /// Owns one test's socket lifetime; all capture state stays inside its I/O task.
 struct CLISocketFixture: Sendable {
     let path: String
+    var responseWritten: AsyncStream<String>.Continuation? = nil
     let response: @Sendable (String) throws -> String?
 
     func capture<T: Sendable>(
         operation: () async throws -> T
     ) async throws -> (result: T, commands: [String]) {
+        defer { responseWritten?.finish() }
         let listener = try bind()
         defer { unlink(path) }
         let (events, continuation) = AsyncStream<Int>.makeStream()
@@ -78,7 +80,7 @@ struct CLISocketFixture: Sendable {
                     }
                     continue
                 }
-                while true {
+                readConnection: while true {
                     var buffer = [UInt8](repeating: 0, count: 4096)
                     let count = Darwin.read(connection.descriptor, &buffer, buffer.count)
                     if count < 0, errno == EINTR { continue }
@@ -96,7 +98,13 @@ struct CLISocketFixture: Sendable {
                         pending[token]!.removeSubrange(...newline)
                         commands.append(line)
                         if let response = try response(line) {
-                            try await write(response + "\n", to: connection.descriptor)
+                            guard try await write(response + "\n", to: connection.descriptor) else {
+                                sources.removeValue(forKey: token)
+                                pending.removeValue(forKey: token)
+                                await close(connection.source, descriptor: connection.descriptor)
+                                break readConnection
+                            }
+                            responseWritten?.yield(line)
                         }
                     }
                 }
@@ -112,10 +120,11 @@ struct CLISocketFixture: Sendable {
     private func readiness(
         descriptor: Int32, token: Int, continuation: AsyncStream<Int>.Continuation
     ) throws -> any DispatchSourceRead {
+        // Accepted sockets inherit this option; re-setting it after peer close fails with EINVAL on Darwin.
         var noSignal: Int32 = 1
         guard fcntl(descriptor, F_SETFL, O_NONBLOCK) == 0,
               fcntl(descriptor, F_SETFD, FD_CLOEXEC) == 0,
-              setsockopt(descriptor, SOL_SOCKET, SO_NOSIGPIPE, &noSignal, socklen_t(MemoryLayout<Int32>.size)) == 0 else {
+              (token != 0 || setsockopt(descriptor, SOL_SOCKET, SO_NOSIGPIPE, &noSignal, socklen_t(MemoryLayout<Int32>.size)) == 0) else {
             let error = POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
             Darwin.close(descriptor)
             throw error
@@ -147,7 +156,7 @@ struct CLISocketFixture: Sendable {
         }
     }
 
-    private func write(_ text: String, to descriptor: Int32) async throws {
+    private func write(_ text: String, to descriptor: Int32) async throws -> Bool {
         let bytes = Array(text.utf8)
         var offset = 0
         while offset < bytes.count {
@@ -159,8 +168,12 @@ struct CLISocketFixture: Sendable {
                 await writable(descriptor)
                 continue
             }
-            guard count > 0 else { throw POSIXError(.EIO) }
+            // A CLI can cancel an in-flight resize after its bridge closes. This is EOF for
+            // that connection, not an acknowledged response or a failure of the listener.
+            if count < 0, errno == EPIPE { return false }
+            guard count > 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
             offset += count
         }
+        return true
     }
 }
