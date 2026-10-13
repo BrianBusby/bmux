@@ -98,6 +98,9 @@ extension BrowserPanel {
         _ window: NSWindow,
         source: String
     ) -> Bool {
+#if DEBUG
+        defer { developerToolsLifecycleObservation.publish() }
+#endif
         guard noteDetachedDeveloperToolsWindowClosed(window, source: source) else { return false }
         detachedDeveloperToolsExplicitUserCloseWindowIds.insert(ObjectIdentifier(window))
         window.close()
@@ -140,6 +143,9 @@ extension BrowserPanel {
         startedAt: Date = Date(),
         allowInspectorTeardown: Bool = true
     ) {
+#if DEBUG
+        defer { developerToolsLifecycleObservation.publish() }
+#endif
         cancelDetachedDeveloperToolsWindowCloseResolution()
         let generation = detachedDeveloperToolsWindowCloseResolutionGeneration
         let delayNanoseconds = Int(developerToolsAttachedManualCloseDetectionDelay * 1_000_000_000)
@@ -168,6 +174,9 @@ extension BrowserPanel {
         startedAt: Date,
         allowInspectorTeardown: Bool
     ) {
+#if DEBUG
+        defer { developerToolsLifecycleObservation.publish() }
+#endif
         guard detachedDeveloperToolsWindowsForPanel().isEmpty else { return }
         guard preferredDeveloperToolsVisible || isDeveloperToolsVisible() else {
             reevaluateHiddenWebViewDiscardAfterDeveloperToolsHidden()
@@ -309,3 +318,24 @@ extension BrowserPanel {
         }
     }
 }
+
+#if DEBUG
+@MainActor
+extension BrowserPanel {
+    /// Subscribe before an action, then recheck current state after each invalidation.
+    func debugDeveloperToolsLifecycleChanges() -> (id: UUID, events: AsyncStream<Void>) {
+        developerToolsLifecycleObservation.changes()
+    }
+
+    func debugRemoveDeveloperToolsLifecycleObserver(_ id: UUID) {
+        developerToolsLifecycleObservation.remove(id)
+    }
+
+    var debugDeveloperToolsTransitionsAreSettled: Bool {
+        developerToolsTransitionTargetVisible == nil &&
+            pendingDeveloperToolsTransitionTargetVisible == nil &&
+            developerToolsTransitionSettleWorkItem == nil &&
+            detachedDeveloperToolsWindowCloseResolutionTimer == nil
+    }
+}
+#endif

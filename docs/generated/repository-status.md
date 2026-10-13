@@ -188,3 +188,4 @@ Repository: `BrianBusby/bmux`
 | `sidebar_width_persistence_focused_gate_verification` | open |
 | `managed_appearance_startup_fixture_verification` | open |
 | `native_app_host_full_suite_failures` | open |
+| `browser_inspector_window_ownership_verification` | open |

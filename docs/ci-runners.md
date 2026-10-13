@@ -489,3 +489,56 @@ Xcode wiring, selector discovery, determinism, file budgets and generated state.
 Full app-host compilation/execution and required checks on the replacement heads
 remain pending. No app build, launch, settings or localization catalog changes
 are part of this consolidation.
+## Browser inspector window ownership verification
+
+The consolidated native app-host run for PR 170 at `45acbff54` still crashes in
+browser inspector fixtures. Retained earlier logs identify ten cases that die
+around native close/autorelease cleanup. An isolated native lifetime control
+reproduces the default `NSWindow.isReleasedWhenClosed` ownership conflict; setting
+that policy to false at construction avoids the control's crash. This supports
+the fixture diagnosis, but does not establish that full WebKit behaviors pass.
+
+Seventeen affected cases (sixteen direct-window cases and one adjacent synchronous
+close observer) move incrementally to one serialized Swift Testing suite.
+Directly owned windows use retained ownership from construction, including early
+close actions. App-created main windows retain the existing application owner.
+Teardown covers partial setup, panel/portal detachment, inspector associations and
+windows. Original routing, visibility, inspector-call, parent-identity and geometry
+assertions remain; untouched legacy case bodies remain in their original suite.
+Temporary shortcut values preserve application-domain provenance and routing
+captures end synchronously before an await.
+
+A DEBUG-only per-panel lifecycle observation stream replaces the migrated cases'
+run-loop polling. The stream reports completed synchronous mutations; consumers
+recheck authoritative transition intent, pending intent, settle work and detached
+close resolution. Existing transition/close decisions and timers are unchanged.
+Subscriber removal and panel close finish streams; termination holds no strong
+panel reference. The existing 2.85-second failure deadline is cancellable and is
+not used to settle or poll state. Seven additional owner-level cases cover queued
+replacement, no-change, close-resolution replacement, subscriber removal, consumer
+cancellation, observation-owner deinitialization and panel close. Settled state covers
+visibility transitions and detached-close resolution; it does not claim that all
+WebKit restore or dock-normalization work is idle.
+Explicit native layout calls replace fixed waits in portal/hosting cases.
+
+The existing focused browser invocation includes
+`BrowserInspectorWindowOwnershipTests` before unchanged full-suite coverage. Its
+matching canonical/local caveat remains open until actual app-host execution
+verifies all 24 cases and clean native teardown. No local foreground UI test or
+app launch is authorized by this fixture work. The minimal ownership control and
+compile/static checks must not be reported as full app-host verification.
+
+The complete affected source compiles without warnings in the test target's
+configured Swift 5 mode against the isolated `browser-inspector-readiness-repair`
+DEBUG module. The new suite and fixtures also compile in Swift 6 with the unchanged
+legacy hook prefix imported from a Swift 5 support module; the complete legacy
+file still has four nonisolated mutable globals that prevent a full Swift 6 check.
+Seven observation cases pass in an owned native harness with isolated HOME and
+app activation prohibited. This exercises the actual built lifecycle owner; it
+is not execution of the seventeen window/UI cases or full app-host coverage.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing migration,
+behavior and local/CI references, architecture ownership/file/concurrency rules,
+debugging runtime pitfalls, shared behavior and native project wiring. No shipped
+strings or localization catalogs change; this section is contributor verification
+prose. This repair is integrated into PR 170; no separate PR is introduced.
