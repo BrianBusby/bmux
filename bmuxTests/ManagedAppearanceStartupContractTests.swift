@@ -12,6 +12,7 @@ struct ManagedAppearanceStartupContractTests {
         let defaults = UserDefaults.standard
         let keys = [
             AppearanceSettings.appearanceModeKey,
+            SidebarMatchTerminalBackgroundSettings.legacyAppliedSettingsFileDefaultKey,
             "bmux.settingsFile.backups.v1",
             "bmux.settingsFile.importedManagedDefaults.v1",
         ]
@@ -32,8 +33,10 @@ struct ManagedAppearanceStartupContractTests {
             }
         }
 
-        // Force an import in every case even if the host registers a system default.
-        defaults.set(AppearanceMode.auto.rawValue, forKey: AppearanceSettings.appearanceModeKey)
+        // Use a distinct canonical mode: active host readers normalize legacy auto to system.
+        let priorMode: AppearanceMode = initialMode == "dark" ? .light : .dark
+        defaults.set(priorMode.rawValue, forKey: AppearanceSettings.appearanceModeKey)
+        #expect(AppearanceSettings.resolvedMode(defaults: defaults) == priorMode)
 
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
