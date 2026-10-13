@@ -162,3 +162,48 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+## Browser initial lifecycle regression (2026-10-12)
+
+A deferred URL or URLRequest is retained by `BrowserPanel.init`, and the panel
+correctly avoids navigation and the new-tab UI, but its published lifecycle and
+`webViewLifecycleTopPayload` remain `new_tab` until a visibility callback arrives.
+The two existing failing deferred-URL XCTest methods are migrated to the wired
+`BrowserInitialLifecycleTests` suite. It covers both URL and request construction,
+new-tab controls with both render flags, initial wire payloads, and visibility
+changes without triggering network navigation. Owned panels close synchronously.
+
+Native tests against the existing build774 app dylib reproduce four initial-state
+assertion failures across the two deferred cases; both empty-panel controls pass.
+The initialization/lifecycle owners are unchanged from main in that artifact;
+build774's unrelated theme-default migration does not modify them. Evidence:
+`/tmp/browser-initial-native-red.log`; compilation has no warnings. Existing
+baseline CI also records both deferred-URL failures. Actual new-test CI red is
+required before pushing a fix. The focused browser gate selects this suite in
+its existing runner. No production files are changed in the regression commit.
+
+Planned correction belongs to the existing BrowserPanel initializer and its
+`refreshWebViewLifecycleState` projection, after initial navigation intent is set,
+including the deferred early-return branches. It must not navigate, defer state
+writes to view rendering, add a second lifecycle owner, or change discard policy.
+Rules: `AGENTS.md`, continuous-code-quality, `skills/bmux-architecture/` and
+`skills/bmux-testing/`. Complete initializer, state projection, visibility and
+socket payload callers are the review boundary. Existing discard/restore and
+WebKit portal failures remain separate unresolved gates. No shipped text changes.
+
+
+### Deferred browser initialization verification (2026-10-12)
+
+PR 151 test-only CI job 114962906951 reproduced all four deferred-state
+assertions and ended with TEST FAILED. The one-line fix refreshes the existing lifecycle projection at
+initializer exit, covering deferred URL and URLRequest early returns without
+starting navigation or adding a state owner. Tagged build 777
+(`browser-initial-lifecycle`) succeeds without launching or replacing an active
+preview. The four focused cases pass against that native artifact in an isolated
+HOME (two deferred constructors and two empty-panel controls); the same tests
+report four initial-state issues against unchanged build 774. Focused compilation
+is warning-free. The app build retains 149 warning lines, matching the previous
+build, so this is not an app-wide warning-free claim. Unrelated discard/portal gates are outside this maintenance slice. Existing prewarmed adoption was inspected but not separately exercised by
+these four cases. The same four cases were revalidated on October 13 against
+the unchanged build 777 artifact. Exact fixed-head app-host CI remains pending.
+No shipped strings changed.

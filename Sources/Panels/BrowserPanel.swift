@@ -4158,7 +4158,7 @@ final class BrowserPanel: Panel, ObservableObject {
             }
             return browserFallbackInteractiveModalHostWindow()
         }
-
+        defer { refreshWebViewLifecycleState() }
         if let initialRequest {
             hiddenWebViewDiscardManager.updateRestoredSessionRenderIntent(nil)
             currentURL = initialRequest.url
