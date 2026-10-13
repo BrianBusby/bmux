@@ -592,6 +592,7 @@
 		C0DE70260000000000000001 /* CLIProvenanceWorktreeRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70260000000000000002 /* CLIProvenanceWorktreeRow.swift */; };
 		C0F16B000000000000000001 /* CLIRemoteShellStartupPerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0F16B000000000000000002 /* CLIRemoteShellStartupPerformanceTests.swift */; };
 		A5D41209A1B2C3D4E5F60718 /* CLIRovoDevHookPersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5D4120AA1B2C3D4E5F60718 /* CLIRovoDevHookPersistenceTests.swift */; };
+		CE4411000000000000000001 /* CLISocketFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE4411000000000000000002 /* CLISocketFixture.swift */; };
 		B900004AA1B2C3D4E5F60719 /* CLISocketPathResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = B900004BA1B2C3D4E5F60719 /* CLISocketPathResolver.swift */; };
 		C12985000000000000000002 /* CLISocketSentryTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C12985000000000000000001 /* CLISocketSentryTelemetry.swift */; };
 		A8D837B3AA85F4353C493DE1 /* CLISSHPTYAttachProbeReplyRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CB1737C956A80E5F98E9DC5 /* CLISSHPTYAttachProbeReplyRegressionTests.swift */; };
@@ -1810,6 +1811,8 @@
 		CE0E01070000000000000001 /* WorkspaceDisplayCurrentStateSubscriptionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E01070000000000000002 /* WorkspaceDisplayCurrentStateSubscriptionTests.swift */; };
 		CE0E01040000000000000001 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E01040000000000000002 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift */; };
 		72DB1838A0F1B710BFB45DC1 /* WorkspaceEnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B561A95C6DC21BA9C4B2BCDD /* WorkspaceEnvironmentTests.swift */; };
+		FBA900000000000000000003 /* WorkspaceFallbackContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA900000000000000000004 /* WorkspaceFallbackContractTests.swift */; };
+		FBA900000000000000000001 /* WorkspaceFallbackFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA900000000000000000002 /* WorkspaceFallbackFixture.swift */; };
 		C0DE36230000000000000001 /* WorkspaceFinderDirectoryResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE36230000000000000002 /* WorkspaceFinderDirectoryResolver.swift */; };
 		F0ACC0DE000000000000000B /* WorkspaceForkAgentConversationAvailability.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0ACC0DE000000000000000C /* WorkspaceForkAgentConversationAvailability.swift */; };
 		F0ACC0DE0000000000000005 /* WorkspaceForkConversationContextMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0ACC0DE0000000000000006 /* WorkspaceForkConversationContextMenuTests.swift */; };
@@ -2471,6 +2474,7 @@
 		C0DE70260000000000000002 /* CLIProvenanceWorktreeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceWorktreeRow.swift; sourceTree = "<group>"; };
 		C0F16B000000000000000002 /* CLIRemoteShellStartupPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIRemoteShellStartupPerformanceTests.swift; sourceTree = "<group>"; };
 		A5D4120AA1B2C3D4E5F60718 /* CLIRovoDevHookPersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIRovoDevHookPersistenceTests.swift; sourceTree = "<group>"; };
+		CE4411000000000000000002 /* CLISocketFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLISocketFixture.swift; sourceTree = "<group>"; };
 		B900004BA1B2C3D4E5F60719 /* CLISocketPathResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLISocketPathResolver.swift; sourceTree = "<group>"; };
 		C12985000000000000000001 /* CLISocketSentryTelemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLISocketSentryTelemetry.swift; sourceTree = "<group>"; };
 		8CB1737C956A80E5F98E9DC5 /* CLISSHPTYAttachProbeReplyRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLISSHPTYAttachProbeReplyRegressionTests.swift; sourceTree = "<group>"; };
@@ -3629,6 +3633,8 @@
 		CE0E01070000000000000002 /* WorkspaceDisplayCurrentStateSubscriptionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDisplayCurrentStateSubscriptionTests.swift; sourceTree = "<group>"; };
 		CE0E01040000000000000002 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift; sourceTree = "<group>"; };
 		B561A95C6DC21BA9C4B2BCDD /* WorkspaceEnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceEnvironmentTests.swift; sourceTree = "<group>"; };
+		FBA900000000000000000004 /* WorkspaceFallbackContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceFallbackContractTests.swift; sourceTree = "<group>"; };
+		FBA900000000000000000002 /* WorkspaceFallbackFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceFallbackFixture.swift; sourceTree = "<group>"; };
 		C0DE36230000000000000002 /* WorkspaceFinderDirectoryResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceFinderDirectoryResolver.swift; sourceTree = "<group>"; };
 		F0ACC0DE000000000000000C /* WorkspaceForkAgentConversationAvailability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceForkAgentConversationAvailability.swift; sourceTree = "<group>"; };
 		F0ACC0DE0000000000000006 /* WorkspaceForkConversationContextMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceForkConversationContextMenuTests.swift; sourceTree = "<group>"; };
@@ -5270,6 +5276,9 @@
 				BABA25000000000000000006 /* BrowserHTTPBasicAuthPromptCoordinatorTests.swift */,
 				BABA25000000000000000004 /* BrowserHTTPBasicAuthPromptTests.swift */,
 				8D828DA0070335773EBAE83F /* BrowserSystemProxyMirrorTests.swift */,
+				FBA900000000000000000004 /* WorkspaceFallbackContractTests.swift */,
+				FBA900000000000000000002 /* WorkspaceFallbackFixture.swift */,
+				CE4411000000000000000002 /* CLISocketFixture.swift */,
 				C59240010000000000000004 /* BrowserDownloadFilenameResolverTests.swift */,
 				C0DE58990000000000000002 /* BmuxWebViewKeyDownReentryTests.swift */,
 				C0DE49870000000000000002 /* BrowserWebContentProcessTests.swift */,
@@ -7596,6 +7605,7 @@
 					C0DE70610000000000000001 /* CLIProvenanceSessionOutcomeCommandTests.swift in Sources */,
 					C0F16B000000000000000001 /* CLIRemoteShellStartupPerformanceTests.swift in Sources */,
 				A5D41209A1B2C3D4E5F60718 /* CLIRovoDevHookPersistenceTests.swift in Sources */,
+				CE4411000000000000000001 /* CLISocketFixture.swift in Sources */,
 				A8D837B3AA85F4353C493DE1 /* CLISSHPTYAttachProbeReplyRegressionTests.swift in Sources */,
 				C73660020000000000000001 /* CLISSHPTYAttachSessionLostRespawnTests.swift in Sources */,
 				6379A0016379A0016379A001 /* CLISSHPTYResizeInputTests.swift in Sources */,
@@ -7880,6 +7890,8 @@
 					CE0E04010000000000000001 /* WorkspaceDisplayCurrentStateSnapshotTests.swift in Sources */,
 					CE0E01070000000000000001 /* WorkspaceDisplayCurrentStateSubscriptionTests.swift in Sources */,
 				72DB1838A0F1B710BFB45DC1 /* WorkspaceEnvironmentTests.swift in Sources */,
+				FBA900000000000000000003 /* WorkspaceFallbackContractTests.swift in Sources */,
+				FBA900000000000000000001 /* WorkspaceFallbackFixture.swift in Sources */,
 				F0ACC0DE0000000000000005 /* WorkspaceForkConversationContextMenuTests.swift in Sources */,
 				C1AC71070000000000000001 /* WorkspaceGroupActionTests.swift in Sources */,
 				C9A57401C9A57401C9A57401 /* WorkspaceGroupMoveToMenuStateTests.swift in Sources */,

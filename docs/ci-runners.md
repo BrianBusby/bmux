@@ -162,3 +162,63 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+
+## Rejected ambient workspace fallback regression
+
+`WorkspaceFallbackContractTests` replaces only the legacy trigger-flash stale
+caller test. Eighteen actual CLI cases cover trigger-flash and notify with an
+explicit surface shorthand: stale/absent/valid ambient identity, validated TTY
+recovery, explicit valid/invalid workspace targets, window targeting, missing
+current selection and selection RPC failure. The socket fixture accepts exactly
+the intended workspace/surface pair and notification payload, rejects unexpected
+commands (including focus mutations), and checks explicit invalid requests fail
+without falling back to a different target. Valid ambient and TTY recovery cases
+return the intended identity at index 0 unfocused, alongside a different focused
+surface at index 1. Flash must retain the identity surface; notify's explicit
+`--surface 0` must retain index selection. Other fallback scenarios keep their
+actual target focused. The reviewed shared CLISocketFixture is reused
+byte-for-byte, with owned file capture and joined socket cleanup.
+
+On unchanged build 773, six cases fail with 18 assertions: the two stale-ambient
+success paths and their missing-current/server-error controls. Twelve controls
+pass. Compilation is warning-free. The shared fallback owner rejects the stale
+workspace through surface.list and tries a validated TTY binding, but then calls
+resolveWorkspaceId(nil), which rereads that rejected BMUX_WORKSPACE_ID. The
+correction at this exhausted fallback boundary reuses currentWorkspaceId with an
+optional window context; the general omitted-selector policy stays unchanged.
+Explicit target and window routing remain authoritative.
+
+Test-only CI job 114995800376 reproduced the six affected cases with 18
+assertion failures and TEST FAILED. Isolated build 780
+(workspace-fallback-recovery, never launched) passes all 18 cases against its
+actual CLI, including the focused decoys. An input-only negative control selects
+decoy index 1 in the four ambient/TTY cases and fails exactly their identity
+assertions. A wrong-current-workspace negative control also rejects incorrect
+flash and notification targets. Native compiles are warning-free; the changed
+CLI file has no compiler warnings. Existing app concurrency/deprecation,
+optional cargo and asset warnings remain outside this repair. The new
+missing-selection callsite preserves English wording and has parsed
+English/Japanese catalog entries. Exact fixed-head app-host CI remains required.
+The focused suite joins the existing browser app-host step without
+an additional runner, tracked by matching canonical/local Project Truth caveats.
+Broader legacy CI is not claimed green. Other WorkspaceRemoteConnectionTests
+methods remain byte-identical.
+
+Guidance: root/personal AGENTS, continuous-code-quality, architecture ownership,
+file/API/concurrency rules, Swift Testing migration/behavior/local-CI guidance,
+shared behavior and socket threading/focus policy. Relevant inspected owners are
+both command branches, workspace/surface normalization, fallback selection,
+validated TTY lookup and current-workspace query. No global environment mutation,
+app focus operation, renderer edit or user app action is part of this slice.
+No shipped strings or localization catalogs changed in the test-only commit.
+
+The final source-budget check found the fallback repair grew the already oversized
+CLI by three lines. The adjacent unused `resolveSurfaceIdForClaudeHook` private
+forwarder was removed; repository-wide search confirmed it had no callers. The
+shared `resolveSurfaceIdAllowingFallback` owner remains unchanged. This reduces
+source size without moving responsibilities or raising the legacy budget.
+Independent review cleared the removal. Final isolated build 782 succeeds, and
+its actual bundled CLI passes all eighteen routing cases. Warning-free native
+fixture compilation, the source budget and Project Truth validation/freshness
+checks pass. Exact published-head app-host CI remains pending.
