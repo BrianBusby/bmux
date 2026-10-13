@@ -83,7 +83,18 @@ final class WorkspaceFallbackFixture {
                     if let requestedWindow = params["window_id"] as? String {
                         try #require(requestedWindow == window && workspace == windowWorkspace)
                     }
-                    result = ["surfaces": [["id": surface, "ref": "surface:1", "index": 0, "focused": true]]]
+                    let hasFocusedDecoy = workspace == target && [.validAmbient, .ttyRecovery].contains(scenario)
+                    // Identity is deliberately unfocused; notify still explicitly selects index 0.
+                    var listed: [[String: Any]] = [
+                        ["id": surface, "ref": "surface:1", "index": 0, "focused": !hasFocusedDecoy],
+                    ]
+                    if hasFocusedDecoy {
+                        listed.append([
+                            "id": "88888888-8888-8888-8888-888888888888",
+                            "ref": "surface:2", "index": 1, "focused": true,
+                        ])
+                    }
+                    result = ["surfaces": listed]
                 }
             case "debug.terminals":
                 try #require(scenario == .ttyRecovery && params.isEmpty)

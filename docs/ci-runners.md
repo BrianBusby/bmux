@@ -173,8 +173,12 @@ recovery, explicit valid/invalid workspace targets, window targeting, missing
 current selection and selection RPC failure. The socket fixture accepts exactly
 the intended workspace/surface pair and notification payload, rejects unexpected
 commands (including focus mutations), and checks explicit invalid requests fail
-without falling back to a different target. The reviewed shared CLISocketFixture
-is reused byte-for-byte, with owned file capture and joined socket cleanup.
+without falling back to a different target. Valid ambient and TTY recovery cases
+return the intended identity at index 0 unfocused, alongside a different focused
+surface at index 1. Flash must retain the identity surface; notify's explicit
+`--surface 0` must retain index selection. Other fallback scenarios keep their
+actual target focused. The reviewed shared CLISocketFixture is reused
+byte-for-byte, with owned file capture and joined socket cleanup.
 
 On unchanged build 773, six cases fail with 18 assertions: the two stale-ambient
 success paths and their missing-current/server-error controls. Twelve controls
@@ -185,16 +189,18 @@ correction at this exhausted fallback boundary reuses currentWorkspaceId with an
 optional window context; the general omitted-selector policy stays unchanged.
 Explicit target and window routing remain authoritative.
 
-The first pushed commit contains tests only. Local isolated build 780
+Test-only CI job 114995800376 reproduced the six affected cases with 18
+assertion failures and TEST FAILED. Isolated build 780
 (workspace-fallback-recovery, never launched) passes all 18 cases against its
-actual CLI. A temporary negative control supplies the wrong current workspace
-and fails exactly the flash and notification target assertions, demonstrating
-that the fixture rejects arbitrary targets. The changed CLI file has no compiler
-warnings. Existing app concurrency/deprecation, optional cargo and asset warnings
-remain outside this repair. The new missing-selection callsite preserves English
-wording and has parsed English/Japanese catalog entries; all existing entries are
-unchanged. Actual test-only CI red is still required before the production fix is
-pushed, followed by exact fixed-HEAD app-host verification. The focused suite joins the existing browser app-host step without
+actual CLI, including the focused decoys. An input-only negative control selects
+decoy index 1 in the four ambient/TTY cases and fails exactly their identity
+assertions. A wrong-current-workspace negative control also rejects incorrect
+flash and notification targets. Native compiles are warning-free; the changed
+CLI file has no compiler warnings. Existing app concurrency/deprecation,
+optional cargo and asset warnings remain outside this repair. The new
+missing-selection callsite preserves English wording and has parsed
+English/Japanese catalog entries. Exact fixed-head app-host CI remains required.
+The focused suite joins the existing browser app-host step without
 an additional runner, tracked by matching canonical/local Project Truth caveats.
 Broader legacy CI is not claimed green. Other WorkspaceRemoteConnectionTests
 methods remain byte-identical.
