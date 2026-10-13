@@ -1309,7 +1309,7 @@ concurrent native probe retained eight PTYs at once across eight batches and
 verified distinct paths plus exact marker delivery to each corresponding master.
 The sixteen CLI cases and constructor-failure cleanup proof also pass after
 this correction; app-host CI remains pending.
-### Consolidated ssh transport fixtures review boundary
+### Consolidated SSH transport fixtures review boundary
 
 This branch consolidates #150, #160, #164, #167, #168, preserving each published source commit in
 its ancestry. Original branches remain available; superseded pull requests
@@ -1453,6 +1453,18 @@ shipped strings or catalogs change; contributor verification notes only.
 ### Consolidated agent session fixtures review boundary
 
 This branch consolidates #146, #152, #157, #159, #162, #165, #166, preserving each published source commit in
+its ancestry. Original branches remain available; superseded pull requests
+link to their replacement. This changes review organization, not application
+behavior. The preserved source heads are:
+
+- #146: `7f48a469821734062ad0c8de95da690cea3e5f4c`
+- #152: `637ae2ede4f18445487574e29988b1aa1befca04`
+- #157: `78cbde9b63acb7ea92929ca17ce9e4bc73fd68fb`
+- #159: `994e34f6512abf871b839b7957d56f2739671314`
+- #162: `90503d88c5f4cb0f69745dfb6b886755fe3ece12`
+- #165: `34f10e69b8fc9b554014ff830d775648dc0cb368`
+- #166: `971a35dfc91986d943ca74a8485139c7f31d8ae7`
+
 ### Agent fixtures after shared transport correction
 
 Codex Stop now uses `CLISocketFixture` with its existing response model and
