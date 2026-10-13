@@ -9,7 +9,7 @@ struct SSHPTYLifecycleBridge {
 
     func capture<T: Sendable>(
         responses: AsyncStream<String>, operation: (Int) async throws -> T
-    ) async throws -> (result: T, handshake: String, closed: Bool) {
+    ) async throws -> (result: T, handshake: String, closed: Bool, resized: Bool, inputEnded: Bool) {
         let (listener, port) = try bind()
         let (events, continuation) = AsyncStream<Event>.makeStream()
         let bridge = Task { try await serve(listener: listener, events: events, continuation: continuation) }
@@ -24,7 +24,7 @@ struct SSHPTYLifecycleBridge {
             acknowledgements.cancel()
             await acknowledgements.value
             let trace = try await bridge.value
-            return (result, trace.0, trace.1)
+            return (result, trace.0, trace.1, trace.2, trace.3)
         } catch {
             continuation.finish()
             acknowledgements.cancel()
@@ -57,7 +57,7 @@ struct SSHPTYLifecycleBridge {
 
     private func serve(
         listener: Int32, events: AsyncStream<Event>, continuation: AsyncStream<Event>.Continuation
-    ) async throws -> (String, Bool) {
+    ) async throws -> (String, Bool, Bool, Bool) {
         var sources: [(Int32, any DispatchSourceRead)] = []
         var client: Int32?
         var pending = Data(), handshake = ""
@@ -103,7 +103,7 @@ struct SSHPTYLifecycleBridge {
                     }
                     if inputSuspended { sources.last?.1.resume() }
                     for (fd, source) in sources { await close(fd, source: source) }
-                    return (handshake, true)
+                    return (handshake, true, resized, inputEnded)
                 }
             }
         } catch {
@@ -113,7 +113,7 @@ struct SSHPTYLifecycleBridge {
         }
         if inputSuspended { sources.last?.1.resume() }
         for (fd, source) in sources { await close(fd, source: source) }
-        return (handshake, false)
+        return (handshake, false, resized, inputEnded)
     }
 
     private func readiness(
