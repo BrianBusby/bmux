@@ -1677,3 +1677,28 @@ behavior and local/CI references, architecture ownership/file/concurrency rules,
 debugging runtime pitfalls, shared behavior and native project wiring. No shipped
 strings or localization catalogs change; this section is contributor verification
 prose. This repair is integrated into PR 170; no separate PR is introduced.
+
+## Maintenance validation refresh (2026-10-13)
+
+This local composition replaces the earlier 87f0c2b5e candidate, retained on
+`maintenance-validation-before-oct13`. The earlier CI run cannot verify this
+composition. It includes the existing SSH and agent fixture diagnostics, the
+browser inspector ownership/observation repair, the browser initializer lifecycle
+fix, the workspace fallback fix and its source-budget cleanup, and the corrected
+whole-suite SSH reconnect regression selector. Source ancestry and focused
+selectors remain preserved; the obsolete reconnect method selector that ran zero
+tests is deliberately replaced by its enclosing suite.
+
+The complete Codex rejected-target correction and SSH manual-reconnect runtime
+correction remain outside this composition until their test-only CI regressions
+actually run and fail. Local native passes do not replace those gates. Seven
+browser observation cases pass against the isolated fresh DEBUG module; all
+seventeen migrated window/inspector cases still need actual app-host execution.
+SSH resize-acknowledgement and shared CLI process timeouts remain unresolved:
+added diagnostics preserve existing assertions, process deadlines and scheduling.
+
+The final combined native and artifact gates remain open. No incomplete,
+cancelled or older-head run is accepted as green, and no main-branch merge has
+occurred. Running user builds 773/775 were not modified. These are contributor
+verification notes; no shipped UI strings or localization catalogs change in
+this integration.
