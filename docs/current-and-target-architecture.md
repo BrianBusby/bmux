@@ -418,4 +418,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Claude replaced-session cleanup fixture focused gate awaits app-host CI (`claude_session_end_scope_focused_gate_verification`) - owner: Bmux; status: open
 - Published maintenance heads are composed for CI; held fixes and full authoritative native and artifact gates remain pending (`maintenance_combined_validation_pending`) - owner: Bmux; status: open
 - Agent launch environment fixture focused gate awaits app-host CI (`agent_launch_environment_fixture_focused_gate_verification`) - owner: Bmux; status: open
+- SSH workspace creation fixture focused gate awaits app-host CI (`ssh_workspace_creation_fixture_focused_gate_verification`) - owner: Bmux; status: open
+- SSH agent environment fixture focused gate awaits app-host CI (`ssh_agent_environment_fixture_focused_gate_verification`) - owner: Bmux; status: open
+- SSH PTY closure and acknowledged-resize fixture verification (`ssh_pty_lifecycle_fixture_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

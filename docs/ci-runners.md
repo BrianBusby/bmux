@@ -1210,3 +1210,161 @@ Held PR151/153/155 production fixes remain excluded; expected regression failure
 are evidence to inspect, not a reason to weaken gates. Subsequent new PRs do not
 supersede or silently rerun this exact batch. The separate native proof above
 remains limited to its recorded source/artifact pairing.
+### SSH workspace creation fixture
+
+The legacy SSH creation test omitted the terminal surface ID from its
+`workspace.create` response and rejected `surface.list`. Persistent SSH PTY
+startup therefore correctly failed target resolution and attempted rollback,
+instead of reaching the configuration assertions. The fixture now represents
+the current create response. A second case exercises the supported fallback
+where an older create response omits the surface but `surface.list` supplies it.
+
+Both Swift Testing cases retain the original exit/output, ordered requests,
+window selection, SSH destination/port/identity/options, relay/auth metadata and
+nonempty startup-command assertions. Every other legacy test remains unchanged.
+No production code, terminal rendering, network service or running app changes.
+The fixture owns its process environment, state/output files and mock socket;
+the reviewed shared CLISocketFixture owns asynchronous transport and cleanup.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing and migration/wiring/
+local-vs-CI references, architecture file/API discipline and socket focus policy.
+The complete workspace create/resolve/configure/select/rollback owner was
+inspected. Both cases pass unchanged build 773 with warning-free focused
+compilation. A temporary negative control restoring the omitted surface and
+rejected lookup fails both cases on the original observable assertions.
+App-host CI and combined full-suite verification remain pending under the
+canonical/local focused-gate caveat. Localization audit: no shipped strings or
+catalogs change; contributor verification documentation only.
+### SSH agent environment fixtures
+
+Two legacy SSH agent tests relied on obsolete fixture assumptions. The tilde
+case changed `HOME` but not Foundation's home override, so the owned candidate
+was not found and the inherited agent path won. The caller-socket case required
+all `ssh_options` to be absent, although the CLI now adds multiplexing defaults.
+Neither failure demonstrates a production forwarding defect.
+
+The migrated Swift Testing cases own both `HOME` and `CFFIXED_USER_HOME`, the
+caller agent path and the optional tilde candidate. They verify the exact path
+in both workspace initial environment and remote configuration, preserve the
+explicit tilde option, and check that the no-option path adds no ForwardAgent
+override while permitting other defaults. A missing-candidate control verifies
+fallback to the owned caller path. Every other legacy method remains unchanged.
+The existence-only lookup uses owned empty files; no agent traffic is sent.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing with migration,
+wiring and local-vs-CI references, architecture/file discipline and shared/socket
+policy. Complete SSHAgentSocketResolver path resolution and the CLI forwarding
+selection/create/configure owners were inspected. Process environment, outputs
+and mock socket are isolated; transport uses the reviewed CLISocketFixture.
+No production, OpenSSH policy, terminal renderer or running app changes.
+
+Three native cases pass unchanged build 773 with warning-free compilation. A
+temporary negative control restoring HOME-only isolation and the nil-options
+assertion reproduces both original failures; the missing-candidate control
+still passes. Actual app-host CI and combined full-suite verification remain
+pending under the canonical/local focused-gate caveat. Localization audit: no
+shipped strings or catalogs change; contributor verification notes only.
+
+### SSH PTY bridge lifecycle fixtures
+
+Four legacy CLI tests expected an initial resize before every bridge EOF/reset,
+but their mock accepted only one RPC connection. Since `643906256`, resize uses
+an independent bounded connection and pending resize may be cancelled by EOF.
+The baseline app-host logs fail only that method-array expectation; the exit,
+error, detach and local attach-end assertions pass.
+
+`SSHPTYLifecycleContractTests` migrates those four methods to sixteen real-CLI
+cases: running session, gone session, absent surface and reset, each with a pipe
+(80×24) or PTY (132×43), and immediate or resize-acknowledged bridge closure.
+Immediate closure preserves the exact lifecycle sequence and validates any
+resize that wins cancellation. The second path closes only after the RPC mock
+writes the complete resize reply and requires exactly one resize with the exact
+workspace/session/attachment/token/dimensions before session reconciliation.
+Running sessions still return 254 and detach; gone/reset sessions return zero
+and clear the local surface; absent surfaces never detach or clear one.
+
+Ownership follows `AGENTS.md`, the continuous-code-quality skill, bmux testing
+migration/behavior/local-vs-CI references, architecture concurrency/file rules,
+and socket focus policy. The maintained `643906256` adjacent cleanup test and
+`CLISSHPTYResizeInputTests` establish the separate connection and native PTY
+contracts. The shared `CLISocketFixture` retains its reviewed transport and
+adds an optional response-written AsyncStream signal; the bridge and output
+channel own and join their native readiness sources. These tests use only
+owned loopback sockets, temporary homes, subprocesses and descriptors. No
+production or renderer behavior changes, global settings, app launches or
+new user-facing copy are involved.
+
+Local native compilation against unchanged build 773 is warning-free; all
+sixteen cases pass. A transport negative control suppressing resize requests
+fails all eight acknowledgement-gated cases at the bounded process deadline,
+while the eight immediate-close cases still pass. This demonstrates that
+accepting cancellation does not remove positive resize coverage. The focused
+browser-proxy app-host invocation includes this suite. Actual app-host CI
+execution remains pending under `ssh_pty_lifecycle_fixture_verification`;
+these local results do not establish full-suite acceptance.
+
+The output-channel fixture resolves each PTY path with `ttyname_r` and an owned
+buffer so parallel cases cannot race over `ttyname` static storage. A temporary
+concurrent native probe retained eight PTYs at once across eight batches and
+verified distinct paths plus exact marker delivery to each corresponding master.
+The sixteen CLI cases and constructor-failure cleanup proof also pass after
+this correction; app-host CI remains pending.
+### Consolidated ssh transport fixtures review boundary
+
+This branch consolidates #150, #160, #164, #167, #168, preserving each published source commit in
+its ancestry. Original branches remain available; superseded pull requests
+link to their replacement. This changes review organization, not application
+behavior. The preserved source heads are:
+
+- #150: `cf9e78dcb5df8dbc4dbadd82df673492ad33cbdf`
+- #160: `d58ea8aaa63284b48302763446964f74cbd94524`
+- #164: `d10e0deaa2e8d34e6f2f17057f43dd8a3d3021b5`
+- #167: `0d1223d04ad3f65f95c280d8d60050f11b808a21`
+- #168: `a289576a0c25890594493b489e43b8a0047c89cb`
+
+The native-settings and SSH replacement PRs depend on #142 for authoritative
+CI exit reporting. The agent-session replacement stacks on SSH to share one
+reviewed socket fixture. Existing focused selectors, full-suite coverage and
+canonical/local verification caveats remain intact. No failed, incomplete or
+cancelled run is treated as green. The original combined validation branch
+remains unchanged and does not verify these new heads.
+
+Local consolidation checks cover source ancestry, test-content preservation,
+Xcode wiring, selector discovery, determinism, file budgets and generated state.
+Full app-host compilation/execution and required checks on the replacement heads
+remain pending. No app build, launch, settings or localization catalog changes
+are part of this consolidation.
+
+A combined native run of the SSH and agent fixture sources against existing
+build 773 executed 22 test functions in 14 suites and failed with three
+fixture errors: one immediate-close SSH PTY case returned POSIX EIO; two Codex
+Stop cases returned POSIX EINVAL. These are unresolved concurrency-sensitive
+verification failures, not a green combined result. Compilation succeeded with
+a non-Sendable callback warning inherited from the unchanged PR150
+SSHExitedPTYClient fixture, whose callback crosses a legacy queue boundary. Prior isolated passes apply to their individual fixtures and artifacts;
+they do not establish combined-suite success; neither the warning nor the new combined failures is waived.
+
+
+### Consolidated socket cancellation follow-up
+
+The first replacement run completed all four app-host jobs with failures; the
+full-suite assertions and deadlines remain authoritative. The shared fixture
+error was reproduced locally with the same 22 test functions and 14 suites:
+operation-labelled diagnostics identified `EPIPE` when replying to a
+`workspace.remote.pty_resize` that the CLI canceled after bridge closure. The
+fixture now closes only that client connection, preserves the captured request,
+and emits no response-written acknowledgment for the canceled reply. Other
+write errors still fail. The eight resize-acknowledged cases and all lifecycle
+assertions are unchanged.
+
+The legacy RPC callback fixture now documents and narrows its immutable transfer
+to the protocol-supplied delivery queue, matching the existing subscription
+ownership contract. Swift 6 compilation is warning-free. The combined native
+batch passes against the existing build 773 artifact after the shared fix and
+the agent branch's duplicate-server removal. This is focused fixture evidence,
+not proof that all replacement-head app-host tests pass.
+
+Both inherited CI reporting capabilities are restored in Project Truth. The
+new exact-head checks remain required. Existing broad failures, including
+inspector crashes, terminal readiness assertions and a stale-control-socket
+process deadline, are not waived by the focused result.

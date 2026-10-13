@@ -157,6 +157,9 @@ Regenerate with: ./scripts/project-docs generate
 | Claude replaced-session cleanup fixture focused gate awaits app-host CI (`claude_session_end_scope_focused_gate_verification`) | Bmux | open |  |
 | Published maintenance heads are composed for CI; held fixes and full authoritative native and artifact gates remain pending (`maintenance_combined_validation_pending`) | Bmux | open |  |
 | Agent launch environment fixture focused gate awaits app-host CI (`agent_launch_environment_fixture_focused_gate_verification`) | Bmux | open |  |
+| SSH workspace creation fixture focused gate awaits app-host CI (`ssh_workspace_creation_fixture_focused_gate_verification`) | Bmux | open |  |
+| SSH agent environment fixture focused gate awaits app-host CI (`ssh_agent_environment_fixture_focused_gate_verification`) | Bmux | open |  |
+| SSH PTY closure and acknowledged-resize fixture verification (`ssh_pty_lifecycle_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

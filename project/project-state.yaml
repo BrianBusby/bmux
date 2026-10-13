@@ -5982,3 +5982,15 @@ caveats:
     title: Agent launch environment fixture focused gate awaits app-host CI
     status: open
     owner: bmux
+  - id: ssh_workspace_creation_fixture_focused_gate_verification
+    title: SSH workspace creation fixture focused gate awaits app-host CI
+    status: open
+    owner: bmux
+  - id: ssh_agent_environment_fixture_focused_gate_verification
+    title: SSH agent environment fixture focused gate awaits app-host CI
+    status: open
+    owner: bmux
+  - id: ssh_pty_lifecycle_fixture_verification
+    title: SSH PTY closure and acknowledged-resize fixture verification
+    status: open
+    owner: bmux

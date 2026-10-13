@@ -252,3 +252,9 @@ local_caveats:
     status: open
   - id: agent_launch_environment_fixture_focused_gate_verification
     status: open
+  - id: ssh_workspace_creation_fixture_focused_gate_verification
+    status: open
+  - id: ssh_agent_environment_fixture_focused_gate_verification
+    status: open
+  - id: ssh_pty_lifecycle_fixture_verification
+    status: open
