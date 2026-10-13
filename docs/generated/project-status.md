@@ -142,7 +142,7 @@ Regenerate with: ./scripts/project-docs generate
 | CI app-host Option/Alt step selects nine SSH lifecycle tests plus managed attach cleanup fixture; pushed-head verification pending (`ssh_startup_lifecycle_focused_gate_verification`) | Bmux | open |  |
 | SSH workspace creation fixture focused gate awaits app-host CI (`ssh_workspace_creation_fixture_focused_gate_verification`) | Bmux | open |  |
 | SSH agent environment fixture focused gate awaits app-host CI (`ssh_agent_environment_fixture_focused_gate_verification`) | Bmux | open |  |
-| SSH PTY closure and acknowledged-resize fixture verification (`ssh_pty_lifecycle_fixture_verification`) | Bmux | open |  |
+| SSH PTY initial resize acknowledgement CI timeouts remain unresolved (`ssh_pty_lifecycle_fixture_verification`) | Bmux | open |  |
 | Codex Stop fixture repair passes 13 local scenarios; focused app-host CI verification remains pending (`codex_stop_fixture_app_host_verification`) | Bmux | open |  |
 | CommandRunner blocking pipe readers can exhaust the cooperative executor during parallel socket tests (`command_runner_parallel_pipe_capture`) | Bmux | open |  |
 | Claude notification full-suite process timeouts remain unresolved despite focused app-host completion (`claude_notification_target_fixture_verification`) | Bmux | open |  |
