@@ -384,9 +384,9 @@ current-turn error suppression. Notification assertions use the current
 `notify_target_async` command. Unknown mock methods fail the test.
 
 Each fixture owns its HOME, CFFIXED_USER_HOME, CODEX_HOME, hook-state directory,
-Unix socket, and input/output files. `CodexStopMockServer` bridges nonblocking
-socket readiness into one async capture task; it awaits descriptor cancellation
-before removing the socket. `CodexStopHookFixture` uses the existing
+Unix socket, and input/output files. The shared `CLISocketFixture` bridges
+nonblocking socket readiness into one async capture task; it awaits descriptor
+cancellation before removing the socket. `CodexStopHookFixture` uses the existing
 `CommandRunner` for exit/deadline handling and positional shell `exec`
 redirection for exact non-TTY input/output. It reads captured output only after
 a native process exit. These fixtures do not build, launch, or contact a user's
