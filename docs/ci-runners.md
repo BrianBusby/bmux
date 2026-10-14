@@ -3018,3 +3018,32 @@ its existing XCTest import warning. The incremental log contains 158 distinct
 warning lines; that count is not comparable to the preceding fresh build.
 No app or tests were launched. Xcode 26.3 compilation and execution still gate
 merge; the earlier local build did not prove the conditional compiled in CI.
+
+### Browser omnibar arrow context fixtures
+
+Run 38509817630 shard 2 (job 115676261618) reported empty field-editor key arrays
+in the two omnibar restoration cases. Their random panel IDs and unregistered
+windows did not satisfy `focusedBrowserAddressBarPanelIdForShortcutEvent`'s real
+window-context, selected-workspace and browser-panel guards. The marked and
+unmarked controls on unchanged build 786 reproduce that boundary: an unknown
+window reports handled but delivers no editor key; a valid context delivers 123.
+
+`BrowserOmnibarArrowRoutingTests` preserves both original native window dispatch
+and exact `[123]` destination assertions, first-responder transitions, marked-text
+state, event modifiers and field-editor identity. It adds explicit field-resolution
+and restored-editor identity checks. `BrowserOmnibarArrowFixture` composes the real
+`MainWindowContext` directly, following the maintained popover-focus fixture, and
+uses the real panel's web view and `focusBrowserAddressBar(in:)` action. It avoids
+`registerMainWindow`'s listener and persistence side effects. All setup, dispatch
+and shared delegate/active-manager restoration are synchronous on MainActor;
+owned panels and retained windows are closed. No clock bound, polling, production
+seam, workflow selector or unrelated legacy case changes.
+
+The new sources compile without warnings in Swift 5 and Swift 6. Both cases pass
+in an isolated, nonactivating native 786 process. Removing only context composition
+fails both original destination checks plus the four added resolution/restoration
+checks. Temporary controls verify cleanup with both absent and existing delegates
+and active managers; the owned socket path stays absent and no listener starts.
+Native logs include existing disabled-Sentry breadcrumb diagnostics; these are
+runtime diagnostics, not compiler warnings. Fixed-head macOS app-host verification
+remains pending; the native check does not replace that gate.
