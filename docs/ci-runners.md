@@ -2241,3 +2241,26 @@ The existing actual CI regression supplies the red evidence. Parsing and project
 state checks pass; the fixed native artifact and complete app-host suite remain
 pending under `workspace_close_ownership_verification`. No test assertion,
 deadline, localization catalog or shipped wording changed.
+
+
+### Portal geometry and workspace contract fixtures
+
+Four legacy cases now use the current owners: hidden anchorless terminals are
+pruned while visible entries remain available for drag recovery; typed terminal
+subview counts exclude portal chrome; deferred external geometry explicitly uses
+its two-hop queue path; workspace creation inherits font lineage into a clean
+config; PR publication is observed through `workspaceDisplayMetadataDidChange`.
+The four functions run as five Swift Testing cases, including both anchor-loss
+visibility states. Only their legacy bodies and the moved config fixture were
+removed; the remaining legacy cases are unchanged. Existing full app-host
+coverage remains the gate, with no selector, runner or timeout changes.
+
+The owned offscreen native harness against existing build 785 compiles these
+sources in Swift 6. It never activates or opens an app, and sets test mode,
+XCTest identity and isolated HOME/config paths before loading the module.
+Original native probes failed; corrected cases pass locally. Input controls for
+visible retention, immediate geometry delivery, wrong font lineage and changed
+PR state exercise the retained count, hit-test, font and deduplication assertions.
+Disabled-Sentry breadcrumb diagnostics are present in the standalone harness;
+these are runtime diagnostics, not compiler warnings or a full app-host result.
+Fixed-head app-host execution remains pending.

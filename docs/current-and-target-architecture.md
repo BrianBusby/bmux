@@ -426,6 +426,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - CI Option/Alt step selects CodexMonitorLeaseTests sequential and nested controls; actual app-host verification pending (`codex_monitor_lease_fixture_verification`) - owner: Bmux; status: open
 - Respawn window protocol fixture focused gate awaits app-host CI (`respawn_window_protocol_fixture_focused_gate_verification`) - owner: Bmux; status: open
 - Workspace fallback regression test red and production fix verification pending (`workspace_fallback_regression_verification`) - owner: Bmux; status: open
+- Portal geometry and workspace creation/publication fixture corrections await fixed-head app-host verification (`native_portal_workspace_contract_fixture_verification`) - owner: Bmux; status: open
 - Completed-close history and batched mobile response fixture corrections await fixed-head app-host verification (`native_history_and_batched_frame_fixture_verification`) - owner: Bmux; status: open
 - Browser inspector window-close runtime fixture correction awaits fixed-head app-host verification (`browser_inspector_window_ownership_verification`) - owner: Bmux; status: open
 - Remote agent restore directory guard passes native build 783; full app-host verification pending (`remote_restore_working_directory_regression`) - owner: Bmux; status: open

@@ -3521,78 +3521,6 @@ final class WorkspaceCreationPlacementTests: XCTestCase {
     }
 }
 
-@MainActor
-final class WorkspaceCreationConfigSanitizationTests: XCTestCase {
-    private final class UnsafeConfigSnapshotTabManager: TabManager {
-        private var injectedConfig: BmuxSurfaceConfigTemplate?
-        var capturedConfigTemplate: BmuxSurfaceConfigTemplate?
-
-        func installInjectedConfig(fontSize: Float) {
-            var config = BmuxSurfaceConfigTemplate()
-            config.fontSize = fontSize
-            config.workingDirectory = "/tmp/bmux-workspace-snapshot"
-            config.command = "echo snapshot"
-            config.environmentVariables = ["BMUX_INHERITED_ENV": "1"]
-            injectedConfig = config
-        }
-
-        override func inheritedTerminalConfigForNewWorkspace(
-            workspace: Workspace?
-        ) -> BmuxSurfaceConfigTemplate? {
-            injectedConfig ?? super.inheritedTerminalConfigForNewWorkspace(workspace: workspace)
-        }
-
-        override func makeWorkspaceForCreation(
-            title: String,
-            workingDirectory: String?,
-            portOrdinal: Int,
-            configTemplate: BmuxSurfaceConfigTemplate?,
-            initialSurface: NewWorkspaceInitialSurface,
-            initialTerminalCommand: String?,
-            initialTerminalInput: String?,
-            initialTerminalEnvironment: [String: String],
-            initialBrowserURL: URL?,
-            initialBrowserOmnibarVisible: Bool,
-            initialBrowserTransparentBackground: Bool,
-            workspaceEnvironment: [String: String],
-            allowTextBoxFocusDefault: Bool
-        ) -> Workspace {
-            capturedConfigTemplate = configTemplate
-            return super.makeWorkspaceForCreation(
-                title: title,
-                workingDirectory: workingDirectory,
-                portOrdinal: portOrdinal,
-                configTemplate: configTemplate,
-                initialSurface: initialSurface,
-                initialTerminalCommand: initialTerminalCommand,
-                initialTerminalInput: initialTerminalInput,
-                initialTerminalEnvironment: initialTerminalEnvironment,
-                initialBrowserURL: initialBrowserURL,
-                initialBrowserOmnibarVisible: initialBrowserOmnibarVisible,
-                initialBrowserTransparentBackground: initialBrowserTransparentBackground,
-                workspaceEnvironment: workspaceEnvironment,
-                allowTextBoxFocusDefault: allowTextBoxFocusDefault
-            )
-        }
-    }
-
-    func testAddWorkspacePassesSanitizedInheritedConfigTemplate() {
-        let manager = UnsafeConfigSnapshotTabManager()
-        manager.installInjectedConfig(fontSize: 19)
-
-        _ = manager.addWorkspace()
-
-        guard let capturedConfig = manager.capturedConfigTemplate else {
-            XCTFail("Expected captured config template for new workspace")
-            return
-        }
-
-        XCTAssertEqual(capturedConfig.fontSize, 19, accuracy: 0.001)
-        XCTAssertNil(capturedConfig.workingDirectory)
-        XCTAssertNil(capturedConfig.command)
-        XCTAssertTrue(capturedConfig.environmentVariables.isEmpty)
-    }
-}
 
 @MainActor
 final class NewBrowserWorkspaceCreationTests: XCTestCase {
@@ -6644,53 +6572,6 @@ final class WorkspacePanelGitBranchTests: XCTestCase {
         )
     }
 
-    func testUpdatingFocusedPanelPullRequestWithSameStateDoesNotRepublishWorkspace() {
-        let workspace = Workspace()
-        guard let panelId = workspace.focusedPanelId else {
-            XCTFail("Expected initial focused panel")
-            return
-        }
-
-        workspace.updatePanelGitBranch(panelId: panelId, branch: "feature/sidebar-pr", isDirty: false)
-
-        var publishCount = 0
-        let cancellable = workspace.objectWillChange.sink { _ in
-            publishCount += 1
-        }
-        defer { cancellable.cancel() }
-
-        let pullRequestURL = URL(string: "https://github.com/manaflow-ai/bmux/pull/2388")!
-        workspace.updatePanelPullRequest(
-            panelId: panelId,
-            number: 2388,
-            label: "PR",
-            url: pullRequestURL,
-            status: .open,
-            branch: "feature/sidebar-pr"
-        )
-        let baselinePublishCount = publishCount
-
-        XCTAssertGreaterThan(
-            baselinePublishCount,
-            0,
-            "Expected the first focused pull request update to publish workspace changes"
-        )
-
-        workspace.updatePanelPullRequest(
-            panelId: panelId,
-            number: 2388,
-            label: "PR",
-            url: pullRequestURL,
-            status: .open,
-            branch: "feature/sidebar-pr"
-        )
-
-        XCTAssertEqual(
-            publishCount,
-            baselinePublishCount,
-            "Expected identical focused pull request refreshes to avoid extra workspace publishes"
-        )
-    }
 
     func testSidebarObservationPublisherEmitsForFocusedGitBranchChangesOnlyOncePerState() {
         let workspace = Workspace()
