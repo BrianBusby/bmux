@@ -305,6 +305,7 @@ local_caveats:
   - id: welcome_window_retained_fixture_verification
     status: open
   - id: browser_inspector_window_ownership_verification
+    # Includes raw detached-inspector close observation; real-window execution remains pending.
     status: open
   - id: remote_restore_working_directory_regression
     status: open

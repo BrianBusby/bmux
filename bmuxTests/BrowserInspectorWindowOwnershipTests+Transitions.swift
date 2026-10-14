@@ -121,4 +121,45 @@ extension BrowserInspectorWindowOwnershipTests {
         #expect(panel.preferredDeveloperToolsVisible)
         #expect(frontendWebView.evaluatedJavaScript.joined(separator: "\n").contains("const detachedFromHostWindow = false;"), "Adopting a WebKit-initiated redock must re-run dock-control normalization in attached mode")
     }
+    @Test
+    func detachedInspectorWindowWillCloseWaitsForManualCloseState() async throws {
+        let fixture = BrowserInspectorTestFixture()
+        let panel = fixture.panel
+        let inspector = fixture.inspector
+        defer { fixture.closePanel() }
+        let window = fixture.makeWindow(contentRect: NSRect(x: 0, y: 0, width: 360, height: 240))
+        window.title = "Web Inspector — example.com"
+        let frontendWebView = WKWebView(frame: window.contentView?.bounds ?? .zero)
+        window.contentView?.addSubview(frontendWebView)
+        window.contentView?.addSubview(WKInspectorProbeView(frame: window.contentView?.bounds ?? .zero))
+        inspector.setFrontendWebView(frontendWebView)
+        defer { fixture.closeWindow(window) }
+        let observation = panel.debugDeveloperToolsLifecycleChanges()
+        defer { panel.debugRemoveDeveloperToolsLifecycleObserver(observation.id) }
+
+        window.makeKeyAndOrderFront(nil)
+        #expect(panel.showDeveloperTools())
+        #expect(panel.isDeveloperToolsVisible())
+        #expect(inspector.closeCount == 0)
+
+        window.close()
+
+        #expect(inspector.closeCount == 0,
+                "A raw detached Web Inspector willClose can be WebKit's redock path, so bmux must not synchronously close _inspector before WebKit reports the final state")
+        #expect(panel.isDeveloperToolsVisible())
+        #expect(!window.isVisible)
+        #expect(NSApp.windows.contains { $0 === window })
+
+        inspector.close()
+        try await fixture.waitForTransitions(observation: observation) {
+            inspector.closeCount == 1 &&
+                !panel.isDeveloperToolsVisible() &&
+                !panel.preferredDeveloperToolsVisible
+        }
+
+        #expect(inspector.closeCount == 1)
+        #expect(!panel.isDeveloperToolsVisible())
+        #expect(!panel.preferredDeveloperToolsVisible)
+    }
+
 }
