@@ -4011,3 +4011,25 @@ for that standalone executable; the socket, process, fixture, and test sources a
 compiled unchanged. Full macOS 15 app-host execution remains pending under the
 existing `grok_hook_connection_fixture_verification` caveat. No tagged app was
 launched or rebuilt for this test-only migration.
+
+### Browser preload fixture window ownership
+
+The I shard-three run crashes during XCTest teardown after the background-preload
+consumption case starts. Matching XCTestCore image UUIDs and frame offsets in
+the same run identify the memory-check teardown boundary; they do not identify
+the invalid object. The case owns a raw borderless NSWindow and closes it before
+Swift releases its reference. A never-presented native window control reproduces
+SIGSEGV with the default release-on-close policy and completes with
+`isReleasedWhenClosed = false`.
+
+Only that case moves to `BrowserBackgroundPreloadOwnershipTests`, retaining all
+three preload assertions, navigation actions and defer order. Its real-host
+window now follows the retained ownership policy already used by the production
+background preload host. No production browser behavior, deadline or selector
+changes. The primitive ran in an owned HOME with activation prohibited; the full
+preloader case is not claimed locally executed and remains an actual macOS 15
+app-host verification gate. The complete migrated case typechecks against build
+790 modules in Swift 5 and strict Swift 6 without warnings. Wiring (577 files),
+native PBX parsing, normalization, main-base source budget, strict determinism
+and local Project Truth validation/generation/freshness checks pass. No shipped
+copy or localization catalogs change.

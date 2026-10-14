@@ -420,3 +420,6 @@ local_caveats:
 
   - id: gemini_stale_pid_obsolete_oracle_verification
     status: open
+
+  - id: browser_preload_window_ownership_verification
+    status: open

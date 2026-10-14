@@ -6297,3 +6297,8 @@ caveats:
     title: Obsolete Gemini dead-PID nil oracle removed under accepted restore policy; native positive and maintained stale-PID coverage pass, integrated app-host verification pending
     status: open
     owner: bmux
+
+  - id: browser_preload_window_ownership_verification
+    title: Browser preload fixture retains its owned window through close; native ownership control passes and full app-host verification remains pending
+    status: open
+    owner: bmux
