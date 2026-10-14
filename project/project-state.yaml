@@ -6292,3 +6292,8 @@ caveats:
     title: Plain terminal attachment and deferred TCIM fixtures await readiness; native controls pass and integrated app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: browser_preload_window_ownership_verification
+    title: Browser preload fixture retains its owned window through close; native ownership control passes and full app-host verification remains pending
+    status: open
+    owner: bmux

@@ -417,3 +417,6 @@ local_caveats:
 
   - id: terminal_attachment_deferred_ime_fixture_verification
     status: open
+
+  - id: browser_preload_window_ownership_verification
+    status: open
