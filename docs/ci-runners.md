@@ -676,9 +676,9 @@ existing filename-resolution suite retains its other assertions.
 The extracted source and focused suite compile in Swift 6 without warnings.
 Five functions/nine parameter cases pass locally on macOS 26. A temporary
 control bypassing sanitization fails with ten exact URL assertions, while native
-persistence checks still pass. The committed app
-module and full app-host execution remain pending; the canonical/local caveat
-stays open. Native readback evidence does not claim macOS 15 CI success.
+persistence checks still pass. Subsequent committed-module verification passed
+as recorded below; full app-host execution remains pending and the canonical/local
+caveat stays open. Native readback evidence does not claim macOS 15 CI success.
 
 Retained policy caveat: the existing writer sets origin equal to the sanitized
 download URL. The SDK recommends a distinct referring page or no origin to avoid
