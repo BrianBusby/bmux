@@ -148,6 +148,8 @@ local_caveats:
     status: open
   - id: antigravity_hook_lifecycle_fixture_verification
     status: open
+  - id: terminal_initial_runtime_readiness_verification
+    status: open
   - id: workspace_runtime_close_fixture_verification
     status: open
   - id: grok_hook_connection_fixture_verification

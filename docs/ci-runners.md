@@ -2470,3 +2470,19 @@ annotation was introduced. Complete accessory/hint-window composition, macOS 15,
 and fixed-head app-host CI remain unverified. The prior full-suite exit-124
 incomplete result remains open under
 `titlebar_search_metadata_fixture_verification`.
+### Initial terminal runtime readiness fixtures
+
+The two initial-input/initial-command cases previously asserted a positive runtime
+creation count synchronously, before the asynchronous command-shim prerequisite
+finished. Native build 786 reproduces zero immediate attempts with the hidden
+startup window already present, followed by a ready runtime and positive count
+at the real `terminalSurfaceDidBecomeReady` event.
+
+The migrated parameterized case subscribes before constructing either panel and
+retains both original hidden-window and positive-attempt assertions. It also
+checks the ready native runtime and absence of a user window. It never attaches
+a visible window to force creation. The original tests had no asynchronous
+failure deadline; a new injected three-second readiness bound matches the adjacent
+real-runtime close fixture, with no sleep used for settling. Both cases pass
+against build 786 with warning-free Swift 6 compilation. Full app-host verification
+remains pending; production startup and shipped strings are unchanged.

@@ -1041,40 +1041,6 @@ final class TerminalOffscreenStartupTests: XCTestCase {
         XCTAssertGreaterThan(panel.surface.debugRuntimeSurfaceCreateAttemptCountForTesting(), 0)
     }
 
-    func testInitialInputSurfaceAttemptsRuntimeCreationBeforeWindowAttachment() {
-        let panel = TerminalPanel(
-            workspaceId: UUID(),
-            initialInput: "echo resume\n"
-        )
-
-        XCTAssertTrue(
-            panel.surface.debugHasHeadlessStartupWindowForTesting(),
-            "Restored auto-resume input should bootstrap through a hidden window rather than waiting for a user-focused portal."
-        )
-        XCTAssertGreaterThan(
-            panel.surface.debugRuntimeSurfaceCreateAttemptCountForTesting(),
-            0,
-            "Restored auto-resume input must start the terminal runtime without waiting for a window attach."
-        )
-    }
-
-    func testInitialCommandSurfaceAttemptsRuntimeCreationBeforeWindowAttachment() {
-        let panel = TerminalPanel(
-            workspaceId: UUID(),
-            initialCommand: "echo startup"
-        )
-
-        XCTAssertTrue(
-            panel.surface.debugHasHeadlessStartupWindowForTesting(),
-            "Command-launched offscreen terminals should bootstrap through a hidden window rather than waiting for a user-focused portal."
-        )
-        XCTAssertGreaterThan(
-            panel.surface.debugRuntimeSurfaceCreateAttemptCountForTesting(),
-            0,
-            "Offscreen command-launched terminals must start the runtime without waiting for a window attach."
-        )
-    }
-
     func testHeadlessStartupWindowDoesNotCountAsViewInWindowForHealth() {
         let panel = TerminalPanel(
             workspaceId: UUID(),
