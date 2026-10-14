@@ -48,6 +48,7 @@ struct ShellContractProcess {
             signal.finish()
             throw error
         }
+        let startedAt = ContinuousClock.now
         // This retained consumer is joined on success, failure and cancellation.
         let exit = Task { () -> Int32 in
             for await status in events { return status }
@@ -58,7 +59,7 @@ struct ShellContractProcess {
             group.addTask { await exit.value }
             group.addTask {
                 // Original interactive-shell failure deadline, never a settling delay.
-                try await ContinuousClock().sleep(for: deadline)
+                try await ContinuousClock().sleep(until: startedAt.advanced(by: deadline))
                 throw Failure.timedOut
             }
             do {
@@ -66,10 +67,11 @@ struct ShellContractProcess {
                 return status
             } catch {
                 // Escalation happens inside the group, before its exit waiter can be joined.
+                let terminationStartedAt = ContinuousClock.now
                 if process.isRunning { process.terminate() }
                 let grace = Task {
                     // Match CommandRunner's genuine owned-process SIGTERM grace period.
-                    do { try await ContinuousClock().sleep(for: terminationGrace) }
+                    do { try await ContinuousClock().sleep(until: terminationStartedAt.advanced(by: terminationGrace)) }
                     catch { return }
                     if process.isRunning { kill(process.processIdentifier, SIGKILL) }
                 }

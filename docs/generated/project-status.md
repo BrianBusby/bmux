@@ -231,7 +231,7 @@ Regenerate with: ./scripts/project-docs generate
 | Browser preload fixture retains its owned window through close; native ownership control passes and full app-host verification remains pending (`browser_preload_window_ownership_verification`) | Bmux | open |  |
 | Hermes hook fixtures join each producer and socket phase; unchanged build 790 passes original contracts, integrated app-host verification remains pending (`hermes_hook_phase_fixture_verification`) | Bmux | open |  |
 | Korean marked-text fixture awaits terminal readiness; native composition controls pass and macOS app-host verification remains pending (`korean_marked_text_runtime_readiness_verification`) | Bmux | open |  |
-| Closed-stderr fixture uses the maintained unknown-command exit contract and joined owned resources; macOS app-host verification remains pending (`cli_closed_stderr_contract_verification`) | Bmux | open |  |
+| Closed-stderr fixture uses the maintained exit contract and joined process owner with absolute deadlines; macOS app-host verification remains pending (`cli_closed_stderr_contract_verification`) | Bmux | open |  |
 | SSH workspace creation fixture joins its producer and owns authentication; native contracts pass, fixed-head app-host verification remains pending (`ssh_creation_joined_producer_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints

@@ -6327,7 +6327,7 @@ caveats:
     owner: bmux
 
   - id: cli_closed_stderr_contract_verification
-    title: Closed-stderr fixture uses the maintained unknown-command exit contract and joined owned resources; macOS app-host verification remains pending
+    title: Closed-stderr fixture uses the maintained exit contract and joined process owner with absolute deadlines; macOS app-host verification remains pending
     status: open
     owner: bmux
 
