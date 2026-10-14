@@ -2672,3 +2672,32 @@ notes and test diagnostics add no product UI or localization keys.
 D activation job115706442232 failed before build or benchmark: Xcode could not parse three newly added Markdown test extension paths containing `+`. Source wiring and normalization had passed because those checks do not parse OpenStep syntax. Quoting only those three `PBXFileReference.path` values fixes the native parser failure; file identities and target membership are unchanged. Native Xcode project loading also exposed one duplicate `ShellContractProcess.swift` navigator membership; removing that duplicate leaves its single file reference and Sources entry intact. `scripts/check-pbxproj.sh` now also runs Apple's `plutil -lint` on macOS, alongside the unchanged object-version and normalization checks. Linux retains its existing checks without a new dependency or custom parser.
 
 An owned temporary copy of the exact D project fails the native guard; the corrected project passes. No metadata-string assertion test was added: the native parser exercises the actual failing boundary. An isolated `xcodebuild -list` now passes project parsing but stops at this sibling worktree’s missing `GhosttyKit.xcframework`; full dependency-resolved project loading remains pending in the initialized integration tree. The failed activation run does not constitute Release-signature or closed-peer regression evidence; both named test-only reds still require actual execution. No app build, launch, active-app replacement, or runtime behavior change is part of this correction. Corrected-head CI remains pending.
+
+### Typed input and Korean Return runtime readiness
+
+Run 38509817630 shard 3 (job 115676261545) reported missing native input in
+`testDirectInsertTextUsesTypedInputSemantics` and retained marked text plus a
+missing Return in `testReturnAfterKoreanCommitAlsoSendsReturnToSurface`.
+The direct-input case passed on retry; Korean Return failed again. Neither
+failure recorded whether the terminal runtime was ready.
+
+Both cases now use the existing `TerminalNativeInputDeliveryTests` ready-surface
+fixture, which subscribes before attachment and requires the runtime before
+installing synchronous input probes. The original exact text/keycode assertions
+and real Korean `keyDown` path remain; the Korean case also requires exactly one
+interpretation and one forwarded Return. Prior observer, layout and interpreter
+hooks are restored before any suspension. The old synchronous cases used 50ms
+settling without an explicit failure deadline; the migrated cases adopt the
+existing suite's one-minute outer test limit. The helper and runtime timeout
+policy, input owners, workflow selectors and production behavior are unchanged.
+
+An owned, offscreen native probe on unchanged build 786 reproduced both missing
+input signatures before readiness and delivered the expected inputs after the
+actual ready notification. The two migrated cases pass against that same module. A temporary copy bypassing
+only readiness fails both cases with five issues, including all four original
+behavior oracles. This establishes the fixture precondition, not the exact macOS 15 CI cause.
+The complete affected files compile without warnings in the test target's Swift
+5 mode. Strict Swift 6 still encounters the existing nonisolated
+`KeyboardLayout.debugInputSourceIdOverride` and legacy CJK support boundary; no
+suppression or production hook was added. Fixed-head macOS app-host verification
+remains pending.

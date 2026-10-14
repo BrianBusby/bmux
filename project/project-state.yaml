@@ -6149,3 +6149,8 @@ caveats:
     title: Native project parsing rejected three unquoted extension filenames; quoted paths and macOS parser guard await corrected CI
     status: open
     owner: bmux
+
+  - id: terminal_native_input_delivery_fixture_verification
+    title: Direct text and Korean Return fixtures require a ready runtime; fixed-head macOS app-host verification remains pending
+    status: open
+    owner: bmux
