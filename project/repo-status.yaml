@@ -381,3 +381,5 @@ local_caveats:
 
   - id: browser_find_routing_fixture_verification
     status: open
+  - id: tmux_launch_identity_fixture_verification
+    status: open
