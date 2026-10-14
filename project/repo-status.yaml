@@ -144,6 +144,8 @@ component_releases:
 local_caveats:
   - id: native_app_host_full_suite_failures
     status: open
+  - id: claude_resume_and_no_git_watch_fixture_verification
+    status: open
   - id: ssh_cleanup_error_idempotency_verification
     status: open
   - id: claude_notification_target_fixture_verification

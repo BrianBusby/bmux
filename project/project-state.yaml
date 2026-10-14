@@ -6042,6 +6042,11 @@ caveats:
     title: Panel clear-content and opaque chrome compositing suite awaits fixed-head app-host verification
     status: open
     owner: bmux
+  - id: claude_resume_and_no_git_watch_fixture_verification
+    title: Claude resume and disabled git-watch contract migrations pass native 786; fixed-head app-host verification pending
+    status: open
+    owner: bmux
+
   - id: titlebar_product_contract_fixture_verification
     title: Native titlebar default-width and voice-control fixture corrections pass locally; app-host verification remains pending
     status: open
