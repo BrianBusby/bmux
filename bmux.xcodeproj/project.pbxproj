@@ -1087,6 +1087,7 @@
 		CE0E0C020000000000000001 /* NotificationPushRuntimeOperationResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0C020000000000000002 /* NotificationPushRuntimeOperationResult.swift */; };
 		CE0E0C030000000000000001 /* NotificationPushRuntimeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0C030000000000000002 /* NotificationPushRuntimeService.swift */; };
 		CE0E0C040000000000000001 /* NotificationPushRuntimeServiceDependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0C040000000000000002 /* NotificationPushRuntimeServiceDependencies.swift */; };
+		C9ADD73ABB7F407080C45029 /* NotificationRestoreFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00BA7586F0D74A8B9DA4CA99 /* NotificationRestoreFixture.swift */; };
 		C7A507000000000000005794 /* NotificationRowSnapshotBoundaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A507000000000000005795 /* NotificationRowSnapshotBoundaryTests.swift */; };
 		B7F00002 /* NotificationSoundSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7F00001 /* NotificationSoundSettings.swift */; };
 		4E5F60720000000000000001 /* NotificationSoundSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E5F60720000000000000002 /* NotificationSoundSettingsTests.swift */; };
@@ -1940,6 +1941,7 @@
 		CA52B0180000000000000000 /* WorkspaceLayoutMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA52C0180000000000000000 /* WorkspaceLayoutMode.swift */; };
 		0F2C25F9170130F8DC09DD1B /* WorkspaceManualUnreadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D301919B10F22B8708E8883 /* WorkspaceManualUnreadTests.swift */; };
 		C1AC71080000000000000001 /* WorkspaceMoveToTopActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1AC71080000000000000002 /* WorkspaceMoveToTopActionTests.swift */; };
+		B744A228E4B84FF182959A41 /* WorkspaceNotificationRestoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12F0B189611A457895D0EC5B /* WorkspaceNotificationRestoreTests.swift */; };
 		CD465201BC6B4E328A393EA8 /* WorkspacePanelContentHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9359BAC13CE47928469F07A /* WorkspacePanelContentHostView.swift */; };
 		E3B7A4000000000000000005 /* WorkspacePlacement+Resolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3B7A4000000000000000006 /* WorkspacePlacement+Resolution.swift */; };
 		AA5269A0C0DE0020FACE0020 /* WorkspacePopoverFocusRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5269A0C0DE0019FACE0019 /* WorkspacePopoverFocusRoutingTests.swift */; };
@@ -3088,6 +3090,7 @@
 		CE0E0C020000000000000002 /* NotificationPushRuntimeOperationResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/NotificationPushRuntimeOperationResult.swift; sourceTree = "<group>"; };
 		CE0E0C030000000000000002 /* NotificationPushRuntimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/NotificationPushRuntimeService.swift; sourceTree = "<group>"; };
 		CE0E0C040000000000000002 /* NotificationPushRuntimeServiceDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/NotificationPushRuntimeServiceDependencies.swift; sourceTree = "<group>"; };
+		00BA7586F0D74A8B9DA4CA99 /* NotificationRestoreFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationRestoreFixture.swift; sourceTree = "<group>"; };
 		C7A507000000000000005795 /* NotificationRowSnapshotBoundaryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationRowSnapshotBoundaryTests.swift; sourceTree = "<group>"; };
 		B7F00001 /* NotificationSoundSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSoundSettings.swift; sourceTree = "<group>"; };
 		4E5F60720000000000000002 /* NotificationSoundSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSoundSettingsTests.swift; sourceTree = "<group>"; };
@@ -3886,6 +3889,7 @@
 		CA52C0180000000000000000 /* WorkspaceLayoutMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceLayoutMode.swift"; sourceTree = "<group>"; };
 		1D301919B10F22B8708E8883 /* WorkspaceManualUnreadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceManualUnreadTests.swift; sourceTree = "<group>"; };
 		C1AC71080000000000000002 /* WorkspaceMoveToTopActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceMoveToTopActionTests.swift; sourceTree = "<group>"; };
+		12F0B189611A457895D0EC5B /* WorkspaceNotificationRestoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceNotificationRestoreTests.swift; sourceTree = "<group>"; };
 		A9359BAC13CE47928469F07A /* WorkspacePanelContentHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/WorkspacePanelContentHostView.swift"; sourceTree = "<group>"; };
 		E3B7A4000000000000000006 /* WorkspacePlacement+Resolution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspacePlacement+Resolution.swift"; sourceTree = "<group>"; };
 		AA5269A0C0DE0019FACE0019 /* WorkspacePopoverFocusRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePopoverFocusRoutingTests.swift; sourceTree = "<group>"; };
@@ -5594,6 +5598,8 @@
 					25142C2E16D47119B14A5EB7 /* WKInspectorProbeWebView.swift */,
 					7A18F313F15C155F3F430C80 /* BrowserInspectorTestFixture.swift */,
 				D211B909CBF68E138FBCA2F4 /* WorkspacePullRequestPublicationTests.swift */,
+				00BA7586F0D74A8B9DA4CA99 /* NotificationRestoreFixture.swift */,
+				12F0B189611A457895D0EC5B /* WorkspaceNotificationRestoreTests.swift */,
 				47591E108B126B7F552379E7 /* ConfigSnapshotTabManager.swift */,
 				40D97D31E44313C0986B3466 /* WorkspaceCreationConfigSanitizationTests.swift */,
 				89940315419C5A8615528C91 /* TerminalPortalGeometryContractTests.swift */,
@@ -8183,6 +8189,7 @@
 				734F49D37E543DD01C2F4FEF /* NotificationAndMenuBarTests.swift in Sources */,
 				D7AB00000000000000B021 /* NotificationDismissSyncTests.swift in Sources */,
 					CE0E0C080000000000000001 /* NotificationPushRuntimeCompositionTests.swift in Sources */,
+				C9ADD73ABB7F407080C45029 /* NotificationRestoreFixture.swift in Sources */,
 				C7A507000000000000005794 /* NotificationRowSnapshotBoundaryTests.swift in Sources */,
 				4E5F60720000000000000001 /* NotificationSoundSettingsTests.swift in Sources */,
 				645645000000000000000002 /* NumberedShortcutSwapTests.swift in Sources */,
@@ -8396,6 +8403,7 @@
 				C9A57001C9A57001C9A57001 /* WorkspaceGroupTests.swift in Sources */,
 				0F2C25F9170130F8DC09DD1B /* WorkspaceManualUnreadTests.swift in Sources */,
 				C1AC71080000000000000001 /* WorkspaceMoveToTopActionTests.swift in Sources */,
+				B744A228E4B84FF182959A41 /* WorkspaceNotificationRestoreTests.swift in Sources */,
 				AA5269A0C0DE0020FACE0020 /* WorkspacePopoverFocusRoutingTests.swift in Sources */,
 				1A1B2C3D4E5F607180000003 /* WorkspacePromptSubmitTests.swift in Sources */,
 				BDE5021AA3AE46E52D145FA8 /* WorkspacePullRequestPublicationTests.swift in Sources */,

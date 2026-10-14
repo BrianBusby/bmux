@@ -2378,3 +2378,33 @@ warning-free Swift 6 compile. Removing captured notifications in a temporary
 control fails five original notification assertions. Local proof does not replace
 fixed app-host and full-suite verification; the canonical/local caveat remains
 open. No production, subprocess timeout, runner or shipped string changed.
+
+
+## Notification-record restore fixture verification
+
+Four legacy unread restore cases expected synthetic indicators even when their
+snapshots contained actual unread notification records. `Workspace` restores
+those records and deliberately suppresses duplicate synthetic indicators;
+`TerminalNotificationStore.unreadCount` counts the records plus one independent
+manual/panel-derived indicator. The original four cases failed seven assertions
+against unchanged native build 786; the corrected record-backed expectations
+passed all four on the same artifact.
+
+`WorkspaceNotificationRestoreTests` migrates only those four methods to Swift
+Testing, retaining badge visibility, mark-read and independent manual-unread
+transitions. A fifth no-record control retains the legacy visual-only indicator
+contract. `NotificationRestoreFixture` swaps the existing app notification store
+synchronously on MainActor and scopes all mutation/cleanup to its own workspace
+IDs; it tears down every owned panel and restores the previous store on throw.
+No shared-store reset, production change, new selector or deadline is introduced.
+
+Exact-source Swift 6 native execution uses the existing build 786 module with
+isolated HOME/config, test mode before module initialization, an owned bundle
+identity and prohibited activation. All five cases pass; a temporary control
+that removes restored records fails the four record-backed cases while the
+legacy control still passes. Owned normal/throw cleanup preserves an unrelated
+record and its manual-unread flag. These are focused native results, not a full
+app-host result; fixed-head macOS app-host verification remains pending under
+`notification_record_restore_fixture_verification`. The localization audit
+covers only test diagnostics and contributor documentation: no shipped copy or
+localization catalogs changed.
