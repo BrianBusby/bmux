@@ -45777,6 +45777,23 @@
         }
       }
     },
+    "cli.ssh.manualReconnectPrompt.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[bmux] reconnect failed. Press r then Enter to try again, or Enter to close this pane."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[bmux] 再接続できませんでした。r を入力して Enter キーを押すと再試行し、Enter キーのみを押すとこのペインを閉じます。"
+          }
+        }
+      }
+    },
     "cli.ssh.manualReconnectPrompt.prompt": {
       "extractionState": "manual",
       "localizations": {
@@ -133994,6 +134011,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "右サイドバーを切り替え"
+          }
+        }
+      }
+    },
+    "rpc.v2.workspace.remote.reconnect.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to reconnect the requested terminal."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "指定されたターミナルに再接続できませんでした。"
           }
         }
       }
