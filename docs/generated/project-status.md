@@ -152,7 +152,7 @@ Regenerate with: ./scripts/project-docs generate
 | Right sidebar shortcut fixture repair passes local flag-state coverage; focused app-host CI verification remains pending (`right_sidebar_shortcut_fixture_app_host_verification`) | Bmux | open |  |
 | CI app-host Option/Alt step selects nine SSH lifecycle tests plus managed attach cleanup fixture; pushed-head verification pending (`ssh_startup_lifecycle_focused_gate_verification`) | Bmux | open |  |
 | SSH manual reconnect has actual CI red and native 779 green; fixed-head app-host and runtime acceptance remain pending (`ssh_manual_reconnect_handoff_regression`) | Bmux | open |  |
-| Focused browser app-host gate includes discard and history restore readiness tests; local native cases pass and pushed-head CI remains pending (`browser_discard_restore_focused_gate_verification`) | Bmux | open |  |
+| Browser discard initial-navigation readiness timed out on macOS 15 CI; bounded fixture diagnostics await app-host evidence (`browser_discard_restore_focused_gate_verification`) | Bmux | open |  |
 | Focused app-host gate includes default and configured sidebar width policy tests; local native cases pass and pushed-head CI remains pending (`sidebar_width_persistence_focused_gate_verification`) | Bmux | open |  |
 | Claude replaced-session cleanup fixture focused gate awaits app-host CI (`claude_session_end_scope_focused_gate_verification`) | Bmux | open |  |
 | Published maintenance fixes are composed for CI; full authoritative native and artifact gates remain pending (`maintenance_combined_validation_pending`) | Bmux | open |  |
