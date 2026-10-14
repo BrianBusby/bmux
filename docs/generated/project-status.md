@@ -197,6 +197,7 @@ Regenerate with: ./scripts/project-docs generate
 | Native project parsing rejected three unquoted extension filenames; quoted paths and macOS parser guard await corrected CI (`native_xcode_project_parse_verification`) | Bmux | open |  |
 | Direct text and Korean Return fixtures require a ready runtime; fixed-head macOS app-host verification remains pending (`terminal_native_input_delivery_fixture_verification`) | Bmux | open |  |
 | Remote agent fork fixture owns its existing agent path and passes native checks; app-host verification remains pending (`remote_agent_fork_fixture_verification`) | Bmux | open |  |
+| Resume cwd and captured Codex fork-tag fixtures follow shared command policy; fixed-head app-host verification pending (`session_resume_fork_contract_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

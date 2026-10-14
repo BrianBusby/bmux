@@ -2709,3 +2709,27 @@ remains pending.
 The case now lives in `WorkspaceRemoteForkLaunchTests` using Swift Testing. It owns a unique temporary directory and an existence-only placeholder, matching the resolution boundary already used by `SSHAgentEnvironmentTests`. No SSH connection or agent traffic is started. All 15 original behavior assertions remain, including remote options, launch command/input, four agent path projections and discarded relay/socket ownership. Workspace panels and temporary files are released on every exit. Untouched legacy test methods are byte-identical.
 
 The migrated case passes against native artifact 786 in Swift 5 and Swift 6 without compiler warnings; removing only placeholder creation fails the same four assertions. This is focused native-module evidence, not a full app-host pass. Integrated CI remains pending. No product behavior, workflow selectors, deadlines or user-facing strings changed; localization catalogs need no updates.
+
+
+### Resume cwd and captured fork command contracts
+
+Final C's shard 3 job 115676261545 failed the old SessionEntry Claude cwd string
+assertion, and shard 2 job 115676261618 failed the captured Codex re-fork prompt
+omission assertion. The shared cwd guard was adopted by `f2123dc2c` (#6580), then
+made fish-safe by `5265559d5` (#6328). Codex captured-fork tag replay was deliberate
+in `9374b139e` (#6803); resume still strips those tags, as maintained package
+coverage requires.
+
+The two legacy methods migrate to Swift Testing. Claude now executes the actual
+command using the existing owned `ShellContractProcess` and verifies cwd plus
+exact session argv. `AgentForkCommandContractTests` retains all eleven original
+fork command/context checks, correcting only deliberate captured-tag retention.
+Its executed direct/Teams fork-versus-resume controls verify the exact target,
+argument ordering, tag boundary, cwd and `CODEX_HOME`. No production parser,
+command policy or workflow selector changes.
+
+The affected suites and shared process helper compile warning-free under Swift 6
+against unchanged native build 786. Five functions (nine expanded cases) pass.
+Owned native generation followed by shell execution also passes fourteen sh/zsh
+scenarios, including the existing missing-cwd policy. These probes do not launch
+real agents or activate the app. Fixed-head app-host verification remains pending.

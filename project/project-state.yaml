@@ -6159,3 +6159,8 @@ caveats:
     title: Remote agent fork fixture owns its existing agent path and passes native checks; app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: session_resume_fork_contract_fixture_verification
+    title: Resume cwd and captured Codex fork-tag fixtures follow shared command policy; fixed-head app-host verification pending
+    status: open
+    owner: bmux

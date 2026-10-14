@@ -40,6 +40,19 @@ struct SessionIndexClaudeResumeCommandTests {
         ])
     }
 
+    @Test
+    func resumeChangesToSessionDirectoryBeforeExecuting() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("claude-cwd-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let sessionID = "a22293b7-bcef-4707-8439-2f538c8517a4"
+        let transcript = root.appendingPathComponent(".claude/projects/-Users-tiffanysun-fun/\(sessionID).jsonl")
+        try FileManager.default.createDirectory(at: transcript.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let cwd = root.appendingPathComponent("session working directory")
+        try FileManager.default.createDirectory(at: cwd, withIntermediateDirectories: true)
+        let entry = makeEntry(transcript: transcript, config: nil, cwd: cwd.path, sessionID: sessionID)
+        try await verifyExecution(entry, root: root, config: nil, arguments: ["--resume", sessionID])
+    }
+
     private func makeEntry(
         transcript: URL, config: String?, cwd: String?, sessionID: String = "claude-session-123", model: String? = nil, permission: String? = nil
     ) -> SessionEntry {

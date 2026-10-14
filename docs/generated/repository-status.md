@@ -158,6 +158,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `session_resume_fork_contract_fixture_verification` | open |
 | `terminal_native_input_delivery_fixture_verification` | open |
 | `native_app_host_full_suite_failures` | open |
 | `workspace_close_ownership_verification` | open |
