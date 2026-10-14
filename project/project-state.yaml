@@ -6007,6 +6007,6 @@ caveats:
     status: open
     owner: bmux
   - id: browser_inspector_window_ownership_verification
-    title: Focused browser inspector window ownership and lifecycle observation cases await app-host verification
+    title: Browser inspector window-close runtime fixture correction awaits fixed-head app-host verification
     status: open
     owner: bmux
