@@ -951,6 +951,8 @@
 		C1713004C1713004C1713004 /* KeyboardShortcutSettingsLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1713003C1713003C1713003 /* KeyboardShortcutSettingsLookup.swift */; };
 		A17110000000000000000001 /* KeyboardShortcutSpaceKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A17110000000000000000002 /* KeyboardShortcutSpaceKeyTests.swift */; };
 		C34670040000000000000001 /* KeyboardShortcutTestSettingsIsolation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C34670040000000000000002 /* KeyboardShortcutTestSettingsIsolation.swift */; };
+		A4C9777A382B46A196B19611 /* KittyClearHistoryFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A01456E5B114590B9CC1B12 /* KittyClearHistoryFixture.swift */; };
+		1352DA119EC14B80BA9AC212 /* KittyClearHistoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE5349130CD4B9780791511 /* KittyClearHistoryTests.swift */; };
 		87C609D63F03597AC12C8B0A /* LastSurfaceClosePreferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2EE0C080FF0FCCE8A8CA930 /* LastSurfaceClosePreferenceTests.swift */; };
 		CE0E03130000000000000001 /* LinearTicketIdentifierAliasMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03130000000000000002 /* LinearTicketIdentifierAliasMap.swift */; };
 		CE0E03120000000000000001 /* LinearWebLinkBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03120000000000000002 /* LinearWebLinkBuilder.swift */; };
@@ -2979,6 +2981,8 @@
 		C1713003C1713003C1713003 /* KeyboardShortcutSettingsLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutSettingsLookup.swift; sourceTree = "<group>"; };
 		A17110000000000000000002 /* KeyboardShortcutSpaceKeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutSpaceKeyTests.swift; sourceTree = "<group>"; };
 		C34670040000000000000002 /* KeyboardShortcutTestSettingsIsolation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutTestSettingsIsolation.swift; sourceTree = "<group>"; };
+		6A01456E5B114590B9CC1B12 /* KittyClearHistoryFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KittyClearHistoryFixture.swift"; sourceTree = "<group>"; };
+		3AE5349130CD4B9780791511 /* KittyClearHistoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KittyClearHistoryTests.swift"; sourceTree = "<group>"; };
 		F2EE0C080FF0FCCE8A8CA930 /* LastSurfaceClosePreferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LastSurfaceClosePreferenceTests.swift; sourceTree = "<group>"; };
 		CE0E03130000000000000002 /* LinearTicketIdentifierAliasMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearTicketIdentifierAliasMap.swift; sourceTree = "<group>"; };
 		CE0E03120000000000000002 /* LinearWebLinkBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearWebLinkBuilder.swift; sourceTree = "<group>"; };
@@ -5464,6 +5468,8 @@
 				C0F674600000000000000002 /* RemoteShellCWDRelayTests.swift */,
 				BA1540010000000000000002 /* BrowserDiscardReadinessTests.swift */,
 				BD1440000000000000000001 /* BrowserNavigationReadinessDiagnostics.swift */,
+				6A01456E5B114590B9CC1B12 /* KittyClearHistoryFixture.swift */,
+				3AE5349130CD4B9780791511 /* KittyClearHistoryTests.swift */,
 				6DA95C22908B4D4BA36CBB23 /* ShellContractProcess.swift */,
 				29C24731413E452294A9A358 /* NoGitWatchShellFixture.swift */,
 				2B1C64DE0F984700BC47741A /* NoGitWatchShellIntegrationTests.swift */,
@@ -8227,6 +8233,8 @@
 				E3337001E3337001E3337001 /* KeyboardShortcutSettingsFileStoreStartupTests.swift in Sources */,
 				A17110000000000000000001 /* KeyboardShortcutSpaceKeyTests.swift in Sources */,
 				C34670040000000000000001 /* KeyboardShortcutTestSettingsIsolation.swift in Sources */,
+				A4C9777A382B46A196B19611 /* KittyClearHistoryFixture.swift in Sources */,
+				1352DA119EC14B80BA9AC212 /* KittyClearHistoryTests.swift in Sources */,
 				87C609D63F03597AC12C8B0A /* LastSurfaceClosePreferenceTests.swift in Sources */,
 				6512F0C06512F0C06512F002 /* MainWindowFocusRestoreTests.swift in Sources */,
 				17C9F5BA0DD14EDC8C3E5001 /* MainWindowVisibilityControllerTests.swift in Sources */,
