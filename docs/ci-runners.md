@@ -3361,3 +3361,35 @@ The safe event-only native control passes on unchanged build 788; actual
 general-pasteboard execution is reserved for isolated app-host CI. The complete
 two-case suite and unchanged fake compile locally; full integrated target and
 actual fixed-head CI remain pending. Every untouched legacy byte is retained.
+### Tmux launch identity endpoint fixture
+
+G shard 2 job 115958161026 failed
+`testTmuxCompatEnvStampsLaunchSurfaceNotFocusedPane` before protocol handling:
+its platform temporary-directory path was 108 bytes, exceeding Darwin's
+104-byte `sockaddr_un.sun_path` capacity. The legacy bind helper asserts the
+length nonfatally and then still copies the path; its possible out-of-bounds
+write remains separately scoped legacy-helper debt. The diagnostic did not
+repeat that unsafe copy or weaken the length check.
+
+`CLITmuxLaunchIdentityTests` migrates only that case to the maintained
+`CLISocketFixture` and `CommandRunner`, with a short owned `/tmp` directory,
+explicit child environment and owned stdout/stderr files. The socket fixture's
+throwing length guard and joined asynchronous serving remain unchanged. The test
+retains the real `__debug-tmux-compat-env` entrypoint, distinct launch/focused
+identities, all five workspace/surface/panel/tab assertions and the 30-second
+process deadline. It additionally requires native success and one actual
+`system.identify` request: a missing focused context otherwise preserves the
+inherited IDs and can satisfy every original output assertion. Canonical pane
+lookup still receives the original unsupported response. No production code,
+shared helper, CLI timeout policy or CI selector changed.
+
+Against unchanged build 788, a safely rejected 108-byte endpoint yields no
+requests yet satisfies the five old identity checks. A short endpoint serves
+`system.identify` and the canonical pane lookups, preserving those checks.
+The migrated native test passes; a temporary missing-endpoint control fails
+exactly the new request assertion. Its full sources and actual bundled-CLI
+locator typecheck without warnings in Swift 5 and Swift 6. Native execution
+uses a temporary locator for the exact existing CLI; bundle discovery itself
+remains an integrated app-host concern. Owned processes, connections and files
+are cleaned without accessing the user's app or socket. Full app-host/test-target
+verification remains pending. No product strings or localization catalogs changed.

@@ -6228,3 +6228,7 @@ caveats:
     title: Shortcut parser fixtures distinguish pure normalization from runtime subscribers; integrated app-host verification remains pending
     status: open
     owner: bmux
+  - id: tmux_launch_identity_fixture_verification
+    title: Tmux launch identity fixture uses an owned short endpoint and requires focused-context exchange; integrated app-host verification remains pending
+    status: open
+    owner: bmux

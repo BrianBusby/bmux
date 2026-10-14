@@ -643,6 +643,7 @@
 		6379A0016379A0016379A001 /* CLISSHPTYResizeInputTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6379A0026379A0026379A002 /* CLISSHPTYResizeInputTests.swift */; };
 		C12984000000000000000004 /* CLIStdioSIGPIPERegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C12984000000000000000003 /* CLIStdioSIGPIPERegressionTests.swift */; };
 		B05553B10000000000000001 /* CLITmuxCompatRemoteSplitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B05553B10000000000000002 /* CLITmuxCompatRemoteSplitTests.swift */; };
+		48B76B39985043AFAFB73E54 /* CLITmuxLaunchIdentityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74478AB8036341AC999204A2 /* CLITmuxLaunchIdentityTests.swift */; };
 		C10D51700000000000000002 /* ClosedItemHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10D51700000000000000001 /* ClosedItemHistory.swift */; };
 		7375A0037375A0037375A003 /* ClosedMainWindowRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7375A0047375A0047375A004 /* ClosedMainWindowRoutingTests.swift */; };
 		032A6F24128742F0A09E4E20 /* ClosedTabHistoryObservation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A72BEFA1942DBB63DB789 /* ClosedTabHistoryObservation.swift */; };
@@ -2688,6 +2689,7 @@
 		6379A0026379A0026379A002 /* CLISSHPTYResizeInputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLISSHPTYResizeInputTests.swift; sourceTree = "<group>"; };
 		C12984000000000000000003 /* CLIStdioSIGPIPERegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIStdioSIGPIPERegressionTests.swift; sourceTree = "<group>"; };
 		B05553B10000000000000002 /* CLITmuxCompatRemoteSplitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLITmuxCompatRemoteSplitTests.swift; sourceTree = "<group>"; };
+		74478AB8036341AC999204A2 /* CLITmuxLaunchIdentityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLITmuxLaunchIdentityTests.swift"; sourceTree = "<group>"; };
 		C10D51700000000000000001 /* ClosedItemHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedItemHistory.swift; sourceTree = "<group>"; };
 		7375A0047375A0047375A004 /* ClosedMainWindowRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedMainWindowRoutingTests.swift; sourceTree = "<group>"; };
 		D89A72BEFA1942DBB63DB789 /* ClosedTabHistoryObservation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ClosedTabHistoryObservation.swift"; sourceTree = "<group>"; };
@@ -5684,6 +5686,7 @@
 				9C9DB4F640E04D5A829039A0 /* BrowserFindShortcutSettingsFixture.swift */,
 				00EA14FF8DC74C26BF2318C1 /* BrowserFindShortcutRoutingTests.swift */,
 				CDD1FFB1CC2343E9B2E69F91 /* ShortcutSettingsParsingContractTests.swift */,
+				74478AB8036341AC999204A2 /* CLITmuxLaunchIdentityTests.swift */,
 				4FC183E5C43143D1BE4B5EA5 /* BrowserFindShortcutFixture.swift */,
 					ADAB0384A46DA242400CDF3A /* BrowserInspectorProbe.swift */,
 					B3CEFE3B4078E1067B333B54 /* BrowserInspectorWindowOwnershipTests+Transitions.swift */,
@@ -8166,6 +8169,7 @@
 				6379A0016379A0016379A001 /* CLISSHPTYResizeInputTests.swift in Sources */,
 				C12984000000000000000004 /* CLIStdioSIGPIPERegressionTests.swift in Sources */,
 				B05553B10000000000000001 /* CLITmuxCompatRemoteSplitTests.swift in Sources */,
+				48B76B39985043AFAFB73E54 /* CLITmuxLaunchIdentityTests.swift in Sources */,
 				7375A0037375A0037375A003 /* ClosedMainWindowRoutingTests.swift in Sources */,
 				032A6F24128742F0A09E4E20 /* ClosedTabHistoryObservation.swift in Sources */,
 					30DFF011841489FD729F9EE0 /* CloudAttachRetryContractTests.swift in Sources */,

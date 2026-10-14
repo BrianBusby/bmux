@@ -271,3 +271,4 @@ Repository: `BrianBusby/bmux`
 | `file_preview_inset_fixture_verification` | open |
 | `browser_find_routing_fixture_verification` | open |
 | `shortcut_parser_lookup_attribution_verification` | open |
+| `tmux_launch_identity_fixture_verification` | open |
