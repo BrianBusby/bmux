@@ -4872,7 +4872,7 @@ class TerminalController {
                 return chain
             }
 
-            let windows = app.scriptableMainWindows()
+            let windows = app.retainedMainWindowStates()
             let windowIndexById = Dictionary(
                 uniqueKeysWithValues: windows.enumerated().map { ($0.element.windowId, $0.offset) }
             )

@@ -6262,3 +6262,8 @@ caveats:
     title: Terminal file launch fixtures compare directory identity and retain exact quoting; native controls pass and integrated app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: closed_main_window_routing_verification
+    title: Closed retained windows are excluded from presentation while manager recovery is preserved; fixed-runtime and app-host verification remain pending
+    status: open
+    owner: bmux

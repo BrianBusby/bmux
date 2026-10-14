@@ -3687,3 +3687,50 @@ activate a window, execute the fixture script, or change user settings. Complete
 integrated target compilation and fixed-head app-host execution remain pending.
 No product strings or localization catalogs changed; added prose is contributor
 verification material.
+
+### Closed retained main-window routing
+
+H run `38600136921`, shard 3 job `115978363675`, failed all three
+closed-window presentation assertions in
+`ClosedMainWindowRoutingTests.testClosedMainWindowIsNotListedOrFocusableWhileItsObjectsLinger`.
+The unregistered, ordered-out window remained listed, accepted focus, and became
+visible. The original test also requires its retained manager to remain
+resolvable. Its recovered-visible companion passed. The affected routing owners
+are unchanged between H995 and J `7d6838c7e`.
+
+Two temporary native controls on unchanged build 788 distinguished the test's
+unregister/orderOut path from real `NSWindow.close` through `WindowCloseObserver`.
+Both removed the registered context but retained list membership, window identity,
+manager identity, and focus acceptance. The two controls passed in 0.231 seconds;
+Swift 6 compilation emitted no warnings. They used owned HOME/test-mode state,
+disabled sockets, never-presented windows, guarded startup/persistence, and the
+existing nonfocus socket policy for the focus call. Thus they establish routing
+acceptance, not visible-window behavior. Disabled-Sentry breadcrumb diagnostics
+were present in the unlaunched native harness.
+
+The correction keeps one computed presentation rule in the existing window
+identity owner: registered windows remain eligible even when hidden; orphaned
+windows must be visible or miniaturized. Window identity, list/search/scripting
+projections, and stale-search-hit actions use that rule. The weak recovery ledger,
+manager lookup, surface lookup, history, inspector cleanup, memory accounting,
+and quit checks retain their existing resource scope. The existing complete
+ordered window-state projection is named `retainedMainWindowStates` for terminal
+diagnostics and provenance workspace resolution; those two callers retain their
+previous population, ordering, and identity semantics. This does not change PE
+contracts, storage, session identity, or the separate SessionProvenance failure.
+
+The exact original regression and recovered-visible test remain unchanged.
+The original H failure is the red evidence; no additional permanent regression
+or deadline change is included. Fixed-runtime controls, a fresh isolated tagged
+app build, full test-target compilation, and real-window macOS 15 app-host
+verification remain pending under `closed_main_window_routing_verification`.
+Local offscreen evidence does not close those gates. Source review and the
+existing CI window-list/focus assertions remain the operational acceptance path;
+no new telemetry or user-facing strings are introduced.
+
+Local static verification passed: all five affected Swift sources parse without
+diagnostics; the actual-main `ce17e9888a6dce4d2e5755795946b68cf52f0329`
+file budget passes; all 574 test files remain wired; Project Truth validation,
+generation and freshness pass. The retained ordered enumeration was checked
+against the prior body, and the two resource callers have only the intended
+method-name substitutions. These checks do not establish fixed-runtime behavior.

@@ -218,6 +218,7 @@ Regenerate with: ./scripts/project-docs generate
 | SSH agent fixture joins its process before socket and file cleanup; native cases pass and fixed-head app-host deadlines remain unverified (`ssh_agent_joined_producer_verification`) | Bmux | open |  |
 | File-preview and notification test-window constructor ownership corrected; four affected app-host cases remain pending (`native_window_close_ownership_verification`) | Bmux | open |  |
 | Terminal file launch fixtures compare directory identity and retain exact quoting; native controls pass and integrated app-host verification remains pending (`terminal_file_launch_directory_contract_verification`) | Bmux | open |  |
+| Closed retained windows are excluded from presentation while manager recovery is preserved; fixed-runtime and app-host verification remain pending (`closed_main_window_routing_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

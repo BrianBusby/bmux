@@ -399,3 +399,6 @@ local_caveats:
 
   - id: terminal_file_launch_directory_contract_verification
     status: open
+
+  - id: closed_main_window_routing_verification
+    status: open
