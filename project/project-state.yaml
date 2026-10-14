@@ -6219,3 +6219,8 @@ caveats:
     title: Browser Find fixtures distinguish owned-window search from menu fallback; integrated app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: cli_notify_socket_bind_guard_verification
+    title: Legacy CLI socket setup rejects invalid paths and syscall failures before unsafe use; native controls pass and integrated app-host verification remains pending
+    status: open
+    owner: bmux
