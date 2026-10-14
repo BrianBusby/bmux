@@ -11,6 +11,7 @@ import re
 import shutil
 import sys
 import tempfile
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -266,25 +267,30 @@ class GitHubRestEvidenceProvider:
         request.add_header("User-Agent", "project-truth-ci")
         if self.token:
             request.add_header("Authorization", f"Bearer {self.token}")
-        try:
-            with urllib.request.urlopen(request, timeout=20) as response:
-                payload = response.read().decode("utf-8")
-                return json.loads(payload) if payload else None
-        except urllib.error.HTTPError as exc:
-            body = exc.read().decode("utf-8", errors="replace")
-            if exc.code == 404:
-                return None
-            if exc.code == 429:
-                raise GitHubProviderError("rate_limit", f"GitHub API rate limit hit for {path}") from exc
-            if exc.code in (401, 403):
-                remaining = exc.headers.get("X-RateLimit-Remaining")
-                lowered = body.lower()
-                if remaining == "0" or "rate limit" in lowered:
+        for attempt in range(3):
+            try:
+                with urllib.request.urlopen(request, timeout=20) as response:
+                    payload = response.read().decode("utf-8")
+                    return json.loads(payload) if payload else None
+            except urllib.error.HTTPError as exc:
+                with exc:
+                    body = exc.read().decode("utf-8", errors="replace")
+                if exc.code in (500, 502, 503, 504) and attempt < 2:
+                    time.sleep(attempt + 1)
+                    continue
+                if exc.code == 404:
+                    return None
+                if exc.code == 429:
                     raise GitHubProviderError("rate_limit", f"GitHub API rate limit hit for {path}") from exc
-                raise GitHubProviderError("auth", f"GitHub API denied access to {path}: HTTP {exc.code}") from exc
-            raise GitHubProviderError("network", f"GitHub API request failed for {path}: HTTP {exc.code}") from exc
-        except (urllib.error.URLError, TimeoutError, http.client.HTTPException) as exc:
-            raise GitHubProviderError("network", f"GitHub API request failed for {path}: {exc}") from exc
+                if exc.code in (401, 403):
+                    remaining = exc.headers.get("X-RateLimit-Remaining")
+                    lowered = body.lower()
+                    if remaining == "0" or "rate limit" in lowered:
+                        raise GitHubProviderError("rate_limit", f"GitHub API rate limit hit for {path}") from exc
+                    raise GitHubProviderError("auth", f"GitHub API denied access to {path}: HTTP {exc.code}") from exc
+                raise GitHubProviderError("network", f"GitHub API request failed for {path}: HTTP {exc.code}") from exc
+            except (urllib.error.URLError, TimeoutError, http.client.HTTPException) as exc:
+                raise GitHubProviderError("network", f"GitHub API request failed for {path}: {exc}") from exc
 
     def repository_exists(self, repository: str) -> bool:
         return self._get(f"/repos/{quote_slug(repository)}") is not None

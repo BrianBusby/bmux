@@ -6042,3 +6042,7 @@ caveats:
     title: Native titlebar default-width and voice-control fixture corrections pass locally; app-host verification remains pending
     status: open
     owner: bmux
+  - id: project_truth_http_retry_verification
+    title: Bounded GitHub evidence HTTP recovery awaits fixed-head CI verification
+    status: open
+    owner: bmux
