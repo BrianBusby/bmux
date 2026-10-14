@@ -2743,3 +2743,9 @@ agent-hook directories, process-detected binding cwd, remote nil-cwd behavior,
 and unmounted-volume metadata must retain their contracts. Full integrated
 app-host/macOS 15 verification remains open under
 `deleted_agent_hook_cwd_regression`. No product-facing strings change.
+
+### Closed-peer gate build prerequisite
+
+D2 run38521190849 shard3 job115712647469 executed all14 bundled-artifact tests and failed exactly the two mixed signed/unsigned slice regressions. The closed-peer suite executed zero tests because its expected CLI did not yet exist: the earlier split-theme check builds only its package, not the app. That setup error is not socket regression proof.
+
+The existing `BundledCLILinkageTests` xcodebuild invocation now runs before both Python regression commands in the same step, supplying the exact bundled CLI prerequisite. Both Python exit statuses are still collected and enforced; dependency-closure verification and archive creation remain afterward. No job, selector, test deadline, or failure policy is removed. Corrected-order actual closed-peer execution remains pending under the existing open verification caveat. No runtime or product copy changes are included.

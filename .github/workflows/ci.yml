@@ -659,6 +659,15 @@ jobs:
         if: ${{ matrix.shard == 3 }}
         run: |
           set -euo pipefail
+          scripts/ci/run-in-console-session.sh \
+            scripts/ci/run-app-host-xcodebuild.sh \
+            -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
+            -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
+            -clonedSourcePackagesDirPath "$PWD/.ci-source-packages" \
+            -disableAutomaticPackageResolution \
+            -destination "platform=macOS" \
+            BMUX_SKIP_ZIG_BUILD=1 \
+            -only-testing:bmuxTests/BundledCLILinkageTests test
           artifact_test_exit=0
           if python3 tests/test_bundled_cli_artifact.py; then
             :
@@ -675,15 +684,6 @@ jobs:
           echo "Bundled CLI artifact tests: $artifact_test_exit; closed-peer receive tests: $socket_test_exit"
           if [ "$artifact_test_exit" -ne 0 ]; then exit "$artifact_test_exit"; fi
           if [ "$socket_test_exit" -ne 0 ]; then exit "$socket_test_exit"; fi
-          scripts/ci/run-in-console-session.sh \
-            scripts/ci/run-app-host-xcodebuild.sh \
-            -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
-            -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
-            -clonedSourcePackagesDirPath "$PWD/.ci-source-packages" \
-            -disableAutomaticPackageResolution \
-            -destination "platform=macOS" \
-            BMUX_SKIP_ZIG_BUILD=1 \
-            -only-testing:bmuxTests/BundledCLILinkageTests test
           python3 scripts/verify-bundled-cli.py \
             "$BMUX_DERIVED_DATA_PATH/Build/Products/Debug/bmux DEV.app" \
             --archive "$RUNNER_TEMP/bmux-cli-debug.tar.gz"
