@@ -417,3 +417,6 @@ local_caveats:
 
   - id: terminal_attachment_deferred_ime_fixture_verification
     status: open
+
+  - id: hermes_hook_phase_fixture_verification
+    status: open

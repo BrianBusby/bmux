@@ -3946,3 +3946,45 @@ run still reports additional agent-session routing and fixture failures; their
 causes are being checked independently. Named Git-alias regression execution,
 all fixed-head macOS shards and the remaining release/validation gates remain
 required before merging.
+
+### Hermes hook phase ownership
+
+The I shard 2 run reported 15 issues across two Hermes hook cases: three
+expectation-only timeouts in notification handling, followed by process timeouts
+and missing downstream commands/state in session-end/finalize. The old fixtures
+started fixed accept workers per invocation on one shared listener; their single
+expectation completed when any worker exited, without joining surplus workers.
+A bounded socket-only control shows both surplus workers serving later phases
+and a prior one-way feed connection being consumed by the next phase's worker.
+These controls establish fixture ownership defects, not the exact historical
+CI schedule or a Hermes production-policy defect.
+
+`HermesHookProcessContractTests` migrates only those two cases. Its fixture uses
+`ShellContractProcess`, `CLISocketFixture` and `CLISocketReadiness` unchanged.
+Each invocation joins the CLI, drains queued one-way telemetry, joins socket
+cleanup and returns that phase's commands before another invocation starts.
+The session store persists across phases in an owned short-path root. The eight
+original requested five-second process deadlines remain; timeout throws after
+termination/join and retains output/request diagnostics. The old helper's
+inherited-CI timeout clamp is not used. Cleanup errors are visible test issues;
+only a genuinely missing store file means absence, while malformed/unreadable
+state fails instead of satisfying the final deletion assertion.
+
+All 45 original behavior oracles remain: 37 direct assertions and eight throwing
+no-timeout boundaries. They cover exact status/stdout, completion and permission
+payloads, approval cleanup without duplicate feed, persisted session fields,
+non-destructive per-turn session-end and destructive finalize. The responder
+models `surface.resume.clear` with surface/source/checkpoint, matching the CLI;
+that request intentionally does not carry `workspace_id`.
+
+An owned, non-app-host executable against unchanged build 790 passed both original
+contracts across eight phases. The synthetic old-worker control and forced-error
+cleanup are separate evidence; no real user socket, application activation or
+external telemetry was used. The exact migrated sources and actual bundle locator compile without warnings
+in Swift 5 and Swift 6; both cases pass against build 790. Temporary negative
+controls reject a wrong notification payload, substituting session-end for
+finalize, malformed JSON and a present malformed session record. A stopped owned
+child reaches the unchanged five-second failure boundary, is killed/joined,
+and leaves neither its socket nor root behind; the timeout remains a test issue.
+Integrated app-host verification is still required before claiming the 15 CI
+issues resolved. No workflow selector or production code changes here.

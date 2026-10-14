@@ -922,6 +922,8 @@
 		2936EBAEBDAFF7A34A17690C /* GrokNotificationPayloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68FF762A8C336C62E56D5EB1 /* GrokNotificationPayloadTests.swift */; };
 		C0DE34020000000000000005 /* HelpMenuUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE34020000000000000006 /* HelpMenuUITests.swift */; };
 		F5320000A1B2C3D4E5F60718 /* HermesAgentIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5320001A1B2C3D4E5F60718 /* HermesAgentIndex.swift */; };
+		4543A946C981457B894CFABA /* HermesHookProcessContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 583061CE94AE4D01B93357B9 /* HermesHookProcessContractTests.swift */; };
+		B0660073F52D48D99E5EB20B /* HermesHookProcessFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52646665E7E94656A2037E54 /* HermesHookProcessFixture.swift */; };
 		7A3D51F31BA38CFAB319B453 /* HermesResumeExecutionFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9FF1801ED937365CA2FDB8E /* HermesResumeExecutionFixture.swift */; };
 		C39DC1708CDAD8C98F6B9D1C /* HermesResumeExecutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A89504BA534AB741618C22A /* HermesResumeExecutionTests.swift */; };
 		3514DB7D5AC7EC7C82671AC7 /* HermesResumeInvocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA331BDC535E245C89570D10 /* HermesResumeInvocation.swift */; };
@@ -2973,6 +2975,8 @@
 		68FF762A8C336C62E56D5EB1 /* GrokNotificationPayloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrokNotificationPayloadTests.swift; sourceTree = "<group>"; };
 		C0DE34020000000000000006 /* HelpMenuUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpMenuUITests.swift; sourceTree = "<group>"; };
 		F5320001A1B2C3D4E5F60718 /* HermesAgentIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesAgentIndex.swift; sourceTree = "<group>"; };
+		583061CE94AE4D01B93357B9 /* HermesHookProcessContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HermesHookProcessContractTests.swift"; sourceTree = "<group>"; };
+		52646665E7E94656A2037E54 /* HermesHookProcessFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HermesHookProcessFixture.swift"; sourceTree = "<group>"; };
 		A9FF1801ED937365CA2FDB8E /* HermesResumeExecutionFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesResumeExecutionFixture.swift; sourceTree = "<group>"; };
 		3A89504BA534AB741618C22A /* HermesResumeExecutionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesResumeExecutionTests.swift; sourceTree = "<group>"; };
 		AA331BDC535E245C89570D10 /* HermesResumeInvocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesResumeInvocation.swift; sourceTree = "<group>"; };
@@ -5895,6 +5899,8 @@
 					42092CDB2109E250F7F2A76E /* TabManagerUnitTests.swift */,
 					9BF41FFE8DA22514668B6E1B /* ClaudeSessionEndScopeTests.swift */,
 					654A89AA139BAE899DD77C8C /* ClaudeSessionEndFixture.swift */,
+					583061CE94AE4D01B93357B9 /* HermesHookProcessContractTests.swift */,
+					52646665E7E94656A2037E54 /* HermesHookProcessFixture.swift */,
 					56851DBE797C46F5ADDAAEC6 /* AgentLaunchEnvironmentTests.swift */,
 					9960810488AB4C6EAF7B5662 /* AgentLaunchEnvironmentFixture.swift */,
 				8028AA685A6F40449A55B50E /* SSHWorkspaceCreationTests.swift */,
@@ -8281,6 +8287,8 @@
 				51553E24B2AD46035F00F643 /* GrokHookConnectionFixture.swift in Sources */,
 				B70E7F1B613184122DE389DC /* GrokHookConnectionTests.swift in Sources */,
 				2936EBAEBDAFF7A34A17690C /* GrokNotificationPayloadTests.swift in Sources */,
+					4543A946C981457B894CFABA /* HermesHookProcessContractTests.swift in Sources */,
+					B0660073F52D48D99E5EB20B /* HermesHookProcessFixture.swift in Sources */,
 				7A3D51F31BA38CFAB319B453 /* HermesResumeExecutionFixture.swift in Sources */,
 				C39DC1708CDAD8C98F6B9D1C /* HermesResumeExecutionTests.swift in Sources */,
 				3514DB7D5AC7EC7C82671AC7 /* HermesResumeInvocation.swift in Sources */,

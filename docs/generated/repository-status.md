@@ -283,3 +283,4 @@ Repository: `BrianBusby/bmux`
 | `hook_prompt_stable_workspace_fixture_verification` | open |
 | `cli_telemetry_joined_producer_verification` | open |
 | `terminal_attachment_deferred_ime_fixture_verification` | open |
+| `hermes_hook_phase_fixture_verification` | open |
