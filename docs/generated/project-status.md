@@ -145,6 +145,7 @@ Regenerate with: ./scripts/project-docs generate
 | Focused browser app-host gate includes discard and history restore readiness tests; local native cases pass and pushed-head CI remains pending (`browser_discard_restore_focused_gate_verification`) | Bmux | open |  |
 | Focused app-host gate includes default and configured sidebar width policy tests; local native cases pass and pushed-head CI remains pending (`sidebar_width_persistence_focused_gate_verification`) | Bmux | open |  |
 | Focused managed appearance startup suite pending actual app-host verification (`managed_appearance_startup_fixture_verification`) | Bmux | open |  |
+| Completed-close history and batched mobile response fixture corrections await fixed-head app-host verification (`native_history_and_batched_frame_fixture_verification`) | Bmux | open |  |
 | Browser inspector window-close runtime fixture correction awaits fixed-head app-host verification (`browser_inspector_window_ownership_verification`) | Bmux | open |  |
 | Focused global search configured-conflict priority suite awaits app-host verification (`global_search_shortcut_conflict_verification`) | Bmux | open |  |
 | Configured and chorded file preview save fixtures await fixed-head app-host verification (`file_preview_save_shortcut_fixture_verification`) | Bmux | open |  |

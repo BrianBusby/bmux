@@ -5917,6 +5917,10 @@ caveats:
     title: Focused managed appearance startup suite pending actual app-host verification
     status: open
     owner: bmux
+  - id: native_history_and_batched_frame_fixture_verification
+    title: Completed-close history and batched mobile response fixture corrections await fixed-head app-host verification
+    status: open
+    owner: bmux
   - id: browser_inspector_window_ownership_verification
     title: Browser inspector window-close runtime fixture correction awaits fixed-head app-host verification
     status: open
