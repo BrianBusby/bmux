@@ -439,7 +439,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Browser inspector window-close correction and raw-close lifecycle fixture await fixed-head app-host verification (`browser_inspector_window_ownership_verification`) - owner: Bmux; status: open
 - Remote agent restore directory guard passes native build 783; full app-host verification pending (`remote_restore_working_directory_regression`) - owner: Bmux; status: open
 - Focused global search configured-conflict priority suite awaits app-host verification (`global_search_shortcut_conflict_verification`) - owner: Bmux; status: open
-- Opt-in app-host sampler completion and private output controls pass locally; macOS 15 graph capture remains pending (`focused_app_host_process_diagnostics_verification`) - owner: Bmux; status: open
+- Opt-in diagnostics cover focused shard1 and broad shard2; usable macOS 15 call graphs and timeout causes remain unverified (`focused_app_host_process_diagnostics_verification`) - owner: Bmux; status: open
 - Remote tmux CRLF record correction passes isolated artifact checks; full CI pending (`remote_tmux_crlf_record_parsing_verification`) - owner: Bmux; status: open
 - Quarantine outbound metadata and native readback contract pass local checks; app-host verification remains pending (`browser_download_quarantine_boundary_verification`) - owner: Bmux; status: open
 - Configured and chorded file preview save fixtures await fixed-head app-host verification (`file_preview_save_shortcut_fixture_verification`) - owner: Bmux; status: open

@@ -3428,3 +3428,29 @@ rejects the existing imported mutable `settingsFileStore` static, without a
 suppression or production isolation change. Native logs retain existing disabled
 Sentry breadcrumb diagnostics. Full integrated app-host/test-target verification
 remains pending. No product copy or localization catalog changed.
+
+### Broad shard 2 process diagnostic coverage
+
+G job 115958161026 recorded a main-thread AppHang, repeated host crashes and
+CLI timeouts before the broad invocation reached its 900-second watchdog. The
+existing opt-in diagnostic environment was set only for the focused shard 1
+invocation. Its uploaded stack files contained no usable call graph and cannot
+establish the cause of the separate broad shard 2 failures.
+
+The same opt-in sampler now also wraps the broad shard 2 invocation. Its native
+Swift Testing start marker, 30-second observation window, eight-sample maximum,
+two-worker concurrency limit, one-second samples and five-second worker
+completion allowance are unchanged. Selection still requires the exact owned
+DerivedData host and CLI descendants; artifacts omit arguments, environment,
+payloads and raw sample headers. The existing upload moves after the broad
+invocation and runs on either selected shard even after failure. All command
+exit statuses, native test deadlines, selectors and retries remain unchanged.
+
+This adds at most eight bounded samples to the implicated broad invocation when
+the existing manual input is enabled. Sampling overhead is diagnostic overhead,
+not a test repair or proof of timeout causality. Automatic runs remain disabled.
+The host sample occurs once near two seconds, and the observation window ends
+30 seconds after the Swift Testing marker. G shard 2 reported its later host
+hang near 49 seconds, so this coverage may miss that hang; it first supplies
+startup and child-process scheduling evidence. Usable actual macOS 15 call
+graphs remain pending.
