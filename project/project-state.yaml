@@ -6014,3 +6014,7 @@ caveats:
     title: Remote agent restore must not pass a remote working directory to the local SSH process; fixed-build validation pending
     status: open
     owner: bmux
+  - id: global_search_shortcut_conflict_verification
+    title: Focused global search configured-conflict priority suite awaits app-host verification
+    status: open
+    owner: bmux

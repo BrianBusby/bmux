@@ -223,3 +223,4 @@ Repository: `BrianBusby/bmux`
 | `ssh_manual_reconnect_nonzero_regression` | resolved |
 | `browser_inspector_window_ownership_verification` | open |
 | `remote_restore_working_directory_regression` | open |
+| `global_search_shortcut_conflict_verification` | open |

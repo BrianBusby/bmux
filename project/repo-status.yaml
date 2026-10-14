@@ -272,3 +272,5 @@ local_caveats:
     status: open
   - id: remote_restore_working_directory_regression
     status: open
+  - id: global_search_shortcut_conflict_verification
+    status: open

@@ -165,6 +165,7 @@ Regenerate with: ./scripts/project-docs generate
 | Workspace fallback regression test red and production fix verification pending (`workspace_fallback_regression_verification`) | Bmux | open |  |
 | Browser inspector window-close runtime fixture correction awaits fixed-head app-host verification (`browser_inspector_window_ownership_verification`) | Bmux | open |  |
 | Remote agent restore must not pass a remote working directory to the local SSH process; fixed-build validation pending (`remote_restore_working_directory_regression`) | Bmux | open |  |
+| Focused global search configured-conflict priority suite awaits app-host verification (`global_search_shortcut_conflict_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
