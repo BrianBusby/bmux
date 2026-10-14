@@ -400,4 +400,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Observability trace API boundary (`observability_trace_api`) - owner: Provenance Engine; status: open
 - GitHub Actions runner reliability (`github_actions_runner_reliability`) - owner: Bmux; status: open; issue: BrianBusby/bmux#8
 - Bounded GitHub evidence HTTP recovery awaits fixed-head CI verification (`project_truth_http_retry_verification`) - owner: Bmux; status: open
+- Project Truth full unit-test gate awaits fixed-head CI verification (`project_truth_full_suite_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

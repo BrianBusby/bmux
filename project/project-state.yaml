@@ -5891,3 +5891,8 @@ caveats:
     title: Bounded GitHub evidence HTTP recovery awaits fixed-head CI verification
     status: open
     owner: bmux
+
+  - id: project_truth_full_suite_verification
+    title: Project Truth full unit-test gate awaits fixed-head CI verification
+    status: open
+    owner: bmux

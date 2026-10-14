@@ -192,3 +192,5 @@ local_caveats:
     status: open
   - id: project_truth_http_retry_verification
     status: open
+  - id: project_truth_full_suite_verification
+    status: open
