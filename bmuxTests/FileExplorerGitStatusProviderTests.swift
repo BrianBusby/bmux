@@ -80,6 +80,64 @@ struct FileExplorerGitStatusProviderTests {
         #expect(status[siblingURL.path] == nil)
     }
 
+    @Test(arguments: [false, true])
+    func statusQueryPreservesRequestedRootAliasAndExcludesSiblingPrefixes(usingSymbolicLink: Bool) async throws {
+        let fixtureRoot = try Self.makeTemporaryDirectory()
+        defer {
+            do { try FileManager.default.removeItem(at: fixtureRoot) }
+            catch { Issue.record(error) }
+        }
+        let repoURL = fixtureRoot.appendingPathComponent("repository", isDirectory: true)
+        let homeURL = fixtureRoot.appendingPathComponent("home", isDirectory: true)
+        let hooksURL = fixtureRoot.appendingPathComponent("empty-hooks", isDirectory: true)
+        let nestedURL = repoURL.appendingPathComponent("work/nested", isDirectory: true)
+        let siblingURL = repoURL.appendingPathComponent("workspace-sibling", isDirectory: true)
+        for directory in [repoURL, homeURL, hooksURL, nestedURL, siblingURL] {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        }
+        let filename = "quoted \"name\" and \\ slash.txt"
+        let trackedURL = nestedURL.appendingPathComponent(filename)
+        let siblingFileURL = siblingURL.appendingPathComponent("tracked.txt")
+        for file in [trackedURL, siblingFileURL] {
+            try "one\n".write(to: file, atomically: true, encoding: .utf8)
+        }
+        let environment = [
+            "PATH": "/usr/bin:/bin", "HOME": homeURL.path, "CFFIXED_USER_HOME": homeURL.path,
+            "XDG_CONFIG_HOME": homeURL.path, "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_TERMINAL_PROMPT": "0",
+            "GIT_AUTHOR_NAME": "bmux tests", "GIT_AUTHOR_EMAIL": "bmux@example.invalid",
+            "GIT_COMMITTER_NAME": "bmux tests", "GIT_COMMITTER_EMAIL": "bmux@example.invalid",
+        ]
+        let process = ShellContractProcess(root: fixtureRoot)
+        let gitPrefix = ["-C", repoURL.path, "-c", "commit.gpgSign=false", "-c", "core.hooksPath=\(hooksURL.path)"]
+        for arguments in [["init", "--template=\(hooksURL.path)"], ["add", "."], ["commit", "-m", "initial"]] {
+            let result = try await process.run(executable: "/usr/bin/git", arguments: gitPrefix + arguments, environment: environment)
+            try #require(result.status == 0, "Owned repository preparation failed: \(result.stderr)")
+        }
+        let rootResult = try await process.run(
+            executable: "/usr/bin/git", arguments: gitPrefix + ["rev-parse", "--show-toplevel"], environment: environment
+        )
+        try #require(rootResult.status == 0)
+        // Git's own physical root keeps the control independent of Foundation's alias choices.
+        let physicalRoot = URL(fileURLWithPath: rootResult.stdout.trimmingCharacters(in: .newlines), isDirectory: true)
+        let aliasURL = fixtureRoot.appendingPathComponent("repository-alias", isDirectory: true)
+        try FileManager.default.createSymbolicLink(at: aliasURL, withDestinationURL: repoURL)
+        for file in [trackedURL, siblingFileURL] {
+            try "two\n".write(to: file, atomically: true, encoding: .utf8)
+        }
+        let requestedRepo = usingSymbolicLink ? aliasURL : physicalRoot
+        let requestedRoot = requestedRepo.appendingPathComponent("work", isDirectory: true)
+        let expectedDirectory = requestedRoot.appendingPathComponent("nested", isDirectory: true)
+        let expectedFile = expectedDirectory.appendingPathComponent(filename)
+        let status = GitStatusProvider(environment: environment).fetchStatus(directory: requestedRoot.path)
+
+        #expect(status[expectedFile.path] == .some(.modified))
+        #expect(status[expectedDirectory.path] == .some(.modified))
+        #expect(status[requestedRepo.appendingPathComponent("workspace-sibling/tracked.txt").path] == nil)
+        #expect(status[requestedRepo.appendingPathComponent("workspace-sibling").path] == nil)
+        #expect(Set(status.keys) == Set([expectedFile.path, expectedDirectory.path]))
+    }
+
     @Test
     func statusQueryMapsTypeChangedAndUnmergedEntries() throws {
         let repoURL = try Self.makeTemporaryDirectory()

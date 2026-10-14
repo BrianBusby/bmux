@@ -3303,3 +3303,31 @@ warning-free. Strict Swift 6 checking still rejects the existing imported mutabl
 `settingsFileStore` and `shortcutLookupObserver` statics; no suppression was added.
 Integrated app-host and full test-target verification remain pending. No app was
 launched and no general clipboard or user settings file was changed.
+
+### Local Git status root-alias regression
+
+The unchanged build 788 provider returns no status for local explorer roots whose
+lexical alias differs from Git's physical repository root. An owned native run of
+all six existing `FileExplorerGitStatusProviderTests` methods fails the quoted
+filename and sibling-prefix positive assertions; index preservation, type-change
+mapping, and both SSH controls pass. Raw Git output contains the modified files;
+the local parser filters them out before returning the dictionary.
+
+A test-only parameterized regression adds an explicit owned symlink to a real Git
+repository. Its physical-root control uses `git rev-parse --show-toplevel`; the
+alias case requires file and parent-directory keys in the requested namespace,
+with exact key membership and sibling-prefix exclusion. Both cases modify a
+quoted/escaped filename and a sibling path. Repository preparation uses the
+existing joined shell-process owner, isolated HOME/config, explicit author and
+committer identities, disabled commit signing and empty owned hooks/templates.
+Cleanup removes the owned repository, symlink, home and process captures.
+
+Against unchanged build 788, the complete seven-method suite compiles without
+warnings in Swift 6. The new physical case passes; its symlink case fails three
+assertions (file, parent and exact keys). The two original nil-status failures
+remain, giving five issues across eight cases. All original test methods and
+helpers remain unchanged. This is deliberate test-only red evidence: the new
+regression still needs its separate CI-red commit before publishing a production
+correction. No app, Git provider, SSH parser, user configuration or global setting
+is changed by this slice. Full fixed-head Xcode 26.3/macOS 15 app-host verification
+remains pending.
