@@ -254,3 +254,4 @@ Repository: `BrianBusby/bmux`
 | `cli_socket_readiness_coalescing_verification` | open |
 | `sidebar_terminal_hit_boundary_verification` | open |
 | `browser_portal_presentation_fixture_verification` | open |
+| `native_xcode_project_parse_verification` | open |

@@ -6144,3 +6144,8 @@ caveats:
     title: Browser portal resize, reveal, and transient rebind contracts pass native 786; integrated app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: native_xcode_project_parse_verification
+    title: Native project parsing rejected three unquoted extension filenames; quoted paths and macOS parser guard await corrected CI
+    status: open
+    owner: bmux

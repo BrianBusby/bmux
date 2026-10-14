@@ -2666,3 +2666,9 @@ macOS 15 result. Integrated fixed-head CI, full-suite execution, and visual
 WebKit rendering remain open under
 `browser_portal_presentation_fixture_verification`. Contributor verification
 notes and test diagnostics add no product UI or localization keys.
+
+### Native Xcode project syntax verification
+
+D activation job115706442232 failed before build or benchmark: Xcode could not parse three newly added Markdown test extension paths containing `+`. Source wiring and normalization had passed because those checks do not parse OpenStep syntax. Quoting only those three `PBXFileReference.path` values fixes the native parser failure; file identities and target membership are unchanged. Native Xcode project loading also exposed one duplicate `ShellContractProcess.swift` navigator membership; removing that duplicate leaves its single file reference and Sources entry intact. `scripts/check-pbxproj.sh` now also runs Apple's `plutil -lint` on macOS, alongside the unchanged object-version and normalization checks. Linux retains its existing checks without a new dependency or custom parser.
+
+An owned temporary copy of the exact D project fails the native guard; the corrected project passes. No metadata-string assertion test was added: the native parser exercises the actual failing boundary. An isolated `xcodebuild -list` now passes project parsing but stops at this sibling worktree’s missing `GhosttyKit.xcframework`; full dependency-resolved project loading remains pending in the initialized integration tree. The failed activation run does not constitute Release-signature or closed-peer regression evidence; both named test-only reds still require actual execution. No app build, launch, active-app replacement, or runtime behavior change is part of this correction. Corrected-head CI remains pending.
