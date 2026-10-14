@@ -407,4 +407,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Focused app-host gate includes default and configured sidebar width policy tests; local native cases pass and pushed-head CI remains pending (`sidebar_width_persistence_focused_gate_verification`) - owner: Bmux; status: open
 - Focused managed appearance startup suite pending actual app-host verification (`managed_appearance_startup_fixture_verification`) - owner: Bmux; status: open
 - Browser inspector window-close runtime fixture correction awaits fixed-head app-host verification (`browser_inspector_window_ownership_verification`) - owner: Bmux; status: open
+- Focused global search configured-conflict priority suite awaits app-host verification (`global_search_shortcut_conflict_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

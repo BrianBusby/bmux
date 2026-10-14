@@ -554,3 +554,34 @@ behavior and local/CI references, architecture ownership/file/concurrency rules,
 debugging runtime pitfalls, shared behavior and native project wiring. No shipped
 strings or localization catalogs change; this section is contributor verification
 prose. This repair is integrated into PR 170; no separate PR is introduced.
+
+## Global search shortcut conflict verification
+
+PR 170 job `115525529711` failed the legacy configured Show/Hide collision case:
+the recorder returned `conflictsWithAction(showHideAllWindows)`, while the test
+expected `reservedBySystem`. The named-action rejection was introduced by
+`1a95cbba8` for actionable recorder feedback and remains the shared validator's
+policy. This correction changes only that legacy test, not shortcut policy or
+Settings behavior.
+
+`GlobalSearchShortcutConflictTests` exercises the real validator through an owned
+managed settings file. It retains the exact configured target, adds a nil normalized
+shortcut assertion, distinguishes a hardcoded system reservation, and checks
+nonconflicting/unbound acceptance and configured-conflict precedence over the
+later system-wide chord rejection. Setup and restoration run synchronously on
+MainActor; managed-default metadata preserves persistent-domain provenance and
+volatile domains are restored. The fixture never calls `resetAll`, persists a
+shortcut, starts a watcher, or suspends with the scoped store installed.
+
+The existing focused browser/settings invocation includes the new suite. Its
+canonical/local caveat remains open until actual fixed-head app-host execution.
+Native build 773 owner verification passes four functions/six parameter cases
+in 0.046 seconds. Restoring the old generic expectation in a temporary control
+fails exactly once; temporary success/throw controls also verify store identity,
+persisted-key absence and volatile-domain restoration. These results do not
+establish full-suite or CI success. The native harness uses the
+target's Swift 5 mode without warnings; forcing Swift 6 exposes the retained
+legacy owner's nonisolated mutable `settingsFileStore`, not a new concurrency
+suppression. Governing sources are root/personal AGENTS, continuous-code-quality,
+bmux-testing migration/behavior/local-CI, architecture and shared-behavior rules.
+No production code or shipped strings change; localization catalogs are untouched.

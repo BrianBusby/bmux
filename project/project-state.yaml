@@ -5921,3 +5921,7 @@ caveats:
     title: Browser inspector window-close runtime fixture correction awaits fixed-head app-host verification
     status: open
     owner: bmux
+  - id: global_search_shortcut_conflict_verification
+    title: Focused global search configured-conflict priority suite awaits app-host verification
+    status: open
+    owner: bmux
