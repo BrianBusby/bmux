@@ -645,6 +645,7 @@
 		B900001BA1B2C3D4E5F60719 /* CloseWorkspacesConfirmDialogUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B900001CA1B2C3D4E5F60719 /* CloseWorkspacesConfirmDialogUITests.swift */; };
 		30DFF011841489FD729F9EE0 /* CloudAttachRetryContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3565F626B09B524536B3C777 /* CloudAttachRetryContractTests.swift */; };
 		586DF57C2A451DD08047FC9F /* CloudAttachRetryFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51310FA425CE1A3A840F6A86 /* CloudAttachRetryFixture.swift */; };
+		69725403D8DFCC4AACD67C4C /* CloudProxyRetryStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E84940FCD5D5DE733F63D05F /* CloudProxyRetryStateTests.swift */; };
 		C10D00010000000000000001 /* CloudVMActionLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10D00020000000000000002 /* CloudVMActionLauncher.swift */; };
 		C75740010000000000000001 /* CloudVMMenuItemMetricsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C75740010000000000000002 /* CloudVMMenuItemMetricsTests.swift */; };
 		C0A1E5CE01C0A1E5CE01A001 /* CoalesceLatestPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1E5CE01C0A1E5CE01A002 /* CoalesceLatestPublisher.swift */; };
@@ -2669,6 +2670,7 @@
 		B900001CA1B2C3D4E5F60719 /* CloseWorkspacesConfirmDialogUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloseWorkspacesConfirmDialogUITests.swift; sourceTree = "<group>"; };
 		3565F626B09B524536B3C777 /* CloudAttachRetryContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudAttachRetryContractTests.swift; sourceTree = "<group>"; };
 		51310FA425CE1A3A840F6A86 /* CloudAttachRetryFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudAttachRetryFixture.swift; sourceTree = "<group>"; };
+		E84940FCD5D5DE733F63D05F /* CloudProxyRetryStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudProxyRetryStateTests.swift; sourceTree = "<group>"; };
 		C10D00020000000000000002 /* CloudVMActionLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudVMActionLauncher.swift; sourceTree = "<group>"; };
 		C75740010000000000000002 /* CloudVMMenuItemMetricsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudVMMenuItemMetricsTests.swift; sourceTree = "<group>"; };
 		C0A1E5CE01C0A1E5CE01A002 /* CoalesceLatestPublisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoalesceLatestPublisher.swift; sourceTree = "<group>"; };
@@ -5537,6 +5539,7 @@
 				6D25ADA5410B1A70A0FFC090 /* BrowserRemoteStoreScopeTests.swift */,
 				A3DE536D7D98EFD0388659FF /* BrowserRemoteStoreFixture.swift */,
 				3565F626B09B524536B3C777 /* CloudAttachRetryContractTests.swift */,
+				E84940FCD5D5DE733F63D05F /* CloudProxyRetryStateTests.swift */,
 				51310FA425CE1A3A840F6A86 /* CloudAttachRetryFixture.swift */,
 				CE4411000000000000000002 /* CLISocketFixture.swift */,
 				4A73492E43412B49856569B9 /* CLISocketReadiness.swift */,
@@ -8100,6 +8103,7 @@
 				032A6F24128742F0A09E4E20 /* ClosedTabHistoryObservation.swift in Sources */,
 					30DFF011841489FD729F9EE0 /* CloudAttachRetryContractTests.swift in Sources */,
 					586DF57C2A451DD08047FC9F /* CloudAttachRetryFixture.swift in Sources */,
+					69725403D8DFCC4AACD67C4C /* CloudProxyRetryStateTests.swift in Sources */,
 				C75740010000000000000001 /* CloudVMMenuItemMetricsTests.swift in Sources */,
 				A9E040000000000000000002 /* CodexAppServerSessionTests.swift in Sources */,
 				BFDECAF433606DDF43C5C9E9 /* CodexMonitorLeaseFixture.swift in Sources */,

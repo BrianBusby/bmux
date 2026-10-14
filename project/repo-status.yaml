@@ -345,3 +345,6 @@ local_caveats:
 
   - id: remote_agent_fork_fixture_verification
     status: open
+
+  - id: default_cloud_proxy_retry_state_verification
+    status: open

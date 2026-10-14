@@ -6159,3 +6159,8 @@ caveats:
     title: Remote agent fork fixture owns its existing agent path and passes native checks; app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: default_cloud_proxy_retry_state_verification
+    title: Default cloud proxy retry must retain connected state while removing old proxy-only artifacts; fixed-artifact and integrated verification remain pending
+    status: open
+    owner: bmux
