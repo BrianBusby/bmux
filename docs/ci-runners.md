@@ -4290,3 +4290,29 @@ observations exist only in temporary diagnostic adapters. Source compilation use
 Swift 6; local evidence does not reproduce or disprove the historical CI timeout.
 Actual macOS 15 app-host verification remains open under
 `browser_remote_loopback_fixture_verification`.
+
+
+## SSH agent fixture failure summaries
+
+Candidate K's broad shard 2 still reports a timeout in the joined SSH agent
+fixture. Its failure diagnostic interpolated entire captured requests, including
+a generated terminal startup script, plus both output files. The first complete
+log interval contains about 528 KB between the inner issue and the rethrown
+error; that log interval is not evidence of child-exit or scheduler latency.
+The captured sequence includes `workspace.create` without
+`workspace.remote.configure`; final-drain capture does not prove a timely reply.
+
+The fixture now reports request count and total byte count, at most eight method
+categories, and stdout/stderr file byte counts or a read-error code. Method
+categories allow only the two expected RPC names; malformed and other requests
+receive fixed labels. It does not log startup scripts, request values, output
+contents, authentication text or paths. The original error is still recorded and
+rethrown, and all successful protocol/path/options assertions remain unchanged.
+No process deadline, concurrency, socket response or production code changes.
+
+A temporary runtime control through the exact summary method uses an 800 KB
+synthetic payload/output, verifies a sub-300-byte summary without its sentinel,
+and retains method/count and missing-file error evidence. The complete affected
+fixture compiles in Swift 6 without warnings. This bounded output correction
+does not resolve or attribute the actual app-host timeout, which remains open
+under `ssh_agent_joined_producer_verification`.
