@@ -6006,6 +6006,10 @@ caveats:
     title: Workspace fallback regression test red and production fix verification pending
     status: open
     owner: bmux
+  - id: native_portal_workspace_contract_fixture_verification
+    title: Portal geometry and workspace creation/publication fixture corrections await fixed-head app-host verification
+    status: open
+    owner: bmux
   - id: native_history_and_batched_frame_fixture_verification
     title: Completed-close history and batched mobile response fixture corrections await fixed-head app-host verification
     status: open
