@@ -2943,3 +2943,20 @@ and pass five functions (nine cases) against unchanged native build 786.
 This focused check does not replace full test-target compilation: the next
 integrated batch must compile the entire `bmuxTests` target with CI's Xcode 26.3
 and run the app-host tests. That gate remains open.
+
+### Combined native test-target compilation after E
+
+The combined revision `3a3f5f7ee` passed a complete `bmux-unit`
+`build-for-testing` with Xcode 26.6 (Swift 6.3.3), using the target's Swift 5
+language mode. The compiler input contained all 557 wired test files plus 14
+shared source files. This used a new isolated derived-data path and bundle IDs;
+no tests or app were launched and existing preview artifacts were untouched.
+The local SDK's existing `BMUX_SKIP_ZIG_BUILD=1` workaround was retained.
+
+The repaired fork assertion and all newly added or rewritten fixture owners
+compiled without warnings. The full target still emitted 404 distinct warning
+lines, predominantly legacy XCTest import diagnostics repeated across compiler
+batches, alongside existing app/test warnings. Modified legacy files retain
+unchanged import and unused-result warnings; no warnings were suppressed and no
+warning budget was relaxed. This is compilation evidence, not a passing test
+suite. CI's Xcode 26.3 compilation and complete app-host execution remain open.
