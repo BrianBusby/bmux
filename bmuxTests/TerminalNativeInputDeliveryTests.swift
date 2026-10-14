@@ -163,6 +163,147 @@ import Testing
         }
     }
 
+    @Test(.timeLimit(.minutes(1)))
+    func optionTildeDeadKeyUsesOriginalEventBeforeAltTranslation() async throws {
+        try await withReadySurface { surface, view, window in
+            surface.hostedView.setVisibleInUI(true)
+            surface.hostedView.setActive(true)
+            let previousObserver = GhosttyNSView.debugGhosttySurfaceKeyEventObserver
+            let previousHandler = GhosttyNSView.debugTextInputEventHandler
+            defer {
+                GhosttyNSView.debugGhosttySurfaceKeyEventObserver = previousObserver
+                GhosttyNSView.debugTextInputEventHandler = previousHandler
+            }
+            var deadKeyPrimed = false
+            GhosttyNSView.debugTextInputEventHandler = { candidate, event in
+                guard candidate === view else { return false }
+                let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+                if event.keyCode == 45, flags.contains(.option), !flags.contains(.command),
+                   !flags.contains(.control), (event.characters ?? "").isEmpty {
+                    deadKeyPrimed = true
+                    candidate.setMarkedText("~", selectedRange: NSRange(location: 1, length: 0),
+                        replacementRange: NSRange(location: NSNotFound, length: 0))
+                    return true
+                }
+                if event.keyCode == 0, deadKeyPrimed, candidate.hasMarkedText() {
+                    candidate.insertText("ã", replacementRange: NSRange(location: NSNotFound, length: 0))
+                    return true
+                }
+                return false
+            }
+            var pressedText: [String] = []
+            var pressedKeycodes: [UInt32] = []
+            GhosttyNSView.debugGhosttySurfaceKeyEventObserver = { event in
+                previousObserver?(event)
+                guard event.action == GHOSTTY_ACTION_PRESS else { return }
+                if let text = event.text { pressedText.append(String(cString: text)) }
+                else { pressedKeycodes.append(event.keycode) }
+            }
+            try #require(window.makeFirstResponder(view))
+            let optionN = try #require(NSEvent.keyEvent(with: .keyDown, location: .zero,
+                modifierFlags: [.option], timestamp: ProcessInfo.processInfo.systemUptime,
+                windowNumber: window.windowNumber, context: nil, characters: "",
+                charactersIgnoringModifiers: "n", isARepeat: false, keyCode: 45))
+            let letterA = try #require(NSEvent.keyEvent(with: .keyDown, location: .zero,
+                modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                windowNumber: window.windowNumber, context: nil, characters: "a",
+                charactersIgnoringModifiers: "a", isARepeat: false, keyCode: 0))
+            view.keyDown(with: optionN)
+            view.keyDown(with: letterA)
+            #expect(pressedText == ["ã"])
+            #expect(pressedKeycodes == [])
+            #expect(!view.hasMarkedText())
+        }
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func shiftBackquoteEscFallbackSendsLiteralTilde() async throws {
+        try await withReadySurface { surface, view, _ in
+            surface.hostedView.setVisibleInUI(true)
+            surface.hostedView.setActive(true)
+            let previousObserver = GhosttyNSView.debugGhosttySurfaceKeyEventObserver
+            let previousHandler = GhosttyNSView.debugTextInputEventHandler
+            defer {
+                GhosttyNSView.debugGhosttySurfaceKeyEventObserver = previousObserver
+                GhosttyNSView.debugTextInputEventHandler = previousHandler
+            }
+            // Exercise textForKeyEvent's fallback when interpretation commits no text.
+            GhosttyNSView.debugTextInputEventHandler = { candidate, _ in candidate === view }
+            var pressText: String?
+            var pressUnshiftedCodepoint: UInt32?
+            GhosttyNSView.debugGhosttySurfaceKeyEventObserver = { event in
+                previousObserver?(event)
+                guard event.action == GHOSTTY_ACTION_PRESS, event.keycode == 50 else { return }
+                pressUnshiftedCodepoint = event.unshifted_codepoint
+                pressText = event.text.map { String(cString: $0) }
+            }
+            #expect(surface.hostedView.debugSendSyntheticKeyPressAndReleaseForUITest(
+                characters: "\u{1B}", charactersIgnoringModifiers: "`", keyCode: 50, modifierFlags: [.shift]))
+            #expect(pressText == "~")
+            #expect(pressUnshiftedCodepoint == "`".unicodeScalars.first!.value)
+        }
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func optionDeletePreservesAltAsModifierForWordDelete() async throws {
+        try await withReadySurface { surface, _, _ in
+            surface.hostedView.setVisibleInUI(true)
+            surface.hostedView.setActive(true)
+            let previousObserver = GhosttyNSView.debugGhosttySurfaceKeyEventObserver
+            defer { GhosttyNSView.debugGhosttySurfaceKeyEventObserver = previousObserver }
+            var pressEvent: ghostty_input_key_s?
+            GhosttyNSView.debugGhosttySurfaceKeyEventObserver = { event in
+                previousObserver?(event)
+                if event.action == GHOSTTY_ACTION_PRESS, event.keycode == 51 { pressEvent = event }
+            }
+            #expect(surface.hostedView.debugSendSyntheticKeyPressAndReleaseForUITest(
+                characters: "\u{7F}", charactersIgnoringModifiers: "\u{7F}", keyCode: 51, modifierFlags: [.option]))
+            let event = try #require(pressEvent, "Capture the Option+Delete key press")
+            #expect(event.action == GHOSTTY_ACTION_PRESS)
+            #expect(event.keycode == 51)
+            #expect(event.mods.rawValue & GHOSTTY_MODS_ALT.rawValue == GHOSTTY_MODS_ALT.rawValue)
+            #expect(event.consumed_mods.rawValue == GHOSTTY_MODS_NONE.rawValue)
+            #expect(event.text == nil)
+        }
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func keyDownDoesNotForwardWhenZhuyinStartsMarkedText() async throws {
+        try await withReadySurface { surface, view, window in
+            surface.hostedView.setVisibleInUI(true)
+            surface.hostedView.setActive(true)
+            let previousObserver = GhosttyNSView.debugGhosttySurfaceKeyEventObserver
+            let previousSource = KeyboardLayout.debugInputSourceIdOverride
+            let previousHandler = GhosttyNSView.debugTextInputEventHandler
+            defer {
+                GhosttyNSView.debugGhosttySurfaceKeyEventObserver = previousObserver
+                KeyboardLayout.debugInputSourceIdOverride = previousSource
+                GhosttyNSView.debugTextInputEventHandler = previousHandler
+            }
+            KeyboardLayout.debugInputSourceIdOverride = "com.apple.inputmethod.TCIM.Zhuyin"
+            GhosttyNSView.debugTextInputEventHandler = { candidate, _ in
+                guard candidate === view else { return false }
+                candidate.setMarkedText("ㄓ", selectedRange: NSRange(location: 1, length: 0),
+                    replacementRange: NSRange(location: NSNotFound, length: 0))
+                return true
+            }
+            var forwardedPressCount = 0
+            GhosttyNSView.debugGhosttySurfaceKeyEventObserver = { event in
+                previousObserver?(event)
+                if event.action == GHOSTTY_ACTION_PRESS { forwardedPressCount += 1 }
+            }
+            let event = try #require(NSEvent.keyEvent(with: .keyDown, location: .zero,
+                modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                windowNumber: window.windowNumber, context: nil, characters: "5",
+                charactersIgnoringModifiers: "5", isARepeat: false, keyCode: 23))
+            try #require(window.makeFirstResponder(view))
+            view.keyDown(with: event)
+            #expect(view.hasMarkedText(), "Zhuyin keyDown should start marked text")
+            #expect(forwardedPressCount == 0,
+                    "AppKit-consumed Zhuyin marked-text changes must not forward a duplicate Ghostty key")
+        }
+    }
+
     private func withReadySurface(body: (TerminalSurface, GhosttyNSView, NSWindow) throws -> Void) async throws {
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 360, height: 240),
             styleMask: [.titled, .closable], backing: .buffered, defer: false)
@@ -180,14 +321,12 @@ import Testing
         host.frame = content.bounds
         host.autoresizingMask = [.width, .height]
         // Subscribe before attachment: initial shim preparation may outlast a fixed 50ms delay.
-        let surfaceID = surface.id
-        let ready = NotificationCenter.default.notifications(named: .terminalSurfaceDidBecomeReady)
-            .filter { ($0.object as? TerminalSurface)?.id == surfaceID }.map { _ in true }
-        var iterator = ready.makeAsyncIterator()
+        let readiness = TerminalRuntimeReadinessFixture(surface: surface)
+        defer { readiness.close() }
         content.addSubview(host)
         content.layoutSubtreeIfNeeded()
         host.layoutSubtreeIfNeeded()
-        if surface.surface == nil { _ = await iterator.next() }
+        if surface.surface == nil { try await readiness.wait(timeout: .seconds(3)) }
         try #require(surface.surface != nil, "Runtime creation must complete before native input")
         let view = try #require(host.subviews.compactMap { $0 as? NSScrollView }.first?
             .documentView?.subviews.first as? GhosttyNSView)

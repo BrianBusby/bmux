@@ -2815,3 +2815,40 @@ and the main-base Swift file budget. The warning budget reports 126 retained
 warnings against 221 allowed, matching build 786; no warning allowance changed.
 The tagged reload compiles the app, not the complete test target. The next CI
 run must execute that target and all configured gates on the published commit.
+
+### IME, modifier and terminal focus fixture readiness
+
+Seven additional failures from C run 38509817630 and D2 are now covered in
+`TerminalNativeInputDeliveryTests` and `TerminalSurfaceRecoveryTests`: Option-N
+dead-key composition, shifted backquote, Option-Delete, Zhuyin marked text,
+responder loss during recovery, inactive visibility restoration, and direct
+focus refresh. Only those seven legacy methods move; their exact input modifiers,
+text/key arrays, marked-text, focus and redraw assertions remain. Backquote uses
+the existing per-view interpreter hook to commit no text, explicitly exercising
+the real fallback instead of depending on the machine's input-source behavior.
+
+`TerminalRuntimeReadinessFixture` owns the notification subscription before
+attachment or recovery, plus an injected cancellable failure deadline. Initial
+readiness is bounded at three seconds; recovery retains the original explicit
+five-second bound. The migrated tests also inherit their suites' one-minute outer
+limit, replacing unbounded synchronous cases with 50ms settling. Process-wide
+input hooks exist only in synchronous bodies after readiness and are restored
+before suspension. Owned windows are retained at construction and closed after
+terminal teardown. No production input policy, workflow selector or clipboard
+behavior changes; paste-routing, Kitty output and notification-flash cases remain
+outside this correction.
+
+Unchanged native build 786 reproduces missing input/focus preconditions without
+readiness, then passes the preserved assertions with actual runtime events.
+These controlled results establish fixture prerequisites, not the exact macOS 15
+CI scheduling cause. The complete affected suites compile without warnings in
+the test target's Swift 5 mode and pass 14 functions (15 cases) in an owned,
+offscreen native process. A temporary exact-source copy omitting initial readiness
+fails all seven migrated cases with nine behavior issues. Two temporary lifecycle
+controls verify missing-event timeout, cancellation/join, and observer closure.
+Strict Swift 6 retains the existing imported
+`KeyboardLayout.debugInputSourceIdOverride` and legacy CJK hook isolation gap;
+no suppression or runtime hook was introduced. The shared readiness owner and
+complete recovery suite also compile without warnings in strict Swift 6; the
+async fixture body explicitly retains MainActor isolation. Fixed-head macOS app-host
+verification remains pending.
