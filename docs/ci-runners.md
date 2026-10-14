@@ -3223,3 +3223,34 @@ fixtures. No suppression, replacement hook or production isolation change was ad
 Native logs retain the existing disabled-Sentry breadcrumb diagnostics.
 These offscreen probes do not replace integrated app-host execution, which
 remains pending. No product strings or localization catalogs changed.
+
+
+### Shortcut parser lookup attribution fixture
+
+D2 shard 2 recorded 672 shortcut lookups in
+`testLegacySettingsShortcutBindingsParseWithoutRuntimeConflictLookup`, while
+its parsed Cmd+1 binding and default/private notification counts remained valid.
+The settings-file parser uses `normalizedSettingsFileShortcut`; initialization
+also writes managed-default bookkeeping. A `UserDefaults.didChangeNotification`
+subscriber can legitimately validate a live global-search shortcut during those
+writes. A controlled subscriber reproduces the same three 224-lookup sequences;
+this is causal local evidence, not a captured CI subscriber stack.
+
+`ShortcutSettingsParsingContractTests` scopes the zero-lookup assertion to the
+actual pure normalization call, restores the previous lookup observer, and then
+constructs the complete fallback-file store. Both subscriber-off and
+subscriber-on cases retain the live Cmd+2 browser conflict, normalized Cmd+1
+output, zero default shortcut notifications and one private notification. The
+enabled subscriber must execute; its callback count is not fixed. Its validation
+calls do not register a system hotkey. Synchronous MainActor ownership restores
+the original store and persisted/volatile provenance of the three bookkeeping
+keys. No production policy, observer suppression, timing limit or CI selector
+changes accompany this one-method migration.
+
+Against unchanged build 786, both cases pass. A temporary control substituting
+runtime recorder normalization fails the zero-lookup and normalized-output
+assertions in both cases (four issues). Target-mode Swift 5 compilation is
+warning-free. Strict Swift 6 checking still rejects the existing imported mutable
+`settingsFileStore` and `shortcutLookupObserver` statics; no suppression was added.
+Integrated app-host and full test-target verification remain pending. No app was
+launched and no general clipboard or user settings file was changed.

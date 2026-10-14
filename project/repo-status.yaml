@@ -381,3 +381,6 @@ local_caveats:
 
   - id: browser_find_routing_fixture_verification
     status: open
+
+  - id: shortcut_parser_lookup_attribution_verification
+    status: open
