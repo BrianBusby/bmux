@@ -348,3 +348,6 @@ local_caveats:
 
   - id: default_cloud_proxy_retry_state_verification
     status: open
+
+  - id: deleted_agent_hook_cwd_regression
+    status: open

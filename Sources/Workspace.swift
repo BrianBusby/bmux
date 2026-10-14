@@ -1399,22 +1399,19 @@ extension Workspace {
                 restoredTmuxStartupScript != nil ||
                 restoredAgentResumeLaunch != nil ||
                 (restoredBindingLaunch != nil && resumeBinding?.isAgentHookBinding == true)
-            // Guarded startup commands cd themselves and tolerate deleted saved directories.
-            // Passing the same cwd to Ghostty can fail before the guarded command runs.
             let suppressWorkspaceRemoteStartupCommand =
                 remoteConfiguration != nil &&
                 snapshot.terminal?.isRemoteTerminal == false &&
                 restoredRemotePTYAttachCommand == nil &&
                 !isDefaultFreestyleSSHDRemoteWorkspace
             let effectiveRemoteStartupCommand = suppressWorkspaceRemoteStartupCommand ? nil : remoteStartupCommand
-            let startupUsesLocalWorkingDirectory = effectiveRemoteStartupCommand == nil &&
-                restoredRemotePTYAttachCommand == nil &&
-                !restoresRemoteWorkspaceTerminalSnapshot
-            let localWorkingDirectory = startupUsesLocalWorkingDirectory && !startupHandlesWorkingDirectory
-                ? (suppressWorkspaceRemoteStartupCommand ? savedWorkingDirectory : workingDirectory)
-                : nil
-            let requestedWorkingDirectory = localWorkingDirectory ??
-                (startupUsesLocalWorkingDirectory && startupHandlesWorkingDirectory ? workingDirectory : nil)
+            let runtimeDirectories = sessionRestorePolicy.runtimeWorkingDirectories(
+                usesLocalWorkingDirectory: effectiveRemoteStartupCommand == nil &&
+                    restoredRemotePTYAttachCommand == nil && !restoresRemoteWorkspaceTerminalSnapshot,
+                startupHandlesWorkingDirectory: startupHandlesWorkingDirectory,
+                workingDirectory: workingDirectory,
+                unguardedWorkingDirectory: suppressWorkspaceRemoteStartupCommand ? savedWorkingDirectory : workingDirectory
+            )
             let restoredAgentWillRunStartupCommand = restorableAgent != nil && (
                 restoredAgentResumeLaunch?.initialCommand != nil ||
                 (restoredBindingLaunch?.initialCommand != nil && resumeBinding?.isAgentHookBinding == true)
@@ -1459,7 +1456,7 @@ extension Workspace {
             guard let terminalPanel = createTerminalSurfaceForAction(
                 inPane: paneId,
                 focus: false,
-                workingDirectory: requestedWorkingDirectory,
+                workingDirectory: runtimeDirectories.requested,
                 initialCommand: restoredStartupCommand,
                 tmuxStartCommand: restoredTmuxStartCommand,
                 initialInput: restoredStartupInput,
@@ -1513,16 +1510,12 @@ extension Workspace {
             } else {
                 surfaceResumeBindingsByPanelId.removeValue(forKey: terminalPanel.id)
             }
-            // A terminal whose startup command cds itself (agent resume, tmux
-            // attach, agent-hook) is spawned without a working directory, so its
-            // shell starts in the default directory and shell integration reports
-            // that directory (typically home) before the startup command cds into
-            // the saved one. Remember the saved directory so the spurious initial
-            // report is ignored instead of overwriting the restored workspace cwd
-            // (#6617). `shouldIgnoreRestoredGuardedDirectoryReport` decides how long
-            // to guard: once while the saved directory still exists, persistently
-            // while it is on an unmounted volume, and not at all once it has been
-            // deleted (the shell's reported cwd is then the real fallback).
+            // Agent resume, tmux attach, and agent-hook launchers own their cwd change;
+            // an unavailable saved directory now leaves runtime cwd unset. Preserve
+            // saved metadata against early shell-integration fallback reports (#6617).
+            // `shouldIgnoreRestoredGuardedDirectoryReport` ignores one fallback while
+            // the directory exists, guards persistently while its volume is unmounted,
+            // and accepts the real fallback once the saved directory has been deleted.
             //
             // Only guard LOCAL terminals. That guard's existence check stats the
             // local Mac, so a remote terminal's remote saved path (e.g.
@@ -1535,7 +1528,7 @@ extension Workspace {
                 restoredRemotePTYSessionID == nil &&
                 snapshot.terminal?.isRemoteTerminal != true
             if startupHandlesWorkingDirectory,
-               localWorkingDirectory == nil,
+               runtimeDirectories.unguarded == nil,
                restoredDirectoryIsLocalPath,
                let guardedWorkingDirectory = resumeSessionWorkingDirectory?.trimmingCharacters(in: .whitespacesAndNewlines),
                !guardedWorkingDirectory.isEmpty {
@@ -2594,7 +2587,11 @@ final class Workspace: Identifiable, ObservableObject {
                     HermesAgentCodexEnvironment.defaultCodexModel(environment: environment)
                 }
             ),
-            temporaryDirectory: temporaryDirectory
+            temporaryDirectory: temporaryDirectory,
+            directoryExists: { path in
+                var isDirectory: ObjCBool = false
+                return FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) && isDirectory.boolValue
+            }
         )
     }
 

@@ -459,4 +459,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Direct text and Korean Return fixtures require a ready runtime; fixed-head macOS app-host verification remains pending (`terminal_native_input_delivery_fixture_verification`) - owner: Bmux; status: open
 - Remote agent fork fixture owns its existing agent path and passes native checks; app-host verification remains pending (`remote_agent_fork_fixture_verification`) - owner: Bmux; status: open
 - Default cloud proxy retry must retain connected state while removing old proxy-only artifacts; fixed-artifact and integrated verification remain pending (`default_cloud_proxy_retry_state_verification`) - owner: Bmux; status: open
+- Deleted agent-hook cwd runtime policy rejects unavailable local directories in focused controls; fresh app-host verification pending (`deleted_agent_hook_cwd_regression`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

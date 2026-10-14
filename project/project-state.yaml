@@ -6164,3 +6164,8 @@ caveats:
     title: Default cloud proxy retry must retain connected state while removing old proxy-only artifacts; fixed-artifact and integrated verification remain pending
     status: open
     owner: bmux
+
+  - id: deleted_agent_hook_cwd_regression
+    title: Deleted agent-hook cwd runtime policy rejects unavailable local directories in focused controls; fresh app-host verification pending
+    status: open
+    owner: bmux

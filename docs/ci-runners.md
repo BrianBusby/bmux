@@ -2719,3 +2719,27 @@ The existing case is migrated to `CloudProxyRetryStateTests` with all ten origin
 The local correction reuses the existing default-cloud policy in the retry predicate, only when the prior sidebar artifact is classified as proxy-only. Existing details, status cleanup, notifications, logging and error classifications remain owned by the same path. No new diagnostics, secrets, product copy or localization keys are introduced; existing status projections remain the observable verification boundary.
 
 Five temporary controls passed against unchanged artifact 786: default-cloud non-proxy error/disconnection and retry without a proxy artifact, ordinary SSH proxy retry, WebSocket transport failure, and persistent-PTY daemon failure. They establish the retained baseline before the required fixed-artifact rerun; they do not verify the new predicate. The correction changes one shared predicate line with zero file growth. It remains unpublished until the isolated fixed build and focused controls run; integrated CI is also still required.
+## Deleted agent-hook working directory regression
+
+Final-C shard 3 (run `38509817630`, job `115676261545`) failed the existing
+`SessionPersistenceTests.testRestoreDoesNotPassDeletedAgentHookCwdToTerminalRuntime`
+assertion because restore passes a deleted directory to the terminal runtime.
+The same case also rejected a valid brace group in the outer zsh launcher's
+post-agent footer. `SessionRestoreDeletedDirectoryTests` migrates exactly that
+case to Swift Testing and scopes the fish-safe brace assertion to the actual
+inline startup command. It preserves the nil runtime-cwd, resume arguments,
+saved-path, and guarded fallback assertions, with isolated defaults and explicit
+workspace/launcher cleanup.
+
+Against unchanged unlaunched native artifact 786, the migrated test compiles in
+Swift 6 without warnings and fails only the original nil-cwd assertion. The
+shell assertions pass. The restore policy now keeps a guarded local cwd only if it is an existing
+directory, through a constructor-injected filesystem predicate. Remote gating
+and directory metadata remain separate. The focused Swift 6 policy harness
+passes all eight existing policy methods and six temporary directory-control
+variants; the complete package graph and fresh fixed-artifact workspace controls
+remain pending. Existing local
+agent-hook directories, process-detected binding cwd, remote nil-cwd behavior,
+and unmounted-volume metadata must retain their contracts. Full integrated
+app-host/macOS 15 verification remains open under
+`deleted_agent_hook_cwd_regression`. No product-facing strings change.
