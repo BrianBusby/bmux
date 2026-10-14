@@ -221,6 +221,7 @@ Regenerate with: ./scripts/project-docs generate
 | Hook prompt evidence fixture uses the accepted stable workspace identity; native old expectation fails and corrected case passes, app-host verification pending (`hook_prompt_stable_workspace_fixture_verification`) | Bmux | open |  |
 | Closed retained windows are excluded from presentation while manager recovery is preserved; fixed-runtime and app-host verification remain pending (`closed_main_window_routing_verification`) | Bmux | open |  |
 | Focused Git metadata fixture verifies sidebar publication and duplicate suppression without workspace publication; native control passes and app-host verification remains pending (`sidebar_git_publication_fixture_verification`) | Bmux | open |  |
+| CLI telemetry fixture joins its producer at unchanged failure bounds; owned-shell counterexample passes and actual telemetry app-host verification remains pending (`cli_telemetry_joined_producer_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

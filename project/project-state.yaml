@@ -6277,3 +6277,8 @@ caveats:
     title: Focused Git metadata fixture verifies sidebar publication and duplicate suppression without workspace publication; native control passes and app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: cli_telemetry_joined_producer_verification
+    title: CLI telemetry fixture joins its producer at unchanged failure bounds; owned-shell counterexample passes and actual telemetry app-host verification remains pending
+    status: open
+    owner: bmux

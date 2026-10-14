@@ -3783,3 +3783,40 @@ presentation. Strict determinism, existing file budgets, wiring, and Project
 Truth validation/generation/freshness pass. Full integrated target compilation
 and exact-head app-host execution remain pending. No product strings changed;
 this section records contributor verification only.
+
+## CLI telemetry producer completion
+
+The three existing `BMUXCLISentryTelemetryRegressionTests` cases now await
+`ShellContractProcess`. Their original two-second or five-second deadline remains
+an actual failure boundary: timeout, spawn failure, and cancellation throw after
+the owned producer is joined. Successful status, expected error text, capture
+probe absence/presence, and durable-store probe assertions remain intact. The
+former `timedOut` assertions are enforced by that throwing boundary, not replaced
+with a successful timeout result. Owned-root cleanup failures are visible test
+issues. Standard output and error are captured separately and combined only for
+the existing substring checks and diagnostics; cross-stream ordering is not an
+asserted contract. No production telemetry, SDK configuration, or helper policy
+changes are included.
+
+The shared runner also sets the child's working directory to the owned fixture
+root instead of inheriting the app-host directory. The tested `ping` failures use
+explicit absolute socket endpoints and HOME-based relay credentials; their error
+selection does not depend on repository working-directory configuration. The
+existing environment and probe paths remain unchanged.
+
+In the prior app-host run, two cases reported `timedOut=true` with status 1 and
+complete expected error output. A temporary owned-shell counterexample retained
+the original two/five-second waits while withholding only the separately queued
+exit waiter: both returned that same contradictory result after independent
+termination observation. Normal-delivery controls and the unchanged shared
+runner returned the expected status and output. Every withheld worker and child
+was joined before cleanup. This establishes a permitted false-timeout ordering,
+not the measured cause or frequency of the CI failures. The temporary proof and
+complete changed suite/support compile warning-free in Swift 6; the complete
+suite/support also typecheck warning-free in the target's Swift 5 mode.
+
+The original telemetry cases were not executed locally: their environment enables
+the real Sentry capture/store path. Their complete assertions remain an isolated
+app-host CI gate. The broader error-output suite's similar legacy waiter remains
+outside this bounded correction. Existing shared-runner close-error handling is
+unchanged; this slice does not claim a new audit of every helper consumer.
