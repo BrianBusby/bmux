@@ -186,7 +186,7 @@ Regenerate with: ./scripts/project-docs generate
 | Narrow titlebar reservation fix preserves offscreen reference layout; integrated app verification remains pending (`titlebar_narrow_window_layout_verification`) | Bmux | open |  |
 | Claude resume and disabled git-watch contract migrations pass native 786; fixed-head app-host verification pending (`claude_resume_and_no_git_watch_fixture_verification`) | Bmux | open |  |
 | Titlebar hit-target sizing and search metadata fixture migrations pass native 786; app-host and Swift 6 shortcut-store isolation remain open (`titlebar_search_metadata_fixture_verification`) | Bmux | open |  |
-| Owned local Git root-alias regression is red on unchanged build 788; separate CI red and production correction remain pending (`file_explorer_git_root_alias_regression`) | Bmux | open |  |
+| Owned local Git root-alias regression is selected in the existing first focused gate after broad coverage was blocked; named CI red and production correction remain pending (`file_explorer_git_root_alias_regression`) | Bmux | open |  |
 | Closed-peer receive regression failed three expected cases in G; receiver repair and tagged build 788 CLI checks pass, fixed-head CI pending (`cli_closed_peer_receive_regression_verification`) | Bmux | open |  |
 | Three tagged CLI fixtures use short owned homes; native 786 exposes a separate multiline receive-timeout error in two cases (`cli_socket_home_fixture_verification`) | Bmux | open |  |
 | Native titlebar default-width and voice-control fixture corrections pass locally; app-host verification remains pending (`titlebar_product_contract_fixture_verification`) | Bmux | open |  |

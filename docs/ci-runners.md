@@ -3454,3 +3454,18 @@ The host sample occurs once near two seconds, and the observation window ends
 hang near 49 seconds, so this coverage may miss that hang; it first supplies
 startup and child-process scheduling evidence. Usable actual macOS 15 call
 graphs remain pending.
+
+## Git root-alias regression admission
+
+`FileExplorerGitStatusProviderTests` is also selected by the existing first
+focused shard-one invocation. The I diagnostic run completed that invocation
+with 115 functions in 27 suites and six CLI timeout issues, then skipped the
+broad shard containing the alias regression. That result is a coverage block,
+not evidence that the newly added alias case ran or failed.
+
+Selecting the complete wired Swift Testing suite exercises both physical-root
+and symbolic-link parameter cases without depending on later broad execution.
+The broad shard selector, all existing focused selectors, job count, wrapper,
+deadlines, and assertions remain unchanged. No Git status production correction
+is included; named actual regression failure is still required before that fix.
+The workflow change follows the maintained conservative all-area CI routing rule.
