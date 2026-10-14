@@ -475,7 +475,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Shortcut parser fixtures distinguish pure normalization from runtime subscribers; integrated app-host verification remains pending (`shortcut_parser_lookup_attribution_verification`) - owner: Bmux; status: open
 - Tmux launch identity fixture uses an owned short endpoint and requires focused-context exchange; integrated app-host verification remains pending (`tmux_launch_identity_fixture_verification`) - owner: Bmux; status: open
 - Orphan workspace shortcut fixture owns focused-context attribution; integrated app-host verification remains pending (`orphan_workspace_shortcut_fixture_verification`) - owner: Bmux; status: open
-- Explicit titlebar hit-test event context preserves routing policy; fresh native build and integrated app-host verification remain pending (`titlebar_hit_test_event_context_verification`) - owner: Bmux; status: open
+- Explicit titlebar event-context suite passes native build789 including ambient keyboard control; integrated app-host verification remains pending (`titlebar_hit_test_event_context_verification`) - owner: Bmux; status: open
 - Legacy CLI socket setup rejects invalid paths and syscall failures before unsafe use; native controls pass and integrated app-host verification remains pending (`cli_notify_socket_bind_guard_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
 

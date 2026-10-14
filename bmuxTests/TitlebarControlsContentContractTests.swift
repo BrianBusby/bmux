@@ -62,7 +62,7 @@ import Testing
                     #expect(proxy.performHitTest(at: point, currentEvent: leftMouseDown) === proxy)
                     #expect(proxy.performHitTest(at: point, currentEvent: nil) === proxy)
                     #expect(proxy.performHitTest(at: point, currentEvent: keyDown) == nil)
-                    let acceptsContextMenu = contextMenuIDs.contains(try #require(button.accessibilityIdentifier()))
+                    let acceptsContextMenu = contextMenuIDs.contains(button.accessibilityIdentifier())
                     #expect((proxy.performHitTest(at: point, currentEvent: rightMouseDown) === proxy) == acceptsContextMenu)
                 }
                 #expect(button.accessibilityPerformPress())
