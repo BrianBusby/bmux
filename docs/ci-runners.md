@@ -4152,8 +4152,13 @@ build 790 dependencies. All seven existing functions (eight parameter cases)
 pass, including index non-mutation, quoting, sibling exclusion and SSH controls.
 Three temporary entry-mapping cases also pass: deleted/renamed/symlink entries,
 a requested trailing slash, and an alias to filesystem root plus direct root.
-These are source-candidate controls; the new tagged binary and fixed-head macOS
-gate remain required. No user-facing strings or localization catalogs change.
+These initial controls compiled the source candidate. The subsequent isolated
+`maintenance-git-root-alias` reload passes at `ad50d343e`, producing build 791
+without launching or replacing a running app. All seven provider functions/eight
+parameter cases then pass against that compiled app (1.470s, strict Swift 6, no
+warnings). Its application warning categories match build 790 after source-line
+and metadata-timestamp normalization. Fixed-head macOS CI remains required.
+No user-facing strings or localization catalogs change.
 
 
 ## Closed-stderr CLI error contract
