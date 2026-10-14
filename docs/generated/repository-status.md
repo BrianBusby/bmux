@@ -161,6 +161,7 @@ Repository: `BrianBusby/bmux`
 | `native_app_host_full_suite_failures` | open |
 | `workspace_close_ownership_verification` | open |
 | `persistent_pty_child_exit_verification` | open |
+| `claude_resume_and_no_git_watch_fixture_verification` | open |
 | `ssh_cleanup_error_idempotency_verification` | open |
 | `claude_notification_target_fixture_verification` | open |
 | `codex_rejected_ambient_identity_verification` | open |

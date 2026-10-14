@@ -39,36 +39,6 @@ final class ClaudeConfigDirectoryPathTests: XCTestCase {
         )
     }
 
-    func testClaudeResumeCommandOmitsUnconfiguredCanonicalConfigDirectory() throws {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("bmux-claude-resume-\(UUID().uuidString)", isDirectory: true)
-        defer { try? FileManager.default.removeItem(at: root) }
-
-        let transcriptURL = root
-            .appendingPathComponent(".claude", isDirectory: true)
-            .appendingPathComponent("projects", isDirectory: true)
-            .appendingPathComponent("-tmp-repo", isDirectory: true)
-            .appendingPathComponent("session-123.jsonl", isDirectory: false)
-        try FileManager.default.createDirectory(
-            at: transcriptURL.deletingLastPathComponent(),
-            withIntermediateDirectories: true
-        )
-        XCTAssertNil(ClaudeConfigurationRoot.configuredResumeDirectory(root.appendingPathComponent(".claude").path))
-
-        let command = try XCTUnwrap(
-            makeClaudeSessionEntry(fileURL: transcriptURL).resumeCommand
-        )
-
-        XCTAssertFalse(command.contains("CLAUDE_CONFIG_DIR="))
-        XCTAssertTrue(command.hasPrefix("cd /tmp/repo && "))
-        XCTAssertTrue(command.contains(
-            AgentResumeArgv.claudeWrapperShellExecutableToken
-                .replacingOccurrences(of: "'", with: "'\\''") + " --resume session-123"
-        ))
-        XCTAssertTrue(command.contains("--model claude-opus-4-7"))
-        XCTAssertTrue(command.contains("--permission-mode default"))
-    }
-
     func testConfiguredResumeDirectoryIgnoresNullAndEmptyAuthFields() throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-claude-config-state-\(UUID().uuidString)", isDirectory: true)

@@ -2264,3 +2264,40 @@ PR state exercise the retained count, hit-test, font and deduplication assertion
 Disabled-Sentry breadcrumb diagnostics are present in the standalone harness;
 these are runtime diagnostics, not compiler warnings or a full app-host result.
 Fixed-head app-host execution remains pending.
+### Claude resume and disabled git-watch fixture contracts
+
+Final C run `38509817630` shard 4 exposed three stale Claude command expectations
+and two disabled-git-watch fixtures with overlong Unix socket paths. Unchanged
+native build 785 reproduced all three command failures. The generated commands
+correctly use sorted environment assignments and the maintained optional cwd
+guard outside the portable `/bin/sh` wrapper. Owned executable probes verified
+configuration selection, preserve-environment flags, cwd and resume/model/
+permission arguments without changing production rendering.
+
+The shell fixture's old bind helper silently truncated paths beyond Darwin's
+104-byte `sun_path` capacity. An owned overlong-path probe reproduced all eight
+failed assertions: the full path was absent, so both prompt hooks returned
+before clearing git state. Shortening only the owned parent made both original
+cases pass. The replacement uses a short owned `/tmp` directory and explicitly
+checks UTF-8 byte capacity before binding.
+
+`SessionIndexClaudeResumeCommandTests` migrates the three Claude cases into
+actual command execution, including quoting and omitted unconfigured roots.
+`NoGitWatchShellIntegrationTests` retains all six assertions for each interactive
+shell. `NoGitWatchShellFixture` owns the socket and shell home;
+`ShellContractProcess` observes native process termination before launch and
+joins it before resources are released. Its original five-second shell deadline
+is followed only on failure by the maintained 200ms owned-process termination
+grace and escalation. All five migrated cases pass against native build 786 in
+Swift 6 without warnings. Spawn-failure, timeout and cancellation controls retain
+their original errors and verify that an owned child ignoring SIGTERM has exited
+before return. Injected bind/fcntl failures each close the descriptor once and
+remove the root; an overlong-path control fails before creating a descriptor.
+Negative command copies detect incorrect preserve-environment flags and missing
+cwd guards, and both shell cases reject enabled git watching. Actual fixed-head
+macOS 15 app-host verification remains pending; the canonical/local
+`claude_resume_and_no_git_watch_fixture_verification` caveat stays open. No
+production policy, deadline extension, serialization or assertion weakening is
+introduced. Shard 4's exit 124 still leaves full-suite coverage incomplete. The
+localization audit finds only test diagnostics and contributor prose, with no
+shipped strings or catalog changes.
