@@ -389,6 +389,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Open Caveats
 
+- Four-agent one-way feed fixture awaits fixed-head app-host verification (`feed_hook_no_response_fixture_verification`) - owner: Bmux; status: open
 - Claude notification full-suite process timeouts remain unresolved despite focused app-host completion (`claude_notification_target_fixture_verification`) - owner: Bmux; status: open
 - Focused Hermes startup and stale-PID suites pending actual app-host verification (`resume_policy_execution_fixture_verification`) - owner: Bmux; status: open
 - Focused browser profile and remote store move suite pending actual app-host verification (`browser_remote_store_fixture_verification`) - owner: Bmux; status: open

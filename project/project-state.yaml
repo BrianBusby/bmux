@@ -5835,6 +5835,11 @@ policies:
     selected_for_implementation: false
 
 caveats:
+  - id: feed_hook_no_response_fixture_verification
+    title: Four-agent one-way feed fixture awaits fixed-head app-host verification
+    status: open
+    owner: bmux
+
   - id: claude_notification_target_fixture_verification
     title: Claude notification full-suite process timeouts remain unresolved despite focused app-host completion
     status: open
