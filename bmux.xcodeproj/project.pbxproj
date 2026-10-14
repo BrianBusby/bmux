@@ -964,6 +964,7 @@
 		C34670040000000000000001 /* KeyboardShortcutTestSettingsIsolation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C34670040000000000000002 /* KeyboardShortcutTestSettingsIsolation.swift */; };
 		A4C9777A382B46A196B19611 /* KittyClearHistoryFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A01456E5B114590B9CC1B12 /* KittyClearHistoryFixture.swift */; };
 		1352DA119EC14B80BA9AC212 /* KittyClearHistoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AE5349130CD4B9780791511 /* KittyClearHistoryTests.swift */; };
+		A66D4C5FC3254F81B6A0B712 /* KoreanMarkedTextRuntimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A66D4C5FC3254F81B6A0B711 /* KoreanMarkedTextRuntimeTests.swift */; };
 		87C609D63F03597AC12C8B0A /* LastSurfaceClosePreferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2EE0C080FF0FCCE8A8CA930 /* LastSurfaceClosePreferenceTests.swift */; };
 		CE0E03130000000000000001 /* LinearTicketIdentifierAliasMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03130000000000000002 /* LinearTicketIdentifierAliasMap.swift */; };
 		CE0E03120000000000000001 /* LinearWebLinkBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03120000000000000002 /* LinearWebLinkBuilder.swift */; };
@@ -3012,6 +3013,7 @@
 		C34670040000000000000002 /* KeyboardShortcutTestSettingsIsolation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutTestSettingsIsolation.swift; sourceTree = "<group>"; };
 		6A01456E5B114590B9CC1B12 /* KittyClearHistoryFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KittyClearHistoryFixture.swift"; sourceTree = "<group>"; };
 		3AE5349130CD4B9780791511 /* KittyClearHistoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KittyClearHistoryTests.swift"; sourceTree = "<group>"; };
+		A66D4C5FC3254F81B6A0B711 /* KoreanMarkedTextRuntimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KoreanMarkedTextRuntimeTests.swift"; sourceTree = "<group>"; };
 		F2EE0C080FF0FCCE8A8CA930 /* LastSurfaceClosePreferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LastSurfaceClosePreferenceTests.swift; sourceTree = "<group>"; };
 		CE0E03130000000000000002 /* LinearTicketIdentifierAliasMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearTicketIdentifierAliasMap.swift; sourceTree = "<group>"; };
 		CE0E03120000000000000002 /* LinearWebLinkBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearWebLinkBuilder.swift; sourceTree = "<group>"; };
@@ -5663,6 +5665,7 @@
 				AA5269A0C0DE0019FACE0019 /* WorkspacePopoverFocusRoutingTests.swift */,
 				AA5269A0C0DE0023FACE0023 /* TerminalSurfaceRecoveryTests.swift */,
 				AC0A317D658C4DD299300001 /* TerminalRuntimeReadinessFixture.swift */,
+				A66D4C5FC3254F81B6A0B711 /* KoreanMarkedTextRuntimeTests.swift */,
 				B3AC017D658C4DD299300011 /* GhosttyPasteShortcutFixture.swift */,
 				B4AC017D658C4DD299300011 /* BrowserOmnibarArrowRoutingTests.swift */,
 				B4AC017D658C4DD299300001 /* BrowserOmnibarArrowFixture.swift */,
@@ -8300,6 +8303,7 @@
 				C34670040000000000000001 /* KeyboardShortcutTestSettingsIsolation.swift in Sources */,
 				A4C9777A382B46A196B19611 /* KittyClearHistoryFixture.swift in Sources */,
 				1352DA119EC14B80BA9AC212 /* KittyClearHistoryTests.swift in Sources */,
+				A66D4C5FC3254F81B6A0B712 /* KoreanMarkedTextRuntimeTests.swift in Sources */,
 				87C609D63F03597AC12C8B0A /* LastSurfaceClosePreferenceTests.swift in Sources */,
 				6512F0C06512F0C06512F002 /* MainWindowFocusRestoreTests.swift in Sources */,
 				17C9F5BA0DD14EDC8C3E5001 /* MainWindowVisibilityControllerTests.swift in Sources */,

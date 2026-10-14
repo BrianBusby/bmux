@@ -224,6 +224,7 @@ Regenerate with: ./scripts/project-docs generate
 | Notification focus dismissal fixture uses the existing broadcaster completion boundary; native controls pass and exact-head app-host verification remains pending (`notification_focus_completion_fixture_verification`) | Bmux | open |  |
 | CLI telemetry fixture joins its producer at unchanged failure bounds; owned-shell counterexample passes and actual telemetry app-host verification remains pending (`cli_telemetry_joined_producer_verification`) | Bmux | open |  |
 | Plain terminal attachment and deferred TCIM fixtures await readiness; native controls pass and integrated app-host verification remains pending (`terminal_attachment_deferred_ime_fixture_verification`) | Bmux | open |  |
+| Korean marked-text fixture awaits terminal readiness; native composition controls pass and macOS app-host verification remains pending (`korean_marked_text_runtime_readiness_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

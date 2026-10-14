@@ -417,3 +417,6 @@ local_caveats:
 
   - id: terminal_attachment_deferred_ime_fixture_verification
     status: open
+
+  - id: korean_marked_text_runtime_readiness_verification
+    status: open
