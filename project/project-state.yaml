@@ -6311,3 +6311,8 @@ caveats:
     title: Hermes hook fixtures join each producer and socket phase; unchanged build 790 passes original contracts, integrated app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: korean_marked_text_runtime_readiness_verification
+    title: Korean marked-text fixture awaits terminal readiness; native composition controls pass and macOS app-host verification remains pending
+    status: open
+    owner: bmux

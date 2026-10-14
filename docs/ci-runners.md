@@ -4110,3 +4110,23 @@ contract checks on macOS 26.3, not a reproduction or disproof of the CI stall.
 Only standalone bundle lookup is adapted; the test and shared owners compile
 unchanged. No app was loaded, launched, or rebuilt. Actual macOS 15 app-host
 verification remains open as `tmux_split_rejection_fixture_verification`.
+
+## Korean marked-text runtime readiness
+
+Integration I shard 3 reported no composing key event in the Korean marked-text
+fixture. It sent a key after a 50 ms run-loop delay without checking runtime
+readiness. The Swift Testing replacement subscribes before attachment and waits
+on the existing readiness helper with its three-second failure bound. It keeps
+the original marked text, Korean source, event and three composition assertions.
+The MainActor event phase saves and restores existing probes without suspension;
+the existing input-handler seam replaces a process-wide method swizzle. The
+retained window is never presented, and teardown closes its runtime and window.
+
+Against frozen build 790 the migrated native case passes (one test, 0.112s).
+Removing marked text fails all three composition assertions; removing the runtime
+fails the required event assertion. These controls preserve coverage and establish
+the preconditions; they do not prove the cause of the macOS 15 CI failure. Full
+app-host verification remains pending. Swift 5 compilation is warning-free. Strict
+Swift 6 still diagnoses the existing mutable nonisolated
+`KeyboardLayout.debugInputSourceIdOverride`; no suppression or production change
+is introduced. No shipped UI strings or localization catalogs change.

@@ -228,6 +228,7 @@ Regenerate with: ./scripts/project-docs generate
 | Obsolete Gemini dead-PID nil oracle removed under accepted restore policy; native positive and maintained stale-PID coverage pass, integrated app-host verification pending (`gemini_stale_pid_obsolete_oracle_verification`) | Bmux | open |  |
 | Browser preload fixture retains its owned window through close; native ownership control passes and full app-host verification remains pending (`browser_preload_window_ownership_verification`) | Bmux | open |  |
 | Hermes hook fixtures join each producer and socket phase; unchanged build 790 passes original contracts, integrated app-host verification remains pending (`hermes_hook_phase_fixture_verification`) | Bmux | open |  |
+| Korean marked-text fixture awaits terminal readiness; native composition controls pass and macOS app-host verification remains pending (`korean_marked_text_runtime_readiness_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

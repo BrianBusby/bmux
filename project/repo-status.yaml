@@ -428,3 +428,6 @@ local_caveats:
 
   - id: hermes_hook_phase_fixture_verification
     status: open
+
+  - id: korean_marked_text_runtime_readiness_verification
+    status: open
