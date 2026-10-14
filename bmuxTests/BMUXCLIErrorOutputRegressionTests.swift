@@ -1277,7 +1277,8 @@ import Testing
     /// spawned CLI via `CFFIXED_USER_HOME`, so they never touch (or bind over) the
     /// developer's real `~/.local/state/bmux` (issue #5146).
     private func makeTemporaryHome() throws -> URL {
-        let home = FileManager.default.temporaryDirectory
+        // The canonical state-directory suffix must fit Darwin's Unix socket path limit.
+        let home = URL(fileURLWithPath: "/tmp", isDirectory: true)
             .appendingPathComponent("bmux-cli-home-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
         return home

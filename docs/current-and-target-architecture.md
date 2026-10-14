@@ -443,6 +443,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Panel clear-content and opaque chrome compositing suite awaits fixed-head app-host verification (`panel_appearance_compositing_fixture_verification`) - owner: Bmux; status: open
 - Narrow titlebar reservation fix preserves offscreen reference layout; integrated app verification remains pending (`titlebar_narrow_window_layout_verification`) - owner: Bmux; status: open
 - Claude resume and disabled git-watch contract migrations pass native 786; fixed-head app-host verification pending (`claude_resume_and_no_git_watch_fixture_verification`) - owner: Bmux; status: open
+- Three tagged CLI fixtures use short owned homes; native 786 exposes a separate multiline receive-timeout error in two cases (`cli_socket_home_fixture_verification`) - owner: Bmux; status: open
 - Native titlebar default-width and voice-control fixture corrections pass locally; app-host verification remains pending (`titlebar_product_contract_fixture_verification`) - owner: Bmux; status: open
 - CLI socket capture completion focused gate and shared-caller verification (`cli_socket_capture_completion_verification`) - owner: Bmux; status: open
 - Remote tmux LF and CRLF parser focused gate awaits fixed-head CI verification (`remote_tmux_parser_focused_gate_verification`) - owner: Bmux; status: open
