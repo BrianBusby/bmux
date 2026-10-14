@@ -423,3 +423,6 @@ local_caveats:
 
   - id: browser_preload_window_ownership_verification
     status: open
+
+  - id: hermes_hook_phase_fixture_verification
+    status: open

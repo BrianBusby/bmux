@@ -285,3 +285,4 @@ Repository: `BrianBusby/bmux`
 | `terminal_attachment_deferred_ime_fixture_verification` | open |
 | `gemini_stale_pid_obsolete_oracle_verification` | open |
 | `browser_preload_window_ownership_verification` | open |
+| `hermes_hook_phase_fixture_verification` | open |

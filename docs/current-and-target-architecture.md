@@ -487,6 +487,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Plain terminal attachment and deferred TCIM fixtures await readiness; native controls pass and integrated app-host verification remains pending (`terminal_attachment_deferred_ime_fixture_verification`) - owner: Bmux; status: open
 - Obsolete Gemini dead-PID nil oracle removed under accepted restore policy; native positive and maintained stale-PID coverage pass, integrated app-host verification pending (`gemini_stale_pid_obsolete_oracle_verification`) - owner: Bmux; status: open
 - Browser preload fixture retains its owned window through close; native ownership control passes and full app-host verification remains pending (`browser_preload_window_ownership_verification`) - owner: Bmux; status: open
+- Hermes hook fixtures join each producer and socket phase; unchanged build 790 passes original contracts, integrated app-host verification remains pending (`hermes_hook_phase_fixture_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
 
 The closed-peer CLI repair gives receive timeout configuration/cache and byte reads one internal `CLISocketReceiver` owner with a borrowed descriptor. `SocketClient` retains framing, connection lifecycle, request policy and telemetry. Actual G regression red is recorded; extracted-owner controls, tagged build 788 bundled CLI checks, and H shard 3 fixed-head CLI checks pass. The full combined native and artifact gates remain pending.

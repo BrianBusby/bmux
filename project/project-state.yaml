@@ -6302,3 +6302,8 @@ caveats:
     title: Browser preload fixture retains its owned window through close; native ownership control passes and full app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: hermes_hook_phase_fixture_verification
+    title: Hermes hook fixtures join each producer and socket phase; unchanged build 790 passes original contracts, integrated app-host verification remains pending
+    status: open
+    owner: bmux

@@ -226,6 +226,7 @@ Regenerate with: ./scripts/project-docs generate
 | Plain terminal attachment and deferred TCIM fixtures await readiness; native controls pass and integrated app-host verification remains pending (`terminal_attachment_deferred_ime_fixture_verification`) | Bmux | open |  |
 | Obsolete Gemini dead-PID nil oracle removed under accepted restore policy; native positive and maintained stale-PID coverage pass, integrated app-host verification pending (`gemini_stale_pid_obsolete_oracle_verification`) | Bmux | open |  |
 | Browser preload fixture retains its owned window through close; native ownership control passes and full app-host verification remains pending (`browser_preload_window_ownership_verification`) | Bmux | open |  |
+| Hermes hook fixtures join each producer and socket phase; unchanged build 790 passes original contracts, integrated app-host verification remains pending (`hermes_hook_phase_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
