@@ -6219,3 +6219,8 @@ caveats:
     title: Browser Find fixtures distinguish owned-window search from menu fallback; integrated app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: shortcut_parser_lookup_attribution_verification
+    title: Shortcut parser fixtures distinguish pure normalization from runtime subscribers; integrated app-host verification remains pending
+    status: open
+    owner: bmux

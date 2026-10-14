@@ -1425,6 +1425,7 @@
 		125BAEF2FE3B454547B964D1 /* ShortcutHintPill.swift in Sources */ = {isa = PBXBuildFile; fileRef = A080D1F6CCCBFBED8D95DD1D /* ShortcutHintPill.swift */; };
 		6042C0046042C0046042C004 /* ShortcutHintTitlebarPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6042D0046042D0046042D004 /* ShortcutHintTitlebarPolicy.swift */; };
 		5C3E0454B6C24B02A2F091A8 /* ShortcutRoutingSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B42A82C6AA614E74873D9A5F /* ShortcutRoutingSupport.swift */; };
+		73947F6DEA1B4FB1A3F40FF8 /* ShortcutSettingsParsingContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDD1FFB1CC2343E9B2E69F91 /* ShortcutSettingsParsingContractTests.swift */; };
 		F6001000A1B2C3D4E5F60718 /* ShortcutUnbindingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6001001A1B2C3D4E5F60718 /* ShortcutUnbindingTests.swift */; };
 		C3467AB10000000000000001 /* ShortcutWhenClauseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3467AB10000000000000002 /* ShortcutWhenClauseTests.swift */; };
 		211A75777F433ED8BA5AE208 /* SidebarAppearanceSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 243632BA1DBBA36FD46E0610 /* SidebarAppearanceSupport.swift */; };
@@ -3440,6 +3441,7 @@
 		A080D1F6CCCBFBED8D95DD1D /* ShortcutHintPill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutHintPill.swift; sourceTree = "<group>"; };
 		6042D0046042D0046042D004 /* ShortcutHintTitlebarPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutHintTitlebarPolicy.swift; sourceTree = "<group>"; };
 		B42A82C6AA614E74873D9A5F /* ShortcutRoutingSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/ShortcutRoutingSupport.swift; sourceTree = "<group>"; };
+		CDD1FFB1CC2343E9B2E69F91 /* ShortcutSettingsParsingContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ShortcutSettingsParsingContractTests.swift"; sourceTree = "<group>"; };
 		F6001001A1B2C3D4E5F60718 /* ShortcutUnbindingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutUnbindingTests.swift; sourceTree = "<group>"; };
 		C3467AB10000000000000002 /* ShortcutWhenClauseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutWhenClauseTests.swift; sourceTree = "<group>"; };
 		243632BA1DBBA36FD46E0610 /* SidebarAppearanceSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/SidebarAppearanceSupport.swift; sourceTree = "<group>"; };
@@ -5681,6 +5683,7 @@
 					970226F3C99D0D937CD00539 /* BrowserConfigTests.swift */,
 				9C9DB4F640E04D5A829039A0 /* BrowserFindShortcutSettingsFixture.swift */,
 				00EA14FF8DC74C26BF2318C1 /* BrowserFindShortcutRoutingTests.swift */,
+				CDD1FFB1CC2343E9B2E69F91 /* ShortcutSettingsParsingContractTests.swift */,
 				4FC183E5C43143D1BE4B5EA5 /* BrowserFindShortcutFixture.swift */,
 					ADAB0384A46DA242400CDF3A /* BrowserInspectorProbe.swift */,
 					B3CEFE3B4078E1067B333B54 /* BrowserInspectorWindowOwnershipTests+Transitions.swift */,
@@ -8404,6 +8407,7 @@
 				1521D55DC63D5E5FC4955E31 /* ShortcutAndCommandPaletteTests.swift in Sources */,
 				6042A0036042A0036042A003 /* ShortcutHintDebugSettingsBindingTests.swift in Sources */,
 				6042A0016042A0016042A001 /* ShortcutHintModifierPolicyTests.swift in Sources */,
+				73947F6DEA1B4FB1A3F40FF8 /* ShortcutSettingsParsingContractTests.swift in Sources */,
 				F6001000A1B2C3D4E5F60718 /* ShortcutUnbindingTests.swift in Sources */,
 				C3467AB10000000000000001 /* ShortcutWhenClauseTests.swift in Sources */,
 					CE0E0B060000000000000001 /* SidebarGitPullRequestRuntimeCompositionTests.swift in Sources */,
