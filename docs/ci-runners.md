@@ -2709,3 +2709,21 @@ remains pending.
 The case now lives in `WorkspaceRemoteForkLaunchTests` using Swift Testing. It owns a unique temporary directory and an existence-only placeholder, matching the resolution boundary already used by `SSHAgentEnvironmentTests`. No SSH connection or agent traffic is started. All 15 original behavior assertions remain, including remote options, launch command/input, four agent path projections and discarded relay/socket ownership. Workspace panels and temporary files are released on every exit. Untouched legacy test methods are byte-identical.
 
 The migrated case passes against native artifact 786 in Swift 5 and Swift 6 without compiler warnings; removing only placeholder creation fails the same four assertions. This is focused native-module evidence, not a full app-host pass. Integrated CI remains pending. No product behavior, workflow selectors, deadlines or user-facing strings changed; localization catalogs need no updates.
+
+### Sidebar pull request projection fixture
+
+Run 38509817630 shard 2 (job 115676261618) failed the background-PR-empty
+assertion in `testSidebarPullRequestsTrackFocusedPanelOnly`. The maintained
+`Workspace.sidebarPullRequestsInDisplayOrder` aggregates valid PRs from every
+panel; `Workspace.pullRequest` separately projects the focused panel's PR.
+The original fixture incorrectly required these two projections to coincide.
+
+The case now lives in `WorkspacePullRequestFocusContractTests`. It retains the
+original focused nil and post-focus PR assertions, requires the background PR
+in the sidebar aggregate, and verifies that switching back clears only the
+focused projection. The synchronous fixture owns and tears down its workspace
+panels; it introduces no observation, polling, deadlines or shared hooks.
+All other legacy methods remain byte-identical. An isolated native build 786
+probe reproduced the original empty-list failure and passed the corrected
+projection contract. Fixed-head app-host verification remains pending. There
+are no product strings, production changes or workflow selector changes.

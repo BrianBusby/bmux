@@ -345,3 +345,6 @@ local_caveats:
 
   - id: remote_agent_fork_fixture_verification
     status: open
+
+  - id: sidebar_pr_focus_contract_fixture_verification
+    status: open

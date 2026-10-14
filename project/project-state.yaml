@@ -6159,3 +6159,8 @@ caveats:
     title: Remote agent fork fixture owns its existing agent path and passes native checks; app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: sidebar_pr_focus_contract_fixture_verification
+    title: Sidebar PR aggregate and focused projection fixture correction awaits fixed-head app-host verification
+    status: open
+    owner: bmux
