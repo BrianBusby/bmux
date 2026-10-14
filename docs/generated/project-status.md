@@ -175,6 +175,7 @@ Regenerate with: ./scripts/project-docs generate
 | Native titlebar default-width and voice-control fixture corrections pass locally; app-host verification remains pending (`titlebar_product_contract_fixture_verification`) | Bmux | open |  |
 | CLI socket capture completion focused gate and shared-caller verification (`cli_socket_capture_completion_verification`) | Bmux | open |  |
 | Remote tmux LF and CRLF parser focused gate awaits fixed-head CI verification (`remote_tmux_parser_focused_gate_verification`) | Bmux | open |  |
+| Per-descriptor native readiness is bounded locally; final app-host timeout attribution and verification remain pending (`cli_socket_readiness_coalescing_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

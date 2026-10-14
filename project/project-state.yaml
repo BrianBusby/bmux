@@ -6063,3 +6063,8 @@ caveats:
     title: Project Truth full 121-test gate verified in CI run 38501918260
     status: resolved
     owner: bmux
+
+  - id: cli_socket_readiness_coalescing_verification
+    title: Per-descriptor native readiness is bounded locally; final app-host timeout attribution and verification remain pending
+    status: open
+    owner: bmux

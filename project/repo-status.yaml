@@ -296,3 +296,6 @@ local_caveats:
     status: open
   - id: project_truth_full_suite_verification
     status: resolved
+
+  - id: cli_socket_readiness_coalescing_verification
+    status: open

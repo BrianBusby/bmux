@@ -872,7 +872,8 @@ withhold listener or client notifications without blocking the native queue, so
 cancel handlers remain runnable. Real owned sockets fully write and close each
 frame before the operation returns. Test-only commit `e8fb55995` records three
 local missing-input issues across five cases; the no-client and operation-error
-cleanup controls pass. Actual test-only CI red remains pending.
+cleanup controls pass. Actual test-only CI run `38499804202`, job
+`115644567245`, subsequently failed with the three expected missing-input issues.
 
 The local correction keeps capture state and one parser inside the fixture's I/O
 task. A private completion event drains queued accepts and available client bytes
@@ -2061,3 +2062,54 @@ bmux-testing migration/behavior/local-CI guidance, architecture concurrency and
 file ownership, and the real Workspace/Bonsplit and MobileHostConnection
 completion boundaries. The localization audit finds no changed shipped strings,
 settings, menus or catalogs; this section is contributor verification prose.
+
+
+### Native socket readiness under combined CLI load
+
+Final carrier `95595b830` run `38509817630`, app-host shard one, failed with
+fifteen CLI deadlines and two browser-readiness errors. The CLI failures include
+all eight acknowledged-resize variants. These results remain failures; this
+fixture correction does not establish that every timeout has the same cause.
+
+A temporary per-instance event counter reproduced unbounded duplicate native
+readiness delivery: level-triggered callbacks kept yielding while the async I/O
+consumer had not yet drained the descriptor. On the same unlaunched build 785
+and frozen 38-function/18-suite source matrix, the old helper emitted 1,467,210
+notifications and reached 78,718 pending events in one fixture. The corrected
+boundary emitted 1,028 notifications and peaked at three pending events per
+fixture. Both same-artifact executions passed (old 5.469s, corrected 4.930s).
+An earlier old-helper execution on build 784 failed eight resize cases. These
+samples prove redundant queue growth, not deterministic timeout causality or a
+failure-frequency comparison; counter instrumentation also adds overhead.
+
+`CLISocketReadiness` owns one native descriptor/source lifetime. A synchronous
+three-state guard only balances the native callback's suspend against the sole
+I/O consumer's acknowledgement or cancellation. This is the architecture's
+native-callback compare-and-set carve-out, not a lock over capture/parser state.
+The handler yields once and suspends; the I/O task services its token and rearms
+it. The completion event is separate and reliable, and the final pass still
+accepts and reads all queued clients even when tests withhold native delivery.
+Weak callback ownership prevents a source/owner cycle. Teardown installs the
+cancel handler before cancel, balances a suspended source once, and joins its
+file-descriptor close. The sole serving task owns teardown; acknowledgements
+after closure are inert. Response parsing, complete-write acknowledgements,
+EPIPE handling, final-drain backpressure errors and all deadlines are unchanged.
+
+The seven existing transport cases pass with the proposed boundary, including
+withheld listener/client delivery, one-way/mixed frames, operation failure and
+backpressure. Three temporary native lifecycle controls verify armed/suspended
+closure, descriptor invalidation, owner deallocation and rearming for subsequent
+input. No source-shape test or new scheduling hook is added. Exact non-instrumented shipping-source validation on build 785 completed all
+38 functions/18 suites with one remaining acknowledged-resize timeout
+(`running`, pipe stdout); the other seventeen suites and all seven transport
+cases passed. The same shipping source passes all sixteen SSH lifecycle cases
+in isolation (0.110s) and all three native source-lifecycle controls. Strict
+Swift 6 compilation is warning-free. The full matrix is still red, and neither
+the isolated result nor reduced queue growth resolves that timeout or proves
+its cause. Actual fixed-head app-host verification remains required.
+The independent CommandRunner blocking-reader caveat remains open.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux architecture
+concurrency/file discipline, testing regression/local-CI rules, shared behavior
+and socket policy. Only test infrastructure and contributor evidence change;
+there are no production changes, new shipped strings or localization entries.
