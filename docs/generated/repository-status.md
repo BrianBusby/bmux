@@ -260,3 +260,4 @@ Repository: `BrianBusby/bmux`
 | `remote_agent_fork_fixture_verification` | open |
 | `default_cloud_proxy_retry_state_verification` | open |
 | `deleted_agent_hook_cwd_regression` | open |
+| `sidebar_pr_focus_contract_fixture_verification` | open |

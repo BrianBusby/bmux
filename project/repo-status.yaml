@@ -353,3 +353,6 @@ local_caveats:
 
   - id: deleted_agent_hook_cwd_regression
     status: open
+
+  - id: sidebar_pr_focus_contract_fixture_verification
+    status: open

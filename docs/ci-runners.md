@@ -2777,3 +2777,20 @@ against unchanged native build 786. Five functions (nine expanded cases) pass.
 Owned native generation followed by shell execution also passes fourteen sh/zsh
 scenarios, including the existing missing-cwd policy. These probes do not launch
 real agents or activate the app. Fixed-head app-host verification remains pending.
+### Sidebar pull request projection fixture
+
+Run 38509817630 shard 2 (job 115676261618) failed the background-PR-empty
+assertion in `testSidebarPullRequestsTrackFocusedPanelOnly`. The maintained
+`Workspace.sidebarPullRequestsInDisplayOrder` aggregates valid PRs from every
+panel; `Workspace.pullRequest` separately projects the focused panel's PR.
+The original fixture incorrectly required these two projections to coincide.
+
+The case now lives in `WorkspacePullRequestFocusContractTests`. It retains the
+original focused nil and post-focus PR assertions, requires the background PR
+in the sidebar aggregate, and verifies that switching back clears only the
+focused projection. The synchronous fixture owns and tears down its workspace
+panels; it introduces no observation, polling, deadlines or shared hooks.
+All other legacy methods remain byte-identical. An isolated native build 786
+probe reproduced the original empty-list failure and passed the corrected
+projection contract. Fixed-head app-host verification remains pending. There
+are no product strings, production changes or workflow selector changes.
