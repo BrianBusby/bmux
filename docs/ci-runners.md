@@ -2960,3 +2960,20 @@ batches, alongside existing app/test warnings. Modified legacy files retain
 unchanged import and unused-result warnings; no warnings were suppressed and no
 warning budget was relaxed. This is compilation evidence, not a passing test
 suite. CI's Xcode 26.3 compilation and complete app-host execution remain open.
+Run 38585955198 shard 2 (job 115929521031) and shard 4 (job 115929521191)
+failed before tests because Xcode 26.3 could not type-check an expression in
+`AgentForkCommandContractTests`. The subsequently available shard 3 diagnostic
+identifies line 345: `prefix + (resume ? ... : ...)`, not the final macro
+comparison. The initial typed-comparison correction alone left that expression
+unchanged. The correction now also uses an explicitly typed `[String]` branch
+value followed by a separate prefix concatenation. Both branches retain exact
+argument values and order; the final comparison keeps its explicit array types.
+
+The local Swift 6.3.3 compiler accepts the original expression, so the older CI
+compiler failure has not been reproduced locally. No compiler limits or flags
+were relaxed. The complete affected fork and Claude resume fixtures compile
+without warnings in Swift 5 target mode and Swift 6, and five test functions
+(nine parameter cases) pass against unchanged build 786. All eleven original
+fork-command assertions and actual argv/cwd/environment checks remain intact.
+The next integrated batch must compile the entire `bmuxTests` target with CI's
+Xcode 26.3 toolchain before these local results count as a repaired compiler gate.

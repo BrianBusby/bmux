@@ -143,7 +143,7 @@ component_releases:
 
 local_caveats:
   - id: session_resume_fork_contract_fixture_verification
-    # Local combined 557-file target compiles; Xcode 26.3 execution remains pending.
+    # E shard 3 identifies the conditional argument expression; typed branches await the compiler gate.
     status: open
   - id: terminal_native_input_delivery_fixture_verification
     # Includes seven additional IME, modifier, focus and visibility readiness migrations.

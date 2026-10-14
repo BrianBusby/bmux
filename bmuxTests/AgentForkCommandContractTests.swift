@@ -342,9 +342,14 @@ struct AgentForkCommandContractTests {
         let fields = result.stdout.components(separatedBy: "\0")
         let actualDirectory = URL(fileURLWithPath: try #require(fields.first)).resolvingSymlinksInPath()
         #expect(actualDirectory == cwd.resolvingSymlinksInPath())
-        let expectedArguments = prefix + (resume
-            ? ["resume", sessionID, "-c", "check_for_update_on_startup=false"] + options + ["--search"]
-            : ["fork", sessionID] + options + ["stale fork prompt", "--search"])
+        let commandArguments: [String]
+        if resume {
+            commandArguments = ["resume", sessionID, "-c", "check_for_update_on_startup=false"]
+                + options + ["--search"]
+        } else {
+            commandArguments = ["fork", sessionID] + options + ["stale fork prompt", "--search"]
+        }
+        let expectedArguments: [String] = prefix + commandArguments
         // Captured fork tags are intentionally replayed on re-fork (#6803), never on resume.
         let actualFields: [String] = Array(fields.dropFirst())
         let expectedFields: [String] = [root.appendingPathComponent("codex home").path] + expectedArguments + [""]
