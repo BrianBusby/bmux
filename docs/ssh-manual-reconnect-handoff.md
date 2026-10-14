@@ -98,4 +98,10 @@ that directory check (`/tmp/remote-resume-cwd-proof.log`). The fallback added in
 input was present. Both directory branches now use the same existing local-startup
 eligibility predicate; remote startup/input and local startup directory behavior
 remain otherwise unchanged. No new policy or test weakening is introduced.
-Fresh isolated build, focused controls and independent review remain pending.
+Independent review is clear. Fresh combined build 783 compiles; the exact original
+remote-restore assertions now pass against its native artifact. The combined run
+passes 42 cases across 22 functions and six suites, including all 25 reconnect
+cases, ten tmux parser cases and six shortcut cases. Logs:
+`/tmp/maintenance-integration-783-native.log` and
+`/tmp/bmux-reload-maintenance-integration.log`. The app was not launched and
+user builds were untouched. Fixed-head full app-host CI remains pending.
