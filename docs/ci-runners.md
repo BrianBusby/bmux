@@ -162,3 +162,99 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+## Codex rejected ambient identity regression
+
+The focused `CodexRejectedAmbientTests` and `CLISocketFixtureCompletionTests` gate runs before the broad app-host suite
+on shard 2. The shared generic-hook target resolver now retains rejected ambient
+provenance: a rejected workspace or surface requires verified PID/TTY attribution
+before any session, resume, status or feed mutation. Explicit invalid flags still
+stop routing; valid remote-like ambient identity and valid saved mappings remain
+supported. The stop branch also suppresses deferred generic feed telemetry when
+target resolution rejects the event, so that fallback cannot resurrect a rejected
+workspace. Successful stop publication and lease retirement keep their existing
+owners and ordering.
+
+The fixture owns an isolated HOME/session store, temporary socket, joined socket
+lifecycle and file-backed process I/O. Its shared `CLISocketFixture` is the exact
+reviewed PR 169 transport. Tests preserve every earlier assertion and cover sixteen
+parameter cases: four prompt rejections, four stop rejections and eight recovery,
+explicit-flag and valid-identity controls. No timing or assertion is relaxed.
+
+Original actual CI job 114969430201 reproduced wrong-target commands and persisted
+running state, alongside the accepted-socket EINVAL fixture race. Unchanged build
+773 fails the four prompt cases with 22 assertions. Build 778, containing the held
+prompt correction, passes twelve cases but fails the four new stop cases on
+unexpected feed.push. Test-only commit 6968859d9 publishes that additional regression;
+its actual app-host red was retained before publishing the complete fix.
+
+Fresh isolated build 781 (`codex-routing-stop-recovery`) succeeds without launching
+the app. Its actual bundled CLI passes all sixteen routing cases with warning-free
+Swift 6 fixture compilation, plus thirteen valid stop payload/transcript/turn-scope
+cases across nine functions. Independent review checked the resolver, stop path,
+deferred telemetry and unchanged lifecycle ordering. The production correction is published in commit `214180692`. Full fixed-head app-host CI and
+combined validation remain pending; these focused results are not broad-suite green.
+The local Project Truth verification caveat stays open.
+
+Source requirements: root/personal `AGENTS.md`, `continuous-code-quality`, and
+`bmux-architecture`, `bmux-testing`, `bmux-shared-behavior`, `bmux-socket-policy`,
+`bmux-dev-workflow` and `bmux-localization`. Maintained references are the verified
+PID/TTY recovery regression, sibling rejected-target telemetry guards, joined
+`CLISocketFixture`, and owned-file CLI capture. Localization audit: no shipped
+strings or catalogs change. Running builds 773/775 remain untouched.
+
+
+### Socket capture completion regression
+
+Review identified a gap in the shared fixture: process completion does not imply
+that DispatchSource has delivered readiness for every one-way `feed.push` frame.
+Finishing the event stream first can discard already-written frames and let a
+negative mutation assertion pass incorrectly. Source cancellation joins descriptor
+closure but does not drain input; `responseWritten` cannot cover frames that have
+no response.
+
+The focused transport suite uses an immutable, constructor-owned native
+readiness-delivery closure. Its default forwards events immediately; tests
+withhold listener or client notifications without blocking the native queue, so
+cancel handlers remain runnable. Real owned sockets fully write and close each
+frame before the operation returns. Test-only commit `e8fb55995` records three
+local missing-input issues across five cases; the no-client and operation-error
+cleanup controls pass. Actual test-only CI red remains pending.
+
+The local correction keeps capture state and one parser inside the fixture's I/O
+task. A private completion event drains queued accepts and available client bytes
+before closing and joining sources. Normal operations must join their request
+producers. Final-drain responses fail explicitly on would-block rather than await
+future peer reads, and partial or failed writes never emit `responseWritten`.
+An EPIPE still permits validation and capture of complete queued frames before
+closing at EOF/EAGAIN. The listener's existing SO_NOSIGPIPE option now precedes
+listen and producer start: a native probe confirmed accepted sockets inherit the
+option at connect time, not accept time.
+
+This does not make every capture shutdown globally bounded. Ordinary serving
+retains its existing backpressure wait; that wait can already be active before
+the completion event is processed. No CLI timeout or assertion is relaxed, and
+no application/runtime code changes in this follow-up.
+
+Final strict Swift 6 compilation is warning-free. The focused transport suite
+passes six functions/seven cases, including a mixed response/one-way connection
+whose prior parser dropped the second frame after EPIPE. Removing the final-drain
+would-block guard causes the owned unread-peer control to fail at its existing
+five-second failure deadline; cleanup closes the peer before joining the writer.
+No sleep is used to synchronize readiness, and no wire sentinel is introduced.
+
+The combined matrix uses validation commit `8ae32c8a8` shared caller sources and
+existing build 784 CLI, with only this fixture substituted. Its 38 functions in
+18 suites complete with five SSH acknowledged-resize timeouts; all other suites
+pass. The same frozen callers with the pre-fix helper also reproduce that timeout
+class (one case), while the final helper's isolated sixteen SSH lifecycle cases
+pass. Those samples establish an existing integration limitation, not a timeout
+frequency comparison or full-suite success. Actual fixed-head app-host CI and
+combined validation remain open in the canonical and local Project Truth caveats.
+
+Source rules and ownership: root/personal `AGENTS.md`, `continuous-code-quality`,
+`bmux-architecture` concurrency/file discipline, `bmux-testing` regression and
+local/CI references, shared-behavior and socket-policy guidance. Existing joined
+DispatchSource cancellation, one-way feed telemetry, response-written observation
+and owned-file CLI capture remain the maintained patterns. Localization audit:
+only test diagnostics and contributor notes change; no shipped copy or catalogs.
