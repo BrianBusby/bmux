@@ -334,3 +334,6 @@ local_caveats:
 
   - id: sidebar_terminal_hit_boundary_verification
     status: open
+
+  - id: browser_portal_presentation_fixture_verification
+    status: open

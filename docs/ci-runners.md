@@ -2637,3 +2637,32 @@ before publishing a production repair. The canonical/local
 `cli_closed_peer_receive_regression_verification` caveat stays open. Only test
 diagnostics and contributor documentation changed; no shipped copy requires
 localization updates.
+## Browser portal presentation fixture migration
+
+The three `BrowserWindowPortalLifecycleTests` failures in final-C native shard 2
+(run `38509817630`) are migrated to
+`BrowserPortalPresentationContractTests`. The external split-resize test now
+observes the real `WKWebView.displayIfNeeded` boundary through a per-instance
+`AsyncStream`, accepting only a redraw at the resized anchor width. The old
+250ms run-loop wait becomes a cancellable 250ms failure deadline. It preserves
+the visible-slot, narrower-frame, repaint, and unchanged-reattach assertions.
+
+Ordinary portal hide/show repaints without WebKit lifecycle reattachment; the
+positive control explicitly marks hidden-host adoption and requires reattachment
+and flag clearing. Transient anchor removal preserves the visible attached slot
+and its frame until rebind; rebind must reuse that slot and repaint. These
+contracts are in the existing portal and rendering-state owners, both unchanged
+from the main baseline. No production behavior changes in this migration.
+
+All three cases passed locally against unlaunched Debug artifact 786 in both
+Swift 5 and Swift 6 compilation modes, without warnings or window activation.
+Temporary old-expectation controls failed all three cases. Separate native
+controls covered buffered display delivery, missing-signal deadline, cancellation,
+and finished-stream behavior. Each test tears down its portal and owned window;
+web views use nonpersistent storage. The remaining legacy test bytes are unchanged.
+
+This is focused native-module evidence, not a complete app-host test-target or
+macOS 15 result. Integrated fixed-head CI, full-suite execution, and visual
+WebKit rendering remain open under
+`browser_portal_presentation_fixture_verification`. Contributor verification
+notes and test diagnostics add no product UI or localization keys.
