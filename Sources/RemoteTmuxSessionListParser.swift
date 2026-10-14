@@ -43,7 +43,8 @@ enum RemoteTmuxSessionListParser {
     /// - Returns: one ``RemoteTmuxSession`` per well-formed line, in input order.
     static func parse(_ output: String) -> [RemoteTmuxSession] {
         var sessions: [RemoteTmuxSession] = []
-        for rawLine in output.split(separator: "\n", omittingEmptySubsequences: true) {
+        // Split the LF substring: Character splitting treats CRLF as one grapheme.
+        for rawLine in output.components(separatedBy: "\n") {
             var line = String(rawLine)
             if line.last == "\r" {
                 line.removeLast()

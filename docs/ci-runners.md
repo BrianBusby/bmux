@@ -553,6 +553,38 @@ blocker, not evidence that the parser regression failed.
 The existing first focused app-host invocation now also selects
 `RemoteTmuxSessionListParserTests`, so Swift Testing executes the LF/CRLF cases
 before broad legacy XCTest work. The full shard selectors, runner count,
-deadlines and assertions are unchanged. The production parser fix remains held
-until CI records the named failing regression; local red and fixed-artifact
-proof do not replace that required CI evidence.
+deadlines and assertions are unchanged. Test-only focused job 115650904190
+of run 38501744697 then executed the parser suite and failed exactly the
+existing whitespace assertion and new CRLF multi-record case, with exit 65.
+The full focused invocation reported 44 functions / 6 suites / 20 issues: the
+two parser failures plus 18 CLI deadline failures, which remain unresolved.
+The reviewed parser correction is published with both source ancestries retained.
+Fixed-head parser and full combined CI verification remain pending.
+
+### Remote tmux CRLF record parsing
+
+Current app-host job 115525529711 failed the existing
+`preservesNameWhitespaceAndStripsLineTerminator` assertion. Swift Character
+splitting treats CRLF as one grapheme, so splitting on an LF Character leaves
+CRLF in a name and can merge several records. The shared parser now splits the LF
+substring; its existing single trailing-CR removal and empty-line handling remain.
+The transport, remote commands, malformed-record policy and name whitespace are
+unchanged.
+
+Test-only commit `b95727d60` adds LF/CRLF multi-record controls with blank lines,
+Unicode/padded names, embedded colons and an unterminated final record. Against
+the unchanged production parser, the complete suite compiled without warnings and
+failed exactly two issues: the existing assertion and the new CRLF case. The
+fix in `7f3c6513e` passes all nine functions (ten cases). These are actual compiled
+parser/value sources with unchanged test assertions, not source-text tests.
+The earlier actual CI failure supplies the existing regression red evidence;
+no failing result was hidden or changed to an expected failure.
+
+Root/personal AGENTS, continuous-code-quality, bmux-testing, architecture and
+shared-behavior guidance were applied to the complete parser, session value,
+transport caller and tests. The parser remains the single session-record owner;
+no new state, dependencies, user-facing strings or localization keys are added.
+Fresh isolated combined builds 783 and 784 succeeded without launch; build 783
+executed all nine parser functions (ten cases) successfully with warning-free
+focused compilation. The app/runtime source in this publication is unchanged
+from that verified parser correction. Full combined app-host CI remains open.

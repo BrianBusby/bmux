@@ -144,7 +144,8 @@ Regenerate with: ./scripts/project-docs generate
 | SSH agent environment fixture focused gate awaits app-host CI (`ssh_agent_environment_fixture_focused_gate_verification`) | Bmux | open |  |
 | SSH PTY initial resize acknowledgement CI timeouts remain unresolved (`ssh_pty_lifecycle_fixture_verification`) | Bmux | open |  |
 | Opt-in focused app-host process diagnostics await actual runner evidence (`focused_app_host_process_diagnostics_verification`) | Bmux | open |  |
-| Remote tmux LF and CRLF parser focused gate awaits named CI regression execution (`remote_tmux_parser_focused_gate_verification`) | Bmux | open |  |
+| Remote tmux LF and CRLF parser focused gate awaits fixed-head CI verification (`remote_tmux_parser_focused_gate_verification`) | Bmux | open |  |
+| Remote tmux CRLF record correction passes isolated artifact checks; full CI pending (`remote_tmux_crlf_record_parsing_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

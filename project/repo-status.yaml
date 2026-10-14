@@ -204,3 +204,5 @@ local_caveats:
     status: open
   - id: remote_tmux_parser_focused_gate_verification
     status: open
+  - id: remote_tmux_crlf_record_parsing_verification
+    status: open

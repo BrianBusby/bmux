@@ -187,3 +187,4 @@ Repository: `BrianBusby/bmux`
 | `native_app_host_full_suite_failures` | open |
 | `focused_app_host_process_diagnostics_verification` | open |
 | `remote_tmux_parser_focused_gate_verification` | open |
+| `remote_tmux_crlf_record_parsing_verification` | open |
