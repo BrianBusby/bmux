@@ -6340,3 +6340,8 @@ caveats:
     title: Native snapshots reproduce Mermaid double scaling under page zoom; geometry correction and fixed-head macOS verification remain pending
     status: open
     owner: bmux
+
+  - id: browser_chrome_default_contract_verification
+    title: Browser chrome reference follows the shared shipped font default; native metrics coverage passes and integrated app-host verification remains pending
+    status: open
+    owner: bmux

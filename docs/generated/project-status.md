@@ -234,6 +234,7 @@ Regenerate with: ./scripts/project-docs generate
 | Closed-stderr fixture uses the maintained exit contract and joined process owner with absolute deadlines; macOS app-host verification remains pending (`cli_closed_stderr_contract_verification`) | Bmux | open |  |
 | SSH workspace creation fixture joins its producer and owns authentication; native contracts pass, fixed-head app-host verification remains pending (`ssh_creation_joined_producer_verification`) | Bmux | open |  |
 | Native snapshots reproduce Mermaid double scaling under page zoom; geometry correction and fixed-head macOS verification remain pending (`markdown_mermaid_double_zoom_verification`) | Bmux | open |  |
+| Browser chrome reference follows the shared shipped font default; native metrics coverage passes and integrated app-host verification remains pending (`browser_chrome_default_contract_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
