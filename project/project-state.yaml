@@ -5894,6 +5894,6 @@ caveats:
     owner: bmux
 
   - id: remote_restore_working_directory_regression
-    title: Remote agent restore must not pass a remote working directory to the local SSH process; fixed-build validation pending
+    title: Remote agent restore directory guard passes native build 783; full app-host verification pending
     status: open
     owner: bmux

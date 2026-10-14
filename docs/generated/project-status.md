@@ -139,7 +139,7 @@ Regenerate with: ./scripts/project-docs generate
 | Observability trace API boundary (`observability_trace_api`) | Provenance Engine | open |  |
 | GitHub Actions runner reliability (`github_actions_runner_reliability`) | Bmux | open | BrianBusby/bmux#8 |
 | SSH manual reconnect has actual CI red and native 779 green; fixed-head app-host and runtime acceptance remain pending (`ssh_manual_reconnect_handoff_regression`) | Bmux | open |  |
-| Remote agent restore must not pass a remote working directory to the local SSH process; fixed-build validation pending (`remote_restore_working_directory_regression`) | Bmux | open |  |
+| Remote agent restore directory guard passes native build 783; full app-host verification pending (`remote_restore_working_directory_regression`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
