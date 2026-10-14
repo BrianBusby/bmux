@@ -582,6 +582,7 @@ jobs:
             -only-testing:bmuxTests/BrowserHiddenWebViewDiscardPolicyTests \
             -only-testing:bmuxTests/GhosttyBackgroundThemeTests \
             -only-testing:bmuxTests/PanelAppearanceCompositingTests \
+            -only-testing:bmuxTests/TitlebarProductContractTests \
             -only-testing:bmuxTests/BrowserUnderPageBackgroundTests \
             -only-testing:bmuxTests/BrowserDiscardReadinessTests \
             -only-testing:bmuxTests/SidebarWidthPersistencePolicyTests \

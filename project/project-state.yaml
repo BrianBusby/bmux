@@ -5937,3 +5937,7 @@ caveats:
     title: Quarantine outbound metadata and native readback contract pass local checks; app-host verification remains pending
     status: open
     owner: bmux
+  - id: titlebar_product_contract_fixture_verification
+    title: Native titlebar default-width and voice-control fixture corrections pass locally; app-host verification remains pending
+    status: open
+    owner: bmux
