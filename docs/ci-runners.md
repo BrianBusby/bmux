@@ -299,8 +299,13 @@ App-host shard 4 runs `CodexStopPayloadFailureTests`,
 invocation before the unchanged full shard coverage. These cover 13 existing
 Stop-hook scenarios (nine Swift Testing methods, one with five parameterized
 payload cases). The focused invocation uses the same app-host wrapper, runner,
-and deadlines as its sibling regression steps. Its native CI result remains
-pending; local executable verification is not a full app-host pass.
+and deadlines as its sibling regression steps. Run 38440609968, job 115447587212,
+completed all nine functions across three suites in 0.464 seconds, followed by
+`TEST SUCCEEDED` at 19:05:35 UTC on October 13. The broader shard then started
+and remains incomplete. The preceding run also passed this focused gate but
+hit inspector assertions during its broader shard before being superseded. The focused gate is
+recorded as completed while the shared canonical and local caveat remains open
+for full-suite verification.
 
 The fixtures describe a live workspace/surface membership response instead of
 returning an empty object to every JSON-RPC request. They preserve the original
@@ -309,9 +314,9 @@ current-turn error suppression. Notification assertions use the current
 `notify_target_async` command. Unknown mock methods fail the test.
 
 Each fixture owns its HOME, CFFIXED_USER_HOME, CODEX_HOME, hook-state directory,
-Unix socket, and input/output files. `CodexStopMockServer` bridges nonblocking
-socket readiness into one async capture task; it awaits descriptor cancellation
-before removing the socket. `CodexStopHookFixture` uses the existing
+Unix socket, and input/output files. The shared `CLISocketFixture` bridges
+nonblocking socket readiness into one async capture task; it awaits descriptor
+cancellation before removing the socket. `CodexStopHookFixture` uses the existing
 `CommandRunner` for exit/deadline handling and positional shell `exec`
 redirection for exact non-TTY input/output. It reads captured output only after
 a native process exit. These fixtures do not build, launch, or contact a user's
@@ -327,8 +332,6 @@ is recorded as an open Project Truth caveat. Restoring the empty topology in
 the file-capture variant still fails all 13 scenarios, independently confirming
 the routing repair. Local checks also preserved a child's native exit 65 and
 exercised socket disconnection cleanup without ignoring SIGPIPE globally.
-
-
 ### Browser legacy-theme migration regression
 
 Baseline app-host logs show BrowserThemeSettingsTests failing the legacy
