@@ -3006,3 +3006,15 @@ runtime recovery. Actual default clipboard payload delivery remains untested.
 Fixed-head macOS app-host verification is pending; local macOS results do not
 resolve the macOS 15 CI boundary. No production policy, workflow selector or
 terminal rendering changes are included.
+
+### Exact conditional inference correction: combined compilation
+
+After E shard 3 identified the failing conditional expression at line 345,
+revision `8e79b921f` passed complete incremental `bmux-unit build-for-testing`
+with Xcode 26.6 in Swift 5 mode. All 559 test files plus 14 shared sources were
+compiler inputs. The exact conditional correction and both paste-binding
+fixture files compiled without warnings. The retained CJK fixture emitted only
+its existing XCTest import warning. The incremental log contains 158 distinct
+warning lines; that count is not comparable to the preceding fresh build.
+No app or tests were launched. Xcode 26.3 compilation and execution still gate
+merge; the earlier local build did not prove the conditional compiled in CI.
