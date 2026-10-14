@@ -1,6 +1,10 @@
 import BmuxCore
 import Testing
+#if canImport(bmux_DEV)
+@testable import bmux_DEV
+#elseif canImport(bmux)
 @testable import bmux
+#endif
 
 @Suite
 struct RemotePTYErrorPolicyTests {
