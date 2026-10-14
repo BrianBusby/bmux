@@ -6139,3 +6139,8 @@ caveats:
     title: Sidebar pointer fixture exercises the actual four-point content overlap; full app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: native_xcode_project_parse_verification
+    title: Native project parsing rejected three unquoted extension filenames; quoted paths and macOS parser guard await corrected CI
+    status: open
+    owner: bmux

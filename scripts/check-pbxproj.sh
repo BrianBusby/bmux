@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # CI guard for bmux.xcodeproj/project.pbxproj.
 # Fails when:
+#   - native macOS plist parsing rejects OpenStep syntax
 #   - objectVersion drifts from the pinned value (Xcode major leak)
 #   - the file is not normalized (someone bypassed the pre-commit hook)
 set -euo pipefail
@@ -9,6 +10,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 PBXPROJ="$REPO_ROOT/bmux.xcodeproj/project.pbxproj"
 XCODE_VERSION_FILE="$REPO_ROOT/.xcode-version"
+
+# Validate native OpenStep syntax independently of normalization ordering.
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    /usr/bin/plutil -lint "$PBXPROJ"
+fi
 
 # Source of truth for the team's Xcode pin: .xcode-version at the repo root.
 # When the team bumps to a new Xcode major, edit that one file and update

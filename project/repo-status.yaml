@@ -334,3 +334,6 @@ local_caveats:
 
   - id: sidebar_terminal_hit_boundary_verification
     status: open
+
+  - id: native_xcode_project_parse_verification
+    status: open
