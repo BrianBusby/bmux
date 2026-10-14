@@ -287,4 +287,4 @@ local_caveats:
   - id: titlebar_product_contract_fixture_verification
     status: open
   - id: project_truth_http_retry_verification
-    status: open
+    status: resolved

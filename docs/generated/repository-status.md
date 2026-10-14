@@ -230,4 +230,4 @@ Repository: `BrianBusby/bmux`
 | `file_preview_save_shortcut_fixture_verification` | open |
 | `panel_appearance_compositing_fixture_verification` | open |
 | `titlebar_product_contract_fixture_verification` | open |
-| `project_truth_http_retry_verification` | open |
+| `project_truth_http_retry_verification` | resolved |

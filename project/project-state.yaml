@@ -6043,6 +6043,6 @@ caveats:
     status: open
     owner: bmux
   - id: project_truth_http_retry_verification
-    title: Bounded GitHub evidence HTTP recovery awaits fixed-head CI verification
-    status: open
+    title: Bounded GitHub evidence HTTP recovery verified in CI run 38499166578
+    status: resolved
     owner: bmux
