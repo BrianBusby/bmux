@@ -6146,7 +6146,7 @@ caveats:
     owner: bmux
 
   - id: native_xcode_project_parse_verification
-    title: Native project parsing rejected three unquoted extension filenames; quoted paths and macOS parser guard await corrected CI
+    title: Native project parsing and D2 build gates pass after quoting extension filenames; final integrated checks remain pending
     status: open
     owner: bmux
 
@@ -6161,12 +6161,12 @@ caveats:
     owner: bmux
 
   - id: default_cloud_proxy_retry_state_verification
-    title: Default cloud proxy retry must retain connected state while removing old proxy-only artifacts; fixed-artifact and integrated verification remain pending
+    title: Default cloud proxy retry correction passes native build787 original and five preserved controls; integrated CI remains pending
     status: open
     owner: bmux
 
   - id: deleted_agent_hook_cwd_regression
-    title: Deleted agent-hook cwd runtime policy rejects unavailable local directories in focused controls; fresh app-host verification pending
+    title: Deleted agent-hook cwd correction passes native build787 regression and nine directory controls; integrated app-host verification pending
     status: open
     owner: bmux
 

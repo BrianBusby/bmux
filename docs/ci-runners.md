@@ -2718,7 +2718,7 @@ The existing case is migrated to `CloudProxyRetryStateTests` with all ten origin
 
 The local correction reuses the existing default-cloud policy in the retry predicate, only when the prior sidebar artifact is classified as proxy-only. Existing details, status cleanup, notifications, logging and error classifications remain owned by the same path. No new diagnostics, secrets, product copy or localization keys are introduced; existing status projections remain the observable verification boundary.
 
-Five temporary controls passed against unchanged artifact 786: default-cloud non-proxy error/disconnection and retry without a proxy artifact, ordinary SSH proxy retry, WebSocket transport failure, and persistent-PTY daemon failure. They establish the retained baseline before the required fixed-artifact rerun; they do not verify the new predicate. The correction changes one shared predicate line with zero file growth. It remains unpublished until the isolated fixed build and focused controls run; integrated CI is also still required.
+Five temporary controls passed against unchanged artifact 786: default-cloud non-proxy error/disconnection and retry without a proxy artifact, ordinary SSH proxy retry, WebSocket transport failure, and persistent-PTY daemon failure. They establish the retained baseline before the required fixed-artifact rerun; they do not verify the new predicate. The correction changes one shared predicate line with zero file growth. Isolated build 787 now passes the original regression and all five preserved controls, compiled without Swift 6 warnings. Integrated app-host CI remains required.
 ## Deleted agent-hook working directory regression
 
 Final-C shard 3 (run `38509817630`, job `115676261545`) failed the existing
@@ -2737,8 +2737,11 @@ shell assertions pass. The restore policy now keeps a guarded local cwd only if 
 directory, through a constructor-injected filesystem predicate. Remote gating
 and directory metadata remain separate. The focused Swift 6 policy harness
 passes all eight existing policy methods and six temporary directory-control
-variants; the complete package graph and fresh fixed-artifact workspace controls
-remain pending. Existing local
+variants. Isolated build 787 also passes the migrated regression plus nine
+workspace controls: existing, missing, file and unmounted directories; remote
+and local launch ownership; process-detected binding cwd; and scrambled
+unmounted-volume reports. Compilation is warning-free under Swift 6. The complete
+package graph and integrated app-host suite remain pending. Existing local
 agent-hook directories, process-detected binding cwd, remote nil-cwd behavior,
 and unmounted-volume metadata must retain their contracts. Full integrated
 app-host/macOS 15 verification remains open under
@@ -2794,3 +2797,21 @@ All other legacy methods remain byte-identical. An isolated native build 786
 probe reproduced the original empty-list failure and passed the corrected
 projection contract. Fixed-head app-host verification remains pending. There
 are no product strings, production changes or workflow selector changes.
+
+### Combined repair build 787 and D2 outcome
+
+The initialized integration tree loads through Xcode's native project parser,
+and D2 run `38521190849` passed Swift packages, build/lag checks, and web/Linux
+checks. The separate D2 activation benchmark passed. All four native shards
+failed; shards 2 and 4 timed out before completing broad coverage. Release
+failed at the mixed-signature audit captured above. These are unresolved gates,
+not successful validation of the complete change.
+
+Isolated `maintenance-runtime-repairs` build 787 compiled source `1d72f1417`
+without launching or replacing the running previews. Native cloud and directory
+controls above exercise this exact artifact. The integrated tree passes native
+project parsing, normalization, wiring for 553 test files, strict determinism,
+and the main-base Swift file budget. The warning budget reports 126 retained
+warnings against 221 allowed, matching build 786; no warning allowance changed.
+The tagged reload compiles the app, not the complete test target. The next CI
+run must execute that target and all configured gates on the published commit.

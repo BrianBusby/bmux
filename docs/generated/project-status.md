@@ -194,11 +194,11 @@ Regenerate with: ./scripts/project-docs generate
 | Per-descriptor native readiness is bounded locally; final app-host timeout attribution and verification remain pending (`cli_socket_readiness_coalescing_verification`) | Bmux | open |  |
 | Sidebar pointer fixture exercises the actual four-point content overlap; full app-host verification remains pending (`sidebar_terminal_hit_boundary_verification`) | Bmux | open |  |
 | Browser portal resize, reveal, and transient rebind contracts pass native 786; integrated app-host verification remains pending (`browser_portal_presentation_fixture_verification`) | Bmux | open |  |
-| Native project parsing rejected three unquoted extension filenames; quoted paths and macOS parser guard await corrected CI (`native_xcode_project_parse_verification`) | Bmux | open |  |
+| Native project parsing and D2 build gates pass after quoting extension filenames; final integrated checks remain pending (`native_xcode_project_parse_verification`) | Bmux | open |  |
 | Direct text and Korean Return fixtures require a ready runtime; fixed-head macOS app-host verification remains pending (`terminal_native_input_delivery_fixture_verification`) | Bmux | open |  |
 | Remote agent fork fixture owns its existing agent path and passes native checks; app-host verification remains pending (`remote_agent_fork_fixture_verification`) | Bmux | open |  |
-| Default cloud proxy retry must retain connected state while removing old proxy-only artifacts; fixed-artifact and integrated verification remain pending (`default_cloud_proxy_retry_state_verification`) | Bmux | open |  |
-| Deleted agent-hook cwd runtime policy rejects unavailable local directories in focused controls; fresh app-host verification pending (`deleted_agent_hook_cwd_regression`) | Bmux | open |  |
+| Default cloud proxy retry correction passes native build787 original and five preserved controls; integrated CI remains pending (`default_cloud_proxy_retry_state_verification`) | Bmux | open |  |
+| Deleted agent-hook cwd correction passes native build787 regression and nine directory controls; integrated app-host verification pending (`deleted_agent_hook_cwd_regression`) | Bmux | open |  |
 | Resume cwd and captured Codex fork-tag fixtures follow shared command policy; fixed-head app-host verification pending (`session_resume_fork_contract_fixture_verification`) | Bmux | open |  |
 | Sidebar PR aggregate and focused projection fixture correction awaits fixed-head app-host verification (`sidebar_pr_focus_contract_fixture_verification`) | Bmux | open |  |
 
