@@ -6480,38 +6480,6 @@ final class WorkspacePanelGitBranchTests: XCTestCase {
         XCTAssertEqual(ordered.map(\.isDirty), [false, true])
     }
 
-    func testUpdatingFocusedPanelGitBranchWithSameStateDoesNotRepublishWorkspace() {
-        let workspace = Workspace()
-        guard let panelId = workspace.focusedPanelId else {
-            XCTFail("Expected initial focused panel")
-            return
-        }
-
-        var publishCount = 0
-        let cancellable = workspace.objectWillChange.sink { _ in
-            publishCount += 1
-        }
-        defer { cancellable.cancel() }
-
-        workspace.updatePanelGitBranch(panelId: panelId, branch: "main", isDirty: false)
-        let baselinePublishCount = publishCount
-
-        XCTAssertGreaterThan(
-            baselinePublishCount,
-            0,
-            "Expected the first focused branch update to publish workspace changes"
-        )
-
-        workspace.updatePanelGitBranch(panelId: panelId, branch: "main", isDirty: false)
-
-        XCTAssertEqual(
-            publishCount,
-            baselinePublishCount,
-            "Expected identical focused branch refreshes to avoid extra workspace publishes"
-        )
-    }
-
-
     func testSidebarObservationPublisherEmitsForFocusedGitBranchChangesOnlyOncePerState() {
         let workspace = Workspace()
         guard let panelId = workspace.focusedPanelId else {

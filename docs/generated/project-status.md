@@ -220,6 +220,7 @@ Regenerate with: ./scripts/project-docs generate
 | Terminal file launch fixtures compare directory identity and retain exact quoting; native controls pass and integrated app-host verification remains pending (`terminal_file_launch_directory_contract_verification`) | Bmux | open |  |
 | Hook prompt evidence fixture uses the accepted stable workspace identity; native old expectation fails and corrected case passes, app-host verification pending (`hook_prompt_stable_workspace_fixture_verification`) | Bmux | open |  |
 | Closed retained windows are excluded from presentation while manager recovery is preserved; fixed-runtime and app-host verification remain pending (`closed_main_window_routing_verification`) | Bmux | open |  |
+| Focused Git metadata fixture verifies sidebar publication and duplicate suppression without workspace publication; native control passes and app-host verification remains pending (`sidebar_git_publication_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

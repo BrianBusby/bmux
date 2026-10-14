@@ -3759,3 +3759,27 @@ file budget passes; all 574 test files remain wired; Project Truth validation,
 generation and freshness pass. The retained ordered enumeration was checked
 against the prior body, and the two resource callers have only the intended
 method-name substitutions. These checks do not establish fixed-runtime behavior.
+
+### Focused Git metadata publication boundary
+
+H shard 3's focused-branch duplicate test still expects `Workspace.objectWillChange`
+to fire for the first Git update. The accepted sidebar extraction `f5f58c4b3b`
+moved that state into `WorkspaceSidebarMetadataModel`; Workspace forwards its
+values, and the sidebar's composed publisher observes the model's subjects.
+The adjacent sidebar-publication test already uses that maintained boundary.
+
+The failing case moves into the existing Swift Testing observation suite. It
+checks both stored branch values, a positive first sidebar notification, no
+notification for an identical refresh, and no whole-workspace publication for
+either update. Subscriptions are canceled and owned panels torn down. Other
+legacy tests and production owners remain unchanged; no new file or CI selector
+is needed.
+
+Unchanged build 789 reproduces the old single failed expectation. The corrected
+native case passes; temporary forced workspace publication and a nonidentical
+branch update trigger the three expected failures. Swift 5 and strict Swift 6
+compilation are warning-free. These are owned test-mode processes without window
+presentation. Strict determinism, existing file budgets, wiring, and Project
+Truth validation/generation/freshness pass. Full integrated target compilation
+and exact-head app-host execution remain pending. No product strings changed;
+this section records contributor verification only.

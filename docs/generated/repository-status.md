@@ -278,3 +278,4 @@ Repository: `BrianBusby/bmux`
 | `native_window_close_ownership_verification` | open |
 | `terminal_file_launch_directory_contract_verification` | open |
 | `closed_main_window_routing_verification` | open |
+| `sidebar_git_publication_fixture_verification` | open |
