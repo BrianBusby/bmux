@@ -3296,6 +3296,12 @@ no test deadline, CI selector or production action changes. Product text and
 localization catalogs are unchanged; the added prose is contributor verification
 material, not localized product content.
 
-The new internal method requires a fresh native module. Root-owned isolated build,
-exact-source native execution and integrated app-host verification remain pending;
-prior build-788 controls do not prove the corrected suite passes.
+Root-owned isolated build 789 contains the unchanged reviewed production seam.
+The exact corrected suite compiles without warnings in the target's Swift 5 mode
+and passes both style cases against that artifact. A temporary owned application
+supplying an ambient key-down event also passes both cases, while the original
+ambient-dependent suite failed 28 assertions in the earlier controlled probe.
+One redundant test unwrap exposed by compilation was removed without changing
+its comparison. The native harness uses an isolated home and test-mode environment
+before module loading and prohibits activation; no user window or clipboard is
+accessed. Integrated fixed-head app-host verification remains pending.

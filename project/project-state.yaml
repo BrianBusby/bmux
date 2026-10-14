@@ -6221,6 +6221,6 @@ caveats:
     owner: bmux
 
   - id: titlebar_hit_test_event_context_verification
-    title: Explicit titlebar hit-test event context preserves routing policy; fresh native build and integrated app-host verification remain pending
+    title: Explicit titlebar event-context suite passes native build789 including ambient keyboard control; integrated app-host verification remains pending
     status: open
     owner: bmux
