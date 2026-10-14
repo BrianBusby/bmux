@@ -145,6 +145,7 @@ local_caveats:
   - id: session_resume_fork_contract_fixture_verification
     status: open
   - id: terminal_native_input_delivery_fixture_verification
+    # Includes seven additional IME, modifier, focus and visibility readiness migrations.
     status: open
   - id: native_app_host_full_suite_failures
     status: open
