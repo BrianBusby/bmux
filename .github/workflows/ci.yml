@@ -590,6 +590,7 @@ jobs:
             BMUX_SKIP_ZIG_BUILD=1 \
             -only-testing:bmuxTests/BrowserSystemProxyMirrorTests \
             -only-testing:bmuxTests/CloudAttachRetryContractTests \
+            -only-testing:bmuxTests/RemoteTmuxSessionListParserTests \
             -only-testing:bmuxTests/SSHWorkspaceCreationTests \
             -only-testing:bmuxTests/SSHAgentEnvironmentTests \
             -only-testing:bmuxTests/SSHPTYLifecycleContractTests \

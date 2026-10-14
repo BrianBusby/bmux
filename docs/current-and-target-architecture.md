@@ -405,4 +405,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - SSH agent environment fixture focused gate awaits app-host CI (`ssh_agent_environment_fixture_focused_gate_verification`) - owner: Bmux; status: open
 - SSH PTY initial resize acknowledgement CI timeouts remain unresolved (`ssh_pty_lifecycle_fixture_verification`) - owner: Bmux; status: open
 - Opt-in focused app-host process diagnostics await actual runner evidence (`focused_app_host_process_diagnostics_verification`) - owner: Bmux; status: open
+- Remote tmux LF and CRLF parser focused gate awaits named CI regression execution (`remote_tmux_parser_focused_gate_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

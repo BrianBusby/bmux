@@ -542,3 +542,17 @@ The actual PR171 focused failure (job 115488618879, 41 functions/10 suites, 19 i
 remains unresolved. Local synthetic subprocess/filter/privacy checks do not prove
 macOS 15 app-host capture or identify a missing CommandRunner callback. The next
 combined dispatch must supply that evidence without changing test deadlines.
+
+### Remote tmux parser regression execution
+
+The test-only CRLF coverage at `b95727d60` did not execute in broad shard 3:
+job 115627514126 of run 38494255765 stopped after a 300-second idle deadline
+with exit 124 during unrelated legacy XCTest execution. This is a coverage
+blocker, not evidence that the parser regression failed.
+
+The existing first focused app-host invocation now also selects
+`RemoteTmuxSessionListParserTests`, so Swift Testing executes the LF/CRLF cases
+before broad legacy XCTest work. The full shard selectors, runner count,
+deadlines and assertions are unchanged. The production parser fix remains held
+until CI records the named failing regression; local red and fixed-artifact
+proof do not replace that required CI evidence.

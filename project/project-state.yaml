@@ -5913,3 +5913,7 @@ caveats:
     title: Opt-in focused app-host process diagnostics await actual runner evidence
     status: open
     owner: bmux
+  - id: remote_tmux_parser_focused_gate_verification
+    title: Remote tmux LF and CRLF parser focused gate awaits named CI regression execution
+    status: open
+    owner: bmux
