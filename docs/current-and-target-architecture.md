@@ -447,7 +447,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Narrow titlebar reservation fix preserves offscreen reference layout; integrated app verification remains pending (`titlebar_narrow_window_layout_verification`) - owner: Bmux; status: open
 - Claude resume and disabled git-watch contract migrations pass native 786; fixed-head app-host verification pending (`claude_resume_and_no_git_watch_fixture_verification`) - owner: Bmux; status: open
 - Titlebar hit-target sizing and search metadata fixture migrations pass native 786; app-host and Swift 6 shortcut-store isolation remain open (`titlebar_search_metadata_fixture_verification`) - owner: Bmux; status: open
-- Closed-peer receive regression failed three expected cases in G; bounded receiver repair passes extracted-owner controls, tagged artifact and CI pending (`cli_closed_peer_receive_regression_verification`) - owner: Bmux; status: open
+- Closed-peer receive regression failed three expected cases in G; receiver repair and tagged build 788 CLI checks pass, fixed-head CI pending (`cli_closed_peer_receive_regression_verification`) - owner: Bmux; status: open
 - Three tagged CLI fixtures use short owned homes; native 786 exposes a separate multiline receive-timeout error in two cases (`cli_socket_home_fixture_verification`) - owner: Bmux; status: open
 - Native titlebar default-width and voice-control fixture corrections pass locally; app-host verification remains pending (`titlebar_product_contract_fixture_verification`) - owner: Bmux; status: open
 - CLI socket capture completion focused gate and shared-caller verification (`cli_socket_capture_completion_verification`) - owner: Bmux; status: open
@@ -472,4 +472,4 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Browser Find fixtures distinguish owned-window search from menu fallback; integrated app-host verification remains pending (`browser_find_routing_fixture_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
 
-The closed-peer CLI repair gives receive timeout configuration/cache and byte reads one internal `CLISocketReceiver` owner with a borrowed descriptor. `SocketClient` retains framing, connection lifecycle, request policy and telemetry. Actual G regression red is recorded; extracted-owner controls pass while tagged artifact and fixed-head CI verification remain pending.
+The closed-peer CLI repair gives receive timeout configuration/cache and byte reads one internal `CLISocketReceiver` owner with a borrowed descriptor. `SocketClient` retains framing, connection lifecycle, request policy and telemetry. Actual G regression red is recorded; extracted-owner controls and tagged build 788 bundled CLI checks pass while fixed-head CI verification remains pending.

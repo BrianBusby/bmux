@@ -6101,7 +6101,7 @@ caveats:
     status: open
     owner: bmux
   - id: cli_closed_peer_receive_regression_verification
-    title: Closed-peer receive regression failed three expected cases in G; bounded receiver repair passes extracted-owner controls, tagged artifact and CI pending
+    title: Closed-peer receive regression failed three expected cases in G; receiver repair and tagged build 788 CLI checks pass, fixed-head CI pending
     status: open
     owner: bmux
   - id: cli_socket_home_fixture_verification

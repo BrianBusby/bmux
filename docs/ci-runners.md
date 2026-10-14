@@ -2680,9 +2680,17 @@ final EOF, ordinary live-peer timeout and invalid descriptor. Invalid-timeval
 control returns EDOM on this host and remains an error. A temporary syscall-result
 injection (not shipped) supplies EINVAL while real native receives return EAGAIN
 or EBADF; both retain the original EINVAL message and leave the cache unchanged.
-These owner-level results do not replace the pending fresh tagged CLI build and
-fixed-head CI. The canonical/local verification caveat remains open. Existing
-shipped error text is byte-identical; no new user-facing copy needs translation.
+Fresh isolated build 788 (`maintenance-closed-peer`) succeeded on integrated
+`fc303bcc862415cb2e74ef255aeeb9616d75891e` in 175 seconds and was not launched.
+Its bundled CLI passes the unchanged three-function/six-scenario closed-peer
+regression, existing socket-operation deadline suite and broken-stdout SIGPIPE
+checks with owned temporary homes and sockets. Additional built-artifact controls
+preserve exact JSON output, an 18,024-byte Unicode multiline reply, and an
+18,015-byte reply with an unterminated final line. The receiver and CLI compile
+without warnings; the app build retains 127 distinct warning lines in existing
+app code/assets. Full fixed-head CI remains required and the canonical/local
+verification caveat stays open. Existing shipped error text is byte-identical;
+no new user-facing copy needs translation.
 
 ## Browser portal presentation fixture migration
 
