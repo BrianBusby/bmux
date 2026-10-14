@@ -2061,3 +2061,23 @@ bmux-testing migration/behavior/local-CI guidance, architecture concurrency and
 file ownership, and the real Workspace/Bonsplit and MobileHostConnection
 completion boundaries. The localization audit finds no changed shipped strings,
 settings, menus or catalogs; this section is contributor verification prose.
+
+
+## Welcome shortcut window ownership verification
+
+The final C shard-3 run (38509817630, job 115676261545) twice crashed after
+`testWelcomeWindowSidebarShortcutsUseSharedToggleCommands` in XCTest object
+cleanup. The migrated `WelcomeWindowShortcutTests` retains its NSWindow from
+construction through `performClose`, preserving all eight command metadata,
+handler and visibility expectations. The real queued right-sidebar action is
+observed through its FIFO event-delivery boundary, with the original one-second
+failure deadline; no polling or settling delay remains in the migrated case.
+
+The existing offscreen NSWindow lifetime control crashes with the default
+release-on-close policy and exits cleanly with retained ownership. Exact new
+sources typecheck without warnings against build 786 in the test target's Swift 5
+mode. Swift 6 rejects the existing imported mutable `settingsFileStore` boundary;
+no suppression or production ownership change was added. Actual Welcome window
+routing remains an app-host CI gate; the primitive and typecheck do not establish
+that result. Existing full shard coverage is unchanged. No local foreground
+window, app launch or runtime build was used for this correction.
