@@ -86,3 +86,16 @@ remain intact. No production source changed since isolated build 779; the final
 fixture execution passes all 25 cases across eight functions and three suites in
 3.989 seconds against that exact artifact (`/tmp/ssh-manual-final-779-green.log`).
 Native owner, shell handoff and placeholder state assertions remain unchanged.
+
+
+## Remote restore working-directory follow-up
+
+Existing CI also fails `testRemoteWorkspaceAutoResumeKeepsRemoteStartupCommand`:
+the restored local SSH process receives a working directory despite remote startup.
+An unchanged-779 native reproduction retains all original assertions and fails only
+that directory check (`/tmp/remote-resume-cwd-proof.log`). The fallback added in
+`bd0b24b741` bypassed the existing remote guards when an agent startup command or
+input was present. Both directory branches now use the same existing local-startup
+eligibility predicate; remote startup/input and local startup directory behavior
+remain otherwise unchanged. No new policy or test weakening is introduced.
+Fresh isolated build, focused controls and independent review remain pending.

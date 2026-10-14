@@ -222,3 +222,4 @@ Repository: `BrianBusby/bmux`
 | `workspace_fallback_regression_verification` | open |
 | `ssh_manual_reconnect_nonzero_regression` | resolved |
 | `browser_inspector_window_ownership_verification` | open |
+| `remote_restore_working_directory_regression` | open |

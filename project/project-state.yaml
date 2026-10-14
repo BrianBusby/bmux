@@ -6010,3 +6010,7 @@ caveats:
     title: Browser inspector window-close runtime fixture correction awaits fixed-head app-host verification
     status: open
     owner: bmux
+  - id: remote_restore_working_directory_regression
+    title: Remote agent restore must not pass a remote working directory to the local SSH process; fixed-build validation pending
+    status: open
+    owner: bmux

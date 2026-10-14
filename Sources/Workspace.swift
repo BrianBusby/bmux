@@ -1407,14 +1407,14 @@ extension Workspace {
                 restoredRemotePTYAttachCommand == nil &&
                 !isDefaultFreestyleSSHDRemoteWorkspace
             let effectiveRemoteStartupCommand = suppressWorkspaceRemoteStartupCommand ? nil : remoteStartupCommand
-            let localWorkingDirectory = effectiveRemoteStartupCommand == nil &&
+            let startupUsesLocalWorkingDirectory = effectiveRemoteStartupCommand == nil &&
                 restoredRemotePTYAttachCommand == nil &&
-                !restoresRemoteWorkspaceTerminalSnapshot &&
-                !startupHandlesWorkingDirectory
+                !restoresRemoteWorkspaceTerminalSnapshot
+            let localWorkingDirectory = startupUsesLocalWorkingDirectory && !startupHandlesWorkingDirectory
                 ? (suppressWorkspaceRemoteStartupCommand ? savedWorkingDirectory : workingDirectory)
                 : nil
-            let requestedWorkingDirectory =
-                localWorkingDirectory ?? (startupHandlesWorkingDirectory ? workingDirectory : nil)
+            let requestedWorkingDirectory = localWorkingDirectory ??
+                (startupUsesLocalWorkingDirectory && startupHandlesWorkingDirectory ? workingDirectory : nil)
             let restoredAgentWillRunStartupCommand = restorableAgent != nil && (
                 restoredAgentResumeLaunch?.initialCommand != nil ||
                 (restoredBindingLaunch?.initialCommand != nil && resumeBinding?.isAgentHookBinding == true)

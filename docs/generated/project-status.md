@@ -164,6 +164,7 @@ Regenerate with: ./scripts/project-docs generate
 | Respawn window protocol fixture focused gate awaits app-host CI (`respawn_window_protocol_fixture_focused_gate_verification`) | Bmux | open |  |
 | Workspace fallback regression test red and production fix verification pending (`workspace_fallback_regression_verification`) | Bmux | open |  |
 | Browser inspector window-close runtime fixture correction awaits fixed-head app-host verification (`browser_inspector_window_ownership_verification`) | Bmux | open |  |
+| Remote agent restore must not pass a remote working directory to the local SSH process; fixed-build validation pending (`remote_restore_working_directory_regression`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

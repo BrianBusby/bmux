@@ -270,3 +270,5 @@ local_caveats:
     status: resolved
   - id: browser_inspector_window_ownership_verification
     status: open
+  - id: remote_restore_working_directory_regression
+    status: open
