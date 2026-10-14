@@ -5998,6 +5998,10 @@ caveats:
     title: Antigravity hook fixture joins request producers without blocked accept workers; full app-host verification pending
     status: open
     owner: bmux
+  - id: workspace_runtime_close_fixture_verification
+    title: Workspace close uses a real ready runtime and coordinator owns injected-free scheduling coverage; full app-host verification pending
+    status: open
+    owner: bmux
   - id: grok_hook_connection_fixture_verification
     title: Grok hook fixtures now drain RPC and one-way telemetry connections; complete app-host verification pending
     status: open
