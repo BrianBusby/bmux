@@ -3105,3 +3105,15 @@ and does not prove clipboard restoration. The real general-pasteboard case was
 compiled but deliberately not executed locally; isolated macOS app-host CI must
 verify its full restoration contract. No production policy, timeout extension,
 workflow selector or shipped text changes are included.
+
+### Combined native fixture compilation
+
+Revision `41d77c34d` passed complete incremental `bmux-unit build-for-testing`
+with local Xcode 26.6 in Swift 5 mode. All 565 wired test files and 14 shared
+sources were compiler inputs. The omnibar arrow, Kitty clear-history and
+clipboard timeout fixtures and extracted clipboard fake compiled without
+warnings. The incremental build retained 163 distinct warning lines; this is
+not comparable to the earlier fresh build's warning count. No warning budget
+was relaxed. No app or tests were launched, and the existing preview artifacts
+were not replaced. Actual clipboard restoration, real inspector windows and
+the complete macOS 15 app-host run remain CI verification boundaries.
