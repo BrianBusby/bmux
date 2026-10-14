@@ -265,3 +265,4 @@ Repository: `BrianBusby/bmux`
 | `sidebar_pr_focus_contract_fixture_verification` | open |
 | `notification_focus_event_fixture_verification` | open |
 | `notification_keydown_fixture_verification` | open |
+| `textbox_clipboard_timeout_fixture_verification` | open |

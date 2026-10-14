@@ -205,6 +205,7 @@ Regenerate with: ./scripts/project-docs generate
 | Sidebar PR aggregate and focused projection fixture correction awaits fixed-head app-host verification (`sidebar_pr_focus_contract_fixture_verification`) | Bmux | open |  |
 | Notification focus fixture awaits the existing event flush and passes native proof; fixed-head app-host remains pending (`notification_focus_event_fixture_verification`) | Bmux | open |  |
 | Keydown notification fixture isolates runtime and surface-flash preferences; fixed-head app-host remains pending (`notification_keydown_fixture_verification`) | Bmux | open |  |
+| Clipboard timeout fixture awaits causal completion; local event-only proof passes but real pasteboard restoration requires isolated app-host CI (`textbox_clipboard_timeout_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

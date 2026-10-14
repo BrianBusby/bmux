@@ -19,48 +19,6 @@ private final class FakeWKInspectorContainerView: NSView {}
 private final class FocusableTestView: NSView {
     override var acceptsFirstResponder: Bool { true }
 }
-private final class FakeTextBoxSubmitSurface: TextBoxSubmitSurfaceControlling {
-    var clipboardReadGeneration = 0
-    var textBoxSubmitObservationWindow: NSWindow?
-    var textBoxSubmitTerminalSurface: TerminalSurface? { nil }
-    var visibleTextValue: String?
-    var sendKeyTextResult = true
-    var sendTextResult = true
-    var sendNamedKeyResult: TerminalSurface.NamedKeySendResult = .sent
-    var performBindingActionResult = true
-    private(set) var sentText: [String] = []
-    private(set) var sentKeys: [String] = []
-    func visibleText() -> String? {
-        visibleTextValue
-    }
-    @discardableResult
-    func sendKeyText(_ text: String) -> Bool {
-        sentText.append(text)
-        return sendKeyTextResult
-    }
-    @discardableResult
-    func sendText(_ text: String) -> Bool {
-        sentText.append(text)
-        return sendTextResult
-    }
-    @discardableResult
-    func sendNamedKey(_ keyName: String) -> TerminalSurface.NamedKeySendResult {
-        sentKeys.append(keyName)
-        return sendNamedKeyResult
-    }
-    @discardableResult
-    func performBindingAction(_ action: String) -> Bool {
-        sentKeys.append(action)
-        return performBindingActionResult
-    }
-    func completeClipboardRead() {
-        clipboardReadGeneration += 1
-        NotificationCenter.default.post(
-            name: .terminalSurfaceDidCompleteClipboardRead,
-            object: self
-        )
-    }
-}
 private final class MenuActionProbe: NSObject {
     var callCount = 0
     @objc func perform(_ sender: Any?) {
@@ -8030,41 +7988,6 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
                 attachmentCount: 0
             )
         ))
-    }
-
-    func testTextBoxSubmitClipboardReadTimeoutRestoresPasteboard() throws {
-#if DEBUG
-        try withPreservedGeneralPasteboard {
-            let surface = FakeTextBoxSubmitSurface()
-            let pasteboard = NSPasteboard.general
-            pasteboard.clearContents()
-            pasteboard.declareTypes([.string], owner: nil)
-            XCTAssertTrue(pasteboard.setString("user clipboard", forType: .string))
-            TextBoxSubmit.debugWaitTimeoutSecondsOverride = 0
-            defer { TextBoxSubmit.debugWaitTimeoutSecondsOverride = nil }
-
-            let imageURL = try makeTemporaryPNGFile(named: "moon.png")
-            var completed = false
-            TextBoxSubmit.debugRunDispatchEvents(
-                [
-                    .captureClipboardReadBaseline,
-                    .pasteFilePath(imageURL.path),
-                    .waitForClipboardRead
-                ],
-                via: surface
-            ) { _ in
-                completed = true
-            }
-
-            XCTAssertEqual(surface.sentKeys, ["paste_from_clipboard"])
-            waitFor(timeout: 1.0, until: { completed })
-
-            XCTAssertTrue(completed)
-            XCTAssertEqual(pasteboard.string(forType: .string), "user clipboard")
-        }
-#else
-        throw XCTSkip("debugRunDispatchEvents is only available in DEBUG")
-#endif
     }
 
     func testTextBoxSubmitSerializesRunsPerSurface() throws {
