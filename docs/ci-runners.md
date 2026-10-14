@@ -3922,3 +3922,27 @@ The broad shard selector, all existing focused selectors, job count, wrapper,
 deadlines, and assertions remain unchanged. No Git status production correction
 is included; named actual regression failure is still required before that fix.
 The workflow change follows the maintained conservative all-area CI routing rule.
+
+### Combined window-routing and fixture checkpoint
+
+The combined `bmux-unit` target passes `build-for-testing` with 576 wired test
+files and 14 shared sources at application/test revision `346e015e5`. The
+subsequent Git-alias focused-selector change touches workflow and evidence only.
+The compile uses its isolated derived-data directory and does not launch an app
+or replace builds 775 and 786–790. Build 790 remains the isolated runtime proof
+for the closed-window routing change.
+
+This complete compile reports 405 distinct warning lines. The new Swift Testing
+owners and changed window routing, search, and provenance owners have none.
+Remaining diagnostics match previously recorded builds after normalizing source
+line shifts and metadata-process timestamps: legacy XCTest imports, unused test
+results, concurrency annotations, and the existing terminal-controller cast and
+window-capture deprecation. No diagnostic or warning budget was suppressed.
+Native project parsing, all 576 test-file wiring entries, strict determinism,
+Swift file budgets, package grouping and lockfile policy pass.
+
+This is compilation evidence, not an app-host suite pass. The older diagnostic
+run still reports additional agent-session routing and fixture failures; their
+causes are being checked independently. Named Git-alias regression execution,
+all fixed-head macOS shards and the remaining release/validation gates remain
+required before merging.

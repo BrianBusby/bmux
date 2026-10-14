@@ -202,7 +202,7 @@ Regenerate with: ./scripts/project-docs generate
 | Remote agent fork fixture owns its existing agent path and passes native checks; app-host verification remains pending (`remote_agent_fork_fixture_verification`) | Bmux | open |  |
 | Default cloud proxy retry correction passes native build787 original and five preserved controls; integrated CI remains pending (`default_cloud_proxy_retry_state_verification`) | Bmux | open |  |
 | Deleted agent-hook cwd correction passes native build787 regression and nine directory controls; integrated app-host verification pending (`deleted_agent_hook_cwd_regression`) | Bmux | open |  |
-| Combined 559-file test target compiles locally; conditional argument correction awaits Xcode 26.3 and integrated app-host verification (`session_resume_fork_contract_fixture_verification`) | Bmux | open |  |
+| Combined 576-file test target compiles locally; conditional argument correction awaits Xcode 26.3 and integrated app-host verification (`session_resume_fork_contract_fixture_verification`) | Bmux | open |  |
 | Sidebar PR aggregate and focused projection fixture correction awaits fixed-head app-host verification (`sidebar_pr_focus_contract_fixture_verification`) | Bmux | open |  |
 | Notification focus fixture awaits the existing event flush and passes native proof; fixed-head app-host remains pending (`notification_focus_event_fixture_verification`) | Bmux | open |  |
 | Keydown notification fixture isolates runtime and surface-flash preferences; fixed-head app-host remains pending (`notification_keydown_fixture_verification`) | Bmux | open |  |
