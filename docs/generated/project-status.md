@@ -138,7 +138,7 @@ Regenerate with: ./scripts/project-docs generate
 | Monorepo migration ledger pending dispositions (`monorepo_migration_ledger_pending_dispositions`) | Bmux | open |  |
 | Observability trace API boundary (`observability_trace_api`) | Provenance Engine | open |  |
 | GitHub Actions runner reliability (`github_actions_runner_reliability`) | Bmux | open | BrianBusby/bmux#8 |
-| GitHub evidence HTTP regression gate awaits bounded transient recovery (`project_truth_http_retry_verification`) | Bmux | open |  |
+| Bounded GitHub evidence HTTP recovery awaits fixed-head CI verification (`project_truth_http_retry_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
