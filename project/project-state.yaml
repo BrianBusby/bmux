@@ -6267,3 +6267,8 @@ caveats:
     title: Hook prompt evidence fixture uses the accepted stable workspace identity; native old expectation fails and corrected case passes, app-host verification pending
     status: open
     owner: bmux
+
+  - id: closed_main_window_routing_verification
+    title: Closed retained windows are excluded from presentation while manager recovery is preserved; fixed-runtime and app-host verification remain pending
+    status: open
+    owner: bmux

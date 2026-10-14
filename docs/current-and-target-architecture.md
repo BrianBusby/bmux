@@ -480,6 +480,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - File-preview and notification test-window constructor ownership corrected; four affected app-host cases remain pending (`native_window_close_ownership_verification`) - owner: Bmux; status: open
 - Terminal file launch fixtures compare directory identity and retain exact quoting; native controls pass and integrated app-host verification remains pending (`terminal_file_launch_directory_contract_verification`) - owner: Bmux; status: open
 - Hook prompt evidence fixture uses the accepted stable workspace identity; native old expectation fails and corrected case passes, app-host verification pending (`hook_prompt_stable_workspace_fixture_verification`) - owner: Bmux; status: open
+- Closed retained windows are excluded from presentation while manager recovery is preserved; fixed-runtime and app-host verification remain pending (`closed_main_window_routing_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
 
 The closed-peer CLI repair gives receive timeout configuration/cache and byte reads one internal `CLISocketReceiver` owner with a borrowed descriptor. `SocketClient` retains framing, connection lifecycle, request policy and telemetry. Actual G regression red is recorded; extracted-owner controls and tagged build 788 bundled CLI checks pass while fixed-head CI verification remains pending.

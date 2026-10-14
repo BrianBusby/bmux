@@ -87,7 +87,8 @@ extension AppDelegate {
         }
 
         for route in recoverableRoutes {
-            guard let tabManager = route.tabManager else { continue }
+            guard let tabManager = route.tabManager,
+                  isMainWindowPresentationEligible(windowId: route.windowId, window: route.window) else { continue }
             let alreadySeen = contexts.contains { $0.windowID == route.windowId }
             guard !alreadySeen else { continue }
             append(windowID: route.windowId, tabManager: tabManager, window: route.window)
@@ -153,7 +154,8 @@ extension AppDelegate {
 
         for route in recoverableMainWindowRoutes() {
             guard !seenWindowIDs.contains(route.windowId),
-                  let tabManager = route.tabManager else {
+                  let tabManager = route.tabManager,
+                  isMainWindowPresentationEligible(windowId: route.windowId, window: route.window) else {
                 continue
             }
             if let result = inspect(windowID: route.windowId, tabManager: tabManager, window: route.window) {
@@ -177,7 +179,10 @@ extension AppDelegate {
             return
         }
 
-        _ = focusMainWindow(windowId: windowID)
+        guard focusMainWindow(windowId: windowID) else {
+            NSSound.beep()
+            return
+        }
         tabManager.selectWorkspaceIdForAction(workspace.id)
         TerminalController.shared.setActiveTabManager(tabManager)
 

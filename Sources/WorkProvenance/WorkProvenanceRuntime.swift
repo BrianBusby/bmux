@@ -462,7 +462,7 @@ final class WorkProvenanceRuntime {
             append(appDelegate.tabManagerFor(tabId: runtimeOrStableWorkspaceID))
         }
         append(appDelegate.tabManager)
-        for window in appDelegate.scriptableMainWindows() {
+        for window in appDelegate.retainedMainWindowStates() {
             append(window.tabManager)
         }
         return managers
