@@ -13,15 +13,27 @@ public struct WorkspaceSessionRestorePolicyService<Binding: WorkspaceSurfaceResu
     private let truncateScrollback: @Sendable (String?) -> String?
     private let hermesCodexEnvironment: WorkspaceHermesCodexEnvironment
     private let temporaryDirectory: URL
+    private let directoryExists: @Sendable (String) -> Bool
 
-    /// Creates a restore policy service.
+    /// Creates a restore policy service with caller-owned filesystem access.
+    ///
+    /// - Parameters:
+    ///   - applyStoredApproval: Applies persisted approval to a saved binding.
+    ///   - shouldRunPromptedSurfaceResume: Resolves approval requiring a prompt.
+    ///   - isRunningUnderAutomatedTests: Suppresses automatic remote connection in tests.
+    ///   - truncateScrollback: Applies the caller's persisted scrollback limit.
+    ///   - hermesCodexEnvironment: Resolves Hermes provider defaults.
+    ///   - temporaryDirectory: Owns generated startup scripts.
+    ///   - directoryExists: Checks local directory existence, following directory symlinks.
+    ///     Tests inject a deterministic predicate or inspect only owned temporary paths.
     public init(
         applyStoredApproval: @escaping @Sendable (Binding, URL, Data?) -> Binding,
         shouldRunPromptedSurfaceResume: @escaping @Sendable (Binding) -> Bool,
         isRunningUnderAutomatedTests: @escaping @Sendable () -> Bool,
         truncateScrollback: @escaping @Sendable (String?) -> String?,
         hermesCodexEnvironment: WorkspaceHermesCodexEnvironment,
-        temporaryDirectory: URL
+        temporaryDirectory: URL,
+        directoryExists: @escaping @Sendable (String) -> Bool
     ) {
         self.applyStoredApproval = applyStoredApproval
         self.shouldRunPromptedSurfaceResume = shouldRunPromptedSurfaceResume
@@ -29,6 +41,34 @@ public struct WorkspaceSessionRestorePolicyService<Binding: WorkspaceSurfaceResu
         self.truncateScrollback = truncateScrollback
         self.hermesCodexEnvironment = hermesCodexEnvironment
         self.temporaryDirectory = temporaryDirectory
+        self.directoryExists = directoryExists
+    }
+
+    /// Resolves local runtime cwd independently of persisted session directory metadata.
+    ///
+    /// Guarded startup commands change directory themselves and tolerate deleted saved
+    /// directories. Passing an unavailable cwd to the terminal runtime can fail before
+    /// that command runs. Existing local directories remain eligible for startup.
+    ///
+    /// - Parameters:
+    ///   - usesLocalWorkingDirectory: Whether this startup may use a local directory.
+    ///     Remote launches must pass `false`; remote paths are never checked locally.
+    ///   - startupHandlesWorkingDirectory: Whether a guarded launcher owns the cwd change.
+    ///   - workingDirectory: The resolved saved directory, including workspace fallback.
+    ///   - unguardedWorkingDirectory: The cwd previously selected for an unguarded launch.
+    /// - Returns: The unguarded cwd used by restore's metadata-report guard, and the
+    ///   requested runtime cwd. Neither value rewrites persisted directory metadata.
+    public func runtimeWorkingDirectories(
+        usesLocalWorkingDirectory: Bool,
+        startupHandlesWorkingDirectory: Bool,
+        workingDirectory: String,
+        unguardedWorkingDirectory: String?
+    ) -> (unguarded: String?, requested: String?) {
+        guard usesLocalWorkingDirectory else { return (nil, nil) }
+        guard startupHandlesWorkingDirectory else {
+            return (unguardedWorkingDirectory, unguardedWorkingDirectory)
+        }
+        return (nil, directoryExists(workingDirectory) ? workingDirectory : nil)
     }
 
     /// Resolves the scrollback text persisted for a terminal snapshot.

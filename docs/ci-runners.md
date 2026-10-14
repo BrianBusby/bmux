@@ -2687,8 +2687,12 @@ workspace/launcher cleanup.
 
 Against unchanged unlaunched native artifact 786, the migrated test compiles in
 Swift 6 without warnings and fails only the original nil-cwd assertion. The
-shell assertions pass. This is test-only regression evidence; the runtime
-correction and fresh fixed-artifact controls remain pending. Existing local
+shell assertions pass. The restore policy now keeps a guarded local cwd only if it is an existing
+directory, through a constructor-injected filesystem predicate. Remote gating
+and directory metadata remain separate. The focused Swift 6 policy harness
+passes all eight existing policy methods and six temporary directory-control
+variants; the complete package graph and fresh fixed-artifact workspace controls
+remain pending. Existing local
 agent-hook directories, process-detected binding cwd, remote nil-cwd behavior,
 and unmounted-volume metadata must retain their contracts. Full integrated
 app-host/macOS 15 verification remains open under
