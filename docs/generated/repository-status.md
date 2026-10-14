@@ -274,3 +274,4 @@ Repository: `BrianBusby/bmux`
 | `shortcut_parser_lookup_attribution_verification` | open |
 | `tmux_launch_identity_fixture_verification` | open |
 | `orphan_workspace_shortcut_fixture_verification` | open |
+| `titlebar_hit_test_event_context_verification` | open |

@@ -3497,3 +3497,28 @@ validation and the existing assertions. Canonical and local caveat
 `agent_launch_joined_producer_verification` retains actual app-host verification
 as pending. No UI or shipped text changes; localization scope is contributor
 verification notes only.
+### Titlebar hit-test event context
+
+G2 recorded 28 nil-hit assertions in the two style cases of
+`TitlebarControlsContentContractTests`. On unchanged build 788, an owned native
+application supplying a mouse-down event passes both cases; supplying a key-down
+event reproduces all 28 failures. That establishes the fixture's ambient-event
+dependency, but the actual event during the CI failure was not recorded.
+
+`MinimalModeSidebarControlActionView.hitTest` now reads `NSApp.currentEvent` once
+and forwards it to internal `performHitTest(at:currentEvent:)`, following the
+maintained `WindowTerminalHostView` boundary. The pointer gate, nil-event behavior,
+context-menu eligibility, enabled/revealed checks, geometry and existing telemetry
+are unchanged. No global override, swizzle, new product API or new logging is added.
+
+The existing two style cases pass explicit left/right mouse-down, key-down and nil
+contexts. They retain content sizes, seven 28pt control frames, hit edges, gaps,
+accessibility identifiers and exact action order, and cover disabled/unrevealed
+rejection and outside bounds. Settings remain synchronously scoped and restored;
+no test deadline, CI selector or production action changes. Product text and
+localization catalogs are unchanged; the added prose is contributor verification
+material, not localized product content.
+
+The new internal method requires a fresh native module. Root-owned isolated build,
+exact-source native execution and integrated app-host verification remain pending;
+prior build-788 controls do not prove the corrected suite passes.

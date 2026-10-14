@@ -214,6 +214,7 @@ Regenerate with: ./scripts/project-docs generate
 | Shortcut parser fixtures distinguish pure normalization from runtime subscribers; integrated app-host verification remains pending (`shortcut_parser_lookup_attribution_verification`) | Bmux | open |  |
 | Tmux launch identity fixture uses an owned short endpoint and requires focused-context exchange; integrated app-host verification remains pending (`tmux_launch_identity_fixture_verification`) | Bmux | open |  |
 | Orphan workspace shortcut fixture owns focused-context attribution; integrated app-host verification remains pending (`orphan_workspace_shortcut_fixture_verification`) | Bmux | open |  |
+| Explicit titlebar hit-test event context preserves routing policy; fresh native build and integrated app-host verification remain pending (`titlebar_hit_test_event_context_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

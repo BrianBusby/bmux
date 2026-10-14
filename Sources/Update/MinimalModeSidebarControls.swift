@@ -196,7 +196,12 @@ final class MinimalModeSidebarControlActionView: NSView {
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
-        if let eventType = NSApp.currentEvent?.type,
+        performHitTest(at: point, currentEvent: NSApp.currentEvent)
+    }
+
+    // Keep event context local to each hit test so callers need no global override.
+    func performHitTest(at point: NSPoint, currentEvent: NSEvent?) -> NSView? {
+        if let eventType = currentEvent?.type,
            eventType != .leftMouseDown,
            eventType != .rightMouseDown {
             return nil
@@ -205,7 +210,7 @@ final class MinimalModeSidebarControlActionView: NSView {
         guard let slot = TitlebarControlsHitRegions.sidebarActionSlot(at: point, config: config) else {
             return nil
         }
-        if NSApp.currentEvent?.type == .rightMouseDown, !slot.acceptsContextMenu {
+        if currentEvent?.type == .rightMouseDown, !slot.acceptsContextMenu {
             return nil
         }
         guard shouldAcceptAction(at: point) else { return nil }
