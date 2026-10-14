@@ -282,3 +282,4 @@ Repository: `BrianBusby/bmux`
 | `notification_focus_completion_fixture_verification` | open |
 | `hook_prompt_stable_workspace_fixture_verification` | open |
 | `cli_telemetry_joined_producer_verification` | open |
+| `terminal_attachment_deferred_ime_fixture_verification` | open |

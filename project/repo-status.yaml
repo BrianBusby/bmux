@@ -414,3 +414,6 @@ local_caveats:
 
   - id: cli_telemetry_joined_producer_verification
     status: open
+
+  - id: terminal_attachment_deferred_ime_fixture_verification
+    status: open
