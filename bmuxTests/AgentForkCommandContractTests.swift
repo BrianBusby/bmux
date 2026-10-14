@@ -346,7 +346,9 @@ struct AgentForkCommandContractTests {
             ? ["resume", sessionID, "-c", "check_for_update_on_startup=false"] + options + ["--search"]
             : ["fork", sessionID] + options + ["stale fork prompt", "--search"])
         // Captured fork tags are intentionally replayed on re-fork (#6803), never on resume.
-        #expect(Array(fields.dropFirst()) == [root.appendingPathComponent("codex home").path] + expectedArguments + [""])
+        let actualFields: [String] = Array(fields.dropFirst())
+        let expectedFields: [String] = [root.appendingPathComponent("codex home").path] + expectedArguments + [""]
+        #expect(actualFields == expectedFields)
     }
 
     private func shellQuotedForTest(_ value: String) -> String {

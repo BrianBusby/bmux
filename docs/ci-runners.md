@@ -2815,3 +2815,25 @@ and the main-base Swift file budget. The warning budget reports 126 retained
 warnings against 221 allowed, matching build 786; no warning allowance changed.
 The tagged reload compiles the app, not the complete test target. The next CI
 run must execute that target and all configured gates on the published commit.
+
+### Fork-command fixture compiler inference
+
+E run 38585955198 shards 2 and 4 (jobs 115929521031 and 115929521191)
+failed before tests: Xcode 26.3 could not type-check an expression in
+`AgentForkCommandContractTests`. The retained console output names the file but
+omits the expression location. The same source compiles with local Swift 6.3.3
+in the target's Swift 5 language mode, so the older compiler failure has not
+been reproduced locally.
+
+The measured local inference hotspot is the final macro assertion combining
+`Array(fields.dropFirst())` with a concatenated expected argument array. Both
+arrays now have explicit `[String]` local bindings before their unchanged
+comparison. The expected fields, order, all eleven fork-command variants, and
+executed argument/cwd/environment assertions remain identical. No command,
+process fixture, timeout, test selection or compiler setting changes.
+
+The complete affected fork and Claude resume fixtures compile without warnings
+and pass five functions (nine cases) against unchanged native build 786.
+This focused check does not replace full test-target compilation: the next
+integrated batch must compile the entire `bmuxTests` target with CI's Xcode 26.3
+and run the app-host tests. That gate remains open.
