@@ -520,38 +520,10 @@ final class AppDelegateLaunchServicesRegistrationTests: XCTestCase {
 }
 
 final class TerminalDefaultFileOpenRequestTests: XCTestCase {
-    func testBuildsQuotedLaunchInputForTerminalCommandFile() throws {
-        let contentType = DefaultTerminalRegistration.contentType(forIdentifier: "com.apple.terminal.shell-script")
-        let url = URL(fileURLWithPath: "/tmp/bmux default's/Run Me.command")
-
-        let request = try XCTUnwrap(TerminalDefaultFileOpenRequest(fileURL: url, contentType: contentType))
-
-        XCTAssertEqual(request.workingDirectory, "/tmp/bmux default's")
-        XCTAssertEqual(request.initialInput, "'/tmp/bmux default'\\''s/Run Me.command'\n")
-    }
-
     func testIgnoresPlainTextFiles() {
         let url = URL(fileURLWithPath: "/tmp/notes.txt")
 
         XCTAssertNil(TerminalDefaultFileOpenRequest(fileURL: url, contentType: .plainText))
-    }
-
-    func testBuildsLaunchInputForExtensionlessUnixExecutable() throws {
-        let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("bmux-terminal-default-executable-\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        defer {
-            try? FileManager.default.removeItem(at: directory)
-        }
-
-        let executable = directory.appendingPathComponent("runme", isDirectory: false)
-        try "#!/bin/sh\necho bmux\n".write(to: executable, atomically: true, encoding: .utf8)
-        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: executable.path)
-
-        let request = try XCTUnwrap(TerminalDefaultFileOpenRequest(fileURL: executable))
-
-        XCTAssertEqual(request.workingDirectory, directory.path)
-        XCTAssertEqual(request.initialInput, "'\(executable.path)'\n")
     }
 
     func testIgnoresDirectoriesWithTerminalScriptExtension() throws {

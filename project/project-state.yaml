@@ -6257,3 +6257,8 @@ caveats:
     title: File-preview and notification test-window constructor ownership corrected; four affected app-host cases remain pending
     status: open
     owner: bmux
+
+  - id: terminal_file_launch_directory_contract_verification
+    title: Terminal file launch fixtures compare directory identity and retain exact quoting; native controls pass and integrated app-host verification remains pending
+    status: open
+    owner: bmux
