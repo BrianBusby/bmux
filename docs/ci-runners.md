@@ -2319,3 +2319,25 @@ warning-free Swift 6 compile. Removing captured notifications in a temporary
 control fails five original notification assertions. Local proof does not replace
 fixed app-host and full-suite verification; the canonical/local caveat remains
 open. No production, subprocess timeout, runner or shipped string changed.
+
+### Grok payload lifecycle fixture completion
+
+The actual shard-4 failure
+`testGrokNotificationHookUsesPayloadMessageAndStopDoesNotSendGenericNotification`
+used the same detached blocking-accept helper with 80 worker slots. Its migrated
+scenario now reuses the joined Grok fixture. All 24 static hook calls and payloads
+are preserved, including the neutral-message loop. The 46 semantic assertions
+retain transcript/cwd/session isolation, persisted notification state, oversized
+and partial-multibyte history handling, generic/fallback/internal notification
+behavior, statuses and target checks. Process deadline, exit and output checks
+remain in the shared invocation owner, with no deadline increase.
+
+A separate `/usr/bin/true` probe with 80 workers did not reproduce a timeout;
+the 128-worker Antigravity control is not proof that 80 workers caused this
+particular CI failure. This removes the demonstrated shared helper's detached
+blocking-worker lifecycle risk, while actual CI attribution remains open.
+Native 786 runs this full scenario plus both prior Grok cases successfully in
+1.697 seconds with warning-free Swift 6 compilation. A temporary wrong-target
+capture control fails 12 original notification target assertions. The canonical
+Grok verification caveat remains open for full app-host execution. No production
+hook, transcript parsing, socket policy or shipped string changed.

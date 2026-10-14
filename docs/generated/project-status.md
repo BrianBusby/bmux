@@ -161,7 +161,7 @@ Regenerate with: ./scripts/project-docs generate
 | SSH agent environment fixture focused gate awaits app-host CI (`ssh_agent_environment_fixture_focused_gate_verification`) | Bmux | open |  |
 | Foreign workspace close reproduces destructive teardown; owned-instance guard awaits fixed native and app-host verification (`workspace_close_ownership_verification`) | Bmux | open |  |
 | Antigravity hook fixture joins request producers without blocked accept workers; full app-host verification pending (`antigravity_hook_lifecycle_fixture_verification`) | Bmux | open |  |
-| Grok hook fixtures now drain RPC and one-way telemetry connections; complete app-host verification pending (`grok_hook_connection_fixture_verification`) | Bmux | open |  |
+| Grok hook fixtures drain RPC and one-way telemetry through the full notification payload lifecycle; app-host verification pending (`grok_hook_connection_fixture_verification`) | Bmux | open |  |
 | Persistent SSH child exit reproduces sibling tracking loss; last-surface guard awaits fixed native and app-host verification (`persistent_pty_child_exit_verification`) | Bmux | open |  |
 | SSH PTY initial resize acknowledgement CI timeouts remain unresolved (`ssh_pty_lifecycle_fixture_verification`) | Bmux | open |  |
 | CI Option/Alt step selects CodexMonitorLeaseTests sequential and nested controls; actual app-host verification pending (`codex_monitor_lease_fixture_verification`) | Bmux | open |  |

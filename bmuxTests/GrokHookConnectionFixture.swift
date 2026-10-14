@@ -14,12 +14,13 @@ final class GrokHookConnectionFixture {
 
     deinit { try? FileManager.default.removeItem(at: root) }
 
-    func run(_ action: String, session: String, surface: String, fields: [String: Any] = [:], stallFeed: Bool = false) async throws -> [String] {
+    func run(_ action: String, session: String?, surface: String, fields: [String: Any] = [:], stallFeed: Bool = false) async throws -> [String] {
         let cli = try BundledCLITestSupport.bundledCLIPath(for: Self.self)
         let socket = root.appendingPathComponent("socket").path
         let input = root.appendingPathComponent("input")
         let events = ["session-start": "SessionStart", "prompt-submit": "UserPromptSubmit", "notification": "Notification", "stop": "Stop"]
-        var payload: [String: Any] = ["sessionId": session, "cwd": root.path, "hookEventName": try #require(events[action])]
+        var payload: [String: Any] = ["cwd": root.path, "hookEventName": try #require(events[action])]
+        if let session { payload["sessionId"] = session }
         payload.merge(fields) { _, new in new }
         try JSONSerialization.data(withJSONObject: payload).write(to: input)
         let environment = [
@@ -40,17 +41,21 @@ final class GrokHookConnectionFixture {
         return commands
     }
 
-    func writeAssistantTranscript(session: String, text: String) throws {
-        var encoded = ""
-        for byte in root.path.utf8 {
-            let unreserved = (65...90).contains(byte) || (97...122).contains(byte) || (48...57).contains(byte) || [45, 46, 95, 126].contains(byte)
-            encoded += unreserved ? String(Character(UnicodeScalar(byte))) : String(format: "%%%02X", byte)
-        }
-        let directory = root.appendingPathComponent("grok-home/sessions").appendingPathComponent(encoded).appendingPathComponent(session)
+    func writeAssistantTranscript(session: String, text: String, cwd: String? = nil) throws {
+        let directory = transcriptDirectory(session: session, cwd: cwd)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         var data = try JSONSerialization.data(withJSONObject: ["type": "assistant", "content": text], options: [.sortedKeys])
         data.append(10)
         try data.write(to: directory.appendingPathComponent("chat_history.jsonl"))
+    }
+
+    func transcriptDirectory(session: String, cwd: String? = nil) -> URL {
+        var encoded = ""
+        for byte in (cwd ?? root.path).utf8 {
+            let unreserved = (65...90).contains(byte) || (97...122).contains(byte) || (48...57).contains(byte) || [45, 46, 95, 126].contains(byte)
+            encoded += unreserved ? String(Character(UnicodeScalar(byte))) : String(format: "%%%02X", byte)
+        }
+        return root.appendingPathComponent("grok-home/sessions").appendingPathComponent(encoded).appendingPathComponent(session)
     }
 
     private func responder(surface: String, stallFeed: Bool) -> @Sendable (String) throws -> String? {
