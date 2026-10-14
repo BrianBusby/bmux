@@ -229,6 +229,7 @@ Repository: `BrianBusby/bmux`
 | `ssh_manual_reconnect_nonzero_regression` | resolved |
 | `native_portal_workspace_contract_fixture_verification` | open |
 | `native_history_and_batched_frame_fixture_verification` | open |
+| `markdown_window_retained_fixture_verification` | open |
 | `welcome_window_retained_fixture_verification` | open |
 | `browser_inspector_window_ownership_verification` | open |
 | `remote_restore_working_directory_regression` | open |
