@@ -330,7 +330,7 @@ local_caveats:
   - id: file_explorer_git_root_alias_regression
     status: open
   - id: cli_closed_peer_receive_regression_verification
-    status: open
+    status: resolved
   - id: cli_socket_home_fixture_verification
     status: open
   - id: titlebar_product_contract_fixture_verification

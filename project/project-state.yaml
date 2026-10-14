@@ -6110,8 +6110,8 @@ caveats:
     status: open
     owner: bmux
   - id: cli_closed_peer_receive_regression_verification
-    title: Closed-peer receive regression failed three expected cases in G; receiver repair and tagged build 788 CLI checks pass, fixed-head CI pending
-    status: open
+    title: Closed-peer receive regression verified by G test-only red and H fixed-head CI run 38600136921 with all six scenarios passing
+    status: resolved
     owner: bmux
   - id: cli_socket_home_fixture_verification
     title: Three tagged CLI fixtures use short owned homes; native 786 exposes a separate multiline receive-timeout error in two cases

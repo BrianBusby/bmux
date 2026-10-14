@@ -2688,8 +2688,11 @@ checks with owned temporary homes and sockets. Additional built-artifact control
 preserve exact JSON output, an 18,024-byte Unicode multiline reply, and an
 18,015-byte reply with an unterminated final line. The receiver and CLI compile
 without warnings; the app build retains 127 distinct warning lines in existing
-app code/assets. Full fixed-head CI remains required and the canonical/local
-verification caveat stays open. Existing shipped error text is byte-identical;
+app code/assets. Fixed-head run `38600136921` subsequently passed all three
+closed-peer tests (six scenarios) and all 14 artifact tests in shard 3 at 17:31 UTC
+on October 14. This resolves the specific receive-regression verification caveat;
+the final combined candidate still requires every configured merge gate.
+Existing shipped error text is byte-identical;
 no new user-facing copy needs translation.
 
 ## Browser portal presentation fixture migration
@@ -3614,3 +3617,30 @@ that discards queued/unread metadata, socket-readiness polling and window
 foregrounding. Those responsibilities are unchanged and are not claimed isolated
 or repaired by the retained-window setting. No XCTest case body is being migrated
 or rewritten as part of this constructor-only lifetime correction.
+
+### Combined producer and window-ownership compile checkpoint
+
+Revision `7983d988b91dfa4a09469de5770396db69099a0e` passes the complete
+`bmux-unit build-for-testing` with local Xcode 26.6: all 573 wired test files
+and 14 shared sources are compiler inputs. This includes the joined agent-launch
+and SSH-agent producers, throwing legacy socket setup, retained test windows,
+explicit titlebar event context, and preceding shortcut/clipboard/tmux fixtures.
+Authenticated Project Truth, native project parsing and normalization, test
+wiring, strict determinism and the existing Swift file-length budget also pass.
+
+The build retains 405 distinct warning lines. The changed titlebar owner and
+new Swift Testing fixtures emit none. Touched legacy support files retain three
+XCTest import-consistency diagnostics and one redundant Void-result diagnostic;
+all four are present in the prior compile, with the last shifted by the window
+constructor line. No warning suppression or budget change was made. Other
+retained warnings include legacy concurrency, deprecations and unused results.
+Compilation does not establish app-host runtime success. The four affected
+window cases and broader timing/host-crash behavior still require CI.
+
+Build 789 remains the isolated verified production artifact; the source changes
+after its build are test/documentation-only. No running preview was rebuilt,
+launched or replaced. All 19 original fixture source heads and current PRs
+169/170 remain ancestors. The older G workflow was canceled after comparing its
+Release production inputs with the successful E Release build; this is recorded
+as cancellation, not a passing gate. Diagnostic run `38605111245` retains the
+separate test-only Git-root alias regression and bounded process sampling.
