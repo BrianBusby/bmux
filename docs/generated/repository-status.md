@@ -180,3 +180,4 @@ Repository: `BrianBusby/bmux`
 | `normal_terminal_codex_rich_evidence_gap` | resolved |
 | `remote_mobile_open_architecture_decisions` | open |
 | `hybrid_focus_render_capture` | open |
+| `project_truth_http_retry_verification` | open |
