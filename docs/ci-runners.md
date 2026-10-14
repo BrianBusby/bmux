@@ -3018,3 +3018,29 @@ its existing XCTest import warning. The incremental log contains 158 distinct
 warning lines; that count is not comparable to the preceding fresh build.
 No app or tests were launched. Xcode 26.3 compilation and execution still gate
 merge; the earlier local build did not prove the conditional compiled in CI.
+
+### Detached inspector manual-close observation
+
+D2 shard 2 failed
+`BrowserDeveloperToolsVisibilityPersistenceTests.testDetachedInspectorWindowWillCloseWaitsForManualCloseState`
+at its 2.85-second synchronous wait and final preferred-visibility assertion.
+The same case passed twice in C shard 3; this is not a claim of a C failure.
+An owned native diagnostic retained preferred visibility after the synchronous
+wait, then cleared it when the existing lifecycle stream allowed owner work to
+complete. RunLoop-in-async warnings belong only to that temporary negative proof.
+
+The single migrated method now lives beside the existing inspector transition
+tests. It subscribes before show/close and uses the unchanged fixture's 2.85-second
+bounded lifecycle wait, including closeCount == 1 and both hidden-state predicates.
+All ten original assertions and real NSWindow visibility/close actions remain.
+A raw willClose must leave the inspector open until its explicit manual-close
+state is observed. The observer, retained window and panel use existing cleanup;
+no shared fixture, production hook, chorded-close case or PBX membership changes.
+
+The affected real-window source compiles warning-free in the target's Swift 5
+language mode. Local execution uses only a temporary offscreen visibility
+stand-in: that diagnostic plus seven unchanged lifecycle-observation controls
+pass against frozen build 787. Omitting only the async wait fails the original
+preferred-visibility assertion. These are diagnostic/control results, not a
+passing execution of the real-window test. The committed real NSWindow case,
+complete Xcode 26.3 target and macOS 15 app-host suite remain required CI gates.

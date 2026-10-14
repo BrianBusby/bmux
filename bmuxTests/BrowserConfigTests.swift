@@ -2694,50 +2694,6 @@ final class BrowserDeveloperToolsVisibilityPersistenceTests: XCTestCase {
 
 
 
-    func testDetachedInspectorWindowWillCloseWaitsForManualCloseState() {
-        let (panel, inspector) = makePanelWithInspector()
-        defer { closeBrowserPanel(panel) }
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 360, height: 240),
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        window.isReleasedWhenClosed = false
-        window.title = "Web Inspector — example.com"
-        let frontendWebView = WKWebView(frame: window.contentView?.bounds ?? .zero)
-        window.contentView?.addSubview(frontendWebView)
-        window.contentView?.addSubview(WKInspectorProbeView(frame: window.contentView?.bounds ?? .zero))
-        inspector.setFrontendWebView(frontendWebView)
-        defer { closeWindow(window) }
-
-        window.makeKeyAndOrderFront(nil)
-        XCTAssertTrue(panel.showDeveloperTools())
-        XCTAssertTrue(panel.isDeveloperToolsVisible())
-        XCTAssertEqual(inspector.closeCount, 0)
-
-        window.close()
-
-        XCTAssertEqual(
-            inspector.closeCount,
-            0,
-            "A raw detached Web Inspector willClose can be WebKit's redock path, so bmux must not synchronously close _inspector before WebKit reports the final state"
-        )
-        XCTAssertTrue(panel.isDeveloperToolsVisible())
-        XCTAssertFalse(window.isVisible)
-        XCTAssertTrue(NSApp.windows.contains { $0 === window })
-
-        inspector.close()
-        waitForDetachedDeveloperToolsCloseResolutionDeadline {
-            inspector.closeCount == 1 &&
-                !panel.isDeveloperToolsVisible() &&
-                !panel.preferredDeveloperToolsVisible
-        }
-
-        XCTAssertEqual(inspector.closeCount, 1)
-        XCTAssertFalse(panel.isDeveloperToolsVisible())
-        XCTAssertFalse(panel.preferredDeveloperToolsVisible)
-    }
 
 
 
