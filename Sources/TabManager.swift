@@ -1974,7 +1974,7 @@ class TabManager: ObservableObject {
     }
 
     func closeWorkspace(_ workspace: Workspace, recordHistory: Bool = true) {
-        guard tabs.count > 1 else { return }
+        guard tabs.count > 1, tabs.contains(where: { $0 === workspace }) else { return }
         panelTitleUpdateCoalescer.flushNow()
         sentryBreadcrumb("workspace.close", data: ["tabCount": tabs.count - 1])
         // User-initiated close of a mirrored remote tmux session kills it on the

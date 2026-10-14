@@ -144,6 +144,10 @@ component_releases:
 local_caveats:
   - id: native_app_host_full_suite_failures
     status: open
+  - id: workspace_close_ownership_verification
+    status: open
+  - id: persistent_pty_child_exit_verification
+    status: open
   - id: ssh_cleanup_error_idempotency_verification
     status: open
   - id: claude_notification_target_fixture_verification

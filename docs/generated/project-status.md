@@ -159,6 +159,8 @@ Regenerate with: ./scripts/project-docs generate
 | Agent launch environment fixture focused gate awaits app-host CI (`agent_launch_environment_fixture_focused_gate_verification`) | Bmux | open |  |
 | SSH workspace creation fixture focused gate awaits app-host CI (`ssh_workspace_creation_fixture_focused_gate_verification`) | Bmux | open |  |
 | SSH agent environment fixture focused gate awaits app-host CI (`ssh_agent_environment_fixture_focused_gate_verification`) | Bmux | open |  |
+| Foreign workspace close reproduces destructive teardown; owned-instance guard awaits fixed native and app-host verification (`workspace_close_ownership_verification`) | Bmux | open |  |
+| Persistent SSH child exit reproduces sibling tracking loss; last-surface guard awaits fixed native and app-host verification (`persistent_pty_child_exit_verification`) | Bmux | open |  |
 | SSH PTY initial resize acknowledgement CI timeouts remain unresolved (`ssh_pty_lifecycle_fixture_verification`) | Bmux | open |  |
 | CI Option/Alt step selects CodexMonitorLeaseTests sequential and nested controls; actual app-host verification pending (`codex_monitor_lease_fixture_verification`) | Bmux | open |  |
 | Respawn window protocol fixture focused gate awaits app-host CI (`respawn_window_protocol_fixture_focused_gate_verification`) | Bmux | open |  |

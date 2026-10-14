@@ -2118,6 +2118,7 @@ slice. No layout-mirroring test or new CI selector is introduced for this revers
 visual correction. Integrated tagged build and app-host verification remain pending.
 The localization audit preserves the existing English/Japanese badge accessibility
 key and folder tooltip; no shipped text or localization catalog changes.
+
 ### Native socket readiness under combined CLI load
 
 Final carrier `95595b830` run `38509817630`, app-host shard one, failed with
@@ -2190,3 +2191,53 @@ only resize-response observations still fails exactly the eight acknowledgement
 cases at the unchanged five-second deadline; all eight immediate-close controls
 pass. This verifies that the new native-source lifecycle does not fabricate the
 resize event or weaken the bridge completion predicate.
+
+
+### Persistent SSH child-exit sibling tracking
+
+Final C run `38509817630` shard 4 failed the existing split persistent-PTY
+child-exit case: closing one child left both panels visible but cleared the
+sibling's active-session tracking. The same case reproduces against unlaunched
+native build 785, with only the active-count and sibling-tracking assertions
+failing. Last-surface disconnect and already-ended-attach controls pass. The
+sibling's saved PTY session ID and remote configuration remain unchanged.
+
+`Workspace.markPersistentRemotePTYAttachFailed` now invokes workspace-wide
+disconnect only when its active remote surface set is empty, matching the
+existing session-ended owner. Per-panel cleanup, placeholder handling, browser
+status and directory notifications remain on the same path. This preserves
+last-surface teardown without stopping a sibling's shared remote controller.
+
+The baseline probe used an owned HOME and XCTest environment established before
+execution, no foreground windows, and the existing SSH cleanup override. Its
+`autoConnect: false` fixture has no live controller, so live controller identity
+preservation remains source-reviewed only. Source parsing and diff checks pass;
+fixed-code native execution and actual macOS 15 app-host verification remain
+pending. Shard 4 ended with exit 124, leaving full-suite coverage incomplete.
+The canonical `persistent_pty_child_exit_verification` and existing full-suite
+caveats remain open. No deadline, assertion or runner policy changed. The
+localization audit finds no shipped string or catalog changes; this is
+contributor verification prose.
+
+
+### Workspace close ownership verification
+
+Authoritative combined shard 2 failed the existing
+`TabManagerWorkspaceOwnershipTests.testCloseWorkspaceIgnoresWorkspaceNotOwnedByManager`.
+The exact test also fails against unlaunched native build 785: an external
+workspace loses its panel and title map even though the manager's tab list and
+selection remain unchanged. The owned-HOME native probe reports exactly these
+two assertions; its focused compile is warning-free.
+
+`TabManager.closeWorkspace` now requires the passed workspace instance to belong
+to the manager before any coalescer, remote tmux, history, notification or teardown
+side effects. The existing last-workspace protection is unchanged. Current
+callers resolve owned model instances; checking reference identity prevents a
+foreign object from being destroyed through this reference-taking API. Workspace
+IDs are immutable and freshly allocated by the initializer, so no artificial
+same-ID test seam was introduced.
+
+The existing actual CI regression supplies the red evidence. Parsing and project
+state checks pass; the fixed native artifact and complete app-host suite remain
+pending under `workspace_close_ownership_verification`. No test assertion,
+deadline, localization catalog or shipped wording changed.
