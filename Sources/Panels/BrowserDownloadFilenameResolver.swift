@@ -1,5 +1,4 @@
 import Foundation
-import CoreServices
 import ImageIO
 import BmuxSettings
 import UniformTypeIdentifiers
@@ -293,24 +292,14 @@ extension URL {
             return
         }
 
-        var quarantineProperties: [String: Any] = [
-            kLSQuarantineTypeKey as String: kLSQuarantineTypeWebDownload as String,
-            kLSQuarantineTimeStampKey as String: Date(),
-            kLSQuarantineAgentNameKey as String: Self.bmuxDownloadQuarantineAgentName(),
-        ]
-        if let bundleIdentifier = Bundle.main.bundleIdentifier,
-           !bundleIdentifier.isEmpty {
-            quarantineProperties[kLSQuarantineAgentBundleIdentifierKey as String] = bundleIdentifier
-        }
-        if let sanitizedSourceURL = Self.bmuxSanitizedDownloadSourceURL(sourceURL) {
-            quarantineProperties[kLSQuarantineDataURLKey as String] = sanitizedSourceURL
-            quarantineProperties[kLSQuarantineOriginURLKey as String] = sanitizedSourceURL
-        }
-
-        var resourceValues = URLResourceValues()
-        resourceValues.quarantineProperties = quarantineProperties
+        let metadata = BrowserDownloadQuarantineMetadata(
+            sourceURL: sourceURL,
+            agentName: Self.bmuxDownloadQuarantineAgentName(),
+            agentBundleIdentifier: Bundle.main.bundleIdentifier,
+            timestamp: Date()
+        )
         var fileURL = self
-        try fileURL.setResourceValues(resourceValues)
+        try fileURL.setResourceValues(metadata.resourceValues)
     }
 
     private static func bmuxDownloadQuarantineAgentName() -> String {
@@ -319,18 +308,5 @@ extension URL {
             ?? "bmux"
         let trimmed = candidate.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? "bmux" : trimmed
-    }
-
-    private static func bmuxSanitizedDownloadSourceURL(_ sourceURL: URL) -> URL? {
-        let scheme = sourceURL.scheme?.lowercased()
-        guard scheme == "http" || scheme == "https",
-              var components = URLComponents(url: sourceURL, resolvingAgainstBaseURL: false) else {
-            return nil
-        }
-        components.user = nil
-        components.password = nil
-        components.query = nil
-        components.fragment = nil
-        return components.url
     }
 }

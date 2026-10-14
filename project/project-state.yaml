@@ -5925,3 +5925,7 @@ caveats:
     title: Focused global search configured-conflict priority suite awaits app-host verification
     status: open
     owner: bmux
+  - id: browser_download_quarantine_boundary_verification
+    title: Quarantine outbound metadata and native readback contract pass local checks; app-host verification remains pending
+    status: open
+    owner: bmux

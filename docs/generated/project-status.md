@@ -147,6 +147,7 @@ Regenerate with: ./scripts/project-docs generate
 | Focused managed appearance startup suite pending actual app-host verification (`managed_appearance_startup_fixture_verification`) | Bmux | open |  |
 | Browser inspector window-close runtime fixture correction awaits fixed-head app-host verification (`browser_inspector_window_ownership_verification`) | Bmux | open |  |
 | Focused global search configured-conflict priority suite awaits app-host verification (`global_search_shortcut_conflict_verification`) | Bmux | open |  |
+| Quarantine outbound metadata and native readback contract pass local checks; app-host verification remains pending (`browser_download_quarantine_boundary_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
