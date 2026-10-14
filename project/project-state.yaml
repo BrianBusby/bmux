@@ -5998,6 +5998,10 @@ caveats:
     title: Antigravity hook fixture joins request producers without blocked accept workers; full app-host verification pending
     status: open
     owner: bmux
+  - id: terminal_initial_runtime_readiness_verification
+    title: Initial-input and command fixtures await native readiness without user-window attachment; full app-host verification pending
+    status: open
+    owner: bmux
   - id: workspace_runtime_close_fixture_verification
     title: Workspace close uses a real ready runtime and coordinator owns injected-free scheduling coverage; full app-host verification pending
     status: open
