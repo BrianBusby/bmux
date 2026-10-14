@@ -158,6 +158,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `browser_find_routing_fixture_verification` | open |
 | `terminal_paste_binding_fixture_verification` | open |
 | `session_resume_fork_contract_fixture_verification` | open |
 | `terminal_native_input_delivery_fixture_verification` | open |

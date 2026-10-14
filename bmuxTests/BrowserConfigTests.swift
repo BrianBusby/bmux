@@ -1449,65 +1449,6 @@ final class BmuxWebViewKeyEquivalentTests: XCTestCase {
         )
     }
 
-    @MainActor
-    func testCmdFDoesNotPreflightIntoPageWhenWebInspectorResponderIsFocused() {
-        _ = NSApplication.shared
-        installBmuxUnitTestWKWebViewPerformKeyEquivalentOverride()
-
-        let spy = ActionSpy()
-        installMenu(spy: spy, key: "f", modifiers: [.command])
-
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 640, height: 420),
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        let container = NSView(frame: window.contentRect(forFrameRect: window.frame))
-        window.contentView = container
-
-        let webView = BmuxWebView(frame: container.bounds, configuration: WKWebViewConfiguration())
-        webView.autoresizingMask = [.width, .height]
-        container.addSubview(webView)
-
-        let inspectorView = FakeWKInspectorResponderView(frame: NSRect(x: 0, y: 0, width: 32, height: 20))
-        webView.addSubview(inspectorView)
-
-        var forwardedEvents: [NSEvent] = []
-        bmuxUnitTestWKWebViewPerformKeyEquivalentHook = { currentWebView, event in
-            guard currentWebView === webView else { return nil }
-            forwardedEvents.append(event)
-            return true
-        }
-
-        window.makeKeyAndOrderFront(nil)
-        defer {
-            bmuxUnitTestWKWebViewPerformKeyEquivalentHook = nil
-            window.orderOut(nil)
-        }
-
-        XCTAssertTrue(window.makeFirstResponder(inspectorView))
-        guard let event = makeKeyDownEvent(
-            key: "f",
-            modifiers: [.command],
-            keyCode: 3,
-            windowNumber: window.windowNumber
-        ) else {
-            XCTFail("Failed to construct Cmd+F event")
-            return
-        }
-
-        let consumed = webView.performKeyEquivalent(with: event)
-
-        XCTAssertTrue(consumed, "Expected the menu/inspector path to keep consuming Cmd+F")
-        XCTAssertTrue(spy.invoked, "Expected Cmd+F to stay on the menu/inspector path while Web Inspector is focused")
-        XCTAssertEqual(
-            forwardedEvents.count,
-            0,
-            "Did not expect BmuxWebView to preflight Cmd+F into page content while Web Inspector is focused"
-        )
-    }
-
     private func installMenu(spy: ActionSpy, key: String, modifiers: NSEvent.ModifierFlags) {
         installMenu(
             target: spy,

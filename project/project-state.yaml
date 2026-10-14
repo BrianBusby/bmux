@@ -6150,6 +6150,11 @@ caveats:
     status: open
     owner: bmux
 
+  - id: browser_find_routing_fixture_verification
+    title: Browser Find fixtures distinguish owned-window search from menu fallback; integrated app-host verification remains pending
+    status: open
+    owner: bmux
+
   - id: terminal_paste_binding_fixture_verification
     title: Paste shortcut fixtures verify native custom binding output and runtime recovery; default clipboard delivery is untested and integrated app-host verification remains pending
     status: open

@@ -3018,3 +3018,42 @@ its existing XCTest import warning. The incremental log contains 158 distinct
 warning lines; that count is not comparable to the preceding fresh build.
 No app or tests were launched. Xcode 26.3 compilation and execution still gate
 merge; the earlier local build did not prove the conditional compiled in CI.
+
+### Browser Find routing context fixtures
+
+Final C shard 2 failed the menu assertion in
+`testCmdFDoesNotPreflightIntoPageWhenWebInspectorResponderIsFocused`.
+The app-before-menu policy introduced in `e133650645` intentionally sends Find
+to the selected browser when the event window owns a main-window context.
+`BrowserFindShortcutRoutingTests` now covers that real graph and the absent-context
+menu fallback through the same `BmuxWebView.performKeyEquivalent` entrypoint.
+Both cases retain Cmd+F/key code 3, inspector first responder, consumed=true,
+and zero WKWebView preflight events. The owned context opens browser search
+without invoking the menu; the absent context invokes the menu once and leaves
+browser search closed. Only the obsolete unconditional-menu expectation changes.
+
+The synchronous fixture composes a direct `MainWindowContext`, retains its
+closed window, and restores its menu, existing WK hook, shared delegate, active
+manager and prior route-retirer. It neither registers a listener nor activates
+a window. No production code, clipboard, timeout or CI selector changes.
+All other bytes of `BrowserConfigTests.swift` remain unchanged.
+The scoped settings fixture uses an owned JSON file, private notification center
+and no watchers to bind Find to Cmd+F and leave Find in Directory unbound.
+It restores the original store and exact persisted/argument/registration values
+of the three settings bookkeeping keys before the existing store setter notifies.
+A temporary prior Cmd+G control exposed two false failures without isolation;
+with isolation it passes and preserves the remap, store and defaults provenance.
+
+Against unchanged native build 786, both cases pass. Restoring the old menu
+expectation fails exactly the registered case. Temporary absent/existing
+collaborator controls verify menu/hook restoration, detached views, closed panels
+and no owned socket listener. The complete affected BrowserConfig container and
+actual support sources compile without warnings in target Swift 5 mode. The new
+window-graph fixture owner also passes strict Swift 6. Combined strict checking
+is blocked by the four retained mutable globals in BrowserConfig's existing
+WK/inspector hook support and the imported nonisolated
+`KeyboardShortcutSettings.settingsFileStore` static used by scoped settings
+fixtures. No suppression, replacement hook or production isolation change was added.
+Native logs retain the existing disabled-Sentry breadcrumb diagnostics.
+These offscreen probes do not replace integrated app-host execution, which
+remains pending. No product strings or localization catalogs changed.
