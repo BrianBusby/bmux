@@ -292,3 +292,5 @@ local_caveats:
     status: open
   - id: remote_tmux_parser_focused_gate_verification
     status: open
+  - id: project_truth_full_suite_verification
+    status: resolved

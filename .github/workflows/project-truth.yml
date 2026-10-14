@@ -28,8 +28,8 @@ jobs:
       - name: Install Project Truth dependencies
         run: python3 -m pip install -r tools/project-docs/requirements.txt
 
-      - name: Test GitHub evidence HTTP behavior
-        run: PYTHONPATH=tools/project-docs python3 -m unittest discover -s tools/project-docs/tests -p test_github_rest_evidence.py
+      - name: Test Project Truth behavior
+        run: PYTHONPATH=tools/project-docs python3 -m unittest discover -s tools/project-docs/tests
 
       - name: Validate manifests
         run: ./scripts/project-docs validate

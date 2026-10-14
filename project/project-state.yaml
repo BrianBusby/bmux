@@ -6054,3 +6054,8 @@ caveats:
     title: Remote tmux LF and CRLF parser focused gate awaits named CI regression execution
     status: open
     owner: bmux
+
+  - id: project_truth_full_suite_verification
+    title: Project Truth full 121-test gate verified in CI run 38501918260
+    status: resolved
+    owner: bmux

@@ -233,3 +233,4 @@ Repository: `BrianBusby/bmux`
 | `project_truth_http_retry_verification` | resolved |
 | `cli_socket_capture_completion_verification` | open |
 | `remote_tmux_parser_focused_gate_verification` | open |
+| `project_truth_full_suite_verification` | resolved |
