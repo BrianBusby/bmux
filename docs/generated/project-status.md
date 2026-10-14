@@ -157,6 +157,7 @@ Regenerate with: ./scripts/project-docs generate
 | Focused app-host gate includes default and configured sidebar width policy tests; local native cases pass and pushed-head CI remains pending (`sidebar_width_persistence_focused_gate_verification`) | Bmux | open |  |
 | Claude replaced-session cleanup fixture focused gate awaits app-host CI (`claude_session_end_scope_focused_gate_verification`) | Bmux | open |  |
 | Published maintenance fixes are composed for CI; full authoritative native and artifact gates remain pending (`maintenance_combined_validation_pending`) | Bmux | open |  |
+| Agent launch fixture joins timeout and cancellation producers before cleanup; native controls pass and app-host verification remains pending (`agent_launch_joined_producer_verification`) | Bmux | open |  |
 | Agent launch environment fixture focused gate awaits app-host CI (`agent_launch_environment_fixture_focused_gate_verification`) | Bmux | open |  |
 | SSH workspace creation fixture focused gate awaits app-host CI (`ssh_workspace_creation_fixture_focused_gate_verification`) | Bmux | open |  |
 | SSH agent environment fixture focused gate awaits app-host CI (`ssh_agent_environment_fixture_focused_gate_verification`) | Bmux | open |  |
