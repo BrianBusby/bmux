@@ -473,6 +473,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Browser Find fixtures distinguish owned-window search from menu fallback; integrated app-host verification remains pending (`browser_find_routing_fixture_verification`) - owner: Bmux; status: open
 - Shortcut parser fixtures distinguish pure normalization from runtime subscribers; integrated app-host verification remains pending (`shortcut_parser_lookup_attribution_verification`) - owner: Bmux; status: open
 - Tmux launch identity fixture uses an owned short endpoint and requires focused-context exchange; integrated app-host verification remains pending (`tmux_launch_identity_fixture_verification`) - owner: Bmux; status: open
+- Orphan workspace shortcut fixture owns focused-context attribution; integrated app-host verification remains pending (`orphan_workspace_shortcut_fixture_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
 
 The closed-peer CLI repair gives receive timeout configuration/cache and byte reads one internal `CLISocketReceiver` owner with a borrowed descriptor. `SocketClient` retains framing, connection lifecycle, request policy and telemetry. Actual G regression red is recorded; extracted-owner controls and tagged build 788 bundled CLI checks pass while fixed-head CI verification remains pending.

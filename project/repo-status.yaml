@@ -388,3 +388,5 @@ local_caveats:
     status: open
   - id: tmux_launch_identity_fixture_verification
     status: open
+  - id: orphan_workspace_shortcut_fixture_verification
+    status: open

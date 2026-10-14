@@ -212,6 +212,7 @@ Regenerate with: ./scripts/project-docs generate
 | Browser Find fixtures distinguish owned-window search from menu fallback; integrated app-host verification remains pending (`browser_find_routing_fixture_verification`) | Bmux | open |  |
 | Shortcut parser fixtures distinguish pure normalization from runtime subscribers; integrated app-host verification remains pending (`shortcut_parser_lookup_attribution_verification`) | Bmux | open |  |
 | Tmux launch identity fixture uses an owned short endpoint and requires focused-context exchange; integrated app-host verification remains pending (`tmux_launch_identity_fixture_verification`) | Bmux | open |  |
+| Orphan workspace shortcut fixture owns focused-context attribution; integrated app-host verification remains pending (`orphan_workspace_shortcut_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

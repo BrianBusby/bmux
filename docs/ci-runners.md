@@ -3393,3 +3393,38 @@ uses a temporary locator for the exact existing CLI; bundle discovery itself
 remains an integrated app-host concern. Owned processes, connections and files
 are cleaned without accessing the user's app or socket. Full app-host/test-target
 verification remains pending. No product strings or localization catalogs changed.
+### Orphan workspace shortcut routing fixture
+
+G shard 2 failed the pruning assertion in
+`testCustomCmdTNewWorkspacePrunesOrphanedContextWithoutLiveWindow`.
+`synchronizeShortcutRoutingContext` prefers an addressable/focused live context
+before the cached active manager; an ambient captured live window can therefore
+replace the intended orphan before workspace creation evaluates it. The fixture
+now owns both a live and a windowless direct `MainWindowContext`, explicitly
+selects the orphan manager and clears/restores the existing captured-window seam.
+It does not register a window, start listeners or activate an app.
+
+`OrphanWorkspaceShortcutTests` retains Cmd+T/key 17/window number zero, the
+windowless precondition, handled=true, unchanged orphan workspace count and the
+pruned-context assertion. It also verifies the existing owned live context
+receives routing without a new context or visible window. The synchronous
+fixture tears down all panels, retains its window through close and restores the
+prior delegate, active manager and focused-window override. It reattaches the
+prior delegate as route-retirer when present; it does not reset the registry
+when the prior delegate is nil. Owned JSON binds New Workspace to Cmd+T; its constructor-owned store has no
+watchers or external fallback paths. Exact persisted/volatile provenance of
+three bookkeeping keys and the prior settings store are restored. No production
+policy, new hook, selector or deadline changes are included. The old 50 ms
+run-loop settling calls are removed because the real routing/pruning operation
+is synchronous.
+
+Against unchanged build 788, the migrated case passes. A temporary focused-live
+control fails the original pruning assertion and the added context-key assertion,
+while handled/count assertions remain valid. Nil/existing prior-delegate controls
+also pass, preserving active/focused owners, a previous Cmd+G remap, settings
+provenance and panel/window cleanup. Swift 5 compilation is warning-free; the
+new graph owner separately passes strict Swift 6. Combined strict checking still
+rejects the existing imported mutable `settingsFileStore` static, without a
+suppression or production isolation change. Native logs retain existing disabled
+Sentry breadcrumb diagnostics. Full integrated app-host/test-target verification
+remains pending. No product copy or localization catalog changed.

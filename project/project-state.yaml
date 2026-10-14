@@ -6232,3 +6232,7 @@ caveats:
     title: Tmux launch identity fixture uses an owned short endpoint and requires focused-context exchange; integrated app-host verification remains pending
     status: open
     owner: bmux
+  - id: orphan_workspace_shortcut_fixture_verification
+    title: Orphan workspace shortcut fixture owns focused-context attribution; integrated app-host verification remains pending
+    status: open
+    owner: bmux
