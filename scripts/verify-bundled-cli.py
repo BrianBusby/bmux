@@ -96,7 +96,7 @@ def audit(app: Path) -> tuple[set[Path], set[str]]:
                 pending.append((resolved, rpaths))
     print(f"Dependency closure: {len(files)} Mach-O images; architectures: {', '.join(architectures)}")
     signed = 0
-    verified: set[Path] = set()
+    verified: set[tuple[Path, str]] = set()
     for binary in sorted(files):
         target = binary
         for ancestor in binary.parents:
@@ -105,16 +105,20 @@ def audit(app: Path) -> tuple[set[Path], set[str]]:
                 break
             if ancestor == app:
                 break
-        if target in verified:
-            continue
-        verified.add(target)
-        signature = subprocess.run(["/usr/bin/codesign", "-d", str(target)], capture_output=True, text=True)
-        if signature.returncode == 0:
-            run("/usr/bin/codesign", "--verify", "--strict", str(target))
-            signed += 1
-        elif "code object is not signed at all" not in signature.stderr:
-            raise RuntimeError(f"cannot inspect signature: {target}: {signature.stderr}")
-    print(f"Signatures: verified {signed}; unsigned {len(verified) - signed} (pre-sign artifacts permitted)")
+        # codesign display defaults to the host slice, while verification defaults
+        # to every slice. Inspect and verify the same explicit architecture.
+        for arch in run("/usr/bin/lipo", "-archs", str(binary)).split():
+            if (target, arch) in verified:
+                continue
+            verified.add((target, arch))
+            signature = subprocess.run(["/usr/bin/codesign", "-d", "--architecture", arch, str(target)],
+                                       capture_output=True, text=True)
+            if signature.returncode == 0:
+                run("/usr/bin/codesign", "--verify", "--strict", "--architecture", arch, str(target))
+                signed += 1
+            elif "code object is not signed at all" not in signature.stderr:
+                raise RuntimeError(f"cannot inspect signature: {target} ({arch}): {signature.stderr}")
+    print(f"Signature slices: verified {signed}; unsigned {len(verified) - signed} (pre-sign artifacts permitted)")
     return files, external_rpaths
 
 
