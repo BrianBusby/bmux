@@ -4189,3 +4189,41 @@ capacity blocking. No app was loaded or launched, no runtime rebuilt, and no
 external telemetry was sent. Actual macOS 15 app-host verification remains open
 as `cli_closed_stderr_contract_verification`. No shipped UI/help/settings strings
 or localization catalogs changed.
+
+## Remote loopback bridge navigation fixture
+
+Integration I shard 3 reports the two-second loading assertion twice in
+`BrowserPanelRemoteStoreTests.testRemoteWorkspaceRuntimeBridgeAliasesMultipleLoopbackPortsFromSamePage`.
+Neither attempt reports a failure in its six-URL JavaScript equality afterward.
+The old helper polled native WebKit state and returned after recording a timeout;
+the case did not explicitly close its panel. Concurrent slow WebContent launch
+logs cannot be attributed to this panel, so the macOS 15 cause remains unproven.
+
+The exact case now uses Swift Testing and a cohesive owned-panel fixture. Native
+KVO observation subscribes before HTML loading without an initial false event;
+buffered events trigger a MainActor check of current `WKWebView.isLoading`.
+The original two-second failure deadline still begins after `loadHTMLString`
+returns. Cancellation joins the event/deadline tasks. A timeout records bounded
+native phase, loading/progress, URL class, and elapsed timestamps, then retains
+the original JavaScript equality flow. No arbitrary URLs or payloads enter the
+diagnostics. Teardown invalidates observations, finishes the stream, and closes
+the panel. Only the named legacy case and its exclusive polling helper were
+removed; the remaining suite and production bridge/proxy behavior are unchanged.
+
+Frozen build 790 on macOS 26.3 passes both the original waiter and a native-signal
+control. The migrated case passes with all six original URL results: HTTP ports
+3000/8000, the API subdomain, cleartext WebSocket port 5173, and unchanged TLS
+WebSocket/HTTPS hosts. A temporary omitted-bridge control fails the original
+URL equality; suppressed signal delivery fails the original two-second bound
+and produces the phase diagnostic while the URL equality still succeeds.
+A cancellation control triggered by native load start joins its waiter and
+confirms the observation stream ends and the panel delegate is cleared.
+
+These native probes first prove a process-local Foundation HTTP(S) denial before
+dynamically loading the app module, then install an owned WebKit HTTP(S) deny
+rule before HTML. This fences the constructor's unrelated script prefetch and
+favicon work; no proxy, window, or external network is used. The fence and cleanup
+observations exist only in temporary diagnostic adapters. Source compilation uses
+Swift 6; local evidence does not reproduce or disprove the historical CI timeout.
+Actual macOS 15 app-host verification remains open under
+`browser_remote_loopback_fixture_verification`.

@@ -272,6 +272,7 @@ Repository: `BrianBusby/bmux`
 | `file_preview_inset_fixture_verification` | open |
 | `browser_find_routing_fixture_verification` | open |
 | `shortcut_parser_lookup_attribution_verification` | open |
+| `browser_remote_loopback_fixture_verification` | open |
 | `tmux_split_rejection_fixture_verification` | open |
 | `tmux_launch_identity_fixture_verification` | open |
 | `orphan_workspace_shortcut_fixture_verification` | open |
