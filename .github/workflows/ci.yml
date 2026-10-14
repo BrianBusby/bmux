@@ -6,6 +6,11 @@ on:
       - main
   pull_request:
   workflow_dispatch:
+    inputs:
+      app_host_process_diagnostics:
+        description: Capture bounded process diagnostics for the focused shard1 run
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -123,6 +128,9 @@ jobs:
 
       - name: Validate xcodebuild noninteractive crash prompt guard
         run: python3 tests/test_ci_xcodebuild_noninteractive_helper.py
+
+      - name: Test opt-in app-host process diagnostics
+        run: python3 tests/test_ci_app_host_process_diagnostics.py
 
       - name: Validate app-host xcodebuild retry guard
         run: ./tests/test_ci_app_host_xcodebuild_retry.sh
@@ -563,6 +571,8 @@ jobs:
           fi
 
       - name: Run browser system proxy mirror regression
+        env:
+          BMUX_APP_HOST_PROCESS_DIAGNOSTICS: ${{ inputs.app_host_process_diagnostics && '1' || '0' }}
         if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_BROWSER_PROXY_REGRESSION_SHARD) }}
         run: |
           # Focused gate for https://github.com/manaflow-ai/bmux/issues/5888.
@@ -584,6 +594,14 @@ jobs:
             -only-testing:bmuxTests/SSHAgentEnvironmentTests \
             -only-testing:bmuxTests/SSHPTYLifecycleContractTests \
             test
+
+      - name: Upload focused app-host process diagnostics
+        if: ${{ always() && inputs.app_host_process_diagnostics && matrix.shard == fromJSON(env.BMUX_APP_HOST_BROWSER_PROXY_REGRESSION_SHARD) }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: app-host-process-diagnostics-${{ matrix.shard }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/bmux-process-diagnostics/
+          if-no-files-found: warn
 
       - name: Run Option/Alt sided-modifier regression
         if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_OPTION_ALT_REGRESSION_SHARD) }}

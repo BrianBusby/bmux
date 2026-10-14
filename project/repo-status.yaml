@@ -200,3 +200,5 @@ local_caveats:
     status: open
   - id: native_app_host_full_suite_failures
     status: open
+  - id: focused_app_host_process_diagnostics_verification
+    status: open

@@ -516,3 +516,29 @@ pre-producer-error cleanup controls, with warning-free Swift 6 compilation. The
 old race cannot be forced deterministically through the current fixture boundary
 without an artificial scheduling hook; no source-shape test or timing assumption
 was added. This diagnostic correction does not establish the CI timeout cause.
+
+### Opt-in focused process diagnostics
+
+For one diagnostic dispatch, set `app_host_process_diagnostics` to true. Only the
+focused shard 1 app-host invocation enables the observer, after acquiring the
+existing GUI-host lock. Normal PR runs and broad tests are unchanged.
+
+The observer starts numeric process snapshots at the Swift Testing start marker
+and stops after 30 seconds. It records PID, parent PID, Darwin state, elapsed time,
+cumulative CPU nanoseconds and thread count only for the exact DerivedData Debug
+host and its bundled CLI descendants. It never reads arguments or environment.
+CLI stack eligibility requires one observed second alive; the host requires two.
+At most eight one-second samples run, at most two concurrently, at 10ms intervals.
+This has diagnostic overhead and may perturb scheduling; it is not a timeout fix.
+
+Raw samples use unlinked temporary files. Artifacts retain only counted stack
+symbol frames, excluding dynamic thread/queue labels, headers, paths and binary
+image inventories. Each invocation/attempt gets a unique directory, uploaded even
+on failure. Missing logs are retried on the next observation tick. On test exit,
+the observer receives EOF; bounded shutdown escalates only against its own process
+group. Diagnostic errors never replace the test command's native exit status.
+
+The actual PR171 focused failure (job 115488618879, 41 functions/10 suites, 19 issues)
+remains unresolved. Local synthetic subprocess/filter/privacy checks do not prove
+macOS 15 app-host capture or identify a missing CommandRunner callback. The next
+combined dispatch must supply that evidence without changing test deadlines.

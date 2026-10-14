@@ -61,9 +61,20 @@ while [ "$attempt" -le "$max_attempts" ]; do
   # establish communication with the test runner" flake. Start each attempt from
   # a clean slate.
   kill_stale_app_host
+  diagnostic_command=(scripts/ci/xcodebuild_noninteractive.py xcodebuild "$@")
+  if [ "${BMUX_APP_HOST_PROCESS_DIAGNOSTICS:-0}" = "1" ] && [ -n "$derived_data_path" ]; then
+    diagnostic_root="${log_dir%/}/bmux-process-diagnostics"
+    if mkdir -p "$diagnostic_root" && invocation_dir="$(mktemp -d "$diagnostic_root/attempt-${attempt}-XXXXXX")"; then
+      diagnostic_command=(python3 scripts/ci/app_host_process_diagnostics.py
+        --root "$derived_data_path" --log "$log_path" --output "$invocation_dir/capture" --
+        "${diagnostic_command[@]}")
+    else
+      echo "Process diagnostics unavailable: output directory" >&2
+    fi
+  fi
   set +e
   BMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH="$log_path" \
-    scripts/ci/xcodebuild_noninteractive.py xcodebuild "$@"
+    "${diagnostic_command[@]}"
   status=$?
   set -e
 

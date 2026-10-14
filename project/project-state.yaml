@@ -5909,3 +5909,7 @@ caveats:
     title: SSH PTY initial resize acknowledgement CI timeouts remain unresolved
     status: open
     owner: bmux
+  - id: focused_app_host_process_diagnostics_verification
+    title: Opt-in focused app-host process diagnostics await actual runner evidence
+    status: open
+    owner: bmux
