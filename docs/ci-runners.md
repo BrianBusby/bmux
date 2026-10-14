@@ -2815,3 +2815,26 @@ and the main-base Swift file budget. The warning budget reports 126 retained
 warnings against 221 allowed, matching build 786; no warning allowance changed.
 The tagged reload compiles the app, not the complete test target. The next CI
 run must execute that target and all configured gates on the published commit.
+
+### Notification focus event fixture
+
+Run 38509817630 shard 2 failed all five dismissal/flash results in
+`testFocusPanelDismissesUnreadNotificationWithDismissFlash`. The maintained
+`FocusSurfaceBroadcaster` explicitly defers delivery; the original test asserted
+before the real focus notification reached `TabManager` and its shared dismissal model.
+The existing synchronous `flush()` boundary preserves that event path without a
+sleep, fabricated notification, or production behavior change.
+
+`NotificationFocusEventTests` retains every original focus, unread, indicator,
+and flash assertion and verifies unread state before delivery. It seeds only its
+owned workspace's records, clears only those records, and restores app composition,
+focus override and exact persisted defaults before returning on the MainActor.
+Teardown focus delivery is flushed before restoring the original optional app
+delegate; native nil/existing-delegate controls verify identity restoration.
+No delivery-handler override or shared notification reset is installed. All other
+legacy methods remain byte-identical. Native artifact 786 passes the migrated
+case; removing only the final flush reproduces the five original failures.
+Actual-target Swift 5 compilation is warning-free. Forced Swift 6 still rejects
+the existing imported mutable `AppFocusState.overrideIsFocused` seam; this repair
+does not suppress or alter that legacy owner. Fixed-head app-host verification
+remains pending. No shipped strings or workflow selectors changed.

@@ -6179,3 +6179,8 @@ caveats:
     title: Sidebar PR aggregate and focused projection fixture correction awaits fixed-head app-host verification
     status: open
     owner: bmux
+
+  - id: notification_focus_event_fixture_verification
+    title: Notification focus fixture awaits the existing event flush and passes native proof; fixed-head app-host remains pending
+    status: open
+    owner: bmux

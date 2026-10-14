@@ -462,4 +462,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Deleted agent-hook cwd correction passes native build787 regression and nine directory controls; integrated app-host verification pending (`deleted_agent_hook_cwd_regression`) - owner: Bmux; status: open
 - Resume cwd and captured Codex fork-tag fixtures follow shared command policy; fixed-head app-host verification pending (`session_resume_fork_contract_fixture_verification`) - owner: Bmux; status: open
 - Sidebar PR aggregate and focused projection fixture correction awaits fixed-head app-host verification (`sidebar_pr_focus_contract_fixture_verification`) - owner: Bmux; status: open
+- Notification focus fixture awaits the existing event flush and passes native proof; fixed-head app-host remains pending (`notification_focus_event_fixture_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
