@@ -2477,8 +2477,8 @@ Final-C Release job `115681649397` in run `38509817630` failed the unsigned
 Release CLI artifact gate with a universal-binary signature error. A real owned
 reproduction with an ad-hoc signed arm64 slice and an unsigned x86_64 slice
 produces the same error. `codesign -d` inspects the native architecture by default,
-but `codesign --verify --strict` checks every architecture. The current verifier
-therefore detects the native signature and incorrectly rejects the permitted
+but `codesign --verify --strict` checks every architecture. The prior verifier
+therefore detected the native signature and incorrectly rejects the permitted
 unsigned sibling slice.
 
 The test-only regression commit extends `tests/test_bundled_cli_artifact.py`,
@@ -2491,17 +2491,8 @@ still validates, and require verifier rejection before execution. The framework
 control uses a thin CLI so the invalid extra framework architecture cannot hide
 behind checking only the executable's architecture list.
 
-Local macOS 26 execution currently runs 14 cases: the two mixed-signature
-acceptance cases fail at the existing signature gate as intended; the other 12
-pass, including both nonhost corruption controls. The mixed cases' archive and
-relocation assertions remain pending behind that expected failure. No verifier,
-workflow, shipped artifact, or signing policy changed in this test-only commit.
-Only disposable test fixtures are signed, stripped, or corrupted.
+The test-only source ran all14 cases in D2 CI run38521190849, shard3 job115712647469. Exactly the two mixed-signature cases failed at codesign inspection; the other12 passed, including nonhost corruption controls. The separate closed-peer suite executed zero cases because its app build prerequisite was missing, so that setup error does not provide socket regression proof.
 
-Under `bundled_cli_mixed_signature_regression_verification`, the existing CI gate
-must record the regression failure before the implementation commit. The fix
-must inspect every architecture present in each signature target, preserve
-framework-bundle signature ownership and deduplication, permit unsigned slices,
-and strictly verify every signed slice without modifying artifact bytes. Full
-Release/fresh-runner and app-host verification, including the prior exit-124
-incomplete native suite, remain open.
+The verifier now enumerates each closure Mach-O's actual architectures and deduplicates signature checks by existing bundle-or-file target plus architecture. Display and strict verification use the same explicit architecture. Unsigned slices retain the existing pre-sign allowance; signed slices, including extra framework architectures absent from a thin CLI, must verify. Staging, archive creation, executable bytes, framework symlinks, and relocated execution are unchanged. No shipped artifact is signed or modified.
+
+All14 real-artifact tests pass locally on macOS26 in8.122s after the fix, including both mixed targets' relocated execution and exact archived bytes/symlinks and both corrupt-nonhost rejection controls. This is local artifact evidence, not final CI green. The open `bundled_cli_mixed_signature_regression_verification` caveat now records captured CI red and local fixed coverage; full Release/fresh-runner and app-host verification, including the prior exit124 incomplete native suite, remain required. Diagnostic signature counts now describe architecture slices. No product-facing copy or localization keys changed.

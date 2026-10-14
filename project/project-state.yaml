@@ -5914,7 +5914,7 @@ caveats:
       number: 8
 
   - id: bundled_cli_mixed_signature_regression_verification
-    title: Real mixed-signature CLI and framework regressions fail locally as expected; CI red proof and per-architecture verifier fix pending
+    title: Mixed-signature regressions failed in actual D2 CI and all14 fixed artifact tests pass locally; full Release and fresh-runner validation pending
     status: open
     owner: bmux
   - id: bundled_cli_artifact_relocation_verification
