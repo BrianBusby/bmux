@@ -6068,7 +6068,7 @@ caveats:
     status: open
     owner: bmux
   - id: focused_app_host_process_diagnostics_verification
-    title: Opt-in focused app-host process diagnostics await actual runner evidence
+    title: Opt-in app-host sampler completion and private output controls pass locally; macOS 15 graph capture remains pending
     status: open
     owner: bmux
   - id: remote_tmux_crlf_record_parsing_verification

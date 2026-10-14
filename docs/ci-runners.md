@@ -1839,9 +1839,13 @@ CLI stack eligibility requires one observed second alive; the host requires two.
 At most eight one-second samples run, at most two concurrently, at 10ms intervals.
 This has diagnostic overhead and may perturb scheduling; it is not a timeout fix.
 
-Raw samples use unlinked temporary files. Artifacts retain only counted stack
-symbol frames, excluding dynamic thread/queue labels, headers, paths and binary
-image inventories. Each invocation/attempt gets a unique directory, uploaded even
+The sample worker has five seconds to finish, including symbol processing after
+the one-second capture. This allowance does not change native test deadlines, the
+30-second observation window, sample count/concurrency, or the observer shutdown
+bounds. The command explicitly directs its output to `/dev/stdout`, backed by an
+unlinked temporary file, so `sample` does not also create its default raw report.
+Artifacts retain only counted stack symbol frames, excluding dynamic thread/queue
+labels, headers, paths and binary image inventories. Each invocation/attempt gets a unique directory, uploaded even
 on failure. Missing logs are retried on the next observation tick. On test exit,
 the observer receives EOF; bounded shutdown escalates only against its own process
 group. Diagnostic errors never replace the test command's native exit status.
@@ -1850,6 +1854,23 @@ The actual PR171 focused failure (job 115488618879, 41 functions/10 suites, 19 i
 remains unresolved. Local synthetic subprocess/filter/privacy checks do not prove
 macOS 15 app-host capture or identify a missing CommandRunner callback. The next
 combined dispatch must supply that evidence without changing test deadlines.
+
+Published D2 diagnostic evidence showed the host sampler killed with status -9
+at its previous two-second worker deadline, without a call graph. An owned ready
+Python child sampled locally took 2.430 seconds including symbol processing.
+Later warm runs with explicit stdout output finished in 1.257–1.634 seconds; these
+do not reproduce the slower run. They did retain 15 sanitized symbol frames,
+created no default raw report, and joined both the sampler and owned target.
+
+A temporary controlled-worker proof exercised the actual observer with pipe
+readiness and a virtual clock: at 2.5 seconds the old allowance killed the worker,
+while five seconds allowed real output and successful completion. Overrun and
+stop controls killed and joined the worker and closed its unlinked capture.
+Existing status/forced-stop tests retain the native command's result. This repairs
+diagnostic collection only; it does not identify the CLI failure cause. Actual
+macOS 15 app-host graph collection remains pending. No app or user process was
+sampled for local proof, and no arguments, environment, or raw payload entered
+its artifacts.
 
 ### Remote tmux CRLF record parsing
 

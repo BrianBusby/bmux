@@ -20,6 +20,7 @@ WINDOW_SECONDS = 30
 MAX_SAMPLES = 8
 MAX_CONCURRENT = 2
 MAX_STACK_BYTES = 256 * 1024
+SAMPLE_WORKER_TIMEOUT_SECONDS = 5  # Includes symbol processing after the one-second sample.
 SGR = re.compile(rb'\x1b\[[0-9;:]*m')
 
 
@@ -53,7 +54,7 @@ def emit(file, **record):
 
 def watch(root, log_path, output, stop_fd, backend=None, sample_command=None):
     backend = backend or MacProcesses()
-    sample_command = sample_command or (lambda pid: ['/usr/bin/sample', str(pid), '1', '10', '-mayDie'])
+    sample_command = sample_command or (lambda pid: ['/usr/bin/sample', str(pid), '1', '10', '-mayDie', '-file', '/dev/stdout'])
     workers, sampled, first_seen = [], set(), {}
     pending, offset, deadline = b'', 0, None
     with open(output / 'processes.jsonl', 'w') as events:
@@ -91,7 +92,7 @@ def watch(root, log_path, output, stop_fd, backend=None, sample_command=None):
                          state=item['state'], role=item['role'], **backend.metrics(item))
                 for worker in workers[:]:
                     proc, capture, identity, started = worker
-                    if proc.poll() is None and now - started < 2:
+                    if proc.poll() is None and now - started < SAMPLE_WORKER_TIMEOUT_SECONDS:
                         continue
                     if proc.poll() is None:
                         proc.kill()
