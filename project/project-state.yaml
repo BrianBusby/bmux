@@ -6263,7 +6263,7 @@ caveats:
     status: open
     owner: bmux
   - id: ssh_agent_joined_producer_verification
-    title: SSH agent fixture joins its process before socket and file cleanup; native cases pass and fixed-head app-host deadlines remain unverified
+    title: SSH agent fixture joins its producer and bounds failure summaries; app-host timeouts remain unresolved
     status: open
     owner: bmux
   - id: native_window_close_ownership_verification

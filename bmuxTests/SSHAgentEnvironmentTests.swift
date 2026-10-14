@@ -56,9 +56,7 @@ final class SSHAgentEnvironmentTests {
         let result: ShellContractProcess.Result
         do { result = try outcome.get() }
         catch {
-            let output = Result { try String(contentsOf: root.appendingPathComponent("stdout"), encoding: .utf8) }
-            let errors = Result { try String(contentsOf: root.appendingPathComponent("stderr"), encoding: .utf8) }
-            Issue.record(error, "SSH agent forwarding failed after requests: \(commands); stdout: \(output); stderr: \(errors)")
+            Issue.record(error, Comment(rawValue: failureSummary(commands: commands, root: root)))
             throw error
         }
         let errors = result.stderr
@@ -79,6 +77,31 @@ final class SSHAgentEnvironmentTests {
         } else {
             // Other defaults (e.g. multiplexing) do not override the caller's ForwardAgent configuration.
             #expect(!options.contains { $0.lowercased().split(whereSeparator: { $0 == "=" || $0.isWhitespace }).first == "forwardagent" })
+        }
+    }
+
+    private func failureSummary(commands: [String], root: URL) -> String {
+        let methods = commands.prefix(8).map { line -> String in
+            guard let data = line.data(using: .utf8),
+                  let request = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let method = request["method"] as? String else { return "non_json" }
+            switch method {
+            case "workspace.create", "workspace.remote.configure": return method
+            default: return "other"
+            }
+        }
+        return "ssh_agent_fixture_failed requests=\(commands.count) "
+            + "request_bytes=\(commands.reduce(0) { $0 + $1.utf8.count }) methods=\(methods) "
+            + "stdout=\(captureSize(root.appendingPathComponent("stdout"))) "
+            + "stderr=\(captureSize(root.appendingPathComponent("stderr")))"
+    }
+
+    private func captureSize(_ url: URL) -> String {
+        do {
+            let values = try url.resourceValues(forKeys: [.fileSizeKey])
+            return values.fileSize.map { "bytes=\($0)" } ?? "size_unavailable"
+        } catch {
+            return "read_error_code=\((error as NSError).code)"
         }
     }
 }
