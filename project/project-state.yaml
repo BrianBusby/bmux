@@ -6096,6 +6096,10 @@ caveats:
     title: Titlebar hit-target sizing and search metadata fixture migrations pass native 786; app-host and Swift 6 shortcut-store isolation remain open
     status: open
     owner: bmux
+  - id: cli_socket_home_fixture_verification
+    title: Three tagged CLI fixtures use short owned homes; native 786 exposes a separate multiline receive-timeout error in two cases
+    status: open
+    owner: bmux
   - id: titlebar_product_contract_fixture_verification
     title: Native titlebar default-width and voice-control fixture corrections pass locally; app-host verification remains pending
     status: open

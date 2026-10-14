@@ -2536,3 +2536,29 @@ Native 786 runs this full scenario plus both prior Grok cases successfully in
 capture control fails 12 original notification target assertions. The canonical
 Grok verification caveat remains open for full app-host execution. No production
 hook, transcript parsing, socket policy or shipped string changed.
+### Tagged CLI socket-home fixture paths
+
+Final-C run `38509817630` shard 2 rejected the stable socket paths in
+`testBundledCLIInTaggedDebugAppPrefersItsOwnSocketWithoutEnvironmentOverride`,
+`testBundledCLIInTaggedDebugAppTreatsCaseVariantStableEnvSocketAsImplicitDefault`,
+and `testBundledCLISkipsIdentifierlessNestedAppWhenResolvingTaggedSocket` before
+launching the CLI: the platform temporary-directory prefix plus fixture UUID and
+canonical `.local/state/bmux/bmux.sock` suffix exceeded Darwin's Unix socket path
+capacity (`NSPOSIXErrorDomain` 63).
+
+The shared helper now creates its unique owned home under `/tmp`; canonical
+`BmuxStateDirectory` layout, responder capacity guard, bundle-resolution inputs,
+response assertions, and deadlines remain unchanged. Native 786 reproduces all
+three original long-path rejections. With the short root, the case-variant test
+passes; the other two get through socket setup and send `ping`, then fail with
+receive-timeout `EINVAL` (22). An owned CLI control receives `TAGGED` and fails
+with both default and explicit five-second timeouts, while `PONG` succeeds with
+both. The retained multiline response path configures a 0.12-second idle timeout
+for `TAGGED`; `PONG` completes without that transition. This separate runtime
+failure remains unresolved; no response or assertion was weakened to hide it.
+
+Full three-case acceptance and fixed-head app-host CI remain open under
+`cli_socket_home_fixture_verification`; the prior full-suite exit-124 incomplete
+result is unchanged. Existing responder stop does not join its accept worker,
+and the legacy fake-bundle helper lacks directory cleanup; this root-only change
+does not claim to repair those retained lifecycle limitations.
