@@ -6135,3 +6135,8 @@ caveats:
     title: Sidebar pointer fixture exercises the actual four-point content overlap; full app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: browser_portal_presentation_fixture_verification
+    title: Browser portal resize, reveal, and transient rebind contracts pass native 786; integrated app-host verification remains pending
+    status: open
+    owner: bmux

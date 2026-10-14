@@ -2602,3 +2602,33 @@ incomplete native suite, remain open.
 The failed C `testHostViewStopsSidebarPassThroughJustInsideTerminalContent` used a full-width terminal over an unrelated internal split and a stale two-point overlap. The maintained `SidebarResizeInteraction` reserves four content-side points; `WindowTerminalHostView` detects the sidebar from the leading hosted-content edge and intentionally rejects sidebar routing for full-width content. `SidebarTerminalHitBoundaryTests` replaces only that case with an owned retained offscreen window and a terminal starting at x=120, with no internal split. A synthetic pointer tests pass-through at x=124 and a concrete hosted-terminal hit at x=125. Both original pass-through/content outcomes remain required. No rendering, hit-testing policy, or typing-sensitive production path changes.
 
 The new suite participates in the existing broad test sharding; workflow selectors are unchanged. Actual C failure and the root's native original-boundary negative are retained. Exact-source strict Swift6 compilation is warning-free; unchanged build786 passes the migrated case in0.058s. A temporary copy restoring the two/three-point boundary fails exactly the original hosted-hit requirement. Full macOS15 app-host verification remains pending. Only test diagnostics and contributor documentation changed; no shipped localized strings were added.
+
+## Browser portal presentation fixture migration
+
+The three `BrowserWindowPortalLifecycleTests` failures in final-C native shard 2
+(run `38509817630`) are migrated to
+`BrowserPortalPresentationContractTests`. The external split-resize test now
+observes the real `WKWebView.displayIfNeeded` boundary through a per-instance
+`AsyncStream`, accepting only a redraw at the resized anchor width. The old
+250ms run-loop wait becomes a cancellable 250ms failure deadline. It preserves
+the visible-slot, narrower-frame, repaint, and unchanged-reattach assertions.
+
+Ordinary portal hide/show repaints without WebKit lifecycle reattachment; the
+positive control explicitly marks hidden-host adoption and requires reattachment
+and flag clearing. Transient anchor removal preserves the visible attached slot
+and its frame until rebind; rebind must reuse that slot and repaint. These
+contracts are in the existing portal and rendering-state owners, both unchanged
+from the main baseline. No production behavior changes in this migration.
+
+All three cases passed locally against unlaunched Debug artifact 786 in both
+Swift 5 and Swift 6 compilation modes, without warnings or window activation.
+Temporary old-expectation controls failed all three cases. Separate native
+controls covered buffered display delivery, missing-signal deadline, cancellation,
+and finished-stream behavior. Each test tears down its portal and owned window;
+web views use nonpersistent storage. The remaining legacy test bytes are unchanged.
+
+This is focused native-module evidence, not a complete app-host test-target or
+macOS 15 result. Integrated fixed-head CI, full-suite execution, and visual
+WebKit rendering remain open under
+`browser_portal_presentation_fixture_verification`. Contributor verification
+notes and test diagnostics add no product UI or localization keys.
