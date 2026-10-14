@@ -168,6 +168,7 @@ Regenerate with: ./scripts/project-docs generate
 | Focused global search configured-conflict priority suite awaits app-host verification (`global_search_shortcut_conflict_verification`) | Bmux | open |  |
 | Opt-in focused app-host process diagnostics await actual runner evidence (`focused_app_host_process_diagnostics_verification`) | Bmux | open |  |
 | Remote tmux CRLF record correction awaits combined artifact and full CI verification (`remote_tmux_crlf_record_parsing_verification`) | Bmux | open |  |
+| Quarantine outbound metadata and native readback contract pass local checks; app-host verification remains pending (`browser_download_quarantine_boundary_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

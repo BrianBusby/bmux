@@ -1793,3 +1793,51 @@ transport caller and tests. The parser remains the single session-record owner;
 no new state, dependencies, user-facing strings or localization keys are added.
 A fresh isolated combined build and its native owner checks are required before
 publishing this runtime correction. Full combined app-host CI remains open.
+
+
+## Download quarantine boundary verification
+
+PR 170's browser/settings job fails the two URL readback assertions in
+`webDownloadQuarantineMetadataMarksRemoteDownloads`. LaunchServices preserves
+quarantine type, agent and timestamp but can omit the optional URL fields. The
+same result occurs with the unchanged writer in an owned native file and in a
+bundled helper with `LSFileQuarantineEnabled`; it is not unique to an unbundled
+command-line harness. The SDK's `LSQuarantine.h` documents these URLs as present
+“if available”.
+
+`BrowserDownloadQuarantineMetadata` owns the exact pure value submitted by the
+existing URL writer. It preserves the existing HTTP(S) filter, credential/query/
+fragment removal, type, timestamp, agent and optional bundle identifier. The
+writer still owns native persistence and throws the same errors. Both session
+and WKDownload callers retain their existing temp-file marking before move or
+replacement and final-path marking. This extraction adds no settings, callbacks,
+state owner, rendering changes or error suppression.
+
+`BrowserDownloadQuarantineTests` checks exact outgoing sanitized URLs and all
+other metadata, unsupported schemes, empty/absent bundle identifiers, actual
+native quarantine persistence and nil/local-source bypass. Native readback must
+still contain the type, agent and timestamp; any returned URL must be typed and
+match the exact sanitized value. Outbound assertions use the actual resource
+values passed to the writer, so optional OS readback cannot hide a sanitization
+regression. The focused browser/settings invocation includes this suite, and the
+existing filename-resolution suite retains its other assertions.
+
+The extracted source and focused suite compile in Swift 6 without warnings.
+Five functions/nine parameter cases pass locally on macOS 26. A temporary
+control bypassing sanitization fails with ten exact URL assertions, while native
+persistence checks still pass. The committed app
+module and full app-host execution remain pending; the canonical/local caveat
+stays open. Native readback evidence does not claim macOS 15 CI success.
+
+Retained policy caveat: the existing writer sets origin equal to the sanitized
+download URL. The SDK recommends a distinct referring page or no origin to avoid
+redownloading when the origin is opened. This boundary correction deliberately
+preserves that existing policy; choosing a referring page belongs to a separate
+browser download behavior change.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux architecture
+ownership/file/concurrency rules, bmux-testing behavior/migration/local-CI and
+Xcode wiring rules, and the SDK quarantine contract. Complete shared writer and
+both caller flows received independent review. No user-facing strings, settings,
+menus or help text change; localization catalogs are untouched. This correction
+is integrated into PR 170, with no new PR.

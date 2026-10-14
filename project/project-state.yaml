@@ -6026,3 +6026,7 @@ caveats:
     title: Remote tmux CRLF record correction awaits combined artifact and full CI verification
     status: open
     owner: bmux
+  - id: browser_download_quarantine_boundary_verification
+    title: Quarantine outbound metadata and native readback contract pass local checks; app-host verification remains pending
+    status: open
+    owner: bmux

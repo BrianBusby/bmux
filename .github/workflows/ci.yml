@@ -612,6 +612,7 @@ jobs:
             -only-testing:bmuxTests/RespawnWindowProtocolTests \
             -only-testing:bmuxTests/WorkspaceFallbackContractTests \
             -only-testing:bmuxTests/GlobalSearchShortcutConflictTests \
+            -only-testing:bmuxTests/BrowserDownloadQuarantineTests \
             -only-testing:bmuxTests/BrowserInspectorWindowOwnershipTests \
             test
 
