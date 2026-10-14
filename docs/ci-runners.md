@@ -4227,3 +4227,23 @@ can still drop delivery under load. Integrated fixed-head app-host execution
 remains required; local success is not proof that the historical failures are
 resolved. No app activation, user socket, clipboard, preference, or external
 telemetry operation is part of these probes.
+
+## SSH creation producer ownership
+
+K focused shard one (`116035338905`) times out in both parameter cases of
+`SSHWorkspaceCreationTests` at the fixture's CommandRunner result. That runner
+can report its deadline before joining the child and detached pipe readers.
+The fixture now uses the existing ShellContractProcess owner at the same
+five-second bound, preserving failures until the producer and final socket drain
+are joined. The subprocess runs the same SSH creation arguments with null stdin,
+owned cwd/output files and environment. Explicit fixture authentication prevents
+user credential fallback and is asserted separately from the original RPC list.
+Cleanup failures now produce test issues. No production runner or CLI changes.
+
+The complete original test file and all create, rename, configure, select and
+output assertions are unchanged. Both variants pass against frozen CLI 790
+(one function/two cases, 0.550s) with strict Swift 6 and no warnings. An incorrect
+remote state response fails the original exact stdout assertion in both cases.
+These establish the CLI contract and fixture ownership, not the historical CI
+timeout cause; fixed-head macOS 15 execution remains required. No UI strings,
+CLI help or localized catalogs change.
