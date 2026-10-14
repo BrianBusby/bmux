@@ -796,6 +796,8 @@
 		FEED49850000000000000001 /* FeedEventClassificationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEED49850000000000000002 /* FeedEventClassificationTests.swift */; };
 		FEEDC1A50000000000000001 /* FeedEventClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEEDC1A50000000000000002 /* FeedEventClassifier.swift */; };
 		FEEDC1A50000000000000003 /* FeedEventClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEEDC1A50000000000000002 /* FeedEventClassifier.swift */; };
+		4B25C059730445E2B3EF7773 /* FeedHookNoResponseContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D36E7F324B4FBBB3E57342 /* FeedHookNoResponseContractTests.swift */; };
+		BEC72FA21E6C4389B8D0E263 /* FeedHookNoResponseFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 410DE41C9E8241C98CB96373 /* FeedHookNoResponseFixture.swift */; };
 		FEED0000000000000000F005 /* FeedPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEED0000000000000000F004 /* FeedPanelView.swift */; };
 		FEED0000000000000000F011 /* FeedPanelViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEED0000000000000000F010 /* FeedPanelViewModel.swift */; };
 		FEED0000000000000000F013 /* FeedPermissionActionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEED0000000000000000F012 /* FeedPermissionActionPolicy.swift */; };
@@ -2846,6 +2848,8 @@
 		FEEDC0DEC0DEC0DEC0DE0002 /* FeedCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedCoordinatorTests.swift; sourceTree = "<group>"; };
 		FEED49850000000000000002 /* FeedEventClassificationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedEventClassificationTests.swift; sourceTree = "<group>"; };
 		FEEDC1A50000000000000002 /* FeedEventClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedEventClassifier.swift; sourceTree = "<group>"; };
+		C4D36E7F324B4FBBB3E57342 /* FeedHookNoResponseContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FeedHookNoResponseContractTests.swift"; sourceTree = "<group>"; };
+		410DE41C9E8241C98CB96373 /* FeedHookNoResponseFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FeedHookNoResponseFixture.swift"; sourceTree = "<group>"; };
 		FEED0000000000000000F004 /* FeedPanelView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedPanelView.swift; sourceTree = "<group>"; };
 		FEED0000000000000000F010 /* FeedPanelViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedPanelViewModel.swift; sourceTree = "<group>"; };
 		FEED0000000000000000F012 /* FeedPermissionActionPolicy.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedPermissionActionPolicy.swift; sourceTree = "<group>"; };
@@ -5700,6 +5704,8 @@
 				00EA14FF8DC74C26BF2318C1 /* BrowserFindShortcutRoutingTests.swift */,
 				CDD1FFB1CC2343E9B2E69F91 /* ShortcutSettingsParsingContractTests.swift */,
 				74478AB8036341AC999204A2 /* CLITmuxLaunchIdentityTests.swift */,
+				C4D36E7F324B4FBBB3E57342 /* FeedHookNoResponseContractTests.swift */,
+				410DE41C9E8241C98CB96373 /* FeedHookNoResponseFixture.swift */,
 				F888C5A85D54408584752031 /* OrphanWorkspaceShortcutTests.swift */,
 				8FD8055070584B2498072294 /* OrphanWorkspaceShortcutSettingsFixture.swift */,
 				9E199B01F53842F19C9D820F /* OrphanWorkspaceShortcutFixture.swift */,
@@ -8239,6 +8245,8 @@
 				FEEDC0DEC0DEC0DEC0DE0001 /* FeedCoordinatorTests.swift in Sources */,
 				FEED49850000000000000001 /* FeedEventClassificationTests.swift in Sources */,
 				FEEDC1A50000000000000003 /* FeedEventClassifier.swift in Sources */,
+				4B25C059730445E2B3EF7773 /* FeedHookNoResponseContractTests.swift in Sources */,
+				BEC72FA21E6C4389B8D0E263 /* FeedHookNoResponseFixture.swift in Sources */,
 				D0B10018A1B2C3D4E5F60001 /* FileDropOverlayViewTests.swift in Sources */,
 				FE002110 /* FileExplorerDoubleClickActionTests.swift in Sources */,
 				FE002112 /* FileExplorerGitStatusProviderTests.swift in Sources */,

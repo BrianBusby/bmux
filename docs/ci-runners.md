@@ -3946,3 +3946,41 @@ run still reports additional agent-session routing and fixture failures; their
 causes are being checked independently. Named Git-alias regression execution,
 all fixed-head macOS shards and the remaining release/validation gates remain
 required before merging.
+
+## Four-agent one-way feed fixture ownership
+
+The I shard-three run records eight issues in the non-actionable feed test:
+Gemini, Kiro, Hermes and Antigravity each miss server observation and record
+zero feed requests, while all child exit, stdout and timeout assertions pass.
+The relevant test, dispatcher, classifier and socket resolver are unchanged
+between I and K. These sources do not take the Claude/Codex running-state
+reconciliation path, so the separate Hermes lifecycle diagnosis does not
+establish this failure's cause.
+
+`FeedHookNoResponseContractTests` retains the exact four payload variants and
+all original behavior oracles. Its owned fixture supplies an explicit private
+password, avoiding ambient password-file/Keychain fallback, and acknowledges
+authentication separately. Feed requests receive no response. The existing
+`ShellContractProcess` joins the child within the original three-second failure
+bound; a throwing timeout replaces the former `!timedOut` assertion. Existing
+`CLISocketFixture` then drains sent bytes and joins socket cleanup before the
+separate original five-second feed-observation bound completes. Authentication
+is excluded from feed capture/count and diagnostics never include credentials.
+Only the one legacy method and its unused input-value type are removed; the
+other two cases and shared helpers are unchanged. The new suite preserves the
+original sequential four-agent execution. No workflow selector or product
+behavior changes.
+
+Exact-source Swift 5 and Swift 6 compilations are warning-free; unchanged build
+790 passes all four variants in isolated owned-home processes. Compiling the
+complete retained legacy container also succeeds, with its existing redundant
+Void-result discard warning in the socket address helper; that helper is unchanged.
+A temporary withheld-authentication control preserves exit zero and exact
+empty-object stdout while failing both feed-observation/count oracles for each agent.
+The control demonstrates a possible boundary, not historical CI causality:
+the old log lacks accepted-connection and authentication evidence. The
+production 50ms best-effort connect/auth/write policy remains unchanged and
+can still drop delivery under load. Integrated fixed-head app-host execution
+remains required; local success is not proof that the historical failures are
+resolved. No app activation, user socket, clipboard, preference, or external
+telemetry operation is part of these probes.

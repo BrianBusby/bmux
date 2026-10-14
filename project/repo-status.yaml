@@ -142,6 +142,8 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: feed_hook_no_response_fixture_verification
+    status: open
   - id: browser_omnibar_arrow_fixture_verification
     status: open
   - id: terminal_paste_binding_fixture_verification
