@@ -2285,7 +2285,10 @@ isolated hook store retain the original target, transcript, status, notification
 and duplicate-suppression assertions. Current id-less telemetry receives no reply;
 the repeated-prompt case verifies that telemetry actually arrived. The shell
 process owner is shared with the Claude/shell contract fixtures, not duplicated
-in the final integration.
+in the final integration. Its constructor injects the failure deadline and
+termination grace, retaining the existing five-second and 200-millisecond defaults.
+Focused spawn-failure, deadline escalation and cancellation controls pass with
+short injected durations; each verifies the owned child has exited before cleanup.
 
 Exact native build 786 execution passes both cases with a warning-free Swift 6
 compile. This corrects a measured fixture protocol mismatch; it does not explain
