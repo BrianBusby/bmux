@@ -6194,3 +6194,8 @@ caveats:
     title: Keydown notification fixture isolates runtime and surface-flash preferences; fixed-head app-host remains pending
     status: open
     owner: bmux
+
+  - id: textbox_clipboard_timeout_fixture_verification
+    title: Clipboard timeout fixture awaits causal completion; local event-only proof passes but real pasteboard restoration requires isolated app-host CI
+    status: open
+    owner: bmux

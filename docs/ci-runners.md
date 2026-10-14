@@ -3018,3 +3018,34 @@ its existing XCTest import warning. The incremental log contains 158 distinct
 warning lines; that count is not comparable to the preceding fresh build.
 No app or tests were launched. Xcode 26.3 compilation and execution still gate
 merge; the earlier local build did not prove the conditional compiled in CI.
+
+### Text-box clipboard timeout completion fixture
+
+The actual C app-host failure in
+`testTextBoxSubmitClipboardReadTimeoutRestoresPasteboard` used a synchronous
+RunLoop wait while the real timeout posts its completion onto MainActor.
+`TextBoxClipboardTimeoutTests` now awaits the existing dispatch completion
+through a buffered AsyncStream. It retains all three dispatch events, the
+`paste_from_clipboard` key assertion, the original one-second completion bound,
+the temporary PNG, and exact restoration of the seeded string. The debug zero
+timeout override is restored synchronously after dispatch captures it.
+
+The existing `FakeTextBoxSubmitSurface` moves unchanged into a shared test file;
+legacy callers retain their behavior. Cleanup uses the existing synchronous
+`debugResetForTesting` boundary before restoring every original pasteboard item
+and representation, including on timeout or cancellation. This prevents a late
+runner from restoring its temporary snapshot over the outer snapshot. The
+current test inventory has no other Swift Testing general-pasteboard writer or
+TextBox dispatch caller; remaining users are XCTest cases. This isolation must
+be reassessed if another asynchronous writer is introduced.
+
+Focused source compiles warning-free in Swift 5 and Swift 6. The entire retained
+shortcut-routing container and its maintained support compile in Swift 5, with
+three existing unused-local warnings and no new warnings. An owned native build
+786 probe uses the exact shared fake and only baseline/wait events: the old
+synchronous one-second wait does not complete, then awaiting the actual signal
+completes successfully. This probe never reads or writes the general pasteboard
+and does not prove clipboard restoration. The real general-pasteboard case was
+compiled but deliberately not executed locally; isolated macOS app-host CI must
+verify its full restoration contract. No production policy, timeout extension,
+workflow selector or shipped text changes are included.

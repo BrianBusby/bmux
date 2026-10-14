@@ -366,3 +366,6 @@ local_caveats:
 
   - id: notification_keydown_fixture_verification
     status: open
+
+  - id: textbox_clipboard_timeout_fixture_verification
+    status: open
