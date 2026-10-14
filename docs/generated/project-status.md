@@ -201,6 +201,7 @@ Regenerate with: ./scripts/project-docs generate
 | Deleted agent-hook cwd correction passes native build787 regression and nine directory controls; integrated app-host verification pending (`deleted_agent_hook_cwd_regression`) | Bmux | open |  |
 | Resume cwd and captured Codex fork-tag fixtures follow shared command policy; fixed-head app-host verification pending (`session_resume_fork_contract_fixture_verification`) | Bmux | open |  |
 | Sidebar PR aggregate and focused projection fixture correction awaits fixed-head app-host verification (`sidebar_pr_focus_contract_fixture_verification`) | Bmux | open |  |
+| Keydown notification fixture isolates runtime and surface-flash preferences; fixed-head app-host remains pending (`notification_keydown_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

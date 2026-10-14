@@ -261,3 +261,4 @@ Repository: `BrianBusby/bmux`
 | `default_cloud_proxy_retry_state_verification` | open |
 | `deleted_agent_hook_cwd_regression` | open |
 | `sidebar_pr_focus_contract_fixture_verification` | open |
+| `notification_keydown_fixture_verification` | open |

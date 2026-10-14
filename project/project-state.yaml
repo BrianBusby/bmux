@@ -6179,3 +6179,8 @@ caveats:
     title: Sidebar PR aggregate and focused projection fixture correction awaits fixed-head app-host verification
     status: open
     owner: bmux
+
+  - id: notification_keydown_fixture_verification
+    title: Keydown notification fixture isolates runtime and surface-flash preferences; fixed-head app-host remains pending
+    status: open
+    owner: bmux
