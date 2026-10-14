@@ -150,7 +150,7 @@ local_caveats:
     # E shard 3 identifies the conditional argument expression; typed branches await the compiler gate.
     status: open
   - id: terminal_native_input_delivery_fixture_verification
-    # Includes seven additional IME, modifier, focus and visibility readiness migrations.
+    # Includes seven input readiness migrations and the Kitty real-PTY complete-screen fixture.
     status: open
   - id: native_app_host_full_suite_failures
     status: open

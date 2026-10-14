@@ -3047,3 +3047,31 @@ and active managers; the owned socket path stays absent and no listener starts.
 Native logs include existing disabled-Sentry breadcrumb diagnostics; these are
 runtime diagnostics, not compiler warnings. Fixed-head macOS app-host verification
 remains pending; the native check does not replace that gate.
+
+### Kitty clear-history PTY fixture
+
+C run 38509817630 shard 4 failed the Kitty clear-history test before either raw
+input assertion: neither terminal-visible marker was found. The legacy reader
+used `GHOSTTY_POINT_SURFACE`, which this Ghostty runtime maps to history only.
+The maintained complete-text reader uses `GHOSTTY_POINT_SCREEN`. An owned native
+787 child emitted both markers and exited normally while the old reader returned
+empty; reading the complete screen saw both. A nearby uncorrelated CI PTY-close
+line does not establish that this test's child exited.
+
+The migrated single test keeps a real PTY, the actual zsh keyboard-reset bytes,
+clear-screen action, synthetic key press/release, exact ASCII capture and absence
+of printable CSI fragments. Owned per-surface title notifications acknowledge
+that Ghostty parsed each preceding visible marker. Raw mode precedes readiness;
+a separate owned PTY control proved that the former ordering could discard input.
+The original five-second output bounds and child input bounds remain unchanged.
+There is no foreground activation, clipboard access, production hook or polling.
+
+Actual build787 passes the migrated test with warning-free Swift6 compilation.
+The original read-domain negative reproduces the marker failure; omitting the
+reset produces the Kitty release sequence instead of one ASCII byte. Temporary
+cleanup controls cover cancellation, output timeout, a spawned child held before
+PID publication, and closing before runtime creation. The existing synchronous
+native-free test seam returns before owned files are removed; the held children
+are alive before close and absent afterward. No new process-kill policy is added.
+These local controls do not establish complete macOS15 app-host or final integrated
+suite success; that gate remains open.
