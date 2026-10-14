@@ -44,8 +44,11 @@ struct RenderableSystemSymbolTests {
             pointSize: 0,
             weight: .medium
         ))
+        let baseImage = try #require(NSImage(systemSymbolName: "questionmark.circle", accessibilityDescription: nil))
+        let configuration = NSImage.SymbolConfiguration(pointSize: 1, weight: .medium)
+        let configuredImage = try #require(baseImage.withSymbolConfiguration(configuration))
         #expect(image.isTemplate)
-        #expect(image.size == NSSize(width: 1, height: 1))
+        #expect(image.size == configuredImage.size)
     }
 
     @Test @MainActor func configuredAppKitImagePreservesConfiguredSizeForNonSquareSymbols() throws {
