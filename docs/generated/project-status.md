@@ -217,6 +217,7 @@ Regenerate with: ./scripts/project-docs generate
 | Explicit titlebar event-context suite passes native build789 including ambient keyboard control; integrated app-host verification remains pending (`titlebar_hit_test_event_context_verification`) | Bmux | open |  |
 | Legacy CLI socket setup rejects invalid paths and syscall failures before unsafe use; native controls pass and integrated app-host verification remains pending (`cli_notify_socket_bind_guard_verification`) | Bmux | open |  |
 | SSH agent fixture joins its process before socket and file cleanup; native cases pass and fixed-head app-host deadlines remain unverified (`ssh_agent_joined_producer_verification`) | Bmux | open |  |
+| File-preview and notification test-window constructor ownership corrected; four affected app-host cases remain pending (`native_window_close_ownership_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

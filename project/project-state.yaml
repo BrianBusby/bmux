@@ -6253,3 +6253,7 @@ caveats:
     title: SSH agent fixture joins its process before socket and file cleanup; native cases pass and fixed-head app-host deadlines remain unverified
     status: open
     owner: bmux
+  - id: native_window_close_ownership_verification
+    title: File-preview and notification test-window constructor ownership corrected; four affected app-host cases remain pending
+    status: open
+    owner: bmux

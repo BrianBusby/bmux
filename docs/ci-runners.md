@@ -3584,3 +3584,33 @@ removal; original error types and request/output context remain visible. Native
 exit observations join, and all roots disappear. The fixed-head macOS 15 app-host
 execution remains pending. Neither this resource correction nor local success resolves the wider process scheduling
 risk or proves the six-second CI stall repaired.
+### File-preview and notification test-window ownership
+
+G shard 4, job `115958161892`, repeatedly crashed during XCTest cleanup after
+`FilePreviewPanelTextSavingTests.testPendingTextFocusAppliesWhenTextViewAttaches`
+and the notification open, latest-unread/no-op, and fallback-unread cases in
+`TerminalNotificationSocketActionTests`. Its XCTest invalid-object cleanup frame
+matches the previously measured raw-window close lifetime failure. This is
+supporting evidence for the constructor ownership repair, not proof that every
+shard crash or idle timeout has the same cause.
+
+The two existing window constructors now set `isReleasedWhenClosed = false`
+before returning or presenting the owned window. All test bodies, assertions,
+actual Unix-socket requests, navigation/read/no-op/fallback behavior and failure
+bounds are byte-for-byte unchanged. Only the pending-focus case calls the
+file-preview helper; the three notification cases request its window-bearing
+fixture. No new API, workflow selector, production code or product string changes.
+
+An offscreen Swift 6 AppKit control exercises both exact window sizes/style,
+close, autorelease-pool drain and final ARC release successfully. The earlier
+unsafe-close negative control is retained, not replayed. No notification case
+was executed locally because its real route raises a window and may activate the
+application. Complete target compilation and the four fixed-head app-host cases
+remain pending; the primitive control is not a full-case pass.
+
+This helper-only correction leaves existing notification-fixture debt explicit:
+shared delegate/store/listener mutation across suspension, whole-store replacement
+that discards queued/unread metadata, socket-readiness polling and window
+foregrounding. Those responsibilities are unchanged and are not claimed isolated
+or repaired by the retained-window setting. No XCTest case body is being migrated
+or rewritten as part of this constructor-only lifetime correction.

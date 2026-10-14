@@ -394,3 +394,5 @@ local_caveats:
     status: open
   - id: titlebar_hit_test_event_context_verification
     status: open
+  - id: native_window_close_ownership_verification
+    status: open

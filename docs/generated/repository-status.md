@@ -275,3 +275,4 @@ Repository: `BrianBusby/bmux`
 | `tmux_launch_identity_fixture_verification` | open |
 | `orphan_workspace_shortcut_fixture_verification` | open |
 | `titlebar_hit_test_event_context_verification` | open |
+| `native_window_close_ownership_verification` | open |
