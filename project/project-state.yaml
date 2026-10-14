@@ -6016,7 +6016,7 @@ caveats:
     status: open
     owner: bmux
   - id: grok_hook_connection_fixture_verification
-    title: Grok hook fixtures drain RPC and one-way telemetry through the full notification payload lifecycle; app-host verification pending
+    title: Grok hook fixtures drain RPC and one-way telemetry across notification payloads, saved-route chat turns, and missing-cwd completion; app-host verification pending
     status: open
     owner: bmux
   - id: persistent_pty_child_exit_verification

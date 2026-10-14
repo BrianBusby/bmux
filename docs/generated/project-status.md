@@ -165,7 +165,7 @@ Regenerate with: ./scripts/project-docs generate
 | Antigravity hook fixture joins request producers without blocked accept workers; full app-host verification pending (`antigravity_hook_lifecycle_fixture_verification`) | Bmux | open |  |
 | Initial-input and command fixtures await native readiness without user-window attachment; full app-host verification pending (`terminal_initial_runtime_readiness_verification`) | Bmux | open |  |
 | Workspace close uses a real ready runtime and coordinator owns injected-free scheduling coverage; full app-host verification pending (`workspace_runtime_close_fixture_verification`) | Bmux | open |  |
-| Grok hook fixtures drain RPC and one-way telemetry through the full notification payload lifecycle; app-host verification pending (`grok_hook_connection_fixture_verification`) | Bmux | open |  |
+| Grok hook fixtures drain RPC and one-way telemetry across notification payloads, saved-route chat turns, and missing-cwd completion; app-host verification pending (`grok_hook_connection_fixture_verification`) | Bmux | open |  |
 | Persistent SSH child exit reproduces sibling tracking loss; last-surface guard awaits fixed native and app-host verification (`persistent_pty_child_exit_verification`) | Bmux | open |  |
 | SSH PTY initial resize acknowledgement CI timeouts remain unresolved (`ssh_pty_lifecycle_fixture_verification`) | Bmux | open |  |
 | CI Option/Alt step selects CodexMonitorLeaseTests sequential and nested controls; actual app-host verification pending (`codex_monitor_lease_fixture_verification`) | Bmux | open |  |

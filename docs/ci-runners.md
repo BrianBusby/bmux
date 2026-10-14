@@ -3972,3 +3972,42 @@ would worsen a retained isolation risk. No new environment swap, production
 injection seam or broad concurrency refactor is introduced. Actual fixed-head
 app-host coverage remains required; the existing suite is not claimed globally
 isolated. No shipped strings or localization catalogs change.
+
+### Grok saved-route and missing-cwd connection fixtures
+
+I (`0f7fa7fcb`, shard 2) reports 34 assertions over 41.016 seconds in
+`testGrokSessionEndDoesNotDropRoutingForLaterChatMessages` and eight over
+10.277 seconds in `testGrokStopNotificationFallsBackWhenTranscriptCwdIsUnavailable`.
+Both first failures capture the prior SessionStart's one-way `feed.push` on the
+legacy fixture's sole accepted connection. Eight and two five-second process
+terminations respectively account for most assertions; later assertions inspect
+incomplete or displaced captures. The session record remains present.
+
+The two cases now use the existing `GrokHookConnectionFixture` and Swift Testing.
+The full eleven-action two-turn sequence preserves saved-route lookup without
+ambient IDs, scoped clear/status/notification assertions, both internal-message
+forms, and exact feed-only SessionEnd output. The three-action missing-cwd case
+preserves generic completion and duplicate suppression. The fixture omits cwd
+from payload and environment together, and unsets the shell wrapper's synthesized
+`PWD` before exec only for that absent input. Existing payload/transcript and
+concurrent-thread cases retain their original source. Each producer keeps the
+shared five-second deadline and 200-millisecond termination grace; success and
+failure join before socket capture drains and files are removed. Cleanup failures
+are visible test issues. No production or shared socket/process helper changes.
+
+Owned CLI controls on frozen build 790 reproduce the boundary: one accept per
+action produces a 5.002-second prompt or Stop timeout, while continuous acceptance
+completes those calls in 0.094 and 0.075 seconds with the same responses. ID-less
+feed receives no reply. All child processes and socket tasks join before owned
+roots are removed. A temporary missing-cwd probe initially failed because its
+shell added PWD; retaining that negative and removing only the injected value
+restored the actual nil-cwd contract. This does not establish a cause for every
+I failure or the separate sibling-status case.
+
+The final source's five Grok tests, including the three existing shared-fixture
+callers, pass against the actual build-790 CLI in 2.044 seconds on macOS 26.3.
+Standalone Swift 6 compilation reports no warnings. Only bundle lookup is adapted
+for that standalone executable; the socket, process, fixture, and test sources are
+compiled unchanged. Full macOS 15 app-host execution remains pending under the
+existing `grok_hook_connection_fixture_verification` caveat. No tagged app was
+launched or rebuilt for this test-only migration.
