@@ -6149,3 +6149,8 @@ caveats:
     title: Native project parsing rejected three unquoted extension filenames; quoted paths and macOS parser guard await corrected CI
     status: open
     owner: bmux
+
+  - id: deleted_agent_hook_cwd_regression
+    title: Deleted agent-hook cwd regression remains red on native 786; runtime directory guard and integrated verification pending
+    status: open
+    owner: bmux

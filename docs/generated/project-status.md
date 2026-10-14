@@ -195,6 +195,7 @@ Regenerate with: ./scripts/project-docs generate
 | Sidebar pointer fixture exercises the actual four-point content overlap; full app-host verification remains pending (`sidebar_terminal_hit_boundary_verification`) | Bmux | open |  |
 | Browser portal resize, reveal, and transient rebind contracts pass native 786; integrated app-host verification remains pending (`browser_portal_presentation_fixture_verification`) | Bmux | open |  |
 | Native project parsing rejected three unquoted extension filenames; quoted paths and macOS parser guard await corrected CI (`native_xcode_project_parse_verification`) | Bmux | open |  |
+| Deleted agent-hook cwd regression remains red on native 786; runtime directory guard and integrated verification pending (`deleted_agent_hook_cwd_regression`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

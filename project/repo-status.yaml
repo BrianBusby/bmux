@@ -340,3 +340,6 @@ local_caveats:
 
   - id: native_xcode_project_parse_verification
     status: open
+
+  - id: deleted_agent_hook_cwd_regression
+    status: open

@@ -255,3 +255,4 @@ Repository: `BrianBusby/bmux`
 | `sidebar_terminal_hit_boundary_verification` | open |
 | `browser_portal_presentation_fixture_verification` | open |
 | `native_xcode_project_parse_verification` | open |
+| `deleted_agent_hook_cwd_regression` | open |

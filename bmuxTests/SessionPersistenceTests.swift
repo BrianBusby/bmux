@@ -5414,54 +5414,6 @@ extension SessionPersistenceTests {
     }
 
     @MainActor
-    func testRestoreDoesNotPassDeletedAgentHookCwdToTerminalRuntime() throws {
-        try withAutoResumeAgentSessionsEnabled {
-            let source = Workspace()
-            let sourcePanelId = try XCTUnwrap(source.focusedPanelId)
-            let missingCwd = FileManager.default.temporaryDirectory
-                .appendingPathComponent("bmux-deleted-agent-hook-cwd-\(UUID().uuidString)", isDirectory: true)
-                .appendingPathComponent("repo", isDirectory: true)
-            let bindingIndex = SurfaceResumeBindingIndex(bindingsByPanel: [
-                SurfaceResumeBindingIndex.PanelKey(workspaceId: source.id, panelId: sourcePanelId): SurfaceResumeBindingSnapshot(
-                    name: "Codex",
-                    kind: "codex",
-                    command: "cd '\(missingCwd.path)' && codex resume session-duplicate-turn --yolo",
-                    cwd: missingCwd.path,
-                    checkpointId: "session-duplicate-turn",
-                    source: "agent-hook",
-                    environment: [
-                        "CLAUDE_CONFIG_DIR": "/tmp/claude-profile"
-                    ],
-                    autoResume: true,
-                    updatedAt: 10
-                ),
-            ])
-            let snapshot = source.sessionSnapshot(
-                includeScrollback: false,
-                surfaceResumeBindingIndex: bindingIndex
-            )
-
-            let restored = Workspace()
-            restored.restoreSessionSnapshot(snapshot)
-            let restoredPanelId = try XCTUnwrap(restored.focusedPanelId)
-            let restoredPanel = try XCTUnwrap(restored.terminalPanel(for: restoredPanelId))
-            let startupPayload = try restoredStartupPayload(for: restoredPanel)
-
-            XCTAssertNil(restoredPanel.requestedWorkingDirectory)
-            XCTAssertTrue(startupPayload.contains("codex resume session-duplicate-turn -c check_for_update_on_startup=false --yolo"), startupPayload)
-            // The guard is the fish-safe, brace-free form (https://github.com/manaflow-ai/bmux/issues/6285):
-            // `cd -- '<dir>' 2>/dev/null || [ ! -d '<dir>' ] && <cmd>`.
-            XCTAssertFalse(startupPayload.contains("{ cd -- "), startupPayload)
-            let guardStart = try XCTUnwrap(startupPayload.range(of: "cd -- "), startupPayload)
-            let guardSuffix = String(startupPayload[guardStart.lowerBound...])
-            let guardEnd = try XCTUnwrap(guardSuffix.range(of: "] &&")?.upperBound, guardSuffix)
-            let guardSnippet = String(guardSuffix[..<guardEnd])
-            XCTAssertTrue(guardSnippet.contains(missingCwd.path), guardSnippet)
-            XCTAssertTrue(guardSnippet.contains("2>/dev/null || [ ! -d"), guardSnippet)
-        }
-    }
-
-    @MainActor
     func testRestorePreservesUnmountedVolumeCwdBindingsWhenInitialReportsAreScrambled() throws {
         try withAutoResumeAgentSessionsEnabled {
             let manager = TabManager(autoWelcomeIfNeeded: false)
