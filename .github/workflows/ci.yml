@@ -777,7 +777,8 @@ jobs:
             -disableAutomaticPackageResolution \
             -destination "platform=macOS" \
             BMUX_SKIP_ZIG_BUILD=1 \
-            -only-testing:bmuxTests/CodexRejectedAmbientTests test
+            -only-testing:bmuxTests/CodexRejectedAmbientTests \
+            -only-testing:bmuxTests/CLISocketFixtureCompletionTests test
 
       - name: Run matte chrome native regressions
         if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_MATTE_REGRESSION_SHARD) }}

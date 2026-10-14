@@ -6046,3 +6046,7 @@ caveats:
     title: Bounded GitHub evidence HTTP recovery verified in CI run 38499166578
     status: resolved
     owner: bmux
+  - id: cli_socket_capture_completion_verification
+    title: CLI socket capture completion focused gate and shared-caller verification
+    status: open
+    owner: bmux

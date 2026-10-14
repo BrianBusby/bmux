@@ -6,7 +6,24 @@ struct CLISocketFixture: Sendable {
     let path: String
     var responseWritten: AsyncStream<String>.Continuation? = nil
     let response: @Sendable (String) throws -> String?
+    private let deliverReadiness: @Sendable (Int, AsyncStream<Int>.Continuation) -> Void
 
+    init(
+        path: String,
+        responseWritten: AsyncStream<String>.Continuation? = nil,
+        deliverReadiness: @escaping @Sendable (Int, AsyncStream<Int>.Continuation) -> Void = {
+            token, destination in destination.yield(token)
+        },
+        response: @escaping @Sendable (String) throws -> String?
+    ) {
+        self.path = path
+        self.responseWritten = responseWritten
+        self.deliverReadiness = deliverReadiness
+        self.response = response
+    }
+
+    /// Normal return must join all request producers. The final pass drains bytes already sent
+    /// without awaiting future input or response capacity; ordinary serving retains its backpressure policy.
     func capture<T: Sendable>(
         operation: () async throws -> T
     ) async throws -> (result: T, commands: [String]) {
@@ -14,10 +31,11 @@ struct CLISocketFixture: Sendable {
         let listener = try bind()
         defer { unlink(path) }
         let (events, continuation) = AsyncStream<Int>.makeStream()
+        defer { continuation.finish() }
         let capture = Task { try await serve(listener: listener, events: events, continuation: continuation) }
         do {
             let result = try await operation()
-            continuation.finish()
+            continuation.yield(Self.completionToken)
             return (result, try await capture.value)
         } catch {
             continuation.finish()
@@ -30,6 +48,11 @@ struct CLISocketFixture: Sendable {
         let listener = socket(AF_UNIX, SOCK_STREAM, 0)
         guard listener >= 0 else { throw POSIXError(.ENFILE) }
         do {
+            // Accepted sockets inherit this at connect time, before the serving task may run.
+            var noSignal: Int32 = 1
+            guard setsockopt(listener, SOL_SOCKET, SO_NOSIGPIPE, &noSignal, socklen_t(MemoryLayout<Int32>.size)) == 0 else {
+                throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+            }
             var address = sockaddr_un()
             address.sun_family = sa_family_t(AF_UNIX)
             let bytes = Array(path.utf8) + [0]
@@ -52,6 +75,8 @@ struct CLISocketFixture: Sendable {
         }
     }
 
+    private static let completionToken = -1
+
     private func serve(
         listener: Int32,
         events: AsyncStream<Int>,
@@ -62,52 +87,63 @@ struct CLISocketFixture: Sendable {
         var commands: [String] = []
         var nextToken = 1
         sources[0] = (listener, try readiness(descriptor: listener, token: 0, continuation: continuation))
+        func acceptPendingClients() throws {
+            while true {
+                let client = accept(listener, nil, nil)
+                if client < 0, errno == EINTR { continue }
+                if client < 0, errno == EAGAIN || errno == EWOULDBLOCK { return }
+                guard client >= 0 else { throw POSIXError(.EIO) }
+                let clientToken = nextToken
+                nextToken += 1
+                sources[clientToken] = (client, try readiness(
+                    descriptor: client, token: clientToken, continuation: continuation
+                ))
+                pending[clientToken] = Data()
+            }
+        }
+
+        func readAvailableInput(token: Int, waitsForResponseCapacity: Bool = true) async throws {
+            guard let connection = sources[token] else { return }
+            var responseWritable = true
+            while true {
+                var buffer = [UInt8](repeating: 0, count: 4096)
+                let count = Darwin.read(connection.descriptor, &buffer, buffer.count)
+                if count < 0, errno == EINTR { continue }
+                if count < 0, errno == EAGAIN || errno == EWOULDBLOCK {
+                    if responseWritable { return }
+                    break
+                }
+                guard count >= 0 else { throw POSIXError(.EIO) }
+                if count == 0 { break }
+                pending[token, default: Data()].append(contentsOf: buffer.prefix(count))
+                while let newline = pending[token]?.firstIndex(of: 10) {
+                    let line = String(decoding: pending[token]!.prefix(upTo: newline), as: UTF8.self)
+                    pending[token]!.removeSubrange(...newline)
+                    commands.append(line)
+                    if let response = try response(line), responseWritable {
+                        responseWritable = try await write(response + "\n", to: connection.descriptor,
+                                                           waitsForCapacity: waitsForResponseCapacity)
+                        if responseWritable { responseWritten?.yield(line) }
+                    }
+                }
+            }
+            sources.removeValue(forKey: token)
+            pending.removeValue(forKey: token)
+            await close(connection.source, descriptor: connection.descriptor)
+        }
+
         do {
             for await token in events {
-                guard let connection = sources[token] else { continue }
-                if token == 0 {
-                    while true {
-                        let client = accept(listener, nil, nil)
-                        if client < 0, errno == EINTR { continue }
-                        if client < 0, errno == EAGAIN || errno == EWOULDBLOCK { break }
-                        guard client >= 0 else { throw POSIXError(.EIO) }
-                        let clientToken = nextToken
-                        nextToken += 1
-                        sources[clientToken] = (client, try readiness(
-                            descriptor: client, token: clientToken, continuation: continuation
-                        ))
-                        pending[clientToken] = Data()
+                if token == Self.completionToken {
+                    // Producer completion is independent of delayed DispatchSource delivery.
+                    try acceptPendingClients()
+                    for clientToken in sources.keys.filter({ $0 != 0 }) {
+                        try await readAvailableInput(token: clientToken, waitsForResponseCapacity: false)
                     }
-                    continue
+                    break
                 }
-                readConnection: while true {
-                    var buffer = [UInt8](repeating: 0, count: 4096)
-                    let count = Darwin.read(connection.descriptor, &buffer, buffer.count)
-                    if count < 0, errno == EINTR { continue }
-                    if count < 0, errno == EAGAIN || errno == EWOULDBLOCK { break }
-                    guard count >= 0 else { throw POSIXError(.EIO) }
-                    if count == 0 {
-                        sources.removeValue(forKey: token)
-                        pending.removeValue(forKey: token)
-                        await close(connection.source, descriptor: connection.descriptor)
-                        break
-                    }
-                    pending[token, default: Data()].append(contentsOf: buffer.prefix(count))
-                    while let newline = pending[token]?.firstIndex(of: 10) {
-                        let line = String(decoding: pending[token]!.prefix(upTo: newline), as: UTF8.self)
-                        pending[token]!.removeSubrange(...newline)
-                        commands.append(line)
-                        if let response = try response(line) {
-                            guard try await write(response + "\n", to: connection.descriptor) else {
-                                sources.removeValue(forKey: token)
-                                pending.removeValue(forKey: token)
-                                await close(connection.source, descriptor: connection.descriptor)
-                                break readConnection
-                            }
-                            responseWritten?.yield(line)
-                        }
-                    }
-                }
+                if token == 0 { try acceptPendingClients() }
+                else { try await readAvailableInput(token: token) }
             }
         } catch {
             for connection in sources.values { await close(connection.source, descriptor: connection.descriptor) }
@@ -120,18 +156,16 @@ struct CLISocketFixture: Sendable {
     private func readiness(
         descriptor: Int32, token: Int, continuation: AsyncStream<Int>.Continuation
     ) throws -> any DispatchSourceRead {
-        // Accepted sockets inherit this option; re-setting it after peer close fails with EINVAL on Darwin.
-        var noSignal: Int32 = 1
+        // SO_NOSIGPIPE is inherited from bind(); re-setting it after peer close fails with EINVAL.
         guard fcntl(descriptor, F_SETFL, O_NONBLOCK) == 0,
-              fcntl(descriptor, F_SETFD, FD_CLOEXEC) == 0,
-              (token != 0 || setsockopt(descriptor, SOL_SOCKET, SO_NOSIGPIPE, &noSignal, socklen_t(MemoryLayout<Int32>.size)) == 0) else {
+              fcntl(descriptor, F_SETFD, FD_CLOEXEC) == 0 else {
             let error = POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
             Darwin.close(descriptor)
             throw error
         }
         // DispatchSource is the native socket-readiness bridge; callers consume an AsyncStream.
         let source = DispatchSource.makeReadSource(fileDescriptor: descriptor)
-        source.setEventHandler { continuation.yield(token) }
+        source.setEventHandler { [deliverReadiness] in deliverReadiness(token, continuation) }
         source.resume()
         return source
     }
@@ -156,7 +190,7 @@ struct CLISocketFixture: Sendable {
         }
     }
 
-    private func write(_ text: String, to descriptor: Int32) async throws -> Bool {
+    private func write(_ text: String, to descriptor: Int32, waitsForCapacity: Bool) async throws -> Bool {
         let bytes = Array(text.utf8)
         var offset = 0
         while offset < bytes.count {
@@ -165,11 +199,13 @@ struct CLISocketFixture: Sendable {
             }
             if count < 0, errno == EINTR { continue }
             if count < 0, errno == EAGAIN || errno == EWOULDBLOCK {
+                // Completion must not wait for a peer to read a response after its producer returned.
+                guard waitsForCapacity else { throw POSIXError(.EWOULDBLOCK) }
                 await writable(descriptor)
                 continue
             }
-            // A CLI can cancel an in-flight resize after its bridge closes. This is EOF for
-            // that connection, not an acknowledged response or a failure of the listener.
+            // A CLI can cancel an in-flight resize after its bridge closes. Do not acknowledge
+            // that response; the caller still drains any complete queued input before closing.
             if count < 0, errno == EPIPE { return false }
             guard count > 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
             offset += count

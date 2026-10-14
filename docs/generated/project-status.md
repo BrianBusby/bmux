@@ -172,6 +172,7 @@ Regenerate with: ./scripts/project-docs generate
 | Configured and chorded file preview save fixtures await fixed-head app-host verification (`file_preview_save_shortcut_fixture_verification`) | Bmux | open |  |
 | Panel clear-content and opaque chrome compositing suite awaits fixed-head app-host verification (`panel_appearance_compositing_fixture_verification`) | Bmux | open |  |
 | Native titlebar default-width and voice-control fixture corrections pass locally; app-host verification remains pending (`titlebar_product_contract_fixture_verification`) | Bmux | open |  |
+| CLI socket capture completion focused gate and shared-caller verification (`cli_socket_capture_completion_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

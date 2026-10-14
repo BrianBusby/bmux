@@ -622,6 +622,7 @@
 		C0F16B000000000000000001 /* CLIRemoteShellStartupPerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0F16B000000000000000002 /* CLIRemoteShellStartupPerformanceTests.swift */; };
 		A5D41209A1B2C3D4E5F60718 /* CLIRovoDevHookPersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5D4120AA1B2C3D4E5F60718 /* CLIRovoDevHookPersistenceTests.swift */; };
 		CE4411000000000000000001 /* CLISocketFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE4411000000000000000002 /* CLISocketFixture.swift */; };
+		E56CCA141F834D5883B50001 /* CLISocketFixtureCompletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E56CCA141F834D5883B50002 /* CLISocketFixtureCompletionTests.swift */; };
 		B900004AA1B2C3D4E5F60719 /* CLISocketPathResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = B900004BA1B2C3D4E5F60719 /* CLISocketPathResolver.swift */; };
 		C12985000000000000000002 /* CLISocketSentryTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C12985000000000000000001 /* CLISocketSentryTelemetry.swift */; };
 		A8D837B3AA85F4353C493DE1 /* CLISSHPTYAttachProbeReplyRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CB1737C956A80E5F98E9DC5 /* CLISSHPTYAttachProbeReplyRegressionTests.swift */; };
@@ -2607,6 +2608,7 @@
 		C0F16B000000000000000002 /* CLIRemoteShellStartupPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIRemoteShellStartupPerformanceTests.swift; sourceTree = "<group>"; };
 		A5D4120AA1B2C3D4E5F60718 /* CLIRovoDevHookPersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIRovoDevHookPersistenceTests.swift; sourceTree = "<group>"; };
 		CE4411000000000000000002 /* CLISocketFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLISocketFixture.swift; sourceTree = "<group>"; };
+		E56CCA141F834D5883B50002 /* CLISocketFixtureCompletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLISocketFixtureCompletionTests.swift; sourceTree = "<group>"; };
 		B900004BA1B2C3D4E5F60719 /* CLISocketPathResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLISocketPathResolver.swift; sourceTree = "<group>"; };
 		C12985000000000000000001 /* CLISocketSentryTelemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLISocketSentryTelemetry.swift; sourceTree = "<group>"; };
 		8CB1737C956A80E5F98E9DC5 /* CLISSHPTYAttachProbeReplyRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLISSHPTYAttachProbeReplyRegressionTests.swift; sourceTree = "<group>"; };
@@ -5810,6 +5812,7 @@
 				C72280000000000000000003 /* CLINotifyClaudeHookWorkspaceRoutingTests.swift */,
 				A5D41204A1B2C3D4E5F60718 /* CLINotifyProcessIntegrationRegressionTests.swift */,
 				1EC77452333507F58CDC2C89 /* CodexRejectedAmbientTests.swift */,
+				E56CCA141F834D5883B50002 /* CLISocketFixtureCompletionTests.swift */,
 				C5A8679C50A0E07FA9D5B592 /* CodexRejectedAmbientFixture.swift */,
 				6379A0026379A0026379A002 /* CLISSHPTYResizeInputTests.swift */,
 				C0F16B000000000000000002 /* CLIRemoteShellStartupPerformanceTests.swift */,
@@ -7976,6 +7979,7 @@
 					C0F16B000000000000000001 /* CLIRemoteShellStartupPerformanceTests.swift in Sources */,
 				A5D41209A1B2C3D4E5F60718 /* CLIRovoDevHookPersistenceTests.swift in Sources */,
 				CE4411000000000000000001 /* CLISocketFixture.swift in Sources */,
+				E56CCA141F834D5883B50001 /* CLISocketFixtureCompletionTests.swift in Sources */,
 				A8D837B3AA85F4353C493DE1 /* CLISSHPTYAttachProbeReplyRegressionTests.swift in Sources */,
 				C73660020000000000000001 /* CLISSHPTYAttachSessionLostRespawnTests.swift in Sources */,
 				6379A0016379A0016379A001 /* CLISSHPTYResizeInputTests.swift in Sources */,
