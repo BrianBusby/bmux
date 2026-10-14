@@ -277,3 +277,4 @@ Repository: `BrianBusby/bmux`
 | `titlebar_hit_test_event_context_verification` | open |
 | `native_window_close_ownership_verification` | open |
 | `terminal_file_launch_directory_contract_verification` | open |
+| `terminal_attachment_deferred_ime_fixture_verification` | open |

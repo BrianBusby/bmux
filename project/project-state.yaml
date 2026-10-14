@@ -6262,3 +6262,7 @@ caveats:
     title: Terminal file launch fixtures compare directory identity and retain exact quoting; native controls pass and integrated app-host verification remains pending
     status: open
     owner: bmux
+  - id: terminal_attachment_deferred_ime_fixture_verification
+    title: Plain terminal attachment and deferred TCIM fixtures await readiness; native controls pass and integrated app-host verification remains pending
+    status: open
+    owner: bmux

@@ -399,3 +399,5 @@ local_caveats:
 
   - id: terminal_file_launch_directory_contract_verification
     status: open
+  - id: terminal_attachment_deferred_ime_fixture_verification
+    status: open

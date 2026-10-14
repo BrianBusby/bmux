@@ -36,6 +36,36 @@ struct TerminalInitialRuntimeReadinessTests {
         #expect(panel.surface.uiWindow == nil)
     }
 
+    @Test
+    func plainHostedViewWindowAttachmentCreatesRuntimeSurface() async throws {
+        let panel = TerminalPanel(workspaceId: UUID())
+        #expect(panel.hostedView.debugSurfaceId == panel.surface.id)
+        #expect(panel.surface.surface == nil)
+        #expect(!panel.surface.debugHasHeadlessStartupWindowForTesting())
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 360, height: 240),
+            styleMask: [.titled, .closable], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        defer {
+            panel.hostedView.removeFromSuperview()
+            panel.surface.teardownSurface()
+            window.contentView = nil
+            window.close()
+        }
+        let content = try #require(window.contentView)
+        let readiness = TerminalRuntimeReadinessFixture(surface: panel.surface)
+        defer { readiness.close() }
+        panel.hostedView.frame = content.bounds
+        panel.hostedView.autoresizingMask = [.width, .height]
+        content.addSubview(panel.hostedView)
+        content.layoutSubtreeIfNeeded()
+        panel.hostedView.layoutSubtreeIfNeeded()
+        if panel.surface.surface == nil { try await readiness.wait(timeout: .seconds(3)) }
+        #expect(panel.surface.surface != nil,
+                "Direct AppKit attachment must create the runtime without input demand")
+        #expect(panel.surface.debugRuntimeSurfaceCreateAttemptCountForTesting() > 0)
+        #expect(!panel.surface.debugHasHeadlessStartupWindowForTesting())
+    }
+
     private func waitForReady(_ events: AsyncStream<Void>, timeout: Duration) async throws {
         try await withThrowingTaskGroup(of: Void.self) { group in
             defer { group.cancelAll() }

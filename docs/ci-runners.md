@@ -3687,3 +3687,41 @@ activate a window, execute the fixture script, or change user settings. Complete
 integrated target compilation and fixed-head app-host execution remain pending.
 No product strings or localization catalogs changed; added prose is contributor
 verification material.
+
+
+### Plain attachment and deferred Traditional Chinese keypad readiness
+
+H shard 3 reports a plain attached terminal with no runtime and zero creation
+attempts after a fixed 50 ms wait, and a Traditional Chinese keypad case with
+no fallback event before its one-second deadline. Runtime creation waits for
+asynchronous Claude shim preparation before incrementing the attempt count;
+keyDown returns before interpretation when no runtime is available. CI did not
+record the exact pending creation gate, so this is a demonstrated fixture
+boundary rather than attribution of every CI delay to shim preparation.
+
+The plain attachment case moves to `TerminalInitialRuntimeReadinessTests`,
+subscribes before attachment and uses the maintained three-second readiness
+bound. Surface identity, initial nil runtime/no headless window, final runtime
+and creation-attempt assertions remain. It does not force input creation.
+`TerminalDeferredNumpadCommitTests` retains real key 83 with numericPad input, Pinyin
+source, and the actual `DispatchQueue.main.async` post-keyDown insertText callback.
+The fallback and completed callback must each leave exactly one digit. Hooks
+are installed and restored separately within each synchronous phase; none span
+an await. An owned completion stream keeps the original one-second callback
+failure bound; timeout/cancellation invalidates pending work and joins the
+cancellable deadline. Retained windows and runtime teardown own all resources.
+Only those two legacy methods are removed; all other legacy bytes are unchanged.
+
+Unchanged build 789 native verification passes three functions/four cases,
+including the retained initial-command/input controls, with warning-free target
+Swift 5 compilation. A controlled duplicate commit fails the exact final text
+array assertion. Omitted completion fails at the original one-second bound;
+cancellation before queued delivery invalidates the callback and preserves
+prior hooks and the input-source override. Readiness controls reproduce nil/zero at 50 ms and an absent
+keypad event without readiness, followed by real runtime completion. These
+probes use owned HOME/test-mode processes and never show or activate windows.
+Strict Swift 6 compilation remains blocked by the existing imported
+`KeyboardLayout.debugInputSourceIdOverride` mutable-static declaration; no
+suppression or production change is introduced. Actual installed IME delivery
+and integrated fixed-head app-host execution remain unverified. No workflow
+selector, runtime timeout, product string or localization catalog changes.
