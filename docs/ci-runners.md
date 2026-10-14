@@ -2895,3 +2895,30 @@ no suppression or runtime hook was introduced. The shared readiness owner and
 complete recovery suite also compile without warnings in strict Swift 6; the
 async fixture body explicitly retains MainActor isolation. Fixed-head macOS app-host
 verification remains pending.
+
+### Keydown notification surface-flash fixture
+
+The C app-host failure in
+`testTerminalKeyDownDismissesUnreadWhenSurfaceIsAlreadyFirstResponder` cleared
+unread state but counted zero renderer flashes. Its ambient overlay preferences
+could select a valid workspace-pane flash instead, and it did not establish the
+native runtime before keydown. These are proven fixture preconditions; the
+actual failing CI preference value is unknown.
+
+`NotificationKeyDownTests` preserves the real F1 action, first-responder and unread
+assertions, and the exact one-renderer-flash result. Its owned fixture awaits the
+real runtime-ready event, then synchronously installs and restores app composition,
+focus and exact persisted preferences with an explicit enabled surface target.
+Only its unique workspace notification is seeded and cleared. The renderer queues
+one callback; the maintained FIFO event-delivery pattern observes that callback
+with the original one-second failure bound after all global overrides are restored.
+No polling, shared counter reset, clipboard access, production change or new
+workflow selector is introduced.
+
+Unchanged native artifact 786 passes the migrated case with warning-free target
+Swift 5 compilation. A temporary ready-runtime control retaining the original
+renderer assertion fails exactly once when only the target changes to a workspace
+pane; the explicit surface target passes. This proves preference isolation matters,
+not that it caused the CI failure. The imported mutable `AppFocusState` seam still
+prevents forced Swift 6 checking, as in the adjacent focus fixture. Fixed-head
+macOS 15 app-host completion remains pending.

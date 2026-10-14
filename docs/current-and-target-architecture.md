@@ -463,4 +463,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Resume cwd and captured Codex fork-tag fixtures follow shared command policy; fixed-head app-host verification pending (`session_resume_fork_contract_fixture_verification`) - owner: Bmux; status: open
 - Sidebar PR aggregate and focused projection fixture correction awaits fixed-head app-host verification (`sidebar_pr_focus_contract_fixture_verification`) - owner: Bmux; status: open
 - Notification focus fixture awaits the existing event flush and passes native proof; fixed-head app-host remains pending (`notification_focus_event_fixture_verification`) - owner: Bmux; status: open
+- Keydown notification fixture isolates runtime and surface-flash preferences; fixed-head app-host remains pending (`notification_keydown_fixture_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

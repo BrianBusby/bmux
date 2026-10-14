@@ -6184,3 +6184,8 @@ caveats:
     title: Notification focus fixture awaits the existing event flush and passes native proof; fixed-head app-host remains pending
     status: open
     owner: bmux
+
+  - id: notification_keydown_fixture_verification
+    title: Keydown notification fixture isolates runtime and surface-flash preferences; fixed-head app-host remains pending
+    status: open
+    owner: bmux

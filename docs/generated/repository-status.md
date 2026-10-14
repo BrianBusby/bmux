@@ -262,3 +262,4 @@ Repository: `BrianBusby/bmux`
 | `deleted_agent_hook_cwd_regression` | open |
 | `sidebar_pr_focus_contract_fixture_verification` | open |
 | `notification_focus_event_fixture_verification` | open |
+| `notification_keydown_fixture_verification` | open |

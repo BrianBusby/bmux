@@ -360,3 +360,6 @@ local_caveats:
 
   - id: notification_focus_event_fixture_verification
     status: open
+
+  - id: notification_keydown_fixture_verification
+    status: open
