@@ -40,6 +40,7 @@ private actor FreedSurfaceRecorder {
             surface: surface,
             callbackContext: nil,
             freeSurface: { pointer in
+                #expect(!Thread.isMainThread, "The injected teardown coordinator owns off-main frees")
                 let bits = UInt(bitPattern: pointer)
                 Task { await recorder.record(bits) }
             }

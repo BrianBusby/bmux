@@ -2378,3 +2378,26 @@ warning-free Swift 6 compile. Removing captured notifications in a temporary
 control fails five original notification assertions. Local proof does not replace
 fixed app-host and full-suite verification; the canonical/local caveat remains
 open. No production, subprocess timeout, runner or shipped string changed.
+
+### Workspace runtime close fixture ownership
+
+Combined run 38509817630 shard 3 crashed while closing a workspace whose test
+installed the invalid native pointer `0x5282`. Intercepting only native free did
+not protect the earlier focus/occlusion calls. The migrated test attaches a real
+terminal to an owned retained window, subscribes before attachment, and awaits
+its actual runtime-ready event under the original three-second failure bound.
+It retains confirmation, workspace removal, remaining-workspace count and runtime
+detachment assertions, and verifies closed lifecycle plus idempotent teardown.
+
+The old global free override selected a DEBUG-only utility-coordinator branch.
+Ordinary explicit teardown schedules native free on the next MainActor turn;
+deinitialization has a separate utility policy. Off-main and exact-pointer checks
+therefore belong to the existing package coordinator's injected-free tests. No
+invalid pointer enters live Ghostty, and no new global override is installed.
+The real-runtime test does not claim to observe native free count or its thread.
+
+Native build 786 executes the real workspace close successfully without activation;
+the coordinator checks execute against the same compiled package owner. Focused
+Swift 6 compilation is warning-free. Full app-host verification remains pending,
+and the canonical/local caveat stays open. Production lifecycle/threading and
+shipped strings are unchanged.
