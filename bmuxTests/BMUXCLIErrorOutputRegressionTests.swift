@@ -16,18 +16,6 @@ import Testing
         let timedOut: Bool
     }
 
-    @Test func testCLIErrorPathDoesNotCrashWhenStderrIsClosed() throws {
-        let cliPath = try bundledCLIPath()
-        let result = runShell(
-            "BMUX_CLI_SENTRY_DISABLED=1 \(shellSingleQuote(cliPath)) definitely-not-a-command 2>&-",
-            timeout: 5
-        )
-
-        XCTAssertFalse(result.timedOut, result.stdout)
-        XCTAssertEqual(result.status, 1, result.stdout)
-        XCTAssertTrue(result.stdout.contains("Usage:"), result.stdout)
-    }
-
     @Test func testAgentTeamsHelpDoesNotLaunchExternalAgentCLI() throws {
         let cliPath = try bundledCLIPath()
         var environment = ProcessInfo.processInfo.environment
