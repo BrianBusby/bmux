@@ -6752,7 +6752,7 @@ final class Workspace: Identifiable, ObservableObject {
         let proxyOnlyError = trimmedDetail.map(Self.isProxyOnlyRemoteError) ?? false
         let preserveConnectedStateForRetry =
             (state == .connecting || state == .reconnecting) &&
-                preservesProxyFailureForSSHRemoteWorkspace &&
+                (preservesProxyFailureForSSHRemoteWorkspace || suppressesProxyOnlySidebarErrorForDefaultCloud) &&
                 hasProxyOnlyRemoteSidebarError
         let suppressProxyOnlySidebarError =
             suppressesProxyOnlySidebarErrorForDefaultCloud &&
