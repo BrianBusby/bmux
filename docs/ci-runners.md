@@ -3223,3 +3223,19 @@ fixtures. No suppression, replacement hook or production isolation change was ad
 Native logs retain the existing disabled-Sentry breadcrumb diagnostics.
 These offscreen probes do not replace integrated app-host execution, which
 remains pending. No product strings or localization catalogs changed.
+
+### Final browser and native-fixture compile checkpoint
+
+Revision `05cc59084` passed complete incremental `bmux-unit build-for-testing`
+with local Xcode 26.6: 568 test files plus 14 shared sources were compiler
+inputs. The latest Find, symbol, inset, inspector and preceding fixture owners
+emitted no warnings. The full incremental build retained 158 distinct warning
+lines; historical warning counts are not directly comparable. This build ran
+no tests and did not launch or replace a preview app. The older CI compiler
+and complete fixed-head native execution remain required.
+
+On published G, job `115958161129` actually ran the closed-peer CLI regression
+at 16:25 UTC on October 14. All three expected TAGGED/Unicode/final-line cases
+failed with receive-timeout EINVAL; PONG and both EOF error controls passed.
+The preceding native CLI linkage test succeeded. This supplies the required
+test-only CI red; it does not yet verify a production receive correction.
