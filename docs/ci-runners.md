@@ -3117,3 +3117,21 @@ not comparable to the earlier fresh build's warning count. No warning budget
 was relaxed. No app or tests were launched, and the existing preview artifacts
 were not replaced. Actual clipboard restoration, real inspector windows and
 the complete macOS 15 app-host run remain CI verification boundaries.
+
+### Native symbol point size and configured dimensions
+
+D2 shard 2 (`115712647490`) failed the existing clamped-symbol test: AppKit
+returned a 2-by-2 image for a one-point medium question-mark symbol, while the
+test expected a 1-by-1 image. The maintained raster-sizing correction
+`e3c4357a2` deliberately preserves valid configured symbol dimensions rather
+than forcing square point-size dimensions. Point size and image extent are
+different native API values.
+
+The fixture now compares the returned image with AppKit's actual configuration
+at the explicit one-point minimum and medium weight, matching the neighboring
+non-square symbol test. It retains the template-image assertion and all other
+sizing, cache, invalid-input and unknown-symbol tests. No production rendering
+or cache policy changes. Against unchanged build 786, the original complete
+seven-test suite reproduces exactly the 2-by-2 versus 1-by-1 failure; the
+corrected suite passes all seven cases. Local compilation is warning-free.
+Fixed-head app-host CI remains required; no test selector or gate is relaxed.

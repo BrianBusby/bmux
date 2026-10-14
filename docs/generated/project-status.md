@@ -206,6 +206,7 @@ Regenerate with: ./scripts/project-docs generate
 | Notification focus fixture awaits the existing event flush and passes native proof; fixed-head app-host remains pending (`notification_focus_event_fixture_verification`) | Bmux | open |  |
 | Keydown notification fixture isolates runtime and surface-flash preferences; fixed-head app-host remains pending (`notification_keydown_fixture_verification`) | Bmux | open |  |
 | Clipboard timeout fixture awaits causal completion; local event-only proof passes but real pasteboard restoration requires isolated app-host CI (`textbox_clipboard_timeout_fixture_verification`) | Bmux | open |  |
+| Native symbol sizing fixture preserves AppKit configured dimensions; fixed-head app-host verification remains pending (`native_symbol_size_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

@@ -266,3 +266,4 @@ Repository: `BrianBusby/bmux`
 | `notification_focus_event_fixture_verification` | open |
 | `notification_keydown_fixture_verification` | open |
 | `textbox_clipboard_timeout_fixture_verification` | open |
+| `native_symbol_size_fixture_verification` | open |

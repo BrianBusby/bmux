@@ -6204,3 +6204,8 @@ caveats:
     title: Clipboard timeout fixture awaits causal completion; local event-only proof passes but real pasteboard restoration requires isolated app-host CI
     status: open
     owner: bmux
+
+  - id: native_symbol_size_fixture_verification
+    title: Native symbol sizing fixture preserves AppKit configured dimensions; fixed-head app-host verification remains pending
+    status: open
+    owner: bmux
