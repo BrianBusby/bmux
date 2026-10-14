@@ -6100,6 +6100,10 @@ caveats:
     title: Titlebar hit-target sizing and search metadata fixture migrations pass native 786; app-host and Swift 6 shortcut-store isolation remain open
     status: open
     owner: bmux
+  - id: cli_closed_peer_receive_regression_verification
+    title: Closed-peer CLI receive regression awaits actual test-only CI red and reviewed production repair
+    status: open
+    owner: bmux
   - id: cli_socket_home_fixture_verification
     title: Three tagged CLI fixtures use short owned homes; native 786 exposes a separate multiline receive-timeout error in two cases
     status: open

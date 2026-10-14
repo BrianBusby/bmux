@@ -2602,3 +2602,38 @@ incomplete native suite, remain open.
 The failed C `testHostViewStopsSidebarPassThroughJustInsideTerminalContent` used a full-width terminal over an unrelated internal split and a stale two-point overlap. The maintained `SidebarResizeInteraction` reserves four content-side points; `WindowTerminalHostView` detects the sidebar from the leading hosted-content edge and intentionally rejects sidebar routing for full-width content. `SidebarTerminalHitBoundaryTests` replaces only that case with an owned retained offscreen window and a terminal starting at x=120, with no internal split. A synthetic pointer tests pass-through at x=124 and a concrete hosted-terminal hit at x=125. Both original pass-through/content outcomes remain required. No rendering, hit-testing policy, or typing-sensitive production path changes.
 
 The new suite participates in the existing broad test sharding; workflow selectors are unchanged. Actual C failure and the root's native original-boundary negative are retained. Exact-source strict Swift6 compilation is warning-free; unchanged build786 passes the migrated case in0.058s. A temporary copy restoring the two/three-point boundary fails exactly the original hosted-hit requirement. Full macOS15 app-host verification remains pending. Only test diagnostics and contributor documentation changed; no shipped localized strings were added.
+
+## Closed-peer CLI receive regression gate
+
+The short socket-home correction exposes a separate receive failure: after an
+unrecognized newline-terminated reply, `SocketClient.send` changes to its
+multiline idle timeout. Darwin returns EINVAL when that socket's peer has already
+closed. Native socketpair controls establish that peer state, not `timeval`
+size/stride, causes the option-setting error.
+
+`tests/test_cli_closed_peer_receive.py` drives the actual built CLI through a
+short owned Unix socket. After receiving its complete ping request, the fixture
+stops only its owned child, observes native stop acknowledgment, writes the
+response and closes the peer before resuming. This establishes ordering without
+polling or sleeps. A scoped three-second harness deadline retains the existing
+CLI test bound; the production response/idle timeouts are unchanged. Cleanup
+resumes a stopped child before killing/joining it, removes owned files and socket,
+and restores the process alarm handler/timer. HOME/config and telemetry test
+settings are isolated; no app or user socket is opened.
+
+Against unchanged native build 786, three functions exercise six scenarios:
+PONG, empty EOF and truncated EOF pass, while complete TAGGED, Unicode multiline
+and final-unterminated-line responses fail with the same receive-timeout EINVAL.
+Temporary deadline controls before accept and while writing to the stopped
+child confirm joined child cleanup, removed socket/home and restored signal
+state. This is test-only red evidence, not a production fix or full CLI pass.
+
+The existing shard-3 bundled CLI artifact step invokes both independent Python
+regressions against the exact built artifact before native linkage verification.
+It retains both exit codes, reports them and fails when either is nonzero; no
+failure is waived. Existing native linkage, dependency-closure verification and
+later CLI deadline tests are unchanged. Actual test-only CI red is still required
+before publishing a production repair. The canonical/local
+`cli_closed_peer_receive_regression_verification` caveat stays open. Only test
+diagnostics and contributor documentation changed; no shipped copy requires
+localization updates.

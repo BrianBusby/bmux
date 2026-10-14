@@ -659,7 +659,22 @@ jobs:
         if: ${{ matrix.shard == 3 }}
         run: |
           set -euo pipefail
-          python3 tests/test_bundled_cli_artifact.py
+          artifact_test_exit=0
+          if python3 tests/test_bundled_cli_artifact.py; then
+            :
+          else
+            artifact_test_exit=$?
+          fi
+          CLI_BIN="$BMUX_DERIVED_DATA_PATH/Build/Products/Debug/bmux DEV.app/Contents/Resources/bin/bmux"
+          socket_test_exit=0
+          if BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_closed_peer_receive.py; then
+            :
+          else
+            socket_test_exit=$?
+          fi
+          echo "Bundled CLI artifact tests: $artifact_test_exit; closed-peer receive tests: $socket_test_exit"
+          if [ "$artifact_test_exit" -ne 0 ]; then exit "$artifact_test_exit"; fi
+          if [ "$socket_test_exit" -ne 0 ]; then exit "$socket_test_exit"; fi
           scripts/ci/run-in-console-session.sh \
             scripts/ci/run-app-host-xcodebuild.sh \
             -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
