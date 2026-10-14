@@ -1825,9 +1825,9 @@ existing filename-resolution suite retains its other assertions.
 The extracted source and focused suite compile in Swift 6 without warnings.
 Five functions/nine parameter cases pass locally on macOS 26. A temporary
 control bypassing sanitization fails with ten exact URL assertions, while native
-persistence checks still pass. The committed app
-module and full app-host execution remain pending; the canonical/local caveat
-stays open. Native readback evidence does not claim macOS 15 CI success.
+persistence checks still pass. Subsequent committed-module verification passed
+as recorded below; full app-host execution remains pending and the canonical/local
+caveat stays open. Native readback evidence does not claim macOS 15 CI success.
 
 Retained policy caveat: the existing writer sets origin equal to the sanitized
 download URL. The SDK recommends a distinct referring page or no origin to avoid
@@ -1842,6 +1842,21 @@ both caller flows received independent review. No user-facing strings, settings,
 menus or help text change; localization catalogs are untouched. This correction
 is integrated into PR 170, with no new PR.
 
+### Combined artifact 784 verification
+
+The fresh isolated maintenance-integration build succeeded at combined source
+`9a5f2cc88` without launch; its reviewed production sources match this PR.
+Quarantine metadata and panel appearance passed six functions/eleven cases in
+strict Swift 6 with no compiler warnings. The two FilePreview shortcut cases
+passed in the actual Swift 5 test-target mode with no compiler warnings. The
+existing mutable static settings owner prevents forcing that fixture into Swift 6,
+as documented above. Build warning budget was 126/221; this is not a claim of a
+warning-free app build. The earlier build 783 separately passed the parser,
+Global Search, reconnect and remote-working-directory owner checks.
+
+These focused native results do not replace macOS 15 app-host execution or the
+full dependency-complete CI gates, which remain open. No active user app was
+rebuilt, launched, quit or replaced.
 ## File preview save-shortcut fixture verification
 
 Actual app-host jobs `115439961432` and `115439961123` accept the configured and
@@ -1864,7 +1879,11 @@ panels are released afterward. Other legacy test bodies remain unchanged.
 An owned native four-case control compares both constructors through the actual
 panel save owner; requiring intended content fails exactly the two bare-editor
 cases and passes both factory cases. The corrected two-case suite compiles
-without warnings in target Swift 5 mode and passes against unchanged build 773.
+without warnings in target Swift 5 mode and passes against unchanged build 773. Forced
+Swift 6 compilation is blocked by the existing mutable static
+`KeyboardShortcutSettings.settingsFileStore` owner, as in the Global Search
+fixture; no suppression or new unsafe declaration is added. That legacy owner
+migration remains outside this test-only correction.
 The focused browser/settings gate includes it, and the canonical/local caveat
 stays open pending fixed-head app-host CI. These local results do not claim
 full-suite success or execution on CI's macOS 15 runner.
@@ -1873,7 +1892,6 @@ Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing migration,
 behavior and local/CI references, architecture/concurrency and shared-behavior
 rules, and debugging runtime pitfalls. Production code and shipped strings are
 unchanged; no localization catalog edits are required.
-
 
 ## Panel appearance compositing verification
 
