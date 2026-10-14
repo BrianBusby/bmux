@@ -1846,8 +1846,10 @@ Root/personal AGENTS, continuous-code-quality, bmux-testing, architecture and
 shared-behavior guidance were applied to the complete parser, session value,
 transport caller and tests. The parser remains the single session-record owner;
 no new state, dependencies, user-facing strings or localization keys are added.
-A fresh isolated combined build and its native owner checks are required before
-publishing this runtime correction. Full combined app-host CI remains open.
+Fresh isolated combined builds 783 and 784 succeeded without launch; build 783
+executed all nine parser functions (ten cases) successfully with warning-free
+focused compilation. The app/runtime source in this publication is unchanged
+from that verified parser correction. Full combined app-host CI remains open.
 
 ### Remote tmux parser regression execution
 
@@ -1859,9 +1861,13 @@ blocker, not evidence that the parser regression failed.
 The existing first focused app-host invocation now also selects
 `RemoteTmuxSessionListParserTests`, so Swift Testing executes the LF/CRLF cases
 before broad legacy XCTest work. The full shard selectors, runner count,
-deadlines and assertions are unchanged. The production parser fix remains held
-until CI records the named failing regression; local red and fixed-artifact
-proof do not replace that required CI evidence.
+deadlines and assertions are unchanged. Test-only focused job 115650904190
+of run 38501744697 then executed the parser suite and failed exactly the
+existing whitespace assertion and new CRLF multi-record case, with exit 65.
+The full focused invocation reported 44 functions / 6 suites / 20 issues: the
+two parser failures plus 18 CLI deadline failures, which remain unresolved.
+The reviewed parser correction is published with both source ancestries retained.
+Fixed-head parser and full combined CI verification remain pending.
 
 ## Download quarantine boundary verification
 

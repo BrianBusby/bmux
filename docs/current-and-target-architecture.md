@@ -428,11 +428,11 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Remote agent restore directory guard passes native build 783; full app-host verification pending (`remote_restore_working_directory_regression`) - owner: Bmux; status: open
 - Focused global search configured-conflict priority suite awaits app-host verification (`global_search_shortcut_conflict_verification`) - owner: Bmux; status: open
 - Opt-in focused app-host process diagnostics await actual runner evidence (`focused_app_host_process_diagnostics_verification`) - owner: Bmux; status: open
-- Remote tmux CRLF record correction awaits combined artifact and full CI verification (`remote_tmux_crlf_record_parsing_verification`) - owner: Bmux; status: open
+- Remote tmux CRLF record correction passes isolated artifact checks; full CI pending (`remote_tmux_crlf_record_parsing_verification`) - owner: Bmux; status: open
 - Quarantine outbound metadata and native readback contract pass local checks; app-host verification remains pending (`browser_download_quarantine_boundary_verification`) - owner: Bmux; status: open
 - Configured and chorded file preview save fixtures await fixed-head app-host verification (`file_preview_save_shortcut_fixture_verification`) - owner: Bmux; status: open
 - Panel clear-content and opaque chrome compositing suite awaits fixed-head app-host verification (`panel_appearance_compositing_fixture_verification`) - owner: Bmux; status: open
 - Native titlebar default-width and voice-control fixture corrections pass locally; app-host verification remains pending (`titlebar_product_contract_fixture_verification`) - owner: Bmux; status: open
 - CLI socket capture completion focused gate and shared-caller verification (`cli_socket_capture_completion_verification`) - owner: Bmux; status: open
-- Remote tmux LF and CRLF parser focused gate awaits named CI regression execution (`remote_tmux_parser_focused_gate_verification`) - owner: Bmux; status: open
+- Remote tmux LF and CRLF parser focused gate awaits fixed-head CI verification (`remote_tmux_parser_focused_gate_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

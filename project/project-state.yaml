@@ -6023,7 +6023,7 @@ caveats:
     status: open
     owner: bmux
   - id: remote_tmux_crlf_record_parsing_verification
-    title: Remote tmux CRLF record correction awaits combined artifact and full CI verification
+    title: Remote tmux CRLF record correction passes isolated artifact checks; full CI pending
     status: open
     owner: bmux
   - id: browser_download_quarantine_boundary_verification
@@ -6051,7 +6051,7 @@ caveats:
     status: open
     owner: bmux
   - id: remote_tmux_parser_focused_gate_verification
-    title: Remote tmux LF and CRLF parser focused gate awaits named CI regression execution
+    title: Remote tmux LF and CRLF parser focused gate awaits fixed-head CI verification
     status: open
     owner: bmux
 
