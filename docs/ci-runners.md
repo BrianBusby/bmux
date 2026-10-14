@@ -585,3 +585,35 @@ legacy owner's nonisolated mutable `settingsFileStore`, not a new concurrency
 suppression. Governing sources are root/personal AGENTS, continuous-code-quality,
 bmux-testing migration/behavior/local-CI, architecture and shared-behavior rules.
 No production code or shipped strings change; localization catalogs are untouched.
+
+## File preview save-shortcut fixture verification
+
+Actual app-host jobs `115439961432` and `115439961123` accept the configured and
+chorded save events, but the two legacy tests write empty files. Both construct
+`SavingTextView()` with a nil text container. Native build 773 reproduces the
+failure before key dispatch: this view has no text storage or container and its
+string stays empty after assignment. Production uses `makeFilePreviewTextView`,
+the explicit TextKit 1 factory introduced by `a86c58363`; the factory preserves
+text and both real shortcut/save paths write the expected content.
+
+Only those two methods migrate to `FilePreviewSaveShortcutTests`. Storage and
+content preconditions guard the native fixture. Original key handling, chord
+prefix no-save and final file assertions remain, with an additional remapped
+old-default negative control. The existing editing protocol's test adapter
+captures the actual panel save Task so the test can await completion without the
+legacy yield loop. No save, routing or timeout policy changes. Managed shortcut
+setup/restoration is synchronous and finishes before any await; owned files and
+panels are released afterward. Other legacy test bodies remain unchanged.
+
+An owned native four-case control compares both constructors through the actual
+panel save owner; requiring intended content fails exactly the two bare-editor
+cases and passes both factory cases. The corrected two-case suite compiles
+without warnings in target Swift 5 mode and passes against unchanged build 773.
+The focused browser/settings gate includes it, and the canonical/local caveat
+stays open pending fixed-head app-host CI. These local results do not claim
+full-suite success or execution on CI's macOS 15 runner.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing migration,
+behavior and local/CI references, architecture/concurrency and shared-behavior
+rules, and debugging runtime pitfalls. Production code and shipped strings are
+unchanged; no localization catalog edits are required.

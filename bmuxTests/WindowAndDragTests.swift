@@ -3090,45 +3090,6 @@ final class FilePreviewPanelTextSavingTests: XCTestCase {
         XCTAssertFalse(panel.isFileUnavailable)
     }
 
-    func testSavingTextViewUsesConfiguredSaveShortcut() async throws {
-        KeyboardShortcutSettings.resetAll()
-        defer { KeyboardShortcutSettings.resetAll() }
-
-        KeyboardShortcutSettings.setShortcut(
-            StoredShortcut(key: "u", command: true, shift: false, option: true, control: false),
-            for: .saveFilePreview
-        )
-
-        let url = try temporaryTextFile(contents: "original", encoding: .utf8)
-        defer { try? FileManager.default.removeItem(at: url) }
-
-        let panel = FilePreviewPanel(workspaceId: UUID(), filePath: url.path)
-        defer { panel.close() }
-        await panel.loadTextContent().value
-
-        let textView = SavingTextView()
-        textView.string = "saved by configured shortcut"
-        textView.panel = panel
-        panel.attachTextView(textView)
-
-        let event = try XCTUnwrap(NSEvent.keyEvent(
-            with: .keyDown,
-            location: .zero,
-            modifierFlags: [.command, .option],
-            timestamp: ProcessInfo.processInfo.systemUptime,
-            windowNumber: 0,
-            context: nil,
-            characters: "u",
-            charactersIgnoringModifiers: "u",
-            isARepeat: false,
-            keyCode: UInt16(kVK_ANSI_U)
-        ))
-
-        XCTAssertTrue(textView.performKeyEquivalent(with: event))
-        await waitForPanelSave(panel)
-        XCTAssertEqual(try String(contentsOf: url, encoding: .utf8), "saved by configured shortcut")
-    }
-
     func testSavingTextViewDoesNotUseDefaultSaveShortcutAfterRemap() async throws {
         KeyboardShortcutSettings.resetAll()
         defer { KeyboardShortcutSettings.resetAll() }

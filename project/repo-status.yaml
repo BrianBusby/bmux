@@ -210,3 +210,5 @@ local_caveats:
     status: open
   - id: global_search_shortcut_conflict_verification
     status: open
+  - id: file_preview_save_shortcut_fixture_verification
+    status: open
