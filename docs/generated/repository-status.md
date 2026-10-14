@@ -281,3 +281,4 @@ Repository: `BrianBusby/bmux`
 | `sidebar_git_publication_fixture_verification` | open |
 | `notification_focus_completion_fixture_verification` | open |
 | `hook_prompt_stable_workspace_fixture_verification` | open |
+| `cli_telemetry_joined_producer_verification` | open |

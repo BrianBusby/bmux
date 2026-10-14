@@ -6282,3 +6282,8 @@ caveats:
     title: Notification focus dismissal fixture uses the existing broadcaster completion boundary; native controls pass and exact-head app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: cli_telemetry_joined_producer_verification
+    title: CLI telemetry fixture joins its producer at unchanged failure bounds; owned-shell counterexample passes and actual telemetry app-host verification remains pending
+    status: open
+    owner: bmux
