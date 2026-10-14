@@ -471,6 +471,8 @@
 		C67540100000000000000001 /* BrowserNavigationPopupPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67540100000000000000002 /* BrowserNavigationPopupPolicy.swift */; };
 		BD1440000000000000000002 /* BrowserNavigationReadinessDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1440000000000000000001 /* BrowserNavigationReadinessDiagnostics.swift */; };
 		B0A501000000000000000001 /* BrowserOmnibarAppKitBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A501000000000000000002 /* BrowserOmnibarAppKitBridge.swift */; };
+		B4AC017D658C4DD299300002 /* BrowserOmnibarArrowFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4AC017D658C4DD299300001 /* BrowserOmnibarArrowFixture.swift */; };
+		B4AC017D658C4DD299300012 /* BrowserOmnibarArrowRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4AC017D658C4DD299300011 /* BrowserOmnibarArrowRoutingTests.swift */; };
 		B0A500000000000000000001 /* BrowserOmnibarPerformanceSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A500000000000000000002 /* BrowserOmnibarPerformanceSupport.swift */; };
 		C2B6A97D1F2E4C71A8B9D001 /* BrowserOmnibarPerformanceSupportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B6A97D1F2E4C71A8B9D002 /* BrowserOmnibarPerformanceSupportTests.swift */; };
 		27DA3BE42CBF4AAFB6DE69C5 /* BrowserOmnibarSubmitSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C76D07ED88D244B1B02FAF3C /* BrowserOmnibarSubmitSupport.swift */; };
@@ -2512,6 +2514,8 @@
 		C67540100000000000000002 /* BrowserNavigationPopupPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserNavigationPopupPolicy.swift; sourceTree = "<group>"; };
 		BD1440000000000000000001 /* BrowserNavigationReadinessDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserNavigationReadinessDiagnostics.swift; sourceTree = "<group>"; };
 		B0A501000000000000000002 /* BrowserOmnibarAppKitBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserOmnibarAppKitBridge.swift; sourceTree = "<group>"; };
+		B4AC017D658C4DD299300001 /* BrowserOmnibarArrowFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BrowserOmnibarArrowFixture.swift"; sourceTree = "<group>"; };
+		B4AC017D658C4DD299300011 /* BrowserOmnibarArrowRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BrowserOmnibarArrowRoutingTests.swift"; sourceTree = "<group>"; };
 		B0A500000000000000000002 /* BrowserOmnibarPerformanceSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserOmnibarPerformanceSupport.swift; sourceTree = "<group>"; };
 		C2B6A97D1F2E4C71A8B9D002 /* BrowserOmnibarPerformanceSupportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserOmnibarPerformanceSupportTests.swift; sourceTree = "<group>"; };
 		C76D07ED88D244B1B02FAF3C /* BrowserOmnibarSubmitSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserOmnibarSubmitSupport.swift; sourceTree = "<group>"; };
@@ -5622,6 +5626,8 @@
 				AA5269A0C0DE0023FACE0023 /* TerminalSurfaceRecoveryTests.swift */,
 				AC0A317D658C4DD299300001 /* TerminalRuntimeReadinessFixture.swift */,
 				B3AC017D658C4DD299300011 /* GhosttyPasteShortcutFixture.swift */,
+				B4AC017D658C4DD299300011 /* BrowserOmnibarArrowRoutingTests.swift */,
+				B4AC017D658C4DD299300001 /* BrowserOmnibarArrowFixture.swift */,
 				B3AC017D658C4DD299300001 /* GhosttyPasteShortcutBindingTests.swift */,
 				B19D367408964643981975A4 /* NotificationKeyDownTests.swift */,
 				C34B27E387CA4E0F84337144 /* NotificationKeyDownFixture.swift */,
@@ -8058,6 +8064,8 @@
 				BCBC0A0E0000000000000E11 /* BrowserMediaActivityAggregationTests.swift in Sources */,
 				BCBC0A0E0000000000000E21 /* BrowserMediaPlaybackAudioActivityTests.swift in Sources */,
 				BD1440000000000000000002 /* BrowserNavigationReadinessDiagnostics.swift in Sources */,
+				B4AC017D658C4DD299300002 /* BrowserOmnibarArrowFixture.swift in Sources */,
+				B4AC017D658C4DD299300012 /* BrowserOmnibarArrowRoutingTests.swift in Sources */,
 				C2B6A97D1F2E4C71A8B9D001 /* BrowserOmnibarPerformanceSupportTests.swift in Sources */,
 				C0DEB0550000000000000005 /* BrowserOpenSplitSocketTests.swift in Sources */,
 				D0B1000EA1B2C3D4E5F60001 /* BrowserPaneDropRoutingTests.swift in Sources */,
