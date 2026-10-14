@@ -8174,15 +8174,21 @@ fi
             .appendingPathComponent("bmux-\(name)-\(UUID().uuidString)", isDirectory: true)
         let socketPath = makeSocketPath(String(name.prefix(6)))
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        return ClaudeHookContext(
-            cliPath: try bundledCLIPath(),
-            socketPath: socketPath,
-            listenerFD: try bindUnixSocket(at: socketPath),
-            state: MockSocketServerState(),
-            root: root,
-            workspaceId: "11111111-1111-1111-1111-111111111111",
-            surfaceId: "22222222-2222-2222-2222-222222222222"
-        )
+        do {
+            return ClaudeHookContext(
+                cliPath: try bundledCLIPath(),
+                socketPath: socketPath,
+                listenerFD: try bindUnixSocket(at: socketPath),
+                state: MockSocketServerState(),
+                root: root,
+                workspaceId: "11111111-1111-1111-1111-111111111111",
+                surfaceId: "22222222-2222-2222-2222-222222222222"
+            )
+        } catch let setupError {
+            do { try FileManager.default.removeItem(at: root) }
+            catch { XCTFail("Could not remove owned Claude hook fixture directory: \(error)") }
+            throw setupError
+        }
     }
 
     private func runClaudeHook(
