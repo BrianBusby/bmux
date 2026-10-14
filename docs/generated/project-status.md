@@ -194,6 +194,7 @@ Regenerate with: ./scripts/project-docs generate
 | Per-descriptor native readiness is bounded locally; final app-host timeout attribution and verification remain pending (`cli_socket_readiness_coalescing_verification`) | Bmux | open |  |
 | Sidebar pointer fixture exercises the actual four-point content overlap; full app-host verification remains pending (`sidebar_terminal_hit_boundary_verification`) | Bmux | open |  |
 | Browser portal resize, reveal, and transient rebind contracts pass native 786; integrated app-host verification remains pending (`browser_portal_presentation_fixture_verification`) | Bmux | open |  |
+| Direct text and Korean Return fixtures require a ready runtime; fixed-head macOS app-host verification remains pending (`terminal_native_input_delivery_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

@@ -158,6 +158,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `terminal_native_input_delivery_fixture_verification` | open |
 | `native_app_host_full_suite_failures` | open |
 | `workspace_close_ownership_verification` | open |
 | `antigravity_hook_lifecycle_fixture_verification` | open |

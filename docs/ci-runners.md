@@ -2666,3 +2666,33 @@ macOS 15 result. Integrated fixed-head CI, full-suite execution, and visual
 WebKit rendering remain open under
 `browser_portal_presentation_fixture_verification`. Contributor verification
 notes and test diagnostics add no product UI or localization keys.
+
+
+### Typed input and Korean Return runtime readiness
+
+Run 38509817630 shard 3 (job 115676261545) reported missing native input in
+`testDirectInsertTextUsesTypedInputSemantics` and retained marked text plus a
+missing Return in `testReturnAfterKoreanCommitAlsoSendsReturnToSurface`.
+The direct-input case passed on retry; Korean Return failed again. Neither
+failure recorded whether the terminal runtime was ready.
+
+Both cases now use the existing `TerminalNativeInputDeliveryTests` ready-surface
+fixture, which subscribes before attachment and requires the runtime before
+installing synchronous input probes. The original exact text/keycode assertions
+and real Korean `keyDown` path remain; the Korean case also requires exactly one
+interpretation and one forwarded Return. Prior observer, layout and interpreter
+hooks are restored before any suspension. The old synchronous cases used 50ms
+settling without an explicit failure deadline; the migrated cases adopt the
+existing suite's one-minute outer test limit. The helper and runtime timeout
+policy, input owners, workflow selectors and production behavior are unchanged.
+
+An owned, offscreen native probe on unchanged build 786 reproduced both missing
+input signatures before readiness and delivered the expected inputs after the
+actual ready notification. The two migrated cases pass against that same module. A temporary copy bypassing
+only readiness fails both cases with five issues, including all four original
+behavior oracles. This establishes the fixture precondition, not the exact macOS 15 CI cause.
+The complete affected files compile without warnings in the test target's Swift
+5 mode. Strict Swift 6 still encounters the existing nonisolated
+`KeyboardLayout.debugInputSourceIdOverride` and legacy CJK support boundary; no
+suppression or production hook was added. Fixed-head macOS app-host verification
+remains pending.

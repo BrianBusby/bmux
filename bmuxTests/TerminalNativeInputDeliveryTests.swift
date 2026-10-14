@@ -104,6 +104,65 @@ import Testing
         }
     }
 
+    @Test(.timeLimit(.minutes(1)))
+    func directInsertTextUsesTypedInputSemantics() async throws {
+        try await withReadySurface { _, view, _ in
+            let previousObserver = GhosttyNSView.debugGhosttySurfaceKeyEventObserver
+            defer { GhosttyNSView.debugGhosttySurfaceKeyEventObserver = previousObserver }
+            var pressedText: [String] = []
+            var pressedKeycodes: [UInt32] = []
+            GhosttyNSView.debugGhosttySurfaceKeyEventObserver = { event in
+                previousObserver?(event)
+                guard event.action == GHOSTTY_ACTION_PRESS else { return }
+                if let text = event.text { pressedText.append(String(cString: text)) }
+                else { pressedKeycodes.append(event.keycode) }
+            }
+            view.insertText("dictated line\n", replacementRange: NSRange(location: NSNotFound, length: 0))
+            #expect(pressedText == ["dictated line"])
+            #expect(pressedKeycodes == [36], "Trailing newline should be delivered as Return, not pasted text")
+        }
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func returnAfterKoreanCommitAlsoSendsReturnToSurface() async throws {
+        try await withReadySurface { _, view, window in
+            let previousObserver = GhosttyNSView.debugGhosttySurfaceKeyEventObserver
+            let previousSource = KeyboardLayout.debugInputSourceIdOverride
+            let previousHandler = GhosttyNSView.debugTextInputEventHandler
+            defer {
+                GhosttyNSView.debugGhosttySurfaceKeyEventObserver = previousObserver
+                KeyboardLayout.debugInputSourceIdOverride = previousSource
+                GhosttyNSView.debugTextInputEventHandler = previousHandler
+            }
+            view.setMarkedText("\u{D55C}", selectedRange: NSRange(location: 0, length: 1),
+                replacementRange: NSRange(location: NSNotFound, length: 0))
+            KeyboardLayout.debugInputSourceIdOverride = "com.apple.inputmethod.Korean.2SetKorean"
+            var interpreted = 0
+            GhosttyNSView.debugTextInputEventHandler = { candidate, _ in
+                guard candidate === view else { return false }
+                interpreted += 1
+                candidate.insertText("\u{D55C}", replacementRange: NSRange(location: NSNotFound, length: 0))
+                return true
+            }
+            var returnPresses = 0
+            GhosttyNSView.debugGhosttySurfaceKeyEventObserver = { event in
+                previousObserver?(event)
+                if event.action == GHOSTTY_ACTION_PRESS, event.keycode == 36, event.text == nil {
+                    returnPresses += 1
+                }
+            }
+            let event = try #require(NSEvent.keyEvent(with: .keyDown, location: .zero,
+                modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                windowNumber: window.windowNumber, context: nil, characters: "\r",
+                charactersIgnoringModifiers: "\r", isARepeat: false, keyCode: 36))
+            try #require(window.makeFirstResponder(view))
+            view.keyDown(with: event)
+            #expect(!view.hasMarkedText(), "Return should commit the active Hangul composition")
+            #expect(returnPresses == 1, "Return should still be forwarded after IME commit so the command executes once")
+            #expect(interpreted == 1)
+        }
+    }
+
     private func withReadySurface(body: (TerminalSurface, GhosttyNSView, NSWindow) throws -> Void) async throws {
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 360, height: 240),
             styleMask: [.titled, .closable], backing: .buffered, defer: false)
