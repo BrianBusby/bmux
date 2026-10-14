@@ -2378,3 +2378,45 @@ warning-free Swift 6 compile. Removing captured notifications in a temporary
 control fails five original notification assertions. Local proof does not replace
 fixed app-host and full-suite verification; the canonical/local caveat remains
 open. No production, subprocess timeout, runner or shipped string changed.
+
+
+### Titlebar sizing and command-palette metadata fixture contracts
+
+Final-C run `38509817630` shard 2 failed
+`TitlebarControlsSizingPolicyTests.testTitlebarControlsUseDeterministicContentSize`
+and `CommandPaletteSwitcherSearchIndexerTests.testKeywordsIncludeDirectoryBranchAndPortMetadata`.
+The former expected the old 152/139-point widths; the current classic/compact
+controls reserve 238/233 points for seven 28-point targets and shortcut hints.
+The latter expected a compound branch fragment as an independent token; the
+package retains the full branch and splits surface components at path, punctuation,
+and whitespace delimiters, so the compound query still matches the full branch.
+
+Only those two methods migrate to Swift Testing. The titlebar case preserves its
+0.001 tolerance and height assertion, renders the actual ordinary and split
+controls, and verifies seven contained hit lanes, action dispatch, and noninteractive
+gaps. Its synchronous main-actor fixture snapshots and restores exact persistent
+values and argument/registration fallbacks separately for the six shortcut keys,
+font magnification, and constructor-owned backup/import/legacy metadata. It also
+restores shortcut file-store identity. A constructor-owned empty settings file
+disables fallback paths and watching; SwiftUI debug settings use an isolated
+defaults suite. No global fixture value crosses an await.
+The search case retains directory, basename, full-branch and port assertions and
+requires component tokens plus successful compound-query matching.
+
+Native 786 verification on local macOS 26 passed both functions (three parameter
+cases), with temporary seeded-settings restoration controls. Success and throwing-body
+controls preserve originally absent persistent keys despite argument/registration
+fallback values, restore store identity, and remove the owned directory. The
+original expectations produced exactly three failures in a controlled temporary
+copy. Independent rendering and hit tests show that the old widths clip the
+forward-history target. Package controls covered all delimiters, full-value
+retention, workspace/surface ranking, and rejected unrelated or branch-removed
+queries. No production code, deadline, or assertion tolerance changed.
+
+The current Swift 5 target compile is warning-free. A Swift 6 probe rejects the
+existing nonisolated mutable `KeyboardShortcutSettings.settingsFileStore` seam,
+including the maintained test isolation pattern; no suppression or unsafe
+annotation was introduced. Complete accessory/hint-window composition, macOS 15,
+and fixed-head app-host CI remain unverified. The prior full-suite exit-124
+incomplete result remains open under
+`titlebar_search_metadata_fixture_verification`.
