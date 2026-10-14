@@ -5929,3 +5929,7 @@ caveats:
     title: Configured and chorded file preview save fixtures await fixed-head app-host verification
     status: open
     owner: bmux
+  - id: panel_appearance_compositing_fixture_verification
+    title: Panel clear-content and opaque chrome compositing suite awaits fixed-head app-host verification
+    status: open
+    owner: bmux

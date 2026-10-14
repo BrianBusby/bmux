@@ -617,3 +617,27 @@ Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing migration,
 behavior and local/CI references, architecture/concurrency and shared-behavior
 rules, and debugging runtime pitfalls. Production code and shipped strings are
 unchanged; no localization catalog edits are required.
+
+## Panel appearance compositing verification
+
+App-host job `115439961299` fails the legacy transparent-opacity case because it
+expects background alpha 0.42 while the shared chrome background is opaque.
+Commit `379033c4b` intentionally changed `GhosttyBackgroundTheme.color` to
+`WindowAppearanceSnapshot.compositedTerminalColor`; `WindowChromeColorResolver`
+blends the terminal RGB over the resolved window background and returns alpha 1.
+`PanelAppearance` independently preserves clear content for transparent terminals.
+
+Only that method migrates to `PanelAppearanceCompositingTests`. Aqua and Dark Aqua
+cases retain clear-content, disabled-fill and zero-content-alpha assertions with
+the original tolerance. Expected RGB is calculated independently from the terminal
+color, 0.42 opacity and the appearance-resolved window background. Scoped native
+drawing appearance restores the previous appearance without changing application
+or user settings. All other legacy methods remain unchanged.
+
+The focused browser/settings gate includes the new suite. Unchanged build 773
+native proof passes both appearances; restoring the original 0.42-alpha assertion
+fails exactly both cases. The matching canonical/local caveat stays open until
+fixed-head app-host CI verifies the migrated suite. No production policy, rendering
+or shipped copy changes. Governing guidance is root/personal AGENTS,
+continuous-code-quality, bmux-testing migration/behavior/local-CI, architecture,
+shared behavior and OS-sensitive debugging; localization catalogs are untouched.

@@ -191,3 +191,4 @@ Repository: `BrianBusby/bmux`
 | `browser_inspector_window_ownership_verification` | open |
 | `global_search_shortcut_conflict_verification` | open |
 | `file_preview_save_shortcut_fixture_verification` | open |
+| `panel_appearance_compositing_fixture_verification` | open |
