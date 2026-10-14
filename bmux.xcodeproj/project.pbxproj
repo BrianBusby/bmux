@@ -1744,6 +1744,8 @@
 		C37800000000000000000003 /* VMDefaultCloudCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C37800000000000000000004 /* VMDefaultCloudCommandTests.swift */; };
 		C37800000000000000000001 /* VMSSHCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C37800000000000000000002 /* VMSSHCommandTests.swift */; };
 		B1F0D1020000000000000001 /* WebViewRepresentable+WebKitTransferSubviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0D1020000000000000002 /* WebViewRepresentable+WebKitTransferSubviews.swift */; };
+		A67139790F323026B1B17CF5 /* WelcomeShortcutWindowFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60BDE836611E78FBAB279B9 /* WelcomeShortcutWindowFixture.swift */; };
+		C70F5F4ACCBD6A3004C90A27 /* WelcomeWindowShortcutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160FEDE51467B37C2B860363 /* WelcomeWindowShortcutTests.swift */; };
 		A500120C /* WindowAccessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001222 /* WindowAccessor.swift */; };
 		063BC42CEE257D6213A2E30C /* WindowAndDragTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEE83F8394D90ACACD8E19DD /* WindowAndDragTests.swift */; };
 		A59170000000000000000001 /* WindowAppearanceSnapshotPaneBackgroundTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59170000000000000000002 /* WindowAppearanceSnapshotPaneBackgroundTests.swift */; };
@@ -3710,6 +3712,8 @@
 		C37800000000000000000004 /* VMDefaultCloudCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMDefaultCloudCommandTests.swift; sourceTree = "<group>"; };
 		C37800000000000000000002 /* VMSSHCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMSSHCommandTests.swift; sourceTree = "<group>"; };
 		B1F0D1020000000000000002 /* WebViewRepresentable+WebKitTransferSubviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/WebViewRepresentable+WebKitTransferSubviews.swift"; sourceTree = "<group>"; };
+		B60BDE836611E78FBAB279B9 /* WelcomeShortcutWindowFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeShortcutWindowFixture.swift; sourceTree = "<group>"; };
+		160FEDE51467B37C2B860363 /* WelcomeWindowShortcutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeWindowShortcutTests.swift; sourceTree = "<group>"; };
 		A5001222 /* WindowAccessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowAccessor.swift; sourceTree = "<group>"; };
 		BEE83F8394D90ACACD8E19DD /* WindowAndDragTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowAndDragTests.swift; sourceTree = "<group>"; };
 		A59170000000000000000002 /* WindowAppearanceSnapshotPaneBackgroundTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowAppearanceSnapshotPaneBackgroundTests.swift; sourceTree = "<group>"; };
@@ -5497,6 +5501,8 @@
 				F5300003A1B2C3D4E5F60718 /* RovoDevTranscriptPreviewTests.swift */,
 				F5310001A1B2C3D4E5F60718 /* RovoDevHookConfigTests.swift */,
 				FA100001A1B2C3D4E5F60718 /* BrowserImportMappingTests.swift */,
+				160FEDE51467B37C2B860363 /* WelcomeWindowShortcutTests.swift */,
+				B60BDE836611E78FBAB279B9 /* WelcomeShortcutWindowFixture.swift */,
 				F6000001A1B2C3D4E5F60718 /* AppDelegateShortcutRoutingTests.swift */,
 				F5588001A1B2C3D4E5F60718 /* AppDelegateOptionDigitShortcutRoutingTests.swift */,
 				6419B0026419B0026419B002 /* AppDelegateShortcutRoutingRepairProbe.swift */,
@@ -8333,6 +8339,8 @@
 				F2000000A1B2C3D4E5F60718 /* UpdatePillReleaseVisibilityTests.swift in Sources */,
 				C37800000000000000000003 /* VMDefaultCloudCommandTests.swift in Sources */,
 				C37800000000000000000001 /* VMSSHCommandTests.swift in Sources */,
+				A67139790F323026B1B17CF5 /* WelcomeShortcutWindowFixture.swift in Sources */,
+				C70F5F4ACCBD6A3004C90A27 /* WelcomeWindowShortcutTests.swift in Sources */,
 				063BC42CEE257D6213A2E30C /* WindowAndDragTests.swift in Sources */,
 				A59170000000000000000001 /* WindowAppearanceSnapshotPaneBackgroundTests.swift in Sources */,
 				F4200000A1B2C3D4E5F60718 /* WindowAppearanceSnapshotTests.swift in Sources */,

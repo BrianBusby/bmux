@@ -6023,6 +6023,10 @@ caveats:
     title: Completed-close history and batched mobile response fixture corrections await fixed-head app-host verification
     status: open
     owner: bmux
+  - id: welcome_window_retained_fixture_verification
+    title: Retained Welcome shortcut window fixture awaits fixed-head app-host verification
+    status: open
+    owner: bmux
   - id: browser_inspector_window_ownership_verification
     title: Browser inspector window-close runtime fixture correction awaits fixed-head app-host verification
     status: open
