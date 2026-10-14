@@ -219,7 +219,7 @@ Regenerate with: ./scripts/project-docs generate
 | File-preview and notification test-window constructor ownership corrected; four affected app-host cases remain pending (`native_window_close_ownership_verification`) | Bmux | open |  |
 | Terminal file launch fixtures compare directory identity and retain exact quoting; native controls pass and integrated app-host verification remains pending (`terminal_file_launch_directory_contract_verification`) | Bmux | open |  |
 | Hook prompt evidence fixture uses the accepted stable workspace identity; native old expectation fails and corrected case passes, app-host verification pending (`hook_prompt_stable_workspace_fixture_verification`) | Bmux | open |  |
-| Closed retained windows are excluded from presentation while manager recovery is preserved; fixed-runtime and app-host verification remain pending (`closed_main_window_routing_verification`) | Bmux | open |  |
+| Closed retained window routing passes isolated build 790 native controls while manager recovery is preserved; real-window app-host verification remains pending (`closed_main_window_routing_verification`) | Bmux | open |  |
 | Focused Git metadata fixture verifies sidebar publication and duplicate suppression without workspace publication; native control passes and app-host verification remains pending (`sidebar_git_publication_fixture_verification`) | Bmux | open |  |
 | Notification focus dismissal fixture uses the existing broadcaster completion boundary; native controls pass and exact-head app-host verification remains pending (`notification_focus_completion_fixture_verification`) | Bmux | open |  |
 

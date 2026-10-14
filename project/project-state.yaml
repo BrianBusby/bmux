@@ -6269,7 +6269,7 @@ caveats:
     owner: bmux
 
   - id: closed_main_window_routing_verification
-    title: Closed retained windows are excluded from presentation while manager recovery is preserved; fixed-runtime and app-host verification remain pending
+    title: Closed retained window routing passes isolated build 790 native controls while manager recovery is preserved; real-window app-host verification remains pending
     status: open
     owner: bmux
 

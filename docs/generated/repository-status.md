@@ -280,3 +280,4 @@ Repository: `BrianBusby/bmux`
 | `closed_main_window_routing_verification` | open |
 | `sidebar_git_publication_fixture_verification` | open |
 | `notification_focus_completion_fixture_verification` | open |
+| `hook_prompt_stable_workspace_fixture_verification` | open |

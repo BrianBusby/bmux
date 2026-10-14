@@ -3746,10 +3746,15 @@ contracts, storage, session identity, or the separate SessionProvenance failure.
 
 The exact original regression and recovered-visible test remain unchanged.
 The original H failure is the red evidence; no additional permanent regression
-or deadline change is included. Fixed-runtime controls, a fresh isolated tagged
-app build, full test-target compilation, and real-window macOS 15 app-host
-verification remain pending under `closed_main_window_routing_verification`.
-Local offscreen evidence does not close those gates. Source review and the
+or deadline change is included. Isolated build 790 passes a fresh tagged reload
+and six native controls (two test functions), with warning-free strict Swift 6
+probe compilation. They cover close/unregister, registered hidden windows,
+presentation projections, retained manager/provenance/diagnostic mapping, cached
+weak-window fallback, and stale-search selection preservation. Visible and
+miniaturized positive cases use temporary getter facts; no window was presented.
+Full test-target compilation and real-window macOS 15 app-host verification
+remain pending under `closed_main_window_routing_verification`. Local offscreen
+evidence does not close those gates. Source review and the
 existing CI window-list/focus assertions remain the operational acceptance path;
 no new telemetry or user-facing strings are introduced.
 
@@ -3811,3 +3816,20 @@ introduced. The synchronous MainActor scope is retained. Full target compilation
 in the repository's configured language mode and exact-head app-host execution
 remain required. The unlaunched harness reports disabled-Sentry breadcrumb
 messages; it does not start telemetry or display windows. No product text changes.
+
+
+### Isolated window-routing build checkpoint
+
+Build 790 (`maintenance-closed-window-routing`) contains the merged five-file
+window-routing repair and passes the tagged Debug build. It was not launched.
+The integration source is `d6ff5b7e3`; the build began from the identical merged
+application files just before the merge commit was recorded. Subsequent local
+changes are test and evidence-only. Existing builds 775 and 786–789 remain intact.
+
+The build reports 131 distinct retained warning lines. Changed window-identity,
+recovery, search and provenance owners have none. The two diagnostics in the
+legacy TerminalController file (redundant responder cast and deprecated window
+capture) match build 789 exactly. Nothing was suppressed. The isolated native
+probe reports disabled-Sentry breadcrumb messages without starting telemetry.
+Combined test-target compilation, latest-head app-host and Release gates remain
+open; this checkpoint is not merge approval or proof of real window focus.

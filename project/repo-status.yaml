@@ -408,3 +408,6 @@ local_caveats:
 
   - id: notification_focus_completion_fixture_verification
     status: open
+
+  - id: hook_prompt_stable_workspace_fixture_verification
+    status: open
