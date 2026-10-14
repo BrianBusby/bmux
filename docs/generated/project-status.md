@@ -143,6 +143,7 @@ Regenerate with: ./scripts/project-docs generate
 | Monorepo migration ledger pending dispositions (`monorepo_migration_ledger_pending_dispositions`) | Bmux | open |  |
 | Observability trace API boundary (`observability_trace_api`) | Provenance Engine | open |  |
 | GitHub Actions runner reliability (`github_actions_runner_reliability`) | Bmux | open | BrianBusby/bmux#8 |
+| Real mixed-signature CLI and framework regressions fail locally as expected; CI red proof and per-architecture verifier fix pending (`bundled_cli_mixed_signature_regression_verification`) | Bmux | open |  |
 | Bundled CLI dynamic and Release artifact relocation verification (`bundled_cli_artifact_relocation_verification`) | Bmux | open |  |
 | Focused browser app-host gate includes discard policy tests; local native cases pass and pushed-head CI remains pending (`browser_discard_policy_focused_gate_verification`) | Bmux | open |  |
 | Codex Stop focused app-host passes nine functions in three suites; full-suite verification remains pending (`codex_stop_fixture_app_host_verification`) | Bmux | open |  |

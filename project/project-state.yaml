@@ -5913,6 +5913,10 @@ caveats:
       repository: BrianBusby/bmux
       number: 8
 
+  - id: bundled_cli_mixed_signature_regression_verification
+    title: Real mixed-signature CLI and framework regressions fail locally as expected; CI red proof and per-architecture verifier fix pending
+    status: open
+    owner: bmux
   - id: bundled_cli_artifact_relocation_verification
     title: Bundled CLI dynamic and Release artifact relocation verification
     status: open

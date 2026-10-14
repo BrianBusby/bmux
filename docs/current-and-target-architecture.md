@@ -404,6 +404,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Monorepo migration ledger pending dispositions (`monorepo_migration_ledger_pending_dispositions`) - owner: Bmux; status: open
 - Observability trace API boundary (`observability_trace_api`) - owner: Provenance Engine; status: open
 - GitHub Actions runner reliability (`github_actions_runner_reliability`) - owner: Bmux; status: open; issue: BrianBusby/bmux#8
+- Real mixed-signature CLI and framework regressions fail locally as expected; CI red proof and per-architecture verifier fix pending (`bundled_cli_mixed_signature_regression_verification`) - owner: Bmux; status: open
 - Bundled CLI dynamic and Release artifact relocation verification (`bundled_cli_artifact_relocation_verification`) - owner: Bmux; status: open
 - Focused browser app-host gate includes discard policy tests; local native cases pass and pushed-head CI remains pending (`browser_discard_policy_focused_gate_verification`) - owner: Bmux; status: open
 - Codex Stop focused app-host passes nine functions in three suites; full-suite verification remains pending (`codex_stop_fixture_app_host_verification`) - owner: Bmux; status: open

@@ -5,6 +5,7 @@ import contextlib
 import io
 import runpy
 import plistlib
+import platform
 import shutil
 import subprocess
 import sys
@@ -127,6 +128,96 @@ class BundledCLIArtifactTests(unittest.TestCase):
         with contextlib.redirect_stdout(output):
             verifier["audit"](self.app)
         self.assertIn("unsigned 1", output.getvalue())
+
+    def nonhost_slice(self, binary):
+        host = platform.machine()
+        self.assertIn(host, ("arm64", "x86_64"))
+        other = "x86_64" if host == "arm64" else "arm64"
+        self.assertEqual(set(self.command("/usr/bin/lipo", "-archs", str(binary)).stdout.split()),
+                         {host, other})
+        thin = self.root / (binary.name + "-nonhost")
+        self.command("/usr/bin/lipo", str(binary), "-thin", other, "-output", str(thin))
+        return host, other, thin
+
+    def replace_slice(self, binary, architecture, thin):
+        merged = self.root / (binary.name + "-reassembled")
+        self.command("/usr/bin/lipo", str(binary), "-replace", architecture, str(thin),
+                     "-output", str(merged))
+        merged.replace(binary)
+
+    def corrupt_nonhost_signature(self, binary, target):
+        host, other, thin = self.nonhost_slice(binary)
+        for architecture in (host, other):
+            self.command("/usr/bin/codesign", "--verify", "--strict", "--architecture",
+                         architecture, str(target))
+        data = thin.read_bytes()
+        self.assertEqual(data.count(b"artifact-signature-marker"), 1)
+        thin.write_bytes(data.replace(b"artifact-signature-marker", b"artifact-signature-marKer"))
+        self.replace_slice(binary, other, thin)
+        self.command("/usr/bin/codesign", "--verify", "--strict", "--architecture", host, str(target))
+        invalid = subprocess.run(["/usr/bin/codesign", "--verify", "--strict", "--architecture",
+                                  other, str(target)], capture_output=True, text=True)
+        self.assertNotEqual(invalid.returncode, 0, invalid.stdout + invalid.stderr)
+
+    def assert_mixed_slices_archive_unchanged(self, binaries, unsigned_targets):
+        for binary, target in unsigned_targets:
+            host, other, thin = self.nonhost_slice(binary)
+            self.command("/usr/bin/codesign", "--remove-signature", str(thin))
+            self.replace_slice(binary, other, thin)
+            self.command("/usr/bin/codesign", "--verify", "--strict", "--architecture", host, str(target))
+            unsigned = subprocess.run(["/usr/bin/codesign", "-d", "--architecture", other, str(target)],
+                                      capture_output=True, text=True)
+            self.assertNotEqual(unsigned.returncode, 0)
+            self.assertIn("code object is not signed at all", unsigned.stderr)
+        before = {binary.relative_to(self.app): binary.read_bytes() for binary in binaries}
+        links = {path.relative_to(self.app): path.readlink()
+                 for path in self.frameworks.rglob("*") if path.is_symlink()}
+        archive = self.root / "mixed-artifact.tar.gz"
+        self.assertIn("Relocated CLI: bmux 42", self.verify(True, "--archive", str(archive)))
+        unpacked = self.root / "download"
+        unpacked.mkdir()
+        self.command("/usr/bin/tar", "-xzf", str(archive), "-C", str(unpacked))
+        self.app = unpacked / "bmux.app"
+        for relative, data in before.items():
+            self.assertEqual((self.app / relative).read_bytes(), data)
+        for relative, target in links.items():
+            self.assertTrue((self.app / relative).is_symlink())
+            self.assertEqual((self.app / relative).readlink(), target)
+        self.assertIn("Relocated CLI: bmux 42", self.verify(True, "--require-absent-external-rpaths"))
+
+    def test_mixed_signed_unsigned_cli_slices_run_and_archive_unchanged(self):
+        self.compile('#include <stdio.h>\nint main(void) { puts("bmux 42"); }',
+                     self.cli, "-arch", "arm64", "-arch", "x86_64")
+        self.assert_mixed_slices_archive_unchanged((self.cli,), ((self.cli, self.cli),))
+
+    def test_mixed_signed_unsigned_framework_slices_run_and_archive_unchanged(self):
+        leaf = self.framework("Leaf", "int leaf(void) { return 42; }",
+                              "-arch", "arm64", "-arch", "x86_64")
+        self.compile('#include <stdio.h>\nextern int leaf(void); int main(void) { printf("bmux %d\\n", leaf()); }',
+                     self.cli, str(leaf), "-arch", "arm64", "-arch", "x86_64",
+                     "-Wl,-rpath,@executable_path/../../Frameworks")
+        self.assertTrue(any(path.is_symlink() for path in self.frameworks.rglob("*")))
+        self.assert_mixed_slices_archive_unchanged(
+            (self.cli, leaf), ((leaf, self.frameworks / "Leaf.framework"),))
+
+    def test_corrupt_nonhost_cli_signature_is_rejected_before_execution(self):
+        self.compile('#include <stdio.h>\nint main(void) { puts("bmux artifact-signature-marker"); }',
+                     self.cli, "-arch", "arm64", "-arch", "x86_64")
+        self.corrupt_nonhost_signature(self.cli, self.cli)
+        output = self.verify(False)
+        self.assertIn("codesign", output)
+        self.assertNotIn("Relocated CLI:", output)
+
+    def test_corrupt_extra_framework_slice_is_rejected_before_execution(self):
+        leaf = self.framework("Leaf", 'const char *marker(void) { return "artifact-signature-marker"; } '
+                              'int leaf(void) { return 42; }', "-arch", "arm64", "-arch", "x86_64")
+        self.compile('#include <stdio.h>\nextern int leaf(void); int main(void) { printf("bmux %d\\n", leaf()); }',
+                     self.cli, str(leaf), "-Wl,-rpath,@executable_path/../../Frameworks")
+        self.assertEqual(self.command("/usr/bin/lipo", "-archs", str(self.cli)).stdout.strip(), platform.machine())
+        self.corrupt_nonhost_signature(leaf, self.frameworks / "Leaf.framework")
+        output = self.verify(False)
+        self.assertIn("codesign", output)
+        self.assertNotIn("Relocated CLI:", output)
 
     def test_native_cli_failure_is_not_accepted(self):
         self.compile('int main(void) { return 42; }', self.cli)
