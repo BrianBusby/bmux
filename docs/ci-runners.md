@@ -692,3 +692,19 @@ Xcode wiring rules, and the SDK quarantine contract. Complete shared writer and
 both caller flows received independent review. No user-facing strings, settings,
 menus or help text change; localization catalogs are untouched. This correction
 is integrated into PR 170, with no new PR.
+
+### Combined artifact 784 verification
+
+The fresh isolated maintenance-integration build succeeded at combined source
+`9a5f2cc88` without launch; its reviewed production sources match this PR.
+Quarantine metadata and panel appearance passed six functions/eleven cases in
+strict Swift 6 with no compiler warnings. The two FilePreview shortcut cases
+passed in the actual Swift 5 test-target mode with no compiler warnings. The
+existing mutable static settings owner prevents forcing that fixture into Swift 6,
+as documented above. Build warning budget was 126/221; this is not a claim of a
+warning-free app build. The earlier build 783 separately passed the parser,
+Global Search, reconnect and remote-working-directory owner checks.
+
+These focused native results do not replace macOS 15 app-host execution or the
+full dependency-complete CI gates, which remain open. No active user app was
+rebuilt, launched, quit or replaced.
