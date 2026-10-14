@@ -2022,3 +2022,42 @@ migration/behavior/local-CI/wiring rules, architecture ownership, and maintained
 ContentView padding and UpdateTitlebarAccessory control/hint consumers. The
 localization audit finds no changed shipped text or catalogs; this section is
 contributor verification prose. This correction belongs to PR 170, not a new PR.
+
+
+### Completed-close history and batched mobile frame fixtures
+
+The PR 169 shard 2 run `115650904163` failed the existing repeated-close history
+case with an empty shared store and the batched mobile frame case with a one-second
+signal timeout. The history test now observes its exact tab's completed
+`Workspace.didCloseTab` callback through a fully forwarding, per-controller
+Bonsplit delegate. It captures the resulting history before another suite can
+clear the shared store, then retains the original prompt, repeated-close,
+panel-removal, title and detail assertions. It restores the original delegate
+before tearing down its panels and isolated defaults. The ten-second deadline
+remains, without polling.
+
+The mobile fixture parks both callbacks with async streams before allowing the
+first to close. A test-target extension enters the existing actor-owned response
+drain before releasing that operation: this captures the task handles before
+`close` clears them. Every success, timeout and cancellation path releases the
+owned gates and joins those tasks. The original request payloads, exact
+`["workspace.list"]` assertion and one-second signal deadlines remain. No
+production owner, app-host selector or runtime deadline changes.
+
+Both exact cases pass together against the unchanged build 784 module. A
+controlled clear after the real close reproduces the old nil-history assertion,
+while the completed-close snapshot passes. An authorization-tail control proves
+that the old `isSubscribed` round-trip can return before authorization returns;
+it does not establish which signal timed out on CI. Missing-first and
+missing-second controls preserve the one-second failure and verify that the
+fixture deallocates after joining callbacks. A temporary exact copy of the
+mobile connection owner, with only its post-authorization close/cancellation
+guard removed, causes the unchanged method assertion to detect the additional
+`terminal.input` delivery. No repository production code is altered by that
+negative control. Fixed-head app-host verification remains pending.
+
+This bounded correction follows root/personal AGENTS, continuous-code-quality,
+bmux-testing migration/behavior/local-CI guidance, architecture concurrency and
+file ownership, and the real Workspace/Bonsplit and MobileHostConnection
+completion boundaries. The localization audit finds no changed shipped strings,
+settings, menus or catalogs; this section is contributor verification prose.

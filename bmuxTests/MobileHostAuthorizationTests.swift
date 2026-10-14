@@ -980,39 +980,7 @@ struct MobileHostAuthorizationTests {
         #expect(finalRecordedIDs == [connectionID])
     }
     @Test func testMobileHostConnectionStopsBatchedFrameProcessingAfterClose() async throws {
-        let connectionID = UUID()
-        let requestRecorder = MobileHostConnectionRequestRecorder()
-        let sessionBox = MobileHostConnectionBox()
-        // Deterministic ordering signals replace the former timing race: the
-        // first frame's authorize records and closes the session, then fulfills
-        // `firstRecorded`. The second frame's authorize blocks on `secondGate`
-        // (held until close is confirmed) instead of a fixed 100ms sleep, so the
-        // close provably lands before the second frame can proceed.
-        let firstRecorded = AsyncTestSignal()
-        let secondAuthorizeStarted = AsyncTestSignal()
-        let secondAuthorizeFinished = AsyncTestSignal()
-        let secondGate = SendableSemaphore(value: 0)
-        let connection = NWConnection.bmuxTestLoopback()
-        let session = MobileHostConnection(
-            id: connectionID,
-            connection: connection,
-            authorizeRequest: { request in
-                if request.id as? String == "second" {
-                    secondAuthorizeStarted.fulfill()
-                    secondGate.wait()
-                    secondAuthorizeFinished.fulfill()
-                }
-                return nil
-            },
-            onAuthorizedRequest: { request in
-                await requestRecorder.record(request)
-                await sessionBox.close(reason: "test close after first batched frame")
-                firstRecorded.fulfill()
-            },
-            handleRequest: { _ in .ok([:]) },
-            onClose: { _ in }
-        )
-        await sessionBox.set(session)
+        let fixture = MobileHostBatchedFrameFixture()
         let firstFrame = try MobileSyncFrameCodec.encodeFrame(
             Data(#"{"id":"first","method":"workspace.list","params":{}}"#.utf8)
         )
@@ -1022,19 +990,7 @@ struct MobileHostAuthorizationTests {
         var batch = Data()
         batch.append(firstFrame)
         batch.append(secondFrame)
-        await session.debugHandleReceiveDataForTesting(batch)
-        // Wait for the first frame to record and close the connection, then
-        // confirm the second frame's authorize is in flight before releasing it.
-        try await firstRecorded.wait()
-        try await secondAuthorizeStarted.wait()
-        secondGate.signal()
-        try await secondAuthorizeFinished.wait()
-        // After the second authorize returns, `respond` re-checks `isClosed`
-        // synchronously and drops the frame without recording it. An
-        // actor-isolated round-trip flushes that synchronous tail so the
-        // recorder reflects the final, settled state.
-        _ = await session.isSubscribed(to: "terminal.updated")
-        let recordedMethods = await requestRecorder.recordedMethods()
+        let recordedMethods = try await fixture.process(batch)
         #expect(recordedMethods == ["workspace.list"])
     }
     // MARK: - Advertised mobile host capabilities
@@ -1211,24 +1167,6 @@ private actor MobileHostManualSleeper {
     func resumeNext() {
         guard !continuations.isEmpty else { return }
         continuations.removeFirst().resume()
-    }
-}
-private actor MobileHostConnectionRequestRecorder {
-    private var methods: [String] = []
-    func record(_ request: MobileHostRPCRequest) {
-        methods.append(request.method)
-    }
-    func recordedMethods() -> [String] {
-        methods
-    }
-}
-private actor MobileHostConnectionBox {
-    private var session: MobileHostConnection?
-    func set(_ session: MobileHostConnection) {
-        self.session = session
-    }
-    func close(reason: String) async {
-        await session?.close(reason: reason)
     }
 }
 private extension NWConnection {
