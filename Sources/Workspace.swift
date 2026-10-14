@@ -6451,9 +6451,7 @@ final class Workspace: Identifiable, ObservableObject {
             activeRemoteTerminalSessionCount = activeRemoteTerminalSurfaceIds.count
         }
         syncRemotePortScanTTYs()
-        if activeRemoteTerminalSurfaceIds.isEmpty {
-            disconnectRemoteConnectionAfterTerminalExit()
-        }
+        if activeRemoteTerminalSurfaceIds.isEmpty { disconnectRemoteConnectionAfterTerminalExit() }
         applyBrowserRemoteWorkspaceStatusToPanels()
         notifyPresentedCurrentDirectoryChanged(from: previousPresentedDirectory, force: removedTrustedDirectory)
     }

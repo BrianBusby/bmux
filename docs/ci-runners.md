@@ -2088,3 +2088,26 @@ The canonical `persistent_pty_child_exit_verification` and existing full-suite
 caveats remain open. No deadline, assertion or runner policy changed. The
 localization audit finds no shipped string or catalog changes; this is
 contributor verification prose.
+
+
+### Workspace close ownership verification
+
+Authoritative combined shard 2 failed the existing
+`TabManagerWorkspaceOwnershipTests.testCloseWorkspaceIgnoresWorkspaceNotOwnedByManager`.
+The exact test also fails against unlaunched native build 785: an external
+workspace loses its panel and title map even though the manager's tab list and
+selection remain unchanged. The owned-HOME native probe reports exactly these
+two assertions; its focused compile is warning-free.
+
+`TabManager.closeWorkspace` now requires the passed workspace instance to belong
+to the manager before any coalescer, remote tmux, history, notification or teardown
+side effects. The existing last-workspace protection is unchanged. Current
+callers resolve owned model instances; checking reference identity prevents a
+foreign object from being destroyed through this reference-taking API. Workspace
+IDs are immutable and freshly allocated by the initializer, so no artificial
+same-ID test seam was introduced.
+
+The existing actual CI regression supplies the red evidence. Parsing and project
+state checks pass; the fixed native artifact and complete app-host suite remain
+pending under `workspace_close_ownership_verification`. No test assertion,
+deadline, localization catalog or shipped wording changed.

@@ -5990,6 +5990,10 @@ caveats:
     title: SSH agent environment fixture focused gate awaits app-host CI
     status: open
     owner: bmux
+  - id: workspace_close_ownership_verification
+    title: Foreign workspace close reproduces destructive teardown; owned-instance guard awaits fixed native and app-host verification
+    status: open
+    owner: bmux
   - id: persistent_pty_child_exit_verification
     title: Persistent SSH child exit reproduces sibling tracking loss; last-surface guard awaits fixed native and app-host verification
     status: open
