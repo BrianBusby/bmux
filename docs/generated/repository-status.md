@@ -251,3 +251,4 @@ Repository: `BrianBusby/bmux`
 | `remote_tmux_parser_focused_gate_verification` | open |
 | `project_truth_full_suite_verification` | resolved |
 | `cli_socket_readiness_coalescing_verification` | open |
+| `sidebar_terminal_hit_boundary_verification` | open |

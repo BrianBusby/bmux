@@ -452,4 +452,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - CLI socket capture completion focused gate and shared-caller verification (`cli_socket_capture_completion_verification`) - owner: Bmux; status: open
 - Remote tmux LF and CRLF parser focused gate awaits fixed-head CI verification (`remote_tmux_parser_focused_gate_verification`) - owner: Bmux; status: open
 - Per-descriptor native readiness is bounded locally; final app-host timeout attribution and verification remain pending (`cli_socket_readiness_coalescing_verification`) - owner: Bmux; status: open
+- Sidebar pointer fixture exercises the actual four-point content overlap; full app-host verification remains pending (`sidebar_terminal_hit_boundary_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

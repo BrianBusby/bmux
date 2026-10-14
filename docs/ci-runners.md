@@ -2597,3 +2597,8 @@ framework-bundle signature ownership and deduplication, permit unsigned slices,
 and strictly verify every signed slice without modifying artifact bytes. Full
 Release/fresh-runner and app-host verification, including the prior exit-124
 incomplete native suite, remain open.
+### Sidebar terminal hit boundary fixture
+
+The failed C `testHostViewStopsSidebarPassThroughJustInsideTerminalContent` used a full-width terminal over an unrelated internal split and a stale two-point overlap. The maintained `SidebarResizeInteraction` reserves four content-side points; `WindowTerminalHostView` detects the sidebar from the leading hosted-content edge and intentionally rejects sidebar routing for full-width content. `SidebarTerminalHitBoundaryTests` replaces only that case with an owned retained offscreen window and a terminal starting at x=120, with no internal split. A synthetic pointer tests pass-through at x=124 and a concrete hosted-terminal hit at x=125. Both original pass-through/content outcomes remain required. No rendering, hit-testing policy, or typing-sensitive production path changes.
+
+The new suite participates in the existing broad test sharding; workflow selectors are unchanged. Actual C failure and the root's native original-boundary negative are retained. Exact-source strict Swift6 compilation is warning-free; unchanged build786 passes the migrated case in0.058s. A temporary copy restoring the two/three-point boundary fails exactly the original hosted-hit requirement. Full macOS15 app-host verification remains pending. Only test diagnostics and contributor documentation changed; no shipped localized strings were added.

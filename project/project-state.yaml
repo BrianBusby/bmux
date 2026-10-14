@@ -6130,3 +6130,8 @@ caveats:
     title: Per-descriptor native readiness is bounded locally; final app-host timeout attribution and verification remain pending
     status: open
     owner: bmux
+
+  - id: sidebar_terminal_hit_boundary_verification
+    title: Sidebar pointer fixture exercises the actual four-point content overlap; full app-host verification remains pending
+    status: open
+    owner: bmux

@@ -3985,67 +3985,6 @@ final class WindowTerminalHostViewTests: XCTestCase {
         )
     }
 
-    func testHostViewStopsSidebarPassThroughJustInsideTerminalContent() {
-        let terminalSideOverlapWidth: CGFloat = 2
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 300, height: 180),
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        defer { window.orderOut(nil) }
-        guard let contentView = window.contentView else {
-            XCTFail("Expected content view")
-            return
-        }
-
-        let splitView = NSSplitView(frame: contentView.bounds)
-        splitView.autoresizingMask = [.width, .height]
-        splitView.isVertical = true
-        splitView.dividerStyle = .thin
-        let splitDelegate = BonsplitMockSplitDelegate()
-        splitView.delegate = splitDelegate
-        let first = NSView(frame: NSRect(x: 0, y: 0, width: 120, height: contentView.bounds.height))
-        let second = NSView(frame: NSRect(x: 121, y: 0, width: 179, height: contentView.bounds.height))
-        splitView.addSubview(first)
-        splitView.addSubview(second)
-        contentView.addSubview(splitView)
-        splitView.setPosition(1, ofDividerAt: 0)
-        splitView.adjustSubviews()
-        contentView.layoutSubtreeIfNeeded()
-
-        let host = WindowTerminalHostView(frame: contentView.bounds)
-        host.autoresizingMask = [.width, .height]
-        let hostedView = makeHostedTerminalView(frame: host.bounds)
-        host.addSubview(hostedView)
-        contentView.addSubview(host)
-
-        let dividerPointInSplit = NSPoint(
-            x: splitView.arrangedSubviews[0].frame.maxX + (splitView.dividerThickness * 0.5),
-            y: splitView.bounds.midY
-        )
-        let dividerPointInWindow = splitView.convert(dividerPointInSplit, to: nil)
-        let dividerPointInHost = host.convert(dividerPointInWindow, from: nil)
-
-        let resizeBandPoint = NSPoint(
-            x: dividerPointInHost.x + terminalSideOverlapWidth,
-            y: dividerPointInHost.y
-        )
-        XCTAssertNil(
-            host.hitTest(resizeBandPoint),
-            "The narrow terminal-side overlap should still pass through to the sidebar resizer"
-        )
-
-        let textSelectionPoint = NSPoint(
-            x: dividerPointInHost.x + terminalSideOverlapWidth + 1,
-            y: dividerPointInHost.y
-        )
-        assertHitFallsInsideHostedTerminal(
-            host.hitTest(textSelectionPoint),
-            hostedView: hostedView,
-            message: "Once the pointer moves past the reduced terminal-side overlap, terminal content should win hit-testing"
-        )
-    }
 }
 
 
