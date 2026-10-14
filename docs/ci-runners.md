@@ -2649,15 +2649,41 @@ Temporary deadline controls before accept and while writing to the stopped
 child confirm joined child cleanup, removed socket/home and restored signal
 state. This is test-only red evidence, not a production fix or full CLI pass.
 
-The existing shard-3 bundled CLI artifact step invokes both independent Python
-regressions against the exact built artifact before native linkage verification.
-It retains both exit codes, reports them and fails when either is nonzero; no
-failure is waived. Existing native linkage, dependency-closure verification and
-later CLI deadline tests are unchanged. Actual test-only CI red is still required
-before publishing a production repair. The canonical/local
-`cli_closed_peer_receive_regression_verification` caveat stays open. Only test
-diagnostics and contributor documentation changed; no shipped copy requires
-localization updates.
+The shard-3 bundled CLI artifact step first builds and executes native linkage,
+then invokes both independent Python regressions against that exact artifact.
+It retains both exit codes and fails when either is nonzero; dependency-closure
+verification and archive creation follow only after success. No failure is waived.
+G run `38593929044`, job `115958161129`, executed all three socket test functions
+at 2026-10-14 16:25:54 UTC. Exactly the complete TAGGED, Unicode multiline and
+final-unterminated-line scenarios failed with receive-timeout EINVAL; PONG and
+both EOF error controls passed. The step exited 1. This is the required actual
+CI red, distinct from D2's missing-artifact setup failure.
+
+### Closed-peer receive correction
+
+`CLISocketReceiver` owns the receive-timeout syscall/cache and byte-read mechanics;
+its descriptor is borrowed from `SocketClient`, which retains socket lifetime,
+request/framing policy, timeout sanitization and operation telemetry. If Darwin
+rejects a timeout change with EINVAL, one nonblocking receive must actually return
+bytes or EOF before the unchanged parser proceeds. Would-block or any other read
+failure preserves the original configuration error. Other configuration errors
+remain strict, as do connect/authentication/event-stream configuration calls.
+Only successful configuration updates the cache; closing the client resets it.
+No deadline, retry, polling, JSON/PONG classification, output whitespace or error
+message changes. Existing operation phase and byte counts continue to describe
+received data; no payload logging is added.
+
+The complete extracted `SocketClient` source compiles warning-free in target
+Swift 5 mode and passes the unchanged three-function/six-scenario Python suite.
+Strict Swift 6 receiver controls cover an 18 KB Unicode reply across three reads,
+final EOF, ordinary live-peer timeout and invalid descriptor. Invalid-timeval
+control returns EDOM on this host and remains an error. A temporary syscall-result
+injection (not shipped) supplies EINVAL while real native receives return EAGAIN
+or EBADF; both retain the original EINVAL message and leave the cache unchanged.
+These owner-level results do not replace the pending fresh tagged CLI build and
+fixed-head CI. The canonical/local verification caveat remains open. Existing
+shipped error text is byte-identical; no new user-facing copy needs translation.
+
 ## Browser portal presentation fixture migration
 
 The three `BrowserWindowPortalLifecycleTests` failures in final-C native shard 2

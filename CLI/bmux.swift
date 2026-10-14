@@ -1759,7 +1759,7 @@ final class SocketClient {
 
     private let path: String
     private var socketFD: Int32 = -1
-    private var lastConfiguredReceiveTimeout: TimeInterval?
+    private var receiver = CLISocketReceiver()
     private var lastOperationTelemetry: CLISocketOperationTelemetry.State?
     private static let defaultResponseTimeoutSeconds: TimeInterval = 15.0
     private static let multilineResponseIdleTimeoutSeconds: TimeInterval = 0.12
@@ -1900,7 +1900,7 @@ final class SocketClient {
             Darwin.close(socketFD)
             socketFD = -1
         }
-        lastConfiguredReceiveTimeout = nil
+        receiver = CLISocketReceiver()
     }
 
     func send(command: String, responseTimeout: TimeInterval? = nil) throws -> String {
@@ -1916,7 +1916,7 @@ final class SocketClient {
         }
 
         let initialResponseTimeout = responseTimeout ?? Self.responseTimeoutSeconds
-        if lastConfiguredReceiveTimeout != initialResponseTimeout {
+        if receiver.configuredTimeout != initialResponseTimeout {
             try configureReceiveTimeout(initialResponseTimeout)
         }
         _ = try? configureSocketWriteSafety(initialResponseTimeout)
@@ -1945,12 +1945,11 @@ final class SocketClient {
             operation.sawNewline = sawNewline
             operation.timeout = currentTimeout
             recordOperation(operation)
-            if lastConfiguredReceiveTimeout != currentTimeout {
-                try configureReceiveTimeout(currentTimeout)
-            }
-
             var buffer = [UInt8](repeating: 0, count: 8192)
-            let count = Darwin.read(socketFD, &buffer, buffer.count)
+            let count = try receiver.read(
+                descriptor: socketFD, buffer: &buffer, count: buffer.count,
+                timeout: currentTimeout, interval: Self.socketTimeval(for: currentTimeout)
+            )
             if count < 0 {
                 if errno == EINTR {
                     continue
@@ -2436,22 +2435,7 @@ final class SocketClient {
     }
 
     private func configureReceiveTimeout(_ timeout: TimeInterval) throws {
-        var interval = Self.socketTimeval(for: timeout)
-        let result = withUnsafePointer(to: &interval) { ptr in
-            setsockopt(
-                socketFD,
-                SOL_SOCKET,
-                SO_RCVTIMEO,
-                ptr,
-                socklen_t(MemoryLayout<timeval>.size)
-            )
-        }
-        guard result == 0 else {
-            let errorCode = errno
-            let reason = String(cString: strerror(errorCode))
-            throw CLIError(message: "Failed to configure socket receive timeout (\(reason), errno \(errorCode))")
-        }
-        lastConfiguredReceiveTimeout = timeout
+        try receiver.configure(descriptor: socketFD, timeout: timeout, interval: Self.socketTimeval(for: timeout))
     }
 
     static func waitForConnectableSocket(path: String, timeout: TimeInterval) throws -> SocketClient {
