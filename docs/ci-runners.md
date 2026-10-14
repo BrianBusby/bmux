@@ -3644,3 +3644,20 @@ launched or replaced. All 19 original fixture source heads and current PRs
 Release production inputs with the successful E Release build; this is recorded
 as cancellation, not a passing gate. Diagnostic run `38605111245` retains the
 separate test-only Git-root alias regression and bounded process sampling.
+
+### Partial Claude hook context construction cleanup
+
+The shared Claude hook context factory also removes its owned temporary directory
+when CLI lookup or listener construction throws before ownership reaches callers.
+Cleanup errors remain visible through the existing test failure channel while the
+original setup error is rethrown. The listener helper still owns descriptor and
+bound-path cleanup; successful context cleanup is unchanged. Other callers that
+create directories before binding already install a defer or XCTest teardown.
+
+A temporary native harness used the actual factory and bind-helper bodies with
+controlled lookup/path inputs. Lookup failure, bind failure, successful ownership
+transfer and cleanup-error reporting all passed, with original errors preserved,
+no remaining owned roots and unchanged descriptor counts. Original-factory lookup
+and bind controls each failed specifically on the leaked root. Swift 5 compilation
+was warning-free. No permanent test adapter, production API, case-body change or
+app operation was introduced; integrated target compilation remains required.

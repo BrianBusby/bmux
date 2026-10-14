@@ -6246,7 +6246,7 @@ caveats:
     status: open
     owner: bmux
   - id: cli_notify_socket_bind_guard_verification
-    title: Legacy CLI socket setup rejects invalid paths and syscall failures before unsafe use; native controls pass and integrated app-host verification remains pending
+    title: Legacy CLI socket setup rejects invalid paths and cleans partial fixture construction failures; native controls pass and integrated app-host verification remains pending
     status: open
     owner: bmux
   - id: ssh_agent_joined_producer_verification

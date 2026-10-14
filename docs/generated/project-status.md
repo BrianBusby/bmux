@@ -214,7 +214,7 @@ Regenerate with: ./scripts/project-docs generate
 | Tmux launch identity fixture uses an owned short endpoint and requires focused-context exchange; integrated app-host verification remains pending (`tmux_launch_identity_fixture_verification`) | Bmux | open |  |
 | Orphan workspace shortcut fixture owns focused-context attribution; integrated app-host verification remains pending (`orphan_workspace_shortcut_fixture_verification`) | Bmux | open |  |
 | Explicit titlebar event-context suite passes native build789 including ambient keyboard control; integrated app-host verification remains pending (`titlebar_hit_test_event_context_verification`) | Bmux | open |  |
-| Legacy CLI socket setup rejects invalid paths and syscall failures before unsafe use; native controls pass and integrated app-host verification remains pending (`cli_notify_socket_bind_guard_verification`) | Bmux | open |  |
+| Legacy CLI socket setup rejects invalid paths and cleans partial fixture construction failures; native controls pass and integrated app-host verification remains pending (`cli_notify_socket_bind_guard_verification`) | Bmux | open |  |
 | SSH agent fixture joins its process before socket and file cleanup; native cases pass and fixed-head app-host deadlines remain unverified (`ssh_agent_joined_producer_verification`) | Bmux | open |  |
 | File-preview and notification test-window constructor ownership corrected; four affected app-host cases remain pending (`native_window_close_ownership_verification`) | Bmux | open |  |
 
