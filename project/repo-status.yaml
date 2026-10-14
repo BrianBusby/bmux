@@ -138,7 +138,7 @@ component_releases:
     release_status: tagged
 
 local_caveats:
-  - id: native_app_host_full_suite_failures
+  - id: cloud_attach_retry_fixture_verification
     status: open
   - id: configured_codex_placeholder_startup_dogfood
     status: open
@@ -189,4 +189,16 @@ local_caveats:
   - id: remote_mobile_open_architecture_decisions
     status: open
   - id: hybrid_focus_render_capture
+    status: open
+  - id: ssh_startup_lifecycle_focused_gate_verification
+    status: open
+  - id: ssh_workspace_creation_fixture_focused_gate_verification
+    status: open
+  - id: ssh_agent_environment_fixture_focused_gate_verification
+    status: open
+  - id: ssh_pty_lifecycle_fixture_verification
+    status: open
+  - id: native_app_host_full_suite_failures
+    status: open
+  - id: focused_app_host_process_diagnostics_verification
     status: open

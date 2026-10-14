@@ -128,6 +128,7 @@ Regenerate with: ./scripts/project-docs generate
 
 | Caveat | Owner | Status | Issue |
 | --- | --- | --- | --- |
+| Focused Cloud attach retry contract suite pending actual app-host verification (`cloud_attach_retry_fixture_verification`) | Bmux | open |  |
 | Broad legacy bmux-local storage migration (`broad_legacy_storage_migration`) | Bmux | open |  |
 | Residual app-runtime lifecycle ownership outside BmuxAppRuntimeServices (`residual_app_runtime_lifecycle_ownership`) | Bmux | open |  |
 | Workspace Display file-watcher SQLite churn (`workspace_display_file_watcher_churn`) | Bmux | open |  |
@@ -138,6 +139,11 @@ Regenerate with: ./scripts/project-docs generate
 | Monorepo migration ledger pending dispositions (`monorepo_migration_ledger_pending_dispositions`) | Bmux | open |  |
 | Observability trace API boundary (`observability_trace_api`) | Provenance Engine | open |  |
 | GitHub Actions runner reliability (`github_actions_runner_reliability`) | Bmux | open | BrianBusby/bmux#8 |
+| CI app-host Option/Alt step selects nine SSH lifecycle tests plus managed attach cleanup fixture; pushed-head verification pending (`ssh_startup_lifecycle_focused_gate_verification`) | Bmux | open |  |
+| SSH workspace creation fixture focused gate awaits app-host CI (`ssh_workspace_creation_fixture_focused_gate_verification`) | Bmux | open |  |
+| SSH agent environment fixture focused gate awaits app-host CI (`ssh_agent_environment_fixture_focused_gate_verification`) | Bmux | open |  |
+| SSH PTY initial resize acknowledgement CI timeouts remain unresolved (`ssh_pty_lifecycle_fixture_verification`) | Bmux | open |  |
+| Opt-in focused app-host process diagnostics await actual runner evidence (`focused_app_host_process_diagnostics_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

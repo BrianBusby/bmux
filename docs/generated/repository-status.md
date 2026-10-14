@@ -154,7 +154,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
-| `native_app_host_full_suite_failures` | open |
+| `cloud_attach_retry_fixture_verification` | open |
 | `configured_codex_placeholder_startup_dogfood` | open |
 | `codex_update_workspace_exit_native_dogfood` | open |
 | `expanded_prior_turn_system_appearance_contrast` | monitoring |
@@ -180,3 +180,9 @@ Repository: `BrianBusby/bmux`
 | `normal_terminal_codex_rich_evidence_gap` | resolved |
 | `remote_mobile_open_architecture_decisions` | open |
 | `hybrid_focus_render_capture` | open |
+| `ssh_startup_lifecycle_focused_gate_verification` | open |
+| `ssh_workspace_creation_fixture_focused_gate_verification` | open |
+| `ssh_agent_environment_fixture_focused_gate_verification` | open |
+| `ssh_pty_lifecycle_fixture_verification` | open |
+| `native_app_host_full_suite_failures` | open |
+| `focused_app_host_process_diagnostics_verification` | open |

@@ -163,6 +163,210 @@ available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
 
+## SSH startup lifecycle fixture repair (2026-10-12)
+
+The signal, retry, stdin and control-socket checks use the maintained CLI
+protocol. `vm ssh` requests `vm.ssh_info` with only `id`, and workspace-create
+replies include the created `surface_id`. The original mock rejected that
+request or forced discovery/rollback before reaching the behavior under test.
+
+Build 779 exposed a second fixture defect hidden by build 773's reusable-shell
+exit-status bug: the stale control-socket test selected managed PTY attach but
+mocked only shell SSH. Its generated command invoked the real `ssh-pty-attach`
+against a nonexistent socket. Stale-path removal succeeded; attach failed.
+The old wrapper masked that failure as exit 0, so the earlier ten-check baseline
+pass (`/tmp/ssh-startup-lifecycle-green.log`) did not prove successful attach.
+The observed build-779 failure is in `/tmp/ssh-lifecycle-779-native.log`, with the
+actual generated attach command in `/tmp/ssh-stale-control-779-generated.sh`.
+
+Only this touched case migrates to `SSHStaleControlSocketTests` (Swift Testing).
+The other nine XCTest methods keep their existing assertions. The new
+`SSHStaleControlSocketFixture` owns a short temporary home, stale UNIX socket,
+fake SSH preflight, CLI command generation, owned output files and explicit
+workspace/surface protocol replies. `SSHExitedPTYClient` supplies one exited
+remote session to the existing production `RemotePTYBridgeServer`; no separate
+TCP bridge implementation is introduced. Raw-SSH mode would skip the managed
+attach boundary that exposed the false pass, so the fixture retains it.
+
+The real bridge owns token validation, ready/EOF delivery and network lifetime.
+Its legacy blocking listener-start API runs on a dedicated thread behind a
+checked continuation; it never blocks Swift's cooperative executor. The fixture
+awaits the bridge's stop signal and shared `CLISocketFixture` descriptor teardown
+before deleting its owned files. Process output uses positional shell redirects
+with existing `CommandRunner`; no new process transport or timeout is added.
+
+`CLISocketFixture` is shared with notification fixtures. This use exposed a Darwin
+peer-close edge: setting `SO_NOSIGPIPE` again on an accepted socket after its peer
+has disconnected returns EINVAL. A native local probe confirmed accepted sockets
+inherit the listener's value for live and closed peers. Set it on the listener
+before accepting clients; keep nonblocking/CLOEXEC flags on every descriptor.
+`/tmp/ssh-control-779-flags-trace.log` retains the original readiness failure.
+`/tmp/ssh-control-nosigpipe-probe.log` also proves a closed-peer write returns
+EPIPE with inherited protection, while its unprotected subprocess dies from
+SIGPIPE; the correction does not disable signal protection.
+
+The test retains exit 0, no timeout, stale-file removal and `-G`/`-O check`
+assertions. It additionally requires removal before the managed attach request,
+a successful real bridge attachment, and the exact ordered target-specific
+bridge/session-query/attach-end/terminal-session-end requests. These checks catch
+an omitted attach mock even when an older wrapper masks the native exit status.
+
+All ten checks pass against both unchanged build 773 and fixed build 779
+(`/tmp/ssh-lifecycle-repaired-773.log`, `/tmp/ssh-lifecycle-repaired-779.log`).
+A temporary missing-attach mock control on 773 retains the misleading native
+exit 0 but fails the new stderr, bridge-attachment and cleanup-sequence assertions
+(`/tmp/ssh-control-773-missing-attach.log`). Actual pushed-head app-host CI remains
+pending. The existing Option/Alt invocation selects the nine
+legacy lifecycle methods and new managed cleanup suite without another runner
+or changing full coverage. Canonical and local Project Truth caveat
+`ssh_startup_lifecycle_focused_gate_verification` remains open.
+
+Guidance: root/personal AGENTS, continuous-code-quality, testing (migration,
+behavioral quality and wiring), architecture (file ownership and concurrency),
+shared-behavior, socket policy and dev workflow. Maintained owners include
+`BMUXCLI.runSSHWithOptions`, `runSSHPTYAttach`, `handleSSHPTYBridgeEOF`,
+`RemotePTYBridgeServer`, `AppRemotePTYBridgeStrings` and the shared socket fixture.
+The retained redundant Void-discard warning in `CLINotifyProcessTestSupport:54`
+is outside this patch. No production code, shipped strings, localization catalogs,
+app launches, builds or real app/socket state changes are part of this repair.
+The separate manual reconnect production repair remains outside this PR.
+### Cloud attach retry fixture contract
+
+The old `testDefaultFreestyleSSHAttachHonorsGenericCloudRetryEnvironment` failed
+because it promoted the backend's `vm_cloud_service_unavailable` to a top-level
+socket error and expected obsolete `0s` wording. The current chain is HTTP 502
+from the VM route, `VMClientError.httpStatus` formatting, then
+`TerminalController.v2VmCall` wrapping that description with socket code
+`vm_error`. HTTP status remains in the description and the CLI already retries
+it. The introducing commit `bd0b24b74` also used the localized zero-delay label
+`now`; this slice changes no retry or presentation policy.
+
+`CloudAttachRetryContractTests` replaces only that legacy method. Its fixture
+uses the actual native formatter and reviewed shared `CLISocketFixture` with
+owned file capture. Twenty-one cases exercise SSH, PTY and session-PTY attach:
+generic environment precedence, legacy fallback, zero retry limit, non-default
+attach, reconnect notice suppression, permanent failure and missing VM. Requests
+retain exact VM/session/attachment parameters; retries get fresh request IDs;
+final errors and exit 1 remain observable. Missing VMs never trigger creation or
+another mutation. Responses always fail, so no SSH or WebSocket connection starts.
+All other methods in VMDefaultCloudCommandTests remain byte-identical.
+
+Actual unchanged build 773 passes all 21 cases with warning-free focused compile.
+A temporary negative-control fixture sets the generic limit to zero for the three
+override cases: exactly those cases fail their count/notice assertions while the
+other 18 pass. The original baseline failure and independent socket diagnosis are
+retained. Actual app-host execution of the new suite remains pending; the broader
+baseline suite is not claimed green. The existing focused browser app-host step
+includes this suite without adding a runner; canonical/local Project Truth
+caveats track the open verification gate.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing migration/
+behavior/local-CI references, architecture file/API/concurrency rules, shared
+behavior, socket focus policy and observability error propagation/safe logging.
+Inspected boundaries include both shared CLI attach retry loops, SocketClient
+error formatting, VMClient HTTP errors, the socket VM adapter and VM route error
+policy. Bare typed socket errors remain unsupported by the current classifier;
+no new typed socket contract or production classifier expansion is introduced.
+No shipped strings, localization catalogs, app settings or runtime files change.
+### SSH workspace creation fixture
+
+The legacy SSH creation test omitted the terminal surface ID from its
+`workspace.create` response and rejected `surface.list`. Persistent SSH PTY
+startup therefore correctly failed target resolution and attempted rollback,
+instead of reaching the configuration assertions. The fixture now represents
+the current create response. A second case exercises the supported fallback
+where an older create response omits the surface but `surface.list` supplies it.
+
+Both Swift Testing cases retain the original exit/output, ordered requests,
+window selection, SSH destination/port/identity/options, relay/auth metadata and
+nonempty startup-command assertions. Every other legacy test remains unchanged.
+No production code, terminal rendering, network service or running app changes.
+The fixture owns its process environment, state/output files and mock socket;
+the reviewed shared CLISocketFixture owns asynchronous transport and cleanup.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing and migration/wiring/
+local-vs-CI references, architecture file/API discipline and socket focus policy.
+The complete workspace create/resolve/configure/select/rollback owner was
+inspected. Both cases pass unchanged build 773 with warning-free focused
+compilation. A temporary negative control restoring the omitted surface and
+rejected lookup fails both cases on the original observable assertions.
+App-host CI and combined full-suite verification remain pending under the
+canonical/local focused-gate caveat. Localization audit: no shipped strings or
+catalogs change; contributor verification documentation only.
+### SSH agent environment fixtures
+
+Two legacy SSH agent tests relied on obsolete fixture assumptions. The tilde
+case changed `HOME` but not Foundation's home override, so the owned candidate
+was not found and the inherited agent path won. The caller-socket case required
+all `ssh_options` to be absent, although the CLI now adds multiplexing defaults.
+Neither failure demonstrates a production forwarding defect.
+
+The migrated Swift Testing cases own both `HOME` and `CFFIXED_USER_HOME`, the
+caller agent path and the optional tilde candidate. They verify the exact path
+in both workspace initial environment and remote configuration, preserve the
+explicit tilde option, and check that the no-option path adds no ForwardAgent
+override while permitting other defaults. A missing-candidate control verifies
+fallback to the owned caller path. Every other legacy method remains unchanged.
+The existence-only lookup uses owned empty files; no agent traffic is sent.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing with migration,
+wiring and local-vs-CI references, architecture/file discipline and shared/socket
+policy. Complete SSHAgentSocketResolver path resolution and the CLI forwarding
+selection/create/configure owners were inspected. Process environment, outputs
+and mock socket are isolated; transport uses the reviewed CLISocketFixture.
+No production, OpenSSH policy, terminal renderer or running app changes.
+
+Three native cases pass unchanged build 773 with warning-free compilation. A
+temporary negative control restoring HOME-only isolation and the nil-options
+assertion reproduces both original failures; the missing-candidate control
+still passes. Actual app-host CI and combined full-suite verification remain
+pending under the canonical/local focused-gate caveat. Localization audit: no
+shipped strings or catalogs change; contributor verification notes only.
+
+### SSH PTY bridge lifecycle fixtures
+
+Four legacy CLI tests expected an initial resize before every bridge EOF/reset,
+but their mock accepted only one RPC connection. Since `643906256`, resize uses
+an independent bounded connection and pending resize may be cancelled by EOF.
+The baseline app-host logs fail only that method-array expectation; the exit,
+error, detach and local attach-end assertions pass.
+
+`SSHPTYLifecycleContractTests` migrates those four methods to sixteen real-CLI
+cases: running session, gone session, absent surface and reset, each with a pipe
+(80×24) or PTY (132×43), and immediate or resize-acknowledged bridge closure.
+Immediate closure preserves the exact lifecycle sequence and validates any
+resize that wins cancellation. The second path closes only after the RPC mock
+writes the complete resize reply and requires exactly one resize with the exact
+workspace/session/attachment/token/dimensions before session reconciliation.
+Running sessions still return 254 and detach; gone/reset sessions return zero
+and clear the local surface; absent surfaces never detach or clear one.
+
+Ownership follows `AGENTS.md`, the continuous-code-quality skill, bmux testing
+migration/behavior/local-vs-CI references, architecture concurrency/file rules,
+and socket focus policy. The maintained `643906256` adjacent cleanup test and
+`CLISSHPTYResizeInputTests` establish the separate connection and native PTY
+contracts. The shared `CLISocketFixture` retains its reviewed transport and
+adds an optional response-written AsyncStream signal; the bridge and output
+channel own and join their native readiness sources. These tests use only
+owned loopback sockets, temporary homes, subprocesses and descriptors. No
+production or renderer behavior changes, global settings, app launches or
+new user-facing copy are involved.
+
+Local native compilation against unchanged build 773 is warning-free; all
+sixteen cases pass. A transport negative control suppressing resize requests
+fails all eight acknowledgement-gated cases at the bounded process deadline,
+while the eight immediate-close cases still pass. This demonstrates that
+accepting cancellation does not remove positive resize coverage. The focused
+browser-proxy app-host invocation includes this suite. Actual app-host CI
+execution remains pending under `ssh_pty_lifecycle_fixture_verification`;
+these local results do not establish full-suite acceptance.
+
+The output-channel fixture resolves each PTY path with `ttyname_r` and an owned
+buffer so parallel cases cannot race over `ttyname` static storage. A temporary
+concurrent native probe retained eight PTYs at once across eight batches and
+verified distinct paths plus exact marker delivery to each corresponding master.
+The sixteen CLI cases and constructor-failure cleanup proof also pass after
+this correction; app-host CI remains pending.
 ## Native test result reporting
 
 The macOS unit-test steps in `ci.yml`, `ci-macos-compat.yml`, `test-depot.yml`
@@ -217,3 +421,124 @@ failed the exact-head workflow guard (run `38283073852`, job `114924791841`)
 by killing an active Swift Testing run with exit 124. Local subprocess verification
 passes with phase-aware cleanup; full native app-host completion remains subject
 to the separately tracked suite failures.
+
+
+### Consolidated ssh transport fixtures review boundary
+
+This branch consolidates #150, #160, #164, #167, #168, preserving each published source commit in
+its ancestry. Original branches remain available; superseded pull requests
+link to their replacement. This changes review organization, not application
+behavior. The preserved source heads are:
+
+- #150: `cf9e78dcb5df8dbc4dbadd82df673492ad33cbdf`
+- #160: `d58ea8aaa63284b48302763446964f74cbd94524`
+- #164: `d10e0deaa2e8d34e6f2f17057f43dd8a3d3021b5`
+- #167: `0d1223d04ad3f65f95c280d8d60050f11b808a21`
+- #168: `a289576a0c25890594493b489e43b8a0047c89cb`
+
+The native-settings and SSH replacement PRs depend on #142 for authoritative
+CI exit reporting. The agent-session replacement stacks on SSH to share one
+reviewed socket fixture. Existing focused selectors, full-suite coverage and
+canonical/local verification caveats remain intact. No failed, incomplete or
+cancelled run is treated as green. The original combined validation branch
+remains unchanged and does not verify these new heads.
+
+Local consolidation checks cover source ancestry, test-content preservation,
+Xcode wiring, selector discovery, determinism, file budgets and generated state.
+Full app-host compilation/execution and required checks on the replacement heads
+remain pending. No app build, launch, settings or localization catalog changes
+are part of this consolidation.
+
+A combined native run of the SSH and agent fixture sources against existing
+build 773 executed 22 test functions in 14 suites and failed with three
+fixture errors: one immediate-close SSH PTY case returned POSIX EIO; two Codex
+Stop cases returned POSIX EINVAL. These are unresolved concurrency-sensitive
+verification failures, not a green combined result. Compilation succeeded with
+a non-Sendable callback warning inherited from the unchanged PR150
+SSHExitedPTYClient fixture, whose callback crosses a legacy queue boundary. Prior isolated passes apply to their individual fixtures and artifacts;
+they do not establish combined-suite success; neither the warning nor the new combined failures is waived.
+
+
+### Consolidated socket cancellation follow-up
+
+The first replacement run completed all four app-host jobs with failures; the
+full-suite assertions and deadlines remain authoritative. The shared fixture
+error was reproduced locally with the same 22 test functions and 14 suites:
+operation-labelled diagnostics identified `EPIPE` when replying to a
+`workspace.remote.pty_resize` that the CLI canceled after bridge closure. The
+fixture now closes only that client connection, preserves the captured request,
+and emits no response-written acknowledgment for the canceled reply. Other
+write errors still fail. The eight resize-acknowledged cases and all lifecycle
+assertions are unchanged.
+
+The legacy RPC callback fixture now documents and narrows its immutable transfer
+to the protocol-supplied delivery queue, matching the existing subscription
+ownership contract. Swift 6 compilation is warning-free. The combined native
+batch passes against the existing build 773 artifact after the shared fix and
+the agent branch's duplicate-server removal. This is focused fixture evidence,
+not proof that all replacement-head app-host tests pass.
+
+Both inherited CI reporting capabilities are restored in Project Truth. The
+new exact-head checks remain required. Existing broad failures, including
+inspector crashes, terminal readiness assertions and a stale-control-socket
+process deadline, are not waived by the focused result.
+
+
+### Initial resize acknowledgement diagnosis
+
+Run 38415496749, focused app-host job 115360361616, completed 35 test functions
+in five suites with eight failures: every acknowledged-resize SSH PTY case hit
+its existing five-second process deadline. All eight immediate-close variants
+passed. This is a remaining failure after the earlier per-client EPIPE fix.
+The maintained CLI still requests its initial resize, using a single RPC with a
+50-millisecond deadline; failure of that request is a candidate, not an established
+cause. The run exposes no tested CLI artifact for an exact-binary local replay.
+
+The fixture now reports its owned requests, handshake, bridge completion, existing
+resize-observed/input-ended flags and output on failure. It adds no mutable state,
+retry, signal, deadline or scheduling change. Sixteen cases pass against unchanged
+build 773 with warning-free Swift 6 compilation. A temporary control suppressing
+only the resize acknowledgement event fails the eight acknowledgement cases and
+passes the eight immediate-close cases; diagnostics show the actual resize request,
+handshake and missing observation. That demonstrates diagnostic sensitivity, not
+that CI lost the same event. Actual CI traces and a causal correction remain required.
+
+Normal completion now drains the finished response-observation stream before
+finishing the bridge event stream. The sole caller joins and finishes its socket
+producer before returning; canceling the consumer first could discard queued
+observations from the diagnostic snapshot. Errors still cancel and join the
+consumer, so a throw before producer startup cannot hang cleanup. This preserves
+the existing bridge-close predicate and five-second CLI deadline. It guarantees
+only consumed or queued observations, not delivery of every kernel EOF event.
+
+All sixteen native CLI cases still pass, as do temporary finished-response and
+pre-producer-error cleanup controls, with warning-free Swift 6 compilation. The
+old race cannot be forced deterministically through the current fixture boundary
+without an artificial scheduling hook; no source-shape test or timing assumption
+was added. This diagnostic correction does not establish the CI timeout cause.
+
+### Opt-in focused process diagnostics
+
+For one diagnostic dispatch, set `app_host_process_diagnostics` to true. Only the
+focused shard 1 app-host invocation enables the observer, after acquiring the
+existing GUI-host lock. Normal PR runs and broad tests are unchanged.
+
+The observer starts numeric process snapshots at the Swift Testing start marker
+and stops after 30 seconds. It records PID, parent PID, Darwin state, elapsed time,
+cumulative CPU nanoseconds and thread count only for the exact DerivedData Debug
+host and its bundled CLI descendants. It never reads arguments or environment.
+CLI stack eligibility requires one observed second alive; the host requires two.
+At most eight one-second samples run, at most two concurrently, at 10ms intervals.
+This has diagnostic overhead and may perturb scheduling; it is not a timeout fix.
+
+Raw samples use unlinked temporary files. Artifacts retain only counted stack
+symbol frames, excluding dynamic thread/queue labels, headers, paths and binary
+image inventories. Each invocation/attempt gets a unique directory, uploaded even
+on failure. Missing logs are retried on the next observation tick. On test exit,
+the observer receives EOF; bounded shutdown escalates only against its own process
+group. Diagnostic errors never replace the test command's native exit status.
+
+The actual PR171 focused failure (job 115488618879, 41 functions/10 suites, 19 issues)
+remains unresolved. Local synthetic subprocess/filter/privacy checks do not prove
+macOS 15 app-host capture or identify a missing CommandRunner callback. The next
+combined dispatch must supply that evidence without changing test deadlines.
