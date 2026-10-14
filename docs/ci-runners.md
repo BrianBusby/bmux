@@ -608,7 +608,11 @@ panels are released afterward. Other legacy test bodies remain unchanged.
 An owned native four-case control compares both constructors through the actual
 panel save owner; requiring intended content fails exactly the two bare-editor
 cases and passes both factory cases. The corrected two-case suite compiles
-without warnings in target Swift 5 mode and passes against unchanged build 773.
+without warnings in target Swift 5 mode and passes against unchanged build 773. Forced
+Swift 6 compilation is blocked by the existing mutable static
+`KeyboardShortcutSettings.settingsFileStore` owner, as in the Global Search
+fixture; no suppression or new unsafe declaration is added. That legacy owner
+migration remains outside this test-only correction.
 The focused browser/settings gate includes it, and the canonical/local caveat
 stays open pending fixed-head app-host CI. These local results do not claim
 full-suite success or execution on CI's macOS 15 runner.
