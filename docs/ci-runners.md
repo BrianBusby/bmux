@@ -2562,3 +2562,38 @@ Full three-case acceptance and fixed-head app-host CI remain open under
 result is unchanged. Existing responder stop does not join its accept worker,
 and the legacy fake-bundle helper lacks directory cleanup; this root-only change
 does not claim to repair those retained lifecycle limitations.
+
+### Mixed signatures in pre-sign universal CLI artifacts
+
+Final-C Release job `115681649397` in run `38509817630` failed the unsigned
+Release CLI artifact gate with a universal-binary signature error. A real owned
+reproduction with an ad-hoc signed arm64 slice and an unsigned x86_64 slice
+produces the same error. `codesign -d` inspects the native architecture by default,
+but `codesign --verify --strict` checks every architecture. The current verifier
+therefore detects the native signature and incorrectly rejects the permitted
+unsigned sibling slice.
+
+The test-only regression commit extends `tests/test_bundled_cli_artifact.py`,
+already run by the existing shard-3 artifact gate. Real arm64/x86_64 fixtures
+exercise mixed signed/unsigned CLI and framework targets independently. Their
+acceptance cases require relocated execution and archive preservation of complete
+Mach-O bytes and framework symlink destinations. Corruption controls first verify
+both signatures, corrupt only the nonhost slice, confirm the native signature
+still validates, and require verifier rejection before execution. The framework
+control uses a thin CLI so the invalid extra framework architecture cannot hide
+behind checking only the executable's architecture list.
+
+Local macOS 26 execution currently runs 14 cases: the two mixed-signature
+acceptance cases fail at the existing signature gate as intended; the other 12
+pass, including both nonhost corruption controls. The mixed cases' archive and
+relocation assertions remain pending behind that expected failure. No verifier,
+workflow, shipped artifact, or signing policy changed in this test-only commit.
+Only disposable test fixtures are signed, stripped, or corrupted.
+
+Under `bundled_cli_mixed_signature_regression_verification`, the existing CI gate
+must record the regression failure before the implementation commit. The fix
+must inspect every architecture present in each signature target, preserve
+framework-bundle signature ownership and deduplication, permit unsigned slices,
+and strictly verify every signed slice without modifying artifact bytes. Full
+Release/fresh-runner and app-host verification, including the prior exit-124
+incomplete native suite, remain open.
