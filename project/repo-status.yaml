@@ -143,7 +143,7 @@ component_releases:
 
 local_caveats:
   - id: session_resume_fork_contract_fixture_verification
-    # E compilation failed before tests; typed comparison awaits the integrated compiler gate.
+    # E shard 3 identifies the conditional argument expression; typed branches await the compiler gate.
     status: open
   - id: terminal_native_input_delivery_fixture_verification
     status: open

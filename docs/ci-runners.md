@@ -2818,22 +2818,20 @@ run must execute that target and all configured gates on the published commit.
 
 ### Fork-command fixture compiler inference
 
-E run 38585955198 shards 2 and 4 (jobs 115929521031 and 115929521191)
-failed before tests: Xcode 26.3 could not type-check an expression in
-`AgentForkCommandContractTests`. The retained console output names the file but
-omits the expression location. The same source compiles with local Swift 6.3.3
-in the target's Swift 5 language mode, so the older compiler failure has not
-been reproduced locally.
+Run 38585955198 shard 2 (job 115929521031) and shard 4 (job 115929521191)
+failed before tests because Xcode 26.3 could not type-check an expression in
+`AgentForkCommandContractTests`. The subsequently available shard 3 diagnostic
+identifies line 345: `prefix + (resume ? ... : ...)`, not the final macro
+comparison. The initial typed-comparison correction alone left that expression
+unchanged. The correction now also uses an explicitly typed `[String]` branch
+value followed by a separate prefix concatenation. Both branches retain exact
+argument values and order; the final comparison keeps its explicit array types.
 
-The measured local inference hotspot is the final macro assertion combining
-`Array(fields.dropFirst())` with a concatenated expected argument array. Both
-arrays now have explicit `[String]` local bindings before their unchanged
-comparison. The expected fields, order, all eleven fork-command variants, and
-executed argument/cwd/environment assertions remain identical. No command,
-process fixture, timeout, test selection or compiler setting changes.
-
-The complete affected fork and Claude resume fixtures compile without warnings
-and pass five functions (nine cases) against unchanged native build 786.
-This focused check does not replace full test-target compilation: the next
-integrated batch must compile the entire `bmuxTests` target with CI's Xcode 26.3
-and run the app-host tests. That gate remains open.
+The local Swift 6.3.3 compiler accepts the original expression, so the older CI
+compiler failure has not been reproduced locally. No compiler limits or flags
+were relaxed. The complete affected fork and Claude resume fixtures compile
+without warnings in Swift 5 target mode and Swift 6, and five test functions
+(nine parameter cases) pass against unchanged build 786. All eleven original
+fork-command assertions and actual argv/cwd/environment checks remain intact.
+The next integrated batch must compile the entire `bmuxTests` target with CI's
+Xcode 26.3 toolchain before these local results count as a repaired compiler gate.

@@ -460,6 +460,6 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Remote agent fork fixture owns its existing agent path and passes native checks; app-host verification remains pending (`remote_agent_fork_fixture_verification`) - owner: Bmux; status: open
 - Default cloud proxy retry correction passes native build787 original and five preserved controls; integrated CI remains pending (`default_cloud_proxy_retry_state_verification`) - owner: Bmux; status: open
 - Deleted agent-hook cwd correction passes native build787 regression and nine directory controls; integrated app-host verification pending (`deleted_agent_hook_cwd_regression`) - owner: Bmux; status: open
-- Fork-command assertion inference correction awaits Xcode 26.3 full test-target compilation and integrated app-host verification (`session_resume_fork_contract_fixture_verification`) - owner: Bmux; status: open
+- Fork-command conditional argument inference correction awaits Xcode 26.3 full test-target compilation and integrated app-host verification (`session_resume_fork_contract_fixture_verification`) - owner: Bmux; status: open
 - Sidebar PR aggregate and focused projection fixture correction awaits fixed-head app-host verification (`sidebar_pr_focus_contract_fixture_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
