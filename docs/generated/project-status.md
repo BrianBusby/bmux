@@ -221,6 +221,7 @@ Regenerate with: ./scripts/project-docs generate
 | Hook prompt evidence fixture uses the accepted stable workspace identity; native old expectation fails and corrected case passes, app-host verification pending (`hook_prompt_stable_workspace_fixture_verification`) | Bmux | open |  |
 | Closed retained windows are excluded from presentation while manager recovery is preserved; fixed-runtime and app-host verification remain pending (`closed_main_window_routing_verification`) | Bmux | open |  |
 | Focused Git metadata fixture verifies sidebar publication and duplicate suppression without workspace publication; native control passes and app-host verification remains pending (`sidebar_git_publication_fixture_verification`) | Bmux | open |  |
+| Notification focus dismissal fixture uses the existing broadcaster completion boundary; native controls pass and exact-head app-host verification remains pending (`notification_focus_completion_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

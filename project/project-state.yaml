@@ -6277,3 +6277,8 @@ caveats:
     title: Focused Git metadata fixture verifies sidebar publication and duplicate suppression without workspace publication; native control passes and app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: notification_focus_completion_fixture_verification
+    title: Notification focus dismissal fixture uses the existing broadcaster completion boundary; native controls pass and exact-head app-host verification remains pending
+    status: open
+    owner: bmux
