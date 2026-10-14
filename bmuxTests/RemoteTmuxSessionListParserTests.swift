@@ -70,6 +70,17 @@ import Testing
         #expect(sessions[1].name == "crlf")
     }
 
+    @Test(arguments: ["\n", "\r\n"])
+    func separatesMultipleRecordsWithoutChangingNames(lineEnding: String) {
+        let records = ["$11:2:0:1780000008:  café  ", "", "$12:1:1:1780000009:a:b", "$13:3:0:1780000010:last"]
+        let sessions = RemoteTmuxSessionListParser.parse(records.joined(separator: lineEnding))
+        #expect(sessions == [
+            RemoteTmuxSession(id: "$11", name: "  café  ", windowCount: 2, attached: false, createdUnix: 1780000008),
+            RemoteTmuxSession(id: "$12", name: "a:b", windowCount: 1, attached: true, createdUnix: 1780000009),
+            RemoteTmuxSession(id: "$13", name: "last", windowCount: 3, attached: false, createdUnix: 1780000010),
+        ])
+    }
+
     @Test func rejectsControlCharSubstitutedOutput() {
         // Regression: against a non-UTF-8 remote tmux client, tmux sanitizes
         // control bytes in `-F` output to `_`. The previous tab-delimited format
