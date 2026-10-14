@@ -494,6 +494,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Korean marked-text fixture awaits terminal readiness; native composition controls pass and macOS app-host verification remains pending (`korean_marked_text_runtime_readiness_verification`) - owner: Bmux; status: open
 - Closed-stderr fixture uses the maintained unknown-command exit contract and joined owned resources; macOS app-host verification remains pending (`cli_closed_stderr_contract_verification`) - owner: Bmux; status: open
 - SSH workspace creation fixture joins its producer and owns authentication; native contracts pass, fixed-head app-host verification remains pending (`ssh_creation_joined_producer_verification`) - owner: Bmux; status: open
+- Browser chrome reference follows the shared shipped font default; native metrics coverage passes and integrated app-host verification remains pending (`browser_chrome_default_contract_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
 
 The closed-peer CLI repair gives receive timeout configuration/cache and byte reads one internal `CLISocketReceiver` owner with a borrowed descriptor. `SocketClient` retains framing, connection lifecycle, request policy and telemetry. Actual G regression red is recorded; extracted-owner controls, tagged build 788 bundled CLI checks, and H shard 3 fixed-head CLI checks pass. The full combined native and artifact gates remain pending.

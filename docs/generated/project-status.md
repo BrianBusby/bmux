@@ -233,6 +233,7 @@ Regenerate with: ./scripts/project-docs generate
 | Korean marked-text fixture awaits terminal readiness; native composition controls pass and macOS app-host verification remains pending (`korean_marked_text_runtime_readiness_verification`) | Bmux | open |  |
 | Closed-stderr fixture uses the maintained unknown-command exit contract and joined owned resources; macOS app-host verification remains pending (`cli_closed_stderr_contract_verification`) | Bmux | open |  |
 | SSH workspace creation fixture joins its producer and owns authentication; native contracts pass, fixed-head app-host verification remains pending (`ssh_creation_joined_producer_verification`) | Bmux | open |  |
+| Browser chrome reference follows the shared shipped font default; native metrics coverage passes and integrated app-host verification remains pending (`browser_chrome_default_contract_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

@@ -4290,3 +4290,19 @@ observations exist only in temporary diagnostic adapters. Source compilation use
 Swift 6; local evidence does not reproduce or disprove the historical CI timeout.
 Actual macOS 15 app-host verification remains open under
 `browser_remote_loopback_fixture_verification`.
+
+### Browser chrome shipped-default contract
+
+K shard 2 (`38616518883`) failed the browser chrome reference-font assertion:
+the shared shipped default is 13, but the test still pinned 11. The accepted
+13pt default predates K; this assertion reads immutable declarations, not mutable
+app-host settings. The test now compares the chrome anchor with
+`GhosttyConfig.defaultSurfaceTabBarFontSize`; the maintained terminal-core config
+test independently pins the shipped value to 13. All scale, legacy-size, clamp
+and invalid-input assertions remain unchanged. Stale numeric comments were removed.
+
+The complete metrics suite passes against unchanged build 791 in an isolated
+native harness (seven functions, eleven cases). Restoring the old literal produces
+exactly the original 13-versus-11 failure. Target Swift 5 and strict Swift 6 compile
+without warnings. No production behavior, config, timing, selector or runtime
+ownership changed. Integrated macOS app-host verification remains pending.
