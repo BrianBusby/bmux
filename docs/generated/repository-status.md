@@ -269,3 +269,4 @@ Repository: `BrianBusby/bmux`
 | `native_symbol_size_fixture_verification` | open |
 | `file_preview_inset_fixture_verification` | open |
 | `browser_find_routing_fixture_verification` | open |
+| `native_window_close_ownership_verification` | open |

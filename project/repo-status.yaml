@@ -381,3 +381,6 @@ local_caveats:
 
   - id: browser_find_routing_fixture_verification
     status: open
+
+  - id: native_window_close_ownership_verification
+    status: open

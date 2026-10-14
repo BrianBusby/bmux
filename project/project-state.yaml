@@ -6219,3 +6219,8 @@ caveats:
     title: Browser Find fixtures distinguish owned-window search from menu fallback; integrated app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: native_window_close_ownership_verification
+    title: File-preview and notification test-window constructor ownership corrected; four affected app-host cases remain pending
+    status: open
+    owner: bmux

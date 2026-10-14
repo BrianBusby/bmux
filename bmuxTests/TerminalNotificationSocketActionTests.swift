@@ -305,6 +305,7 @@ final class TerminalNotificationSocketActionTests: XCTestCase {
                 backing: .buffered,
                 defer: false
             )
+            testWindow.isReleasedWhenClosed = false
             testWindow.identifier = NSUserInterfaceItemIdentifier("bmux.main.\(registeredWindowId.uuidString)")
             testWindow.makeKeyAndOrderFront(nil)
             windowId = registeredWindowId
