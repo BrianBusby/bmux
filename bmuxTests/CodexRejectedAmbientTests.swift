@@ -14,6 +14,16 @@ final class CodexRejectedAmbientTests {
     }
 
     @Test(arguments: [CodexRejectedAmbientFixture.Identity.invalidSurface, .foreignMapping],
+          [CodexRejectedAmbientFixture.Binding.missing, .unlistedPID])
+    func rejectedStopIdentityCannotEmitFallbackTelemetry(
+        identity: CodexRejectedAmbientFixture.Identity, binding: CodexRejectedAmbientFixture.Binding
+    ) async throws {
+        let fixture = try CodexRejectedAmbientFixture(identity: identity)
+        let commands = try await fixture.run(cli: cliPath(), binding: binding, stop: true)
+        try expectNoMutations(commands, fixture: fixture)
+    }
+
+    @Test(arguments: [CodexRejectedAmbientFixture.Identity.invalidSurface, .foreignMapping],
           [CodexRejectedAmbientFixture.Binding.pid, .tty])
     func rejectedAmbientIdentityRecoversWithVerifiedBinding(
         identity: CodexRejectedAmbientFixture.Identity, binding: CodexRejectedAmbientFixture.Binding
