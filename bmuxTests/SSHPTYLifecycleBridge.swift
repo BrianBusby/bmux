@@ -7,6 +7,7 @@ struct SSHPTYLifecycleBridge {
     let waitsForResize: Bool
     let resets: Bool
 
+    /// The operation must finish its response producer before returning normally.
     func capture<T: Sendable>(
         responses: AsyncStream<String>, operation: (Int) async throws -> T
     ) async throws -> (result: T, handshake: String, closed: Bool, resized: Bool, inputEnded: Bool) {
@@ -20,9 +21,9 @@ struct SSHPTYLifecycleBridge {
         }
         do {
             let result = try await operation(port)
-            continuation.finish()
-            acknowledgements.cancel()
+            // Preserve queued response observations before closing their destination stream.
             await acknowledgements.value
+            continuation.finish()
             let trace = try await bridge.value
             return (result, trace.0, trace.1, trace.2, trace.3)
         } catch {
