@@ -152,6 +152,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `cli_socket_capture_completion_verification` | open |
 | `codex_rejected_ambient_identity_verification` | open |
 | `configured_codex_placeholder_startup_dogfood` | open |
 | `codex_update_workspace_exit_native_dogfood` | open |

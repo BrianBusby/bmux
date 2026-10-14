@@ -165,7 +165,7 @@ that have them registered (runner-side, needs org/runner admin).
 
 ## Codex rejected ambient identity regression
 
-The focused `CodexRejectedAmbientTests` gate runs before the broad app-host suite
+The focused `CodexRejectedAmbientTests` and `CLISocketFixtureCompletionTests` gate runs before the broad app-host suite
 on shard 2. The shared generic-hook target resolver now retains rejected ambient
 provenance: a rejected workspace or surface requires verified PID/TTY attribution
 before any session, resume, status or feed mutation. Explicit invalid flags still
@@ -186,14 +186,13 @@ running state, alongside the accepted-socket EINVAL fixture race. Unchanged buil
 773 fails the four prompt cases with 22 assertions. Build 778, containing the held
 prompt correction, passes twelve cases but fails the four new stop cases on
 unexpected feed.push. Test-only commit 6968859d9 publishes that additional regression;
-its actual app-host red remains required before publishing the complete fix.
+its actual app-host red was retained before publishing the complete fix.
 
 Fresh isolated build 781 (`codex-routing-stop-recovery`) succeeds without launching
 the app. Its actual bundled CLI passes all sixteen routing cases with warning-free
 Swift 6 fixture compilation, plus thirteen valid stop payload/transcript/turn-scope
 cases across nine functions. Independent review checked the resolver, stop path,
-deferred telemetry and unchanged lifecycle ordering. The production correction is
-committed locally and held for the regression gate. Full fixed-head app-host CI and
+deferred telemetry and unchanged lifecycle ordering. The production correction is published in commit `214180692`. Full fixed-head app-host CI and
 combined validation remain pending; these focused results are not broad-suite green.
 The local Project Truth verification caveat stays open.
 
@@ -203,3 +202,29 @@ Source requirements: root/personal `AGENTS.md`, `continuous-code-quality`, and
 PID/TTY recovery regression, sibling rejected-target telemetry guards, joined
 `CLISocketFixture`, and owned-file CLI capture. Localization audit: no shipped
 strings or catalogs change. Running builds 773/775 remain untouched.
+
+
+### Socket capture completion regression
+
+Review identified a gap in the shared fixture: process completion does not imply
+that DispatchSource has delivered readiness for every one-way `feed.push` frame.
+Finishing the event stream first can discard already-written frames and let a
+negative mutation assertion pass incorrectly. Source cancellation joins descriptor
+closure but does not drain input; `responseWritten` cannot cover frames that have
+no response.
+
+The new focused transport suite uses an immutable, constructor-owned native
+readiness-delivery closure. Its default forwards events immediately; tests
+withhold listener or client notifications without blocking the native queue, so
+cancel handlers remain runnable. Real owned sockets fully write and close each
+frame before the operation returns. No sleeps, wire sentinels, serialization or
+changed CLI deadlines are used. The local Swift 6 test-only run reports exactly
+three missing-input issues across five cases; the no-client and operation-error
+cleanup controls pass. Actual test-only CI red and a completion-drain correction
+remain pending. No production behavior changes in this follow-up.
+
+The intended owner remains the fixture's single I/O task: successful capture must
+drain queued accepts and available client bytes through its existing parser before
+closing sources. Normal operations must join their request producers; failure
+cleanup must not wait for future peer EOF. Shared-client and final app-host
+verification remain open in the canonical and local Project Truth caveats.

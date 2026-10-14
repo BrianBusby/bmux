@@ -6,6 +6,21 @@ struct CLISocketFixture: Sendable {
     let path: String
     var responseWritten: AsyncStream<String>.Continuation? = nil
     let response: @Sendable (String) throws -> String?
+    private let deliverReadiness: @Sendable (Int, AsyncStream<Int>.Continuation) -> Void
+
+    init(
+        path: String,
+        responseWritten: AsyncStream<String>.Continuation? = nil,
+        deliverReadiness: @escaping @Sendable (Int, AsyncStream<Int>.Continuation) -> Void = {
+            token, destination in destination.yield(token)
+        },
+        response: @escaping @Sendable (String) throws -> String?
+    ) {
+        self.path = path
+        self.responseWritten = responseWritten
+        self.deliverReadiness = deliverReadiness
+        self.response = response
+    }
 
     func capture<T: Sendable>(
         operation: () async throws -> T
@@ -131,7 +146,7 @@ struct CLISocketFixture: Sendable {
         }
         // DispatchSource is the native socket-readiness bridge; callers consume an AsyncStream.
         let source = DispatchSource.makeReadSource(fileDescriptor: descriptor)
-        source.setEventHandler { continuation.yield(token) }
+        source.setEventHandler { [deliverReadiness] in deliverReadiness(token, continuation) }
         source.resume()
         return source
     }

@@ -136,6 +136,8 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: cli_socket_capture_completion_verification
+    status: open
   - id: codex_rejected_ambient_identity_verification
     status: open
   - id: configured_codex_placeholder_startup_dogfood
