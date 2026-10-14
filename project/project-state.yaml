@@ -6316,3 +6316,8 @@ caveats:
     title: Korean marked-text fixture awaits terminal readiness; native composition controls pass and macOS app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: ssh_creation_joined_producer_verification
+    title: SSH workspace creation fixture joins its producer and owns authentication; native contracts pass, fixed-head app-host verification remains pending
+    status: open
+    owner: bmux

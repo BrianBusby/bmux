@@ -431,3 +431,6 @@ local_caveats:
 
   - id: korean_marked_text_runtime_readiness_verification
     status: open
+
+  - id: ssh_creation_joined_producer_verification
+    status: open
