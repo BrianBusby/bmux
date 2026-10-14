@@ -3946,3 +3946,38 @@ run still reports additional agent-session routing and fixture failures; their
 causes are being checked independently. Named Git-alias regression execution,
 all fixed-head macOS shards and the remaining release/validation gates remain
 required before merging.
+
+### Tmux split rejection fixture joins owned work
+
+I (`0f7fa7fcb`, shard 3) reports three failures in
+`CLITmuxCompatRemoteSplitTests.splitPrintCarriesPreMutationRemoteRejection`:
+the server semaphore times out, the CLI is terminated with status 15 and empty
+stderr, and the expected pre-mutation rejection is missing. Its approximately
+62-second span includes the 30-second child deadline followed by a separate
+30-second server wait. The log does not identify whether the global-queue server
+worker started, accepted, or handled a request. This is not the Grok fixture's
+separate one-way connection mismatch, and the macOS 15 cause remains unproven.
+
+The exact case now uses `CLISocketFixture` and `ShellContractProcess`, keeping
+its original 30-second producer bound, direct CLI argv, null stdin, routing IDs,
+`remote_tmux_unsupported_options=["-P"]` checks, rejection text, nonzero exit, and
+absence of an "already applied" message. The shared process owner's existing
+200-millisecond termination grace applies; no timeout is extended. Captured
+success or failure joins the producer before the socket's final drain and
+resource cleanup. Failed processes rethrow after joined capture with owned
+request/output context; directory cleanup failures become test issues. The
+other two respawn cases and their legacy helpers remain unchanged, including
+their unresolved lifecycle risk. No production, shared helper, or selector changes.
+
+An owned build-790 CLI trace through the maintained helpers observes
+`surface.list`, `surface.current`, `surface.list`, then `surface.split`; each
+response is written before the producer joins, followed by joined socket and
+observer cleanup. It returns the exact remote rejection and status 1 in
+0.039 seconds. The final repository case passes in 0.047 seconds with warning-free
+Swift 6 compilation. Two temporary source controls retain the original assertions:
+omitting `-P` fails the option-forwarding assertion, while returning an accepted
+split fails the nonzero-exit and rejection-text assertions. These are local
+contract checks on macOS 26.3, not a reproduction or disproof of the CI stall.
+Only standalone bundle lookup is adapted; the test and shared owners compile
+unchanged. No app was loaded, launched, or rebuilt. Actual macOS 15 app-host
+verification remains open as `tmux_split_rejection_fixture_verification`.
