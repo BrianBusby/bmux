@@ -186,7 +186,7 @@ Regenerate with: ./scripts/project-docs generate
 | Narrow titlebar reservation fix preserves offscreen reference layout; integrated app verification remains pending (`titlebar_narrow_window_layout_verification`) | Bmux | open |  |
 | Claude resume and disabled git-watch contract migrations pass native 786; fixed-head app-host verification pending (`claude_resume_and_no_git_watch_fixture_verification`) | Bmux | open |  |
 | Titlebar hit-target sizing and search metadata fixture migrations pass native 786; app-host and Swift 6 shortcut-store isolation remain open (`titlebar_search_metadata_fixture_verification`) | Bmux | open |  |
-| Closed-peer CLI receive regression awaits actual test-only CI red and reviewed production repair (`cli_closed_peer_receive_regression_verification`) | Bmux | open |  |
+| Closed-peer receive regression awaits execution after bundled CLI build prerequisite; D2 setup ran zero socket tests (`cli_closed_peer_receive_regression_verification`) | Bmux | open |  |
 | Three tagged CLI fixtures use short owned homes; native 786 exposes a separate multiline receive-timeout error in two cases (`cli_socket_home_fixture_verification`) | Bmux | open |  |
 | Native titlebar default-width and voice-control fixture corrections pass locally; app-host verification remains pending (`titlebar_product_contract_fixture_verification`) | Bmux | open |  |
 | CLI socket capture completion focused gate and shared-caller verification (`cli_socket_capture_completion_verification`) | Bmux | open |  |
