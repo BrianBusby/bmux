@@ -421,6 +421,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - SSH workspace creation fixture focused gate awaits app-host CI (`ssh_workspace_creation_fixture_focused_gate_verification`) - owner: Bmux; status: open
 - SSH agent environment fixture focused gate awaits app-host CI (`ssh_agent_environment_fixture_focused_gate_verification`) - owner: Bmux; status: open
 - Foreign workspace close reproduces destructive teardown; owned-instance guard awaits fixed native and app-host verification (`workspace_close_ownership_verification`) - owner: Bmux; status: open
+- Antigravity hook fixture joins request producers without blocked accept workers; full app-host verification pending (`antigravity_hook_lifecycle_fixture_verification`) - owner: Bmux; status: open
 - Grok hook fixtures now drain RPC and one-way telemetry connections; complete app-host verification pending (`grok_hook_connection_fixture_verification`) - owner: Bmux; status: open
 - Persistent SSH child exit reproduces sibling tracking loss; last-surface guard awaits fixed native and app-host verification (`persistent_pty_child_exit_verification`) - owner: Bmux; status: open
 - SSH PTY initial resize acknowledgement CI timeouts remain unresolved (`ssh_pty_lifecycle_fixture_verification`) - owner: Bmux; status: open
