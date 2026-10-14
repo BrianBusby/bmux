@@ -390,6 +390,8 @@ local_caveats:
 
   - id: shortcut_parser_lookup_attribution_verification
     status: open
+  - id: browser_remote_loopback_fixture_verification
+    status: open
   - id: tmux_split_rejection_fixture_verification
     status: open
   - id: tmux_launch_identity_fixture_verification

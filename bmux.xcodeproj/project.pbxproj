@@ -518,6 +518,8 @@
 		B4245003000000000000PW01 /* BrowserPrewarmedWebViewPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4245004000000000000PW01 /* BrowserPrewarmedWebViewPool.swift */; };
 		B6585001B6585001B658PW01 /* BrowserPrewarmedWebViewPoolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6585002B6585002B658PW02 /* BrowserPrewarmedWebViewPoolTests.swift */; };
 		7B5F1A2E9C0D4B6A8E217304 /* BrowserReliabilityRegressionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5F1A2E9C0D4B6A8E217303 /* BrowserReliabilityRegressionUITests.swift */; };
+		44D7210E0DEE41A6B3DDE05E /* BrowserRemoteLoopbackBridgeFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0537C03F00034967BEE78144 /* BrowserRemoteLoopbackBridgeFixture.swift */; };
+		9B5CC0031D5B4BC883C9EEC3 /* BrowserRemoteLoopbackBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A663566D4D46238ACBF436 /* BrowserRemoteLoopbackBridgeTests.swift */; };
 		12E6C748D4B3360A1F943193 /* BrowserRemoteStoreFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DE536D7D98EFD0388659FF /* BrowserRemoteStoreFixture.swift */; };
 		63A58D33579D61A06BE184A0 /* BrowserRemoteStoreScopeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D25ADA5410B1A70A0FFC090 /* BrowserRemoteStoreScopeTests.swift */; };
 		BFBAC1A77CEE7A2DF91DA02C /* BrowserRemoteWorkspaceStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 109D0E38E29A8779FA0BAE82 /* BrowserRemoteWorkspaceStatus.swift */; };
@@ -2584,6 +2586,8 @@
 		B4245004000000000000PW01 /* BrowserPrewarmedWebViewPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserPrewarmedWebViewPool.swift; sourceTree = "<group>"; };
 		B6585002B6585002B658PW02 /* BrowserPrewarmedWebViewPoolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserPrewarmedWebViewPoolTests.swift; sourceTree = "<group>"; };
 		7B5F1A2E9C0D4B6A8E217303 /* BrowserReliabilityRegressionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserReliabilityRegressionUITests.swift; sourceTree = "<group>"; };
+		0537C03F00034967BEE78144 /* BrowserRemoteLoopbackBridgeFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BrowserRemoteLoopbackBridgeFixture.swift"; sourceTree = "<group>"; };
+		E2A663566D4D46238ACBF436 /* BrowserRemoteLoopbackBridgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BrowserRemoteLoopbackBridgeTests.swift"; sourceTree = "<group>"; };
 		A3DE536D7D98EFD0388659FF /* BrowserRemoteStoreFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserRemoteStoreFixture.swift; sourceTree = "<group>"; };
 		6D25ADA5410B1A70A0FFC090 /* BrowserRemoteStoreScopeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserRemoteStoreScopeTests.swift; sourceTree = "<group>"; };
 		109D0E38E29A8779FA0BAE82 /* BrowserRemoteWorkspaceStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserRemoteWorkspaceStatus.swift; sourceTree = "<group>"; };
@@ -5613,6 +5617,8 @@
 				F54100A1A1B2C3D4E5F60718 /* RestorableAgentSessionStalePIDTests.swift */,
 				6D25ADA5410B1A70A0FFC090 /* BrowserRemoteStoreScopeTests.swift */,
 				A3DE536D7D98EFD0388659FF /* BrowserRemoteStoreFixture.swift */,
+				E2A663566D4D46238ACBF436 /* BrowserRemoteLoopbackBridgeTests.swift */,
+				0537C03F00034967BEE78144 /* BrowserRemoteLoopbackBridgeFixture.swift */,
 				3565F626B09B524536B3C777 /* CloudAttachRetryContractTests.swift */,
 				E84940FCD5D5DE733F63D05F /* CloudProxyRetryStateTests.swift */,
 				51310FA425CE1A3A840F6A86 /* CloudAttachRetryFixture.swift */,
@@ -8150,6 +8156,8 @@
 				1F0A459851444F37ABB6CDA8 /* BrowserPortalPresentationContractTests.swift in Sources */,
 				3054308CC0B6449D947A3B65 /* BrowserPortalTrackingWebView.swift in Sources */,
 				B6585001B6585001B658PW01 /* BrowserPrewarmedWebViewPoolTests.swift in Sources */,
+				44D7210E0DEE41A6B3DDE05E /* BrowserRemoteLoopbackBridgeFixture.swift in Sources */,
+				9B5CC0031D5B4BC883C9EEC3 /* BrowserRemoteLoopbackBridgeTests.swift in Sources */,
 					12E6C748D4B3360A1F943193 /* BrowserRemoteStoreFixture.swift in Sources */,
 					63A58D33579D61A06BE184A0 /* BrowserRemoteStoreScopeTests.swift in Sources */,
 				C2035A060000000000000001 /* BrowserSSLTrustBypassStateTests.swift in Sources */,

@@ -6238,6 +6238,10 @@ caveats:
     title: Shortcut parser fixtures distinguish pure normalization from runtime subscribers; integrated app-host verification remains pending
     status: open
     owner: bmux
+  - id: browser_remote_loopback_fixture_verification
+    title: Remote loopback bridge fixture owns native loading observation and cleanup; macOS 15 timeout cause and app-host verification remain open
+    status: open
+    owner: bmux
   - id: tmux_split_rejection_fixture_verification
     title: Tmux split rejection fixture joins CLI and socket completion; actual macOS 15 timeout cause and app-host verification remain open
     status: open

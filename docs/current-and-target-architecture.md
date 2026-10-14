@@ -473,6 +473,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - File preview inset fixture uses the maintained TextKit stack; fixed-head app-host verification remains pending (`file_preview_inset_fixture_verification`) - owner: Bmux; status: open
 - Browser Find fixtures distinguish owned-window search from menu fallback; integrated app-host verification remains pending (`browser_find_routing_fixture_verification`) - owner: Bmux; status: open
 - Shortcut parser fixtures distinguish pure normalization from runtime subscribers; integrated app-host verification remains pending (`shortcut_parser_lookup_attribution_verification`) - owner: Bmux; status: open
+- Remote loopback bridge fixture owns native loading observation and cleanup; macOS 15 timeout cause and app-host verification remain open (`browser_remote_loopback_fixture_verification`) - owner: Bmux; status: open
 - Tmux split rejection fixture joins CLI and socket completion; actual macOS 15 timeout cause and app-host verification remain open (`tmux_split_rejection_fixture_verification`) - owner: Bmux; status: open
 - Tmux launch identity fixture uses an owned short endpoint and requires focused-context exchange; integrated app-host verification remains pending (`tmux_launch_identity_fixture_verification`) - owner: Bmux; status: open
 - Orphan workspace shortcut fixture owns focused-context attribution; integrated app-host verification remains pending (`orphan_workspace_shortcut_fixture_verification`) - owner: Bmux; status: open
