@@ -267,6 +267,6 @@ local_caveats:
   - id: workspace_fallback_regression_verification
     status: open
   - id: ssh_manual_reconnect_nonzero_regression
-    status: open
+    status: resolved
   - id: browser_inspector_window_ownership_verification
     status: open

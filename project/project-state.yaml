@@ -5954,7 +5954,7 @@ caveats:
     owner: bmux
 
   - id: ssh_manual_reconnect_handoff_regression
-    title: SSH manual reconnect has a failing native handoff regression; shell prompt and native respawn ownership repair remain pending
+    title: SSH manual reconnect has actual CI red and native 779 green; fixed-head app-host and runtime acceptance remain pending
     status: open
     owner: bmux
 
