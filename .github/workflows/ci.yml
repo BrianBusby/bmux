@@ -606,6 +606,7 @@ jobs:
             -only-testing:bmuxTests/BrowserRemoteStoreScopeTests \
             -only-testing:bmuxTests/ClaudeSessionEndScopeTests \
             -only-testing:bmuxTests/CloudAttachRetryContractTests \
+            -only-testing:bmuxTests/RemoteTmuxSessionListParserTests \
             -only-testing:bmuxTests/ManagedAppearanceStartupContractTests \
             -only-testing:bmuxTests/AgentLaunchEnvironmentTests \
             -only-testing:bmuxTests/SSHWorkspaceCreationTests \

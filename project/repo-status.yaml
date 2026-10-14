@@ -290,3 +290,5 @@ local_caveats:
     status: resolved
   - id: cli_socket_capture_completion_verification
     status: open
+  - id: remote_tmux_parser_focused_gate_verification
+    status: open

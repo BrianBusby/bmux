@@ -1849,6 +1849,19 @@ no new state, dependencies, user-facing strings or localization keys are added.
 A fresh isolated combined build and its native owner checks are required before
 publishing this runtime correction. Full combined app-host CI remains open.
 
+### Remote tmux parser regression execution
+
+The test-only CRLF coverage at `b95727d60` did not execute in broad shard 3:
+job 115627514126 of run 38494255765 stopped after a 300-second idle deadline
+with exit 124 during unrelated legacy XCTest execution. This is a coverage
+blocker, not evidence that the parser regression failed.
+
+The existing first focused app-host invocation now also selects
+`RemoteTmuxSessionListParserTests`, so Swift Testing executes the LF/CRLF cases
+before broad legacy XCTest work. The full shard selectors, runner count,
+deadlines and assertions are unchanged. The production parser fix remains held
+until CI records the named failing regression; local red and fixed-artifact
+proof do not replace that required CI evidence.
 
 ## Download quarantine boundary verification
 

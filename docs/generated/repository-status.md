@@ -232,3 +232,4 @@ Repository: `BrianBusby/bmux`
 | `titlebar_product_contract_fixture_verification` | open |
 | `project_truth_http_retry_verification` | resolved |
 | `cli_socket_capture_completion_verification` | open |
+| `remote_tmux_parser_focused_gate_verification` | open |
