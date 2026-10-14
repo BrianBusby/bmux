@@ -38,6 +38,11 @@ struct SSHPTYLifecycleBridge {
     private func bind() throws -> (Int32, Int) {
         let fd = socket(AF_INET, SOCK_STREAM, 0)
         guard fd >= 0 else { throw POSIXError(.ENFILE) }
+        // Configure before producers can connect so accepted sockets inherit SIGPIPE protection.
+        var noSignal: Int32 = 1
+        guard setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &noSignal, socklen_t(MemoryLayout<Int32>.size)) == 0 else {
+            Darwin.close(fd); throw POSIXError(.EIO)
+        }
         var address = sockaddr_in()
         address.sin_family = sa_family_t(AF_INET)
         address.sin_addr.s_addr = inet_addr("127.0.0.1")
@@ -59,14 +64,21 @@ struct SSHPTYLifecycleBridge {
     private func serve(
         listener: Int32, events: AsyncStream<Event>, continuation: AsyncStream<Event>.Continuation
     ) async throws -> (String, Bool, Bool, Bool) {
-        var sources: [(Int32, any DispatchSourceRead)] = []
+        var sources: [CLISocketReadiness] = []
         var client: Int32?
         var pending = Data(), handshake = ""
         var resized = false, inputEnded = false
-        var inputSuspended = false
         do {
-            sources.append((listener, try readiness(listener, event: .accept, continuation: continuation)))
+            sources.append(try readiness(listener, event: .accept, continuation: continuation))
             for await event in events {
+                defer {
+                    // This bridge accepts one client; EOF remains suspended until joined teardown.
+                    switch event {
+                    case .accept: if client == nil { sources.first?.acknowledge() }
+                    case .input: if !inputEnded { sources.last?.acknowledge() }
+                    case .resized: break
+                    }
+                }
                 switch event {
                 case .accept:
                     guard client == nil else { continue }
@@ -74,7 +86,7 @@ struct SSHPTYLifecycleBridge {
                     if fd < 0, errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR { continue }
                     guard fd >= 0 else { throw POSIXError(.EIO) }
                     client = fd
-                    sources.append((fd, try readiness(fd, event: .input, continuation: continuation)))
+                    sources.append(try readiness(fd, event: .input, continuation: continuation))
                 case .resized: resized = true
                 case .input:
                     guard !inputEnded else { continue }
@@ -85,8 +97,6 @@ struct SSHPTYLifecycleBridge {
                     guard count >= 0 else { throw POSIXError(.EIO) }
                     if count == 0 {
                         inputEnded = true
-                        sources.last?.1.suspend()
-                        inputSuspended = true
                     }
                     else { pending.append(contentsOf: buffer.prefix(count)) }
                     if handshake.isEmpty, let newline = pending.firstIndex(of: 10) {
@@ -102,42 +112,22 @@ struct SSHPTYLifecycleBridge {
                             throw POSIXError(.EIO)
                         }
                     }
-                    if inputSuspended { sources.last?.1.resume() }
-                    for (fd, source) in sources { await close(fd, source: source) }
+                    for source in sources { await source.close() }
                     return (handshake, true, resized, inputEnded)
                 }
             }
         } catch {
-            if inputSuspended { sources.last?.1.resume() }
-            for (fd, source) in sources { await close(fd, source: source) }
+            for source in sources { await source.close() }
             throw error
         }
-        if inputSuspended { sources.last?.1.resume() }
-        for (fd, source) in sources { await close(fd, source: source) }
+        for source in sources { await source.close() }
         return (handshake, false, resized, inputEnded)
     }
 
     private func readiness(
         _ fd: Int32, event: Event, continuation: AsyncStream<Event>.Continuation
-    ) throws -> any DispatchSourceRead {
-        // Accepted sockets inherit SO_NOSIGPIPE; setting it after a peer closes can return EINVAL.
-        var noSignal: Int32 = 1
-        guard fcntl(fd, F_SETFL, O_NONBLOCK) == 0, fcntl(fd, F_SETFD, FD_CLOEXEC) == 0,
-              (event != .accept || setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &noSignal, socklen_t(MemoryLayout<Int32>.size)) == 0) else {
-            Darwin.close(fd); throw POSIXError(.EIO)
-        }
-        // Native socket readiness is consumed by the bridge task; cancellation joins descriptor closure.
-        let source = DispatchSource.makeReadSource(fileDescriptor: fd)
-        source.setEventHandler { continuation.yield(event) }
-        source.resume()
-        return source
-    }
-
-    private func close(_ fd: Int32, source: any DispatchSourceRead) async {
-        await withCheckedContinuation { continuation in
-            source.setCancelHandler { Darwin.close(fd); continuation.resume() }
-            source.cancel()
-        }
+    ) throws -> CLISocketReadiness {
+        try CLISocketReadiness(descriptor: fd) { continuation.yield(event) }
     }
 
     private func writeReady(to fd: Int32) async throws {

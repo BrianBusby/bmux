@@ -2153,7 +2153,7 @@ The seven existing transport cases pass with the proposed boundary, including
 withheld listener/client delivery, one-way/mixed frames, operation failure and
 backpressure. Three temporary native lifecycle controls verify armed/suspended
 closure, descriptor invalidation, owner deallocation and rearming for subsequent
-input. No source-shape test or new scheduling hook is added. Exact non-instrumented shipping-source validation on build 785 completed all
+input. No source-shape test or new scheduling hook is added. The intermediate RPC-only non-instrumented source on build 785 completed all
 38 functions/18 suites with one remaining acknowledged-resize timeout
 (`running`, pipe stdout); the other seventeen suites and all seven transport
 cases passed. The same shipping source passes all sixteen SSH lifecycle cases
@@ -2167,3 +2167,26 @@ Guidance: root/personal AGENTS, continuous-code-quality, bmux architecture
 concurrency/file discipline, testing regression/local-CI rules, shared behavior
 and socket policy. Only test infrastructure and contributor evidence change;
 there are no production changes, new shipped strings or localization entries.
+
+
+The remaining resize case prompted inspection of `SSHPTYLifecycleBridge`, which
+had an independent level-triggered readiness stream. A temporary native counter
+measured up to 13,407 pending events for one bridge's single accept, handshake and
+EOF while the RPC fixture was already bounded; that matrix had two resize
+failures. The bridge now reuses the same descriptor owner. Its listener stays
+suspended after the single expected client is accepted; input rearms after a
+read and remains suspended after EOF until joined closure. The synthetic resize
+acknowledgement remains an independent reliable event. Existing SO_NOSIGPIPE
+configuration precedes listen so accepted descriptors inherit it before any
+producer connects. The close predicate and all lifecycle assertions are intact.
+
+The resulting exact non-instrumented source passes all 38 functions in 18 suites
+on build 785 (4.571s), including all sixteen SSH lifecycle and seven transport
+cases; strict Swift 6 compilation is warning-free. This resolves both measured
+unbounded queue owners, but does not prove the cause of every macOS 15 CI timeout.
+The earlier failing matrices remain part of the evidence, and the final
+combined app-host gate is still required. A temporary control that suppresses
+only resize-response observations still fails exactly the eight acknowledgement
+cases at the unchanged five-second deadline; all eight immediate-close controls
+pass. This verifies that the new native-source lifecycle does not fabricate the
+resize event or weaken the bridge completion predicate.
