@@ -6219,3 +6219,8 @@ caveats:
     title: Browser Find fixtures distinguish owned-window search from menu fallback; integrated app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: ssh_agent_joined_producer_verification
+    title: SSH agent fixture joins its process before socket and file cleanup; native cases pass and fixed-head app-host deadlines remain unverified
+    status: open
+    owner: bmux

@@ -470,6 +470,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Native symbol sizing fixture preserves AppKit configured dimensions; fixed-head app-host verification remains pending (`native_symbol_size_fixture_verification`) - owner: Bmux; status: open
 - File preview inset fixture uses the maintained TextKit stack; fixed-head app-host verification remains pending (`file_preview_inset_fixture_verification`) - owner: Bmux; status: open
 - Browser Find fixtures distinguish owned-window search from menu fallback; integrated app-host verification remains pending (`browser_find_routing_fixture_verification`) - owner: Bmux; status: open
+- SSH agent fixture joins its process before socket and file cleanup; native cases pass and fixed-head app-host deadlines remain unverified (`ssh_agent_joined_producer_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
 
 The closed-peer CLI repair gives receive timeout configuration/cache and byte reads one internal `CLISocketReceiver` owner with a borrowed descriptor. `SocketClient` retains framing, connection lifecycle, request policy and telemetry. Actual G regression red is recorded; extracted-owner controls and tagged build 788 bundled CLI checks pass while fixed-head CI verification remains pending.

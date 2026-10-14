@@ -3273,3 +3273,33 @@ at 16:25 UTC on October 14. All three expected TAGGED/Unicode/final-line cases
 failed with receive-timeout EINVAL; PONG and both EOF error controls passed.
 The preceding native CLI linkage test succeeded. This supplies the required
 test-only CI red; it does not yet verify a production receive correction.
+
+
+### SSH agent forwarding joined producer
+
+Current candidate 995 job 115978363652 completed 115 tests in 27 suites with
+three issues. One SSH agent case (explicit tilde path, missing candidate) timed
+out, while its other two cases passed; both agent-launch cases also timed out.
+The SSH fixture still returned a `CommandRunner` timeout result before its owned
+child had joined, violating the shared socket fixture's producer-completion
+contract. Independent owned-child controls established this cleanup ordering
+gap; they do not establish the cause of the CI deadline.
+
+The three SSH agent variants now use the existing `ShellContractProcess` with
+the same five-second deadline and 200 ms termination grace. Direct argv,
+environment, cwd and null stdin are unchanged. The process owner alone writes
+stdout/stderr. Success or captured failure joins before socket final drain;
+after capture, failure records only owned requests/output and rethrows the
+original error. Owned root removal failures are visible. Status, empty stderr,
+exact two RPC methods, both agent paths, workspace and option assertions remain
+unchanged. No shared helper, runtime API, serialization or deadline changed.
+
+Actual bundled CLI build 788 passes all three original parameter cases in
+0.478 seconds; complete source compilation in Swift 6 emits no warnings.
+Temporary exact-method timeout and cancellation controls also pass (two cases,
+5.404 seconds, two expected recorded issues). Their TERM-ignoring children are
+already absent at producer return and socket-source join, before owned root
+removal; original error types and request/output context remain visible. Native
+exit observations join, and all roots disappear. The fixed-head macOS 15 app-host
+execution remains pending. Neither this resource correction nor local success resolves the wider process scheduling
+risk or proves the six-second CI stall repaired.

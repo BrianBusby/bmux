@@ -209,6 +209,7 @@ Regenerate with: ./scripts/project-docs generate
 | Native symbol sizing fixture preserves AppKit configured dimensions; fixed-head app-host verification remains pending (`native_symbol_size_fixture_verification`) | Bmux | open |  |
 | File preview inset fixture uses the maintained TextKit stack; fixed-head app-host verification remains pending (`file_preview_inset_fixture_verification`) | Bmux | open |  |
 | Browser Find fixtures distinguish owned-window search from menu fallback; integrated app-host verification remains pending (`browser_find_routing_fixture_verification`) | Bmux | open |  |
+| SSH agent fixture joins its process before socket and file cleanup; native cases pass and fixed-head app-host deadlines remain unverified (`ssh_agent_joined_producer_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
