@@ -213,18 +213,48 @@ negative mutation assertion pass incorrectly. Source cancellation joins descript
 closure but does not drain input; `responseWritten` cannot cover frames that have
 no response.
 
-The new focused transport suite uses an immutable, constructor-owned native
+The focused transport suite uses an immutable, constructor-owned native
 readiness-delivery closure. Its default forwards events immediately; tests
 withhold listener or client notifications without blocking the native queue, so
 cancel handlers remain runnable. Real owned sockets fully write and close each
-frame before the operation returns. No sleeps, wire sentinels, serialization or
-changed CLI deadlines are used. The local Swift 6 test-only run reports exactly
-three missing-input issues across five cases; the no-client and operation-error
-cleanup controls pass. Actual test-only CI red and a completion-drain correction
-remain pending. No production behavior changes in this follow-up.
+frame before the operation returns. Test-only commit `e8fb55995` records three
+local missing-input issues across five cases; the no-client and operation-error
+cleanup controls pass. Actual test-only CI red remains pending.
 
-The intended owner remains the fixture's single I/O task: successful capture must
-drain queued accepts and available client bytes through its existing parser before
-closing sources. Normal operations must join their request producers; failure
-cleanup must not wait for future peer EOF. Shared-client and final app-host
-verification remain open in the canonical and local Project Truth caveats.
+The local correction keeps capture state and one parser inside the fixture's I/O
+task. A private completion event drains queued accepts and available client bytes
+before closing and joining sources. Normal operations must join their request
+producers. Final-drain responses fail explicitly on would-block rather than await
+future peer reads, and partial or failed writes never emit `responseWritten`.
+An EPIPE still permits validation and capture of complete queued frames before
+closing at EOF/EAGAIN. The listener's existing SO_NOSIGPIPE option now precedes
+listen and producer start: a native probe confirmed accepted sockets inherit the
+option at connect time, not accept time.
+
+This does not make every capture shutdown globally bounded. Ordinary serving
+retains its existing backpressure wait; that wait can already be active before
+the completion event is processed. No CLI timeout or assertion is relaxed, and
+no application/runtime code changes in this follow-up.
+
+Final strict Swift 6 compilation is warning-free. The focused transport suite
+passes six functions/seven cases, including a mixed response/one-way connection
+whose prior parser dropped the second frame after EPIPE. Removing the final-drain
+would-block guard causes the owned unread-peer control to fail at its existing
+five-second failure deadline; cleanup closes the peer before joining the writer.
+No sleep is used to synchronize readiness, and no wire sentinel is introduced.
+
+The combined matrix uses validation commit `8ae32c8a8` shared caller sources and
+existing build 784 CLI, with only this fixture substituted. Its 38 functions in
+18 suites complete with five SSH acknowledged-resize timeouts; all other suites
+pass. The same frozen callers with the pre-fix helper also reproduce that timeout
+class (one case), while the final helper's isolated sixteen SSH lifecycle cases
+pass. Those samples establish an existing integration limitation, not a timeout
+frequency comparison or full-suite success. Actual fixed-head app-host CI and
+combined validation remain open in the canonical and local Project Truth caveats.
+
+Source rules and ownership: root/personal `AGENTS.md`, `continuous-code-quality`,
+`bmux-architecture` concurrency/file discipline, `bmux-testing` regression and
+local/CI references, shared-behavior and socket-policy guidance. Existing joined
+DispatchSource cancellation, one-way feed telemetry, response-written observation
+and owned-file CLI capture remain the maintained patterns. Localization audit:
+only test diagnostics and contributor notes change; no shipped copy or catalogs.

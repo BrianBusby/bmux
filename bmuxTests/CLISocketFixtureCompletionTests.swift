@@ -64,6 +64,68 @@ struct CLISocketFixtureCompletionTests {
         #expect(!FileManager.default.fileExists(atPath: path))
     }
 
+    @Test
+    func completedMixedFramesFromClosedPeerAreCapturedWithoutAcknowledgement() async throws {
+        let path = socketPath()
+        let (acknowledgements, written) = AsyncStream<String>.makeStream()
+        let server = CLISocketFixture(path: path, responseWritten: written,
+                                      deliverReadiness: { _, _ in }, response: { line in
+                                          line == "owned-request" ? "OK" : nil
+                                      })
+        let expected = ["owned-request", frame(client: 0, event: 0)]
+        let (_, commands) = try await server.capture { try send(expected, to: path) }
+        #expect(commands == expected)
+        var responses: [String] = []
+        for await response in acknowledgements { responses.append(response) }
+        #expect(responses.isEmpty, "A response to a closed peer must not be acknowledged")
+        #expect(!FileManager.default.fileExists(atPath: path))
+    }
+
+    @Test
+    func completionBackpressureFailsWithoutWaitingOrAcknowledging() async throws {
+        let path = socketPath()
+        let client = socket(AF_UNIX, SOCK_STREAM, 0)
+        try #require(client >= 0)
+        let peer = FileHandle(fileDescriptor: client, closeOnDealloc: true)
+        defer { try? peer.close() }
+        var capacity: Int32 = 0
+        var length = socklen_t(MemoryLayout<Int32>.size)
+        try #require(getsockopt(client, SOL_SOCKET, SO_RCVBUF, &capacity, &length) == 0)
+        try #require(capacity > 0)
+        // The peer deliberately never reads; one response exceeds its measured receive capacity.
+        let response = String(repeating: "x", count: Int(capacity) * 4)
+        let (acknowledgements, written) = AsyncStream<String>.makeStream()
+        let server = CLISocketFixture(path: path, responseWritten: written,
+                                      deliverReadiness: { _, _ in }, response: { _ in response })
+        await #expect(throws: POSIXError(.EWOULDBLOCK)) {
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    try await withTaskCancellationHandler {
+                        _ = try await server.capture {
+                            try connect(client, to: path)
+                            try write([frame(client: 0, event: 0)], to: client)
+                        }
+                    } onCancel: {
+                        // FileHandle owns close-once cleanup; closing the peer releases an unfixed native writer.
+                        try? peer.close()
+                    }
+                }
+                group.addTask {
+                    // This failure deadline detects an accidental wait for future peer reads.
+                    try await Task.sleep(for: .seconds(5))
+                    try? peer.close()
+                    throw ProbeError.readinessDeadline
+                }
+                defer { group.cancelAll() }
+                _ = try await group.next()
+            }
+        }
+        var responses: [String] = []
+        for await response in acknowledgements { responses.append(response) }
+        #expect(responses.isEmpty, "A partial response is not an acknowledgement")
+        #expect(!FileManager.default.fileExists(atPath: path))
+    }
+
     private func frame(client: Int, event: Int) -> String {
         #"{"method":"feed.push","params":{"workspace_id":"wrong-target","client":\#(client),"event":\#(event)}}"#
     }
@@ -76,6 +138,11 @@ struct CLISocketFixtureCompletionTests {
         defer { Darwin.close(client) }
         var noSignal: Int32 = 1
         try #require(setsockopt(client, SOL_SOCKET, SO_NOSIGPIPE, &noSignal, socklen_t(MemoryLayout<Int32>.size)) == 0)
+        try connect(client, to: path)
+        try write(frames, to: client)
+    }
+
+    private func connect(_ client: Int32, to path: String) throws {
         var address = sockaddr_un()
         address.sun_family = sa_family_t(AF_UNIX)
         let pathBytes = Array(path.utf8) + [0]
@@ -87,6 +154,9 @@ struct CLISocketFixtureCompletionTests {
             }
         }
         try #require(status == 0)
+    }
+
+    private func write(_ frames: [String], to client: Int32) throws {
         // These tiny owned frames fit in the fresh socket buffer; the peer never needs to reply.
         let bytes = Array((frames.joined(separator: "\n") + "\n").utf8)
         let count = bytes.withUnsafeBytes { Darwin.write(client, $0.baseAddress, bytes.count) }
