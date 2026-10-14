@@ -256,3 +256,4 @@ Repository: `BrianBusby/bmux`
 | `sidebar_terminal_hit_boundary_verification` | open |
 | `browser_portal_presentation_fixture_verification` | open |
 | `native_xcode_project_parse_verification` | open |
+| `remote_agent_fork_fixture_verification` | open |

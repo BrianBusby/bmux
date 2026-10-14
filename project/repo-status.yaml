@@ -342,3 +342,6 @@ local_caveats:
 
   - id: native_xcode_project_parse_verification
     status: open
+
+  - id: remote_agent_fork_fixture_verification
+    status: open

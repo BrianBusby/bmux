@@ -457,4 +457,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Browser portal resize, reveal, and transient rebind contracts pass native 786; integrated app-host verification remains pending (`browser_portal_presentation_fixture_verification`) - owner: Bmux; status: open
 - Native project parsing rejected three unquoted extension filenames; quoted paths and macOS parser guard await corrected CI (`native_xcode_project_parse_verification`) - owner: Bmux; status: open
 - Direct text and Korean Return fixtures require a ready runtime; fixed-head macOS app-host verification remains pending (`terminal_native_input_delivery_fixture_verification`) - owner: Bmux; status: open
+- Remote agent fork fixture owns its existing agent path and passes native checks; app-host verification remains pending (`remote_agent_fork_fixture_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

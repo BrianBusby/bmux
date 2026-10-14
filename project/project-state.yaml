@@ -6154,3 +6154,8 @@ caveats:
     title: Direct text and Korean Return fixtures require a ready runtime; fixed-head macOS app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: remote_agent_fork_fixture_verification
+    title: Remote agent fork fixture owns its existing agent path and passes native checks; app-host verification remains pending
+    status: open
+    owner: bmux
