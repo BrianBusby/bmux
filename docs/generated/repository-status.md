@@ -243,6 +243,7 @@ Repository: `BrianBusby/bmux`
 | `panel_appearance_compositing_fixture_verification` | open |
 | `titlebar_narrow_window_layout_verification` | open |
 | `titlebar_search_metadata_fixture_verification` | open |
+| `cli_closed_peer_receive_regression_verification` | open |
 | `cli_socket_home_fixture_verification` | open |
 | `titlebar_product_contract_fixture_verification` | open |
 | `project_truth_http_retry_verification` | resolved |

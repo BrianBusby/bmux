@@ -2562,3 +2562,39 @@ Full three-case acceptance and fixed-head app-host CI remain open under
 result is unchanged. Existing responder stop does not join its accept worker,
 and the legacy fake-bundle helper lacks directory cleanup; this root-only change
 does not claim to repair those retained lifecycle limitations.
+
+
+## Closed-peer CLI receive regression gate
+
+The short socket-home correction exposes a separate receive failure: after an
+unrecognized newline-terminated reply, `SocketClient.send` changes to its
+multiline idle timeout. Darwin returns EINVAL when that socket's peer has already
+closed. Native socketpair controls establish that peer state, not `timeval`
+size/stride, causes the option-setting error.
+
+`tests/test_cli_closed_peer_receive.py` drives the actual built CLI through a
+short owned Unix socket. After receiving its complete ping request, the fixture
+stops only its owned child, observes native stop acknowledgment, writes the
+response and closes the peer before resuming. This establishes ordering without
+polling or sleeps. A scoped three-second harness deadline retains the existing
+CLI test bound; the production response/idle timeouts are unchanged. Cleanup
+resumes a stopped child before killing/joining it, removes owned files and socket,
+and restores the process alarm handler/timer. HOME/config and telemetry test
+settings are isolated; no app or user socket is opened.
+
+Against unchanged native build 786, three functions exercise six scenarios:
+PONG, empty EOF and truncated EOF pass, while complete TAGGED, Unicode multiline
+and final-unterminated-line responses fail with the same receive-timeout EINVAL.
+Temporary deadline controls before accept and while writing to the stopped
+child confirm joined child cleanup, removed socket/home and restored signal
+state. This is test-only red evidence, not a production fix or full CLI pass.
+
+The existing shard-3 bundled CLI artifact step invokes both independent Python
+regressions against the exact built artifact before native linkage verification.
+It retains both exit codes, reports them and fails when either is nonzero; no
+failure is waived. Existing native linkage, dependency-closure verification and
+later CLI deadline tests are unchanged. Actual test-only CI red is still required
+before publishing a production repair. The canonical/local
+`cli_closed_peer_receive_regression_verification` caveat stays open. Only test
+diagnostics and contributor documentation changed; no shipped copy requires
+localization updates.
