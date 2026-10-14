@@ -6042,6 +6042,10 @@ caveats:
     title: Panel clear-content and opaque chrome compositing suite awaits fixed-head app-host verification
     status: open
     owner: bmux
+  - id: titlebar_narrow_window_layout_verification
+    title: Narrow titlebar reservation fix preserves offscreen reference layout; integrated app verification remains pending
+    status: open
+    owner: bmux
   - id: titlebar_product_contract_fixture_verification
     title: Native titlebar default-width and voice-control fixture corrections pass locally; app-host verification remains pending
     status: open

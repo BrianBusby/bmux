@@ -2061,3 +2061,32 @@ bmux-testing migration/behavior/local-CI guidance, architecture concurrency and
 file ownership, and the real Workspace/Bonsplit and MobileHostConnection
 completion boundaries. The localization audit finds no changed shipped strings,
 settings, menus or catalogs; this section is contributor verification prose.
+
+
+### Narrow titlebar reservations
+
+The matte titlebar applied its leading-control reservation to both edges. Native
+measurements at 600/700pt with the default 352pt reservation gave the title zero
+width and moved the build badge beyond the trailing edge. `WorkspaceTitlebarLayout`
+now reserves the existing leading width once and measures the optional badge.
+It keeps the title centered in the titlebar band when it fits, otherwise truncates
+within the actual interval between controls and badge. It uses only existing theme
+gaps/insets and preserves the folder view, badge accessibility and control owner.
+
+Offscreen native verification against build 784 covered 80 combinations per theme:
+300/600/700/1092/1100pt, visible/hidden sidebar reservations, short/long titles,
+100/200% fonts and badge presence/absence. The 1092/1100pt short-title light PNGs
+remain byte-identical; at 600pt the default title is fully visible and the badge
+has its original 8pt trailing inset. No measured title slot overlaps the reserved
+controls or badge. The existing 300pt case with 352pt leading controls still has
+no title interval; this correction does not redesign those controls. The existing
+28pt band versus 30pt text at 200% is a separate vertical constraint, not a claim
+of complete magnification support. The same horizontal matrix was inspected in
+dark and light without ordering or activating a window.
+
+Root/personal AGENTS, continuous-code-quality, architecture file/concurrency rules,
+bmux-debugging runtime guidance and bmux-testing local/CI boundaries govern this
+slice. No layout-mirroring test or new CI selector is introduced for this reversible
+visual correction. Integrated tagged build and app-host verification remain pending.
+The localization audit preserves the existing English/Japanese badge accessibility
+key and folder tooltip; no shipped text or localization catalog changes.
