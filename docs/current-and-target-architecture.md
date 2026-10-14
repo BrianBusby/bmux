@@ -428,4 +428,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Remote agent restore directory guard passes native build 783; full app-host verification pending (`remote_restore_working_directory_regression`) - owner: Bmux; status: open
 - Focused global search configured-conflict priority suite awaits app-host verification (`global_search_shortcut_conflict_verification`) - owner: Bmux; status: open
 - Opt-in focused app-host process diagnostics await actual runner evidence (`focused_app_host_process_diagnostics_verification`) - owner: Bmux; status: open
+- Remote tmux CRLF record correction awaits combined artifact and full CI verification (`remote_tmux_crlf_record_parsing_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

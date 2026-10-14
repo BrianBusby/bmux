@@ -276,3 +276,5 @@ local_caveats:
     status: open
   - id: focused_app_host_process_diagnostics_verification
     status: open
+  - id: remote_tmux_crlf_record_parsing_verification
+    status: open

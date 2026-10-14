@@ -225,3 +225,4 @@ Repository: `BrianBusby/bmux`
 | `remote_restore_working_directory_regression` | open |
 | `global_search_shortcut_conflict_verification` | open |
 | `focused_app_host_process_diagnostics_verification` | open |
+| `remote_tmux_crlf_record_parsing_verification` | open |

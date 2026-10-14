@@ -1767,3 +1767,29 @@ The actual PR171 focused failure (job 115488618879, 41 functions/10 suites, 19 i
 remains unresolved. Local synthetic subprocess/filter/privacy checks do not prove
 macOS 15 app-host capture or identify a missing CommandRunner callback. The next
 combined dispatch must supply that evidence without changing test deadlines.
+
+### Remote tmux CRLF record parsing
+
+Current app-host job 115525529711 failed the existing
+`preservesNameWhitespaceAndStripsLineTerminator` assertion. Swift Character
+splitting treats CRLF as one grapheme, so splitting on an LF Character leaves
+CRLF in a name and can merge several records. The shared parser now splits the LF
+substring; its existing single trailing-CR removal and empty-line handling remain.
+The transport, remote commands, malformed-record policy and name whitespace are
+unchanged.
+
+Test-only commit `b95727d60` adds LF/CRLF multi-record controls with blank lines,
+Unicode/padded names, embedded colons and an unterminated final record. Against
+the unchanged production parser, the complete suite compiled without warnings and
+failed exactly two issues: the existing assertion and the new CRLF case. The
+fix in `7f3c6513e` passes all nine functions (ten cases). These are actual compiled
+parser/value sources with unchanged test assertions, not source-text tests.
+The earlier actual CI failure supplies the existing regression red evidence;
+no failing result was hidden or changed to an expected failure.
+
+Root/personal AGENTS, continuous-code-quality, bmux-testing, architecture and
+shared-behavior guidance were applied to the complete parser, session value,
+transport caller and tests. The parser remains the single session-record owner;
+no new state, dependencies, user-facing strings or localization keys are added.
+A fresh isolated combined build and its native owner checks are required before
+publishing this runtime correction. Full combined app-host CI remains open.

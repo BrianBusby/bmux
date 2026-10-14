@@ -167,6 +167,7 @@ Regenerate with: ./scripts/project-docs generate
 | Remote agent restore directory guard passes native build 783; full app-host verification pending (`remote_restore_working_directory_regression`) | Bmux | open |  |
 | Focused global search configured-conflict priority suite awaits app-host verification (`global_search_shortcut_conflict_verification`) | Bmux | open |  |
 | Opt-in focused app-host process diagnostics await actual runner evidence (`focused_app_host_process_diagnostics_verification`) | Bmux | open |  |
+| Remote tmux CRLF record correction awaits combined artifact and full CI verification (`remote_tmux_crlf_record_parsing_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
