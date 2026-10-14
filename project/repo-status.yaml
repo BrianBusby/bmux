@@ -323,3 +323,6 @@ local_caveats:
 
   - id: cli_socket_readiness_coalescing_verification
     status: open
+
+  - id: sidebar_terminal_hit_boundary_verification
+    status: open
