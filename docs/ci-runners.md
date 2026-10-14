@@ -2354,3 +2354,27 @@ compile. This corrects a measured fixture protocol mismatch; it does not explain
 the separate Antigravity detached-worker timeouts or clear the existing process
 scheduling caveat. Full app-host verification remains open. No production code,
 CLI deadline, runner policy or shipped localization changed.
+
+### Antigravity hook fixture completion boundary
+
+Combined run 38509817630 shard 3 failed the Antigravity stop/notification
+lifecycle case. Its detached mock launched 128 blocking accept workers before
+running any hook. A controlled native probe using the unchanged legacy process
+helper returned `/usr/bin/true` with status zero but `timedOut=true` after 7.019
+seconds under those workers; without them it returned normally in 0.065 seconds.
+This proves a false timeout at that fixture boundary, not the cause of every
+subprocess failure in the combined run.
+
+The migrated case uses the existing asynchronous socket fixture and joined shell
+process owner, with the same five-second deadline. All original background-work,
+missing-fullyIdle, shared-status, completion, session-end routing, duplicate,
+permission and error assertions remain. Each invocation captures completed RPC
+and id-less telemetry producers without preallocating blocking accept workers.
+The owned responder supports current routing/resume requests and rejects unknown
+commands; id-less telemetry receives no response.
+
+Unchanged build 786 passes the full lifecycle case in 0.917 seconds with a
+warning-free Swift 6 compile. Removing captured notifications in a temporary
+control fails five original notification assertions. Local proof does not replace
+fixed app-host and full-suite verification; the canonical/local caveat remains
+open. No production, subprocess timeout, runner or shipped string changed.

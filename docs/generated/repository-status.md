@@ -160,6 +160,7 @@ Repository: `BrianBusby/bmux`
 | --- | --- |
 | `native_app_host_full_suite_failures` | open |
 | `workspace_close_ownership_verification` | open |
+| `antigravity_hook_lifecycle_fixture_verification` | open |
 | `grok_hook_connection_fixture_verification` | open |
 | `persistent_pty_child_exit_verification` | open |
 | `claude_resume_and_no_git_watch_fixture_verification` | open |

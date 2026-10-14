@@ -108,6 +108,8 @@
 		2449E6E5FCE8096D5BF4A323 /* AgentSessionWorkspaceLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = C52592C7248AC72ED53FECC1 /* AgentSessionWorkspaceLink.swift */; };
 		REE0CA0000000000000000F2 /* AIAccountCredentialSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = REE0CA0000000000000000F1 /* AIAccountCredentialSources.swift */; };
 		REE0CA0000000000000000E2 /* AIAccountsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = REE0CA0000000000000000E1 /* AIAccountsClient.swift */; };
+		C1FF740C89D25A4F477B04F6 /* AntigravityHookLifecycleFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AADD50A5C19738A020A1371 /* AntigravityHookLifecycleFixture.swift */; };
+		590C5D304F84054DB77AF01D /* AntigravityHookLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13AF5EBD16899B088E8E1434 /* AntigravityHookLifecycleTests.swift */; };
 		F4350A110000000000000001 /* AppBundleIconPersistencePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4350A130000000000000001 /* AppBundleIconPersistencePolicy.swift */; };
 		F4350A120000000000000001 /* AppBundleIconPersistencePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4350A130000000000000001 /* AppBundleIconPersistencePolicy.swift */; };
 		C0DE45AC0000000000000001 /* AppDelegate+AgentChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE45AC0000000000000002 /* AppDelegate+AgentChat.swift */; };
@@ -2176,6 +2178,8 @@
 		C52592C7248AC72ED53FECC1 /* AgentSessionWorkspaceLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionWorkspaceLink.swift; sourceTree = "<group>"; };
 		REE0CA0000000000000000F1 /* AIAccountCredentialSources.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AIAccountCredentialSources.swift; sourceTree = "<group>"; };
 		REE0CA0000000000000000E1 /* AIAccountsClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AIAccountsClient.swift; sourceTree = "<group>"; };
+		9AADD50A5C19738A020A1371 /* AntigravityHookLifecycleFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AntigravityHookLifecycleFixture.swift; sourceTree = "<group>"; };
+		13AF5EBD16899B088E8E1434 /* AntigravityHookLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AntigravityHookLifecycleTests.swift; sourceTree = "<group>"; };
 		F4350A130000000000000001 /* AppBundleIconPersistencePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/AppBundleIconPersistencePolicy.swift; sourceTree = "<group>"; };
 		C0DE45AC0000000000000002 /* AppDelegate+AgentChat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+AgentChat.swift"; sourceTree = "<group>"; };
 		C54860050000000000000002 /* AppDelegate+BmuxNavigationDeepLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+BmuxNavigationDeepLinks.swift"; sourceTree = "<group>"; };
@@ -5882,6 +5886,8 @@
 				CE4412000000000000000012 /* ClaudeNotificationTargetTests.swift */,
 				FC6229443FDB43D4C7C0F36A /* GrokHookConnectionFixture.swift */,
 				FE1BCCFCEE0CD5FE7A2A412A /* GrokHookConnectionTests.swift */,
+				13AF5EBD16899B088E8E1434 /* AntigravityHookLifecycleTests.swift */,
+				9AADD50A5C19738A020A1371 /* AntigravityHookLifecycleFixture.swift */,
 				6DA95C22908B4D4BA36CBB23 /* ShellContractProcess.swift */,
 				CE4412000000000000000002 /* ClaudeNotificationTargetFixture.swift */,
 				CE4411000000000000000022 /* RemotePTYErrorPolicyTests.swift */,
@@ -7882,6 +7888,8 @@
 				CE2F03010000000000000001 /* AgentSessionSmartSessionStoreTests.swift in Sources */,
 				A9E030000000000000000002 /* AgentSessionSocketSurfaceTests.swift in Sources */,
 				A9E050000000000000000002 /* AgentSessionWebRendererTests.swift in Sources */,
+				C1FF740C89D25A4F477B04F6 /* AntigravityHookLifecycleFixture.swift in Sources */,
+				590C5D304F84054DB77AF01D /* AntigravityHookLifecycleTests.swift in Sources */,
 				725746692D9647948561044D /* AppDelegateBareSpaceShortcutRoutingTests.swift in Sources */,
 				A1B2C3D4E5F600000000CF01 /* AppDelegateDisplayConfigRestoreTests.swift in Sources */,
 				E3309A09 /* AppDelegateEqualizeSplitsShortcutTests.swift in Sources */,
