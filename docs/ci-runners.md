@@ -4343,3 +4343,24 @@ execution remain open under `markdown_mermaid_double_zoom_verification`.
 The probe retains an owned, never-presented window and uses bundled inline
 assets; it does not launch or replace a preview or claim WindowServer focus
 coverage. Test diagnostics and contributor notes introduce no shipped strings.
+
+## Mermaid physical zoom regression gate
+
+The regression now converts DOM CSS geometry into native view points using
+`WKWebView.pageZoom`. It preserves the original proportional prose/SVG, wide-fit,
+resize, left-edge and export checks, and adds a fresh-at-2x render compared with
+an independent 1x view plus content-cap change/restore checks. The fixture
+composes the maintained retained-window rendering owner and cancellable DOM
+observation; the original ten-second geometry deadline is unchanged. The
+focused shard-one gate includes both cases so a broad-suite abort cannot hide
+the regression. Production rendering remains unchanged in this test-only slice.
+
+Owned build-791 native probes fail the physical geometry checks. Additional
+instrumentation observes the production global error handler replacing the page
+with a generic script-error message immediately after resize observation. A
+control changing only the observer's synchronous geometry write to next-frame
+delivery removes that page replacement while retaining five geometry failures.
+The error is generic, so this does not identify its JavaScript stack; it supports
+a resize-delivery feedback correction without suppressing errors or increasing
+deadlines. Actual CI red and the subsequent production correction are pending.
+No shipped UI strings, terminal engine, user settings or active preview changed.

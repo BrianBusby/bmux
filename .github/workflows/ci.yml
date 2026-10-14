@@ -608,6 +608,7 @@ jobs:
             -only-testing:bmuxTests/CloudAttachRetryContractTests \
             -only-testing:bmuxTests/RemoteTmuxSessionListParserTests \
             -only-testing:bmuxTests/FileExplorerGitStatusProviderTests \
+            -only-testing:bmuxTests/MarkdownMermaidZoomTests \
             -only-testing:bmuxTests/ManagedAppearanceStartupContractTests \
             -only-testing:bmuxTests/AgentLaunchEnvironmentTests \
             -only-testing:bmuxTests/SSHWorkspaceCreationTests \

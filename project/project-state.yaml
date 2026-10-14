@@ -6337,6 +6337,6 @@ caveats:
     owner: bmux
 
   - id: markdown_mermaid_double_zoom_verification
-    title: Native snapshots reproduce Mermaid double scaling under page zoom; geometry correction and fixed-head macOS verification remain pending
+    title: Physical-unit Mermaid regressions reproduce double scaling and content-cap failures; actual CI red and production correction remain pending
     status: open
     owner: bmux
