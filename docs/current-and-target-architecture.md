@@ -425,6 +425,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Respawn window protocol fixture focused gate awaits app-host CI (`respawn_window_protocol_fixture_focused_gate_verification`) - owner: Bmux; status: open
 - Workspace fallback regression test red and production fix verification pending (`workspace_fallback_regression_verification`) - owner: Bmux; status: open
 - Completed-close history and batched mobile response fixture corrections await fixed-head app-host verification (`native_history_and_batched_frame_fixture_verification`) - owner: Bmux; status: open
+- Retained Markdown rendering windows and event-driven fixture await fixed-head app-host verification (`markdown_window_retained_fixture_verification`) - owner: Bmux; status: open
 - Retained Welcome shortcut window fixture awaits fixed-head app-host verification (`welcome_window_retained_fixture_verification`) - owner: Bmux; status: open
 - Browser inspector window-close runtime fixture correction awaits fixed-head app-host verification (`browser_inspector_window_ownership_verification`) - owner: Bmux; status: open
 - Remote agent restore directory guard passes native build 783; full app-host verification pending (`remote_restore_working_directory_regression`) - owner: Bmux; status: open

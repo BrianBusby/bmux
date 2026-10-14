@@ -2081,3 +2081,31 @@ no suppression or production ownership change was added. Actual Welcome window
 routing remains an app-host CI gate; the primitive and typecheck do not establish
 that result. Existing full shard coverage is unchanged. No local foreground
 window, app launch or runtime build was used for this correction.
+
+
+## Markdown rendering window ownership verification
+
+The final C shard-2 job 115676261618 identifies four Markdown rendering cases in
+XCTest object cleanup. `MarkdownWindowRenderingTests` migrates those cases while
+retaining their windows from construction through close. All 118 expectations
+remain: heading position (3), local image boundaries (12), data images (5), and
+remote image consent/security (98). The other 24 legacy test bodies are unchanged.
+
+The fixture owns navigation completion and DOM observations instead of XCTest
+expectations or polling. The existing five-second navigation and three-second
+image deadlines are retained; copied/reverted button states share one eight-second
+budget. DOM load/error events and MutationObserver check the actual predicate,
+including an initial-ready check. Completion removes listeners and observers;
+native cancellation queues cleanup on the same page, and pagehide/phase expiry
+also disconnect. Closing removes the script handler, stops loading, detaches the
+delegate/view, cancels owned scheme work and releases the retained window.
+
+Exact new sources compile without warnings in both the actual Swift 5 target mode
+and Swift 6 against build 786. A temporary offscreen minimal-HTML WebKit probe
+passes seven cases covering initial readiness, mutation, real image load/error,
+deadline, cancellation and navigation replacement. Actual observer counts return
+to zero and the script handler is absent after close; omitting disconnection in a
+temporary negative control fails six cleanup assertions. Full rendering,
+navigation, security and scroll execution remains app-host CI verification; a primitive window-lifetime control
+or a minimal offscreen WebKit observer probe does not establish those outcomes.
+No production renderer, timeout policy, CI selector or app runtime was changed.

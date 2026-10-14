@@ -975,13 +975,19 @@
 		A50014F2 /* MarkdownPanelFileLinkResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50014F0 /* MarkdownPanelFileLinkResolver.swift */; };
 		D3664002D3664002D3664002 /* MarkdownPanelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3664001D3664001D3664001 /* MarkdownPanelTests.swift */; };
 		A5001421 /* MarkdownPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001419 /* MarkdownPanelView.swift */; };
+		CC25298C1C4B9DCCCAA7FAAE /* MarkdownRemoteImageHoldingSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0179E41B2A61509B9DB47809 /* MarkdownRemoteImageHoldingSchemeHandler.swift */; };
 		A50014F7 /* MarkdownRemoteImageLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50014F6 /* MarkdownRemoteImageLoader.swift */; };
+		C7C2E4CABAF2B7B103A8C5B0 /* MarkdownRenderTestFixture+DOMObservation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 181346F8C673F272F164BA6E /* MarkdownRenderTestFixture+DOMObservation.swift */; };
+		3D6AD0563CD8205D16A39280 /* MarkdownRenderTestFixture+Snapshots.swift in Sources */ = {isa = PBXBuildFile; fileRef = 180511F4CD28122D773F56E9 /* MarkdownRenderTestFixture+Snapshots.swift */; };
+		C545359702768F9998BB99AF /* MarkdownRenderTestFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4392AEACD02CFC760240B81F /* MarkdownRenderTestFixture.swift */; };
 		F5168A020000000000000001 /* MarkdownTypographyControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5168A020000000000000002 /* MarkdownTypographyControl.swift */; };
 		F5168A060000000000000001 /* MarkdownTypographyDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5168A060000000000000002 /* MarkdownTypographyDefaults.swift */; };
 		A5001290 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = A5001291 /* MarkdownUI */; };
 		A50014F3 /* MarkdownViewerAssets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50014F1 /* MarkdownViewerAssets.swift */; };
 		A50014F5 /* MarkdownWebRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50014F4 /* MarkdownWebRenderer.swift */; };
 		A50014F9 /* MarkdownWebSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50014F8 /* MarkdownWebSupport.swift */; };
+		247C61F259D10F8A355A78BF /* MarkdownWindowRenderingTests+RemoteImageConsent.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAA0039833FA3B29486AAF0A /* MarkdownWindowRenderingTests+RemoteImageConsent.swift */; };
+		9ECBF5A36FE4B41DE5877F83 /* MarkdownWindowRenderingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0195578D8B103ABCFD928D /* MarkdownWindowRenderingTests.swift */; };
 		A44000000000000000000006 /* MatteBonsplitAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = A44000000000000000001006 /* MatteBonsplitAppearance.swift */; };
 		AA5269A0C0DE0026FACE0026 /* MatteChromePreferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5269A0C0DE0025FACE0025 /* MatteChromePreferenceTests.swift */; };
 		7EAB93599808431C8694005E /* MatteTerminalBackdropCompositionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C12A914BAAC46DB802A18DE /* MatteTerminalBackdropCompositionTests.swift */; };
@@ -2962,12 +2968,18 @@
 		A50014F0 /* MarkdownPanelFileLinkResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownPanelFileLinkResolver.swift; sourceTree = "<group>"; };
 		D3664001D3664001D3664001 /* MarkdownPanelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPanelTests.swift; sourceTree = "<group>"; };
 		A5001419 /* MarkdownPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownPanelView.swift; sourceTree = "<group>"; };
+		0179E41B2A61509B9DB47809 /* MarkdownRemoteImageHoldingSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRemoteImageHoldingSchemeHandler.swift; sourceTree = "<group>"; };
 		A50014F6 /* MarkdownRemoteImageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownRemoteImageLoader.swift; sourceTree = "<group>"; };
+		181346F8C673F272F164BA6E /* MarkdownRenderTestFixture+DOMObservation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderTestFixture+DOMObservation.swift; sourceTree = "<group>"; };
+		180511F4CD28122D773F56E9 /* MarkdownRenderTestFixture+Snapshots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderTestFixture+Snapshots.swift; sourceTree = "<group>"; };
+		4392AEACD02CFC760240B81F /* MarkdownRenderTestFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderTestFixture.swift; sourceTree = "<group>"; };
 		F5168A020000000000000002 /* MarkdownTypographyControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownTypographyControl.swift; sourceTree = "<group>"; };
 		F5168A060000000000000002 /* MarkdownTypographyDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownTypographyDefaults.swift; sourceTree = "<group>"; };
 		A50014F1 /* MarkdownViewerAssets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownViewerAssets.swift; sourceTree = "<group>"; };
 		A50014F4 /* MarkdownWebRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownWebRenderer.swift; sourceTree = "<group>"; };
 		A50014F8 /* MarkdownWebSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownWebSupport.swift; sourceTree = "<group>"; };
+		DAA0039833FA3B29486AAF0A /* MarkdownWindowRenderingTests+RemoteImageConsent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownWindowRenderingTests+RemoteImageConsent.swift; sourceTree = "<group>"; };
+		4E0195578D8B103ABCFD928D /* MarkdownWindowRenderingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownWindowRenderingTests.swift; sourceTree = "<group>"; };
 		A44000000000000000001006 /* MatteBonsplitAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Terminal/MatteBonsplitAppearance.swift"; sourceTree = "<group>"; };
 		AA5269A0C0DE0025FACE0025 /* MatteChromePreferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatteChromePreferenceTests.swift; sourceTree = "<group>"; };
 		1C12A914BAAC46DB802A18DE /* MatteTerminalBackdropCompositionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MatteTerminalBackdropCompositionTests.swift"; sourceTree = "<group>"; };
@@ -5474,6 +5486,12 @@
 				FA100001A1B2C3D4E5F60718 /* BrowserImportMappingTests.swift */,
 				160FEDE51467B37C2B860363 /* WelcomeWindowShortcutTests.swift */,
 				B60BDE836611E78FBAB279B9 /* WelcomeShortcutWindowFixture.swift */,
+				4E0195578D8B103ABCFD928D /* MarkdownWindowRenderingTests.swift */,
+				DAA0039833FA3B29486AAF0A /* MarkdownWindowRenderingTests+RemoteImageConsent.swift */,
+				4392AEACD02CFC760240B81F /* MarkdownRenderTestFixture.swift */,
+				181346F8C673F272F164BA6E /* MarkdownRenderTestFixture+DOMObservation.swift */,
+				180511F4CD28122D773F56E9 /* MarkdownRenderTestFixture+Snapshots.swift */,
+				0179E41B2A61509B9DB47809 /* MarkdownRemoteImageHoldingSchemeHandler.swift */,
 				F6000001A1B2C3D4E5F60718 /* AppDelegateShortcutRoutingTests.swift */,
 				F5588001A1B2C3D4E5F60718 /* AppDelegateOptionDigitShortcutRoutingTests.swift */,
 				6419B0026419B0026419B002 /* AppDelegateShortcutRoutingRepairProbe.swift */,
@@ -8101,6 +8119,12 @@
 				D7470002D7470002D7470002 /* MarkdownLinkBoundaryRegressionTests.swift in Sources */,
 				D6069002D6069002D6069002 /* MarkdownMermaidZoomTests.swift in Sources */,
 				D3664002D3664002D3664002 /* MarkdownPanelTests.swift in Sources */,
+				CC25298C1C4B9DCCCAA7FAAE /* MarkdownRemoteImageHoldingSchemeHandler.swift in Sources */,
+				C7C2E4CABAF2B7B103A8C5B0 /* MarkdownRenderTestFixture+DOMObservation.swift in Sources */,
+				3D6AD0563CD8205D16A39280 /* MarkdownRenderTestFixture+Snapshots.swift in Sources */,
+				C545359702768F9998BB99AF /* MarkdownRenderTestFixture.swift in Sources */,
+				247C61F259D10F8A355A78BF /* MarkdownWindowRenderingTests+RemoteImageConsent.swift in Sources */,
+				9ECBF5A36FE4B41DE5877F83 /* MarkdownWindowRenderingTests.swift in Sources */,
 				AA5269A0C0DE0026FACE0026 /* MatteChromePreferenceTests.swift in Sources */,
 				7EAB93599808431C8694005E /* MatteTerminalBackdropCompositionTests.swift in Sources */,
 				AA5269A0C0DE0018FACE0018 /* MatteTerminalConfigurationTests.swift in Sources */,

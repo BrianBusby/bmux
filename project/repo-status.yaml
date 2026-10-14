@@ -270,6 +270,8 @@ local_caveats:
     status: resolved
   - id: native_history_and_batched_frame_fixture_verification
     status: open
+  - id: markdown_window_retained_fixture_verification
+    status: open
   - id: welcome_window_retained_fixture_verification
     status: open
   - id: browser_inspector_window_ownership_verification
