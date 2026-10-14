@@ -4384,3 +4384,27 @@ native harness (seven functions, eleven cases). Restoring the old literal produc
 exactly the original 13-versus-11 failure. Target Swift 5 and strict Swift 6 compile
 without warnings. No production behavior, config, timing, selector or runtime
 ownership changed. Integrated macOS app-host verification remains pending.
+
+### OMX HUD restore directory precondition
+
+K shard 2 (`38616518883`) failed the OMX HUD restore cwd assertion after the
+fixture supplied a unique directory path without creating it. The accepted
+restore policy preserves saved directory metadata but omits an unavailable local
+cwd from guarded terminal startup. The migrated Swift Testing case creates its
+owned directory and retains the original saved HUD command, fresh launcher,
+launcher-path and requested-cwd assertions. Both workspaces, the generated
+launcher and owned directory are cleaned up; cleanup errors fail the test. All
+other legacy method bytes remain unchanged.
+
+Unchanged build 791 passes the exact migrated case under Swift 5 and strict
+Swift 6, both without warnings. The old container and new suite also compile
+together in the target Swift 5 mode. A temporary missing-directory control fails
+exactly the original cwd equality, while a separate control confirms nil runtime
+cwd and preserved snapshot metadata. A diagnostic copy emitting only its owned
+paths verifies the root and generated launcher are removed after completion.
+The harness uses isolated HOME/config and test mode before module initialization;
+Foundation chooses its OS temporary root on this host, so resource ownership is
+by unique directory and launcher paths, not an assumed TMPDIR override. No
+window, terminal runtime, shell command, user preferences or app launch is
+required. No production, deadline, selector or shared-helper behavior changed.
+Integrated macOS app-host verification remains pending.

@@ -1991,6 +1991,7 @@
 		0F2C25F9170130F8DC09DD1B /* WorkspaceManualUnreadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D301919B10F22B8708E8883 /* WorkspaceManualUnreadTests.swift */; };
 		C1AC71080000000000000001 /* WorkspaceMoveToTopActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1AC71080000000000000002 /* WorkspaceMoveToTopActionTests.swift */; };
 		B744A228E4B84FF182959A41 /* WorkspaceNotificationRestoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12F0B189611A457895D0EC5B /* WorkspaceNotificationRestoreTests.swift */; };
+		C628587B170F499896C57240 /* WorkspaceOMXHudRestoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2A81E60A1E448BEBED15023 /* WorkspaceOMXHudRestoreTests.swift */; };
 		CD465201BC6B4E328A393EA8 /* WorkspacePanelContentHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9359BAC13CE47928469F07A /* WorkspacePanelContentHostView.swift */; };
 		E3B7A4000000000000000005 /* WorkspacePlacement+Resolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3B7A4000000000000000006 /* WorkspacePlacement+Resolution.swift */; };
 		AA5269A0C0DE0020FACE0020 /* WorkspacePopoverFocusRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5269A0C0DE0019FACE0019 /* WorkspacePopoverFocusRoutingTests.swift */; };
@@ -3992,6 +3993,7 @@
 		1D301919B10F22B8708E8883 /* WorkspaceManualUnreadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceManualUnreadTests.swift; sourceTree = "<group>"; };
 		C1AC71080000000000000002 /* WorkspaceMoveToTopActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceMoveToTopActionTests.swift; sourceTree = "<group>"; };
 		12F0B189611A457895D0EC5B /* WorkspaceNotificationRestoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceNotificationRestoreTests.swift; sourceTree = "<group>"; };
+		A2A81E60A1E448BEBED15023 /* WorkspaceOMXHudRestoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceOMXHudRestoreTests.swift"; sourceTree = "<group>"; };
 		A9359BAC13CE47928469F07A /* WorkspacePanelContentHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/WorkspacePanelContentHostView.swift"; sourceTree = "<group>"; };
 		E3B7A4000000000000000006 /* WorkspacePlacement+Resolution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspacePlacement+Resolution.swift"; sourceTree = "<group>"; };
 		AA5269A0C0DE0019FACE0019 /* WorkspacePopoverFocusRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacePopoverFocusRoutingTests.swift; sourceTree = "<group>"; };
@@ -5765,6 +5767,7 @@
 				A88EFA5D7D7F40B3A829EAC1 /* TerminalDefaultFileLaunchContractTests.swift */,
 				16B79263D68443AEBB554A37 /* BrowserBackgroundPreloadOwnershipTests.swift */,
 				D913C76028364CD3B3DEE904 /* SessionRestoreDeletedDirectoryTests.swift */,
+				A2A81E60A1E448BEBED15023 /* WorkspaceOMXHudRestoreTests.swift */,
 				918892F0FEC44F4AB93A8602 /* BrowserPortalPresentationContractTests.swift */,
 				05A4F069B8D84DAAB173E2C1 /* WorkspaceRemoteForkLaunchTests.swift */,
 				34EC90CDB1D34B8093285796 /* BrowserPortalTrackingWebView.swift */,
@@ -8611,6 +8614,7 @@
 				0F2C25F9170130F8DC09DD1B /* WorkspaceManualUnreadTests.swift in Sources */,
 				C1AC71080000000000000001 /* WorkspaceMoveToTopActionTests.swift in Sources */,
 				B744A228E4B84FF182959A41 /* WorkspaceNotificationRestoreTests.swift in Sources */,
+				C628587B170F499896C57240 /* WorkspaceOMXHudRestoreTests.swift in Sources */,
 				AA5269A0C0DE0020FACE0020 /* WorkspacePopoverFocusRoutingTests.swift in Sources */,
 				1A1B2C3D4E5F607180000003 /* WorkspacePromptSubmitTests.swift in Sources */,
 				FBC19B61EAA78629B431D31E /* WorkspacePullRequestFocusContractTests.swift in Sources */,

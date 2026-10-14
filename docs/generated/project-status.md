@@ -235,6 +235,7 @@ Regenerate with: ./scripts/project-docs generate
 | SSH workspace creation fixture joins its producer and owns authentication; native contracts pass, fixed-head app-host verification remains pending (`ssh_creation_joined_producer_verification`) | Bmux | open |  |
 | Native snapshots reproduce Mermaid double scaling under page zoom; geometry correction and fixed-head macOS verification remain pending (`markdown_mermaid_double_zoom_verification`) | Bmux | open |  |
 | Browser chrome reference follows the shared shipped font default; native metrics coverage passes and integrated app-host verification remains pending (`browser_chrome_default_contract_verification`) | Bmux | open |  |
+| OMX HUD restore fixture establishes its existing-directory precondition; native restoration and missing-directory controls pass, integrated app-host verification pending (`omx_hud_restore_directory_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
