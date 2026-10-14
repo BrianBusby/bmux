@@ -178,3 +178,4 @@ Repository: `BrianBusby/bmux`
 | `remote_mobile_open_architecture_decisions` | open |
 | `hybrid_focus_render_capture` | open |
 | `ssh_manual_reconnect_handoff_regression` | open |
+| `ssh_manual_reconnect_nonzero_regression` | resolved |
