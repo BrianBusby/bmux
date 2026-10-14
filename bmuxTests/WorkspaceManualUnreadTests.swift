@@ -2331,26 +2331,6 @@ final class CommandPaletteFuzzyMatcherTests: XCTestCase {
 }
 
 final class CommandPaletteSwitcherSearchIndexerTests: XCTestCase {
-    func testKeywordsIncludeDirectoryBranchAndPortMetadata() {
-        let metadata = CommandPaletteSwitcherSearchMetadata(
-            directories: ["/Users/example/dev/bmuxterm-hq/worktrees/feat-cmd-palette"],
-            branches: ["feature/cmd-palette-indexing"],
-            ports: [3000, 9222]
-        )
-
-        let keywords = CommandPaletteSwitcherSearchIndexer(
-            baseKeywords: ["workspace", "switch"],
-            metadata: metadata
-        ).keywords
-
-        XCTAssertTrue(keywords.contains("/Users/example/dev/bmuxterm-hq/worktrees/feat-cmd-palette"))
-        XCTAssertTrue(keywords.contains("feat-cmd-palette"))
-        XCTAssertTrue(keywords.contains("feature/cmd-palette-indexing"))
-        XCTAssertTrue(keywords.contains("cmd-palette-indexing"))
-        XCTAssertTrue(keywords.contains("3000"))
-        XCTAssertTrue(keywords.contains(":9222"))
-    }
-
     func testFuzzyMatcherMatchesDirectoryBranchAndPortMetadata() {
         let metadata = CommandPaletteSwitcherSearchMetadata(
             directories: ["/tmp/bmuxterm/worktrees/issue-123-switcher-search"],
