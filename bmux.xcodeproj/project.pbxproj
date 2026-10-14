@@ -900,6 +900,8 @@
 		C77CE3F7C35D4C4F863949A8 /* GlobalSearchShortcutConflictTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC955B94B80410481A83B4C /* GlobalSearchShortcutConflictTests.swift */; };
 		3865A0053865A0053865A005 /* GlobalSearchShortcutSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3865B0053865B0053865B005 /* GlobalSearchShortcutSettingsTests.swift */; };
 		C1ADE10002A1B2C3D4E5F719 /* grok in Copy CLI */ = {isa = PBXBuildFile; fileRef = C1ADE10001A1B2C3D4E5F719 /* grok */; };
+		51553E24B2AD46035F00F643 /* GrokHookConnectionFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC6229443FDB43D4C7C0F36A /* GrokHookConnectionFixture.swift */; };
+		B70E7F1B613184122DE389DC /* GrokHookConnectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1BCCFCEE0CD5FE7A2A412A /* GrokHookConnectionTests.swift */; };
 		C0DE34020000000000000005 /* HelpMenuUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE34020000000000000006 /* HelpMenuUITests.swift */; };
 		F5320000A1B2C3D4E5F60718 /* HermesAgentIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5320001A1B2C3D4E5F60718 /* HermesAgentIndex.swift */; };
 		7A3D51F31BA38CFAB319B453 /* HermesResumeExecutionFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9FF1801ED937365CA2FDB8E /* HermesResumeExecutionFixture.swift */; };
@@ -1380,6 +1382,7 @@
 		F0ACC0DE0000000000000011 /* SharedLiveAgentIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0ACC0DE0000000000000012 /* SharedLiveAgentIndex.swift */; };
 		F0ACC0DF0000000000000001 /* SharedLiveAgentIndexAgentLivenessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0ACC0DF0000000000000002 /* SharedLiveAgentIndexAgentLivenessTests.swift */; };
 		F0ACC0DE0000000000000007 /* SharedLiveAgentIndexLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0ACC0DE0000000000000008 /* SharedLiveAgentIndexLoader.swift */; };
+		80EDAF5BA8EF4EBDA46AC600 /* ShellContractProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DA95C22908B4D4BA36CBB23 /* ShellContractProcess.swift */; };
 		C0F16A000000000000000001 /* ShellStartupMatrixTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0F16A000000000000000002 /* ShellStartupMatrixTests.swift */; };
 		C0F16C000000000000000001 /* ShellStartupMissingBundleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0F16C000000000000000002 /* ShellStartupMissingBundleTests.swift */; };
 		1521D55DC63D5E5FC4955E31 /* ShortcutAndCommandPaletteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6083A7DAD962E287FC2FFE94 /* ShortcutAndCommandPaletteTests.swift */; };
@@ -2895,6 +2898,8 @@
 		FEC955B94B80410481A83B4C /* GlobalSearchShortcutConflictTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSearchShortcutConflictTests.swift; sourceTree = "<group>"; };
 		3865B0053865B0053865B005 /* GlobalSearchShortcutSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSearchShortcutSettingsTests.swift; sourceTree = "<group>"; };
 		C1ADE10001A1B2C3D4E5F719 /* grok */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = Resources/bin/grok; sourceTree = SOURCE_ROOT; };
+		FC6229443FDB43D4C7C0F36A /* GrokHookConnectionFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrokHookConnectionFixture.swift; sourceTree = "<group>"; };
+		FE1BCCFCEE0CD5FE7A2A412A /* GrokHookConnectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrokHookConnectionTests.swift; sourceTree = "<group>"; };
 		C0DE34020000000000000006 /* HelpMenuUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpMenuUITests.swift; sourceTree = "<group>"; };
 		F5320001A1B2C3D4E5F60718 /* HermesAgentIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesAgentIndex.swift; sourceTree = "<group>"; };
 		A9FF1801ED937365CA2FDB8E /* HermesResumeExecutionFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesResumeExecutionFixture.swift; sourceTree = "<group>"; };
@@ -3347,6 +3352,7 @@
 		F0ACC0DE0000000000000012 /* SharedLiveAgentIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedLiveAgentIndex.swift; sourceTree = "<group>"; };
 		F0ACC0DF0000000000000002 /* SharedLiveAgentIndexAgentLivenessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedLiveAgentIndexAgentLivenessTests.swift; sourceTree = "<group>"; };
 		F0ACC0DE0000000000000008 /* SharedLiveAgentIndexLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedLiveAgentIndexLoader.swift; sourceTree = "<group>"; };
+		6DA95C22908B4D4BA36CBB23 /* ShellContractProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellContractProcess.swift; sourceTree = "<group>"; };
 		C0F16A000000000000000002 /* ShellStartupMatrixTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellStartupMatrixTests.swift; sourceTree = "<group>"; };
 		C0F16C000000000000000002 /* ShellStartupMissingBundleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellStartupMissingBundleTests.swift; sourceTree = "<group>"; };
 		6083A7DAD962E287FC2FFE94 /* ShortcutAndCommandPaletteTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutAndCommandPaletteTests.swift; sourceTree = "<group>"; };
@@ -5858,6 +5864,9 @@
 				B83CD9602BE88BB200011102 /* BundledCLITestSupport.swift */,
 				CE4411000000000000000012 /* SSHCleanupErrorTests.swift */,
 				CE4412000000000000000012 /* ClaudeNotificationTargetTests.swift */,
+				FC6229443FDB43D4C7C0F36A /* GrokHookConnectionFixture.swift */,
+				FE1BCCFCEE0CD5FE7A2A412A /* GrokHookConnectionTests.swift */,
+				6DA95C22908B4D4BA36CBB23 /* ShellContractProcess.swift */,
 				CE4412000000000000000002 /* ClaudeNotificationTargetFixture.swift */,
 				CE4411000000000000000022 /* RemotePTYErrorPolicyTests.swift */,
 				C37800000000000000000004 /* VMDefaultCloudCommandTests.swift */,
@@ -8093,6 +8102,8 @@
 				D7AB34400000000000000003 /* GhosttyTerminalViewVisibilityPolicyTests.swift in Sources */,
 				C77CE3F7C35D4C4F863949A8 /* GlobalSearchShortcutConflictTests.swift in Sources */,
 				3865A0053865A0053865A005 /* GlobalSearchShortcutSettingsTests.swift in Sources */,
+				51553E24B2AD46035F00F643 /* GrokHookConnectionFixture.swift in Sources */,
+				B70E7F1B613184122DE389DC /* GrokHookConnectionTests.swift in Sources */,
 				7A3D51F31BA38CFAB319B453 /* HermesResumeExecutionFixture.swift in Sources */,
 				C39DC1708CDAD8C98F6B9D1C /* HermesResumeExecutionTests.swift in Sources */,
 				3514DB7D5AC7EC7C82671AC7 /* HermesResumeInvocation.swift in Sources */,
@@ -8219,6 +8230,7 @@
 				A50019B2 /* SettingsSearchIndexTests.swift in Sources */,
 				D36090010000000000000003 /* SettingsWindowPresenterTests.swift in Sources */,
 				F0ACC0DF0000000000000001 /* SharedLiveAgentIndexAgentLivenessTests.swift in Sources */,
+				80EDAF5BA8EF4EBDA46AC600 /* ShellContractProcess.swift in Sources */,
 				C0F16A000000000000000001 /* ShellStartupMatrixTests.swift in Sources */,
 				C0F16C000000000000000001 /* ShellStartupMissingBundleTests.swift in Sources */,
 				1521D55DC63D5E5FC4955E31 /* ShortcutAndCommandPaletteTests.swift in Sources */,

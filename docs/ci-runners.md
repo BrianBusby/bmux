@@ -2264,3 +2264,31 @@ PR state exercise the retained count, hit-test, font and deduplication assertion
 Disabled-Sentry breadcrumb diagnostics are present in the standalone harness;
 these are runtime diagnostics, not compiler warnings or a full app-host result.
 Fixed-head app-host execution remains pending.
+
+
+### Grok hook connection fixture correction
+
+Combined run 38509817630, shard 3 job 115676261545, failed
+`testGrokStopFallbackCompletionsFireForTwoConcurrentThreads`
+and `testGrokNotificationStillFiresOnRepeatedPromptWhenFeedTelemetryDoesNotReply`.
+Their mock accepted exactly one connection per invocation. Owned traces against
+the unchanged 773 CLI show each hook also opens a separate one-way `feed.push`
+connection. With the old per-invocation accept budget, the next server consumes
+that queued telemetry connection while the next hook's RPC waits until its
+unchanged five-second deadline. An unrestricted owned server runs the same
+session-start and prompt in under 0.2 seconds each.
+
+The two tests now use the shared `CLISocketFixture`, with no connection-count
+limit, and the reviewed `ShellContractProcess` to join each owned process before
+capture drains its input. File-backed input/output, short socket roots and an
+isolated hook store retain the original target, transcript, status, notification
+and duplicate-suppression assertions. Current id-less telemetry receives no reply;
+the repeated-prompt case verifies that telemetry actually arrived. The shell
+process owner is shared with the Claude/shell contract fixtures, not duplicated
+in the final integration.
+
+Exact native build 786 execution passes both cases with a warning-free Swift 6
+compile. This corrects a measured fixture protocol mismatch; it does not explain
+the separate Antigravity detached-worker timeouts or clear the existing process
+scheduling caveat. Full app-host verification remains open. No production code,
+CLI deadline, runner policy or shipped localization changed.
