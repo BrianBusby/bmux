@@ -43,21 +43,57 @@ import Testing
                 "focusHistoryBack", "focusHistoryForward",
             ].map { "titlebarControl." + $0 }
             #expect(buttons.map { $0.accessibilityIdentifier() } == expectedIDs)
+            let leftMouseDown = try mouseEvent(.leftMouseDown)
+            let rightMouseDown = try mouseEvent(.rightMouseDown)
+            let keyDown = try #require(NSEvent.keyEvent(
+                with: .keyDown, location: .zero, modifierFlags: [], timestamp: 0,
+                windowNumber: 0, context: nil, characters: "a",
+                charactersIgnoringModifiers: "a", isARepeat: false, keyCode: 0
+            ))
+            let contextMenuIDs: Set<String> = [
+                "titlebarControl.toggleSidebar", "titlebarControl.newTab", "titlebarControl.cloudVM",
+                "titlebarControl.focusHistoryBack", "titlebarControl.focusHistoryForward",
+            ]
             for button in buttons {
                 #expect(button.frame.size == NSSize(width: 28, height: 28))
                 #expect(proxy.bounds.contains(button.frame))
                 for dx in [0.5, 27.5] {
                     let point = NSPoint(x: button.frame.minX + dx, y: proxy.bounds.midY)
-                    #expect(proxy.hitTest(point) === proxy)
+                    #expect(proxy.performHitTest(at: point, currentEvent: leftMouseDown) === proxy)
+                    #expect(proxy.performHitTest(at: point, currentEvent: nil) === proxy)
+                    #expect(proxy.performHitTest(at: point, currentEvent: keyDown) == nil)
+                    let acceptsContextMenu = contextMenuIDs.contains(try #require(button.accessibilityIdentifier()))
+                    #expect((proxy.performHitTest(at: point, currentEvent: rightMouseDown) === proxy) == acceptsContextMenu)
                 }
                 #expect(button.accessibilityPerformPress())
             }
             #expect(actions == expectedIDs)
             for (left, right) in zip(buttons, buttons.dropFirst()) where right.frame.minX > left.frame.maxX {
                 let gap = NSPoint(x: (left.frame.maxX + right.frame.minX) / 2, y: proxy.bounds.midY)
-                #expect(proxy.hitTest(gap) == nil)
+                for event in [leftMouseDown, rightMouseDown, keyDown, nil] {
+                    #expect(proxy.performHitTest(at: gap, currentEvent: event) == nil)
+                }
             }
+            let firstButton = try #require(buttons.first)
+            let point = NSPoint(x: firstButton.frame.midX, y: proxy.bounds.midY)
+            let outside = NSPoint(x: -1, y: proxy.bounds.midY)
+            #expect(proxy.performHitTest(at: outside, currentEvent: leftMouseDown) == nil)
+            proxy.isEnabled = false
+            #expect(proxy.performHitTest(at: point, currentEvent: leftMouseDown) == nil)
+            #expect(!firstButton.accessibilityPerformPress())
+            proxy.isEnabled = true
+            proxy.requiresRevealedState = true
+            #expect(proxy.performHitTest(at: point, currentEvent: leftMouseDown) == nil)
+            #expect(!firstButton.accessibilityPerformPress())
+            #expect(actions == expectedIDs)
         }
+    }
+
+    private func mouseEvent(_ type: NSEvent.EventType) throws -> NSEvent {
+        try #require(NSEvent.mouseEvent(
+            with: type, location: .zero, modifierFlags: [], timestamp: 0,
+            windowNumber: 0, context: nil, eventNumber: 1, clickCount: 1, pressure: 1
+        ))
     }
 
     private func withDefaultTitlebarSettings(_ body: (UserDefaults) throws -> Void) throws {

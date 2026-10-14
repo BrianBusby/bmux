@@ -6219,3 +6219,8 @@ caveats:
     title: Browser Find fixtures distinguish owned-window search from menu fallback; integrated app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: titlebar_hit_test_event_context_verification
+    title: Explicit titlebar hit-test event context preserves routing policy; fresh native build and integrated app-host verification remain pending
+    status: open
+    owner: bmux
