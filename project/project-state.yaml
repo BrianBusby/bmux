@@ -5913,3 +5913,7 @@ caveats:
     title: Opt-in focused app-host process diagnostics await actual runner evidence
     status: open
     owner: bmux
+  - id: remote_tmux_crlf_record_parsing_verification
+    title: Remote tmux CRLF record correction awaits combined artifact and full CI verification
+    status: open
+    owner: bmux
