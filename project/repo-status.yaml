@@ -375,3 +375,6 @@ local_caveats:
 
   - id: native_symbol_size_fixture_verification
     status: open
+
+  - id: file_preview_inset_fixture_verification
+    status: open
