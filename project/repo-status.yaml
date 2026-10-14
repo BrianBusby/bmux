@@ -396,3 +396,6 @@ local_caveats:
     status: open
   - id: native_window_close_ownership_verification
     status: open
+
+  - id: terminal_file_launch_directory_contract_verification
+    status: open

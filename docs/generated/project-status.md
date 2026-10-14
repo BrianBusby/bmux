@@ -217,6 +217,7 @@ Regenerate with: ./scripts/project-docs generate
 | Legacy CLI socket setup rejects invalid paths and cleans partial fixture construction failures; native controls pass and integrated app-host verification remains pending (`cli_notify_socket_bind_guard_verification`) | Bmux | open |  |
 | SSH agent fixture joins its process before socket and file cleanup; native cases pass and fixed-head app-host deadlines remain unverified (`ssh_agent_joined_producer_verification`) | Bmux | open |  |
 | File-preview and notification test-window constructor ownership corrected; four affected app-host cases remain pending (`native_window_close_ownership_verification`) | Bmux | open |  |
+| Terminal file launch fixtures compare directory identity and retain exact quoting; native controls pass and integrated app-host verification remains pending (`terminal_file_launch_directory_contract_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

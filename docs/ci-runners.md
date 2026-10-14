@@ -3661,3 +3661,29 @@ no remaining owned roots and unchanged descriptor counts. Original-factory looku
 and bind controls each failed specifically on the leaked root. Swift 5 compilation
 was warning-free. No permanent test adapter, production API, case-body change or
 app operation was introduced; integrated target compilation remains required.
+
+### Terminal file launch directory identity
+
+H shard 3 reports two working-directory string mismatches in
+`TerminalDefaultFileOpenRequestTests`: Foundation's decoded parent-directory
+path retains a trailing slash, while the expected `.path` string omits it.
+The complete request initializer and both AppDelegate launch paths use the
+result as a directory, not an exact serialized identifier. Both spellings
+identify the same directory. No application change is needed for this mismatch.
+
+Only the two launch cases migrate to `TerminalDefaultFileLaunchContractTests`.
+They compare directory URLs without resolving symlinks and retain the exact
+quoted executable input, including the apostrophe/space case. The executable
+case still creates a real owned executable and cleanup errors remain visible.
+The plain-text and script-named-directory rejection tests remain unchanged.
+The new file is wired into the native test target; no selector or deadline changes.
+
+Against unchanged build 789, both original string assertions fail exactly as in
+macOS 15 CI. Both corrected cases pass with warning-free Swift 5 and Swift 6
+compilation. Temporary wrong-sibling and unquoted-input controls fail their
+respective assertions, showing the new oracle still rejects incorrect behavior.
+These native checks use an isolated test-mode process and do not launch or
+activate a window, execute the fixture script, or change user settings. Complete
+integrated target compilation and fixed-head app-host execution remain pending.
+No product strings or localization catalogs changed; added prose is contributor
+verification material.
