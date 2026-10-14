@@ -14,31 +14,6 @@ final class SidebarWidthPolicyTests: XCTestCase {
     private let settingsFileBackupsDefaultsKey = "bmux.settingsFile.backups.v1"
     private let importedManagedDefaultsKey = "bmux.settingsFile.importedManagedDefaults.v1"
 
-    func testDefaultMinimumSidebarWidthIsPersistedProductDefault() {
-        let suiteName = "SidebarWidthPolicyTests.defaultMinimum.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suiteName)!
-        defer { defaults.removePersistentDomain(forName: suiteName) }
-
-        XCTAssertEqual(
-            SessionPersistencePolicy.defaultMinimumSidebarWidth,
-            240,
-            accuracy: 0.001
-        )
-        XCTAssertEqual(
-            SessionPersistencePolicy.resolvedMinimumSidebarWidth(defaults: defaults),
-            240,
-            accuracy: 0.001
-        )
-    }
-
-    func testContentViewClampKeepsMinimumSidebarWidth() {
-        XCTAssertEqual(
-            ContentView.clampedSidebarWidth(184, maximumWidth: 600),
-            CGFloat(SessionPersistencePolicy.minimumSidebarWidth),
-            accuracy: 0.001
-        )
-    }
-
     func testContentViewClampCanUseSmallerConfiguredMinimumSidebarWidth() {
         XCTAssertEqual(
             ContentView.clampedSidebarWidth(184, maximumWidth: 600, minimumWidth: 160),

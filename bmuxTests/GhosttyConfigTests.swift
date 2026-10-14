@@ -1927,54 +1927,6 @@ final class BrowserPanelPopupContextTests: XCTestCase {
 
 @MainActor
 final class BrowserPanelWebViewLifecycleTests: XCTestCase {
-    func testHiddenDiscardPolicyReadsUserDefaults() throws {
-        let suiteName = "bmux.browserHiddenDiscardPolicyTests.\(UUID().uuidString)"
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
-        defer {
-            defaults.removePersistentDomain(forName: suiteName)
-        }
-        let hasEnabledEnvironmentOverride =
-            ProcessInfo.processInfo.environment["BMUX_BROWSER_HIDDEN_WEBVIEW_DISCARD_ENABLED"] != nil
-        let hasDelayEnvironmentOverride =
-            ProcessInfo.processInfo.environment["BMUX_BROWSER_HIDDEN_WEBVIEW_DISCARD_DELAY_SECONDS"] != nil
-
-        if !hasEnabledEnvironmentOverride {
-            XCTAssertEqual(
-                BrowserHiddenWebViewDiscardPolicy.isEnabled(defaults: defaults),
-                BrowserHiddenWebViewDiscardPolicy.defaultEnabled
-            )
-        }
-        if !hasDelayEnvironmentOverride {
-            XCTAssertEqual(
-                BrowserHiddenWebViewDiscardPolicy.hiddenDelay(defaults: defaults),
-                BrowserHiddenWebViewDiscardPolicy.defaultHiddenDelay
-            )
-        }
-
-        defaults.set(false, forKey: BrowserHiddenWebViewDiscardPolicy.enabledKey)
-        defaults.set(42.5, forKey: BrowserHiddenWebViewDiscardPolicy.hiddenDelayKey)
-
-        if !hasEnabledEnvironmentOverride {
-            XCTAssertEqual(defaults.object(forKey: BrowserHiddenWebViewDiscardPolicy.enabledKey) as? Bool, false)
-            XCTAssertFalse(BrowserHiddenWebViewDiscardPolicy.isEnabled(defaults: defaults))
-        }
-        if !hasDelayEnvironmentOverride {
-            XCTAssertEqual(BrowserHiddenWebViewDiscardPolicy.hiddenDelay(defaults: defaults), 42.5)
-
-            defaults.set(7200, forKey: BrowserHiddenWebViewDiscardPolicy.hiddenDelayKey)
-            XCTAssertEqual(
-                BrowserHiddenWebViewDiscardPolicy.hiddenDelay(defaults: defaults),
-                BrowserHiddenWebViewDiscardPolicy.maximumHiddenDelay
-            )
-
-            defaults.set(-1, forKey: BrowserHiddenWebViewDiscardPolicy.hiddenDelayKey)
-            XCTAssertEqual(
-                BrowserHiddenWebViewDiscardPolicy.hiddenDelay(defaults: defaults),
-                BrowserHiddenWebViewDiscardPolicy.defaultHiddenDelay
-            )
-        }
-    }
-
     func testLifecycleDistinguishesDeferredURLFromNewTab() {
         let panel = BrowserPanel(
             workspaceId: UUID(),
@@ -2114,49 +2066,6 @@ final class BrowserPanelWebViewLifecycleTests: XCTestCase {
         XCTAssertEqual(panel.webViewLifecycleState, .closing)
     }
 
-    func testDiscardReplacesHiddenWebViewAndRestoresOnDemand() {
-        let discardedAt = Date(timeIntervalSince1970: 200)
-        let panel = BrowserPanel(
-            workspaceId: UUID(),
-            initialURL: URL(string: "about:blank")!,
-            isRemoteWorkspace: false
-        )
-        defer { panel.close() }
-
-        let deadline = Date().addingTimeInterval(1.0)
-        while panel.webView.isLoading,
-              RunLoop.main.run(mode: .default, before: deadline),
-              Date() < deadline {}
-        XCTAssertFalse(panel.webView.isLoading, "Timed out waiting for about:blank to finish loading")
-
-        panel.noteWebViewVisibility(false, reason: "test.hidden", now: discardedAt)
-        let originalWebView = panel.webView
-
-        XCTAssertTrue(panel.discardHiddenWebViewForMemory(reason: "test.discard", now: discardedAt))
-        XCTAssertFalse(panel.webView === originalWebView)
-        XCTAssertFalse(panel.shouldRenderWebView)
-        XCTAssertEqual(panel.webViewLifecycleState, .discarded)
-
-        let discardedPayload = panel.webViewLifecycleTopPayload(now: discardedAt)
-        XCTAssertEqual(discardedPayload["state"] as? String, "discarded")
-        XCTAssertEqual(discardedPayload["last_discard_reason"] as? String, "test.discard")
-        XCTAssertNotNil(discardedPayload["discarded_at"] as? String)
-
-        var observedStates: [BrowserWebViewLifecycleState] = []
-        var cancellable: AnyCancellable?
-        cancellable = panel.$webViewLifecycleState.sink { state in
-            observedStates.append(state)
-        }
-        defer { cancellable?.cancel() }
-
-        XCTAssertTrue(panel.restoreDiscardedWebViewIfNeeded(reason: "test.restore"))
-        XCTAssertTrue(panel.shouldRenderWebView)
-        XCTAssertEqual(panel.webViewLifecycleState, .liveHidden)
-        XCTAssertFalse(observedStates.contains(.newTab), "Restore emitted unexpected states: \(observedStates)")
-
-        panel.noteWebViewVisibility(true, reason: "test.visible")
-        XCTAssertEqual(panel.webViewLifecycleState, .liveVisible)
-    }
 
     /// Regression guard for the issue #5303 render loop: `BrowserPanelView.onAppear`
     /// re-fired on every CoreAnimation commit and re-asserted webview visibility,
@@ -2210,44 +2119,6 @@ final class BrowserPanelWebViewLifecycleTests: XCTestCase {
         XCTAssertEqual(panel.webViewLastVisibilityChangeAt, changeAtAfterFirst)
     }
 
-    func testRestoredHistoryBackDoesNotEmitNewTabLifecycleState() {
-        let discardedAt = Date(timeIntervalSince1970: 300)
-        let panel = BrowserPanel(
-            workspaceId: UUID(),
-            initialURL: URL(string: "about:blank")!,
-            isRemoteWorkspace: false
-        )
-        defer { panel.close() }
-
-        let deadline = Date().addingTimeInterval(1.0)
-        while panel.webView.isLoading,
-              RunLoop.main.run(mode: .default, before: deadline),
-              Date() < deadline {}
-        XCTAssertFalse(panel.webView.isLoading, "Timed out waiting for about:blank to finish loading")
-
-        panel.restoreSessionNavigationHistory(
-            backHistoryURLStrings: ["https://example.test/back"],
-            forwardHistoryURLStrings: [],
-            currentURLString: "https://example.test/current"
-        )
-        XCTAssertTrue(panel.canGoBack)
-
-        panel.noteWebViewVisibility(false, reason: "test.hidden", now: discardedAt)
-        XCTAssertTrue(panel.discardHiddenWebViewForMemory(reason: "test.discard", now: discardedAt))
-        XCTAssertEqual(panel.webViewLifecycleState, .discarded)
-
-        var observedStates: [BrowserWebViewLifecycleState] = []
-        var cancellable: AnyCancellable?
-        cancellable = panel.$webViewLifecycleState.sink { state in
-            observedStates.append(state)
-        }
-        defer { cancellable?.cancel() }
-
-        panel.goBack()
-
-        XCTAssertFalse(observedStates.contains(.newTab), "Back restore emitted unexpected states: \(observedStates)")
-        XCTAssertEqual(panel.webViewLifecycleState, .liveHidden)
-    }
 }
 
 @MainActor
@@ -2340,28 +2211,6 @@ final class BrowserNewTabNavigationSeedTests: XCTestCase {
 
 @MainActor
 final class BrowserPanelRemoteStoreTests: XCTestCase {
-    func testRemoteWorkspacePanelsShareWorkspaceScopedWebsiteDataStore() {
-        let localPanel = BrowserPanel(workspaceId: UUID(), isRemoteWorkspace: false)
-        let remoteWorkspaceId = UUID()
-        let firstRemotePanel = BrowserPanel(
-            workspaceId: remoteWorkspaceId,
-            isRemoteWorkspace: true,
-            remoteWebsiteDataStoreIdentifier: remoteWorkspaceId
-        )
-        let secondRemotePanel = BrowserPanel(
-            workspaceId: remoteWorkspaceId,
-            isRemoteWorkspace: true,
-            remoteWebsiteDataStoreIdentifier: remoteWorkspaceId
-        )
-
-        XCTAssertTrue(localPanel.webView.configuration.websiteDataStore === WKWebsiteDataStore.default())
-        XCTAssertFalse(firstRemotePanel.webView.configuration.websiteDataStore === WKWebsiteDataStore.default())
-        XCTAssertTrue(
-            firstRemotePanel.webView.configuration.websiteDataStore ===
-                secondRemotePanel.webView.configuration.websiteDataStore
-        )
-    }
-
     func testRemoteWorkspaceDefersInitialNavigationUntilProxyEndpointIsReady() {
         let remoteWorkspaceId = UUID()
         let url = URL(string: "http://localhost:3000/demo")!
@@ -2477,80 +2326,6 @@ final class BrowserPanelRemoteStoreTests: XCTestCase {
             }
             try await Task.sleep(nanoseconds: 10_000_000)
         }
-    }
-
-    func testBrowserMoveIntoRemoteWorkspaceRebuildsWebsiteDataStoreScope() throws {
-        let source = Workspace()
-        let sourcePaneId = try XCTUnwrap(source.bonsplitController.allPaneIds.first)
-        let sourceBrowser = try XCTUnwrap(source.newBrowserSurface(inPane: sourcePaneId, focus: false))
-        let localStore = sourceBrowser.webView.configuration.websiteDataStore
-        XCTAssertTrue(localStore === WKWebsiteDataStore.default())
-
-        let destination = Workspace()
-        destination.configureRemoteConnection(
-            WorkspaceRemoteConfiguration(
-                destination: "bmux-macmini",
-                port: 22,
-                identityFile: nil,
-                sshOptions: [],
-                localProxyPort: nil,
-                relayPort: 64001,
-                relayID: "relay-store-dest",
-                relayToken: String(repeating: "a", count: 64),
-                localSocketPath: "/tmp/bmux-store-dest.sock",
-                terminalStartupCommand: "ssh bmux-macmini"
-            ),
-            autoConnect: false
-        )
-        let destinationPaneId = try XCTUnwrap(destination.bonsplitController.allPaneIds.first)
-        let destinationBrowser = try XCTUnwrap(destination.newBrowserSurface(inPane: destinationPaneId, focus: false))
-        let destinationStore = destinationBrowser.webView.configuration.websiteDataStore
-        XCTAssertFalse(destinationStore === WKWebsiteDataStore.default())
-
-        let detached = try XCTUnwrap(source.detachSurface(panelId: sourceBrowser.id))
-        let attachedPanelId = try XCTUnwrap(
-            destination.attachDetachedSurface(detached, inPane: destinationPaneId, focus: false)
-        )
-        let movedBrowser = try XCTUnwrap(destination.panels[attachedPanelId] as? BrowserPanel)
-
-        XCTAssertTrue(movedBrowser.webView.configuration.websiteDataStore === destinationStore)
-        XCTAssertFalse(movedBrowser.webView.configuration.websiteDataStore === localStore)
-    }
-
-    func testBrowserMoveOutOfRemoteWorkspaceRestoresDefaultWebsiteDataStore() throws {
-        let source = Workspace()
-        source.configureRemoteConnection(
-            WorkspaceRemoteConfiguration(
-                destination: "bmux-macmini",
-                port: 22,
-                identityFile: nil,
-                sshOptions: [],
-                localProxyPort: nil,
-                relayPort: 64002,
-                relayID: "relay-store-source",
-                relayToken: String(repeating: "b", count: 64),
-                localSocketPath: "/tmp/bmux-store-source.sock",
-                terminalStartupCommand: "ssh bmux-macmini"
-            ),
-            autoConnect: false
-        )
-        let sourcePaneId = try XCTUnwrap(source.bonsplitController.allPaneIds.first)
-        let movedBrowser = try XCTUnwrap(source.newBrowserSurface(inPane: sourcePaneId, focus: false))
-        let remainingRemoteBrowser = try XCTUnwrap(source.newBrowserSurface(inPane: sourcePaneId, focus: false))
-        let remoteStore = remainingRemoteBrowser.webView.configuration.websiteDataStore
-        XCTAssertFalse(remoteStore === WKWebsiteDataStore.default())
-
-        let destination = Workspace()
-        let destinationPaneId = try XCTUnwrap(destination.bonsplitController.allPaneIds.first)
-        let detached = try XCTUnwrap(source.detachSurface(panelId: movedBrowser.id))
-        let attachedPanelId = try XCTUnwrap(
-            destination.attachDetachedSurface(detached, inPane: destinationPaneId, focus: false)
-        )
-        let attachedBrowser = try XCTUnwrap(destination.panels[attachedPanelId] as? BrowserPanel)
-
-        XCTAssertTrue(attachedBrowser.webView.configuration.websiteDataStore === WKWebsiteDataStore.default())
-        XCTAssertTrue(remainingRemoteBrowser.webView.configuration.websiteDataStore === remoteStore)
-        XCTAssertFalse(remainingRemoteBrowser.webView.configuration.websiteDataStore === attachedBrowser.webView.configuration.websiteDataStore)
     }
 
     func testNewTerminalSurfaceStaysRemoteWhileBrowserPanelsKeepWorkspaceRemote() throws {

@@ -163,6 +163,249 @@ available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
 
+
+## Hidden browser discard policy test maintenance
+
+The baseline `BrowserPanelWebViewLifecycleTests.testHiddenDiscardPolicyReadsUserDefaults`
+expected a stored 7200-second delay to clamp to 3600. The policy introduced in
+`69e6393db` deliberately rejects oversized values, and the JSON settings path
+uses the same `resolvedHiddenDelay` validation. The native baseline log reports
+300 versus 3600; this is a stale expectation, not a requested product change.
+
+`BrowserHiddenWebViewDiscardPolicyTests` replaces only that touched XCTest case
+with Swift Testing. It preserves enabled/default/valid-value checks and covers
+both accepted endpoints, negative/oversized values, and nonfinite rejection.
+Each defaults test owns a unique suite and removes it; environment overrides
+explicitly disable the corresponding persisted-preference test, while pure
+validation always runs. No process-wide environment mutation or app behavior
+changes are introduced. The existing focused browser gate runs the new suite
+without adding a runner, so an unrelated legacy app-host abort cannot conceal it.
+
+Guidance: `AGENTS.md`, `skills/bmux-testing/SKILL.md` and its Swift Testing,
+regression/quality, and local/CI references; `skills/bmux-architecture/SKILL.md`;
+and the personal continuous-code-quality skill. Ownership stays in
+`BrowserHiddenWebViewDiscardPolicy`, with the maintained JSON caller in
+`KeyboardShortcutSettingsFileStore` and boundary coverage in `WorkspaceUnitTests`
+as contract evidence. Native execution against build 774 passed four functions
+and fourteen cases, with warning-free test compilation. This change adds no
+shipped strings or localization keys. Actual focused CI and independent review
+remain required; local success does not establish full-suite health.
+## Browser background compositing test maintenance
+
+Commit `379033c4bf` made `GhosttyBackgroundTheme` use the shared opaque window
+compositing policy, but three theme tests and two WebKit under-page tests still
+expected uncomposited RGB plus partial alpha. Baseline CI records those exact
+component/alpha mismatches. The replacement Swift Testing suites preserve the
+payload/fallback and native-notification assertions, exercise Aqua and Dark Aqua,
+and check clamped endpoints against window/terminal colors. Payload tests compare
+the wrapper with its shared compositing owner; under-page tests check the native
+WebKit result after the real notification path, including NSNumber opacity.
+
+The under-page fixture supplies a deferred `.test` page URL without navigation.
+A blank page can correctly be clear when the window owns a transparent backdrop,
+so it is not a reliable fixture for a real website's native fill. Each panel closes
+synchronously on the main actor; drawing appearance is scoped to AppKit's native
+`performAsCurrentDrawingAppearance`. Tests do not change user preferences, global
+Ghostty settings, or terminal rendering. No app code or shipped strings change.
+
+Governing sources: `AGENTS.md`, `skills/bmux-testing/SKILL.md` and its migration,
+regression/quality and local/CI references; `skills/bmux-architecture/SKILL.md`;
+continuous-code-quality. Ownership remains in `GhosttyBackgroundTheme`,
+`WindowAppearanceSnapshot`/`WindowChromeColorResolver`, and BrowserPanel's existing
+notification/background path. Native execution against build 774 passed four
+functions/fourteen cases. The focused existing browser CI invocation runs both
+suites; actual CI and independent review remain verification gates.
+## Right sidebar shortcut fixture coverage
+
+Shard 3 runs `RightSidebarModeAvailabilityShortcutTests` and the remaining
+`RightSidebarModeShortcutHintTests` before the unchanged full app-host suite.
+The focused invocation uses the existing console-session and app-host wrappers;
+it does not change runner selection, retries, deadlines, or full-suite coverage.
+Expect four Swift Testing tests containing thirteen cases, plus three XCTest
+methods. Full app-host CI verification remains pending for this fixture repair.
+
+The original three failing shortcut fixtures expected Feed/Dock routes without
+enabling their beta flags. `RightSidebarMode.modeShortcut` correctly checks
+`RightSidebarMode+Availability`, whose Feed and Dock defaults are disabled.
+The corrected tests retain default/custom-file binding and action-gate assertions,
+exercise each flag independently, and cover absent flags. They use the same real
+shortcut owner as AppDelegate; no production shortcut behavior changes.
+
+Fixture setup, assertions, and cleanup stay in one synchronous MainActor turn.
+An owned JSON file, disabled fallbacks/watchers, and temporary removal of managed
+settings bookkeeping prevent unrelated settings discovery or restoration. Cleanup
+restores the original settings store and the exact persisted/registered defaults,
+then notifies observers and removes the owned directory. This follows the
+constructor pattern in `KeyboardShortcutTestSettingsIsolation` and the explicit
+beta ownership in `RightSidebarCommandPaletteTests`, with the incremental Swift
+Testing migration required by `skills/bmux-testing`.
+
+Local verification used unchanged build 773 (`bcad95a88`) in an isolated native
+executable with its own bundle ID and home; the six relevant production owners
+match base `ce17e9888`. All thirteen cases and the three retained XCTest methods
+passed. Removing only beta setup reproduced failures in the same three test
+families. A seeded preservation probe also verified exact effective, persistent,
+and registered defaults, store identity, and owned-directory cleanup. These
+results do not establish that the broader app-host suite is green.
+### Browser discard fixture readiness (2026-10-12)
+
+Two legacy `BrowserPanelWebViewLifecycleTests` cases attempted discard after
+polling only `WKWebView.isLoading`. Discard eligibility also checks the model's
+loading/provisional state. A native probe against unchanged build 774 observed a
+loading blocker at the old boundary; awaiting the model's loading-complete event
+produced no blockers and allowed discard. Both complete discard/restore and
+restored-history assertions pass against the unchanged artifact with that event
+boundary. This proves the corrected fixture's behavior locally; it is not proof
+that every earlier CI failure had the same timing.
+
+`BrowserDiscardReadinessTests` migrates only those two cases to Swift Testing,
+awaits the existing model publisher's async sequence, confirms WebKit completion,
+and keeps the original one-second failure deadline. The deadline is injected as
+a duration and canceled with the task group. The inherited synchronous lifecycle
+subscription remains confined to tests: it captures every transient state during
+synchronous restore and history navigation, which an unbuffered async sequence
+could miss. No production propagation API, state owner or discard policy changes.
+Panels close and subscriptions cancel through scoped cleanup.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing (migration,
+regression quality and wiring), bmux-architecture (legacy boundary/concurrency),
+and bmux-dev-workflow (project normalization). Owners inspected:
+`BrowserPanel.noteWebViewVisibility`, `discardHiddenWebViewForMemory`,
+`restoreDiscardedWebViewIfNeeded`, `goBack`, and
+`BrowserHiddenWebViewDiscardManager.blockers`. Verification runs in an
+isolated HOME against a native app artifact, without launching or replacing the
+user's preview. The existing ReactGrab prefetch can still perform background
+network activity; this fixture does not add it or claim a network-free app.
+All prior webview identity, lifecycle, timestamp/reason, visibility and transient
+new-tab assertions remain. The focused browser CI invocation includes the new
+wired suite. No shipped text changed; English test diagnostics and contributor
+verification notes are the only new prose. App-host CI remains required.
+### Sidebar width policy fixture alignment (2026-10-12)
+
+`SessionPersistenceTests.testSidebarWidthSanitizationClampsToPolicyRange` used the
+old 240pt minimum constant even after commit `2c783a9ee` deliberately made the
+unconfigured minimum 290pt. The policy's default width is 340pt, maximum 600pt;
+explicit minimum overrides retain their separate 120...260pt allowed range.
+`SidebarWidthPersistencePolicyTests` now exercises those observable defaults, numeric and
+string overrides, finite clamping, and nil/nonfinite/invalid-value fallbacks with
+unique UserDefaults suites and scoped persistent-domain cleanup. It replaces only
+the three obsolete persistence/default-clamp tests; production policy, geometry and configuration remain unchanged.
+
+Eighteen cases pass against unchanged native build 774 in an isolated
+HOME, with warning-free focused compilation. The source owner is unchanged from
+main. Xcode wiring, normalization, strict determinism, runner policy and Project
+Truth checks pass. The existing focused browser invocation also runs this small
+policy suite; no runner is added. Actual app-host CI remains the merge gate.
+Guidance read: root AGENTS, continuous-code-quality, bmux-testing and migration/
+quality references, bmux-architecture, bmux-dev-workflow and normalization.
+Complete `SessionPersistencePolicy` and its width consumers were inspected; the
+resolved minimum remains owned by persistence policy. No shipped text changes;
+new prose is limited to test names and contributor verification notes.
+
+The rest of the existing `SidebarWidthPolicyTests.swift` remains unchanged,
+including right-sidebar, settings, titlebar and selection-color coverage. Two
+additional baseline failures in that file had the same stale 240pt assumption;
+the new suite preserves their default-constant and ContentView static-clamp
+assertions at 290pt. A separate existing inconsistency remains unverified here:
+the live @AppStorage path clamps its 290pt fallback through the configured
+120...260pt range, unlike persistence's absent-key branch. These tests establish
+the current persistence and static-clamp contracts, not live resize/default
+consistency. Resolving that policy discrepancy would require a separate runtime
+change and visual verification.
+### Browser remote store profile fixture maintenance
+
+Three `BrowserPanelRemoteStoreTests` assertions assumed every local browser used
+`WKWebsiteDataStore.default()`. The current profile policy instead resolves an
+unspecified profile from the selected/workspace/last-used profile. Moving out of
+a remote workspace restores that panel's retained profile store. Actual baseline
+CI failed only the hardcoded default assertions at GhosttyConfigTests lines 2357,
+2487 and 2551; the surrounding remote sharing and move isolation assertions passed.
+
+`BrowserRemoteStoreScopeTests` migrates exactly those three methods and executes
+both an explicit built-in default and a deliberately selected named profile.
+It preserves the original sharing, move-in replacement and move-out isolation
+checks, and checks panel/profile identity, different remote workspace isolation,
+and absent navigation. The fixture owns its profiles and unmounted panels,
+snapshots/restores profile defaults and selection synchronously on the main actor,
+and configures remote workspaces with `autoConnect: false`; no remote controller,
+network navigation, user socket, or app launch is needed. Unrelated remote URL,
+navigation and terminal tests remain byte-identical.
+
+Unchanged build 773 passes all six parameter cases (three functions/one suite)
+with warning-free native compilation. Reinstating the old always-default-store
+expectation fails exactly the three named-profile cases while explicit-default
+controls pass. This establishes fixture state omission, not a production fix.
+The existing focused app-host browser gate includes the new suite without adding
+a runner. Actual app-host CI remains pending, and the broader suite is not claimed
+green. Canonical and local Project Truth caveats retain that verification gap.
+
+Guidance and inspected owners: root/personal AGENTS, continuous-code-quality,
+bmux-testing migration/behavioral/local-vs-CI references, architecture file/API/
+concurrency guidance and shared-behavior. BrowserProfileRepository owns persisted
+selection and profile stores; BrowserPanel init/reattach owns the active WebKit
+store; Workspace's existing new-browser and detach/attach paths retain panel
+identity and choose the destination scope. No production files, shipped strings,
+or localization catalogs change; this is contributor test documentation only.
+## Managed appearance startup fixture contract
+
+Three legacy `KeyboardShortcutSettingsFileStoreStartupTests` methods expected
+neither application appearance nor terminal synchronization during launch and
+reload. The retained base app-host log reports 18 assertion failures across
+those methods. Commit `e788e5606` intentionally applies application appearance
+at launch while withholding terminal synchronization, then synchronizes on a
+changed reload. The former global environment override also allowed unrelated
+appearance observers to enter the fixture's recorded calls.
+
+`ManagedAppearanceStartupContractTests` replaces only those three methods with
+constructor-injected effects, a private notification center, disabled watchers
+and an owned settings file. Each synchronous MainActor case restores the exact
+four touched application-domain defaults values (including absent keys, without
+promoting registered/global fallbacks); no global environment provider or settings-store
+replacement is used. Dark, light and system launch cases assert one application
+appearance, zero startup terminal synchronization, an inert deferred drain and
+unchanged reload, then one changed-mode application and synchronization with the
+exact source. Repeated reload/deferred calls add no effects. System startup uses
+the injected system appearance; switching back to system clears the app override.
+All other legacy methods remain byte-identical.
+
+Focused Swift 6 compilation is warning-free against unchanged build 777. All
+three native cases pass. Additional isolated-home native probes verify a persisted
+legacy sidebar migration marker survives the suite and all four originally absent
+application-domain keys stay absent when appearance and migration-marker
+registration fallbacks exist. Registered fallbacks remain visible. The same seeded
+marker probe against the uncorrected fixture exits 1: all three appearance cases
+pass, but the persisted marker is removed by `saveImportedManagedDefaults`.
+The temporary runner explicitly establishes each initial state in its own process
+preferences domain and cleans it afterward; a fresh HOME alone does not clear
+macOS preferences-daemon caching.
+
+The first consolidated app-host run (`115049483591`) passed dark and light but
+reported four missing initial-application callback assertions for system mode.
+The fixture had seeded legacy `auto`, which the appearance owner normalizes to
+`system`; that makes the subsequent system import a legitimate no-op. A controlled
+native 777 probe calling the real resolver after the old seed reproduces the same
+four failures. The fixture now seeds a different canonical mode and asserts that
+resolution preserves it before importing the requested mode. All original
+callback, terminal synchronization and no-op assertions remain. Both persisted
+marker and registration-only native probes pass all three cases and preserve the
+four application-domain keys. These controls establish the normalization cause;
+they do not identify which live app-host reader normalized the original value.
+Corrected app-host verification remains pending.
+
+A temporary negative control reinstating the obsolete
+no-launch-appearance and no-reload-sync expectations fails exactly six assertions
+across those three cases. No app build, launch, user settings change or production
+edit is required. The existing focused
+browser app-host step includes the suite, tracked by matching canonical/local
+Project Truth caveats. Broader legacy CI is not claimed green.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing migration,
+behavior and local/CI references, architecture ownership/file/concurrency rules,
+and shared behavior. Reviewed owners are the file store's init/reload/managed
+side-effect pipeline and AppearanceSettings' injected launch/live application.
+The existing UserDefaults-backed production storage remains unchanged; synchronous
+ownership avoids yielding while test defaults are installed. No shipped copy or
+localization catalog changes are introduced.
 ## Native test result reporting
 
 The macOS unit-test steps in `ci.yml`, `ci-macos-compat.yml`, `test-depot.yml`
@@ -217,3 +460,282 @@ failed the exact-head workflow guard (run `38283073852`, job `114924791841`)
 by killing an active Swift Testing run with exit 124. Local subprocess verification
 passes with phase-aware cleanup; full native app-host completion remains subject
 to the separately tracked suite failures.
+
+
+### Consolidated native settings fixtures review boundary
+
+This branch consolidates #145, #147, #149, #154, #156, #158, #161, preserving each published source commit in
+its ancestry. Original branches remain available; superseded pull requests
+link to their replacement. This changes review organization, not application
+behavior. The preserved source heads are:
+
+- #145: `b275c76c3d1a14aec865f07de8d7b2cfa96c92cc`
+- #147: `537681592de0f1a51b00308a2fa3834f31959b49`
+- #149: `2b8592920ed58232e9506c14ba6e4842d2982f14`
+- #154: `b25ad79c66f064dfad82754642666b5fcf22a2a8`
+- #156: `d5350d19b490fc1d3505dfeb635513be0d672c49`
+- #158: `83ff7d17c9cefb5be4ca644c558ea60251b67073`
+- #161: `c3644da9c64d4498dbe5d7cae855c17029773457`
+
+The native-settings and SSH replacement PRs depend on #142 for authoritative
+CI exit reporting. The agent-session replacement stacks on SSH to share one
+reviewed socket fixture. Existing focused selectors, full-suite coverage and
+canonical/local verification caveats remain intact. No failed, incomplete or
+cancelled run is treated as green. The original combined validation branch
+remains unchanged and does not verify these new heads.
+
+Local consolidation checks cover source ancestry, test-content preservation,
+Xcode wiring, selector discovery, determinism, file budgets and generated state.
+Full app-host compilation/execution and required checks on the replacement heads
+remain pending. No app build, launch, settings or localization catalog changes
+are part of this consolidation.
+## Browser inspector window ownership verification
+
+The consolidated native app-host run for PR 170 at `45acbff54` still crashes in
+browser inspector fixtures. Retained earlier logs identify ten cases that die
+around native close/autorelease cleanup. An isolated native lifetime control
+reproduces the default `NSWindow.isReleasedWhenClosed` ownership conflict; setting
+that policy to false at construction avoids the control's crash. This supports
+the fixture diagnosis, but does not establish that full WebKit behaviors pass.
+
+Seventeen affected cases (sixteen direct-window cases and one adjacent synchronous
+close observer) move incrementally to one serialized Swift Testing suite.
+Directly owned windows use retained ownership from construction, including early
+close actions. App-created main windows retain the existing application owner.
+Teardown covers partial setup, panel/portal detachment, inspector associations and
+windows. Original routing, visibility, inspector-call, parent-identity and geometry
+assertions remain; untouched legacy case bodies remain in their original suite.
+Temporary shortcut values preserve application-domain provenance and routing
+captures end synchronously before an await.
+
+A DEBUG-only per-panel lifecycle observation stream replaces the migrated cases'
+run-loop polling. The stream reports completed synchronous mutations; consumers
+recheck authoritative transition intent, pending intent, settle work and detached
+close resolution. Existing transition/close decisions and timers are unchanged.
+Subscriber removal and panel close finish streams; termination holds no strong
+panel reference. The existing 2.85-second failure deadline is cancellable and is
+not used to settle or poll state. Seven additional owner-level cases cover queued
+replacement, no-change, close-resolution replacement, subscriber removal, consumer
+cancellation, observation-owner deinitialization and panel close. Settled state covers
+visibility transitions and detached-close resolution; it does not claim that all
+WebKit restore or dock-normalization work is idle.
+Explicit native layout calls replace fixed waits in portal/hosting cases.
+
+The existing focused browser invocation includes
+`BrowserInspectorWindowOwnershipTests` before unchanged full-suite coverage. Its
+matching canonical/local caveat remains open until actual app-host execution
+verifies all 24 cases and clean native teardown. No local foreground UI test or
+app launch is authorized by this fixture work. The minimal ownership control and
+compile/static checks must not be reported as full app-host verification.
+
+The complete affected source compiles without warnings in the test target's
+configured Swift 5 mode against the isolated `browser-inspector-readiness-repair`
+DEBUG module. The new suite and fixtures also compile in Swift 6 with the unchanged
+legacy hook prefix imported from a Swift 5 support module; the complete legacy
+file still has four nonisolated mutable globals that prevent a full Swift 6 check.
+Seven observation cases pass in an owned native harness with isolated HOME and
+app activation prohibited. This exercises the actual built lifecycle owner; it
+is not execution of the seventeen window/UI cases or full app-host coverage.
+
+The focused app-host job `115430721439` ran 71 test functions across nine suites
+and completed with exactly three issues in the window-close observer case: no
+inspector close before `willClose`, no close count, and retained visible state.
+XCTest composition disables `.browserAndDevTools`,
+so this case now installs an explicitly enabled, scoped runtime only for the
+synchronous close action and restores the original runtime after owned teardown.
+It starts no background services and retains every original assertion. An owned,
+offscreen control against the same built owner fails with the default disabled
+capability, still fails after responder-swizzle installation, and passes when only
+the browser capability is enabled. The actual main-window case still needs the
+next app-host run; this control does not claim that foreground UI verification.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing migration,
+behavior and local/CI references, architecture ownership/file/concurrency rules,
+debugging runtime pitfalls, shared behavior and native project wiring. No shipped
+strings or localization catalogs change; this section is contributor verification
+prose. This repair is integrated into PR 170; no separate PR is introduced.
+
+## Global search shortcut conflict verification
+
+PR 170 job `115525529711` failed the legacy configured Show/Hide collision case:
+the recorder returned `conflictsWithAction(showHideAllWindows)`, while the test
+expected `reservedBySystem`. The named-action rejection was introduced by
+`1a95cbba8` for actionable recorder feedback and remains the shared validator's
+policy. This correction changes only that legacy test, not shortcut policy or
+Settings behavior.
+
+`GlobalSearchShortcutConflictTests` exercises the real validator through an owned
+managed settings file. It retains the exact configured target, adds a nil normalized
+shortcut assertion, distinguishes a hardcoded system reservation, and checks
+nonconflicting/unbound acceptance and configured-conflict precedence over the
+later system-wide chord rejection. Setup and restoration run synchronously on
+MainActor; managed-default metadata preserves persistent-domain provenance and
+volatile domains are restored. The fixture never calls `resetAll`, persists a
+shortcut, starts a watcher, or suspends with the scoped store installed.
+
+The existing focused browser/settings invocation includes the new suite. Its
+canonical/local caveat remains open until actual fixed-head app-host execution.
+Native build 773 owner verification passes four functions/six parameter cases
+in 0.046 seconds. Restoring the old generic expectation in a temporary control
+fails exactly once; temporary success/throw controls also verify store identity,
+persisted-key absence and volatile-domain restoration. These results do not
+establish full-suite or CI success. The native harness uses the
+target's Swift 5 mode without warnings; forcing Swift 6 exposes the retained
+legacy owner's nonisolated mutable `settingsFileStore`, not a new concurrency
+suppression. Governing sources are root/personal AGENTS, continuous-code-quality,
+bmux-testing migration/behavior/local-CI, architecture and shared-behavior rules.
+No production code or shipped strings change; localization catalogs are untouched.
+
+## File preview save-shortcut fixture verification
+
+Actual app-host jobs `115439961432` and `115439961123` accept the configured and
+chorded save events, but the two legacy tests write empty files. Both construct
+`SavingTextView()` with a nil text container. Native build 773 reproduces the
+failure before key dispatch: this view has no text storage or container and its
+string stays empty after assignment. Production uses `makeFilePreviewTextView`,
+the explicit TextKit 1 factory introduced by `a86c58363`; the factory preserves
+text and both real shortcut/save paths write the expected content.
+
+Only those two methods migrate to `FilePreviewSaveShortcutTests`. Storage and
+content preconditions guard the native fixture. Original key handling, chord
+prefix no-save and final file assertions remain, with an additional remapped
+old-default negative control. The existing editing protocol's test adapter
+captures the actual panel save Task so the test can await completion without the
+legacy yield loop. No save, routing or timeout policy changes. Managed shortcut
+setup/restoration is synchronous and finishes before any await; owned files and
+panels are released afterward. Other legacy test bodies remain unchanged.
+
+An owned native four-case control compares both constructors through the actual
+panel save owner; requiring intended content fails exactly the two bare-editor
+cases and passes both factory cases. The corrected two-case suite compiles
+without warnings in target Swift 5 mode and passes against unchanged build 773. Forced
+Swift 6 compilation is blocked by the existing mutable static
+`KeyboardShortcutSettings.settingsFileStore` owner, as in the Global Search
+fixture; no suppression or new unsafe declaration is added. That legacy owner
+migration remains outside this test-only correction.
+The focused browser/settings gate includes it, and the canonical/local caveat
+stays open pending fixed-head app-host CI. These local results do not claim
+full-suite success or execution on CI's macOS 15 runner.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing migration,
+behavior and local/CI references, architecture/concurrency and shared-behavior
+rules, and debugging runtime pitfalls. Production code and shipped strings are
+unchanged; no localization catalog edits are required.
+
+## Panel appearance compositing verification
+
+App-host job `115439961299` fails the legacy transparent-opacity case because it
+expects background alpha 0.42 while the shared chrome background is opaque.
+Commit `379033c4b` intentionally changed `GhosttyBackgroundTheme.color` to
+`WindowAppearanceSnapshot.compositedTerminalColor`; `WindowChromeColorResolver`
+blends the terminal RGB over the resolved window background and returns alpha 1.
+`PanelAppearance` independently preserves clear content for transparent terminals.
+
+Only that method migrates to `PanelAppearanceCompositingTests`. Aqua and Dark Aqua
+cases retain clear-content, disabled-fill and zero-content-alpha assertions with
+the original tolerance. Expected RGB is calculated independently from the terminal
+color, 0.42 opacity and the appearance-resolved window background. Scoped native
+drawing appearance restores the previous appearance without changing application
+or user settings. All other legacy methods remain unchanged.
+
+The focused browser/settings gate includes the new suite. Unchanged build 773
+native proof passes both appearances; restoring the original 0.42-alpha assertion
+fails exactly both cases. The matching canonical/local caveat stays open until
+fixed-head app-host CI verifies the migrated suite. No production policy, rendering
+or shipped copy changes. Governing guidance is root/personal AGENTS,
+continuous-code-quality, bmux-testing migration/behavior/local-CI, architecture,
+shared behavior and OS-sensitive debugging; localization catalogs are untouched.
+
+## Download quarantine boundary verification
+
+PR 170's browser/settings job fails the two URL readback assertions in
+`webDownloadQuarantineMetadataMarksRemoteDownloads`. LaunchServices preserves
+quarantine type, agent and timestamp but can omit the optional URL fields. The
+same result occurs with the unchanged writer in an owned native file and in a
+bundled helper with `LSFileQuarantineEnabled`; it is not unique to an unbundled
+command-line harness. The SDK's `LSQuarantine.h` documents these URLs as present
+“if available”.
+
+`BrowserDownloadQuarantineMetadata` owns the exact pure value submitted by the
+existing URL writer. It preserves the existing HTTP(S) filter, credential/query/
+fragment removal, type, timestamp, agent and optional bundle identifier. The
+writer still owns native persistence and throws the same errors. Both session
+and WKDownload callers retain their existing temp-file marking before move or
+replacement and final-path marking. This extraction adds no settings, callbacks,
+state owner, rendering changes or error suppression.
+
+`BrowserDownloadQuarantineTests` checks exact outgoing sanitized URLs and all
+other metadata, unsupported schemes, empty/absent bundle identifiers, actual
+native quarantine persistence and nil/local-source bypass. Native readback must
+still contain the type, agent and timestamp; any returned URL must be typed and
+match the exact sanitized value. Outbound assertions use the actual resource
+values passed to the writer, so optional OS readback cannot hide a sanitization
+regression. The focused browser/settings invocation includes this suite, and the
+existing filename-resolution suite retains its other assertions.
+
+The extracted source and focused suite compile in Swift 6 without warnings.
+Five functions/nine parameter cases pass locally on macOS 26. A temporary
+control bypassing sanitization fails with ten exact URL assertions, while native
+persistence checks still pass. Subsequent committed-module verification passed
+as recorded below; full app-host execution remains pending and the canonical/local
+caveat stays open. Native readback evidence does not claim macOS 15 CI success.
+
+Retained policy caveat: the existing writer sets origin equal to the sanitized
+download URL. The SDK recommends a distinct referring page or no origin to avoid
+redownloading when the origin is opened. This boundary correction deliberately
+preserves that existing policy; choosing a referring page belongs to a separate
+browser download behavior change.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux architecture
+ownership/file/concurrency rules, bmux-testing behavior/migration/local-CI and
+Xcode wiring rules, and the SDK quarantine contract. Complete shared writer and
+both caller flows received independent review. No user-facing strings, settings,
+menus or help text change; localization catalogs are untouched. This correction
+is integrated into PR 170, with no new PR.
+
+### Combined artifact 784 verification
+
+The fresh isolated maintenance-integration build succeeded at combined source
+`9a5f2cc88` without launch; its reviewed production sources match this PR.
+Quarantine metadata and panel appearance passed six functions/eleven cases in
+strict Swift 6 with no compiler warnings. The two FilePreview shortcut cases
+passed in the actual Swift 5 test-target mode with no compiler warnings. The
+existing mutable static settings owner prevents forcing that fixture into Swift 6,
+as documented above. Build warning budget was 126/221; this is not a claim of a
+warning-free app build. The earlier build 783 separately passed the parser,
+Global Search, reconnect and remote-working-directory owner checks.
+
+These focused native results do not replace macOS 15 app-host execution or the
+full dependency-complete CI gates, which remain open. No active user app was
+rebuilt, launched, quit or replaced.
+
+## Titlebar product contract fixture verification
+
+The remaining titlebar failures assume a default sidebar width equal to its
+minimum and a control list without voice input. Commit `2c783a9ee` intentionally
+increased the workspace-card default to 340pt while retaining the 240pt resize
+minimum, and `d5c2a521f` added the voice-input control and its shortcut hint.
+The shared padding owner follows the visible sidebar width and uses the minimum
+when hidden; the control and minimal-mode routing both include voice input.
+The old fixtures conflict with these maintained product changes.
+
+`TitlebarProductContractTests` replaces only those two expectations. It checks
+the existing width policy and the helper’s exact 352pt/252pt output for an
+explicit 240pt absolute-minimum input, and
+retains the full ordered hint-action assertion with voice input between
+notifications and new workspace. Existing minimum-width no-shift, wider-sidebar,
+fullscreen and other hint-policy tests remain unchanged. These controlled
+helper inputs do not claim the live configured-minimum default, whose separate
+policy caveat remains recorded. The new suite is wired
+into the native test target and focused browser/settings gate. No production
+layout, navigation, shortcuts, settings or strings change.
+
+Both old expectations fail against the unchanged build 784 app module with
+exactly two issues. The corrected two functions pass in Swift 6 without warnings
+against that same module. This local macOS 26 evidence does not establish the
+macOS 15 full app-host result; the canonical/local caveat stays open pending CI.
+Governing sources are root/personal AGENTS, continuous-code-quality, bmux-testing
+migration/behavior/local-CI/wiring rules, architecture ownership, and maintained
+ContentView padding and UpdateTitlebarAccessory control/hint consumers. The
+localization audit finds no changed shipped text or catalogs; this section is
+contributor verification prose. This correction belongs to PR 170, not a new PR.

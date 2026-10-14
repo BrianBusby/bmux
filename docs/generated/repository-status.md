@@ -154,7 +154,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
-| `native_app_host_full_suite_failures` | open |
+| `browser_remote_store_fixture_verification` | open |
 | `configured_codex_placeholder_startup_dogfood` | open |
 | `codex_update_workspace_exit_native_dogfood` | open |
 | `expanded_prior_turn_system_appearance_contrast` | monitoring |
@@ -180,3 +180,17 @@ Repository: `BrianBusby/bmux`
 | `normal_terminal_codex_rich_evidence_gap` | resolved |
 | `remote_mobile_open_architecture_decisions` | open |
 | `hybrid_focus_render_capture` | open |
+| `browser_discard_policy_focused_gate_verification` | open |
+| `browser_background_compositing_focused_gate_verification` | open |
+| `right_sidebar_shortcut_fixture_app_host_verification` | open |
+| `browser_discard_restore_focused_gate_verification` | open |
+| `sidebar_minimum_default_and_configured_range_consistency` | open |
+| `sidebar_width_persistence_focused_gate_verification` | open |
+| `managed_appearance_startup_fixture_verification` | open |
+| `native_app_host_full_suite_failures` | open |
+| `browser_inspector_window_ownership_verification` | open |
+| `global_search_shortcut_conflict_verification` | open |
+| `file_preview_save_shortcut_fixture_verification` | open |
+| `panel_appearance_compositing_fixture_verification` | open |
+| `browser_download_quarantine_boundary_verification` | open |
+| `titlebar_product_contract_fixture_verification` | open |

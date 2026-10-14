@@ -5835,6 +5835,11 @@ policies:
     selected_for_implementation: false
 
 caveats:
+  - id: browser_remote_store_fixture_verification
+    title: Focused browser profile and remote store move suite pending actual app-host verification
+    status: open
+    owner: bmux
+
   - id: broad_legacy_storage_migration
     title: Broad legacy bmux-local storage migration
     status: open
@@ -5887,3 +5892,52 @@ caveats:
     issue:
       repository: BrianBusby/bmux
       number: 8
+
+  - id: browser_discard_policy_focused_gate_verification
+    title: Focused browser app-host gate includes discard policy tests; local native cases pass and pushed-head CI remains pending
+    status: open
+    owner: bmux
+  - id: browser_background_compositing_focused_gate_verification
+    title: Focused browser app-host gate includes background compositing tests; local native cases pass and pushed-head CI remains pending
+    status: open
+    owner: bmux
+  - id: right_sidebar_shortcut_fixture_app_host_verification
+    title: Right sidebar shortcut fixture repair passes local flag-state coverage; focused app-host CI verification remains pending
+    status: open
+    owner: bmux
+  - id: browser_discard_restore_focused_gate_verification
+    title: Focused browser app-host gate includes discard and history restore readiness tests; local native cases pass and pushed-head CI remains pending
+    status: open
+    owner: bmux
+  - id: sidebar_width_persistence_focused_gate_verification
+    title: Focused app-host gate includes default and configured sidebar width policy tests; local native cases pass and pushed-head CI remains pending
+    status: open
+    owner: bmux
+  - id: managed_appearance_startup_fixture_verification
+    title: Focused managed appearance startup suite pending actual app-host verification
+    status: open
+    owner: bmux
+  - id: browser_inspector_window_ownership_verification
+    title: Browser inspector window-close runtime fixture correction awaits fixed-head app-host verification
+    status: open
+    owner: bmux
+  - id: global_search_shortcut_conflict_verification
+    title: Focused global search configured-conflict priority suite awaits app-host verification
+    status: open
+    owner: bmux
+  - id: file_preview_save_shortcut_fixture_verification
+    title: Configured and chorded file preview save fixtures await fixed-head app-host verification
+    status: open
+    owner: bmux
+  - id: panel_appearance_compositing_fixture_verification
+    title: Panel clear-content and opaque chrome compositing suite awaits fixed-head app-host verification
+    status: open
+    owner: bmux
+  - id: browser_download_quarantine_boundary_verification
+    title: Quarantine outbound metadata and native readback contract pass local checks; app-host verification remains pending
+    status: open
+    owner: bmux
+  - id: titlebar_product_contract_fixture_verification
+    title: Native titlebar default-width and voice-control fixture corrections pass locally; app-host verification remains pending
+    status: open
+    owner: bmux

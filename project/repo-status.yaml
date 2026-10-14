@@ -138,7 +138,7 @@ component_releases:
     release_status: tagged
 
 local_caveats:
-  - id: native_app_host_full_suite_failures
+  - id: browser_remote_store_fixture_verification
     status: open
   - id: configured_codex_placeholder_startup_dogfood
     status: open
@@ -189,4 +189,32 @@ local_caveats:
   - id: remote_mobile_open_architecture_decisions
     status: open
   - id: hybrid_focus_render_capture
+    status: open
+  - id: browser_discard_policy_focused_gate_verification
+    status: open
+  - id: browser_background_compositing_focused_gate_verification
+    status: open
+  - id: right_sidebar_shortcut_fixture_app_host_verification
+    status: open
+  - id: browser_discard_restore_focused_gate_verification
+    status: open
+  - id: sidebar_minimum_default_and_configured_range_consistency
+    status: open
+  - id: sidebar_width_persistence_focused_gate_verification
+    status: open
+  - id: managed_appearance_startup_fixture_verification
+    status: open
+  - id: native_app_host_full_suite_failures
+    status: open
+  - id: browser_inspector_window_ownership_verification
+    status: open
+  - id: global_search_shortcut_conflict_verification
+    status: open
+  - id: file_preview_save_shortcut_fixture_verification
+    status: open
+  - id: panel_appearance_compositing_fixture_verification
+    status: open
+  - id: browser_download_quarantine_boundary_verification
+    status: open
+  - id: titlebar_product_contract_fixture_verification
     status: open
