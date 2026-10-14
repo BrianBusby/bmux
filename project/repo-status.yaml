@@ -142,6 +142,8 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: terminal_paste_binding_fixture_verification
+    status: open
   - id: session_resume_fork_contract_fixture_verification
     # E shard 3 identifies the conditional argument expression; typed branches await the compiler gate.
     status: open

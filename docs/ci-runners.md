@@ -2977,3 +2977,32 @@ without warnings in Swift 5 target mode and Swift 6, and five test functions
 fork-command assertions and actual argv/cwd/environment checks remain intact.
 The next integrated batch must compile the entire `bmuxTests` target with CI's
 Xcode 26.3 toolchain before these local results count as a repaired compiler gate.
+### Paste shortcut binding fixture contracts
+
+The three terminal paste cases from run 38509817630 shard 4 asserted a forced
+AppKit paste action after a menu miss. Commit `a90bc5480` deliberately delegates
+that path to Ghostty bindings so user overrides win. `GhosttyPasteShortcutBindingTests`
+now exercises the real `NSWindow.performKeyEquivalent` entrypoint for Command-V,
+Command-Shift-V, and Command-V after runtime release. It preserves consumption,
+terminal association, exact modifiers/key, and immediate runtime recreation,
+while expecting one native binding event instead of the obsolete direct action.
+
+`GhosttyPasteShortcutFixture` owns a manual-I/O terminal, retained offscreen
+window, and per-surface config. Actual Ghostty `text:` bindings emit distinct
+bytes; neither the general pasteboard nor the global Ghostty config is changed.
+A synchronous runtime-ready observer reinstalls only the owned config during
+recreation. Menu/input probes and that observer are restored before the output
+wait. Existing `TerminalRuntimeReadinessFixture` subscribes before mounting.
+Initial readiness and output each have an injected three-second failure bound,
+with cancellation and joined tasks. The old cases used a 50ms settling delay
+and had no output deadline; these bounded waits are new fixture behavior.
+
+Exact repository sources compile without warnings in Swift 5 target mode and
+Swift 6 against unchanged native build 786. All three parameter cases pass in
+an isolated test-mode process; wrong binding output and duplicate real dispatch
+controls fail their exact output and single-forward assertions respectively.
+These controls prove custom binding precedence, action execution, output and
+runtime recovery. Actual default clipboard payload delivery remains untested.
+Fixed-head macOS app-host verification is pending; local macOS results do not
+resolve the macOS 15 CI boundary. No production policy, workflow selector or
+terminal rendering changes are included.

@@ -195,6 +195,7 @@ Regenerate with: ./scripts/project-docs generate
 | Sidebar pointer fixture exercises the actual four-point content overlap; full app-host verification remains pending (`sidebar_terminal_hit_boundary_verification`) | Bmux | open |  |
 | Browser portal resize, reveal, and transient rebind contracts pass native 786; integrated app-host verification remains pending (`browser_portal_presentation_fixture_verification`) | Bmux | open |  |
 | Native project parsing and D2 build gates pass after quoting extension filenames; final integrated checks remain pending (`native_xcode_project_parse_verification`) | Bmux | open |  |
+| Paste shortcut fixtures verify native custom binding output and runtime recovery; default clipboard delivery is untested and integrated app-host verification remains pending (`terminal_paste_binding_fixture_verification`) | Bmux | open |  |
 | Native input, IME and focus-recovery fixtures require bounded runtime readiness; integrated macOS app-host verification remains pending (`terminal_native_input_delivery_fixture_verification`) | Bmux | open |  |
 | Remote agent fork fixture owns its existing agent path and passes native checks; app-host verification remains pending (`remote_agent_fork_fixture_verification`) | Bmux | open |  |
 | Default cloud proxy retry correction passes native build787 original and five preserved controls; integrated CI remains pending (`default_cloud_proxy_retry_state_verification`) | Bmux | open |  |
