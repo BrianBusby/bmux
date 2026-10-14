@@ -6043,6 +6043,10 @@ caveats:
     title: Retained Markdown rendering windows and event-driven fixture await fixed-head app-host verification
     status: open
     owner: bmux
+  - id: notification_record_restore_fixture_verification
+    title: Notification-record restore fixtures await fixed-head app-host verification
+    status: open
+    owner: bmux
   - id: welcome_window_retained_fixture_verification
     title: Retained Welcome shortcut window fixture awaits fixed-head app-host verification
     status: open
