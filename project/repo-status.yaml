@@ -190,3 +190,5 @@ local_caveats:
     status: open
   - id: hybrid_focus_render_capture
     status: open
+  - id: project_truth_http_retry_verification
+    status: open

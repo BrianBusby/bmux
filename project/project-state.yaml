@@ -5887,3 +5887,7 @@ caveats:
     issue:
       repository: BrianBusby/bmux
       number: 8
+  - id: project_truth_http_retry_verification
+    title: GitHub evidence HTTP regression gate awaits bounded transient recovery
+    status: open
+    owner: bmux
