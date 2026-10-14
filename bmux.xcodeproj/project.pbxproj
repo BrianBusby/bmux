@@ -1093,6 +1093,7 @@
 		C06552010000000000000003 /* NotificationBurstCoalescer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C06552010000000000000004 /* NotificationBurstCoalescer.swift */; };
 		7490C00D7490C00D7490C00D /* NotificationCacheMemoryPressureResponder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7490D00D7490D00D7490D00D /* NotificationCacheMemoryPressureResponder.swift */; };
 		D7AB00000000000000B021 /* NotificationDismissSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AB00000000000000B020 /* NotificationDismissSyncTests.swift */; };
+		194C32A7F2F806C861E716A9 /* NotificationFocusEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26ECAA4099463828BEF72859 /* NotificationFocusEventTests.swift */; };
 		CE0E0C050000000000000001 /* NotificationPushDeliveryCoordinating.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0C050000000000000002 /* NotificationPushDeliveryCoordinating.swift */; };
 		CE0E0C080000000000000001 /* NotificationPushRuntimeCompositionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0C080000000000000002 /* NotificationPushRuntimeCompositionTests.swift */; };
 		CE0E0C010000000000000001 /* NotificationPushRuntimeLifecycleState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0C010000000000000002 /* NotificationPushRuntimeLifecycleState.swift */; };
@@ -3116,6 +3117,7 @@
 		C06552010000000000000004 /* NotificationBurstCoalescer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBurstCoalescer.swift; sourceTree = "<group>"; };
 		7490D00D7490D00D7490D00D /* NotificationCacheMemoryPressureResponder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/NotificationCacheMemoryPressureResponder.swift; sourceTree = "<group>"; };
 		D7AB00000000000000B020 /* NotificationDismissSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NotificationDismissSyncTests.swift"; sourceTree = "<group>"; };
+		26ECAA4099463828BEF72859 /* NotificationFocusEventTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NotificationFocusEventTests.swift"; sourceTree = "<group>"; };
 		CE0E0C050000000000000002 /* NotificationPushDeliveryCoordinating.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/NotificationPushDeliveryCoordinating.swift; sourceTree = "<group>"; };
 		CE0E0C080000000000000002 /* NotificationPushRuntimeCompositionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPushRuntimeCompositionTests.swift; sourceTree = "<group>"; };
 		CE0E0C010000000000000002 /* NotificationPushRuntimeLifecycleState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/NotificationPushRuntimeLifecycleState.swift; sourceTree = "<group>"; };
@@ -5648,6 +5650,7 @@
 				D211B909CBF68E138FBCA2F4 /* WorkspacePullRequestPublicationTests.swift */,
 				C3115FA5FAA47F1A60434F96 /* WorkspacePullRequestFocusContractTests.swift */,
 				00BA7586F0D74A8B9DA4CA99 /* NotificationRestoreFixture.swift */,
+				26ECAA4099463828BEF72859 /* NotificationFocusEventTests.swift */,
 				12F0B189611A457895D0EC5B /* WorkspaceNotificationRestoreTests.swift */,
 				47591E108B126B7F552379E7 /* ConfigSnapshotTabManager.swift */,
 				40D97D31E44313C0986B3466 /* WorkspaceCreationConfigSanitizationTests.swift */,
@@ -8259,6 +8262,7 @@
 				3F1319520A494EC8A59394B4 /* NoGitWatchShellIntegrationTests.swift in Sources */,
 				734F49D37E543DD01C2F4FEF /* NotificationAndMenuBarTests.swift in Sources */,
 				D7AB00000000000000B021 /* NotificationDismissSyncTests.swift in Sources */,
+				194C32A7F2F806C861E716A9 /* NotificationFocusEventTests.swift in Sources */,
 					CE0E0C080000000000000001 /* NotificationPushRuntimeCompositionTests.swift in Sources */,
 				C9ADD73ABB7F407080C45029 /* NotificationRestoreFixture.swift in Sources */,
 				C7A507000000000000005794 /* NotificationRowSnapshotBoundaryTests.swift in Sources */,
