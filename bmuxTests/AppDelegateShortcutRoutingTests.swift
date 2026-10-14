@@ -8099,58 +8099,6 @@ final class AppDelegateShortcutRoutingTests: XCTestCase {
 #endif
     }
 
-    func testTextBoxSubmitKeepsQueuedRunForStillActiveSurfaceWhenAnotherSurfaceFinishes() throws {
-#if DEBUG
-        try withPreservedGeneralPasteboard {
-            let activeSurface = FakeTextBoxSubmitSurface()
-            let finishingSurface = FakeTextBoxSubmitSurface()
-            TextBoxSubmit.debugWaitTimeoutSecondsOverride = 10
-            defer { TextBoxSubmit.debugWaitTimeoutSecondsOverride = nil }
-            let imageURL = try makeTemporaryPNGFile(named: "moon.png")
-            var completions: [String] = []
-
-            TextBoxSubmit.debugRunDispatchEvents(
-                [
-                    .captureClipboardReadBaseline,
-                    .pasteFilePath(imageURL.path),
-                    .waitForClipboardRead,
-                    .pasteText("active-first")
-                ],
-                via: activeSurface
-            ) { _ in
-                completions.append("active-first")
-            }
-            TextBoxSubmit.debugRunDispatchEvents(
-                [.pasteText("active-second")],
-                via: activeSurface
-            ) { _ in
-                completions.append("active-second")
-            }
-            TextBoxSubmit.debugRunDispatchEvents(
-                [.pasteText("finishing")],
-                via: finishingSurface
-            ) { _ in
-                completions.append("finishing")
-            }
-
-            waitFor(timeout: 1.0, until: { completions == ["finishing"] })
-            XCTAssertEqual(finishingSurface.sentText, ["finishing"])
-            XCTAssertEqual(activeSurface.sentText, [])
-            XCTAssertEqual(activeSurface.sentKeys, ["paste_from_clipboard"])
-
-            activeSurface.completeClipboardRead()
-            waitFor(timeout: 1.0, until: {
-                completions == ["finishing", "active-first", "active-second"]
-            })
-
-            XCTAssertEqual(activeSurface.sentText, ["active-first", "active-second"])
-            XCTAssertEqual(completions, ["finishing", "active-first", "active-second"])
-        }
-#else
-        throw XCTSkip("debugRunDispatchEvents is only available in DEBUG")
-#endif
-    }
-
     func testTextBoxSubmitStressMatrixKeepsClaudeImagesInterspersedWithText() throws {
         let firstURL = try makeTemporaryPNGFile(named: "first.png")
         let secondURL = try makeTemporaryPNGFile(named: "second.png")

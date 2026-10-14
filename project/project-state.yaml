@@ -6205,7 +6205,7 @@ caveats:
     owner: bmux
 
   - id: textbox_clipboard_timeout_fixture_verification
-    title: Clipboard timeout fixture awaits causal completion; local event-only proof passes but real pasteboard restoration requires isolated app-host CI
+    title: Clipboard timeout and queued-run fixtures await causal completion; local event-only proofs pass but real pasteboard transactions require isolated app-host CI
     status: open
     owner: bmux
 

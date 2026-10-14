@@ -3125,9 +3125,9 @@ legacy callers retain their behavior. Cleanup uses the existing synchronous
 `debugResetForTesting` boundary before restoring every original pasteboard item
 and representation, including on timeout or cancellation. This prevents a late
 runner from restoring its temporary snapshot over the outer snapshot. The
-current test inventory has no other Swift Testing general-pasteboard writer or
-TextBox dispatch caller; remaining users are XCTest cases. This isolation must
-be reassessed if another asynchronous writer is introduced.
+two current Swift Testing general-pasteboard writers and TextBox dispatch callers
+share this serialized suite; remaining users are XCTest cases. This isolation
+must be reassessed if another asynchronous writer is introduced.
 
 Focused source compiles warning-free in Swift 5 and Swift 6. The entire retained
 shortcut-routing container and its maintained support compile in Swift 5, with
@@ -3331,3 +3331,33 @@ regression still needs its separate CI-red commit before publishing a production
 correction. No app, Git provider, SSH parser, user configuration or global setting
 is changed by this slice. Full fixed-head Xcode 26.3/macOS 15 app-host verification
 remains pending.
+
+### Queued text submission completion fixture
+
+G shard 2 job 115958161026 fails the two final assertions in
+`testTextBoxSubmitKeepsQueuedRunForStillActiveSurfaceWhenAnotherSurfaceFinishes`:
+the active surface has sent neither queued text and only the unrelated surface
+has completed. The existing clipboard-read observer posts a MainActor task; the
+legacy synchronous RunLoop wait prevents that task from resuming. A native
+build 788 event-only control preserves both surfaces, the active queue and real
+clipboard-read notification. After the original one-second synchronous wait it
+has the same incomplete state; awaiting actual completion then produces both
+texts and all three completions in order. This probe omits only the file-paste
+event and never accesses the general clipboard, so it does not establish the
+pasteboard transaction or its restoration.
+
+The exact case migrates into `TextBoxClipboardTimeoutTests`. Both tests share
+a scoped snapshot/attachment/cleanup helper and serialize only their shared
+general-pasteboard transactions. The migrated case retains the actual PNG paste,
+all five original output/key/order assertions, the ten-second runner timeout
+and both one-second completion bounds. The timeout override is captured during
+dispatch and restored synchronously before suspension. Buffered completion
+streams preserve already-completed events and their deadlines are cancelled
+and joined. Cleanup resets owned runners and restores every prior pasteboard
+representation before removing the attachment directory. No production policy,
+CI selector or user-facing string changes.
+
+The safe event-only native control passes on unchanged build 788; actual
+general-pasteboard execution is reserved for isolated app-host CI. The complete
+two-case suite and unchanged fake compile locally; full integrated target and
+actual fixed-head CI remain pending. Every untouched legacy byte is retained.
