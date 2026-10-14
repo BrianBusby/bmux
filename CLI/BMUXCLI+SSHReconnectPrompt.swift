@@ -14,13 +14,18 @@ extension BMUXCLI {
         return "\\n\\033[31m\(status)\\033[0m\\n\\033[2m\(detail)\\033[0m\\n\\033[2m\(prompt)\\033[0m\\n"
     }
 
+    func sshManualReconnectFailureMessage() -> String {
+        String(localized: "cli.ssh.manualReconnectPrompt.failed",
+               defaultValue: "[bmux] reconnect failed. Press r then Enter to try again, or Enter to close this pane.")
+    }
+
     func sshRemoteReconnectShellFunction() -> String {
         [
             "bmux_ssh_remote_reconnect() {",
             "  bmux_reconnect_cli=\"${BMUX_BUNDLED_CLI_PATH:-}\"",
             "  if [ -z \"$bmux_reconnect_cli\" ] || [ ! -x \"$bmux_reconnect_cli\" ]; then bmux_reconnect_cli=\"$(command -v bmux 2>/dev/null || true)\"; fi",
             "  bmux_reconnect_socket=\"${BMUX_SOCKET_PATH:-${BMUX_SOCKET:-}}\"",
-            "  if [ -z \"$bmux_reconnect_cli\" ] || [ -z \"$bmux_reconnect_socket\" ] || [ -z \"${BMUX_WORKSPACE_ID:-}\" ]; then return 0; fi",
+            "  if [ -z \"$bmux_reconnect_cli\" ] || [ -z \"$bmux_reconnect_socket\" ] || [ -z \"${BMUX_WORKSPACE_ID:-}\" ] || [ -z \"${BMUX_SURFACE_ID:-}\" ]; then return 1; fi",
             "  bmux_reconnect_payload=\"{\\\"workspace_id\\\":\\\"$BMUX_WORKSPACE_ID\\\"\"",
             "  if [ -n \"${BMUX_SURFACE_ID:-}\" ]; then bmux_reconnect_payload=\"$bmux_reconnect_payload,\\\"surface_id\\\":\\\"$BMUX_SURFACE_ID\\\"\"; fi",
             "  bmux_reconnect_payload=\"$bmux_reconnect_payload}\"",

@@ -399,4 +399,6 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Monorepo migration ledger pending dispositions (`monorepo_migration_ledger_pending_dispositions`) - owner: Bmux; status: open
 - Observability trace API boundary (`observability_trace_api`) - owner: Provenance Engine; status: open
 - GitHub Actions runner reliability (`github_actions_runner_reliability`) - owner: Bmux; status: open; issue: BrianBusby/bmux#8
+- SSH manual reconnect has actual CI red and native 779 green; fixed-head app-host and runtime acceptance remain pending (`ssh_manual_reconnect_handoff_regression`) - owner: Bmux; status: open
+- Remote agent restore directory guard passes native build 783; full app-host verification pending (`remote_restore_working_directory_regression`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

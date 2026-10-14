@@ -47,6 +47,6 @@ extension GhosttyNSView {
         guard let workspace = remoteWorkspaceForCurrentSurface(),
               canReconnectRemotePane(in: workspace),
               let panel = remoteReconnectablePanel(in: workspace) else { return }
-        panel.sendInput("r\r")
+        workspace.reconnectRemoteConnection(surfaceId: panel.id)
     }
 }
