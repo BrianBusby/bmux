@@ -5933,3 +5933,7 @@ caveats:
     title: Panel clear-content and opaque chrome compositing suite awaits fixed-head app-host verification
     status: open
     owner: bmux
+  - id: browser_download_quarantine_boundary_verification
+    title: Quarantine outbound metadata and native readback contract pass local checks; app-host verification remains pending
+    status: open
+    owner: bmux

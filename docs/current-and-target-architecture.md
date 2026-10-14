@@ -410,4 +410,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Focused global search configured-conflict priority suite awaits app-host verification (`global_search_shortcut_conflict_verification`) - owner: Bmux; status: open
 - Configured and chorded file preview save fixtures await fixed-head app-host verification (`file_preview_save_shortcut_fixture_verification`) - owner: Bmux; status: open
 - Panel clear-content and opaque chrome compositing suite awaits fixed-head app-host verification (`panel_appearance_compositing_fixture_verification`) - owner: Bmux; status: open
+- Quarantine outbound metadata and native readback contract pass local checks; app-host verification remains pending (`browser_download_quarantine_boundary_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

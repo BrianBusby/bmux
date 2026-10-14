@@ -416,6 +416,8 @@
 		C59240010000000000000001 /* BrowserDownloadFilenameResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C59240010000000000000002 /* BrowserDownloadFilenameResolver.swift */; };
 		C59240010000000000000003 /* BrowserDownloadFilenameResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C59240010000000000000004 /* BrowserDownloadFilenameResolverTests.swift */; };
 		C67540020000000000000001 /* BrowserDownloadHTTPStatusDecision.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67540020000000000000002 /* BrowserDownloadHTTPStatusDecision.swift */; };
+		564337474753441E89FF3636 /* BrowserDownloadQuarantineMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = B889DEE3FC654FECB9A3D94B /* BrowserDownloadQuarantineMetadata.swift */; };
+		507AE9BDBA5E46B0A08EC52A /* BrowserDownloadQuarantineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8F3FE785124071B49B5A1C /* BrowserDownloadQuarantineTests.swift */; };
 		C67540110000000000000001 /* BrowserDownloadRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67540110000000000000002 /* BrowserDownloadRecord.swift */; };
 		C67540120000000000000001 /* BrowserDownloadsToolbarButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67540120000000000000002 /* BrowserDownloadsToolbarButton.swift */; };
 		C2035A010000000000000001 /* BrowserErrorPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2035A010000000000000002 /* BrowserErrorPage.swift */; };
@@ -2327,6 +2329,8 @@
 		C59240010000000000000002 /* BrowserDownloadFilenameResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserDownloadFilenameResolver.swift; sourceTree = "<group>"; };
 		C59240010000000000000004 /* BrowserDownloadFilenameResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserDownloadFilenameResolverTests.swift; sourceTree = "<group>"; };
 		C67540020000000000000002 /* BrowserDownloadHTTPStatusDecision.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserDownloadHTTPStatusDecision.swift; sourceTree = "<group>"; };
+		B889DEE3FC654FECB9A3D94B /* BrowserDownloadQuarantineMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserDownloadQuarantineMetadata.swift; sourceTree = "<group>"; };
+		5E8F3FE785124071B49B5A1C /* BrowserDownloadQuarantineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserDownloadQuarantineTests.swift; sourceTree = "<group>"; };
 		C67540110000000000000002 /* BrowserDownloadRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserDownloadRecord.swift; sourceTree = "<group>"; };
 		C67540120000000000000002 /* BrowserDownloadsToolbarButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserDownloadsToolbarButton.swift; sourceTree = "<group>"; };
 		C2035A010000000000000002 /* BrowserErrorPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserErrorPage.swift; sourceTree = "<group>"; };
@@ -4679,6 +4683,7 @@
 				C2035A070000000000000002 /* URLRequest+BrowserFailedNavigation.swift */,
 				C62530010000000000000002 /* BrowserPanelReloadMode.swift */,
 				C59240010000000000000002 /* BrowserDownloadFilenameResolver.swift */,
+				B889DEE3FC654FECB9A3D94B /* BrowserDownloadQuarantineMetadata.swift */,
 				C67540020000000000000002 /* BrowserDownloadHTTPStatusDecision.swift */,
 				C42660030000000000000002 /* BrowserDownloadDelegate+PDFPreviewData.swift */,
 				C67540050000000000000002 /* BrowserSessionDownloadSaver.swift */,
@@ -5342,6 +5347,7 @@
 				C6AD2754E18F402DB53B0A60 /* FilePreviewSaveTaskCapture.swift */,
 				845D46632118424A875D0573 /* FilePreviewSaveShortcutTests.swift */,
 				C59240010000000000000004 /* BrowserDownloadFilenameResolverTests.swift */,
+				5E8F3FE785124071B49B5A1C /* BrowserDownloadQuarantineTests.swift */,
 				C0DE58990000000000000002 /* BmuxWebViewKeyDownReentryTests.swift */,
 				C0DE49870000000000000002 /* BrowserWebContentProcessTests.swift */,
 				43F90FAF3FD44F11BF547BE9 /* BmuxWebViewMouseNavigationButtonTests.swift */,
@@ -6366,6 +6372,7 @@
 				C42660030000000000000001 /* BrowserDownloadDelegate+PDFPreviewData.swift in Sources */,
 				C59240010000000000000001 /* BrowserDownloadFilenameResolver.swift in Sources */,
 				C67540020000000000000001 /* BrowserDownloadHTTPStatusDecision.swift in Sources */,
+				564337474753441E89FF3636 /* BrowserDownloadQuarantineMetadata.swift in Sources */,
 				C67540110000000000000001 /* BrowserDownloadRecord.swift in Sources */,
 				C67540120000000000000001 /* BrowserDownloadsToolbarButton.swift in Sources */,
 				C2035A010000000000000001 /* BrowserErrorPage.swift in Sources */,
@@ -7615,6 +7622,7 @@
 					CE0E0A060000000000000001 /* BrowserDevToolsRuntimeCompositionTests.swift in Sources */,
 				BA1540010000000000000001 /* BrowserDiscardReadinessTests.swift in Sources */,
 				C59240010000000000000003 /* BrowserDownloadFilenameResolverTests.swift in Sources */,
+				507AE9BDBA5E46B0A08EC52A /* BrowserDownloadQuarantineTests.swift in Sources */,
 				A5008381 /* BrowserFindJavaScriptTests.swift in Sources */,
 				B6585001B6585001B6585001 /* BrowserHiddenWebViewDiscardMemoryPressureTests.swift in Sources */,
 				AD92ED9742D04409B9041F4E /* BrowserHiddenWebViewDiscardPolicyTests.swift in Sources */,

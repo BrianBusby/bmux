@@ -589,6 +589,7 @@ jobs:
             -only-testing:bmuxTests/ManagedAppearanceStartupContractTests \
             -only-testing:bmuxTests/GlobalSearchShortcutConflictTests \
             -only-testing:bmuxTests/FilePreviewSaveShortcutTests \
+            -only-testing:bmuxTests/BrowserDownloadQuarantineTests \
             -only-testing:bmuxTests/BrowserInspectorWindowOwnershipTests \
             test
 
