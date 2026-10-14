@@ -229,3 +229,4 @@ Repository: `BrianBusby/bmux`
 | `browser_download_quarantine_boundary_verification` | open |
 | `file_preview_save_shortcut_fixture_verification` | open |
 | `panel_appearance_compositing_fixture_verification` | open |
+| `titlebar_product_contract_fixture_verification` | open |

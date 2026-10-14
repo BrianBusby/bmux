@@ -596,6 +596,7 @@ jobs:
             -only-testing:bmuxTests/BrowserThemeSettingsTests \
             -only-testing:bmuxTests/GhosttyBackgroundThemeTests \
             -only-testing:bmuxTests/PanelAppearanceCompositingTests \
+            -only-testing:bmuxTests/TitlebarProductContractTests \
             -only-testing:bmuxTests/BrowserUnderPageBackgroundTests \
             -only-testing:bmuxTests/BrowserInitialLifecycleTests \
             -only-testing:bmuxTests/BrowserDiscardReadinessTests \
