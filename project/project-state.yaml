@@ -6262,3 +6262,8 @@ caveats:
     title: Terminal file launch fixtures compare directory identity and retain exact quoting; native controls pass and integrated app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: hook_prompt_stable_workspace_fixture_verification
+    title: Hook prompt evidence fixture uses the accepted stable workspace identity; native old expectation fails and corrected case passes, app-host verification pending
+    status: open
+    owner: bmux
