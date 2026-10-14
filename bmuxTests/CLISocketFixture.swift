@@ -82,7 +82,7 @@ struct CLISocketFixture: Sendable {
         events: AsyncStream<Int>,
         continuation: AsyncStream<Int>.Continuation
     ) async throws -> [String] {
-        var sources: [Int: (descriptor: Int32, source: any DispatchSourceRead)] = [:]
+        var sources: [Int: (descriptor: Int32, source: CLISocketReadiness)] = [:]
         var pending: [Int: Data] = [:]
         var commands: [String] = []
         var nextToken = 1
@@ -129,11 +129,13 @@ struct CLISocketFixture: Sendable {
             }
             sources.removeValue(forKey: token)
             pending.removeValue(forKey: token)
-            await close(connection.source, descriptor: connection.descriptor)
+            await connection.source.close()
         }
 
         do {
             for await token in events {
+                let readySource = sources[token]?.source
+                defer { readySource?.acknowledge() }
                 if token == Self.completionToken {
                     // Producer completion is independent of delayed DispatchSource delivery.
                     try acceptPendingClients()
@@ -146,37 +148,18 @@ struct CLISocketFixture: Sendable {
                 else { try await readAvailableInput(token: token) }
             }
         } catch {
-            for connection in sources.values { await close(connection.source, descriptor: connection.descriptor) }
+            for connection in sources.values { await connection.source.close() }
             throw error
         }
-        for connection in sources.values { await close(connection.source, descriptor: connection.descriptor) }
+        for connection in sources.values { await connection.source.close() }
         return commands
     }
 
     private func readiness(
         descriptor: Int32, token: Int, continuation: AsyncStream<Int>.Continuation
-    ) throws -> any DispatchSourceRead {
-        // SO_NOSIGPIPE is inherited from bind(); re-setting it after peer close fails with EINVAL.
-        guard fcntl(descriptor, F_SETFL, O_NONBLOCK) == 0,
-              fcntl(descriptor, F_SETFD, FD_CLOEXEC) == 0 else {
-            let error = POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
-            Darwin.close(descriptor)
-            throw error
-        }
-        // DispatchSource is the native socket-readiness bridge; callers consume an AsyncStream.
-        let source = DispatchSource.makeReadSource(fileDescriptor: descriptor)
-        source.setEventHandler { [deliverReadiness] in deliverReadiness(token, continuation) }
-        source.resume()
-        return source
-    }
-
-    private func close(_ source: any DispatchSourceRead, descriptor: Int32) async {
-        await withCheckedContinuation { continuation in
-            source.setCancelHandler {
-                Darwin.close(descriptor)
-                continuation.resume()
-            }
-            source.cancel()
+    ) throws -> CLISocketReadiness {
+        try CLISocketReadiness(descriptor: descriptor) { [deliverReadiness] in
+            deliverReadiness(token, continuation)
         }
     }
 
