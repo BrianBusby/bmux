@@ -1693,11 +1693,15 @@ whole-suite SSH reconnect regression selector. Source ancestry and focused
 selectors remain preserved; the obsolete reconnect method selector that ran zero
 tests is deliberately replaced by its enclosing suite.
 
-The complete Codex rejected-target correction and SSH manual-reconnect runtime
-correction remain outside this composition until their test-only CI regressions
-actually run and fail. Local native passes do not replace those gates. Seven
-browser observation cases pass against the isolated fresh DEBUG module; all
-seventeen migrated window/inspector cases still need actual app-host execution.
+The complete Codex rejected-target and SSH manual-reconnect runtime corrections
+are included after their test-only CI runs produced the expected nonzero
+failures. The fixed Codex CLI passes sixteen routing cases and thirteen valid
+Stop cases against isolated build 781; reconnect passes twenty-five cases against
+unchanged isolated build 779. These native results do not replace fixed-head
+app-host gates. Seven browser observation cases pass against the isolated DEBUG
+module. Earlier focused app-host execution passed the migrated inspector cases
+except one window-close case; its explicit capability fixture correction still
+needs the fixed-head app-host run.
 SSH resize-acknowledgement and shared CLI process timeouts remain unresolved:
 added diagnostics preserve existing assertions, process deadlines and scheduling.
 

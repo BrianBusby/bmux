@@ -5974,7 +5974,7 @@ caveats:
     owner: bmux
 
   - id: maintenance_combined_validation_pending
-    title: Published maintenance heads are composed for CI; held fixes and full authoritative native and artifact gates remain pending
+    title: Published maintenance fixes are composed for CI; full authoritative native and artifact gates remain pending
     status: open
     owner: bmux
 
