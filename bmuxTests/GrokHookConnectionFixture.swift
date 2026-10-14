@@ -7,34 +7,60 @@ final class GrokHookConnectionFixture {
     let workspaceID = "11111111-1111-1111-1111-111111111111"
     let surfaceIDs = ["22222222-2222-2222-2222-222222222222", "33333333-3333-3333-3333-333333333333"]
 
-    init() throws {
+    private let workingDirectory: String?
+
+    init(hasWorkingDirectory: Bool = true) throws {
         root = URL(fileURLWithPath: "/tmp").appendingPathComponent("grok-hook-\(UUID().uuidString)")
+        workingDirectory = hasWorkingDirectory ? root.path : nil
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     }
 
-    deinit { try? FileManager.default.removeItem(at: root) }
+    deinit {
+        do { try FileManager.default.removeItem(at: root) }
+        catch { Issue.record(error, "Could not remove owned Grok hook fixture directory") }
+    }
 
-    func run(_ action: String, session: String?, surface: String, fields: [String: Any] = [:], stallFeed: Bool = false) async throws -> [String] {
+    /// A nil surface omits ambient routing IDs and requires the saved route to the first owned surface.
+    func run(_ action: String, session: String?, surface: String?, fields: [String: Any] = [:], stallFeed: Bool = false) async throws -> [String] {
         let cli = try BundledCLITestSupport.bundledCLIPath(for: Self.self)
         let socket = root.appendingPathComponent("socket").path
         let input = root.appendingPathComponent("input")
-        let events = ["session-start": "SessionStart", "prompt-submit": "UserPromptSubmit", "notification": "Notification", "stop": "Stop"]
-        var payload: [String: Any] = ["cwd": root.path, "hookEventName": try #require(events[action])]
+        let events = ["session-start": "SessionStart", "prompt-submit": "UserPromptSubmit", "notification": "Notification", "stop": "Stop", "session-end": "SessionEnd"]
+        var payload: [String: Any] = ["hookEventName": try #require(events[action])]
+        if let workingDirectory { payload["cwd"] = workingDirectory }
         if let session { payload["sessionId"] = session }
         payload.merge(fields) { _, new in new }
         try JSONSerialization.data(withJSONObject: payload).write(to: input)
-        let environment = [
-            "HOME": root.path, "CFFIXED_USER_HOME": root.path, "PWD": root.path,
+        var environment = [
+            "HOME": root.path, "CFFIXED_USER_HOME": root.path,
             "PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "BMUX_SOCKET_PATH": socket,
-            "BMUX_WORKSPACE_ID": workspaceID, "BMUX_SURFACE_ID": surface,
             "BMUX_AGENT_HOOK_STATE_DIR": root.path, "BMUX_CLI_SENTRY_DISABLED": "1",
             "GROK_HOME": root.appendingPathComponent("grok-home").path,
         ]
-        let server = CLISocketFixture(path: socket, response: responder(surface: surface, stallFeed: stallFeed))
-        let (result, commands) = try await server.capture {
-            try await ShellContractProcess(root: root).run(executable: "/bin/sh", arguments: [
-                "-c", "exec \"$1\" hooks grok \"$2\" <\"$3\"", "grok-hook", cli, action, input.path,
-            ], environment: environment)
+        if let workingDirectory { environment["PWD"] = workingDirectory }
+        if let surface {
+            environment["BMUX_WORKSPACE_ID"] = workspaceID
+            environment["BMUX_SURFACE_ID"] = surface
+        }
+        // A shell supplies PWD itself; preserve the missing-cwd hook input before exec.
+        let command = (workingDirectory == nil ? "unset PWD; " : "") + "exec \"$1\" hooks grok \"$2\" <\"$3\""
+        let targetSurface = surface ?? surfaceIDs[0]
+        let server = CLISocketFixture(path: socket, response: responder(surface: targetSurface, stallFeed: stallFeed))
+        let (outcome, commands) = try await server.capture {
+            // Producer completion, including failure, precedes the socket's final drain.
+            do {
+                return Result<ShellContractProcess.Result, any Error>.success(try await ShellContractProcess(root: root).run(
+                    executable: "/bin/sh", arguments: ["-c", command, "grok-hook", cli, action, input.path], environment: environment
+                ))
+            } catch { return .failure(error) }
+        }
+        let result: ShellContractProcess.Result
+        do { result = try outcome.get() }
+        catch {
+            let output = Result { try String(contentsOf: root.appendingPathComponent("stdout"), encoding: .utf8) }
+            let errors = Result { try String(contentsOf: root.appendingPathComponent("stderr"), encoding: .utf8) }
+            Issue.record(error, "Grok \(action) failed after requests: \(commands); stdout: \(output); stderr: \(errors)")
+            throw error
         }
         #expect(result.status == 0, "\(result.stderr); requests: \(commands)")
         #expect(result.stdout == "{}\n", "\(result.stderr)")
