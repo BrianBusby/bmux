@@ -2061,3 +2061,30 @@ bmux-testing migration/behavior/local-CI guidance, architecture concurrency and
 file ownership, and the real Workspace/Bonsplit and MobileHostConnection
 completion boundaries. The localization audit finds no changed shipped strings,
 settings, menus or catalogs; this section is contributor verification prose.
+
+
+### Persistent SSH child-exit sibling tracking
+
+Final C run `38509817630` shard 4 failed the existing split persistent-PTY
+child-exit case: closing one child left both panels visible but cleared the
+sibling's active-session tracking. The same case reproduces against unlaunched
+native build 785, with only the active-count and sibling-tracking assertions
+failing. Last-surface disconnect and already-ended-attach controls pass. The
+sibling's saved PTY session ID and remote configuration remain unchanged.
+
+`Workspace.markPersistentRemotePTYAttachFailed` now invokes workspace-wide
+disconnect only when its active remote surface set is empty, matching the
+existing session-ended owner. Per-panel cleanup, placeholder handling, browser
+status and directory notifications remain on the same path. This preserves
+last-surface teardown without stopping a sibling's shared remote controller.
+
+The baseline probe used an owned HOME and XCTest environment established before
+execution, no foreground windows, and the existing SSH cleanup override. Its
+`autoConnect: false` fixture has no live controller, so live controller identity
+preservation remains source-reviewed only. Source parsing and diff checks pass;
+fixed-code native execution and actual macOS 15 app-host verification remain
+pending. Shard 4 ended with exit 124, leaving full-suite coverage incomplete.
+The canonical `persistent_pty_child_exit_verification` and existing full-suite
+caveats remain open. No deadline, assertion or runner policy changed. The
+localization audit finds no shipped string or catalog changes; this is
+contributor verification prose.

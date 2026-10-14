@@ -159,6 +159,7 @@ Repository: `BrianBusby/bmux`
 | Caveat | Status |
 | --- | --- |
 | `native_app_host_full_suite_failures` | open |
+| `persistent_pty_child_exit_verification` | open |
 | `ssh_cleanup_error_idempotency_verification` | open |
 | `claude_notification_target_fixture_verification` | open |
 | `codex_rejected_ambient_identity_verification` | open |
