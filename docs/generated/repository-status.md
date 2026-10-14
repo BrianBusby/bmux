@@ -193,3 +193,4 @@ Repository: `BrianBusby/bmux`
 | `file_preview_save_shortcut_fixture_verification` | open |
 | `panel_appearance_compositing_fixture_verification` | open |
 | `browser_download_quarantine_boundary_verification` | open |
+| `titlebar_product_contract_fixture_verification` | open |

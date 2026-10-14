@@ -708,3 +708,34 @@ Global Search, reconnect and remote-working-directory owner checks.
 These focused native results do not replace macOS 15 app-host execution or the
 full dependency-complete CI gates, which remain open. No active user app was
 rebuilt, launched, quit or replaced.
+
+## Titlebar product contract fixture verification
+
+The remaining titlebar failures assume a default sidebar width equal to its
+minimum and a control list without voice input. Commit `2c783a9ee` intentionally
+increased the workspace-card default to 340pt while retaining the 240pt resize
+minimum, and `d5c2a521f` added the voice-input control and its shortcut hint.
+The shared padding owner follows the visible sidebar width and uses the minimum
+when hidden; the control and minimal-mode routing both include voice input.
+The old fixtures conflict with these maintained product changes.
+
+`TitlebarProductContractTests` replaces only those two expectations. It checks
+the existing width policy and the helper’s exact 352pt/252pt output for an
+explicit 240pt absolute-minimum input, and
+retains the full ordered hint-action assertion with voice input between
+notifications and new workspace. Existing minimum-width no-shift, wider-sidebar,
+fullscreen and other hint-policy tests remain unchanged. These controlled
+helper inputs do not claim the live configured-minimum default, whose separate
+policy caveat remains recorded. The new suite is wired
+into the native test target and focused browser/settings gate. No production
+layout, navigation, shortcuts, settings or strings change.
+
+Both old expectations fail against the unchanged build 784 app module with
+exactly two issues. The corrected two functions pass in Swift 6 without warnings
+against that same module. This local macOS 26 evidence does not establish the
+macOS 15 full app-host result; the canonical/local caveat stays open pending CI.
+Governing sources are root/personal AGENTS, continuous-code-quality, bmux-testing
+migration/behavior/local-CI/wiring rules, architecture ownership, and maintained
+ContentView padding and UpdateTitlebarAccessory control/hint consumers. The
+localization audit finds no changed shipped text or catalogs; this section is
+contributor verification prose. This correction belongs to PR 170, not a new PR.
