@@ -6110,67 +6110,6 @@ final class WorkspacePanelGitBranchTests: XCTestCase {
         XCTAssertEqual(workspace.activeRemoteTerminalSessionCount, initialRemoteSessionCount)
     }
 
-    func testForkAgentWorkspaceLaunchInRemoteWorkspacePreservesRemoteContext() throws {
-        let workspace = Workspace()
-        let agentSocketPath = "/tmp/bmux-fork-agent.sock"
-        workspace.configureRemoteConnection(
-            WorkspaceRemoteConfiguration(
-                destination: "bmux-macmini",
-                port: 2222,
-                identityFile: "/Users/example/.ssh/bmux",
-                sshOptions: ["ServerAliveInterval=30", "ForwardAgent=yes"],
-                localProxyPort: nil,
-                relayPort: 64000,
-                relayID: "relay-fork",
-                relayToken: String(repeating: "a", count: 64),
-                localSocketPath: "/tmp/bmux-fork-remote.sock",
-                terminalStartupCommand: "ssh -p 2222 -i /Users/example/.ssh/bmux -o ServerAliveInterval=30 -o ForwardAgent=yes -tt bmux-macmini",
-                agentSocketPath: agentSocketPath
-            ),
-            autoConnect: false
-        )
-        let sourcePanelId = try XCTUnwrap(workspace.focusedPanelId)
-        let snapshot = SessionRestorableAgentSnapshot(
-            kind: .codex,
-            sessionId: "019dad34-d218-7943-b81a-eddac5c87951",
-            workingDirectory: "/Users/bmux/project",
-            launchCommand: AgentLaunchCommandSnapshot(
-                launcher: "codex",
-                executablePath: "/Users/example/.bun/bin/codex",
-                arguments: ["/Users/example/.bun/bin/codex"],
-                workingDirectory: "/Users/bmux/project",
-                environment: nil,
-                capturedAt: 123,
-                source: "process"
-            )
-        )
-
-        let launch = try XCTUnwrap(
-            workspace.forkAgentWorkspaceLaunch(
-                fromPanelId: sourcePanelId,
-                snapshot: snapshot
-            )
-        )
-
-        XCTAssertEqual(launch.workingDirectory, "/Users/bmux/project")
-        XCTAssertNil(launch.terminalWorkingDirectory)
-        XCTAssertEqual(
-            launch.initialTerminalCommand,
-            "ssh -p 2222 -i /Users/example/.ssh/bmux -o ServerAliveInterval=30 -o ForwardAgent=yes -tt bmux-macmini"
-        )
-        XCTAssertEqual(launch.initialTerminalInput, snapshot.forkCommand.map { $0 + "\n" })
-        XCTAssertEqual(launch.initialTerminalEnvironment["SSH_AUTH_SOCK"], agentSocketPath)
-        XCTAssertTrue(launch.autoConnectRemoteConfiguration)
-        XCTAssertEqual(launch.remoteConfiguration?.destination, "bmux-macmini")
-        XCTAssertEqual(launch.remoteConfiguration?.port, 2222)
-        XCTAssertEqual(launch.remoteConfiguration?.identityFile, "/Users/example/.ssh/bmux")
-        XCTAssertEqual(launch.remoteConfiguration?.sshOptions, ["ServerAliveInterval=30", "ForwardAgent=yes"])
-        XCTAssertEqual(launch.remoteConfiguration?.agentSocketPath, agentSocketPath)
-        XCTAssertEqual(launch.remoteConfiguration?.sshTerminalStartupEnvironment?["SSH_AUTH_SOCK"], agentSocketPath)
-        XCTAssertEqual(launch.remoteConfiguration?.sshProcessEnvironment?["SSH_AUTH_SOCK"], agentSocketPath)
-        XCTAssertNil(launch.remoteConfiguration?.relayPort)
-        XCTAssertNil(launch.remoteConfiguration?.localSocketPath)
-    }
 
     func testForkAgentWorkspaceLaunchFromPersistentSSHPTYDoesNotReuseParentRelayOrDaemonSlot() throws {
         let workspace = Workspace()

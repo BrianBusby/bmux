@@ -337,3 +337,6 @@ local_caveats:
 
   - id: browser_portal_presentation_fixture_verification
     status: open
+
+  - id: remote_agent_fork_fixture_verification
+    status: open

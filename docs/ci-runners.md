@@ -2666,3 +2666,11 @@ macOS 15 result. Integrated fixed-head CI, full-suite execution, and visual
 WebKit rendering remain open under
 `browser_portal_presentation_fixture_verification`. Contributor verification
 notes and test diagnostics add no product UI or localization keys.
+
+### Remote agent fork fixture path ownership
+
+`WorkspacePanelGitBranchTests.testForkAgentWorkspaceLaunchInRemoteWorkspacePreservesRemoteContext` supplied an agent socket path that did not exist. The maintained `WorkspaceRemoteConfiguration.resolvedAgentSocketPath` deliberately accepts only existing paths and falls back to the caller's agent environment. Native artifact 786 reproduced all four agent-environment mismatches with an absent owned path; creating that path made all original checks pass.
+
+The case now lives in `WorkspaceRemoteForkLaunchTests` using Swift Testing. It owns a unique temporary directory and an existence-only placeholder, matching the resolution boundary already used by `SSHAgentEnvironmentTests`. No SSH connection or agent traffic is started. All 15 original behavior assertions remain, including remote options, launch command/input, four agent path projections and discarded relay/socket ownership. Workspace panels and temporary files are released on every exit. Untouched legacy test methods are byte-identical.
+
+The migrated case passes against native artifact 786 in Swift 5 and Swift 6 without compiler warnings; removing only placeholder creation fails the same four assertions. This is focused native-module evidence, not a full app-host pass. Integrated CI remains pending. No product behavior, workflow selectors, deadlines or user-facing strings changed; localization catalogs need no updates.
