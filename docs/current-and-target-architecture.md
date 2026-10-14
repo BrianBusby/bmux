@@ -456,4 +456,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Sidebar pointer fixture exercises the actual four-point content overlap; full app-host verification remains pending (`sidebar_terminal_hit_boundary_verification`) - owner: Bmux; status: open
 - Browser portal resize, reveal, and transient rebind contracts pass native 786; integrated app-host verification remains pending (`browser_portal_presentation_fixture_verification`) - owner: Bmux; status: open
 - Native project parsing rejected three unquoted extension filenames; quoted paths and macOS parser guard await corrected CI (`native_xcode_project_parse_verification`) - owner: Bmux; status: open
+- Default cloud proxy retry must retain connected state while removing old proxy-only artifacts; fixed-artifact and integrated verification remain pending (`default_cloud_proxy_retry_state_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

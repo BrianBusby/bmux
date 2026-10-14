@@ -158,6 +158,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `default_cloud_proxy_retry_state_verification` | open |
 | `native_app_host_full_suite_failures` | open |
 | `workspace_close_ownership_verification` | open |
 | `antigravity_hook_lifecycle_fixture_verification` | open |

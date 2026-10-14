@@ -6149,3 +6149,8 @@ caveats:
     title: Native project parsing rejected three unquoted extension filenames; quoted paths and macOS parser guard await corrected CI
     status: open
     owner: bmux
+
+  - id: default_cloud_proxy_retry_state_verification
+    title: Default cloud proxy retry must retain connected state while removing old proxy-only artifacts; fixed-artifact and integrated verification remain pending
+    status: open
+    owner: bmux

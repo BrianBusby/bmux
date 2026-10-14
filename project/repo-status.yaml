@@ -142,6 +142,8 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: default_cloud_proxy_retry_state_verification
+    status: open
   - id: native_app_host_full_suite_failures
     status: open
   - id: workspace_close_ownership_verification
