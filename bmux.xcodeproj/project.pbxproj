@@ -886,6 +886,8 @@
 		C54860070000000000000001 /* GhosttyNSViewSurfaceLinkCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54860070000000000000002 /* GhosttyNSViewSurfaceLinkCopy.swift */; };
 		BDFCA25C0CE77A299C915E26 /* GhosttyOptionAsAltModsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F34462AE2F2EECEF5298031 /* GhosttyOptionAsAltModsTests.swift */; };
 		3069F1D10000000000000003 /* GhosttyPasteboardFidelityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3069F1D10000000000000004 /* GhosttyPasteboardFidelityTests.swift */; };
+		B3AC017D658C4DD299300002 /* GhosttyPasteShortcutBindingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3AC017D658C4DD299300001 /* GhosttyPasteShortcutBindingTests.swift */; };
+		B3AC017D658C4DD299300012 /* GhosttyPasteShortcutFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3AC017D658C4DD299300011 /* GhosttyPasteShortcutFixture.swift */; };
 		5C0011AA0000000000000001 /* GhosttyScrollPreciseBoostTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C0011AA0000000000000002 /* GhosttyScrollPreciseBoostTests.swift */; };
 		B84BD7AD94EE485B8DDAB6FF /* GhosttySurfaceConfigurationRefresh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DAB808A8EC74C40B95F7672 /* GhosttySurfaceConfigurationRefresh.swift */; };
 		A5F100000000000000000009 /* GhosttySurfaceScrollView+NotificationScroll.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F10000000000000000000A /* GhosttySurfaceScrollView+NotificationScroll.swift */; };
@@ -2917,6 +2919,8 @@
 		C54860070000000000000002 /* GhosttyNSViewSurfaceLinkCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhosttyNSViewSurfaceLinkCopy.swift; sourceTree = "<group>"; };
 		4F34462AE2F2EECEF5298031 /* GhosttyOptionAsAltModsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhosttyOptionAsAltModsTests.swift; sourceTree = "<group>"; };
 		3069F1D10000000000000004 /* GhosttyPasteboardFidelityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhosttyPasteboardFidelityTests.swift; sourceTree = "<group>"; };
+		B3AC017D658C4DD299300001 /* GhosttyPasteShortcutBindingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GhosttyPasteShortcutBindingTests.swift"; sourceTree = "<group>"; };
+		B3AC017D658C4DD299300011 /* GhosttyPasteShortcutFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GhosttyPasteShortcutFixture.swift"; sourceTree = "<group>"; };
 		5C0011AA0000000000000002 /* GhosttyScrollPreciseBoostTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhosttyScrollPreciseBoostTests.swift; sourceTree = "<group>"; };
 		9DAB808A8EC74C40B95F7672 /* GhosttySurfaceConfigurationRefresh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/GhosttySurfaceConfigurationRefresh.swift; sourceTree = "<group>"; };
 		A5F10000000000000000000A /* GhosttySurfaceScrollView+NotificationScroll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GhosttySurfaceScrollView+NotificationScroll.swift"; sourceTree = "<group>"; };
@@ -5617,6 +5621,8 @@
 				AA5269A0C0DE0019FACE0019 /* WorkspacePopoverFocusRoutingTests.swift */,
 				AA5269A0C0DE0023FACE0023 /* TerminalSurfaceRecoveryTests.swift */,
 				AC0A317D658C4DD299300001 /* TerminalRuntimeReadinessFixture.swift */,
+				B3AC017D658C4DD299300011 /* GhosttyPasteShortcutFixture.swift */,
+				B3AC017D658C4DD299300001 /* GhosttyPasteShortcutBindingTests.swift */,
 				B19D367408964643981975A4 /* NotificationKeyDownTests.swift */,
 				C34B27E387CA4E0F84337144 /* NotificationKeyDownFixture.swift */,
 				A58CAA855EB145DFB40B37EA /* TerminalKeyRepeatDeliveryTests.swift */,
@@ -8203,6 +8209,8 @@
 				A11EAF000000000000000000 /* GhosttyNotificationDispatcherTests.swift in Sources */,
 				BDFCA25C0CE77A299C915E26 /* GhosttyOptionAsAltModsTests.swift in Sources */,
 				3069F1D10000000000000003 /* GhosttyPasteboardFidelityTests.swift in Sources */,
+				B3AC017D658C4DD299300002 /* GhosttyPasteShortcutBindingTests.swift in Sources */,
+				B3AC017D658C4DD299300012 /* GhosttyPasteShortcutFixture.swift in Sources */,
 				5C0011AA0000000000000001 /* GhosttyScrollPreciseBoostTests.swift in Sources */,
 				C13519000000000000000003 /* GhosttyTerminalStartupEnvironmentTests.swift in Sources */,
 				D7AB34400000000000000003 /* GhosttyTerminalViewVisibilityPolicyTests.swift in Sources */,
