@@ -279,3 +279,4 @@ Repository: `BrianBusby/bmux`
 | `terminal_file_launch_directory_contract_verification` | open |
 | `closed_main_window_routing_verification` | open |
 | `sidebar_git_publication_fixture_verification` | open |
+| `notification_focus_completion_fixture_verification` | open |

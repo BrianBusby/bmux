@@ -3783,3 +3783,31 @@ presentation. Strict determinism, existing file budgets, wiring, and Project
 Truth validation/generation/freshness pass. Full integrated target compilation
 and exact-head app-host execution remain pending. No product strings changed;
 this section records contributor verification only.
+
+### Notification focus completion boundary
+
+H shard 3 failed only the notification-focus test's artificial 100 ms delayed
+expectation; its subsequent focus, unread-indicator and dismissal-flash assertions
+passed. The existing `FocusSurfaceBroadcaster.flush()` is the causal delivery
+boundary already used by `NotificationFocusEventTests`. The timer does not prove
+that delivery occurred and can fail independently of the intended behavior.
+
+The legacy case now shares that existing Swift Testing fixture as a second
+parameter: direct panel focus and notification-triggered manager focus. Both
+check unread state before the action, the actual selected panel afterward,
+unread/indicator removal, and exactly one dismissal flash with the expected panel
+and reason. Notification state is seeded through the existing scoped restoration
+method, which preserves the supplied record without adding a restored-state flag.
+This avoids external delivery and global delivery-hook replacement. The fixture
+flushes prior work before installing its synchronous composition, restores
+preferences and shared references, and tears down only its owned workspaces.
+
+Both native cases pass against unchanged build 789. Omitting the notification
+focus action in a temporary negative control produces six expected failures.
+Swift 5 compilation is warning-free. Strict Swift 6 rejects both the original
+fixture and this revision at the same three accesses to the existing nonisolated
+`AppFocusState.overrideIsFocused` test override; no new access or suppression is
+introduced. The synchronous MainActor scope is retained. Full target compilation
+in the repository's configured language mode and exact-head app-host execution
+remain required. The unlaunched harness reports disabled-Sentry breadcrumb
+messages; it does not start telemetry or display windows. No product text changes.

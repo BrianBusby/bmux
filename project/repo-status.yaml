@@ -405,3 +405,6 @@ local_caveats:
 
   - id: sidebar_git_publication_fixture_verification
     status: open
+
+  - id: notification_focus_completion_fixture_verification
+    status: open
