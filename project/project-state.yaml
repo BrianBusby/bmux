@@ -6272,3 +6272,8 @@ caveats:
     title: Closed retained windows are excluded from presentation while manager recovery is preserved; fixed-runtime and app-host verification remain pending
     status: open
     owner: bmux
+
+  - id: sidebar_git_publication_fixture_verification
+    title: Focused Git metadata fixture verifies sidebar publication and duplicate suppression without workspace publication; native control passes and app-host verification remains pending
+    status: open
+    owner: bmux
