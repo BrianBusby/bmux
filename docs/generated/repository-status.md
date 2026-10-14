@@ -292,3 +292,4 @@ Repository: `BrianBusby/bmux`
 | `korean_marked_text_runtime_readiness_verification` | open |
 | `cli_closed_stderr_contract_verification` | open |
 | `ssh_creation_joined_producer_verification` | open |
+| `markdown_mermaid_double_zoom_verification` | open |

@@ -4312,3 +4312,34 @@ is gone after the joined return. The cancellation probe joins its native
 readiness source through the existing fixture primitive. These local controls
 do not replace the integrated test-target and macOS app-host gates. No app,
 network telemetry, user settings or clipboard was accessed.
+
+## Integrated repair batch L verification
+
+The complete `bmux-unit` target builds at `ebe8398460c527dafbc0cf334fa7034c82fb54ff`,
+including 585 wired test files and 14 shared sources. Normalized warning categories
+are 249 versus 250 in the prior complete K compilation, with no new categories;
+existing warnings remain visible. Build 791 separately verifies the compiled
+Git-root alias correction, with seven functions/eight parameter cases passing.
+Authenticated Project Truth, wiring, project normalization, strict determinism,
+actual-main Swift budgets, package grouping and lockfile policy pass. All 21
+preserved source heads remain ancestors. These results do not establish a
+full-suite pass: exact published-head macOS app-host gates remain required.
+
+K shard two exposes additional failures. The old 11pt font oracle and a restore
+fixture that never creates its requested directory conflict with accepted 13pt
+and existing-directory policies. Other native/CLI timeouts still need evidence;
+concurrent suites and large failure payloads are observed, but no universal
+scheduler cause has been established. No deadlines or gates are waived.
+
+A separate unchanged Markdown case reproduces its exact CI ratio failure in an
+owned native probe against compiled build 791 on macOS 26.3. Baseline SVG/prose
+DOM dimensions are 240/22; at native page zoom 2 they are 480/22.5. Native WebKit
+snapshots show diagram labels at roughly four times their initial visible size
+while prose doubles. The shell multiplies SVG dimensions in addition to native
+page zoom; CSS DOM rectangles alone do not measure visible zoom. The original
+wide-diagram assertion also fails in this probe. No production correction is
+included yet. Fit behavior, physical-unit test assertions, and fixed-head macOS
+execution remain open under `markdown_mermaid_double_zoom_verification`.
+The probe retains an owned, never-presented window and uses bundled inline
+assets; it does not launch or replace a preview or claim WindowServer focus
+coverage. Test diagnostics and contributor notes introduce no shipped strings.

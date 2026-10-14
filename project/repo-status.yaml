@@ -441,3 +441,6 @@ local_caveats:
 
   - id: ssh_creation_joined_producer_verification
     status: open
+
+  - id: markdown_mermaid_double_zoom_verification
+    status: open
