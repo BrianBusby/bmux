@@ -162,3 +162,183 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+## CLI baseline failure classification (2026-10-12)
+
+Read-only audit of 38 `CLINotifyProcessIntegrationRegressionTests` methods failed
+on feature base `ce17e9888a6dce4d2e5755795946b68cf52f0329`. Evidence is retained in
+`/tmp/matte-baseline-failure-index.json` and `/tmp/matte-base-apphost{1,2,3,4}.log`.
+These are historical failures, not a claim that current maintenance branches pass.
+The audit inspected complete process/socket helpers and the relevant production
+routing, cleanup, resize, auto-naming and SSH agent-resolution paths. No test or
+app execution was performed for this classification.
+
+Categories: 14 concrete fixture/expectation mismatches, 13 lifecycle/process
+candidates, 5 production candidates (only sanitizer confirmed), and 6 unresolved
+timing/environment cases. A candidate is not a proven cause and does not authorize
+relaxing assertions or excluding a test.
+
+### Concrete fixture/expectation mismatches (14)
+
+- Seven startup-signal cases call `SSHStartupSignalLifecycleTests.generatedVMSSHInitialStartupCommand`
+  (737–810), whose mock accepts `vm.attach_info`; the real CLI requests `vm.ssh_info`.
+  Logs fail at helper809 with `Unexpected method vm.ssh_info` before shell behavior.
+- The stale-control-socket startup fixture omits initial surface identity and
+  `surface.list`; its primary error is inability to resolve the initial terminal
+  surface, followed by an unsupported rollback `workspace.close` request.
+- Respawn expects `surface.send_text`, while the maintained command uses
+  `surface.respawn` (`CLI/bmux.swift:24036`). Preserve window/command payload checks.
+- Both Claude notification routing cases target the correct workspace/surface;
+  their generic heartbeat produces `Idle`, while assertions demand `Needs input`.
+  The production generic-idle classifier is at `CLI/bmux.swift:24672`.
+- Codex hook install counts inline `hooks codex prompt-submit` in wrapper paths;
+  the same test already has `commandBodies` to inspect the installed wrappers.
+- Auto-naming prompt cache injects a logger with `BMUX_BUNDLED_CLI_PATH`, but the
+  maintained launcher prefers absolute executable argv[0] over that fallback
+  (`CLI/BMUXCLI+AutoNamingHooks.swift:168`). This does not establish failed caching.
+- Tmux compat builds a 108-byte socket path against 104-byte `sun_path` and gets
+  bind/listen result -1. The legacy helper asserts length then continues copying; fix
+  fixture path ownership and fail invalid prerequisites before memory writes.
+
+### Lifecycle/process candidates (13)
+
+Nine generic-hook cases time out (Antigravity, six Grok, Hermes finalize, Kiro),
+and four wait for mock completion (three Claude lifecycle cases, Hermes extra
+payload). Shared `CLIMockSocketServerSupport` queues 80/128 blocking accept/read
+blocks on global user-initiated workers without joined listener cancellation.
+`CLINotifyProcessTestSupport.runProcess` queues process waiting on the same QoS,
+output drains on utility workers, then blocks on a semaphore. Some tests read
+`state.commands` outside its lock instead of `snapshot()`.
+
+Antigravity's baseline has repeated timedOut=true with empty stdout and status 0
+(no status assertion failure), suggesting waiter/drain scheduling rather than
+proving a child hang. This requires a controlled reproduction/stack capture;
+do not increase deadlines. `startMockServer` fulfills on the first disconnect,
+not after all four accepted connections.
+
+A separate newer async Codex fixture measured cooperative-executor pipe starvation
+in `CommandRunner` (two detached blocking reads), recorded by its owner in
+`/tmp/codex-stop-pipe-stacks.txt` and `/tmp/codex-stop-fixtures-handoff.md`.
+That is **not** proof of the legacy GCD helper hypothesis above.
+
+### Production candidates (5)
+
+- **Confirmed sanitizer defect:** cleanup locally creates `persistent SSH PTY
+  session is no longer running` at `CLI/bmux.swift:12101`, then sanitizes it again
+  at 12208. Both CLI and app sanitizers only match `not running`, which does not
+  match `no longer running`; the CLI reports generic failure. Baseline apphost1
+  at 2026-10-10T18:05:24.777 fails line 5291, while exit 1, no close and session-ID
+  assertions pass. Other canonical diagnostics also need round-trip coverage.
+- Cloud retry mock returns typed `vm_cloud_service_unavailable`, but classifier
+  at 10925 recognizes other text/codes; one RPC instead of two is observed. Inspect
+  the documented typed retry contract before changing any retry policy.
+- Invalid/foreign Codex surface cases actually set running/resume metadata on
+  focused/mapped surfaces. `resolveAgentHookTarget` at 30666 falls through preferred,
+  mapped and default surface; stale-ambient recovery documentation at 30460 says
+  TTY/PID ground truth. Preserve wrong-target assertions and empirically inspect
+  identity provenance before correcting the shared resolver.
+- Stale Claude SessionEnd clears the consumed stale workspace. The fixture seeds
+  an active workspace/session map and sends SessionEnd with missing ID; actual
+  clear_agent_pid/clear_notifications target the stale workspace. Store-schema
+  compatibility and intended consumed-workspace ownership remain unverified.
+
+### Timing/environment unresolved (6)
+
+- Four attach tests miss only `workspace.remote.pty_resize`; the mock closes the
+  bridge immediately after ready. `SSHPTYResizeMonitor` schedules initial resize
+  asynchronously and cancellation on EOF can precede the drain. Determine the
+  initial-size handshake contract, preserve resize assertions, use causal signals.
+- Two agent-socket tests override HOME but inherit CFFIXED_USER_HOME/SSH_AUTH_SOCK;
+  Foundation tilde expansion and caller socket fallback may escape fixture home.
+  The second also observes nonnil ssh_options. Exact option/config provenance
+  and controlled-home proof are pending; neither is called a production defect.
+
+### Exact case index
+
+All rows belong to `CLINotifyProcessIntegrationRegressionTests`; log names resolve
+under `/tmp` in the retained audit environment.
+
+| Case | Classification | Baseline log |
+| --- | --- | --- |
+| `testAntigravityStopAndNotificationsUseGenericNotificationPath` | lifecycle / process candidate | `matte-base-apphost3.log` |
+| `testClaudeNotificationFallsBackToLiveWorkspaceInsteadOfFocusedTab` | fixture / expectation | `matte-base-apphost2.log` |
+| `testClaudeNotificationHonorsExplicitWorkspaceHandleRef` | fixture / expectation | `matte-base-apphost3.log` |
+| `testClaudePromptSubmitFromNewSessionCanReplaceStoppedSession` | lifecycle / process candidate | `matte-base-apphost3.log` |
+| `testClaudeSessionEndChecksConsumedWorkspaceBeforeClearingVisibleState` | production candidate | `matte-base-apphost1.log` |
+| `testClaudeSessionStartRecordIsNotRestorableUntilPrompt` | lifecycle / process candidate | `matte-base-apphost1.log` |
+| `testClaudeStopFromPreviousSessionDoesNotClobberClearRunningStatus` | lifecycle / process candidate | `matte-base-apphost3.log` |
+| `testCodexHookInstallPrefersLaunchingAppBundledCLI` | fixture / expectation | `matte-base-apphost1.log` |
+| `testCodexPromptSubmitCachesPromptForAutoNaming` | fixture / expectation | `matte-base-apphost2.log` |
+| `testCodexPromptSubmitWithForeignBmuxEnvIgnoresStaleMappedSession` | production candidate | `matte-base-apphost1.log` |
+| `testCodexPromptSubmitWithInvalidSurfaceDoesNotFallbackToFocusedSurface` | production candidate | `matte-base-apphost2.log` |
+| `testDefaultFreestyleSSHAttachHonorsGenericCloudRetryEnvironment` | production candidate | `matte-base-apphost3.log` |
+| `testGrokCompletionDoesNotResetStatusWhileSiblingSessionRuns` | lifecycle / process candidate | `matte-base-apphost1.log` |
+| `testGrokNotificationHookUsesPayloadMessageAndStopDoesNotSendGenericNotification` | lifecycle / process candidate | `matte-base-apphost1.log` |
+| `testGrokNotificationStillFiresOnRepeatedPromptWhenFeedTelemetryDoesNotReply` | lifecycle / process candidate | `matte-base-apphost4.log` |
+| `testGrokSessionEndDoesNotDropRoutingForLaterChatMessages` | lifecycle / process candidate | `matte-base-apphost4.log` |
+| `testGrokStopFallbackCompletionsFireForTwoConcurrentThreads` | lifecycle / process candidate | `matte-base-apphost1.log` |
+| `testGrokStopNotificationFallsBackWhenTranscriptCwdIsUnavailable` | lifecycle / process candidate | `matte-base-apphost3.log` |
+| `testHermesAgentNotificationsUseShellHookExtraPayload` | lifecycle / process candidate | `matte-base-apphost4.log` |
+| `testHermesAgentSessionEndIsTurnBoundaryButFinalizeTearsDown` | lifecycle / process candidate | `matte-base-apphost1.log` |
+| `testKiroFeedDenyUsesPreToolUseExitCodeTwo` | lifecycle / process candidate | `matte-base-apphost2.log` |
+| `testRespawnPaneWindowFlagDoesNotBecomePositionalCommandText` | fixture / expectation | `matte-base-apphost2.log` |
+| `testSSHForwardAgentTildeSocketPathExpandsSocketPath` | unresolved timing / environment | `matte-base-apphost1.log` |
+| `testSSHPTYAttachBridgeEOFWhenSessionGoneClearsLocalState` | unresolved timing / environment | `matte-base-apphost3.log` |
+| `testSSHPTYAttachBridgeEOFWhileSessionRunsExitsWithoutSSHRetryStatus` | unresolved timing / environment | `matte-base-apphost3.log` |
+| `testSSHPTYAttachBridgeResetWhenSessionGoneClearsLocalState` | unresolved timing / environment | `matte-base-apphost4.log` |
+| `testSSHPTYAttachWithoutSurfaceDoesNotSendLocalAttachEnd` | unresolved timing / environment | `matte-base-apphost3.log` |
+| `testSSHPaneCloseSignalDoesNotReportSessionEndToSharedTransport` | fixture / expectation | `matte-base-apphost3.log` |
+| `testSSHPaneCloseSignalDoesNotTerminateWrappedSSHChild` | fixture / expectation | `matte-base-apphost3.log` |
+| `testSSHPreservesCallerAgentSocketForOpenSSHConfigResolution` | unresolved timing / environment | `matte-base-apphost1.log` |
+| `testSSHSessionCleanupAllWorkspacesSessionIDReportsNotFound` | production candidate | `matte-base-apphost1.log` |
+| `testSSHSignalDerivedChildExitReportsSessionEnd` | fixture / expectation | `matte-base-apphost1.log` |
+| `testSSHSignalDuringReconnectDelayDoesNotStartAnotherSSH` | fixture / expectation | `matte-base-apphost2.log` |
+| `testSSHStartupDoesNotRetryNonTransientSSHExit` | fixture / expectation | `matte-base-apphost2.log` |
+| `testSSHStartupPrintsFinalErrorBannerWhenStderrIsCaptured` | fixture / expectation | `matte-base-apphost1.log` |
+| `testSSHStartupRemovesStaleBmuxControlSocketBeforeLaunchingPaneSSH` | fixture / expectation | `matte-base-apphost3.log` |
+| `testSSHStartupStopsAtConfiguredReconnectLimit` | fixture / expectation | `matte-base-apphost4.log` |
+| `testTmuxCompatEnvStampsLaunchSurfaceNotFocusedPane` | fixture / expectation | `matte-base-apphost3.log` |
+
+### Authorized next bounded slice
+
+The parent separately owns the eight startup protocol fixture repairs.
+Only the cleanup error idempotency repair is selected for this branch; other
+categories remain diagnosis and separately owned maintenance work. Proposed owner:
+pure Sendable remote-error value in `BmuxCore/Remote`, with existing app/CLI adapters
+and unchanged stable protocol diagnostics. Preserve CLI-only capability aliases
+and allocation-detail disclosure policy. No retry or routing change in this slice.
+Parent confirmed this plan. The new executable Swift Testing regression runs
+against unchanged build 773 CLI and records seven expected diagnostic failures
+across fourteen parameter cases; native compile is warning-free. The shared
+`CLISocketFixture` follows the reviewed PR 146 readiness/cancel-join design, with
+checked socket flags, unique readiness tokens, partial writes, owned file output,
+and joined cleanup. Test-only commit `606e4e8b0` is pushed in PR 148. The local shared Core classifier
+and adapters have independent review with no blockers; all 44 BmuxCore test
+functions in nine suites pass, including 29 new parameter cases. Exact canonical
+messages also survive the existing `remote_pty_error:` envelope. CLI-only aliases
+and allocation-detail passthrough remain outside Core; the app retains its
+stricter disclosure policy. The app's existing string adapter is internal solely
+for direct native policy verification. Source budget, strict test determinism,
+pbx wiring and Project Truth checks pass. The parent-built isolated tag `ssh-cleanup-idempotency`, build 776, succeeds
+without launch. All 27 native parameter cases (five functions, two suites) pass
+against that artifact's real bundled CLI and app dylib; fixture compilation is
+warning-free. Evidence: `/tmp/ssh-cleanup-native-green.log` and
+`/tmp/ssh-cleanup-native-fixed-compile.log`. Actual test-only CI job 114953934391 on commit 606e4e8b0 completed the
+SSHCleanupErrorTests suite with the seven expected diagnostic issues before its
+legacy wrapper truncated later output. The job badge incorrectly reports success
+because of that separately repaired PR 142 reporting defect; the completed suite
+log is the red evidence, not the badge. The production fix can now be pushed;
+fixed app-host CI and the full-suite gate remain pending.
+Localization/disclosure audit confirms all nine protocol diagnostics are
+byte-identical to the pre-existing CLI strings. No new UI wording or catalog keys
+are introduced; existing protocol text and CLI presentation remain English.
+Project Truth caveat `ssh_cleanup_error_idempotency_verification` stays open.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux-shared-behavior,
+bmux-architecture (package DAG, file/API discipline, concurrency), bmux-testing,
+bmux-socket-policy, bmux-dev-workflow and bmux-localization. Existing remote core
+value `RemoteDropUploadError` separates protocol values from app-localized display;
+actual ownership/localization decisions must remain explicit during implementation.
+No active user build may be rebuilt or replaced; parent owns a new isolated tag
+before a production push. PR 144 packaging artifact verification is separate and
+still awaits real dynamic Debug plus unsigned Release CI proof.
