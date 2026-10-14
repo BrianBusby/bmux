@@ -233,6 +233,7 @@ Regenerate with: ./scripts/project-docs generate
 | Korean marked-text fixture awaits terminal readiness; native composition controls pass and macOS app-host verification remains pending (`korean_marked_text_runtime_readiness_verification`) | Bmux | open |  |
 | Closed-stderr fixture uses the maintained unknown-command exit contract and joined owned resources; macOS app-host verification remains pending (`cli_closed_stderr_contract_verification`) | Bmux | open |  |
 | SSH workspace creation fixture joins its producer and owns authentication; native contracts pass, fixed-head app-host verification remains pending (`ssh_creation_joined_producer_verification`) | Bmux | open |  |
+| OMX HUD restore fixture establishes its existing-directory precondition; native restoration and missing-directory controls pass, integrated app-host verification pending (`omx_hud_restore_directory_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

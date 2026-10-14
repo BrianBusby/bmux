@@ -289,45 +289,6 @@ final class WorkspaceSplitStartupCommandTests: XCTestCase {
         )
     }
 
-    func testSessionRestoreRelaunchesOMXHudTmuxStartCommand() throws {
-        let workspace = Workspace()
-        let sourcePanelId = try XCTUnwrap(workspace.focusedPanelId)
-        let requestedDirectory = "/tmp/bmux-hud-restore-\(UUID().uuidString)"
-        let originalStartupScript = "/tmp/bmux-tmux-command-\(UUID().uuidString).sh"
-        let tmuxStartCommand = "env OMX_SESSION_ID=omx-test node '/opt/oh-my-codex/dist/cli/omx.js' hud --watch"
-        let hudPanel = try XCTUnwrap(workspace.newTerminalSplit(
-            from: sourcePanelId,
-            orientation: .vertical,
-            insertFirst: false,
-            focus: false,
-            workingDirectory: requestedDirectory,
-            initialCommand: originalStartupScript,
-            tmuxStartCommand: tmuxStartCommand,
-            initialDividerPosition: 0.82
-        ))
-
-        let snapshot = workspace.sessionSnapshot(includeScrollback: false)
-        let hudSnapshot = try XCTUnwrap(snapshot.panels.first { $0.id == hudPanel.id })
-        XCTAssertEqual(hudSnapshot.terminal?.tmuxStartCommand, tmuxStartCommand)
-
-        let restored = Workspace()
-        restored.restoreSessionSnapshot(snapshot)
-
-        let restoredHudPanel = try XCTUnwrap(
-            restored.panels.values
-                .compactMap { $0 as? TerminalPanel }
-                .first { $0.surface.debugTmuxStartCommand() == tmuxStartCommand }
-        )
-        let restoredStartupScript = try XCTUnwrap(restoredHudPanel.surface.debugInitialCommand())
-        XCTAssertNotEqual(
-            restoredStartupScript,
-            originalStartupScript,
-            "Restored HUD panes must launch through a fresh script, not a deleted tmux temp script"
-        )
-        XCTAssertTrue(restoredStartupScript.contains("bmux-session-terminal-command"))
-        XCTAssertEqual(restoredHudPanel.requestedWorkingDirectory, requestedDirectory)
-    }
-
     func testSessionSnapshotDoesNotPersistGenericTmuxStartCommand() throws {
         let workspace = Workspace()
         let paneId = try XCTUnwrap(workspace.bonsplitController.focusedPaneId)

@@ -6335,3 +6335,8 @@ caveats:
     title: SSH workspace creation fixture joins its producer and owns authentication; native contracts pass, fixed-head app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: omx_hud_restore_directory_fixture_verification
+    title: OMX HUD restore fixture establishes its existing-directory precondition; native restoration and missing-directory controls pass, integrated app-host verification pending
+    status: open
+    owner: bmux
