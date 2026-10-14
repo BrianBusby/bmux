@@ -5887,3 +5887,12 @@ caveats:
     issue:
       repository: BrianBusby/bmux
       number: 8
+  - id: project_truth_http_retry_verification
+    title: Bounded GitHub evidence HTTP recovery awaits fixed-head CI verification
+    status: open
+    owner: bmux
+
+  - id: project_truth_full_suite_verification
+    title: Project Truth full unit-test gate awaits fixed-head CI verification
+    status: open
+    owner: bmux
