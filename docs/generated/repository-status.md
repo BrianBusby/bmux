@@ -179,3 +179,4 @@ Repository: `BrianBusby/bmux`
 | `hybrid_focus_render_capture` | open |
 | `ssh_manual_reconnect_handoff_regression` | open |
 | `ssh_manual_reconnect_nonzero_regression` | resolved |
+| `remote_restore_working_directory_regression` | open |

@@ -190,3 +190,5 @@ local_caveats:
     status: open
   - id: ssh_manual_reconnect_nonzero_regression
     status: resolved
+  - id: remote_restore_working_directory_regression
+    status: open

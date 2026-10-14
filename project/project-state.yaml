@@ -5892,3 +5892,8 @@ caveats:
     title: SSH manual reconnect has actual CI red and native 779 green; fixed-head app-host and runtime acceptance remain pending
     status: open
     owner: bmux
+
+  - id: remote_restore_working_directory_regression
+    title: Remote agent restore must not pass a remote working directory to the local SSH process; fixed-build validation pending
+    status: open
+    owner: bmux
