@@ -224,3 +224,4 @@ Repository: `BrianBusby/bmux`
 | `browser_inspector_window_ownership_verification` | open |
 | `remote_restore_working_directory_regression` | open |
 | `global_search_shortcut_conflict_verification` | open |
+| `focused_app_host_process_diagnostics_verification` | open |
