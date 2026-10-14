@@ -3522,3 +3522,30 @@ material, not localized product content.
 The new internal method requires a fresh native module. Root-owned isolated build,
 exact-source native execution and integrated app-host verification remain pending;
 prior build-788 controls do not prove the corrected suite passes.
+
+### Legacy CLI socket setup failure boundary
+
+G shard 2 reported a 108-byte Unix endpoint against the 104-byte `sun_path`
+capacity. The legacy notification support helper used nonfatal XCTest checks,
+then continued into the unchecked copy or returned a failed listener. The
+current tmux fixture migration removes that observed long-path caller, but
+remaining legacy callers still share this setup owner.
+
+`bindUnixSocket` now rejects oversized UTF-8 paths before unlinking or creating
+a descriptor. Socket creation, bind and listen failures throw a captured POSIX
+error; failures after creation close only the owned descriptor. A listen failure
+also unlinks the endpoint this helper successfully bound before caller ownership
+was transferred. Bind failure does not unlink a possibly unrelated path. Successful
+address encoding, backlog and caller-owned close/unlink semantics are unchanged.
+The shared legacy process runner and other server helpers are outside this
+bounded correction; their existing blocking/task cleanup risks remain open.
+
+A temporary native harness compiled the complete actual support file in Swift 5
+mode without warnings. Five controls passed: 108-byte rejection preserved an
+existing sentinel and descriptor count, missing-parent and directory bind errors
+preserved errno without leaking descriptors, and normal plus maximum 103-byte
+paths connected/accepted and transferred an exact byte. A safe original-helper missing-parent control failed because it returned a
+listener instead of throwing; its returned descriptor was closed by the harness.
+No unsafe original buffer copy was executed. The harness's minimal XCTest host is temporary, not a shipped
+Swift Testing adapter or new fixture API. Full integrated test-target and macOS 15
+app-host execution remain pending.

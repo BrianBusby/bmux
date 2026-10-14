@@ -6245,3 +6245,7 @@ caveats:
     title: Explicit titlebar hit-test event context preserves routing policy; fresh native build and integrated app-host verification remain pending
     status: open
     owner: bmux
+  - id: cli_notify_socket_bind_guard_verification
+    title: Legacy CLI socket setup rejects invalid paths and syscall failures before unsafe use; native controls pass and integrated app-host verification remains pending
+    status: open
+    owner: bmux
