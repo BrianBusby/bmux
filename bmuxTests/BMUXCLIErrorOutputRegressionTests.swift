@@ -1269,7 +1269,7 @@ import Testing
         try BundledCLITestSupport.bundledCLIPath(for: BundledCLILinkageTests.self)
     }
 
-    /// A throwaway home directory for hermetic CLI socket-resolution tests.
+    /// An owned short home that keeps canonical paths within Darwin’s Unix socket limit.
     ///
     /// The CLI resolves its stable socket under `homeDirectoryForCurrentUser`,
     /// which honors `CFFIXED_USER_HOME`. Tests build the socket path from this home
@@ -1277,7 +1277,6 @@ import Testing
     /// spawned CLI via `CFFIXED_USER_HOME`, so they never touch (or bind over) the
     /// developer's real `~/.local/state/bmux` (issue #5146).
     private func makeTemporaryHome() throws -> URL {
-        // The canonical state-directory suffix must fit Darwin's Unix socket path limit.
         let home = URL(fileURLWithPath: "/tmp", isDirectory: true)
             .appendingPathComponent("bmux-cli-home-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
