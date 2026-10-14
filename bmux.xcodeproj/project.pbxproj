@@ -1133,6 +1133,9 @@
 		A9F200000000000000000019 /* OpenCodeProcessOutputDisposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000019 /* OpenCodeProcessOutputDisposition.swift */; };
 		ODBG00010000000000000001 /* OpenDiffViewerAgentBaselineLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = ODBG00010000000000000002 /* OpenDiffViewerAgentBaselineLookup.swift */; };
 		ODBG00020000000000000001 /* OpenDiffViewerAgentContextRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = ODBG00020000000000000002 /* OpenDiffViewerAgentContextRequest.swift */; };
+		59B3790D1C2E470DB0945D83 /* OrphanWorkspaceShortcutFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E199B01F53842F19C9D820F /* OrphanWorkspaceShortcutFixture.swift */; };
+		F044AFECB73A4056949D9064 /* OrphanWorkspaceShortcutSettingsFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD8055070584B2498072294 /* OrphanWorkspaceShortcutSettingsFixture.swift */; };
+		81608081B7B9467BB4E27DE2 /* OrphanWorkspaceShortcutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F888C5A85D54408584752031 /* OrphanWorkspaceShortcutTests.swift */; };
 		E3B7A4000000000000000021 /* PaneChromeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3B7A4000000000000000022 /* PaneChromeSettings.swift */; };
 		D0B752900000000000000002 /* PaneDropRoutingRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B752900000000000000001 /* PaneDropRoutingRegistration.swift */; };
 		D0B752900000000000000004 /* PaneDropRoutingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B752900000000000000003 /* PaneDropRoutingSession.swift */; };
@@ -3172,6 +3175,9 @@
 		A9F100000000000000000019 /* OpenCodeProcessOutputDisposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/OpenCodeProcessOutputDisposition.swift; sourceTree = "<group>"; };
 		ODBG00010000000000000002 /* OpenDiffViewerAgentBaselineLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenDiffViewerAgentBaselineLookup.swift; sourceTree = "<group>"; };
 		ODBG00020000000000000002 /* OpenDiffViewerAgentContextRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenDiffViewerAgentContextRequest.swift; sourceTree = "<group>"; };
+		9E199B01F53842F19C9D820F /* OrphanWorkspaceShortcutFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OrphanWorkspaceShortcutFixture.swift"; sourceTree = "<group>"; };
+		8FD8055070584B2498072294 /* OrphanWorkspaceShortcutSettingsFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OrphanWorkspaceShortcutSettingsFixture.swift"; sourceTree = "<group>"; };
+		F888C5A85D54408584752031 /* OrphanWorkspaceShortcutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OrphanWorkspaceShortcutTests.swift"; sourceTree = "<group>"; };
 		E3B7A4000000000000000022 /* PaneChromeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaneChromeSettings.swift; sourceTree = "<group>"; };
 		D0B752900000000000000001 /* PaneDropRoutingRegistration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaneDropRoutingRegistration.swift; sourceTree = "<group>"; };
 		D0B752900000000000000003 /* PaneDropRoutingSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaneDropRoutingSession.swift; sourceTree = "<group>"; };
@@ -5681,6 +5687,9 @@
 					970226F3C99D0D937CD00539 /* BrowserConfigTests.swift */,
 				9C9DB4F640E04D5A829039A0 /* BrowserFindShortcutSettingsFixture.swift */,
 				00EA14FF8DC74C26BF2318C1 /* BrowserFindShortcutRoutingTests.swift */,
+				F888C5A85D54408584752031 /* OrphanWorkspaceShortcutTests.swift */,
+				8FD8055070584B2498072294 /* OrphanWorkspaceShortcutSettingsFixture.swift */,
+				9E199B01F53842F19C9D820F /* OrphanWorkspaceShortcutFixture.swift */,
 				4FC183E5C43143D1BE4B5EA5 /* BrowserFindShortcutFixture.swift */,
 					ADAB0384A46DA242400CDF3A /* BrowserInspectorProbe.swift */,
 					B3CEFE3B4078E1067B333B54 /* BrowserInspectorWindowOwnershipTests+Transitions.swift */,
@@ -8330,6 +8339,9 @@
 				9637C6D3170F4BE1A7EF6243 /* OmnibarSubmitDecisionTests.swift in Sources */,
 				0A0F00550000000000000001 /* OmpSupportTests.swift in Sources */,
 				A5E01203A1B2C3D4E5F60718 /* OpenCodeHookRegressionTests.swift in Sources */,
+				59B3790D1C2E470DB0945D83 /* OrphanWorkspaceShortcutFixture.swift in Sources */,
+				F044AFECB73A4056949D9064 /* OrphanWorkspaceShortcutSettingsFixture.swift in Sources */,
+				81608081B7B9467BB4E27DE2 /* OrphanWorkspaceShortcutTests.swift in Sources */,
 				46E80EA8FA5E44D7BBF301FD /* PanelAppearanceCompositingTests.swift in Sources */,
 					C44550000000000000000001 /* PanelOwnedNativeViewSessionTests.swift in Sources */,
 					6313FACE0000000000000000 /* PaneMemoryGuardrailTests.swift in Sources */,

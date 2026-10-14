@@ -381,3 +381,5 @@ local_caveats:
 
   - id: browser_find_routing_fixture_verification
     status: open
+  - id: orphan_workspace_shortcut_fixture_verification
+    status: open
