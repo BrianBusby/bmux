@@ -3968,7 +3968,7 @@ exit 2, and empty stdout/stderr. The shared process result now carries the exist
 Foundation termination reason as a Boolean, distinguishing exit 2 from SIGINT 2. The throwing runner rejects a timeout after joining the
 child; socket final drain and visible directory cleanup follow. All remaining
 legacy case bytes and helpers stay unchanged; their lifecycle risks are not
-claimed resolved. No production or selector changes are made; other shared process mechanics are unchanged.
+claimed resolved. No production or selector changes are made; the shared deadline precision correction below retains the same configured durations.
 
 The exact new source passes against frozen build 790 in a standalone Swift 6
 harness (one case, 0.242s; no compiler warnings), with only bundled-CLI lookup
@@ -3981,3 +3981,26 @@ capacity blocking. No app was loaded or launched, no runtime rebuilt, and no
 external telemetry was sent. Actual macOS 15 app-host verification remains open
 as `cli_closed_stderr_contract_verification`. No shipped UI/help/settings strings
 or localization catalogs changed.
+
+
+## Shared shell fixture deadline precision
+
+A final boundary review found that the shared `ShellContractProcess` slept for
+its injected duration only after the timeout child was scheduled. Delayed
+scheduling could therefore extend the intended failure bound. The owner now
+captures a monotonic start immediately after successful `Process.run()` and
+sleeps until that start plus the existing duration. SIGTERM escalation likewise
+captures its start before scheduling the existing grace task. The configured
+defaults remain five seconds and 200 ms, and every caller-specific duration is
+unchanged. Process exit, timeout and cancellation still join the child before
+returning or releasing fixture resources; no new clock, mode or public API is
+introduced. This corrects deadline anchoring, not the historical CI stall cause.
+
+Temporary controls through the actual shared owner pass in Swift 6 with no
+compiler warnings: normal exit 2 versus SIGINT 2, spawn failure preserving the
+original error, deadline escalation of a SIGTERM-ignoring child, and native-ready
+triggered cancellation of that child. Both failure paths verify the owned PID
+is gone after the joined return. The cancellation probe joins its native
+readiness source through the existing fixture primitive. These local controls
+do not replace the integrated test-target and macOS app-host gates. No app,
+network telemetry, user settings or clipboard was accessed.
