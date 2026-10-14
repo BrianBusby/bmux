@@ -467,4 +467,5 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Notification focus fixture awaits the existing event flush and passes native proof; fixed-head app-host remains pending (`notification_focus_event_fixture_verification`) - owner: Bmux; status: open
 - Keydown notification fixture isolates runtime and surface-flash preferences; fixed-head app-host remains pending (`notification_keydown_fixture_verification`) - owner: Bmux; status: open
 - Clipboard timeout fixture awaits causal completion; local event-only proof passes but real pasteboard restoration requires isolated app-host CI (`textbox_clipboard_timeout_fixture_verification`) - owner: Bmux; status: open
+- File preview inset fixture uses the maintained TextKit stack; fixed-head app-host verification remains pending (`file_preview_inset_fixture_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

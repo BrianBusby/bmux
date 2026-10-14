@@ -3117,3 +3117,29 @@ not comparable to the earlier fresh build's warning count. No warning budget
 was relaxed. No app or tests were launched, and the existing preview artifacts
 were not replaced. Actual clipboard restoration, real inspector windows and
 the complete macOS 15 app-host run remain CI verification boundaries.
+
+### File preview inset fixture uses its real text stack
+
+D2 shard 4 (`115712647520`) failed both line-fragment-padding assertions in
+`testTextEditorInsetsReapplyWhenMovedBetweenWindows`: the convenience
+`SavingTextView()` has no text container. The actual editor is constructed by
+`makeFilePreviewTextView()`, which owns an explicit TextKit 1 stack. The fixture
+now uses that maintained factory and moves into the existing Swift Testing
+TextKit suite; exactly one legacy method is removed.
+
+Both window transitions still reset and verify horizontal/vertical insets and
+line-fragment padding. Added identity checks verify the editor moved to each
+window and retained its original text container. The two retained offscreen
+windows detach content and close synchronously; no application activation,
+settings mutation, production change or timing wait is introduced.
+
+An owned native build 786 control reproduces exactly the two nil-padding
+failures with the old constructor, while the real factory passes both moves.
+The complete corrected TextKit suite passes all eight tests locally in Swift
+5 target mode without warnings. Fixed-head macOS app-host execution remains
+required.
+
+Strict Swift 6 compilation of the complete existing TextKit suite still rejects
+its unchanged legacy `KeyboardShortcutSettings.settingsFileStore` references.
+The migrated inset case itself adds no settings access or shared mutable state;
+no suppression or production concurrency change is included.

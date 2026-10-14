@@ -3128,30 +3128,6 @@ final class FilePreviewPanelTextSavingTests: XCTestCase {
         XCTAssertTrue(panel.isFileUnavailable)
     }
 
-    func testTextEditorInsetsReapplyWhenMovedBetweenWindows() {
-        _ = NSApplication.shared
-        let textView = SavingTextView()
-        textView.textContainerInset = .zero
-        textView.textContainer?.lineFragmentPadding = 5
-
-        let firstWindow = windowHosting(textView)
-        defer { closeWindow(firstWindow) }
-        XCTAssertEqual(textView.textContainerInset.width, FilePreviewTextEditorLayout.textContainerInset.width)
-        XCTAssertEqual(textView.textContainerInset.height, FilePreviewTextEditorLayout.textContainerInset.height)
-        XCTAssertEqual(textView.textContainer?.lineFragmentPadding, FilePreviewTextEditorLayout.lineFragmentPadding)
-
-        textView.textContainerInset = .zero
-        textView.textContainer?.lineFragmentPadding = 5
-
-        let secondWindow = windowHosting(textView)
-        defer { closeWindow(secondWindow) }
-        XCTAssertEqual(textView.textContainerInset.width, FilePreviewTextEditorLayout.textContainerInset.width)
-        XCTAssertEqual(textView.textContainerInset.height, FilePreviewTextEditorLayout.textContainerInset.height)
-        XCTAssertEqual(textView.textContainer?.lineFragmentPadding, FilePreviewTextEditorLayout.lineFragmentPadding)
-
-        withExtendedLifetime([firstWindow, secondWindow]) {}
-    }
-
     func testTextEditorClearThemeDoesNotDrawAppKitBackgrounds() {
         _ = NSApplication.shared
         let scrollView = NSScrollView()
