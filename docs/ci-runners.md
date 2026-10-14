@@ -3946,3 +3946,29 @@ run still reports additional agent-session routing and fixture failures; their
 causes are being checked independently. Named Git-alias regression execution,
 all fixed-head macOS shards and the remaining release/validation gates remain
 required before merging.
+
+### Remaining obsolete dead-PID restore oracle
+
+I shard two still executes `RestorableAgentSessionIndexTests`' Gemini case that
+expects a dead saved PID to erase the session snapshot. Accepted commit
+`9374b139e1` deliberately preserves restorable snapshots and clears live-process
+evidence. The earlier maintenance correction removed the corresponding Codex
+oracle in `SessionPersistenceTests`; this separate Gemini oracle remained. Only
+that obsolete method and its contradictory comment are removed here. Production
+restore behavior and every other legacy case remain unchanged.
+
+The maintained `RestorableAgentSessionStalePIDTests` covers snapshot retention,
+empty process IDs, no live-process flag, Codex fork construction, and precedence
+of a scoped live record over a newer stale record. A temporary parameterized
+control also verifies Gemini kind, session identity and working directory on
+unchanged build 790: two functions/three cases pass with warning-free strict
+Swift 6 compilation. It uses an owned HOME and hook directory and never launches
+the app or contacts a service. This is a policy correction, not a new product fix.
+
+The temporary extra parameter is not added to the permanent suite: its existing
+synchronous environment override is serialized only within that suite, so an
+unrelated concurrent loader can still observe it. Expanding that global fixture
+would worsen a retained isolation risk. No new environment swap, production
+injection seam or broad concurrency refactor is introduced. Actual fixed-head
+app-host coverage remains required; the existing suite is not claimed globally
+isolated. No shipped strings or localization catalogs change.
