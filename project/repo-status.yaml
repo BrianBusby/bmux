@@ -146,6 +146,8 @@ local_caveats:
     status: open
   - id: workspace_close_ownership_verification
     status: open
+  - id: grok_hook_connection_fixture_verification
+    status: open
   - id: persistent_pty_child_exit_verification
     status: open
   - id: claude_resume_and_no_git_watch_fixture_verification

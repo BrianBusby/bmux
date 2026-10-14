@@ -4,6 +4,14 @@ import Foundation
 /// Joins the owned shell process before its contract fixture releases files or sockets.
 struct ShellContractProcess {
     let root: URL
+    let deadline: Duration
+    let terminationGrace: Duration
+
+    init(root: URL, deadline: Duration = .seconds(5), terminationGrace: Duration = .milliseconds(200)) {
+        self.root = root
+        self.deadline = deadline
+        self.terminationGrace = terminationGrace
+    }
 
     struct Result: Sendable {
         let status: Int32
@@ -49,7 +57,7 @@ struct ShellContractProcess {
             group.addTask { await exit.value }
             group.addTask {
                 // Original interactive-shell failure deadline, never a settling delay.
-                try await ContinuousClock().sleep(for: .seconds(5))
+                try await ContinuousClock().sleep(for: deadline)
                 throw Failure.timedOut
             }
             do {
@@ -60,7 +68,7 @@ struct ShellContractProcess {
                 if process.isRunning { process.terminate() }
                 let grace = Task {
                     // Match CommandRunner's genuine owned-process SIGTERM grace period.
-                    do { try await ContinuousClock().sleep(for: .milliseconds(200)) }
+                    do { try await ContinuousClock().sleep(for: terminationGrace) }
                     catch { return }
                     if process.isRunning { kill(process.processIdentifier, SIGKILL) }
                 }
