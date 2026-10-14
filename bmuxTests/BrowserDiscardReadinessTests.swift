@@ -89,9 +89,25 @@ struct BrowserDiscardReadinessTests {
     }
 
     private func waitForNavigation(_ panel: BrowserPanel, timeout: Duration) async throws {
+        let diagnostics = BrowserNavigationReadinessDiagnostics(panel: panel)
+        defer { diagnostics.stop() }
+        do {
+            try await waitForNavigation(panel, timeout: timeout, diagnostics: diagnostics)
+        } catch let error as NSError where error.domain == "BrowserNavigationReadiness" && error.code == 1 {
+            throw diagnostics.describeFailure(error)
+        }
+    }
+
+    private func waitForNavigation(
+        _ panel: BrowserPanel,
+        timeout: Duration,
+        diagnostics: BrowserNavigationReadinessDiagnostics
+    ) async throws {
+        let startedAt = diagnostics.startedAt
         try await withThrowingTaskGroup(of: Void.self) { group in
             group.addTask { @MainActor in
                 for await loading in panel.$isLoading.values {
+                    diagnostics.record("model_consumed", loading: loading)
                     if !loading,
                        !panel.webView.isLoading,
                        panel.webView.estimatedProgress == 1,
@@ -102,7 +118,11 @@ struct BrowserDiscardReadinessTests {
             group.addTask {
                 // Deadline bounds failure; navigation events determine readiness.
                 try await Task.sleep(for: timeout)
-                throw NSError(domain: "BrowserNavigationReadiness", code: 1)
+                throw NSError(
+                    domain: "BrowserNavigationReadiness",
+                    code: 1,
+                    userInfo: ["deadline_elapsed": String(describing: startedAt.duration(to: .now))]
+                )
             }
             defer { group.cancelAll() }
             try await group.next()

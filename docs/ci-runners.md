@@ -816,6 +816,33 @@ new-tab assertions remain. The focused browser CI invocation includes the new
 wired suite. No shipped text changed; English test diagnostics and contributor
 verification notes are the only new prose. App-host CI remains required.
 
+### Browser initial-navigation timeout diagnostics (2026-10-14)
+
+Run `38509817630`, focused shard 1 job `115676261510`, failed both
+`BrowserDiscardReadinessTests` cases in their initial `about:blank` readiness
+wait on macOS 15.7.9. Neither reached discard or restored-history assertions.
+The same cases pass against existing build 784 on macOS 26.3; a native KVO trace
+showed WebKit progress/loading settling before the model completion event.
+That local ordering does not explain or disprove the CI timeouts.
+
+The fixture now attaches a bounded diagnostic recorder while retaining the
+original one-second deadline, readiness predicate and assertions. It records up
+to 64 model consumptions and WebKit loading/progress/URL-class changes,
+plus an omitted-event count and an untruncated failure snapshot. URL values are
+classified only as absent, `about:blank`, or other; arbitrary URLs and page
+content are never reported. The original deadline task records its elapsed time
+before throwing; the later MainActor failure snapshot has its own elapsed time.
+This distinguishes deadline firing from delayed actor resumption. Diagnostic
+observations do not wake or complete the readiness consumer and are removed
+before panel teardown. No production navigation or discard owner changes.
+Model values come from the existing readiness consumer; the recorder does not
+add a model subscription or compare emitted versus consumed model values.
+
+These diagnostics require macOS 15 app-host evidence before any missing-signal
+or resource-timing cause can be assigned. Local green is not a CI repair claim.
+No shipped wording or localization catalogs change; added strings are test
+failure diagnostics and contributor verification notes.
+
 ## Codex rejected ambient identity regression
 
 The focused `CodexRejectedAmbientTests` and `CLISocketFixtureCompletionTests` gate runs before the broad app-host suite

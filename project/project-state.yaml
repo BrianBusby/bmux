@@ -5959,7 +5959,7 @@ caveats:
     owner: bmux
 
   - id: browser_discard_restore_focused_gate_verification
-    title: Focused browser app-host gate includes discard and history restore readiness tests; local native cases pass and pushed-head CI remains pending
+    title: Browser discard initial-navigation readiness timed out on macOS 15 CI; bounded fixture diagnostics await app-host evidence
     status: open
     owner: bmux
 
