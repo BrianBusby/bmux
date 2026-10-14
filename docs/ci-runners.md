@@ -3919,8 +3919,8 @@ not evidence that the newly added alias case ran or failed.
 Selecting the complete wired Swift Testing suite exercises both physical-root
 and symbolic-link parameter cases without depending on later broad execution.
 The broad shard selector, all existing focused selectors, job count, wrapper,
-deadlines, and assertions remain unchanged. No Git status production correction
-is included; named actual regression failure is still required before that fix.
+deadlines, and assertions remain unchanged. At this selector-only checkpoint no Git status production correction
+was included; named actual regression failure was required before that fix.
 The workflow change follows the maintained conservative all-area CI routing rule.
 
 ### Combined window-routing and fixture checkpoint
@@ -3943,7 +3943,7 @@ Swift file budgets, package grouping and lockfile policy pass.
 
 This is compilation evidence, not an app-host suite pass. The older diagnostic
 run still reports additional agent-session routing and fixture failures; their
-causes are being checked independently. Named Git-alias regression execution,
+causes are being checked independently. At that checkpoint named Git-alias regression execution,
 all fixed-head macOS shards and the remaining release/validation gates remain
 required before merging.
 
@@ -4130,3 +4130,27 @@ app-host verification remains pending. Swift 5 compilation is warning-free. Stri
 Swift 6 still diagnoses the existing mutable nonisolated
 `KeyboardLayout.debugInputSourceIdOverride`; no suppression or production change
 is introduced. No shipped UI strings or localization catalogs change.
+
+## Local Git root alias correction
+
+K (`b34092aa9`) focused shard one, job `116035338905` in run
+`38616518883`, executes the test-only alias regression: the physical-root
+control passes and the symbolic-link case fails its two modified-status checks
+and exact key-set check. The two older quoted-name/sibling-prefix cases also
+fail. This is actual macOS CI red before the production correction.
+
+`GitStatusProvider.fetchStatus` now resolves both existing local roots with the
+same Foundation operation before containment and parent propagation, then maps
+returned keys into the caller's requested root. Individual status entries stay
+lexical so deleted paths, renamed paths and symlink files keep their identities.
+The SSH path is unchanged because its roots belong to the remote filesystem.
+FileExplorerStore continues to own refresh/publication and receives keys matching
+its existing row paths; no UI layout, terminal, model or navigation owner changes.
+
+The candidate owner compiled with strict Swift 6 and no warnings against frozen
+build 790 dependencies. All seven existing functions (eight parameter cases)
+pass, including index non-mutation, quoting, sibling exclusion and SSH controls.
+Three temporary entry-mapping cases also pass: deleted/renamed/symlink entries,
+a requested trailing slash, and an alias to filesystem root plus direct root.
+These are source-candidate controls; the new tagged binary and fixed-head macOS
+gate remain required. No user-facing strings or localization catalogs change.
