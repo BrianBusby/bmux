@@ -1,4 +1,3 @@
-import BmuxFoundation
 import Foundation
 import Testing
 
@@ -13,13 +12,15 @@ final class AgentLaunchEnvironmentFixture {
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     }
 
-    deinit { try? FileManager.default.removeItem(at: root) }
+    deinit {
+        do { try FileManager.default.removeItem(at: root) }
+        catch { Issue.record(error, "Could not remove owned agent launch fixture directory") }
+    }
 
     func run(cli: String, codexHome: String) async throws -> [String: Any] {
         let socket = root.appendingPathComponent("socket").path
-        let stdout = root.appendingPathComponent("stdout"), stderr = root.appendingPathComponent("stderr")
         let argv = ["/usr/local/bin/codex", "--model", "gpt-5.4", "old prompt"]
-        let runner = CommandRunner(environment: [
+        let environment = [
             "HOME": root.path, "CFFIXED_USER_HOME": root.path,
             "PATH": "/tmp/custom-bin:/usr/bin", "SHELL": "/bin/zsh",
             "BMUX_SOCKET_PATH": socket, "BMUX_WORKSPACE_ID": workspaceID,
@@ -29,19 +30,27 @@ final class AgentLaunchEnvironmentFixture {
             "BMUX_AGENT_LAUNCH_ARGV_B64": Data((argv.joined(separator: "\0") + "\0").utf8).base64EncodedString(),
             "BMUX_AGENT_LAUNCH_CWD": "/tmp/repo", "CODEX_HOME": codexHome,
             "BMUX_CLI_SENTRY_DISABLED": "1",
-        ])
+        ]
+        let runner = ShellContractProcess(root: root, deadline: .seconds(5), terminationGrace: .milliseconds(200))
         let server = CLISocketFixture(path: socket, response: responder())
-        let (result, commands) = try await server.capture {
-            await runner.run(directory: root.path, executable: "/bin/sh", arguments: [
-                "-c", "exec \"$1\" hooks codex session-start </dev/null >\"$2\" 2>\"$3\"",
-                "launch-env", cli, stdout.path, stderr.path,
-            ], timeout: 5)
+        let (outcome, commands) = try await server.capture {
+            // Even failures complete the owned producer before the socket's final drain.
+            do {
+                return Result<ShellContractProcess.Result, any Error>.success(try await runner.run(
+                    executable: cli, arguments: ["hooks", "codex", "session-start"], environment: environment
+                ))
+            } catch { return .failure(error) }
         }
-        try #require(!result.timedOut, "Session-start timed out after requests: \(commands)")
-        try #require(result.executionError == nil)
-        let errors = try String(contentsOf: stderr, encoding: .utf8)
-        #expect(result.exitStatus == 0, "\(errors)")
-        #expect(try String(contentsOf: stdout, encoding: .utf8) == "{}\n")
+        let result: ShellContractProcess.Result
+        do { result = try outcome.get() }
+        catch {
+            let output = Result { try String(contentsOf: root.appendingPathComponent("stdout"), encoding: .utf8) }
+            let errors = Result { try String(contentsOf: root.appendingPathComponent("stderr"), encoding: .utf8) }
+            Issue.record(error, "Session-start failed after requests: \(commands); stdout: \(output); stderr: \(errors)")
+            throw error
+        }
+        #expect(result.status == 0, "\(result.stderr)")
+        #expect(result.stdout == "{}\n")
         let state = try #require(JSONSerialization.jsonObject(with:
             Data(contentsOf: root.appendingPathComponent("codex-hook-sessions.json"))) as? [String: Any])
         let sessions = try #require(state["sessions"] as? [String: [String: Any]])

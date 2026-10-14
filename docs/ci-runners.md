@@ -3273,3 +3273,47 @@ at 16:25 UTC on October 14. All three expected TAGGED/Unicode/final-line cases
 failed with receive-timeout EINVAL; PONG and both EOF error controls passed.
 The preceding native CLI linkage test succeeded. This supplies the required
 test-only CI red; it does not yet verify a production receive correction.
+
+### Agent launch producer cleanup ordering
+
+G's broad shard 2 (run `38593929044`, job `115958161026`) recorded both
+agent-launch fixture cases timing out. Its main-thread hang, crashes, and final
+900-second watchdog failure remain unresolved; the roughly 61-second suite
+completion does not establish when each five-second CLI timer fired.
+
+A separate controlled native probe of unchanged build 788 established a cleanup
+contract mismatch: `CommandRunner` returned a timeout while its owned child was
+still alive, and socket unlink plus fixture-directory removal preceded child
+exit. This occurred both when the child honored SIGTERM and when it ignored it;
+the latter exit observation followed about 208 ms later, consistent with the
+existing 200 ms escalation grace. Both owned children were subsequently observed
+exited and absent. This proves cleanup ordering, not the cause of G's longer stall.
+
+Only `AgentLaunchEnvironmentFixture` now uses the maintained
+`ShellContractProcess`, with the same five-second deadline and 200 ms termination
+grace. It invokes the actual bundled CLI directly with the same arguments and
+environment; the process owner supplies null stdin and solely owns stdout/stderr
+files. A captured result carries success or the original failure through the
+socket's final drain, after producer exit. Failure context includes only owned
+requests and output, then the original error propagates. Owned directory removal failures also record
+a test issue instead of disappearing in teardown. Environment allowlist,
+executable, arguments, working directory, source and persisted identity assertions
+are unchanged. No production process owner, socket policy or test deadline changes.
+
+Against unchanged build 788, both existing parameterized cases pass in 0.205 s
+with warning-free Swift 6 compilation. An injected directory-removal failure
+records the expected issue; this final three-case run completes in 0.206 s. Temporary exact-fixture controls exercise
+TERM-ignoring timeout and cancellation: the child is absent before producer return
+and before socket cleanup, original errors and request context remain visible,
+and owned exit observation plus directory cleanup complete. Both controls pass
+in 5.503 s with exactly the two deliberately expected failure issues. The
+controls use only owned children and add observational timestamps to a temporary
+socket-helper copy; no diagnostic hook or extra test is committed.
+
+Guidance and complete owners reassessed: root AGENTS, continuous-code-quality,
+bmux-testing, architecture/concurrency, debugging, shared behavior, observability,
+`CommandRunner`, `ShellContractProcess`, shared socket lifecycle, launch target
+validation and the existing assertions. Canonical and local caveat
+`agent_launch_joined_producer_verification` retains actual app-host verification
+as pending. No UI or shipped text changes; localization scope is contributor
+verification notes only.

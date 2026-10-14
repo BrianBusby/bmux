@@ -224,6 +224,7 @@ Repository: `BrianBusby/bmux`
 | `sidebar_width_persistence_focused_gate_verification` | open |
 | `claude_session_end_scope_focused_gate_verification` | open |
 | `maintenance_combined_validation_pending` | open |
+| `agent_launch_joined_producer_verification` | open |
 | `agent_launch_environment_fixture_focused_gate_verification` | open |
 | `ssh_workspace_creation_fixture_focused_gate_verification` | open |
 | `ssh_agent_environment_fixture_focused_gate_verification` | open |
