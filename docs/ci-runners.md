@@ -2754,3 +2754,26 @@ The test-only source ran all14 cases in D2 CI run38521190849, shard3 job11571264
 The verifier now enumerates each closure Mach-O's actual architectures and deduplicates signature checks by existing bundle-or-file target plus architecture. Display and strict verification use the same explicit architecture. Unsigned slices retain the existing pre-sign allowance; signed slices, including extra framework architectures absent from a thin CLI, must verify. Staging, archive creation, executable bytes, framework symlinks, and relocated execution are unchanged. No shipped artifact is signed or modified.
 
 All14 real-artifact tests pass locally on macOS26 in8.122s after the fix, including both mixed targets' relocated execution and exact archived bytes/symlinks and both corrupt-nonhost rejection controls. This is local artifact evidence, not final CI green. The open `bundled_cli_mixed_signature_regression_verification` caveat now records captured CI red and local fixed coverage; full Release/fresh-runner and app-host verification, including the prior exit124 incomplete native suite, remain required. Diagnostic signature counts now describe architecture slices. No product-facing copy or localization keys changed.
+
+### Resume cwd and captured fork command contracts
+
+Final C's shard 3 job 115676261545 failed the old SessionEntry Claude cwd string
+assertion, and shard 2 job 115676261618 failed the captured Codex re-fork prompt
+omission assertion. The shared cwd guard was adopted by `f2123dc2c` (#6580), then
+made fish-safe by `5265559d5` (#6328). Codex captured-fork tag replay was deliberate
+in `9374b139e` (#6803); resume still strips those tags, as maintained package
+coverage requires.
+
+The two legacy methods migrate to Swift Testing. Claude now executes the actual
+command using the existing owned `ShellContractProcess` and verifies cwd plus
+exact session argv. `AgentForkCommandContractTests` retains all eleven original
+fork command/context checks, correcting only deliberate captured-tag retention.
+Its executed direct/Teams fork-versus-resume controls verify the exact target,
+argument ordering, tag boundary, cwd and `CODEX_HOME`. No production parser,
+command policy or workflow selector changes.
+
+The affected suites and shared process helper compile warning-free under Swift 6
+against unchanged native build 786. Five functions (nine expanded cases) pass.
+Owned native generation followed by shell execution also passes fourteen sh/zsh
+scenarios, including the existing missing-cwd policy. These probes do not launch
+real agents or activate the app. Fixed-head app-host verification remains pending.
