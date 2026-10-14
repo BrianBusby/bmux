@@ -139,111 +139,6 @@ final class SessionProvenanceTests: XCTestCase {
         XCTAssertEqual(lastErrorDescription, "database unavailable")
     }
 
-    func testHookPromptSubmitRecordsFactualSessionAndWorkspaceDisplayLink() async throws {
-        let client = CapturingProvenanceEngineClient()
-        let recorder = WorkProvenanceCodingAgentEvidenceRecorder(
-            client: client,
-            gitInspector: FakeGitInspector(snapshotsByDirectory: [
-                "/repo": WorkProvenanceGitSnapshot(
-                    repositoryRoot: "/repo",
-                    commonDirectory: "/repo/.git",
-                    remoteSlug: "manaflow-ai/bmux",
-                    branch: "fix-session-view-terminal-overlay",
-                    headCommit: "abc123",
-                    isDirty: false
-                )
-            ])
-        )
-        let stableWorkspaceID = UUID()
-        let timestamp = Date(timeIntervalSince1970: 1_725_000_123)
-        let record = AgentChatSessionRecord(
-            sessionID: "raw-codex-session",
-            agentKind: .codex,
-            workspaceID: "runtime-workspace",
-            surfaceID: "surface-1",
-            workingDirectory: "/repo",
-            transcriptPath: nil,
-            state: .working(since: timestamp),
-            lastActivityAt: timestamp,
-            title: nil,
-            pid: 123
-        )
-        let event = WorkstreamEvent(
-            sessionId: "codex-raw-codex-session",
-            hookEventName: .userPromptSubmit,
-            source: "codex",
-            workspaceId: "runtime-workspace",
-            surfaceId: "surface-1",
-            cwd: "/repo",
-            context: WorkstreamContext(lastUserMessage: "Fix the PE session tab"),
-            requestId: "hook-request-1",
-            ppid: 123,
-            receivedAt: timestamp
-        )
-
-        try await recorder.recordHookUserPromptSubmit(
-            record: record,
-            event: event,
-            stableWorkspaceID: stableWorkspaceID
-        )
-
-        let requests = await client.appendedEventRequests
-        let request = try XCTUnwrap(requests.first)
-        XCTAssertEqual(requests.count, 1)
-        XCTAssertEqual(request.event.eventType, .codingAgentPromptSubmitted)
-        XCTAssertEqual(request.event.sessionID, "raw-codex-session")
-        XCTAssertEqual(request.event.evidenceOrigin, .codexSession)
-        XCTAssertEqual(request.event.confidence, .medium)
-
-        let session = try XCTUnwrap(request.event.payload.session)
-        XCTAssertEqual(session.id, "raw-codex-session")
-        XCTAssertEqual(session.agentKind, "codex")
-        XCTAssertEqual(session.workspaceID, "runtime-workspace")
-        XCTAssertEqual(session.surfaceID, "surface-1")
-        XCTAssertEqual(session.cwd, "/repo")
-        XCTAssertEqual(session.status, "active")
-
-        let turn = try XCTUnwrap(request.event.payload.codingAgentTurn)
-        let prompt = try XCTUnwrap(request.event.payload.codingAgentPrompt)
-        XCTAssertEqual(turn.sessionID, "raw-codex-session")
-        XCTAssertEqual(turn.provider, "codex")
-        XCTAssertEqual(turn.status, "started")
-        XCTAssertEqual(turn.confidence, .medium)
-        let legacyHookTurnSeed = "raw-codex-session\nhook-request-1\ncodex-raw-codex-session\n\(timestamp.timeIntervalSince1970)\nFix the PE session tab"
-        let stableIDFactory = WorkProvenanceStableIDFactory()
-        let expectedSyntheticProviderTurnID = stableIDFactory.id(prefix: "hook-codex-turn", value: legacyHookTurnSeed)
-        XCTAssertEqual(turn.providerTurnID, expectedSyntheticProviderTurnID)
-        XCTAssertEqual(prompt.sessionID, "raw-codex-session")
-        XCTAssertEqual(prompt.turnID, turn.id)
-        XCTAssertEqual(prompt.id, stableIDFactory.id(prefix: "coding-agent-prompt", value: "hook\nraw-codex-session\n\(expectedSyntheticProviderTurnID)\nFix the PE session tab"))
-        XCTAssertEqual(prompt.text, "Fix the PE session tab")
-        XCTAssertEqual(prompt.confidence, .medium)
-        XCTAssertEqual(request.event.id, "event-\(stableIDFactory.id(prefix: "hook-codex-prompt", value: legacyHookTurnSeed))")
-
-        let display = try XCTUnwrap(request.event.payload.workspaceDisplay)
-        XCTAssertEqual(display.workspaceID, stableWorkspaceID.uuidString)
-        XCTAssertEqual(display.currentDirectory, "/repo")
-        XCTAssertEqual(display.lastSubmittedPrompt, "Fix the PE session tab")
-        XCTAssertEqual(display.lastSubmittedPromptSessionID, "raw-codex-session")
-        XCTAssertEqual(display.worktreeID, WorkProvenanceStableIDFactory().worktreeID(repositoryRoot: "/repo"))
-
-        try await recorder.recordTranscriptUserPrompts(
-            record: record,
-            messages: [
-                ChatMessage(id: "line-12", seq: 12, role: .user, timestamp: timestamp.addingTimeInterval(10), kind: .prose(ChatProse(text: "Backfilled transcript prompt"))),
-                ChatMessage(id: "line-13", seq: 13, role: .agent, timestamp: timestamp.addingTimeInterval(11), kind: .prose(ChatProse(text: "Agent response"))),
-            ],
-            stableWorkspaceID: stableWorkspaceID
-        )
-        let backfillRequests = await client.appendedEventRequests
-        let backfillRequest = try XCTUnwrap(backfillRequests.last)
-        XCTAssertEqual(backfillRequests.count, 2)
-        XCTAssertNil(backfillRequest.event.payload.codingAgentTurn)
-        XCTAssertEqual(backfillRequest.event.payload.codingAgentPrompt?.text, "Backfilled transcript prompt")
-        XCTAssertNil(backfillRequest.event.payload.codingAgentPrompt?.turnID)
-        XCTAssertEqual(backfillRequest.event.payload.workspaceDisplay?.lastSubmittedPromptSessionID, "raw-codex-session")
-    }
-
     @MainActor
     func testExecutionTelemetryProjectionReportsUnavailableSidecar() async throws {
         let agentChatURL = URL(string: "http://127.0.0.1:7739")!
@@ -436,7 +331,7 @@ private struct FixtureAgentChatHTTPLoader: AgentChatHTTPLoading {
     }
 }
 
-private actor CapturingProvenanceEngineClient: ProvenanceEngineContracts.ProvenanceEngineClient {
+actor CapturingProvenanceEngineClient: ProvenanceEngineContracts.ProvenanceEngineClient {
     private(set) var recordedLifecycleRequests: [ProvenanceEngineContracts.ProvenanceSessionLifecycleRequest] = []
     private(set) var appendedEventRequests: [ProvenanceEngineContracts.ProvenanceAppendEventRequest] = []
     private let lifecycleResponse: ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse

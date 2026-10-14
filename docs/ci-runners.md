@@ -3687,3 +3687,27 @@ activate a window, execute the fixture script, or change user settings. Complete
 integrated target compilation and fixed-head app-host execution remain pending.
 No product strings or localization catalogs changed; added prose is contributor
 verification material.
+
+### Hook prompt stable workspace identity
+
+H shard 3 reports one outdated workspace identity assertion in the hook prompt
+session test. The accepted `ecf7190a7` implementation records the persistent
+workspace ID for both hook and transcript evidence; the runtime resolves a live
+workspace before passing `workspace.stableId`. This matches the merged workspace
+association capability and its production lifecycle coverage. The old assertion
+still expected the transient `runtime-workspace` fixture value.
+
+Only that existing hook/backfill case migrates to Swift Testing. Its session
+workspace assertion now expects the supplied stable ID; every other prompt,
+turn, display, backfill and synthetic-identity assertion is preserved. The
+existing capturing client is shared within the test target; production identity
+policy and other legacy cases are unchanged. The new test file is wired into
+Xcode without changing CI selection.
+
+An isolated native test process linked to unchanged build 789 reproduces the
+original single mismatch and passes the corrected complete case. Swift 5 and
+strict Swift 6 compilation are warning-free. Native project parsing, 575-file
+wiring, strict determinism, the existing file-length budget and Project Truth
+validate/generate/check pass. Integrated test-target compilation and exact-head
+macOS app-host execution remain pending. No application window, external service,
+user settings or product strings are changed; the prose is contributor evidence.
