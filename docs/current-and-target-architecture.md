@@ -430,4 +430,6 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Opt-in focused app-host process diagnostics await actual runner evidence (`focused_app_host_process_diagnostics_verification`) - owner: Bmux; status: open
 - Remote tmux CRLF record correction awaits combined artifact and full CI verification (`remote_tmux_crlf_record_parsing_verification`) - owner: Bmux; status: open
 - Quarantine outbound metadata and native readback contract pass local checks; app-host verification remains pending (`browser_download_quarantine_boundary_verification`) - owner: Bmux; status: open
+- Configured and chorded file preview save fixtures await fixed-head app-host verification (`file_preview_save_shortcut_fixture_verification`) - owner: Bmux; status: open
+- Panel clear-content and opaque chrome compositing suite awaits fixed-head app-host verification (`panel_appearance_compositing_fixture_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->

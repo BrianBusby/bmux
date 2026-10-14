@@ -595,6 +595,7 @@ jobs:
             -only-testing:bmuxTests/BrowserHiddenWebViewDiscardPolicyTests \
             -only-testing:bmuxTests/BrowserThemeSettingsTests \
             -only-testing:bmuxTests/GhosttyBackgroundThemeTests \
+            -only-testing:bmuxTests/PanelAppearanceCompositingTests \
             -only-testing:bmuxTests/BrowserUnderPageBackgroundTests \
             -only-testing:bmuxTests/BrowserInitialLifecycleTests \
             -only-testing:bmuxTests/BrowserDiscardReadinessTests \
@@ -613,6 +614,7 @@ jobs:
             -only-testing:bmuxTests/WorkspaceFallbackContractTests \
             -only-testing:bmuxTests/GlobalSearchShortcutConflictTests \
             -only-testing:bmuxTests/BrowserDownloadQuarantineTests \
+            -only-testing:bmuxTests/FilePreviewSaveShortcutTests \
             -only-testing:bmuxTests/BrowserInspectorWindowOwnershipTests \
             test
 

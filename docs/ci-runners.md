@@ -1841,3 +1841,60 @@ Xcode wiring rules, and the SDK quarantine contract. Complete shared writer and
 both caller flows received independent review. No user-facing strings, settings,
 menus or help text change; localization catalogs are untouched. This correction
 is integrated into PR 170, with no new PR.
+
+## File preview save-shortcut fixture verification
+
+Actual app-host jobs `115439961432` and `115439961123` accept the configured and
+chorded save events, but the two legacy tests write empty files. Both construct
+`SavingTextView()` with a nil text container. Native build 773 reproduces the
+failure before key dispatch: this view has no text storage or container and its
+string stays empty after assignment. Production uses `makeFilePreviewTextView`,
+the explicit TextKit 1 factory introduced by `a86c58363`; the factory preserves
+text and both real shortcut/save paths write the expected content.
+
+Only those two methods migrate to `FilePreviewSaveShortcutTests`. Storage and
+content preconditions guard the native fixture. Original key handling, chord
+prefix no-save and final file assertions remain, with an additional remapped
+old-default negative control. The existing editing protocol's test adapter
+captures the actual panel save Task so the test can await completion without the
+legacy yield loop. No save, routing or timeout policy changes. Managed shortcut
+setup/restoration is synchronous and finishes before any await; owned files and
+panels are released afterward. Other legacy test bodies remain unchanged.
+
+An owned native four-case control compares both constructors through the actual
+panel save owner; requiring intended content fails exactly the two bare-editor
+cases and passes both factory cases. The corrected two-case suite compiles
+without warnings in target Swift 5 mode and passes against unchanged build 773.
+The focused browser/settings gate includes it, and the canonical/local caveat
+stays open pending fixed-head app-host CI. These local results do not claim
+full-suite success or execution on CI's macOS 15 runner.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing migration,
+behavior and local/CI references, architecture/concurrency and shared-behavior
+rules, and debugging runtime pitfalls. Production code and shipped strings are
+unchanged; no localization catalog edits are required.
+
+
+## Panel appearance compositing verification
+
+App-host job `115439961299` fails the legacy transparent-opacity case because it
+expects background alpha 0.42 while the shared chrome background is opaque.
+Commit `379033c4b` intentionally changed `GhosttyBackgroundTheme.color` to
+`WindowAppearanceSnapshot.compositedTerminalColor`; `WindowChromeColorResolver`
+blends the terminal RGB over the resolved window background and returns alpha 1.
+`PanelAppearance` independently preserves clear content for transparent terminals.
+
+Only that method migrates to `PanelAppearanceCompositingTests`. Aqua and Dark Aqua
+cases retain clear-content, disabled-fill and zero-content-alpha assertions with
+the original tolerance. Expected RGB is calculated independently from the terminal
+color, 0.42 opacity and the appearance-resolved window background. Scoped native
+drawing appearance restores the previous appearance without changing application
+or user settings. All other legacy methods remain unchanged.
+
+The focused browser/settings gate includes the new suite. Unchanged build 773
+native proof passes both appearances; restoring the original 0.42-alpha assertion
+fails exactly both cases. The matching canonical/local caveat stays open until
+fixed-head app-host CI verifies the migrated suite. No production policy, rendering
+or shipped copy changes. Governing guidance is root/personal AGENTS,
+continuous-code-quality, bmux-testing migration/behavior/local-CI, architecture,
+shared behavior and OS-sensitive debugging; localization catalogs are untouched.

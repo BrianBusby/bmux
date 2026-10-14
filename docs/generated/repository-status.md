@@ -227,3 +227,5 @@ Repository: `BrianBusby/bmux`
 | `focused_app_host_process_diagnostics_verification` | open |
 | `remote_tmux_crlf_record_parsing_verification` | open |
 | `browser_download_quarantine_boundary_verification` | open |
+| `file_preview_save_shortcut_fixture_verification` | open |
+| `panel_appearance_compositing_fixture_verification` | open |
