@@ -431,3 +431,6 @@ local_caveats:
 
   - id: korean_marked_text_runtime_readiness_verification
     status: open
+
+  - id: cli_closed_stderr_contract_verification
+    status: open

@@ -15,6 +15,7 @@ struct ShellContractProcess {
 
     struct Result: Sendable {
         let status: Int32
+        let terminatedNormally: Bool
         let stdout: String
         let stderr: String
     }
@@ -78,6 +79,10 @@ struct ShellContractProcess {
                 throw error
             }
         }
-        return Result(status: status, stdout: try String(contentsOf: stdout, encoding: .utf8), stderr: try String(contentsOf: stderr, encoding: .utf8))
+        return Result(
+            status: status, terminatedNormally: process.terminationReason == .exit,
+            stdout: try String(contentsOf: stdout, encoding: .utf8),
+            stderr: try String(contentsOf: stderr, encoding: .utf8)
+        )
     }
 }

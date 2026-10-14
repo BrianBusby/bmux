@@ -4154,3 +4154,38 @@ Three temporary entry-mapping cases also pass: deleted/renamed/symlink entries,
 a requested trailing slash, and an alias to filesystem root plus direct root.
 These are source-candidate controls; the new tagged binary and fixed-head macOS
 gate remain required. No user-facing strings or localization catalogs change.
+
+
+## Closed-stderr CLI error contract
+
+Integration I shard 3 reported a timeout, exit-status mismatch and missing Usage
+text in `testCLIErrorPathDoesNotCrashWhenStderrIsClosed`. The fixture inherited
+its socket and process environment and waited for a global-queue exit worker.
+The accepted `f48922aa94` CLI policy deliberately replaced full Usage on stdout
+and exit 1 for unknown commands with a short stderr error and exit 2. Normal
+unknown-command dispatch still connects and authenticates before selecting that
+error, so an ambient socket failure can exercise a different error path.
+
+Only that case moves to `CLIStderrClosedContractTests`. It uses the existing
+joined socket and process owners, an owned short socket/root/environment, an
+explicit fixture password, and shell `exec` with stderr closed. The password
+prevents fallback to user credential lookup. The original five-second child
+failure bound remains; the shared owner's 200 ms termination grace applies.
+Successful completion requires the exact owned authentication exchange, normal
+exit 2, and empty stdout/stderr. The shared process result now carries the existing
+Foundation termination reason as a Boolean, distinguishing exit 2 from SIGINT 2. The throwing runner rejects a timeout after joining the
+child; socket final drain and visible directory cleanup follow. All remaining
+legacy case bytes and helpers stay unchanged; their lifecycle risks are not
+claimed resolved. No production or selector changes are made; other shared process mechanics are unchanged.
+
+The exact new source passes against frozen build 790 in a standalone Swift 6
+harness (one case, 0.242s; no compiler warnings), with only bundled-CLI lookup
+adapted. A temporary open-stderr control retains exit 2 and observes the short
+unknown-command error. Restoring the two obsolete exit-1/Usage assertions fails
+exactly twice. Two owned-shell controls both return numeric status 2 but distinguish
+normal exit from self-SIGINT through the new result field; both pass. These prove the current error contract, not the historical CI
+waiter stall. An earlier owned file/pipe comparison did not reproduce pipe
+capacity blocking. No app was loaded or launched, no runtime rebuilt, and no
+external telemetry was sent. Actual macOS 15 app-host verification remains open
+as `cli_closed_stderr_contract_verification`. No shipped UI/help/settings strings
+or localization catalogs changed.
