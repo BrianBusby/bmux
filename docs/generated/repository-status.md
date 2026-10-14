@@ -268,3 +268,4 @@ Repository: `BrianBusby/bmux`
 | `textbox_clipboard_timeout_fixture_verification` | open |
 | `native_symbol_size_fixture_verification` | open |
 | `file_preview_inset_fixture_verification` | open |
+| `browser_find_routing_fixture_verification` | open |

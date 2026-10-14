@@ -378,3 +378,6 @@ local_caveats:
 
   - id: file_preview_inset_fixture_verification
     status: open
+
+  - id: browser_find_routing_fixture_verification
+    status: open

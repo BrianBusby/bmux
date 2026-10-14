@@ -6214,3 +6214,8 @@ caveats:
     title: File preview inset fixture uses the maintained TextKit stack; fixed-head app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: browser_find_routing_fixture_verification
+    title: Browser Find fixtures distinguish owned-window search from menu fallback; integrated app-host verification remains pending
+    status: open
+    owner: bmux

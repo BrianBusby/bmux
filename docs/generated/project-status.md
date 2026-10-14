@@ -208,6 +208,7 @@ Regenerate with: ./scripts/project-docs generate
 | Clipboard timeout fixture awaits causal completion; local event-only proof passes but real pasteboard restoration requires isolated app-host CI (`textbox_clipboard_timeout_fixture_verification`) | Bmux | open |  |
 | Native symbol sizing fixture preserves AppKit configured dimensions; fixed-head app-host verification remains pending (`native_symbol_size_fixture_verification`) | Bmux | open |  |
 | File preview inset fixture uses the maintained TextKit stack; fixed-head app-host verification remains pending (`file_preview_inset_fixture_verification`) | Bmux | open |  |
+| Browser Find fixtures distinguish owned-window search from menu fallback; integrated app-host verification remains pending (`browser_find_routing_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
