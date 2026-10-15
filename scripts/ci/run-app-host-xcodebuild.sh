@@ -108,30 +108,11 @@ while [ "$attempt" -le "$max_attempts" ]; do
       echo "Process diagnostics unavailable: output directory" >&2
     fi
   fi
-  failure_evidence=""
-  if [ -n "$derived_data_path" ]; then
-    evidence_root="${log_dir%/}/bmux-failure-evidence"
-    if mkdir -p "$evidence_root" && evidence_invocation="$(mktemp -d "$evidence_root/attempt-${attempt}-XXXXXX")" &&
-       run_owned_phase python3 "$(dirname "$0")/app_host_failure_evidence.py" snapshot --root "$derived_data_path" --output "$evidence_invocation/capture"; then
-      failure_evidence="$evidence_invocation/capture"
-    else
-      echo "App-host failure evidence unavailable: snapshot" >&2
-    fi
-  fi
   set +e
   BMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH="$log_path" \
     run_owned_phase "${diagnostic_command[@]}"
   status=$?
   set -e
-
-  if [ -n "$failure_evidence" ]; then
-    # External diagnostic tools run in the workflow's always-step, outside the
-    # native watchdog. Freeze this attempt before another invocation reuses logs.
-    if ! run_owned_phase python3 "$(dirname "$0")/app_host_failure_evidence.py" defer --root "$derived_data_path" \
-        --output "$failure_evidence" --log "$log_path" --status "$status"; then
-      echo "App-host failure evidence unavailable: snapshot; native status remains $status" >&2
-    fi
-  fi
 
   if grep -Fq 'path = "/tmp/bmux-debug.sock"' "$log_path"; then
     echo "FAIL: app-host used default debug socket instead of an XCTest-scoped socket" >&2

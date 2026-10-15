@@ -4534,44 +4534,29 @@ This addresses a concrete fixture lifetime gap, not a demonstrated cause of the
 K2/L4 app-host timeouts. Full target compilation and actual macOS 15 app-host
 verification remain pending under `kiro_lifecycle_feed_fixture_verification`.
 
-## Bounded app-host failure evidence
+## Retired optional app-host failure evidence
 
-Each failed native wrapper attempt now has a separate sanitized `report.json`
-under the existing runner temporary directory. The existing app-host job uploads
-only these reports for seven days, including when a focused gate prevents broad
-execution. Native test exit status, retry policy, timeouts and concurrency remain
-unchanged. Collection is post-failure, with a separate absolute 30-second budget;
-a failed or cancelled diagnostic tool cannot turn a native failure into success.
+The optional collector has been removed. Review `4289216424` identified that
+its synchronous result-directory scan and up-to-64-MiB log copy still ran inside
+the native watchdog after xcodebuild exited. Near the existing deadline, staging
+could replace native exit 65 with watchdog exit 124. Removing the optional
+collector avoids adding another diagnostic lifecycle to the native test owner.
 
-The wrapper snapshots result bundle names before the invocation. The collector
-reads only new bundles contained in that exact DerivedData root, records their
-counts and any matching result paths reported by the invocation, and preserves
-multiple runs instead of treating the last console footer as the whole suite.
-It retains allowlisted result counts, suite/method identities, repetition
-results and durations. Parameter display names, failure messages, attachments,
-raw logs/results, environment, command arguments and source paths are excluded.
-Unsupported or incomplete result data is marked unavailable.
+The wrapper no longer snapshots or stages failure evidence. Its native logs,
+process sampler, cancellation handling, socket guards, retry policy and exit
+status propagation remain unchanged. The workflow no longer runs the collector
+or uploads its sanitized reports; it retains the sampler upload and every native
+product gate. The exclusive collector tests are removed. Cancellation coverage
+now contains eleven scenarios: only the two retired defer-phase TERM/INT cases
+and their unused fixture branches were removed.
 
-Numeric crash frames, crashed thread numbers, image UUIDs and offsets are parsed
-before diagnostic tools run. Restart and test-limit events remain separate;
-none is attributed to the last test printed. Symbolication uses only images
-inside the exact DerivedData products directory after their UUID/architecture
-matches the crash record. System/missing images remain numeric. Every owned
-tool process group is terminated and its direct process joined on completion,
-error or cancellation. Tool output is capped at 8 MiB; log scanning at 64 MiB;
-individual lines at 16 KiB; nodes at 2,048; reports at 2 MiB. Truncation is explicit.
-At most 16 crashes, 128 images per crash, and 128 ordinary plus 128 crashed-thread
-frames per crash are retained. Symbol strings are bounded and path-free.
-
-Local behavioral controls cover invocation isolation, payload exclusion,
-UUID mismatch, path escapes, output/record caps, exhausted budgets retaining
-multiple crashes, cancellation and original native exit codes 65/124. A small
-owned native Mach-O resolves its known function through real `dwarfdump`/`atos`;
-no app launch or induced crash is required. Existing retry/attempt/status tests
-pass. Parsing the archived L2 log recovers its five native crashes and all five
-restart boundaries, with explicit omitted-frame counts. This does not identify
-their cause: matching CI image symbolication and arrival of the next real
-failure report remain pending under `app_host_failure_evidence_verification`.
+Automated per-attempt JSON reports, result-bundle attribution and matching-image
+UUID symbolication are no longer provided by this enhancement. Native logs and
+the separate process sampler remain available. This is abandonment of the
+optional enhancement, not proof that symbolication or hang diagnosis is complete.
+The canonical and local `app_host_failure_evidence_verification` caveat is
+superseded with that explicit disposition. Existing Q/R artifacts remain historical
+evidence; their records below do not promise future collector artifacts.
 
 ## Live-surface recovery window precondition
 
@@ -4623,7 +4608,11 @@ visible. Local Bash verification does not establish the historical macOS 15 CI
 schedule. Actual app-host verification remains pending under
 `bash_relay_refresh_fixture_verification`; no production script changes apply.
 
-### App-host collector watchdog boundary regression
+### Historical app-host collector watchdog boundary regression
+
+This section records the now-retired collector and its earlier verification.
+The optional enhancement was subsequently removed as described above; none of
+these historical controls or report capabilities remains an active gate.
 
 Actual test-only CI run 38762790883 reproduced native exit 65 being replaced by
 watchdog exit 124 while the collector report still recorded 65. The earlier run
@@ -4665,8 +4654,8 @@ Fixed-head Linux workflow guard 116531176822 subsequently passed all sixteen
 controls in 8.884 seconds at commit `119d6a9b5`. This does not erase the local
 Linux timeout above. No Xcode, application,
 external service or user process runs in these controls. Q subsequently verified
-real deferred artifact delivery (recorded below); matching-image symbolication
-remains pending under `app_host_failure_evidence_verification`.
+real deferred artifact delivery (recorded below); complete symbolication coverage
+and hang diagnosis remained unverified when the optional collector was abandoned.
 
 ### Session write capture and background window teardown
 
@@ -4850,6 +4839,10 @@ adds no app behavior or localized product strings; no localization catalog chang
 are required.
 
 ### App-host cancellation ownership regression
+
+The thirteen-case results below are historical and include two collector-defer
+cases. After retiring the optional collector, the current guard retains the
+other eleven scenarios and all their cancellation/ownership assertions.
 
 Before the repair, the Bash wrapper ran its foreground PTY helper without a
 cancellation trap. The PTY helper handled its own idle/post-test deadlines but
@@ -5110,13 +5103,14 @@ this owner; focused invocations and their deadlines are unchanged.
 Four behavioral tests pass locally on Linux, including the unchanged pipeline
 regression, native status/default controls and six TERM/INT controls across
 running, stopped and timeout-cleanup children. All four workflow exit-reporting
-guards also pass. The existing 13 cancellation controls additionally pass with
+guards also pass. The historical 13 cancellation controls additionally passed with
 the new deadline owner around the actual app-host wrapper, including sampler,
-retry, deferred-evidence and stubborn-child cases; every owned fixture joins
-and is removed. These tests model the console boundary without privileges;
-actual fixed-head macOS sudo/launchctl cleanup remains unverified. A wrapper
-cancelled before its defer phase can still leave native_status_unavailable in
-its diagnostic report; that report never overrides the workflow's timeout exit.
+retry, deferred-evidence and stubborn-child cases; every owned fixture joined
+and was removed. The current guard retains eleven controls after removing the
+optional collector and its two defer-phase cases. These tests model the console
+boundary without privileges; actual fixed-head macOS sudo/launchctl cleanup
+remains unverified. The removed collector no longer produces diagnostic reports;
+native logs and the optional process sampler remain available.
 
 ## Crash-report symlink fixture ownership
 
