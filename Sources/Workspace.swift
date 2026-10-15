@@ -7233,7 +7233,7 @@ final class Workspace: Identifiable, ObservableObject {
             // ghostty_surface_inherited_config or bmuxCurrentSurfaceFontSizePoints
             // is still reading through the pointer.
             let surface = terminalPanel.surface
-            guard let sourceSurface = surface.surface else { continue }
+            guard let sourceSurface = surface.liveSurfaceForGhosttyAccess(reason: "workspace.inheritConfig") else { continue }
             var config = bmuxInheritedSurfaceConfig(
                 sourceSurface: sourceSurface,
                 context: GHOSTTY_SURFACE_CONTEXT_SPLIT

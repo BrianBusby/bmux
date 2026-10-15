@@ -457,6 +457,9 @@ local_caveats:
   - id: cli_closed_stderr_contract_verification
     status: open
 
+  - id: terminal_inherited_surface_guard_verification
+    status: open
+
   - id: ssh_creation_joined_producer_verification
     status: open
 

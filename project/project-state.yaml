@@ -6355,6 +6355,11 @@ caveats:
     status: open
     owner: bmux
 
+  - id: terminal_inherited_surface_guard_verification
+    title: Terminal config inheritance now uses existing runtime ownership guard after S restart-associated regressions; fixed artifact and app-host verification remain pending
+    status: open
+    owner: bmux
+
   - id: ssh_creation_joined_producer_verification
     title: SSH workspace creation fixture joins its producer and owns authentication; native contracts pass, fixed-head app-host verification remains pending
     status: open
