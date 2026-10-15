@@ -12,7 +12,7 @@ struct MarkdownWebRenderer: NSViewRepresentable {
     let panelId: UUID
     let workspaceId: UUID
     let filePath: String
-    /// Body font size in points, applied as `pageZoom` and to shell-managed SVG zoom.
+    /// Body font size in points, applied as native `pageZoom` to prose and diagrams.
     let fontSize: Double
     /// Body prose font-family name (empty = System). Applied as an inline
     /// `font-family` on the content.
@@ -243,13 +243,10 @@ struct MarkdownWebRenderer: NSViewRepresentable {
         private func applyMaxContentWidth() {
             guard let webView else { return }
             let width = Int(MarkdownMaxWidthSettings.clamp(lastMaxContentWidth).rounded())
-            let js = """
-            (function(width) {
-              var content = document.getElementById('content');
-              if (content) { content.style.maxWidth = width + 'px'; }
-            })(\(width));
-            """
-            webView.evaluateJavaScript(js, completionHandler: nil)
+            webView.evaluateJavaScript(
+                "window.__bmuxSetMarkdownMaxWidth && window.__bmuxSetMarkdownMaxWidth(\(width));",
+                completionHandler: nil
+            )
         }
 
         func close() {

@@ -4418,7 +4418,7 @@ an independent 1x view plus content-cap change/restore checks. The fixture
 composes the maintained retained-window rendering owner and cancellable DOM
 observation; the original ten-second geometry deadline is unchanged. The
 focused shard-one gate includes both cases so a broad-suite abort cannot hide
-the regression. Production rendering remains unchanged in this test-only slice.
+the regression. The test-only commit preceded the production correction.
 
 Owned build-791 native probes fail the physical geometry checks. Additional
 instrumentation observes the production global error handler replacing the page
@@ -4427,5 +4427,21 @@ control changing only the observer's synchronous geometry write to next-frame
 delivery removes that page replacement while retaining five geometry failures.
 The error is generic, so this does not identify its JavaScript stack; it supports
 a resize-delivery feedback correction without suppressing errors or increasing
-deadlines. Actual CI red and the subsequent production correction are pending.
+deadlines. [CI run 38630476342, attempt 2](https://github.com/BrianBusby/bmux/actions/runs/38630476342/job/116091487642)
+on test-only integration head `76a5e4731cf13d8d60badf0b1b93c854a97c1233`
+then failed five intended geometry assertions, independently of its additional
+deadline failure and unrelated native issues.
+
+The correction leaves native `pageZoom` as the sole visible scale. The shell
+fits SVGs against the nominal unzoomed viewport and content cap, and coalesces
+resize-driven writes into one cancellable animation frame. The existing native
+coordinator forwards content-cap changes to that same shell owner. No polling,
+error suppression or deadline increase is introduced. A classic scrollbar can
+change the nominal fit by its gutter width; exact proportional baseline width
+is not promised across scrollbar appearance changes. Existing fit, resize,
+left-edge and export assertions remain intact.
+
+Both unchanged regression cases pass against the actual build-792 app module
+and bundled shell in 0.352 seconds. This isolated native probe does not establish
+integrated app-host CI success; that gate remains pending.
 No shipped UI strings, terminal engine, user settings or active preview changed.

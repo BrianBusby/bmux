@@ -1182,6 +1182,7 @@ html { scroll-behavior: smooth; }
   var bmuxMarkdownZoom = 1;
   var mermaidResizeObserver = null;
   var mermaidObservedWidth = 0;
+  var mermaidResizeFrame = null;
 
   function normalizedMarkdownZoom(value) {
     var zoom = Number(value);
@@ -1273,15 +1274,17 @@ html { scroll-behavior: smooth; }
 
   function mermaidCurrentBaseSize(svg, natural) {
     var container = svg.closest ? svg.closest('.bmux-mermaid') : svg.parentElement;
-    var rect = container && container.getBoundingClientRect ? container.getBoundingClientRect() : null;
-    var containerWidth = rect ? rect.width : NaN;
-    if (!Number.isFinite(containerWidth) || containerWidth <= 0) {
-      containerWidth = container ? container.clientWidth : NaN;
-    }
-    var width = natural.width;
-    if (Number.isFinite(containerWidth) && containerWidth > 0) {
-      width = Math.min(containerWidth, natural.width);
-    }
+    var contentRect = contentEl.getBoundingClientRect();
+    var containerRect = container ? container.getBoundingClientRect() : contentRect;
+    var bodyStyle = window.getComputedStyle(document.body);
+    var contentStyle = window.getComputedStyle(contentEl);
+    // Fit in the unzoomed viewport; native pageZoom scales this size exactly once.
+    var available = window.innerWidth * bmuxMarkdownZoom
+      - parseFloat(bodyStyle.paddingLeft) - parseFloat(bodyStyle.paddingRight);
+    var cap = parseFloat(contentStyle.maxWidth);
+    if (Number.isFinite(cap) && cap > 0) { available = Math.min(available, cap); }
+    available -= Math.max(0, contentRect.width - containerRect.width);
+    var width = Math.max(1, Math.min(natural.width, available));
     return { width: width, height: width * (natural.height / natural.width) };
   }
 
@@ -1306,10 +1309,23 @@ html { scroll-behavior: smooth; }
       }
       if (width === mermaidObservedWidth) { return; }
       mermaidObservedWidth = width;
-      applyMermaidZoom(contentEl);
+      if (mermaidResizeFrame !== null) { return; }
+      // Resize delivery must finish before a diagram write changes the observed height.
+      mermaidResizeFrame = window.requestAnimationFrame(function() {
+        mermaidResizeFrame = null;
+        applyMermaidZoom(contentEl);
+      });
     });
     mermaidResizeObserver.observe(contentEl);
   }
+
+  window.addEventListener('pagehide', function() {
+    if (mermaidResizeFrame !== null) {
+      window.cancelAnimationFrame(mermaidResizeFrame);
+      mermaidResizeFrame = null;
+    }
+  });
+  window.addEventListener('pageshow', function() { applyMermaidZoom(contentEl); });
 
   function applyMermaidZoomToSVG(svg) {
     if (!svg) { return; }
@@ -1321,9 +1337,9 @@ html { scroll-behavior: smooth; }
       return;
     }
     var base = mermaidCurrentBaseSize(svg, natural);
-    // WKWebView pageZoom scales markdown text metrics here, but Mermaid SVG bounds stay fixed.
-    var width = Math.max(1, base.width * bmuxMarkdownZoom);
-    var height = Math.max(1, base.height * bmuxMarkdownZoom);
+    // Native pageZoom applies the same visible scale to prose and SVG.
+    var width = Math.max(1, base.width);
+    var height = Math.max(1, base.height);
     svg.style.maxWidth = '';
     svg.setAttribute('data-bmux-mermaid-scaled', '1');
     svg.style.width = width + 'px';
@@ -1337,6 +1353,13 @@ html { scroll-behavior: smooth; }
     if (!scope || !scope.querySelectorAll) { return; }
     Array.prototype.forEach.call(scope.querySelectorAll('.bmux-mermaid svg'), applyMermaidZoomToSVG);
   }
+
+  window.__bmuxSetMarkdownMaxWidth = function(width) {
+    var cssWidth = width + 'px';
+    if (!contentEl || contentEl.style.maxWidth === cssWidth) { return; }
+    contentEl.style.maxWidth = cssWidth;
+    applyMermaidZoom(contentEl);
+  };
 
   window.__bmuxSetMarkdownZoom = function(zoom) {
     bmuxMarkdownZoom = normalizedMarkdownZoom(zoom);

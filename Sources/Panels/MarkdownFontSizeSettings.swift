@@ -6,9 +6,9 @@ import Foundation
 /// The value is the `.markdown-body` font size in points. The web shell renders
 /// the body at `baseRenderPointSize` px intrinsically, so the panel applies
 /// `pointSize / baseRenderPointSize` as the WKWebView `pageZoom` to scale the
-/// rendered document the way browser zoom does. Mermaid SVGs also receive this
-/// factor in the shell because Mermaid emits inline max-width values that
-/// WebKit text zoom does not resize. Keep `baseRenderPointSize` in sync with
+/// rendered document, including Mermaid SVGs, the way browser zoom does. The
+/// shell fits diagrams to the unzoomed viewport without multiplying their size
+/// again. Keep `baseRenderPointSize` in sync with
 /// the `.markdown-body { font-size: ... }` rule in `Resources/markdown-viewer/shell.html`.
 enum MarkdownFontSizeSettings {
     /// UserDefaults / bmux.json key (`markdown.fontSize`).
