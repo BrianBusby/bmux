@@ -1825,11 +1825,13 @@ suppression. Governing sources are root/personal AGENTS, continuous-code-quality
 bmux-testing migration/behavior/local-CI, architecture and shared-behavior rules.
 No production code or shipped strings change; localization catalogs are untouched.
 
-### Opt-in focused process diagnostics
+### Bounded app-host process diagnostics
 
-For one diagnostic dispatch, set `app_host_process_diagnostics` to true. Only the
-focused shard 1 app-host invocation enables the observer, after acquiring the
-existing GUI-host lock. Normal PR runs and broad tests are unchanged.
+Broad tests on all four PR shards enable the existing observer after acquiring
+the GUI-host lock. For a manual diagnostic dispatch, set
+`app_host_process_diagnostics` to true to enable all broad shards and the focused
+shard 1 invocation. Focused PR invocations remain unchanged. Artifact upload runs
+even after failure and ignores absent output when an invocation did not run.
 
 The observer starts numeric process snapshots at the Swift Testing start marker
 and stops after 30 seconds. It records PID, parent PID, Darwin state, elapsed time,
@@ -3440,7 +3442,7 @@ existing opt-in diagnostic environment was set only for the focused shard 1
 invocation. Its uploaded stack files contained no usable call graph and cannot
 establish the cause of the separate broad shard 2 failures.
 
-The same opt-in sampler now also wraps the broad shard 2 invocation. Its native
+The initial diagnostic change also wrapped the broad shard 2 invocation. Its native
 Swift Testing start marker, 30-second observation window, eight-sample maximum,
 two-worker concurrency limit, one-second samples and five-second worker
 completion allowance are unchanged. Selection still requires the exact owned
@@ -3451,7 +3453,8 @@ exit statuses, native test deadlines, selectors and retries remain unchanged.
 
 This adds at most eight bounded samples to the implicated broad invocation when
 the existing manual input is enabled. Sampling overhead is diagnostic overhead,
-not a test repair or proof of timeout causality. Automatic runs remain disabled.
+not a test repair or proof of timeout causality. Automatic runs were disabled in
+that initial change; the broad PR coverage described below supersedes that routing.
 The host sample occurs once near two seconds, and the observation window ends
 30 seconds after the Swift Testing marker. G shard 2 reported its later host
 hang near 49 seconds, so this coverage may miss that hang; it first supplies
@@ -4679,3 +4682,22 @@ retains the pre-existing non-Sendable closure-conversion warning; the candidate
 has none. Fixed-artifact compilation, existing inspector coverage and actual
 macOS 15 app-host verification remain pending under
 `session_write_store_capture_verification`.
+
+### Broad PR host diagnostic coverage
+
+O's broad shards reported cross-family failures and AppHang records, including
+owned operations lasting longer than their failure bounds. These observations
+justify collecting the existing bounded process stacks on every broad PR shard;
+they do not establish a shared scheduler cause or justify timeout increases or
+serializing suites. The sampler implementation and native test/retry deadlines
+are unchanged: one 30-second observation window, at most eight one-second samples
+and two concurrent workers, with the existing five-second worker completion bound.
+
+Each process identity is sampled once after its minimum age (host two seconds,
+CLI one second). The window begins at the Swift Testing start marker, so it may
+miss earlier XCTest hangs or later failures. This change does not promise a stack
+at the exact hang. Samples add bounded overhead and may affect scheduling.
+Artifacts retain only existing allowlisted numeric process records and sanitized
+symbol frames; raw headers, arguments, environment, paths and image inventories
+remain excluded. Actual macOS 15 artifact delivery and useful call graphs remain
+open verification, to be assessed on the next complete candidate run.
