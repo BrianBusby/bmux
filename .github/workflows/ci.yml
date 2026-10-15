@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       app_host_process_diagnostics:
-        description: Capture bounded process diagnostics for focused shard1 and broad shard2
+        description: Enable bounded diagnostics for focused shard1 and all broad shards (automatic on PR broad tests)
         type: boolean
         default: false
 
@@ -827,7 +827,7 @@ jobs:
 
       - name: Run unit tests
         env:
-          BMUX_APP_HOST_PROCESS_DIAGNOSTICS: ${{ inputs.app_host_process_diagnostics && matrix.shard == 2 && '1' || '0' }}
+          BMUX_APP_HOST_PROCESS_DIAGNOSTICS: ${{ (github.event_name == 'pull_request' || inputs.app_host_process_diagnostics) && '1' || '0' }}
         run: |
           set -euo pipefail
           SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
@@ -923,12 +923,12 @@ jobs:
           retention-days: 7
 
       - name: Upload app-host process diagnostics
-        if: ${{ always() && inputs.app_host_process_diagnostics && (matrix.shard == fromJSON(env.BMUX_APP_HOST_BROWSER_PROXY_REGRESSION_SHARD) || matrix.shard == 2) }}
+        if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: app-host-process-diagnostics-${{ matrix.shard }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/bmux-process-diagnostics/
-          if-no-files-found: warn
+          if-no-files-found: ignore
 
       - name: Run bundled Ghostty theme picker helper regression
         if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_THEME_PICKER_REGRESSION_SHARD) }}
