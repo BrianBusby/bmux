@@ -4679,3 +4679,36 @@ retains the pre-existing non-Sendable closure-conversion warning; the candidate
 has none. Fixed-artifact compilation, existing inspector coverage and actual
 macOS 15 app-host verification remain pending under
 `session_write_store_capture_verification`.
+
+### Claude session replacement phase ownership
+
+Two Claude session replacement cases in O shard 3 (run 38758720078, job
+116505698417) recorded seven socket-expectation timeouts without failed product
+oracles. Their shared legacy helper starts four independent accept workers per
+phase, but its expectation completes after any one worker closes. Remaining
+workers can consume later phases without satisfying the later expectation.
+
+A bounded owned control with the unchanged build 793 CLI demonstrated that
+ordering: the first phase completed with two workers still accepting; those
+workers served the next successful hook while its gated phase captured nothing
+and timed out at the original five-second observation bound. All eight workers
+were explicitly released and joined before removing the listener and owned root,
+including an injected-failure control. This proves a possible fixture failure,
+not the historical CI interleaving.
+
+`ClaudeSessionPhaseTests` retains the exact nine subprocess phases and all 24
+original assertion intents. Throwing joined execution preserves each no-timeout
+check and its five-second child deadline. The obsolete per-phase socket
+expectation is replaced by the maintained producer-complete final drain and
+awaited socket cleanup, rather than a longer wait or a connection count. Owned
+authentication bypasses Keychain, authentication requests are excluded from
+business assertions, and one-way feed events receive no response. The other ten
+legacy helper callers and all shared transport/process owners remain unchanged.
+
+Exact-source Swift 5 and Swift 6 compilation is warning-free; both native cases
+pass using an owned test bundle and the unchanged build 793 CLI. Input controls
+that stop the current session instead of the stale session, or repeat startup
+instead of submitting the new prompt, fail the retained business assertions.
+Actual integrated app-host verification remains pending under
+`claude_session_phase_fixture_verification`. No production or workflow changes
+apply. The production best-effort feed timing policy remains unchanged.
