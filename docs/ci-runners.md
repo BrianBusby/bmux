@@ -4499,3 +4499,25 @@ compilation remains blocked by the imported mutable
 production concurrency change is included. Integrated full-target compilation
 and fixed-head app-host verification remain pending. No workflow selector or
 production behavior changes in this slice.
+
+### Kiro lifecycle no-response fixture ownership
+
+`CLIHookNoResponseTests.genericLifecycleFeedTelemetryDoesNotWaitForSocketResponse`
+now composes the maintained socket and shell process fixtures. The Kiro launch,
+SessionStart payload, routing replies, unanswered id-less `feed.push`, exit status
+and stdout assertions remain intact. The producer keeps its three-second failure
+bound and the feed observation keeps its separate five-second bound. A captured
+producer error propagates after the child exits and the socket's final input drain
+and native readiness sources join; only then can owned files be removed.
+
+The exact migrated case passed against unchanged CLI build 791 on macOS 26.3.
+Temporary controls withhold initial authentication before lifecycle subprocesses
+can start; timeout and cancellation retain their errors and prove the owned PID
+is gone before producer/socket completion and root cleanup. These controls do not
+change shipped fixture APIs. The unchanged eight-megabyte no-read case and its
+helpers remain byte-identical, including their existing redundant Void-result
+compiler warning and legacy worker ownership risks.
+
+This addresses a concrete fixture lifetime gap, not a demonstrated cause of the
+K2/L4 app-host timeouts. Full target compilation and actual macOS 15 app-host
+verification remain pending under `kiro_lifecycle_feed_fixture_verification`.

@@ -128,6 +128,7 @@ Regenerate with: ./scripts/project-docs generate
 
 | Caveat | Owner | Status | Issue |
 | --- | --- | --- | --- |
+| Joined Kiro lifecycle no-response fixture awaits actual app-host verification (`kiro_lifecycle_feed_fixture_verification`) | Bmux | open |  |
 | Four-agent one-way feed fixture awaits fixed-head app-host verification (`feed_hook_no_response_fixture_verification`) | Bmux | open |  |
 | Claude notification full-suite process timeouts remain unresolved despite focused app-host completion (`claude_notification_target_fixture_verification`) | Bmux | open |  |
 | Focused Hermes startup and stale-PID suites pending actual app-host verification (`resume_policy_execution_fixture_verification`) | Bmux | open |  |

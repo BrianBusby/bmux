@@ -144,6 +144,8 @@ component_releases:
 local_caveats:
   - id: palette_selection_shortcut_fixture_verification
     status: open
+  - id: kiro_lifecycle_feed_fixture_verification
+    status: open
   - id: split_workspace_title_delivery_fixture_verification
     status: open
   - id: omx_hud_restore_directory_fixture_verification

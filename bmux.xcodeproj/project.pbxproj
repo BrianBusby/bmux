@@ -877,6 +877,7 @@
 		AA5269A0C0DE0004FACE0004 /* ForeignFirstResponderPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5269A0C0DE0003FACE0003 /* ForeignFirstResponderPolicyTests.swift */; };
 		F17F00000000000000000003 /* FullWidthTabCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17F00000000000000000004 /* FullWidthTabCommandTests.swift */; };
 		F17F00000000000000000001 /* FullWidthTabPersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17F00000000000000000002 /* FullWidthTabPersistenceTests.swift */; };
+		2D75CF8459D3495CAEF457A1 /* GenericLifecycleFeedNoResponseFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = D765F48E62DB41949A952E22 /* GenericLifecycleFeedNoResponseFixture.swift */; };
 		A44000000000000000000005 /* GhosttyApp+InlineConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A44000000000000000001005 /* GhosttyApp+InlineConfiguration.swift */; };
 		D0B10012A1B2C3D4E5F60001 /* GhosttyApp+SurfaceConfigurationReload.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B10013A1B2C3D4E5F60001 /* GhosttyApp+SurfaceConfigurationReload.swift */; };
 		12FD81406C5B1FE173D91DCC /* GhosttyApp+TerminalChildExit.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D21E8915E326942DA5CB38 /* GhosttyApp+TerminalChildExit.swift */; };
@@ -2943,6 +2944,7 @@
 		AA5269A0C0DE0003FACE0003 /* ForeignFirstResponderPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForeignFirstResponderPolicyTests.swift; sourceTree = "<group>"; };
 		F17F00000000000000000004 /* FullWidthTabCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullWidthTabCommandTests.swift; sourceTree = "<group>"; };
 		F17F00000000000000000002 /* FullWidthTabPersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullWidthTabPersistenceTests.swift; sourceTree = "<group>"; };
+		D765F48E62DB41949A952E22 /* GenericLifecycleFeedNoResponseFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GenericLifecycleFeedNoResponseFixture.swift"; sourceTree = "<group>"; };
 		A5001017 /* ghostty.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ghostty.h; sourceTree = "<group>"; };
 		A44000000000000000001005 /* GhosttyApp+InlineConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GhosttyApp+InlineConfiguration.swift"; sourceTree = "<group>"; };
 		D0B10013A1B2C3D4E5F60001 /* GhosttyApp+SurfaceConfigurationReload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GhosttyApp+SurfaceConfigurationReload.swift"; sourceTree = "<group>"; };
@@ -5740,6 +5742,7 @@
 				74478AB8036341AC999204A2 /* CLITmuxLaunchIdentityTests.swift */,
 				C4D36E7F324B4FBBB3E57342 /* FeedHookNoResponseContractTests.swift */,
 				410DE41C9E8241C98CB96373 /* FeedHookNoResponseFixture.swift */,
+				D765F48E62DB41949A952E22 /* GenericLifecycleFeedNoResponseFixture.swift */,
 				F888C5A85D54408584752031 /* OrphanWorkspaceShortcutTests.swift */,
 				8FD8055070584B2498072294 /* OrphanWorkspaceShortcutSettingsFixture.swift */,
 				9E199B01F53842F19C9D820F /* OrphanWorkspaceShortcutFixture.swift */,
@@ -8318,6 +8321,7 @@
 				AA5269A0C0DE0004FACE0004 /* ForeignFirstResponderPolicyTests.swift in Sources */,
 				F17F00000000000000000003 /* FullWidthTabCommandTests.swift in Sources */,
 				F17F00000000000000000001 /* FullWidthTabPersistenceTests.swift in Sources */,
+				2D75CF8459D3495CAEF457A1 /* GenericLifecycleFeedNoResponseFixture.swift in Sources */,
 				CA37554AE0A442D1AD949A54 /* GhosttyBackgroundThemeTests.swift in Sources */,
 				1718C0DE1718C0DE17180002 /* GhosttyCommandShiftForwardingTests.swift in Sources */,
 				A11EB0000000000000000000 /* GhosttyConfigPathResolverTests.swift in Sources */,

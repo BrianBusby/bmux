@@ -5835,6 +5835,11 @@ policies:
     selected_for_implementation: false
 
 caveats:
+  - id: kiro_lifecycle_feed_fixture_verification
+    title: Joined Kiro lifecycle no-response fixture awaits actual app-host verification
+    status: open
+    owner: bmux
+
   - id: feed_hook_no_response_fixture_verification
     title: Four-agent one-way feed fixture awaits fixed-head app-host verification
     status: open
