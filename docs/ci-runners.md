@@ -4952,3 +4952,23 @@ request to TERM. All 16 existing failure-evidence tests also pass.
 The native console sudo/launchctl chain and testmanagerd-created sessions are
 outside these owned process-group proofs. The observed O watchdog overrun is
 motivation, not a proven complete historical cause. No app was launched or built.
+
+
+### Integrated cancellation CI evidence
+
+Fixed-source run 38776426265 at b9100e8e1 completed all 13 cancellation
+scenarios under Python 3.9, with every owned child joined and its fixture root
+removed. The original noninteractive-helper controls also passed. The complete
+workflow guard failed afterward because the new cleanup helper expressed its
+six-second failure deadline as a duration assertion. Follow-up ee3a3ed52 uses
+an explicit TimeoutError at the same deadline; all 13 Linux controls and the
+strict determinism gate pass locally. This preserves the cleanup bound and does
+not add a lint exception. Complete integrated CI remains required.
+
+The full integrated bmux-unit target at 4b9c79553 compiles 600 test files plus
+14 shared sources with no new warning messages relative to the earlier complete
+compile. Subsequent integration changes only Python, Bash, workflow and evidence
+documents. Authenticated Project Truth passes at 6bab8abd7. The configured PR
+Swift-size gate passes its speculative merge with main, retaining the documented
+incidental growth allowances of six, five and one lines; the unparameterized
+global scan still reports inherited baseline overages. No budget was changed.
