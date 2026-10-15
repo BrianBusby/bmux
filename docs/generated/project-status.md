@@ -128,7 +128,7 @@ Regenerate with: ./scripts/project-docs generate
 
 | Caveat | Owner | Status | Issue |
 | --- | --- | --- | --- |
-| App-host cancellation owners pass all 13 Linux CI cleanup cases; complete integrated guard and console-session coverage remain pending (`app_host_cancellation_ownership_verification`) | Bmux | open |  |
+| App-host Linux cancellation controls pass, but native console watchdog leaves an output owner alive; inside-console deadline repair and real runner verification remain pending (`app_host_cancellation_ownership_verification`) | Bmux | open |  |
 | Session persistence store capture builds as 794 and passes compiled policy/store checks; macOS 15 app-host teardown verification remains pending (`session_write_store_capture_verification`) | Bmux | open |  |
 | Bash refresh FIFO observation awaits app-host verification and retains detached stub cleanup risk (`bash_relay_refresh_fixture_verification`) | Bmux | open |  |
 | Joined Kiro lifecycle no-response fixture awaits actual app-host verification (`kiro_lifecycle_feed_fixture_verification`) | Bmux | open |  |

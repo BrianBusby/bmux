@@ -129,6 +129,9 @@ jobs:
       - name: Validate xcodebuild noninteractive crash prompt guard
         run: python3 tests/test_ci_xcodebuild_noninteractive_helper.py
 
+      - name: Test native timeout ownership across console sessions
+        run: python3 tests/test_ci_console_native_watchdog.py
+
       - name: Test bounded app-host failure evidence
         run: python3 tests/test_ci_app_host_failure_evidence.py
 

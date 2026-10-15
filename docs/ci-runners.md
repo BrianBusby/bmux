@@ -4972,3 +4972,20 @@ documents. Authenticated Project Truth passes at 6bab8abd7. The configured PR
 Swift-size gate passes its speculative merge with main, retaining the documented
 incidental growth allowances of six, five and one lines; the unparameterized
 global scan still reports inherited baseline overages. No budget was changed.
+
+## Console watchdog ownership regression
+
+R run 38777932066 shard 3 printed its 900-second native timeout at
+18:19:58 UTC, but the output pipeline remained until the job deadline at
+18:51:00. Runner cleanup reported an orphan tee process. The deferred report
+retained native_status_unavailable, not a native completion status. The existing
+13 Linux cancellation controls passed; they did not cover sudo/launchctl.
+
+The new behavioral guard executes the actual workflow through an owned console
+supervisor whose child has a separate session. On unchanged source, native
+0/65/124 statuses pass, but timeout leaves the output pipeline open. Its Linux
+subreaper joins all expected-red descendants before deleting temporary files.
+No privileged command or app runs. This models the missing ownership boundary;
+it does not reproduce the actual runner's sudo configuration. The test-only
+commit precedes moving the unchanged deadline inside the console session.
+Actual CI red and fixed-head macOS verification remain required.
