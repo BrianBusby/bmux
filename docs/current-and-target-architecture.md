@@ -424,8 +424,8 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Claude replaced-session cleanup fixture focused gate awaits app-host CI (`claude_session_end_scope_focused_gate_verification`) - owner: Bmux; status: open
 - Published maintenance fixes are composed for CI; full authoritative native and artifact gates remain pending (`maintenance_combined_validation_pending`) - owner: Bmux; status: open
 - Agent launch fixture joins timeout and cancellation producers before cleanup; native controls pass and app-host verification remains pending (`agent_launch_joined_producer_verification`) - owner: Bmux; status: open
-- Agent launch environment fixture focused gate awaits app-host CI (`agent_launch_environment_fixture_focused_gate_verification`) - owner: Bmux; status: open
-- SSH workspace creation fixture focused gate awaits app-host CI (`ssh_workspace_creation_fixture_focused_gate_verification`) - owner: Bmux; status: open
+- Agent launch environment fixture adopts existing 20-second CI process policy after S timeouts; local five-second verification passes and fixed-head app-host evidence remains pending (`agent_launch_environment_fixture_focused_gate_verification`) - owner: Bmux; status: open
+- SSH workspace creation fixture adopts existing 20-second CI process policy after S timeouts; local five-second verification passes and fixed-head app-host evidence remains pending (`ssh_workspace_creation_fixture_focused_gate_verification`) - owner: Bmux; status: open
 - SSH agent environment fixture focused gate awaits app-host CI (`ssh_agent_environment_fixture_focused_gate_verification`) - owner: Bmux; status: open
 - Foreign workspace close reproduces destructive teardown; owned-instance guard awaits fixed native and app-host verification (`workspace_close_ownership_verification`) - owner: Bmux; status: open
 - Antigravity hook fixture joins request producers without blocked accept workers; full app-host verification pending (`antigravity_hook_lifecycle_fixture_verification`) - owner: Bmux; status: open

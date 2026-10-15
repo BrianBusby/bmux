@@ -6013,11 +6013,11 @@ caveats:
     owner: bmux
 
   - id: agent_launch_environment_fixture_focused_gate_verification
-    title: Agent launch environment fixture focused gate awaits app-host CI
+    title: Agent launch environment fixture adopts existing 20-second CI process policy after S timeouts; local five-second verification passes and fixed-head app-host evidence remains pending
     status: open
     owner: bmux
   - id: ssh_workspace_creation_fixture_focused_gate_verification
-    title: SSH workspace creation fixture focused gate awaits app-host CI
+    title: SSH workspace creation fixture adopts existing 20-second CI process policy after S timeouts; local five-second verification passes and fixed-head app-host evidence remains pending
     status: open
     owner: bmux
   - id: ssh_agent_environment_fixture_focused_gate_verification

@@ -32,7 +32,7 @@ final class SSHWorkspaceCreationFixture: Sendable {
             // Preserve failure until the producer is joined and the socket has drained.
             do {
                 return Result<ShellContractProcess.Result, any Error>.success(try await ShellContractProcess(
-                    root: root, deadline: .seconds(5)
+                    root: root, deadline: .seconds(CLIProcessTestTimeout().seconds(5))
                 ).run(executable: cli, arguments: [
                     "--password", password, "ssh", "--name", "SSH Workspace", "--port", "2222",
                     "--identity", "/Users/test/.ssh/id_ed25519",

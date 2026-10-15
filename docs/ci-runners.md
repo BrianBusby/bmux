@@ -4799,8 +4799,9 @@ of each child's deliberately restricted environment. The mixed Claude notificati
 fixture receives its timeout from the routing caller; PID lifecycle cases keep
 their original direct five seconds. Respawn's separately added shell execution
 also keeps five seconds. Feed hooks, stderr/Sentry, launch/creation, Codex stop and
-monitor, manual SSH and unrelated shell fixtures never inherited this policy and
-remain unchanged. The tmux launch case already requested 30 seconds. Shared
+monitor, manual SSH and unrelated shell fixtures never inherited this policy.
+Launch/creation later adopt it explicitly as documented below; the other listed
+fixtures remain unchanged. The tmux launch case already requested 30 seconds. Shared
 process runners, socket observation deadlines, termination grace and all behavior
 assertions remain unchanged.
 
@@ -5149,3 +5150,44 @@ is substituted in these checks; they link the new app module. The complete
 complete test compile introduces warning messages relative to the previous
 complete builds; retained warnings remain. The app was not launched. Integrated
 macOS 15 app-host verification remains pending.
+
+## Agent launch and SSH creation CI process allowance
+
+S (`00aa09b39`, run 38821520072, focused shard-1 job 116720337780)
+failed both parameter cases in `AgentLaunchEnvironmentTests` and both in
+`SSHWorkspaceCreationTests` with the direct five-second process timeout. The
+eight issues are each fixture's diagnostic plus its propagated error, covering
+four cases. The suite aggregates were 6.921 and 6.928 seconds. The captured
+Agent requests ended at `surface.resume.set`; requests are captured before reply
+writing and final draining can occur after producer timeout, so this does not
+establish successful reply delivery. SSH stdout/stderr were empty. Four process
+samples had no call graphs, and recorded PIDs could not be assigned to cases.
+
+These two execution owners now explicitly adopt `CLIProcessTestTimeout`: local
+requests remain five seconds, while host `CI=true` or `GITHUB_ACTIONS=true`
+selects the existing 20-second minimum. This is a new policy adoption, not
+restoration of an inherited allowance. The larger CI scheduling allowance is
+inferred to be appropriate for this concurrent app-host workload; it is not a
+proven explanation of the historical timeouts. Child environments, protocol and
+functional assertions, parallelism, 200-millisecond termination grace, producer
+join and final socket drain are unchanged. Shared runners and production code
+are unchanged.
+
+Before adoption, temporary instrumentation against frozen CLI build 795 on
+macOS 26.3 passed all four original cases: Agent in 0.413 seconds and SSH in
+0.629 seconds. Native replies and status-zero completion preceded asynchronous
+consumption. A separate copied-runner control deliberately held consumption
+after native exit at 0.118 seconds; the original five-second deadline won and
+cleanup still joined. That establishes sensitivity under artificial scheduling,
+not the S cause. Empty stdout in S weighs against a normally completed child
+being misclassified, since successful CLI completion prints the required result.
+
+Exact candidate source compiled with Swift 6 warnings-as-errors and passed all
+four cases against CLI 795 in 0.467 seconds with the local five-second bound.
+The maintained policy controls passed 28 environment/request combinations plus
+an owned finite-process local-timeout/CI-completion pair, joining both children
+before cleanup. Full integrated test-target compilation
+and fixed-head macOS 15 app-host results remain integration gates; neither the
+local pass nor policy adoption establishes that S is repaired. The existing
+`agent_launch_environment_fixture_focused_gate_verification` and
+`ssh_workspace_creation_fixture_focused_gate_verification` caveats remain open.

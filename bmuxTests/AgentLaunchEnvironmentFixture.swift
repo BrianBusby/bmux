@@ -31,7 +31,7 @@ final class AgentLaunchEnvironmentFixture {
             "BMUX_AGENT_LAUNCH_CWD": "/tmp/repo", "CODEX_HOME": codexHome,
             "BMUX_CLI_SENTRY_DISABLED": "1",
         ]
-        let runner = ShellContractProcess(root: root, deadline: .seconds(5), terminationGrace: .milliseconds(200))
+        let runner = ShellContractProcess(root: root, deadline: .seconds(CLIProcessTestTimeout().seconds(5)), terminationGrace: .milliseconds(200))
         let server = CLISocketFixture(path: socket, response: responder())
         let (outcome, commands) = try await server.capture {
             // Even failures complete the owned producer before the socket's final drain.
