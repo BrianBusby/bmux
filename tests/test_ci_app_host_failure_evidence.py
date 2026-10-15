@@ -165,7 +165,7 @@ class EvidenceTests(unittest.TestCase):
 
     def test_tool_timeout_joins_leader(self):
         pid_file = Path(self.temp.name) / 'pid'
-        script = f'import os,time;open({str(pid_file)!r},"w").write(str(os.getpid()));time.sleep(20)'
+        script = f'import os,signal;open({str(pid_file)!r},"w").write(str(os.getpid()));signal.pause()'
         with self.assertRaises(subprocess.TimeoutExpired):
             evidence.DiagnosticTools(.3).run([sys.executable, '-c', script])
         pid = int(pid_file.read_text())
@@ -197,7 +197,7 @@ class EvidenceTests(unittest.TestCase):
     def test_cancelled_tool_is_joined(self):
         child_pid = Path(self.temp.name) / 'child'
         ready = Path(self.temp.name) / 'ready'
-        worker = f'import os,time;open({str(child_pid)!r},"w").write(str(os.getpid()));time.sleep(20)'
+        worker = f'import os,signal;open({str(child_pid)!r},"w").write(str(os.getpid()));signal.pause()'
         launcher = f"import sys,signal;sys.path.insert(0,{str(Path(evidence.__file__).parent)!r});import app_host_failure_evidence as e;signal.signal(signal.SIGTERM,lambda *a: (_ for _ in ()).throw(InterruptedError()));open({str(ready)!r},'w').close();e.DiagnosticTools(10).run({[sys.executable, '-c', worker]!r})"
         with tempfile.TemporaryFile() as output:
             parent = subprocess.Popen([sys.executable, '-c', launcher], stdout=output, stderr=output)
