@@ -844,15 +844,11 @@ jobs:
             [ -n "$arg" ] && ONLY_TESTING_ARGS+=("$arg")
           done < "$SHARD_ARGS"
           run_unit_tests() {
-            # These app-host tests create real SwiftUI/WebKit/Ghostty windows and
-            # intermittently crash inside XCTest's post-test memory checker or
-            # leave native display/WebKit work alive on GitHub macOS runners.
-            # When that happens, Swift's crash/backtrace handling or the stale
-            # app-host process keeps xcodebuild alive until the job-level timeout,
-            # hiding the actual unit test summary.
-            # The app-host wrapper also serializes GUI XCTest ownership per Mac,
-            # while still allowing shards on separate Macs to run in parallel.
+            # The total deadline must own the test wrapper inside the console
+            # session. Signaling the outer sudo/launchctl PID can leave its
+            # console child alive and keep tee waiting for output forever.
             scripts/ci/run-in-console-session.sh \
+              python3 scripts/ci/run-unit-tests-with-timeout.py \
               scripts/ci/run-app-host-xcodebuild.sh \
               -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
               -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
@@ -861,22 +857,7 @@ jobs:
               -destination "platform=macOS" \
               "${ONLY_TESTING_ARGS[@]}" \
               BMUX_SKIP_ZIG_BUILD=1 \
-              test 2>&1 &
-            local xcodebuild_pid=$!
-            local timeout_seconds="${BMUX_UNIT_TEST_TIMEOUT_SECONDS:-900}"
-            local deadline=$((SECONDS + timeout_seconds))
-            while kill -0 "$xcodebuild_pid" 2>/dev/null; do
-              if [ "$SECONDS" -ge "$deadline" ]; then
-                echo "xcodebuild unit test timeout after ${timeout_seconds}s; terminating"
-                kill -TERM "$xcodebuild_pid" 2>/dev/null || true
-                sleep 5
-                kill -KILL "$xcodebuild_pid" 2>/dev/null || true
-                wait "$xcodebuild_pid" 2>/dev/null || true
-                return 124
-              fi
-              sleep 5
-            done
-            wait "$xcodebuild_pid"
+              test 2>&1
           }
 
           # Stream output via tee so CI logs are visible in real time, while still

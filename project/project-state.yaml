@@ -5836,7 +5836,7 @@ policies:
 
 caveats:
   - id: app_host_cancellation_ownership_verification
-    title: App-host Linux cancellation controls pass, but native console watchdog leaves an output owner alive; inside-console deadline repair and real runner verification remain pending
+    title: Native deadline now owns the test wrapper inside the console session; output-pipeline and cancellation controls pass, real runner cleanup remains unverified
     status: open
     owner: bmux
 

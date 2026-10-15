@@ -4988,4 +4988,29 @@ subreaper joins all expected-red descendants before deleting temporary files.
 No privileged command or app runs. This models the missing ownership boundary;
 it does not reproduce the actual runner's sudo configuration. The test-only
 commit precedes moving the unchanged deadline inside the console session.
-Actual CI red and fixed-head macOS verification remain required.
+Actual CI run 38819984008 at regression-only 7b9aebc48 reproduces the single
+pipeline-open assertion after 15 seconds; native 0/65/124 controls pass and the
+owned descendants are joined. The complete guard reports two tests, one failure.
+
+The broad native workflow now invokes its deadline owner after entering the
+console session. It launches the existing app-host wrapper directly, preserving
+the 900-second default, explicit integer overrides and five-second termination
+grace. An empty override retains the original default; nonpositive integers
+retain immediate timeout behavior. The owner checks cancellation in bounded
+100ms waits, sends TERM and CONT to its direct child, then joins or escalates
+within the existing grace. Popen owns child identity; no process scan or new
+subtree implementation is introduced. Native statuses remain authoritative,
+timeout returns 124, and an external interrupt retains 128 plus its first signal,
+including during deadline cleanup. Existing retry and tee handling stay outside
+this owner; focused invocations and their deadlines are unchanged.
+
+Four behavioral tests pass locally on Linux, including the unchanged pipeline
+regression, native status/default controls and six TERM/INT controls across
+running, stopped and timeout-cleanup children. All four workflow exit-reporting
+guards also pass. The existing 13 cancellation controls additionally pass with
+the new deadline owner around the actual app-host wrapper, including sampler,
+retry, deferred-evidence and stubborn-child cases; every owned fixture joins
+and is removed. These tests model the console boundary without privileges;
+actual fixed-head macOS sudo/launchctl cleanup remains unverified. A wrapper
+cancelled before its defer phase can still leave native_status_unavailable in
+its diagnostic report; that report never overrides the workflow's timeout exit.
