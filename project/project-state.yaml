@@ -5836,7 +5836,7 @@ policies:
 
 caveats:
   - id: app_host_cancellation_ownership_verification
-    title: App-host cancellation owners pass all 13 Linux CI cleanup cases; complete integrated guard and console-session coverage remain pending
+    title: Native deadline now owns the test wrapper inside the console session; output-pipeline and cancellation controls pass, real runner cleanup remains unverified
     status: open
     owner: bmux
 

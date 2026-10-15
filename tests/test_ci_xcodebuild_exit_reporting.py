@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import tempfile
@@ -69,6 +70,7 @@ raise SystemExit(status)
             executable(root / "bin/sleep", "#!/usr/bin/env python3\nimport time\ntime.sleep(0.01)\n")
             if tee_fails:
                 executable(root / "bin/tee", "#!/usr/bin/env python3\nimport sys\nfrom pathlib import Path\ndata=sys.stdin.read()\nPath(sys.argv[1]).write_text(data)\nprint(data, end='')\nraise SystemExit(73)\n")
+            shutil.copy2(ROOT / "scripts/ci/run-unit-tests-with-timeout.py", root / "scripts/ci")
             script = workflow_script(filename, WORKFLOWS[filename])
             # Isolate the two legacy hardcoded log destinations, preserving all
             # shell control flow and command-status handling from the workflow.
