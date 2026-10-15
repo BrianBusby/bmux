@@ -276,9 +276,9 @@ signal.pause()
         except ValueError:
             collection = ':'
         subprocess.run(['bash', '-c', collection], cwd=work, env=env, check=True, timeout=12)
-        self.assertTrue(entered.exists())
+        self.assertTrue(entered.exists(), output.decode(errors='replace'))
         reports = list(Path(self.temp.name).glob('bmux-failure-evidence/**/report.json'))
-        self.assertEqual(len(reports), 1)
+        self.assertEqual(len(reports), 1, output.decode(errors='replace'))
         self.assertEqual(json.loads(reports[0].read_text())['native_exit_code'], 65)
         self.assertEqual(process.returncode, 65, output.decode(errors='replace'))
 
