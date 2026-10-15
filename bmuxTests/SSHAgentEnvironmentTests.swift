@@ -41,7 +41,7 @@ final class SSHAgentEnvironmentTests {
             "PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "SSH_AUTH_SOCK": ambient.path,
             "BMUX_SOCKET_PATH": socket, "BMUX_CLI_SENTRY_DISABLED": "1",
         ]
-        let runner = ShellContractProcess(root: root, deadline: .seconds(5), terminationGrace: .milliseconds(200))
+        let runner = ShellContractProcess(root: root, deadline: .seconds(CLIProcessTestTimeout().seconds(5)), terminationGrace: .milliseconds(200))
         let cli = try BundledCLITestSupport.bundledCLIPath(for: Self.self)
         let arguments = ["ssh", "example.test", "--no-focus"]
             + (explicitTilde ? ["--ssh-option", "ForwardAgent=~/.ssh/agent.sock"] : [])

@@ -757,8 +757,9 @@ The old lifecycle harness used blocking process/semaphore waits and a socket
 responder that acknowledged even id-less telemetry; retained full-suite evidence
 in `/tmp/matte-stage5-apphost4.log` (2026-10-11 05:44:39Z, lines 199587–199594)
 records a socket wait timeout, process status 15 and missing status. Reusing the
-joined async socket and owned-file capture removes those fixture paths without
-increasing the five-second process deadline. This local proof does not establish
+joined async socket and owned-file capture removes those fixture paths. The PID
+lifecycle cases retain their direct five-second deadline; the separate routing
+cases retain five seconds locally and the original 20-second CI minimum. This local proof does not establish
 the cause of every historical full-suite timeout.
 
 On unchanged build 773, the temporary old heartbeat expectation fails exactly
@@ -1650,7 +1651,8 @@ checks pass. Exact published-head app-host CI remains pending.
 
 Run 38416355276, job 115363087236, completed the focused Claude notification
 suite in 0.256 seconds. In the full Swift Testing wave, three of its four cases
-then failed the unchanged five-second process deadline; that suite took 19.129
+then failed the migrated five-second process deadline (later found to omit the original
+20-second CI minimum); that suite took 19.129
 seconds. Many unrelated process tests timed out in the same wave. Earlier
 session-start failures occurred in a focused invocation, so broad concurrency
 alone is not an established explanation for both failures.
@@ -1670,7 +1672,8 @@ user preferences, localization strings, or active app builds changed.
 
 Run 38415496749, focused app-host job 115360361616, completed 35 test functions
 in five suites with eight failures: every acknowledged-resize SSH PTY case hit
-its existing five-second process deadline. All eight immediate-close variants
+the then-configured five-second process deadline. The later deadline-policy audit
+found that migration had omitted the original 20-second CI minimum. All eight immediate-close variants
 passed. This is a remaining failure after the earlier per-client EPIPE fix.
 The maintained CLI still requests its initial resize, using a single RPC with a
 50-millisecond deadline; failure of that request is a candidate, not an established
@@ -1690,7 +1693,8 @@ finishing the bridge event stream. The sole caller joins and finishes its socket
 producer before returning; canceling the consumer first could discard queued
 observations from the diagnostic snapshot. Errors still cancel and join the
 consumer, so a throw before producer startup cannot hang cleanup. This preserves
-the existing bridge-close predicate and five-second CLI deadline. It guarantees
+the existing bridge-close predicate. The CLI deadline is five seconds locally;
+the deadline-policy correction restores its original 20-second CI minimum. It guarantees
 only consumed or queued observations, not delivery of every kernel EOF event.
 
 All sixteen native CLI cases still pass, as do temporary finished-response and
@@ -2211,7 +2215,7 @@ unbounded queue owners, but does not prove the cause of every macOS 15 CI timeou
 The earlier failing matrices remain part of the evidence, and the final
 combined app-host gate is still required. A temporary control that suppresses
 only resize-response observations still fails exactly the eight acknowledgement
-cases at the unchanged five-second deadline; all eight immediate-close controls
+cases at the local five-second deadline; all eight immediate-close controls
 pass. This verifies that the new native-source lifecycle does not fabricate the
 resize event or weaken the bridge completion predicate.
 
@@ -2357,7 +2361,7 @@ Their mock accepted exactly one connection per invocation. Owned traces against
 the unchanged 773 CLI show each hook also opens a separate one-way `feed.push`
 connection. With the old per-invocation accept budget, the next server consumes
 that queued telemetry connection while the next hook's RPC waits until its
-unchanged five-second deadline. An unrestricted owned server runs the same
+local five-second deadline. An unrestricted owned server runs the same
 session-start and prompt in under 0.2 seconds each.
 
 The two tests now use the shared `CLISocketFixture`, with no connection-count
@@ -2376,7 +2380,8 @@ Exact native build 786 execution passes both cases with a warning-free Swift 6
 compile. This corrects a measured fixture protocol mismatch; it does not explain
 the separate Antigravity detached-worker timeouts or clear the existing process
 scheduling caveat. Full app-host verification remains open. No production code,
-CLI deadline, runner policy or shipped localization changed.
+production CLI deadline, shared runner policy or shipped localization changed.
+The fixture deadline-policy correction below restores the original CI allowance.
 
 ### Antigravity hook fixture completion boundary
 
@@ -2389,7 +2394,8 @@ This proves a false timeout at that fixture boundary, not the cause of every
 subprocess failure in the combined run.
 
 The migrated case uses the existing asynchronous socket fixture and joined shell
-process owner, with the same five-second deadline. All original background-work,
+process owner, with five seconds locally and the restored original 20-second CI
+minimum. All original background-work,
 missing-fullyIdle, shared-status, completion, session-end routing, duplicate,
 permission and error assertions remain. Each invocation captures completed RPC
 and id-less telemetry producers without preallocating blocking accept workers.
@@ -2400,7 +2406,8 @@ Unchanged build 786 passes the full lifecycle case in 0.917 seconds with a
 warning-free Swift 6 compile. Removing captured notifications in a temporary
 control fails five original notification assertions. Local proof does not replace
 fixed app-host and full-suite verification; the canonical/local caveat remains
-open. No production, subprocess timeout, runner or shipped string changed.
+open. No production, shared runner or shipped string changed. The fixture
+deadline-policy correction below restores the original CI allowance.
 
 ### Workspace runtime close fixture ownership
 
@@ -3573,7 +3580,8 @@ contract. Independent owned-child controls established this cleanup ordering
 gap; they do not establish the cause of the CI deadline.
 
 The three SSH agent variants now use the existing `ShellContractProcess` with
-the same five-second deadline and 200 ms termination grace. Direct argv,
+five seconds locally, the restored original 20-second CI minimum and the same
+200 ms termination grace. Direct argv,
 environment, cwd and null stdin are unchanged. The process owner alone writes
 stdout/stderr. Success or captured failure joins before socket final drain;
 after capture, failure records only owned requests/output and rethrows the
@@ -3994,7 +4002,8 @@ preserves generic completion and duplicate suppression. The fixture omits cwd
 from payload and environment together, and unsets the shell wrapper's synthesized
 `PWD` before exec only for that absent input. Existing payload/transcript and
 concurrent-thread cases retain their original source. Each producer keeps the
-shared five-second deadline and 200-millisecond termination grace; success and
+local five-second deadline, restored original 20-second CI minimum and unchanged
+200-millisecond termination grace; success and
 failure join before socket capture drains and files are removed. Cleanup failures
 are visible test issues. No production or shared socket/process helper changes.
 
@@ -4054,9 +4063,9 @@ CI schedule or a Hermes production-policy defect.
 Each invocation joins the CLI, drains queued one-way telemetry, joins socket
 cleanup and returns that phase's commands before another invocation starts.
 The session store persists across phases in an owned short-path root. The eight
-original requested five-second process deadlines remain; timeout throws after
-termination/join and retains output/request diagnostics. The old helper's
-inherited-CI timeout clamp is not used. Cleanup errors are visible test issues;
+original requested five-second process deadlines remain locally, with the original
+20-second CI minimum restored by the shared fixture policy. Timeout throws after
+termination/join and retains output/request diagnostics. Cleanup errors are visible test issues;
 only a genuinely missing store file means absence, while malformed/unreadable
 state fails instead of satisfying the final deletion assertion.
 
@@ -4074,7 +4083,7 @@ external telemetry was used. The exact migrated sources and actual bundle locato
 in Swift 5 and Swift 6; both cases pass against build 790. Temporary negative
 controls reject a wrong notification payload, substituting session-end for
 finalize, malformed JSON and a present malformed session record. A stopped owned
-child reaches the unchanged five-second failure boundary, is killed/joined,
+child reaches the local five-second failure boundary, is killed/joined,
 and leaves neither its socket nor root behind; the timeout remains a test issue.
 Integrated app-host verification is still required before claiming the 15 CI
 issues resolved. No workflow selector or production code changes here.
@@ -4709,7 +4718,8 @@ not the historical CI interleaving.
 
 `ClaudeSessionPhaseTests` retains the exact nine subprocess phases and all 24
 original assertion intents. Throwing joined execution preserves each no-timeout
-check and its five-second child deadline. The obsolete per-phase socket
+check and its local five-second child deadline; the original 20-second CI minimum
+is restored by the deadline-policy correction below. The obsolete per-phase socket
 expectation is replaced by the maintained producer-complete final drain and
 awaited socket cleanup, rather than a longer wait or a connection count. Owned
 authentication bypasses Keychain, authentication requests are excluded from
@@ -4769,7 +4779,8 @@ The isolated process owns HOME, CFFIXED_USER_HOME, CODEX_HOME and XDG directorie
 script paths must remain under that root before reads. This matters because the
 script writer uses Foundation's current-user home, which HOME alone did not
 isolate in the failing runner. The existing joined process owner retains the
-original five-second failure bound and joins before owned directory cleanup.
+original local five-second failure bound and 20-second CI minimum, and joins
+before owned directory cleanup.
 No generated hook executes and no socket, Keychain or external service is used.
 
 Exact-source Swift 5 and Swift 6 compilation is warning-free, and the native case
@@ -4779,3 +4790,34 @@ versus one even though both entries share the same script body. Other legacy
 cases and shared helpers are unchanged. Integrated app-host verification remains
 pending under `codex_hook_installation_fixture_verification`; no production or
 workflow policy changes apply.
+
+### Migrated CLI process CI deadline policy
+
+Review comment 4285721683 identified that the Claude session and Codex installer
+migrations retained the requested five seconds but bypassed
+`CLINotifyProcessTestSupport.processTimeout`. That existing helper uses the host
+`CI=true` or `GITHUB_ACTIONS=true` environment to enforce a 20-second minimum.
+The origin audit found the same omission in thirteen migrated execution owners:
+Claude session phases, installer, Hermes, Grok, Antigravity, Claude session-end,
+Codex rejected ambient routing, Claude notification routing, SSH agent forwarding,
+SSH PTY lifecycle, respawn CLI invocation, Cloud attach retry and stale SSH control
+socket execution. The correction restores their original CI policy; it does not
+increase their original local requests or production timeouts.
+
+`CLIProcessTestTimeout` is one immutable test policy shared by the retained legacy
+helper and those affected callers. It reads the host environment, independently
+of each child's deliberately restricted environment. The mixed Claude notification
+fixture receives its timeout from the routing caller; PID lifecycle cases keep
+their original direct five seconds. Respawn's separately added shell execution
+also keeps five seconds. Feed hooks, stderr/Sentry, launch/creation, Codex stop and
+monitor, manual SSH and unrelated shell fixtures never inherited this policy and
+remain unchanged. The tmux launch case already requested 30 seconds. Shared
+process runners, socket observation deadlines, termination grace and all behavior
+assertions remain unchanged.
+
+Temporary Swift 6 controls verify 28 exact environment/request combinations and
+execute the unchanged joined process owner: a finite owned child exceeds a short
+local request and fails, while the identical child completes under CI policy.
+Both child PIDs are gone before cleanup. These local controls prove the selected
+policy and ownership boundary, not the cause of historical app-host stalls.
+Fixed-head macOS 15 app-host verification remains pending.

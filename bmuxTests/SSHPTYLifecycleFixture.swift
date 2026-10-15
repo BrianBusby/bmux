@@ -83,7 +83,7 @@ final class SSHPTYLifecycleFixture {
                     await CommandRunner(environment: environment).run(directory: root.path, executable: "/bin/sh", arguments: [
                         "-c", "cli=$1; output=$2; errors=$3; shift 3; exec \"$cli\" \"$@\" </dev/null >\"$output\" 2>\"$errors\"",
                         "pty-lifecycle", cli, output.path, stderr.path,
-                    ] + arguments, timeout: 5)
+                    ] + arguments, timeout: CLIProcessTestTimeout().seconds(5))
                 }
             }
         }

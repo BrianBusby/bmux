@@ -14,7 +14,9 @@ final class ClaudeNotificationTargetTests {
     }
 
     private func verify(routing: ClaudeNotificationTargetFixture.Routing, permission: Bool) async throws {
-        let fixture = try ClaudeNotificationTargetFixture(routing: routing)
+        let fixture = try ClaudeNotificationTargetFixture(
+            routing: routing, processTimeout: CLIProcessTestTimeout().seconds(5)
+        )
         let cli = try BundledCLITestSupport.bundledCLIPath(for: Self.self)
         let commands = try await fixture.run(cli: cli, permission: permission)
         let status = permission ? "Needs input" : "Idle"

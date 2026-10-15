@@ -53,7 +53,7 @@ final class ClaudeSessionEndFixture {
             await runner.run(directory: root.path, executable: "/bin/sh", arguments: [
                 "-c", "exec \"$1\" hooks claude session-end <\"$2\" >\"$3\" 2>\"$4\"",
                 "claude-end", cli, input.path, stdout.path, stderr.path,
-            ], timeout: 5)
+            ], timeout: CLIProcessTestTimeout().seconds(5))
         }
         try #require(!result.timedOut)
         try #require(result.executionError == nil)

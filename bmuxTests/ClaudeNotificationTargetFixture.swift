@@ -9,14 +9,16 @@ final class ClaudeNotificationTargetFixture {
     let root: URL
     let routing: Routing
     let agentPID: Int?
+    private let processTimeout: TimeInterval
     let targetWorkspaceID = "22222222-2222-2222-2222-222222222222"
     let targetSurfaceID = "33333333-3333-3333-3333-333333333333"
     let staleWorkspaceID = "11111111-1111-1111-1111-111111111111"
     let focusedWorkspaceID = "99999999-9999-9999-9999-999999999999"
 
-    init(routing: Routing, agentPID: Int? = nil) throws {
+    init(routing: Routing, agentPID: Int? = nil, processTimeout: TimeInterval = 5) throws {
         self.routing = routing
         self.agentPID = agentPID
+        self.processTimeout = processTimeout
         root = URL(fileURLWithPath: "/tmp").appendingPathComponent("claude-target-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     }
@@ -66,7 +68,7 @@ final class ClaudeNotificationTargetFixture {
             await runner.run(directory: root.path, executable: "/bin/sh", arguments: [
                 "-c", "cli=$1; input=$2; output=$3; errors=$4; shift 4; exec \"$cli\" \"$@\" < \"$input\" > \"$output\" 2> \"$errors\"",
                 "claude-notification", cli, input.path, stdout.path, stderr.path,
-            ] + arguments, timeout: 5)
+            ] + arguments, timeout: processTimeout)
         }
         if result.timedOut {
             // Only fixture-owned output is recorded; retain file-read failures in the diagnostic.

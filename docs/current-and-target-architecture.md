@@ -506,6 +506,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Live-surface recovery fixture establishes a visible retained window; direct-context native controls and compilation pass, real presentation app-host verification remains pending (`live_surface_recovery_window_fixture_verification`) - owner: Bmux; status: open
 - Claude session replacement fixtures join each hook and socket phase; native controls pass and integrated app-host verification remains pending (`claude_session_phase_fixture_verification`) - owner: Bmux; status: open
 - Codex installer fixture counts configured prompt entries and owns generated script paths; native controls pass and integrated app-host verification remains pending (`codex_hook_installation_fixture_verification`) - owner: Bmux; status: open
+- Migrated CLI fixture deadlines restore their original host-CI minimum; local policy controls pass and fixed-head app-host verification remains pending (`migrated_cli_process_ci_deadline_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
 
 The closed-peer CLI repair gives receive timeout configuration/cache and byte reads one internal `CLISocketReceiver` owner with a borrowed descriptor. `SocketClient` retains framing, connection lifecycle, request policy and telemetry. Actual G regression red is recorded; extracted-owner controls, tagged build 788 bundled CLI checks, and H shard 3 fixed-head CLI checks pass. The full combined native and artifact gates remain pending.

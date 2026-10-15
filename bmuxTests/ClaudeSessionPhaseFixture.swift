@@ -37,8 +37,8 @@ final class ClaudeSessionPhaseFixture {
             "BMUX_CLI_SENTRY_DISABLED": "1", "BMUX_CLAUDE_HOOK_SENTRY_DISABLED": "1"
         ]
         let server = CLISocketFixture(path: socket, response: responder())
-        // Retain the original five-second child deadline; timeout joins the child.
-        let runner = ShellContractProcess(root: root, deadline: .seconds(5))
+        // Retain local five seconds and the original host-CI minimum of twenty seconds.
+        let runner = ShellContractProcess(root: root, deadline: .seconds(CLIProcessTestTimeout().seconds(5)))
         let (outcome, phaseCommands) = try await server.capture { @Sendable [cli] in
             // Capture failure as data so queued requests are drained before rethrowing.
             do {
