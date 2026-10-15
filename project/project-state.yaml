@@ -6411,7 +6411,7 @@ caveats:
     owner: bmux
 
   - id: crash_report_symlink_fixture_verification
-    title: Crash-report symlink fixture owns an existing report and isolated home; native source controls pass, integrated build and macOS 15 app-host verification remain pending
+    title: Crash-report symlink fixture owns an existing report and isolated home; build 795 and complete test target compile pass, macOS 15 app-host verification remains pending
     status: open
     owner: bmux
 

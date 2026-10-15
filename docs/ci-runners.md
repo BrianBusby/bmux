@@ -5136,6 +5136,16 @@ fails the original nil assertion. Nine temporary classifications cover dangling
 and existing targets, direct paths, outside executable eligibility, injected XDG
 lexical/resolved paths, omitted XDG state, and snapshot alias preservation.
 Compilation uses Swift 6 with warnings as errors. All owned processes and roots
-are cleaned up. This is local source-plus-existing-module evidence, not a rebuilt
-app or macOS 15 fixed-head result. Root's isolated tagged build, full test-target
-compilation, and integrated app-host verification remain pending.
+are cleaned up. That checkpoint used local source-plus-existing-module evidence,
+not a rebuilt app or macOS 15 fixed-head result. The integrated build and test
+compilation results are recorded below; macOS 15 app-host verification is pending.
+
+The integrated correction also passes against fresh isolated build 795 (tag
+`maintenance-crash-fixture`): the exact repaired test and both unchanged terminal
+launch contracts pass (three tests). Removing only the target-file write in a
+temporary test copy reproduces the original nil assertion. No production source
+is substituted in these checks; they link the new app module. The complete
+`bmux-unit` test target compiles on integrated `f3346c1bb`. Neither build nor
+complete test compile introduces warning messages relative to the previous
+complete builds; retained warnings remain. The app was not launched. Integrated
+macOS 15 app-host verification remains pending.
