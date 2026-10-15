@@ -501,6 +501,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Palette shortcut fixtures own their settings and window context; native routing controls pass and integrated app-host verification remains pending (`palette_selection_shortcut_fixture_verification`) - owner: Bmux; status: open
 - Split workspace title fixture advances the recorded notification coalescer callback; native controls pass and integrated app-host verification remains pending (`split_workspace_title_delivery_fixture_verification`) - owner: Bmux; status: open
 - App-host failure collector preserves bounded numeric crash and result evidence with UUID-checked symbols; local controls pass and actual CI artifact verification remains pending (`app_host_failure_evidence_verification`) - owner: Bmux; status: open
+- Live-surface recovery fixture establishes a visible retained window; direct-context native controls and compilation pass, real presentation app-host verification remains pending (`live_surface_recovery_window_fixture_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
 
 The closed-peer CLI repair gives receive timeout configuration/cache and byte reads one internal `CLISocketReceiver` owner with a borrowed descriptor. `SocketClient` retains framing, connection lifecycle, request policy and telemetry. Actual G regression red is recorded; extracted-owner controls, tagged build 788 bundled CLI checks, and H shard 3 fixed-head CLI checks pass. The full combined native and artifact gates remain pending.

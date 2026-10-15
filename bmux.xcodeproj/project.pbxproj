@@ -980,6 +980,8 @@
 		87C609D63F03597AC12C8B0A /* LastSurfaceClosePreferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2EE0C080FF0FCCE8A8CA930 /* LastSurfaceClosePreferenceTests.swift */; };
 		CE0E03130000000000000001 /* LinearTicketIdentifierAliasMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03130000000000000002 /* LinearTicketIdentifierAliasMap.swift */; };
 		CE0E03120000000000000001 /* LinearWebLinkBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E03120000000000000002 /* LinearWebLinkBuilder.swift */; };
+		FAD796FBD691455C94B81C5E /* LiveSurfaceRecoverySocketTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D08EE100244919901E2C8C /* LiveSurfaceRecoverySocketTests.swift */; };
+		489757ED79714A0A850504F5 /* LiveSurfaceRecoveryWindowFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0C29643A9CF40DD936A13AB /* LiveSurfaceRecoveryWindowFixture.swift */; };
 		DA7A10CA710E000000000003 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DA7A10CA710E000000000001 /* Localizable.xcstrings */; };
 		53750022A0B1C2D3E4F50022 /* MacAuthComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53750023A0B1C2D3E4F50023 /* MacAuthComposition.swift */; };
 		D1F0A00600000000000000C1 /* MacPairedMacBackupBody.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1F0A00600000000000000C2 /* MacPairedMacBackupBody.swift */; };
@@ -3045,6 +3047,8 @@
 		F2EE0C080FF0FCCE8A8CA930 /* LastSurfaceClosePreferenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LastSurfaceClosePreferenceTests.swift; sourceTree = "<group>"; };
 		CE0E03130000000000000002 /* LinearTicketIdentifierAliasMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearTicketIdentifierAliasMap.swift; sourceTree = "<group>"; };
 		CE0E03120000000000000002 /* LinearWebLinkBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearWebLinkBuilder.swift; sourceTree = "<group>"; };
+		17D08EE100244919901E2C8C /* LiveSurfaceRecoverySocketTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LiveSurfaceRecoverySocketTests.swift"; sourceTree = "<group>"; };
+		F0C29643A9CF40DD936A13AB /* LiveSurfaceRecoveryWindowFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LiveSurfaceRecoveryWindowFixture.swift"; sourceTree = "<group>"; };
 		DA7A10CA710E000000000001 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		53750023A0B1C2D3E4F50023 /* MacAuthComposition.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MacAuthComposition.swift; sourceTree = "<group>"; };
 		D1F0A00600000000000000C2 /* MacPairedMacBackupBody.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MacPairedMacBackupBody.swift; sourceTree = "<group>"; };
@@ -5734,6 +5738,8 @@
 					730600010000000000000001 /* MainWindowVisibleFrameFitCoreTests.swift */,
 					970226F3C99D0D937CD00539 /* BrowserConfigTests.swift */,
 				9C9DB4F640E04D5A829039A0 /* BrowserFindShortcutSettingsFixture.swift */,
+				F0C29643A9CF40DD936A13AB /* LiveSurfaceRecoveryWindowFixture.swift */,
+				17D08EE100244919901E2C8C /* LiveSurfaceRecoverySocketTests.swift */,
 				F22765BFA4A3411EAC43F51D /* CommandPaletteShortcutWindowFixture.swift */,
 				1E678C63DBFA4E17B063B317 /* CommandPaletteShortcutSettingsFixture.swift */,
 				0009ED1219DD448D89474284 /* CommandPaletteSelectionShortcutTests.swift */,
@@ -8365,6 +8371,8 @@
 				1352DA119EC14B80BA9AC212 /* KittyClearHistoryTests.swift in Sources */,
 				A66D4C5FC3254F81B6A0B712 /* KoreanMarkedTextRuntimeTests.swift in Sources */,
 				87C609D63F03597AC12C8B0A /* LastSurfaceClosePreferenceTests.swift in Sources */,
+				FAD796FBD691455C94B81C5E /* LiveSurfaceRecoverySocketTests.swift in Sources */,
+				489757ED79714A0A850504F5 /* LiveSurfaceRecoveryWindowFixture.swift in Sources */,
 				6512F0C06512F0C06512F002 /* MainWindowFocusRestoreTests.swift in Sources */,
 				17C9F5BA0DD14EDC8C3E5001 /* MainWindowVisibilityControllerTests.swift in Sources */,
 				A6D1F0100000000000000002 /* MainWindowVisibilityLifecycleTests.swift in Sources */,
