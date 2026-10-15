@@ -102,4 +102,41 @@ struct ClaudeSessionPhaseTests {
             "Expected a new Claude session to replace a stopped idle owner on prompt-submit, saw \(newPromptCommands)"
         )
     }
+
+    @Test
+    func claudeSessionStartRecordIsNotRestorableUntilPrompt() async throws {
+        let context = try ClaudeSessionPhaseFixture(cli: BundledCLITestSupport.bundledCLIPath(for: ClaudeSessionPhaseFixture.self))
+        defer { context.cleanup() }
+        let sessionId = "startup-only-session"
+        func readSession() throws -> [String: Any] {
+            let data = try Data(contentsOf: context.root.appendingPathComponent("claude-hook-sessions.json"))
+            let state = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+            let sessions = try #require(state["sessions"] as? [String: Any])
+            return try #require(sessions[sessionId] as? [String: Any])
+        }
+
+        // Throwing joined runs retain both original no-timeout assertions.
+        let start = try await context.run(
+            arguments: ["hooks", "claude", "session-start"],
+            standardInput: #"{"session_id":"\#(sessionId)","source":"startup","cwd":"\#(context.root.path)","transcript_path":"\#(context.root.path)/projects/startup-only-session.jsonl","hook_event_name":"SessionStart"}"#
+        )
+        #expect(start.status == 0, "\(start.stderr)")
+        var record = try readSession()
+        #expect(
+            record["isRestorable"] as? Bool == false,
+            "Startup SessionStart records are only routing state until Claude creates a conversation."
+        )
+        #expect(record["transcriptPath"] as? String == "\(context.root.path)/projects/startup-only-session.jsonl")
+
+        let prompt = try await context.run(
+            arguments: ["hooks", "claude", "prompt-submit"],
+            standardInput: #"{"session_id":"\#(sessionId)","turn_id":"turn-1","cwd":"\#(context.root.path)","transcript_path":"\#(context.root.path)/projects/startup-only-session.jsonl","hook_event_name":"UserPromptSubmit"}"#
+        )
+        #expect(prompt.status == 0, "\(prompt.stderr)")
+        record = try readSession()
+        #expect(
+            record["isRestorable"] as? Bool == true,
+            "UserPromptSubmit marks the session eligible for resume."
+        )
+    }
 }

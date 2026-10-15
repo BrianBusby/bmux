@@ -5040,3 +5040,38 @@ was not captured, so this does not establish its historical hang cause.
 Forwarding `CI` also restores existing strict Cargo/bundled-library checks in the
 Nucleo build script and test. The unaffected CLI runners' five-second deadlines
 remain unchanged.
+
+## Claude startup session restoration eligibility
+
+R (`a31a5cb2`) failed
+`CLINotifyProcessIntegrationRegressionTests.testClaudeSessionStartRecordIsNotRestorableUntilPrompt`
+at the legacy helper's separate five-second socket expectation. The CLI exit and
+persistence assertions did not fail. That helper starts four independent accept
+workers on a shared listener and fulfills its expectation when any worker closes;
+it does not join the surplus workers before the next phase. The historical R
+worker ordering remains unmeasured.
+
+The exact case now joins `ClaudeSessionPhaseTests` and its maintained fixture.
+The startup and prompt CLI producers each complete before their owned socket's
+final drain and cleanup. All seven original assertion intents remain: two
+no-timeout outcomes (now throwing joined runs), two zero exit statuses, startup
+ineligibility, the exact transcript path and eligibility after the prompt. Store
+reads still throw for absent, malformed or incorrectly shaped data.
+
+The process bound remains local five seconds / original host-CI minimum twenty
+seconds. The old **separate five-second server expectation is replaced**, not
+retained: completion is tied to the joined producer and final socket drain.
+Owned authentication, HOME/CFFIXED/XDG paths and disabled CLI telemetry come from
+the existing fixture unchanged. There is no production, helper or selector
+change. All other legacy method bytes remain unchanged; their shared listener
+ownership risk is outside this exact-case correction. Fixed-head app-host
+verification remains pending.
+
+The final exact-source suite and shared owners compile without warnings in Swift
+5 and Swift 6. The migrated case passes against frozen build 794 in both modes
+(0.261s / 0.057s); no app is launched. Temporary controls retain the real CLI
+path: replacing prompt-submit with another session-start fails the final
+eligibility assertion, and a different transcript input fails the exact-path
+assertion. Each control records exactly one intended failure and completes owned
+producer/socket/root cleanup. These controls establish oracle sensitivity, not
+the historical R worker interleaving.
