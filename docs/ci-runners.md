@@ -4734,3 +4734,49 @@ Artifacts retain only existing allowlisted numeric process records and sanitized
 symbol frames; raw headers, arguments, environment, paths and image inventories
 remain excluded. Actual macOS 15 artifact delivery and useful call graphs remain
 open verification, to be assessed on the next complete candidate run.
+
+
+### App-host cancellation ownership regression
+
+The existing Bash wrapper runs its foreground PTY helper without a cancellation
+trap. The PTY helper handles its own idle/post-test deadlines but has no external
+termination handler. An owned native control sent TERM to the real wrapper: the
+wrapper exited while its helper and ready stub remained alive. Releasing only
+the owned stub allowed the helper to reap it and close the output pipe. This
+proves a cancellation ownership gap, not the cause of O's prolonged output after
+the broad 900-second watchdog or the complete console-session chain.
+
+`test_ci_app_host_cancellation.py` exercises the actual owners under Linux with
+an owned xcodebuild stub and the real machine lock at an owned path. Cases cover
+TERM/INT at the PTY, wrapper, second retry attempt, and evidence-defer boundaries,
+plus a same-PTY-group descendant, the enabled process observer and its existing-
+output-directory fallback, and a stubborn
+child under the existing outer watchdog's five-second termination allowance.
+The desired contract is cancellation status `128 + signal`, no subsequent retry,
+joined direct child, stopped owned group descendants, and closed output before
+the wrapper returns. No native 900-second, idle, post-test, or retry policy is
+changed in this regression-only commit.
+
+Each scenario runs in a dedicated Linux subreaper process. The guard itself is
+also an isolated subreaper and owns each temporary root, so an outer scenario
+timeout still joins adopted descendants before removing their files. Captured processes
+are signaled through pidfds, so cleanup cannot signal a reused PID. Assertions
+capture failures before cleanup; a finally path releases/kills and reaps only
+owned descendants, then removes the owned root. An exited grandchild may be
+adopted and reaped by the test; this is distinct from requiring its PTY helper
+to waitpid a process that is not its direct child. macOS skips this Linux-only
+ownership harness, which does not claim sudo/launchctl or testmanagerd-created
+session coverage. Linux cannot load the MacProcesses libproc backend: the
+sampler-enabled case proves the real diagnostics command-forwarding chain, not
+a live macOS sampling worker cancellation. Existing diagnostics tests separately
+exercise owned observer stop/join behavior. The existing native prompt/watchdog/
+status controls remain.
+
+The unchanged production owners fail all 13 controls in a cached local Linux
+container with networking disabled and the repository mounted read-only; all
+13 scenarios complete owned cleanup. A temporary control that deliberately
+wedges the ready scenario confirms outer-timeout child joins and root removal. A first container attempt lacked execute
+permission on its temporary mount and is excluded from regression evidence.
+Actual GitHub Linux guard red is still required before the production fix.
+`app_host_cancellation_ownership_verification` remains open; no production fix
+or complete historical CI-cause claim is included.

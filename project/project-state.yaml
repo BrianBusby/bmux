@@ -5835,6 +5835,11 @@ policies:
     selected_for_implementation: false
 
 caveats:
+  - id: app_host_cancellation_ownership_verification
+    title: App-host cancellation ownership regression is locally red and awaits actual Linux CI red before its fix
+    status: open
+    owner: bmux
+
   - id: session_write_store_capture_verification
     title: Session persistence store capture awaits fixed-artifact and app-host verification
     status: open

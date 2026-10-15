@@ -398,6 +398,8 @@ def main() -> int:
     check_test_progress_watchdog()
     check_colored_test_progress_watchdog()
 
+    subprocess.run([sys.executable, str(ROOT / "tests/test_ci_app_host_cancellation.py")], check=True)
+
     print("PASS: xcodebuild noninteractive helper dismisses crash prompts and idle-times out stuck children")
     return 0
 
