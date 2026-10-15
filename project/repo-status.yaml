@@ -469,3 +469,6 @@ local_caveats:
 
   - id: claude_session_phase_fixture_verification
     status: open
+
+  - id: codex_hook_installation_fixture_verification
+    status: open

@@ -303,3 +303,4 @@ Repository: `BrianBusby/bmux`
 | `app_host_failure_evidence_verification` | open |
 | `live_surface_recovery_window_fixture_verification` | open |
 | `claude_session_phase_fixture_verification` | open |
+| `codex_hook_installation_fixture_verification` | open |

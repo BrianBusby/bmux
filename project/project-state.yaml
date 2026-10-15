@@ -6390,3 +6390,8 @@ caveats:
     title: Claude session replacement fixtures join each hook and socket phase; native controls pass and integrated app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: codex_hook_installation_fixture_verification
+    title: Codex installer fixture counts configured prompt entries and owns generated script paths; native controls pass and integrated app-host verification remains pending
+    status: open
+    owner: bmux
