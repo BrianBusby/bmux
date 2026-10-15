@@ -4585,3 +4585,18 @@ and a hidden fact retains the original presentation failures. These establish th
 routing precondition and fixture cleanup, not real WindowServer presentation.
 The permanent `orderBack` case is compiled only locally; its actual app-host run
 remains pending under `live_surface_recovery_window_fixture_verification`.
+
+
+### App-host collector watchdog boundary regression
+
+Review of the broad unit-test watchdog found that synchronous failure collection
+can outlive its native command and replace exit 65 with the outer watchdog's 124.
+The new behavioral control executes the actual workflow shell and app-host wrapper
+with an owned native failure and bounded slow diagnostic tools. It verifies the
+report retains native exit 65, then requires the workflow to return that same exit.
+On the current implementation the report records 65 while the workflow returns 124.
+The other eleven collector controls remain green. This commit contains only the
+regression and verification state; collection ownership is unchanged pending actual
+CI red. The proposed correction moves expensive collection outside the timed native
+command without extending its 900-second bound, retries, or machine lock policy.
+No actual Xcode, application, external service, or user process runs in this control.

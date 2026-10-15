@@ -5,12 +5,14 @@ import json
 import os
 from pathlib import Path
 import signal
+import shutil
 import subprocess
 import sys
 import tempfile
 import time
 import unittest
 from unittest.mock import patch
+from test_ci_xcodebuild_exit_reporting import executable, workflow_script
 
 SPEC = importlib.util.spec_from_file_location('evidence', Path(__file__).resolve().parents[1] / 'scripts/ci/app_host_failure_evidence.py')
 evidence = importlib.util.module_from_spec(SPEC)
@@ -214,6 +216,71 @@ class EvidenceTests(unittest.TestCase):
                 if parent.poll() is None:
                     parent.kill()
                 parent.wait()
+
+    def test_collection_outside_native_watchdog_preserves_exit(self):
+        repository = Path(__file__).resolve().parents[1]
+        work = Path(self.temp.name) / 'work'
+        scripts = work / 'scripts/ci'
+        scripts.mkdir(parents=True)
+        for name in ('run-app-host-xcodebuild.sh', 'xcodebuild_noninteractive.py',
+                     'app_host_failure_evidence.py'):
+            shutil.copy2(repository / 'scripts/ci' / name, scripts / name)
+        executable(scripts / 'run-in-console-session.sh', '#!/bin/bash\nexec "$@"\n')
+        executable(scripts / 'bmux_unit_test_shard.py',
+                   'import sys\nfrom pathlib import Path\nPath(sys.argv[-1]).write_text("-only-testing:bmuxTests/OwnedFixture\\n")\n')
+        executable(work / 'bin/xcodebuild', '''#!/usr/bin/env python3
+import os
+from pathlib import Path
+(Path(os.environ['BMUX_DERIVED_DATA_PATH']) / 'Logs/Test/owned.xcresult').mkdir()
+print('Owned native failure', flush=True)
+raise SystemExit(65)
+''')
+        # A bounded diagnostic tool crosses the shorter native watchdog. No
+        # app, Xcode, external service or duration assertion is used.
+        executable(work / 'bin/xcrun', '''#!/usr/bin/env python3
+import os, signal
+from pathlib import Path
+Path(os.environ['OWNED_TOOL_ENTERED']).write_text('entered')
+def finish(*_):
+    print('{}', flush=True)
+    raise SystemExit(0)
+signal.signal(signal.SIGALRM, finish)
+signal.alarm(2)
+signal.pause()
+''')
+        # Keep the real SECONDS watchdog, with faster bounded predicate polling
+        # than the workflow's five-second interval for this owned process graph.
+        executable(work / 'bin/sleep',
+                   '#!/usr/bin/env python3\nimport select\nselect.select([], [], [], .01)\n')
+        entered = Path(self.temp.name) / 'tool-entered'
+        env = {**os.environ, 'PATH': str(work / 'bin') + os.pathsep + os.environ['PATH'],
+               'RUNNER_TEMP': self.temp.name, 'BMUX_DERIVED_DATA_PATH': str(self.root),
+               'BMUX_APP_HOST_TEST_LOCK_ACTIVE': '1', 'BMUX_APP_HOST_XCODEBUILD_ATTEMPTS': '1',
+               'BMUX_APP_HOST_PROCESS_DIAGNOSTICS': '0', 'BMUX_UNIT_TEST_TIMEOUT_SECONDS': '1',
+               'OWNED_TOOL_ENTERED': str(entered)}
+        process = subprocess.Popen(['bash', '-c', workflow_script('ci.yml', 'Run unit tests')],
+                                   cwd=work, env=env, stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT, start_new_session=True)
+        try:
+            output, _ = process.communicate(timeout=12)
+        finally:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            process.wait()
+        # Execute the actual always-step when present. Before the repair,
+        # synchronous collection above changes the native result from 65 to 124.
+        try:
+            collection = workflow_script('ci.yml', 'Collect app-host failure evidence')
+        except ValueError:
+            collection = ':'
+        subprocess.run(['bash', '-c', collection], cwd=work, env=env, check=True, timeout=12)
+        self.assertTrue(entered.exists())
+        reports = list(Path(self.temp.name).glob('bmux-failure-evidence/**/report.json'))
+        self.assertEqual(len(reports), 1)
+        self.assertEqual(json.loads(reports[0].read_text())['native_exit_code'], 65)
+        self.assertEqual(process.returncode, 65, output.decode(errors='replace'))
 
     def test_tool_output_limit(self):
         with patch.object(evidence, 'MAX_TOOL_BYTES', 4096):
