@@ -128,7 +128,7 @@ Regenerate with: ./scripts/project-docs generate
 
 | Caveat | Owner | Status | Issue |
 | --- | --- | --- | --- |
-| Session persistence store capture awaits fixed-artifact and app-host verification (`session_write_store_capture_verification`) | Bmux | open |  |
+| Session persistence store capture builds as 794 and passes compiled policy/store checks; macOS 15 app-host teardown verification remains pending (`session_write_store_capture_verification`) | Bmux | open |  |
 | Bash refresh FIFO observation awaits app-host verification and retains detached stub cleanup risk (`bash_relay_refresh_fixture_verification`) | Bmux | open |  |
 | Joined Kiro lifecycle no-response fixture awaits actual app-host verification (`kiro_lifecycle_feed_fixture_verification`) | Bmux | open |  |
 | Four-agent one-way feed fixture awaits fixed-head app-host verification (`feed_hook_no_response_fixture_verification`) | Bmux | open |  |
@@ -241,7 +241,7 @@ Regenerate with: ./scripts/project-docs generate
 | OMX HUD restore fixture establishes its existing-directory precondition; native restoration and missing-directory controls pass, integrated app-host verification pending (`omx_hud_restore_directory_fixture_verification`) | Bmux | open |  |
 | Palette shortcut fixtures own their settings and window context; native routing controls pass and integrated app-host verification remains pending (`palette_selection_shortcut_fixture_verification`) | Bmux | open |  |
 | Split workspace title fixture advances the recorded notification coalescer callback; native controls pass and integrated app-host verification remains pending (`split_workspace_title_delivery_fixture_verification`) | Bmux | open |  |
-| App-host failure evidence defers collection outside the native watchdog after actual CI regression proof; fixed-head CI and actual artifact verification remain pending (`app_host_failure_evidence_verification`) | Bmux | open |  |
+| Deferred app-host evidence passes the fixed Linux guard; actual deferred artifact delivery and matching-image symbolication remain pending (`app_host_failure_evidence_verification`) | Bmux | open |  |
 | Live-surface recovery fixture establishes a visible retained window; direct-context native controls and compilation pass, real presentation app-host verification remains pending (`live_surface_recovery_window_fixture_verification`) | Bmux | open |  |
 | Claude session replacement fixtures join each hook and socket phase; native controls pass and integrated app-host verification remains pending (`claude_session_phase_fixture_verification`) | Bmux | open |  |
 

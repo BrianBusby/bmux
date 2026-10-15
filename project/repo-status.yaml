@@ -143,6 +143,7 @@ component_releases:
 
 local_caveats:
   - id: session_write_store_capture_verification
+    # Build 794 and twelve compiled policy/store cases pass; full teardown CI remains open.
     status: open
   - id: bash_relay_refresh_fixture_verification
     status: open

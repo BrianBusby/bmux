@@ -4652,8 +4652,10 @@ passed sixteen; the final Linux run passed the watchdog regression but recorded
 one timeout in the unchanged two-second output-limit worker control. A separate
 owned worker probe completed in 0.039 seconds, which does not explain that timeout.
 The final Linux result remains fifteen passes and one error, not a clean rerun.
-Fixed-head workflow guard CI is still required. No Xcode, application,
-external service or user process runs in these controls. Fixed-head CI, real
+Fixed-head Linux workflow guard 116531176822 subsequently passed all sixteen
+controls in 8.884 seconds at commit `119d6a9b5`. This does not erase the local
+Linux timeout above. No Xcode, application,
+external service or user process runs in these controls. Real deferred
 artifact delivery and matching-image symbolication remain pending under
 `app_host_failure_evidence_verification`.
 
@@ -4679,8 +4681,14 @@ owner off-main and store-only captures release it on main before queued work.
 This is a copied-method ownership proof, not execution of the compiled app
 method; the actual UI teardown evidence is the O stack. Its original method
 retains the pre-existing non-Sendable closure-conversion warning; the candidate
-has none. Fixed-artifact compilation, existing inspector coverage and actual
-macOS 15 app-host verification remain pending under
+has none. Committed-source build 794 completed in 296 seconds without launch.
+Twelve exact existing persistence cases pass against its compiled module: ten
+AppDelegate policy cases and two owned-file repository round trips. Swift 6 probe
+compilation has no warnings. These cases do not directly call the private async
+write closure or reproduce UI destruction. The full test target compiles at
+`14c0e7ae9` (598 test files and 14 shared sources), with no new warning messages
+relative to the prior complete compile. Actual inspector and macOS 15 app-host
+verification remain pending under
 `session_write_store_capture_verification`.
 
 ### Claude session replacement phase ownership
@@ -4734,3 +4742,15 @@ Artifacts retain only existing allowlisted numeric process records and sanitized
 symbol frames; raw headers, arguments, environment, paths and image inventories
 remain excluded. Actual macOS 15 artifact delivery and useful call graphs remain
 open verification, to be assessed on the next complete candidate run.
+
+### O broad native completion and cancellation boundary
+
+All four broad native shards failed in run 38758720078. The original synchronous
+collector delivered sanitized reports on shards 1, 3 and 4; shard 2 explicitly
+uploaded no report files after outer cancellation. Shards 2 and 3 continued
+printing native output after the 900-second outer watchdog terminated its wrapper.
+An owned executable control confirms that sending TERM to the existing Bash
+wrapper leaves its PTY helper and command alive; the control then explicitly
+releases and joins both. This is a concrete existing cancellation ownership gap,
+not evidence that it caused the earlier test failures. A bounded repair remains
+separate from the deferred collector. No native failure or timeout is waived.

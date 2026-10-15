@@ -5836,7 +5836,7 @@ policies:
 
 caveats:
   - id: session_write_store_capture_verification
-    title: Session persistence store capture awaits fixed-artifact and app-host verification
+    title: Session persistence store capture builds as 794 and passes compiled policy/store checks; macOS 15 app-host teardown verification remains pending
     status: open
     owner: bmux
 
@@ -6377,7 +6377,7 @@ caveats:
     owner: bmux
 
   - id: app_host_failure_evidence_verification
-    title: App-host failure evidence defers collection outside the native watchdog after actual CI regression proof; fixed-head CI and actual artifact verification remain pending
+    title: Deferred app-host evidence passes the fixed Linux guard; actual deferred artifact delivery and matching-image symbolication remain pending
     status: open
     owner: bmux
 
