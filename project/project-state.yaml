@@ -6351,6 +6351,11 @@ caveats:
     status: open
     owner: bmux
 
+  - id: palette_selection_shortcut_fixture_verification
+    title: Palette shortcut fixtures own their settings and window context; native routing controls pass and integrated app-host verification remains pending
+    status: open
+    owner: bmux
+
   - id: split_workspace_title_delivery_fixture_verification
     title: Split workspace title fixture advances the recorded notification coalescer callback; native controls pass and integrated app-host verification remains pending
     status: open

@@ -685,10 +685,13 @@
 		C0DEC0DE000000000000F204 /* CommandPaletteNucleoFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEC0DE000000000000F203 /* CommandPaletteNucleoFixtures.swift */; };
 		C0DEFF200000000000000001 /* CommandPaletteOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFF200000000000000002 /* CommandPaletteOverlay.swift */; };
 		A5008383 /* CommandPaletteSearchEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5008382 /* CommandPaletteSearchEngineTests.swift */; };
+		9BFA38FFA85847ADB8ECD435 /* CommandPaletteSelectionShortcutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0009ED1219DD448D89474284 /* CommandPaletteSelectionShortcutTests.swift */; };
 		C0DEF4110000000000000001 /* CommandPaletteSettingsToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEF4110000000000000002 /* CommandPaletteSettingsToggle.swift */; };
 		C0DEF4120000000000000001 /* CommandPaletteSettingsToggleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEF4120000000000000002 /* CommandPaletteSettingsToggleTests.swift */; };
 		C1713006C1713006C1713006 /* CommandPaletteShortcutCustomizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1713005C1713005C1713005 /* CommandPaletteShortcutCustomizationTests.swift */; };
 		C1713002C1713002C1713002 /* CommandPaletteShortcutRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1713001C1713001C1713001 /* CommandPaletteShortcutRouting.swift */; };
+		B1E2D5AFAC4043D69FED5275 /* CommandPaletteShortcutSettingsFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E678C63DBFA4E17B063B317 /* CommandPaletteShortcutSettingsFixture.swift */; };
+		0641FB39C1ED4CCE957D8B33 /* CommandPaletteShortcutWindowFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = F22765BFA4A3411EAC43F51D /* CommandPaletteShortcutWindowFixture.swift */; };
 		3023A1013023A1013023A101 /* ConfigSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3023B1013023B1013023B101 /* ConfigSettingsView.swift */; };
 		C099EDC284C2BFFFDD14268F /* ConfigSnapshotTabManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47591E108B126B7F552379E7 /* ConfigSnapshotTabManager.swift */; };
 		3023A1003023A1003023A100 /* ConfigSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3023B1003023B1003023B100 /* ConfigSource.swift */; };
@@ -2749,10 +2752,13 @@
 		C0DEC0DE000000000000F203 /* CommandPaletteNucleoFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteNucleoFixtures.swift; sourceTree = "<group>"; };
 		C0DEFF200000000000000002 /* CommandPaletteOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPalette/CommandPaletteOverlay.swift; sourceTree = "<group>"; };
 		A5008382 /* CommandPaletteSearchEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteSearchEngineTests.swift; sourceTree = "<group>"; };
+		0009ED1219DD448D89474284 /* CommandPaletteSelectionShortcutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CommandPaletteSelectionShortcutTests.swift"; sourceTree = "<group>"; };
 		C0DEF4110000000000000002 /* CommandPaletteSettingsToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPalette/CommandPaletteSettingsToggle.swift; sourceTree = "<group>"; };
 		C0DEF4120000000000000002 /* CommandPaletteSettingsToggleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteSettingsToggleTests.swift; sourceTree = "<group>"; };
 		C1713005C1713005C1713005 /* CommandPaletteShortcutCustomizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteShortcutCustomizationTests.swift; sourceTree = "<group>"; };
 		C1713001C1713001C1713001 /* CommandPaletteShortcutRouting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/CommandPaletteShortcutRouting.swift; sourceTree = "<group>"; };
+		1E678C63DBFA4E17B063B317 /* CommandPaletteShortcutSettingsFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CommandPaletteShortcutSettingsFixture.swift"; sourceTree = "<group>"; };
+		F22765BFA4A3411EAC43F51D /* CommandPaletteShortcutWindowFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CommandPaletteShortcutWindowFixture.swift"; sourceTree = "<group>"; };
 		3023B1013023B1013023B101 /* ConfigSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings/ConfigSettingsView.swift; sourceTree = "<group>"; };
 		47591E108B126B7F552379E7 /* ConfigSnapshotTabManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigSnapshotTabManager.swift; sourceTree = "<group>"; };
 		3023B1003023B1003023B100 /* ConfigSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings/ConfigSource.swift; sourceTree = "<group>"; };
@@ -5726,6 +5732,9 @@
 					730600010000000000000001 /* MainWindowVisibleFrameFitCoreTests.swift */,
 					970226F3C99D0D937CD00539 /* BrowserConfigTests.swift */,
 				9C9DB4F640E04D5A829039A0 /* BrowserFindShortcutSettingsFixture.swift */,
+				F22765BFA4A3411EAC43F51D /* CommandPaletteShortcutWindowFixture.swift */,
+				1E678C63DBFA4E17B063B317 /* CommandPaletteShortcutSettingsFixture.swift */,
+				0009ED1219DD448D89474284 /* CommandPaletteSelectionShortcutTests.swift */,
 				00EA14FF8DC74C26BF2318C1 /* BrowserFindShortcutRoutingTests.swift */,
 				CDD1FFB1CC2343E9B2E69F91 /* ShortcutSettingsParsingContractTests.swift */,
 				74478AB8036341AC999204A2 /* CLITmuxLaunchIdentityTests.swift */,
@@ -8254,8 +8263,11 @@
 				C0DEC0DE000000000000F102 /* CommandPaletteNucleoFFITests.swift in Sources */,
 				C0DEC0DE000000000000F204 /* CommandPaletteNucleoFixtures.swift in Sources */,
 				A5008383 /* CommandPaletteSearchEngineTests.swift in Sources */,
+				9BFA38FFA85847ADB8ECD435 /* CommandPaletteSelectionShortcutTests.swift in Sources */,
 				C0DEF4120000000000000001 /* CommandPaletteSettingsToggleTests.swift in Sources */,
 				C1713006C1713006C1713006 /* CommandPaletteShortcutCustomizationTests.swift in Sources */,
+				B1E2D5AFAC4043D69FED5275 /* CommandPaletteShortcutSettingsFixture.swift in Sources */,
+				0641FB39C1ED4CCE957D8B33 /* CommandPaletteShortcutWindowFixture.swift in Sources */,
 				C099EDC284C2BFFFDD14268F /* ConfigSnapshotTabManager.swift in Sources */,
 				C202527C3427412C87E5397A /* ConfiguredCodexLaunchTests.swift in Sources */,
 				4866F6C10E9D4FD58501B475 /* ConnectedCodexExecutableResolverTests.swift in Sources */,

@@ -4467,3 +4467,35 @@ by this fixture. The historical CI timer/settings state was not captured, so
 this proves the maintained completion boundary without assigning the CI cause.
 No production, shared-helper or selector change was made. Integrated macOS
 app-host verification remains pending.
+
+### Palette selection shortcut fixture ownership
+
+L shard 2 rejected the final shortcut events in
+`testChordedCommandPaletteNextShortcutMovesSelection` and
+`testRemappedCommandPalettePreviousShortcutDoesNotConsumeControlP`; their
+missing-notification timeouts followed those synchronous rejections. The exact
+historical rejecting gate remains unassigned. The original fixture constructs a
+full application window, holds shared settings during a nested XCTest wait, and
+leaves the settings constructor's additional fallback path enabled.
+
+The two migrated cases retain the original shortcut setters, key codes,
+modifiers, handled results, target and selection-delta assertions. An owned
+retained window, direct main-window context and genuine field-editor property
+establish the route without activation or listener startup. A prewritten empty
+settings file disables all fallbacks; synchronous cleanup restores the previous
+app/active manager, settings store, persisted keys and volatile domains. The
+handler posts selection notifications synchronously, so its return replaces the
+original 150ms inverted and one-second notification waits; these are removed,
+not extended. The remaining legacy cases are unchanged.
+
+Frozen build 791 runs the exact new two-case suite successfully with zero
+Swift 5 compile diagnostics, including compilation of the remaining legacy
+container. Temporary multiline-editor, wrong-window and wrong-binding controls
+reject the original positive oracles; the settings control demonstrates owned
+fallback import versus an isolated primary. This establishes boundary
+sensitivity, not the cause of the macOS 15 CI failure. Standalone Swift 6
+compilation remains blocked by the imported mutable
+`KeyboardShortcutSettings.settingsFileStore` declaration; no suppression or
+production concurrency change is included. Integrated full-target compilation
+and fixed-head app-host verification remain pending. No workflow selector or
+production behavior changes in this slice.
