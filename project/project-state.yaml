@@ -6392,7 +6392,7 @@ caveats:
     owner: bmux
 
   - id: claude_session_phase_fixture_verification
-    title: Claude session replacement fixtures join each hook and socket phase; native controls pass and integrated app-host verification remains pending
+    title: Claude session replacement and startup-restorable fixtures join each hook and socket phase; native controls pass and integrated app-host verification remains pending
     status: open
     owner: bmux
 
