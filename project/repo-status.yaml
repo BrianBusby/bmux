@@ -450,3 +450,6 @@ local_caveats:
 
   - id: markdown_mermaid_double_zoom_verification
     status: open
+
+  - id: app_host_failure_evidence_verification
+    status: open

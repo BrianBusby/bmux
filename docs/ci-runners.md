@@ -4467,3 +4467,42 @@ by this fixture. The historical CI timer/settings state was not captured, so
 this proves the maintained completion boundary without assigning the CI cause.
 No production, shared-helper or selector change was made. Integrated macOS
 app-host verification remains pending.
+
+## Bounded app-host failure evidence
+
+Each failed native wrapper attempt now has a separate sanitized `report.json`
+under the existing runner temporary directory. The existing app-host job uploads
+only these reports for seven days, including when a focused gate prevents broad
+execution. Native test exit status, retry policy, timeouts and concurrency remain
+unchanged. Collection is post-failure, with a separate absolute 30-second budget;
+a failed or cancelled diagnostic tool cannot turn a native failure into success.
+
+The wrapper snapshots result bundle names before the invocation. The collector
+reads only new bundles contained in that exact DerivedData root, records their
+counts and any matching result paths reported by the invocation, and preserves
+multiple runs instead of treating the last console footer as the whole suite.
+It retains allowlisted result counts, suite/method identities, repetition
+results and durations. Parameter display names, failure messages, attachments,
+raw logs/results, environment, command arguments and source paths are excluded.
+Unsupported or incomplete result data is marked unavailable.
+
+Numeric crash frames, crashed thread numbers, image UUIDs and offsets are parsed
+before diagnostic tools run. Restart and test-limit events remain separate;
+none is attributed to the last test printed. Symbolication uses only images
+inside the exact DerivedData products directory after their UUID/architecture
+matches the crash record. System/missing images remain numeric. Every owned
+tool process group is terminated and its direct process joined on completion,
+error or cancellation. Tool output is capped at 8 MiB; log scanning at 64 MiB;
+individual lines at 16 KiB; nodes at 2,048; reports at 2 MiB. Truncation is explicit.
+At most 16 crashes, 128 images per crash, and 128 ordinary plus 128 crashed-thread
+frames per crash are retained. Symbol strings are bounded and path-free.
+
+Local behavioral controls cover invocation isolation, payload exclusion,
+UUID mismatch, path escapes, output/record caps, exhausted budgets retaining
+multiple crashes, cancellation and original native exit codes 65/124. A small
+owned native Mach-O resolves its known function through real `dwarfdump`/`atos`;
+no app launch or induced crash is required. Existing retry/attempt/status tests
+pass. Parsing the archived L2 log recovers its five native crashes and all five
+restart boundaries, with explicit omitted-frame counts. This does not identify
+their cause: matching CI image symbolication and arrival of the next real
+failure report remain pending under `app_host_failure_evidence_verification`.
