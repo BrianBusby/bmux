@@ -21,6 +21,9 @@ MAX_LOG_BYTES = 64 * 1024 * 1024
 MAX_LINE_BYTES = 16384
 MAX_REPORT_BYTES = 2 * 1024 * 1024
 MAX_RECORDS = 2048
+MAX_PENDING = 64
+MAX_PENDING_LOG_BYTES = 128 * 1024 * 1024
+MAX_STATE_BYTES = 2 * 1024 * 1024
 MAX_FRAMES = 128
 MAX_STRING = 256
 IDENTITY = re.compile(r'(?:[A-Za-z_][A-Za-z_0-9]*[./])*[A-Za-z_][A-Za-z_0-9]*(?:\((?:[A-Za-z_][A-Za-z_0-9]*:|_:)*\))?\Z')
@@ -98,9 +101,82 @@ def result_bundles(root):
 
 
 def snapshot(root, output):
+    if len(pending_outputs(output.parent.parent)) >= MAX_PENDING:
+        raise ValueError('pending_attempt_limit')
     output.mkdir(parents=True, exist_ok=False)
-    state = {'before': result_bundles(root), 'started': time.monotonic()}
+    state = {'before': result_bundles(root), 'started': time.monotonic(), 'root': str(root.resolve())}
     (output / 'state.json').write_text(json.dumps(state))
+
+
+def pending_outputs(directory):
+    outputs = []
+    if directory.exists():
+        with os.scandir(directory) as entries:
+            for index, entry in enumerate(entries):
+                if index >= MAX_RECORDS:
+                    raise ValueError('pending_directory_limit')
+                if not re.fullmatch(r'attempt-\d+-[A-Za-z0-9]+', entry.name):
+                    continue
+                output = Path(entry.path) / 'capture'
+                if output.is_dir() and contained(output, directory) is not None and not entry.is_symlink() and not output.is_symlink():
+                    outputs.append(output)
+                if len(outputs) > MAX_PENDING:
+                    raise ValueError('pending_attempt_limit')
+    return sorted(outputs)
+
+
+def defer_collection(root, log, output, status):
+    """Freeze only this attempt's bounded private evidence; never launch tools."""
+    if status == 0:
+        (output / 'state.json').unlink(missing_ok=True)
+        return
+    outputs = pending_outputs(output.parent.parent)
+    used = sum((p / 'native.log').stat().st_size for p in outputs if (p / 'native.log').is_file())
+    remaining = min(MAX_LOG_BYTES, max(0, MAX_PENDING_LOG_BYTES - used))
+    state = json.loads((output / 'state.json').read_text())
+    state.update(status=status, elapsed=max(0, time.monotonic() - state['started']),
+                 bundles=[name for name in result_bundles(root) if name not in state['before']],
+                 log_bytes=log.stat().st_size, retained_log_bytes=min(log.stat().st_size, remaining))
+    with open(log, 'rb') as source, open(output / 'native.log', 'wb') as target:
+        while remaining:
+            block = source.read(min(1024 * 1024, remaining))
+            if not block:
+                break
+            target.write(block)
+            remaining -= len(block)
+    (output / 'state.json').write_text(json.dumps(state))
+
+
+def collect_pending(directory, tools=None):
+    """Parse every attempt before tools consume the single post-step budget."""
+    tools = tools or DiagnosticTools()
+    outputs = pending_outputs(directory)
+    pending = []
+    try:
+        for output in outputs:
+            state_path, log = output / 'state.json', output / 'native.log'
+            if not state_path.is_file():
+                continue
+            pending.append((output, None, None))
+            try:
+                if state_path.stat().st_size > MAX_STATE_BYTES:
+                    raise ValueError('pending_state_limit')
+                state = json.loads(state_path.read_text())
+                if not isinstance(state.get('root'), str) or not Path(state['root']).is_absolute():
+                    raise ValueError('pending_root_invalid')
+                parsed = crash_records(log, tools) if log.is_file() else ([], [], {'unavailable': True}, [])
+                pending[-1] = (output, state, parsed)
+            except (OSError, ValueError, KeyError) as error:
+                (output / 'report.json').write_text(json.dumps({'event': 'app_host_failure_evidence',
+                    'invocation': output.parent.name, 'errors': [type(error).__name__]}))
+        for output, state, parsed in pending:
+            if state is not None:
+                collect(Path(state['root']), output / 'native.log', output, state.get('status'), tools, parsed)
+    finally:
+        # Includes cancellation: pending files stay private and are never uploaded.
+        for output in outputs:
+            (output / 'state.json').unlink(missing_ok=True)
+            (output / 'native.log').unlink(missing_ok=True)
 
 
 def summary_report(value):
@@ -271,7 +347,7 @@ def symbolicate(crash, root, tools):
     return {'line': crash['line'], 'crashed_thread': crash.get('crashed_thread'), 'images': records}
 
 
-def collect(root, log, output, status, tools=None):
+def collect(root, log, output, status, tools=None, parsed=None):
     tools = tools or DiagnosticTools()
     report = {'event': 'app_host_failure_evidence', 'schema': 1, 'native_exit_code': status, 'invocation': output.parent.name if re.fullmatch(r'attempt-\d+-[A-Za-z0-9]+', output.parent.name) else 'unavailable',
               'results': [], 'crashes': [], 'events': [], 'errors': []}
@@ -293,12 +369,19 @@ def collect(root, log, output, status, tools=None):
         report['workflow_sha'] = sha.lower()
     try:
         state = json.loads((output / 'state.json').read_text())
-        report['elapsed_seconds'] = max(0, time.monotonic() - state['started'])
+        report['elapsed_seconds'] = state.get('elapsed', max(0, time.monotonic() - state['started']))
+        if status is None:
+            report['errors'].append('native_status_unavailable')
         # Parse numeric crash/restart evidence before tools can consume the budget.
-        crashes, report['events'], report['log_limits'], result_paths = crash_records(log, tools)
+        crashes, report['events'], report['log_limits'], result_paths = parsed if parsed is not None else crash_records(log, tools)
+        if 'retained_log_bytes' in state:
+            report['log_limits'].update(original_bytes=state['log_bytes'], retained_bytes=state['retained_log_bytes'])
         for crash in crashes:
             report['crashes'].append(symbolicate(crash, root, tools))
-        bundles = [name for name in result_bundles(root) if name not in state['before']]
+        if 'bundles' in state:
+            bundles = state['bundles']
+        else:
+            bundles = [] if status is None else [name for name in result_bundles(root) if name not in state['before']]
         report['new_result_count'] = len(bundles)
         owned_paths = {contained(root / 'Logs' / 'Test' / name, root) for name in bundles}
         report['log_result_references'] = len(result_paths)
@@ -333,8 +416,8 @@ def collect(root, log, output, status, tools=None):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('phase', choices=('snapshot', 'collect'))
-    parser.add_argument('--root', type=Path, required=True)
+    parser.add_argument('phase', choices=('snapshot', 'defer', 'collect', 'collect-pending'))
+    parser.add_argument('--root', type=Path)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--log', type=Path)
     parser.add_argument('--status', type=int)
@@ -344,11 +427,18 @@ def main():
     signal.signal(signal.SIGTERM, cancelled)
     signal.signal(signal.SIGINT, cancelled)
     try:
-        if args.phase == 'snapshot':
+        if args.phase == 'collect-pending':
+            collect_pending(args.output)
+        elif args.root is None:
+            parser.error('--root is required for attempt operations')
+        elif args.phase == 'snapshot':
             snapshot(args.root, args.output)
         else:
             if args.log is None or args.status is None:
-                parser.error('collect requires --log and --status')
+                parser.error('collect/defer requires --log and --status')
+            if args.phase == 'defer':
+                defer_collection(args.root, args.log, args.output, args.status)
+                return 0
             report = collect(args.root, args.log, args.output, args.status)
             if report['errors'] or any('unavailable' in r for r in report['results']):
                 print('App-host failure evidence incomplete; see sanitized report', file=sys.stderr)

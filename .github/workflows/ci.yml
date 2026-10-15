@@ -905,6 +905,14 @@ jobs:
           # A partial log summary cannot turn a failure or timeout into success.
           exit "$EXIT_CODE"
 
+      - name: Collect app-host failure evidence
+        if: ${{ always() }}
+        run: |
+          # Diagnostics cannot replace the native step's exit or consume its deadline.
+          scripts/ci/run-in-console-session.sh python3 scripts/ci/app_host_failure_evidence.py collect-pending \
+            --output "$RUNNER_TEMP/bmux-failure-evidence" || \
+            echo "App-host failure evidence incomplete; native test result is unchanged"
+
       - name: Upload sanitized app-host failure evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
