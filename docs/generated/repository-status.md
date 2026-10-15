@@ -301,3 +301,4 @@ Repository: `BrianBusby/bmux`
 | `markdown_mermaid_double_zoom_verification` | open |
 | `app_host_failure_evidence_verification` | open |
 | `live_surface_recovery_window_fixture_verification` | open |
+| `claude_session_phase_fixture_verification` | open |

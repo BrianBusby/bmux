@@ -588,6 +588,8 @@
 		C7A533000000000000000002 /* ClaudeSessionCanonicalizationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A533000000000000000001 /* ClaudeSessionCanonicalizationContext.swift */; };
 		AE92B00E65D8D867C2135516 /* ClaudeSessionEndFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 654A89AA139BAE899DD77C8C /* ClaudeSessionEndFixture.swift */; };
 		1FE3229D8649FF96B01112F1 /* ClaudeSessionEndScopeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BF41FFE8DA22514668B6E1B /* ClaudeSessionEndScopeTests.swift */; };
+		C4F20E0D1DC046BD81312F7A /* ClaudeSessionPhaseFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E559DC04A90425A9853E653 /* ClaudeSessionPhaseFixture.swift */; };
+		7584088793C0485788ED90E9 /* ClaudeSessionPhaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED74C632748346D09D2B3467 /* ClaudeSessionPhaseTests.swift */; };
 		A9F200000000000000000015 /* ClaudeStreamJSONAccumulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000015 /* ClaudeStreamJSONAccumulator.swift */; };
 		CE7000000000000000000001 /* ClaudeWrapperResumeEnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7000000000000000000002 /* ClaudeWrapperResumeEnvironmentTests.swift */; };
 		A5D4120DA1B2C3D4E5F60718 /* CLIAuthAliasTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5D4120EA1B2C3D4E5F60718 /* CLIAuthAliasTests.swift */; };
@@ -2667,6 +2669,8 @@
 		C7A533000000000000000001 /* ClaudeSessionCanonicalizationContext.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "ClaudeSessionCanonicalizationContext.swift"; sourceTree = "<group>"; };
 		654A89AA139BAE899DD77C8C /* ClaudeSessionEndFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeSessionEndFixture.swift; sourceTree = "<group>"; };
 		9BF41FFE8DA22514668B6E1B /* ClaudeSessionEndScopeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeSessionEndScopeTests.swift; sourceTree = "<group>"; };
+		2E559DC04A90425A9853E653 /* ClaudeSessionPhaseFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ClaudeSessionPhaseFixture.swift"; sourceTree = "<group>"; };
+		ED74C632748346D09D2B3467 /* ClaudeSessionPhaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ClaudeSessionPhaseTests.swift"; sourceTree = "<group>"; };
 		A9F100000000000000000015 /* ClaudeStreamJSONAccumulator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ClaudeStreamJSONAccumulator.swift; sourceTree = "<group>"; };
 		CE7000000000000000000002 /* ClaudeWrapperResumeEnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeWrapperResumeEnvironmentTests.swift; sourceTree = "<group>"; };
 		A5D4120EA1B2C3D4E5F60718 /* CLIAuthAliasTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIAuthAliasTests.swift; sourceTree = "<group>"; };
@@ -5954,6 +5958,8 @@
 					654A89AA139BAE899DD77C8C /* ClaudeSessionEndFixture.swift */,
 					583061CE94AE4D01B93357B9 /* HermesHookProcessContractTests.swift */,
 					52646665E7E94656A2037E54 /* HermesHookProcessFixture.swift */,
+				ED74C632748346D09D2B3467 /* ClaudeSessionPhaseTests.swift */,
+				2E559DC04A90425A9853E653 /* ClaudeSessionPhaseFixture.swift */,
 					56851DBE797C46F5ADDAAEC6 /* AgentLaunchEnvironmentTests.swift */,
 					9960810488AB4C6EAF7B5662 /* AgentLaunchEnvironmentFixture.swift */,
 				8028AA685A6F40449A55B50E /* SSHWorkspaceCreationTests.swift */,
@@ -8214,6 +8220,8 @@
 				CE4412000000000000000011 /* ClaudeNotificationTargetTests.swift in Sources */,
 					AE92B00E65D8D867C2135516 /* ClaudeSessionEndFixture.swift in Sources */,
 					1FE3229D8649FF96B01112F1 /* ClaudeSessionEndScopeTests.swift in Sources */,
+				C4F20E0D1DC046BD81312F7A /* ClaudeSessionPhaseFixture.swift in Sources */,
+				7584088793C0485788ED90E9 /* ClaudeSessionPhaseTests.swift in Sources */,
 				CE7000000000000000000001 /* ClaudeWrapperResumeEnvironmentTests.swift in Sources */,
 				A5D4120DA1B2C3D4E5F60718 /* CLIAuthAliasTests.swift in Sources */,
 					CA11E4D0FA017DE500000B101 /* CLICallerWorkspaceDefaultTests.swift in Sources */,
