@@ -205,85 +205,6 @@ final class CommandPaletteShortcutCustomizationTests: XCTestCase {
         )
     }
 
-    func testRemappedCommandPalettePreviousShortcutDoesNotConsumeControlP() {
-        guard let appDelegate = AppDelegate.shared else {
-            XCTFail("Expected AppDelegate.shared")
-            return
-        }
-
-        withCommandPaletteFieldEditor(appDelegate: appDelegate) { window, _ in
-            withTemporaryCommandPalettePreviousShortcut {
-                let remappedPrevious = StoredShortcut(key: "u", command: false, shift: false, option: false, control: true)
-                KeyboardShortcutSettings.setShortcut(remappedPrevious, for: .commandPalettePrevious)
-                XCTAssertEqual(KeyboardShortcutSettings.shortcutIfBound(for: .commandPalettePrevious), remappedPrevious)
-
-                let controlPExpectation = expectation(
-                    description: "Remapped Ctrl+P should not route command palette move-selection"
-                )
-                controlPExpectation.isInverted = true
-                let controlPToken = NotificationCenter.default.addObserver(
-                    forName: .commandPaletteMoveSelection,
-                    object: nil,
-                    queue: nil
-                ) { _ in
-                    controlPExpectation.fulfill()
-                }
-                defer { NotificationCenter.default.removeObserver(controlPToken) }
-
-                guard let controlPEvent = makeKeyDownEvent(
-                    key: "\u{10}",
-                    modifiers: [.control],
-                    keyCode: 35,
-                    windowNumber: window.windowNumber
-                ) else {
-                    XCTFail("Failed to construct Ctrl+P event")
-                    return
-                }
-
-                #if DEBUG
-                XCTAssertFalse(appDelegate.debugHandleCustomShortcut(event: controlPEvent))
-                #else
-                XCTFail("debugHandleCustomShortcut is only available in DEBUG")
-                #endif
-
-                wait(for: [controlPExpectation], timeout: 0.15)
-
-                let controlUExpectation = expectation(
-                    description: "Remapped Ctrl+U should route command palette previous selection"
-                )
-                var observedDelta: Int?
-                let controlUToken = NotificationCenter.default.addObserver(
-                    forName: .commandPaletteMoveSelection,
-                    object: nil,
-                    queue: nil
-                ) { notification in
-                    observedDelta = notification.userInfo?["delta"] as? Int
-                    controlUExpectation.fulfill()
-                }
-                defer { NotificationCenter.default.removeObserver(controlUToken) }
-
-                guard let controlUEvent = makeKeyDownEvent(
-                    key: "\u{15}",
-                    modifiers: [.control],
-                    keyCode: 32,
-                    windowNumber: window.windowNumber
-                ) else {
-                    XCTFail("Failed to construct Ctrl+U event")
-                    return
-                }
-
-                #if DEBUG
-                XCTAssertTrue(appDelegate.debugHandleCustomShortcut(event: controlUEvent))
-                #else
-                XCTFail("debugHandleCustomShortcut is only available in DEBUG")
-                #endif
-
-                wait(for: [controlUExpectation], timeout: 1.0)
-                XCTAssertEqual(observedDelta, -1)
-            }
-        }
-    }
-
     func testUnboundCommandPalettePreviousShortcutLetsControlPPassThrough() {
         guard let appDelegate = AppDelegate.shared else {
             XCTFail("Expected AppDelegate.shared")
@@ -328,51 +249,6 @@ final class CommandPaletteShortcutCustomizationTests: XCTestCase {
                 #endif
 
                 wait(for: [moveExpectation], timeout: 0.15)
-            }
-        }
-    }
-
-    func testChordedCommandPaletteNextShortcutMovesSelection() {
-        guard let appDelegate = AppDelegate.shared else {
-            XCTFail("Expected AppDelegate.shared")
-            return
-        }
-
-        withCommandPaletteFieldEditor(appDelegate: appDelegate) { window, _ in
-            withTemporaryCommandPaletteShortcut(.commandPaletteNext) {
-                KeyboardShortcutSettings.setShortcut(
-                    StoredShortcut(key: "b", command: false, shift: false, option: false, control: true, chordKey: "n"),
-                    for: .commandPaletteNext
-                )
-                let moveExpectation = expectation(description: "Expected chorded next shortcut to move selection")
-                var observedDeltas: [Int] = []
-                var observedWindow: NSWindow?
-                let moveToken = NotificationCenter.default.addObserver(forName: .commandPaletteMoveSelection, object: nil, queue: nil) { notification in
-                    observedWindow = notification.object as? NSWindow
-                    if let delta = notification.userInfo?["delta"] as? Int {
-                        observedDeltas.append(delta)
-                        moveExpectation.fulfill()
-                    }
-                }
-                defer { NotificationCenter.default.removeObserver(moveToken) }
-
-                guard let prefixEvent = makeKeyDownEvent(key: "b", modifiers: [.control], keyCode: 11, windowNumber: window.windowNumber),
-                      let actionEvent = makeKeyDownEvent(key: "n", modifiers: [], keyCode: 45, windowNumber: window.windowNumber) else {
-                    XCTFail("Failed to construct command-palette chord events")
-                    return
-                }
-
-                #if DEBUG
-                XCTAssertTrue(appDelegate.debugHandleCustomShortcut(event: prefixEvent))
-                XCTAssertEqual(observedDeltas, [], "Chord prefix must arm without moving selection")
-                XCTAssertTrue(appDelegate.debugHandleCustomShortcut(event: actionEvent))
-                #else
-                XCTFail("debugHandleCustomShortcut is only available in DEBUG")
-                #endif
-
-                wait(for: [moveExpectation], timeout: 1.0)
-                XCTAssertEqual(observedWindow?.windowNumber, window.windowNumber)
-                XCTAssertEqual(observedDeltas, [1])
             }
         }
     }

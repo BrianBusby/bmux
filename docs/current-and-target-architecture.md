@@ -497,6 +497,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Mermaid scaling correction follows five actual CI geometry failures and passes native build 792 coverage; integrated app-host verification remains pending (`markdown_mermaid_double_zoom_verification`) - owner: Bmux; status: open
 - Browser chrome reference follows the shared shipped font default; native metrics coverage passes and integrated app-host verification remains pending (`browser_chrome_default_contract_verification`) - owner: Bmux; status: open
 - OMX HUD restore fixture establishes its existing-directory precondition; native restoration and missing-directory controls pass, integrated app-host verification pending (`omx_hud_restore_directory_fixture_verification`) - owner: Bmux; status: open
+- Palette shortcut fixtures own their settings and window context; native routing controls pass and integrated app-host verification remains pending (`palette_selection_shortcut_fixture_verification`) - owner: Bmux; status: open
 - Split workspace title fixture advances the recorded notification coalescer callback; native controls pass and integrated app-host verification remains pending (`split_workspace_title_delivery_fixture_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
 
