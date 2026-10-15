@@ -6386,6 +6386,11 @@ caveats:
     status: open
     owner: bmux
 
+  - id: app_host_sentry_hang_evidence_verification
+    title: Synthetic AppHang evidence regressions expose missing collector records locally; actual guard red, bounded native adapter and matching-image report delivery remain pending
+    status: open
+    owner: bmux
+
   - id: live_surface_recovery_window_fixture_verification
     title: Live-surface recovery fixture establishes a visible retained window; direct-context native controls and compilation pass, real presentation app-host verification remains pending
     status: open

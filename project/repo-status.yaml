@@ -466,6 +466,9 @@ local_caveats:
   - id: app_host_failure_evidence_verification
     status: open
 
+  - id: app_host_sentry_hang_evidence_verification
+    status: open
+
   - id: live_surface_recovery_window_fixture_verification
     status: open
 

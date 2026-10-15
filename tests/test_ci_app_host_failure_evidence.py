@@ -16,6 +16,7 @@ from test_ci_xcodebuild_exit_reporting import executable, workflow_script
 
 SPEC = importlib.util.spec_from_file_location('evidence', Path(__file__).resolve().parents[1] / 'scripts/ci/app_host_failure_evidence.py')
 evidence = importlib.util.module_from_spec(SPEC)
+sys.path.insert(0, str(Path(SPEC.origin).parent))
 SPEC.loader.exec_module(evidence)
 
 
@@ -390,4 +391,6 @@ signal.pause()
 
 
 if __name__ == '__main__':
-    unittest.main()
+    result = unittest.main(exit=False).result
+    hang_status = subprocess.run([sys.executable, str(Path(__file__).with_name('test_ci_app_host_sentry_hang_evidence.py'))]).returncode
+    raise SystemExit(int(not result.wasSuccessful() or hang_status != 0))

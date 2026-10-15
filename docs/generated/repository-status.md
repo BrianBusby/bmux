@@ -302,6 +302,7 @@ Repository: `BrianBusby/bmux`
 | `ssh_creation_joined_producer_verification` | open |
 | `markdown_mermaid_double_zoom_verification` | open |
 | `app_host_failure_evidence_verification` | open |
+| `app_host_sentry_hang_evidence_verification` | open |
 | `live_surface_recovery_window_fixture_verification` | open |
 | `claude_session_phase_fixture_verification` | open |
 | `codex_hook_installation_fixture_verification` | open |

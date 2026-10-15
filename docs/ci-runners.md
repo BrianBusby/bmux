@@ -4972,3 +4972,40 @@ documents. Authenticated Project Truth passes at 6bab8abd7. The configured PR
 Swift-size gate passes its speculative merge with main, retaining the documented
 incidental growth allowances of six, five and one lines; the unparameterized
 global scan still reports inherited baseline overages. No budget was changed.
+
+
+## Serialized AppHang evidence regression boundary
+
+Q shard 3 (run `38770214680`, job `116546261128`) contains serialized
+NSDictionary/OpenStep Sentry events that the native-crash collector does not
+recognize. Native `plutil` parses the first complete archived event; its
+`exception.values[].mechanism.type` is `AppHang`. That exception contains 100
+frames, including 19 matching app-image frames. Sentry preserves the older
+entrypoint frames first and the meaningful differing tail later; shared
+entrypoint offsets do not establish a shared stalled owner. Local app image
+UUIDs differ from this CI image and cannot symbolize its addresses.
+
+The test-only regression slice adds synthetic owned records to the existing
+failure-evidence guard. It requires separate hang records, original exception
+frame indexes, exact UUID and Products containment gates, numeric evidence when
+symbol tools expire, and no raw payload, paths or environment in reports.
+Quoted braces, literal newlines and fake event prefixes stay within their event;
+incomplete, malformed and oversized envelopes fail closed. Event/image/frame
+caps are checked independently of the existing 2 MiB final report cap. Conversion
+budget exhaustion must not erase native numeric crashes or restart records from
+later attempts. All attempt numeric parsing precedes conversion; conversion
+precedes symbol tools. Already converted records survive later tool exhaustion,
+while unconverted envelopes have an explicit budget-omission count.
+
+Linux controls inject only the conversion result at the existing diagnostic-tool
+boundary; they do not claim a portable OpenStep parser. A macOS-only test uses
+real `plutil`, and an independent native format check confirms the synthetic
+quoted-delimiter input parses before relying on missing-evidence failures. No
+archived Sentry payload is committed. The production collector, workflow, native
+exit policy, 30-second diagnostic budget and sampling settings are unchanged in
+this regression-only slice. Actual guard red is required before implementing the
+bounded native adapter. On unchanged production source, all 16 existing tests pass
+on macOS and Linux; the new module has 11 expected missing-evidence failures on
+macOS and 10 on Linux, where the native `plutil` case is explicitly skipped.
+There are no setup/import errors. Matching-image symbolication and sanitized report arrival
+in a real app-host failure artifact remain unverified.
