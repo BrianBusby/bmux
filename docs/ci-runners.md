@@ -5117,3 +5117,31 @@ and is removed. These tests model the console boundary without privileges;
 actual fixed-head macOS sudo/launchctl cleanup remains unverified. A wrapper
 cancelled before its defer phase can still leave native_status_unavailable in
 its diagnostic report; that report never overrides the workflow's timeout exit.
+
+## Crash-report symlink fixture ownership
+
+R run 38777932066 shard 4 on macOS 15.7.9 failed
+`CrashDiagnosticSessionPolicyTests.terminalDefaultFileOpenIgnoresSymlinkedGhosttyCrashReportsInBmuxCrashDirectory`
+at line 39: the initializer returned a launch request instead of nil. The fixture
+created a link to an ambient crash-report path without creating its destination.
+Actual unchanged build 794 on macOS 26.3 accepts the dangling link, then rejects
+the same link once its target exists. That establishes a missing fixture
+precondition locally; the historical CI target state was not recorded.
+
+The exact test now owns a temporary home, real crash report, and symlink, with
+visible cleanup failures. `TerminalDefaultFileOpenRequest` takes explicit home
+and environment inputs whose defaults preserve existing callers. Both lexical
+and resolved-path guards forward those inputs to the existing crash-storage
+policy. The complete request type moves into its own source file to respect the
+legacy file's hard length limit. Session pruning retains its lexical semantics;
+no global settings, filesystem policy, or execution eligibility changes.
+
+The exact repaired method passes when compiled with the candidate request owner
+and build 794's unchanged policy. A temporary copy omitting only the target write
+fails the original nil assertion. Nine temporary classifications cover dangling
+and existing targets, direct paths, outside executable eligibility, injected XDG
+lexical/resolved paths, omitted XDG state, and snapshot alias preservation.
+Compilation uses Swift 6 with warnings as errors. All owned processes and roots
+are cleaned up. This is local source-plus-existing-module evidence, not a rebuilt
+app or macOS 15 fixed-head result. Root's isolated tagged build, full test-target
+compilation, and integrated app-host verification remain pending.

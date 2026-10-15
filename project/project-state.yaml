@@ -6410,6 +6410,11 @@ caveats:
     status: open
     owner: bmux
 
+  - id: crash_report_symlink_fixture_verification
+    title: Crash-report symlink fixture owns an existing report and isolated home; native source controls pass, integrated build and macOS 15 app-host verification remain pending
+    status: open
+    owner: bmux
+
   - id: ci_test_host_environment_propagation_verification
     title: CI flags now cross console and XCTest boundaries after actual test-only CI red; fixed-head guard and native app-host verification remain pending
     status: open
