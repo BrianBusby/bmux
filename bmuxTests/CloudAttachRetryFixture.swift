@@ -76,7 +76,7 @@ final class CloudAttachRetryFixture {
             await runner.run(directory: root.path, executable: "/bin/sh", arguments: [
                 "-c", "cli=$1; output=$2; errors=$3; shift 3; exec \"$cli\" \"$@\" </dev/null >\"$output\" 2>\"$errors\"",
                 "cloud-attach-retry", cli, stdout.path, stderr.path,
-            ] + arguments, timeout: 5)
+            ] + arguments, timeout: CLIProcessTestTimeout().seconds(5))
         }
         try #require(!result.timedOut)
         try #require(result.executionError == nil)

@@ -55,7 +55,7 @@ final class AntigravityHookLifecycleFixture {
             return String(decoding: try JSONSerialization.data(withJSONObject: ["id": id, "ok": true, "result": result]), as: UTF8.self)
         }
         let (result, commands) = try await server.capture {
-            try await ShellContractProcess(root: root).run(executable: "/bin/sh", arguments: [
+            try await ShellContractProcess(root: root, deadline: .seconds(CLIProcessTestTimeout().seconds(5))).run(executable: "/bin/sh", arguments: [
                 "-c", "exec \"$1\" hooks antigravity \"$2\" <\"$3\"", "antigravity-hook", cli, action, inputURL.path,
             ], environment: environment)
         }

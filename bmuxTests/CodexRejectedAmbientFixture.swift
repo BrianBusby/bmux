@@ -74,7 +74,7 @@ final class CodexRejectedAmbientFixture {
             await runner.run(directory: root.path, executable: "/bin/sh", arguments: [
                 "-c", "cli=$1; input=$2; output=$3; errors=$4; shift 4; exec \"$cli\" \"$@\" < \"$input\" > \"$output\" 2> \"$errors\"",
                 "codex-routing", cli, input.path, stdout.path, stderr.path,
-            ] + arguments, timeout: 5)
+            ] + arguments, timeout: CLIProcessTestTimeout().seconds(5))
         }
         try #require(!result.timedOut)
         try #require(result.executionError == nil)

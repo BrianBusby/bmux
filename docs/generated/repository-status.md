@@ -304,3 +304,4 @@ Repository: `BrianBusby/bmux`
 | `live_surface_recovery_window_fixture_verification` | open |
 | `claude_session_phase_fixture_verification` | open |
 | `codex_hook_installation_fixture_verification` | open |
+| `migrated_cli_process_ci_deadline_verification` | open |

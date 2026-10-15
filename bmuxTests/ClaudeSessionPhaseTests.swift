@@ -7,7 +7,7 @@ struct ClaudeSessionPhaseTests {
         let context = try ClaudeSessionPhaseFixture(cli: BundledCLITestSupport.bundledCLIPath(for: ClaudeSessionPhaseFixture.self))
         defer { context.cleanup() }
 
-        // A throwing, joined five-second run retains each original no-timeout assertion.
+        // A throwing, joined run retains each original no-timeout assertion.
         let oldStart = try await context.run(
             arguments: ["hooks", "claude", "session-start"],
             standardInput: #"{"session_id":"old-session","cwd":"\#(context.root.path)","hook_event_name":"SessionStart"}"#
@@ -62,7 +62,7 @@ struct ClaudeSessionPhaseTests {
         let context = try ClaudeSessionPhaseFixture(cli: BundledCLITestSupport.bundledCLIPath(for: ClaudeSessionPhaseFixture.self))
         defer { context.cleanup() }
 
-        // A throwing, joined five-second run retains each original no-timeout assertion.
+        // A throwing, joined run retains each original no-timeout assertion.
         let oldStart = try await context.run(
             arguments: ["hooks", "claude", "session-start"],
             standardInput: #"{"session_id":"old-session","cwd":"\#(context.root.path)","hook_event_name":"SessionStart"}"#

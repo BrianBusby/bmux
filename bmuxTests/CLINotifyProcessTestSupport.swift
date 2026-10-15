@@ -344,11 +344,7 @@ extension CLINotifyProcessIntegrationRegressionTests {
     }
 
     func processTimeout(_ requested: TimeInterval) -> TimeInterval {
-        let env = ProcessInfo.processInfo.environment
-        guard env["GITHUB_ACTIONS"] == "true" || env["CI"] == "true" else {
-            return requested
-        }
-        return max(requested, 20)
+        CLIProcessTestTimeout().seconds(requested)
     }
 
     func jsonObject(_ line: String) -> [String: Any]? {

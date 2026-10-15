@@ -52,7 +52,7 @@ final class RespawnWindowProtocolTests {
             await runner.run(directory: root.path, executable: "/bin/sh", arguments: [
                 "-c", "program=$1; output=$2; errors=$3; shift 3; exec \"$program\" \"$@\" </dev/null >\"$output\" 2>\"$errors\"",
                 "respawn-window", cli, stdout.path, stderr.path, "respawn-pane",
-            ] + arguments, timeout: 5)
+            ] + arguments, timeout: CLIProcessTestTimeout().seconds(5))
         }
         try #require(!result.timedOut)
         try #require(result.executionError == nil)

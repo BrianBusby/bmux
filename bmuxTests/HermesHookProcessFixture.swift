@@ -33,9 +33,9 @@ final class HermesHookProcessFixture: Sendable {
             "BMUX_CLI_SENTRY_DISABLED": "1", "BMUX_CLAUDE_HOOK_SENTRY_DISABLED": "1",
         ]
         let server = CLISocketFixture(path: socket, response: Self.responder(workspace: workspace, surface: surface))
-        // Each original hook invocation requested five seconds. Timeout throws only after
-        // the owned child has terminated and joined; capture then joins socket cleanup.
-        let runner = ShellContractProcess(root: root, deadline: .seconds(5))
+        // Original requests allow five seconds locally and at least twenty on CI.
+        // Timeout joins the child before capture joins socket cleanup.
+        let runner = ShellContractProcess(root: root, deadline: .seconds(CLIProcessTestTimeout().seconds(5)))
         let (outcome, phase) = try await server.capture {
             // Preserve producer failure while still draining its final queued requests.
             do {

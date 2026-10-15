@@ -472,3 +472,6 @@ local_caveats:
 
   - id: codex_hook_installation_fixture_verification
     status: open
+
+  - id: migrated_cli_process_ci_deadline_verification
+    status: open

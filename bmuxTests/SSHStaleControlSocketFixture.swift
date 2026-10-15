@@ -103,7 +103,7 @@ final class SSHStaleControlSocketFixture {
             directory: root.path, executable: "/bin/sh", arguments: [
                 "-c", "program=$1; output=$2; errors=$3; shift 3; exec \"$program\" \"$@\" </dev/null >\"$output\" 2>\"$errors\"",
                 "ssh-control", executable, stdout.path, stderr.path,
-            ] + arguments, timeout: 5
+            ] + arguments, timeout: CLIProcessTestTimeout().seconds(5)
         )
         try #require(!result.timedOut)
         try #require(result.executionError == nil)

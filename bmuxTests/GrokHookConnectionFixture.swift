@@ -49,7 +49,7 @@ final class GrokHookConnectionFixture {
         let (outcome, commands) = try await server.capture {
             // Producer completion, including failure, precedes the socket's final drain.
             do {
-                return Result<ShellContractProcess.Result, any Error>.success(try await ShellContractProcess(root: root).run(
+                return Result<ShellContractProcess.Result, any Error>.success(try await ShellContractProcess(root: root, deadline: .seconds(CLIProcessTestTimeout().seconds(5))).run(
                     executable: "/bin/sh", arguments: ["-c", command, "grok-hook", cli, action, input.path], environment: environment
                 ))
             } catch { return .failure(error) }

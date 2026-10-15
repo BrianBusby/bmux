@@ -42,8 +42,8 @@ final class CodexHookInstallationContractTests {
         try JSONSerialization.data(withJSONObject: legacyHookJSON, options: [.prettyPrinted, .sortedKeys])
             .write(to: codexHome.appendingPathComponent("hooks.json", isDirectory: false), options: .atomic)
 
-        // Preserve the original five-second no-timeout boundary and join before cleanup.
-        let result = try await ShellContractProcess(root: root, deadline: .seconds(5)).run(
+        // Preserve local five seconds / CI minimum twenty, and join before cleanup.
+        let result = try await ShellContractProcess(root: root, deadline: .seconds(CLIProcessTestTimeout().seconds(5))).run(
             executable: cliPath,
             arguments: ["hooks", "codex", "install", "--yes"],
             environment: [
