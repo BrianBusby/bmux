@@ -299,6 +299,7 @@ Repository: `BrianBusby/bmux`
 | `hermes_hook_phase_fixture_verification` | open |
 | `korean_marked_text_runtime_readiness_verification` | open |
 | `cli_closed_stderr_contract_verification` | open |
+| `terminal_inherited_surface_guard_verification` | open |
 | `ssh_creation_joined_producer_verification` | open |
 | `markdown_mermaid_double_zoom_verification` | open |
 | `app_host_failure_evidence_verification` | open |

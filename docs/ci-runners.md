@@ -5117,3 +5117,44 @@ and is removed. These tests model the console boundary without privileges;
 actual fixed-head macOS sudo/launchctl cleanup remains unverified. A wrapper
 cancelled before its defer phase can still leave native_status_unavailable in
 its diagnostic report; that report never overrides the workflow's timeout exit.
+
+## Terminal inheritance rejects unowned runtime surfaces
+
+S (`00aa09b39`, run 38821520072) shard 2 restarted after starting
+`WorkspaceSplitWorkingDirectoryTests.testNewTerminalSplitSkipsFreedInheritedSurfacePointer`
+and again after starting
+`testNewTerminalSurfaceSkipsFreedInheritedSurfacePointer`. The log records native
+surface closure before each subsequent app-host launch, but contains no native
+stack assigning either termination to a particular source instruction. This
+association alone does not prove the historical crash cause.
+
+Source inspection found a concrete shared-path defect: `inheritedTerminalConfig`
+read the raw `surface` property and immediately passed it to
+`ghostty_surface_inherited_config`. The native wrapper dereferences its surface
+without an ownership check. The existing regression helper unregisters and frees
+the native surface while deliberately retaining a non-nil Swift property.
+`withExtendedLifetime` retains the Swift model, not the freed native allocation.
+
+The shared inheritance owner now calls the existing
+`liveSurfaceForGhosttyAccess(reason:)` guard. It validates registry ownership
+before native allocation probing, quarantines an unowned wrapper, and permits
+the existing candidate/fallback search to continue. Both split and nested
+surface creation use this owner; candidate priority, font lineage, working
+directory policy and all original regression assertions remain unchanged.
+No Ghostty/submodule change or new state, lifecycle policy or test hook is added.
+
+On unchanged build 795, four temporary Swift 6 controls compiled warning-free
+and passed in 0.341 seconds: an owned manual-I/O surface in a retained, invisible
+window could create a split or nested surface; after the owned free helper, a
+direct call to the existing guard quarantined the pointer and both creation
+actions still succeeded. Runtime readiness used the existing native signal with
+the original two-second bound. The unsafe old free-to-inheritance path was never
+called. These controls establish the existing guard and safe setup, not the new
+Workspace call site. A proposed still-allocated/unregistered control was not
+executed because later quarantine could release its live callback leases.
+
+Fixed-artifact native verification and the original macOS 15 app-host cases
+remain pending under `terminal_inherited_surface_guard_verification`. Local
+validation must use retained offscreen windows and owned resources; the original
+foreground helper and unchecked freed-pointer native path are not run locally.
+A source finding is not presented as a fixed-binary result.
