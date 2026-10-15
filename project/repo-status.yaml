@@ -477,3 +477,6 @@ local_caveats:
 
   - id: migrated_cli_process_ci_deadline_verification
     status: open
+
+  - id: ci_test_host_environment_propagation_verification
+    status: open

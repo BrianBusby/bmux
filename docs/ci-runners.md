@@ -5006,3 +5006,37 @@ unresolved; this change does not weaken it or claim to repair it. No new runtime
 workflow selector, test framework, serialized suite or localized product string
 is introduced. Existing shared-menu/defaults/notification-state fixture risks
 remain outside this constructor-only repair.
+
+## CI flags across console and XCTest boundaries
+
+The R source (`a31a5cb2`) selected the restored CLI fixture allowance from the
+**test host's** `CI` or `GITHUB_ACTIONS` value, but neither process boundary
+explicitly transported that policy. The console-session allowlist now preserves
+both flags and their `TEST_RUNNER_` counterparts when present. The existing PTY
+owner copies a present raw flag to its prefixed counterpart only when no explicit
+test-host override exists. Unset stays unset; false and empty overrides remain
+exact. Timeout values, schemes and explicit CLI child environments are unchanged.
+
+`tests/test_ci_test_host_environment.py` executes the real shell and PTY helpers
+with owned subprocesses. Its console shims model an environment-resetting sudo
+hop without invoking privileged tools. It covers unset, true, false and empty
+values, explicit test-runner overrides, fallback execution and native exit
+preservation. A forced timeout releases the owned probe, joins through the PTY
+owner and rethrows the timeout. Only allowlisted fixture values are captured.
+
+The test-only commit `39d1d7549` failed the actual workflow guard with exactly 44
+missing-flag assertions and zero errors in five tests (12.688 seconds):
+[run 38814688184, job 116696279171](https://github.com/BrianBusby/bmux/actions/runs/38814688184/job/116696279171).
+The fixed source passes all five local tests, including the 100 matrix
+invocations and cleanup control (28.266 seconds). Existing PTY/watchdog,
+exit-reporting, retry and attempt-budget guards pass. The Linux-only cancellation
+guard skips on macOS and remains a CI check. The fix changes only the two existing
+transport owners; fixed-head CI and native app-host verification remain pending.
+
+The modeled reset is not evidence of a particular runner's sudo configuration.
+Native `xcodebuild` documents `TEST_RUNNER_` prefix stripping. The R SSH durations
+were consistent with the local timeout branch, but the failed host's environment
+was not captured, so this does not establish its historical hang cause.
+Forwarding `CI` also restores existing strict Cargo/bundled-library checks in the
+Nucleo build script and test. The unaffected CLI runners' five-second deadlines
+remain unchanged.

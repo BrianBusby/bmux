@@ -248,6 +248,7 @@ Regenerate with: ./scripts/project-docs generate
 | Claude session replacement fixtures join each hook and socket phase; native controls pass and integrated app-host verification remains pending (`claude_session_phase_fixture_verification`) | Bmux | open |  |
 | Codex installer fixture counts configured prompt entries and owns generated script paths; native controls pass and integrated app-host verification remains pending (`codex_hook_installation_fixture_verification`) | Bmux | open |  |
 | Migrated CLI fixture deadlines restore their original host-CI minimum; local policy controls pass and fixed-head app-host verification remains pending (`migrated_cli_process_ci_deadline_verification`) | Bmux | open |  |
+| CI flags now cross console and XCTest boundaries after actual test-only CI red; fixed-head guard and native app-host verification remain pending (`ci_test_host_environment_propagation_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
