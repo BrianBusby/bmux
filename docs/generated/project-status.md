@@ -128,6 +128,7 @@ Regenerate with: ./scripts/project-docs generate
 
 | Caveat | Owner | Status | Issue |
 | --- | --- | --- | --- |
+| Session persistence store capture awaits fixed-artifact and app-host verification (`session_write_store_capture_verification`) | Bmux | open |  |
 | Bash refresh FIFO observation awaits app-host verification and retains detached stub cleanup risk (`bash_relay_refresh_fixture_verification`) | Bmux | open |  |
 | Joined Kiro lifecycle no-response fixture awaits actual app-host verification (`kiro_lifecycle_feed_fixture_verification`) | Bmux | open |  |
 | Four-agent one-way feed fixture awaits fixed-head app-host verification (`feed_hook_no_response_fixture_verification`) | Bmux | open |  |

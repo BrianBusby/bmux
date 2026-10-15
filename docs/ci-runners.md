@@ -4653,3 +4653,29 @@ Fixed-head workflow guard CI is still required. No Xcode, application,
 external service or user process runs in these controls. Fixed-head CI, real
 artifact delivery and matching-image symbolication remain pending under
 `app_host_failure_evidence_verification`.
+
+### Session write capture and background window teardown
+
+O shard 3 (`38758720078`, job `116505698417`) reports a Main Thread Checker
+violation on `com.bmuxterm.app.sessionPersistence`: `AppDelegate` destruction
+releases `WindowDecorationsController`, whose deinitializer removes views off
+main. The exception is attributed to the active inspector fallback test; the
+log does not identify which fixture created or last released that delegate.
+
+`persistSessionSnapshot` now captures its existing immutable, Sendable snapshot
+store instead of retaining the app delegate solely for save/remove calls. The
+closure is explicitly Sendable. Snapshot, geometry and crash-removal policy,
+serial write ordering and synchronous termination/debug writes stay unchanged.
+This corrects the persistence ownership boundary without changing inspector
+behavior or moving arbitrary UI teardown onto another queue.
+
+A temporary executable copies the exact original/candidate method bodies into
+an owned lifetime probe. Eight controls preserve save, remove, geometry and
+synchronous behavior while showing original asynchronous captures release the
+owner off-main and store-only captures release it on main before queued work.
+This is a copied-method ownership proof, not execution of the compiled app
+method; the actual UI teardown evidence is the O stack. Its original method
+retains the pre-existing non-Sendable closure-conversion warning; the candidate
+has none. Fixed-artifact compilation, existing inspector coverage and actual
+macOS 15 app-host verification remain pending under
+`session_write_store_capture_verification`.
