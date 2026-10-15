@@ -5835,6 +5835,11 @@ policies:
     selected_for_implementation: false
 
 caveats:
+  - id: session_write_store_capture_verification
+    title: Session persistence store capture awaits fixed-artifact and app-host verification
+    status: open
+    owner: bmux
+
   - id: bash_relay_refresh_fixture_verification
     title: Bash refresh FIFO observation awaits app-host verification and retains detached stub cleanup risk
     status: open
