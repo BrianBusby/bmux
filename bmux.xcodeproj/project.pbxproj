@@ -180,6 +180,7 @@
 		74AB3F34FE3B4974A3A5D264 /* AutoNamingHookPayloadAdapterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46792DAA478444ED87B17B31 /* AutoNamingHookPayloadAdapterTests.swift */; };
 		C0DE35860000000000000001 /* BackgroundWorkspacePrimeCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE35860000000000000002 /* BackgroundWorkspacePrimeCoordinator.swift */; };
 		A50012F1 /* Backport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50012F0 /* Backport.swift */; };
+		9512FBAC5C3E42C4B7A53C0D /* BashRelayPromptRefreshTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D10D640C66D48559BA44F32 /* BashRelayPromptRefreshTests.swift */; };
 		B900000BA1B2C3D4E5F60719 /* bmux in Copy CLI */ = {isa = PBXBuildFile; fileRef = B9000004A1B2C3D4E5F60719 /* bmux */; };
 		C1ADE20002A1B2C3D4E5F719 /* bmux-claude-wrapper in Copy CLI */ = {isa = PBXBuildFile; fileRef = C1ADE20001A1B2C3D4E5F719 /* bmux-claude-wrapper */; };
 		C1ADE30002A1B2C3D4E5F719 /* bmux-codex-wrapper in Copy CLI */ = {isa = PBXBuildFile; fileRef = C1ADE30001A1B2C3D4E5F719 /* bmux-codex-wrapper */; };
@@ -2315,6 +2316,7 @@
 		46792DAA478444ED87B17B31 /* AutoNamingHookPayloadAdapterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoNamingHookPayloadAdapterTests.swift; sourceTree = "<group>"; };
 		C0DE35860000000000000002 /* BackgroundWorkspacePrimeCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundWorkspacePrimeCoordinator.swift; sourceTree = "<group>"; };
 		A50012F0 /* Backport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backport.swift; sourceTree = "<group>"; };
+		5D10D640C66D48559BA44F32 /* BashRelayPromptRefreshTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BashRelayPromptRefreshTests.swift"; sourceTree = "<group>"; };
 		B9000004A1B2C3D4E5F60719 /* bmux */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = bmux; sourceTree = BUILT_PRODUCTS_DIR; };
 		A5001018 /* bmux-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "bmux-Bridging-Header.h"; sourceTree = "<group>"; };
 		C1ADE20001A1B2C3D4E5F719 /* bmux-claude-wrapper */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "Resources/bin/bmux-claude-wrapper"; sourceTree = SOURCE_ROOT; };
@@ -5749,6 +5751,7 @@
 				C4D36E7F324B4FBBB3E57342 /* FeedHookNoResponseContractTests.swift */,
 				410DE41C9E8241C98CB96373 /* FeedHookNoResponseFixture.swift */,
 				D765F48E62DB41949A952E22 /* GenericLifecycleFeedNoResponseFixture.swift */,
+				5D10D640C66D48559BA44F32 /* BashRelayPromptRefreshTests.swift */,
 				F888C5A85D54408584752031 /* OrphanWorkspaceShortcutTests.swift */,
 				8FD8055070584B2498072294 /* OrphanWorkspaceShortcutSettingsFixture.swift */,
 				9E199B01F53842F19C9D820F /* OrphanWorkspaceShortcutFixture.swift */,
@@ -8107,6 +8110,7 @@
 				7C592156DCB3419BB95383E5 /* AutoNamingEngineTests.swift in Sources */,
 				A4ECF22C62724853A72D6BDE /* AutoNamingGrokAdapterTests.swift in Sources */,
 				74AB3F34FE3B4974A3A5D264 /* AutoNamingHookPayloadAdapterTests.swift in Sources */,
+				9512FBAC5C3E42C4B7A53C0D /* BashRelayPromptRefreshTests.swift in Sources */,
 				C0DE43000000000000000009 /* BmuxAgentChatConfigTests.swift in Sources */,
 					0CB4E9797AD54D3BB9CF06F9 /* BMUXCLI+AutoNaming.swift in Sources */,
 					C0DE31390000000000000105 /* BMUXCLIErrorOutputRegressionTests.swift in Sources */,

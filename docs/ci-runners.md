@@ -4585,3 +4585,28 @@ and a hidden fact retains the original presentation failures. These establish th
 routing precondition and fixture cleanup, not real WindowServer presentation.
 The permanent `orderBack` case is compiled only locally; its actual app-host run
 remains pending under `live_surface_recovery_window_fixture_verification`.
+
+### Bash relay refresh completion observation
+
+`BashRelayPromptRefreshTests` migrates only the original Bash prompt-refresh
+case from `GhosttyConfigTests`. The real `_bmux_detach_bg` still invokes an owned
+fast CLI stub with the original argv. The stub appends its log first, then only
+`surface.ports_kick` emits one newline through an owned FIFO. Bash opens the FIFO
+before invoking the prompt and uses builtin `read -t 1` immediately afterward.
+This replaces the first-nonempty-log predicate, which could observe the separate
+pwd callback before refresh. Missing completion exits nonzero before reading the
+log; exact refresh JSON, status-zero and no-prompt-noise assertions remain.
+
+The existing `ShellContractProcess` retains the five-second whole-process bound
+and joins parent Bash on success, failure and cancellation. The FIFO writer uses
+its own O_RDWR open, so one bounded token does not wait for parent reader
+admission. Temporary native controls cover normal completion, missing token,
+cancellation, no other reader, and failed log append. No diagnostic phase FIFO
+or process observation framework is added to the permanent test.
+
+The fast detached stubs remain untracked, as in the original test. A late stub
+may race owned directory removal; joining Bash does not establish descendant
+termination. This known risk is retained explicitly, while cleanup failures are
+visible. Local Bash verification does not establish the historical macOS 15 CI
+schedule. Actual app-host verification remains pending under
+`bash_relay_refresh_fixture_verification`; no production script changes apply.

@@ -5835,6 +5835,11 @@ policies:
     selected_for_implementation: false
 
 caveats:
+  - id: bash_relay_refresh_fixture_verification
+    title: Bash refresh FIFO observation awaits app-host verification and retains detached stub cleanup risk
+    status: open
+    owner: bmux
+
   - id: kiro_lifecycle_feed_fixture_verification
     title: Joined Kiro lifecycle no-response fixture awaits actual app-host verification
     status: open
