@@ -244,6 +244,7 @@ Regenerate with: ./scripts/project-docs generate
 | App-host failure evidence defers collection outside the native watchdog after actual CI regression proof; fixed-head CI and actual artifact verification remain pending (`app_host_failure_evidence_verification`) | Bmux | open |  |
 | Live-surface recovery fixture establishes a visible retained window; direct-context native controls and compilation pass, real presentation app-host verification remains pending (`live_surface_recovery_window_fixture_verification`) | Bmux | open |  |
 | Claude session replacement fixtures join each hook and socket phase; native controls pass and integrated app-host verification remains pending (`claude_session_phase_fixture_verification`) | Bmux | open |  |
+| Codex installer fixture counts configured prompt entries and owns generated script paths; native controls pass and integrated app-host verification remains pending (`codex_hook_installation_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

@@ -4712,3 +4712,28 @@ instead of submitting the new prompt, fail the retained business assertions.
 Actual integrated app-host verification remains pending under
 `claude_session_phase_fixture_verification`. No production or workflow changes
 apply. The production best-effort feed timing policy remains unchanged.
+
+### Codex persistent hook installation fixture
+
+O shard 2 (run 38758720078) recorded a zero-versus-one prompt-hook count at
+`CLIGenericHookPersistenceTests.swift:1515`. The installer already generates
+persistent executable script paths; the old count searched those paths for inline
+shell invocation text. The maintained installer removes legacy owned entries and
+inserts one `UserPromptSubmit` entry. The fixture now counts actual configured
+entries and separately reads their generated script bodies, preserving bundled
+CLI/socket routing and obsolete-command rejection assertions.
+
+The isolated process owns HOME, CFFIXED_USER_HOME, CODEX_HOME and XDG directories;
+script paths must remain under that root before reads. This matters because the
+script writer uses Foundation's current-user home, which HOME alone did not
+isolate in the failing runner. The existing joined process owner retains the
+original five-second failure bound and joins before owned directory cleanup.
+No generated hook executes and no socket, Keychain or external service is used.
+
+Exact-source Swift 5 and Swift 6 compilation is warning-free, and the native case
+passes against unchanged build 794. The old inline-text oracle still fails zero
+versus one; a control that duplicates the actual generated prompt entry fails two
+versus one even though both entries share the same script body. Other legacy
+cases and shared helpers are unchanged. Integrated app-host verification remains
+pending under `codex_hook_installation_fixture_verification`; no production or
+workflow policy changes apply.
