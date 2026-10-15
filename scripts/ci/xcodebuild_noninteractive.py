@@ -158,6 +158,12 @@ def main() -> int:
         ),
     )
 
+    # XCTest hosts need the same CI classification as the invoking process.
+    # Preserve explicit test-host overrides, including empty or false values.
+    for name in ("CI", "GITHUB_ACTIONS"):
+        if name in os.environ:
+            os.environ.setdefault(f"TEST_RUNNER_{name}", os.environ[name])
+
     wake_read, wake_write = os.pipe()
     os.set_blocking(wake_read, False)
     os.set_blocking(wake_write, False)

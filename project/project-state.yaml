@@ -6407,6 +6407,6 @@ caveats:
     owner: bmux
 
   - id: ci_test_host_environment_propagation_verification
-    title: CI test-host environment propagation has failing behavioral coverage; console and XCTest forwarding repair and actual CI verification are pending
+    title: CI flags now cross console and XCTest boundaries after actual test-only CI red; fixed-head guard and native app-host verification remain pending
     status: open
     owner: bmux
