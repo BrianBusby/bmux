@@ -38,6 +38,7 @@ struct TerminalNotificationOpenPanelFallbackTests {
             backing: .buffered,
             defer: false
         )
+        window.isReleasedWhenClosed = false
         window.identifier = NSUserInterfaceItemIdentifier("bmux.main.\(windowId.uuidString)")
         window.makeKeyAndOrderFront(nil)
 

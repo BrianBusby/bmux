@@ -6286,6 +6286,10 @@ caveats:
     title: SSH agent fixture joins its producer and bounds failure summaries; app-host timeouts remain unresolved
     status: open
     owner: bmux
+  - id: selected_native_window_close_ownership_verification
+    title: Eight selected test-window constructors retain Swift ownership through close; offscreen controls pass, exact app-host cases and crash attribution remain pending
+    status: open
+    owner: bmux
   - id: native_window_close_ownership_verification
     title: File-preview and notification test-window constructor ownership corrected; four affected app-host cases remain pending
     status: open

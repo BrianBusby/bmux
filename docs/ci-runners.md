@@ -4972,3 +4972,37 @@ documents. Authenticated Project Truth passes at 6bab8abd7. The configured PR
 Swift-size gate passes its speculative merge with main, retaining the documented
 incidental growth allowances of six, five and one lines; the unparameterized
 global scan still reports inherited baseline overages. No budget was changed.
+
+### Selected test-window close ownership after R
+
+R shard 2's NSZombie diagnostic run `38780179312` (workflow-only head
+`01632defb9`) records four explicit messages sent to deallocated `NSWindow`
+instances. Normal R shards 2 and 4 also crash in Objective-C release/concurrency
+cleanup paths. R4 did not enable NSZombie, so its object class is unproven;
+parallel test output and entrypoint-only app frames do not identify an allocation
+or establish a one-to-one mapping from cases to crashes.
+
+Eight raw constructor sites now use `isReleasedWhenClosed = false`: two helpers in
+`WindowKeyDownReplayGuardTests`, the local window in
+`TerminalNotificationOpenPanelFallbackTests`, two local windows in
+`RemoteTmuxSessionRenameTitleTests`, and the shared private constructor used by three `WindowTitleTemplateTests` cases.
+The three identical title-template constructors share one private `@MainActor`
+helper to keep the suite below its file limit. All four files already use Swift
+Testing. These constructors feed nine selected cases that retain Swift window references
+and explicitly close them. The title tests' `TabManager.window` reference is weak;
+it does not supply controller ownership. This follows the existing retained-close
+fixture policy. All original actions, assertions, cleanup, routing, settings and
+failure bounds remain unchanged, as do product window controllers and constructors
+whose callers only order windows out.
+
+A temporary Swift 6 offscreen AppKit control passes eight constructor-shape
+checks through close, autorelease-pool drain and final ARC release, with compiler
+warnings treated as errors. It uses an owned home and prohibited activation; no
+app or user window is launched or activated. This is a primitive ownership check,
+not execution of the nine full test cases. Full test-target compilation and
+fixed-head macOS 15 app-host execution remain pending. The independent local-undo
+assertion failure in `terminalHostedEditableResponderKeepsLocalUndo` remains
+unresolved; this change does not weaken it or claim to repair it. No new runtime,
+workflow selector, test framework, serialized suite or localized product string
+is introduced. Existing shared-menu/defaults/notification-state fixture risks
+remain outside this constructor-only repair.
