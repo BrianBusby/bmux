@@ -497,6 +497,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Physical-unit Mermaid regressions reproduce double scaling and content-cap failures; actual CI red and production correction remain pending (`markdown_mermaid_double_zoom_verification`) - owner: Bmux; status: open
 - Browser chrome reference follows the shared shipped font default; native metrics coverage passes and integrated app-host verification remains pending (`browser_chrome_default_contract_verification`) - owner: Bmux; status: open
 - OMX HUD restore fixture establishes its existing-directory precondition; native restoration and missing-directory controls pass, integrated app-host verification pending (`omx_hud_restore_directory_fixture_verification`) - owner: Bmux; status: open
+- Split workspace title fixture advances the recorded notification coalescer callback; native controls pass and integrated app-host verification remains pending (`split_workspace_title_delivery_fixture_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
 
 The closed-peer CLI repair gives receive timeout configuration/cache and byte reads one internal `CLISocketReceiver` owner with a borrowed descriptor. `SocketClient` retains framing, connection lifecycle, request policy and telemetry. Actual G regression red is recorded; extracted-owner controls, tagged build 788 bundled CLI checks, and H shard 3 fixed-head CLI checks pass. The full combined native and artifact gates remain pending.

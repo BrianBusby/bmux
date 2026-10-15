@@ -4429,3 +4429,25 @@ The error is generic, so this does not identify its JavaScript stack; it support
 a resize-delivery feedback correction without suppressing errors or increasing
 deadlines. Actual CI red and the subsequent production correction are pending.
 No shipped UI strings, terminal engine, user settings or active preview changed.
+
+### Split workspace title notification delivery
+
+L shard 4 failed the focused split-workspace title test's one-second polling
+assertion. The migrated Swift Testing case injects owned settings and the
+maintained notification-coalescer scheduler. It posts the original notification,
+requires its recorded callback, checks that titles have not changed before
+delivery, then advances that callback. All original initial-title, split-focus,
+panel-count, updated-title, custom-title and sibling-title assertions remain.
+The fixture tears down its owned panels and defaults; no global hook or production
+mutation is needed. All other legacy test bytes remain unchanged.
+
+The exact migrated case passes against unchanged build 791 in target Swift 5
+and strict Swift 6 with no compiler warnings. Retaining the imported coalescer
+callback type avoids an implicit Swift 6 Sendable conversion at the Swift 5
+module boundary. Withholding delivery produces exactly the two original final
+title failures. The one-second polling wait is replaced by explicit scheduler
+control, not a longer timeout; elapsed production timer behavior is not covered
+by this fixture. The historical CI timer/settings state was not captured, so
+this proves the maintained completion boundary without assigning the CI cause.
+No production, shared-helper or selector change was made. Integrated macOS
+app-host verification remains pending.

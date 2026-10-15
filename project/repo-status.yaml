@@ -142,6 +142,8 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: split_workspace_title_delivery_fixture_verification
+    status: open
   - id: omx_hud_restore_directory_fixture_verification
     status: open
   - id: browser_chrome_default_contract_verification
