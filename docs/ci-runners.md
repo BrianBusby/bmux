@@ -1831,11 +1831,11 @@ No production code or shipped strings change; localization catalogs are untouche
 
 ### Bounded app-host process diagnostics
 
-Broad tests on all four PR shards enable the existing observer after acquiring
-the GUI-host lock. For a manual diagnostic dispatch, set
-`app_host_process_diagnostics` to true to enable all broad shards and the focused
-shard 1 invocation. Focused PR invocations remain unchanged. Artifact upload runs
-even after failure and ignores absent output when an invocation did not run.
+Broad tests on all four PR shards and the focused shard 1 invocation enable the
+existing observer after acquiring the GUI-host lock. For a manual diagnostic
+dispatch, set `app_host_process_diagnostics` to true to enable those same
+invocations. Artifact upload runs even after failure and ignores absent output
+when an invocation did not run.
 
 The observer starts numeric process snapshots at the Swift Testing start marker
 and stops after 30 seconds. It records PID, parent PID, Darwin state, elapsed time,
@@ -4664,9 +4664,9 @@ The final Linux result remains fifteen passes and one error, not a clean rerun.
 Fixed-head Linux workflow guard 116531176822 subsequently passed all sixteen
 controls in 8.884 seconds at commit `119d6a9b5`. This does not erase the local
 Linux timeout above. No Xcode, application,
-external service or user process runs in these controls. Real deferred
-artifact delivery and matching-image symbolication remain pending under
-`app_host_failure_evidence_verification`.
+external service or user process runs in these controls. Q subsequently verified
+real deferred artifact delivery (recorded below); matching-image symbolication
+remains pending under `app_host_failure_evidence_verification`.
 
 ### Session write capture and background window teardown
 
@@ -4821,3 +4821,30 @@ local request and fails, while the identical child completes under CI policy.
 Both child PIDs are gone before cleanup. These local controls prove the selected
 policy and ownership boundary, not the cause of historical app-host stalls.
 Fixed-head macOS 15 app-host verification remains pending.
+
+### Q focused failure evidence and process sampling
+
+Q run 38770214680, job 116546261120, failed its focused invocation with native
+status 65: AgentLaunchEnvironment had two parameter failures, SSHWorkspaceCreation
+had two, and SSHAgentEnvironment had three. Broad shard 1 was skipped, so its
+automatic process observer could not capture these earlier failures. The focused
+invocation now enables the same existing observer on PR events as on explicit
+diagnostic dispatches. Its duration, sample limits, filtering, shutdown owner,
+artifact upload and test deadlines are unchanged. The host is sampled once after
+two observed seconds; the 30-second window can still miss later hangs. Actual
+focused call graphs and a cause for the timeout cluster remain unverified.
+
+The deferred failure collector did deliver artifact 11992708159 from that job.
+Its unique attempt-1-Af2Wo9 report retained native status 65, 124 test functions,
+121 passes and three failed identities matching those seven parameter cases.
+It reported zero crash/restart records and no collector errors, with explicit
+omissions for oversized lines and parameter nodes. This verifies deferred report
+delivery through the existing GitHub artifact channel, not hang-stack capture
+or matching-image symbolication. The report contains no raw log or result bundle.
+
+The inherited CI deadline restoration covers SSHAgentEnvironment; AgentLaunch
+and SSHWorkspaceCreation did not originate from the CI20 timeout owner and keep
+their original five-second process bounds. Neither diagnostics nor the deadline
+audit establishes the cause of their current failures. This workflow-only change
+adds no app behavior or localized product strings; no localization catalog changes
+are required.

@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       app_host_process_diagnostics:
-        description: Enable bounded diagnostics for focused shard1 and all broad shards (automatic on PR broad tests)
+        description: Enable bounded diagnostics for focused shard1 and all broad shards (automatic on PRs)
         type: boolean
         default: false
 
@@ -578,7 +578,7 @@ jobs:
 
       - name: Run browser settings and system proxy regressions
         env:
-          BMUX_APP_HOST_PROCESS_DIAGNOSTICS: ${{ inputs.app_host_process_diagnostics && '1' || '0' }}
+          BMUX_APP_HOST_PROCESS_DIAGNOSTICS: ${{ (github.event_name == 'pull_request' || inputs.app_host_process_diagnostics) && '1' || '0' }}
         if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_BROWSER_PROXY_REGRESSION_SHARD) }}
         run: |
           # Focused gate for https://github.com/manaflow-ai/bmux/issues/5888.
