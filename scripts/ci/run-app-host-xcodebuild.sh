@@ -72,11 +72,31 @@ while [ "$attempt" -le "$max_attempts" ]; do
       echo "Process diagnostics unavailable: output directory" >&2
     fi
   fi
+  failure_evidence=""
+  if [ -n "$derived_data_path" ]; then
+    evidence_root="${log_dir%/}/bmux-failure-evidence"
+    if mkdir -p "$evidence_root" && evidence_invocation="$(mktemp -d "$evidence_root/attempt-${attempt}-XXXXXX")" &&
+       python3 "$(dirname "$0")/app_host_failure_evidence.py" snapshot --root "$derived_data_path" --output "$evidence_invocation/capture"; then
+      failure_evidence="$evidence_invocation/capture"
+    else
+      echo "App-host failure evidence unavailable: snapshot" >&2
+    fi
+  fi
   set +e
   BMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH="$log_path" \
     "${diagnostic_command[@]}"
   status=$?
   set -e
+
+  if [ -n "$failure_evidence" ]; then
+    if [ "$status" -ne 0 ]; then
+      if ! python3 "$(dirname "$0")/app_host_failure_evidence.py" collect --root "$derived_data_path" \
+          --output "$failure_evidence" --log "$log_path" --status "$status"; then
+        echo "App-host failure evidence unavailable: collector; native status remains $status" >&2
+      fi
+    fi
+    rm -f "$failure_evidence/state.json" || echo "App-host failure evidence private state cleanup failed" >&2
+  fi
 
   if grep -Fq 'path = "/tmp/bmux-debug.sock"' "$log_path"; then
     echo "FAIL: app-host used default debug socket instead of an XCTest-scoped socket" >&2
