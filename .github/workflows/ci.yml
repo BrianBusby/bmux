@@ -129,6 +129,9 @@ jobs:
       - name: Validate xcodebuild noninteractive crash prompt guard
         run: python3 tests/test_ci_xcodebuild_noninteractive_helper.py
 
+      - name: Validate CI test-host environment propagation
+        run: python3 tests/test_ci_test_host_environment.py
+
       - name: Test bounded app-host failure evidence
         run: python3 tests/test_ci_app_host_failure_evidence.py
 

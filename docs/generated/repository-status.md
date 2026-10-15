@@ -306,3 +306,4 @@ Repository: `BrianBusby/bmux`
 | `claude_session_phase_fixture_verification` | open |
 | `codex_hook_installation_fixture_verification` | open |
 | `migrated_cli_process_ci_deadline_verification` | open |
+| `ci_test_host_environment_propagation_verification` | open |

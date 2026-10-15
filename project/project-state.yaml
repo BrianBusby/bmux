@@ -6405,3 +6405,8 @@ caveats:
     title: Migrated CLI fixture deadlines restore their original host-CI minimum; local policy controls pass and fixed-head app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: ci_test_host_environment_propagation_verification
+    title: CI test-host environment propagation has failing behavioral coverage; console and XCTest forwarding repair and actual CI verification are pending
+    status: open
+    owner: bmux

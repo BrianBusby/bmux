@@ -4972,3 +4972,30 @@ documents. Authenticated Project Truth passes at 6bab8abd7. The configured PR
 Swift-size gate passes its speculative merge with main, retaining the documented
 incidental growth allowances of six, five and one lines; the unparameterized
 global scan still reports inherited baseline overages. No budget was changed.
+
+## CI flags across console and XCTest boundaries
+
+The R source (`a31a5cb2`) selects the restored CLI fixture allowance from the
+**test host's** `CI` or `GITHUB_ACTIONS` value. The console-session allowlist
+currently omits both flags and their explicit `TEST_RUNNER_` overrides. The PTY
+wrapper bridges only `SWIFT_BACKTRACE`. This leaves the intended local versus CI
+policy dependent on environment transport that the wrappers do not establish.
+The R SSH timeout durations are consistent with the local branch, but the failed
+host's actual environment was not captured; this is not proof of its hang cause.
+
+`tests/test_ci_test_host_environment.py` executes the real shell and PTY helpers
+with owned subprocesses. Its console shims model an environment-resetting sudo
+hop without invoking privileged tools. It covers unset, true, false and empty
+values, explicit test-runner overrides, fallback execution and native exit
+preservation. A forced timeout releases the owned probe, joins through the PTY
+owner and rethrows the timeout; that cleanup control passes. Only allowlisted
+fixture values are captured. The new workflow
+check intentionally fails on R; the test-first slice changes neither wrapper nor
+any deadline. Actual CI red and the subsequent forwarding repair remain pending.
+
+The modeled reset is not evidence of a particular runner's sudo configuration.
+Native `xcodebuild` documents `TEST_RUNNER_` prefix stripping, but final app-host
+verification remains necessary. Forwarding `CI` also restores existing strict
+Cargo/bundled-library checks in the Nucleo build script and test; it is not solely
+a timeout switch. Explicit child environments and the unaffected CLI runners'
+five-second deadlines remain unchanged.
