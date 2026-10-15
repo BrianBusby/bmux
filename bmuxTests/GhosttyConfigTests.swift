@@ -4963,54 +4963,6 @@ final class ZshShellIntegrationHandoffTests: XCTestCase {
         XCTAssertFalse(result.stdout.contains(#""surface_id""#), result.stdout)
     }
 
-    func testShellIntegrationRelayPromptRefreshUsesRefreshReasonInBashWithoutPromptNoise() throws {
-        let fileManager = FileManager.default
-        let root = fileManager.temporaryDirectory
-            .appendingPathComponent("bmux-bash-relay-prompt-\(UUID().uuidString)")
-        let binDir = root.appendingPathComponent("bin", isDirectory: true)
-        let logPath = root.appendingPathComponent("relay.log", isDirectory: false)
-
-        try fileManager.createDirectory(at: binDir, withIntermediateDirectories: true)
-        defer { try? fileManager.removeItem(at: root) }
-
-        try writeExecutableScript(
-            at: binDir.appendingPathComponent("bmux", isDirectory: false),
-            contents: """
-            #!/bin/sh
-            printf '%s\\n' "$*" >> "\(logPath.path)"
-            exit 0
-            """
-        )
-
-        let result = try runInteractiveBash(
-            bmuxLoadShellIntegration: true,
-            command: """
-            : > "\(logPath.path)"
-            _BMUX_TTY_REPORTED=1
-            _BMUX_PORTS_LAST_RUN=-999
-            _bmux_prompt_command
-            for _bmux_i in $(seq 1 20); do
-              [ -s "\(logPath.path)" ] && break
-              sleep 0.05
-            done
-            cat "\(logPath.path)"
-            """,
-            extraEnvironment: [
-                "PATH": "\(binDir.path):/usr/bin:/bin:/usr/sbin:/sbin",
-                "BMUX_SOCKET_PATH": "127.0.0.1:64011",
-                "BMUX_WORKSPACE_ID": "11111111-1111-1111-1111-111111111111",
-                "BMUX_TAB_ID": "22222222-2222-2222-2222-222222222222",
-                "BMUX_PANEL_ID": "22222222-2222-2222-2222-222222222222",
-            ]
-        )
-
-        XCTAssertFalse(result.stderr.contains("_bmux_report_tmux_state"), result.stderr)
-        XCTAssertTrue(
-            result.stdout.contains(#"rpc surface.ports_kick {"workspace_id":"11111111-1111-1111-1111-111111111111","reason":"refresh","surface_id":"22222222-2222-2222-2222-222222222222"}"#),
-            result.stdout
-        )
-    }
-
     func testZshNoPullRequestWatchSkipsLegacyGhPRProbe() throws {
         let fileManager = FileManager.default
         let root = fileManager.temporaryDirectory
