@@ -331,7 +331,7 @@ local_caveats:
   - id: global_search_shortcut_conflict_verification
     status: open
   - id: focused_app_host_process_diagnostics_verification
-    # All broad PR shards use the existing bounded observer; actual call graphs remain pending.
+    # Broad PR shards and focused shard 1 use the bounded observer; actual call graphs remain pending.
     status: open
   - id: remote_tmux_crlf_record_parsing_verification
     status: open

@@ -6093,7 +6093,7 @@ caveats:
     status: open
     owner: bmux
   - id: focused_app_host_process_diagnostics_verification
-    title: Bounded process diagnostics are enabled for all broad PR shards; usable macOS 15 call graphs and timeout causes remain unverified
+    title: Bounded process diagnostics are enabled for all broad PR shards and focused shard 1; usable macOS 15 call graphs and timeout causes remain unverified
     status: open
     owner: bmux
   - id: remote_tmux_crlf_record_parsing_verification
@@ -6377,7 +6377,7 @@ caveats:
     owner: bmux
 
   - id: app_host_failure_evidence_verification
-    title: Deferred app-host evidence passes the fixed Linux guard; actual deferred artifact delivery and matching-image symbolication remain pending
+    title: Deferred app-host evidence delivered the Q focused failure report with native status 65; matching-image symbolication and hang stacks remain pending
     status: open
     owner: bmux
 

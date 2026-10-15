@@ -183,7 +183,7 @@ Regenerate with: ./scripts/project-docs generate
 | Browser inspector window-close correction and raw-close lifecycle fixture await fixed-head app-host verification (`browser_inspector_window_ownership_verification`) | Bmux | open |  |
 | Remote agent restore directory guard passes native build 783; full app-host verification pending (`remote_restore_working_directory_regression`) | Bmux | open |  |
 | Focused global search configured-conflict priority suite awaits app-host verification (`global_search_shortcut_conflict_verification`) | Bmux | open |  |
-| Bounded process diagnostics are enabled for all broad PR shards; usable macOS 15 call graphs and timeout causes remain unverified (`focused_app_host_process_diagnostics_verification`) | Bmux | open |  |
+| Bounded process diagnostics are enabled for all broad PR shards and focused shard 1; usable macOS 15 call graphs and timeout causes remain unverified (`focused_app_host_process_diagnostics_verification`) | Bmux | open |  |
 | Remote tmux CRLF record correction passes isolated artifact checks; full CI pending (`remote_tmux_crlf_record_parsing_verification`) | Bmux | open |  |
 | Quarantine outbound metadata and native readback contract pass local checks; app-host verification remains pending (`browser_download_quarantine_boundary_verification`) | Bmux | open |  |
 | Configured and chorded file preview save fixtures await fixed-head app-host verification (`file_preview_save_shortcut_fixture_verification`) | Bmux | open |  |
@@ -241,7 +241,7 @@ Regenerate with: ./scripts/project-docs generate
 | OMX HUD restore fixture establishes its existing-directory precondition; native restoration and missing-directory controls pass, integrated app-host verification pending (`omx_hud_restore_directory_fixture_verification`) | Bmux | open |  |
 | Palette shortcut fixtures own their settings and window context; native routing controls pass and integrated app-host verification remains pending (`palette_selection_shortcut_fixture_verification`) | Bmux | open |  |
 | Split workspace title fixture advances the recorded notification coalescer callback; native controls pass and integrated app-host verification remains pending (`split_workspace_title_delivery_fixture_verification`) | Bmux | open |  |
-| Deferred app-host evidence passes the fixed Linux guard; actual deferred artifact delivery and matching-image symbolication remain pending (`app_host_failure_evidence_verification`) | Bmux | open |  |
+| Deferred app-host evidence delivered the Q focused failure report with native status 65; matching-image symbolication and hang stacks remain pending (`app_host_failure_evidence_verification`) | Bmux | open |  |
 | Live-surface recovery fixture establishes a visible retained window; direct-context native controls and compilation pass, real presentation app-host verification remains pending (`live_surface_recovery_window_fixture_verification`) | Bmux | open |  |
 | Claude session replacement fixtures join each hook and socket phase; native controls pass and integrated app-host verification remains pending (`claude_session_phase_fixture_verification`) | Bmux | open |  |
 | Codex installer fixture counts configured prompt entries and owns generated script paths; native controls pass and integrated app-host verification remains pending (`codex_hook_installation_fixture_verification`) | Bmux | open |  |
