@@ -128,7 +128,7 @@ Regenerate with: ./scripts/project-docs generate
 
 | Caveat | Owner | Status | Issue |
 | --- | --- | --- | --- |
-| App-host cancellation ownership regression is locally red and awaits actual Linux CI red before its fix (`app_host_cancellation_ownership_verification`) | Bmux | open |  |
+| App-host cancellation ownership regression awaits valid Linux CI red after signal argument compatibility repair (`app_host_cancellation_ownership_verification`) | Bmux | open |  |
 | Session persistence store capture awaits fixed-artifact and app-host verification (`session_write_store_capture_verification`) | Bmux | open |  |
 | Bash refresh FIFO observation awaits app-host verification and retains detached stub cleanup risk (`bash_relay_refresh_fixture_verification`) | Bmux | open |  |
 | Joined Kiro lifecycle no-response fixture awaits actual app-host verification (`kiro_lifecycle_feed_fixture_verification`) | Bmux | open |  |

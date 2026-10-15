@@ -4780,3 +4780,11 @@ permission on its temporary mount and is excluded from regression evidence.
 Actual GitHub Linux guard red is still required before the production fix.
 `app_host_cancellation_ownership_verification` remains open; no production fix
 or complete historical CI-cause claim is included.
+
+The first test-only GitHub run, `38771908182` / guard `116549614354`, failed
+before scenario readiness: Python 3.9 formats a signal enum as `Signals.SIGTERM`
+rather than an integer, so scenario argument parsing raised `ValueError`.
+That run is not production regression evidence. The follow-up explicitly
+serializes `str(int(signum))`; no cancellation owner, deadline, or oracle changes.
+The numeric argv round trip was verified with local Python 3.9.6. The full
+Linux guard still requires the next actual CI run to establish valid red.

@@ -232,7 +232,7 @@ def main() -> int:
     for phase, signum in scenarios:
         # Parent owns the directory even if the scenario itself must be killed.
         with tempfile.TemporaryDirectory(prefix="bmux-cancel-guard-") as directory:
-            proc = subprocess.Popen([sys.executable, __file__, "--scenario", phase, str(signum), directory],
+            proc = subprocess.Popen([sys.executable, __file__, "--scenario", phase, str(int(signum)), directory],
                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             failure = None
             try:
