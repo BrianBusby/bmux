@@ -31,9 +31,6 @@ if kind == "xcodebuild":
     if phase == "retry" and attempt == 1:
         print("The test runner hung before establishing connection.", flush=True)
         raise SystemExit(65)
-    if phase == "defer":
-        print("SocketControlServer: Listening on owned-test-socket", flush=True)
-        raise SystemExit(0)
 # HUP is not cancellation forwarding: a dying PTY owner must still join us.
 signal.signal(signal.SIGHUP, signal.SIG_IGN)
 def finish(signum, frame):
@@ -127,11 +124,7 @@ def run_scenario(phase: str, signum: int, directory: str) -> None:
         "xcodebuild": f'exec {shlex.quote(sys.executable)} "{stub}" xcodebuild "$@"',
         # Never run the production stale-host broad match in this test.
         "pkill": "exit 0",
-        "python3": f'''if [[ "$1" == *app_host_failure_evidence.py ]]; then
-  if [[ "$2" == defer ]]; then exec {shlex.quote(sys.executable)} "{stub}" defer; fi
-  exit 0
-fi
-exec {shlex.quote(sys.executable)} "$@"''',
+        "python3": f'exec {shlex.quote(sys.executable)} "$@"',
     }.items():
         path = binary / name
         path.write_text("#!/bin/bash\n" + body + "\n")
@@ -151,7 +144,7 @@ exec {shlex.quote(sys.executable)} "$@"''',
                if phase.startswith("pty") else ["/bin/bash", str(WRAPPER), "owned-test"])
     if phase == "sampler":
         env["BMUX_APP_HOST_PROCESS_DIAGNOSTICS"] = "1"
-    if phase in ("defer", "sampler"):
+    if phase == "sampler":
         command += ["-derivedDataPath", str(root / "DerivedData")]
     if phase == "diagnostics-fallback":
         command = [sys.executable, str(ROOT / "scripts/ci/app_host_process_diagnostics.py"),
@@ -179,9 +172,8 @@ exec {shlex.quote(sys.executable)} "$@"''',
         if record["grandchild"]:
             owned[record["grandchild"]] = os.pidfd_open(record["grandchild"])
             release.add(record["grandchild"])
-        # PTY helper is the ready stub's parent. Defer runs directly under Bash.
-        if phase != "defer":
-            owned[record["parent"]] = os.pidfd_open(record["parent"])
+        # PTY helper is the ready stub's parent.
+        owned[record["parent"]] = os.pidfd_open(record["parent"])
         proc.send_signal(signum)
         status = proc.wait(timeout=5 if phase == "stubborn" else 8)
         # Stubborn cancellation must finish before the existing outer KILL at 5s.
@@ -189,13 +181,12 @@ exec {shlex.quote(sys.executable)} "$@"''',
         assert not leftovers, f"{phase}: cancellation returned with owned descendants alive: {leftovers}"
         # An exited leader adopted by this supervisor was NOT waitpid-joined
         # by its owner. Grandchildren are different: we reap those below.
-        if phase != "defer":
-            try:
-                adopted = os.waitid(os.P_PIDFD, owned[record["pid"]],
-                                    os.WEXITED | os.WNOHANG | os.WNOWAIT)
-            except ChildProcessError:
-                adopted = None
-            assert adopted is None, "PTY leader exited but was not joined by its helper"
+        try:
+            adopted = os.waitid(os.P_PIDFD, owned[record["pid"]],
+                                os.WEXITED | os.WNOHANG | os.WNOWAIT)
+        except ChildProcessError:
+            adopted = None
+        assert adopted is None, "PTY leader exited but was not joined by its helper"
         assert status == 128 + signum, f"{phase}: expected cancellation {128 + signum}, got {status}"
         output = proc.communicate(timeout=1)[0]
         assert b"Retrying" not in output or phase == "retry", "cancellation retried native execution"
@@ -226,7 +217,7 @@ def main() -> int:
         return 0
     become_subreaper()
     failures = []
-    scenarios = [(phase, signum) for phase in ("pty", "pty-group", "wrapper", "retry", "defer")
+    scenarios = [(phase, signum) for phase in ("pty", "pty-group", "wrapper", "retry")
                  for signum in (signal.SIGTERM, signal.SIGINT)]
     scenarios += [("sampler", signal.SIGTERM), ("stubborn", signal.SIGTERM),
                   ("diagnostics-fallback", signal.SIGTERM)]

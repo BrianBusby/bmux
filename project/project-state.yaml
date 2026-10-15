@@ -6386,8 +6386,8 @@ caveats:
     owner: bmux
 
   - id: app_host_failure_evidence_verification
-    title: Deferred app-host evidence delivered the Q focused failure report with native status 65; matching-image symbolication and hang stacks remain pending
-    status: open
+    title: Optional app-host failure collector abandoned to remove diagnostic staging from the native watchdog; automated reports and matching-image symbolication are unavailable
+    status: superseded
     owner: bmux
 
   - id: live_surface_recovery_window_fixture_verification
