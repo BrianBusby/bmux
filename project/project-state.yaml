@@ -6337,7 +6337,7 @@ caveats:
     owner: bmux
 
   - id: markdown_mermaid_double_zoom_verification
-    title: Physical-unit Mermaid regressions reproduce double scaling and content-cap failures; actual CI red and production correction remain pending
+    title: Mermaid scaling correction follows five actual CI geometry failures and passes native build 792 coverage; integrated app-host verification remains pending
     status: open
     owner: bmux
 
