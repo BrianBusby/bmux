@@ -5,12 +5,14 @@ import json
 import os
 from pathlib import Path
 import signal
+import shutil
 import subprocess
 import sys
 import tempfile
 import time
 import unittest
 from unittest.mock import patch
+from test_ci_xcodebuild_exit_reporting import executable, workflow_script
 
 SPEC = importlib.util.spec_from_file_location('evidence', Path(__file__).resolve().parents[1] / 'scripts/ci/app_host_failure_evidence.py')
 evidence = importlib.util.module_from_spec(SPEC)
@@ -60,7 +62,7 @@ class EvidenceTests(unittest.TestCase):
 
     def test_separate_invocations_keep_only_new_results_and_sanitize(self):
         (self.results / 'old.xcresult').mkdir()
-        first = Path(self.temp.name) / 'attempt-1'
+        first = Path(self.temp.name) / 'pending/attempt-1-ABC001/capture'
         evidence.snapshot(self.root, first)
         for name in ('new.xcresult', 'restart.xcresult'):
             (self.results / name).mkdir()
@@ -71,7 +73,7 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(len(report['results'][0]['tests']), 3)
         self.assertNotIn('SECRET', json.dumps(report))
         self.assertFalse((first / 'state.json').exists())
-        second = Path(self.temp.name) / 'attempt-2'
+        second = Path(self.temp.name) / 'pending/attempt-2-ABC002/capture'
         evidence.snapshot(self.root, second)
         report2 = evidence.collect(self.root, self.log, second, 124, FakeTools())
         self.assertEqual(report2['new_result_count'], 0)
@@ -97,6 +99,96 @@ class EvidenceTests(unittest.TestCase):
             self.assertEqual(crash['images'][0]['symbolication'], 'TimeoutError')
             self.assertEqual(crash['images'][0]['frames'], [{'offset': '0x5', 'thread': 0, 'symbol': None}])
         self.assertEqual(report['results'][0]['unavailable'], 'TimeoutError')
+
+    def test_deferred_attempts_keep_log_and_result_identity_after_reuse(self):
+        directory = Path(self.temp.name) / 'pending'
+        outputs = [directory / f'attempt-1-ABC00{i}/capture' for i in range(2)]
+        for index, output in enumerate(outputs):
+            evidence.snapshot(self.root, output)
+            (self.results / f'owned{index}.xcresult').mkdir()
+            self.log.write_text('Restarting after unexpected exit, crash, or test timeout\n' * (index + 1))
+            evidence.defer_collection(self.root, self.log, output, 65 + index)
+        (self.results / 'later.xcresult').mkdir()
+        self.log.write_text('SECRET overwritten')
+        evidence.collect_pending(directory, FakeTools())
+        for index, output in enumerate(outputs):
+            report = json.loads((output / 'report.json').read_text())
+            self.assertEqual(report['native_exit_code'], 65 + index)
+            self.assertEqual(report['new_result_count'], 1)
+            self.assertEqual(len(report['events']), index + 1)
+            self.assertEqual(report['invocation'], output.parent.name)
+            self.assertFalse((output / 'native.log').exists())
+            self.assertFalse((output / 'state.json').exists())
+
+    def test_batch_budget_exhaustion_keeps_later_attempt_numeric_evidence(self):
+        class ExhaustingTools(FakeTools):
+            expired = False
+            def remaining(self):
+                if self.expired:
+                    raise TimeoutError('diagnostic_budget')
+                return 30
+            def run(self, args):
+                self.expired = True
+                raise TimeoutError('diagnostic_budget')
+        directory = Path(self.temp.name) / 'pending'
+        binary = self.products / 'owned'
+        binary.write_bytes(b'owned')
+        for index in range(2):
+            output = directory / f'attempt-1-ABC00{index}/capture'
+            evidence.snapshot(self.root, output)
+            self.log.write_text(f'Program crashed: signal 11\nThread 0 crashed:\n0 0x1005\n0x1000–0x1010 {"a"*32} app  {binary}\nRestarting after unexpected exit, crash, or test timeout\n')
+            evidence.defer_collection(self.root, self.log, output, 65)
+        evidence.collect_pending(directory, ExhaustingTools())
+        for report_path in directory.glob('*/capture/report.json'):
+            report = json.loads(report_path.read_text())
+            self.assertEqual(len(report['crashes']), 1)
+            self.assertEqual(len(report['events']), 1)
+            self.assertEqual(report['crashes'][0]['images'][0]['symbolication'], 'TimeoutError')
+
+    def test_pending_caps_success_and_unfinished_cleanup(self):
+        directory = Path(self.temp.name) / 'pending'
+        first = directory / 'attempt-1-ABC000/capture'
+        evidence.snapshot(self.root, first)
+        self.log.write_text('x' * 100)
+        with patch.object(evidence, 'MAX_PENDING_LOG_BYTES', 32):
+            evidence.defer_collection(self.root, self.log, first, 65)
+        self.assertEqual((first / 'native.log').stat().st_size, 32)
+        second = directory / 'attempt-1-ABC001/capture'
+        evidence.snapshot(self.root, second)
+        evidence.defer_collection(self.root, self.log, second, 0)
+        self.assertFalse((second / 'state.json').exists())
+        unfinished = directory / 'attempt-1-ABC002/capture'
+        evidence.snapshot(self.root, unfinished)
+        (self.results / 'later.xcresult').mkdir()
+        with patch.object(evidence, 'MAX_PENDING', 2):
+            with self.assertRaises(ValueError):
+                evidence.pending_outputs(directory)
+        evidence.collect_pending(directory, FakeTools())
+        report = json.loads((unfinished / 'report.json').read_text())
+        self.assertIsNone(report['native_exit_code'])
+        self.assertEqual(report['new_result_count'], 0)
+        self.assertIn('native_status_unavailable', report['errors'])
+        self.assertEqual(list(directory.glob('*/capture/state.json')), [])
+        self.assertEqual(list(directory.glob('*/capture/native.log')), [])
+
+    def test_rejected_attempt_does_not_block_retained_reports_or_cleanup(self):
+        directory = Path(self.temp.name) / 'pending'
+        with patch.object(evidence, 'MAX_PENDING', 2):
+            for index in range(2):
+                output = directory / f'attempt-1-CAP00{index}/capture'
+                evidence.snapshot(self.root, output)
+                evidence.defer_collection(self.root, self.log, output, 65)
+            rejected = directory / 'attempt-1-CAP002/capture'
+            rejected.parent.mkdir()  # The wrapper's mktemp precedes snapshot.
+            with self.assertRaises(ValueError):
+                evidence.snapshot(self.root, rejected)
+            self.assertFalse(rejected.exists())
+            # A frozen final inventory must not consult a later invocation's root.
+            with patch.object(evidence, 'result_bundles', side_effect=AssertionError('unexpected rescan')):
+                evidence.collect_pending(directory, FakeTools())
+            self.assertEqual(len(list(directory.glob('*/capture/report.json'))), 2)
+            self.assertEqual(list(directory.glob('*/capture/state.json')), [])
+            self.assertEqual(list(directory.glob('*/capture/native.log')), [])
 
     def test_invalid_case_never_inherits_suite_as_case_identity(self):
         value = {'testNodes': [{'nodeType': 'Test Suite', 'nodeIdentifier': 'Suite', 'children': [
@@ -141,7 +233,7 @@ class EvidenceTests(unittest.TestCase):
         self.results.rmdir()
         self.results.symlink_to(outside, target_is_directory=True)
         with self.assertRaises(ValueError):
-            evidence.snapshot(self.root, Path(self.temp.name) / 'attempt')
+            evidence.snapshot(self.root, Path(self.temp.name) / 'pending/attempt-1-ESCAPE/capture')
         image = self.products / 'escape'
         image.symlink_to(outside)
         tools = FakeTools()
@@ -172,12 +264,12 @@ class EvidenceTests(unittest.TestCase):
         with self.assertRaises(ProcessLookupError):
             os.kill(pid, 0)
 
-    def test_wrapper_preserves_native_status_when_collector_fails_or_is_cancelled(self):
+    def test_wrapper_preserves_native_status_when_evidence_phases_fail_or_cancel(self):
         repository = Path(__file__).resolve().parents[1]
         stub = Path(self.temp.name) / 'bin'
         stub.mkdir()
         python = stub / 'python3'
-        python.write_text(f"#!/bin/sh\ncase \"$*\" in\n *app_host_failure_evidence.py*collect*) kill -TERM $$;;\n *) exec {sys.executable} \"$@\";;\nesac\n")
+        python.write_text(f"#!/bin/sh\ncase \"$*\" in\n *app_host_failure_evidence.py*defer*|*app_host_failure_evidence.py*collect-pending*) kill -TERM $$;;\n *) exec {sys.executable} \"$@\";;\nesac\n")
         python.chmod(0o755)
         native = stub / 'xcodebuild'
         native.write_text('#!/bin/sh\nexit "$OWNED_NATIVE_STATUS"\n')
@@ -192,7 +284,17 @@ class EvidenceTests(unittest.TestCase):
                                     cwd=repository, env=env, capture_output=True, timeout=10)
             self.assertEqual(result.returncode, status, result.stderr)
             self.assertIn(f'native status remains {status}'.encode(), result.stderr)
+        collection_work = Path(self.temp.name) / 'collection-work'
+        executable(collection_work / 'scripts/ci/run-in-console-session.sh', '#!/bin/bash\nexec "$@"\n')
+        post = subprocess.run(['bash', '-c', workflow_script('ci.yml', 'Collect app-host failure evidence')],
+                              cwd=collection_work, env=env, capture_output=True, timeout=5)
+        self.assertEqual(post.returncode, 0)
+        self.assertIn(b'native test result is unchanged', post.stdout)
+        evidence.collect_pending(Path(self.temp.name) / 'bmux-failure-evidence')
         self.assertEqual(list(Path(self.temp.name).glob('bmux-failure-evidence/**/state.json')), [])
+        reports = list(Path(self.temp.name).glob('bmux-failure-evidence/**/report.json'))
+        self.assertEqual(len(reports), 2)
+        self.assertTrue(all('native_status_unavailable' in json.loads(p.read_text())['errors'] for p in reports))
 
     def test_cancelled_tool_is_joined(self):
         child_pid = Path(self.temp.name) / 'child'
@@ -214,6 +316,72 @@ class EvidenceTests(unittest.TestCase):
                 if parent.poll() is None:
                     parent.kill()
                 parent.wait()
+
+    def test_collection_outside_native_watchdog_preserves_exit(self):
+        repository = Path(__file__).resolve().parents[1]
+        work = Path(self.temp.name) / 'work'
+        scripts = work / 'scripts/ci'
+        scripts.mkdir(parents=True)
+        for name in ('run-app-host-xcodebuild.sh', 'xcodebuild_noninteractive.py',
+                     'app_host_failure_evidence.py'):
+            shutil.copy2(repository / 'scripts/ci' / name, scripts / name)
+        executable(scripts / 'run-in-console-session.sh', '#!/bin/bash\nexec "$@"\n')
+        executable(scripts / 'bmux_unit_test_shard.py',
+                   'import sys\nfrom pathlib import Path\nPath(sys.argv[-1]).write_text("-only-testing:bmuxTests/OwnedFixture\\n")\n')
+        executable(work / 'bin/xcodebuild', '''#!/usr/bin/env python3
+import os
+from pathlib import Path
+(Path(os.environ['BMUX_DERIVED_DATA_PATH']) / 'Logs/Test/owned.xcresult').mkdir()
+print('Owned native failure', flush=True)
+raise SystemExit(65)
+''')
+        # A four-second tool crosses the three-second native watchdog, allowing
+        # owned Python setup to finish before the deadline. No
+        # app, Xcode, external service or duration assertion is used.
+        executable(work / 'bin/xcrun', '''#!/usr/bin/env python3
+import os, signal
+from pathlib import Path
+Path(os.environ['OWNED_TOOL_ENTERED']).write_text('entered')
+def finish(*_):
+    print('{}', flush=True)
+    raise SystemExit(0)
+signal.signal(signal.SIGALRM, finish)
+signal.alarm(4)
+signal.pause()
+''')
+        # Keep the real SECONDS watchdog, with faster bounded predicate polling
+        # than the workflow's five-second interval for this owned process graph.
+        executable(work / 'bin/sleep',
+                   '#!/usr/bin/env python3\nimport select\nselect.select([], [], [], .01)\n')
+        entered = Path(self.temp.name) / 'tool-entered'
+        env = {**os.environ, 'PATH': str(work / 'bin') + os.pathsep + os.environ['PATH'],
+               'RUNNER_TEMP': self.temp.name, 'BMUX_DERIVED_DATA_PATH': str(self.root),
+               'BMUX_APP_HOST_TEST_LOCK_ACTIVE': '1', 'BMUX_APP_HOST_XCODEBUILD_ATTEMPTS': '1',
+               'BMUX_APP_HOST_PROCESS_DIAGNOSTICS': '0', 'BMUX_UNIT_TEST_TIMEOUT_SECONDS': '3',
+               'OWNED_TOOL_ENTERED': str(entered)}
+        process = subprocess.Popen(['bash', '-c', workflow_script('ci.yml', 'Run unit tests')],
+                                   cwd=work, env=env, stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT, start_new_session=True)
+        try:
+            output, _ = process.communicate(timeout=20)
+        finally:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            process.wait()
+        # Execute the actual always-step when present. Before the repair,
+        # synchronous collection above changes the native result from 65 to 124.
+        try:
+            collection = workflow_script('ci.yml', 'Collect app-host failure evidence')
+        except ValueError:
+            collection = ':'
+        subprocess.run(['bash', '-c', collection], cwd=work, env=env, check=True, timeout=20)
+        self.assertTrue(entered.exists(), output.decode(errors='replace'))
+        reports = list(Path(self.temp.name).glob('bmux-failure-evidence/**/report.json'))
+        self.assertEqual(len(reports), 1, output.decode(errors='replace'))
+        self.assertEqual(json.loads(reports[0].read_text())['native_exit_code'], 65)
+        self.assertEqual(process.returncode, 65, output.decode(errors='replace'))
 
     def test_tool_output_limit(self):
         with patch.object(evidence, 'MAX_TOOL_BYTES', 4096):

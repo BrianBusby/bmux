@@ -240,7 +240,7 @@ Regenerate with: ./scripts/project-docs generate
 | OMX HUD restore fixture establishes its existing-directory precondition; native restoration and missing-directory controls pass, integrated app-host verification pending (`omx_hud_restore_directory_fixture_verification`) | Bmux | open |  |
 | Palette shortcut fixtures own their settings and window context; native routing controls pass and integrated app-host verification remains pending (`palette_selection_shortcut_fixture_verification`) | Bmux | open |  |
 | Split workspace title fixture advances the recorded notification coalescer callback; native controls pass and integrated app-host verification remains pending (`split_workspace_title_delivery_fixture_verification`) | Bmux | open |  |
-| App-host failure collector preserves bounded numeric crash and result evidence with UUID-checked symbols; local controls pass and actual CI artifact verification remains pending (`app_host_failure_evidence_verification`) | Bmux | open |  |
+| App-host failure evidence defers collection outside the native watchdog after actual CI regression proof; fixed-head CI and actual artifact verification remain pending (`app_host_failure_evidence_verification`) | Bmux | open |  |
 | Live-surface recovery fixture establishes a visible retained window; direct-context native controls and compilation pass, real presentation app-host verification remains pending (`live_surface_recovery_window_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints

@@ -89,13 +89,12 @@ while [ "$attempt" -le "$max_attempts" ]; do
   set -e
 
   if [ -n "$failure_evidence" ]; then
-    if [ "$status" -ne 0 ]; then
-      if ! python3 "$(dirname "$0")/app_host_failure_evidence.py" collect --root "$derived_data_path" \
-          --output "$failure_evidence" --log "$log_path" --status "$status"; then
-        echo "App-host failure evidence unavailable: collector; native status remains $status" >&2
-      fi
+    # External diagnostic tools run in the workflow's always-step, outside the
+    # native watchdog. Freeze this attempt before another invocation reuses logs.
+    if ! python3 "$(dirname "$0")/app_host_failure_evidence.py" defer --root "$derived_data_path" \
+        --output "$failure_evidence" --log "$log_path" --status "$status"; then
+      echo "App-host failure evidence unavailable: snapshot; native status remains $status" >&2
     fi
-    rm -f "$failure_evidence/state.json" || echo "App-host failure evidence private state cleanup failed" >&2
   fi
 
   if grep -Fq 'path = "/tmp/bmux-debug.sock"' "$log_path"; then

@@ -4610,3 +4610,46 @@ termination. This known risk is retained explicitly, while cleanup failures are
 visible. Local Bash verification does not establish the historical macOS 15 CI
 schedule. Actual app-host verification remains pending under
 `bash_relay_refresh_fixture_verification`; no production script changes apply.
+
+### App-host collector watchdog boundary regression
+
+Actual test-only CI run 38762790883 reproduced native exit 65 being replaced by
+watchdog exit 124 while the collector report still recorded 65. The earlier run
+38762136559 stopped before the diagnostic tool entered; it was a harness startup
+failure, not proof of this bug. The same early limit was reproduced locally after
+moving collection, so the owned behavioral control now pairs a three-second
+watchdog with a four-second tool. The original implementation still fails
+124-versus-65 with that pair; production retains its 900-second native bound.
+
+The wrapper now freezes each failed attempt's exit status, elapsed time, result
+bundle names and bounded private log. External diagnostic tools run in one
+`always()` step after native testing, before the existing report-only upload.
+Collection uses the same console-session owner as capture so private files remain
+readable and removable on runners whose agent is outside that login session.
+Retries, machine locking and authoritative native exit handling are unchanged.
+Later invocations cannot overwrite the saved log or add their result names to an
+earlier attempt. An interrupted wrapper that never finalizes its snapshot reports
+unavailable native status and result attribution instead of guessing. It may lack
+native log evidence; this limitation remains explicit.
+
+Pending data is bounded to 64 attempt directories, 2 MiB per state file, 64 MiB per
+saved log and 128 MiB of saved logs in aggregate. Numeric crash and restart data
+for all retained attempts is parsed before external tools consume the shared
+30-second batch budget. Exhausted tool budgets retain unsymbolicated numeric
+records. Private state and logs are deleted after collection, including handled
+cancellation; only sanitized reports are uploaded. A killed runner cannot run
+cleanup or upload, so actual CI artifact delivery remains a required check.
+
+Sixteen behavioral controls cover the actual workflow/watchdog boundary, deferred
+attempt identity, overwritten source logs, later bundles, exhausted tools, caps,
+unfinished snapshots, failure/cancellation cleanup, privacy and UUID checks.
+Existing native-exit, retry and attempt controls also pass. Final macOS controls
+pass all sixteen. A Linux run before the console-owner invocation adjustment also
+passed sixteen; the final Linux run passed the watchdog regression but recorded
+one timeout in the unchanged two-second output-limit worker control. A separate
+owned worker probe completed in 0.039 seconds, which does not explain that timeout.
+The final Linux result remains fifteen passes and one error, not a clean rerun.
+Fixed-head workflow guard CI is still required. No Xcode, application,
+external service or user process runs in these controls. Fixed-head CI, real
+artifact delivery and matching-image symbolication remain pending under
+`app_host_failure_evidence_verification`.
