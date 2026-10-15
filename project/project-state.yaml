@@ -5836,7 +5836,7 @@ policies:
 
 caveats:
   - id: app_host_cancellation_ownership_verification
-    title: App-host cancellation ownership regression awaits valid Linux CI red after signal argument compatibility repair
+    title: App-host cancellation owners pass local cleanup controls after valid Linux CI red; fixed CI and console-session coverage remain pending
     status: open
     owner: bmux
 

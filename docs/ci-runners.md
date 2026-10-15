@@ -4738,9 +4738,9 @@ open verification, to be assessed on the next complete candidate run.
 
 ### App-host cancellation ownership regression
 
-The existing Bash wrapper runs its foreground PTY helper without a cancellation
-trap. The PTY helper handles its own idle/post-test deadlines but has no external
-termination handler. An owned native control sent TERM to the real wrapper: the
+Before the repair, the Bash wrapper ran its foreground PTY helper without a
+cancellation trap. The PTY helper handled its own idle/post-test deadlines but
+had no external termination handler. An owned native control sent TERM to the real wrapper: the
 wrapper exited while its helper and ready stub remained alive. Releasing only
 the owned stub allowed the helper to reap it and close the output pipe. This
 proves a cancellation ownership gap, not the cause of O's prolonged output after
@@ -4755,7 +4755,7 @@ child under the existing outer watchdog's five-second termination allowance.
 The desired contract is cancellation status `128 + signal`, no subsequent retry,
 joined direct child, stopped owned group descendants, and closed output before
 the wrapper returns. No native 900-second, idle, post-test, or retry policy is
-changed in this regression-only commit.
+changed by the repair.
 
 Each scenario runs in a dedicated Linux subreaper process. The guard itself is
 also an isolated subreaper and owns each temporary root, so an outer scenario
@@ -4777,9 +4777,10 @@ container with networking disabled and the repository mounted read-only; all
 13 scenarios complete owned cleanup. A temporary control that deliberately
 wedges the ready scenario confirms outer-timeout child joins and root removal. A first container attempt lacked execute
 permission on its temporary mount and is excluded from regression evidence.
-Actual GitHub Linux guard red is still required before the production fix.
-`app_host_cancellation_ownership_verification` remains open; no production fix
-or complete historical CI-cause claim is included.
+The corrected GitHub run `38772618395`, guard `116552085440`, reached all
+13 intended ownership failures, completed all 13 owned cleanups, and reported
+no setup/readiness/API errors. This is the actual CI red for the production fix;
+the earlier setup failure below is excluded.
 
 The first test-only GitHub run, `38771908182` / guard `116549614354`, failed
 before scenario readiness: Python 3.9 formats a signal enum as `Signals.SIGTERM`
@@ -4787,4 +4788,54 @@ rather than an integer, so scenario argument parsing raised `ValueError`.
 That run is not production regression evidence. The follow-up explicitly
 serializes `str(int(signum))`; no cancellation owner, deadline, or oracle changes.
 The numeric argv round trip was verified with local Python 3.9.6. The full
-Linux guard still requires the next actual CI run to establish valid red.
+Linux guard subsequently established the valid red recorded above.
+
+The repair stays in the three existing lifecycle owners. Bash retains its sole
+asynchronous job through signal forwarding and wait, including native execution,
+evidence snapshot/defer, and retry boundaries. It checks the shell job table,
+never post-reap PID liveness, and resumes stopped owned jobs to process cancellation.
+Its internal request is TERM because asynchronous Bash children initially inherit
+ignored INT; the wrapper still returns the first external signal as 130 or 143.
+A temporary pre-handler barrier proves old INT forwarding permits native work
+after cancellation, while TERM forwarding stops that child before native work starts.
+The PTY helper installs TERM/INT/SIGCHLD handlers and a wakeup pipe before fork;
+its child resets handlers and closes those descriptors before exec. SIGCHLD is
+only a wakeup hint. The leader remains unreaped through the final owned-group
+KILL, then receives a waitpid join. Normal PTY EOF still waits for actual exit,
+with cancellation remaining observable. The normal five-second termination
+grace remains; external cancellation limits that grace to three seconds from
+its first signal. This also shortens an already-running cleanup when cancellation
+arrives during an idle/post-test timeout.
+
+Diagnostics uses the same forwarding owner when its output directory cannot be
+created. Cancellation closes the stop pipe and signals the observer group while
+the PTY helper cleans up. Observer cleanup uses the remaining four-second
+cancellation allowance, leaving a margin before the unchanged outer five-second
+KILL. Normal observer shutdown remains bounded by three seconds, a half-second
+TERM grace, and one second after KILL. No sampling duration, rate, window,
+concurrency, native deadline, retry limit, lock policy, or console routing changed.
+Darwin can report EPERM when signaling a group containing only an unreaped
+zombie; the fallback signals only that still-owned leader before joining it.
+
+Local Linux checks pass all 13 regression scenarios and the original helper
+controls. All 12 existing diagnostics tests pass on macOS. Temporary macOS
+controls exercise real Bash 3.2 without monitor mode, TERM/INT forwarding,
+stopped jobs, cancellation after PTY EOF, and a stubborn child (about 3.03s).
+Two controlled fork-boundary cases run the actual helper main function and
+verify a single leader waitpid join for startup cancellation and an already-exited
+child. A temporary Linux control combines a stubborn PTY child with a live
+stubborn observer and worker: cancellation returns 143 in about 3.05s, both
+direct leaders are joined, and all owned processes have stopped before return;
+the test subreaper then joins its adopted worker and removes the owned root.
+These controls add no permanent seam or extra committed regression case.
+Four additional owned macOS controls deliver TERM/INT during an already-running
+idle/post-test cleanup. All preserve cancellation status 143/130 after the join
+(in about 3.02–3.07s); absent cancellation, the original 124/125 results remain.
+A direct diagnostics pre-handler control confirms caught INT resets to default
+at exec and returns 130 before work begins, so only Bash normalizes its internal
+request to TERM. All 16 existing failure-evidence tests also pass.
+
+`app_host_cancellation_ownership_verification` stays open pending fixed actual CI.
+The native console sudo/launchctl chain and testmanagerd-created sessions are
+outside these owned process-group proofs. The observed O watchdog overrun is
+motivation, not a proven complete historical cause. No app was launched or built.

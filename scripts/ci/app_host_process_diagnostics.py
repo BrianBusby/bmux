@@ -148,69 +148,106 @@ def report_error(output, message):
         pass  # The diagnostic error is reported above; native status stays authoritative.
 
 
-def stop_observer(observer):
-    # This group contains only our observer/sample helpers, never the test command.
-    forced = False
+def signal_observer(observer, signum):
     try:
-        for timeout, next_signal in ((3, signal.SIGTERM), (0.5, signal.SIGKILL), (1, None)):
-            try:
-                return observer.wait(timeout=timeout)
-            except subprocess.TimeoutExpired:
-                if next_signal is not None:
-                    forced = True
-                    try:
-                        os.killpg(observer.pid, next_signal)
-                    except ProcessLookupError:
-                        pass
+        os.killpg(observer.pid, signum)
+    except (ProcessLookupError, PermissionError):
+        # Darwin returns EPERM for a group containing only its unreaped zombie.
+        try:
+            os.kill(observer.pid, signum)
+        except ProcessLookupError:
+            pass
+
+
+def stop_observer(observer, cancellation_deadline=None):
+    # This group contains only our observer/sample helpers, never the test command.
+    if cancellation_deadline is None:
+        try:
+            return observer.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            signal_observer(observer, signal.SIGTERM)
+            # Do not reap the leader before the final group signal: a worker
+            # may ignore TERM, and the unreaped leader preserves PGID identity.
+            select.select([], [], [], 0.5)
+    signal_observer(observer, signal.SIGKILL)
+    timeout = 1 if cancellation_deadline is None else max(0, cancellation_deadline - time.monotonic())
+    try:
+        return observer.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
         return 124
-    finally:
-        # The leader may exit on TERM while a sample worker ignores it.
-        if forced:
-            try:
-                os.killpg(observer.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
 
 
 def run(command, root, log_path, output, observer_command=None):
-    try:
-        output.mkdir(parents=True, exist_ok=False)
-    except OSError:
-        print('Process diagnostics unavailable: output directory', file=sys.stderr)
-        status = subprocess.call(command)
-        return status if status >= 0 else 128 - status
-    read_fd, write_fd = os.pipe()
-    observer = None
-    proc = subprocess.Popen(command)
+    proc, observer = None, None
+    read_fd, write_fd = None, None
+    cancellation, cancellation_deadline = 0, None
     previous = {}
+
     def forward(sig, frame):
-        try:
-            proc.send_signal(sig)
-        except ProcessLookupError:
-            pass
+        nonlocal cancellation, cancellation_deadline, write_fd
+        if not cancellation:
+            cancellation = sig
+            # Cleanup is concurrent with the PTY owner's three-second TERM
+            # grace, leaving a margin before the workflow's existing five-second KILL.
+            cancellation_deadline = time.monotonic() + 4
+        if proc is not None:
+            try:
+                proc.send_signal(cancellation)
+            except ProcessLookupError:
+                pass
+        if write_fd is not None:
+            closing_fd, write_fd = write_fd, None
+            os.close(closing_fd)
+        if observer is not None:
+            signal_observer(observer, signal.SIGTERM)
+
     try:
+        # Bash background children inherit ignored INT; explicitly own both
+        # signals before spawn, including the output-directory fallback path.
         for signum in (signal.SIGTERM, signal.SIGINT):
             previous[signum] = signal.signal(signum, forward)
+        observation_enabled = True
         try:
-            observer_args = [sys.executable, __file__, '--watch', str(read_fd),
-                             '--root', str(root), '--log', str(log_path), '--output', str(output)]
-            observer = subprocess.Popen(observer_command(read_fd) if observer_command else observer_args,
-                                        pass_fds=(read_fd,), stdout=subprocess.DEVNULL,
-                                        stderr=subprocess.DEVNULL, start_new_session=True)
-        except OSError as error:
-            report_error(output, type(error).__name__)
-        finally:
+            output.mkdir(parents=True, exist_ok=False)
+        except OSError:
+            print('Process diagnostics unavailable: output directory', file=sys.stderr)
+            observation_enabled = False
+        if cancellation:
+            return 128 + cancellation
+        if observation_enabled:
+            read_fd, write_fd = os.pipe()
+        proc = subprocess.Popen(command)
+        if cancellation:
+            forward(cancellation, None)  # Signal between spawn and registration.
+        elif observation_enabled:
+            try:
+                observer_args = [sys.executable, __file__, '--watch', str(read_fd),
+                                 '--root', str(root), '--log', str(log_path), '--output', str(output)]
+                observer = subprocess.Popen(observer_command(read_fd) if observer_command else observer_args,
+                                            pass_fds=(read_fd,), stdout=subprocess.DEVNULL,
+                                            stderr=subprocess.DEVNULL, start_new_session=True)
+                if cancellation:
+                    forward(cancellation, None)
+            except OSError as error:
+                report_error(output, type(error).__name__)
+        if read_fd is not None:
             os.close(read_fd)
+            read_fd = None
         status = proc.wait()
     finally:
-        os.close(write_fd)  # EOF also stops observation if this runner is killed.
+        if read_fd is not None:
+            os.close(read_fd)
+        if write_fd is not None:
+            closing_fd, write_fd = write_fd, None
+            os.close(closing_fd)  # EOF also stops observation if this runner is killed.
         if observer is not None:
-            observer_status = stop_observer(observer)
+            stopping_observer, observer = observer, None
+            observer_status = stop_observer(stopping_observer, cancellation_deadline)
             if observer_status:
                 report_error(output, f'Observer exited {observer_status}')
         for sig, handler in previous.items():
             signal.signal(sig, handler)
-    return status if status >= 0 else 128 - status
+    return 128 + cancellation if cancellation else (status if status >= 0 else 128 - status)
 
 
 def main():

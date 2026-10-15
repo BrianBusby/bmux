@@ -29,6 +29,42 @@ if [ -z "${BMUX_APP_HOST_TEST_LOCK_ACTIVE:-}" ]; then
     "$lock_file" "$lock_wait_seconds" "$0" "$@"
 fi
 
+# Keep the lock holder alive until every foreground phase has joined. Bash's
+# wait is interrupted by traps, so a signal forwards first and then resumes wait.
+active_pid=""
+cancel_signal=0
+wait_interrupted=0
+cancel_owned_phase() {
+  wait_interrupted=1
+  [ "$cancel_signal" -ne 0 ] || cancel_signal="$1"
+  if [ -n "$active_pid" ]; then
+    # Async Bash jobs inherit ignored INT until their interpreter installs a
+    # handler. TERM cancels that startup interval; our result retains 128 + INT.
+    kill -TERM %+ 2>/dev/null || true
+    kill -CONT %+ 2>/dev/null || true  # Let a stopped owned phase handle cancellation.
+  fi
+}
+trap 'cancel_owned_phase 15' TERM
+trap 'cancel_owned_phase 2' INT
+run_owned_phase() {
+  [ "$cancel_signal" -eq 0 ] || exit "$((128 + cancel_signal))"
+  "$@" <&0 &
+  active_pid=$!
+  # Covers cancellation between launch and registration of the owned child.
+  [ "$cancel_signal" -eq 0 ] || cancel_owned_phase "$cancel_signal"
+  local child_status=0
+  while true; do
+    wait_interrupted=0
+    if wait "$active_pid"; then child_status=0; else child_status=$?; fi
+    [ "$wait_interrupted" -ne 0 ] || break
+    # Consult Bash job ownership, never a potentially reused post-wait PID.
+    [ "$(jobs -p)" = "$active_pid" ] || break
+  done
+  active_pid=""
+  [ "$cancel_signal" -eq 0 ] || exit "$((128 + cancel_signal))"
+  return "$child_status"
+}
+
 # Resolve a CI-scoped root so app-host cleanup targets every CI app-host on this
 # Mac (this run AND orphans left by previous runs, which live under a different
 # per-run DerivedData path), while never matching a human's tagged dev build
@@ -48,7 +84,7 @@ kill_stale_app_host() {
   # unrelated dev build outside the runner work area. If we cannot identify the
   # root, do nothing rather than risk an unrelated process.
   [ -n "$ci_app_host_root" ] && \
-    pkill -f "${ci_app_host_root%/}/.*Build/Products/.*bmux DEV" 2>/dev/null || true
+    run_owned_phase pkill -f "${ci_app_host_root%/}/.*Build/Products/.*bmux DEV" 2>/dev/null || true
 }
 
 attempt=1
@@ -76,7 +112,7 @@ while [ "$attempt" -le "$max_attempts" ]; do
   if [ -n "$derived_data_path" ]; then
     evidence_root="${log_dir%/}/bmux-failure-evidence"
     if mkdir -p "$evidence_root" && evidence_invocation="$(mktemp -d "$evidence_root/attempt-${attempt}-XXXXXX")" &&
-       python3 "$(dirname "$0")/app_host_failure_evidence.py" snapshot --root "$derived_data_path" --output "$evidence_invocation/capture"; then
+       run_owned_phase python3 "$(dirname "$0")/app_host_failure_evidence.py" snapshot --root "$derived_data_path" --output "$evidence_invocation/capture"; then
       failure_evidence="$evidence_invocation/capture"
     else
       echo "App-host failure evidence unavailable: snapshot" >&2
@@ -84,14 +120,14 @@ while [ "$attempt" -le "$max_attempts" ]; do
   fi
   set +e
   BMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH="$log_path" \
-    "${diagnostic_command[@]}"
+    run_owned_phase "${diagnostic_command[@]}"
   status=$?
   set -e
 
   if [ -n "$failure_evidence" ]; then
     # External diagnostic tools run in the workflow's always-step, outside the
     # native watchdog. Freeze this attempt before another invocation reuses logs.
-    if ! python3 "$(dirname "$0")/app_host_failure_evidence.py" defer --root "$derived_data_path" \
+    if ! run_owned_phase python3 "$(dirname "$0")/app_host_failure_evidence.py" defer --root "$derived_data_path" \
         --output "$failure_evidence" --log "$log_path" --status "$status"; then
       echo "App-host failure evidence unavailable: snapshot; native status remains $status" >&2
     fi
