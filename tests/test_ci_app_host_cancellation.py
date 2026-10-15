@@ -104,7 +104,8 @@ def reap_owned_children(proc: subprocess.Popen, owned: dict[int, int], release: 
                     os.kill(int(child), signal.SIGKILL)
                 except ProcessLookupError:
                     pass
-        assert elapsed < 6, "owned cancellation descendants failed to join after KILL"
+        if elapsed >= 6:
+            raise TimeoutError("owned cancellation descendants failed to join after KILL")
         select.select([], [], [], 0.01)  # Bounded reaping grace, not readiness.
 
 
