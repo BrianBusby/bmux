@@ -323,7 +323,7 @@ class EvidenceTests(unittest.TestCase):
         scripts = work / 'scripts/ci'
         scripts.mkdir(parents=True)
         for name in ('run-app-host-xcodebuild.sh', 'xcodebuild_noninteractive.py',
-                     'app_host_failure_evidence.py'):
+                     'app_host_failure_evidence.py', 'run-unit-tests-with-timeout.py'):
             shutil.copy2(repository / 'scripts/ci' / name, scripts / name)
         executable(scripts / 'run-in-console-session.sh', '#!/bin/bash\nexec "$@"\n')
         executable(scripts / 'bmux_unit_test_shard.py',
@@ -349,10 +349,6 @@ signal.signal(signal.SIGALRM, finish)
 signal.alarm(4)
 signal.pause()
 ''')
-        # Keep the real SECONDS watchdog, with faster bounded predicate polling
-        # than the workflow's five-second interval for this owned process graph.
-        executable(work / 'bin/sleep',
-                   '#!/usr/bin/env python3\nimport select\nselect.select([], [], [], .01)\n')
         entered = Path(self.temp.name) / 'tool-entered'
         env = {**os.environ, 'PATH': str(work / 'bin') + os.pathsep + os.environ['PATH'],
                'RUNNER_TEMP': self.temp.name, 'BMUX_DERIVED_DATA_PATH': str(self.root),
