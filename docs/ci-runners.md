@@ -4560,3 +4560,28 @@ pass. Parsing the archived L2 log recovers its five native crashes and all five
 restart boundaries, with explicit omitted-frame counts. This does not identify
 their cause: matching CI image symbolication and arrival of the next real
 failure report remain pending under `app_host_failure_evidence_verification`.
+
+## Live-surface recovery window precondition
+
+The migrated live-surface recovery socket case keeps every original registry
+identity and ping/capabilities/tree/current/workspace/surface/pane/health/split
+assertion. It now presents its retained window with `orderBack(nil)` and requires
+visibility before unregistering. Accepted routing policy distinguishes retained
+surface identity from eligible window presentation; an unregistered hidden window
+is deliberately absent from presentation-oriented APIs.
+
+A synchronous owned fixture composes the real window context directly, avoiding
+registration's shared listener and session-save side effects. The existing
+unregister seam still invokes the actual discard-and-remember route owner.
+Cleanup tears down every owned panel, including the split, forgets only the owned
+recoverable route, closes the retained window, and restores the prior app, active
+manager and route-retirer collaborator without suspension. No production routing,
+API, selector or timeout policy changes.
+
+The exact permanent source compiles warning-free in target Swift 5 and strict
+Swift 6 against unchanged build 791. Temporary direct-context controls never
+present a window: a controlled visibility fact exercises the complete API body,
+and a hidden fact retains the original presentation failures. These establish the
+routing precondition and fixture cleanup, not real WindowServer presentation.
+The permanent `orderBack` case is compiled only locally; its actual app-host run
+remains pending under `live_surface_recovery_window_fixture_verification`.

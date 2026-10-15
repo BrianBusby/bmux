@@ -6370,3 +6370,8 @@ caveats:
     title: App-host failure collector preserves bounded numeric crash and result evidence with UUID-checked symbols; local controls pass and actual CI artifact verification remains pending
     status: open
     owner: bmux
+
+  - id: live_surface_recovery_window_fixture_verification
+    title: Live-surface recovery fixture establishes a visible retained window; direct-context native controls and compilation pass, real presentation app-host verification remains pending
+    status: open
+    owner: bmux
