@@ -389,6 +389,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Open Caveats
 
+- App-host cancellation owners pass local cleanup controls after valid Linux CI red; fixed CI and console-session coverage remain pending (`app_host_cancellation_ownership_verification`) - owner: Bmux; status: open
 - Session persistence store capture builds as 794 and passes compiled policy/store checks; macOS 15 app-host teardown verification remains pending (`session_write_store_capture_verification`) - owner: Bmux; status: open
 - Bash refresh FIFO observation awaits app-host verification and retains detached stub cleanup risk (`bash_relay_refresh_fixture_verification`) - owner: Bmux; status: open
 - Joined Kiro lifecycle no-response fixture awaits actual app-host verification (`kiro_lifecycle_feed_fixture_verification`) - owner: Bmux; status: open

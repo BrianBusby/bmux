@@ -158,6 +158,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `app_host_cancellation_ownership_verification` | open |
 | `session_write_store_capture_verification` | open |
 | `bash_relay_refresh_fixture_verification` | open |
 | `palette_selection_shortcut_fixture_verification` | open |

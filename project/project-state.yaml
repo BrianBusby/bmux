@@ -5835,6 +5835,11 @@ policies:
     selected_for_implementation: false
 
 caveats:
+  - id: app_host_cancellation_ownership_verification
+    title: App-host cancellation owners pass local cleanup controls after valid Linux CI red; fixed CI and console-session coverage remain pending
+    status: open
+    owner: bmux
+
   - id: session_write_store_capture_verification
     title: Session persistence store capture builds as 794 and passes compiled policy/store checks; macOS 15 app-host teardown verification remains pending
     status: open
