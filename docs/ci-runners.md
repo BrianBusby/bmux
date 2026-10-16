@@ -6639,3 +6639,29 @@ shared application/background state can still affect this real composition even
 with native test serialization. Integrated compilation and macOS 15 execution
 remain required, and the original failure is not marked resolved. No selector,
 shared helper, runtime code, shipped text or localization catalog changes.
+
+## Inspector close failure diagnostics (V follow-up)
+
+V's four detached-inspector cases failed the existing 2.85-second transition
+wait; the chord case also retained its visible window and preferred-open state.
+Safe build-799 controls completed locally, including inactive synthetic event
+delivery, so no production fix or event-coverage replacement is justified by
+those positives. The historical macOS 15 cause remains unresolved.
+
+The existing waiter now retains at most 12 allowlisted snapshots (entry and
+consumed events), total consumed-event count, elapsed time and final raw settled,
+preferred-open and pending-close state in its existing failure message. The
+chord case records three synchronous before/prefix/suffix snapshots of active,
+native-key, captured-routing identity, visible and preferred-open booleans in
+its existing final assertion messages. It emits no URLs, titles, identifiers,
+event payloads or raw global logs, and adds no observers or runtime hooks.
+Predicate evaluations and short-circuit behavior, NSApp event dispatch, original
+assertions, the 2.85-second timer race and structured cleanup remain unchanged.
+
+These are consumer and final-state diagnostics. The existing Void event stream
+does not carry producer timestamps, and a false wait result still means deadline
+or stream closure; it is not relabeled as a proven timer firing. Timer tasks are
+not instrumented with extra actor hops. Source review and focused strict Swift 6
+compilation cover the diagnostic edits; no visible-window native execution was
+performed for this change. Root owns full target compilation and actual app-host
+execution, including whether the failure messages arrive on macOS 15.

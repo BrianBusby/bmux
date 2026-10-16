@@ -66,15 +66,35 @@ struct BrowserInspectorTestFixture {
     ) async throws {
         defer { panel.debugRemoveDeveloperToolsLifecycleObserver(observation.id) }
         let panel = panel
+        let started = ContinuousClock.now
+        var snapshots: [String] = []
+        var consumedEvents = 0
+        let record: @MainActor @Sendable (String) -> Void = { phase in
+            guard snapshots.count < 12 else { return }
+            snapshots.append("phase=\(phase) elapsed=\(started.duration(to: .now)) " +
+                "settled=\(panel.debugDeveloperToolsTransitionsAreSettled) " +
+                "preferred=\(panel.preferredDeveloperToolsVisible) " +
+                "closePending=\(panel.hasPendingDetachedDeveloperToolsWindowCloseResolution)")
+        }
+        record("wait_entry")
         let completed = try await completesBeforeDeadline(timeout: timeout) {
             if panel.debugDeveloperToolsTransitionsAreSettled && condition() { return true }
             for await _ in observation.events {
                 if Task.isCancelled { return false }
+                consumedEvents += 1
+                record("consumed")
                 if panel.debugDeveloperToolsTransitionsAreSettled && condition() { return true }
             }
             return false
         }
-        #expect(completed, "Timed out or closed while waiting for developer-tools transitions")
+        #expect(completed, """
+            event=inspector_transition_wait Timed out or closed while waiting for developer-tools transitions;
+            elapsed=\(started.duration(to: .now)) events=\(consumedEvents)
+            finalSettled=\(panel.debugDeveloperToolsTransitionsAreSettled)
+            finalPreferred=\(panel.preferredDeveloperToolsVisible)
+            finalClosePending=\(panel.hasPendingDetachedDeveloperToolsWindowCloseResolution)
+            snapshots=\(snapshots.joined(separator: ";"))
+            """)
     }
 
     func waitForObservationEnd(

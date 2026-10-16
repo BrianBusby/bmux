@@ -290,6 +290,7 @@ Regenerate with: ./scripts/project-docs generate
 | Search-overlay mouse fixtures own a real focused workspace and native mount delivery with a new three-second runtime prerequisite and original one-second mount cap; build 799 controls pass, integrated macOS 15 verification remains pending (`terminal_search_overlay_mouse_fixture_verification`) | Bmux | open |  |
 | Welcome shortcut timeout retains its original route and one-second observer while reporting bounded callback and native window state; historical V timeout cause and next macOS 15 execution remain unresolved (`welcome_shortcut_delivery_diagnostic_verification`) | Bmux | open |  |
 | Expired pending-open Escape fixture preserves the real main-window route and original no-dismiss bounds with raw-state failure diagnostics; target compilation passes, full macOS 15 failure attribution remains pending (`command_palette_expired_escape_diagnostics`) | Bmux | open |  |
+| Inspector close failures include bounded wait-state and chord-routing snapshots without changing actions or deadlines; actual macOS 15 cause remains unresolved (`inspector_close_failure_diagnostics`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

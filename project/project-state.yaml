@@ -6622,3 +6622,8 @@ caveats:
     title: Expired pending-open Escape fixture preserves the real main-window route and original no-dismiss bounds with raw-state failure diagnostics; target compilation passes, full macOS 15 failure attribution remains pending
     status: open
     owner: bmux
+
+  - id: inspector_close_failure_diagnostics
+    title: Inspector close failures include bounded wait-state and chord-routing snapshots without changing actions or deadlines; actual macOS 15 cause remains unresolved
+    status: open
+    owner: bmux
