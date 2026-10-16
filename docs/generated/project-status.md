@@ -266,6 +266,7 @@ Regenerate with: ./scripts/project-docs generate
 | Workspace stress profiles preserve workload and timing categories while awaiting bounded FIFO delivery; native build 797 passes locally, fixed-head macOS 15 verification remains pending (`workspace_stress_delivery_verification`) | Bmux | open |  |
 | Native deadline owner records numeric termination and final-exit phases; local status controls pass, actual macOS console pipeline completion diagnosis remains pending (`native_deadline_exit_diagnostics_verification`) | Bmux | open |  |
 | Approved agent-hook launch commands participate in existing running-state and directory cleanup ownership without requiring a separate agent snapshot; fresh runtime and fixed-head macOS 15 verification remain pending (`binding_only_resume_state_verification`) | Bmux | open |  |
+| Pointer and keyboard dismissal share owned input and renderer delivery fixtures; native build 797 passes, fixed-head macOS 15 coverage and legacy AppFocusState isolation remain pending (`terminal_pointer_notification_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

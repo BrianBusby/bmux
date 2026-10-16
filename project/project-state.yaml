@@ -6504,3 +6504,8 @@ caveats:
     title: Approved agent-hook launch commands participate in existing running-state and directory cleanup ownership without requiring a separate agent snapshot; fresh runtime and fixed-head macOS 15 verification remain pending
     status: open
     owner: bmux
+
+  - id: terminal_pointer_notification_fixture_verification
+    title: Pointer and keyboard dismissal share owned input and renderer delivery fixtures; native build 797 passes, fixed-head macOS 15 coverage and legacy AppFocusState isolation remain pending
+    status: open
+    owner: bmux

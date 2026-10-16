@@ -5754,3 +5754,31 @@ probe provide the failing-before evidence. Independent source review covered the
 approval/launcher, restoration, directory rescue, and prompt-idle cleanup owners.
 A fresh built-runtime regression/control run and fixed-head macOS 15 CI remain
 pending; local source review is not a passing runtime verdict.
+
+### Terminal pointer notification dismissal fixture
+
+T's direct mouse interaction case reported a blocked one-second main-queue drain
+and a zero flash count. The exact case now shares the existing keyboard fixture's
+owned terminal/window, synchronous composition overrides, and buffered renderer
+callback observation. Both still send real AppKit input to GhosttyNSView and
+assert first-responder setup, unread state before input, dismissal after input,
+and exactly one flash. The existing renderer callback is observed with the same
+one-second failure bound; globals and preferences are restored before suspension.
+The renamed NotificationInteractionFixture owns both input modes rather than
+copying the keyboard setup. No terminal rendering or production behavior changes.
+
+The mouse fixture seeds an unread session record for its own workspace, matching
+the maintained keyboard fixture, instead of replacing the entire shared store and
+invoking notification delivery. Delivery itself is not this dismissal contract.
+It captures a per-surface flash-count delta rather than resetting all counters,
+flushes setup focus before seeding unread state, and closes its owned window and
+panels. The old now-empty XCTest class and its unused helpers are removed.
+
+Actual build 797 passes both input cases in 0.438 seconds with warning-free
+compilation in the repository's Swift 5 language mode. Omitting only the pointer
+event in a temporary control fails both dismissal and flash assertions while the
+keyboard case still passes. Strict Swift 6 compilation
+still rejects the three existing imported AppFocusState.overrideIsFocused accesses;
+this retained production global is not newly suppressed or declared concurrency
+safe. Fixed-head macOS 15 app-host coverage remains pending. The local result does
+not establish which queued stage caused the historical CI failure.

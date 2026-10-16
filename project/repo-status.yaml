@@ -531,3 +531,6 @@ local_caveats:
 
   - id: binding_only_resume_state_verification
     status: open
+
+  - id: terminal_pointer_notification_fixture_verification
+    status: open
