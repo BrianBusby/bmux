@@ -937,6 +937,8 @@
 		51553E24B2AD46035F00F643 /* GrokHookConnectionFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC6229443FDB43D4C7C0F36A /* GrokHookConnectionFixture.swift */; };
 		B70E7F1B613184122DE389DC /* GrokHookConnectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1BCCFCEE0CD5FE7A2A412A /* GrokHookConnectionTests.swift */; };
 		2936EBAEBDAFF7A34A17690C /* GrokNotificationPayloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68FF762A8C336C62E56D5EB1 /* GrokNotificationPayloadTests.swift */; };
+		2BAC05CC4EDB498D8CF36A27 /* GrokSiblingStatusFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65F1CAC861C94F7DA0B50FB2 /* GrokSiblingStatusFixture.swift */; };
+		A7456C7308AE433085D708A2 /* GrokSiblingStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6C72030892644869BE359DA /* GrokSiblingStatusTests.swift */; };
 		C0DE34020000000000000005 /* HelpMenuUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE34020000000000000006 /* HelpMenuUITests.swift */; };
 		F5320000A1B2C3D4E5F60718 /* HermesAgentIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5320001A1B2C3D4E5F60718 /* HermesAgentIndex.swift */; };
 		4543A946C981457B894CFABA /* HermesHookProcessContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 583061CE94AE4D01B93357B9 /* HermesHookProcessContractTests.swift */; };
@@ -3020,6 +3022,8 @@
 		FC6229443FDB43D4C7C0F36A /* GrokHookConnectionFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrokHookConnectionFixture.swift; sourceTree = "<group>"; };
 		FE1BCCFCEE0CD5FE7A2A412A /* GrokHookConnectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrokHookConnectionTests.swift; sourceTree = "<group>"; };
 		68FF762A8C336C62E56D5EB1 /* GrokNotificationPayloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrokNotificationPayloadTests.swift; sourceTree = "<group>"; };
+		65F1CAC861C94F7DA0B50FB2 /* GrokSiblingStatusFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrokSiblingStatusFixture.swift; sourceTree = "<group>"; };
+		B6C72030892644869BE359DA /* GrokSiblingStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrokSiblingStatusTests.swift; sourceTree = "<group>"; };
 		C0DE34020000000000000006 /* HelpMenuUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpMenuUITests.swift; sourceTree = "<group>"; };
 		F5320001A1B2C3D4E5F60718 /* HermesAgentIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesAgentIndex.swift; sourceTree = "<group>"; };
 		583061CE94AE4D01B93357B9 /* HermesHookProcessContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HermesHookProcessContractTests.swift"; sourceTree = "<group>"; };
@@ -6113,6 +6117,8 @@
 				CE4411000000000000000012 /* SSHCleanupErrorTests.swift */,
 				CE4412000000000000000012 /* ClaudeNotificationTargetTests.swift */,
 				FC6229443FDB43D4C7C0F36A /* GrokHookConnectionFixture.swift */,
+				B6C72030892644869BE359DA /* GrokSiblingStatusTests.swift */,
+				65F1CAC861C94F7DA0B50FB2 /* GrokSiblingStatusFixture.swift */,
 				FE1BCCFCEE0CD5FE7A2A412A /* GrokHookConnectionTests.swift */,
 				C0DEAC01442BE639EFE1E922 /* WorkspaceRuntimeCloseTests.swift */,
 				73A43E372B9D4332B14D0462 /* TerminalDeferredNumpadCommitTests.swift */,
@@ -8395,6 +8401,8 @@
 				51553E24B2AD46035F00F643 /* GrokHookConnectionFixture.swift in Sources */,
 				B70E7F1B613184122DE389DC /* GrokHookConnectionTests.swift in Sources */,
 				2936EBAEBDAFF7A34A17690C /* GrokNotificationPayloadTests.swift in Sources */,
+				2BAC05CC4EDB498D8CF36A27 /* GrokSiblingStatusFixture.swift in Sources */,
+				A7456C7308AE433085D708A2 /* GrokSiblingStatusTests.swift in Sources */,
 					4543A946C981457B894CFABA /* HermesHookProcessContractTests.swift in Sources */,
 					B0660073F52D48D99E5EB20B /* HermesHookProcessFixture.swift in Sources */,
 				7A3D51F31BA38CFAB319B453 /* HermesResumeExecutionFixture.swift in Sources */,
