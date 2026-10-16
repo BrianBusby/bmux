@@ -6459,3 +6459,8 @@ caveats:
     title: Grok sibling completion uses owned authenticated joined connections and preserves saved-route status assertions; native build 796 passes five cases, integrated macOS 15 app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: native_deadline_exit_diagnostics_verification
+    title: Native deadline owner records numeric termination and final-exit phases; local status controls pass, actual macOS console pipeline completion diagnosis remains pending
+    status: open
+    owner: bmux

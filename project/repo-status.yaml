@@ -504,3 +504,6 @@ local_caveats:
 
   - id: grok_sibling_status_fixture_verification
     status: open
+
+  - id: native_deadline_exit_diagnostics_verification
+    status: open
