@@ -21,7 +21,14 @@ struct WorkspaceReferenceRail: View {
     @Binding var isFilterPanelPresented: Bool
     @State private var repoLauncherAnchorView: NSView?
 
+    #if DEBUG
+    @Environment(\.minimalModeInvalidationProbe) private var minimalModeInvalidationProbe
+    #endif
+
     var body: some View {
+        #if DEBUG
+        let _ = minimalModeInvalidationProbe.workspaceRailBody?()
+        #endif
         WorkspaceChromeFocusScope(usesIntrinsicSize: false, onAttachmentChange: {
             onFocusHostChange($0, .rail, $1)
         }) {

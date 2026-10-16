@@ -13,103 +13,21 @@ import Bonsplit
 
 @Suite(.serialized)
 final class WorkspaceContentViewVisibilityTests {
-    private final class MinimalModeBodyProbeCounts {
-        var contentViewBody = 0
-        var workspaceContentBody = 0
-        var verticalTabsSidebarBody = 0
-
-        func reset() {
-            contentViewBody = 0
-            workspaceContentBody = 0
-            verticalTabsSidebarBody = 0
-        }
-    }
-
     @Test
     @MainActor
     func testMinimalModeToggleDoesNotReevaluateChromeHeavyBodies() async throws {
-        _ = NSApplication.shared
+        let fixture = try MinimalModeBodyFixture(eventTimeout: .seconds(1))
+        defer { fixture.close() }
+        try await fixture.mount()
+        #expect(fixture.contentViewBody > 0)
+        #expect(fixture.workspaceContentBody > 0)
+        #expect(fixture.workspaceRailBody > 0)
 
-        let suiteName = "WorkspaceContentViewVisibilityTests.\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suiteName))
-        defaults.removePersistentDomain(forName: suiteName)
-        defer {
-            defaults.removePersistentDomain(forName: suiteName)
-        }
-        defaults.set(
-            WorkspacePresentationModeSettings.Mode.standard.rawValue,
-            forKey: WorkspacePresentationModeSettings.modeKey
-        )
-
-        let tabManager = TabManager()
-        for _ in 0..<6 {
-            tabManager.addWorkspace(autoWelcomeIfNeeded: false)
-        }
-        let notificationStore = TerminalNotificationStore.shared
-        let counts = MinimalModeBodyProbeCounts()
-        let root = ContentView(updateViewModel: UpdateStateModel(), windowId: UUID())
-            .environmentObject(tabManager)
-            .environmentObject(notificationStore)
-            .environmentObject(notificationStore.sidebarUnread)
-            .environmentObject(SidebarState())
-            .environmentObject(SidebarSelectionState())
-            .environmentObject(FileExplorerState())
-            .environmentObject(BmuxConfigStore())
-            .environment(
-                \.minimalModeInvalidationProbe,
-                MinimalModeInvalidationProbe(
-                    contentViewBody: { counts.contentViewBody += 1 },
-                    workspaceContentBody: { counts.workspaceContentBody += 1 },
-                    verticalTabsSidebarBody: { counts.verticalTabsSidebarBody += 1 }
-                )
-            )
-            .defaultAppStorage(defaults)
-
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 900, height: 640),
-            styleMask: [.titled, .closable, .resizable],
-            backing: .buffered,
-            defer: false
-        )
-        window.contentView = MainWindowHostingView(rootView: root)
-        defer {
-            window.contentView = nil
-            window.close()
-        }
-
-        await Self.drainMainRunLoop(for: window)
-        #expect(counts.contentViewBody > 0)
-        #expect(counts.workspaceContentBody > 0)
-        #expect(counts.verticalTabsSidebarBody > 0)
-
-        counts.reset()
-        defaults.set(
-            WorkspacePresentationModeSettings.Mode.minimal.rawValue,
-            forKey: WorkspacePresentationModeSettings.modeKey
-        )
-        await Self.drainMainRunLoop(for: window)
-
-        #expect(
-            counts.contentViewBody == 0,
-            "Minimal-mode toggles must not re-evaluate the whole ContentView body."
-        )
-        #expect(
-            counts.workspaceContentBody == 0,
-            "Minimal-mode toggles must not re-evaluate WorkspaceContentView/Bonsplit content."
-        )
-        #expect(
-            counts.verticalTabsSidebarBody == 0,
-            "Minimal-mode toggles must not rebuild the vertical sidebar render context."
-        )
-    }
-
-    @MainActor
-    private static func drainMainRunLoop(for window: NSWindow, iterations: Int = 20) async {
-        for _ in 0..<iterations {
-            window.contentView?.layoutSubtreeIfNeeded()
-            _ = RunLoop.main.run(mode: .default, before: Date(timeIntervalSinceNow: 0.001))
-            await Task.yield()
-        }
+        fixture.resetCounts()
+        try await fixture.switchToMinimalMode()
+        #expect(fixture.contentViewBody == 0, "Minimal-mode toggles must not re-evaluate the whole ContentView body.")
+        #expect(fixture.workspaceContentBody == 0, "Minimal-mode toggles must not re-evaluate WorkspaceContentView/Bonsplit content.")
+        #expect(fixture.workspaceRailBody == 0, "Minimal-mode toggles must not rebuild the workspace rail body.")
     }
 
     @Test

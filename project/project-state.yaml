@@ -6692,3 +6692,8 @@ caveats:
     title: Y1 overlay fixtures observe queued mounting and adopt the maintained three-second runtime setup bound for Escape while retaining fifty-millisecond overlay phases and real key-up calibration; owned bundle controls isolate startup delay, presented macOS 15 verification remains pending
     status: open
     owner: bmux
+
+  - id: minimal_mode_current_shell_invalidation_verification
+    title: Current terminal and workspace-rail body coverage preserves all six minimal-mode assertions; owned build 799 proves unrelated inset AppStorage invalidation, isolated observer correction and fresh-build macOS 15 validation remain pending
+    status: open
+    owner: bmux

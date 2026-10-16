@@ -7140,3 +7140,38 @@ notification failed setup at 3.267 seconds including construction; both overlay
 cases still passed. Every owned process joined before its temporary root was
 removed. Root owns the integrated test target and actual presented app-host gate. No user-facing or
 localized product strings changed.
+
+### Minimal-mode heavy-body coverage follows the current shell
+
+Y native shard 7 reported two missing initial body counters and one root-body
+reevaluation in `testMinimalModeToggleDoesNotReevaluateChromeHeavyBodies`.
+The default chat branch never mounts terminal workspace content, and the old
+vertical-sidebar probe measured a layout no longer called by the current shell.
+The fixture now selects the terminal branch explicitly and the existing DEBUG
+sidebar probe observes `WorkspaceReferenceRail`. All six original intents remain:
+three bodies must actually render, then none may reevaluate for the mode change.
+
+The retained offscreen window owns seven manual-IO workspace graphs. Buffered
+body/mode observations and native transaction completion replace the old twenty
+RunLoop settling iterations. Each observation has a new explicit one-second
+failure cap; this was not an original behavioral deadline. Transaction completion
+covers that transaction, not arbitrary future SwiftUI work. Cleanup unmounts the
+view, discards only its app-host window context, stops its metadata observation,
+and tears down all owned panels. No shared delegate is swapped across suspension.
+The original app-host registration/session and delayed startup-task composition
+remain an integration boundary; service cancellation is not a global task join.
+
+Owned macOS 26/build 799 controls mount the actual terminal root/workspace bodies;
+a matched no-toggle phase leaves both counters zero. A mode change reevaluates
+both once. SwiftUI `_printChanges` attributes that update to four root AppStorage
+Double titlebar-inset fields even when their explicit values remain unchanged.
+A temporary minimal AppStorage leaf reproduces the unrelated-key invalidation;
+a filtered leaf observer preserves real inset changes while avoiding parent-body
+reevaluation for mode changes. Current-rail projection controls are meaningful
+but are not substituted for the new actual rail-body assertion. These results do
+not establish historical macOS 15 scheduling or full rendering quiescence.
+
+This first staged commit intentionally retains the product invalidation for red
+coverage. The follow-up isolates the inset observation at the existing leaf
+boundary. Exact new probe execution, fresh tagged production build, complete test
+target, and macOS 15 CI remain pending. No product-facing strings changed.

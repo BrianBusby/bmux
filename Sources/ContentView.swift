@@ -10119,8 +10119,6 @@ struct VerticalTabsSidebar: View {
     @LiveSetting(\.customSidebars.renderer) private var customSidebarRenderer
     @LiveSetting(\.shortcuts.showModifierHoldHints) private var showModifierHoldHints
 #if DEBUG
-    @Environment(\.minimalModeInvalidationProbe) private var minimalModeInvalidationProbe
-
     /// Opt-in fixture for reviewing the hybrid workbench with bounded sample
     /// card content while retaining live workspace selection. It is only
     /// compiled into Debug builds and is enabled with the tagged app's bundle
@@ -10443,9 +10441,6 @@ struct VerticalTabsSidebar: View {
     }
 
     var body: some View {
-#if DEBUG
-        let _ = { minimalModeInvalidationProbe.verticalTabsSidebarBody?() }()
-#endif
         let signpost = SidebarProfilingSignposts.begin("vertical-sidebar-body", "workspaces=\(tabManager.tabs.count) selected=\(sidebarShortTabId(tabManager.selectedTabId))")
         let tabs = tabManager.tabs
         let workspaceCount = tabs.count

@@ -621,3 +621,6 @@ local_caveats:
 
   - id: terminal_overlay_runtime_setup_verification
     status: open
+
+  - id: minimal_mode_current_shell_invalidation_verification
+    status: open
