@@ -6484,3 +6484,31 @@ completion change. Existing lock and best-effort temporary-directory cleanup in
 the untouched fixture remain unchanged. No deadline, selector, runtime code,
 shared helper or shipped text changes. Full integrated macOS 15 execution remains
 pending; local macOS 26 evidence does not substitute for that gate.
+
+
+### Welcome shortcut delivery failure context
+
+V's `sidebarShortcutsUseSharedToggleCommands` failed with
+`rightSidebarDeliveryTimedOut`. The handled and left-sidebar assertions passed;
+the timeout prevented the final right-sidebar visibility assertion. The current
+fixture races stream consumption with its one-second timer, so this report alone
+does not distinguish a missing queued callback from delayed consumer scheduling.
+No historical cause or behavior correction is claimed.
+
+The same owned fixture now reports `event=welcome_shortcut_delivery` only when
+that timeout occurs. Fields contain elapsed time since wait entry, callback
+publication time relative to that entry (possibly negative for buffered delivery),
+capture/completion flags, the handled result, registered-context presence and
+native/final visibility facts. It does not expose window IDs, titles, paths,
+settings contents or process environments. Reading these existing facts does not
+invoke routing predicates or mutate production state.
+
+The original key events, real queued shared toggle, synchronous settings restore,
+callback FIFO ordering, task-group cancellation/join, relative one-second timer
+and all test assertions are unchanged. The retained competing-consumer race and
+late queued callback/default restoration behavior remain investigation limits.
+An owned never-presented fixture control verifies buffered success and missing-
+callback failure details; it does not execute the original presented shortcut
+composition or prove the macOS 15 cause. Full next-candidate CI remains required.
+No production hook, global logging configuration, timeout increase or UI string
+change is introduced.

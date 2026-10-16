@@ -341,3 +341,4 @@ Repository: `BrianBusby/bmux`
 | `v_tail_nonfocus_and_option_terminal_fixture_verification` | open |
 | `app_host_lock_stopped_child_verification` | open |
 | `fork_live_process_scope_fixture_verification` | open |
+| `welcome_shortcut_delivery_diagnostic_verification` | open |

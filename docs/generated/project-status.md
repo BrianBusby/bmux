@@ -286,6 +286,7 @@ Regenerate with: ./scripts/project-docs generate
 | Codex pending-write fixture observes real request boundaries and joins its held submission on timeout or cancellation; build 799 passes local controls, integrated macOS 15 verification remains pending (`codex_pending_turn_write_fixture_verification`) | Bmux | open |  |
 | Owned stopped-child controls reproduce missing resume in app-host lock cancellation; regression-only CI red and bounded owner correction remain pending, historical V pipe completion cause is unresolved (`app_host_lock_stopped_child_verification`) | Bmux | open |  |
 | Fork cache refresh fixture supplies matching live workspace and surface environment identities; missing and wrong scope controls fail while the corrected native case passes, fixed-head macOS 15 verification remains pending (`fork_live_process_scope_fixture_verification`) | Bmux | open |  |
+| Welcome shortcut timeout retains its original route and one-second observer while reporting bounded callback and native window state; historical V timeout cause and next macOS 15 execution remain unresolved (`welcome_shortcut_delivery_diagnostic_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

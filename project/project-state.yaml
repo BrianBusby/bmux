@@ -6602,3 +6602,8 @@ caveats:
     title: Fork cache refresh fixture supplies matching live workspace and surface environment identities; missing and wrong scope controls fail while the corrected native case passes, fixed-head macOS 15 verification remains pending
     status: open
     owner: bmux
+
+  - id: welcome_shortcut_delivery_diagnostic_verification
+    title: Welcome shortcut timeout retains its original route and one-second observer while reporting bounded callback and native window state; historical V timeout cause and next macOS 15 execution remain unresolved
+    status: open
+    owner: bmux
