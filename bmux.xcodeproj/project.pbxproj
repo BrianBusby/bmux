@@ -1149,6 +1149,7 @@
 		13AB1A2E5DA6AD02DCAE971D /* MockBridgeInputCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD3B5F249DECAB446CC71D32 /* MockBridgeInputCapture.swift */; };
 		C75740020000000000000001 /* MouseDownMenuItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C75740020000000000000002 /* MouseDownMenuItemView.swift */; };
 		B9000015A1B2C3D4E5F60719 /* MultiWindowNotificationsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000016A1B2C3D4E5F60719 /* MultiWindowNotificationsUITests.swift */; };
+		2D3A9950E56D45499310F13F /* NativeMainQueueDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D661CEF571E4D829682012A /* NativeMainQueueDelivery.swift */; };
 		596100000000000000000003 /* NativeNotificationDeliveryHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 596100000000000000000004 /* NativeNotificationDeliveryHooks.swift */; };
 		596100000000000000000001 /* NativeNotificationFallbackCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 596100000000000000000002 /* NativeNotificationFallbackCommandTests.swift */; };
 		8B1B2AB6EC6ACDB2CD39A9BB /* NewBrowserWorkspaceShortcutUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04698069140539D8495D6B9B /* NewBrowserWorkspaceShortcutUITests.swift */; };
@@ -3277,6 +3278,7 @@
 		CD3B5F249DECAB446CC71D32 /* MockBridgeInputCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockBridgeInputCapture.swift; sourceTree = "<group>"; };
 		C75740020000000000000002 /* MouseDownMenuItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Update/MouseDownMenuItemView.swift; sourceTree = "<group>"; };
 		B9000016A1B2C3D4E5F60719 /* MultiWindowNotificationsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiWindowNotificationsUITests.swift; sourceTree = "<group>"; };
+		0D661CEF571E4D829682012A /* NativeMainQueueDelivery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeMainQueueDelivery.swift"; sourceTree = "<group>"; };
 		596100000000000000000004 /* NativeNotificationDeliveryHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeNotificationDeliveryHooks.swift; sourceTree = "<group>"; };
 		596100000000000000000002 /* NativeNotificationFallbackCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeNotificationFallbackCommandTests.swift; sourceTree = "<group>"; };
 		04698069140539D8495D6B9B /* NewBrowserWorkspaceShortcutUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewBrowserWorkspaceShortcutUITests.swift; sourceTree = "<group>"; };
@@ -5846,6 +5848,7 @@
 				AC0A317D658C4DD299300001 /* TerminalRuntimeReadinessFixture.swift */,
 				A13EF928AC4C46A9B7500001 /* TerminalSearchOverlayMouseFixture.swift */,
 				81E1408C51174C0398AD3047 /* WorkspaceTerminalFocusRecoveryFixture.swift */,
+				0D661CEF571E4D829682012A /* NativeMainQueueDelivery.swift */,
 				2DD821A1D37F42A19180307A /* WorkspaceFilterSelectionVisibilityTests.swift */,
 				FC02A59739484E64B8100003 /* CommandPaletteEscapeExpiryTests.swift */,
 				FC02A59739484E64B8100001 /* CommandPaletteEscapeExpiryFixture.swift */,
@@ -8637,6 +8640,7 @@
 				9B08F916D7FF7626C6820727 /* MobilePairingConnectionTransitionTests.swift in Sources */,
 				F6448F377504F33956E7E03B /* MobileWorkspaceListFidelityTests.swift in Sources */,
 				13AB1A2E5DA6AD02DCAE971D /* MockBridgeInputCapture.swift in Sources */,
+				2D3A9950E56D45499310F13F /* NativeMainQueueDelivery.swift in Sources */,
 				596100000000000000000001 /* NativeNotificationFallbackCommandTests.swift in Sources */,
 				378D5422D1ED47EF9B3EBF78 /* NoGitWatchShellFixture.swift in Sources */,
 				3F1319520A494EC8A59394B4 /* NoGitWatchShellIntegrationTests.swift in Sources */,

@@ -7557,3 +7557,55 @@ The exact permanent fixture and all seven unchanged cases compile in configured
 Swift 5 and strict Swift 6 with warnings-as-errors and zero warnings. Local
 Project Truth validate/generate/check, strict determinism, selector validation,
 and actual-main file budgets pass. Root owns full-target and CI verification.
+
+
+### Shared native main-queue delivery for terminal overlays and focus
+
+Actual Z1 reports `deliveryTimedOut` in
+`searchOverlaySurvivesPortalRebindDuringSplitLikeChurn` (0.314 seconds).
+That case has only one queued-mutation wait, before its initial overlay
+assertion, so the failed phase is the initial search-overlay mount. The same
+suite's Escape case passed its subsequent-key-up delivery calibration, and the
+visibility-churn case passed. The archived error has no producer timestamp and
+does not establish why the mount wait expired.
+
+The legacy helper raced async stream consumption against its 50ms timer. In a
+controlled process, the action's queued mutation preceded the native FIFO
+marker at 0.042ms, but a deliberately held consumer let the timer win at
+60.016ms. This demonstrates the same observation defect as the focus helper;
+it does not reproduce historical Z1 scheduling or prove a product mount bug.
+
+`NativeMainQueueDelivery` now owns this single test-only FIFO boundary for both
+consumers. It captures the absolute deadline before the synchronous action,
+then enqueues the marker after the action's native mutation. First-event
+buffering preserves a timely producer despite late consumption; actual late
+producer timestamps and missing producers still fail. The timer is canceled
+and joined, parent cancellation remains authoritative, and a queued marker
+captures only the continuation. Unexpected clock errors propagate. This does
+not promise completion of later work enqueued by the native mutation, including
+search-field focus retries.
+
+The overlay suite calls the shared owner directly; the focus fixture retains
+its semantic method and fixed 50ms policy. All ten case actions, assertions,
+window/portal teardown, Escape routing/calibration and native mutation owners
+remain unchanged. The overlay's four callee names change; the seven focus
+case bodies remain byte-identical. Failure-only output contains a stable
+`native_main_queue_delivery_timeout` event, caller phase/line, arrival source,
+arrival/observation time and deadline, with no raw object IDs or payloads.
+
+Temporary exact-owner controls verify action-before-marker ordering and that
+an action exhausting the 50ms budget fails. Narrow scheduling controls verify
+timely producer/late consumer success, late/missing producer failures,
+cancellation, buffered-success cancellation, timer join and terminated late
+signals without retaining the action's owned graph. Both Swift 5 and strict
+Swift 6 controls pass with warnings-as-errors. An initial temporary control ran
+its deliberately blocking action concurrently with the normal control and
+correctly timed out both; those artificial controls now run serially. This
+changes no committed suite scheduling.
+
+The desktop remains locked. No presentation or responder operation was run for
+this slice; local controls do not establish presented macOS 15 behavior.
+Integrated full-target compilation and actual CI remain root-owned gates.
+The bounded proof and exact source provenance are recorded in
+`/tmp/z1-overlay-delivery-proof/handoff.md`. No production or localization surface
+changes are included.
