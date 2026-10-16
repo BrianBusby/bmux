@@ -492,3 +492,6 @@ local_caveats:
 
   - id: portal_animation_completion_fixture_verification
     status: open
+
+  - id: notification_settings_retry_fixture_verification
+    status: open

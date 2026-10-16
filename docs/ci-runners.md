@@ -5336,3 +5336,34 @@ historical CI interleaving. The old geometry setup already pumped the RunLoop, s
 its precise failure cause remains unknown. Local macOS 26 native completion does
 not establish macOS 15 callback ordering; fixed-head app-host verification remains
 open under `portal_animation_completion_fixture_verification`.
+
+
+### Notification settings retry fixture verification
+
+The exact legacy `NotificationDockBadgeTests.testNotificationSettingsPromptRetriesUntilWindowExists`
+case now uses one synchronous Swift Testing scope. Its existing test hook calls
+`promptToEnableNotifications` and `presentNotificationSettingsPrompt` directly;
+the injected scheduler only appends a retry block, and the native alert probe
+calls completion synchronously. The former main-queue sentinel and one-second
+XCTest wait were unrelated to that completion contract. Removing them does not
+change a production retry deadline, presentation policy or scheduler.
+
+All five count assertions remain: no sheet or modal before a window, one queued
+retry, then one sheet and no modal after invoking that retry. The Not Now
+response must not open a settings URL. A retained 480-by-320 titled window is
+never presented, and explicitly closes at synchronous teardown. Only the
+existing settings-prompt hooks reset; notification records, delivery hooks,
+AppDelegate and unrelated singleton state are not reset. The existing private
+singleton initializer/test-hook seam remains unchanged; no new production seam
+or broad fixture owner is introduced.
+
+Exact source compiled without warnings in Swift 5 and Swift 6 with
+warnings-as-errors. Actual frozen build 796 on macOS 26.3 passed the one case
+in 0.056 seconds. Temporary controls that omit the retry or call the native
+probe's modal path retain the original assertions and fail meaningfully. Each
+isolated process owns its HOME/config/tmp, disables telemetry before module
+use, prohibits activation and removes its owned root. No real sheet/modal or
+application launch occurs. Historical S app-host failure causality remains
+unproven; this repairs a concrete fixture completion/ownership mismatch.
+Integrated full-target compilation and macOS 15 app-host execution remain
+pending under `notification_settings_retry_fixture_verification`.

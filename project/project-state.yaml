@@ -6439,3 +6439,8 @@ caveats:
     title: Two portal geometry and overlay fixtures preserve their scheduled-action and animation-completion assertions; native controls pass, fixed-head app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: notification_settings_retry_fixture_verification
+    title: Notification settings retry fixture follows synchronous injected callbacks and retains its window; native build 796 passes, integrated macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux

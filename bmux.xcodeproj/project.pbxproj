@@ -1140,6 +1140,8 @@
 		CE0E0C040000000000000001 /* NotificationPushRuntimeServiceDependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E0C040000000000000002 /* NotificationPushRuntimeServiceDependencies.swift */; };
 		C9ADD73ABB7F407080C45029 /* NotificationRestoreFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00BA7586F0D74A8B9DA4CA99 /* NotificationRestoreFixture.swift */; };
 		C7A507000000000000005794 /* NotificationRowSnapshotBoundaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A507000000000000005795 /* NotificationRowSnapshotBoundaryTests.swift */; };
+		C73D35957F254E57AD6F4100 /* NotificationSettingsPromptAlertProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2200C933400E4461954E8015 /* NotificationSettingsPromptAlertProbe.swift */; };
+		285D6BB5EC704BA287E88B75 /* NotificationSettingsPromptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87C2C6F299C435C970AD0C6 /* NotificationSettingsPromptTests.swift */; };
 		B7F00002 /* NotificationSoundSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7F00001 /* NotificationSoundSettings.swift */; };
 		4E5F60720000000000000001 /* NotificationSoundSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E5F60720000000000000002 /* NotificationSoundSettingsTests.swift */; };
 		A5001094 /* NotificationsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001091 /* NotificationsPage.swift */; };
@@ -3214,6 +3216,8 @@
 		CE0E0C040000000000000002 /* NotificationPushRuntimeServiceDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/NotificationPushRuntimeServiceDependencies.swift; sourceTree = "<group>"; };
 		00BA7586F0D74A8B9DA4CA99 /* NotificationRestoreFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationRestoreFixture.swift; sourceTree = "<group>"; };
 		C7A507000000000000005795 /* NotificationRowSnapshotBoundaryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationRowSnapshotBoundaryTests.swift; sourceTree = "<group>"; };
+		2200C933400E4461954E8015 /* NotificationSettingsPromptAlertProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettingsPromptAlertProbe.swift; sourceTree = "<group>"; };
+		E87C2C6F299C435C970AD0C6 /* NotificationSettingsPromptTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettingsPromptTests.swift; sourceTree = "<group>"; };
 		B7F00001 /* NotificationSoundSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSoundSettings.swift; sourceTree = "<group>"; };
 		4E5F60720000000000000002 /* NotificationSoundSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSoundSettingsTests.swift; sourceTree = "<group>"; };
 		A5001091 /* NotificationsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsPage.swift; sourceTree = "<group>"; };
@@ -5832,6 +5836,8 @@
 				C92A8919A7DF464B98FBB3CB /* BrowserUnderPageBackgroundTests.swift */,
 				C36EA76CD0B5432888F99604 /* GhosttyBackgroundThemeTests.swift */,
 				D910AAD9E9CF49EFB0723284 /* WorkspaceChromeColorTests.swift */,
+				2200C933400E4461954E8015 /* NotificationSettingsPromptAlertProbe.swift */,
+				E87C2C6F299C435C970AD0C6 /* NotificationSettingsPromptTests.swift */,
 				B6585002B6585002B658PW02 /* BrowserPrewarmedWebViewPoolTests.swift */,
 				58C7B1B978620BE162CC057E /* BrowserPanelTests.swift */,
 				C42660040000000000000002 /* BrowserPDFPreviewActionRegressionTests.swift */,
@@ -8455,6 +8461,8 @@
 					CE0E0C080000000000000001 /* NotificationPushRuntimeCompositionTests.swift in Sources */,
 				C9ADD73ABB7F407080C45029 /* NotificationRestoreFixture.swift in Sources */,
 				C7A507000000000000005794 /* NotificationRowSnapshotBoundaryTests.swift in Sources */,
+				C73D35957F254E57AD6F4100 /* NotificationSettingsPromptAlertProbe.swift in Sources */,
+				285D6BB5EC704BA287E88B75 /* NotificationSettingsPromptTests.swift in Sources */,
 				4E5F60720000000000000001 /* NotificationSoundSettingsTests.swift in Sources */,
 				645645000000000000000002 /* NumberedShortcutSwapTests.swift in Sources */,
 				4378399A7C0245EF8186F306 /* OmnibarAndToolsTests.swift in Sources */,
