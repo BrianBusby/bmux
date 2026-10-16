@@ -537,3 +537,6 @@ local_caveats:
 
   - id: sidebar_tool_focus_delivery_verification
     status: open
+
+  - id: kiro_codex_feed_contract_verification
+    status: open

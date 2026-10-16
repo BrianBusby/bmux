@@ -6514,3 +6514,8 @@ caveats:
     title: Sidebar tool focus preservation observes all three deferred owner phases with unchanged one-second bounds; native build 797 passes, integrated macOS 15 verification remains pending
     status: open
     owner: bmux
+
+  - id: kiro_codex_feed_contract_verification
+    title: Kiro deny and Codex late-PR feed contract uses owned joined producers and excludes detached monitor composition; fixed-head macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux

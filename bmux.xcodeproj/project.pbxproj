@@ -38,6 +38,8 @@
 		A9F200000000000000000001 /* AgentExecutableResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000001 /* AgentExecutableResolver.swift */; };
 		A9F200000000000000000002 /* AgentExecutableResolverError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000002 /* AgentExecutableResolverError.swift */; };
 		A9E020000000000000000005 /* AgentExecutableResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E010000000000000000005 /* AgentExecutableResolverTests.swift */; };
+		43861B14610142B5B5E57D97 /* AgentFeedContractFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2EDCEF599524403AC9184C7 /* AgentFeedContractFixture.swift */; };
+		D8380D61482D4B568109113C /* AgentFeedPayloadContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3C09CAEB2E485ABDC95F27 /* AgentFeedPayloadContractTests.swift */; };
 		A95EE3F75449EA3A8EFDDBAC /* AgentForkCommandContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 682E0FC1E3525DC526260ED6 /* AgentForkCommandContractTests.swift */; };
 		C0DEF0C10000000000000001 /* AgentForkSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEF0C10000000000000002 /* AgentForkSupport.swift */; };
 		D36A00010000000000000001 /* AgentHibernationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D36A00010000000000000002 /* AgentHibernationController.swift */; };
@@ -2199,6 +2201,8 @@
 		A9F100000000000000000001 /* AgentExecutableResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentExecutableResolver.swift; sourceTree = "<group>"; };
 		A9F100000000000000000002 /* AgentExecutableResolverError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentExecutableResolverError.swift; sourceTree = "<group>"; };
 		A9E010000000000000000005 /* AgentExecutableResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentExecutableResolverTests.swift; sourceTree = "<group>"; };
+		D2EDCEF599524403AC9184C7 /* AgentFeedContractFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AgentFeedContractFixture.swift"; sourceTree = "<group>"; };
+		8D3C09CAEB2E485ABDC95F27 /* AgentFeedPayloadContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AgentFeedPayloadContractTests.swift"; sourceTree = "<group>"; };
 		682E0FC1E3525DC526260ED6 /* AgentForkCommandContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AgentForkCommandContractTests.swift"; sourceTree = "<group>"; };
 		C0DEF0C10000000000000002 /* AgentForkSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentForkSupport.swift; sourceTree = "<group>"; };
 		D36A00010000000000000002 /* AgentHibernationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/AgentHibernationController.swift; sourceTree = "<group>"; };
@@ -6021,6 +6025,8 @@
 				18CC53E330BC4400B7292BE1 /* CLIAmbiguousClaudeWorkflowTests.swift */,
 				6D8052EF822F4004A13044BB /* ThemeReloadObservation.swift */,
 				322E640EE6854E11BD8C1ED4 /* CLIThemeTargetContractTests.swift */,
+				8D3C09CAEB2E485ABDC95F27 /* AgentFeedPayloadContractTests.swift */,
+				D2EDCEF599524403AC9184C7 /* AgentFeedContractFixture.swift */,
 				1C33E6ADB46945C6BCF8ED0C /* CodexHookInstallationContractTests.swift */,
 				2E559DC04A90425A9853E653 /* ClaudeSessionPhaseFixture.swift */,
 				919DCAF7D0DD44A796A899FF /* CLIProcessTestTimeout.swift */,
@@ -8147,6 +8153,8 @@
 				C7A51D100000000000000002 /* AgentChatSessionRegistryObservationReviewRegressionTests.swift in Sources */,
 				C7A51D000000000000000002 /* AgentChatSessionRegistryObservationTests.swift in Sources */,
 				A9E020000000000000000005 /* AgentExecutableResolverTests.swift in Sources */,
+				43861B14610142B5B5E57D97 /* AgentFeedContractFixture.swift in Sources */,
+				D8380D61482D4B568109113C /* AgentFeedPayloadContractTests.swift in Sources */,
 					A95EE3F75449EA3A8EFDDBAC /* AgentForkCommandContractTests.swift in Sources */,
 				C1AC71040000000000000001 /* AgentHibernationMobileInputTests.swift in Sources */,
 				D72260010000000000000001 /* AgentHibernationPortalVisibilityTests.swift in Sources */,

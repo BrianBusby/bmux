@@ -326,3 +326,4 @@ Repository: `BrianBusby/bmux`
 | `binding_only_resume_state_verification` | open |
 | `terminal_pointer_notification_fixture_verification` | open |
 | `sidebar_tool_focus_delivery_verification` | open |
+| `kiro_codex_feed_contract_verification` | open |

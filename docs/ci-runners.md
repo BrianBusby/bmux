@@ -5803,3 +5803,36 @@ Swift 6 compilation. Explicitly focusing the new tool fails the two original
 focus assertions; withholding FIFO delivery fails the one-second observation.
 These controls establish contract sensitivity, not the historical macOS 15
 scheduler cause. Integrated app-host verification remains pending.
+
+### Kiro deny and Codex late-prompt Feed contract
+
+T shard 3 failed two assertions inside the appended Codex phase of
+`testKiroFeedDenyUsesPreToolUseExitCodeTwo`: the CLI timed out and stdout was
+empty. Kiro deny behavior, Codex status zero and both late-PR extraction checks
+passed. The failure does not identify an exact stalled owner. Its legacy mock
+launched 80 unjoined accept workers; the migrated whole method uses the maintained
+joined socket/process owners, explicit fixture authentication and isolated homes,
+configuration, state and provenance paths. The original local five-second /
+host-CI minimum twenty-second producer policy and separate five-second feed
+observation bound remain. Kiro receives the actual permission-deny response and
+retains status two, stderr and feed event/source/PID checks. Codex retains the
+long prompt, status/stdout, and PR URL in both tool input and context.
+
+The Codex phase explicitly uses the existing visible-mutation suppression policy
+and a disabled auto-name response. This keeps its asserted feed behavior while
+preventing detached naming/monitor processes from outliving fixture cleanup. It
+no longer exercises parent workspace association and monitor-launch composition.
+Dedicated `CLICodexHookPEAssociationTests` cover persisted stable/runtime workspace
+association, and `CodexMonitorLeaseTests.nextPromptRespectsPriorTurnCompletion`
+covers prompt/lease identity and retirement. Existing direct monitor tests in
+`WorkspaceRemoteConnectionTests` cover transcript error/input behavior. These are
+retained constituent contracts, not a claim of equivalent whole composition or
+a new verification result for those tests.
+
+One-way Codex feed telemetry gets no response; authentication is validated
+separately. Failure is retained until producer exit and socket drain, then
+reported and rethrown before owned paths are removed. The original 50ms
+best-effort feed transport budget remains a loaded-host risk. No production,
+shared helper or workflow selector changes accompany this fixture correction.
+Native proof and negative controls are recorded in the slice handoff; integrated
+fixed-head macOS 15 app-host verification remains pending.
