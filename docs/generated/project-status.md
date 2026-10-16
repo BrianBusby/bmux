@@ -291,6 +291,7 @@ Regenerate with: ./scripts/project-docs generate
 | Welcome shortcut timeout retains its original route and one-second observer while reporting bounded callback and native window state; historical V timeout cause and next macOS 15 execution remain unresolved (`welcome_shortcut_delivery_diagnostic_verification`) | Bmux | open |  |
 | Expired pending-open Escape fixture preserves the real main-window route and original no-dismiss bounds with raw-state failure diagnostics; target compilation passes, full macOS 15 failure attribution remains pending (`command_palette_expired_escape_diagnostics`) | Bmux | open |  |
 | Inspector close failure diagnostics preserve actions and deadlines; explicit closure typing passes Swift 5 and 6 focused compilation after the integrated parser failure, corrected full-target build and actual macOS 15 cause remain pending (`inspector_close_failure_diagnostics`) | Bmux | open |  |
+| Legacy remote cwd trust fixture targets the original panel identity and restores it focused before testing presented directory; build 799 positive and trust-negative controls pass, actual macOS 15 CI remains pending (`legacy_remote_directory_trust_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

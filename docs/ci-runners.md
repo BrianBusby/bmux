@@ -6669,3 +6669,39 @@ and their maintained dependencies passes with warnings-as-errors in both Swift 5
 and strict Swift 6. No visible-window native execution was performed for this
 change. Root owns the corrected full-target build and actual app-host execution,
 including whether the failure messages arrive on macOS 15.
+
+
+### Legacy remote cwd trust fixture identity
+
+Fixed W native shard 4 (job 116831461888) reported one failure in the legacy
+remote-restore directory case: the final presented directory remained nil. The
+test had created a second terminal with `focus: true`, persisted that focus, then
+reported a trusted directory for the original background panel. The maintained
+`Workspace+SidebarDirectories` projection intentionally returns the focused
+terminal's effective directory or nil; a background remote report cannot replace
+that focus. Both this policy and the original test are unchanged from main
+`ce17e9888`. All preceding trust assertions passed in the failed CI case.
+
+The exact existing case now explicitly focuses the original panel before taking
+the snapshot, selects its snapshot entry by panel UUID instead of array position,
+and verifies that restore selects its mapped panel. Every original assertion is
+retained: persisted raw metadata remains untrusted, ordinary directory reports
+are rejected, sidebar/filesystem/git projections remain suppressed, and only the
+trusted remote report enables the reported and presented directory. A separate
+cohesive Swift Testing file keeps the original 498-line container below the file
+limit; every other case and the original shared helper remain unchanged.
+
+Both workspace graphs own teardown. The existing SSH cleanup override is saved
+and restored synchronously after both graphs tear down so cleanup cannot launch
+SSH. The maintained automated-test restore policy prevents automatic connection;
+no production trust policy or runtime seam changes. No timeout, selector or gate
+is relaxed.
+
+Owned build-799 controls reproduce the original final failure and an explicit
+background-focus negative. The focused, identity-indexed fixture passes; omitting
+the trusted report still fails reported and presented directory assertions. All
+runtime surfaces remain uncreated in these controls, with no window attachment,
+network or external SSH, and every owned process and temporary home is cleaned
+up. Exact final source compiles in configured Swift 5 and strict Swift 6 without
+warnings and passes the native control. Actual macOS 15 CI execution remains pending; this evidence does
+not establish broader restore behavior across OS versions.

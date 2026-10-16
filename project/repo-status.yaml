@@ -594,3 +594,6 @@ local_caveats:
 
   - id: command_palette_expired_escape_diagnostics
     status: open
+
+  - id: legacy_remote_directory_trust_fixture_verification
+    status: open

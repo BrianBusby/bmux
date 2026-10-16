@@ -6627,3 +6627,8 @@ caveats:
     title: Inspector close failure diagnostics preserve actions and deadlines; explicit closure typing passes Swift 5 and 6 focused compilation after the integrated parser failure, corrected full-target build and actual macOS 15 cause remain pending
     status: open
     owner: bmux
+
+  - id: legacy_remote_directory_trust_fixture_verification
+    title: Legacy remote cwd trust fixture targets the original panel identity and restores it focused before testing presented directory; build 799 positive and trust-negative controls pass, actual macOS 15 CI remains pending
+    status: open
+    owner: bmux
