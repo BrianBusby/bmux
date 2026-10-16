@@ -1200,6 +1200,9 @@
 		6313B6A0 /* PaneMemoryWarning.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6313B6A1 /* PaneMemoryWarning.swift */; };
 		E30760090000000000000002 /* PassthroughWindowOverlayContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30760090000000000000001 /* PassthroughWindowOverlayContainerView.swift */; };
 		A5001425 /* PDFPreviewChromeDebugWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001424 /* PDFPreviewChromeDebugWindowController.swift */; };
+		86C41D581397443E9D2A8A80 /* PendingDiffGitFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD540EFD8E84A8EB4BB195A /* PendingDiffGitFixture.swift */; };
+		20338D06DE814F90B7784F06 /* PendingDiffOrderingFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 482110219B7D4BC384395365 /* PendingDiffOrderingFixture.swift */; };
+		21FEBC1A389A4F0C8DFB2803 /* PendingDiffOrderingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3457BBDB5A3E4A1B883B0E4B /* PendingDiffOrderingTests.swift */; };
 		D1F0A00400000000000000D1 /* PhoneForwardingMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1F0A00400000000000000D2 /* PhoneForwardingMode.swift */; };
 		D1F0A00100000000000000A1 /* PhonePushClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1F0A00100000000000000A2 /* PhonePushClient.swift */; };
 		D1F0A00100000000000000A3 /* PhonePushPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1F0A00100000000000000A4 /* PhonePushPayload.swift */; };
@@ -3296,6 +3299,9 @@
 		6313B6A1 /* PaneMemoryWarning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaneMemoryWarning.swift; sourceTree = "<group>"; };
 		E30760090000000000000001 /* PassthroughWindowOverlayContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassthroughWindowOverlayContainerView.swift; sourceTree = "<group>"; };
 		A5001424 /* PDFPreviewChromeDebugWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/PDFPreviewChromeDebugWindowController.swift; sourceTree = "<group>"; };
+		7BD540EFD8E84A8EB4BB195A /* PendingDiffGitFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingDiffGitFixture.swift; sourceTree = "<group>"; };
+		482110219B7D4BC384395365 /* PendingDiffOrderingFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingDiffOrderingFixture.swift; sourceTree = "<group>"; };
+		3457BBDB5A3E4A1B883B0E4B /* PendingDiffOrderingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingDiffOrderingTests.swift; sourceTree = "<group>"; };
 		D1F0A00400000000000000D2 /* PhoneForwardingMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneForwardingMode.swift; sourceTree = "<group>"; };
 		D1F0A00100000000000000A2 /* PhonePushClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PhonePushClient.swift; sourceTree = "<group>"; };
 		D1F0A00100000000000000A4 /* PhonePushPayload.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PhonePushPayload.swift; sourceTree = "<group>"; };
@@ -5675,6 +5681,9 @@
 				A9E040000000000000000001 /* CodexAppServerSessionTests.swift */,
 				31E525759EF945DE958FA04F /* CodexInputQueueTests.swift */,
 				815B4F2659FA47D8A3240A9B /* PromptSessionLinkCompletionTests.swift */,
+				3457BBDB5A3E4A1B883B0E4B /* PendingDiffOrderingTests.swift */,
+				482110219B7D4BC384395365 /* PendingDiffOrderingFixture.swift */,
+				7BD540EFD8E84A8EB4BB195A /* PendingDiffGitFixture.swift */,
 				D72260010000000000000002 /* AgentHibernationPortalVisibilityTests.swift */,
 				D36A00020000000000000002 /* AgentHibernationTests.swift */,
 				C1AC71040000000000000002 /* AgentHibernationMobileInputTests.swift */,
@@ -8549,6 +8558,9 @@
 				46E80EA8FA5E44D7BBF301FD /* PanelAppearanceCompositingTests.swift in Sources */,
 					C44550000000000000000001 /* PanelOwnedNativeViewSessionTests.swift in Sources */,
 					6313FACE0000000000000000 /* PaneMemoryGuardrailTests.swift in Sources */,
+				86C41D581397443E9D2A8A80 /* PendingDiffGitFixture.swift in Sources */,
+				20338D06DE814F90B7784F06 /* PendingDiffOrderingFixture.swift in Sources */,
+				21FEBC1A389A4F0C8DFB2803 /* PendingDiffOrderingTests.swift in Sources */,
 					D1F0A00300000000000000C1 /* PhonePushPresenceGateTests.swift in Sources */,
 					B3575000000000000000000A /* PiVaultAgentPersistenceTests.swift in Sources */,
 					B1D5CEE0407545B6B57E3B0E /* PortalHitTestingPerformanceTests.swift in Sources */,

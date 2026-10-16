@@ -6554,3 +6554,8 @@ caveats:
     title: Option-digit fixture observes native readiness before explicit focus and keeps real key-equivalent assertions; fixed-head macOS 15 app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: pending_diff_ordering_fixture_verification
+    title: Pending diff ordering fixture owns Git and gh setup, retains original five-second phase assertions and joins CLI/socket/native viewer cleanup; native build 797 passes while macOS 15 execution and pre-announcement child tails remain explicit limits
+    status: open
+    owner: bmux
