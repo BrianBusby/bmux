@@ -507,3 +507,6 @@ local_caveats:
 
   - id: dock_close_confirmation_owner_verification
     status: open
+
+  - id: remote_daemon_bootstrap_contract_verification
+    status: open

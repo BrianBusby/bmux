@@ -6464,3 +6464,8 @@ caveats:
     title: Dock pane prompt fixture registers its owner and observes the real rejection callback with a one-second failure bound; native build 796 passes, integrated macOS 15 coverage and existing suite isolation warning remain pending
     status: open
     owner: bmux
+
+  - id: remote_daemon_bootstrap_contract_verification
+    title: Persistent PTY reinstall contract uses the owning package and verified owned cache; original two-second oracles pass locally, fixed-head package CI and retained Workspace integration coverage remain pending
+    status: open
+    owner: bmux

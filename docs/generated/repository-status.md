@@ -316,3 +316,4 @@ Repository: `BrianBusby/bmux`
 | `workspace_git_snapshot_observation_verification` | open |
 | `grok_sibling_status_fixture_verification` | open |
 | `dock_close_confirmation_owner_verification` | open |
+| `remote_daemon_bootstrap_contract_verification` | open |
