@@ -6463,3 +6463,24 @@ the existing eight-second observation bound. This commit contains tests only.
 Actual regression CI red is required before the minimal forwarding correction.
 The normal native deadline, retry policy and cancellation grace are unchanged.
 The controlled stopped-child failure is not proof of the historical V cause.
+
+### Fork cache refresh live-process scope prerequisite
+
+Candidate V's `forkAvailabilitySnapshotRefreshesWhenProcessScopeChanges` supplied
+live workspace and surface IDs in its process snapshot but only `PWD` in the
+process arguments environment. Fork validation independently checks the current
+process identity, matching `BMUX_WORKSPACE_ID` and `BMUX_SURFACE_ID`, and launch
+arguments. The fixture now supplies its existing live IDs through that environment
+provider. Its stale hook record, process transition, three refreshes and all three
+assertions are unchanged; production validation remains strict.
+
+The exact-case native control on frozen build 797 failed the final live-session
+assertion with the original missing scope and with deliberately wrong scope.
+Matching IDs passed in 0.004 seconds. These controls used injected process facts,
+an owned hook-store root and isolated launch settings; no real process scan,
+app presentation or user settings mutation was needed. Strict Swift 6 compilation
+was warning-free. This is a supplied-data correction, not a cache policy or
+completion change. Existing lock and best-effort temporary-directory cleanup in
+the untouched fixture remain unchanged. No deadline, selector, runtime code,
+shared helper or shipped text changes. Full integrated macOS 15 execution remains
+pending; local macOS 26 evidence does not substitute for that gate.

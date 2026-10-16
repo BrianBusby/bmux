@@ -6597,3 +6597,8 @@ caveats:
     title: Owned stopped-child controls reproduce missing resume in app-host lock cancellation; regression-only CI red and bounded owner correction remain pending, historical V pipe completion cause is unresolved
     status: open
     owner: bmux
+
+  - id: fork_live_process_scope_fixture_verification
+    title: Fork cache refresh fixture supplies matching live workspace and surface environment identities; missing and wrong scope controls fail while the corrected native case passes, fixed-head macOS 15 verification remains pending
+    status: open
+    owner: bmux
