@@ -443,6 +443,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Notification-record restore fixtures await fixed-head app-host verification (`notification_record_restore_fixture_verification`) - owner: Bmux; status: open
 - Retained Welcome shortcut window fixture awaits fixed-head app-host verification (`welcome_window_retained_fixture_verification`) - owner: Bmux; status: open
 - WebAuthn relay fixture awaits Promise completion and passes native build 799; fixed-head macOS 15 app-host CI remains pending (`browser_webauthn_async_result_fixture_verification`) - owner: Bmux; status: open
+- Popup termination fixture verifies controller release after autorelease drainage; fixed-head macOS 15 app-host CI remains pending (`browser_popup_termination_ownership_fixture_verification`) - owner: Bmux; status: open
 - Browser inspector window-close correction and raw-close lifecycle fixture await fixed-head app-host verification (`browser_inspector_window_ownership_verification`) - owner: Bmux; status: open
 - Remote agent restore directory guard passes native build 783; full app-host verification pending (`remote_restore_working_directory_regression`) - owner: Bmux; status: open
 - Focused global search configured-conflict priority suite awaits app-host verification (`global_search_shortcut_conflict_verification`) - owner: Bmux; status: open

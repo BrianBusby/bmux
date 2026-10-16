@@ -378,19 +378,25 @@ struct BrowserWebContentProcessTests {
     func floatingPopupClosesWhenWebContentProcessTerminates() throws {
         let panel = BrowserPanel(workspaceId: UUID(), isRemoteWorkspace: false)
         defer { panel.close() }
-        let popupWebView = try #require(
-            panel.createFloatingPopup(
-                configuration: WKWebViewConfiguration(),
-                windowFeatures: WKWindowFeatures()
+        weak var popupController: (any NSWindowDelegate)?
+        let (popupWebView, popupWindow) = try autoreleasepool {
+            let popupWebView = try #require(
+                panel.createFloatingPopup(
+                    configuration: WKWebViewConfiguration(),
+                    windowFeatures: WKWindowFeatures()
+                )
             )
-        )
-        let popupWindow = try #require(popupWebView.window)
+            let popupWindow = try #require(popupWebView.window)
+            let controller = try #require(popupWindow.delegate)
+            popupController = controller
 
-        popupWebView.navigationDelegate?.webViewWebContentProcessDidTerminate?(popupWebView)
+            popupWebView.navigationDelegate?.webViewWebContentProcessDidTerminate?(popupWebView)
+            return (popupWebView, popupWindow)
+        }
 
         #expect(popupWebView.navigationDelegate == nil)
         #expect(popupWebView.uiDelegate == nil)
-        #expect(popupWebView.window == nil)
+        #expect(popupController == nil)
         #expect(!popupWindow.isVisible)
     }
 }
