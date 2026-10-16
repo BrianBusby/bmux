@@ -344,3 +344,4 @@ Repository: `BrianBusby/bmux`
 | `app_host_eight_shard_capacity_verification` | open |
 | `terminal_search_overlay_mouse_fixture_verification` | open |
 | `welcome_shortcut_delivery_diagnostic_verification` | open |
+| `command_palette_expired_escape_diagnostics` | open |

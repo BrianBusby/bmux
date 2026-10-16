@@ -6617,3 +6617,8 @@ caveats:
     title: Welcome shortcut timeout retains its original route and one-second observer while reporting bounded callback and native window state; historical V timeout cause and next macOS 15 execution remain unresolved
     status: open
     owner: bmux
+
+  - id: command_palette_expired_escape_diagnostics
+    title: Expired pending-open Escape fixture preserves the real main-window route and original no-dismiss bounds with raw-state failure diagnostics; target compilation passes, full macOS 15 failure attribution remains pending
+    status: open
+    owner: bmux

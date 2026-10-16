@@ -591,3 +591,6 @@ local_caveats:
 
   - id: welcome_shortcut_delivery_diagnostic_verification
     status: open
+
+  - id: command_palette_expired_escape_diagnostics
+    status: open
