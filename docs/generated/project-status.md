@@ -302,6 +302,7 @@ Regenerate with: ./scripts/project-docs generate
 | Redundant browser visibility fixture observes native loading within its original one-second bound; build 799 positive and omission controls pass locally, actual macOS 15 verification and historical startup latency remain unresolved (`browser_visible_notification_completion_verification`) | Bmux | open |  |
 | Session fork diagnostic fixture joins CLI completion within its original plain five-second local and CI bound; build 799 positive and fork-mode negative controls pass, historical timeout cause and integrated macOS 15 verification remain unresolved (`session_fork_diagnostic_completion_verification`) | Bmux | open |  |
 | Agent liveness fixture observes its actual watch reload before scope mutation and final refresh before cleanup; all seven original assertions and owned build 799 controls pass, integrated macOS 15 and private-task failure cleanup remain pending (`agent_liveness_watch_completion_verification`) | Bmux | open |  |
+| Editable terminal-child Undo requires its real native key-window menu context with original routing assertions retained; isolated inactive build 799 reproduces missing target, active macOS 15 positive verification remains pending (`editable_terminal_undo_key_context_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

@@ -311,18 +311,25 @@ struct WindowKeyDownReplayGuardTests {
     }
 
     @Test
-    func terminalHostedEditableResponderKeepsLocalUndo() {
+    func terminalHostedEditableResponderKeepsLocalUndo() throws {
         _ = NSApplication.shared
         AppDelegate.installWindowResponderSwizzlesForTesting()
 
         let previousMenu = installResponderChainUndoMenu()
         defer { NSApp.mainMenu = previousMenu }
 
+        let previousKeyWindow = NSApp.keyWindow
         let (window, terminal, textView) = makeWindowWithTerminalHostedEditableResponder()
         defer {
             window.orderOut(nil)
             window.close()
+            if previousKeyWindow?.isVisible == true { previousKeyWindow?.makeKey() }
         }
+
+        // A nil-target menu action resolves through AppKit's actual key window.
+        window.makeKeyAndOrderFront(nil)
+        try #require(NSApp.keyWindow === window)
+        try #require(window.makeFirstResponder(textView))
 
         guard let event = makeCommandZKeyDownEvent(modifiers: [.command], windowNumber: window.windowNumber) else {
             Issue.record("Failed to construct Undo key event")

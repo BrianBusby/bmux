@@ -615,3 +615,6 @@ local_caveats:
 
   - id: session_fork_diagnostic_completion_verification
     status: open
+
+  - id: editable_terminal_undo_key_context_verification
+    status: open

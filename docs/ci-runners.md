@@ -7080,3 +7080,23 @@ That existing limitation remains explicit. Local probes own their filesystem and
 telemetry-disabled process and create no windows or external agent processes.
 Integrated target and actual macOS 15 verification remain pending; there is no
 claim that local scheduling proves every historical CI interleaving.
+
+### Editable terminal child Undo owns its native menu context
+
+Y native shard 1 consumed Cmd+Z without invoking the editable child's Undo. The
+fixture installed a nil-target menu item and selected a responder in an offscreen
+window, but never made that window key. Event window metadata does not establish
+AppKit's application-wide nil-target menu context. The exact case now presents
+its retained window, requires the actual application key-window identity, and
+reestablishes the editable responder before the original event. Cleanup restores
+the previous visible key window. The original consumed-event, single-Undo and
+no-terminal-forwarding assertions remain; production routing is unchanged.
+
+An isolated build 799 native probe reproduces the original single Undo-count
+failure with the correct local first responder but no matching application
+action target. Nonactivating presentation cannot make the owned window key in
+that inactive process, so it fails the new prerequisite instead of establishing
+a positive result. No explicit menu target or fake key-window override is used.
+Actual active macOS 15 app-host verification remains required; the local probe
+does not establish the historical CI action target. No user app was activated,
+replaced, or rebuilt, and no product strings changed.

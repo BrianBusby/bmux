@@ -352,3 +352,4 @@ Repository: `BrianBusby/bmux`
 | `file_explorer_shortcut_context_fixture_verification` | open |
 | `browser_visible_notification_completion_verification` | open |
 | `session_fork_diagnostic_completion_verification` | open |
+| `editable_terminal_undo_key_context_verification` | open |
