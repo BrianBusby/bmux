@@ -6568,3 +6568,8 @@ caveats:
     title: Visible terminal responder repair uses buffered readiness and native focus delivery with original bounds; offscreen controls and strict compilation pass, actual app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: v2_cli_and_browser_completion_fixture_verification
+    title: Three V2 fixture migrations retain joined five-second CLI producers and finite browser focus delivery; native positive and negative controls pass, fixed-head macOS 15 app-host execution remains pending
+    status: open
+    owner: bmux

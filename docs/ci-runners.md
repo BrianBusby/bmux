@@ -6210,3 +6210,48 @@ existing didFinish/error completion behavior; no deadline is added or extended.
 This is test-boundary evidence, not a production passkey ceremony or a macOS 15
 app-host result. The separate inspector-close completion and popup-detachment
 failures in V remain unresolved by this change. Fixed-head app-host CI is required.
+
+
+### V2 CLI and non-focus browser split completion
+
+Candidate V shard 2 failed three unchanged legacy cases: the non-focus browser
+split's one-second queue expectation, the every-theme-write command's no-timeout
+assertion, and the transcript-backed Claude session command's no-timeout assertion.
+The latter two reported successful exit status and complete output. Their shared
+legacy runner waits for a worker's process-completion signal before draining its
+pipe. That ordering is an ownership risk, not proof of the historical timeout's
+cause. The earlier tagged-theme and ambiguous-session corrections were different
+cases; these exact three original methods were unchanged from actual main.
+
+The two CLI cases now use the maintained `ShellContractProcess` producer and
+join its bounded operation before cleanup. Each command retains its original
+five-second local and CI bound; neither adopts the twenty-second CI policy used
+by other hook fixtures. The theme case retains three actual writes, three config
+values, three real distributed notifications with the exact owned bundle identity
+and `final` phase, and no socket RPC. `BMUXTestExpectation.wait(timeout:)` used a
+fresh five-second wait for each fulfillment, so the replacement retains five
+seconds per notification. Its unique bundle identity cannot target an existing
+app. The session case retains the original transcript, stored false-restorable
+flag, status and all seven status/data expectations, with a throwing process
+deadline replacing the old no-timeout boolean. Both own HOME, CFFIXED_USER_HOME,
+XDG paths, credentials and cleanup; shared process/socket/notification owners are
+unchanged.
+
+The browser case retains the actual `newBrowserSplit(... focus: false)` action
+and both identity/focus assertions. Its finite main-queue delivery bridge follows
+the owner's two nested focus reassertions and their queued focus reconciliation:
+three FIFO deliveries under one absolute one-second failure bound. This is a
+source-specific event boundary, not a sleep or a general queue-drain guarantee.
+The stream and deadline tasks cancel and join; owned panels are torn down.
+
+Frozen build 797 native controls passed both CLI cases in target Swift 5 and
+strict Swift 6, and the browser case in strict Swift 6. Omitting the third theme
+write failed notification delivery; an empty transcript failed four original
+restorable/fork assertions; requesting browser focus failed the original focus
+preservation assertion. Exact repository sources and maintained helpers typecheck
+in Swift 5 and Swift 6 without warnings. The executable CLI proof substitutes
+only the bundle locator with the exact frozen CLI path; the real locator is
+separately typechecked. All other legacy bytes are unchanged. No production code,
+selector, shared helper or user-facing text changes. Fixed-head macOS 15 app-host
+execution and the integrated full test-target build remain required; these local
+controls do not establish the historical scheduler or process timeout cause.
