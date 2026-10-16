@@ -5492,3 +5492,38 @@ or pipeline completion remained unresolved until cancellation. That shard has
 no passing verdict, and the cause of that completion gap is not established. The final published T head still requires its own
 actual CI and review gates before merge; local compilation and controlled
 native probes do not replace those gates.
+
+### Dock pane close confirmation ownership
+
+T shard 4 last started
+`DockControlDefinitionDecodingTests.dockPaneClosePromptListsEveryTabThatWillClose`
+before an AppHang record and incomplete broad coverage. The fixture installed a
+manager's confirmation handler without registering its window context. The Dock
+resolves confirmation through its registered owner; a missing owner bypasses that
+handler and reaches the production modal-alert fallback. This is a demonstrated
+fixture routing hazard, not attribution from a last-started test alone.
+
+The exact case now retains an owned windowless context, verifies manager routing
+before requesting close, and observes its real confirmation callback through a
+buffered stream. A cancellable one-second missing-callback failure bound replaces
+ten unbounded scheduler yields; it is a new explicit bound, not a restored old
+timeout. The original close rejection, title, two-tab message and Command-D
+assertions remain. The task captures its manager synchronously, so the fixture
+restores the prior shared delegate and nonnil route-retirer before awaiting.
+Context and panels are torn down after observation. The owned rejection handler
+stays attached until manager release, so even a close task delayed beyond a
+failed observation cannot fall through to a real modal after cleanup. Finishing
+the observation does not claim cancellation of that production task.
+
+Actual build-796 safe controls observed missing-owner nil without invoking close,
+then registered-owner identity and the expected callback with both panels retained
+and the queued close task's pending set cleared. The exact revised case passes;
+an omitted-signal control fails at the new one-second bound while retaining its
+safe rejection handler and removing the owned home. No real alert, presented
+window, app launch or production change was used. The focused case compiles under
+strict Swift 6 without warnings. The unchanged full-suite `v2Result` helper at
+line 38 retains its pre-existing Swift 5 actor-isolation warning and Swift 6 error;
+baseline and candidate were compared without suppression. A same-flow scan found
+no other unregistered Dock confirmation handler: WindowDockLifecycleTests already
+registers both managers. Integrated target and macOS 15 app-host verification
+remain pending.
