@@ -296,6 +296,7 @@ Regenerate with: ./scripts/project-docs generate
 | Three terminal overlay cases observe native completion with preserved intervals and oracles; drop and rebind controls pass, Escape delivery calibration exposes the offscreen gap and awaits presented macOS 15 app-host verification (`terminal_overlay_completion_fixture_verification`) | Bmux | open |  |
 | Codex approval fixture observes keyed async replies while preserving standard and full-access permission assertions with a new one-second observation bound; owned build 799 controls pass, integrated macOS 15 CI remains pending (`codex_approval_response_observation_verification`) | Bmux | open |  |
 | Two notification coalescer cases observe real native timer callbacks within the original one-second total bound; latest-action and separate-burst controls pass, actual macOS 15 verification remains pending (`notification_burst_native_completion_verification`) | Bmux | open |  |
+| LaunchServices scheduling test restores its original delegate and route-retirer composition; native 799 scheduling and identity controls pass, historical inspector routing linkage and macOS 15 app-host verification remain unproven (`launch_services_scheduling_fixture_ownership_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

@@ -6652,3 +6652,8 @@ caveats:
     title: Two notification coalescer cases observe real native timer callbacks within the original one-second total bound; latest-action and separate-burst controls pass, actual macOS 15 verification remains pending
     status: open
     owner: bmux
+
+  - id: launch_services_scheduling_fixture_ownership_verification
+    title: LaunchServices scheduling test restores its original delegate and route-retirer composition; native 799 scheduling and identity controls pass, historical inspector routing linkage and macOS 15 app-host verification remain unproven
+    status: open
+    owner: bmux

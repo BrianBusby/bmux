@@ -6867,3 +6867,40 @@ cohesive actor-isolated consumer method without a suppression or production
 change. No app, window, provider process, network or user setting is involved.
 The unchanged third coalescing case remains in its original suite. Root owns the
 combined test-target build and actual macOS 15 CI verification.
+
+### LaunchServices scheduling fixture restores application composition
+
+Fixed-W native shard 1 passed the detached-inspector chord case in its focused
+stage, then failed it after the broad legacy batch. Its new failure diagnostics
+showed an active app, native key inspector, and matching routing window at both
+strokes. The sole lifecycle event settled with visible intent still true after
+0.759 seconds; the 2.85-second wait ended with the inspector still open. This
+is not evidence that a successful close merely reached the observer late.
+
+The preceding `AppDelegateLaunchServicesRegistrationTests` scheduling case
+constructed an `AppDelegate` without restoring the prior composition. The
+constructor replaces both `AppDelegate.shared` and the terminal registry's weak
+route-retirer, while the real shortcut monitor captures its original owner weakly.
+Later snapshot tests restore the already-replaced shared value. The four final
+legacy recorder cases stop recording and remove their owned monitors; the
+following sidebar browser cases do not construct delegates. This establishes a
+fixture ownership leak, not the exact historical inspector failure mechanism.
+
+The exact scheduling case now lives in `LaunchServicesRegistrationSchedulingTests`.
+Its synchronous scope snapshots the original delegate before construction and
+restores both known composition owners on exit, following the maintained browser
+shortcut fixtures. All three original deferred-registration/count assertions,
+URL input, and injected scheduler/register operations remain. No LaunchServices
+registration, application launch, monitor replacement, or production change is
+introduced. The separate advertised-target case remains untouched.
+
+Frozen build 799 runs the exact new source plus nil/existing-delegate restoration
+controls. The copied original body retains all scheduling assertions but fails
+both identity-restoration controls. These are owned-process, telemetry-disabled
+checks without windows or external registration. The registry collaborator has
+no snapshot getter; its restoration is source-reviewed against the maintained
+composition pattern, not claimed as an independently observed callback result.
+Configured Swift 5 and strict Swift 6 warnings-as-errors compilation and local
+static/Project Truth gates cover this slice. Full-target and actual macOS 15
+app-host verification remain integration gates; no local proof claims the
+inspector chord is fixed.
