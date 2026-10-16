@@ -5492,3 +5492,28 @@ or pipeline completion remained unresolved until cancellation. That shard has
 no passing verdict, and the cause of that completion gap is not established. The final published T head still requires its own
 actual CI and review gates before merge; local compilation and controlled
 native probes do not replace those gates.
+
+### Managed shortcut authority fixtures
+
+The two legacy New Tab shortcut cases contradicted the file-authoritative policy
+accepted in `fdbf2d10e9` and failed in candidate T. Their Swift Testing replacements
+exercise the actual settings lookup and setter: a managed binding wins over an
+existing persisted value without erasing it, UI writes and reset cannot replace
+a managed binding, and removing management restores the prior value or default.
+No production shortcut behavior changes. The remaining legacy methods are unchanged.
+
+The synchronous fixture follows the maintained Find settings owner: private
+notification centers, no file watchers, owned JSON files, and exact restoration
+of the affected persistent values, provenance keys, volatile domains and prior
+settings store before returning. The suite does not suspend while globals are
+changed; its serialization alone would not isolate other suites. Existing default
+notification delivery and the imported mutable settings store remain shared-owner
+risks, bounded here by the native target's existing serialization policy.
+
+Actual build 796 passes both cases with Swift 5 and no warnings. A missing-binding
+negative produces six issues, and an owned-process seeded-state control verifies
+restoration after both successful cases and a thrown failure. Strict Swift 6
+rejects the pre-existing imported mutable `settingsFileStore` owner; no suppression
+or production concurrency change is added. The integrated test-target compile
+and macOS 15 hosted run remain required. These test-only strings are not product
+UI or localized documentation surfaces.

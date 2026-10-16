@@ -315,3 +315,4 @@ Repository: `BrianBusby/bmux`
 | `notification_settings_retry_fixture_verification` | open |
 | `workspace_git_snapshot_observation_verification` | open |
 | `grok_sibling_status_fixture_verification` | open |
+| `managed_shortcut_authority_fixture_verification` | open |

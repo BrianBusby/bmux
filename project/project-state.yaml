@@ -6459,3 +6459,8 @@ caveats:
     title: Grok sibling completion uses owned authenticated joined connections and preserves saved-route status assertions; native build 796 passes five cases, integrated macOS 15 app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: managed_shortcut_authority_fixture_verification
+    title: Managed shortcut fixtures follow file-authoritative bindings and restore owned settings; native build 796 controls pass, integrated macOS 15 verification remains pending
+    status: open
+    owner: bmux
