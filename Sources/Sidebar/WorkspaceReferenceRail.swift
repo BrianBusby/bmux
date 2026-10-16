@@ -85,6 +85,7 @@ struct WorkspaceReferenceRail: View {
 
                 WorkspaceTabFilterBar(
                     items: filterItems,
+                    selectedWorkspaceID: selectedWorkspaceID,
                     selectedWorkspaceTitle: selectedWorkspaceTitle,
                     filters: $filters,
                     isPanelPresented: $isFilterPanelPresented,

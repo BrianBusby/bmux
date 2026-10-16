@@ -6714,6 +6714,6 @@ caveats:
     owner: bmux
 
   - id: workspace_filter_selection_identity_verification
-    title: PR 171 review 5543944260 duplicate-title filter warning has a runtime-failing semantic-view regression and four passing controls; actual CI red and identity-based fix verification remain pending
+    title: PR 171 review 5543944260 duplicate-title filter warning has actual CI red in run 38876211760 shard 4 and an identity-based fix with five local passing cases in Swift 5 and 6; fixed integrated build and CI green remain pending
     status: open
     owner: bmux

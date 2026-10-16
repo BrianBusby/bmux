@@ -4,6 +4,7 @@ import BmuxAppKitSupportUI
 
 struct WorkspaceTabFilterBar: View {
     let items: [WorkspaceFilterItem]
+    let selectedWorkspaceID: UUID?
     let selectedWorkspaceTitle: String?
     @Binding var filters: WorkspaceFilters
     @Binding var isPanelPresented: Bool
@@ -19,8 +20,8 @@ struct WorkspaceTabFilterBar: View {
 
     /// Semantic visibility state used by the warning and its reveal action.
     var isSelectionHidden: Bool {
-        guard !filters.isEmpty, let selectedWorkspaceTitle else { return false }
-        return !visibleItems.contains { $0.title == selectedWorkspaceTitle }
+        guard !filters.isEmpty, let selectedWorkspaceID else { return false }
+        return !visibleItems.contains { $0.id == selectedWorkspaceID }
     }
 
     var body: some View {
