@@ -1191,7 +1191,10 @@
 		FEED0000000000000000F007 /* opencode-plugin.js in Resources */ = {isa = PBXBuildFile; fileRef = FEED0000000000000000F006 /* opencode-plugin.js */; };
 		A9F200000000000000000017 /* OpenCodeEventStreamParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000017 /* OpenCodeEventStreamParser.swift */; };
 		A9F200000000000000000018 /* OpenCodeEventTextAccumulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000018 /* OpenCodeEventTextAccumulator.swift */; };
+		573E809CC3994672A288125F /* OpenCodeForkProbeWorkingDirectoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1681D2A0C9E548968BF69254 /* OpenCodeForkProbeWorkingDirectoryTests.swift */; };
 		A5E01203A1B2C3D4E5F60718 /* OpenCodeHookRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5E01204A1B2C3D4E5F60718 /* OpenCodeHookRegressionTests.swift */; };
+		5D78683704DC49229CD8FE78 /* OpenCodeProbeCommandOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB36C3A454374CEDAFE96D57 /* OpenCodeProbeCommandOutput.swift */; };
+		8947338A842E4F3C959C2BF7 /* OpenCodeProbeCompletion.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4113D84944D46688A37BF73 /* OpenCodeProbeCompletion.swift */; };
 		A9F200000000000000000019 /* OpenCodeProcessOutputDisposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000019 /* OpenCodeProcessOutputDisposition.swift */; };
 		ODBG00010000000000000001 /* OpenDiffViewerAgentBaselineLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = ODBG00010000000000000002 /* OpenDiffViewerAgentBaselineLookup.swift */; };
 		ODBG00020000000000000001 /* OpenDiffViewerAgentContextRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = ODBG00020000000000000002 /* OpenDiffViewerAgentContextRequest.swift */; };
@@ -3328,7 +3331,10 @@
 		FEED0000000000000000F006 /* opencode-plugin.js */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.javascript; path = "opencode-plugin.js"; sourceTree = "<group>"; };
 		A9F100000000000000000017 /* OpenCodeEventStreamParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/OpenCodeEventStreamParser.swift; sourceTree = "<group>"; };
 		A9F100000000000000000018 /* OpenCodeEventTextAccumulator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/OpenCodeEventTextAccumulator.swift; sourceTree = "<group>"; };
+		1681D2A0C9E548968BF69254 /* OpenCodeForkProbeWorkingDirectoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodeForkProbeWorkingDirectoryTests.swift; sourceTree = "<group>"; };
 		A5E01204A1B2C3D4E5F60718 /* OpenCodeHookRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodeHookRegressionTests.swift; sourceTree = "<group>"; };
+		FB36C3A454374CEDAFE96D57 /* OpenCodeProbeCommandOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodeProbeCommandOutput.swift; sourceTree = "<group>"; };
+		C4113D84944D46688A37BF73 /* OpenCodeProbeCompletion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodeProbeCompletion.swift; sourceTree = "<group>"; };
 		A9F100000000000000000019 /* OpenCodeProcessOutputDisposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/OpenCodeProcessOutputDisposition.swift; sourceTree = "<group>"; };
 		ODBG00010000000000000002 /* OpenDiffViewerAgentBaselineLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenDiffViewerAgentBaselineLookup.swift; sourceTree = "<group>"; };
 		ODBG00020000000000000002 /* OpenDiffViewerAgentContextRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenDiffViewerAgentContextRequest.swift; sourceTree = "<group>"; };
@@ -5454,6 +5460,8 @@
 				F0ACC0DE0000000000000012 /* SharedLiveAgentIndex.swift */,
 				F0ACC0DE0000000000000010 /* SurfaceResumeBindingIndex.swift */,
 				C0DEF0C10000000000000002 /* AgentForkSupport.swift */,
+				FB36C3A454374CEDAFE96D57 /* OpenCodeProbeCommandOutput.swift */,
+				C4113D84944D46688A37BF73 /* OpenCodeProbeCompletion.swift */,
 				C0DEF0C20000000000000002 /* SemanticVersion.swift */,
 				A5001642 /* RemoteInteractiveShellBootstrapBuilder.swift */,
 				A5001641 /* RemoteRelayZshBootstrap.swift */,
@@ -5880,6 +5888,7 @@
 				9EA1A6EE9D4D4E24A447FF7E /* DeferredTerminalSearchFixture.swift */,
 				EC49F544A7294E5190FFE0AA /* DeferredTerminalSearchFocusTests.swift */,
 				AD6B4479FE6D4B46B4AA8919 /* TerminalSearchFieldFocusObservation.swift */,
+				1681D2A0C9E548968BF69254 /* OpenCodeForkProbeWorkingDirectoryTests.swift */,
 				EC41976AD10B4C4BAA49AE16 /* TerminalFocusDeliveryFixture.swift */,
 				40B4A40D8CD44AAAA2402FA2 /* TerminalSearchResponderRepairTests.swift */,
 				A66D4C5FC3254F81B6A0B711 /* KoreanMarkedTextRuntimeTests.swift */,
@@ -7477,6 +7486,8 @@
 				C67540090000000000000001 /* OmnibarAddressButtonStyle.swift in Sources */,
 				A9F200000000000000000017 /* OpenCodeEventStreamParser.swift in Sources */,
 				A9F200000000000000000018 /* OpenCodeEventTextAccumulator.swift in Sources */,
+				5D78683704DC49229CD8FE78 /* OpenCodeProbeCommandOutput.swift in Sources */,
+				8947338A842E4F3C959C2BF7 /* OpenCodeProbeCompletion.swift in Sources */,
 				A9F200000000000000000019 /* OpenCodeProcessOutputDisposition.swift in Sources */,
 				ODBG00010000000000000001 /* OpenDiffViewerAgentBaselineLookup.swift in Sources */,
 				ODBG00020000000000000001 /* OpenDiffViewerAgentContextRequest.swift in Sources */,
@@ -8688,6 +8699,7 @@
 				4378399A7C0245EF8186F306 /* OmnibarAndToolsTests.swift in Sources */,
 				9637C6D3170F4BE1A7EF6243 /* OmnibarSubmitDecisionTests.swift in Sources */,
 				0A0F00550000000000000001 /* OmpSupportTests.swift in Sources */,
+				573E809CC3994672A288125F /* OpenCodeForkProbeWorkingDirectoryTests.swift in Sources */,
 				A5E01203A1B2C3D4E5F60718 /* OpenCodeHookRegressionTests.swift in Sources */,
 				59B3790D1C2E470DB0945D83 /* OrphanWorkspaceShortcutFixture.swift in Sources */,
 				F044AFECB73A4056949D9064 /* OrphanWorkspaceShortcutSettingsFixture.swift in Sources */,

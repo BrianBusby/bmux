@@ -7898,3 +7898,50 @@ and the first failed harness attempt remain in
 macOS 15/full-target verification and the original CI scheduling cause remain
 pending. The other synchronous legacy callers are unchanged. No production,
 app presentation, localized string or user configuration changes.
+
+### OpenCode version-probe output ownership (AF1)
+
+AF1 failed the existing launch-working-directory fork-support assertion in
+0.165 seconds. The original case passes against owned build 802. An exact-source
+controlled probe nevertheless demonstrates a real capture race: its readability
+callback can consume the version bytes, pause before appending them, and lose to
+process-exit completion, which returns an empty buffer. Reversing only those two
+controlled boundaries restores the supported-version result. This establishes an
+output-ownership defect, not the historical AF1 schedule.
+
+`OpenCodeProbeCommandOutput` now owns the process, a single merged-pipe reader,
+and their joined completion. The blocking reader runs on a retained detached
+task using only its raw descriptor, as allowed for process pipe I/O, and is joined
+before the descriptor closes or output is parsed. The configured three-second
+absolute deadline still starts before `Process.run`; cancellation acts on the
+process only after launch returns. TERM retains its 500 ms escalation grace.
+The native-exit cleanup stream remains independent of parent cancellation.
+A separate one-shot synchronous receipt claims native exit or deadline before
+asynchronous consumption; its tiny Boolean lock follows the documented callback
+arbitration carve-out, with no ongoing process state behind the lock. Cancellation
+is checked before spawn and after all joins before returning success.
+
+Environment sanitization, relative PATH resolution, working directory, merged
+stderr, version threshold and cache policy remain with the existing owners. Only
+the failed XCTest method moves to Swift Testing, preserving its original stub,
+snapshot and assertion; owned-directory cleanup failures now report a test issue.
+The unrelated `ProcessTerminationGate` and general `CommandRunner` are unchanged.
+
+Configured Swift 5 and strict Swift 6 focused controls pass. Temporary controls
+cover merged/nonzero output, output exceeding pipe capacity, spawn failure,
+cancellation before launch and during execution, and stubborn-child timeout and
+reaping at the original three-second/500 ms policy. Exact-owner instrumentation
+holds the sole reader after exit and holds receipt publication after its claim:
+output remains complete, cancellation cannot return buffered success, and a later
+deadline cannot displace the claimed exit. Existing unsupported-version cache and
+environment controls pass. Proof provenance and retained original counterexample
+are in `/tmp/af-opencode-probe-proof/handoff.md`; no control hook ships.
+
+The pre-existing inherited-pipe limitation remains: a descendant retaining the
+write end can delay EOF after the direct child exits. This change joins that
+reader rather than abandoning it and does not claim descendant containment.
+Expected unavailable/unsupported probes still fall back to unavailable fork
+support, not incidents; low-level read errors retain the existing process-pipe
+logger. No new telemetry, raw command output/path/environment logging, localized
+surface or sampling change is introduced. A fresh isolated whole-app build,
+user-approved dogfood and fixed macOS 15 CI remain required; build 802 is untouched.

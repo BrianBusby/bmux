@@ -654,3 +654,6 @@ local_caveats:
 
   - id: cli_process_native_completion_verification
     status: open
+
+  - id: opencode_probe_output_ownership_verification
+    status: open

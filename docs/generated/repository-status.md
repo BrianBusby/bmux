@@ -365,3 +365,4 @@ Repository: `BrianBusby/bmux`
 | `z_inspector_redraw_precursor_verification` | open |
 | `workspace_focus_delivery_arrival_verification` | open |
 | `cli_process_native_completion_verification` | open |
+| `opencode_probe_output_ownership_verification` | open |

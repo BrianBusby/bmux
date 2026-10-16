@@ -317,6 +317,7 @@ Regenerate with: ./scripts/project-docs generate
 | Z8 executed redraw fixture now restores shared delegate and active manager with native 799 identity and redraw controls; actual installed-monitor attribution and macOS 15 inspector verification remain open (`z_inspector_redraw_precursor_verification`) | Bmux | open |  |
 | Focus and overlay fixtures share a duration-configured native FIFO arrival owner with one-second focus completion and initial overlay mount setup bounds, while post-Escape remains 50ms; Swift 5 and 6 controls pass, fixed presented macOS 15 verification remains open (`workspace_focus_delivery_arrival_verification`) | Bmux | open |  |
 | CLI process fixtures preserve synchronous native completion and joined parent cancellation at existing bounds; exact stale-Codex default/cwd/all controls pass with owned build 802, historical AF8 timeout cause and integrated macOS 15 verification remain unresolved (`cli_process_native_completion_verification`) | Bmux | open |  |
+| OpenCode fork probes join sole merged-output reader and native exit at existing three-second and 500ms bounds; owned source controls pass, inherited descendant pipe retention and fixed whole-app/macOS 15 verification remain open (`opencode_probe_output_ownership_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

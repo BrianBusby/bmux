@@ -6757,3 +6757,8 @@ caveats:
     title: CLI process fixtures preserve synchronous native completion and joined parent cancellation at existing bounds; exact stale-Codex default/cwd/all controls pass with owned build 802, historical AF8 timeout cause and integrated macOS 15 verification remain unresolved
     status: open
     owner: bmux
+
+  - id: opencode_probe_output_ownership_verification
+    title: OpenCode fork probes join sole merged-output reader and native exit at existing three-second and 500ms bounds; owned source controls pass, inherited descendant pipe retention and fixed whole-app/macOS 15 verification remain open
+    status: open
+    owner: bmux
