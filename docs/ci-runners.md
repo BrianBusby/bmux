@@ -6185,3 +6185,28 @@ Local expansion confirms the corrected macro receives only the resulting value.
 Only the current toolchain is installed locally; this is not an execution of
 CI's older Testing plugin. Corrected package and app-host CI remain required.
 No production code, timeout policy or permanent syntax-only tests are changed.
+
+### WebAuthn relay Promise result fixture
+
+Candidate V shard 2 reported WKErrorDomain code 5 in
+`webAuthnPageBridgeRelaysCredentialGetThroughContentWorldHandler`, before its five
+credential/handler assertions. The test passed an async JavaScript IIFE to
+`evaluateJavaScript`, which returned an unsupported Promise. The fixture now uses
+WebKit's `callAsyncJavaScript` Promise-resolution boundary in the page content
+world. The original bridge scripts, request payload, native reply, and all five
+assertions remain unchanged. Its reply-handler closure carries the current SDK's
+required MainActor/Sendable annotations; no native authentication code changes.
+
+The exact corrected test method passed against frozen native build 799 on local
+macOS 26.3, with the unchanged method body apart from the invocation correction.
+Restoring the original invocation in a temporary copy reproduced the same code-5
+failure. The complete test file compiled in strict Swift 6 without warnings.
+These owned-process controls install a Foundation network fence before loading
+the module and a WebKit HTTP(S) deny rule in the temporary load helper before
+loading HTML. They use no visible windows, user credentials, or external services.
+Each runner joined and removed its owned home. The committed helper retains its
+existing didFinish/error completion behavior; no deadline is added or extended.
+
+This is test-boundary evidence, not a production passkey ceremony or a macOS 15
+app-host result. The separate inspector-close completion and popup-detachment
+failures in V remain unresolved by this change. Fixed-head app-host CI is required.
