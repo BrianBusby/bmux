@@ -6185,3 +6185,34 @@ Local expansion confirms the corrected macro receives only the resulting value.
 Only the current toolchain is installed locally; this is not an execution of
 CI's older Testing plugin. Corrected package and app-host CI remain required.
 No production code, timeout policy or permanent syntax-only tests are changed.
+
+## Codex pending turn-write fixture completion (V follow-up)
+
+V (`5307ec8379bd5a3fd2f046924dbef0c1baa594e7`) shard 1 last reported
+`testCodexSubmitBlocksReentrantTurnWhileWriteIsPending` before its idle and
+outer watchdog limits. Its single yield did not establish that `thread/start`
+had registered response ID 2; an early reply can be ignored, leaving the later
+pending-write yield loop unbounded. An owned build-797 control deliberately
+held the initialized writer, proved the early reply was ignored, and contrasted
+ordered reply delivery. That proves the fixture ordering defect, not the exact
+historical CI scheduling sequence.
+
+`CodexPendingTurnWriteTests` now observes the injected writer's actual
+`thread/start` and held `turn/start` boundaries. The thread writer is explicitly
+MainActor and does not suspend, so the session stores its request ID before the
+consumer can supply the reply. The test retains rejection of the second submit,
+four emitted lines, and the first prompt text. A new one-second absolute failure
+bound contains the previously unbounded fixture; it does not alter a production
+timeout. Expiry and parent cancellation finish the owned release stream and
+supply the existing startup error protocol. The structured group and explicit
+first-submission await join the fixture's tasks before returning. This is not a
+new general session shutdown API or a claim that every internal session task is
+independently joined.
+
+The exact new source passed against frozen build 799 on macOS 26 with Swift 6
+warnings-as-errors. Four temporary controls passed for omitted thread signal,
+omitted release, and parent cancellation at the thread and turn boundaries;
+held-turn controls recorded the first submission joined before fixture return.
+All probe processes and owned homes were removed. No production source, user
+settings, network requests, windows, or app launches changed. Integrated test
+compilation and actual fixed-head macOS 15 execution remain root-owned gates.

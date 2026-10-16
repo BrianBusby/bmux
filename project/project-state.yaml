@@ -6564,3 +6564,8 @@ caveats:
     title: Visible terminal responder repair uses buffered readiness and native focus delivery with original bounds; offscreen controls and strict compilation pass, actual app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: codex_pending_turn_write_fixture_verification
+    title: Codex pending-write fixture observes real request boundaries and joins its held submission on timeout or cancellation; build 799 passes local controls, integrated macOS 15 verification remains pending
+    status: open
+    owner: bmux
