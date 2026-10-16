@@ -6707,3 +6707,8 @@ caveats:
     title: Seven terminal focus recovery cases observe queued work and establish authoritative visibility and geometry prerequisites within 50ms completion bounds; owned build 799 positive and omission controls pass, real presented macOS 15 verification remains pending
     status: open
     owner: bmux
+
+  - id: inspector_precursor_delegate_composition_verification
+    title: Actual shard-3 precursor fixtures restore shared delegate and known route-retirer composition with scoped resource cleanup; build 799 identity controls pass, historical inspector causality and presented macOS 15 acceptance remain pending
+    status: open
+    owner: bmux

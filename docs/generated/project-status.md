@@ -307,6 +307,7 @@ Regenerate with: ./scripts/project-docs generate
 | Actual Y Welcome callback arrived after the one-second fixture bound with correct state; explicit three-second absolute functional containment retains all routing assertions, owned controls pass and macOS 15 verification remains pending (`welcome_shortcut_delivery_containment_verification`) | Bmux | open |  |
 | Current terminal and workspace-rail body coverage preserves all six minimal-mode assertions; owned build 799 proves unrelated inset AppStorage invalidation, isolated observer correction and fresh-build macOS 15 validation remain pending (`minimal_mode_current_shell_invalidation_verification`) | Bmux | open |  |
 | Seven terminal focus recovery cases observe queued work and establish authoritative visibility and geometry prerequisites within 50ms completion bounds; owned build 799 positive and omission controls pass, real presented macOS 15 verification remains pending (`workspace_terminal_focus_completion_verification`) | Bmux | open |  |
+| Actual shard-3 precursor fixtures restore shared delegate and known route-retirer composition with scoped resource cleanup; build 799 identity controls pass, historical inspector causality and presented macOS 15 acceptance remain pending (`inspector_precursor_delegate_composition_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
