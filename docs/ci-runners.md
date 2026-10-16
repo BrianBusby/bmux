@@ -6368,3 +6368,41 @@ not executed locally. Fixed-head macOS 15 app-host execution remains required;
 these controls do not establish why V's original notification wait timed out.
 No production code, runtime hooks, selector, deadline policy or shipped text is
 changed. Native global serialization does not isolate unrelated background work.
+
+
+### Remaining V non-focus split and Option-digit prerequisites
+
+The completed V shard 3 log records two further non-focus split failures only at
+the legacy one-second main-queue expectation. Their subsequent panel, pane and
+selected-tab assertions did not fail. The terminal split and delayed stale-browser
+selection cases now join the existing native non-focus split suite. The same
+three FIFO deliveries follow the owner's two queued reassertions and subsequent
+focus reconciliation. Buffered events preserve every delivery even if a consumer
+resumes later. The ordinary terminal/browser cases consume all three under one
+absolute one-second bound. The stale-selection case retains three sequential
+one-second phase bounds, its actual queued Bonsplit `didSelectTab` call, and all
+three final focus projections. Its owned callback is invalidated before teardown
+on failure, and successful delivery is asserted. No generic queue drain, runtime
+mutation, copied polling or wider deadline replaces those contracts.
+
+The failed Option-digit terminal key-equivalent case separately still created
+its window with the default Chat tab. It now explicitly selects Terminal; every
+other byte, including the three-second runtime prerequisite, real window route,
+exact key payload, synchronous shortcut isolation and all workspace assertions,
+is unchanged. Chat omits terminal content and disables portal rendering, so
+waiting for a runtime cannot substitute for selecting the required content. The
+other Option-digit cases exercise generic responders and retain their existing
+tab selection.
+
+Frozen build 797 executed the complete three-case non-focus suite successfully
+in strict Swift 6. Changing the splits to request focus failed four original
+focus/pane assertions across the same three tests. The complete affected files
+compile in target Swift 5; strict Swift 6 native split compilation is clean.
+The complete Option-digit fixture's strict-Swift-6 attempt retains the existing
+imported mutable `KeyboardShortcutSettings.settingsFileStore` isolation gap; no
+suppression or settings-owner change is included. The pure production portal-plan
+control and owned offscreen attachment/focus controls support the Option-digit
+prerequisite, but the complete visible key-equivalent case remains CI-only.
+Historical V scheduling cause, fixed-head macOS 15 execution and the integrated
+full test-target build remain unverified here. Other legacy cases, shared helpers,
+selectors, product code and user-facing text are unchanged.
