@@ -6549,7 +6549,7 @@ caveats:
     owner: bmux
 
   - id: prompt_session_link_completion_fixture_verification
-    title: Identity-only session linkage fixture joins hook persistence within its original one-second bound and releases SQLite before cleanup; native build 797 passes, integrated macOS 15 verification remains pending
+    title: Identity-only session linkage fixture records full projection completion before async consumption under its original one-second bound and joins before SQLite cleanup; build 801 controls pass, historical AD7 phase attribution and integrated macOS 15 verification remain pending
     status: open
     owner: bmux
 

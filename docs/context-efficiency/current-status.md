@@ -374,13 +374,15 @@ focused Codex telemetry test still passes.
 
 ## Identity linkage fixture verification
 
-The monitor-transcript plus identity-only hook regression now observes existing
-runtime producer completion with its original one-second bound and closes the
-owned SQLite graph before removing its files. The six factual/import assertions
-are preserved; the separate display-projection case remains unchanged. Native
-build 797 passes locally, but integrated macOS 15 app-host verification remains
-pending. This is fixture lifecycle maintenance, not a new provenance capability
-or phase transition. See the identity-only completion evidence in
+The monitor-transcript plus identity-only hook regression now observes
+the full factual projection at producer completion under its original one-second
+bound and closes the owned SQLite graph before removing its files. The six
+factual/import assertions and separate display-projection case remain unchanged.
+After AD7 timed out, build-801 controls prove timely result preservation across
+delayed consumption and retain late/missing/cancellation failures. Historical AD
+phase attribution and integrated macOS 15 verification remain pending. This is
+fixture lifecycle maintenance, not a new provenance capability or phase transition.
+See the identity-only completion evidence in
 [CI runners](../ci-runners.md#identity-only-session-linkage-completion) and the
 `prompt_session_link_completion_fixture_verification` Project Truth caveat.
 
