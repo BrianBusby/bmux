@@ -5492,3 +5492,34 @@ or pipeline completion remained unresolved until cancellation. That shard has
 no passing verdict, and the cause of that completion gap is not established. The final published T head still requires its own
 actual CI and review gates before merge; local compilation and controlled
 native probes do not replace those gates.
+
+### Tagged theme notification and ambiguous Claude workflow fixtures
+
+T shard 1 reported four theme-target issues and one sessions-list timeout. The
+theme fixture generated an `active-theme-UUID` socket but expected only the
+`active.theme` bundle prefix. The CLI preserves the full normalized suffix. The
+corrected fixture uses an owned hexadecimal suffix, independently constructs the
+complete expected bundle, and retains real distributed notification, phase, socket
+and stale-bundle checks. Parsed JSON identifies the exact target and the generated
+configuration remains beneath the owned home. No running app matches that unique
+bundle target.
+
+The ambiguous Claude workflow case returned status zero and complete JSON while
+the old helper reported a timeout. That helper waits on a separately queued exit
+waiter before draining its pipe. The log does not establish output saturation or
+a scheduling cause. The exact case now uses the maintained file-backed
+`ShellContractProcess`, retaining all session/restorability/fork assertions and
+owning HOME, CFFIXED_USER_HOME, XDG and agent paths. Both cases preserve their
+original five-second process bound in local and CI runs; the theme notification
+retains its separate five-second delivery bound. The throwing process wait joins
+before file cleanup. Notification subscription precedes launch and its consumer
+and deadline are cancelled and joined before observer removal. Shared legacy
+helpers, other cases, production behavior and workflow selectors are unchanged.
+
+Native build 796 passes both cases. Temporary controls fail both obsolete
+theme-target comparisons and all five session business assertions when ambiguity
+is removed. Exact-source Swift 6 compilation is warning-free. The execution
+harness substitutes only bundle discovery with the frozen CLI path; the actual
+bundle locator is separately typechecked unchanged. Full fixed-head macOS 15
+app-host verification remains pending;
+local evidence does not identify the historical sessions timeout cause.
