@@ -519,3 +519,6 @@ local_caveats:
 
   - id: notification_settings_sheet_fixture_verification
     status: open
+
+  - id: theme_session_cli_fixture_verification
+    status: open

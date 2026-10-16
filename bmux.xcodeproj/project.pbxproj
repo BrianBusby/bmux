@@ -594,6 +594,7 @@
 		7584088793C0485788ED90E9 /* ClaudeSessionPhaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED74C632748346D09D2B3467 /* ClaudeSessionPhaseTests.swift */; };
 		A9F200000000000000000015 /* ClaudeStreamJSONAccumulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000015 /* ClaudeStreamJSONAccumulator.swift */; };
 		CE7000000000000000000001 /* ClaudeWrapperResumeEnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7000000000000000000002 /* ClaudeWrapperResumeEnvironmentTests.swift */; };
+		7909173F501C49EDA66BE5A7 /* CLIAmbiguousClaudeWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18CC53E330BC4400B7292BE1 /* CLIAmbiguousClaudeWorkflowTests.swift */; };
 		A5D4120DA1B2C3D4E5F60718 /* CLIAuthAliasTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5D4120EA1B2C3D4E5F60718 /* CLIAuthAliasTests.swift */; };
 		CA11E4D0FA017DE500000B101 /* CLICallerWorkspaceDefaultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA11E4D0FA017DE500000F102 /* CLICallerWorkspaceDefaultTests.swift */; };
 		CE0E06310000000000000001 /* CLICodexHookPEAssociationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E06310000000000000002 /* CLICodexHookPEAssociationTests.swift */; };
@@ -652,6 +653,7 @@
 		6379A0016379A0016379A001 /* CLISSHPTYResizeInputTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6379A0026379A0026379A002 /* CLISSHPTYResizeInputTests.swift */; };
 		B789ABCE1400000000000001 /* CLIStderrClosedContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B789ABCE1400000000000002 /* CLIStderrClosedContractTests.swift */; };
 		C12984000000000000000004 /* CLIStdioSIGPIPERegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C12984000000000000000003 /* CLIStdioSIGPIPERegressionTests.swift */; };
+		7CEC69E2C7804D36B0B172AC /* CLIThemeTargetContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322E640EE6854E11BD8C1ED4 /* CLIThemeTargetContractTests.swift */; };
 		B05553B10000000000000001 /* CLITmuxCompatRemoteSplitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B05553B10000000000000002 /* CLITmuxCompatRemoteSplitTests.swift */; };
 		48B76B39985043AFAFB73E54 /* CLITmuxLaunchIdentityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74478AB8036341AC999204A2 /* CLITmuxLaunchIdentityTests.swift */; };
 		C10D51700000000000000002 /* ClosedItemHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10D51700000000000000001 /* ClosedItemHistory.swift */; };
@@ -1789,6 +1791,7 @@
 		C0DE7B3C0000000000000001 /* TextBoxSubmitActionSettingsFileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE7B3C0000000000000002 /* TextBoxSubmitActionSettingsFileTests.swift */; };
 		C0DE7B360000000000000001 /* TextBoxSubmitActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE7B360000000000000002 /* TextBoxSubmitActionTests.swift */; };
 		C0DE5A420000000000000001 /* TextBoxSubmitAvailability.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE5A420000000000000002 /* TextBoxSubmitAvailability.swift */; };
+		E69EEB35F2564292A280D458 /* ThemeReloadObservation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D8052EF822F4004A13044BB /* ThemeReloadObservation.swift */; };
 		A5002000 /* THIRD_PARTY_LICENSES.md in Resources */ = {isa = PBXBuildFile; fileRef = A5002001 /* THIRD_PARTY_LICENSES.md */; };
 		F50030050000000000000001 /* TitlebarAccessoryContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50030050000000000000002 /* TitlebarAccessoryContainerView.swift */; };
 		F50030060000000000000001 /* TitlebarAccessoryHostingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50030060000000000000002 /* TitlebarAccessoryHostingView.swift */; };
@@ -2690,6 +2693,7 @@
 		ED74C632748346D09D2B3467 /* ClaudeSessionPhaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ClaudeSessionPhaseTests.swift"; sourceTree = "<group>"; };
 		A9F100000000000000000015 /* ClaudeStreamJSONAccumulator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ClaudeStreamJSONAccumulator.swift; sourceTree = "<group>"; };
 		CE7000000000000000000002 /* ClaudeWrapperResumeEnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeWrapperResumeEnvironmentTests.swift; sourceTree = "<group>"; };
+		18CC53E330BC4400B7292BE1 /* CLIAmbiguousClaudeWorkflowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIAmbiguousClaudeWorkflowTests.swift"; sourceTree = "<group>"; };
 		A5D4120EA1B2C3D4E5F60718 /* CLIAuthAliasTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIAuthAliasTests.swift; sourceTree = "<group>"; };
 		CA11E4D0FA017DE500000F102 /* CLICallerWorkspaceDefaultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLICallerWorkspaceDefaultTests.swift; sourceTree = "<group>"; };
 		CE0E06310000000000000002 /* CLICodexHookPEAssociationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLICodexHookPEAssociationTests.swift; sourceTree = "<group>"; };
@@ -2741,6 +2745,7 @@
 		6379A0026379A0026379A002 /* CLISSHPTYResizeInputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLISSHPTYResizeInputTests.swift; sourceTree = "<group>"; };
 		B789ABCE1400000000000002 /* CLIStderrClosedContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIStderrClosedContractTests.swift"; sourceTree = "<group>"; };
 		C12984000000000000000003 /* CLIStdioSIGPIPERegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIStdioSIGPIPERegressionTests.swift; sourceTree = "<group>"; };
+		322E640EE6854E11BD8C1ED4 /* CLIThemeTargetContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIThemeTargetContractTests.swift"; sourceTree = "<group>"; };
 		B05553B10000000000000002 /* CLITmuxCompatRemoteSplitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLITmuxCompatRemoteSplitTests.swift; sourceTree = "<group>"; };
 		74478AB8036341AC999204A2 /* CLITmuxLaunchIdentityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLITmuxLaunchIdentityTests.swift"; sourceTree = "<group>"; };
 		C10D51700000000000000001 /* ClosedItemHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedItemHistory.swift; sourceTree = "<group>"; };
@@ -3844,6 +3849,7 @@
 		C0DE7B3C0000000000000002 /* TextBoxSubmitActionSettingsFileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextBoxSubmitActionSettingsFileTests.swift; sourceTree = "<group>"; };
 		C0DE7B360000000000000002 /* TextBoxSubmitActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextBoxSubmitActionTests.swift; sourceTree = "<group>"; };
 		C0DE5A420000000000000002 /* TextBoxSubmitAvailability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextBoxSubmitAvailability.swift; sourceTree = "<group>"; };
+		6D8052EF822F4004A13044BB /* ThemeReloadObservation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ThemeReloadObservation.swift"; sourceTree = "<group>"; };
 		A5002001 /* THIRD_PARTY_LICENSES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = THIRD_PARTY_LICENSES.md; sourceTree = SOURCE_ROOT; };
 		F50030050000000000000002 /* TitlebarAccessoryContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitlebarAccessoryContainerView.swift; sourceTree = "<group>"; };
 		F50030060000000000000002 /* TitlebarAccessoryHostingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitlebarAccessoryHostingView.swift; sourceTree = "<group>"; };
@@ -6000,6 +6006,9 @@
 					583061CE94AE4D01B93357B9 /* HermesHookProcessContractTests.swift */,
 					52646665E7E94656A2037E54 /* HermesHookProcessFixture.swift */,
 				ED74C632748346D09D2B3467 /* ClaudeSessionPhaseTests.swift */,
+				18CC53E330BC4400B7292BE1 /* CLIAmbiguousClaudeWorkflowTests.swift */,
+				6D8052EF822F4004A13044BB /* ThemeReloadObservation.swift */,
+				322E640EE6854E11BD8C1ED4 /* CLIThemeTargetContractTests.swift */,
 				1C33E6ADB46945C6BCF8ED0C /* CodexHookInstallationContractTests.swift */,
 				2E559DC04A90425A9853E653 /* ClaudeSessionPhaseFixture.swift */,
 				919DCAF7D0DD44A796A899FF /* CLIProcessTestTimeout.swift */,
@@ -8271,6 +8280,7 @@
 				C4F20E0D1DC046BD81312F7A /* ClaudeSessionPhaseFixture.swift in Sources */,
 				7584088793C0485788ED90E9 /* ClaudeSessionPhaseTests.swift in Sources */,
 				CE7000000000000000000001 /* ClaudeWrapperResumeEnvironmentTests.swift in Sources */,
+				7909173F501C49EDA66BE5A7 /* CLIAmbiguousClaudeWorkflowTests.swift in Sources */,
 				A5D4120DA1B2C3D4E5F60718 /* CLIAuthAliasTests.swift in Sources */,
 					CA11E4D0FA017DE500000B101 /* CLICallerWorkspaceDefaultTests.swift in Sources */,
 				CE0E06310000000000000001 /* CLICodexHookPEAssociationTests.swift in Sources */,
@@ -8308,6 +8318,7 @@
 				6379A0016379A0016379A001 /* CLISSHPTYResizeInputTests.swift in Sources */,
 				B789ABCE1400000000000001 /* CLIStderrClosedContractTests.swift in Sources */,
 				C12984000000000000000004 /* CLIStdioSIGPIPERegressionTests.swift in Sources */,
+				7CEC69E2C7804D36B0B172AC /* CLIThemeTargetContractTests.swift in Sources */,
 				B05553B10000000000000001 /* CLITmuxCompatRemoteSplitTests.swift in Sources */,
 				48B76B39985043AFAFB73E54 /* CLITmuxLaunchIdentityTests.swift in Sources */,
 				7375A0037375A0037375A003 /* ClosedMainWindowRoutingTests.swift in Sources */,
@@ -8670,6 +8681,7 @@
 				C0DE7B300000000000000001 /* TextBoxMentionCompletionTests.swift in Sources */,
 				C0DE7B3C0000000000000001 /* TextBoxSubmitActionSettingsFileTests.swift in Sources */,
 				C0DE7B360000000000000001 /* TextBoxSubmitActionTests.swift in Sources */,
+				E69EEB35F2564292A280D458 /* ThemeReloadObservation.swift in Sources */,
 				49F4A7EB27D046C2A1344353 /* TitlebarControlsContentContractTests.swift in Sources */,
 				F50030040000000000000001 /* TitlebarInteractiveControlTests.swift in Sources */,
 				AB4B840400554FDA9E5B5840 /* TitlebarProductContractTests.swift in Sources */,

@@ -320,3 +320,4 @@ Repository: `BrianBusby/bmux`
 | `managed_shortcut_authority_fixture_verification` | open |
 | `agent_session_stream_contract_verification` | open |
 | `notification_settings_sheet_fixture_verification` | open |
+| `theme_session_cli_fixture_verification` | open |

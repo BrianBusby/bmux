@@ -6484,3 +6484,8 @@ caveats:
     title: Settings sheet fixture observes synchronous injected alert completion and retains its window; build 796 controls pass, integrated macOS 15 verification remains pending
     status: open
     owner: bmux
+
+  - id: theme_session_cli_fixture_verification
+    title: Tagged theme notification and ambiguous Claude workflow fixtures own their CLI completion and paths; fixed-head macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux
