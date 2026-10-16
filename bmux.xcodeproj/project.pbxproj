@@ -673,6 +673,7 @@
 		C10D00010000000000000001 /* CloudVMActionLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10D00020000000000000002 /* CloudVMActionLauncher.swift */; };
 		C75740010000000000000001 /* CloudVMMenuItemMetricsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C75740010000000000000002 /* CloudVMMenuItemMetricsTests.swift */; };
 		C0A1E5CE01C0A1E5CE01A001 /* CoalesceLatestPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1E5CE01C0A1E5CE01A002 /* CoalesceLatestPublisher.swift */; };
+		FC02A59739484E64B8300002 /* CodexApprovalResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC02A59739484E64B8300001 /* CodexApprovalResponseTests.swift */; };
 		A9F200000000000000000016 /* CodexAppServerQueuedInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000016 /* CodexAppServerQueuedInput.swift */; };
 		A9E02000000000000000000E /* CodexAppServerSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E01000000000000000000E /* CodexAppServerSession.swift */; };
 		A9E040000000000000000002 /* CodexAppServerSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E040000000000000000001 /* CodexAppServerSessionTests.swift */; };
@@ -2790,6 +2791,7 @@
 		C10D00020000000000000002 /* CloudVMActionLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudVMActionLauncher.swift; sourceTree = "<group>"; };
 		C75740010000000000000002 /* CloudVMMenuItemMetricsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudVMMenuItemMetricsTests.swift; sourceTree = "<group>"; };
 		C0A1E5CE01C0A1E5CE01A002 /* CoalesceLatestPublisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoalesceLatestPublisher.swift; sourceTree = "<group>"; };
+		FC02A59739484E64B8300001 /* CodexApprovalResponseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CodexApprovalResponseTests.swift"; sourceTree = "<group>"; };
 		A9F100000000000000000016 /* CodexAppServerQueuedInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/CodexAppServerQueuedInput.swift; sourceTree = "<group>"; };
 		A9E01000000000000000000E /* CodexAppServerSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/CodexAppServerSession.swift; sourceTree = "<group>"; };
 		A9E040000000000000000001 /* CodexAppServerSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexAppServerSessionTests.swift; sourceTree = "<group>"; };
@@ -5705,6 +5707,7 @@
 				51819639FC2F40309D04291E /* ManagedCodexDownloadFixture.swift */,
 				0EAEC7433DF04AC8A922C0CA /* ManagedCodexRuntimeTests.swift */,
 				A9E040000000000000000001 /* CodexAppServerSessionTests.swift */,
+				FC02A59739484E64B8300001 /* CodexApprovalResponseTests.swift */,
 				31E525759EF945DE958FA04F /* CodexInputQueueTests.swift */,
 				A2091D521EE34DC5AA4EFD11 /* CodexPendingTurnWriteTests.swift */,
 				815B4F2659FA47D8A3240A9B /* PromptSessionLinkCompletionTests.swift */,
@@ -8406,6 +8409,7 @@
 					586DF57C2A451DD08047FC9F /* CloudAttachRetryFixture.swift in Sources */,
 					69725403D8DFCC4AACD67C4C /* CloudProxyRetryStateTests.swift in Sources */,
 				C75740010000000000000001 /* CloudVMMenuItemMetricsTests.swift in Sources */,
+				FC02A59739484E64B8300002 /* CodexApprovalResponseTests.swift in Sources */,
 				A9E040000000000000000002 /* CodexAppServerSessionTests.swift in Sources */,
 				9D1353944494446EB293DB3D /* CodexHookInstallationContractTests.swift in Sources */,
 				A16DDFEAE3624CA78A8722AA /* CodexInputQueueTests.swift in Sources */,
