@@ -6185,3 +6185,37 @@ Local expansion confirms the corrected macro receives only the resulting value.
 Only the current toolchain is installed locally; this is not an execution of
 CI's older Testing plugin. Corrected package and app-host CI remain required.
 No production code, timeout policy or permanent syntax-only tests are changed.
+
+### Dock prompt callback event ordering
+
+Candidate V reports `DockCloseConfirmationMissing` in the registered-owner Dock
+pane case. The prior fixture raced a callback-consuming task against a deadline
+task. A controlled build-799 reproduction records the real callback before its
+one-second deadline, holds only its consumer, and still gets the timeout error.
+This demonstrates a fixture observation hazard; V did not record callback
+arrival timestamps, so it does not establish the historical CI cause.
+
+The exact case now places callback and deadline events into one first-event
+buffer. The callback carries its monotonic arrival timestamp; an event arriving
+after the original absolute one-second deadline is rejected even if timer
+execution is delayed. The timer is a structured child, cancelled and joined on
+completion or parent cancellation. The registered manager, real close request,
+rejection, title, two-tab message and Command-D assertions are unchanged. The
+late-safe rejection handler remains attached; observing failure does not claim
+to cancel the production close task. No product behavior or timeout changes.
+
+Strict Swift 6 build-799 controls pass the exact case and an on-time callback
+whose consumer is withheld until the deadline. Omitted callback and deliberately
+late publication of the real prompt payload each fail with the expected missing
+confirmation error. Parent cancellation after the real handler runs joins the
+timer before returning. All probes use an owned home, process-local telemetry
+fence and prohibited activation, without presenting a window or touching a
+running app. These are macOS 26 controls; complete target and corrected macOS 15
+app-host verification remain required. No shipped UI or localization strings
+change.
+
+The complete Dock file compiles in the repository's Swift 5 mode with its existing
+nonisolated `v2Result` access to the MainActor `TerminalController.shared` warning
+at line 38. Both the unchanged V file and this file reject that same access in
+strict Swift 6; the modified case and its support compile warning-free in strict
+Swift 6. No suppression or unrelated socket-helper rewrite is included.

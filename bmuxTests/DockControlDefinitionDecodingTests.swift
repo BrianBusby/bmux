@@ -398,11 +398,16 @@ struct DockControlDefinitionDecodingTests {
 
         try #require(appDelegate.dockReferenceTabManager(for: store) === manager)
         typealias Prompt = (title: String, message: String, acceptCmdD: Bool)
-        let (prompts, signal) = AsyncStream<Prompt>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        enum PromptEvent: Sendable {
+            case prompt(Prompt, ContinuousClock.Instant)
+            case deadline
+        }
+        // Keep the first producer event even if the observer is scheduled after the deadline.
+        let (events, signal) = AsyncStream<PromptEvent>.makeStream(bufferingPolicy: .bufferingOldest(1))
         defer { signal.finish() }
         // Keep the owned rejection handler safe if the queued close task outlives a failed observation.
         manager.confirmCloseHandler = { title, message, acceptCmdD in
-            signal.yield((title, message, acceptCmdD))
+            signal.yield(.prompt((title, message, acceptCmdD), .now))
             return false
         }
 
@@ -410,18 +415,22 @@ struct DockControlDefinitionDecodingTests {
         #expect(!store.splitTabBar(store.bonsplitController, shouldClosePane: rootPane))
         // The queued close task already captured its registered manager; do not swap globals across await.
         restoreDelegate()
-        let capturedPrompt = try await withThrowingTaskGroup(of: Prompt.self) { group in
+        let capturedPrompt = try await withThrowingTaskGroup(of: Void.self, returning: Prompt.self) { group in
             defer { group.cancelAll() }
-            group.addTask {
-                for await prompt in prompts { return prompt }
-                throw CancellationError()
-            }
             group.addTask {
                 // A missing callback is a bounded failure, not a settling delay or yield-count guess.
                 try await ContinuousClock().sleep(until: deadline)
+                signal.yield(.deadline)
+            }
+            var iterator = events.makeAsyncIterator()
+            let event = await iterator.next()
+            try Task.checkCancellation()
+            switch try #require(event) {
+            case let .prompt(prompt, arrived) where arrived <= deadline:
+                return prompt
+            case .prompt, .deadline:
                 throw NSError(domain: "DockCloseConfirmationMissing", code: 1)
             }
-            return try #require(try await group.next())
         }
 
         let expectedMessage = String(
