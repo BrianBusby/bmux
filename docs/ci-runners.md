@@ -6210,3 +6210,33 @@ existing didFinish/error completion behavior; no deadline is added or extended.
 This is test-boundary evidence, not a production passkey ceremony or a macOS 15
 app-host result. The separate inspector-close completion and popup-detachment
 failures in V remain unresolved by this change. Fixed-head app-host CI is required.
+
+### Popup termination controller ownership fixture
+
+Candidate V shard 2's `floatingPopupClosesWhenWebContentProcessTerminates`
+cleared both WebKit delegates and hid its retained window, but failed the immediate
+`webView.window == nil` assertion. The popup controller's existing lifecycle
+contract releases its self-retention and opener registration on close; it does not
+promise to detach the view hierarchy from a window retained by the caller.
+
+The fixture now captures the window delegate weakly and checks controller release
+after a synchronous autorelease pool containing construction and termination.
+The opener, popup window, and web view remain retained across that check. Both
+original delegate-clear assertions and the hidden-window assertion remain. No
+production behavior, presentation action, deadline, or cleanup policy changes.
+
+Against frozen native build 799 on macOS 26.3, the exact corrected method passed
+in 0.098 seconds; omitting only termination failed the controller and both delegate
+assertions in 0.227 seconds. The complete test file compiled in strict Swift 6
+without warnings. A preliminary immediate weak-reference check remained nonnil
+until autorelease drainage, so immediate deallocation is not the asserted contract.
+The native ownership control retained attachment even after controller release.
+
+These controls intercept only `BrowserPopupPanel.makeKeyAndOrderFront` in an
+owned diagnostic process, preventing presentation. They therefore verify actual
+controller teardown, not visible-window behavior. The committed test retains real
+presentation and the original visibility assertion. Foundation network interception
+is verified before module loading; telemetry is disabled and home/environment
+paths are owned. No HTML is loaded or external request forwarded. Every owned
+runner exits and is joined before its home is removed. Fixed-head app-host CI on
+macOS 15 remains required; this does not resolve the separate inspector failures.
