@@ -5232,3 +5232,44 @@ remain pending under `terminal_inherited_surface_guard_verification`. Local
 validation must use retained offscreen windows and owned resources; the original
 foreground helper and unchecked freed-pointer native path are not run locally.
 A source finding is not presented as a fixed-binary result.
+
+### Native test-host shared-resource isolation
+
+The `bmux-unit` scheme explicitly disables parallel test execution for its
+`bmuxTests` target. Its suites share one AppKit application, window/focus state,
+process-wide runtime settings and routing collaborators. `@MainActor` protects
+synchronous actor jobs, but async fixtures can retain those resources across
+suspension. A suite's `.serialized` trait orders its own descendants; it does
+not exclude unrelated suites. The existing machine lock orders app-host
+invocations, not tests inside the same host.
+
+Exact S shard 2 recorded 435 test-start events before its first completion,
+then 709 functions in 105 suites with 86 issues. That establishes overlapping
+scheduling, not the cause of every failure. The bounded sampler observed one
+host and 28 CLI identities, with a peak of 21 processes in one snapshot; its
+eight stack files contain no call graph. No deadlock or shared-state overwrite
+is inferred from those numeric observations.
+
+An owned, hostless Xcode control ran two unrelated Swift Testing suites against
+one file transaction resource. Both retain the same exclusive-ownership and
+read-back assertions across actual asynchronous file I/O. With the scheme
+attribute omitted, native exit 65 reports exactly one ownership failure and
+records two active transactions. Adding only `parallelizable="NO"` gives native
+exit 0, two tests in two suites, and complete first-transaction exit before the
+second enters. No sleep, GUI application, user settings or product test was used.
+The temporary target emitted existing scaffolding warnings about headermap style
+and absent AppIntents metadata; neither is a bmux source warning.
+
+This uses the existing Xcode target setting, not a private environment flag or
+new test plan. All selected tests, assertions, four shards, retries, socket
+checks and the 900-second broad deadline remain unchanged. Standalone package
+parallelism is unchanged. The local control uses Testing Library 1902; S used
+1501, so full fixed-head app-host execution remains required.
+
+Serial host execution is not assumed to fit the existing budget. S reached
+Swift Testing about 615 seconds after the broad wrapper started, leaving about
+285 seconds of its 900-second budget. Summed overlapping test durations are not
+a serial-runtime prediction. Actual CI must verify both complete coverage and
+elapsed time; no deadline increase or coverage reduction is included. Remaining
+failures still require their own evidence. This gate remains open under
+`app_host_shared_resource_isolation_verification`.

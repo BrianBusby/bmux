@@ -511,6 +511,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Migrated CLI fixture deadlines restore their original host-CI minimum; local policy controls pass and fixed-head app-host verification remains pending (`migrated_cli_process_ci_deadline_verification`) - owner: Bmux; status: open
 - Crash-report symlink fixture owns an existing report and isolated home; build 795 and complete test target compile pass, macOS 15 app-host verification remains pending (`crash_report_symlink_fixture_verification`) - owner: Bmux; status: open
 - CI flags now cross console and XCTest boundaries after actual test-only CI red; fixed-head guard and native app-host verification remain pending (`ci_test_host_environment_propagation_verification`) - owner: Bmux; status: open
+- Native test target explicitly disables in-process parallelization for shared AppKit and runtime state; hostless controls pass, full app-host coverage and unchanged 900-second budget remain unverified (`app_host_shared_resource_isolation_verification`) - owner: Bmux; status: open
 <!-- END GENERATED: current-target-architecture-status -->
 
 The closed-peer CLI repair gives receive timeout configuration/cache and byte reads one internal `CLISocketReceiver` owner with a borrowed descriptor. `SocketClient` retains framing, connection lifecycle, request policy and telemetry. Actual G regression red is recorded; extracted-owner controls, tagged build 788 bundled CLI checks, and H shard 3 fixed-head CLI checks pass. The full combined native and artifact gates remain pending.

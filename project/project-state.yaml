@@ -6424,3 +6424,8 @@ caveats:
     title: CI flags now cross console and XCTest boundaries after actual test-only CI red; fixed-head guard and native app-host verification remain pending
     status: open
     owner: bmux
+
+  - id: app_host_shared_resource_isolation_verification
+    title: Native test target explicitly disables in-process parallelization for shared AppKit and runtime state; hostless controls pass, full app-host coverage and unchanged 900-second budget remain unverified
+    status: open
+    owner: bmux

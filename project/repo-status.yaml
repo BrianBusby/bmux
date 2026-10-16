@@ -483,3 +483,6 @@ local_caveats:
 
   - id: ci_test_host_environment_propagation_verification
     status: open
+
+  - id: app_host_shared_resource_isolation_verification
+    status: open
