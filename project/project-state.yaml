@@ -6717,3 +6717,8 @@ caveats:
     title: PR 171 review 5543944260 duplicate-title filter warning has actual CI red in run 38876211760 shard 4 and an identity-based fix with five local passing cases in Swift 5 and 6; fixed integrated build and CI green remain pending
     status: open
     owner: bmux
+
+  - id: keyboard_space_native_layout_isolation_verification
+    title: Z shard 6 background HIToolbox crash has a source-supported main-actor shortcut fixture repair with three local native cases passing in Swift 5 and 6; matched CI symbols and fixed macOS 15 CI remain pending
+    status: open
+    owner: bmux

@@ -7355,3 +7355,33 @@ runtime controls, with zero compiler warnings. Fixed integrated target, fresh
 tagged runtime build, and actual CI green remain pending root verification.
 The existing warning and reveal-action catalog keys have English and Japanese
 translations; no user-facing strings change in this regression slice.
+
+### Space shortcut native keyboard-layout isolation
+
+Z-red run `38876211760`, shard 6, crashes on background Thread 18 at
+09:19:38 through libdispatch and HIToolbox, followed by app and test frames.
+`KeyboardShortcutSpaceKeyTests.shortcutConfigParsingRoundTripsSpaceKey` is the
+last printed start, but that alone does not identify a parallel test's stack.
+The exact CI app UUID is `e1a53d8e28ee3af28389195b54329b7d` and test UUID is
+`31b16f42b2b43f4ca8e7beaedd1f5327`; matching-image symbols are not available.
+Local image addresses were not substituted for those frames.
+
+The three-case Swift Testing suite was nonisolated. Its space-key loop calls
+`ShortcutStroke.resolvedKeyCode()` with the real default provider, which enters
+`KeyboardLayout.character`, `TISCopyCurrentKeyboardInputSource`, and native
+layout translation before falling back to the physical space key. The suite now
+uses `@MainActor`, matching maintained native shortcut fixtures. All original
+case bodies, assertions, parser inputs, settings-file ownership, and native
+provider calls remain unchanged; no production isolation or shortcut policy is
+modified.
+
+A temporary safe control replaced only those six default-provider calls with the
+existing injected provider and checked its execution thread. The original suite
+reported six off-main boundary failures without calling native TIS off-main.
+This is an executable scheduling control, not exact CI frame symbolication. The
+unchanged three cases with the actor annotation and actual build 801 module pass
+in both configured Swift 5 and strict Swift 6 with zero compiler warnings.
+Owned HOME and telemetry/network fences precede module loading; processes join
+before owned directory deletion. No app, window, input-source selection, or
+user settings are activated or changed. Full integrated target and macOS 15 CI
+remain pending. No product-facing strings or localization keys change.
