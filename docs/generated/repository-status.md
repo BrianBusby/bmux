@@ -357,3 +357,4 @@ Repository: `BrianBusby/bmux`
 | `minimal_mode_current_shell_invalidation_verification` | open |
 | `workspace_terminal_focus_completion_verification` | open |
 | `workspace_filter_selection_identity_verification` | open |
+| `zsh_relay_refresh_completion_verification` | open |

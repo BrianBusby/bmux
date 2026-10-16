@@ -630,3 +630,6 @@ local_caveats:
 
   - id: workspace_filter_selection_identity_verification
     status: open
+
+  - id: zsh_relay_refresh_completion_verification
+    status: open

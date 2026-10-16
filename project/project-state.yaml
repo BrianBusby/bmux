@@ -6717,3 +6717,8 @@ caveats:
     title: PR 171 review 5543944260 duplicate-title filter warning has actual CI red in run 38876211760 shard 4 and an identity-based fix with five local passing cases in Swift 5 and 6; fixed integrated build and CI green remain pending
     status: open
     owner: bmux
+
+  - id: zsh_relay_refresh_completion_verification
+    title: Zsh prompt-refresh fixture observes both inherited-FIFO callbacks within the original one-second phase and joins its five-second shell; local Swift 5 and 6 controls pass, detached exits and integrated macOS 15 verification remain unproven
+    status: open
+    owner: bmux

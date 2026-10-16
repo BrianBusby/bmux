@@ -2128,6 +2128,7 @@
 		440AC5D24915463C9670F510 /* WorkspaceTitleProvenanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E241BE1D74A7459C8D9C16BC /* WorkspaceTitleProvenanceTests.swift */; };
 		6B524A0BA34FD46A771335AB /* WorkspaceUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F8ED91A4B55D34BE6A0668 /* WorkspaceUnitTests.swift */; };
 		84E00D47E4584162AE53BC8D /* xterm-ghostty in Resources */ = {isa = PBXBuildFile; fileRef = B2E7294509CC42FE9191870E /* xterm-ghostty */; };
+		D96FCCCF491E42F59D8C63F9 /* ZshRelayPromptRefreshTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BD97AE2493D4A7FA64F92A8 /* ZshRelayPromptRefreshTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -4199,6 +4200,7 @@
 		E241BE1D74A7459C8D9C16BC /* WorkspaceTitleProvenanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceTitleProvenanceTests.swift; sourceTree = "<group>"; };
 		71F8ED91A4B55D34BE6A0668 /* WorkspaceUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceUnitTests.swift; sourceTree = "<group>"; };
 		B2E7294509CC42FE9191870E /* xterm-ghostty */ = {isa = PBXFileReference; lastKnownFileType = file; path = "ghostty/terminfo/78/xterm-ghostty"; sourceTree = "<group>"; };
+		4BD97AE2493D4A7FA64F92A8 /* ZshRelayPromptRefreshTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZshRelayPromptRefreshTests.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -5903,6 +5905,7 @@
 				410DE41C9E8241C98CB96373 /* FeedHookNoResponseFixture.swift */,
 				D765F48E62DB41949A952E22 /* GenericLifecycleFeedNoResponseFixture.swift */,
 				5D10D640C66D48559BA44F32 /* BashRelayPromptRefreshTests.swift */,
+				4BD97AE2493D4A7FA64F92A8 /* ZshRelayPromptRefreshTests.swift */,
 				F888C5A85D54408584752031 /* OrphanWorkspaceShortcutTests.swift */,
 				8FD8055070584B2498072294 /* OrphanWorkspaceShortcutSettingsFixture.swift */,
 				9E199B01F53842F19C9D820F /* OrphanWorkspaceShortcutFixture.swift */,
@@ -8913,6 +8916,7 @@
 				634AA6233A5BBF781FE83E89 /* WorkspaceTerminalWorkingDirectoryFallbackTests.swift in Sources */,
 				440AC5D24915463C9670F510 /* WorkspaceTitleProvenanceTests.swift in Sources */,
 				6B524A0BA34FD46A771335AB /* WorkspaceUnitTests.swift in Sources */,
+				D96FCCCF491E42F59D8C63F9 /* ZshRelayPromptRefreshTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
