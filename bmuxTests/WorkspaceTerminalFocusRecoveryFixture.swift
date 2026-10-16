@@ -18,6 +18,7 @@ final class WorkspaceTerminalFocusRecoveryFixture {
     private var manager: TabManager?
     private var windowID: UUID?
     private var peers: [TerminalPanel] = []
+    private var isClosed = false
 
     static func run(
         dock: Bool,
@@ -85,8 +86,61 @@ final class WorkspaceTerminalFocusRecoveryFixture {
         try await deliverQueuedFocus(phase: "prepare")
     }
 
+    func prepareFindTerminalRestore(searchState: TerminalSurface.SearchState) async throws {
+        try await prepare(visible: true)
+        try await NativeMainQueueDelivery(duration: .seconds(1)).deliver {
+            panel.surface.searchState = searchState
+            panel.hostedView.setSearchOverlay(searchState: searchState)
+        }
+        let overlay = try #require(panel.hostedView.debugSearchOverlayHostingViewForTesting())
+        overlay.layoutSubtreeIfNeeded()
+        let field = try #require(findEditableTextField(in: overlay))
+        // Complete initial Find autofocus before establishing the terminal-restoration intent.
+        try await TerminalSearchFieldFocusObservation(duration: .seconds(1)).wait(of: field, in: window)
+        panel.hostedView.preparePanelFocusIntentForActivation(.surface)
+    }
+
     func deliverQueuedFocus(phase: String = #function, line: UInt = #line) async throws {
-        try await NativeMainQueueDelivery(duration: .milliseconds(50)).deliver(phase: phase, line: line)
+        try await NativeMainQueueDelivery(duration: .seconds(1)).deliver(phase: phase, line: line)
+    }
+
+    func setSurfaceGeometry(_ size: NSSize) {
+        // The native host owns child sizing; queued layout must preserve this test precondition.
+        panel.hostedView.frame.size = size
+        panel.hostedView.reconcileGeometryNow()
+        panel.hostedView.surfaceView.frame = NSRect(origin: .zero, size: size)
+    }
+
+    func revealWithTinySurface() async throws -> TerminalFocusDeferralObservation {
+        var observation: TerminalFocusDeferralObservation?
+        try await NativeMainQueueDelivery(duration: .seconds(1)).deliver {
+            // Native reveal refreshes layout synchronously before queueing automatic focus.
+            DispatchQueue.main.async { [weak self] in
+                guard let self, !self.isClosed else { return }
+                self.panel.hostedView.surfaceView.frame = .zero
+            }
+            panel.hostedView.setVisibleInUI(true)
+            // Capture actual callback effects before a later AppKit layout can resize the child.
+            DispatchQueue.main.async { [weak self] in
+                guard let self, !self.isClosed else { return }
+                observation = TerminalFocusDeferralObservation(
+                    firstResponder: self.panel.hostedView.isSurfaceViewFirstResponder(),
+                    hostDesiredFocus: self.panel.hostedView.debugRenderStats().desiredFocus,
+                    surfaceDesiredFocus: self.panel.surface.debugDesiredFocusState(),
+                    surfaceSize: self.panel.hostedView.surfaceView.frame.size,
+                    hostSize: self.panel.hostedView.frame.size
+                )
+            }
+        }
+        return try #require(observation)
+    }
+
+    private func findEditableTextField(in view: NSView) -> NSTextField? {
+        if let field = view as? NSTextField, field.isEditable { return field }
+        for subview in view.subviews {
+            if let field = findEditableTextField(in: subview) { return field }
+        }
+        return nil
     }
 
     private static func makePanel(dock: Bool) -> TerminalPanel {
@@ -100,6 +154,7 @@ final class WorkspaceTerminalFocusRecoveryFixture {
     }
 
     private func close() {
+        isClosed = true
         for panel in [panel] + peers {
             panel.surface.beginPortalCloseLifecycle(reason: "focus-recovery-fixture.cleanup")
             panel.surface.releaseSurfaceForTesting()

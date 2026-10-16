@@ -23,7 +23,7 @@ struct WorkspaceTerminalFocusRecoverySwiftTests {
             panel.surface.setFocus(false)
             #expect(!panel.surface.debugDesiredFocusState())
 
-            surfaceView.frame = NSRect(x: 0, y: 0, width: 0, height: 0)
+            fixture.setSurfaceGeometry(.zero)
             #expect(window.makeFirstResponder(surfaceView))
             #expect(panel.hostedView.isSurfaceViewFirstResponder())
             #expect(panel.hostedView.debugRenderStats().desiredFocus)
@@ -38,7 +38,7 @@ struct WorkspaceTerminalFocusRecoverySwiftTests {
                 "The first deferred apply can fire while geometry is still unusable"
             )
 
-            surfaceView.frame = NSRect(x: 0, y: 0, width: 180, height: 220)
+            fixture.setSurfaceGeometry(NSSize(width: 180, height: 220))
             surfaceView.layoutSubtreeIfNeeded()
             try await fixture.deliverQueuedFocus()
 
@@ -58,7 +58,7 @@ struct WorkspaceTerminalFocusRecoverySwiftTests {
             let surfaceView = panel.hostedView.surfaceView
             window.makeFirstResponder(nil)
             panel.surface.setFocus(false)
-            surfaceView.frame = NSRect(x: 0, y: 0, width: 0, height: 0)
+            fixture.setSurfaceGeometry(.zero)
             panel.hostedView.suppressReparentFocus()
             #expect(panel.hostedView.debugIsSuppressingReparentFocusForTesting())
             #expect(window.makeFirstResponder(surfaceView))
@@ -74,7 +74,7 @@ struct WorkspaceTerminalFocusRecoverySwiftTests {
             )
             #expect(!panel.surface.debugDesiredFocusState())
 
-            surfaceView.frame = NSRect(x: 0, y: 0, width: 180, height: 220)
+            fixture.setSurfaceGeometry(NSSize(width: 180, height: 220))
             try await fixture.deliverQueuedFocus()
 
             #expect(
@@ -96,7 +96,7 @@ struct WorkspaceTerminalFocusRecoverySwiftTests {
             panel.surface.setFocus(false)
             #expect(!panel.surface.debugDesiredFocusState())
 
-            surfaceView.frame = NSRect(x: 0, y: 0, width: 0, height: 0)
+            fixture.setSurfaceGeometry(.zero)
             panel.hostedView.suppressReparentFocus()
             panel.hostedView.clearSuppressReparentFocus()
 
@@ -106,7 +106,7 @@ struct WorkspaceTerminalFocusRecoverySwiftTests {
             )
             #expect(!panel.surface.debugDesiredFocusState())
 
-            surfaceView.frame = NSRect(x: 0, y: 0, width: 180, height: 220)
+            fixture.setSurfaceGeometry(NSSize(width: 180, height: 220))
             try await fixture.deliverQueuedFocus()
 
             #expect(
@@ -128,19 +128,19 @@ struct WorkspaceTerminalFocusRecoverySwiftTests {
             #expect(!panel.hostedView.debugPortalVisibleInUI)
             window.makeFirstResponder(nil)
             panel.surface.setFocus(false)
-            surfaceView.frame = NSRect(x: 0, y: 0, width: 0, height: 0)
 
-            panel.hostedView.setVisibleInUI(true)
-            try await fixture.deliverQueuedFocus()
+            let deferral = try await fixture.revealWithTinySurface()
+            #expect(deferral.surfaceSize == .zero)
+            #expect(deferral.hostSize.width > 1 && deferral.hostSize.height > 1)
 
-            #expect(panel.hostedView.isSurfaceViewFirstResponder())
-            #expect(panel.hostedView.debugRenderStats().desiredFocus)
+            #expect(deferral.firstResponder)
+            #expect(deferral.hostDesiredFocus)
             #expect(
-                !panel.surface.debugDesiredFocusState(),
+                !deferral.surfaceDesiredFocus,
                 "Automatic first-responder apply must not mark Ghostty focused while hidden/tiny deferral is pending"
             )
 
-            surfaceView.frame = NSRect(x: 0, y: 0, width: 180, height: 220)
+            fixture.setSurfaceGeometry(NSSize(width: 180, height: 220))
             surfaceView.layoutSubtreeIfNeeded()
             panel.hostedView.layoutSubtreeIfNeeded()
             try await fixture.deliverQueuedFocus()
@@ -158,28 +158,25 @@ struct WorkspaceTerminalFocusRecoverySwiftTests {
             let panel = fixture.panel
             let window = fixture.window
             let searchState = TerminalSurface.SearchState(needle: "needle")
-            panel.surface.searchState = searchState
-            panel.hostedView.setSearchOverlay(searchState: searchState)
-            panel.hostedView.preparePanelFocusIntentForActivation(.surface)
-            try await fixture.prepare(visible: false)
+            try await fixture.prepareFindTerminalRestore(searchState: searchState)
             let surfaceView = panel.hostedView.surfaceView
             // Initial workspace reconciliation may restore selected-panel visibility.
             panel.hostedView.setVisibleInUI(false)
             #expect(!panel.hostedView.debugPortalVisibleInUI)
             window.makeFirstResponder(nil)
             panel.surface.setFocus(false)
-            surfaceView.frame = NSRect(x: 0, y: 0, width: 0, height: 0)
 
-            panel.hostedView.setVisibleInUI(true)
-            try await fixture.deliverQueuedFocus()
+            let deferral = try await fixture.revealWithTinySurface()
+            #expect(deferral.surfaceSize == .zero)
+            #expect(deferral.hostSize.width > 1 && deferral.hostSize.height > 1)
 
-            #expect(panel.hostedView.isSurfaceViewFirstResponder())
+            #expect(deferral.firstResponder)
             #expect(
-                !panel.surface.debugDesiredFocusState(),
+                !deferral.surfaceDesiredFocus,
                 "Find terminal restore must not drop hidden/tiny focus recovery before Ghostty focus is reapplied"
             )
 
-            surfaceView.frame = NSRect(x: 0, y: 0, width: 180, height: 220)
+            fixture.setSurfaceGeometry(NSSize(width: 180, height: 220))
             surfaceView.layoutSubtreeIfNeeded()
             panel.hostedView.layoutSubtreeIfNeeded()
             try await fixture.deliverQueuedFocus()
@@ -202,10 +199,7 @@ struct WorkspaceTerminalFocusRecoverySwiftTests {
             panel.surface.setFocus(false)
             #expect(!panel.surface.debugDesiredFocusState())
 
-            // The host owns child size; constrain it so queued layout preserves tiny geometry.
-            panel.hostedView.frame.size = .zero
-            panel.hostedView.reconcileGeometryNow()
-            surfaceView.frame = NSRect(x: 0, y: 0, width: 0, height: 0)
+            fixture.setSurfaceGeometry(.zero)
             #expect(surfaceView.bounds.size == .zero)
             #expect(window.makeFirstResponder(surfaceView))
             #expect(panel.hostedView.isSurfaceViewFirstResponder())
@@ -221,9 +215,7 @@ struct WorkspaceTerminalFocusRecoverySwiftTests {
                 "The dock deferred apply can fire while geometry is still unusable"
             )
 
-            panel.hostedView.frame.size = NSSize(width: 180, height: 220)
-            panel.hostedView.reconcileGeometryNow()
-            surfaceView.frame = NSRect(x: 0, y: 0, width: 180, height: 220)
+            fixture.setSurfaceGeometry(NSSize(width: 180, height: 220))
             surfaceView.layoutSubtreeIfNeeded()
             panel.hostedView.layoutSubtreeIfNeeded()
             try await fixture.deliverQueuedFocus()

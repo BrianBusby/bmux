@@ -7798,3 +7798,58 @@ Configured Swift 5/strict Swift 6 compilation, native omission, delayed-consumer
 and cancellation controls, exact untouched legacy bytes and cleanup evidence
 are recorded in `/tmp/ad-search-field-proof/handoff.md`. Root owns integrated
 full-target and CI verification. No production or localization surface changes.
+
+
+### AD focus delivery functional containment and geometry ownership
+
+All seven AD native-shard-2 focus recovery failures identify `phase=prepare`
+at the shared fixture's line 85. Native FIFO producer arrivals range from
+75.815ms to 443.905ms, beyond 50ms, before any case-body oracle. Later phases
+were not reached; AD supplies no measurement of their latency.
+
+The fixture adopts a one-second functional failure cap for initial and
+subsequent FIFO deliveries. This is a NEW policy, not restoration of an
+unchanged deadline. The original seven tests used fixed 50ms RunLoop settling,
+without elapsed-performance assertions; maintained native portal queue-drain
+fixtures use one-second containment. Delivery still returns at its first
+native marker without additional settling. Production and the shared FIFO
+owner are unchanged.
+
+Owned build 801 controls with both 50ms and one-second bounds exposed the same
+five geometry-related assertion failures. Native layout legitimately restored
+a zero-sized child from its usable host. Explicit-responder and reparent cases
+now set geometry through the authoritative host. Automatic/find cases require
+a usable host: the fixture queues child geometry after reveal's synchronous
+layout and before its queued focus callback, then captures immutable facts
+after that callback and before later layout can resize the child. Both weak
+callbacks stop when the fixture closes. The observation owns a separate file;
+there is no new production hook or shared delivery API. These two native FIFO
+blocks require the documented ordering and are not interchangeable with tasks.
+
+All forty original focus expectations and three precondition expectations
+retain their intent, including intermediate deferral, final recovery, and
+no-steal checks; case setup and intermediate observation sites change. Four
+additional geometry expectations verify tiny child and usable host premises.
+Seven owned logical-key cases pass. Omitting queued geometry fails four
+assertions; omitting reveal fails five. Omitting explicit recovery fails four
+cases, while automatic/find can recover through legitimate AppKit layout;
+those two controls do not prove that explicit recovery is the sole producer.
+
+A later strict Swift 6 control preserved a final Find recovery failure despite
+passing intermediate deferral observations. Initial overlay mount can still
+own forced field-focus retries after an early terminal intent. Find setup now
+completes real mount/layout and automatic field focus using the shared native
+responder observer before setting terminal intent and testing hidden/tiny
+recovery. Native mount delivery and field-focus observation each have a one-second
+failure cap.
+This removes an unsatisfied setup prerequisite without claiming that it proves
+the scheduler history of the preserved failure or AD.
+
+Configured Swift 5/strict Swift 6 compilation, positive and negative controls,
+and queued cancellation/closed-fixture cleanup are recorded in
+`/tmp/ad-focus-delivery-proof/handoff.md`. Initial controls were never presented;
+final field-focus controls use an owned nonactivating presented logical-key
+window and verify unchanged frontmost process. Permanent tests retain normal
+NSWindow and original presentation. Local controls do not prove native key
+acquisition or fixed presented macOS 15 behavior. No user app is activated or replaced,
+and no localization surface changes.
