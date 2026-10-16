@@ -6920,7 +6920,7 @@ The focused source review found the case explicitly closing a Swift-owned
 `NSWindow` without disabling release-on-close. Its synchronous focus coordinator
 holds weak endpoint references and records pending intent until the view gains
 a window; no task or delayed callback belongs to that coordinator. The exact
-case now lives in `FilePreviewFocusCoordinatorTests`, with the same borderless
+case now lives in `FilePreviewPendingFocusTests`, with the same borderless
 320-by-240 window, original missing-window rejection and final first-responder
 identity assertions, and content-detach/close cleanup. It sets
 `isReleasedWhenClosed = false`, matching the maintained file-preview text-editor
@@ -6937,3 +6937,12 @@ compilation cover this slice, alongside local Project Truth, PBX, determinism,
 and actual-main file-budget checks. Root owns integrated target compilation and
 macOS 15 verification; no local result identifies the historical crashed object.
 No application was launched or window presented, and no product strings changed.
+
+
+The first migration used a suite name already declared by an untouched legacy
+class in `WindowAndDragTests.swift`. Focused source compilation did not include
+that class and therefore missed the target-wide collision; the integrated gate
+correctly rejected it. The suite and its file are now `FilePreviewPendingFocusTests`.
+The existing legacy class stays unchanged. Full selector inventory validation
+(`python3 scripts/ci/bmux_unit_test_shard.py --validate`) now accompanies the
+focused configured Swift 5/strict Swift 6 compilation; no test behavior changed.

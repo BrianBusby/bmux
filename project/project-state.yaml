@@ -6659,6 +6659,6 @@ caveats:
     owner: bmux
 
   - id: file_preview_pending_focus_window_ownership_verification
-    title: Pending file-preview focus test retains its owned window through explicit close and preserves both focus assertions; native 799 ownership controls pass, exact historical crash object and macOS 15 verification remain unresolved
+    title: FilePreviewPendingFocusTests retains its owned window through explicit close and preserves both focus assertions; native 799 ownership controls pass, exact historical crash object and macOS 15 verification remain unresolved
     status: open
     owner: bmux
