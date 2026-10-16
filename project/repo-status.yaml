@@ -630,3 +630,6 @@ local_caveats:
 
   - id: workspace_filter_selection_identity_verification
     status: open
+
+  - id: markdown_scroll_frame_completion_verification
+    status: open

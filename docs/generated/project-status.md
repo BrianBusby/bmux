@@ -309,6 +309,7 @@ Regenerate with: ./scripts/project-docs generate
 | Seven terminal focus recovery cases observe queued work and establish authoritative visibility and geometry prerequisites within 50ms completion bounds; owned build 799 positive and omission controls pass, real presented macOS 15 verification remains pending (`workspace_terminal_focus_completion_verification`) | Bmux | open |  |
 | Actual shard-3 precursor fixtures restore shared delegate and known route-retirer composition with scoped resource cleanup; build 799 identity controls pass, historical inspector causality and presented macOS 15 acceptance remain pending (`inspector_precursor_delegate_composition_verification`) | Bmux | open |  |
 | PR 171 review 5543944260 duplicate-title filter warning has actual CI red in run 38876211760 shard 4 and an identity-based fix with five local passing cases in Swift 5 and 6; fixed integrated build and CI green remain pending (`workspace_filter_selection_identity_verification`) | Bmux | open |  |
+| Z7 markdown scroll drift has a controlled stale-frame counterexample and fixture completion fix with timeout and cancellation cleanup; actual displayed native-frame verification is pending an unlocked desktop or CI (`markdown_scroll_frame_completion_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

@@ -14,6 +14,7 @@ final class MarkdownRenderTestFixture: NSObject, WKNavigationDelegate, WKScriptM
     let webView: WKWebView
     private let window: NSWindow
     private let navigationTimeout: Duration
+    private let renderTimeout: Duration
     let imageTimeout: Duration
     let buttonTimeout: Duration
     private var expectedNavigation: WKNavigation?
@@ -24,11 +25,13 @@ final class MarkdownRenderTestFixture: NSObject, WKNavigationDelegate, WKScriptM
     init(
         webView: WKWebView,
         navigationTimeout: Duration = .seconds(5),
+        renderTimeout: Duration = .seconds(5),
         imageTimeout: Duration = .seconds(3),
         buttonTimeout: Duration = .seconds(8)
     ) {
         self.webView = webView
         self.navigationTimeout = navigationTimeout
+        self.renderTimeout = renderTimeout
         self.imageTimeout = imageTimeout
         self.buttonTimeout = buttonTimeout
         window = NSWindow(contentRect: webView.frame, styleMask: [.borderless], backing: .buffered, defer: false)
@@ -69,6 +72,47 @@ final class MarkdownRenderTestFixture: NSObject, WKNavigationDelegate, WKScriptM
         let data = try JSONSerialization.data(withJSONObject: [markdown])
         let literal = try #require(String(data: data, encoding: .utf8))
         _ = try await webView.evaluateJavaScript("window.__bmuxRenderMarkdown(\(literal)[0]);")
+    }
+
+    /// Awaits the renderer's two scroll-restoration frames, not image or diagram readiness.
+    func renderMarkdownForScrollObservation(_ markdown: String) async throws {
+        let deadline = ContinuousClock.now.advanced(by: renderTimeout)
+        let data = try JSONSerialization.data(withJSONObject: [markdown])
+        let literal = try #require(String(data: data, encoding: .utf8))
+        _ = try await operation(deadline: deadline) { id in
+            let remaining = ContinuousClock.now.duration(to: deadline)
+            let milliseconds = max(0, Double(remaining.components.seconds) * 1000 + Double(remaining.components.attoseconds) / 1e15)
+            let script = """
+            (function() {
+              var registry = window.__bmuxFixtureObservers || (window.__bmuxFixtureObservers = Object.create(null));
+              var id = '\(id)', done = false, frame, timer;
+              function finish(result) {
+                if (done) { return; }
+                done = true;
+                if (frame) { cancelAnimationFrame(frame); }
+                if (timer) { clearTimeout(timer); }
+                window.removeEventListener('pagehide', pagehide);
+                delete registry[id];
+                if (result) { window.webkit.messageHandlers.bmuxRenderingFixture.postMessage(Object.assign({id: id}, result)); }
+              }
+              function pagehide() { finish({error: 'Navigation replaced rendering page'}); }
+              registry[id] = function() { finish(null); };
+              window.addEventListener('pagehide', pagehide);
+              timer = setTimeout(function() { finish({error: 'Render scroll frames deadline exceeded'}); }, \(milliseconds));
+              try {
+                window.__bmuxRenderMarkdown(\(literal)[0]);
+                // Register after the producer so its nested restore also precedes our second frame.
+                frame = requestAnimationFrame(function() {
+                  frame = requestAnimationFrame(function() { finish({json: ''}); });
+                });
+              } catch (error) { finish({error: String(error)}); }
+            })();
+            """
+            // WebKit's callback reports evaluation failure; the message reports scroll-frame completion.
+            webView.evaluateJavaScript(script) { [weak self] _, error in
+                if let error, self?.activeID == id { self?.finish(.failure(error)) }
+            }
+        }
     }
 
     func observeDOM(snapshot: String, predicate: String, deadline: ContinuousClock.Instant) async throws -> String {
