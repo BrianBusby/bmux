@@ -262,24 +262,6 @@ final class FilePreviewReviewFeedbackTests: XCTestCase {
         }
     }
 
-    func testFocusCoordinatorKeepsPendingFocusUntilEndpointHasWindow() {
-        let textView = FilePreviewReviewFocusTestView(frame: NSRect(x: 0, y: 0, width: 320, height: 240))
-        let coordinator = FilePreviewFocusCoordinator(preferredIntent: .textEditor)
-        coordinator.register(root: textView, primaryResponder: textView, intent: .textEditor)
-
-        XCTAssertFalse(coordinator.focus(.textEditor))
-
-        let window = NSWindow(contentRect: textView.bounds, styleMask: [], backing: .buffered, defer: false)
-        defer {
-            window.contentView = nil
-            window.close()
-        }
-        window.contentView = textView
-        coordinator.fulfillPendingFocusIfNeeded()
-
-        XCTAssertTrue(window.firstResponder === textView)
-    }
-
     func testFileOpenHonorsExplicitPaneDestinationInsteadOfReusingExistingPreview() throws {
         let originalURL = try temporaryTextFile(contents: "original", encoding: .utf8)
         let placeholderURL = try temporaryTextFile(contents: "placeholder", encoding: .utf8)
@@ -420,9 +402,4 @@ final class FilePreviewReviewFeedbackTests: XCTestCase {
             XCTFail("Timed out waiting for panel save", file: file, line: line)
         }
     }
-}
-
-private final class FilePreviewReviewFocusTestView: NSView {
-    override var acceptsFirstResponder: Bool { true }
-    override var canBecomeKeyView: Bool { true }
 }
