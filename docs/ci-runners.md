@@ -6746,3 +6746,54 @@ network or external SSH, and every owned process and temporary home is cleaned
 up. Exact final source compiles in configured Swift 5 and strict Swift 6 without
 warnings and passes the native control. Actual macOS 15 CI execution remains pending; this evidence does
 not establish broader restore behavior across OS versions.
+
+## Terminal overlay completion fixtures (fixed W follow-up)
+
+Fixed W (`c8b35a6bd98e425799e40aee064f2e8b219994b0`, run 38856996751,
+job 116831461888) failed three legacy `GhosttySurfaceOverlayTests` cases.
+Drop-hover attachment and geometry passed, then the final hidden assertion
+failed. Escape stopped at a missing mounted field before either key event.
+Split-like rebind lacked its overlay before either bind; the later failures
+therefore do not establish that rebind removed it. The production search-mount
+and drop animation owners are unchanged from main `ce17e9888`.
+
+Exactly those three cases now live in `TerminalDropZoneOverlayContractTests`
+and `TerminalSearchOverlayLifecycleTests`. They retain parent attachment and all
+four geometry values, initial and both rebind overlay assertions, empty-search
+Escape dismissal and zero terminal release assertions. Native animation-group
+completion observes drop hiding; a FIFO signal observes the existing single
+queued search mutation. The old fixed 250ms/50ms settling intervals now serve as
+completion failure bounds with the same duration values; they were not previously
+event-based deadlines. Escape additionally requires native runtime readiness in
+its first 50ms phase, a mounted field and its real first responder. Manual I/O
+avoids unrelated shell startup. Retained windows, portal teardown, surface free
+and normal teardown own cleanup without production hooks or shared-helper changes.
+
+The permanent Escape case retains its presented window and original
+`NSApp.sendEvent` key-down/key-up pair. The existing static key observer is saved
+and restored only around synchronous dispatch: `keyUp` and `sendGhosttyKey`
+invoke it synchronously. The original dismissal release count is captured
+separately, then a subsequent plain Escape key-up goes through the same NSApp
+path and must produce cumulative count one. This calibration prevents a zero
+count from passing when AppKit never delivers releases to the terminal. Its
+returned original count excludes unrelated later events that the old RunLoop
+interval could observe. The final 50ms FIFO phase observes
+queued dismissal work, not additional release callbacks; no global override is
+held across an await.
+
+Frozen build 799 controls passed original drop/rebind oracles and Escape with an
+actual live terminal and field editor; omission controls failed their intended
+assertions. Before adding delivery calibration, the migrated three cases passed with only
+the Escape presentation call omitted in the local harness. With calibration,
+the two non-keyboard cases pass and offscreen Escape intentionally fails the
+subsequent-release assertion, exposing the delivery gap. That offscreen
+adaptation is not shipped.
+Both configured Swift 5 and strict Swift 6 warnings-as-errors compilation cover
+the exact permanent sources. The inactive local AppKit release did not consume
+the terminal suppression flag: subsequent direct native releases consumed it,
+then reached the observer. This supports suppression-owner sensitivity but does
+not verify presented end-to-end key-up delivery. The permanent calibration uses
+only NSApp delivery, never direct handler calls, and still needs actual app-host
+verification. Root owns full-target compilation
+and actual macOS 15 app-host verification; local positives do not prove the
+historical CI scheduling cause. No runtime behavior or product strings changed.
