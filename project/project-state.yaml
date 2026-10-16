@@ -6434,3 +6434,8 @@ caveats:
     title: Workspace chrome tests follow opaque compositing in scoped light and dark appearances; native build 796 passes, integrated macOS 15 app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: markdown_file_reload_fixture_verification
+    title: Markdown atomic file reload uses the existing content sequence with a joined three-second wait; native build 796 passes, integrated macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux

@@ -489,3 +489,6 @@ local_caveats:
 
   - id: workspace_chrome_color_contract_verification
     status: open
+
+  - id: markdown_file_reload_fixture_verification
+    status: open

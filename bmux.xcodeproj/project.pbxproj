@@ -1021,6 +1021,7 @@
 		D6069002D6069002D6069002 /* MarkdownMermaidZoomTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6069001D6069001D6069001 /* MarkdownMermaidZoomTests.swift */; };
 		A5001420 /* MarkdownPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001418 /* MarkdownPanel.swift */; };
 		A50014F2 /* MarkdownPanelFileLinkResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50014F0 /* MarkdownPanelFileLinkResolver.swift */; };
+		54AF30D5AD154901AA8E2B42 /* MarkdownPanelFileReloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB60424084345EAAA0BBFAD /* MarkdownPanelFileReloadTests.swift */; };
 		D3664002D3664002D3664002 /* MarkdownPanelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3664001D3664001D3664001 /* MarkdownPanelTests.swift */; };
 		A5001421 /* MarkdownPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001419 /* MarkdownPanelView.swift */; };
 		CC25298C1C4B9DCCCAA7FAAE /* MarkdownRemoteImageHoldingSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0179E41B2A61509B9DB47809 /* MarkdownRemoteImageHoldingSchemeHandler.swift */; };
@@ -3095,6 +3096,7 @@
 		D6069001D6069001D6069001 /* MarkdownMermaidZoomTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownMermaidZoomTests.swift; sourceTree = "<group>"; };
 		A5001418 /* MarkdownPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownPanel.swift; sourceTree = "<group>"; };
 		A50014F0 /* MarkdownPanelFileLinkResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownPanelFileLinkResolver.swift; sourceTree = "<group>"; };
+		9EB60424084345EAAA0BBFAD /* MarkdownPanelFileReloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPanelFileReloadTests.swift; sourceTree = "<group>"; };
 		D3664001D3664001D3664001 /* MarkdownPanelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPanelTests.swift; sourceTree = "<group>"; };
 		A5001419 /* MarkdownPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownPanelView.swift; sourceTree = "<group>"; };
 		0179E41B2A61509B9DB47809 /* MarkdownRemoteImageHoldingSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRemoteImageHoldingSchemeHandler.swift; sourceTree = "<group>"; };
@@ -5829,6 +5831,7 @@
 				C92A8919A7DF464B98FBB3CB /* BrowserUnderPageBackgroundTests.swift */,
 				C36EA76CD0B5432888F99604 /* GhosttyBackgroundThemeTests.swift */,
 				D910AAD9E9CF49EFB0723284 /* WorkspaceChromeColorTests.swift */,
+				9EB60424084345EAAA0BBFAD /* MarkdownPanelFileReloadTests.swift */,
 				B6585002B6585002B658PW02 /* BrowserPrewarmedWebViewPoolTests.swift */,
 				58C7B1B978620BE162CC057E /* BrowserPanelTests.swift */,
 				C42660040000000000000002 /* BrowserPDFPreviewActionRegressionTests.swift */,
@@ -8411,6 +8414,7 @@
 				A6D14D760EF84965AF0F0404 /* MarkdownMermaidStubHandler.swift in Sources */,
 				A6D14D760EF84965AF0F0402 /* MarkdownMermaidTestFixture.swift in Sources */,
 				D6069002D6069002D6069002 /* MarkdownMermaidZoomTests.swift in Sources */,
+				54AF30D5AD154901AA8E2B42 /* MarkdownPanelFileReloadTests.swift in Sources */,
 				D3664002D3664002D3664002 /* MarkdownPanelTests.swift in Sources */,
 				CC25298C1C4B9DCCCAA7FAAE /* MarkdownRemoteImageHoldingSchemeHandler.swift in Sources */,
 				C7C2E4CABAF2B7B103A8C5B0 /* MarkdownRenderTestFixture+DOMObservation.swift in Sources */,
