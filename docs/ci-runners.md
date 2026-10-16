@@ -6458,11 +6458,26 @@ signal status, descendant joins, output EOF and no-retry contract. Expected-red
 cleanup resumes that same owned child and joins all descendants before removing
 its temporary root. No broad process matching or app execution is used.
 
-The original eleven cancellation cases pass locally; both new cases time out at
-the existing eight-second observation bound. This commit contains tests only.
-Actual regression CI red is required before the minimal forwarding correction.
-The normal native deadline, retry policy and cancellation grace are unchanged.
-The controlled stopped-child failure is not proof of the historical V cause.
+The regression-only commit was published in candidate W-red `8f11bfa7004`.
+Actual CI run `38854766648`, guard `116823656929`, passed the original eleven
+cases and failed both stopped-child cases at the existing eight-second bound.
+All thirteen scenarios confirmed owned subtree joins and temporary-root removal.
+
+The lock now forwards the original TERM/INT and then SIGCONT to its direct
+`Popen` command. This lets a stopped shell run its existing cancellation trap;
+the lock continues waiting for that command while holding its existing lock.
+There is no process scan, new process group, retry or deadline extension.
+All thirteen local Linux cancellation controls pass with the correction,
+including signal status, joined descendants, output EOF and no native retry.
+The complete existing noninteractive helper guard also passes locally. On
+macOS 26, the real fixed-source outer owner, lock, Bash wrapper, sampler, PTY and
+tee composition passes both normal and stopped-Bash controls (5.118 and 5.154
+seconds). Both retain status 124, observe owned process exits and tee EOF,
+reacquire the lock and remove owned roots; the stopped case observes actual STOP
+before cancellation. Direct normal exit 0/65 controls preserve status and output.
+No app, privileged console hop or user state is involved. Fixed-head CI remains
+required. The controlled stopped-child failure is not proof of the historical V
+cause; its early samples did not establish STOP.
 
 ### Fork cache refresh live-process scope prerequisite
 
