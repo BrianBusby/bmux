@@ -40,7 +40,7 @@ import Testing
         _ selected: WorkspaceFilterItem?, items: [WorkspaceFilterItem], filters: WorkspaceFilters
     ) -> Bool {
         WorkspaceTabFilterBar(
-            items: items, selectedWorkspaceTitle: selected?.title,
+            items: items, selectedWorkspaceID: selected?.id, selectedWorkspaceTitle: selected?.title,
             filters: .constant(filters), isPanelPresented: .constant(false)
         ).isSelectionHidden
     }

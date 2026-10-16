@@ -306,7 +306,7 @@ Regenerate with: ./scripts/project-docs generate
 | Y1 overlay fixtures observe queued mounting and adopt the maintained three-second runtime setup bound for Escape while retaining fifty-millisecond overlay phases and real key-up calibration; owned bundle controls isolate startup delay, presented macOS 15 verification remains pending (`terminal_overlay_runtime_setup_verification`) | Bmux | open |  |
 | Actual Y Welcome callback arrived after the one-second fixture bound with correct state; explicit three-second absolute functional containment retains all routing assertions, owned controls pass and macOS 15 verification remains pending (`welcome_shortcut_delivery_containment_verification`) | Bmux | open |  |
 | Current terminal and workspace-rail body coverage preserves all six minimal-mode assertions; owned build 799 proves unrelated inset AppStorage invalidation, isolated observer correction and fresh-build macOS 15 validation remain pending (`minimal_mode_current_shell_invalidation_verification`) | Bmux | open |  |
-| PR 171 review 5543944260 duplicate-title filter warning has a runtime-failing semantic-view regression and four passing controls; actual CI red and identity-based fix verification remain pending (`workspace_filter_selection_identity_verification`) | Bmux | open |  |
+| PR 171 review 5543944260 duplicate-title filter warning has actual CI red in run 38876211760 shard 4 and an identity-based fix with five local passing cases in Swift 5 and 6; fixed integrated build and CI green remain pending (`workspace_filter_selection_identity_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

@@ -7222,7 +7222,19 @@ Local configured Swift 5 and strict Swift 6 warnings-as-errors compile the full
 current view source, adding only a testable-import preamble for its isolated
 module, against protected build 799 dependencies. No native window or app is
 launched. This source-level runtime proof does not claim that the frozen app
-binary contains the new internal seam; integrated target and actual CI red remain
-separate gates. The production fix and its green verification are still pending.
+binary contains the new internal seam.
+
+Actual test-first CI red is confirmed on integration `c4d1` in run `38876211760`,
+shard 4: `duplicateTitleDoesNotMakeFilteredSelectionVisible` fails at line 16 at
+09:11:18, with exactly one issue across the five regression cases. The broad
+batch reports 292 tests in 43 suites, one issue, and exits 65. The archived log is
+`/tmp/z-red-shard4-terminal.log`.
+
+The follow-up passes the rail's existing selected workspace ID into the filter
+bar and compares visible item IDs. The title remains display text; the warning
+and existing reveal action share the same semantic predicate. All five unchanged
+scenario assertions pass in configured Swift 5 and strict Swift 6 source-level
+runtime controls, with zero compiler warnings. Fixed integrated target, fresh
+tagged runtime build, and actual CI green remain pending root verification.
 The existing warning and reveal-action catalog keys have English and Japanese
 translations; no user-facing strings change in this regression slice.
