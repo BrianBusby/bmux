@@ -555,3 +555,6 @@ local_caveats:
 
   - id: prompt_session_link_completion_fixture_verification
     status: open
+
+  - id: pending_diff_ordering_fixture_verification
+    status: open

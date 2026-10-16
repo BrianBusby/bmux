@@ -5969,3 +5969,50 @@ precondition, so that attempt is not counted as test evidence. The importer is
 compiled from its existing CLI/test-target sources and uses only local Git reads
 under the isolated environment. Whole app-host/macOS 15 verification remains
 pending; these controls do not establish the historical scheduler cause.
+
+### Pending diff viewer ordering fixture
+
+T shard 2 failed only the combined selected-page redirect and cached-alternate
+start predicate at legacy line 1716. Initial pending-page, open-before-Git and
+final CLI/patch assertions did not fail. The log does not identify which part of
+the combined predicate missed its five-second bound. Historical unchanged local
+runs both passed and failed; supplying a stable `origin/main` avoided unrelated
+missing-base searches, without establishing the historical CI cause.
+
+The exact case moves to Swift Testing with an owned Git/gh environment. The gh
+stub returns no PR without external access; Git advertises `origin/main` and
+preserves the original selected patch and empty cached alternate. FIFO readiness
+signals replace polling. The cached-start signal is emitted after the real CLI
+writes the selected redirect; the fixture reads that redirect while cached Git
+is still held. All pending payload, title, markup, release ordering, live CLI,
+exit/output and final patch assertions remain.
+
+The three CLI phases each retain their original five-second failure deadline.
+The existing joined process helper adds a fifteen-second outer ceiling, derived
+from those phases; this does not replace or extend any phase. Socket capture
+joins its final drain and checks the original five-second completion bound.
+The fake Git gate has a new five-second failure exit using Bash's built-in read.
+Native child and HTTP-server cleanup each have a separate five-second failure
+bound, so this is not a claim that the total test budget is unchanged.
+
+The process and socket use the maintained joined helpers. Error paths release
+both Git gates before canceling and joining the direct CLI. Announced Git PIDs
+are observed through native exit sources; the HTTP server is checked against
+this fixture's manifest root and executable before termination and native exit
+observation. Cleanup runs in a retained task independent of caller cancellation,
+then joins before directory removal; errors are visible. This is not a general
+descendant-join guarantee: a fast Git child not yet announced when the CLI exits
+can retain a short startup tail, and cancellation before HTTP manifest publication
+still has the inherited server-admission gap. The controls cover the observed
+open/phase boundaries. The bounded Git gate eliminates the old unbounded wait;
+no PID admission framework or production process policy is introduced.
+
+Native build 797 passes the exact case with strict Swift 6 compilation. Temporary
+omit-release, cancellation and early-failure controls retain their errors and
+remove their owned roots after joined cleanup. The first candidate trapped in a
+new DispatchSource callback that inherited MainActor isolation; explicit
+Sendable native callbacks corrected that fixture defect. Its owned viewer was
+independently identity-checked, stopped and observed exited before root removal.
+That attempt is not evidence of the historical CI failure. Full integrated
+app-host/macOS 15 execution remains pending. No production or user-facing string
+changes are included.

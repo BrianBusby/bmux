@@ -6544,3 +6544,8 @@ caveats:
     title: Identity-only session linkage fixture joins hook persistence within its original one-second bound and releases SQLite before cleanup; native build 797 passes, integrated macOS 15 verification remains pending
     status: open
     owner: bmux
+
+  - id: pending_diff_ordering_fixture_verification
+    title: Pending diff ordering fixture owns Git and gh setup, retains original five-second phase assertions and joins CLI/socket/native viewer cleanup; native build 797 passes while macOS 15 execution and pre-announcement child tails remain explicit limits
+    status: open
+    owner: bmux

@@ -274,6 +274,7 @@ Regenerate with: ./scripts/project-docs generate
 | Canvas split shortcut fixtures synchronize existing panel descriptors before geometry assertions; owned native controls pass, original app-host window verification remains pending (`canvas_split_shortcut_initial_panes_verification`) | Bmux | open |  |
 | Same-path Find scope reset uses real presentation query submission with original reset assertions; build 799 passes, fixed-head macOS 15 app-host coverage remains pending (`find_workspace_scope_fixture_verification`) | Bmux | open |  |
 | Identity-only session linkage fixture joins hook persistence within its original one-second bound and releases SQLite before cleanup; native build 797 passes, integrated macOS 15 verification remains pending (`prompt_session_link_completion_fixture_verification`) | Bmux | open |  |
+| Pending diff ordering fixture owns Git and gh setup, retains original five-second phase assertions and joins CLI/socket/native viewer cleanup; native build 797 passes while macOS 15 execution and pre-announcement child tails remain explicit limits (`pending_diff_ordering_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
