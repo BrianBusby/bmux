@@ -7646,3 +7646,44 @@ strict-Swift-6 helper limitations; configured Swift 5 compiles that full source.
 No desktop presentation, app build, or user settings changes occur. Actual
 macOS 15 integrated verification remains open in
 `minimal_mode_failure_phase_diagnostics_verification`.
+
+
+### Markdown fixture callback-arrival ownership
+
+Final review of the Z7 scroll-frame fixture found that its existing operation
+still raced async callback consumption against the deadline task. An owned,
+nonpresented whole-fixture control supplied a timely callback but held its
+consumer; the old operation returned `deadlineExceeded`. This is a controlled
+boundary counterexample, not attribution of the historical scroll drift.
+
+The existing operation now records the first native callback result and arrival
+time in a buffered stream. Its timer publishes on the same actor; the parent
+consumes directly, cancels and joins the timer, then checks cancellation before
+returning a result. A late callback still fails even if timer delivery was late.
+Callback errors and unexpected clock errors propagate. All JavaScript, native
+callback callers, registration IDs, cleanup and deadline-start sites remain
+unchanged. No rendering, image or navigation deadline is extended.
+
+Temporary whole-fixture controls cover timely callbacks, delayed consumers,
+late and missing callbacks, cancellation, buffered-success cancellation and
+callback errors. All seven pass in configured Swift 5 and strict Swift 6 with
+zero compiler warnings. Native nonpresented WebKit controls verify registry
+cleanup after success, observation error, timeout and registered cancellation.
+An initial temporary 50ms DOM control expired before registration; the timeout
+cleanup control therefore uses the fixture's existing 3s image deadline to
+exercise an actual registered observer. That change is confined to the probe.
+The 50ms native operation controls retain their original bound.
+
+One harness cleanup encountered a late WebKit cache write after its process
+exited. The exact owned root was removed; the temporary runner now retries only
+that root's `ENOTEMPTY` cleanup within 3s and reports failure if it cannot remove
+it. This is not a claim that WebKit XPC processes are joined. Fixture release,
+cleared native registrations and queued DOM cleanup are checked separately.
+
+The complete fixture and its rendering, image-consent and Mermaid callers
+compile in Swift 5 and strict Swift 6 without warnings. All displayed-window
+behavior remains unchanged and was not executed while the desktop was locked.
+Actual displayed scroll-frame completion remains an unlocked-desktop or CI
+gate. Source adaptations, controls and limits are recorded in
+`/tmp/markdown-operation-arrival-proof/handoff.md`. Root owns integrated
+full-target and CI verification; no production or localization surface changed.
