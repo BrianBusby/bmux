@@ -6589,7 +6589,11 @@ assertions, the 2.85-second timer race and structured cleanup remain unchanged.
 These are consumer and final-state diagnostics. The existing Void event stream
 does not carry producer timestamps, and a false wait result still means deadline
 or stream closure; it is not relabeled as a proven timer firing. Timer tasks are
-not instrumented with extra actor hops. Source review and focused strict Swift 6
-compilation cover the diagnostic edits; no visible-window native execution was
-performed for this change. Root owns full target compilation and actual app-host
-execution, including whether the failure messages arrive on macOS 15.
+not instrumented with extra actor hops. The initial strict Swift 6-only check missed a configured Swift 5 parser
+incompatibility in the chord diagnostic closure, which the integrated full-target
+build caught. The closure now puts MainActor on its explicit variable type,
+matching the existing fixture pattern. Focused compilation of both changed files
+and their maintained dependencies passes with warnings-as-errors in both Swift 5
+and strict Swift 6. No visible-window native execution was performed for this
+change. Root owns the corrected full-target build and actual app-host execution,
+including whether the failure messages arrive on macOS 15.

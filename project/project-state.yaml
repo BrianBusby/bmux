@@ -6614,6 +6614,6 @@ caveats:
     owner: bmux
 
   - id: inspector_close_failure_diagnostics
-    title: Inspector close failures include bounded wait-state and chord-routing snapshots without changing actions or deadlines; actual macOS 15 cause remains unresolved
+    title: Inspector close failure diagnostics preserve actions and deadlines; explicit closure typing passes Swift 5 and 6 focused compilation after the integrated parser failure, corrected full-target build and actual macOS 15 cause remain pending
     status: open
     owner: bmux
