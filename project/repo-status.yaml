@@ -642,3 +642,6 @@ local_caveats:
 
   - id: markdown_scroll_frame_completion_verification
     status: open
+
+  - id: workspace_focus_delivery_arrival_verification
+    status: open
