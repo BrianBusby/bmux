@@ -6612,3 +6612,8 @@ caveats:
     title: Search-overlay mouse fixtures own a real focused workspace and native mount delivery with a new three-second runtime prerequisite and original one-second mount cap; build 799 controls pass, integrated macOS 15 verification remains pending
     status: open
     owner: bmux
+
+  - id: inspector_close_failure_diagnostics
+    title: Inspector close failures include bounded wait-state and chord-routing snapshots without changing actions or deadlines; actual macOS 15 cause remains unresolved
+    status: open
+    owner: bmux

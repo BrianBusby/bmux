@@ -42,6 +42,13 @@ extension BrowserInspectorWindowOwnershipTests {
         inspector.setFrontendWebView(frontendWebView)
         defer { fixture.closeWindow(inspectorWindow) }
 
+        var routingSnapshots: [String] = []
+        let recordRouting = { @MainActor (phase: String) in
+            routingSnapshots.append("phase=\(phase) active=\(NSApp.isActive) " +
+                "nativeKey=\(inspectorWindow.isKeyWindow) " +
+                "routingMatches=\(AppDelegate.shared?.shortcutRoutingKeyWindow === inspectorWindow) " +
+                "visible=\(inspectorWindow.isVisible) preferred=\(browserPanel.preferredDeveloperToolsVisible)")
+        }
         let observation = browserPanel.debugDeveloperToolsLifecycleChanges()
         defer { browserPanel.debugRemoveDeveloperToolsLifecycleObserver(observation.id) }
         try main.withRoutingWindow(inspectorWindow) {
@@ -76,12 +83,15 @@ extension BrowserInspectorWindowOwnershipTests {
             ))
 
             try main.withTemporaryShortcut(chordedCloseTab) {
+                recordRouting("before_prefix")
                 NSApp.sendEvent(prefixEvent)
+                recordRouting("after_prefix")
 
                 #expect(inspectorWindow.isVisible)
                 #expect(workspace.browserPanel(for: browserPanelId) != nil, "Close Tab chord prefix must not close the browser panel")
 
                 NSApp.sendEvent(suffixEvent)
+                recordRouting("after_suffix")
 
             }
         }
@@ -91,9 +101,10 @@ extension BrowserInspectorWindowOwnershipTests {
         }
 
         #expect(inspector.closeCount == 0, "Chorded Close Tab in a detached Web Inspector must not call _inspector.close on the inspected page")
-        #expect(!(inspectorWindow.isVisible))
+        #expect(!(inspectorWindow.isVisible), "inspector_chord_close_failed \(routingSnapshots.joined(separator: ";"))")
         #expect(workspace.browserPanel(for: browserPanelId) != nil, "Chorded Close Tab in a detached Web Inspector must not fall through to bmux close-tab routing")
-        #expect(browserPanel.debugDeveloperToolsStateSummary().contains("pref=0"))
+        #expect(browserPanel.debugDeveloperToolsStateSummary().contains("pref=0"),
+            "inspector_chord_preference_failed \(routingSnapshots.joined(separator: ";"))")
     }
 
     @Test
