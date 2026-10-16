@@ -5973,6 +5973,33 @@ compiled from its existing CLI/test-target sources and uses only local Git reads
 under the isolated environment. Whole app-host/macOS 15 verification remains
 pending; these controls do not establish the historical scheduler cause.
 
+AD shard 7 later failed only this case with generic `timedOut` (1.662 seconds).
+The log does not identify whether persistence, projection or result consumption
+was late. A controlled build-801 run completed the real factual projection at
+7.88ms, then held only result delivery; the old task-group timer won at 1.025s.
+This proves consumer-scheduling sensitivity, not the historical AD cause.
+
+The same-file fixture now publishes the complete factual projection and its
+arrival timestamp into a first-result buffer from the captured producer. A
+background-work completion alone cannot establish success. The original absolute
+one-second deadline includes the projection read; late or missing results still
+fail. Timer and producer cancellation, runtime stop and captured producer join
+complete before result interpretation or SQLite cleanup. Parent cancellation is
+authoritative even with buffered success. Failure-only diagnostics identify the
+background/projection/completed phase and elapsed arrival without session or
+path payloads. No production or shared-observer API changed.
+
+The exact case and importer compile warning-free in configured Swift 5 and strict
+Swift 6 against immutable build 801. Controlled timely-result/delayed-consumer,
+missing/late result, cancellation before capture and before/after buffering, and
+unexpected-clock-error checks pass. Omitting the hook still fails the original
+availability assertion. All controls observe weak runtime/client release and
+zero owned SQLite descriptors before deletion. The first strict Swift 6 attempt
+correctly required explicit MainActor isolation on the private diagnostic phase
+carrier; it was corrected without suppression. The desktop was not presented,
+and actual integrated macOS 15 verification remains pending. Evidence:
+`/tmp/ad-prompt-completion-proof/handoff.md`.
+
 ### Codex prompt cache and fallback launch fixture
 
 The exact prompt-cache case now supplies the missing-path condition required by

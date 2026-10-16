@@ -124,45 +124,98 @@ struct PromptSessionLinkCompletionTests {
         stableWorkspaceID: UUID,
         timeout: Duration = .seconds(1)
     ) async throws -> AgentSessionFactualProjectionReadResult {
-        let deadline = ContinuousClock.now.advanced(by: timeout)
+        let start = ContinuousClock.now
+        let deadline = start.advanced(by: timeout)
+        let progress = CompletionProgress()
+        let (results, signal) = AsyncStream<Completion>.makeStream(bufferingPolicy: .bufferingOldest(1))
+        defer { signal.finish() }
         var ownedProducer: Task<Void, Never>?
         await withCheckedContinuation { entered in
             ownedProducer = Task { @MainActor in
                 // Same-actor entry captures task handles before timeout cleanup can clear them.
                 entered.resume()
                 await runtime.waitForBackgroundTasks()
+                guard !Task.isCancelled else { return }
+                progress.phase = "projection"
+                let projection = await runtime.agentSessionFactualProjection(stableWorkspaceID: stableWorkspaceID)
+                progress.phase = "completed"
+                // Record the full result before async consumption can race the deadline.
+                signal.yield(.projection(projection, .now))
+                signal.finish()
             }
         }
         let producer = try #require(ownedProducer)
-        do {
-            return try await withThrowingTaskGroup(of: AgentSessionFactualProjectionReadResult.self) { group in
-                defer { group.cancelAll() }
-                group.addTask {
-                    await producer.value
-                    try Task.checkCancellation()
-                    return await runtime.agentSessionFactualProjection(stableWorkspaceID: stableWorkspaceID)
-                }
-                group.addTask { try await expire(runtime: runtime, deadline: deadline) }
-                return try #require(await group.next())
+        let completion = await withTaskGroup(of: Void.self) { group in
+            defer { group.cancelAll() }
+            group.addTask {
+                await expire(
+                    runtime: runtime, producer: producer, progress: progress,
+                    start: start, deadline: deadline, signal: signal
+                )
             }
-        } catch {
-            runtime.stop()
-            await producer.value
+            var iterator = results.makeAsyncIterator()
+            return await iterator.next()
+        }
+        producer.cancel()
+        runtime.stop()
+        await producer.value
+        try Task.checkCancellation()
+        guard let completion else { throw CancellationError() }
+        switch completion {
+        case let .projection(projection, arrival):
+            guard arrival < deadline else {
+                throw CompletionFailure.timedOut(phase: "projection", arrival: start.duration(to: arrival))
+            }
+            return projection
+        case .failed(let error):
             throw error
         }
     }
 
     private func expire(
         runtime: WorkProvenanceRuntime,
-        deadline: ContinuousClock.Instant
-    ) async throws -> AgentSessionFactualProjectionReadResult {
-        // Cancel producers on timeout or parent cancellation; the captured waiter still joins them.
-        defer { runtime.stop() }
-        try await ContinuousClock().sleep(until: deadline)
-        throw CompletionFailure.timedOut
+        producer: Task<Void, Never>,
+        progress: CompletionProgress,
+        start: ContinuousClock.Instant,
+        deadline: ContinuousClock.Instant,
+        signal: AsyncStream<Completion>.Continuation
+    ) async {
+        // Stop cancels runtime work; the captured producer is still joined by the caller.
+        defer { producer.cancel(); runtime.stop() }
+        do {
+            // The original absolute one-second failure bound includes the full projection read.
+            try await ContinuousClock().sleep(until: deadline)
+            signal.yield(.failed(CompletionFailure.timedOut(
+                phase: progress.phase, arrival: start.duration(to: .now)
+            )))
+        } catch is CancellationError {
+            return
+        } catch {
+            signal.yield(.failed(error))
+        }
+        signal.finish()
     }
 
-    private enum CompletionFailure: Error { case timedOut }
+    @MainActor
+    private final class CompletionProgress {
+        var phase = "background"
+    }
+
+    private enum Completion: Sendable {
+        case projection(AgentSessionFactualProjectionReadResult, ContinuousClock.Instant)
+        case failed(any Error)
+    }
+
+    private enum CompletionFailure: Error, CustomStringConvertible {
+        case timedOut(phase: String, arrival: Duration)
+
+        var description: String {
+            switch self {
+            case let .timedOut(phase, arrival):
+                "event=prompt_session_link_timeout phase=\(phase) arrival=\(arrival)"
+            }
+        }
+    }
 
     private static func codexPromptTranscriptLines(
         sessionID: String,
