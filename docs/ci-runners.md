@@ -7201,6 +7201,29 @@ This first staged commit intentionally retains the product invalidation for red
 coverage. The follow-up isolates the inset observation at the existing leaf
 boundary. Exact new probe execution, fresh tagged production build, complete test
 target, and macOS 15 CI remain pending. No product-facing strings changed.
+
+The separate production correction moves the four inset AppStorage properties
+into `WorkspaceTitlebarInsetChangeObserver`, following the existing mode-observer
+leaf pattern. It publishes the same clamped value snapshot; an equality guard
+prevents unrelated defaults notifications from writing root state. The existing
+titlebar apply and traffic-light synchronization callbacks remain unchanged.
+The constructor seeds the snapshot from its explicit defaults store before the
+first render, and the observer reads that same store. Production callers retain
+`.standard`; the owned fixture supplies its existing suite. This avoids a default
+value frame before appearance and avoids SwiftUI's private defaultAppStorage
+lookup API. There is no global cache, timer, navigation or output-policy change.
+
+A temporary harness compiling the actual observer against build 799 passed the
+mode-write control (0.089 seconds) and nondefault first-render inset91 control
+(0.095 seconds). Changing the real inset72→80 reevaluated the parent once and
+failed the noninvalidation negative (0.082 seconds). The observer typechecks in
+configured Swift5 and strict Swift6 with warnings as errors. These leaf controls
+do not claim the complete modified root passes: root-owned fresh tagged build,
+exact six-oracle red/green execution, complete target and macOS15 CI remain gates.
+The full existing visibility container also retains five strict6 actor-isolation
+errors in untouched synchronous static-helper tests; its configured Swift5 check
+passes. No suppression or unrelated migration is included.
+
 ### Workspace terminal focus recovery completion
 
 Y (`ff3e6e5ed4620ca676bf3198fd26ff870071c263`) shard 7 recorded ten

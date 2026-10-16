@@ -871,10 +871,8 @@ struct ContentView: View {
     @AppStorage(TitlebarControlsStyle.storageKey) private var titlebarControlsStyleRawValue = TitlebarControlsStyle.defaultRawValue
     @AppStorage(RightSidebarWidthSettings.maxWidthKey) private var rightSidebarMaxWidthSetting = RightSidebarWidthSettings.noOverrideValue
     @AppStorage(SessionPersistencePolicy.sidebarMinimumWidthKey) private var sidebarMinimumWidthSetting = SessionPersistencePolicy.defaultMinimumSidebarWidth
-    @AppStorage(MinimalModeTitlebarDebugSettings.leftControlsLeadingInsetKey) private var titlebarLeftControlsLeadingInset = MinimalModeTitlebarDebugSettings.defaultLeftControlsLeadingInset
-    @AppStorage(MinimalModeTitlebarDebugSettings.leftControlsTopInsetKey) private var titlebarLeftControlsTopInset = MinimalModeTitlebarDebugSettings.defaultLeftControlsTopInset
-    @AppStorage(MinimalModeTitlebarDebugSettings.trafficLightTabBarInsetKey) private var titlebarTrafficLightTabBarInset = MinimalModeTitlebarDebugSettings.defaultTrafficLightTabBarInset
-    @AppStorage(MinimalModeTitlebarDebugSettings.trafficLightTitlebarLeadingInsetKey) private var titlebarTrafficLightTitlebarLeadingInset = MinimalModeTitlebarDebugSettings.defaultTrafficLightTitlebarLeadingInset
+    private let titlebarDefaults: UserDefaults
+    @State private var titlebarDebugChromeSnapshot: MinimalModeTitlebarDebugSnapshot
     @AppStorage(PaneChromeSettings.activePaneBorderColorKey) private var activePaneBorderColorHex = PaneChromeSettings.defaultColorHex
     @LiveSetting(\.shortcuts.showModifierHoldHints) private var showModifierHoldHints
     @LiveSetting(\.customSidebars.renderer) private var customSidebarRenderer
@@ -977,8 +975,11 @@ struct ContentView: View {
     init(
         updateViewModel: UpdateStateModel,
         windowId: UUID,
-        initialPrimaryTab: AgentSessionFactualProjectionMode = .chat
+        initialPrimaryTab: AgentSessionFactualProjectionMode = .chat,
+        titlebarDefaults: UserDefaults = .standard
     ) {
+        self.titlebarDefaults = titlebarDefaults
+        _titlebarDebugChromeSnapshot = State(initialValue: MinimalModeTitlebarDebugSettings.snapshot(defaults: titlebarDefaults))
         self.updateViewModel = updateViewModel
         self.windowId = windowId
         self.initialPrimaryTab = initialPrimaryTab
@@ -2035,27 +2036,6 @@ struct ContentView: View {
         ).width
     }
 
-    private var titlebarDebugChromeSnapshot: MinimalModeTitlebarDebugSnapshot {
-        MinimalModeTitlebarDebugSnapshot(
-            leftControlsLeadingInset: MinimalModeTitlebarDebugSettings.clamped(
-                titlebarLeftControlsLeadingInset,
-                range: MinimalModeTitlebarDebugSettings.horizontalInsetRange
-            ),
-            leftControlsTopInset: MinimalModeTitlebarDebugSettings.clamped(
-                titlebarLeftControlsTopInset,
-                range: MinimalModeTitlebarDebugSettings.topInsetRange
-            ),
-            trafficLightTabBarLeadingInset: MinimalModeTitlebarDebugSettings.clamped(
-                titlebarTrafficLightTabBarInset,
-                range: MinimalModeTitlebarDebugSettings.horizontalInsetRange
-            ),
-            trafficLightTitlebarLeadingInset: MinimalModeTitlebarDebugSettings.clamped(
-                titlebarTrafficLightTitlebarLeadingInset,
-                range: MinimalModeTitlebarDebugSettings.horizontalInsetRange
-            )
-        )
-    }
-
     private func customTitlebar(appearance: WindowAppearanceSnapshot) -> some View {
         let titlebarContentHeight = max(1, WindowChromeMetrics.appTitlebarHeight - 2)
         let leadingPadding = Self.customTitlebarLeadingPadding(
@@ -2571,6 +2551,12 @@ struct ContentView: View {
                 .background(Color.clear)
                 .background(
                     MinimalModeTitlebarEventSurfaceLayer(isFullScreen: isFullScreen)
+                )
+                .background(
+                    WorkspaceTitlebarInsetChangeObserver(defaults: titlebarDefaults) { snapshot in
+                        guard titlebarDebugChromeSnapshot != snapshot else { return }
+                        titlebarDebugChromeSnapshot = snapshot
+                    }
                 )
                 .background(
                     WorkspacePresentationModeChangeObserver { isMinimalMode in
