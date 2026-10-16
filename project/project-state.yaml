@@ -6627,3 +6627,8 @@ caveats:
     title: Inspector close failure diagnostics preserve actions and deadlines; explicit closure typing passes Swift 5 and 6 focused compilation after the integrated parser failure, corrected full-target build and actual macOS 15 cause remain pending
     status: open
     owner: bmux
+
+  - id: app_host_cold_build_deadline_boundary
+    title: Cold app-host compilation precedes the unchanged 900-second native test deadline with shared build arguments and rebuild on package retry; owned executable controls pass, actual macOS CI build and test completion remain pending
+    status: open
+    owner: bmux

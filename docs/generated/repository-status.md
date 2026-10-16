@@ -345,3 +345,4 @@ Repository: `BrianBusby/bmux`
 | `terminal_search_overlay_mouse_fixture_verification` | open |
 | `welcome_shortcut_delivery_diagnostic_verification` | open |
 | `command_palette_expired_escape_diagnostics` | open |
+| `app_host_cold_build_deadline_boundary` | open |

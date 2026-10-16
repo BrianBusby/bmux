@@ -594,3 +594,6 @@ local_caveats:
 
   - id: command_palette_expired_escape_diagnostics
     status: open
+
+  - id: app_host_cold_build_deadline_boundary
+    status: open
