@@ -504,3 +504,6 @@ local_caveats:
 
   - id: grok_sibling_status_fixture_verification
     status: open
+
+  - id: option_digit_terminal_focus_fixture_verification
+    status: open
