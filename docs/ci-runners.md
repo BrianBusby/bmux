@@ -5463,3 +5463,32 @@ clear/status/notification writes, with no response to idless feed messages.
 Every owned producer and server was joined before root removal, including the
 controlled timeout paths. Local macOS 26 CLI evidence does not substitute for
 integrated macOS 15 app-host coverage, which remains pending.
+
+### Candidate T integrated local verification
+
+The combined source at `f251d6324aff5630e77fab16aafea0266ef28044` passes
+`bmux-unit` build-for-testing with the isolated maintenance test bundle and
+derived-data directory. This supersedes the earlier pending integrated
+compilation notes for the chrome, geometry, overlay, Markdown, notification,
+Git snapshot and Grok fixture slices; their macOS 15 app-host results remain
+pending. All 609 test files pass the wiring check. Strict test determinism,
+PBX normalization, the configured speculative-main Swift length budget and
+authenticated Project Truth CI pass. All 21 approved source heads remain
+ancestors. Production sources, CLI, packages, resources and dependency pointers
+are unchanged from the separately built and natively checked build 796.
+
+The complete compile emits existing warnings; it is not warning-free. Its
+16 distinct warning messages also occur in prior complete integration logs.
+An origin audit maps all 189 physical warning sites to unchanged main-branch
+statements or the exact relocated XCTest bundle helper. No new warning cause
+was found; existing actor-isolation and import warnings remain risks, and a
+same-toolchain baseline rebuild was not repeated. The latest focused fixture
+sources compile with strict Swift 6 and no warnings.
+The old S run's first, second and fourth native shards failed; Release and
+UI/typing checks passed. Its third shard is canceled. The terminal log records the known two legacy
+fixture failures, then 457 Swift Testing starts with no completions. The
+300-second idle timeout and 900-second broad deadline both fired; termination
+or pipeline completion remained unresolved until cancellation. That shard has
+no passing verdict, and the cause of that completion gap is not established. The final published T head still requires its own
+actual CI and review gates before merge; local compilation and controlled
+native probes do not replace those gates.
