@@ -7758,3 +7758,43 @@ configured Swift 5/strict Swift 6 compilation and cleanup are recorded in
 `/tmp/ad-overlay-mount-proof/handoff.md`. The locked desktop prevents presented
 Escape verification; fixed-head app-host CI remains required. No localization
 surface changes.
+
+
+### AD deferred terminal search-field attachment and focus
+
+AD native shard 3 failed the legacy deferred-search case while synchronously
+polling the RunLoop for its field. An owned build 801 control reproduced that
+mount boundary; following the actual queued attach with the existing native
+FIFO observer and one hosting layout pass exposed the field promptly. The
+exact case now uses Swift Testing and retains the original field and automatic
+field-editor ownership assertions. No direct focus request is added.
+
+The first one-second bound starts after synchronous `setSearchOverlay`, matching
+the original polling helper. The second one-second bound uses the duration-configured
+`TerminalSearchFieldFocusObservation` value to observe native
+`NSWindow.firstResponder` KVO, subscribed before checking current ownership.
+The original predicate is preserved: the field itself, or a field editor whose
+delegate is that field. Matching native arrival is timestamped synchronously
+and buffered before async consumption; native arrival and timer publication
+are serialized by the same MainActor owner. Cancellation remains authoritative and
+the failure timer is canceled and joined. The token is invalidated on every
+return before owned window/context/panel teardown. This token seam is the
+architecture allowance for AppKit KVO-only observation, not a new runtime hook.
+The owner also supports the separate terminal-focus fixture's initial search-field
+prerequisite, keeping both callers on the same automatic-focus contract.
+
+The fixture retains the original logical-key window and real
+`makeKeyAndOrderFront` in CI, but owns a manual-IO terminal, its workspace,
+registered context and retained window. It requires the app-host delegate
+instead of replacing shared delegate/manager state across suspension. Local
+controls substitute only nonactivating `orderFrontRegardless`; they neither
+activate the app nor explicitly focus a responder. Automatic focus succeeds
+with `NSApp.keyWindow` still different and the app inactive. A temporary editing
+notification probe incorrectly timed out despite actual field-editor ownership;
+responder observation corrects that diagnostic seam. This does not establish
+the historical AD scheduling cause or prove the real presented macOS 15 case.
+
+Configured Swift 5/strict Swift 6 compilation, native omission, delayed-consumer
+and cancellation controls, exact untouched legacy bytes and cleanup evidence
+are recorded in `/tmp/ad-search-field-proof/handoff.md`. Root owns integrated
+full-target and CI verification. No production or localization surface changes.

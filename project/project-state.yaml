@@ -6548,6 +6548,11 @@ caveats:
     status: open
     owner: bmux
 
+  - id: deferred_terminal_search_focus_fixture_verification
+    title: Deferred terminal search attachment uses native FIFO and actual responder observation with original one-second phase bounds; owned build 801 controls pass, original presented macOS 15 composition remains pending
+    status: open
+    owner: bmux
+
   - id: prompt_session_link_completion_fixture_verification
     title: Identity-only session linkage fixture records full projection completion before async consumption under its original one-second bound and joins before SQLite cleanup; build 801 controls pass, historical AD7 phase attribution and integrated macOS 15 verification remain pending
     status: open
