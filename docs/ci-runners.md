@@ -7575,8 +7575,9 @@ marker at 0.042ms, but a deliberately held consumer let the timer win at
 60.016ms. This demonstrates the same observation defect as the focus helper;
 it does not reproduce historical Z1 scheduling or prove a product mount bug.
 
-`NativeMainQueueDelivery` now owns this single test-only FIFO boundary for both
-consumers. It captures the absolute deadline before the synchronous action,
+`NativeMainQueueDelivery` owns this single test-only FIFO boundary as a value
+configured with its immutable duration. Both consumers construct a 50ms instance.
+It captures the absolute deadline before the synchronous action,
 then enqueues the marker after the action's native mutation. First-event
 buffering preserves a timely producer despite late consumption; actual late
 producer timestamps and missing producers still fail. The timer is canceled
@@ -7609,6 +7610,21 @@ Integrated full-target compilation and actual CI remain root-owned gates.
 The bounded proof and exact source provenance are recorded in
 `/tmp/z1-overlay-delivery-proof/handoff.md`. No production or localization surface
 changes are included.
+
+A follow-up corrected the original no-case namespace enum, which violated
+`bmux-architecture` despite the earlier passing controls. The owner is now a
+configured struct with instance delivery and private instance helpers. The five
+call sites retain their actions, caller diagnostics and 50ms duration. Native
+`DispatchQueue.main.async` is retained specifically to observe FIFO ordering
+after an AppKit mutation already enqueued by the action; an unstructured Task
+would not preserve that queue ordering. This is not a settling delay.
+
+The configured owner passes the same two exact-source controls and six temporary
+scheduling/cancellation controls in both Swift 5 and strict Swift 6, with zero
+warnings. All three affected files and seven unchanged focus cases compile in
+both modes against frozen build 801. No presented case was executed; the locked
+desktop and integrated macOS 15 verification gap remain. Follow-up evidence is
+in `/tmp/native-main-queue-value-proof/handoff.md`.
 
 ### Minimal-mode observation decision ownership
 

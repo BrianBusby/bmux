@@ -3,9 +3,14 @@ import Foundation
 /// Observes one native main-queue FIFO delivery, preserving its arrival across delayed async consumption.
 /// This does not wait for work that the native mutation schedules later.
 @MainActor
-enum NativeMainQueueDelivery {
-    static func deliver(
-        within duration: Duration,
+struct NativeMainQueueDelivery {
+    private let duration: Duration
+
+    init(duration: Duration) {
+        self.duration = duration
+    }
+
+    func deliver(
         phase: String = #function,
         line: UInt = #line,
         action: @MainActor () -> Void = {}
@@ -20,7 +25,7 @@ enum NativeMainQueueDelivery {
         DispatchQueue.main.async { signal.yield(.producer(.now)); signal.finish() }
         let delivery = await withTaskGroup(of: Void.self) { group in
             defer { group.cancelAll() }
-            group.addTask { await Self.expireDelivery(at: deadline, signal: signal) }
+            group.addTask { await expireDelivery(at: deadline, signal: signal) }
             var iterator = events.makeAsyncIterator()
             return await iterator.next()
         }
@@ -41,13 +46,13 @@ enum NativeMainQueueDelivery {
         }
         throw Failure.deliveryTimedOut(
             phase: phase, line: line, source: source,
-            arrivalMilliseconds: Self.milliseconds(start.duration(to: arrival)),
-            observedMilliseconds: Self.milliseconds(start.duration(to: .now)),
-            deadlineMilliseconds: Self.milliseconds(duration)
+            arrivalMilliseconds: milliseconds(start.duration(to: arrival)),
+            observedMilliseconds: milliseconds(start.duration(to: .now)),
+            deadlineMilliseconds: milliseconds(duration)
         )
     }
 
-    private static func expireDelivery(
+    private func expireDelivery(
         at deadline: ContinuousClock.Instant,
         signal: AsyncStream<Delivery>.Continuation
     ) async {
@@ -64,7 +69,7 @@ enum NativeMainQueueDelivery {
         signal.finish()
     }
 
-    private static func milliseconds(_ duration: Duration) -> Double {
+    private func milliseconds(_ duration: Duration) -> Double {
         Double(duration.components.seconds) * 1000 + Double(duration.components.attoseconds) / 1e15
     }
 
