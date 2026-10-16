@@ -606,3 +606,6 @@ local_caveats:
 
   - id: notification_burst_native_completion_verification
     status: open
+
+  - id: editable_terminal_undo_key_context_verification
+    status: open
