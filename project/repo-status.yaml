@@ -582,3 +582,6 @@ local_caveats:
 
   - id: fork_live_process_scope_fixture_verification
     status: open
+
+  - id: terminal_search_overlay_mouse_fixture_verification
+    status: open

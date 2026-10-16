@@ -6602,3 +6602,8 @@ caveats:
     title: Fork cache refresh fixture supplies matching live workspace and surface environment identities; missing and wrong scope controls fail while the corrected native case passes, fixed-head macOS 15 verification remains pending
     status: open
     owner: bmux
+
+  - id: terminal_search_overlay_mouse_fixture_verification
+    title: Search-overlay mouse fixtures own a real focused workspace and native mount delivery with a new three-second runtime prerequisite and original one-second mount cap; build 799 controls pass, integrated macOS 15 verification remains pending
+    status: open
+    owner: bmux
