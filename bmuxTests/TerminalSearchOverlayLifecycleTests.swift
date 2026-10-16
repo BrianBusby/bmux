@@ -31,7 +31,7 @@ struct TerminalSearchOverlayLifecycleTests {
 
         let searchState = TerminalSurface.SearchState(needle: "")
         surface.searchState = searchState
-        try await deliverQueuedMutation(within: .milliseconds(50)) {
+        try await NativeMainQueueDelivery.deliver(within: .milliseconds(50)) {
             hostedView.setSearchOverlay(searchState: searchState)
         }
         hostedView.layoutSubtreeIfNeeded()
@@ -43,7 +43,7 @@ struct TerminalSearchOverlayLifecycleTests {
         try #require(window.firstResponder === searchField || window.firstResponder === editor)
 
         let escapeKeyUpCount = try dispatchEscape(window: window)
-        try await deliverQueuedMutation(within: .milliseconds(50)) {}
+        try await NativeMainQueueDelivery.deliver(within: .milliseconds(50)) {}
         #expect(surface.searchState == nil, "Escape should dismiss find overlay when search text is empty")
         #expect(escapeKeyUpCount == 0, "Escape used to dismiss find must not reach the terminal key-up path")
     }
@@ -62,7 +62,7 @@ struct TerminalSearchOverlayLifecycleTests {
         contentView.addSubview(anchorA)
         contentView.addSubview(anchorB)
         let hostedView = surface.hostedView
-        try await deliverQueuedMutation(within: .milliseconds(50)) {
+        try await NativeMainQueueDelivery.deliver(within: .milliseconds(50)) {
             hostedView.setSearchOverlay(searchState: TerminalSurface.SearchState(needle: "split"))
         }
         #expect(hostedView.debugHasSearchOverlay())
@@ -84,7 +84,7 @@ struct TerminalSearchOverlayLifecycleTests {
         let anchor = NSView(frame: NSRect(x: 40, y: 40, width: 220, height: 160))
         contentView.addSubview(anchor)
         let hostedView = surface.hostedView
-        try await deliverQueuedMutation(within: .milliseconds(50)) {
+        try await NativeMainQueueDelivery.deliver(within: .milliseconds(50)) {
             hostedView.setSearchOverlay(searchState: TerminalSurface.SearchState(needle: "workspace"))
         }
         #expect(hostedView.debugHasSearchOverlay())
@@ -123,28 +123,6 @@ struct TerminalSearchOverlayLifecycleTests {
         window.contentView = nil
         window.orderOut(nil)
         window.close()
-    }
-
-    private func deliverQueuedMutation(within duration: Duration, action: @MainActor () -> Void) async throws {
-        let deadline = ContinuousClock.now.advanced(by: duration)
-        let (events, signal) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingNewest(1))
-        defer { signal.finish() }
-        action()
-        // The legacy owner enqueues one mutation; this observes its FIFO delivery.
-        DispatchQueue.main.async { signal.yield(()); signal.finish() }
-        try await withThrowingTaskGroup(of: Void.self) { group in
-            defer { group.cancelAll() }
-            group.addTask {
-                for await _ in events { return }
-                throw CancellationError()
-            }
-            group.addTask {
-                // Preserve the original 50ms phase cap without a settling delay.
-                try await ContinuousClock().sleep(until: deadline)
-                throw Failure.deliveryTimedOut
-            }
-            _ = try await group.next()
-        }
     }
 
     private func dispatchEscape(window: NSWindow) throws -> Int {
@@ -187,6 +165,4 @@ struct TerminalSearchOverlayLifecycleTests {
         }
         return nil
     }
-
-    private enum Failure: Error { case deliveryTimedOut }
 }

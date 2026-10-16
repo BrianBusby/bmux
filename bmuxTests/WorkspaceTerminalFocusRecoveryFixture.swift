@@ -86,65 +86,7 @@ final class WorkspaceTerminalFocusRecoveryFixture {
     }
 
     func deliverQueuedFocus(phase: String = #function, line: UInt = #line) async throws {
-        let start = ContinuousClock.now
-        let deadline = start.advanced(by: .milliseconds(50))
-        let (events, signal) = AsyncStream<Delivery>.makeStream(bufferingPolicy: .bufferingOldest(1))
-        defer { signal.finish() }
-        // Preserve producer arrival even if the async consumer resumes after the deadline.
-        DispatchQueue.main.async { signal.yield(.producer(.now)); signal.finish() }
-        let delivery = await withTaskGroup(of: Void.self) { group in
-            defer { group.cancelAll() }
-            group.addTask { await Self.expireDelivery(at: deadline, signal: signal) }
-            var iterator = events.makeAsyncIterator()
-            return await iterator.next()
-        }
-        try Task.checkCancellation()
-        guard let delivery else { throw CancellationError() }
-        let arrival: ContinuousClock.Instant
-        let source: String
-        switch delivery {
-        case .producer(let timestamp):
-            if timestamp < deadline { return }
-            arrival = timestamp
-            source = "producer"
-        case .deadline(let timestamp):
-            arrival = timestamp
-            source = "deadline"
-        case .failed(let error):
-            throw error
-        }
-        throw Failure.focusDeliveryTimedOut(
-            phase: phase, line: line, source: source,
-            arrivalMilliseconds: Self.milliseconds(start.duration(to: arrival)),
-            observedMilliseconds: Self.milliseconds(start.duration(to: .now))
-        )
-    }
-
-    private static func expireDelivery(
-        at deadline: ContinuousClock.Instant,
-        signal: AsyncStream<Delivery>.Continuation
-    ) async {
-        // The original 50ms failure bound is unchanged; the group cancels and joins this timer.
-        do { try await ContinuousClock().sleep(until: deadline) }
-        catch is CancellationError { return }
-        catch {
-            signal.yield(.failed(error))
-            signal.finish()
-            return
-        }
-        // Serialize deadline publication with the native MainActor producer, not its consumer.
-        signal.yield(.deadline(.now))
-        signal.finish()
-    }
-
-    private static func milliseconds(_ duration: Duration) -> Double {
-        Double(duration.components.seconds) * 1000 + Double(duration.components.attoseconds) / 1e15
-    }
-
-    private enum Delivery: Sendable {
-        case producer(ContinuousClock.Instant)
-        case deadline(ContinuousClock.Instant)
-        case failed(any Error)
+        try await NativeMainQueueDelivery.deliver(within: .milliseconds(50), phase: phase, line: line)
     }
 
     private static func makePanel(dock: Bool) -> TerminalPanel {
@@ -168,20 +110,5 @@ final class WorkspaceTerminalFocusRecoveryFixture {
         manager?.tabs.forEach { $0.teardownRemoteConnection(); $0.teardownAllPanels() }
         window.contentView = nil
         window.close()
-    }
-
-    private enum Failure: Error, CustomStringConvertible {
-        case focusDeliveryTimedOut(
-            phase: String, line: UInt, source: String,
-            arrivalMilliseconds: Double, observedMilliseconds: Double
-        )
-
-        var description: String {
-            switch self {
-            case let .focusDeliveryTimedOut(phase, line, source, arrival, observed):
-                return "event=focus_delivery_timeout phase=\(phase) line=\(line) source=\(source) "
-                    + "arrival_ms=\(arrival) observed_ms=\(observed) deadline_ms=50"
-            }
-        }
     }
 }
