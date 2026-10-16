@@ -6797,3 +6797,42 @@ only NSApp delivery, never direct handler calls, and still needs actual app-host
 verification. Root owns full-target compilation
 and actual macOS 15 app-host verification; local positives do not prove the
 historical CI scheduling cause. No runtime behavior or product strings changed.
+
+
+### Codex approval reply observation
+
+Fixed W shard 1 failed the full-access approval contract at its first indexed
+response read: `sentLines[4]` had no result. The complete Codex app-server owner
+snapshots permission decisions synchronously when requests arrive, then schedules
+response writes asynchronously. Another `turn/start` can occupy that output
+position. The permission-response schema and decision owner are unchanged from
+main; no policy correction is made here.
+
+Only the existing case moves into a cohesive in-memory Swift Testing suite. It
+observes the actual `thread/start` write before supplying the thread response,
+then observes all four approval response IDs and requires exactly one matching
+reply for each. It retains the blocked overlapping full-access submission,
+standard command decline and empty permissions, full-access session acceptance
+and enabled network permission. No absolute message-array position or arbitrary
+`Task.yield` is used as completion evidence. The same-actor writer does not
+suspend; a buffered event is published after recording the write.
+
+The original case had no explicit observation deadline. A new one-second absolute
+failure bound follows the maintained input-queue fixture pattern. Structured
+observation/timer children cancel and join; cleanup injects the existing startup
+failure event to release any queued submission continuation and finishes the
+owned stream. No provider process, socket, window, global hook or production seam
+is introduced. Internal app-server response tasks remain the production owner's
+responsibility; the test observes their writer completion rather than claiming
+access to their task handles.
+
+An ordinary build-799 observation passed both positional and keyed oracles; it
+does not reproduce CI scheduling. A controlled injected writer then held approval
+replies until the subsequent turn request was recorded. Position four became
+`turn/start`, reproducing the missing-result failure; after releasing every held
+write, keyed assertions passed with the same permission outcomes. A wrong
+standard approval expectation still failed. This establishes sensitivity to a
+permitted ordering, not the historical CI interleaving. Exact-source configured
+Swift 5 and strict Swift 6 compilation and native controls are recorded in the
+handoff; actual integrated macOS 15 verification remains pending. No permission
+mode, runtime behavior, selector or existing gate is changed.

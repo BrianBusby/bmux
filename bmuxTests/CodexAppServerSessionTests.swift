@@ -868,58 +868,6 @@ struct CodexAppServerSessionTests {
     }
 
     @Test
-    func testCodexApprovalRequestsOnlyAutoApproveForFullAccessMode() async throws {
-        var sentLines: [String] = []
-        let session = CodexAppServerSession(
-            workingDirectory: nil,
-            writeData: { data in
-                sentLines.append(String(decoding: data, as: UTF8.self).trimmingCharacters(in: .newlines))
-            },
-            outputSink: { _, _ in }
-        )
-
-        try await session.start()
-        session.consumeStdout(
-            #"{"id":1,"result":{"userAgent":"codex","codexHome":"/tmp","platformFamily":"unix","platformOs":"macos"}}"#
-                + "\n")
-        await Task.yield()
-        session.consumeStdout(#"{"id":2,"result":{"thread":{"id":"thread-1"}}}"# + "\n")
-        try await session.submit("default prompt", permissionMode: .standard)
-        session.consumeStdout(
-            #"{"id":"cmd-1","method":"item/commandExecution/requestApproval","params":{"threadId":"thread-1"}}"# + "\n")
-        session.consumeStdout(
-            #"{"id":"perm-1","method":"item/permissions/requestApproval","params":{"permissions":{"network":{"enabled":true}}}}"# + "\n")
-        await expectThrowsErrorAsync {
-            try await session.submit("blocked full access prompt", permissionMode: .fullAccess)
-        }
-        session.consumeStdout(#"{"method":"turn/completed","params":{"threadId":"thread-1"}}"# + "\n")
-        try await session.submit("full access prompt", permissionMode: .fullAccess)
-        session.consumeStdout(
-            #"{"id":"cmd-2","method":"item/commandExecution/requestApproval","params":{"threadId":"thread-1"}}"# + "\n")
-        session.consumeStdout(
-            #"{"id":"perm-2","method":"item/permissions/requestApproval","params":{"permissions":{"network":{"enabled":true}}}}"# + "\n")
-
-        let defaultCommandResponse = jsonLine(sentLines[4])
-        let defaultCommandResult = try #require(defaultCommandResponse["result"] as? [String: Any])
-        expectEqual(defaultCommandResult["decision"] as? String, "decline")
-
-        let defaultPermissionResponse = jsonLine(sentLines[5])
-        let defaultPermissionResult = try #require(defaultPermissionResponse["result"] as? [String: Any])
-        let defaultPermissions = try #require(defaultPermissionResult["permissions"] as? [String: Any])
-        expectTrue(defaultPermissions.isEmpty)
-
-        let fullAccessCommandResponse = jsonLine(sentLines[7])
-        let fullAccessCommandResult = try #require(fullAccessCommandResponse["result"] as? [String: Any])
-        expectEqual(fullAccessCommandResult["decision"] as? String, "acceptForSession")
-
-        let fullAccessPermissionResponse = jsonLine(sentLines[8])
-        let fullAccessPermissionResult = try #require(fullAccessPermissionResponse["result"] as? [String: Any])
-        let fullAccessPermissions = try #require(fullAccessPermissionResult["permissions"] as? [String: Any])
-        let networkPermissions = try #require(fullAccessPermissions["network"] as? [String: Any])
-        expectEqual(networkPermissions["enabled"] as? Bool, true)
-    }
-
-    @Test
     func testMapsAgentMessageDeltaToStdout() {
         var output: [(String, String)] = []
         let session = CodexAppServerSession(

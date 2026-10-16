@@ -6642,3 +6642,8 @@ caveats:
     title: Three terminal overlay cases observe native completion with preserved intervals and oracles; drop and rebind controls pass, Escape delivery calibration exposes the offscreen gap and awaits presented macOS 15 app-host verification
     status: open
     owner: bmux
+
+  - id: codex_approval_response_observation_verification
+    title: Codex approval fixture observes keyed async replies while preserving standard and full-access permission assertions with a new one-second observation bound; owned build 799 controls pass, integrated macOS 15 CI remains pending
+    status: open
+    owner: bmux
