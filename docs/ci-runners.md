@@ -7197,10 +7197,9 @@ reevaluation for mode changes. Current-rail projection controls are meaningful
 but are not substituted for the new actual rail-body assertion. These results do
 not establish historical macOS 15 scheduling or full rendering quiescence.
 
-This first staged commit intentionally retains the product invalidation for red
-coverage. The follow-up isolates the inset observation at the existing leaf
-boundary. Exact new probe execution, fresh tagged production build, complete test
-target, and macOS 15 CI remain pending. No product-facing strings changed.
+The first staged commit (`dec581bcb`) intentionally retained the product
+invalidation for red coverage. The separate fix (`2cd07dd22`) isolates inset
+observation at the existing leaf boundary. No product-facing strings changed.
 
 The separate production correction moves the four inset AppStorage properties
 into `WorkspaceTitlebarInsetChangeObserver`, following the existing mode-observer
@@ -7218,11 +7217,32 @@ mode-write control (0.089 seconds) and nondefault first-render inset91 control
 (0.095 seconds). Changing the real inset72→80 reevaluated the parent once and
 failed the noninvalidation negative (0.082 seconds). The observer typechecks in
 configured Swift5 and strict Swift6 with warnings as errors. These leaf controls
-do not claim the complete modified root passes: root-owned fresh tagged build,
-exact six-oracle red/green execution, complete target and macOS15 CI remain gates.
+did not claim complete modified-root success; the subsequent exact-root proof
+below supplies that local evidence. Complete target and macOS15 CI remain gates.
 The full existing visibility container also retains five strict6 actor-isolation
 errors in untouched synchronous static-helper tests; its configured Swift5 check
 passes. No suppression or unrelated migration is included.
+
+Root-built isolated build800 (`e239ec808`) then ran the exact committed alignment
+fixture without adapters. All three initial body assertions passed; root,
+workspace and current-rail bodies each reevaluated once after the mode write,
+failing precisely the three noninvalidation assertions (one test, 0.508 seconds).
+Root-built fixed801 (`f14ecfff9`) passed the exact same six intents (0.495 seconds).
+A temporary control changing the actual inset72→96 instead of mode failed the
+same three noninvalidation assertions (0.622 seconds), confirming live edits still
+reach the parent and current content. The actual801 observer with an initial
+custom inset91 retained that value on first render and ignored the unrelated
+mode change. These owned processes used retained offscreen windows, manual-IO
+workspaces, isolated homes and startup telemetry fences; every process joined
+before its home was removed. No running user app was launched or changed.
+
+The exact complete containing test file compiled in configured Swift5 with zero
+warnings. Focused configured5/strict6 validation and previously reported legacy
+strict6 limitations remain separate. Root-owned full target and macOS15 app-host
+execution still cover registration/session/startup composition absent from the
+nil-AppDelegate temporary process. Native transaction completion remains scoped
+to that transaction; neither the green run nor the timing proves global SwiftUI
+quiescence or a historical CI scheduler cause.
 
 ### Workspace terminal focus recovery completion
 
