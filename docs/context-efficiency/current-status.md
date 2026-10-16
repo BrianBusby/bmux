@@ -372,6 +372,18 @@ on `adapters/lines.ts` because `ReadableStream<Uint8Array<ArrayBufferLike>>`
 lacks an async iterator in the active TypeScript library environment. The
 focused Codex telemetry test still passes.
 
+## Identity linkage fixture verification
+
+The monitor-transcript plus identity-only hook regression now observes existing
+runtime producer completion with its original one-second bound and closes the
+owned SQLite graph before removing its files. The six factual/import assertions
+are preserved; the separate display-projection case remains unchanged. Native
+build 797 passes locally, but integrated macOS 15 app-host verification remains
+pending. This is fixture lifecycle maintenance, not a new provenance capability
+or phase transition. See the identity-only completion evidence in
+[CI runners](../ci-runners.md#identity-only-session-linkage-completion) and the
+`prompt_session_link_completion_fixture_verification` Project Truth caveat.
+
 ## Current Handoffs
 
 - Project Truth: `docs/handoffs/latest.md`

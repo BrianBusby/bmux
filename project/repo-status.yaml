@@ -540,3 +540,6 @@ local_caveats:
 
   - id: kiro_codex_feed_contract_verification
     status: open
+
+  - id: prompt_session_link_completion_fixture_verification
+    status: open

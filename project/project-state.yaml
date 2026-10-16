@@ -6519,3 +6519,8 @@ caveats:
     title: Kiro deny and Codex late-PR feed contract uses owned joined producers and excludes detached monitor composition; fixed-head macOS 15 app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: prompt_session_link_completion_fixture_verification
+    title: Identity-only session linkage fixture joins hook persistence within its original one-second bound and releases SQLite before cleanup; native build 797 passes, integrated macOS 15 verification remains pending
+    status: open
+    owner: bmux

@@ -5836,3 +5836,40 @@ best-effort feed transport budget remains a loaded-host risk. No production,
 shared helper or workflow selector changes accompany this fixture correction.
 Native proof and negative controls are recorded in the slice handoff; integrated
 fixed-head macOS 15 app-host verification remains pending.
+
+### Identity-only session linkage completion
+
+T shard 3 failed the monitor-transcript plus identity-hook association assertion
+with `no_canonical_association`. Immediately afterward SQLite reported the
+fixture database, WAL and shared-memory files unlinked while still open. The
+missing association does not identify whether the writer was pending or failed;
+the cleanup messages independently establish invalid file lifetime ownership.
+The recorder was present, and an earlier native original-case pass disproved a
+missing-recorder explanation.
+
+The exact case moves to Swift Testing and awaits the maintained runtime's tracked
+background work before reading factual projection. A same-actor entry captures
+the task handles before timeout cleanup can clear them. Its original one-second
+bound covers completion and the final read; timeout and parent cancellation stop
+the runtime, then join the captured producer and deadline tasks. The async graph
+scope releases SQLite before the outer owned directory cleanup, whose errors are
+reported. Owned workspace panels are torn down on every path.
+
+All six import, direct-read and linked-session assertions remain, with the same
+transcript structure and identity-only hook. The unasserted optional display cache
+is omitted to avoid independent refresh tasks; the unchanged following legacy
+test retains display-projection coverage. Hook lookup, raw-output storage and
+repository paths are owned, and event delivery is injected off. No production
+association policy, package API, roadmap capability or deadline changes.
+
+The exact case passes against native build 797 in 0.304 seconds with warning-free
+Swift 6 compilation. Temporary controlled writer gating distinguishes missing
+association before append from available projection after completion. Timeout,
+parent cancellation and rejected-write controls retain failures and verify weak
+runtime/client release plus zero owned SQLite descriptors before deletion. The
+native runner uses an activation-prohibited application with no windows; the
+first pure-parser bootstrap lacked NSApplication and failed its Ghostty
+precondition, so that attempt is not counted as test evidence. The importer is
+compiled from its existing CLI/test-target sources and uses only local Git reads
+under the isolated environment. Whole app-host/macOS 15 verification remains
+pending; these controls do not establish the historical scheduler cause.
