@@ -5186,8 +5186,8 @@ Exact candidate source compiled with Swift 6 warnings-as-errors and passed all
 four cases against CLI 795 in 0.467 seconds with the local five-second bound.
 The maintained policy controls passed 28 environment/request combinations plus
 an owned finite-process local-timeout/CI-completion pair, joining both children
-before cleanup. Full integrated test-target compilation
-and fixed-head macOS 15 app-host results remain integration gates; neither the
+before cleanup. The complete integrated test target compiles at `9694b662c`.
+Fixed-head macOS 15 app-host results remain an integration gate; neither the
 local pass nor policy adoption establishes that S is repaired. The existing
 `agent_launch_environment_fixture_focused_gate_verification` and
 `ssh_workspace_creation_fixture_focused_gate_verification` caveats remain open.
@@ -5227,11 +5227,19 @@ called. These controls establish the existing guard and safe setup, not the new
 Workspace call site. A proposed still-allocated/unregistered control was not
 executed because later quarantine could release its live callback leases.
 
-Fixed-artifact native verification and the original macOS 15 app-host cases
-remain pending under `terminal_inherited_surface_guard_verification`. Local
-validation must use retained offscreen windows and owned resources; the original
-foreground helper and unchecked freed-pointer native path are not run locally.
-A source finding is not presented as a fixed-binary result.
+Fresh isolated build 796 (`maintenance-surface-guard`, source `24f440488`)
+passes all four native controls in 0.209 seconds. The freed cases now call the
+actual split/surface creation owner without a preparatory guard: both return a
+new panel and quarantine the source with reason `workspace.inheritConfig`. The
+live controls preserve their source. Swift 6 compilation reports no warnings;
+owned windows remain invisible and all resources are cleaned up. The full app
+build and integrated `bmux-unit` compilation pass; no new warning messages are
+introduced relative to prior complete builds. The app was not launched.
+
+These checks use macOS 26.3 and owned manual-I/O surfaces. The original macOS 15
+app-host cases remain pending under `terminal_inherited_surface_guard_verification`;
+the original foreground helper and unchecked old freed-pointer path were not
+run locally.
 
 ### Native test-host shared-resource isolation
 
