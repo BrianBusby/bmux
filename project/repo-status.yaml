@@ -534,3 +534,6 @@ local_caveats:
 
   - id: terminal_pointer_notification_fixture_verification
     status: open
+
+  - id: nested_split_divider_cache_verification
+    status: open

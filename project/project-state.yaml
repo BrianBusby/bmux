@@ -6509,3 +6509,8 @@ caveats:
     title: Pointer and keyboard dismissal share owned input and renderer delivery fixtures; native build 797 passes, fixed-head macOS 15 coverage and legacy AppFocusState isolation remain pending
     status: open
     owner: bmux
+
+  - id: nested_split_divider_cache_verification
+    title: Shared terminal and browser divider caches validate bounded weak child snapshots instead of relying on subviews KVO; fresh portal integration, latency and macOS 15 coverage remain pending
+    status: open
+    owner: bmux

@@ -5782,3 +5782,26 @@ still rejects the three existing imported AppFocusState.overrideIsFocused access
 this retained production global is not newly suppressed or declared concurrency
 safe. Fixed-head macOS 15 app-host coverage remains pending. The local result does
 not establish which queued stage caused the historical CI failure.
+
+### Nested split-divider cache validity
+
+The unchanged nested-insertion regression fails against build 797 while the
+other six portal hit-testing performance cases pass. A native AppKit control
+observed one added child and zero `subviews` KVO deliveries. The shared cache
+invalidator had relied on that notification to discover new splits below an
+existing layout container, leaving a warmed empty cache valid indefinitely.
+
+The invalidator now keeps weak child-identity snapshots of the same bounded set
+of root, direct-child and split-related containers it already observes. Both
+terminal and browser portal cache hits check those snapshots before reuse;
+insertion, removal or reordering triggers the existing region collection path.
+This does not recursively inspect arbitrary descendants on every hit and does not
+add work to the terminal's non-pointer guard. Geometry notifications and hidden
+state observation remain unchanged. The snapshots do not retain windows or views.
+
+Three temporary native controls of the candidate invalidator pass with strict
+Swift 6 compilation: insertion/removal invalidation, weak ownership, and 1,000
+unchanged-cache checks. This is candidate-source validation, not yet a freshly
+built portal integration or a pointer-latency measurement. The full existing
+portal suite, browser counterpart, performance gates and fixed-head macOS 15
+coverage remain required before merge. No terminal rendering code is changed.
