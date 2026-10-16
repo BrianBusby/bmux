@@ -525,3 +525,6 @@ local_caveats:
 
   - id: workspace_stress_delivery_verification
     status: open
+
+  - id: native_deadline_exit_diagnostics_verification
+    status: open

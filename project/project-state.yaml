@@ -6494,3 +6494,8 @@ caveats:
     title: Workspace stress profiles preserve workload and timing categories while awaiting bounded FIFO delivery; native build 797 passes locally, fixed-head macOS 15 verification remains pending
     status: open
     owner: bmux
+
+  - id: native_deadline_exit_diagnostics_verification
+    title: Native deadline owner records numeric termination and final-exit phases; local status controls pass, actual macOS console pipeline completion diagnosis remains pending
+    status: open
+    owner: bmux

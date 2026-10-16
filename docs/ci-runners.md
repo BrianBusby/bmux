@@ -5714,3 +5714,24 @@ once at the original one-second bound and still completes cleanup and the batch
 case. This local macOS 26 result does not replace
 fixed-head macOS 15 CI coverage. The earlier broad-run pipeline completion gap
 remains a separate unresolved issue.
+
+### Native deadline termination evidence
+
+All four candidate T native jobs printed their 900-second deadline before normal
+workflow cancellation; runner cleanup later reported orphaned `tee` processes.
+The optional failure collector was absent from T, so its removal did not resolve
+this completion gap. Existing local full-chain controls pass and do not identify
+the actual macOS 15 cause. T's third shard was still advancing through tests at
+its deadline; the final symbol test identity is not evidence of a hang in that
+test. Native jobs canceled after observed failures are not passing coverage.
+
+The existing deadline owner now emits `native_test_deadline_lifecycle` records
+to the same GitHub step stderr: termination requested, grace expired, kill sent,
+child joined, and owner exit. Records contain fixed phase names, numeric process
+IDs and exit codes; an exceptional exit has a null code. No command arguments,
+paths, environment or test payloads are added. The final marker runs in `finally`;
+it distinguishes a returned owner from a pending child wait when delivery succeeds.
+A closed diagnostic channel cannot replace the native result. No new collector,
+artifact, retry, signal policy or deadline is introduced; native 900 seconds and
+termination grace five seconds remain unchanged. Local status controls verify
+behavior, while actual runner delivery and the pipeline cause remain pending.

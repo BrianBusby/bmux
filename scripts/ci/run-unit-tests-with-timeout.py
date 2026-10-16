@@ -1,10 +1,20 @@
 #!/usr/bin/env python3
 """Own the broad native test deadline inside the console user's session."""
+import json
 import os
 import signal
 import subprocess
 import sys
 import time
+
+
+def record_lifecycle(phase, **numbers):
+    # Existing GitHub step logs own these bounded numeric diagnostics; never log argv or environment.
+    record = dict(event="native_test_deadline_lifecycle", phase=phase, owner_pid=os.getpid(), **numbers)
+    try:
+        os.write(2, (json.dumps(record, separators=(",", ":")) + "\n").encode())
+    except OSError:
+        pass  # A closed diagnostic channel must not replace the authoritative native result.
 
 
 def main():
@@ -30,13 +40,17 @@ def main():
     def join_after_termination():
         # The app-host wrapper owns its subtree. Popen checks/reaps only this
         # direct child before signaling; no recycled PID or process scan is used.
+        record_lifecycle("termination_requested", child_pid=process.pid)
         process.terminate()
         process.send_signal(signal.SIGCONT)
         try:
             process.wait(timeout=5)
         except subprocess.TimeoutExpired:
+            record_lifecycle("termination_grace_expired", child_pid=process.pid)
             process.kill()
+            record_lifecycle("kill_sent", child_pid=process.pid)
             process.wait()
+        record_lifecycle("child_joined", child_pid=process.pid, exit_code=process.returncode)
 
     try:
         if cancelled:
@@ -66,4 +80,9 @@ def main():
 
 
 if __name__ == '__main__':
-    raise SystemExit(main())
+    exit_code = None
+    try:
+        exit_code = main()
+    finally:
+        record_lifecycle("owner_exit", exit_code=exit_code)
+    raise SystemExit(exit_code)

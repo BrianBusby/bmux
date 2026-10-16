@@ -322,3 +322,4 @@ Repository: `BrianBusby/bmux`
 | `notification_settings_sheet_fixture_verification` | open |
 | `theme_session_cli_fixture_verification` | open |
 | `workspace_stress_delivery_verification` | open |
+| `native_deadline_exit_diagnostics_verification` | open |

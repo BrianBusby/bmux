@@ -264,6 +264,7 @@ Regenerate with: ./scripts/project-docs generate
 | Settings sheet fixture observes synchronous injected alert completion and retains its window; build 796 controls pass, integrated macOS 15 verification remains pending (`notification_settings_sheet_fixture_verification`) | Bmux | open |  |
 | Tagged theme notification and ambiguous Claude workflow fixtures own their CLI completion and paths; fixed-head macOS 15 app-host verification remains pending (`theme_session_cli_fixture_verification`) | Bmux | open |  |
 | Workspace stress profiles preserve workload and timing categories while awaiting bounded FIFO delivery; native build 797 passes locally, fixed-head macOS 15 verification remains pending (`workspace_stress_delivery_verification`) | Bmux | open |  |
+| Native deadline owner records numeric termination and final-exit phases; local status controls pass, actual macOS console pipeline completion diagnosis remains pending (`native_deadline_exit_diagnostics_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
