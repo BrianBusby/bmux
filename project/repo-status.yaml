@@ -489,3 +489,6 @@ local_caveats:
 
   - id: workspace_chrome_color_contract_verification
     status: open
+
+  - id: workspace_git_snapshot_observation_verification
+    status: open

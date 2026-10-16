@@ -6434,3 +6434,8 @@ caveats:
     title: Workspace chrome tests follow opaque compositing in scoped light and dark appearances; native build 796 passes, integrated macOS 15 app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: workspace_git_snapshot_observation_verification
+    title: Same-directory Git snapshot fixture owns count observations and reader cleanup; native controls pass, integrated macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux
