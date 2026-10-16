@@ -6577,3 +6577,8 @@ caveats:
     title: Three V2 fixture migrations retain joined five-second CLI producers and finite browser focus delivery; native positive and negative controls pass, fixed-head macOS 15 app-host execution remains pending
     status: open
     owner: bmux
+
+  - id: v4_terminal_search_and_window_restore_fixture_verification
+    title: V4 terminal search repair uses buffered readiness and native overlay delivery while stranded-sidebar restoration explicitly selects Terminal; strict compilation and offscreen boundary controls pass, full macOS 15 window cases remain pending
+    status: open
+    owner: bmux

@@ -1765,6 +1765,7 @@
 		D5671101D5671101D5671101 /* TerminalScrollSpeedSettingsFileStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5671102D5671102D5671102 /* TerminalScrollSpeedSettingsFileStoreTests.swift */; };
 		C0DE53350000000000000001 /* TerminalSearchOverlayHostingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE53350000000000000002 /* TerminalSearchOverlayHostingView.swift */; };
 		C0DE53360000000000000001 /* TerminalSearchOverlayMouseReleaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE53360000000000000002 /* TerminalSearchOverlayMouseReleaseTests.swift */; };
+		65DB13069E2C457594114E30 /* TerminalSearchResponderRepairTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40B4A40D8CD44AAAA2402FA2 /* TerminalSearchResponderRepairTests.swift */; };
 		A5001543 /* TerminalSSHSessionDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001545 /* TerminalSSHSessionDetector.swift */; };
 		AA5269A0C0DE0024FACE0024 /* TerminalSurfaceRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5269A0C0DE0023FACE0023 /* TerminalSurfaceRecoveryTests.swift */; };
 		D3052001000000000000001 /* TerminalSurfaceResizePolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3052001000000000000002 /* TerminalSurfaceResizePolicyTests.swift */; };
@@ -3839,6 +3840,7 @@
 		D5671102D5671102D5671102 /* TerminalScrollSpeedSettingsFileStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalScrollSpeedSettingsFileStoreTests.swift; sourceTree = "<group>"; };
 		C0DE53350000000000000002 /* TerminalSearchOverlayHostingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Find/TerminalSearchOverlayHostingView.swift; sourceTree = "<group>"; };
 		C0DE53360000000000000002 /* TerminalSearchOverlayMouseReleaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSearchOverlayMouseReleaseTests.swift; sourceTree = "<group>"; };
+		40B4A40D8CD44AAAA2402FA2 /* TerminalSearchResponderRepairTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalSearchResponderRepairTests.swift"; sourceTree = "<group>"; };
 		A5001545 /* TerminalSSHSessionDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSSHSessionDetector.swift; sourceTree = "<group>"; };
 		AA5269A0C0DE0023FACE0023 /* TerminalSurfaceRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSurfaceRecoveryTests.swift; sourceTree = "<group>"; };
 		D3052001000000000000002 /* TerminalSurfaceResizePolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSurfaceResizePolicyTests.swift; sourceTree = "<group>"; };
@@ -5790,6 +5792,7 @@
 				5C3D646943BA4696A9DDA9CC /* CLIThemeWriteReloadTests.swift */,
 				160662F01AFC45128C8D00E2 /* VisibleTerminalResponderRepairTests.swift */,
 				EC41976AD10B4C4BAA49AE16 /* TerminalFocusDeliveryFixture.swift */,
+				40B4A40D8CD44AAAA2402FA2 /* TerminalSearchResponderRepairTests.swift */,
 				A66D4C5FC3254F81B6A0B711 /* KoreanMarkedTextRuntimeTests.swift */,
 				B3AC017D658C4DD299300011 /* GhosttyPasteShortcutFixture.swift */,
 				B4AC017D658C4DD299300011 /* BrowserOmnibarArrowRoutingTests.swift */,
@@ -8737,6 +8740,7 @@
 				AC0A317D658C4DD299300002 /* TerminalRuntimeReadinessFixture.swift in Sources */,
 				D5671101D5671101D5671101 /* TerminalScrollSpeedSettingsFileStoreTests.swift in Sources */,
 				C0DE53360000000000000001 /* TerminalSearchOverlayMouseReleaseTests.swift in Sources */,
+				65DB13069E2C457594114E30 /* TerminalSearchResponderRepairTests.swift in Sources */,
 				AA5269A0C0DE0024FACE0024 /* TerminalSurfaceRecoveryTests.swift in Sources */,
 				D3052001000000000000001 /* TerminalSurfaceResizePolicyTests.swift in Sources */,
 				EC010C01 /* TerminalUploadCommandTests.swift in Sources */,

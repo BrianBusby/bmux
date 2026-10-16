@@ -104,7 +104,7 @@ struct MainWindowFocusRestoreTests {
     @Test func windowKeyRestoreIgnoresStrandedRightSidebarResponderForFocusedTerminal() throws {
         let appDelegate = try #require(AppDelegate.shared)
 
-        let windowId = appDelegate.createMainWindow()
+        let windowId = appDelegate.createMainWindow(initialPrimaryTab: .terminal)
         defer { closeWindow(withId: windowId) }
 
         let window = try #require(mainWindow(for: windowId))

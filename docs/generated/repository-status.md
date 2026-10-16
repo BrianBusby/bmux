@@ -337,3 +337,4 @@ Repository: `BrianBusby/bmux`
 | `pending_diff_ordering_fixture_verification` | open |
 | `visible_terminal_responder_readiness_verification` | open |
 | `v2_cli_and_browser_completion_fixture_verification` | open |
+| `v4_terminal_search_and_window_restore_fixture_verification` | open |
