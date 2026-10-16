@@ -305,6 +305,7 @@ Regenerate with: ./scripts/project-docs generate
 | Editable terminal-child Undo requires its real native key-window menu context with original routing assertions retained; isolated inactive build 799 reproduces missing target, active macOS 15 positive verification remains pending (`editable_terminal_undo_key_context_verification`) | Bmux | open |  |
 | Y1 overlay fixtures observe queued mounting and adopt the maintained three-second runtime setup bound for Escape while retaining fifty-millisecond overlay phases and real key-up calibration; owned bundle controls isolate startup delay, presented macOS 15 verification remains pending (`terminal_overlay_runtime_setup_verification`) | Bmux | open |  |
 | Actual Y Welcome callback arrived after the one-second fixture bound with correct state; explicit three-second absolute functional containment retains all routing assertions, owned controls pass and macOS 15 verification remains pending (`welcome_shortcut_delivery_containment_verification`) | Bmux | open |  |
+| Current terminal and workspace-rail body coverage preserves all six minimal-mode assertions; owned build 799 proves unrelated inset AppStorage invalidation, isolated observer correction and fresh-build macOS 15 validation remain pending (`minimal_mode_current_shell_invalidation_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

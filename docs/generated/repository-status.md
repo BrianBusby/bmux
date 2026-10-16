@@ -354,3 +354,4 @@ Repository: `BrianBusby/bmux`
 | `session_fork_diagnostic_completion_verification` | open |
 | `editable_terminal_undo_key_context_verification` | open |
 | `terminal_overlay_runtime_setup_verification` | open |
+| `minimal_mode_current_shell_invalidation_verification` | open |
