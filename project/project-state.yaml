@@ -6602,3 +6602,8 @@ caveats:
     title: Fork cache refresh fixture supplies matching live workspace and surface environment identities; missing and wrong scope controls fail while the corrected native case passes, fixed-head macOS 15 verification remains pending
     status: open
     owner: bmux
+
+  - id: app_host_eight_shard_capacity_verification
+    title: Eight deterministic native shards preserve the complete selector partition and unchanged 900-second bound; measured V workload supports added capacity, final CI completion and increased runner queue cost remain pending
+    status: open
+    owner: bmux

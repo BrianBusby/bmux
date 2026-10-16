@@ -1831,7 +1831,7 @@ No production code or shipped strings change; localization catalogs are untouche
 
 ### Bounded app-host process diagnostics
 
-Broad tests on all four PR shards and the focused shard 1 invocation enable the
+Broad tests on all eight PR shards and the focused shard 1 invocation enable the
 existing observer after acquiring the GUI-host lock. For a manual diagnostic
 dispatch, set `app_host_process_diagnostics` to true to enable those same
 invocations. Artifact upload runs even after failure and ignores absent output
@@ -6484,3 +6484,33 @@ completion change. Existing lock and best-effort temporary-directory cleanup in
 the untouched fixture remain unchanged. No deadline, selector, runtime code,
 shared helper or shipped text changes. Full integrated macOS 15 execution remains
 pending; local macOS 26 evidence does not substitute for that gate.
+
+
+### Native shard capacity under sequential app-host execution
+
+V's four broad invocations reached the unchanged 900-second native limit before
+completing their selected tests. Shard 3 spent about 591 seconds in XCTest, then
+reached only the early Swift Testing suites before the deadline. Two passing
+AppDelegate shortcut suites alone consumed about 125 seconds. Shards 2 and 4
+reached later Workspace suites. Counting test declarations balances the current
+sharder weights but does not balance measured native execution time.
+
+The existing deterministic algorithm now partitions broad coverage across eight
+jobs. No selector, test assertion, native deadline, retry or focused gate is
+removed or extended. Focused assignments stay on shards 1–4; shards 5–8 add broad
+execution only. The stable aggregate `tests` job still depends on the complete
+app-host matrix. Broad process sampling retains the same per-invocation bounds.
+
+At V, both four- and eight-way partitions contain exactly the same 2,055 selectors
+once each. The behavioral guard verifies union, disjointness, extension-method
+coverage, balanced source weights and the existing focused exclusions for both
+partition sizes. Eight-way source weights are 809–810 rather than 1,618–1,619.
+A lower-bound estimate using completed V XCTest methods and unrenamed Swift
+suites distributes 246–454 seconds of known work per new bucket. This omits
+unexecuted or interrupted tests, display-named suites, partial suites, build and
+host overhead; it is not a guarantee that every final invocation fits 900 seconds.
+
+Four additional macOS jobs increase runner demand, repeated build/setup work and
+potential queue time. Actual completion on the final CI toolchain remains the
+gate. The stopped-child cancellation hazard and historical V output-pipe gap
+remain separate from capacity; adding shards is not credited with fixing them.

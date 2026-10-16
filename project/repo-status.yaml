@@ -582,3 +582,6 @@ local_caveats:
 
   - id: fork_live_process_scope_fixture_verification
     status: open
+
+  - id: app_host_eight_shard_capacity_verification
+    status: open
