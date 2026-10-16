@@ -19,7 +19,7 @@ final class MarkdownRenderTestFixture: NSObject, WKNavigationDelegate, WKScriptM
     let buttonTimeout: Duration
     private var expectedNavigation: WKNavigation?
     private var activeID: String?
-    private var completion: AsyncStream<Result<String, Error>>.Continuation?
+    private var completion: AsyncStream<OperationDelivery>.Continuation?
     private let messageName = "bmuxRenderingFixture"
 
     init(
@@ -133,7 +133,7 @@ final class MarkdownRenderTestFixture: NSObject, WKNavigationDelegate, WKScriptM
     ) async throws -> String {
         try #require(activeID == nil, "Rendering fixture operations must not overlap")
         let id = UUID().uuidString
-        let events = AsyncStream<Result<String, Error>>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        let events = AsyncStream<OperationDelivery>.makeStream(bufferingPolicy: .bufferingOldest(1))
         activeID = id
         completion = events.continuation
         defer {
@@ -144,19 +144,40 @@ final class MarkdownRenderTestFixture: NSObject, WKNavigationDelegate, WKScriptM
             expectedNavigation = nil
         }
         start(id)
-        return try await withThrowingTaskGroup(of: String.self) { group in
+        let delivery = await withTaskGroup(of: Void.self) { group in
             defer { group.cancelAll() }
-            group.addTask {
-                for await result in events.stream { return try result.get() }
-                throw CancellationError()
-            }
-            group.addTask {
-                // Original phase deadline; cancellation joins the timer without polling WebKit.
-                try await ContinuousClock().sleep(until: deadline)
-                throw Failure.deadlineExceeded
-            }
-            return try await group.next() ?? ""
+            group.addTask { await Self.expireOperation(at: deadline, signal: events.continuation) }
+            var iterator = events.stream.makeAsyncIterator()
+            return await iterator.next()
         }
+        try Task.checkCancellation()
+        guard let delivery else { throw CancellationError() }
+        switch delivery {
+        case let .callback(result, arrivedAt):
+            guard arrivedAt < deadline else { throw Failure.deadlineExceeded }
+            return try result.get()
+        case .deadline:
+            throw Failure.deadlineExceeded
+        case .clockFailure(let error):
+            throw error
+        }
+    }
+
+    private static func expireOperation(
+        at deadline: ContinuousClock.Instant,
+        signal: AsyncStream<OperationDelivery>.Continuation
+    ) async {
+        // Original phase deadline; the operation cancels and joins this timer.
+        // Publish on the callback's actor; async consumption must not choose the winner.
+        do { try await ContinuousClock().sleep(until: deadline) }
+        catch is CancellationError { return }
+        catch {
+            signal.yield(.clockFailure(error))
+            signal.finish()
+            return
+        }
+        signal.yield(.deadline)
+        signal.finish()
     }
 
     private func cancelDOMObservation() {
@@ -170,7 +191,7 @@ final class MarkdownRenderTestFixture: NSObject, WKNavigationDelegate, WKScriptM
     }
 
     private func finish(_ result: Result<String, Error>) {
-        completion?.yield(result)
+        completion?.yield(.callback(result, arrivedAt: .now))
         completion?.finish()
     }
 
@@ -201,6 +222,12 @@ final class MarkdownRenderTestFixture: NSObject, WKNavigationDelegate, WKScriptM
         if let error = body["error"] { finish(.failure(Failure.domObservation(error))) }
         else if let json = body["json"] { finish(.success(json)) }
         else { finish(.failure(Failure.invalidDOMResult)) }
+    }
+
+    private enum OperationDelivery: Sendable {
+        case callback(Result<String, Error>, arrivedAt: ContinuousClock.Instant)
+        case deadline
+        case clockFailure(any Error)
     }
 
     private enum Failure: Error {
