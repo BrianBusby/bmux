@@ -287,6 +287,7 @@ Regenerate with: ./scripts/project-docs generate
 | Owned stopped-child controls reproduce missing resume in app-host lock cancellation; regression-only CI red and bounded owner correction remain pending, historical V pipe completion cause is unresolved (`app_host_lock_stopped_child_verification`) | Bmux | open |  |
 | Fork cache refresh fixture supplies matching live workspace and surface environment identities; missing and wrong scope controls fail while the corrected native case passes, fixed-head macOS 15 verification remains pending (`fork_live_process_scope_fixture_verification`) | Bmux | open |  |
 | Eight deterministic native shards preserve the complete selector partition and unchanged 900-second bound; measured V workload supports added capacity, final CI completion and increased runner queue cost remain pending (`app_host_eight_shard_capacity_verification`) | Bmux | open |  |
+| Expired pending-open Escape fixture preserves the real main-window route and original no-dismiss bounds with raw-state failure diagnostics; target compilation passes, full macOS 15 failure attribution remains pending (`command_palette_expired_escape_diagnostics`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

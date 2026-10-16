@@ -695,6 +695,8 @@
 		53FC7079DACB4E62B9836B97 /* Color+WorkspaceReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CBA0E5F00AA40C29BA5700D /* Color+WorkspaceReference.swift */; };
 		C4041001000000000000001B /* CommandClickFileOpenRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4041001000000000000001A /* CommandClickFileOpenRouter.swift */; };
 		C0DEC0DE000000000000F302 /* CommandPaletteEmojiTitleSearchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEC0DE000000000000F301 /* CommandPaletteEmojiTitleSearchTests.swift */; };
+		FC02A59739484E64B8100002 /* CommandPaletteEscapeExpiryFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC02A59739484E64B8100001 /* CommandPaletteEscapeExpiryFixture.swift */; };
+		FC02A59739484E64B8100004 /* CommandPaletteEscapeExpiryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC02A59739484E64B8100003 /* CommandPaletteEscapeExpiryTests.swift */; };
 		C0DE32470000000000000005 /* CommandPaletteIdentifierClipboardUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE32470000000000000006 /* CommandPaletteIdentifierClipboardUITests.swift */; };
 		11F7B3A3BAD84490929E045B /* CommandPaletteMetadataContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B748E7945E345C1962FF26F /* CommandPaletteMetadataContractTests.swift */; };
 		C0DEC0DE000000000000F202 /* CommandPaletteNucleoFFILibrarySupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEC0DE000000000000F201 /* CommandPaletteNucleoFFILibrarySupport.swift */; };
@@ -2805,6 +2807,8 @@
 		7CBA0E5F00AA40C29BA5700D /* Color+WorkspaceReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sidebar/Color+WorkspaceReference.swift"; sourceTree = "<group>"; };
 		C4041001000000000000001A /* CommandClickFileOpenRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandClickFileOpenRouter.swift; sourceTree = "<group>"; };
 		C0DEC0DE000000000000F301 /* CommandPaletteEmojiTitleSearchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteEmojiTitleSearchTests.swift; sourceTree = "<group>"; };
+		FC02A59739484E64B8100001 /* CommandPaletteEscapeExpiryFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CommandPaletteEscapeExpiryFixture.swift"; sourceTree = "<group>"; };
+		FC02A59739484E64B8100003 /* CommandPaletteEscapeExpiryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CommandPaletteEscapeExpiryTests.swift"; sourceTree = "<group>"; };
 		C0DE32470000000000000006 /* CommandPaletteIdentifierClipboardUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteIdentifierClipboardUITests.swift; sourceTree = "<group>"; };
 		3B748E7945E345C1962FF26F /* CommandPaletteMetadataContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteMetadataContractTests.swift; sourceTree = "<group>"; };
 		C0DEC0DE000000000000F201 /* CommandPaletteNucleoFFILibrarySupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteNucleoFFILibrarySupport.swift; sourceTree = "<group>"; };
@@ -5790,6 +5794,8 @@
 				AA5269A0C0DE0019FACE0019 /* WorkspacePopoverFocusRoutingTests.swift */,
 				AA5269A0C0DE0023FACE0023 /* TerminalSurfaceRecoveryTests.swift */,
 				AC0A317D658C4DD299300001 /* TerminalRuntimeReadinessFixture.swift */,
+				FC02A59739484E64B8100003 /* CommandPaletteEscapeExpiryTests.swift */,
+				FC02A59739484E64B8100001 /* CommandPaletteEscapeExpiryFixture.swift */,
 				9D251E5A6AD74AADAE6E1215 /* WorkspaceNonFocusBrowserSplitTests.swift */,
 				C27B8138A41C48ADA02715A7 /* CLITranscriptBackedClaudeSessionTests.swift */,
 				5C3D646943BA4696A9DDA9CC /* CLIThemeWriteReloadTests.swift */,
@@ -8405,6 +8411,8 @@
 				0E4B570EA4564121AE262C4C /* CodexStopTurnScopeTests.swift in Sources */,
 				C0DECAFE0000000000000003 /* CodexTeamsApprovalBridge.swift in Sources */,
 				C0DEC0DE000000000000F302 /* CommandPaletteEmojiTitleSearchTests.swift in Sources */,
+				FC02A59739484E64B8100002 /* CommandPaletteEscapeExpiryFixture.swift in Sources */,
+				FC02A59739484E64B8100004 /* CommandPaletteEscapeExpiryTests.swift in Sources */,
 				11F7B3A3BAD84490929E045B /* CommandPaletteMetadataContractTests.swift in Sources */,
 				C0DEC0DE000000000000F202 /* CommandPaletteNucleoFFILibrarySupport.swift in Sources */,
 				C0DEC0DE000000000000F102 /* CommandPaletteNucleoFFITests.swift in Sources */,

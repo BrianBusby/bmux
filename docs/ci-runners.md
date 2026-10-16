@@ -6514,3 +6514,48 @@ Four additional macOS jobs increase runner demand, repeated build/setup work and
 potential queue time. Actual completion on the final CI toolchain remains the
 gate. The stopped-child cancellation hazard and historical V output-pipe gap
 remain separate from capacity; adding shards is not credited with fixing them.
+
+### Expired pending-open Escape failure diagnostics
+
+Candidate V's `testEscapeDoesNotConsumeWhenMenuTriggeredPendingOpenStateExpires`
+remains an unresolved full app-host observation. A narrow build 799 control
+confirmed that an owned twenty-second-old pending request lets Escape pass while
+a fresh request consumes it. That control does not reproduce the original real
+main-window composition and is not evidence of a historical CI timing cause.
+
+Only that existing case moves to Swift Testing, retaining actual
+`createMainWindow()` with default Chat, `makeKey`, the twenty-second seed,
+visibility-false update, plain keycode-53 event, consumed-false assertion, global
+no-dismiss observation for 0.2 seconds and thirty-second outer allowance. The
+incidental fifty-millisecond RunLoop settling after `makeKey` and window close is
+removed; no stronger focus state, replacement settling delay or product behavior
+is imposed. The original mount/visibility path remains in CI, not an offscreen
+replacement. No real-window execution is performed locally for this diagnostic.
+
+The fixture preserves default shortcut binding isolation and persisted provenance
+using the maintained Welcome fixture pattern. Recorder/chord reset and focused
+window capture remain inside synchronous creation/dispatch: the existing capture
+begin/end methods call `debugResetShortcutRoutingStateForTesting`, including
+pending-chord reset. Settings and focus capture restore before the asynchronous
+no-dismiss observation. The original
+observer starts after seeding and before Escape, still observes all dismiss
+notifications, and is removed before window cleanup. A buffered stream retains
+synchronous notifications; its absolute observation deadline cancels and joins
+the losing child. Window-ID cleanup is owned immediately after creation, including
+failed lookup, and close-confirmation state restores synchronously.
+
+Failure comments now carry bounded entry/final facts: raw pending flag, stored
+visibility, key/main/captured-window identity comparisons, a fixed responder
+category, recorder activity, modal window and attached-sheet presence. These
+reads do not prune pending state or invoke routing predicates. They include no
+query, results, title, path, environment, raw event or user text. The diagnostics
+identify existing state rather than selecting a product fix or changing the
+expected outcome.
+
+Exact new sources compile warning-free in target Swift 5 against build 799.
+Strict Swift 6 still rejects the maintained imported mutable `settingsFileStore`
+owner; no concurrency suppression or production change is introduced. Existing
+shared application/background state can still affect this real composition even
+with native test serialization. Integrated compilation and macOS 15 execution
+remain required, and the original failure is not marked resolved. No selector,
+shared helper, runtime code, shipped text or localization catalog changes.

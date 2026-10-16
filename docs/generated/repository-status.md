@@ -342,3 +342,4 @@ Repository: `BrianBusby/bmux`
 | `app_host_lock_stopped_child_verification` | open |
 | `fork_live_process_scope_fixture_verification` | open |
 | `app_host_eight_shard_capacity_verification` | open |
+| `command_palette_expired_escape_diagnostics` | open |
