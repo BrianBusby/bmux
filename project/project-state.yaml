@@ -6662,3 +6662,8 @@ caveats:
     title: Pending file-preview focus test retains its owned window through explicit close and preserves both focus assertions; native 799 ownership controls pass, exact historical crash object and macOS 15 verification remain unresolved
     status: open
     owner: bmux
+
+  - id: file_explorer_shortcut_context_fixture_verification
+    title: Two file-explorer shortcut cases own their real event-window context with all routing assertions retained; offscreen build 799 controls pass, presented macOS 15 CI and legacy settings-owner strict concurrency remain unverified
+    status: open
+    owner: bmux
