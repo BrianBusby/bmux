@@ -6904,3 +6904,36 @@ Configured Swift 5 and strict Swift 6 warnings-as-errors compilation and local
 static/Project Truth gates cover this slice. Full-target and actual macOS 15
 app-host verification remain integration gates; no local proof claims the
 inspector chord is fixed.
+
+
+### File-preview pending-focus fixture retains its owned window through close
+
+Actual Y native shard 6 restarted after a main-thread bad-pointer dereference at
+`0x20`, with `FilePreviewReviewFeedbackTests.testFocusCoordinatorKeepsPendingFocusUntilEndpointHasWindow`
+the final started legacy case. The crash's exact image mapping places the first
+two frames in libobjc at offsets `0x8028`/`0xc040` and the next in XCTestCore at
+`0x47270` (UUID `8690f5b824b63fc2a90b8e0a5f149efe`). These frames and the last
+printed identity do not establish the released object's class or an exact
+causal test. Later 293 Swift Testing cases passing does not erase that crash.
+
+The focused source review found the case explicitly closing a Swift-owned
+`NSWindow` without disabling release-on-close. Its synchronous focus coordinator
+holds weak endpoint references and records pending intent until the view gains
+a window; no task or delayed callback belongs to that coordinator. The exact
+case now lives in `FilePreviewFocusCoordinatorTests`, with the same borderless
+320-by-240 window, original missing-window rejection and final first-responder
+identity assertions, and content-detach/close cleanup. It sets
+`isReleasedWhenClosed = false`, matching the maintained file-preview text-editor
+fixture. Only its exclusive responder helper moves with it; production and all
+other legacy cases remain unchanged.
+
+Owned, nonpresented controls against frozen build 799 measured the original
+window default as true, then set it false before any close. Both original focus
+assertions and a separate weak-window release-after-scope control pass. Omitting
+content attachment fails the responder assertion while retained cleanup still
+passes. The unsafe original release-on-close sequence was not executed. Exact
+migrated-source controls and configured Swift 5/strict Swift 6 warnings-as-errors
+compilation cover this slice, alongside local Project Truth, PBX, determinism,
+and actual-main file-budget checks. Root owns integrated target compilation and
+macOS 15 verification; no local result identifies the historical crashed object.
+No application was launched or window presented, and no product strings changed.

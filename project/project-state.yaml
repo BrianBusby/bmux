@@ -6657,3 +6657,8 @@ caveats:
     title: LaunchServices scheduling test restores its original delegate and route-retirer composition; native 799 scheduling and identity controls pass, historical inspector routing linkage and macOS 15 app-host verification remain unproven
     status: open
     owner: bmux
+
+  - id: file_preview_pending_focus_window_ownership_verification
+    title: Pending file-preview focus test retains its owned window through explicit close and preserves both focus assertions; native 799 ownership controls pass, exact historical crash object and macOS 15 verification remain unresolved
+    status: open
+    owner: bmux
