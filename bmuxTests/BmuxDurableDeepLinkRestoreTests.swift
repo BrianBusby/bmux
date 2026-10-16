@@ -289,15 +289,24 @@ struct BmuxDurableDeepLinkRestoreTests {
     @Test func closedWindowRestoreWithLiveIdentityMintsFreshStableIds() async throws {
         try await AppContextSerialGate.withExclusiveAppContext {
             let previousAppDelegate = AppDelegate.shared
+            let previousActiveManager = TerminalController.shared.activeTabManagerForCallerNotification()
             let appDelegate = AppDelegate()
             AppDelegate.shared = appDelegate
             ClosedItemHistoryStore.shared.removeAll()
             defer {
                 for context in Array(appDelegate.mainWindowContexts.values) {
+                    context.window?.isReleasedWhenClosed = false
+                    appDelegate.discardMainWindowWithoutClosedHistory(windowId: context.windowId)
                     appDelegate.unregisterMainWindowContextForTesting(windowId: context.windowId)
+                    context.tabManager.tabs.forEach { $0.teardownAllPanels() }
+                    context.tabManager.window = nil
                 }
+                TerminalController.shared.setActiveTabManager(previousActiveManager)
                 ClosedItemHistoryStore.shared.removeAll()
                 AppDelegate.shared = previousAppDelegate
+                if let previousAppDelegate {
+                    GhosttyApp.terminalSurfaceRegistry.attachRouteRetirer(previousAppDelegate)
+                }
             }
 
             let liveManager = TabManager()

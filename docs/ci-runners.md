@@ -6904,3 +6904,41 @@ Configured Swift 5 and strict Swift 6 warnings-as-errors compilation and local
 static/Project Truth gates cover this slice. Full-target and actual macOS 15
 app-host verification remain integration gates; no local proof claims the
 inspector chord is fixed.
+
+
+### Restoring delegate composition before inspector routing
+
+Candidate Y shard 3 executed the disabled-browser agent-chat action test before
+its inspector chord case. The action test constructed an `AppDelegate`, whose
+initializer replaces `AppDelegate.shared` and the terminal registry's weak route
+retirer, without restoring either. The action still correctly returned false.
+The fixture now owns its manager/panels and restores the prior application
+composition synchronously. Its unchanged disabled-browser assertion passes;
+build 799 controls with both an existing and absent prior delegate fail against
+the original fixture and pass against the corrected fixture.
+
+The bounded audit used the actual preceding Y shard-3 identities, rather than
+all constructors in files selected by that shard. Two `ClosedMainWindowRoutingTests`
+cases and the durable closed-window restore case already restored shared state
+but omitted the known application's route-retirer attachment. Their cleanup now
+reattaches it. The two routing cases migrate in place to a serialized Swift Testing
+suite, retain every routing/lingering-window assertion, restore the prior active
+manager, and close retained windows/tear down owned panels only after assertions.
+The durable case also closes only its owned restored windows through the existing
+no-history discard path, tears down panels, and restores its prior active manager;
+identity assertions and the existing async context gate are unchanged.
+Unselected snapshot constructors were excluded; selected nil-coalescing delegate
+accesses do not replace an existing application owner.
+
+This repairs concrete test composition leaks; it does not prove they caused Y's
+inspector chord failure. The original local event monitor captures its delegate,
+while the inspector fixture consults shared state, so continuity matters, but no
+monitor was replaced or bypassed in verification. Registry restoration is checked
+against its maintained composition contract, not a private-state getter. Configured
+Swift 5 and strict Swift 6 compile all three complete affected files and maintained
+test support without warnings. Two never-presented native windows exercise real
+close notifications, context removal, panel teardown and active-manager restoration;
+omitting close fails that lifecycle control. The presented routing cases and whole combined
+macOS 15 target remain CI verification; the local controls never present a window.
+All temporary process homes and processes are owned and removed/joined. No product
+behavior or user-visible strings changed, so no localization entries are required.

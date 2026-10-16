@@ -187,9 +187,19 @@ import Testing
 
     @MainActor
     @Test func performNewAgentChatActionRejectsWhenBrowserSurfacesAreDisabled() throws {
-        try withBrowserDisabled {
-            let didStart = AppDelegate().performNewAgentChatAction(
-                tabManager: TabManager(),
+        let previousApp = AppDelegate.shared
+        defer {
+            AppDelegate.shared = previousApp
+            if let previousApp {
+                GhosttyApp.terminalSurfaceRegistry.attachRouteRetirer(previousApp)
+            }
+        }
+        let app = AppDelegate()
+        let manager = TabManager()
+        defer { manager.tabs.forEach { $0.teardownAllPanels() } }
+        withBrowserDisabled {
+            let didStart = app.performNewAgentChatAction(
+                tabManager: manager,
                 agentChat: .default,
                 globalConfigPath: nil,
                 preferredWindow: nil
