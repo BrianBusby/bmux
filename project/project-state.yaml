@@ -6566,6 +6566,6 @@ caveats:
     owner: bmux
 
   - id: app_host_lock_stopped_child_verification
-    title: Owned stopped-child controls reproduce missing resume in app-host lock cancellation; regression-only CI red and bounded owner correction remain pending, historical V pipe completion cause is unresolved
+    title: Actual CI proves stopped-child cancellation fails without resume; the lock now forwards the original signal then resumes its owned command and all thirteen local cancellation cases pass, fixed-head CI and historical V pipe completion cause remain unresolved
     status: open
     owner: bmux

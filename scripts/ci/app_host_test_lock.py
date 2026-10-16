@@ -90,6 +90,8 @@ def main() -> int:
     def _forward(signum, _frame):
         try:
             proc.send_signal(signum)
+            # A stopped command must resume to run its cancellation handler.
+            proc.send_signal(signal.SIGCONT)
         except ProcessLookupError:
             pass
 
