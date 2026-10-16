@@ -6657,3 +6657,8 @@ caveats:
     title: LaunchServices scheduling test restores its original delegate and route-retirer composition; native 799 scheduling and identity controls pass, historical inspector routing linkage and macOS 15 app-host verification remain unproven
     status: open
     owner: bmux
+
+  - id: terminal_overlay_runtime_setup_verification
+    title: Y1 overlay fixtures observe queued mounting and adopt the maintained three-second runtime setup bound for Escape while retaining fifty-millisecond overlay phases and real key-up calibration; owned bundle controls isolate startup delay, presented macOS 15 verification remains pending
+    status: open
+    owner: bmux

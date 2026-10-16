@@ -606,3 +606,6 @@ local_caveats:
 
   - id: notification_burst_native_completion_verification
     status: open
+
+  - id: terminal_overlay_runtime_setup_verification
+    status: open
