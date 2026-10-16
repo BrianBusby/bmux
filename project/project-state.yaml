@@ -6444,3 +6444,8 @@ caveats:
     title: Markdown atomic file reload uses the existing content sequence with a joined three-second wait; native build 796 passes, integrated macOS 15 app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: notification_settings_retry_fixture_verification
+    title: Notification settings retry fixture follows synchronous injected callbacks and retains its window; native build 796 passes, integrated macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux

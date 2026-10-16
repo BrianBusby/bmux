@@ -495,3 +495,6 @@ local_caveats:
 
   - id: markdown_file_reload_fixture_verification
     status: open
+
+  - id: notification_settings_retry_fixture_verification
+    status: open

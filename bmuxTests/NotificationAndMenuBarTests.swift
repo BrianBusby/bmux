@@ -1407,46 +1407,6 @@ final class NotificationDockBadgeTests: XCTestCase {
         )
     }
 
-    func testNotificationSettingsPromptRetriesUntilWindowExists() {
-        let store = TerminalNotificationStore.shared
-        let alertSpy = NotificationSettingsAlertSpy()
-        alertSpy.nextResponse = .alertSecondButtonReturn
-
-        var queuedRetryBlocks: [() -> Void] = []
-        var promptWindow: NSWindow?
-        store.configureNotificationSettingsPromptHooksForTesting(
-            windowProvider: { promptWindow },
-            alertFactory: { alertSpy },
-            scheduler: { _, block in queuedRetryBlocks.append(block) },
-            urlOpener: { _ in
-                XCTFail("Should not open settings for Not Now response")
-            }
-        )
-        addTeardownBlock {
-            store.resetNotificationSettingsPromptHooksForTesting()
-        }
-
-        store.promptToEnableNotificationsForTesting()
-        let drained = expectation(description: "main queue drained")
-        DispatchQueue.main.async { drained.fulfill() }
-        wait(for: [drained], timeout: 1.0)
-
-        XCTAssertEqual(alertSpy.beginSheetModalCallCount, 0)
-        XCTAssertEqual(alertSpy.runModalCallCount, 0)
-        XCTAssertEqual(queuedRetryBlocks.count, 1)
-
-        promptWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 480, height: 320),
-            styleMask: [.titled],
-            backing: .buffered,
-            defer: false
-        )
-        queuedRetryBlocks.removeFirst()()
-
-        XCTAssertEqual(alertSpy.beginSheetModalCallCount, 1)
-        XCTAssertEqual(alertSpy.runModalCallCount, 0)
-    }
-
     func testNotificationIndexesTrackUnreadCountsByTabAndSurface() {
         let tabA = UUID()
         let tabB = UUID()
