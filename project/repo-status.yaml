@@ -636,3 +636,6 @@ local_caveats:
 
   - id: zsh_relay_refresh_completion_verification
     status: open
+
+  - id: minimal_mode_failure_phase_diagnostics_verification
+    status: open

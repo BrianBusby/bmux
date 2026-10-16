@@ -311,6 +311,7 @@ Regenerate with: ./scripts/project-docs generate
 | PR 171 review 5543944260 duplicate-title filter warning has actual CI red in run 38876211760 shard 4 and an identity-based fix with five local passing cases in Swift 5 and 6; fixed integrated build and CI green remain pending (`workspace_filter_selection_identity_verification`) | Bmux | open |  |
 | Z shard 6 background HIToolbox crash has a source-supported main-actor shortcut fixture repair with three local native cases passing in Swift 5 and 6; matched CI symbols and fixed macOS 15 CI remain pending (`keyboard_space_native_layout_isolation_verification`) | Bmux | open |  |
 | Zsh prompt-refresh fixture observes both inherited-FIFO callbacks within the original one-second phase and joins its five-second shell; local Swift 5 and 6 controls pass, detached exits and integrated macOS 15 verification remain unproven (`zsh_relay_refresh_completion_verification`) | Bmux | open |  |
+| Minimal-mode fixture reports the failing native event phase with elapsed time, body counts and owned registration under unchanged one-second bounds; local phase controls pass, actual macOS 15 timeout cause and diagnostic delivery remain unresolved (`minimal_mode_failure_phase_diagnostics_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

@@ -7411,3 +7411,31 @@ event-driven cancellation control joins the parent and removes its root.
 These establish completion sensitivity, not the historical CI interleaving;
 integrated macOS 15 verification remains open in
 `zsh_relay_refresh_completion_verification`. No production shell code changes.
+
+### Minimal-mode event failure phases
+
+Z run `38876211760`, shard 7, reports `eventTimedOut` from the minimal-mode
+body fixture without identifying which of its four native observations failed.
+The fixture now adds failure-only `minimal_mode_event_timeout` details: mount
+bodies, mount transaction, mode notification or final transaction, elapsed time,
+three body counts, and whether its own window is registered. It emits no raw
+window identifiers, settings, paths or unconditional runtime logs. Existing
+one-second phase bounds, task-group cancellation/join, and all six assertions
+remain unchanged; this is diagnosis, not a claimed repair.
+
+Exact build 801 controls pass with and without an owned registered delegate.
+Temporary omission controls report each of the four phases at the original
+bound. Actual Z also logs reentrant hosting layout and ongoing startup during
+the case; these facts do not yet identify the failed phase or its cause. Local
+macOS 26 controls do not disprove the macOS 15 failure. Actual CI diagnostic
+delivery and the underlying timeout remain pending; no production or localized
+product strings change.
+
+The task boundary now explicitly marks its actor-isolated predicate and event
+consumer Sendable. This resolves the Swift 6 region-checker failure without an
+unsafe annotation or ownership change. The complete fixture and exact minimal
+case compile in configured Swift 5 and strict Swift 6; the full unchanged
+visibility suite compiles in configured Swift 5. Five unrelated legacy helper
+actor-call diagnostics still prevent strict Swift 6 compilation of that whole
+suite. The temporary controls use the existing dispatch-main bootstrap; they do
+not establish equivalence to the app-host NSApplication event loop.

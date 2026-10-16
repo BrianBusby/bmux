@@ -68,10 +68,10 @@ final class MinimalModeBodyFixture {
             .defaultAppStorage(defaults)
         window.contentView = MainWindowHostingView(rootView: root)
         window.contentView?.layoutSubtreeIfNeeded()
-        try await waitForEvent { [self] event in
+        try await waitForEvent(phase: .mountBodies) { [self] event in
             event == .body && contentViewBody > 0 && workspaceContentBody > 0 && workspaceRailBody > 0
         }
-        try await finishCurrentTransaction()
+        try await finishCurrentTransaction(phase: .mountTransaction)
     }
 
     func resetCounts() {
@@ -82,8 +82,8 @@ final class MinimalModeBodyFixture {
 
     func switchToMinimalMode() async throws {
         defaults.set("minimal", forKey: WorkspacePresentationModeSettings.modeKey)
-        try await waitForEvent { $0 == .minimal }
-        try await finishCurrentTransaction()
+        try await waitForEvent(phase: .minimalMode) { $0 == .minimal }
+        try await finishCurrentTransaction(phase: .minimalTransaction)
     }
 
     func close() {
@@ -99,7 +99,7 @@ final class MinimalModeBodyFixture {
         defaults.removePersistentDomain(forName: suiteName)
     }
 
-    private func finishCurrentTransaction() async throws {
+    private func finishCurrentTransaction(phase: Phase) async throws {
         // AppKit's completion owns this rendering transaction, not all future SwiftUI work.
         CATransaction.begin()
         CATransaction.setCompletionBlock { [signal] in signal.yield(.transaction) }
@@ -107,23 +107,33 @@ final class MinimalModeBodyFixture {
         window.displayIfNeeded()
         CATransaction.commit()
         CATransaction.flush()
-        try await waitForEvent { $0 == .transaction }
+        try await waitForEvent(phase: phase) { $0 == .transaction }
     }
 
-    private func waitForEvent(_ matches: @escaping @MainActor (Event) -> Bool) async throws {
-        let deadline = ContinuousClock.now.advanced(by: eventTimeout)
-        try await withThrowingTaskGroup(of: Void.self) { group in
-            defer { group.cancelAll() }
-            group.addTask { @MainActor [events] in
-                for await event in events { if matches(event) { return } }
-                throw CancellationError()
+    private func waitForEvent(phase: Phase, _ matches: @escaping @MainActor @Sendable (Event) -> Bool) async throws {
+        let started = ContinuousClock.now
+        let deadline = started.advanced(by: eventTimeout)
+        do {
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                defer { group.cancelAll() }
+                group.addTask { @MainActor @Sendable [events, matches] in
+                    for await event in events { if matches(event) { return } }
+                    throw CancellationError()
+                }
+                group.addTask {
+                    // Injected failure containment for actual body/mode/transaction events, never settling.
+                    try await ContinuousClock().sleep(until: deadline)
+                    throw Failure.eventTimedOut
+                }
+                _ = try await group.next()
             }
-            group.addTask {
-                // Injected failure containment for actual body/mode/transaction events, never settling.
-                try await ContinuousClock().sleep(until: deadline)
-                throw Failure.eventTimedOut
-            }
-            _ = try await group.next()
+        } catch Failure.eventTimedOut {
+            throw PhaseTimeout(
+                phase: phase, elapsed: started.duration(to: .now),
+                contentBodies: contentViewBody, workspaceBodies: workspaceContentBody,
+                railBodies: workspaceRailBody,
+                registered: registeredApp?.mainWindowContexts[ObjectIdentifier(window)] != nil
+            )
         }
         try Task.checkCancellation()
     }
@@ -153,4 +163,20 @@ final class MinimalModeBodyFixture {
 
     private enum Event { case body, minimal, transaction }
     private enum Failure: Error { case eventTimedOut }
+    private enum Phase: String { case mountBodies, mountTransaction, minimalMode, minimalTransaction }
+
+    private struct PhaseTimeout: Error, CustomStringConvertible {
+        let phase: Phase
+        let elapsed: Duration
+        let contentBodies: Int
+        let workspaceBodies: Int
+        let railBodies: Int
+        let registered: Bool
+
+        var description: String {
+            "minimal_mode_event_timeout phase=\(phase.rawValue) elapsed=\(elapsed) "
+                + "content_bodies=\(contentBodies) workspace_bodies=\(workspaceBodies) "
+                + "rail_bodies=\(railBodies) registered=\(registered)"
+        }
+    }
 }
