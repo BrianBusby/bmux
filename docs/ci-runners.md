@@ -5630,9 +5630,9 @@ ordering triggered the new one-second failure bound, and cancellation returned
 after the owned task join. The candidate accumulator source plus actual 796
 Codex/auth owners pass seven focused cases and five additional temporary
 message-ID, Unicode, reset and retention controls. Swift 6 compilation reports
-no warnings. Candidate-source compilation is not whole-built runtime proof:
-a fresh isolated runtime build, integrated test-target compile and actual
-macOS 15 app-host results remain required. No app, window, provider process,
+no warnings. Fresh isolated build 797 subsequently passes twelve actual built-module
+contracts and controls; the complete integrated test target compiles at
+504c97420. Fixed-head macOS 15 app-host results remain required. No app, window, provider process,
 network service or user state was used. The last-start record supports this
 source diagnosis but is not a captured historical task stack.
 
@@ -5752,8 +5752,10 @@ run and clear the binding when the shell reports prompt-idle. Both existing
 regressions and their assertions are unchanged; actual CI and a native build 797
 probe provide the failing-before evidence. Independent source review covered the
 approval/launcher, restoration, directory rescue, and prompt-idle cleanup owners.
-A fresh built-runtime regression/control run and fixed-head macOS 15 CI remain
-pending; local source review is not a passing runtime verdict.
+Fresh isolated build 798 passes both unchanged regressions and three controls
+for disabled auto-resume, unapproved bindings and non-agent state (five cases,
+0.133 seconds, strict Swift 6 without warnings). Fixed-head macOS 15 CI remains
+pending.
 
 ### Terminal pointer notification dismissal fixture
 
@@ -5855,10 +5857,11 @@ state observation remain unchanged. The snapshots do not retain windows or views
 
 Three temporary native controls of the candidate invalidator pass with strict
 Swift 6 compilation: insertion/removal invalidation, weak ownership, and 1,000
-unchanged-cache checks. This is candidate-source validation, not yet a freshly
-built portal integration or a pointer-latency measurement. The full existing
-portal suite, browser counterpart, performance gates and fixed-head macOS 15
-coverage remain required before merge. No terminal rendering code is changed.
+unchanged-cache checks. Fresh isolated build 799 subsequently passes all seven
+unchanged portal cases (0.062 seconds) and seven temporary browser counterparts
+(0.065 seconds), with strict Swift 6 compilation and no warnings. These establish
+cache behavior, not a pointer-latency measurement. Fixed-head performance gates
+and macOS 15 coverage remain required. No terminal rendering code is changed.
 
 ### Claude idle reminders after an idle Stop
 
@@ -6123,3 +6126,39 @@ process-local telemetry fence, with no visible window, activation or shell child
 The permanent visible-window case was compiled but not executed locally. Its
 macOS 15 app-host behavior, complete target compilation and combined CI remain
 pending; these controls neither reproduce nor disprove the historical CI cause.
+
+### Candidate U integrated local verification
+
+The complete `bmux-unit` target builds successfully at
+`504c97420f2debdcdc2f356137f2f37fa4d22737` after all observed T failure groups
+received scoped repairs. The subsequent publication commit changes verification
+notes only. Build 799 contains identical production Swift, CLI, package-source,
+resource and dependency content; subsequent integrations affect tests and notes.
+No validation app was launched or replaced the user's running preview.
+
+All 629 test files are wired, the project parses natively, strict test determinism
+has zero findings, and the configured speculative-main-merge Swift file budget
+passes. All 21 approved prerequisite heads remain ancestors, including both
+maintenance PR heads and the matte branch. The final incremental compilation
+emits warnings at sixteen affected-file locations; their exact source lines
+are unchanged from T. These include existing XCTest import consistency and
+library-evolution warnings, a non-Sendable legacy socket-handler conversion,
+actor-isolated ObservableObject conformance, unused local values and an immediate
+legacy cleanup defer. No warning suppression or wider migration is included.
+Earlier full-build actor-isolation warnings remain recorded; this incremental
+comparison is not a warning-free full-baseline claim.
+
+New native fixture files compile in strict Swift 6 where recorded in their
+individual sections. Existing imported mutable-global limitations in the
+Option-digit and pointer paths remain explicit. The original visible-window
+Option-digit, canvas and responder-repair compositions require actual app-host
+CI; offscreen controls are boundary evidence, not those complete executions.
+Pending-diff and Codex fallback fixtures retain documented detached-child
+admission/exit limits. No maintenance change adds shipped UI/help text or changes
+a localization catalog.
+
+T's four native shards were cancelled after actual failures and their 900-second
+deadlines; they are not passing evidence. The numeric watchdog diagnostics do
+not claim to fix the unresolved historical deadline-to-pipeline completion gap.
+Candidate U requires its own native, release, performance, package and companion
+gates before merge; no check or threshold is waived.

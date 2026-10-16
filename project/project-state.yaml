@@ -6476,7 +6476,7 @@ caveats:
     owner: bmux
 
   - id: agent_session_stream_contract_verification
-    title: Codex queue observes owned submission and RPC boundaries, OpenCode auth matches the explicit username, and Claude final text is not counted as pending delta; focused native checks pass, fresh runtime and macOS 15 app-host verification remain pending
+    title: Codex queue observes owned submission and RPC boundaries, OpenCode auth matches the explicit username, and Claude final text is not counted as pending delta; fresh build 797 passes native contracts and controls, fixed-head macOS 15 app-host verification remains pending
     status: open
     owner: bmux
 
@@ -6501,7 +6501,7 @@ caveats:
     owner: bmux
 
   - id: binding_only_resume_state_verification
-    title: Approved agent-hook launch commands participate in existing running-state and directory cleanup ownership without requiring a separate agent snapshot; fresh runtime and fixed-head macOS 15 verification remain pending
+    title: Approved agent-hook launch commands participate in existing running-state and directory cleanup ownership without requiring a separate agent snapshot; fresh build 798 passes both regressions and three policy controls, fixed-head macOS 15 verification remains pending
     status: open
     owner: bmux
 
@@ -6521,7 +6521,7 @@ caveats:
     owner: bmux
 
   - id: nested_split_divider_cache_verification
-    title: Shared terminal and browser divider caches validate bounded weak child snapshots instead of relying on subviews KVO; fresh portal integration, latency and macOS 15 coverage remain pending
+    title: Shared terminal and browser divider caches validate bounded weak child snapshots instead of relying on subviews KVO; fresh build 799 passes existing portal tests and browser counterparts, fixed-head latency and macOS 15 coverage remain pending
     status: open
     owner: bmux
 
