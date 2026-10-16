@@ -278,6 +278,7 @@ Regenerate with: ./scripts/project-docs generate
 | Option-digit fixture observes native readiness before explicit focus and keeps real key-equivalent assertions; fixed-head macOS 15 app-host verification remains pending (`option_digit_terminal_focus_fixture_verification`) | Bmux | open |  |
 | Pending diff ordering fixture owns Git and gh setup and materializes task-group completion before its Testing assertion; original phase and cleanup controls pass locally, corrected macOS 15 CI and pre-announcement child tails remain explicit limits (`pending_diff_ordering_fixture_verification`) | Bmux | open |  |
 | Visible terminal responder repair uses buffered readiness and native focus delivery with original bounds; offscreen controls and strict compilation pass, actual app-host verification remains pending (`visible_terminal_responder_readiness_verification`) | Bmux | open |  |
+| Eight deterministic native shards preserve the complete selector partition and unchanged 900-second bound; measured V workload supports added capacity, final CI completion and increased runner queue cost remain pending (`app_host_eight_shard_capacity_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

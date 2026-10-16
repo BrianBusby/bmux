@@ -426,7 +426,7 @@ jobs:
     # transitive skip otherwise marks every macOS job skipped even when
     # linux-preflight itself succeeds. Require the direct needs explicitly.
     if: ${{ !cancelled() && needs.changes.result == 'success' && needs.linux-preflight.result == 'success' && needs.changes.outputs.macos == 'true' }}
-    name: app-host unit tests (${{ matrix.shard }}/4)
+    name: app-host unit tests (${{ matrix.shard }}/8)
     # App-host XCTest needs a runner that can broker testmanagerd control
     # sessions. Validated head-to-head that warp-macos-15-arm64-6x runs the
     # full app-host suite with 0 unexpected failures, so route through the
@@ -436,7 +436,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     env:
       BMUX_CI_XCODE_APP: ${{ vars.BMUX_CI_XCODE_APP_MACOS_15 }}
       BMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
@@ -837,7 +837,7 @@ jobs:
           SHARD_ARGS="$RUNNER_TEMP/bmux-unit-shard-${{ matrix.shard }}.args"
           python3 scripts/ci/bmux_unit_test_shard.py \
             --shard-index "${{ matrix.shard }}" \
-            --shard-total 4 \
+            --shard-total 8 \
             --output "$SHARD_ARGS"
           ONLY_TESTING_ARGS=()
           while IFS= read -r arg; do
