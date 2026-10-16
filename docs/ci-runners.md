@@ -6904,3 +6904,30 @@ Configured Swift 5 and strict Swift 6 warnings-as-errors compilation and local
 static/Project Truth gates cover this slice. Full-target and actual macOS 15
 app-host verification remain integration gates; no local proof claims the
 inspector chord is fixed.
+
+### Welcome shortcut completion containment
+
+Y native shard 3 delivered the real Welcome right-sidebar toggle after 1.328
+seconds. Its diagnostics recorded handled, registered, key and visible state as
+true, with the expected final sidebar state, but the fixture's one-second timer
+had already failed. That is measured late functional delivery, not evidence of
+an on-time callback losing a task-group race or a product shortcut failure.
+Window registration and synchronous settings restoration also enqueue work; the
+log does not identify which preceding work accounts for the delay.
+
+The fixture now gives its actual FIFO completion three seconds, captured as an
+absolute deadline before task creation. This is an explicit new test-containment
+budget, not a claim that the old bound is unchanged or that three seconds is a
+product latency target. Both real shortcut handlers, all original label/default
+and routing/visibility assertions, settings scope, callback ordering and joined
+observation cleanup remain unchanged. No sleep is used to settle state, and no
+production timing or global timeout policy changes.
+
+Frozen build 799 compiles the exact fixture in configured Swift 5 without
+warnings. Owned, never-presented temporary controls verify buffered success and
+missing callback failure with the existing allowlisted diagnostic; the latter
+still records no callback and joined cancellation under the new bound. The
+original presented shortcut case was not executed locally. Its actual macOS 15
+verification, and the historical source of main-queue delay, remain pending.
+Imported mutable settings-owner strict Swift 6 limitations are unchanged. No
+user app, persistent user settings or product-facing strings were changed.

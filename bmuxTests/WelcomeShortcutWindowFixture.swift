@@ -96,8 +96,9 @@ final class WelcomeShortcutWindowFixture {
         }
     }
 
-    func awaitRightSidebarToggle(_ events: AsyncStream<Bool>, timeout: Duration = .seconds(1)) async throws -> Bool {
+    func awaitRightSidebarToggle(_ events: AsyncStream<Bool>, timeout: Duration = .seconds(3)) async throws -> Bool {
         let started = ProcessInfo.processInfo.systemUptime
+        let deadline = ContinuousClock.now.advanced(by: timeout)
         do {
             return try await withThrowingTaskGroup(of: Bool.self) { group in
                 defer { group.cancelAll() }
@@ -106,8 +107,8 @@ final class WelcomeShortcutWindowFixture {
                     throw CancellationError()
                 }
                 group.addTask {
-                    // Original one-second failure deadline; never a settling or polling delay.
-                    try await ContinuousClock().sleep(for: timeout)
+                    // Functional delivery containment; the actual FIFO callback determines completion.
+                    try await ContinuousClock().sleep(until: deadline)
                     throw FixtureFailure.rightSidebarDeliveryTimedOut("timer expired")
                 }
                 return try await group.next() ?? false

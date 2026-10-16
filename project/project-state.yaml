@@ -6657,3 +6657,8 @@ caveats:
     title: LaunchServices scheduling test restores its original delegate and route-retirer composition; native 799 scheduling and identity controls pass, historical inspector routing linkage and macOS 15 app-host verification remain unproven
     status: open
     owner: bmux
+
+  - id: welcome_shortcut_delivery_containment_verification
+    title: Actual Y Welcome callback arrived after the one-second fixture bound with correct state; explicit three-second absolute functional containment retains all routing assertions, owned controls pass and macOS 15 verification remains pending
+    status: open
+    owner: bmux
