@@ -6642,3 +6642,8 @@ caveats:
     title: Three terminal overlay cases observe native completion with preserved intervals and oracles; drop and rebind controls pass, Escape delivery calibration exposes the offscreen gap and awaits presented macOS 15 app-host verification
     status: open
     owner: bmux
+
+  - id: launch_services_scheduling_fixture_ownership_verification
+    title: LaunchServices scheduling test restores its original delegate and route-retirer composition; native 799 scheduling and identity controls pass, historical inspector routing linkage and macOS 15 app-host verification remain unproven
+    status: open
+    owner: bmux
