@@ -269,6 +269,7 @@ Regenerate with: ./scripts/project-docs generate
 | Pointer and keyboard dismissal share owned input and renderer delivery fixtures; native build 797 passes, fixed-head macOS 15 coverage and legacy AppFocusState isolation remain pending (`terminal_pointer_notification_fixture_verification`) | Bmux | open |  |
 | Sidebar tool focus preservation observes all three deferred owner phases with unchanged one-second bounds; native build 797 passes, integrated macOS 15 verification remains pending (`sidebar_tool_focus_delivery_verification`) | Bmux | open |  |
 | Kiro deny and Codex late-PR feed contract uses owned joined producers and excludes detached monitor composition; fixed-head macOS 15 app-host verification remains pending (`kiro_codex_feed_contract_verification`) | Bmux | open |  |
+| Shared terminal and browser divider caches validate bounded weak child snapshots instead of relying on subviews KVO; fresh portal integration, latency and macOS 15 coverage remain pending (`nested_split_divider_cache_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

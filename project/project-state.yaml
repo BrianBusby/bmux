@@ -6519,3 +6519,8 @@ caveats:
     title: Kiro deny and Codex late-PR feed contract uses owned joined producers and excludes detached monitor composition; fixed-head macOS 15 app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: nested_split_divider_cache_verification
+    title: Shared terminal and browser divider caches validate bounded weak child snapshots instead of relying on subviews KVO; fresh portal integration, latency and macOS 15 coverage remain pending
+    status: open
+    owner: bmux

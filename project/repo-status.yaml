@@ -540,3 +540,6 @@ local_caveats:
 
   - id: kiro_codex_feed_contract_verification
     status: open
+
+  - id: nested_split_divider_cache_verification
+    status: open
