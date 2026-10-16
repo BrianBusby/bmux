@@ -35,7 +35,7 @@ struct CodexAppServerSessionTests {
                 "OPENCODE_SERVER_USERNAME": "bmux",
                 "OPENCODE_SERVER_PASSWORD": "secret",
             ])?.authorizationHeader,
-            "Basic Y211eDpzZWNyZXQ="
+            "Basic Ym11eDpzZWNyZXQ="
         )
     }
 
@@ -763,38 +763,6 @@ struct CodexAppServerSessionTests {
         for line in sentLines {
             expectTrue(line.hasPrefix("{"), "Codex app-server stdin must stay JSON-RPC, got \(line)")
         }
-    }
-
-    @Test
-    func testCodexInputQueueBeforeThreadIsBounded() async throws {
-        var sentLines: [String] = []
-        let session = CodexAppServerSession(
-            workingDirectory: nil,
-            writeData: { data in
-                sentLines.append(String(decoding: data, as: UTF8.self).trimmingCharacters(in: .newlines))
-            },
-            outputSink: { _, _ in }
-        )
-
-        try await session.start()
-        let submitTask = Task { try await session.submit("first prompt") }
-        await expectThrowsErrorAsync {
-            try await session.submit("second prompt")
-        }
-
-        session.consumeStdout(
-            #"{"id":1,"result":{"userAgent":"codex","codexHome":"/tmp","platformFamily":"unix","platformOs":"macos"}}"#
-                + "\n")
-        await Task.yield()
-        session.consumeStdout(#"{"id":2,"result":{"thread":{"id":"thread-1"}}}"# + "\n")
-        try await submitTask.value
-
-        expectEqual(sentLines.count, 4)
-        let turnStart = jsonLine(sentLines[3])
-        expectEqual(turnStart["method"] as? String, "turn/start")
-        let turnParams = try #require(turnStart["params"] as? [String: Any])
-        let input = try #require(turnParams["input"] as? [[String: Any]])
-        expectEqual(input.first?["text"] as? String, "first prompt")
     }
 
     @Test

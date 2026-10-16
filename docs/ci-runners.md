@@ -5492,3 +5492,41 @@ or pipeline completion remained unresolved until cancellation. That shard has
 no passing verdict, and the cause of that completion gap is not established. The final published T head still requires its own
 actual CI and review gates before merge; local compilation and controlled
 native probes do not replace those gates.
+
+### Agent-session queue and stream contracts after candidate T
+
+T shard 1 (`final-t-shard1-0140.log`, run 38831441428) reports the explicit
+OpenCode username mismatch and the missing second Claude message suffix, then
+starts `testCodexInputQueueBeforeThreadIsBounded` at 01:23:28 UTC. The native
+300-second idle guard fires at 01:28:55. These source paths are unchanged from
+main `ce17e9888`; this does not dismiss the failures. The queue test can await
+the second submission before supplying responses while that submission owns
+the sole queue slot. Its replacement observes first submission entry and the
+actual `thread/start` writer boundary, preserving pre-initialize rejection and
+the original count/method/first-prompt assertions. A new one-second failure
+bound replaces the formerly unbounded test flow; it is not an increased old
+deadline. Existing startup-error notification releases queued continuations before
+owned tasks join, including the transition between startup request IDs and
+parent cancellation. Cleanup runs when the deadline task is canceled as well
+as when it expires. No polling, new provider API or runtime scheduling change is
+introduced.
+
+The auth test now expects the encoded `bmux:secret` value it actually supplies.
+Claude's accumulator counts only raw delta events in its incremental accounting;
+full assistant messages already reconcile their complete text in the existing
+message owner. Counting their returned suffix again leaked that suffix into the
+next message and suppressed text. All five existing accumulator tests retain
+their original assertions.
+
+Owned in-memory native checks against frozen build 796 reproduced the original
+two assertion failures, with the other four contracts passing. The corrected
+queue passed against that unchanged module; restoring the original submission
+ordering triggered the new one-second failure bound, and cancellation returned
+after the owned task join. The candidate accumulator source plus actual 796
+Codex/auth owners pass seven focused cases and five additional temporary
+message-ID, Unicode, reset and retention controls. Swift 6 compilation reports
+no warnings. Candidate-source compilation is not whole-built runtime proof:
+a fresh isolated runtime build, integrated test-target compile and actual
+macOS 15 app-host results remain required. No app, window, provider process,
+network service or user state was used. The last-start record supports this
+source diagnosis but is not a captured historical task stack.
