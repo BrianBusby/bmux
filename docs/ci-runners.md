@@ -7515,3 +7515,45 @@ are involved. The session was locked during diagnosis. Actual installed-monitor
 identity and the macOS 15 inspector result remain unverified, tracked by
 `z_inspector_redraw_precursor_verification`; this is a proven fixture leak, not
 proof of the historical chord failure's cause.
+
+
+### Terminal focus FIFO arrival boundary
+
+Actual Z3 reports `focusDeliveryTimedOut` in all seven
+`WorkspaceTerminalFocusRecoverySwiftTests` cases (6.363 seconds total). The
+previous error had no phase, so it does not identify initial preparation versus
+a later focus mutation. Original main-branch tests used 50ms RunLoop settling;
+the migrated helper used that interval as a completion-failure bound.
+
+A controlled native FIFO arrived at 0.046ms, but holding only its async consumer
+let the helper's 50ms timer win at 51.015ms. This demonstrates an observation
+scheduling defect without proving the historical Z3 timing. The corrected
+helper preserves the first producer/deadline event in a buffered stream and
+validates the producer's actual timestamp against the same absolute 50ms bound.
+The timer publishes on the same actor and is canceled and joined before the
+result escapes. Late producer delivery still fails even if the deadline task
+was delayed. Parent cancellation remains authoritative, including after a
+successful event was buffered; a later native callback retains only a terminated
+continuation, not the closed fixture graph. Unexpected clock errors propagate
+after the timer joins; only cancellation is ignored.
+
+All seven test bodies, 40 original expectations and three prerequisite checks
+remain unchanged. Failure-only diagnostics now identify `prepare` or the test's
+function/line, producer versus deadline event, arrival and observation times,
+and the unchanged deadline. They contain no raw workspace IDs or payloads.
+This is a test-fixture correction, not a product focus-policy or timing change.
+
+Temporary exact-helper controls cover timely producer/delayed consumer success,
+late/missing producer failure, cancellation, buffered-success cancellation,
+joined timer, weak fixture release, owned window teardown and late signal
+termination. An owned, nonpresented build-801 preparation probe measured first
+FIFO arrival at 8–15ms and later delivery below 1ms; it does not reproduce CI.
+No presentation or key acquisition was attempted while the desktop was locked.
+Native presented macOS 15 and integrated CI remain verification gates. Sources,
+logs and the explicit harness adaptations are in
+`/tmp/z3-focus-delivery-proof/handoff.md`.
+
+The exact permanent fixture and all seven unchanged cases compile in configured
+Swift 5 and strict Swift 6 with warnings-as-errors and zero warnings. Local
+Project Truth validate/generate/check, strict determinism, selector validation,
+and actual-main file budgets pass. Root owns full-target and CI verification.

@@ -645,3 +645,6 @@ local_caveats:
 
   - id: z_inspector_redraw_precursor_verification
     status: open
+
+  - id: workspace_focus_delivery_arrival_verification
+    status: open

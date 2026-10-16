@@ -6742,3 +6742,8 @@ caveats:
     title: Z8 executed redraw fixture now restores shared delegate and active manager with native 799 identity and redraw controls; actual installed-monitor attribution and macOS 15 inspector verification remain open
     status: open
     owner: bmux
+
+  - id: workspace_focus_delivery_arrival_verification
+    title: Z3 focus FIFO helper now accepts timely producer arrival despite delayed consumer scheduling at the unchanged 50ms bound; controlled late and missing producers fail, while historical CI phase and presented macOS 15 behavior remain unverified
+    status: open
+    owner: bmux
