@@ -6709,7 +6709,7 @@ caveats:
     owner: bmux
 
   - id: workspace_terminal_focus_completion_verification
-    title: Seven terminal focus recovery cases observe queued work and establish authoritative visibility and geometry prerequisites within 50ms completion bounds; owned build 799 positive and omission controls pass, real presented macOS 15 verification remains pending
+    title: Seven terminal focus recovery cases adopt one-second FIFO containment after AD setup arrivals of 75.8–443.9ms and retain original focus assertions through authoritative host geometry, callback-boundary observations, and completed initial Find autofocus; owned logical-key positives and omission controls pass, presented macOS 15 verification remains pending
     status: open
     owner: bmux
 
@@ -6749,6 +6749,6 @@ caveats:
     owner: bmux
 
   - id: workspace_focus_delivery_arrival_verification
-    title: Focus and overlay fixtures share a duration-configured native FIFO arrival owner with 50ms focus and post-Escape bounds and a new one-second initial overlay mount setup bound; Swift 5 and 6 controls pass, while historical scheduling attribution and fixed macOS 15 verification remain open
+    title: Focus and overlay fixtures share a duration-configured native FIFO arrival owner with one-second focus completion and initial overlay mount setup bounds, while post-Escape remains 50ms; Swift 5 and 6 controls pass, fixed presented macOS 15 verification remains open
     status: open
     owner: bmux
