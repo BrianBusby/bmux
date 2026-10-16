@@ -31,7 +31,7 @@ struct TerminalSearchOverlayLifecycleTests {
 
         let searchState = TerminalSurface.SearchState(needle: "")
         surface.searchState = searchState
-        try await NativeMainQueueDelivery.deliver(within: .milliseconds(50)) {
+        try await NativeMainQueueDelivery(duration: .milliseconds(50)).deliver {
             hostedView.setSearchOverlay(searchState: searchState)
         }
         hostedView.layoutSubtreeIfNeeded()
@@ -43,7 +43,7 @@ struct TerminalSearchOverlayLifecycleTests {
         try #require(window.firstResponder === searchField || window.firstResponder === editor)
 
         let escapeKeyUpCount = try dispatchEscape(window: window)
-        try await NativeMainQueueDelivery.deliver(within: .milliseconds(50)) {}
+        try await NativeMainQueueDelivery(duration: .milliseconds(50)).deliver {}
         #expect(surface.searchState == nil, "Escape should dismiss find overlay when search text is empty")
         #expect(escapeKeyUpCount == 0, "Escape used to dismiss find must not reach the terminal key-up path")
     }
@@ -62,7 +62,7 @@ struct TerminalSearchOverlayLifecycleTests {
         contentView.addSubview(anchorA)
         contentView.addSubview(anchorB)
         let hostedView = surface.hostedView
-        try await NativeMainQueueDelivery.deliver(within: .milliseconds(50)) {
+        try await NativeMainQueueDelivery(duration: .milliseconds(50)).deliver {
             hostedView.setSearchOverlay(searchState: TerminalSurface.SearchState(needle: "split"))
         }
         #expect(hostedView.debugHasSearchOverlay())
@@ -84,7 +84,7 @@ struct TerminalSearchOverlayLifecycleTests {
         let anchor = NSView(frame: NSRect(x: 40, y: 40, width: 220, height: 160))
         contentView.addSubview(anchor)
         let hostedView = surface.hostedView
-        try await NativeMainQueueDelivery.deliver(within: .milliseconds(50)) {
+        try await NativeMainQueueDelivery(duration: .milliseconds(50)).deliver {
             hostedView.setSearchOverlay(searchState: TerminalSurface.SearchState(needle: "workspace"))
         }
         #expect(hostedView.debugHasSearchOverlay())

@@ -314,7 +314,7 @@ Regenerate with: ./scripts/project-docs generate
 | Minimal-mode fixture records native event decisions before async consumption under unchanged one-second bounds; four delayed-consumer counterexamples and bounded omission, late-event and cleanup controls pass locally, actual macOS 15 verification and historical timeout phase remain unresolved (`minimal_mode_failure_phase_diagnostics_verification`) | Bmux | open |  |
 | Z7 markdown scroll drift has a controlled stale-frame counterexample and fixture completion fix with timeout and cancellation cleanup; actual displayed native-frame verification is pending an unlocked desktop or CI (`markdown_scroll_frame_completion_verification`) | Bmux | open |  |
 | Z8 executed redraw fixture now restores shared delegate and active manager with native 799 identity and redraw controls; actual installed-monitor attribution and macOS 15 inspector verification remain open (`z_inspector_redraw_precursor_verification`) | Bmux | open |  |
-| Z3 focus and Z1 overlay fixtures share native FIFO producer-arrival completion at unchanged 50ms bounds; controlled ordering and cancellation pass, while historical scheduling attribution and presented macOS 15 verification remain open (`workspace_focus_delivery_arrival_verification`) | Bmux | open |  |
+| Z3 focus and Z1 overlay fixtures share a duration-configured value owner for native FIFO producer-arrival completion at unchanged 50ms bounds; Swift 5 and 6 ordering and cancellation controls pass, while historical scheduling attribution and presented macOS 15 verification remain open (`workspace_focus_delivery_arrival_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

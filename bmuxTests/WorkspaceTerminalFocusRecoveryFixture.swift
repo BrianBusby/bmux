@@ -86,7 +86,7 @@ final class WorkspaceTerminalFocusRecoveryFixture {
     }
 
     func deliverQueuedFocus(phase: String = #function, line: UInt = #line) async throws {
-        try await NativeMainQueueDelivery.deliver(within: .milliseconds(50), phase: phase, line: line)
+        try await NativeMainQueueDelivery(duration: .milliseconds(50)).deliver(phase: phase, line: line)
     }
 
     private static func makePanel(dock: Bool) -> TerminalPanel {

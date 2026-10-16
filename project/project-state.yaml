@@ -6744,6 +6744,6 @@ caveats:
     owner: bmux
 
   - id: workspace_focus_delivery_arrival_verification
-    title: Z3 focus and Z1 overlay fixtures share native FIFO producer-arrival completion at unchanged 50ms bounds; controlled ordering and cancellation pass, while historical scheduling attribution and presented macOS 15 verification remain open
+    title: Z3 focus and Z1 overlay fixtures share a duration-configured value owner for native FIFO producer-arrival completion at unchanged 50ms bounds; Swift 5 and 6 ordering and cancellation controls pass, while historical scheduling attribution and presented macOS 15 verification remain open
     status: open
     owner: bmux
