@@ -5309,3 +5309,30 @@ their temporary homes; no window was constructed or app activated. This is
 local native evidence, not macOS 15 app-host completion. Integrated full-target
 compilation and actual CI remain pending under
 `workspace_chrome_color_contract_verification`.
+
+### Portal geometry and drop-overlay completion fixtures
+
+Two named S shard 2 legacy failures now use their actual completion boundaries.
+The window-scoped geometry case completes the existing bind-triggered FIFO work
+before moving either anchor, then invokes the original scheduled first-window
+entrypoint. All seven stale/current hit assertions remain. Retained offscreen
+windows and manual I/O preserve real portal geometry without starting shells;
+owned surfaces detach and tear down before the windows close.
+
+The browser overlay case retains all nine z-order, frame, hit-routing and hidden
+state assertions. It observes native animation-group completion instead of
+running the RunLoop for a presumed settling duration. The original 250ms interval
+is now an explicit failure cap anchored before the action; the timer and stream
+consumer are cancelled and joined. No animation policy, production seam, adjacent
+legacy case or test selector changes.
+
+The exact migrated sources compile under Swift 6 without warnings against frozen
+build 795, and the two cases pass in an isolated, never-presented native harness.
+Temporary controls reproduce the two unrelated-window failures when initial work
+remains queued; explicitly scheduling both windows fails the same two assertions.
+Omitting the overlay clear action fails its hidden-state assertion while retaining
+the other outcomes. These demonstrate completion and target sensitivity, not the
+historical CI interleaving. The old geometry setup already pumped the RunLoop, so
+its precise failure cause remains unknown. Local macOS 26 native completion does
+not establish macOS 15 callback ordering; fixed-head app-host verification remains
+open under `portal_animation_completion_fixture_verification`.

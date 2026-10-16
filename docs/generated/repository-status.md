@@ -310,3 +310,4 @@ Repository: `BrianBusby/bmux`
 | `ci_test_host_environment_propagation_verification` | open |
 | `app_host_shared_resource_isolation_verification` | open |
 | `workspace_chrome_color_contract_verification` | open |
+| `portal_animation_completion_fixture_verification` | open |

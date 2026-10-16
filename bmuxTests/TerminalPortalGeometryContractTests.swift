@@ -132,6 +132,147 @@ struct TerminalPortalGeometryContractTests {
         )
     }
 
+    @Test func windowScopedExternalGeometrySyncDoesNotRefreshOtherWindows() async throws {
+        let firstWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 700, height: 420),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        firstWindow.isReleasedWhenClosed = false
+        defer { firstWindow.close() }
+
+        let secondWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 700, height: 420),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        secondWindow.isReleasedWhenClosed = false
+        defer { secondWindow.close() }
+
+        let firstSurface = TerminalSurface(
+            tabId: UUID(),
+            context: GHOSTTY_SURFACE_CONTEXT_SPLIT,
+            configTemplate: nil,
+            workingDirectory: nil,
+            manualIO: true,
+            manualInputHandler: { _ in }
+        )
+        let secondSurface = TerminalSurface(
+            tabId: UUID(),
+            context: GHOSTTY_SURFACE_CONTEXT_SPLIT,
+            configTemplate: nil,
+            workingDirectory: nil,
+            manualIO: true,
+            manualInputHandler: { _ in }
+        )
+
+        defer {
+            for surface in [firstSurface, secondSurface] {
+                TerminalWindowPortalRegistry.detach(hostedView: surface.hostedView)
+                surface.teardownSurface()
+            }
+        }
+        let firstContentView = try #require(firstWindow.contentView)
+        let secondContentView = try #require(secondWindow.contentView)
+
+        let firstContainer = NSView(frame: NSRect(x: 40, y: 60, width: 260, height: 180))
+        firstContentView.addSubview(firstContainer)
+        let firstAnchor = NSView(frame: NSRect(x: 0, y: 0, width: 260, height: 180))
+        firstContainer.addSubview(firstAnchor)
+
+        let secondContainer = NSView(frame: NSRect(x: 40, y: 60, width: 260, height: 180))
+        secondContentView.addSubview(secondContainer)
+        let secondAnchor = NSView(frame: NSRect(x: 0, y: 0, width: 260, height: 180))
+        secondContainer.addSubview(secondAnchor)
+
+        TerminalWindowPortalRegistry.bind(
+            hostedView: firstSurface.hostedView,
+            to: firstAnchor,
+            visibleInUI: true,
+            expectedSurfaceId: firstSurface.id,
+            expectedGeneration: firstSurface.portalBindingGeneration()
+        )
+        TerminalWindowPortalRegistry.bind(
+            hostedView: secondSurface.hostedView,
+            to: secondAnchor,
+            visibleInUI: true,
+            expectedSurfaceId: secondSurface.id,
+            expectedGeneration: secondSurface.portalBindingGeneration()
+        )
+        TerminalWindowPortalRegistry.synchronizeForAnchor(firstAnchor)
+        TerminalWindowPortalRegistry.synchronizeForAnchor(secondAnchor)
+        firstContentView.layoutSubtreeIfNeeded()
+        secondContentView.layoutSubtreeIfNeeded()
+        // Complete bind-triggered delivery before shifting either anchor. Manual I/O
+        // keeps this geometry contract independent of shell process startup.
+        await deliverQueuedGeometry {}
+        await deliverQueuedGeometry {}
+
+        let originalFirstFrameInWindow = firstAnchor.convert(firstAnchor.bounds, to: nil)
+        let originalSecondFrameInWindow = secondAnchor.convert(secondAnchor.bounds, to: nil)
+
+        firstContainer.frame.origin.x += 72
+        secondContainer.frame.origin.x += 88
+        firstContentView.layoutSubtreeIfNeeded()
+        secondContentView.layoutSubtreeIfNeeded()
+        firstWindow.displayIfNeeded()
+        secondWindow.displayIfNeeded()
+
+        let shiftedFirstFrameInWindow = firstAnchor.convert(firstAnchor.bounds, to: nil)
+        let shiftedSecondFrameInWindow = secondAnchor.convert(secondAnchor.bounds, to: nil)
+        let retiredFirstPoint = NSPoint(
+            x: (originalFirstFrameInWindow.minX + shiftedFirstFrameInWindow.minX) / 2,
+            y: shiftedFirstFrameInWindow.midY
+        )
+        let shiftedFirstPoint = NSPoint(
+            x: (originalFirstFrameInWindow.maxX + shiftedFirstFrameInWindow.maxX) / 2,
+            y: shiftedFirstFrameInWindow.midY
+        )
+        let retiredSecondPoint = NSPoint(
+            x: (originalSecondFrameInWindow.minX + shiftedSecondFrameInWindow.minX) / 2,
+            y: shiftedSecondFrameInWindow.midY
+        )
+        let shiftedSecondPoint = NSPoint(
+            x: (originalSecondFrameInWindow.maxX + shiftedSecondFrameInWindow.maxX) / 2,
+            y: shiftedSecondFrameInWindow.midY
+        )
+        #expect(
+            TerminalWindowPortalRegistry.terminalViewAtWindowPoint(shiftedFirstPoint, in: firstWindow) == nil,
+            "First window should remain stale until its scheduled external geometry sync runs"
+        )
+        #expect(
+            TerminalWindowPortalRegistry.terminalViewAtWindowPoint(shiftedSecondPoint, in: secondWindow) == nil,
+            "Second window should remain stale until its scheduled external geometry sync runs"
+        )
+        #expect(
+            TerminalWindowPortalRegistry.terminalViewAtWindowPoint(retiredSecondPoint, in: secondWindow) != nil,
+            "Before syncing, unrelated windows should still report the stale portal location"
+        )
+
+        TerminalWindowPortalRegistry.scheduleExternalGeometrySynchronize(for: firstWindow)
+        // The default force-immediate owner queues one main-queue delivery.
+        await deliverQueuedGeometry {}
+
+        #expect(
+            TerminalWindowPortalRegistry.terminalViewAtWindowPoint(retiredFirstPoint, in: firstWindow) == nil,
+            "Window-scoped sync should clear the stale location in the requested window"
+        )
+        #expect(
+            TerminalWindowPortalRegistry.terminalViewAtWindowPoint(shiftedFirstPoint, in: firstWindow) != nil,
+            "Window-scoped sync should refresh the requested window"
+        )
+        #expect(
+            TerminalWindowPortalRegistry.terminalViewAtWindowPoint(shiftedSecondPoint, in: secondWindow) == nil,
+            "Window-scoped sync should not refresh unrelated windows"
+        )
+        #expect(
+            TerminalWindowPortalRegistry.terminalViewAtWindowPoint(retiredSecondPoint, in: secondWindow) != nil,
+            "Unrelated windows should retain their stale geometry until their own sync runs"
+        )
+    }
+
     // Bridge the legacy portal's FIFO main-queue event delivery, not a time-based settling wait.
     private func deliverQueuedGeometry(_ operation: @escaping @MainActor @Sendable () -> Void) async {
         await withCheckedContinuation { continuation in
