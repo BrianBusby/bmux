@@ -5735,3 +5735,22 @@ A closed diagnostic channel cannot replace the native result. No new collector,
 artifact, retry, signal policy or deadline is introduced; native 900 seconds and
 termination grace five seconds remain unchanged. Local status controls verify
 behavior, while actual runner delivery and the pipeline cause remain pending.
+
+### Binding-only agent resume state
+
+The two T binding-only resume regressions reproduce against build 797: the
+approved launcher exists, but its running state is nil and the binding remains
+after prompt-idle. Workspace's derived startup-command predicate required a
+restorable-agent snapshot even for a valid agent-hook binding. That contradicted
+the existing binding-only state branch and the corresponding startup-input
+predicate. The predicate now recognizes either an agent resume command or an
+already-approved agent-hook binding command. Approval, launch selection, remote
+policy, and input handling are unchanged.
+
+This lets the existing owner preserve the resumed working directory during the
+run and clear the binding when the shell reports prompt-idle. Both existing
+regressions and their assertions are unchanged; actual CI and a native build 797
+probe provide the failing-before evidence. Independent source review covered the
+approval/launcher, restoration, directory rescue, and prompt-idle cleanup owners.
+A fresh built-runtime regression/control run and fixed-head macOS 15 CI remain
+pending; local source review is not a passing runtime verdict.
