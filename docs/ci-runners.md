@@ -5686,3 +5686,31 @@ harness substitutes only bundle discovery with the frozen CLI path; the actual
 bundle locator is separately typechecked unchanged. Full fixed-head macOS 15
 app-host verification remains pending;
 local evidence does not identify the historical sessions timeout cause.
+
+### Workspace stress profile queue delivery
+
+Candidate T reported 50 failures from the stress profile's one-second main-queue
+poll, then reached the broad native deadline. The synchronous MainActor test spun
+RunLoop while waiting for a callback queued on DispatchQueue.main. The stress
+suite now uses Swift Testing and suspends on a buffered FIFO delivery event after
+TabManager's queued selection effects, with an absolute one-second failure
+bound. It throws on the first missing delivery instead of recording a failure
+and repeating the full workload. The boundary does not claim all descendant
+work, timers, or rendering has settled.
+
+Both profile cases retain their default 48 workspaces, 10 tabs per workspace,
+six switch passes, functional assertions, optional p95 budgets, and report
+attachments. The selection profile still measures dispatch, first queue delivery,
+unfocus, second queue delivery, and their total. Queue/total measurements now
+include async suspension and resumption overhead; they are not interchangeable
+with historical nested-runloop timings. Batch actions retain synchronous timings.
+The existing autoWelcomeIfNeeded initializer argument replaces a temporary global
+welcome preference override, and owned panels are torn down on success or failure.
+No production code, workflow selector, workload size, or budget is changed.
+
+The actual build 797 module passes both complete profiles locally in 2.514 seconds
+with warning-free Swift 6 compilation. A temporary withheld FIFO callback fails
+once at the original one-second bound and still completes cleanup and the batch
+case. This local macOS 26 result does not replace
+fixed-head macOS 15 CI coverage. The earlier broad-run pipeline completion gap
+remains a separate unresolved issue.
