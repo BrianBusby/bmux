@@ -6466,7 +6466,7 @@ caveats:
     owner: bmux
 
   - id: remote_daemon_bootstrap_contract_verification
-    title: Persistent PTY reinstall contract uses the owning package and verified owned cache; original two-second oracles pass locally, fixed-head package CI and retained Workspace integration coverage remain pending
+    title: Persistent PTY reinstall contract uses verified owned cache and materializes task-group completion before requiring its value for older Testing compatibility; local controls pass, corrected package CI and retained Workspace integration coverage remain pending
     status: open
     owner: bmux
 
@@ -6546,6 +6546,6 @@ caveats:
     owner: bmux
 
   - id: pending_diff_ordering_fixture_verification
-    title: Pending diff ordering fixture owns Git and gh setup, retains original five-second phase assertions and joins CLI/socket/native viewer cleanup; native build 797 passes while macOS 15 execution and pre-announcement child tails remain explicit limits
+    title: Pending diff ordering fixture owns Git and gh setup and materializes task-group completion before its Testing assertion; original phase and cleanup controls pass locally, corrected macOS 15 CI and pre-announcement child tails remain explicit limits
     status: open
     owner: bmux
