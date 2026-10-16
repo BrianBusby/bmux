@@ -5,7 +5,7 @@ import Testing
 /// Exercises pending focus with a Swift-owned window that remains retained through close.
 @MainActor
 @Suite
-struct FilePreviewFocusCoordinatorTests {
+struct FilePreviewPendingFocusTests {
     @Test
     func keepsPendingFocusUntilEndpointHasWindow() {
         let textView = FocusView(frame: NSRect(x: 0, y: 0, width: 320, height: 240))
