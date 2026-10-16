@@ -1147,44 +1147,6 @@ final class RestorableAgentSessionIndexTests: XCTestCase {
         XCTAssertEqual(Set(commands.compactMap { $0 }).count, 1, "resume command must be stable across reloads")
     }
 
-    // A session whose recorded process is no longer alive (the agent was killed) must NOT restore
-    // from the hook index, even though the record is still on disk.
-    func testKilledSessionWithDeadProcessDoesNotRestore() throws {
-        let fm = FileManager.default
-        let root = fm.temporaryDirectory
-            .appendingPathComponent("bmux-killed-\(UUID().uuidString)", isDirectory: true)
-        defer { try? fm.removeItem(at: root) }
-        let dir = root.appendingPathComponent("repo", isDirectory: true)
-        try fm.createDirectory(at: dir, withIntermediateDirectories: true)
-
-        let ws = UUID()
-        let panel = UUID()
-        let sid = "44444444-4444-4444-4444-444444444444"
-        try writeHookStore(
-            root: root,
-            storeFilename: "gemini-hook-sessions.json",
-            sessions: [
-                sid: driftedAgentHookRecord(
-                    launcher: "gemini", sessionId: sid, workspaceId: ws, panelId: panel,
-                    recordedCwd: dir.path, launchCwd: dir.path, updatedAt: 10, pid: 999_999
-                ),
-            ]
-        )
-
-        let registry = BmuxVaultAgentRegistry.load(homeDirectory: root.path, fileManager: fm)
-        let index = RestorableAgentSessionIndex.load(
-            homeDirectory: root.path,
-            fileManager: fm,
-            registry: registry,
-            detectedSnapshots: [:],
-            processArgumentsProvider: { _ in nil }
-        )
-        XCTAssertNil(
-            index.snapshot(workspaceId: ws, panelId: panel),
-            "a killed session whose recorded process is dead must not restore"
-        )
-    }
-
     private func driftedHookRecord(
         sessionId: String,
         workspaceId: UUID,

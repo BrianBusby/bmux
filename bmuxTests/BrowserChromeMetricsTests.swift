@@ -34,13 +34,13 @@ import Testing
     }
 
     @Test func referenceFontSizeMatchesShippedDefault() {
-        // The byte-identical anchor must be the actual shipped default (11.0),
+        // The byte-identical anchor must be the actual shipped default,
         // not an arbitrary constant.
-        #expect(BrowserChromeMetrics.referenceFontSize == 11)
+        #expect(BrowserChromeMetrics.referenceFontSize == GhosttyConfig.defaultSurfaceTabBarFontSize)
     }
 
     @Test func largerFontScalesEverySizeUpProportionally() {
-        let larger = BrowserChromeMetrics.referenceFontSize + 2 // 13: a valid in-range size
+        let larger = BrowserChromeMetrics.referenceFontSize + 2
         let metrics = BrowserChromeMetrics(tabBarFontSize: larger)
         let expectedScale = larger / BrowserChromeMetrics.referenceFontSize
 
@@ -53,7 +53,7 @@ import Testing
     }
 
     @Test func smallerFontScalesEverySizeDownProportionally() {
-        let smaller = BrowserChromeMetrics.referenceFontSize - 3 // 8: the minimum valid tab bar font size
+        let smaller = BrowserChromeMetrics.referenceFontSize - 3
         let metrics = BrowserChromeMetrics(tabBarFontSize: smaller)
         let expectedScale = smaller / BrowserChromeMetrics.referenceFontSize
 

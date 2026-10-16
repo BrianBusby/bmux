@@ -17,6 +17,154 @@ HELPER = ROOT / "scripts" / "ci" / "xcodebuild_noninteractive.py"
 PROMPT = "Press space to interact, D to debug, or any other key to quit"
 
 
+def check_test_progress_watchdog() -> None:
+    # The real app-host output runs Swift Testing after Selected tests finishes.
+    # The child workload includes a silent test longer than the cleanup deadline;
+    # execution belongs to the existing general idle watchdog until run completion.
+    env = {
+        **os.environ,
+        "BMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS": "3",
+        "BMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS": "0.4",
+    }
+    for status in [0, 65]:
+        child = textwrap.dedent(f"""
+            import os, sys, time
+            print("Test Suite 'Selected tests' passed at now", flush=True)
+            start = "◇ Test run started.\\n".encode()
+            os.write(1, start[:1])
+            time.sleep(0.02)
+            os.write(1, start[1:])
+            time.sleep(0.6)
+            for index in range(10):
+                print(f"◇ Test case passing 1 argument value → {{index}} to example(value:) started.", flush=True)
+                time.sleep(0.08)
+                print(f"✔ Test example(value:) passed after 0.08 seconds.", flush=True)
+            # Real PTY reads may split a lifecycle line, including UTF-8 glyphs.
+            summary = "{'✔' if status == 0 else '✘'} Test run with 10 tests{' in 1 suite' if status == 0 else ''} {'passed' if status == 0 else 'failed'} after 0.8 seconds.\\n".encode()
+            os.write(1, summary[:1])
+            time.sleep(0.02)
+            os.write(1, summary[1:19])
+            time.sleep(0.02)
+            os.write(1, summary[19:])
+            raise SystemExit({status})
+        """)
+        result = subprocess.run(
+            [sys.executable, str(HELPER), sys.executable, "-c", child],
+            cwd=ROOT, text=True, capture_output=True, timeout=5, env=env,
+        )
+        assert result.returncode == status, (
+            f"Active Swift Testing must reach native exit {status}, got {result.returncode}\n"
+            + result.stdout + result.stderr
+        )
+        assert "Test run with 10 tests" in result.stdout
+
+    # xcodebuild may restart an XCTest host after an unexpected exit. Its active
+    # work must not inherit the previous host's cleanup deadline either.
+    child = textwrap.dedent("""
+        import time
+        print("Test Suite 'Selected tests' failed at previous", flush=True)
+        print("Test Suite 'Selected tests' started at restarted", flush=True)
+        time.sleep(0.6)
+        print("Test Suite 'Selected tests' passed at finished", flush=True)
+        raise SystemExit(65)
+    """)
+    result = subprocess.run(
+        [sys.executable, str(HELPER), sys.executable, "-c", child],
+        cwd=ROOT, text=True, capture_output=True, timeout=5, env=env,
+    )
+    assert result.returncode == 65, result.stdout + result.stderr
+
+    # Later passed summaries must not erase a prior failure, including restarts.
+    # A completed run marker followed by chatter must not be repeatedly rediscovered
+    # in the rolling buffer and keep stalled cleanup alive.
+    for failed_summary in [False, True]:
+        child = textwrap.dedent(f"""
+            import os, time
+            print("Test Suite 'Selected tests' {'failed' if failed_summary else 'passed'} at now", flush=True)
+            print("Test Suite 'Selected tests' started at later", flush=True)
+            print("Test Suite 'Selected tests' passed at later", flush=True)
+            print("◇ Test run started.", flush=True)
+            summary = "✔ Test run with 1 test passed after 0.01 seconds.\\n".encode()
+            os.write(1, summary[:1])
+            time.sleep(0.02)
+            os.write(1, summary[1:])
+            for _ in range(40):
+                print("unrelated app diagnostic", flush=True)
+                time.sleep(0.05)
+            print("cleanup-child-finished", flush=True)
+        """)
+        result = subprocess.run(
+            [sys.executable, str(HELPER), sys.executable, "-c", child],
+            cwd=ROOT, text=True, capture_output=True, timeout=5, env=env,
+        )
+        expected = 125 if failed_summary else 124
+        assert result.returncode == expected, result.stdout + result.stderr
+        assert "cleanup-child-finished" not in result.stdout, "Cleanup must terminate despite app noise"
+
+    # Active Swift Testing retains the existing general output-idle deadline.
+    child = (
+        "import time\n"
+        "print(\"Test Suite 'Selected tests' passed at now\", flush=True)\n"
+        "print('◇ Test run started.', flush=True)\n"
+        "time.sleep(10)\n"
+    )
+    result = subprocess.run(
+        [sys.executable, str(HELPER), sys.executable, "-c", child],
+        cwd=ROOT, text=True, capture_output=True, timeout=5,
+        env={**env, "BMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS": "0.6"},
+    )
+    assert result.returncode == 124, result.stdout + result.stderr
+    assert "Idle timed out after 0.6s" in result.stderr, result.stderr
+
+
+
+def check_colored_test_progress_watchdog() -> None:
+    # Swift Testing emits SGR around its glyphs when stdout is this wrapper's PTY.
+    # Start and completion are independent cases: a plain start isolates whether
+    # the colored final summary actually rearms cleanup.
+    for phase, expected in [("start", 0), ("start", 65), ("completion", 124), ("completion", 125)]:
+        marker = ("\x1b[90m◇\x1b[0m Test run started." if phase == "start" else
+                  "\x1b[92m✔\x1b[0m Test run with 1 test in 0 suites passed after 0.01 seconds.")
+        child = textwrap.dedent(f"""
+            import os, time
+            print("Test Suite 'Selected tests' {'failed' if expected == 125 else 'passed'} at now", flush=True)
+            if {phase!r} == "completion":
+                print("◇ Test run started.", flush=True)
+            marker = {marker!r}.encode() + b"\\n"
+            offset = 0
+            # Fragment both ANSI escape sequences and the UTF-8 status glyph.
+            for end in [1, 3, 6, 9, len(marker)]:
+                os.write(1, marker[offset:end])
+                offset = end
+                time.sleep(0.01)
+            if {phase!r} == "start":
+                time.sleep(0.6)
+                print("✔ Test run with 1 test passed after 0.6 seconds.", flush=True)
+                raise SystemExit({expected})
+            for _ in range(40):
+                print("unrelated app diagnostic", flush=True)
+                time.sleep(0.05)
+            print("cleanup-child-finished", flush=True)
+        """)
+        with tempfile.TemporaryDirectory() as temporary:
+            log_path = Path(temporary) / "colored.log"
+            result = subprocess.run(
+                [sys.executable, str(HELPER), sys.executable, "-c", child],
+                cwd=ROOT, text=True, capture_output=True, timeout=5,
+                env={**os.environ,
+                     "BMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS": "3",
+                     "BMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS": "0.4",
+                     "BMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH": str(log_path)},
+            )
+            assert result.returncode == expected, (
+                f"Colored {phase} must exit {expected}, got {result.returncode}\n"
+                + result.stdout + result.stderr
+            )
+            assert marker in result.stdout, "Parser normalization must preserve raw stdout styling"
+            assert marker.encode() in log_path.read_bytes(), "Keep ANSI bytes in the saved log"
+            assert "cleanup-child-finished" not in result.stdout
+
+
 def main() -> int:
     child = textwrap.dedent(
         f"""
@@ -111,11 +259,11 @@ def main() -> int:
         timeout=5,
         env=post_test_env,
     )
-    if passing_post_test_result.returncode != 0:
+    if passing_post_test_result.returncode != 124:
         print(passing_post_test_result.stdout, end="")
         print(passing_post_test_result.stderr, end="", file=sys.stderr)
         print(
-            "FAIL: expected post-test timeout after passing Selected tests summary to exit 0, "
+            "FAIL: expected post-test timeout after partial Selected tests summary to exit 124, "
             f"got {passing_post_test_result.returncode}"
         )
         return 1
@@ -142,12 +290,12 @@ def main() -> int:
         env=post_test_env,
     )
     noisy_elapsed = time.monotonic() - noisy_started
-    if noisy_post_test_result.returncode != 0:
+    if noisy_post_test_result.returncode != 124:
         print(noisy_post_test_result.stdout, end="")
         print(noisy_post_test_result.stderr, end="", file=sys.stderr)
         print(
             "FAIL: expected noisy post-test timeout after passing Selected tests summary "
-            f"to exit 0, got {noisy_post_test_result.returncode}"
+            f"to exit 124, got {noisy_post_test_result.returncode}"
         )
         return 1
     if noisy_elapsed > 1.5:
@@ -155,6 +303,24 @@ def main() -> int:
         print(noisy_post_test_result.stderr, end="", file=sys.stderr)
         print(f"FAIL: noisy post-test timeout was rearmed; elapsed {noisy_elapsed:.2f}s")
         return 1
+
+    # An early XCTest summary may precede Swift Testing. Neither that summary
+    # nor a printed success marker replaces the native process exit status.
+    for trailing_output in ["Swift Testing recorded an issue", "** TEST SUCCEEDED **"]:
+        child = (
+            "import time\n"
+            "print(\"Test Suite 'Selected tests' passed at now\", flush=True)\n"
+            f"print({trailing_output!r}, flush=True)\n"
+            "time.sleep(10)\n"
+        )
+        result = subprocess.run(
+            [sys.executable, str(HELPER), sys.executable, "-c", child],
+            cwd=ROOT, text=True, capture_output=True, timeout=5, env=post_test_env,
+        )
+        if result.returncode != 124:
+            print(result.stdout, end="")
+            print(f"FAIL: expected incomplete native run to exit 124, got {result.returncode}")
+            return 1
 
     failing_post_test_child = textwrap.dedent(
         """
@@ -228,6 +394,11 @@ def main() -> int:
             print(log_result.stderr, end="", file=sys.stderr)
             print("FAIL: helper did not write child output to log path")
             return 1
+
+    check_test_progress_watchdog()
+    check_colored_test_progress_watchdog()
+
+    subprocess.run([sys.executable, str(ROOT / "tests/test_ci_app_host_cancellation.py")], check=True)
 
     print("PASS: xcodebuild noninteractive helper dismisses crash prompts and idle-times out stuck children")
     return 0

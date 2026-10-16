@@ -363,11 +363,22 @@ struct DockControlDefinitionDecodingTests {
     @MainActor
     func dockPaneClosePromptListsEveryTabThatWillClose() async throws {
         let previousAppDelegate = AppDelegate.shared
+        var needsDelegateRestoration = true
+        func restoreDelegate() {
+            guard needsDelegateRestoration else { return }
+            AppDelegate.shared = previousAppDelegate
+            if let previousAppDelegate {
+                GhosttyApp.terminalSurfaceRegistry.attachRouteRetirer(previousAppDelegate)
+            }
+            needsDelegateRestoration = false
+        }
+        defer { restoreDelegate() }
         let appDelegate = AppDelegate()
         let manager = TabManager()
         AppDelegate.shared = appDelegate
         appDelegate.tabManager = manager
-        defer { AppDelegate.shared = previousAppDelegate }
+        let windowId = appDelegate.registerMainWindowContextForTesting(tabManager: manager)
+        defer { appDelegate.unregisterMainWindowContextForTesting(windowId: windowId) }
 
         let workspace = try #require(manager.tabs.first)
         defer { workspace.teardownAllPanels() }
@@ -385,15 +396,41 @@ struct DockControlDefinitionDecodingTests {
             cleanPanel.surface.setNeedsConfirmCloseOverrideForTesting(nil)
         }
 
-        var capturedPrompt: (title: String, message: String, acceptCmdD: Bool)?
+        try #require(appDelegate.dockReferenceTabManager(for: store) === manager)
+        typealias Prompt = (title: String, message: String, acceptCmdD: Bool)
+        enum PromptEvent: Sendable {
+            case prompt(Prompt, ContinuousClock.Instant)
+            case deadline
+        }
+        // Keep the first producer event even if the observer is scheduled after the deadline.
+        let (events, signal) = AsyncStream<PromptEvent>.makeStream(bufferingPolicy: .bufferingOldest(1))
+        defer { signal.finish() }
+        // Keep the owned rejection handler safe if the queued close task outlives a failed observation.
         manager.confirmCloseHandler = { title, message, acceptCmdD in
-            capturedPrompt = (title, message, acceptCmdD)
+            signal.yield(.prompt((title, message, acceptCmdD), .now))
             return false
         }
 
+        let deadline = ContinuousClock.now.advanced(by: .seconds(1))
         #expect(!store.splitTabBar(store.bonsplitController, shouldClosePane: rootPane))
-        for _ in 0..<10 where capturedPrompt == nil {
-            await Task.yield()
+        // The queued close task already captured its registered manager; do not swap globals across await.
+        restoreDelegate()
+        let capturedPrompt = try await withThrowingTaskGroup(of: Void.self, returning: Prompt.self) { group in
+            defer { group.cancelAll() }
+            group.addTask {
+                // A missing callback is a bounded failure, not a settling delay or yield-count guess.
+                try await ContinuousClock().sleep(until: deadline)
+                signal.yield(.deadline)
+            }
+            var iterator = events.makeAsyncIterator()
+            let event = await iterator.next()
+            try Task.checkCancellation()
+            switch try #require(event) {
+            case let .prompt(prompt, arrived) where arrived <= deadline:
+                return prompt
+            case .prompt, .deadline:
+                throw NSError(domain: "DockCloseConfirmationMissing", code: 1)
+            }
         }
 
         let expectedMessage = String(
@@ -405,9 +442,9 @@ struct DockControlDefinitionDecodingTests {
             Int64(2),
             "• Terminal\n• Terminal"
         )
-        #expect(capturedPrompt?.title == String(localized: "dialog.closePane.title", defaultValue: "Close pane?"))
-        #expect(capturedPrompt?.message == expectedMessage)
-        #expect(capturedPrompt?.acceptCmdD == false)
+        #expect(capturedPrompt.title == String(localized: "dialog.closePane.title", defaultValue: "Close pane?"))
+        #expect(capturedPrompt.message == expectedMessage)
+        #expect(capturedPrompt.acceptCmdD == false)
     }
 
     @Test("Dock browser closes when WebKit requests close")

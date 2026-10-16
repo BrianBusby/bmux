@@ -1759,7 +1759,7 @@ final class SocketClient {
 
     private let path: String
     private var socketFD: Int32 = -1
-    private var lastConfiguredReceiveTimeout: TimeInterval?
+    private var receiver = CLISocketReceiver()
     private var lastOperationTelemetry: CLISocketOperationTelemetry.State?
     private static let defaultResponseTimeoutSeconds: TimeInterval = 15.0
     private static let multilineResponseIdleTimeoutSeconds: TimeInterval = 0.12
@@ -1900,7 +1900,7 @@ final class SocketClient {
             Darwin.close(socketFD)
             socketFD = -1
         }
-        lastConfiguredReceiveTimeout = nil
+        receiver = CLISocketReceiver()
     }
 
     func send(command: String, responseTimeout: TimeInterval? = nil) throws -> String {
@@ -1916,7 +1916,7 @@ final class SocketClient {
         }
 
         let initialResponseTimeout = responseTimeout ?? Self.responseTimeoutSeconds
-        if lastConfiguredReceiveTimeout != initialResponseTimeout {
+        if receiver.configuredTimeout != initialResponseTimeout {
             try configureReceiveTimeout(initialResponseTimeout)
         }
         _ = try? configureSocketWriteSafety(initialResponseTimeout)
@@ -1945,12 +1945,11 @@ final class SocketClient {
             operation.sawNewline = sawNewline
             operation.timeout = currentTimeout
             recordOperation(operation)
-            if lastConfiguredReceiveTimeout != currentTimeout {
-                try configureReceiveTimeout(currentTimeout)
-            }
-
             var buffer = [UInt8](repeating: 0, count: 8192)
-            let count = Darwin.read(socketFD, &buffer, buffer.count)
+            let count = try receiver.read(
+                descriptor: socketFD, buffer: &buffer, count: buffer.count,
+                timeout: currentTimeout, interval: Self.socketTimeval(for: currentTimeout)
+            )
             if count < 0 {
                 if errno == EINTR {
                     continue
@@ -2436,22 +2435,7 @@ final class SocketClient {
     }
 
     private func configureReceiveTimeout(_ timeout: TimeInterval) throws {
-        var interval = Self.socketTimeval(for: timeout)
-        let result = withUnsafePointer(to: &interval) { ptr in
-            setsockopt(
-                socketFD,
-                SOL_SOCKET,
-                SO_RCVTIMEO,
-                ptr,
-                socklen_t(MemoryLayout<timeval>.size)
-            )
-        }
-        guard result == 0 else {
-            let errorCode = errno
-            let reason = String(cString: strerror(errorCode))
-            throw CLIError(message: "Failed to configure socket receive timeout (\(reason), errno \(errorCode))")
-        }
-        lastConfiguredReceiveTimeout = timeout
+        try receiver.configure(descriptor: socketFD, timeout: timeout, interval: Self.socketTimeval(for: timeout))
     }
 
     static func waitForConnectableSocket(path: String, timeout: TimeInterval) throws -> SocketClient {
@@ -17328,8 +17312,8 @@ struct BMUXCLI {
         }
     }
 
-    private func currentWorkspaceId(windowHandle: String, client: SocketClient) throws -> String? {
-        let payload = try client.sendV2(method: "workspace.current", params: ["window_id": windowHandle])
+    private func currentWorkspaceId(windowHandle: String?, client: SocketClient) throws -> String? {
+        let payload = try client.sendV2(method: "workspace.current", params: windowHandle.map { ["window_id": $0] } ?? [:])
         let workspaceId = (payload["workspace_id"] as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard let workspaceId, !workspaceId.isEmpty else { return nil }
@@ -25541,14 +25525,6 @@ struct BMUXCLI {
         return name.isEmpty ? String(path.suffix(30)) : name
     }
 
-    private func resolveSurfaceIdForClaudeHook(
-        _ raw: String?,
-        workspaceId: String,
-        client: SocketClient
-    ) throws -> String {
-        try resolveSurfaceIdAllowingFallback(raw, workspaceId: workspaceId, client: client)
-    }
-
     private func resolveWorkspaceIdAllowingFallback(
         _ raw: String?,
         client: SocketClient
@@ -25562,7 +25538,10 @@ struct BMUXCLI {
         if let callerWorkspaceId = resolveCallerWorkspaceIdForClaudeHook(client: client) {
             return callerWorkspaceId
         }
-        return try resolveWorkspaceId(nil, client: client)
+        guard let current = try currentWorkspaceId(windowHandle: nil, client: client) else {
+            throw CLIError(message: String(localized: "cli.workspace.error.noSelection", defaultValue: "No workspace selected"))
+        }
+        return current
     }
 
     struct ClaudeHookResolvedSurface {
@@ -30468,22 +30447,15 @@ export default BMUXSessionRestore;
             try? resolveSurfaceId(nil, workspaceId: workspaceId, client: client)
         }
         let resolvedDirectWorkspaceArg = resolveAccessibleWorkspaceId(directWorkspaceArg)
-        // Only an EXPLICIT --workspace flag that fails to resolve is a hard, hook-dropping error. A
-        // stale/invalid AMBIENT BMUX_WORKSPACE_ID must not abort routing — treated as absent, it falls
-        // through to the PID/TTY binding below, which is ground truth.
+        // Invalid explicit flags stop routing; rejected ambient IDs require verified PID/TTY recovery.
         let hasInvalidDirectWorkspaceArg = hookWsFlag != nil && resolvedDirectWorkspaceArg == nil
         var processBindingCache: CallerTerminalBinding?
         var didResolveProcessBinding = false
         func processBinding() -> CallerTerminalBinding? {
             if !didResolveProcessBinding {
                 didResolveProcessBinding = true
-                // Always resolve the agent process's own terminal binding (TTY first, then PID), even
-                // when env supplies both ids. Historically this was suppressed whenever both env ids
-                // were present, which made a leaked/stale BMUX_SURFACE_ID impossible to correct — the
-                // codex jumble class, where a session routes to the wrong surface and the no-pid-gate
-                // resume binding persists it across reload. resolveAgentHookTarget now uses this
-                // binding to OVERRIDE a disagreeing ambient-env surface; the binding stays nil (env
-                // trusted) under remote/SSH where no local TTY maps to a surface.
+                // Even complete ambient IDs may name the focused pane instead of the caller.
+                // Prefer its TTY/PID binding; valid ambient IDs still work remotely without one.
                 processBindingCache = resolveCallerTerminalBindingByTTY(client: client)
                     ?? resolveAgentProcessTerminalBinding(pid: inferredPID, client: client)
             }
@@ -30500,10 +30472,7 @@ export default BMUXSessionRestore;
             guard let workspaceId = resolvedDirectWorkspaceArg ?? processBinding()?.workspaceId else { return nil }
             return resolveAccessibleSurfaceId(directSurfaceArg, workspaceId: workspaceId)
         }()
-        // Same asymmetry for the surface: an explicit --surface flag that fails to resolve is a hard
-        // error, but a stale/invalid ambient BMUX_SURFACE_ID (a surface that was closed, or belongs to
-        // another workspace) must fall through to the PID/TTY binding instead of dropping the hook —
-        // that is the stale-env variant of the codex jumble.
+        // A rejected ambient surface can recover, but cannot authorize a saved/focused fallback.
         let hasInvalidDirectSurfaceArg = explicitSurfaceFlag != nil && resolvedDirectSurfaceArg == nil
         let hasUnusableDirectBinding = hasInvalidDirectWorkspaceArg || hasInvalidDirectSurfaceArg
         func workspaceArg() -> String? {
@@ -30678,6 +30647,16 @@ export default BMUXSessionRestore;
                 )
 #endif
                 return nil
+            }
+            if (directWorkspaceArg != nil && resolvedDirectWorkspaceArg == nil)
+                || (directSurfaceArg != nil && resolvedDirectSurfaceArg == nil) {
+                // Discarded ambient identity is not permission to guess another terminal.
+                guard let binding = processBinding(),
+                      let workspaceId = resolveAccessibleWorkspaceId(binding.workspaceId),
+                      resolvedDirectWorkspaceArg == nil || resolvedDirectWorkspaceArg == workspaceId,
+                      let surfaceId = resolveAccessibleSurfaceId(binding.surfaceId, workspaceId: workspaceId)
+                else { return nil }
+                return (workspaceId, surfaceId)
             }
             func resolveTarget(
                 workspaceId: String,
@@ -31264,12 +31243,8 @@ export default BMUXSessionRestore;
             }
             let mapped = sessionId.isEmpty ? nil : (try? store.lookup(sessionId: sessionId))
             guard let target = resolveAgentHookTarget(mapped: mapped) else {
-                switch action {
-                case .approvalResponse:
-                    didSendFeedTelemetry = true
-                default:
-                    break
-                }
+                // A rejected target must not be reintroduced by the deferred telemetry fallback.
+                didSendFeedTelemetry = true
                 print("{}")
                 return
             }

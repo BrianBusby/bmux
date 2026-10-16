@@ -81,6 +81,22 @@
         }
       }
     },
+    "cli.workspace.error.noSelection": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No workspace selected"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ワークスペースが選択されていません"
+          }
+        }
+      }
+    },
     "hybrid.fixture.inMotion": {
       "extractionState": "manual",
       "localizations": {
@@ -1518,7 +1534,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Build %@"
+            "value": "ビルド %@"
           }
         }
       }
@@ -45773,6 +45789,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "[bmux] 遠端 VM 可能已暫停、被刪除或失去網路連線。"
+          }
+        }
+      }
+    },
+    "cli.ssh.manualReconnectPrompt.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[bmux] reconnect failed. Press r then Enter to try again, or Enter to close this pane."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[bmux] 再接続できませんでした。r を入力して Enter キーを押すと再試行し、Enter キーのみを押すとこのペインを閉じます。"
           }
         }
       }
@@ -133994,6 +134027,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "右サイドバーを切り替え"
+          }
+        }
+      }
+    },
+    "rpc.v2.workspace.remote.reconnect.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to reconnect the requested terminal."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "指定されたターミナルに再接続できませんでした。"
           }
         }
       }
@@ -240635,6 +240685,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "さらに表示"
+          }
+        }
+      }
+    },
+    "sidebar.workspaceFilter.clearSearch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear search"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "検索をクリア"
+          }
+        }
+      }
+    },
+    "sidebar.workspaceFilter.activeCount": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d active filters"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有効なフィルター：%d個"
+          }
+        }
+      }
+    },
+    "sidebar.workspaceFilter.removeFilter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove filter %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フィルター「%@」を削除"
           }
         }
       }

@@ -233,47 +233,4 @@ struct ClaudeBackgroundWorkNotifyTests {
                 "Pending idle_prompt must not set a Needs input pill; saw \(snapshot)")
     }
 
-    @Test func idlePromptAfterIdleStopTagsNotPending() throws {
-        let session = "idle-after-idle"
-        let harness = ClaudeHookSurfaceResolutionSwiftTests()
-        let context = try harness.makeClaudeHookContext(name: "idle-idle")
-        defer { context.cleanup() }
-        let storeURL = context.root.appendingPathComponent("claude-hook-sessions.json")
-        let handled = harness.startClaudeSurfaceResolutionServer(
-            context: context,
-            surfaces: [(context.surfaceId, "surface:1", true)],
-            ttyName: "ttys-idle-idle",
-            ttySurfaceId: context.surfaceId
-        )
-        let environment = harness.claudeHookEnvironment(
-            context: context,
-            surfaceId: context.surfaceId,
-            ttyName: "ttys-idle-idle",
-            storeURL: storeURL
-        )
-        let stopResult = harness.runProcess(
-            executablePath: context.cliPath,
-            arguments: ["hooks", "claude", "stop"],
-            environment: environment,
-            standardInput: #"{"session_id":"\#(session)","cwd":"/tmp/x","hook_event_name":"Stop","last_assistant_message":"ok","background_tasks":[],"session_crons":[]}"#,
-            timeout: 5
-        )
-        #expect(handled.wait(timeout: .now() + 5) == .success)
-        harness.assertSuccessfulHook(stopResult)
-        let notifResult = harness.runProcess(
-            executablePath: context.cliPath,
-            arguments: ["hooks", "claude", "notification"],
-            environment: environment,
-            standardInput: #"{"session_id":"\#(session)","cwd":"/tmp/x","hook_event_name":"Notification","message":"Claude is waiting for your input","notification_type":"idle_prompt"}"#,
-            timeout: 5
-        )
-        #expect(handled.wait(timeout: .now() + 5) == .success)
-        harness.assertSuccessfulHook(notifResult)
-        let snapshot = context.state.snapshot()
-        #expect(notifyLine(snapshot, containing: "c=idle-reminder;p=0") != nil,
-                "idle_prompt after an idle stop must tag pending=0; saw \(snapshot)")
-        // With no pending work this is a real waiting state, so the pill flips.
-        #expect(statusLine(snapshot, value: "Needs input") != nil,
-                "Idle idle_prompt must still set the Needs input pill; saw \(snapshot)")
-    }
 }

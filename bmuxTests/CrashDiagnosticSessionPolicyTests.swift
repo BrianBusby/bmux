@@ -27,20 +27,29 @@ struct CrashDiagnosticSessionPolicyTests {
 
     @Test
     func terminalDefaultFileOpenIgnoresSymlinkedGhosttyCrashReportsInBmuxCrashDirectory() throws {
-        let crashReport = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".local/state/bmux/crash/bmux.ghosttycrash", isDirectory: false)
-        let symlink = FileManager.default.temporaryDirectory
-            .appendingPathComponent("bmux-symlinked-crash-\(UUID().uuidString).ghosttycrash", isDirectory: false)
-        try FileManager.default.createSymbolicLink(at: symlink, withDestinationURL: crashReport)
+        let fileManager = FileManager.default
+        let root = fileManager.temporaryDirectory
+            .appendingPathComponent("bmux-symlinked-crash-\(UUID().uuidString)", isDirectory: true)
+        try fileManager.createDirectory(at: root, withIntermediateDirectories: true)
         defer {
-            try? FileManager.default.removeItem(at: symlink)
+            do { try fileManager.removeItem(at: root) }
+            catch { Issue.record(error, "Could not remove owned crash-report fixture") }
         }
+        let homeDirectory = root.appendingPathComponent("home", isDirectory: true)
+        let crashReport = homeDirectory
+            .appendingPathComponent(".local/state/bmux/crash/bmux.ghosttycrash", isDirectory: false)
+        try fileManager.createDirectory(at: crashReport.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data("MDMP".utf8).write(to: crashReport)
+        let symlink = root.appendingPathComponent("report-link.ghosttycrash", isDirectory: false)
+        try fileManager.createSymbolicLink(at: symlink, withDestinationURL: crashReport)
 
         #expect(
             TerminalDefaultFileOpenRequest(
                 fileURL: symlink,
                 contentType: .unixExecutable,
-                isExecutable: true
+                isExecutable: true,
+                homeDirectory: homeDirectory,
+                environment: [:]
             ) == nil
         )
     }

@@ -51,28 +51,11 @@ func sidebarActiveForegroundNSColor(
 }
 
 func titlebarControlForegroundNSColor(opacity: CGFloat) -> NSColor {
-    let app = GhosttyApp.shared
-    let bestMatch = NSApp?.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua])
-    let colorScheme: ColorScheme = bestMatch == .darkAqua ? .dark : .light
-    let appearance = WindowAppearanceResolver(
-        terminalAppearance: WindowTerminalAppearanceSnapshot(
-            backgroundColor: app.defaultBackgroundColor,
-            backgroundOpacity: app.defaultBackgroundOpacity,
-            backgroundBlur: app.defaultBackgroundBlur,
-            usesHostLayerBackground: app.usesHostLayerBackground
-        )
-    ).currentFromUserDefaults(defaults: .standard, colorScheme: colorScheme)
-    return titlebarControlForegroundNSColor(
-        opacity: opacity,
-        appearance: appearance
-    )
+    MatteTheme.dynamicColor(.textSecondary).withAlphaComponent(max(0, min(opacity, 1)))
 }
 
 func titlebarControlForegroundNSColor(opacity: CGFloat, appearance: WindowAppearanceSnapshot) -> NSColor {
-    bmuxReadableForegroundNSColor(
-        on: appearance.compositedTerminalBackgroundColor,
-        opacity: opacity
-    )
+    titlebarControlForegroundNSColor(opacity: opacity)
 }
 
 func bmuxAccentNSColor(for colorScheme: ColorScheme) -> NSColor {

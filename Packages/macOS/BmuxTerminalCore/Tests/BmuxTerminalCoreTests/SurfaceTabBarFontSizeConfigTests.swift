@@ -5,10 +5,10 @@ import BmuxTerminalCore
 
 @Suite
 struct SurfaceTabBarFontSizeConfigTests {
-    @Test func defaultSurfaceTabBarFontSizeMatchesBaseline() {
+    @Test func defaultSurfaceTabBarFontSizeMatchesApprovedMatteDefault() {
         let config = GhosttyConfig()
 
-        #expect(abs(config.surfaceTabBarFontSize - 11) <= 0.0001)
+        #expect(abs(config.surfaceTabBarFontSize - 13) <= 0.0001)
         #expect(abs(config.surfaceTabBarFontSize - GhosttyConfig.defaultSurfaceTabBarFontSize) <= 0.0001)
     }
 

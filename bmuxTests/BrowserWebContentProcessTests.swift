@@ -153,9 +153,9 @@ struct BrowserWebContentProcessTests {
             baseURL: URL(string: "https://example.com/")!
         )
 
-        let result = try await webView.evaluateJavaScript(
+        let result = try await webView.callAsyncJavaScript(
             """
-            (async () => {
+            return (async () => {
               const handlerVisible = !!(
                 window.webkit &&
                 window.webkit.messageHandlers &&
@@ -180,7 +180,10 @@ struct BrowserWebContentProcessTests {
                   credential.response.signature.byteLength
               };
             })()
-            """
+            """,
+            arguments: [:],
+            in: nil,
+            contentWorld: .page
         ) as? [String: Any]
 
         #expect(result?["handlerVisible"] as? Bool == false)
@@ -375,19 +378,25 @@ struct BrowserWebContentProcessTests {
     func floatingPopupClosesWhenWebContentProcessTerminates() throws {
         let panel = BrowserPanel(workspaceId: UUID(), isRemoteWorkspace: false)
         defer { panel.close() }
-        let popupWebView = try #require(
-            panel.createFloatingPopup(
-                configuration: WKWebViewConfiguration(),
-                windowFeatures: WKWindowFeatures()
+        weak var popupController: (any NSWindowDelegate)?
+        let (popupWebView, popupWindow) = try autoreleasepool {
+            let popupWebView = try #require(
+                panel.createFloatingPopup(
+                    configuration: WKWebViewConfiguration(),
+                    windowFeatures: WKWindowFeatures()
+                )
             )
-        )
-        let popupWindow = try #require(popupWebView.window)
+            let popupWindow = try #require(popupWebView.window)
+            let controller = try #require(popupWindow.delegate)
+            popupController = controller
 
-        popupWebView.navigationDelegate?.webViewWebContentProcessDidTerminate?(popupWebView)
+            popupWebView.navigationDelegate?.webViewWebContentProcessDidTerminate?(popupWebView)
+            return (popupWebView, popupWindow)
+        }
 
         #expect(popupWebView.navigationDelegate == nil)
         #expect(popupWebView.uiDelegate == nil)
-        #expect(popupWebView.window == nil)
+        #expect(popupController == nil)
         #expect(!popupWindow.isVisible)
     }
 }
@@ -432,7 +441,7 @@ private final class BrowserWebAuthnReplyProbe: NSObject, WKScriptMessageHandlerW
     func userContentController(
         _ userContentController: WKUserContentController,
         didReceive message: WKScriptMessage,
-        replyHandler: @escaping (Any?, String?) -> Void
+        replyHandler: @escaping @MainActor @Sendable (Any?, String?) -> Void
     ) {
         guard let body = message.body as? [String: Any],
               let kind = body["kind"] as? String else {

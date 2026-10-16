@@ -2,6 +2,29 @@ import AppKit
 
 @MainActor
 final class PortalSplitDividerCacheInvalidator {
+    @MainActor
+    private struct ViewStructure {
+        weak var view: NSView?
+        let subviewIDs: [ObjectIdentifier]
+
+        init(view: NSView) {
+            self.view = view
+            subviewIDs = view.subviews.map(ObjectIdentifier.init)
+        }
+
+        var isCurrent: Bool {
+            guard let view else { return false }
+            let subviews = view.subviews
+            return subviews.count == subviewIDs.count &&
+                zip(subviews, subviewIDs).allSatisfy { ObjectIdentifier($0.0) == $0.1 }
+        }
+    }
+
+    private var structures: [ViewStructure] = []
+
+    /// Checks only the already-collected layout containers, without walking their descendants.
+    var isStructureCurrent: Bool { structures.allSatisfy(\.isCurrent) }
+
     // Observer tokens are assigned/cleared from main-thread AppKit paths. Swift
     // deinit is nonisolated, so the teardown helper needs nonisolated access
     // after all main-thread use has ceased.
@@ -42,14 +65,10 @@ final class PortalSplitDividerCacheInvalidator {
                 MainActor.assumeIsolated { onChange() }
             }
         }
-        // Nested splits can be inserted under known layout containers after cache
-        // warm-up. Keep this bounded to root/direct/split-related containers, not
-        // arbitrary descendants such as WebKit or terminal internals.
-        observations.append(contentsOf: subviewObservedViews.map { view in
-            view.observe(\.subviews, options: [.new]) { _, _ in
-                MainActor.assumeIsolated { onChange() }
-            }
-        })
+        // NSView.addSubview does not reliably emit KVO for subviews. Keep weak snapshots
+        // of the same bounded root/direct/split-related containers for cache-hit validation.
+        structures = subviewObservedViews.map(ViewStructure.init)
+
     }
 
     private static func uniqueViews(_ views: [NSView]) -> [NSView] {
@@ -62,6 +81,7 @@ final class PortalSplitDividerCacheInvalidator {
     }
 
     func invalidate() {
+        structures.removeAll()
         invalidateObservations()
     }
 

@@ -5835,6 +5835,56 @@ policies:
     selected_for_implementation: false
 
 caveats:
+  - id: app_host_cancellation_ownership_verification
+    title: Native deadline now owns the test wrapper inside the console session; output-pipeline and cancellation controls pass, real runner cleanup remains unverified
+    status: open
+    owner: bmux
+
+  - id: session_write_store_capture_verification
+    title: Session persistence store capture builds as 794 and passes compiled policy/store checks; macOS 15 app-host teardown verification remains pending
+    status: open
+    owner: bmux
+
+  - id: bash_relay_refresh_fixture_verification
+    title: Bash refresh FIFO observation awaits app-host verification and retains detached stub cleanup risk
+    status: open
+    owner: bmux
+
+  - id: kiro_lifecycle_feed_fixture_verification
+    title: Joined Kiro lifecycle no-response fixture awaits actual app-host verification
+    status: open
+    owner: bmux
+
+  - id: feed_hook_no_response_fixture_verification
+    title: Four-agent one-way feed fixture awaits fixed-head app-host verification
+    status: open
+    owner: bmux
+
+  - id: claude_notification_target_fixture_verification
+    title: Claude notification full-suite process timeouts remain unresolved despite focused app-host completion
+    status: open
+    owner: bmux
+
+  - id: resume_policy_execution_fixture_verification
+    title: Focused Hermes startup and stale-PID suites pending actual app-host verification
+    status: open
+    owner: bmux
+
+  - id: browser_remote_store_fixture_verification
+    title: Focused browser profile and remote store move suite pending actual app-host verification
+    status: open
+    owner: bmux
+
+  - id: cloud_attach_retry_fixture_verification
+    title: Focused Cloud attach retry contract suite pending actual app-host verification
+    status: open
+    owner: bmux
+
+  - id: managed_appearance_startup_fixture_verification
+    title: Focused managed appearance startup suite pending actual app-host verification
+    status: open
+    owner: bmux
+
   - id: broad_legacy_storage_migration
     title: Broad legacy bmux-local storage migration
     status: open
@@ -5887,3 +5937,828 @@ caveats:
     issue:
       repository: BrianBusby/bmux
       number: 8
+
+  - id: bundled_cli_mixed_signature_regression_verification
+    title: Mixed-signature regressions failed in actual D2 CI and all14 fixed artifact tests pass locally; full Release and fresh-runner validation pending
+    status: open
+    owner: bmux
+  - id: bundled_cli_artifact_relocation_verification
+    title: Bundled CLI dynamic and Release artifact relocation verification
+    status: open
+    owner: bmux
+
+  - id: browser_discard_policy_focused_gate_verification
+    title: Focused browser app-host gate includes discard policy tests; local native cases pass and pushed-head CI remains pending
+    status: open
+    owner: bmux
+
+  - id: codex_stop_fixture_app_host_verification
+    title: Codex Stop focused app-host passes nine functions in three suites; full-suite verification remains pending
+    status: open
+    owner: bmux
+
+  - id: command_runner_parallel_pipe_capture
+    title: CommandRunner blocking pipe readers can exhaust the cooperative executor during parallel socket tests
+    status: open
+    owner: bmux
+
+  - id: browser_legacy_theme_startup_migration_verification
+    title: Browser legacy theme startup migration focused gate awaits fixed app-host CI
+    status: open
+    owner: bmux
+
+  - id: browser_background_compositing_focused_gate_verification
+    title: Focused browser app-host gate includes background compositing tests; local native cases pass and pushed-head CI remains pending
+    status: open
+    owner: bmux
+
+  - id: right_sidebar_shortcut_fixture_app_host_verification
+    title: Right sidebar shortcut fixture repair passes local flag-state coverage; focused app-host CI verification remains pending
+    status: open
+    owner: bmux
+
+  - id: ssh_startup_lifecycle_focused_gate_verification
+    title: CI app-host Option/Alt step selects nine SSH lifecycle tests plus managed attach cleanup fixture; pushed-head verification pending
+    status: open
+    owner: bmux
+
+  - id: ssh_manual_reconnect_handoff_regression
+    title: SSH manual reconnect has actual CI red and native 779 green; fixed-head app-host and runtime acceptance remain pending
+    status: open
+    owner: bmux
+
+  - id: browser_discard_restore_focused_gate_verification
+    title: Browser discard initial-navigation readiness timed out on macOS 15 CI; bounded fixture diagnostics await app-host evidence
+    status: open
+    owner: bmux
+
+  - id: sidebar_width_persistence_focused_gate_verification
+    title: Focused app-host gate includes default and configured sidebar width policy tests; local native cases pass and pushed-head CI remains pending
+    status: open
+    owner: bmux
+
+  - id: claude_session_end_scope_focused_gate_verification
+    title: Claude replaced-session cleanup fixture focused gate awaits app-host CI
+    status: open
+    owner: bmux
+
+  - id: maintenance_combined_validation_pending
+    title: Published maintenance fixes are composed for CI; full authoritative native and artifact gates remain pending
+    status: open
+    owner: bmux
+
+  - id: agent_launch_joined_producer_verification
+    title: Agent launch fixture joins timeout and cancellation producers before cleanup; native controls pass and app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: agent_launch_environment_fixture_focused_gate_verification
+    title: Agent launch environment fixture adopts existing 20-second CI process policy after S timeouts; local five-second verification passes and fixed-head app-host evidence remains pending
+    status: open
+    owner: bmux
+  - id: ssh_workspace_creation_fixture_focused_gate_verification
+    title: SSH workspace creation fixture adopts existing 20-second CI process policy after S timeouts; local five-second verification passes and fixed-head app-host evidence remains pending
+    status: open
+    owner: bmux
+  - id: ssh_agent_environment_fixture_focused_gate_verification
+    title: SSH agent environment fixture focused gate awaits app-host CI
+    status: open
+    owner: bmux
+  - id: workspace_close_ownership_verification
+    title: Foreign workspace close reproduces destructive teardown; owned-instance guard awaits fixed native and app-host verification
+    status: open
+    owner: bmux
+  - id: antigravity_hook_lifecycle_fixture_verification
+    title: Antigravity hook fixture joins request producers without blocked accept workers; full app-host verification pending
+    status: open
+    owner: bmux
+  - id: terminal_initial_runtime_readiness_verification
+    title: Initial-input and command fixtures await native readiness without user-window attachment; full app-host verification pending
+    status: open
+    owner: bmux
+  - id: workspace_runtime_close_fixture_verification
+    title: Workspace close uses a real ready runtime and coordinator owns injected-free scheduling coverage; full app-host verification pending
+    status: open
+    owner: bmux
+  - id: grok_hook_connection_fixture_verification
+    title: Grok hook fixtures drain RPC and one-way telemetry across notification payloads, saved-route chat turns, and missing-cwd completion; app-host verification pending
+    status: open
+    owner: bmux
+  - id: persistent_pty_child_exit_verification
+    title: Persistent SSH child exit reproduces sibling tracking loss; last-surface guard awaits fixed native and app-host verification
+    status: open
+    owner: bmux
+
+  - id: ssh_pty_lifecycle_fixture_verification
+    title: SSH PTY initial resize acknowledgement CI timeouts remain unresolved
+    status: open
+    owner: bmux
+  - id: codex_monitor_lease_fixture_verification
+    title: CI Option/Alt step selects CodexMonitorLeaseTests sequential and nested controls; actual app-host verification pending
+    status: open
+    owner: bmux
+  - id: respawn_window_protocol_fixture_focused_gate_verification
+    title: Respawn window protocol fixture focused gate awaits app-host CI
+    status: open
+    owner: bmux
+  - id: workspace_fallback_regression_verification
+    title: Workspace fallback regression test red and production fix verification pending
+    status: open
+    owner: bmux
+  - id: native_portal_workspace_contract_fixture_verification
+    title: Portal geometry and workspace creation/publication fixture corrections await fixed-head app-host verification
+    status: open
+    owner: bmux
+  - id: native_history_and_batched_frame_fixture_verification
+    title: Completed-close history and batched mobile response fixture corrections await fixed-head app-host verification
+    status: open
+    owner: bmux
+  - id: markdown_window_retained_fixture_verification
+    title: Retained Markdown rendering windows and event-driven fixture await fixed-head app-host verification
+    status: open
+    owner: bmux
+  - id: notification_record_restore_fixture_verification
+    title: Notification-record restore fixtures await fixed-head app-host verification
+    status: open
+    owner: bmux
+  - id: welcome_window_retained_fixture_verification
+    title: Retained Welcome shortcut window fixture awaits fixed-head app-host verification
+    status: open
+    owner: bmux
+  - id: browser_webauthn_async_result_fixture_verification
+    title: WebAuthn relay fixture awaits Promise completion and passes native build 799; fixed-head macOS 15 app-host CI remains pending
+    status: open
+    owner: bmux
+  - id: browser_popup_termination_ownership_fixture_verification
+    title: Popup termination fixture verifies controller release after autorelease drainage; fixed-head macOS 15 app-host CI remains pending
+    status: open
+    owner: bmux
+  - id: browser_inspector_window_ownership_verification
+    title: Browser inspector window-close correction and raw-close lifecycle fixture await fixed-head app-host verification
+    status: open
+    owner: bmux
+  - id: remote_restore_working_directory_regression
+    title: Remote agent restore directory guard passes native build 783; full app-host verification pending
+    status: open
+    owner: bmux
+  - id: global_search_shortcut_conflict_verification
+    title: Focused global search configured-conflict priority suite awaits app-host verification
+    status: open
+    owner: bmux
+  - id: focused_app_host_process_diagnostics_verification
+    title: Bounded process diagnostics are enabled for all broad PR shards and focused shard 1; usable macOS 15 call graphs and timeout causes remain unverified
+    status: open
+    owner: bmux
+  - id: remote_tmux_crlf_record_parsing_verification
+    title: Remote tmux CRLF record correction passes isolated artifact checks; full CI pending
+    status: open
+    owner: bmux
+  - id: browser_download_quarantine_boundary_verification
+    title: Quarantine outbound metadata and native readback contract pass local checks; app-host verification remains pending
+    status: open
+    owner: bmux
+  - id: file_preview_save_shortcut_fixture_verification
+    title: Configured and chorded file preview save fixtures await fixed-head app-host verification
+    status: open
+    owner: bmux
+  - id: panel_appearance_compositing_fixture_verification
+    title: Panel clear-content and opaque chrome compositing suite awaits fixed-head app-host verification
+    status: open
+    owner: bmux
+  - id: titlebar_narrow_window_layout_verification
+    title: Narrow titlebar reservation fix preserves offscreen reference layout; integrated app verification remains pending
+    status: open
+    owner: bmux
+  - id: claude_resume_and_no_git_watch_fixture_verification
+    title: Claude resume and disabled git-watch contract migrations pass native 786; fixed-head app-host verification pending
+    status: open
+    owner: bmux
+
+  - id: titlebar_search_metadata_fixture_verification
+    title: Titlebar hit-target sizing and search metadata fixture migrations pass native 786; app-host and Swift 6 shortcut-store isolation remain open
+    status: open
+    owner: bmux
+  - id: file_explorer_git_root_alias_regression
+    title: K focused CI reproduces local Git root-alias loss; build 791 preserves caller paths and passes all provider cases, with fixed-head macOS verification pending
+    status: open
+    owner: bmux
+  - id: cli_closed_peer_receive_regression_verification
+    title: Closed-peer receive regression verified by G test-only red and H fixed-head CI run 38600136921 with all six scenarios passing
+    status: resolved
+    owner: bmux
+  - id: cli_socket_home_fixture_verification
+    title: Three tagged CLI fixtures use short owned homes; native 786 exposes a separate multiline receive-timeout error in two cases
+    status: open
+    owner: bmux
+  - id: titlebar_product_contract_fixture_verification
+    title: Native titlebar default-width and voice-control fixture corrections pass locally; app-host verification remains pending
+    status: open
+    owner: bmux
+  - id: project_truth_http_retry_verification
+    title: Bounded GitHub evidence HTTP recovery verified in CI run 38499166578
+    status: resolved
+    owner: bmux
+  - id: cli_socket_capture_completion_verification
+    title: CLI socket capture completion focused gate and shared-caller verification
+    status: open
+    owner: bmux
+  - id: remote_tmux_parser_focused_gate_verification
+    title: Remote tmux LF and CRLF parser focused gate awaits fixed-head CI verification
+    status: open
+    owner: bmux
+
+  - id: project_truth_full_suite_verification
+    title: Project Truth full 121-test gate verified in CI run 38501918260
+    status: resolved
+    owner: bmux
+
+  - id: cli_socket_readiness_coalescing_verification
+    title: Per-descriptor native readiness is bounded locally; final app-host timeout attribution and verification remain pending
+    status: open
+    owner: bmux
+
+  - id: sidebar_terminal_hit_boundary_verification
+    title: Sidebar pointer fixture exercises the actual four-point content overlap; full app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: browser_portal_presentation_fixture_verification
+    title: Browser portal resize, reveal, and transient rebind contracts pass native 786; integrated app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: native_xcode_project_parse_verification
+    title: Native project parsing and D2 build gates pass after quoting extension filenames; final integrated checks remain pending
+    status: open
+    owner: bmux
+
+  - id: browser_omnibar_arrow_fixture_verification
+    title: Browser omnibar arrow fixtures own the required native window context; fixed-head app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: terminal_paste_binding_fixture_verification
+    title: Paste shortcut fixtures verify native custom binding output and runtime recovery; default clipboard delivery is untested and integrated app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: terminal_native_input_delivery_fixture_verification
+    title: Native input and Kitty PTY fixtures use causal readiness and complete-screen reads; integrated macOS app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: remote_agent_fork_fixture_verification
+    title: Remote agent fork fixture owns its existing agent path and passes native checks; app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: default_cloud_proxy_retry_state_verification
+    title: Default cloud proxy retry correction passes native build787 original and five preserved controls; integrated CI remains pending
+    status: open
+    owner: bmux
+
+  - id: deleted_agent_hook_cwd_regression
+    title: Deleted agent-hook cwd correction passes native build787 regression and nine directory controls; integrated app-host verification pending
+    status: open
+    owner: bmux
+
+  - id: session_resume_fork_contract_fixture_verification
+    title: Combined 576-file test target compiles locally; conditional argument correction awaits Xcode 26.3 and integrated app-host verification
+    status: open
+    owner: bmux
+
+  - id: sidebar_pr_focus_contract_fixture_verification
+    title: Sidebar PR aggregate and focused projection fixture correction awaits fixed-head app-host verification
+    status: open
+    owner: bmux
+
+  - id: notification_focus_event_fixture_verification
+    title: Notification focus fixture awaits the existing event flush and passes native proof; fixed-head app-host remains pending
+    status: open
+    owner: bmux
+
+  - id: notification_keydown_fixture_verification
+    title: Keydown notification fixture isolates runtime and surface-flash preferences; fixed-head app-host remains pending
+    status: open
+    owner: bmux
+
+  - id: textbox_clipboard_timeout_fixture_verification
+    title: Clipboard timeout and queued-run fixtures await causal completion; local event-only proofs pass but real pasteboard transactions require isolated app-host CI
+    status: open
+    owner: bmux
+
+  - id: native_symbol_size_fixture_verification
+    title: Native symbol sizing fixture preserves AppKit configured dimensions; fixed-head app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: file_preview_inset_fixture_verification
+    title: File preview inset fixture uses the maintained TextKit stack; fixed-head app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: browser_find_routing_fixture_verification
+    title: Browser Find fixtures distinguish owned-window search from menu fallback; integrated app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: shortcut_parser_lookup_attribution_verification
+    title: Shortcut parser fixtures distinguish pure normalization from runtime subscribers; integrated app-host verification remains pending
+    status: open
+    owner: bmux
+  - id: browser_remote_loopback_fixture_verification
+    title: Remote loopback bridge fixture owns native loading observation and cleanup; macOS 15 timeout cause and app-host verification remain open
+    status: open
+    owner: bmux
+  - id: tmux_split_rejection_fixture_verification
+    title: Tmux split rejection fixture joins CLI and socket completion; actual macOS 15 timeout cause and app-host verification remain open
+    status: open
+    owner: bmux
+  - id: tmux_launch_identity_fixture_verification
+    title: Tmux launch identity fixture uses an owned short endpoint and requires focused-context exchange; integrated app-host verification remains pending
+    status: open
+    owner: bmux
+  - id: orphan_workspace_shortcut_fixture_verification
+    title: Orphan workspace shortcut fixture owns focused-context attribution; integrated app-host verification remains pending
+    status: open
+    owner: bmux
+  - id: titlebar_hit_test_event_context_verification
+    title: Explicit titlebar event-context suite passes native build789 including ambient keyboard control; integrated app-host verification remains pending
+    status: open
+    owner: bmux
+  - id: cli_notify_socket_bind_guard_verification
+    title: Legacy CLI socket setup rejects invalid paths and cleans partial fixture construction failures; native controls pass and integrated app-host verification remains pending
+    status: open
+    owner: bmux
+  - id: ssh_agent_joined_producer_verification
+    title: SSH agent fixture joins its producer and bounds failure summaries; app-host timeouts remain unresolved
+    status: open
+    owner: bmux
+  - id: selected_native_window_close_ownership_verification
+    title: Eight selected test-window constructors retain Swift ownership through close; offscreen controls pass, exact app-host cases and crash attribution remain pending
+    status: open
+    owner: bmux
+  - id: native_window_close_ownership_verification
+    title: File-preview and notification test-window constructor ownership corrected; four affected app-host cases remain pending
+    status: open
+    owner: bmux
+
+  - id: terminal_file_launch_directory_contract_verification
+    title: Terminal file launch fixtures compare directory identity and retain exact quoting; native controls pass and integrated app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: hook_prompt_stable_workspace_fixture_verification
+    title: Hook prompt evidence fixture uses the accepted stable workspace identity; native old expectation fails and corrected case passes, app-host verification pending
+    status: open
+    owner: bmux
+
+  - id: closed_main_window_routing_verification
+    title: Closed retained window routing passes isolated build 790 native controls while manager recovery is preserved; real-window app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: sidebar_git_publication_fixture_verification
+    title: Focused Git metadata fixture verifies sidebar publication and duplicate suppression without workspace publication; native control passes and app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: notification_focus_completion_fixture_verification
+    title: Notification focus dismissal fixture uses the existing broadcaster completion boundary; native controls pass and exact-head app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: cli_telemetry_joined_producer_verification
+    title: CLI telemetry fixture joins its producer at unchanged failure bounds; owned-shell counterexample passes and actual telemetry app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: terminal_attachment_deferred_ime_fixture_verification
+    title: Plain terminal attachment and deferred TCIM fixtures await readiness; native controls pass and integrated app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: gemini_stale_pid_obsolete_oracle_verification
+    title: Obsolete Gemini dead-PID nil oracle removed under accepted restore policy; native positive and maintained stale-PID coverage pass, integrated app-host verification pending
+    status: open
+    owner: bmux
+
+  - id: browser_preload_window_ownership_verification
+    title: Browser preload fixture retains its owned window through close; native ownership control passes and full app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: hermes_hook_phase_fixture_verification
+    title: Hermes hook fixtures join each producer and socket phase; unchanged build 790 passes original contracts, integrated app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: korean_marked_text_runtime_readiness_verification
+    title: Korean marked-text fixture awaits terminal readiness; native composition controls pass and macOS app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: cli_closed_stderr_contract_verification
+    title: Closed-stderr fixture uses the maintained exit contract and joined process owner with absolute deadlines; macOS app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: terminal_inherited_surface_guard_verification
+    title: Terminal config inheritance uses existing runtime ownership guard; build 796 native controls and integrated test compilation pass, macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: ssh_creation_joined_producer_verification
+    title: SSH workspace creation fixture joins its producer and owns authentication; native contracts pass, fixed-head app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: markdown_mermaid_double_zoom_verification
+    title: Mermaid scaling correction follows five actual CI geometry failures and passes native build 792 coverage; integrated app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: browser_chrome_default_contract_verification
+    title: Browser chrome reference follows the shared shipped font default; native metrics coverage passes and integrated app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: omx_hud_restore_directory_fixture_verification
+    title: OMX HUD restore fixture establishes its existing-directory precondition; native restoration and missing-directory controls pass, integrated app-host verification pending
+    status: open
+    owner: bmux
+
+  - id: palette_selection_shortcut_fixture_verification
+    title: Palette shortcut fixtures own their settings and window context; native routing controls pass and integrated app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: split_workspace_title_delivery_fixture_verification
+    title: Split workspace title fixture advances the recorded notification coalescer callback; native controls pass and integrated app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: app_host_failure_evidence_verification
+    title: Optional app-host failure collector abandoned to remove diagnostic staging from the native watchdog; automated reports and matching-image symbolication are unavailable
+    status: superseded
+    owner: bmux
+
+  - id: live_surface_recovery_window_fixture_verification
+    title: Live-surface recovery fixture establishes a visible retained window; direct-context native controls and compilation pass, real presentation app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: claude_session_phase_fixture_verification
+    title: Claude session replacement and startup-restorable fixtures join each hook and socket phase; native controls pass and integrated app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: codex_hook_installation_fixture_verification
+    title: Codex installer fixture counts configured prompt entries and owns generated script paths; native controls pass and integrated app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: migrated_cli_process_ci_deadline_verification
+    title: Migrated CLI fixture deadlines restore their original host-CI minimum; local policy controls pass and fixed-head app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: crash_report_symlink_fixture_verification
+    title: Crash-report symlink fixture owns an existing report and isolated home; build 795 and complete test target compile pass, macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: ci_test_host_environment_propagation_verification
+    title: CI flags now cross console and XCTest boundaries after actual test-only CI red; fixed-head guard and native app-host verification remain pending
+    status: open
+    owner: bmux
+
+  - id: app_host_shared_resource_isolation_verification
+    title: Native test target explicitly disables in-process parallelization for shared AppKit and runtime state; hostless controls pass, full app-host coverage and unchanged 900-second budget remain unverified
+    status: open
+    owner: bmux
+
+  - id: workspace_chrome_color_contract_verification
+    title: Workspace chrome tests follow opaque compositing in scoped light and dark appearances; native build 796 passes, integrated macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: portal_animation_completion_fixture_verification
+    title: Two portal geometry and overlay fixtures preserve their scheduled-action and animation-completion assertions; native controls pass, fixed-head app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: markdown_file_reload_fixture_verification
+    title: Markdown atomic file reload uses the existing content sequence with a joined three-second wait; native build 796 passes, integrated macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: notification_settings_retry_fixture_verification
+    title: Notification settings retry fixture follows synchronous injected callbacks and retains its window; native build 796 passes, integrated macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: workspace_git_snapshot_observation_verification
+    title: Same-directory Git snapshot fixture owns count observations and reader cleanup; native controls pass, integrated macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: grok_sibling_status_fixture_verification
+    title: Grok sibling completion uses owned authenticated joined connections and preserves saved-route status assertions; native build 796 passes five cases, integrated macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: dock_close_confirmation_owner_verification
+    title: Dock pane prompt fixture preserves producer event order and arrival timestamps within its one-second bound; native build 799 callback, delayed-consumer and cancellation controls pass, corrected macOS 15 verification and existing suite isolation warning remain pending
+    status: open
+    owner: bmux
+
+  - id: remote_daemon_bootstrap_contract_verification
+    title: Persistent PTY reinstall contract uses verified owned cache and materializes task-group completion before requiring its value for older Testing compatibility; local controls pass, corrected package CI and retained Workspace integration coverage remain pending
+    status: open
+    owner: bmux
+
+  - id: managed_shortcut_authority_fixture_verification
+    title: Managed shortcut fixtures follow file-authoritative bindings and restore owned settings; native build 796 controls pass, integrated macOS 15 verification remains pending
+    status: open
+    owner: bmux
+
+  - id: agent_session_stream_contract_verification
+    title: Codex queue observes owned submission and RPC boundaries, OpenCode auth matches the explicit username, and Claude final text is not counted as pending delta; fresh build 797 passes native contracts and controls, fixed-head macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: notification_settings_sheet_fixture_verification
+    title: Settings sheet fixture observes synchronous injected alert completion and retains its window; build 796 controls pass, integrated macOS 15 verification remains pending
+    status: open
+    owner: bmux
+
+  - id: theme_session_cli_fixture_verification
+    title: Tagged theme notification and ambiguous Claude workflow fixtures own their CLI completion and paths; fixed-head macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: workspace_stress_delivery_verification
+    title: Workspace stress profiles preserve workload and timing categories while awaiting bounded FIFO delivery; native build 797 passes locally, fixed-head macOS 15 verification remains pending
+    status: open
+    owner: bmux
+
+  - id: native_deadline_exit_diagnostics_verification
+    title: Native deadline owner records numeric termination and final-exit phases; local status controls pass, actual macOS console pipeline completion diagnosis remains pending
+    status: open
+    owner: bmux
+
+  - id: binding_only_resume_state_verification
+    title: Approved agent-hook launch commands participate in existing running-state and directory cleanup ownership without requiring a separate agent snapshot; fresh build 798 passes both regressions and three policy controls, fixed-head macOS 15 verification remains pending
+    status: open
+    owner: bmux
+
+  - id: terminal_pointer_notification_fixture_verification
+    title: Pointer and keyboard dismissal share owned input and renderer delivery fixtures; native build 797 passes, fixed-head macOS 15 coverage and legacy AppFocusState isolation remain pending
+    status: open
+    owner: bmux
+
+  - id: sidebar_tool_focus_delivery_verification
+    title: Sidebar tool focus preservation observes all three deferred owner phases with unchanged one-second bounds; native build 797 passes, integrated macOS 15 verification remains pending
+    status: open
+    owner: bmux
+
+  - id: kiro_codex_feed_contract_verification
+    title: Kiro deny and Codex late-PR feed contract uses owned joined producers and excludes detached monitor composition; fixed-head macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: nested_split_divider_cache_verification
+    title: Shared terminal and browser divider caches validate bounded weak child snapshots instead of relying on subviews KVO; fresh build 799 passes existing portal tests and browser counterparts, fixed-head latency and macOS 15 coverage remain pending
+    status: open
+    owner: bmux
+
+  - id: claude_idle_reminder_contract_verification
+    title: Claude idle reminders retain Idle and cached not-pending metadata through joined phases with original five-second limits; native build 797 passes, fixed-head macOS 15 verification remains pending
+    status: open
+    owner: bmux
+
+  - id: canvas_split_shortcut_initial_panes_verification
+    title: Canvas split shortcut fixtures synchronize existing panel descriptors before geometry assertions; owned native controls pass, original app-host window verification remains pending
+    status: open
+    owner: bmux
+
+  - id: find_workspace_scope_fixture_verification
+    title: Same-path Find scope reset uses real presentation query submission with original reset assertions; build 799 passes, fixed-head macOS 15 app-host coverage remains pending
+    status: open
+    owner: bmux
+
+  - id: deferred_terminal_search_focus_fixture_verification
+    title: Deferred terminal search attachment uses native FIFO and actual responder observation with original one-second phase bounds; owned build 801 controls pass, original presented macOS 15 composition remains pending
+    status: open
+    owner: bmux
+
+  - id: prompt_session_link_completion_fixture_verification
+    title: Identity-only session linkage fixture records full projection completion before async consumption under its original one-second bound and joins before SQLite cleanup; build 801 controls pass, historical AD7 phase attribution and integrated macOS 15 verification remain pending
+    status: open
+    owner: bmux
+
+  - id: codex_prompt_cache_fallback_fixture_verification
+    title: Codex prompt cache and detached fallback launch retain original assertions with an owned missing-path precondition and final-write signal; native controls pass, fixed-head macOS 15 execution remains pending
+    status: open
+    owner: bmux
+
+  - id: option_digit_terminal_focus_fixture_verification
+    title: Option-digit fixture observes native readiness before explicit focus and keeps real key-equivalent assertions; fixed-head macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: pending_diff_ordering_fixture_verification
+    title: Pending diff ordering fixture owns Git and gh setup and materializes task-group completion before its Testing assertion; original phase and cleanup controls pass locally, corrected macOS 15 CI and pre-announcement child tails remain explicit limits
+    status: open
+    owner: bmux
+
+  - id: visible_terminal_responder_readiness_verification
+    title: Visible terminal responder repair uses buffered readiness and native focus delivery with original bounds; offscreen controls and strict compilation pass, actual app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: v2_cli_and_browser_completion_fixture_verification
+    title: Three V2 fixture migrations retain joined five-second CLI producers and finite browser focus delivery; native positive and negative controls pass, fixed-head macOS 15 app-host execution remains pending
+    status: open
+    owner: bmux
+
+  - id: v4_terminal_search_and_window_restore_fixture_verification
+    title: V4 terminal search repair uses buffered readiness and native overlay delivery while stranded-sidebar restoration explicitly selects Terminal; strict compilation and offscreen boundary controls pass, full macOS 15 window cases remain pending
+    status: open
+    owner: bmux
+
+  - id: v_tail_nonfocus_and_option_terminal_fixture_verification
+    title: Remaining V non-focus split cases retain native queued selection and original phase bounds while Option-digit explicitly mounts Terminal; native split controls pass, full macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux
+
+  - id: codex_pending_turn_write_fixture_verification
+    title: Codex pending-write fixture observes real request boundaries and joins its held submission on timeout or cancellation; build 799 passes local controls, integrated macOS 15 verification remains pending
+    status: open
+    owner: bmux
+
+  - id: app_host_lock_stopped_child_verification
+    title: Actual CI proves stopped-child cancellation fails without resume; the lock now forwards the original signal then resumes its owned command and all thirteen local cancellation cases pass, fixed-head CI and historical V pipe completion cause remain unresolved
+    status: open
+    owner: bmux
+
+  - id: fork_live_process_scope_fixture_verification
+    title: Fork cache refresh fixture supplies matching live workspace and surface environment identities; missing and wrong scope controls fail while the corrected native case passes, fixed-head macOS 15 verification remains pending
+    status: open
+    owner: bmux
+
+  - id: app_host_eight_shard_capacity_verification
+    title: Eight deterministic native shards preserve the complete selector partition and unchanged 900-second bound; measured V workload supports added capacity, final CI completion and increased runner queue cost remain pending
+    status: open
+    owner: bmux
+
+  - id: terminal_search_overlay_mouse_fixture_verification
+    title: Search-overlay mouse fixtures own a real focused workspace and native mount delivery with a new three-second runtime prerequisite and original one-second mount cap; build 799 controls pass, integrated macOS 15 verification remains pending
+    status: open
+    owner: bmux
+
+  - id: welcome_shortcut_delivery_diagnostic_verification
+    title: Welcome shortcut timeout retains its original route and one-second observer while reporting bounded callback and native window state; historical V timeout cause and next macOS 15 execution remain unresolved
+    status: open
+    owner: bmux
+
+  - id: command_palette_expired_escape_diagnostics
+    title: Expired pending-open Escape fixture preserves the real main-window route and original no-dismiss bounds with raw-state failure diagnostics; target compilation passes, full macOS 15 failure attribution remains pending
+    status: open
+    owner: bmux
+
+  - id: inspector_close_failure_diagnostics
+    title: Inspector close failure diagnostics preserve actions and deadlines; explicit closure typing passes Swift 5 and 6 focused compilation after the integrated parser failure, corrected full-target build and actual macOS 15 cause remain pending
+    status: open
+    owner: bmux
+
+  - id: app_host_cold_build_deadline_boundary
+    title: Cold app-host compilation precedes the unchanged 900-second native test deadline with shared build arguments and rebuild on package retry; owned executable controls pass, actual macOS CI build and test completion remain pending
+    status: open
+    owner: bmux
+
+  - id: legacy_remote_directory_trust_fixture_verification
+    title: Legacy remote cwd trust fixture targets the original panel identity and restores it focused before testing presented directory; build 799 positive and trust-negative controls pass, actual macOS 15 CI remains pending
+    status: open
+    owner: bmux
+
+  - id: terminal_overlay_completion_fixture_verification
+    title: Three terminal overlay cases observe native completion with preserved intervals and oracles; drop and rebind controls pass, Escape delivery calibration exposes the offscreen gap and awaits presented macOS 15 app-host verification
+    status: open
+    owner: bmux
+
+  - id: codex_approval_response_observation_verification
+    title: Codex approval fixture observes keyed async replies while preserving standard and full-access permission assertions with a new one-second observation bound; owned build 799 controls pass, integrated macOS 15 CI remains pending
+    status: open
+    owner: bmux
+
+  - id: notification_burst_native_completion_verification
+    title: Two notification coalescer cases observe real native timer callbacks within the original one-second total bound; latest-action and separate-burst controls pass, actual macOS 15 verification remains pending
+    status: open
+    owner: bmux
+
+  - id: launch_services_scheduling_fixture_ownership_verification
+    title: LaunchServices scheduling test restores its original delegate and route-retirer composition; native 799 scheduling and identity controls pass, historical inspector routing linkage and macOS 15 app-host verification remain unproven
+    status: open
+    owner: bmux
+
+  - id: file_preview_pending_focus_window_ownership_verification
+    title: FilePreviewPendingFocusTests retains its owned window through explicit close and preserves both focus assertions; native 799 ownership controls pass, exact historical crash object and macOS 15 verification remain unresolved
+    status: open
+    owner: bmux
+
+  - id: file_explorer_shortcut_context_fixture_verification
+    title: Two file-explorer shortcut cases own their real event-window context with all routing assertions retained; offscreen build 799 controls pass, presented macOS 15 CI and legacy settings-owner strict concurrency remain unverified
+    status: open
+    owner: bmux
+
+  - id: browser_visible_notification_completion_verification
+    title: Redundant browser visibility fixture observes native loading within its original one-second bound; build 799 positive and omission controls pass locally, actual macOS 15 verification and historical startup latency remain unresolved
+    status: open
+    owner: bmux
+
+  - id: session_fork_diagnostic_completion_verification
+    title: Session fork diagnostic fixture joins CLI completion within its original plain five-second local and CI bound; build 799 positive and fork-mode negative controls pass, historical timeout cause and integrated macOS 15 verification remain unresolved
+    status: open
+    owner: bmux
+
+  - id: agent_liveness_watch_completion_verification
+    title: Agent liveness fixture observes its actual watch reload before scope mutation and final refresh before cleanup; all seven original assertions and owned build 799 controls pass, integrated macOS 15 and private-task failure cleanup remain pending
+    status: open
+    owner: bmux
+
+  - id: editable_terminal_undo_key_context_verification
+    title: Editable terminal-child Undo requires its real native key-window menu context with original routing assertions retained; isolated inactive build 799 reproduces missing target, active macOS 15 positive verification remains pending
+    status: open
+    owner: bmux
+
+  - id: terminal_overlay_runtime_setup_verification
+    title: Initial overlay mounting uses the maintained one-second setup allowance, Escape runtime setup remains three seconds and post-Escape delivery 50ms; AF macOS 15 passed all three cases including real key-up calibration, with latest integrated-head CI pending
+    status: open
+    owner: bmux
+
+  - id: welcome_shortcut_delivery_containment_verification
+    title: Actual Y Welcome callback arrived after the one-second fixture bound with correct state; explicit three-second absolute functional containment retains all routing assertions, owned controls pass and macOS 15 verification remains pending
+    status: open
+    owner: bmux
+
+  - id: minimal_mode_current_shell_invalidation_verification
+    title: Current terminal and workspace-rail body coverage retains all six minimal-mode assertions; root builds 800/801 established red/green and live inset edits remain observed, while the complete minimal-mode case passed on macOS 15 in AF shard 7; latest integrated-head CI remains pending
+    status: open
+    owner: bmux
+
+  - id: workspace_terminal_focus_completion_verification
+    title: Seven terminal focus recovery cases retain one-second FIFO containment, authoritative host geometry, callback-boundary observations and completed initial Find autofocus; all seven passed on macOS 15 in AF shard 1, with latest integrated-head CI pending
+    status: open
+    owner: bmux
+
+  - id: inspector_precursor_delegate_composition_verification
+    title: Actual shard-3 precursor fixtures restore shared delegate and known route-retirer composition with scoped resource cleanup; build 799 identity controls pass, historical inspector causality and presented macOS 15 acceptance remain pending
+    status: open
+    owner: bmux
+
+  - id: workspace_filter_selection_identity_verification
+    title: Duplicate-title selection filtering has actual regression CI red in run 38876211760 shard 4 and the identity-based fix; all five fixed cases passed on macOS 15 in AF shard 2 and fixed build 802 passed, with latest integrated-head CI pending
+    status: open
+    owner: bmux
+
+  - id: keyboard_space_native_layout_isolation_verification
+    title: Z shard 6 background HIToolbox crash has a source-supported main-actor shortcut fixture repair with three local native cases passing in Swift 5 and 6; matched CI symbols and fixed macOS 15 CI remain pending
+    status: open
+    owner: bmux
+
+  - id: zsh_relay_refresh_completion_verification
+    title: Zsh prompt-refresh fixture observes both inherited-FIFO callbacks within the original one-second phase and joins its five-second shell; local Swift 5 and 6 controls pass, detached exits and integrated macOS 15 verification remain unproven
+    status: open
+    owner: bmux
+
+  - id: minimal_mode_failure_phase_diagnostics_verification
+    title: Minimal-mode fixture records native decisions before asynchronous consumption under unchanged one-second phase bounds; local delayed-consumer and cleanup controls pass and the full macOS 15 case passed in AF shard 7, while historical timeout phase and latest integrated-head CI remain unresolved
+    status: open
+    owner: bmux
+
+  - id: markdown_scroll_frame_completion_verification
+    title: Markdown callback and frame operations preserve native arrival, joined cancellation and existing deadlines; all four actual macOS 15 rendering cases passed in AF shard 5 including scroll reset, with latest integrated-head CI pending
+    status: open
+    owner: bmux
+
+  - id: z_inspector_redraw_precursor_verification
+    title: Z8 executed redraw fixture now restores shared delegate and active manager with native 799 identity and redraw controls; actual installed-monitor attribution and macOS 15 inspector verification remain open
+    status: open
+    owner: bmux
+
+  - id: workspace_focus_delivery_arrival_verification
+    title: Focus and overlay fixtures share a duration-configured native FIFO arrival owner with one-second focus and initial mount bounds and 50ms post-Escape delivery; AF macOS 15 focus seven and overlay three passed, with latest integrated-head CI pending
+    status: open
+    owner: bmux
+
+  - id: cli_process_native_completion_verification
+    title: CLI process fixtures preserve synchronous native completion and joined parent cancellation at existing bounds; stale-Codex default/cwd/all controls pass with owned build 802 and exact missing-UTF8 shell controls pass in Swift 5 and 6, historical AF8/AF6 timeout causes and integrated macOS 15 verification remain unresolved
+    status: open
+    owner: bmux
+
+  - id: opencode_probe_output_ownership_verification
+    title: OpenCode probes join merged-output capture at existing three-second and 500ms bounds; isolated build 803 and actual-module success/cancellation controls pass, while user dogfood, latest integrated-head CI and inherited descendant pipe retention remain open
+    status: open
+    owner: bmux

@@ -461,7 +461,13 @@ extension TerminalController: ControlWorkspaceContext {
         guard workspace.remoteConfiguration != nil else {
             return .notConfigured(workspaceID: workspaceID)
         }
-        workspace.reconnectRemoteConnection(surfaceId: surfaceID)
+        let didRespawn = workspace.reconnectRemoteConnection(surfaceId: surfaceID)
+        if let surfaceID, !didRespawn {
+            return .reconnectFailed(workspaceID: workspaceID, surfaceID: surfaceID, message: String(
+                localized: "rpc.v2.workspace.remote.reconnect.failed",
+                defaultValue: "Failed to reconnect the requested terminal."
+            ))
+        }
         notifyRemotePTYControllerAvailabilityChanged()
         let windowId = AppDelegate.shared?.windowId(for: owner)
         return .resolved(

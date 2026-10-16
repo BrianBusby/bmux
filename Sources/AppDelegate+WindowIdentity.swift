@@ -8,6 +8,20 @@ extension AppDelegate {
     }
 
     func windowForMainWindowId(_ windowId: UUID) -> NSWindow? {
+        guard let window = retainedMainWindow(for: windowId),
+              isMainWindowPresentationEligible(windowId: windowId, window: window) else { return nil }
+        return window
+    }
+
+    /// Distinguishes routable windows from closed objects retained for resource cleanup.
+    func isMainWindowPresentationEligible(windowId: UUID, window: NSWindow?) -> Bool {
+        guard let window = window ?? retainedMainWindow(for: windowId) else { return false }
+        return mainWindowContexts.values.contains { $0.windowId == windowId }
+            || window.isVisible || window.isMiniaturized
+    }
+
+    /// Finds retained window identity without granting presentation or focus eligibility.
+    func retainedMainWindow(for windowId: UUID) -> NSWindow? {
         if let ctx = mainWindowContexts.values.first(where: { $0.windowId == windowId }),
            let window = ctx.window {
             return window

@@ -1,0 +1,1433 @@
+# Matte skin implementation record
+
+Visual-only native skin, authorized by Brian on 2026-10-10. Preserve navigation,
+workspace data, action routing, terminal rendering, and terminal fonts.
+
+## References and base
+
+The three PNGs here are verbatim conversation attachments. No PDF or original
+pre-redesign screenshots were attached. The spec image is 444 × 2048; the two
+targets are 1183 × 2048, including prototype tooling outside the simulated app.
+That tooling is not product UI. Palette labels are cross-checked against raw
+RGBA pixels in solid spec swatches, without display color conversion.
+
+Branch `matte-skin` starts from `origin/main` at `ce17e9888`.
+
+## Stages
+
+1. Theme tokens for both appearances — approved by Brian on 2026-10-10. Definitions and resolution only.
+2. Reusable base, card, panel, inset, and overlay styles — approved by Brian on 2026-10-10.
+3. Workspace cards and existing sidebar controls — visually approved by Brian; CI compatibility follow-up remains separately tracked.
+4. Main panel and terminal chrome — current; authorized by Brian’s “looks good keep going.”
+5. Optional static texture behind a flag.
+
+One commit per stage, followed by focused checks, an isolated tagged build and
+launch, same-size dark/light captures, comparison, and user review. Do not
+advance automatically. Stage 1 captures are the existing UI baseline; palette
+verification precedes surface primitives in stage 2 and component adoption in stages 3–4.
+
+## Governing sources and ownership
+
+Read AGENTS.md, continuous-code-quality, and bmux architecture, debugging,
+testing, dev-workflow, and localization skills. Apply installed Superpowers
+implementation/review/verification workflows with repository rules taking priority.
+
+Tokens belong to the existing BmuxAppKitSupportUI appearance area. MatteTheme
+owns all numeric style values. Supporting value types have separate files.
+No new package, service, mutable state, or settings owner. Existing
+WindowAppearanceResolver/Snapshot and AppearanceSettings remain the integration
+boundaries. The active `WorkspaceReferenceRail` consumes card and repository scopes; rows must retain immutable presentation snapshots. The older `TabItemView` equality boundary remains intact.
+Bonsplit appearance owns terminal tab chrome. TerminalPanelView and the AppKit
+portal retain identity/focus/geometry; GhosttySurfaceScrollView retains search.
+
+## Constraints and pending verification
+
+- Live verification corrected the initial source-search miss: the reference shell
+  exists in `ContentView.bmuxReferenceAppShell`; its sidebar is
+  `Sources/Sidebar/WorkspaceReferenceRail.swift`, search/filter is
+  `WorkspaceTabFilterBar.swift`, and heading/navigation comes through
+  `Sources/Panels/AgentSessionFactualProjectionModeHost.swift` and
+  `AgentSessionFactualProjectionView.swift`. Existing hard-coded colors live in
+  `Sources/Sidebar/Color+WorkspaceReference.swift`. Preserve action ownership.
+- The current PR-link closure in ContentView selects the workspace before opening
+  the link. Stage 3 must address the explicit requested no-selection interaction
+  without creating a second selection or URL-opening path.
+- Existing terminal horizontal scrolling is disabled. Adding it would change
+  behavior, outside this skin. The spec terminal font is reference-only.
+- CSS negative spread requires a documented native approximation. Native menus,
+  window shadows, and font rasterization are not browser-pixel-identical.
+- Homebrew submodule setup URL is unavailable; app-required Ghostty and Bonsplit
+  initialize separately. Pinned GhosttyKit uses the existing legacy cache path.
+- Existing shell hard-codes dark colors even in light appearance. The stage 1
+  light baseline documents this; token integration must remove it in stages 3–4.
+- No native visual parity claim until the surfaces and components consume tokens.
+- Stage 1 adds no product strings. Later UI stages audit English/Japanese labels.
+
+## Stage 1 verification
+
+- `swift test --package-path Packages/macOS/BmuxAppKitSupportUI`: 25 tests in
+  eight suites passed, including six new parameterized test functions.
+- Independent spec review: all 48 opaque palette values match raw reference
+  swatches; translucent colors, dimensions, typography, shadows, motion, and
+  texture match the enlarged spec. Native token swatches were rendered from the
+  production Swift files. No color or token deviations found.
+- Independent code review: one README test-seam omission corrected. Complete
+  types, tests, existing appearance owners, and concurrency boundaries reviewed.
+- `BMUX_RELOAD_NO_GLOBAL_CLI_LINKS=1 ./scripts/reload.sh --tag matte-skin-stage1`:
+  passed; isolated app launched and tag-bound socket commands succeeded.
+- Baselines use the existing debug viewport recorder at 1092 × 593 points and
+  `debug.window.screenshot` at nominal resolution. Only the tagged bundle's
+  `appearanceMode` was changed. No main-app preferences or global CLI links changed.
+- `./scripts/project-docs validate`, `generate`, and `check`: passed.
+  `repo-status.yaml` records the token capability; no unrelated roadmap slice
+  was reassigned. Explicit user authorization governs this separate visual task.
+- Localization audit: no product labels, accessibility strings, menus, settings,
+  or localization catalogs changed. Added prose is internal engineering/design
+  documentation and diagnostic comparison labels, not shipped app UI.
+- Existing full-app warnings include AppIcon unassigned children, AppDelegate
+  deprecated AppKit calls, BrowserPanel actor-isolation/preconcurrency warnings,
+  ContentView existential syntax, and a WebKit conformance warning. No changed
+  token file emitted a warning. The app test target and entire repo test suite
+  were not run locally; package tests are the focused stage 1 coverage.
+
+See [comparison.html](verification-stage1/comparison.html) for reference/baseline
+pairs and native token swatches. These are stage 1 evidence, not acceptance of
+completed skin parity.
+
+## Baseline deviations and stage ownership
+
+| Area | Observed deviation in both baselines unless stated | Reason / owning stage |
+| --- | --- | --- |
+| Palette | Cool dark shell and saturated selected fill; light mode remains dark | Existing fixed reference colors; stages 2–4 consume dynamic tokens |
+| Base / separation | Inset outer framed shell, darker sidebar, strong vertical divider, no 14pt floating gutter | Existing shell layout; stage 2 and integration in 3–4 |
+| Elevation | Flat card/panel; no contact/ambient pair, directional inner edges, or floating main panel | Surface styles deferred to stage 2 |
+| Header | Wordmark shape, brand spacing, top margin, icon size/spacing, count casing differ | Existing native header/control styles; stages 3–4 |
+| Sidebar | 340pt fixed rail, larger search/filter, different gaps and card padding/radius/type | Existing rail metrics; stage 3 |
+| Card states | Existing selected blue border; no square marker or specified hover/focus/press styles | Stage 3; state behavior not integrated yet |
+| Main heading / tabs | Main title and metadata positioned differently; tab indicator/color and margins differ | Existing projection chrome; stage 4 |
+| Terminal | No recessed container; different tab silhouette/indicator; fonts, prompt and engine theme differ | Container/tab styling stage 4; terminal fonts/renderer preserved |
+| Texture | No grain | Optional stage 5; off is required to remain usable |
+| Content | One fresh workspace; no second PR/author card; current home-directory label and shell prompt | Isolated baseline has no original workspace session/data; do not fabricate product data |
+| Native titlebar | Current build 736, native folder icon, macOS capture/share badge in traffic-light area | Runtime/OS chrome and version; not prototype controls, no removal of existing features |
+| Prototype tooling | Top controls and bottom inspector absent from native app | Intentional: reference tooling is not product UI |
+
+Material mismatches above are explicitly pending integration stages, not changes
+introduced by stage 1. Brian approved stage 1 on 2026-10-10; stage 2 is now authorized.
+
+## Stage 2 ownership and verification plan
+
+Implement reusable, noninteractive SwiftUI surface drawing in the existing
+`BmuxAppKitSupportUI/Matte` concern. `MatteTheme` continues to own every design
+literal. Immutable role/state inputs resolve fills, radii, edges, contact and
+ambient shadows; the renderer owns native drawing only. Components keep all
+selection, actions, focus, gesture state, lifecycle, and terminal ownership.
+Stage 2 does not apply new styling to app views: sidebar adoption is stage 3,
+main panel/terminal-container adoption is stage 4. The preview is diagnostic,
+not another product screen or feature.
+
+Native shadow mapping uses the reference blur converted to the native radius,
+and contracted shadow-caster geometry for negative spread. Inner edges use
+`strokeBorder` gradients; no material, live blur view, or animated texture.
+Verify actual SwiftUI rendering in both schemes, including resting, hover,
+selected, selected+hover, pressed, focused, disabled, and inactive appearances.
+Package tests should exercise resolved state priority and rendered pixels/layout,
+not duplicate literal tables. Compare the native preview against reference
+inspection surfaces, and capture the unchanged app baseline at 1092 × 593 using
+an isolated stage 2 tag. Preserve the user's stage 1 tagged app if still in use.
+
+## Stage 2 verification
+
+- Added passive `View.matteSurface` drawing for all five roles, immutable
+  `MatteSurfaceState`, semantic appearance resolution and separate edge rendering.
+  No app view, navigation, store, terminal engine, font, or action routing changed.
+- `swift test --package-path Packages/macOS/BmuxAppKitSupportUI`: 32 tests in
+  nine suites passed. Seven new test functions cover state resolution and actual
+  SwiftUI pixels/layout in both schemes. Rendered checks caught and corrected a
+  uniform inset band and disabled caster bleed-through before final verification.
+- Actual native galleries rendered at 1092 × 593 points, 2× scale, using production
+  files. Both galleries were inspected against reference surfaces with texture off.
+- Independent spec and subsequent code-quality reviews found no remaining issue.
+  Reviewed full primitives, token ownership, tests, package patterns and README.
+- Tagged `matte-skin-stage2` reload passed; build 738 launched and tag-bound CLI
+  rename/screenshot commands succeeded. App captures are both 1092 × 593 points.
+  Only the stage 2 bundle's appearance preference changed. Stage 1 was untouched.
+- Existing app warnings were reviewed: deprecated APIs, Swift concurrency warnings,
+  unused values/results, icon assignments, absent AppIntents metadata and optional
+  command-palette FFI skipped because Cargo is unavailable. No Matte file emitted
+  a warning. Release download 404s fell back to the existing local artifact path;
+  the tagged build succeeded. Full app tests remain CI coverage, not a local claim.
+- Localization audit: production additions contain no user-visible strings or
+  accessibility labels. Diagnostic gallery text and engineering docs do not ship
+  in the app. No localization catalogs changed.
+- Live pointer routing, VoiceOver, keyboard behavior, list performance and older
+  macOS rendering remain integration checks. The surface modifier is noninteractive
+  and hidden from accessibility; that source contract is not a live app AX test.
+- Project Truth records surface primitives only. Component adoption remains pending.
+
+See [stage 2 comparison](verification-stage2/comparison.html) and its reproducible
+native gallery harness. Pause for Brian’s review before stage 3.
+
+### Stage 2 comparison deviations
+
+| Area | Deviation and reason |
+| --- | --- |
+| Shadow rasterization | Native blur radius is CSS blur / 2 and negative spread contracts the caster. SwiftUI and browser kernels differ; the spec's contact/ambient ingredients and geometry are retained. |
+| Inner edges | Raised diagonal gradient strokes and concentric fading inset strokes approximate CSS inner shadows without live blur. Exact browser shadow-pixel equality is not claimed. |
+| Gallery composition | Diagnostic text and specimen sizes differ from the HTML inspector; this verifies materials, not app layout/type. No prototype controls were added. |
+| Card semantics | Gallery shows state decoration only. Leading selection square, accessibility selected trait, close/link targets, hover lift and reduced-motion behavior belong to the existing components in stage 3. |
+| Texture | Off; static optional texture remains stage 5. Material hierarchy is visible without it. |
+| App integration | All baseline deviations listed above remain: legacy palette/divider/card geometry, header/sidebar/main spacing, terminal chrome. Stage 2 adds reusable drawing only; stages 3–4 adopt it. |
+| Capture content | Build badge is 738; fresh isolated session shows one workspace, current home directory/prompt and startup help in the dark capture. No original PR/session data was supplied. The OS capture badge occupies the traffic-light area. |
+
+No unexplained material mismatch remains within the stage 2 primitive scope.
+App parity and runtime performance are not yet accepted.
+
+
+## Stage 3 — sidebar ownership and verification
+
+Stage 2 was approved by Brian; its full CI on `27e5101e7` passed, including all
+four app-host test shards and release build. Stage 3 is implemented and awaits
+user review. Do not advance to stage 4 before that review.
+
+### Ownership and native mapping
+
+- `MatteTheme` owns colors, metrics, typography, motion and surface/control values.
+  New shared `MatteButton` presentation uses native SwiftUI Button actions and
+  local hover/focus/press state. Decorative layers are noninteractive.
+- `WorkspaceReferenceRail` retains projection/observation above the list boundary.
+  `WorkspaceReferenceCardView` receives immutable snapshots and action closures.
+  Selection/close remain existing TabManager actions; busy state and final-card
+  close eligibility are preserved. PR/author links retain BrowserExternalLinkOpener
+  and no longer incidentally select the card, as explicitly requested.
+- Cards, search, filter, filter popover and count consume semantic tokens. The
+  continuous base and 14pt gutter are integrated; main panel, title/navigation,
+  terminal chrome and final brand-header metrics remain stage 4. Chat/Session
+  content, terminal engine, fonts, models and rendering are unchanged.
+- Brian approved the 4pt selection square and native 1pt hovered-link underline.
+  The spec's 2pt underline remains documented as the native adaptation.
+- The native control target expands by the existing 4pt token with outer layout
+  compensation. The rail's explicit native host includes the existing 14pt gutter,
+  also compensated, to retain out-of-face clicks and room for card shadows.
+
+### Keyboard integration and evidence
+
+Live testing found the existing terminal focus-repair policy reclaimed Space,
+Return and Escape from newly keyboard-focusable sidebar buttons. A render-driven
+per-button focus callback lagged rapid Tab input; a native timing harness proved
+that retaining a SwiftUI FocusState binding had the same delay. Those approaches
+were removed. No private SwiftUI class exemption, per-key tree scan, layout flush,
+deprecated focus callback or delayed race workaround is present.
+
+`WorkspaceSidebarFocusScope` and `WorkspaceSidebarHostingView` give the rail and
+filter popover explicit native identity/lifecycle boundaries. They forward the
+entire inherited environment (including appearance, accessibility and locale),
+preserve stable SwiftUI local state, and use flexible rail/intrinsic popover size.
+`MainWindowFocusController` owns `WorkspaceSidebarFocusOwner`; it resolves native
+membership synchronously through the existing first-responder-change hook and
+keeps weak identities. Per-key ownership checks are constant-time comparisons.
+Detach/reparent/unregister revoke grants; reattachment requires fresh focus.
+An AppKit `NSKeyValueObservation` token revokes child-window ownership synchronously
+before parenting changes, under the documented native-boundary carve-out.
+
+The shared foreign-responder policy and existing terminal restoration paths honor
+only these explicitly owned controls. The terminal-Find Escape helper leaves an
+active sidebar popover to native dispatch. Explicit terminal/Find focus requests
+retain their existing precedence. These are narrow focus-integration changes,
+including in GhosttyTerminalView; they are not terminal rendering changes.
+
+### Checks completed before the final candidate
+
+- Package suite: 42 tests, including rendered native control/surface pixels,
+  state priority, keyboard action and environment-sensitive drawing.
+- Production-source native harness: 14 focus/hosting tests, including rapid Tab
+  before layout, exact main/child ownership, detach/reparent/weak lifetimes,
+  environment/state continuity and the 3pt outside-face native hit area. This
+  temporary harness uses the actual production sources; it does not establish
+  that the full Xcode app-host test target compiles. That remains a CI gate.
+- Build 747 live: rapid search → Tab → Space opens filter with Terminal visible,
+  both with Find closed and open; Return toggles once and exposes selected AX
+  state; Escape dismisses filter while preserving Find; explicit Find close
+  returns to terminal. Tab reaches cards, close buttons and metadata links and
+  continues outside the sidebar host. Unselected close appears on keyboard focus.
+- Prior live candidate: Shift-Tab returns to search; Return selects a card through
+  the existing action. Closing a focused disposable workspace uses the existing
+  confirmation and returns to the remaining terminal. Last-workspace close is
+  AX-disabled and clicking is a no-op. PR activation does not select its workspace.
+  Explicit Command-F from sidebar focus and terminal shell input both work.
+- Narrow fixture at 802 × 593: eight workspaces, a six-line title and scrolling
+  preserve search/filter/close usability (`graphite-narrow.png`, build 743).
+- Build 748 passed the final native out-of-face test: clicking 3pt beyond the
+  filter face opens the popover. Rapid Tab/Space with Find open, Return toggle,
+  Escape preserving Find and explicit Command-F were repeated successfully.
+  Temporary DEBUG focus probes are removed.
+- English/Japanese audit covers 30 sidebar labels, including three new localized
+  accessibility labels. No user-facing bare English was added; engineering notes
+  and comparison labels are not shipped UI.
+- Independent spec and quality reviews cover full affected modules, prior surface
+  primitives, focus callers and lifecycle tests. Final corrections are re-reviewed.
+
+Desktop sleep interrupted native automation twice (`cgWindowNotFound` affected
+both this app and the unchanged stage 2 app). Waking restored access; a bounded
+display-awake assertion supports the test run without changing persistent settings.
+
+### Final stage evidence
+
+Build 748 succeeded and ran in both appearances. The final PNGs are exactly
+1092 × 593 points; `verification-stage3/comparison.html` places them beside the
+same-size target crop. The captures include the two reference card titles and PR
+metadata, a Codex-named real terminal tab, and no texture. The temporary fixture's
+local Git refresh can clear manually reported PR metadata; metadata was restored
+through the existing API immediately before each capture. No production data was
+copied or changed.
+
+No unexplained material mismatch remains within the sidebar scope. Differences
+and ownership are enumerated in `verification-stage3/README.md`. In particular,
+the main panel is still dark in light appearance and titlebar controls retain
+the existing terminal-derived foreground, making them low contrast on the new
+light base. These remain explicit stage 4 header/panel integration gates; this
+stage does not establish whole-app visual or accessibility acceptance.
+
+The final build retained existing warnings (deprecated AppKit/SwiftUI APIs,
+concurrency diagnostics in unrelated owners, unused values/results, asset and
+AppIntents notices). No new Matte, sidebar, native-host or focus-owner source
+warning was emitted. Optional helper downloads fell back to existing local
+artifacts; no dependency or toolchain change was made.
+
+Final checks: 42 package tests and 14 production-source native tests pass;
+Xcode normalization/test wiring and diff checks pass. Localization audit parsed
+the catalog, checked all 30 sidebar/control keys in English/Japanese (including
+dynamic status labels), and scanned added/moved view strings. Existing product
+names remain literal; three new accessibility labels have both translations.
+Project Truth validation/generation/freshness checks complete the stage manifest.
+Independent spec and quality review covered accumulated primitives, controls,
+sidebar snapshot boundaries, focus ownership/callers and lifecycle corrections.
+
+Hover and Reduce Motion have source/render coverage; direct live hover/system
+setting verification, VoiceOver and older-macOS behavior are not claimed. The
+full Xcode app-host test target remains a CI gate. Stage 3 is one commit; the
+new lifecycle regression has local failing-before/passing-after evidence within
+that stage, honoring Brian's explicit one-commit-per-stage instruction.
+
+After commit/push: update the draft PR, build the pushed HEAD under the same
+isolated verification tag, perform a short smoke check, then pause for stage review.
+The checked-in captures document build 748; a build-number-only change in the
+post-commit verification does not require replacing them.
+
+### Stage 3 CI file-budget repair
+
+The first stage 3 CI preflight found positive growth in three files already above
+900 lines. The repair follows `AGENTS.md`, `continuous-code-quality`, and the
+architecture file/API discipline: extract cohesive native presentation and focus
+responsibilities, without changing the budget, compressing code, or adding state.
+
+- `WorkspaceReferenceAppShell` owns only the continuous-base/header/gutter layout.
+  Its generic builders preserve the existing hierarchy, metrics and inherited
+  appearance. ContentView retains workspace projection, Chat/Terminal content,
+  navigation state and terminal lifecycle callbacks. Stage 4 header tuning is
+  still deferred.
+- `WindowKeyboardFocusRouting` binds an injected optional AppDelegate/window to
+  the existing foreign-responder policy and native focus owner. It consolidates
+  repeated lookup wiring and the native child-window dispatch path. The shared
+  policy, nil-delegate NSText fallback, explicit terminal/Find bypass, and
+  automatic sidebar ownership checks retain their prior semantics.
+- `NSResponder.keyboardFocusOwnerView` owns the existing field-editor responder
+  chain fallback. The terminal surface still resolves its mounted Find field
+  first. Its four existing focus/search callers use the same wrapper and traversal;
+  no renderer, font, hot-path scan, or navigation behavior was added.
+
+Against PR base `ce17e9888`, ContentView is 17,017 versus 17,032 lines,
+AppDelegate is 18,183 versus 18,185, and GhosttyTerminalView is 13,451 versus
+13,457. The read-only file-budget guard passes with new/uncommitted files included;
+no budget file changed. Normalization and test wiring pass (433 test files).
+The package suite passes 42 tests. The native production-source harness passes
+18 tests, including four new owning-view/no-owner/field-editor fallback cases.
+The test uses the maintained bmux_DEV/bmux conditional import for app-host CI.
+
+A separate `matte-skin-stage3-ci` tagged build (750) compiled all extracted sources
+successfully without launching or replacing Brian's stage 3 build 749. No new
+helper emitted a warning. Existing unrelated warnings remain. The checked-in
+screenshots still document builds 748/743; no new visual claim is made from the
+compile-only repair. App-host test compilation/execution remains a CI gate.
+
+Localization audit: the shell moves the existing bmux/CompanyCam product names
+and decorative mark unchanged; no labels, keys or translations were added.
+The English/Japanese catalog parses, and moved/added views were scanned for text.
+The prior 30-key sidebar audit remains applicable.
+
+A separate CI blocker remains outside this bounded repair: the activation-session
+benchmark on Xcode 26.3 reports optional type inference at
+`View+MatteTypography.swift:27`. The local Xcode 26.5 build passes; it does not prove
+compatibility with that older CI compiler. Typography is unchanged by this repair.
+
+### Stage 3 typography compiler compatibility follow-up
+
+The Xcode 26.3 activation-session benchmark and app-host CI shards still failed
+on `7c5f3450a` because the compiler inferred optional `Double` for the local
+line-spacing expression. The bounded follow-up replaces optional `map`/coalescing
+with an explicitly nonoptional `Double` and `if let`/`else`. It preserves exactly
+`max(0, pointSize * lineHeightMultiple - nativeLineHeight)` when configured and
+zero otherwise. Native ascent/descent rounding, font selection, weights, tracking,
+all token values, and terminal preferences are unchanged. No new state or caller
+responsibility was introduced.
+
+Local Swift 6.3.3 verification: 42 package tests pass, including the rendered
+multiline-title baseline check, and Release package compilation passes. The
+Release build retains existing unused-public-import, Bonsplit deprecation/actor
+isolation and NotificationCenter-isolation warnings; the typography file emits
+no warning. The installed toolchain is newer than CI, so this local result does
+not establish Xcode 26.3 compatibility or full app-host test success.
+
+The isolated incremental `matte-skin-stage3-ci` reload (build 751) also passes,
+without launching or replacing the user's build. Global CLI links were preserved.
+The `matte_skin_ci_compiler_compatibility` caveat remains open until actual
+Xcode 26.3 CI passes. Localization audit: this expression-only repair adds no
+user-facing strings, labels, keys or translations; the prior sidebar audit is
+unchanged. The checked-in visual evidence and user's build 749 remain unchanged.
+
+## Stage 4 ownership and verification plan
+
+Brian approved the stage 3 visual build and authorized continuing. The parent
+reviewed the pushed stage 3 shell/focus extractions and the explicitly typed
+line-spacing fix (`24b555192`); no formula, terminal renderer or ownership
+regression was found in those deltas. Exact-head Xcode 26.3 CI remains monitored.
+The running stage 3 build 749 must remain untouched. Stage 4 uses a new isolated
+tag and pauses after its one stage commit and dual-appearance review.
+
+- `WorkspaceReferenceAppShell` owns the continuous base, brand header and rail/main
+  layout. Existing sidebar snapshots/actions remain unchanged. Header/titlebar
+  foreground must use the effective matte appearance instead of terminal luminance.
+- `AgentSessionFactualProjectionView` retains selected-primary-tab state, identity,
+  refresh and existing content routing. Extract passive panel heading/navigation
+  presentation as needed; apply shared panel surface and semantic typography.
+  Preserve Chat/Session content and explicit terminal identity.
+- Bonsplit owns the existing terminal tabs, close/menu/drag behavior and toolbar.
+  Its current public API lacks exact state palette, selected-tab geometry and
+  28pt control-target hooks. A minimal optional presentation API must preserve
+  existing defaults and actions; bmux supplies values from MatteTheme. Initial
+  appearance and both Ghostty/resolved-chrome updates must share one mapper.
+- Bonsplit is pinned to `fb5307f`; upstream main is 243 commits ahead and is not
+  writable from this account. Do not upgrade it wholesale or leave an unreachable
+  submodule commit. Prepare the scoped patch against the pinned source for review;
+  resolve reachable remote-main delivery before committing the parent pointer.
+- Terminal foreground/background colors are permitted presentation inputs in the
+  request. Use existing native/configuration seams only if fonts, renderer, ANSI
+  colors, lifecycle and global user configuration remain intact. MatteTheme owns
+  the values; no duplicate palette in terminal core. Do not edit Ghostty itself.
+- Terminal views live in the AppKit portal, so a SwiftUI rounded clip alone is
+  insufficient. Keep stable panel identity, native Find/accessory layering and
+  pointer-only portal routing. Use the shared SwiftUI inset outside a padded, unchanged native portal footprint;
+  no per-frame work or new rendering loop.
+- Files over the 900-line hard cap may not grow versus the PR base; existing
+  tracked files below that cap retain the guard’s 25-line incidental allowance
+  (`scripts/swift_file_length_budget.py`). New files stay below 500 lines. Use
+  coherent extraction with explicit inputs, not compressed code or budget changes.
+
+For header/tab gaps absent from the token image, Brian was asked whether to use
+screenshot measurements or retain existing spacing. After ample opportunity to
+answer this optional preference, the parent stated the assumption that measurements
+from the authoritative screenshots will be used and recorded as semantic tokens.
+This follows the requested visual match; it is not claimed as an explicit answer
+or permission to invent values. Actual native comparison still precedes geometry edits.
+
+Verification includes focused native rendering/state coverage, actual CI compiler
+compatibility, app-host compilation, new-tag build/run, 1092 × 593 dark/light
+comparison, native keyboard focus and separate tab/close targets, Find, terminal
+input, split/resize/narrow-window usability and localization audit. Record every
+remaining reference difference. Texture stays off until stage 5.
+
+### Stage 3 CI compiler evidence
+
+On `24b555192`, the Xcode 26.3 activation-session workflow successfully completed
+its tagged app build at 2026-10-11 03:28:49 UTC. This resolves the specific older
+compiler failure in the typography line-spacing expression. Evidence: [run
+38107446173, job 114375911325](https://github.com/BrianBusby/bmux/actions/runs/38107446173/job/114375911325).
+The activation benchmark, package tests, build-and-lag job and app-host shard 4
+subsequently passed. The other shards and release check remain monitored; this
+is not a claim that all CI passed. Stage 4 has separate new changes
+that still need its own build, test and runtime verification.
+
+### Stage 4 first-pass checks
+
+The initial app build caught a duplicate Xcode object identifier; the scoped fix
+was verified by reproducing the failing project load and then obtaining a successful
+`xcodebuild -list`, plus checking all 1,887 build-phase references. A subsequent
+compile caught a missing shared-UI import, now fixed. Package and native-harness
+passes alone had not exercised these app-target issues.
+
+The independent specification review identified titlebar split controls below
+28pt, a duplicated accessory hover wash, and missing passive terminal-tab hover
+motion. Those were corrected before visual review. Its initial inactive-tab weight
+finding was retracted after direct inspection of the authoritative image: both
+active and inactive tabs are 14pt / 500. No conflicting typography change was made.
+The updated checks pass 44 shared-UI tests, 175 Bonsplit tests (155 XCTest plus
+20 Swift Testing), and 18 native focus harness tests. The latest full app build
+and runtime comparison remain pending.
+
+### Stage 4 measured geometry and ownership checkpoint
+
+The 1092 × 593 native preview was measured against the reference app crop. Theme
+metrics now record brand inset 8 and vertical offset 24, main-panel top inset 28,
+heading native-baseline adjustment -3, navigation gaps 12/4, embedded terminal
+gap 18, terminal strip height 32 and terminal interior padding 13 horizontal /
+12 vertical. Exact type/color/material tokens remain unchanged. Native text
+rasterization is not corrected by shrinking authoritative font sizes.
+
+The first inset experiment exposed stacked inner-edge siblings as horizontal
+bands. The final composition removes the native edge attachment/hosting API
+entirely: `TerminalInsetContainer` pads the unchanged native portal and places
+the existing shared inset outside its footprint. The shared inset has dark/light
+pixel coverage for a continuous interior. Find remains owned by the native portal.
+`WorkspaceTitlebarPresentation` owns only centered title/folder and badge drawing;
+the folder's existing drag/menu actions remain in `DetachedFolderDragIcon`.
+
+The final quality fixes propagate the 28pt toolbar minimum into width reservations
+and narrow-pane caps (nil presentation retains 22pt), extract `PanelAppearance`
+coherently, and replace the moved styling namespace with an immutable appearance
+value. The file-budget guard passes without changing budgets; its explicit
+incidental allowance covers +5 focus-controller and +2 workspace-content lines.
+Project loading, normalization, 433-test wiring, duplicate-ID audit, Swift parsing
+and diff checks pass. Existing package unused-import and vendor deprecation/actor
+warnings were inspected; no new warning was identified in focused test logs.
+
+### Stage 4 native preview and dependency delivery
+
+Tagged build 753 passed. At 1092 × 593, the main panel begins at approximately
+(314,90), matching the reference (313,90); the terminal inset begins at (339,247)
+versus (336,246). The remaining few points follow exact native padding/rounding.
+Live checks passed search-to-filter-to-primary-tab keyboard traversal, selected
+Terminal focus retention, Session activation, native Find above the terminal,
+shell input/output, split-right creation and closing the temporary split with
+Cmd-W. At 802 × 593 a long workspace title wraps while the close button, primary
+tabs and four terminal tools remain visible. Fullscreen entry/exit retained the
+centered title and terminal. Appearance changed light→dark in place through the
+tagged app’s Settings. No user build or global appearance was changed.
+
+The light Chat preview exposed white text on the new porcelain backing. The
+correction uses the renderer’s existing explicit theme-input seam, scoped to the
+shell Chat caller. It changes semantic colors only, with no web layout, content,
+action or lifecycle changes. This correction still requires a fresh app build
+and light/dark live check. Final token review also centralizes retained native
+titlebar/header metrics and fixes the affected Japanese build-badge translation.
+
+Bonsplit’s reviewed optional presentation patch is commit
+`306a7424d93259ddc1728634e237947d2c4ede13`, pushed to `main` in the owned dependency
+repository https://github.com/BrianBusby/bonsplit. It preserves the pinned
+`fb5307f` history and MIT license rather than taking 243 unrelated upstream commits.
+Remote-main reachability was verified before the parent pointer update. The
+parent submodule URL now points to this reachable copy; local `upstream` retains
+https://github.com/manaflow-ai/bonsplit.git. HTTPS publication lacked workflow
+scope, so publication used the existing GitHub SSH identity. GitHub’s large-file
+warning concerns inherited `.build` history, not this source/test-only patch.
+
+### Stage 4 final source and preview check
+
+Build 754 passes after the Chat contrast correction and token centralization.
+The porcelain Chat preview now shows readable ink text, metadata and its existing
+button without changing content/layout. Its diagnostic capture is included.
+Independent final specification and quality reviews have no remaining findings.
+Shared UI now passes 45 tests, including native magnified-title rendering;
+Bonsplit remains 175 tests and native focus harness 18. Catalog JSON parses;
+the moved badge’s English/Japanese placeholder parity is verified.
+
+The main-presentation capability is implemented, with the requested user review
+gate still pending before texture. App-host and full suite results on the stage 4
+commit remain CI evidence, not inferred from the successful app build.
+
+The open 754 preview changed during automation, so it is treated as potentially
+in use and will not be quit/replaced. Final pushed-commit dogfood uses the
+separate `matte-skin-stage4-review` tag. The committed graphite/porcelain pair
+records builds 753/754; the final review build uses the same production sources
+with no further geometry changes. Full suite and app-host CI stay pending.
+
+## Selected-card visual follow-up
+
+Brian explicitly confirmed using screenshot measurements for unspecified spacing,
+and identified the selected sidebar card as still unlike the reference. Stage 4
+commit `00d3d13b8` had already been pushed and its isolated build 755 passed; this
+follow-up corrects the specific sidebar discrepancy before the next visual gate.
+
+Read-only comparison found a concrete header-line-box error: the close button’s
+outer 14pt frame collapsed the header, producing a roughly 68pt card versus 74pt
+in the reference. The title sat about 6pt too high and repository label about
+3–4pt too high. A measured 20pt, vertically centered header corrects this while
+preserving the authoritative 13/16/14 padding, 7pt gap, 15pt/600 title, and 28pt
+close target. Rich metadata can still increase row height. The semantic selected
+fill, 1pt ring, inner edges and level-2 shadows were already applied. The separate
+keyboard-focus outline must remain accessible; it is not the ordinary selection
+ring. Texture remains deferred.
+
+The selected card’s 600 weight correctly resolves to native semibold. Native
+650/750 requests quantize on this macOS, but that observation alone does not prove
+a browser-reference mismatch; no typography substitution or whole-UI scaling is
+authorized or introduced in this follow-up. Verification remains actual native
+card geometry in both appearances and close/focus targets, plus focused checks.
+
+
+Follow-up verification: tagged build 756 passed. Both 1092 × 593 captures now
+show the corrected approximately 74pt selected card. Live keyboard traversal
+reaches its selected accessibility element and adds a separate focus outline
+without a geometry change. Its independent close control removed only the
+disposable selected workspace; the fixture was restored afterward. Shared UI
+45 tests, source parse, length budget and diff checks passed. Independent review
+of the complete card/rail/focus path found no new state or ownership change.
+No localized strings changed. Full app-host/CI remains a separate pending gate.
+
+
+## Pointer-selected card consistency follow-up
+
+Brian supplied two porcelain screenshots showing a thin selection ring on the
+terminal workspace and an extra outer ring on the Chat workspace. Reproduced
+on running build 757 with real pointer clicks: Terminal receives native focus
+after selection, while Chat leaves the clicked card focused. Raw FocusState
+incorrectly drove keyboard decoration for both input methods. This is a visual
+state issue; native focus, navigation and activation must remain unchanged.
+
+The existing application event dispatch now reports input modality through
+WindowKeyboardFocusRouting to the per-window WorkspaceChromeFocusOwner. Only
+modality transitions update the registered hosts' value-only environment.
+No new event monitor, gesture, observable row dependency, responder change,
+view-tree scan, or per-frame work is introduced. The hosting root keeps its
+content identity; callbacks capture hosts weakly and are cleared at teardown.
+Actual focus still controls close visibility and accessibility. Both button
+and card decoration gate the whole focus expression, preserving keyboard rings.
+
+The PR-link hover wash was also incorrectly shared with flat icon controls.
+Links now retain only their existing token color and native underline on hover;
+flat icon controls retain the wash. No new color, metric, or string is added.
+
+Guidance: AGENTS.md snapshot/hot-path/file-budget requirements; continuous-code-
+quality; bmux-architecture, debugging and testing skills. Existing patterns:
+WorkspaceChromeFocusOwner/Scope/HostingView, WindowKeyboardFocusRouting and
+NSApplication.bmux_applicationSendEvent; MatteButtonLabel/ControlDecoration.
+Independent complete-path review found no blocking ownership/lifecycle issue.
+AppDelegate remains smaller than the feature base; the exact base-aware source
+length gate passes.
+
+Regression evidence: the link-hover rendered-pixel test failed in both themes
+before the fix (test-only e32a72f94). CI previously omitted BmuxAppKitSupportUI,
+so test-only 75528c0b2 adds the confirmed standalone package to its existing job.
+The fix passes 47 shared UI tests and 19 native focus-harness tests, including
+modality deduplication, unchanged responder ownership, separate-window state,
+new-host propagation, and actual outline/interior pixel comparisons. Test-host
+compilation/full app suites remain CI gates. No new localization strings.
+Live build 759 passes the exact pointer sequence in both appearances. Tab and
+Shift-Tab restore the outline, Return retains the selected workspace, and clicking
+an already-focused card suppresses only decoration while retaining its actual
+accessibility focus. The first live pass exposed inherited EnvironmentValues
+overwriting the semantic Boolean; ordering is corrected and the hosting-boundary
+test now asserts the actual subtree value and unchanged local-state UUID.
+Brian explicitly approved retaining the existing pressed-link background while
+removing only its hover background. The rendered test distinguishes both states.
+The paired selected-card captures show build 759 (before that pressed-only
+restoration, which does not affect these unpressed captures). Final committed
+source reload and CI are reported in the PR/handoff. Direct VoiceOver visual
+behavior after pointer input is not claimed.
+
+## Texture stage reverted at Brian's request
+
+Brian rejected the optional texture after reviewing build762. Revert only stage5
+commit16e9e6a4e: remove the grain assets, loader/scope, preference flag, surface
+integration and texture-specific tests/artifacts. Keep approved stages1–4, the
+selected-card focus fixes, and the independent metric-test corrections. Runtime
+source is identical to approved2f0181b3c after this revert. The running stage5
+preview's flag was disabled immediately, without quitting or rebuilding it.
+No UI text is added or changed; localization entries remain unchanged.
+
+## Retained CI follow-up (historical texture-build evidence)
+
+
+Exact-source CI at `16e9e6a4e` passes all 51 shared UI tests, the package suite,
+activation checks, and build/typing-lag checks. Full app-host verification remains
+blocked: run `38113835880`, shard 3 (`114395249842`) fails, while completed shards
+1 and 4 contain assertion failures despite successful job statuses. The existing
+workflow accepts any XCTest summary containing `(0 unexpected)`; that text does
+not mean assertion failures are approved expected failures. The feature-base run
+`38072470965` also contains many failed tests. Some current cases did not execute
+in its logs, so a clean baseline or wholly pre-existing failure set is not claimed.
+
+The bounded follow-up corrects two metric tests: retained right-sidebar controls
+must use their own shared 20pt owner instead of the new 28pt matte titlebar value;
+the group/row alignment test already had stale 10/6 padding expectations on the
+feature base and now checks the existing 12/8 padding and 20/28 edge/center offsets.
+All alignment, scaling, icon and radius assertions remain. The touched XCTest
+method moves to a same-file Swift Testing suite; the oversized file shrinks one
+line. No production behavior changes and no preview is rebuilt.
+
+Seven focused compiled metric tests pass with actual production definitions and
+shared-package dependencies. Full app-host compilation remains a CI gate. The
+standalone harness emits an actor-isolation warning in unchanged header-icon
+code; no new warning is introduced in repository source. Test wiring, Swift parse,
+base-aware file budget and diff checks pass. No user-facing strings change.
+Source rules remain root AGENTS, continuous-code-quality and bmux-testing's
+incremental Swift Testing migration; CI ownership stays separate from dogfood.
+The app-host masking rule and unrelated baseline failures are reported rather
+than broadened into this visual change. `matte_skin_full_app_host_verification`
+records the unresolved acceptance gate in Project Truth.
+
+Texture-revert checks: all47 shared UI tests pass; Sources and the shared UI
+package match approved2f0181b3c exactly. No new localization strings. The existing
+light preview was inspected with texture off, preserving its window/workspaces.
+A separate matte-skin-no-texture tagged build validates the reverted source
+without replacing the user's active preview. Full app-host CI caveats above
+remain unresolved and are not hidden by this revert.
+
+
+## Truthful CI reporting and matte test follow-up
+
+Brian authorized the reporting fix and base comparison after the texture revert.
+The reporting change is isolated in PR142 (`ci-test-result-reporting`, based on
+`ce17e9888`); it must preserve nonzero runner/timeout status instead of accepting
+XCTest's `(0 unexpected)` text. No merge is authorized. The existing
+`matte_skin_full_app_host_verification` caveat remains open.
+
+Comparison of XCTest case-result lines from current run38143802312 and base
+run38072470965 found 133 current failed cases, 114 also failed on the base,
+14 passed on the base, and 5 were absent from the base log. These counts cover
+observed XCTest cases only, not all Swift Testing cases or a clean complete run.
+Five of the 14 pass in another sampled matte run: AX insertion, initial git
+metadata coalescing, mouse unread dismissal, detach reconciliation and relay
+ZDOTDIR history. That establishes intermittency, not an acceptable green gate.
+Six terminal-runtime initialization checks and the active-surface queued-submit
+check remain unresolved; no environment-only or pre-existing claim is made.
+
+Two deterministic failures were stale presentation expectations. The titlebar
+test required pure black rather than the approved secondary-text token. Its
+replacement checks the token and >=4.5 contrast against the actual matte base
+in both appearances. The drag test's fixed x=240 point is inside a 28pt button;
+the replacement checks all actual button centers, inter-button gaps and trailing
+whitespace for all five existing titlebar styles. Only these tests migrate to
+Swift Testing; both new files are wired into the existing Xcode test target.
+
+Seven parameter cases pass in a native harness using the production foreground,
+hit-region registry, range calculations and drag-capture code. Application-only
+Bonsplit/minimal-mode fallback and telemetry are absent in that harness, so it
+does not replace full app-host compilation and execution. No production code,
+user-facing strings, terminal code or active preview changes in this follow-up.
+Localization audit: the diff contains test names/assertions only, no UI strings.
+
+The five color failures absent from the base log expect translucent #1122337F.
+An isolated native probe of the byte-identical base/current bonsplitChromeHex
+function and WindowAppearanceSnapshot produces opaque composited colors in both
+appearances, reproducing that expectation mismatch without matte changes.
+This is focused source/runtime evidence, not a complete baseline app-host run.
+
+Governing sources: root AGENTS.md; continuous-code-quality; bmux-testing and its
+Swift Testing migration rule; bmux-debugging's routing/hot-path boundaries;
+bmux-dev-workflow's Xcode test wiring and normalization requirements. Ownership
+remains the existing semantic theme and drag registry. Full CI evidence and
+the seven unresolved cases above remain required before merge readiness.
+
+
+### Final verification and native CI isolation follow-up
+
+Final build763 was inspected in both appearances at1092×593, then at802×593
+with the long reference heading and an eight-workspace scrolling sidebar.
+Fresh images and the side-by-side comparison are in `verification-final/`;
+`verification-stage4/README.md` records differences and exact live coverage.
+Only the newly launched no-texture tag was manipulated; the user's stage5
+preview remained untouched. Original System appearance was restored afterward.
+No app source or shipped strings changed; production source still matches2f0181b3c.
+
+Actual20bf68591 app-host logs show all7 titlebar parameter cases starting but no
+completions before the45-second post-XCTest cutoff. Shard2 also crashes from a
+ContentView fixture missing SidebarUnreadModel. That root omission predates the
+skin, but directly obstructs verification. The one affected file-drop test now
+uses the maintained root composition (the notification store's own unread
+projection), detaches its content at teardown, and migrates to Swift Testing.
+Review identified that Task.yield alone does not drain AppKit attachment work;
+the final test uses the existing visibility fixture's bounded main-run-loop
+drain. Both affected files typecheck against the actual built app module without
+warnings. Full runtime execution remains required.
+
+PR142's three reporting commits are cherry-picked as a prerequisite onto this
+branch, without merging either PR to main. Project Truth conflict resolution
+retains both matte and CI capabilities/caveats and regenerates derived documentation.
+A focused shard3 invocation runs all seven affected native suites before legacy
+full-suite fixtures. It uses the same console-session/serialized app-host runner
+and authoritative exit status; no timeout is extended and no full-suite tests
+are removed. This separates feature evidence from later unrelated failures.
+The shared package's47 tests passed on20bf68591; all remaining app-host failures
+and incomplete runs still block a clean full-suite claim.
+
+
+### Terminal preference precedence review correction
+
+Review of PR141 found the post-user-config matte override replaced explicit
+Ghostty themes, colors and opacity. Matte foreground/background now enter through
+the existing managed-default loader, before user files and recursive includes.
+Explicit themes retain their existing default-suppression rule; individual colors
+override only the matching default. Matte no longer writes background-opacity,
+so opacity-only user configuration survives the existing stale-legacy reassertion.
+Startup, app reload, surface reload and preview profiles retain the same loader.
+Renderer code, fonts, input handling and the existing readable-foreground policy
+are unchanged. Production source therefore no longer matches2f0181b3c exactly.
+
+The test-only commit edf7fa0b7 adds a native C-config/full-loader suite and the four
+unresolved terminal cases to the existing focused CI invocation. The corrected
+identical suite completes all12 parameter cases against both compiled app dylibs:
+the previous build fails14 assertions; the fixed isolated build passes all12 cases.
+It covers both default palettes, explicit colors, single/paired themes, independent
+color overrides and opacity0.88. Expected theme foreground retains the pre-existing
+contrast reconciliation rather than changing the renderer. The synchronous
+MainActor fixture restores preview state and preserves shared shell/host modes.
+Both test compiles are warning-free. Existing config-policy package tests complete
+11/11 cases, but SwiftPM exits nonzero with existing binary-name diagnostics; this
+is not counted as a clean package command. Independent review found no blocker.
+
+Fresh baseline app/test source ce17e9888 now reproduces three of the seven disputed
+failures: queued-submit, direct-first-responder refresh and visibility restore.
+IME repeat, printable repeat, detached-surface recovery and closed-surface recovery
+pass on base but previously failed on matte at their initial runtime-surface
+precondition after a fixed50ms drain. Both suites show readiness instability;
+matte resource discovery occurs after one failed readiness assertion. This is a
+timing hypothesis, not proof those four failures are unrelated. They remain in
+the focused native gate. The five static chrome-color failures use literal colors
+and opacity through unchanged compositing functions; they do not read Ghostty
+configuration and remain separate stale alpha expectations. Baseline shards1/4
+correctly fail with exit124; required comparison logs are retained and remaining
+baseline jobs were cancelled after evidence capture. Full-suite green is not claimed.
+
+Governing sources remain root AGENTS, continuous-code-quality, bmux-architecture,
+bmux-debugging and bmux-testing. Existing default-config ownership and discovery
+patterns are reused; no new config store, parser or test-only app branch is added.
+No shipped strings change. The explicit-preference regression is resolved in
+Project Truth; full app-host verification remains open. New default/custom visual
+checks and exact-head CI are still required before a merge decision.
+
+### Popover routing, terminal inset paint, and readiness follow-up
+
+The completed 616e app-host run (38159675610, shard 3 job114530497925)
+passed all 12 native config cases and the seven original native suites. IME and
+printable-repeat also passed. Detached recovery and closed recovery failed their
+initial runtime-surface precondition; the focused failure skipped the later full
+legacy invocation. This is partial passing coverage, not full-suite green.
+
+Two actual popover callers incorrectly inspected the parent window's responder
+while handling a child window. WindowKeyboardFocusRouting and the shared terminal
+Find Escape route now inspect the child responder while retaining the existing
+parent-owned WorkspaceChromeFocusOwner. Its exact registered-host ownership and
+revocation rules are unchanged. Native caller tests exercise actual AppDelegate
+contexts with distinct parent/child responders, unrelated child focus, and open
+terminal Find. Against 616e, two tests complete with three expected assertions.
+The fixture restores shared app/active manager and the registry's route-retirer,
+and closes its terminal panels. No new production state owner is introduced.
+
+Live custom-theme checking also exposed a separate paint regression: config
+precedence was correct, but TerminalInsetContainer painted the fixed matte inset
+under the terminal's configured foreground. The container now receives
+PanelAppearance.backgroundColor through a per-call matte-surface fill. This
+reuses the existing GhosttyBackgroundTheme/WindowAppearanceSnapshot composition
+(and thus existing readable-foreground input). Raw config opacity remains intact;
+its effect is represented in the already-composited panel color. The inset keeps
+its native radius/edge stack; other matte surfaces retain semantic token fills.
+No renderer, engine, font, per-keystroke work, or user preference changes are made.
+The full TerminalPanelView is rasterized through native NSHostingView: four custom
+color/opacity cases fail on616e, while both default matte palette cases pass.
+ImageRenderer cannot capture an NSViewRepresentable and was not used as proof.
+
+The two recovery tests are incrementally migrated to Swift Testing, preserving
+the release/detach and closed-lifecycle behavior assertions. Their fixed 50ms setup
+could release nil while asynchronous Claude shim installation was pending; its
+later completion could create the headless bootstrap window after detachment.
+They now subscribe to terminalSurfaceDidBecomeReady before mounting, following
+ConfiguredCodexLaunchTests, and require a runtime before changing lifecycle. The
+closed test additionally checks no queued restart or new create attempt. Existing
+failed616e cases provide the failing fixture evidence. No production lifecycle
+code or timeout/retry policy is changed. Both migrated cases pass against the actual
+616e and fixed production dylibs. The notification sequence filters immutable surface
+UUIDs before yielding Bool, avoiding transfer of the non-Sendable surface object.
+
+Governing sources: root AGENTS; continuous-code-quality; bmux-architecture file/API
+and concurrency guidance; bmux-debugging runtime pitfalls; bmux-testing behavioral,
+Swift Testing migration, wiring, and native-host validation guidance; shared-behavior
+routing guidance. Complete callers, owner, config/panel composition and maintained
+native render/launch fixtures were inspected. Independent review identified the
+fixture route-retirer cleanup and it was corrected; no remaining production blocker
+was found in that scoped review. No shipped strings are added (test diagnostics and
+contributor docs only). The test-only commits are a96772a22 and 5ddefd5ce. Native red
+runs and warning-free test-file compilation are recorded. The fixed 766 production
+dylib passes 16 tests across four suites (popover, six inset parameter cases, 12
+config cases, and existing native matte surface tests); recovery separately passes
+2/2. Parent-owned isolated tagged reload succeeded. Test wiring, source length,
+diff and Project Truth gates pass. Actual app-host CI
+remains pending; existing full-suite caveats remain open.
+
+Parent live verification on isolated build 766 passed in both appearances: the
+explicit Tango Dark terminal background now stays dark with readable white text;
+reloading configuration preserves it. With terminal Find open and workspace filter
+popover focused, the first Escape dismisses only the popover and keeps Find open;
+the second Escape closes Find. System appearance was restored. New 1092×593 captures
+are verification-final/custom-theme-graphite.png and custom-theme-porcelain.png.
+Their terminal intentionally differs from the default reference because the user
+explicitly configured Tango Dark and opacity 0.88; no preferences were edited. The
+earlier default captures/walkthrough remain labeled build 763. The configured-inset
+visual caveat is resolved; exact-commit tagged build and actual CI remain gates.
+
+The test-only 5ddefd5ce app-host job 114567585239 (run 38172199110)
+completed both popover tests with the expected three assertions, and all six inset
+cases: four custom-color failures and two passing default palettes. All 12 config
+cases and the original seven native suites passed. IME repeat passed; printable
+repeat again failed its initial runtime-surface precondition (it passed on 616e),
+and the old detached/closed fixtures failed as before. This preserves actual CI
+red evidence for both fixes and confirms that the readiness issue varies across
+runs. The exact 7ce43151c tagged reload succeeded as build 767; production source
+is unchanged by this documentation update. Fixed-head app-host results remain
+pending, including the migrated recovery cases and existing printable-repeat case.
+
+
+### Follow-up: automatic popover focus and chrome preferences
+
+Read the root AGENTS instructions, continuous-code-quality, architecture file/API
+and concurrency references, native runtime pitfalls, Swift Testing/regression and
+validation references, shared-behavior, dev workflow, and localization guidance.
+Reviewed complete WorkspaceChromeFocusOwner, routing, native responder hook and
+hosting attachment lifecycle; both automatic Ghostty focus guards; the Bonsplit
+mapper and Workspace initialization/config/background/appearance reload callers;
+and the existing pane settings and config font parsing/magnification owners.
+
+Actual fixed-head CI run 38174191168, job 114573655856, completed all 12 config
+cases, six inset cases, two migrated recovery cases, and both unchanged IME and
+printable repeat cases successfully. Its 40 Swift Testing functions finished with
+four issues in the two popover fixtures. Native app-host makeFirstResponder hooks
+observed focus before the fixture registered its host, recording the responder
+identity without a grant. Later synchronization correctly deduplicated that same
+identity. Production registers on host attachment before focus. The fixture now
+matches that ordering; detach/reparent revocation semantics are unchanged. The
+standalone dylib harness does not install full app startup hooks, explaining why
+it did not expose this fixture ordering defect. Actual app-host rerun remains a
+gate; the broader legacy suite remains separately unresolved.
+
+Test-only commit 438a0fd24 adds automatic guard ownership/revocation assertions
+and configuration preference coverage. Against build 767, eight parameter cases
+across six test functions produce 14 assertions: two focus, four tab font size,
+and eight pane border assertions. The new preference fixture uses a synchronous
+MainActor volatile argument-domain override, restores nesting, closes panels,
+and never writes persistent preferences. Test wiring now covers 441 files.
+
+The automatic guard now asks the existing focus owner for its validated current
+grant, including a registered child popover; the owner validates current native
+first responder and existing weak host/window identities. Both existing automatic
+terminal/Find guard callers benefit without renderer or per-key traversal changes.
+Explicit focus actions and unrelated child windows retain their previous policy.
+The matte mapper resolves the existing paneBorderColor preference through
+PaneChromeSettings, with the theme edge as fallback. Initialization, configuration,
+background-only and appearance changes share this mapper, including clearing an
+override. No independent setting or persistent state is introduced.
+
+Independent review found no blocker in the bounded focus/border changes. The
+parent-owned isolated tagged build matte-skin-preferences-focus succeeded as build
+768. Compiled native tests against its actual dylib pass five test functions /
+seven cases for focus and border (/tmp/matte-focus-border-native-green.log).
+Running the full new suite still reports precisely the four expected font-size
+assertions; this is not described as a complete green run. The font default choice
+remains pending: the shared config/Settings/reset default is 11pt while the matte
+prototype is 13pt. The explicit configured-size regression stays in the focused CI
+gate. No font production code has changed yet. No shipped strings changed; the
+localization audit found only contributor notes, test fixtures, and code comments.
+Actual new CI run 38182296127 is pending on test-only head 438a0fd24; fixes must
+retain actual red evidence before their push. Source budgets and diff checks pass.
+
+Parent live verification of isolated build 768 also passed: opening terminal Find,
+then focusing the filter popover's Active control, leaves Find open when the first
+Escape dismisses the popover; the second Escape closes Find. Existing user previews
+were untouched. This verifies the independent focus/border slice; the configured
+tab-size fix and actual CI gates are still pending.
+
+
+### Approved 13pt tab default and configured-size preservation
+
+The user selected 13pt when unset. BmuxGhosttyConfigSettingEditor remains the
+single configuration-policy owner for the default, minimum and maximum; Settings,
+reset, GhosttyConfig, browser tabs and dock tabs consume that existing shared
+owner. The Settings fallback host now consumes it too, replacing its duplicated
+11pt defaults. MatteTheme.body remains a separate authoritative design token:
+general body typography and a configurable tab preference have different reasons
+to change, although both approved defaults are currently 13pt. No dependency
+reversal, parser duplication, provenance flag, or new preference is introduced.
+
+Workspace initialization already receives the resolved config size. The matte
+mapper now leaves that size intact. A config reload applies the config's already
+clamped and magnified size; background-only and appearance mapper calls preserve
+it. Terminal rendering and terminal font-size ownership are untouched. The web
+configuration example explicitly choosing 11pt is still a valid custom value and
+is not documented as the default; it remains unchanged.
+
+Actual test-only CI run 38182296127, job 114597724777, completed 44 Swift Testing
+functions across 12 suites with precisely the expected 14 assertions: two
+automatic-focus, four configured-size, and eight pane-border assertions. Both
+original popover tests passed, confirming the attachment-order fixture correction.
+This supplies actual CI red evidence before focus/border fix 510da7df8 was pushed,
+and for the pending font mapper fix. PR replies link the focus/border correction.
+
+Test-only 3b0251604 additionally covers the newly approved default/reset policy:
+config and Settings fallback agree on 13pt; resetting a custom value preserves the
+terminal font; magnification produces 19.5pt and reaches workspace/dock chrome.
+Against build 768, the native suite completes seven functions with 11 expected
+font assertions (seven default/reset plus four configured-size). The package suite
+runs 11 cases and fails its expected default-13 assertion. After the scoped source
+change, the same package command passes all 11 cases with exit 0. The initial red
+package invocation also printed existing GhosttyKit static-library naming errors;
+the green invocation did not. Unused-public-import and unused-try warnings remain
+in unchanged TerminalCore files; no changed source has a new diagnostic.
+
+Independent review found no blocker in the four-file font patch, including full
+mapper/reload consumers, Settings/reset ownership and the existing package DAG.
+Wiring (441 files), source budgets and diff checks pass. Existing English/Japanese
+font-setting, subtitle, reset and value localization entries were audited; there
+are no new shipped strings. Parent-owned final tagged build, native combined-suite
+execution, live default/custom-size checks and fixed-head CI are pending.
+
+
+Final font build 769 succeeded under the new isolated matte-skin-font-default tag.
+The combined native harness then passed 23 Swift Testing functions across six
+suites: preference/default/reset/magnification, popover routing, terminal inset
+pixels, configuration precedence, runtime recovery, and existing matte surface
+coverage. Compilation emitted no diagnostics. An earlier compile was terminated
+by SIGTERM before producing an executable (zero tests); only the completed rerun
+is counted. The native log is /tmp/matte-font-final-native-green.log. The 11 package
+font cases also passed with exit 0. Actual 438a0fd24 CI red already covers the font
+mapper regression; the additional 3b0251604 expectations pin the newly approved
+13pt policy rather than treating the former documented 11pt default as a bug.
+Live verification and final fixed-head CI remain pending.
+
+
+Parent live build 769 verification passed in the isolated tag's own config file:
+CLI reported unset/configured:false at 13pt, a temporary 12.5pt override reloaded
+and appeared as 12.5pt in Terminal Settings, and the native Reset control restored
+13pt. Removing only that owned override and reloading returned configured:false
+at 13pt. User configuration and existing previews were untouched. CUA checks at
+1092×593 in both appearances found no new material mismatch; system appearance
+was restored. Default layout matches the approved 13pt matte treatment, while the
+user's explicit Tango Dark terminal stays readable in the light appearance. The
+existing native chrome, text truncation and texture-off deviations remain as
+previously documented. These live checks do not replace final fixed-head CI.
+
+### Terminal transparency and native test readiness follow-up
+
+Final font HEAD 7f5121e00 completed CI run 38186042753. Its focused native step
+passed 45 Swift Testing functions across 12 suites, but the two legacy printable
+and IME repeat XCTest fixtures failed during their fixed-50ms initial surface
+setup. All four full app-host shards and the aggregate failed; package, build/lag
+and workflow guards passed. This is not a green full-suite result.
+
+Review r4243798941 identified a separate visible-opacity regression: the correct
+configured terminal background was still occluded by the inset's opaque composite,
+Bonsplit pane fill, main panel, and base. The earlier inset pixel test verified
+readable color but incorrectly expected the opaque composite for translucent
+content; configuration precedence tests did not exercise these drawing layers.
+Test-only commit 36a1500b1 corrects the established clear-content contract while
+retaining opaque/default coverage. Against unchanged build 769, seven native test
+functions complete with six expected assertions (four pane-owner and two
+translucent-leaf assertions). Actual CI red evidence remains pending.
+
+The existing WindowAppearanceSnapshot/PanelAppearance policy continues to own
+terminal opacity and glass. A bounds preference originates above Bonsplit's native
+NSHostingView boundaries, only for visible terminal content that delegates its
+backdrop to the window. Base and main-panel decorations subtract that region from
+their own fills and shadows, without masking content or the root backdrop. Native
+tab chrome remains opaque; the pane canvas and terminal inset respect their
+existing clear-content ownership. No renderer, font, typing path, blur, persistent
+state, polling, or global geometry owner changes. Default opaque matte surfaces
+publish no aperture.
+
+WorkspaceContentView's existing appearance resolver is constructor-injected for
+real visible composition coverage, including both initial state and subsequent
+refreshes with the same reason/background override. Its unchanged panel-content
+host moved into its own cohesive file to keep the workspace file below its
+feature-base budget (802 lines versus 822). The integration fixture uses real
+NSSplitView child hosting roots and checks both pane centers, tab chrome, panel
+margin, sidebar, and hidden/remounted visibility. Native bitmap capture across
+those layer-backed roots is still under investigation; compilation alone is not
+pixel proof. The initial standalone /tmp harness aborted in UserNotifications
+because it lacked an app bundle; a uniquely identified test bundle removes that
+harness limitation without changing production initialization.
+
+The two touched repeat fixtures are incrementally migrated to Swift Testing. They
+subscribe to the maintained terminalSurfaceDidBecomeReady signal before mounting
+and require successful setup before dispatch. Each retains three forwarded repeat
+events, exact committed text, and zero forced refreshes; temporary hooks are
+installed/restored synchronously after readiness. Both cases pass against unchanged
+build 769. This changes test synchronization, not terminal behavior.
+
+Source budgets, test wiring (443 files), and diff checks pass. Independent review
+assessed the native hosting boundary, visibility lifetime, configuration refresh
+owner, and repeat-hook cleanup without a remaining source blocker. No shipped
+strings are added; localization scope is unchanged. Full composition execution,
+parent-owned fresh build/live transparency checks, actual red/fixed CI, and
+remaining baseline classifications must be recorded before final handoff.
+
+Parent-owned isolated build 771 succeeds with the explicit opaque structural
+mask. The supported native regression run against that exact dylib passes eight
+Swift Testing functions across three suites (pane/configured chrome, six inset
+pixel cases, and both signal-ready repeat cases), with compilation exit 0 and no
+diagnostics. Logs: /tmp/matte-transparency-focused-green-compile.log and
+/tmp/matte-transparency-focused-green.log. Existing Sentry-not-started diagnostics
+from the standalone harness remain visible; they are not app-runtime failures.
+The app build has no diagnostics in the changed production files; retained
+deprecations/concurrency warnings occur in unchanged owners, alongside optional
+cargo and AppIntents extraction notices.
+
+The native full-composition fixture compiles, but its standalone capture does not
+yet provide valid child-host pixels. A window-server diagnostic does render the
+ancestor aperture and sentinel, while omitting native Bonsplit child content. The
+parent independently confirmed the Mac session is locked and live capture is
+unavailable. No tolerance was widened and no production change was made to fit
+this artifact. Full composition pixel/visibility assertions and final live
+transparency checks remain pending an unlocked desktop. The parent owns build
+771 and all visual work; the user's build 769 and older previews are untouched.
+
+Bounded shard-2 comparison found 42 failing XCTest methods: 37 have the same
+reason on captured baseline executions; four passed baseline and fail now; one
+has no captured baseline execution. Two of those four are the initial-readiness
+repeat fixtures repaired here. The other two Bash/Zsh prompt-refresh fixtures
+stop polling on any nonempty log, potentially observing report_pwd before
+ports_kick; that is a supported race hypothesis, not proof of a baseline failure.
+WorkspacePanelGitBranchTests.testUpdatingFocusedPanelGitBranchWithSameStateDoesNotRepublishWorkspace
+has no captured baseline execution. Three Swift Testing failures likewise remain
+unclassified: webDownloadQuarantineMetadataMarksRemoteDownloads,
+attachReportsPTYSizeChangeBeforeForwardingInput, and
+claudeNotificationStatusCarriesPIDForStaleSweep. No further matte production
+regression is confirmed by this comparison. Full-suite red status and those
+baseline evidence gaps remain open; this follow-up does not repair unrelated
+legacy coverage. Sources: /tmp/matte-final-head-shard2.log,
+/tmp/matte-base-apphost{1..4}.log, and
+/tmp/ci-reporting-baseline-apphost{1,4}.log.
+
+Test-only CI run 38189232267 targets 36a1500b1; focused shard 3 is job
+114618756680 and was queued at this checkpoint. Production fixes must not be
+pushed until its actual regression assertions are captured.
+
+### Unlocked native composition proof
+
+Actual test-only CI run 38189232267, shard 3 job 114618756680, completed 46 Swift
+Testing functions across 12 suites with exactly the six intended assertions: four
+pane-background ownership assertions and two translucent inset assertions. Both
+legacy repeat XCTest cases passed in that run. This preserves actual CI red
+evidence before the transparency fix is pushed.
+
+After unlock, the fixture exposed two setup/capture mistakes rather than a
+production regression. Bonsplit deliberately hides its native split view when
+isInteractive is false, so a visible fixture must also be input-active. Reference
+colors and real composition must use the same window-server color pipeline.
+AppKit cacheDisplay flattens destination-out/native-backed content differently;
+it is not a valid compositor oracle. ScreenCaptureKit was also tested in /tmp but
+requires TCC capture permission in that harness and was not adopted.
+
+The fixture now reuses the app's existing DEBUG composited-window PNG helper
+through @testable access (private becomes internal; implementation unchanged).
+It awaits a real Core Animation transaction completion, creates only its own
+offscreen windows, and detaches/closes them at teardown. It sets the independently
+tested inactive-split opacity to 1 so both panes measure backdrop ownership.
+Opaque/default coverage, native tab chrome, panel margin, sidebar base, two pane
+centers, and same-host hidden/remounted state remain asserted with the original
+color tolerance. No permission prompt, sleep, polling, or assertion relaxation is
+added. The existing AppKit fallback screenshot path is not validated here; it
+already cannot represent all native/Metal compositing.
+
+Before changing the helper visibility, an identical-method /tmp harness against
+build 771 passed 10 Swift Testing functions across four suites. A negative control
+that removed only the outer aperture preference failed exactly 16 terminal-center
+and remount assertions; opaque/chrome/margin/sidebar/hidden checks continued to
+pass. Thus the new full composition coverage detects the missing-ancestor-hole
+regression through real NSSplitView hosting roots. Logs are
+/tmp/matte-transparency-unlocked-same-pipeline.log and
+/tmp/matte-transparency-disabled-aperture.log. The temporary duplicate helper
+emitted the same deprecated window-capture API warning as the existing app helper;
+the committed fixture calls the maintained owner and does not duplicate that API.
+Final compiled execution through the newly exposed helper completed successfully
+against build 772, as recorded below.
+
+Parent live build 771 verification passed at 1092×593 in both appearances. Its
+own comment-only configuration preserves the previous single-pane layout; a
+temporary tag-only opacity 0.25/blur 0 override reloads to a visibly transparent
+canvas in both panes while tabs, sidebar and panel margins remain opaque. The
+dark inactive-pane overlay remains the existing configured behavior. Session
+removes the terminal aperture; Terminal remount restores it. The extra fixture
+split was closed, the tag-only file restored exactly, configuration reloaded, and
+System appearance restored. Real user config and build 769 were untouched.
+Composited PNGs from the existing debug.window.screenshot RPC are preserved as
+verification-final/build-771-custom-theme-graphite.png and
+verification-final/build-771-custom-theme-porcelain.png. These are explicitly
+build-771 custom-theme captures, not replacements for the historical default
+design comparisons. No new material deviation was observed.
+
+Final isolated build 772 (matte-skin-transparency-verified) succeeded without
+replacing the user's running build 771. The final fixture linked to that actual
+app dylib passes all 27 Swift Testing functions across eight suites, including
+six full composition cases, configuration precedence, preferences, popover focus,
+inset pixels, repeat delivery, recovery, and shared surfaces. Compilation and
+execution exit 0; the test compile emits no diagnostics. Logs:
+/tmp/matte-transparency-final-green-compile.log and
+/tmp/matte-transparency-final-green.log. The one-line DEBUG access change leaves
+release/runtime drawing behavior identical to the live-verified build 771.
+Independent review found no blocker in the final fixture/helper lifecycle and
+coverage. The existing conditional-cast and deprecated capture warnings in
+TerminalController remain unchanged; no new warning or suppression was added.
+
+Local inset/composition/live verification is resolved. Full fixed-head app-host CI
+remains a separate open gate, with the previously classified full-suite failures
+and four missing-baseline cases retained above. Test wiring (443 files),
+feature-base source budgets, project normalization, diff checks, and Project Truth
+validate/generate/check pass. Localization audit found no new shipped labels,
+menus, preferences, messages, or translation keys; this follow-up changes internal
+fixture descriptions, contributor evidence, and existing screenshot access only.
+
+
+### User-directed rollback of Bonsplit customization (2026-10-12)
+
+The user declined publishing the styling extension to manaflow-ai/bonsplit and
+requested abandoning that dependency customization for now. Restore the exact
+pre-feature submodule commit fb5307f9599753bdf10bf15a407a16e5f7519ad7 and original
+organization URL. No upstream publication or deletion of the preserved personal
+fork is required. This supersedes the earlier custom TabChromePresentation plan.
+
+Bmux retains its own semantic tokens, sidebar cards, main panel, inset and
+transparent-terminal background ownership. MatteBonsplitAppearance now uses only
+existing upstream ChromeColors, tabBarHeight and SplitButtonBackdropEffect APIs.
+The existing no-op guard compares fields because the original dependency does not
+provide the added Equatable conformances. Configured tab font sizes and pane
+borders remain owned by their existing settings paths.
+
+Intentional visual deviation: native terminal tabs and toolbar buttons return to
+Bonsplit's original shape, selected/hover/focus treatments and motion. The custom
+matte terminal-tab outline, corners and control presentation are deferred; this
+is user-approved reduced scope, not an exact match to the HTML prototype. The
+sidebar workspace cards and main Chat/Terminal/Session navigation are unaffected.
+
+Rules/patterns: root AGENTS.md and continuous-code-quality; bmux-architecture
+(file/API discipline), bmux-testing (behavioral native coverage), bmux-dev-workflow
+(isolated tagged builds), and bmux-debugging (native hosting and hot paths).
+No new state owner, rendering engine change, setting, label or localization key.
+No existing user preview was replaced. Isolated build 773
+(matte-skin-stock-bonsplit) succeeds. All 27 focused Swift Testing functions across
+eight suites pass against its actual app dylib, including six composition cases,
+preferences, repeat/recovery and matte surface coverage. The native runner must
+be in its own .app bundle for UserNotifications; a direct /tmp executable launch
+was rejected by AppKit before test completion. The bundled run exits 0 without
+assertion failures. No new compiler warnings; existing disabled-Sentry diagnostic
+messages remain in the standalone harness. Logs: /tmp/matte-stock-bonsplit-build.log,
+/tmp/matte-stock-bonsplit-compile.log and /tmp/matte-stock-bonsplit-native.log.
+
+Live light/dark review passed at 1092x593, including split-right and closing the
+temporary split. Both captures are in verification-final/build-773-stock-bonsplit-
+{graphite,porcelain}.png. The preview is restored to System appearance and a single
+terminal pane. Relative to the target, stock tabs now have square corners, native
+selected fills and the native brighter blue top indicator, plus stock toolbar
+hover/focus/hit-area behavior. These are the explicitly deferred dependency
+customizations. Existing terminal preference, OS titlebar, text-rasterization,
+metadata-truncation and texture-off differences remain documented above; this
+rollback does not change those owners. No other material layout change observed.
+
+Independent source review found no remaining blocker after restoring comparisons
+for every stock backdrop field. Test wiring (443 files), diff checks and Project
+Truth validate/generate/check pass. Localization audit: no shipped strings or
+translation keys changed; only internal documentation and dependency configuration.
+The ownership comment is addressed by restoring both URL and exact original pin;
+no modifications need to be published to the organization dependency.
+
+Current earlier-head CI evidence (bcad95a88): focused matte regressions passed
+49 tests across 14 suites. Full app-host shards failed; baseline-pass/current-fail
+input/CLI cases and other recorded evidence gaps remain unresolved. Release,
+package, build/lag and Project Truth checks passed. This rollback does not claim
+to repair those separate full-suite failures.
+
+### Native input fixture readiness follow-up (2026-10-12)
+
+The user approved build 773 and authorized merge after remaining CI and review
+findings are resolved. The parent resolved eight addressed review threads. This
+follow-up changes tests only; the approved app binary and runtime behavior remain
+unchanged, and the full app-host gate remains open.
+
+Completed CI 38251646944 exposed four baseline-pass/current-fail native input
+cases: Korean post-composition Left/Right delivery, synthetic Space release,
+direct ESC insertion, and accessibility insertion. All four fixtures waited a
+fixed 50 ms after attachment without requiring a live terminal surface. The
+maintained TerminalKeyRepeatDeliveryTests and TerminalSurfaceRecoveryTests instead
+subscribe before attachment and await terminalSurfaceDidBecomeReady.
+
+Controlled execution against the unchanged build 773 proves the setup problem:
+withholding readiness reproduces all seven observed assertions; awaiting the
+existing signal passes all four cases. The migrated Swift Testing suite retains
+the Korean window.sendEvent route and exact original precomposed Hangul UTF-16
+text, synthetic press/release fields, raw direct ESC text, and sanitized
+accessibility text plus Return. Global probes are installed and restored within a
+synchronous MainActor closure after readiness; each owned window/surface is torn
+down, detached and closed. No renderer, input owner, timeout or app setting is changed. The new suite is
+added to the existing focused native CI step, preserving the full suite and all
+other selectors. Existing failed cases provide CI red evidence; this is a
+fixture correction, not a new production bug hidden by weaker assertions.
+
+All three complete affected test files compile together against build 773 without
+warnings. The final native execution passes three Swift Testing functions (four
+cases) in one suite. The negative control exits 1 with exactly seven issues;
+its intentionally unused readiness iterator produces a diagnostic only in the
+external /tmp probe. Evidence: /tmp/matte-input-ready-compile.log,
+/tmp/matte-input-ready-native.log and /tmp/matte-input-early-native.log. The exact
+d809dcf8e CI run 38278253830 also reproduces both insertion failures in completed
+job 114910088185; its focused matte step separately passed 49 tests in 14 suites.
+Full test-target compilation and execution of the migrated suite remain CI gates.
+
+The separate Codex non-restorable exec timeout is not a terminal-readiness case.
+An owned mock socket and the exact subprocess inputs against build 773 complete in
+0.26 seconds with exit 0, a rejected launch marker and no persisted CODEX_HOME.
+The prior CI timeout cause remains unproved; that fixture and production CLI are
+unchanged. Other recorded full-suite failures and baseline evidence gaps remain
+open rather than being classified as fixed by this migration.
+
+Guidance reassessed: root AGENTS.md, continuous-code-quality, bmux-testing
+(regression quality, incremental Swift Testing migration and target wiring),
+bmux-architecture (lifecycle ownership and signal-based synchronization),
+bmux-debugging (native input paths), shared behavior and development workflow.
+Localization audit: no shipped strings, labels, settings or translation keys
+change; additions are internal test descriptions and contributor evidence only.
+
+Independent review found no blocker after checking original assertions, exact
+Hangul codepoints, shared probe lifecycle and Xcode wiring. The new suite also
+runs in the focused native step before the broad legacy test run.
+
+### Native search field-editor review evidence (2026-10-12)
+
+Review discussion r4250589357 proposed resolving a shared field editor through
+keyboardFocusOwnerView before checking workspace-chrome membership. Native
+AppKit and SwiftUI probes on macOS 26.3 (25D2125) show the editor is a descendant
+of the edited text field via its keyboard-focus clip view. The helper returns
+that same clip view, which has the same chrome membership. The hypothesized
+Escape failure is not reproduced; no runtime change is justified by this evidence.
+
+The existing wired WorkspacePopoverFocusRoutingTests now mount a real SwiftUI
+TextField, select it through AppKit, require an actual field-editor NSTextView,
+and exercise both the rail and child-popover routes. Both cases verify ownership,
+the automatic-focus guard, Escape leaving terminal Find open, retention of the
+native responder, and revocation on focus moving to an unrelated text field.
+These pass against unchanged approved build 773: 28 functions across eight suites,
+including two new parameterized cases; compilation has no warnings. The native
+harness retains its known disabled-Sentry diagnostics. Evidence:
+/tmp/matte-field-editor-native.log and /tmp/matte-stock-bonsplit-compile.log.
+
+This is added behavior coverage, not a bug fix with an unproved red/green claim.
+No production files, renderer, native focus lifecycle, settings or visible copy
+change. No new localization entries are needed. Other macOS versions remain
+unmeasured locally; the committed test will exercise the existing CI environment.
+The full app-host gate and unrelated failure classification remain open.
+
+Independent review checked the complete focus owner, responder helper, routing
+callers and fixture lifecycle and found no blocker in this test-only addition.
+It confirms the evidence does not justify changing production focus behavior;
+interactive popover presentation and older macOS remain outside this new test.
+
+### Native CI framework completion follow-up (2026-10-12)
+
+Full app-host logs showed the shared runner terminating active Swift Testing
+because its 45-second cleanup deadline began at the earlier Selected XCTest
+summary. In run 38251646944, one shard was killed only four seconds after fresh
+Swift Testing cases started; another retained the earlier deadline across a
+restarted test host. This was a runner lifecycle problem, separate from assertion
+failures and the fixture readiness changes above.
+
+The bounded repair lives in prerequisite PR142 and is integrated here. Test-only
+6d25320ae failed the actual workflow guard in run 38283073852, job 114924791841:
+active Swift Testing was killed with exit 124 instead of reaching native exit 0.
+Fix 38eaa2e4e suspends the cleanup deadline when a fresh Swift Testing or restarted
+XCTest run begins and rearms it at framework completion. Complete output lines
+are consumed once, including split UTF-8 markers; unrelated app noise cannot
+extend cleanup. Earlier failed XCTest summaries stay recorded across restarts.
+The existing general idle watchdog, native test deadlines and job timeout bound
+active execution. No configured timeout, retry budget or test assertion was
+relaxed, and only the real child exit establishes success.
+
+All 15 executable PTY cases pass, including an active test longer than the cleanup
+allowance, native exits 0 and 65, split lifecycle markers, noisy stalled cleanup,
+active idle timeout, and restarted XCTest execution. A negative control removing
+only the XCTest-start suspension fails the restarted-run case. The shell-wrapper
+suite passes four tests containing 51 subprocess scenarios; retry/attempt guards,
+Python compilation and Project Truth checks pass. Independent review inspected
+complete runner/caller ownership and found no blocker. Actual fixed-head PR142 CI
+and combined matte full-suite results remain separate gates; this does not claim
+to resolve the recorded baseline failures or the unproved Codex timeout.
+
+This integration also retains the parent's test-only real SwiftUI field-editor
+coverage: rail and popover ownership, Escape preserving terminal Find, automatic
+focus grant and outside-chrome revocation pass on unchanged build 773. No app
+runtime correction was supported by that measured repro on macOS 26. Earlier
+macOS behavior remains unverified. No build, reload, user preference change or
+merge is performed by this follow-up. Localization audit: only internal runner
+messages and contributor/test evidence changed; no shipped UI or translation key.
+
+The first fixed-head reporting CI run (38283791179, workflow guard 114927169830)
+passed the executable helper cases but rejected a newly introduced elapsed-time
+assertion under the strict test-determinism guard. Follow-up 130ab5a30 replaces that
+measurement with observable child lifecycle: cleanup must return timeout 124/125
+before the child prints its natural-completion sentinel. No allowlist, tolerance
+or helper behavior was changed. External negative controls that disable final
+cleanup or refresh its deadline on unrelated output both fail with native exit 0
+and the completion sentinel. All 15 PTY cases, 51 wrapper scenarios, retry guards,
+strict determinism (zero active findings) and documentation gates pass locally.
+Exact corrected-head CI remains pending; the failed guard is not counted as green.
+
+ANSI-colored Swift Testing output exposed a separate supported PTY variant: the
+installed Testing 1902 runtime emits styling between its glyph and lifecycle text
+under TERM=xterm-256color. Retained earlier CI logs have plain markers, so this is
+not claimed as their historical cause. Test-only 0f0a8162c failed the actual guard
+in run 38285242111, job 114932287953, with colored-start exit 124 instead of 0.
+Fix 5117031ee strips SGR styling only from complete parser lines; raw stdout and
+saved log bytes remain unchanged. Four cases independently exercise colored
+start and completion, fragmented ANSI/UTF-8, native success/failure and bounded
+cleanup. All 19 PTY cases, 51 wrapper scenarios and strict determinism pass locally;
+a start-only normalization control fails the completion case as expected.
+Independent review found no blocker. The final corrected-head workflow guard
+and combined native full suite remain CI gates. No application source changed.
+
+Actual final reporting guard is now green: run 38285593460, job 114933074554,
+records the executable helper pass, four wrapper tests and zero strict-determinism
+findings. The ANSI review thread was replied to with this evidence and resolved.
+Combined matte native CI and the separately authorized broader maintenance PRs
+remain open gates; no full-suite green or merge is claimed.
+
+
+### Rejected-config recovery appearance follow-up
+
+Review r4250878434 identified that `ghostty_app_new` recovery built its minimal
+fallback without loading bmux's default appearance. The fallback now invokes the
+existing `loadBmuxDefaultAppearanceConfig` with the captured startup appearance
+before applying its existing renderer/titlebar/shell and managed settings. It
+still excludes rejected user files and leaves allocation, finalization, app
+creation and error reporting in their current lifecycle owner. Normal user
+configuration precedence and the terminal engine are unchanged.
+
+The native `MatteTerminalConfigurationTests` cover the reused loader's dark/light
+colors and explicit configuration precedence. They do not force
+`ghostty_app_new(primary)` rejection; no source-shape test or test-only public API
+is added. Review of the actual recovery call site is the integration evidence
+for that edge path. An isolated tagged build, focused native suite, fresh preview
+approval and CI remain required. Build 773 remains untouched and its earlier
+approval does not cover this new runtime correction. No shipped strings change.
+
+Build 775 (`matte-skin-config-fallback`) now builds from runtime HEAD 08c317bf5.
+The actual app dylib passes all 28 native Swift Testing functions across eight
+suites (2.328 seconds); focused test compilation is warning-free. Build retains
+149 existing warning lines, including the already-recorded terminal cast and
+nil-coalescing warnings; no warning-free app-build claim is made.
+
+Live dark/light inspection succeeds after the machine was unlocked. Captures
+`verification-final/build-775-fallback-{graphite,porcelain}.png` are both 1000x700.
+CUA window dragging repeatedly reports `windowNotFoundAtPosition`, so these are
+not a new exact-1092x593 comparison. Existing approved build773 captures retain
+that exact-size evidence. Runtime content differs: actual shell date/prompt,
+and temporary PR metadata expires through the existing background refresh.
+The user's global Ghostty `Builtin Tango Dark` theme and 0.88 opacity are still
+respected, so the terminal is dark even in porcelain. A comment-only config in
+this preview's own bundle directory removes release-channel overrides but does
+not suppress the user's explicit global Ghostty theme. No user config was edited.
+Native loader/precedence tests verify the matte default colors separately.
+The stock Bonsplit differences already accepted for build773 remain; no texture
+or dependency styling has returned. The preview is restored to System appearance.
+Fresh user approval and combined CI remain pending; forced app-creation rejection
+is still covered by call-site inspection rather than a fault-injected runtime.
+
+Brian approved build775 after the live check: “Build 775 looks good; merge when
+all gates pass.” It replaces build773 as the approved matte runtime. The rejected-
+config appearance verification caveat is resolved by the tagged build, shared
+loader tests, independent call-site review and fresh dogfood approval; the stated
+fault-injection and exact-size capture limitations remain documented above.
+The full app-host gate and separate maintenance repairs are still open. Approval
+is not a waiver of those gates, and no merge has occurred.

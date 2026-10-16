@@ -13,6 +13,30 @@ import BmuxSidebar
 
 @MainActor
 struct WorkspaceSidebarObservationTests {
+    @Test func focusedGitBranchUpdatesSidebarWithoutWorkspacePublication() throws {
+        let workspace = Workspace()
+        defer { workspace.teardownAllPanels() }
+        let panelID = try #require(workspace.focusedPanelId)
+        var workspacePublishes = 0
+        var sidebarPublishes = 0
+        let workspaceSubscription = workspace.objectWillChange.sink { workspacePublishes += 1 }
+        let sidebarSubscription = workspace.sidebarObservationPublisher.sink { sidebarPublishes += 1 }
+        defer { workspaceSubscription.cancel(); sidebarSubscription.cancel() }
+        sidebarPublishes = 0
+
+        workspace.updatePanelGitBranch(panelId: panelID, branch: "main", isDirty: false)
+        let expected = SidebarGitBranchState(branch: "main", isDirty: false)
+        #expect(workspace.gitBranch == expected)
+        #expect(workspace.panelGitBranches[panelID] == expected)
+        #expect(sidebarPublishes > 0, "The first branch update must reach the sidebar observation boundary")
+        #expect(workspacePublishes == 0, "Sidebar metadata must not republish the entire workspace")
+        let baseline = sidebarPublishes
+
+        workspace.updatePanelGitBranch(panelId: panelID, branch: "main", isDirty: false)
+        #expect(sidebarPublishes == baseline, "Identical branch refreshes must not republish sidebar state")
+        #expect(workspacePublishes == 0)
+    }
+
     @Test(.timeLimit(.minutes(1))) func referenceCardsObserveRepeatedTitlesAndAgentActivity() async throws {
         let workspace = Workspace(title: "Roof inspection")
         let panelID = try #require(workspace.focusedPanelId)

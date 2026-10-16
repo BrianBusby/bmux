@@ -193,12 +193,7 @@ struct WindowTitleTemplateTests {
         )
         manager.windowId = windowId
 
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 640, height: 420),
-            styleMask: [.titled],
-            backing: .buffered,
-            defer: false
-        )
+        let window = makeRetainedWindow()
         manager.window = window
         defer {
             manager.window = nil
@@ -239,12 +234,7 @@ struct WindowTitleTemplateTests {
         let workspace = try #require(manager.selectedWorkspace)
         let remotePanelId = try #require(workspace.focusedPanelId)
 
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 640, height: 420),
-            styleMask: [.titled],
-            backing: .buffered,
-            defer: false
-        )
+        let window = makeRetainedWindow()
         manager.window = window
         defer {
             manager.window = nil
@@ -318,12 +308,7 @@ struct WindowTitleTemplateTests {
         ))
         #expect(workspace.updatePanelDirectory(panelId: localPanel.id, directory: localTerminalDirectory))
 
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 640, height: 420),
-            styleMask: [.titled],
-            backing: .buffered,
-            defer: false
-        )
+        let window = makeRetainedWindow()
         manager.window = window
         defer {
             manager.window = nil
@@ -463,6 +448,18 @@ struct WindowTitleTemplateTests {
 
         #expect(workspace.reportedPanelDirectory(panelId: agentPanel.id) == localDirectory)
         #expect(workspace.presentedCurrentDirectory == localDirectory)
+    }
+
+    @MainActor
+    private func makeRetainedWindow() -> NSWindow {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 640, height: 420),
+            styleMask: [.titled],
+            backing: .buffered,
+            defer: false
+        )
+        window.isReleasedWhenClosed = false
+        return window
     }
 
     private func sshRemoteConfiguration(command: String) -> WorkspaceRemoteConfiguration {

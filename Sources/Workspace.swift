@@ -1399,26 +1399,22 @@ extension Workspace {
                 restoredTmuxStartupScript != nil ||
                 restoredAgentResumeLaunch != nil ||
                 (restoredBindingLaunch != nil && resumeBinding?.isAgentHookBinding == true)
-            // Guarded startup commands cd themselves and tolerate deleted saved directories.
-            // Passing the same cwd to Ghostty can fail before the guarded command runs.
             let suppressWorkspaceRemoteStartupCommand =
                 remoteConfiguration != nil &&
                 snapshot.terminal?.isRemoteTerminal == false &&
                 restoredRemotePTYAttachCommand == nil &&
                 !isDefaultFreestyleSSHDRemoteWorkspace
             let effectiveRemoteStartupCommand = suppressWorkspaceRemoteStartupCommand ? nil : remoteStartupCommand
-            let localWorkingDirectory = effectiveRemoteStartupCommand == nil &&
-                restoredRemotePTYAttachCommand == nil &&
-                !restoresRemoteWorkspaceTerminalSnapshot &&
-                !startupHandlesWorkingDirectory
-                ? (suppressWorkspaceRemoteStartupCommand ? savedWorkingDirectory : workingDirectory)
-                : nil
-            let requestedWorkingDirectory =
-                localWorkingDirectory ?? (startupHandlesWorkingDirectory ? workingDirectory : nil)
-            let restoredAgentWillRunStartupCommand = restorableAgent != nil && (
+            let runtimeDirectories = sessionRestorePolicy.runtimeWorkingDirectories(
+                usesLocalWorkingDirectory: effectiveRemoteStartupCommand == nil &&
+                    restoredRemotePTYAttachCommand == nil && !restoresRemoteWorkspaceTerminalSnapshot,
+                startupHandlesWorkingDirectory: startupHandlesWorkingDirectory,
+                workingDirectory: workingDirectory,
+                unguardedWorkingDirectory: suppressWorkspaceRemoteStartupCommand ? savedWorkingDirectory : workingDirectory
+            )
+            let restoredAgentWillRunStartupCommand =
                 restoredAgentResumeLaunch?.initialCommand != nil ||
                 (restoredBindingLaunch?.initialCommand != nil && resumeBinding?.isAgentHookBinding == true)
-            )
             let restoredAgentWillRunStartupInput =
                 restoredAgentResumeLaunch?.initialInput != nil ||
                 (restoredBindingLaunch?.initialInput != nil && resumeBinding?.isAgentHookBinding == true)
@@ -1459,7 +1455,7 @@ extension Workspace {
             guard let terminalPanel = createTerminalSurfaceForAction(
                 inPane: paneId,
                 focus: false,
-                workingDirectory: requestedWorkingDirectory,
+                workingDirectory: runtimeDirectories.requested,
                 initialCommand: restoredStartupCommand,
                 tmuxStartCommand: restoredTmuxStartCommand,
                 initialInput: restoredStartupInput,
@@ -1513,16 +1509,12 @@ extension Workspace {
             } else {
                 surfaceResumeBindingsByPanelId.removeValue(forKey: terminalPanel.id)
             }
-            // A terminal whose startup command cds itself (agent resume, tmux
-            // attach, agent-hook) is spawned without a working directory, so its
-            // shell starts in the default directory and shell integration reports
-            // that directory (typically home) before the startup command cds into
-            // the saved one. Remember the saved directory so the spurious initial
-            // report is ignored instead of overwriting the restored workspace cwd
-            // (#6617). `shouldIgnoreRestoredGuardedDirectoryReport` decides how long
-            // to guard: once while the saved directory still exists, persistently
-            // while it is on an unmounted volume, and not at all once it has been
-            // deleted (the shell's reported cwd is then the real fallback).
+            // Agent resume, tmux attach, and agent-hook launchers own their cwd change;
+            // an unavailable saved directory now leaves runtime cwd unset. Preserve
+            // saved metadata against early shell-integration fallback reports (#6617).
+            // `shouldIgnoreRestoredGuardedDirectoryReport` ignores one fallback while
+            // the directory exists, guards persistently while its volume is unmounted,
+            // and accepts the real fallback once the saved directory has been deleted.
             //
             // Only guard LOCAL terminals. That guard's existence check stats the
             // local Mac, so a remote terminal's remote saved path (e.g.
@@ -1535,7 +1527,7 @@ extension Workspace {
                 restoredRemotePTYSessionID == nil &&
                 snapshot.terminal?.isRemoteTerminal != true
             if startupHandlesWorkingDirectory,
-               localWorkingDirectory == nil,
+               runtimeDirectories.unguarded == nil,
                restoredDirectoryIsLocalPath,
                let guardedWorkingDirectory = resumeSessionWorkingDirectory?.trimmingCharacters(in: .whitespacesAndNewlines),
                !guardedWorkingDirectory.isEmpty {
@@ -2594,7 +2586,11 @@ final class Workspace: Identifiable, ObservableObject {
                     HermesAgentCodexEnvironment.defaultCodexModel(environment: environment)
                 }
             ),
-            temporaryDirectory: temporaryDirectory
+            temporaryDirectory: temporaryDirectory,
+            directoryExists: { path in
+                var isDirectory: ObjCBool = false
+                return FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) && isDirectory.boolValue
+            }
         )
     }
 
@@ -2765,31 +2761,10 @@ final class Workspace: Identifiable, ObservableObject {
         )
     }
 
-    private static func bonsplitChromeColorsEqual(
-        _ lhs: BonsplitConfiguration.Appearance.ChromeColors,
-        _ rhs: BonsplitConfiguration.Appearance.ChromeColors
-    ) -> Bool {
-        lhs.backgroundHex == rhs.backgroundHex &&
-            lhs.tabBarBackgroundHex == rhs.tabBarBackgroundHex &&
-            lhs.splitButtonBackdropHex == rhs.splitButtonBackdropHex &&
-            lhs.paneBackgroundHex == rhs.paneBackgroundHex &&
-            lhs.borderHex == rhs.borderHex
-    }
-
-    private static func bonsplitChromeColorsLogDescription(
-        _ colors: BonsplitConfiguration.Appearance.ChromeColors
-    ) -> String {
-        "bg=\(colors.backgroundHex ?? "nil") " +
-            "tabBarBg=\(colors.tabBarBackgroundHex ?? "nil") " +
-            "splitBackdrop=\(colors.splitButtonBackdropHex ?? "nil") " +
-            "paneBg=\(colors.paneBackgroundHex ?? "nil") " +
-            "border=\(colors.borderHex ?? "nil")"
-    }
-
     private static func bonsplitAppearance(
         from backgroundColor: NSColor,
         backgroundOpacity: Double,
-        tabTitleFontSize: CGFloat = 11
+        tabTitleFontSize: CGFloat = GhosttyConfig.defaultSurfaceTabBarFontSize
     ) -> BonsplitConfiguration.Appearance {
         let sharesWindowBackdrop = usesWindowRootTerminalBackdrop()
         let renderingMode = WindowAppearanceSnapshot.terminalRenderingMode(
@@ -2802,7 +2777,7 @@ final class Workspace: Identifiable, ObservableObject {
             renderingMode: renderingMode,
             paneBorderColorHex: PaneChromeSettings.paneBorderColorHex()
         )
-        return BonsplitConfiguration.Appearance(
+        var appearance = BonsplitConfiguration.Appearance(
             tabBarHeight: WindowChromeMetrics.bonsplitTabBarHeight,
             tabTitleFontSize: tabTitleFontSize,
             splitButtonBackdropEffect: Self.bonsplitSplitButtonBackdropEffect(),
@@ -2811,113 +2786,17 @@ final class Workspace: Identifiable, ObservableObject {
             chromeColors: chromeColors,
             usesSharedBackdrop: sharesWindowBackdrop
         )
+        MatteBonsplitAppearance().apply(to: &appearance)
+        return appearance
     }
 
     func applyGhosttyChrome(from config: GhosttyConfig, reason: String = "unspecified") {
-        let sharesWindowBackdrop = Self.usesWindowRootTerminalBackdrop()
-        let renderingMode = WindowAppearanceSnapshot.terminalRenderingMode(
-            usesHostLayerBackground: GhosttyApp.shared.usesHostLayerBackground
-        )
-        let nextChromeColors = Self.bonsplitChromeColors(
-            backgroundColor: config.backgroundColor,
-            backgroundOpacity: config.backgroundOpacity,
-            sharesWindowBackdrop: sharesWindowBackdrop,
-            renderingMode: renderingMode,
-            paneBorderColorHex: PaneChromeSettings.paneBorderColorHex()
-        )
-        let nextTabTitleFontSize = config.surfaceTabBarFontSize
-        let currentAppearance = bonsplitController.configuration.appearance
-        let currentTabTitleFontSize = currentAppearance.tabTitleFontSize
-        let colorsChanged = !Self.bonsplitChromeColorsEqual(
-            currentAppearance.chromeColors,
-            nextChromeColors
-        )
-        let sharedBackdropChanged = currentAppearance.usesSharedBackdrop != sharesWindowBackdrop
-        let fontSizeChanged = abs(currentTabTitleFontSize - nextTabTitleFontSize) > 0.0001
-        let isNoOp = !colorsChanged && !sharedBackdropChanged && !fontSizeChanged
-
-        if GhosttyApp.shared.backgroundLogEnabled {
-            GhosttyApp.shared.logBackground(
-                "theme apply workspace=\(id.uuidString) reason=\(reason) " +
-                "current=[\(Self.bonsplitChromeColorsLogDescription(currentAppearance.chromeColors))] " +
-                "next=[\(Self.bonsplitChromeColorsLogDescription(nextChromeColors))] " +
-                "currentTabFont=\(String(format: "%.3f", currentTabTitleFontSize)) " +
-                "nextTabFont=\(String(format: "%.3f", nextTabTitleFontSize)) " +
-                "sharesWindowBackdrop=\(sharesWindowBackdrop ? 1 : 0) " +
-                "currentUsesSharedBackdrop=\(currentAppearance.usesSharedBackdrop ? 1 : 0) " +
-                "paneBackdrop=\(Self.usesBonsplitPaneTerminalBackdrop(renderingMode: renderingMode, sharesWindowBackdrop: sharesWindowBackdrop) ? 1 : 0) " +
-                "noop=\(isNoOp)"
-            )
-        }
-
-        guard !isNoOp else { return }
-
-        if colorsChanged {
-            bonsplitController.configuration.appearance.chromeColors = nextChromeColors
-        }
-        if sharedBackdropChanged {
-            bonsplitController.configuration.appearance.usesSharedBackdrop = sharesWindowBackdrop
-        }
-        if fontSizeChanged {
-            bonsplitController.configuration.appearance.tabTitleFontSize = nextTabTitleFontSize
-        }
-
-        if GhosttyApp.shared.backgroundLogEnabled {
-            GhosttyApp.shared.logBackground(
-                "theme applied workspace=\(id.uuidString) reason=\(reason) " +
-                "resulting=[\(Self.bonsplitChromeColorsLogDescription(bonsplitController.configuration.appearance.chromeColors))] " +
-                "resultingUsesSharedBackdrop=\(bonsplitController.configuration.appearance.usesSharedBackdrop ? 1 : 0) " +
-                "resultingTabFont=\(String(format: "%.3f", bonsplitController.configuration.appearance.tabTitleFontSize))"
-            )
-        }
+        bonsplitController.configuration.appearance.tabTitleFontSize = config.surfaceTabBarFontSize
+        MatteBonsplitAppearance().apply(to: &bonsplitController.configuration.appearance)
     }
 
     func applyGhosttyChrome(backgroundColor: NSColor, backgroundOpacity: Double, reason: String = "unspecified") {
-        let sharesWindowBackdrop = Self.usesWindowRootTerminalBackdrop()
-        let renderingMode = WindowAppearanceSnapshot.terminalRenderingMode(
-            usesHostLayerBackground: GhosttyApp.shared.usesHostLayerBackground
-        )
-        let nextChromeColors = Self.bonsplitChromeColors(
-            backgroundColor: backgroundColor,
-            backgroundOpacity: backgroundOpacity,
-            sharesWindowBackdrop: sharesWindowBackdrop,
-            renderingMode: renderingMode,
-            paneBorderColorHex: PaneChromeSettings.paneBorderColorHex()
-        )
-        let currentChromeColors = bonsplitController.configuration.appearance.chromeColors
-        let currentUsesSharedBackdrop = bonsplitController.configuration.appearance.usesSharedBackdrop
-        let colorsChanged = !Self.bonsplitChromeColorsEqual(currentChromeColors, nextChromeColors)
-        let sharedBackdropChanged = currentUsesSharedBackdrop != sharesWindowBackdrop
-        let isNoOp = !colorsChanged && !sharedBackdropChanged
-
-        if GhosttyApp.shared.backgroundLogEnabled {
-            GhosttyApp.shared.logBackground(
-                "theme apply workspace=\(id.uuidString) reason=\(reason) " +
-                "current=[\(Self.bonsplitChromeColorsLogDescription(currentChromeColors))] " +
-                "next=[\(Self.bonsplitChromeColorsLogDescription(nextChromeColors))] " +
-                "sharesWindowBackdrop=\(sharesWindowBackdrop ? 1 : 0) " +
-                "currentUsesSharedBackdrop=\(currentUsesSharedBackdrop ? 1 : 0) " +
-                "paneBackdrop=\(Self.usesBonsplitPaneTerminalBackdrop(renderingMode: renderingMode, sharesWindowBackdrop: sharesWindowBackdrop) ? 1 : 0) " +
-                "noop=\(isNoOp)"
-            )
-        }
-
-        if isNoOp {
-            return
-        }
-        if colorsChanged {
-            bonsplitController.configuration.appearance.chromeColors = nextChromeColors
-        }
-        if sharedBackdropChanged {
-            bonsplitController.configuration.appearance.usesSharedBackdrop = sharesWindowBackdrop
-        }
-        if GhosttyApp.shared.backgroundLogEnabled {
-            GhosttyApp.shared.logBackground(
-                "theme applied workspace=\(id.uuidString) reason=\(reason) " +
-                "resulting=[\(Self.bonsplitChromeColorsLogDescription(bonsplitController.configuration.appearance.chromeColors))] " +
-                "resultingUsesSharedBackdrop=\(bonsplitController.configuration.appearance.usesSharedBackdrop ? 1 : 0)"
-            )
-        }
+        MatteBonsplitAppearance().apply(to: &bonsplitController.configuration.appearance)
     }
 
     init(
@@ -5791,7 +5670,9 @@ final class Workspace: Identifiable, ObservableObject {
         var didRespawnTerminal = false
         let reconnectingSurfaceId: UUID?
         if let surfaceId {
-            guard panels[surfaceId] is TerminalPanel else { return false }
+            guard panels[surfaceId] is TerminalPanel,
+                  let startupCommand = effectiveRemoteTerminalStartupCommand(from: configuration),
+                  !startupCommand.isEmpty else { return false }
             reconnectingSurfaceId = surfaceId
         } else {
             reconnectingSurfaceId = remoteReconnectTerminalSurfaceId(requestedSurfaceId: nil)
@@ -5807,8 +5688,10 @@ final class Workspace: Identifiable, ObservableObject {
                 !activeRemoteTerminalSurfaceIds.contains(reconnectingSurfaceId) ||
                 activeRemoteTerminalSurfaceIds.isEmpty ||
                 remoteConnectionState != .connected
-            remoteDisconnectPlaceholderPanelIds.remove(reconnectingSurfaceId)
-            pendingRemoteTerminalChildExitSurfaceIds.remove(reconnectingSurfaceId)
+            if surfaceId == nil {
+                remoteDisconnectPlaceholderPanelIds.remove(reconnectingSurfaceId)
+                pendingRemoteTerminalChildExitSurfaceIds.remove(reconnectingSurfaceId)
+            }
             if shouldRespawnSurface {
                 didRespawnTerminal = respawnTerminalSurface(
                     panelId: reconnectingSurfaceId,
@@ -5816,6 +5699,11 @@ final class Workspace: Identifiable, ObservableObject {
                     tmuxStartCommand: startupCommand,
                     waitAfterCommand: true
                 ) != nil
+                if surfaceId != nil, !didRespawnTerminal { return false }
+            }
+            if surfaceId != nil {
+                remoteDisconnectPlaceholderPanelIds.remove(reconnectingSurfaceId)
+                pendingRemoteTerminalChildExitSurfaceIds.remove(reconnectingSurfaceId)
             }
             trackRemoteTerminalSurface(reconnectingSurfaceId)
         }
@@ -6559,7 +6447,7 @@ final class Workspace: Identifiable, ObservableObject {
             activeRemoteTerminalSessionCount = activeRemoteTerminalSurfaceIds.count
         }
         syncRemotePortScanTTYs()
-        disconnectRemoteConnectionAfterTerminalExit()
+        if activeRemoteTerminalSurfaceIds.isEmpty { disconnectRemoteConnectionAfterTerminalExit() }
         applyBrowserRemoteWorkspaceStatusToPanels()
         notifyPresentedCurrentDirectoryChanged(from: previousPresentedDirectory, force: removedTrustedDirectory)
     }
@@ -6860,7 +6748,7 @@ final class Workspace: Identifiable, ObservableObject {
         let proxyOnlyError = trimmedDetail.map(Self.isProxyOnlyRemoteError) ?? false
         let preserveConnectedStateForRetry =
             (state == .connecting || state == .reconnecting) &&
-                preservesProxyFailureForSSHRemoteWorkspace &&
+                (preservesProxyFailureForSSHRemoteWorkspace || suppressesProxyOnlySidebarErrorForDefaultCloud) &&
                 hasProxyOnlyRemoteSidebarError
         let suppressProxyOnlySidebarError =
             suppressesProxyOnlySidebarErrorForDefaultCloud &&
@@ -7344,7 +7232,7 @@ final class Workspace: Identifiable, ObservableObject {
             // ghostty_surface_inherited_config or bmuxCurrentSurfaceFontSizePoints
             // is still reading through the pointer.
             let surface = terminalPanel.surface
-            guard let sourceSurface = surface.surface else { continue }
+            guard let sourceSurface = surface.liveSurfaceForGhosttyAccess(reason: "workspace.inheritConfig") else { continue }
             var config = bmuxInheritedSurfaceConfig(
                 sourceSurface: sourceSurface,
                 context: GHOSTTY_SURFACE_CONTEXT_SPLIT
@@ -10384,93 +10272,6 @@ final class Workspace: Identifiable, ObservableObject {
     }
 
     // MARK: - Utility
-
-    /// Writes a small shell wrapper that keeps a disconnected remote terminal visible.
-    /// Returned path goes to `initialCommand`, which Ghostty runs as the PTY command.
-    private static func remoteDisconnectPlaceholderScript(target: String, reconnectCommand: String?) -> String {
-        let tempDir = FileManager.default.temporaryDirectory
-        let scriptURL = tempDir.appendingPathComponent(
-            "bmux-remote-disconnect-\(UUID().uuidString.lowercased()).sh"
-        )
-        // Encode the target as base64 and decode it inside the shell. This sidesteps every
-        // layer of shell quoting: no matter what the target contains (`$(id)`, backticks,
-        // single/double quotes, escape sequences), the shell never sees it as shell syntax.
-        // Previous version only escaped backslash and double-quote, which left command
-        // substitution and backticks as a live injection vector (Codex P2).
-        let encodedTarget = Data(target.utf8).base64EncodedString()
-        // Localized banner strings. Both use %s (not %@) because they're rendered by the
-        // POSIX printf inside the shell wrapper, not by Swift's String(format:).
-        let endedLineFormat = String(
-            localized: "remote.disconnectBanner.sessionEnded",
-            defaultValue: "[bmux] remote session disconnected: %s"
-        )
-        let reconnectLine = String(
-            localized: "remote.disconnectBanner.reconnectHint",
-            defaultValue: "[bmux] Press Enter to reconnect. This terminal will stay disconnected until then."
-        )
-        let reconnectUnavailableLine = String(
-            localized: "remote.disconnectBanner.reconnectUnavailableHint",
-            defaultValue: "[bmux] Reconnect this workspace from the sidebar or by running the original bmux remote command again."
-        )
-        // Encode the localized lines the same way as the target, so a translator using
-        // backticks or $(…) in a translation string can't unexpectedly execute in the
-        // user's local shell. Decoded inline at wrapper startup, then fed to printf.
-        let encodedEndedFormat = Data(endedLineFormat.utf8).base64EncodedString()
-        let encodedReconnectLine = Data(reconnectLine.utf8).base64EncodedString()
-        let encodedReconnectUnavailableLine = Data(reconnectUnavailableLine.utf8).base64EncodedString()
-        let encodedReconnectCommand = Data((reconnectCommand ?? "").utf8).base64EncodedString()
-        let body = """
-        #!/bin/sh
-        bmux_disconnect_decode() {
-          printf '%s' "$1" | base64 --decode 2>/dev/null || printf '%s' "$1" | base64 -D 2>/dev/null
-        }
-        bmux_disconnect_target="$(bmux_disconnect_decode '\(encodedTarget)')"
-        bmux_disconnect_ended_format="$(bmux_disconnect_decode '\(encodedEndedFormat)')"
-        bmux_disconnect_reconnect_line="$(bmux_disconnect_decode '\(encodedReconnectLine)')"
-        bmux_disconnect_reconnect_unavailable_line="$(bmux_disconnect_decode '\(encodedReconnectUnavailableLine)')"
-        bmux_disconnect_reconnect_command="$(bmux_disconnect_decode '\(encodedReconnectCommand)')"
-        # Append newline + color codes ourselves rather than trusting the translator to
-        # preserve them in every locale.
-        printf '\\033[1;33m'
-        printf "$bmux_disconnect_ended_format" "$bmux_disconnect_target"
-        printf '\\033[0m\\n' >&2
-        # Remove ourselves so /tmp doesn't accumulate these wrappers across sessions.
-        rm -f -- "$0" 2>/dev/null || true
-        if [ -n "$bmux_disconnect_reconnect_command" ]; then
-          printf '\\033[2m%s\\033[0m\\n\\n' "$bmux_disconnect_reconnect_line" >&2
-          IFS= read -r _ || exit 0
-          bmux_reconnect_cli="${BMUX_BUNDLED_CLI_PATH:-}"
-          if [ -z "$bmux_reconnect_cli" ] || [ ! -x "$bmux_reconnect_cli" ]; then
-            bmux_reconnect_cli="$(command -v bmux 2>/dev/null || true)"
-          fi
-          bmux_reconnect_socket="${BMUX_SOCKET_PATH:-${BMUX_SOCKET:-}}"
-          if [ -n "$bmux_reconnect_cli" ] && [ -n "$bmux_reconnect_socket" ] && [ -n "${BMUX_WORKSPACE_ID:-}" ]; then
-            bmux_reconnect_payload="{\\"workspace_id\\":\\"$BMUX_WORKSPACE_ID\\""
-            if [ -n "${BMUX_SURFACE_ID:-}" ]; then
-              bmux_reconnect_payload="$bmux_reconnect_payload,\\"surface_id\\":\\"$BMUX_SURFACE_ID\\""
-            fi
-            bmux_reconnect_payload="$bmux_reconnect_payload}"
-            if "$bmux_reconnect_cli" --socket "$bmux_reconnect_socket" rpc workspace.remote.reconnect "$bmux_reconnect_payload" >/dev/null 2>&1; then
-              exec /bin/sh -lc "$bmux_disconnect_reconnect_command"
-            fi
-          fi
-          printf '\\033[2m%s\\033[0m\\n' "$bmux_disconnect_reconnect_unavailable_line" >&2
-          while IFS= read -r _; do :; done
-          exit 0
-        fi
-        printf '\\033[2m%s\\033[0m\\n' "$bmux_disconnect_reconnect_unavailable_line" >&2
-        while IFS= read -r _; do :; done
-        exit 0
-
-        """
-        do {
-            try body.write(to: scriptURL, atomically: true, encoding: .utf8)
-            try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: scriptURL.path)
-            return scriptURL.path
-        } catch {
-            return "/bin/sh"
-        }
-    }
 
     /// Create a new terminal panel (used when replacing the last panel)
     @discardableResult

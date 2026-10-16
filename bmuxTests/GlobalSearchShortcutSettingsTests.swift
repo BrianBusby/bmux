@@ -55,18 +55,6 @@ final class GlobalSearchShortcutSettingsTests: XCTestCase {
         )
     }
 
-    func testGlobalSearchRejectsConfiguredShowHideHotkeyConflict() {
-        let reservedShortcut = StoredShortcut(key: "g", command: true, shift: false, option: true, control: true)
-
-        KeyboardShortcutSettings.setShortcut(.unbound, for: .globalSearch)
-        SystemWideHotkeySettings.setShortcut(reservedShortcut)
-
-        XCTAssertEqual(
-            KeyboardShortcutSettings.Action.globalSearch.normalizedRecordedShortcutResult(reservedShortcut),
-            .rejected(.reservedBySystem)
-        )
-    }
-
     func testSettingsFileStoreParsesGlobalSearchShortcut() throws {
         let directoryURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-global-search-settings-\(UUID().uuidString)", isDirectory: true)

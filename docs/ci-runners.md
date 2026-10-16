@@ -162,3 +162,7846 @@ set `MACOS_RUNNER_*` / `LINUX_RUNNER` to a self-hosted label; keep them on
 available cloud providers. Fully closing the variable-value path requires
 removing any colliding labels from self-hosted runners in repositories or orgs
 that have them registered (runner-side, needs org/runner admin).
+
+## Native test result reporting
+
+The macOS unit-test steps in `ci.yml`, `ci-macos-compat.yml`, `test-depot.yml`
+and `tmux-corpus.yml` preserve the native runner's exit status. A zero exit is
+success; assertion failures, crashes and timeouts remain failures. Pipelines
+use `pipefail` so a failed log writer also fails the step. Existing bounded
+SwiftPM dependency retries remain; the final attempt determines the result.
+
+`xcodebuild_noninteractive.py` owns PTY output, crash-prompt dismissal and timeout
+cleanup. Only an actual child exit of zero establishes success. A post-test
+watchdog timeout returns 125 after a failed Selected-tests summary, otherwise
+124. A passed XCTest summary can precede Swift Testing and cannot establish
+completion. The cleanup deadline starts at the Selected-tests summary, suspends
+when a fresh Swift Testing run (or restarted XCTest run) starts, and restarts at
+the final framework summary. Lifecycle lines are consumed once, including lines
+split across PTY reads. ANSI SGR styling is removed only from parser input, so
+colored Swift Testing glyphs preserve the same lifecycle handling while stdout
+and saved logs retain their original bytes. Unrelated app output cannot extend cleanup. A failed
+Selected-tests result remains recorded across later successful restart summaries.
+During active tests, the existing general output-idle watchdog and native test/job
+time limits apply, so an individual test may legitimately exceed the cleanup
+allowance. A noisy active test remains bounded by the native test/job limits.
+Even a printed `TEST SUCCEEDED` marker cannot override a timeout.
+The app-host wrapper retains its existing retry budget. The separately scoped
+strict zero-failure cleanup fallback in `test-ios.yml` is unchanged.
+
+Ordinary XCTest assertions can produce `(0 unexpected)` in summaries. Earlier
+workflows treated that text as success even with failed assertions; their green
+job statuses are not evidence of a clean app-host suite. `native_app_host_full_suite_failures`
+in Project Truth remains open until real failures are separately triaged.
+
+`tests/test_ci_xcodebuild_exit_reporting.py` executes all four workflow shell
+steps in isolated subprocess sandboxes with controlled native-runner outcomes.
+It verifies failure/signal/timeout propagation, misleading later zero-test
+summaries, successful expected-failure runs, bounded retries and log-writer
+failures. Native PTY tests execute real child processes, including incomplete
+XCTest/Swift Testing runs and timeouts; no app or GUI is launched.
+
+The test-only commit `6f46d5f22` failed the actual Linux guard with 40 assertions
+([run38152397961](https://github.com/BrianBusby/bmux/actions/runs/38152397961/job/114508355015)).
+The reporting fix passes the focused workflow and native-runner tests locally.
+Final CI and broad app-host results remain verification gates, not assumptions.
+This work follows root AGENTS, continuous-code-quality, bmux-testing and
+bmux-shared-behavior: workflow steps own pipeline status; the existing shared
+runner owns process lifecycle; no app test expectations are relaxed.
+
+The framework-completion regression in the PTY helper test executes real child
+processes: a silent Swift Testing test longer than the cleanup allowance must
+reach its native success/failure exit, active silence must reach the existing idle
+deadline, and completed-run chatter must still time out. Test-only `6d25320ae`
+failed the exact-head workflow guard (run `38283073852`, job `114924791841`)
+by killing an active Swift Testing run with exit 124. Local subprocess verification
+passes with phase-aware cleanup; full native app-host completion remains subject
+to the separately tracked suite failures.
+
+## Bundled CLI artifact verification
+
+The CLI is distributed inside the app (including the installed CLI symlink).
+Private dynamic frameworks are permitted only when their complete dependency
+closure is shipped at helper-visible bundle paths. The historical Sentry dyld
+regression must still fail; a blanket ban on every private `@rpath` framework
+also rejects valid Xcode app-host products.
+
+`scripts/verify-bundled-cli.py` is the shared artifact check used by
+`BundledCLILinkageTests`, the existing unsigned universal `release-build`, and
+`bundled-cli-artifacts`. It inspects every architecture's dependency closure,
+rejects private dependencies outside the app, verifies present CLI/framework
+signatures, copies that closure without changing executable bytes, and runs
+`--version` with a temporary home and no ambient socket or dyld environment.
+The final release signing script retains its separate deep/strict signed-app
+verification. Pre-sign Release CI legitimately permits unsigned objects; this
+check does not claim Developer ID or notarization verification.
+
+One app-host shard and the Release lane upload three-day artifacts containing
+only the CLI, Info.plist, and dependency frameworks. The separate macOS 26 job
+uses the existing `MACOS_RUNNER_26` routing and downloads both artifacts; it does
+not build an app. Before launching, it fails if any original external private
+runpath still exists. This explicit check matters even on a new job because
+self-hosted runners may reuse build directories. No source directory is renamed,
+no binary is patched or re-signed, and no running app is touched. `ci-status`
+requires this gate. A same-runner launch alone is not proof that dyld avoided a
+build-directory fallback.
+
+`tests/test_bundled_cli_artifact.py` builds small real Mach-O fixtures. It checks
+static and transitive dynamic relocation, preserved archived bytes, missing
+direct/transitive dependencies (including a live original-build fallback),
+missing architecture slices, invalid existing signatures, unsigned pre-sign inspection, native exit failure,
+missing CLI, and rejection of surviving original runpaths.
+
+Maintenance record: base `ce17e9888`, historical contract commits `d3695c102`
+and `915c01f9d`; retained baseline CI run `38072470965` shard 3 actually failed
+`testBundledCLIDoesNotDependOnPrivateRPathFrameworks` on six frameworks that the
+same build embedded and signed. This is the existing red evidence for correcting
+the fixture policy, rather than introducing another known-wrong assertion.
+Ownership follows AGENTS.md, continuous-code-quality, bmux-testing's executable
+artifact policy, bmux-architecture's test ownership rules, and the existing
+`sign-bmux-bundle.sh` signing lifecycle. No production linking policy changes.
+Local ten-case fixture verification and static build 773 relocation pass;
+its minimum archive is 16 MB. Actual dynamic app-host and unsigned Release
+artifact results, transfer size/time, and final CI remain pending.
+
+
+## Hidden browser discard policy test maintenance
+
+The baseline `BrowserPanelWebViewLifecycleTests.testHiddenDiscardPolicyReadsUserDefaults`
+expected a stored 7200-second delay to clamp to 3600. The policy introduced in
+`69e6393db` deliberately rejects oversized values, and the JSON settings path
+uses the same `resolvedHiddenDelay` validation. The native baseline log reports
+300 versus 3600; this is a stale expectation, not a requested product change.
+
+`BrowserHiddenWebViewDiscardPolicyTests` replaces only that touched XCTest case
+with Swift Testing. It preserves enabled/default/valid-value checks and covers
+both accepted endpoints, negative/oversized values, and nonfinite rejection.
+Each defaults test owns a unique suite and removes it; environment overrides
+explicitly disable the corresponding persisted-preference test, while pure
+validation always runs. No process-wide environment mutation or app behavior
+changes are introduced. The existing focused browser gate runs the new suite
+without adding a runner, so an unrelated legacy app-host abort cannot conceal it.
+
+Guidance: `AGENTS.md`, `skills/bmux-testing/SKILL.md` and its Swift Testing,
+regression/quality, and local/CI references; `skills/bmux-architecture/SKILL.md`;
+and the personal continuous-code-quality skill. Ownership stays in
+`BrowserHiddenWebViewDiscardPolicy`, with the maintained JSON caller in
+`KeyboardShortcutSettingsFileStore` and boundary coverage in `WorkspaceUnitTests`
+as contract evidence. Native execution against build 774 passed four functions
+and fourteen cases, with warning-free test compilation. This change adds no
+shipped strings or localization keys. Actual focused CI and independent review
+remain required; local success does not establish full-suite health.
+
+## Codex Stop hook fixture coverage
+
+App-host shard 4 runs `CodexStopPayloadFailureTests`,
+`CodexStopTranscriptFailureTests`, and `CodexStopTurnScopeTests` in a focused
+invocation before the unchanged full shard coverage. These cover 13 existing
+Stop-hook scenarios (nine Swift Testing methods, one with five parameterized
+payload cases). The focused invocation uses the same app-host wrapper, runner,
+and deadlines as its sibling regression steps. Run 38440609968, job 115447587212,
+completed all nine functions across three suites in 0.464 seconds, followed by
+`TEST SUCCEEDED` at 19:05:35 UTC on October 13. The broader shard then started
+and remains incomplete. The preceding run also passed this focused gate but
+hit inspector assertions during its broader shard before being superseded. The focused gate is
+recorded as completed while the shared canonical and local caveat remains open
+for full-suite verification.
+
+The fixtures describe a live workspace/surface membership response instead of
+returning an empty object to every JSON-RPC request. They preserve the original
+transcript/payload, notification, status, and output assertions, including
+current-turn error suppression. Notification assertions use the current
+`notify_target_async` command. Unknown mock methods fail the test.
+
+Each fixture owns its HOME, CFFIXED_USER_HOME, CODEX_HOME, hook-state directory,
+Unix socket, and input/output files. The shared `CLISocketFixture` bridges
+nonblocking socket readiness into one async capture task; it awaits descriptor
+cancellation before removing the socket. `CodexStopHookFixture` uses the existing
+`CommandRunner` for exit/deadline handling and positional shell `exec`
+redirection for exact non-TTY input/output. It reads captured output only after
+a native process exit. These fixtures do not build, launch, or contact a user's
+running app.
+
+A controlled local comparison exposed a separate existing limitation in
+`CommandRunner`: its detached blocking stdout/stderr readers can exhaust the
+cooperative executor while parallel socket fixtures await responses. Stack
+sampling confirmed workers in `CommandRunner.readToEnd`; the unchanged pipe
+variant passed serially, while owned-file capture passed all 13 cases in
+parallel. The production runner remains unchanged and that concurrency risk
+is recorded as an open Project Truth caveat. Restoring the empty topology in
+the file-capture variant still fails all 13 scenarios, independently confirming
+the routing repair. Local checks also preserved a child's native exit 65 and
+exercised socket disconnection cleanup without ignoring SIGPIPE globally.
+### Browser legacy-theme migration regression
+
+Baseline app-host logs show BrowserThemeSettingsTests failing the legacy
+force-dark migration. A native probe against unchanged build 773 confirms the
+startup path: BrowserPanel.normalizeBrowserDefaults registers `browserThemeMode`
+as System before BrowserThemeSettings reads the legacy boolean, so migration
+mistakes a fallback for an explicit choice. The migrated Swift Testing suite
+retains the old direct-access assertions and adds startup, repeat-normalization,
+implicit-default and explicit-mode cases. Its focused CI selector runs alongside
+the browser proxy regression to preserve native failure reporting independently
+of the legacy broad-suite summary handling.
+
+Ownership remains unchanged: BrowserPanel owns process-once defaults bootstrap;
+BrowserThemeSettings owns legacy migration, canonical values and its System
+fallback; BrowserPanelView's AppStorage owns the same declared fallback for view
+binding. The bounded correction removes the redundant theme fallback
+registration that masks migration. Explicit System/Light/Dark choices must retain
+precedence. Other normalization keys and browser behavior are outside this fix.
+No new package, state owner, setting or UI string is needed.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing (Swift Testing,
+behavioral coverage, two-commit regression evidence and target wiring),
+bmux-architecture (ownership and file discipline), bmux-shared-behavior and
+bmux-dev-workflow. Patterns inspected: the complete BrowserThemeSettings owner,
+BrowserPanel bootstrap/normalization and BrowserPanelView's AppStorage consumers;
+existing BrowserDefaultsNormalizationTests retain separate canonicalization
+coverage. Local test-only evidence on macOS 26.3 is six functions (ten cases),
+with four expected migration assertions failing and all other checks passing.
+Actual test-only CI job 114950761885 reproduced those four expected assertions
+on commit 9a9b2e1cb. The isolated tagged build 774 succeeds, and the same six
+functions (ten cases) pass against its native app module with no focused compiler
+warnings. This exercises startup normalization and persistence in unique temporary
+defaults suites. Fixed app-host CI and the full suite remain pending; the canonical
+and local verification caveat stays open. Build 773 and real user defaults are
+untouched. No shipped text or
+translation keys change. Other baseline failures remain separate maintenance PRs.
+
+
+## Browser background compositing test maintenance
+
+Commit `379033c4bf` made `GhosttyBackgroundTheme` use the shared opaque window
+compositing policy, but three theme tests and two WebKit under-page tests still
+expected uncomposited RGB plus partial alpha. Baseline CI records those exact
+component/alpha mismatches. The replacement Swift Testing suites preserve the
+payload/fallback and native-notification assertions, exercise Aqua and Dark Aqua,
+and check clamped endpoints against window/terminal colors. Payload tests compare
+the wrapper with its shared compositing owner; under-page tests check the native
+WebKit result after the real notification path, including NSNumber opacity.
+
+The under-page fixture supplies a deferred `.test` page URL without navigation.
+A blank page can correctly be clear when the window owns a transparent backdrop,
+so it is not a reliable fixture for a real website's native fill. Each panel closes
+synchronously on the main actor; drawing appearance is scoped to AppKit's native
+`performAsCurrentDrawingAppearance`. Tests do not change user preferences, global
+Ghostty settings, or terminal rendering. No app code or shipped strings change.
+
+Governing sources: `AGENTS.md`, `skills/bmux-testing/SKILL.md` and its migration,
+regression/quality and local/CI references; `skills/bmux-architecture/SKILL.md`;
+continuous-code-quality. Ownership remains in `GhosttyBackgroundTheme`,
+`WindowAppearanceSnapshot`/`WindowChromeColorResolver`, and BrowserPanel's existing
+notification/background path. Native execution against build 774 passed four
+functions/fourteen cases. The focused existing browser CI invocation runs both
+suites; actual CI and independent review remain verification gates.
+
+## CLI baseline failure classification (2026-10-12)
+
+Read-only audit of 38 `CLINotifyProcessIntegrationRegressionTests` methods failed
+on feature base `ce17e9888a6dce4d2e5755795946b68cf52f0329`. Evidence is retained in
+`/tmp/matte-baseline-failure-index.json` and `/tmp/matte-base-apphost{1,2,3,4}.log`.
+These are historical failures, not a claim that current maintenance branches pass.
+The audit inspected complete process/socket helpers and the relevant production
+routing, cleanup, resize, auto-naming and SSH agent-resolution paths. No test or
+app execution was performed for this classification.
+
+Categories: 14 concrete fixture/expectation mismatches, 13 lifecycle/process
+candidates, 5 production candidates (only sanitizer confirmed), and 6 unresolved
+timing/environment cases. A candidate is not a proven cause and does not authorize
+relaxing assertions or excluding a test.
+
+### Concrete fixture/expectation mismatches (14)
+
+- Seven startup-signal cases call `SSHStartupSignalLifecycleTests.generatedVMSSHInitialStartupCommand`
+  (737–810), whose mock accepts `vm.attach_info`; the real CLI requests `vm.ssh_info`.
+  Logs fail at helper809 with `Unexpected method vm.ssh_info` before shell behavior.
+- The stale-control-socket startup fixture omits initial surface identity and
+  `surface.list`; its primary error is inability to resolve the initial terminal
+  surface, followed by an unsupported rollback `workspace.close` request.
+- Respawn expects `surface.send_text`, while the maintained command uses
+  `surface.respawn` (`CLI/bmux.swift:24036`). Preserve window/command payload checks.
+- Both Claude notification routing cases target the correct workspace/surface;
+  their generic heartbeat produces `Idle`, while assertions demand `Needs input`.
+  The production generic-idle classifier is at `CLI/bmux.swift:24672`.
+- Codex hook install counts inline `hooks codex prompt-submit` in wrapper paths;
+  the same test already has `commandBodies` to inspect the installed wrappers.
+- Auto-naming prompt cache injects a logger with `BMUX_BUNDLED_CLI_PATH`, but the
+  maintained launcher prefers absolute executable argv[0] over that fallback
+  (`CLI/BMUXCLI+AutoNamingHooks.swift:168`). This does not establish failed caching.
+- Tmux compat builds a 108-byte socket path against 104-byte `sun_path` and gets
+  bind/listen result -1. The legacy helper asserts length then continues copying; fix
+  fixture path ownership and fail invalid prerequisites before memory writes.
+
+### Lifecycle/process candidates (13)
+
+Nine generic-hook cases time out (Antigravity, six Grok, Hermes finalize, Kiro),
+and four wait for mock completion (three Claude lifecycle cases, Hermes extra
+payload). Shared `CLIMockSocketServerSupport` queues 80/128 blocking accept/read
+blocks on global user-initiated workers without joined listener cancellation.
+`CLINotifyProcessTestSupport.runProcess` queues process waiting on the same QoS,
+output drains on utility workers, then blocks on a semaphore. Some tests read
+`state.commands` outside its lock instead of `snapshot()`.
+
+Antigravity's baseline has repeated timedOut=true with empty stdout and status 0
+(no status assertion failure), suggesting waiter/drain scheduling rather than
+proving a child hang. This requires a controlled reproduction/stack capture;
+do not increase deadlines. `startMockServer` fulfills on the first disconnect,
+not after all four accepted connections.
+
+A separate newer async Codex fixture measured cooperative-executor pipe starvation
+in `CommandRunner` (two detached blocking reads), recorded by its owner in
+`/tmp/codex-stop-pipe-stacks.txt` and `/tmp/codex-stop-fixtures-handoff.md`.
+That is **not** proof of the legacy GCD helper hypothesis above.
+
+### Production candidates (5)
+
+- **Confirmed sanitizer defect:** cleanup locally creates `persistent SSH PTY
+  session is no longer running` at `CLI/bmux.swift:12101`, then sanitizes it again
+  at 12208. Both CLI and app sanitizers only match `not running`, which does not
+  match `no longer running`; the CLI reports generic failure. Baseline apphost1
+  at 2026-10-10T18:05:24.777 fails line 5291, while exit 1, no close and session-ID
+  assertions pass. Other canonical diagnostics also need round-trip coverage.
+- Cloud retry mock returns typed `vm_cloud_service_unavailable`, but classifier
+  at 10925 recognizes other text/codes; one RPC instead of two is observed. Inspect
+  the documented typed retry contract before changing any retry policy.
+- Invalid/foreign Codex surface cases actually set running/resume metadata on
+  focused/mapped surfaces. `resolveAgentHookTarget` at 30666 falls through preferred,
+  mapped and default surface; stale-ambient recovery documentation at 30460 says
+  TTY/PID ground truth. Preserve wrong-target assertions and empirically inspect
+  identity provenance before correcting the shared resolver.
+- Stale Claude SessionEnd clears the consumed stale workspace. The fixture seeds
+  an active workspace/session map and sends SessionEnd with missing ID; actual
+  clear_agent_pid/clear_notifications target the stale workspace. Store-schema
+  compatibility and intended consumed-workspace ownership remain unverified.
+
+### Timing/environment unresolved (6)
+
+- Four attach tests miss only `workspace.remote.pty_resize`; the mock closes the
+  bridge immediately after ready. `SSHPTYResizeMonitor` schedules initial resize
+  asynchronously and cancellation on EOF can precede the drain. Determine the
+  initial-size handshake contract, preserve resize assertions, use causal signals.
+- Two agent-socket tests override HOME but inherit CFFIXED_USER_HOME/SSH_AUTH_SOCK;
+  Foundation tilde expansion and caller socket fallback may escape fixture home.
+  The second also observes nonnil ssh_options. Exact option/config provenance
+  and controlled-home proof are pending; neither is called a production defect.
+
+### Exact case index
+
+All rows belong to `CLINotifyProcessIntegrationRegressionTests`; log names resolve
+under `/tmp` in the retained audit environment.
+
+| Case | Classification | Baseline log |
+| --- | --- | --- |
+| `testAntigravityStopAndNotificationsUseGenericNotificationPath` | lifecycle / process candidate | `matte-base-apphost3.log` |
+| `testClaudeNotificationFallsBackToLiveWorkspaceInsteadOfFocusedTab` | fixture / expectation | `matte-base-apphost2.log` |
+| `testClaudeNotificationHonorsExplicitWorkspaceHandleRef` | fixture / expectation | `matte-base-apphost3.log` |
+| `testClaudePromptSubmitFromNewSessionCanReplaceStoppedSession` | lifecycle / process candidate | `matte-base-apphost3.log` |
+| `testClaudeSessionEndChecksConsumedWorkspaceBeforeClearingVisibleState` | production candidate | `matte-base-apphost1.log` |
+| `testClaudeSessionStartRecordIsNotRestorableUntilPrompt` | lifecycle / process candidate | `matte-base-apphost1.log` |
+| `testClaudeStopFromPreviousSessionDoesNotClobberClearRunningStatus` | lifecycle / process candidate | `matte-base-apphost3.log` |
+| `testCodexHookInstallPrefersLaunchingAppBundledCLI` | fixture / expectation | `matte-base-apphost1.log` |
+| `testCodexPromptSubmitCachesPromptForAutoNaming` | fixture / expectation | `matte-base-apphost2.log` |
+| `testCodexPromptSubmitWithForeignBmuxEnvIgnoresStaleMappedSession` | production candidate | `matte-base-apphost1.log` |
+| `testCodexPromptSubmitWithInvalidSurfaceDoesNotFallbackToFocusedSurface` | production candidate | `matte-base-apphost2.log` |
+| `testDefaultFreestyleSSHAttachHonorsGenericCloudRetryEnvironment` | production candidate | `matte-base-apphost3.log` |
+| `testGrokCompletionDoesNotResetStatusWhileSiblingSessionRuns` | lifecycle / process candidate | `matte-base-apphost1.log` |
+| `testGrokNotificationHookUsesPayloadMessageAndStopDoesNotSendGenericNotification` | lifecycle / process candidate | `matte-base-apphost1.log` |
+| `testGrokNotificationStillFiresOnRepeatedPromptWhenFeedTelemetryDoesNotReply` | lifecycle / process candidate | `matte-base-apphost4.log` |
+| `testGrokSessionEndDoesNotDropRoutingForLaterChatMessages` | lifecycle / process candidate | `matte-base-apphost4.log` |
+| `testGrokStopFallbackCompletionsFireForTwoConcurrentThreads` | lifecycle / process candidate | `matte-base-apphost1.log` |
+| `testGrokStopNotificationFallsBackWhenTranscriptCwdIsUnavailable` | lifecycle / process candidate | `matte-base-apphost3.log` |
+| `testHermesAgentNotificationsUseShellHookExtraPayload` | lifecycle / process candidate | `matte-base-apphost4.log` |
+| `testHermesAgentSessionEndIsTurnBoundaryButFinalizeTearsDown` | lifecycle / process candidate | `matte-base-apphost1.log` |
+| `testKiroFeedDenyUsesPreToolUseExitCodeTwo` | lifecycle / process candidate | `matte-base-apphost2.log` |
+| `testRespawnPaneWindowFlagDoesNotBecomePositionalCommandText` | fixture / expectation | `matte-base-apphost2.log` |
+| `testSSHForwardAgentTildeSocketPathExpandsSocketPath` | unresolved timing / environment | `matte-base-apphost1.log` |
+| `testSSHPTYAttachBridgeEOFWhenSessionGoneClearsLocalState` | unresolved timing / environment | `matte-base-apphost3.log` |
+| `testSSHPTYAttachBridgeEOFWhileSessionRunsExitsWithoutSSHRetryStatus` | unresolved timing / environment | `matte-base-apphost3.log` |
+| `testSSHPTYAttachBridgeResetWhenSessionGoneClearsLocalState` | unresolved timing / environment | `matte-base-apphost4.log` |
+| `testSSHPTYAttachWithoutSurfaceDoesNotSendLocalAttachEnd` | unresolved timing / environment | `matte-base-apphost3.log` |
+| `testSSHPaneCloseSignalDoesNotReportSessionEndToSharedTransport` | fixture / expectation | `matte-base-apphost3.log` |
+| `testSSHPaneCloseSignalDoesNotTerminateWrappedSSHChild` | fixture / expectation | `matte-base-apphost3.log` |
+| `testSSHPreservesCallerAgentSocketForOpenSSHConfigResolution` | unresolved timing / environment | `matte-base-apphost1.log` |
+| `testSSHSessionCleanupAllWorkspacesSessionIDReportsNotFound` | production candidate | `matte-base-apphost1.log` |
+| `testSSHSignalDerivedChildExitReportsSessionEnd` | fixture / expectation | `matte-base-apphost1.log` |
+| `testSSHSignalDuringReconnectDelayDoesNotStartAnotherSSH` | fixture / expectation | `matte-base-apphost2.log` |
+| `testSSHStartupDoesNotRetryNonTransientSSHExit` | fixture / expectation | `matte-base-apphost2.log` |
+| `testSSHStartupPrintsFinalErrorBannerWhenStderrIsCaptured` | fixture / expectation | `matte-base-apphost1.log` |
+| `testSSHStartupRemovesStaleBmuxControlSocketBeforeLaunchingPaneSSH` | fixture / expectation | `matte-base-apphost3.log` |
+| `testSSHStartupStopsAtConfiguredReconnectLimit` | fixture / expectation | `matte-base-apphost4.log` |
+| `testTmuxCompatEnvStampsLaunchSurfaceNotFocusedPane` | fixture / expectation | `matte-base-apphost3.log` |
+
+### Authorized next bounded slice
+
+The parent separately owns the eight startup protocol fixture repairs.
+Only the cleanup error idempotency repair is selected for this branch; other
+categories remain diagnosis and separately owned maintenance work. Proposed owner:
+pure Sendable remote-error value in `BmuxCore/Remote`, with existing app/CLI adapters
+and unchanged stable protocol diagnostics. Preserve CLI-only capability aliases
+and allocation-detail disclosure policy. No retry or routing change in this slice.
+Parent confirmed this plan. The new executable Swift Testing regression runs
+against unchanged build 773 CLI and records seven expected diagnostic failures
+across fourteen parameter cases; native compile is warning-free. The shared
+`CLISocketFixture` follows the reviewed PR 146 readiness/cancel-join design, with
+checked socket flags, unique readiness tokens, partial writes, owned file output,
+and joined cleanup. Test-only commit `606e4e8b0` is pushed in PR 148. The local shared Core classifier
+and adapters have independent review with no blockers; all 44 BmuxCore test
+functions in nine suites pass, including 29 new parameter cases. Exact canonical
+messages also survive the existing `remote_pty_error:` envelope. CLI-only aliases
+and allocation-detail passthrough remain outside Core; the app retains its
+stricter disclosure policy. The app's existing string adapter is internal solely
+for direct native policy verification. Source budget, strict test determinism,
+pbx wiring and Project Truth checks pass. The parent-built isolated tag `ssh-cleanup-idempotency`, build 776, succeeds
+without launch. All 27 native parameter cases (five functions, two suites) pass
+against that artifact's real bundled CLI and app dylib; fixture compilation is
+warning-free. Evidence: `/tmp/ssh-cleanup-native-green.log` and
+`/tmp/ssh-cleanup-native-fixed-compile.log`. Actual test-only CI job 114953934391 on commit 606e4e8b0 completed the
+SSHCleanupErrorTests suite with the seven expected diagnostic issues before its
+legacy wrapper truncated later output. The job badge incorrectly reports success
+because of that separately repaired PR 142 reporting defect; the completed suite
+log is the red evidence, not the badge. The production fix can now be pushed;
+fixed app-host CI and the full-suite gate remain pending.
+Localization/disclosure audit confirms all nine protocol diagnostics are
+byte-identical to the pre-existing CLI strings. No new UI wording or catalog keys
+are introduced; existing protocol text and CLI presentation remain English.
+Project Truth caveat `ssh_cleanup_error_idempotency_verification` stays open.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux-shared-behavior,
+bmux-architecture (package DAG, file/API discipline, concurrency), bmux-testing,
+bmux-socket-policy, bmux-dev-workflow and bmux-localization. Existing remote core
+value `RemoteDropUploadError` separates protocol values from app-localized display;
+actual ownership/localization decisions must remain explicit during implementation.
+No active user build may be rebuilt or replaced; parent owns a new isolated tag
+before a production push. PR 144 packaging artifact verification is separate and
+still awaits real dynamic Debug plus unsigned Release CI proof.
+
+## Right sidebar shortcut fixture coverage
+
+Shard 3 runs `RightSidebarModeAvailabilityShortcutTests` and the remaining
+`RightSidebarModeShortcutHintTests` before the unchanged full app-host suite.
+The focused invocation uses the existing console-session and app-host wrappers;
+it does not change runner selection, retries, deadlines, or full-suite coverage.
+Expect four Swift Testing tests containing thirteen cases, plus three XCTest
+methods. Full app-host CI verification remains pending for this fixture repair.
+
+The original three failing shortcut fixtures expected Feed/Dock routes without
+enabling their beta flags. `RightSidebarMode.modeShortcut` correctly checks
+`RightSidebarMode+Availability`, whose Feed and Dock defaults are disabled.
+The corrected tests retain default/custom-file binding and action-gate assertions,
+exercise each flag independently, and cover absent flags. They use the same real
+shortcut owner as AppDelegate; no production shortcut behavior changes.
+
+Fixture setup, assertions, and cleanup stay in one synchronous MainActor turn.
+An owned JSON file, disabled fallbacks/watchers, and temporary removal of managed
+settings bookkeeping prevent unrelated settings discovery or restoration. Cleanup
+restores the original settings store and the exact persisted/registered defaults,
+then notifies observers and removes the owned directory. This follows the
+constructor pattern in `KeyboardShortcutTestSettingsIsolation` and the explicit
+beta ownership in `RightSidebarCommandPaletteTests`, with the incremental Swift
+Testing migration required by `skills/bmux-testing`.
+
+Local verification used unchanged build 773 (`bcad95a88`) in an isolated native
+executable with its own bundle ID and home; the six relevant production owners
+match base `ce17e9888`. All thirteen cases and the three retained XCTest methods
+passed. Removing only beta setup reproduced failures in the same three test
+families. A seeded preservation probe also verified exact effective, persistent,
+and registered defaults, store identity, and owned-directory cleanup. These
+results do not establish that the broader app-host suite is green.
+
+## SSH startup lifecycle fixture repair (2026-10-12)
+
+The signal, retry, stdin and control-socket checks use the maintained CLI
+protocol. `vm ssh` requests `vm.ssh_info` with only `id`, and workspace-create
+replies include the created `surface_id`. The original mock rejected that
+request or forced discovery/rollback before reaching the behavior under test.
+
+Build 779 exposed a second fixture defect hidden by build 773's reusable-shell
+exit-status bug: the stale control-socket test selected managed PTY attach but
+mocked only shell SSH. Its generated command invoked the real `ssh-pty-attach`
+against a nonexistent socket. Stale-path removal succeeded; attach failed.
+The old wrapper masked that failure as exit 0, so the earlier ten-check baseline
+pass (`/tmp/ssh-startup-lifecycle-green.log`) did not prove successful attach.
+The observed build-779 failure is in `/tmp/ssh-lifecycle-779-native.log`, with the
+actual generated attach command in `/tmp/ssh-stale-control-779-generated.sh`.
+
+Only this touched case migrates to `SSHStaleControlSocketTests` (Swift Testing).
+The other nine XCTest methods keep their existing assertions. The new
+`SSHStaleControlSocketFixture` owns a short temporary home, stale UNIX socket,
+fake SSH preflight, CLI command generation, owned output files and explicit
+workspace/surface protocol replies. `SSHExitedPTYClient` supplies one exited
+remote session to the existing production `RemotePTYBridgeServer`; no separate
+TCP bridge implementation is introduced. Raw-SSH mode would skip the managed
+attach boundary that exposed the false pass, so the fixture retains it.
+
+The real bridge owns token validation, ready/EOF delivery and network lifetime.
+Its legacy blocking listener-start API runs on a dedicated thread behind a
+checked continuation; it never blocks Swift's cooperative executor. The fixture
+awaits the bridge's stop signal and shared `CLISocketFixture` descriptor teardown
+before deleting its owned files. Process output uses positional shell redirects
+with existing `CommandRunner`; no new process transport or timeout is added.
+
+`CLISocketFixture` is shared with notification fixtures. This use exposed a Darwin
+peer-close edge: setting `SO_NOSIGPIPE` again on an accepted socket after its peer
+has disconnected returns EINVAL. A native local probe confirmed accepted sockets
+inherit the listener's value for live and closed peers. Set it on the listener
+before accepting clients; keep nonblocking/CLOEXEC flags on every descriptor.
+`/tmp/ssh-control-779-flags-trace.log` retains the original readiness failure.
+`/tmp/ssh-control-nosigpipe-probe.log` also proves a closed-peer write returns
+EPIPE with inherited protection, while its unprotected subprocess dies from
+SIGPIPE; the correction does not disable signal protection.
+
+The test retains exit 0, no timeout, stale-file removal and `-G`/`-O check`
+assertions. It additionally requires removal before the managed attach request,
+a successful real bridge attachment, and the exact ordered target-specific
+bridge/session-query/attach-end/terminal-session-end requests. These checks catch
+an omitted attach mock even when an older wrapper masks the native exit status.
+
+All ten checks pass against both unchanged build 773 and fixed build 779
+(`/tmp/ssh-lifecycle-repaired-773.log`, `/tmp/ssh-lifecycle-repaired-779.log`).
+A temporary missing-attach mock control on 773 retains the misleading native
+exit 0 but fails the new stderr, bridge-attachment and cleanup-sequence assertions
+(`/tmp/ssh-control-773-missing-attach.log`). Actual pushed-head app-host CI remains
+pending. The existing Option/Alt invocation selects the nine
+legacy lifecycle methods and new managed cleanup suite without another runner
+or changing full coverage. Canonical and local Project Truth caveat
+`ssh_startup_lifecycle_focused_gate_verification` remains open.
+
+Guidance: root/personal AGENTS, continuous-code-quality, testing (migration,
+behavioral quality and wiring), architecture (file ownership and concurrency),
+shared-behavior, socket policy and dev workflow. Maintained owners include
+`BMUXCLI.runSSHWithOptions`, `runSSHPTYAttach`, `handleSSHPTYBridgeEOF`,
+`RemotePTYBridgeServer`, `AppRemotePTYBridgeStrings` and the shared socket fixture.
+The retained redundant Void-discard warning in `CLINotifyProcessTestSupport:54`
+is outside this patch. No production code, shipped strings, localization catalogs,
+app launches, builds or real app/socket state changes are part of this repair.
+The separate manual reconnect production repair remains outside this PR.
+## Browser initial lifecycle regression (2026-10-12)
+
+A deferred URL or URLRequest is retained by `BrowserPanel.init`, and the panel
+correctly avoids navigation and the new-tab UI, but its published lifecycle and
+`webViewLifecycleTopPayload` remain `new_tab` until a visibility callback arrives.
+The two existing failing deferred-URL XCTest methods are migrated to the wired
+`BrowserInitialLifecycleTests` suite. It covers both URL and request construction,
+new-tab controls with both render flags, initial wire payloads, and visibility
+changes without triggering network navigation. Owned panels close synchronously.
+
+Native tests against the existing build774 app dylib reproduce four initial-state
+assertion failures across the two deferred cases; both empty-panel controls pass.
+The initialization/lifecycle owners are unchanged from main in that artifact;
+build774's unrelated theme-default migration does not modify them. Evidence:
+`/tmp/browser-initial-native-red.log`; compilation has no warnings. Existing
+baseline CI also records both deferred-URL failures. Actual new-test CI red is
+required before pushing a fix. The focused browser gate selects this suite in
+its existing runner. No production files are changed in the regression commit.
+
+Planned correction belongs to the existing BrowserPanel initializer and its
+`refreshWebViewLifecycleState` projection, after initial navigation intent is set,
+including the deferred early-return branches. It must not navigate, defer state
+writes to view rendering, add a second lifecycle owner, or change discard policy.
+Rules: `AGENTS.md`, continuous-code-quality, `skills/bmux-architecture/` and
+`skills/bmux-testing/`. Complete initializer, state projection, visibility and
+socket payload callers are the review boundary. Existing discard/restore and
+WebKit portal failures remain separate unresolved gates. No shipped text changes.
+
+## Claude notification target fixture maintenance
+
+Two baseline failures were stale status expectations, not wrong-target mutations:
+`testClaudeNotificationFallsBackToLiveWorkspaceInsteadOfFocusedTab` and
+`testClaudeNotificationHonorsExplicitWorkspaceHandleRef` in
+`CLINotifyClaudeHookWorkspaceRoutingTests.swift`. Baseline logs
+`/tmp/matte-base-apphost2.log` (2026-10-10 18:07:09Z) and
+`/tmp/matte-base-apphost3.log` (18:01:58Z) show the correct target workspace/surface,
+but `Idle` instead of the old expected `Needs input`.
+
+Commit `f62cae83f` deliberately stopped treating generic Claude notification
+heartbeats as blocked input. The maintained `classifyClaudeNotification` and
+notification lifecycle owner keep plain heartbeats idle while explicit permission
+prompts remain `Needs input`. The repaired fixtures retain the original generic
+payload and add a permission payload to each of the same two routing scenarios.
+Both status and notification must address the exact target workspace and surface;
+stale and focused workspaces remain forbidden mutation targets.
+
+The two routing methods migrate to `ClaudeNotificationTargetTests` (Swift Testing).
+`ClaudeNotificationTargetFixture` owns each short temporary root, state file,
+input/output files and isolated process environment. The shared `CLISocketFixture`
+is byte-identical to the SSH cleanup maintenance fixture, with the same project
+identity for later integration. Its native readiness stream joins descriptor
+cancellation before removing files. The responder drains id-less `feed.push`
+telemetry without replying, matching the production frame at `CLI/bmux.swift`.
+Unexpected command mutations fail the test. No app or CLI production code changes.
+
+Evidence against unchanged tagged build 773:
+
+- The original `Needs input` expectation reproduces exactly two failures, one
+  per generic-heartbeat routing case; permission variants and original forbidden
+  target assertions pass. `/tmp/claude-target-native-old-expectation.log` preserves
+  actual command traces.
+- Corrected expectations pass all four payload/routing combinations in two test
+  functions. `/tmp/claude-target-native-green.log`; compilation is warning-free.
+- A separate temporary misrouting control redirects resolution to the focused
+  workspace to verify the exact-target and forbidden-target assertions remain
+  effective: all four combinations fail their exact-target and forbidden-target
+  assertions (12 issues), `/tmp/claude-target-misroute.log`. The checked-in fixture
+  is unchanged by this control.
+
+The dedicated `ClaudeNotificationStatusLifecycleTests` now reuses the same async
+fixture with an explicit agent PID and caller workspace/surface configuration.
+Its heartbeat case expects `Idle`; its permission case expects `Needs input`.
+Both require exactly one status with the exact target and PID, plus the matching
+lifecycle command. The fixture reports an empty process inventory for the CLI's
+PID lookup, leaving the explicit caller IDs responsible for routing. The original
+four routing cases and their forbidden stale/focused target assertions remain.
+
+The old lifecycle harness used blocking process/semaphore waits and a socket
+responder that acknowledged even id-less telemetry; retained full-suite evidence
+in `/tmp/matte-stage5-apphost4.log` (2026-10-11 05:44:39Z, lines 199587–199594)
+records a socket wait timeout, process status 15 and missing status. Reusing the
+joined async socket and owned-file capture removes those fixture paths. The PID
+lifecycle cases retain their direct five-second deadline; the separate routing
+cases retain five seconds locally and the original 20-second CI minimum. This local proof does not establish
+the cause of every historical full-suite timeout.
+
+On unchanged build 773, the temporary old heartbeat expectation fails exactly
+once with `Idle` and `--pid=42424` in the actual command; permission and all four
+routing controls pass (`/tmp/claude-pid-native-old-expectation.log`). Corrected
+source passes six parallel cases across three test functions in two suites
+(`/tmp/claude-pid-native-green.log`), with warning-free native compilation. This
+verifies PID metadata required by stale sweeping; it does not run the sweep or
+claim full app-host execution.
+
+The existing app-host shard 2 now runs both suites explicitly before broad legacy
+tests. Actual focused app-host CI and broader suite results remain pending;
+Project Truth caveat `claude_notification_target_fixture_verification` stays open.
+No reload or app launch is needed for this test-only correction.
+
+Guidance applied: root/personal AGENTS, continuous-code-quality,
+bmux-testing (incremental Swift Testing, behavioral coverage, wiring and native
+versus CI proof), architecture (file ownership and concurrency), shared-behavior,
+socket-policy and dev-workflow. Independent review found no blocker. Localization
+audit: test data and contributor diagnostics only; no shipped wording or catalogs
+changed. The legacy ambiguous-TTY and active-pointer tests remain untouched.
+
+
+### Browser discard fixture readiness (2026-10-12)
+
+Two legacy `BrowserPanelWebViewLifecycleTests` cases attempted discard after
+polling only `WKWebView.isLoading`. Discard eligibility also checks the model's
+loading/provisional state. A native probe against unchanged build 774 observed a
+loading blocker at the old boundary; awaiting the model's loading-complete event
+produced no blockers and allowed discard. Both complete discard/restore and
+restored-history assertions pass against the unchanged artifact with that event
+boundary. This proves the corrected fixture's behavior locally; it is not proof
+that every earlier CI failure had the same timing.
+
+`BrowserDiscardReadinessTests` migrates only those two cases to Swift Testing,
+awaits the existing model publisher's async sequence, confirms WebKit completion,
+and keeps the original one-second failure deadline. The deadline is injected as
+a duration and canceled with the task group. The inherited synchronous lifecycle
+subscription remains confined to tests: it captures every transient state during
+synchronous restore and history navigation, which an unbuffered async sequence
+could miss. No production propagation API, state owner or discard policy changes.
+Panels close and subscriptions cancel through scoped cleanup.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing (migration,
+regression quality and wiring), bmux-architecture (legacy boundary/concurrency),
+and bmux-dev-workflow (project normalization). Owners inspected:
+`BrowserPanel.noteWebViewVisibility`, `discardHiddenWebViewForMemory`,
+`restoreDiscardedWebViewIfNeeded`, `goBack`, and
+`BrowserHiddenWebViewDiscardManager.blockers`. Verification runs in an
+isolated HOME against a native app artifact, without launching or replacing the
+user's preview. The existing ReactGrab prefetch can still perform background
+network activity; this fixture does not add it or claim a network-free app.
+All prior webview identity, lifecycle, timestamp/reason, visibility and transient
+new-tab assertions remain. The focused browser CI invocation includes the new
+wired suite. No shipped text changed; English test diagnostics and contributor
+verification notes are the only new prose. App-host CI remains required.
+
+### Browser initial-navigation timeout diagnostics (2026-10-14)
+
+Run `38509817630`, focused shard 1 job `115676261510`, failed both
+`BrowserDiscardReadinessTests` cases in their initial `about:blank` readiness
+wait on macOS 15.7.9. Neither reached discard or restored-history assertions.
+The same cases pass against existing build 784 on macOS 26.3; a native KVO trace
+showed WebKit progress/loading settling before the model completion event.
+That local ordering does not explain or disprove the CI timeouts.
+
+The fixture now attaches a bounded diagnostic recorder while retaining the
+original one-second deadline, readiness predicate and assertions. It records up
+to 64 model consumptions and WebKit loading/progress/URL-class changes,
+plus an omitted-event count and an untruncated failure snapshot. URL values are
+classified only as absent, `about:blank`, or other; arbitrary URLs and page
+content are never reported. The original deadline task records its elapsed time
+before throwing; the later MainActor failure snapshot has its own elapsed time.
+This distinguishes deadline firing from delayed actor resumption. Diagnostic
+observations do not wake or complete the readiness consumer and are removed
+before panel teardown. No production navigation or discard owner changes.
+Model values come from the existing readiness consumer; the recorder does not
+add a model subscription or compare emitted versus consumed model values.
+
+These diagnostics require macOS 15 app-host evidence before any missing-signal
+or resource-timing cause can be assigned. Local green is not a CI repair claim.
+No shipped wording or localization catalogs change; added strings are test
+failure diagnostics and contributor verification notes.
+
+## Codex rejected ambient identity regression
+
+The focused `CodexRejectedAmbientTests` and `CLISocketFixtureCompletionTests` gate runs before the broad app-host suite
+on shard 2. The shared generic-hook target resolver now retains rejected ambient
+provenance: a rejected workspace or surface requires verified PID/TTY attribution
+before any session, resume, status or feed mutation. Explicit invalid flags still
+stop routing; valid remote-like ambient identity and valid saved mappings remain
+supported. The stop branch also suppresses deferred generic feed telemetry when
+target resolution rejects the event, so that fallback cannot resurrect a rejected
+workspace. Successful stop publication and lease retirement keep their existing
+owners and ordering.
+
+The fixture owns an isolated HOME/session store, temporary socket, joined socket
+lifecycle and file-backed process I/O. Its shared `CLISocketFixture` is the exact
+reviewed PR 169 transport. Tests preserve every earlier assertion and cover sixteen
+parameter cases: four prompt rejections, four stop rejections and eight recovery,
+explicit-flag and valid-identity controls. No timing or assertion is relaxed.
+
+Original actual CI job 114969430201 reproduced wrong-target commands and persisted
+running state, alongside the accepted-socket EINVAL fixture race. Unchanged build
+773 fails the four prompt cases with 22 assertions. Build 778, containing the held
+prompt correction, passes twelve cases but fails the four new stop cases on
+unexpected feed.push. Test-only commit 6968859d9 publishes that additional regression;
+its actual app-host red was retained before publishing the complete fix.
+
+Fresh isolated build 781 (`codex-routing-stop-recovery`) succeeds without launching
+the app. Its actual bundled CLI passes all sixteen routing cases with warning-free
+Swift 6 fixture compilation, plus thirteen valid stop payload/transcript/turn-scope
+cases across nine functions. Independent review checked the resolver, stop path,
+deferred telemetry and unchanged lifecycle ordering. The production correction is published in commit `214180692`. Full fixed-head app-host CI and
+combined validation remain pending; these focused results are not broad-suite green.
+The local Project Truth verification caveat stays open.
+
+Source requirements: root/personal `AGENTS.md`, `continuous-code-quality`, and
+`bmux-architecture`, `bmux-testing`, `bmux-shared-behavior`, `bmux-socket-policy`,
+`bmux-dev-workflow` and `bmux-localization`. Maintained references are the verified
+PID/TTY recovery regression, sibling rejected-target telemetry guards, joined
+`CLISocketFixture`, and owned-file CLI capture. Localization audit: no shipped
+strings or catalogs change. Running builds 773/775 remain untouched.
+
+
+### Socket capture completion regression
+
+Review identified a gap in the shared fixture: process completion does not imply
+that DispatchSource has delivered readiness for every one-way `feed.push` frame.
+Finishing the event stream first can discard already-written frames and let a
+negative mutation assertion pass incorrectly. Source cancellation joins descriptor
+closure but does not drain input; `responseWritten` cannot cover frames that have
+no response.
+
+The focused transport suite uses an immutable, constructor-owned native
+readiness-delivery closure. Its default forwards events immediately; tests
+withhold listener or client notifications without blocking the native queue, so
+cancel handlers remain runnable. Real owned sockets fully write and close each
+frame before the operation returns. Test-only commit `e8fb55995` records three
+local missing-input issues across five cases; the no-client and operation-error
+cleanup controls pass. Actual test-only CI run `38499804202`, job
+`115644567245`, subsequently failed with the three expected missing-input issues.
+
+The local correction keeps capture state and one parser inside the fixture's I/O
+task. A private completion event drains queued accepts and available client bytes
+before closing and joining sources. Normal operations must join their request
+producers. Final-drain responses fail explicitly on would-block rather than await
+future peer reads, and partial or failed writes never emit `responseWritten`.
+An EPIPE still permits validation and capture of complete queued frames before
+closing at EOF/EAGAIN. The listener's existing SO_NOSIGPIPE option now precedes
+listen and producer start: a native probe confirmed accepted sockets inherit the
+option at connect time, not accept time.
+
+This does not make every capture shutdown globally bounded. Ordinary serving
+retains its existing backpressure wait; that wait can already be active before
+the completion event is processed. No CLI timeout or assertion is relaxed, and
+no application/runtime code changes in this follow-up.
+
+Final strict Swift 6 compilation is warning-free. The focused transport suite
+passes six functions/seven cases, including a mixed response/one-way connection
+whose prior parser dropped the second frame after EPIPE. Removing the final-drain
+would-block guard causes the owned unread-peer control to fail at its existing
+five-second failure deadline; cleanup closes the peer before joining the writer.
+No sleep is used to synchronize readiness, and no wire sentinel is introduced.
+
+The combined matrix uses validation commit `8ae32c8a8` shared caller sources and
+existing build 784 CLI, with only this fixture substituted. Its 38 functions in
+18 suites complete with five SSH acknowledged-resize timeouts; all other suites
+pass. The same frozen callers with the pre-fix helper also reproduce that timeout
+class (one case), while the final helper's isolated sixteen SSH lifecycle cases
+pass. Those samples establish an existing integration limitation, not a timeout
+frequency comparison or full-suite success. Actual fixed-head app-host CI and
+combined validation remain open in the canonical and local Project Truth caveats.
+
+Source rules and ownership: root/personal `AGENTS.md`, `continuous-code-quality`,
+`bmux-architecture` concurrency/file discipline, `bmux-testing` regression and
+local/CI references, shared-behavior and socket-policy guidance. Existing joined
+DispatchSource cancellation, one-way feed telemetry, response-written observation
+and owned-file CLI capture remain the maintained patterns. Localization audit:
+only test diagnostics and contributor notes change; no shipped copy or catalogs.
+
+## Resume policy executable fixture maintenance
+
+Five obsolete `SessionPersistenceTests` expectations are reconciled with current
+shared owners. Commit `9374b139e1` deliberately retains a restorable/forkable
+session when its saved PID has died, while clearing live process evidence. The
+existing `RestorableAgentSessionStalePIDTests` already verifies that behavior and
+live-record precedence, so the contradictory nil-snapshot test is removed rather
+than duplicated with a different expected value.
+
+Four Hermes tests previously compared raw shell substrings that changed when the
+startup command acquired nested environment quoting. `HermesResumeExecutionTests`
+executes the actual `Workspace.surfaceResumeStartupInput` output with owned fake
+executables, a temporary HOME/configuration and an isolated inherited cwd. A
+NUL-delimited recorder verifies exact argv and order, captured versus PATH
+executable identity, cwd before every bootstrap step, provider/base URL/API mode/
+model configuration, stale-provider rewrite, and explicit-provider no-bootstrap.
+The guarded relative executable uses a directory containing spaces and an
+apostrophe. A separate owned PATH executable catches captured-path substitution.
+No network request or real Hermes process is involved.
+
+Actual unchanged build 773 native execution passes four Hermes cases plus the two
+existing stale-PID cases (three functions/two suites), with warning-free focused
+compilation. The original five expectations have retained actual baseline CI red
+logs; no synthetic production regression or link-policy change is introduced.
+The existing focused browser gate also runs these two suites, without adding a
+runner. Final app-host CI remains pending and the broad baseline is not claimed
+green. The deleted-agent-cwd metadata test is untouched: its terminal-runtime
+metadata policy remains a separate unresolved question, even though prior shell
+execution probes passed.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing and its
+migration/behavioral/local-vs-CI references, architecture ownership/file/API/
+concurrency guidance, shared-behavior and dev-workflow. Inspected owners include
+Workspace's restore-policy composition, WorkspaceSessionRestorePolicyService,
+WorkspaceHermesAgentCommandBootstrapper, SurfaceResumeBindingSnapshot/environment
+rendering, HermesAgentCodexEnvironment and RestorableAgentSessionIndex. No shipped
+strings, settings, production source, or localization catalogs change. All other
+SessionPersistenceTests methods remain byte-identical to the feature baseline.
+
+### Browser remote store profile fixture maintenance
+
+Three `BrowserPanelRemoteStoreTests` assertions assumed every local browser used
+`WKWebsiteDataStore.default()`. The current profile policy instead resolves an
+unspecified profile from the selected/workspace/last-used profile. Moving out of
+a remote workspace restores that panel's retained profile store. Actual baseline
+CI failed only the hardcoded default assertions at GhosttyConfigTests lines 2357,
+2487 and 2551; the surrounding remote sharing and move isolation assertions passed.
+
+`BrowserRemoteStoreScopeTests` migrates exactly those three methods and executes
+both an explicit built-in default and a deliberately selected named profile.
+It preserves the original sharing, move-in replacement and move-out isolation
+checks, and checks panel/profile identity, different remote workspace isolation,
+and absent navigation. The fixture owns its profiles and unmounted panels,
+snapshots/restores profile defaults and selection synchronously on the main actor,
+and configures remote workspaces with `autoConnect: false`; no remote controller,
+network navigation, user socket, or app launch is needed. Unrelated remote URL,
+navigation and terminal tests remain byte-identical.
+
+Unchanged build 773 passes all six parameter cases (three functions/one suite)
+with warning-free native compilation. Reinstating the old always-default-store
+expectation fails exactly the three named-profile cases while explicit-default
+controls pass. This establishes fixture state omission, not a production fix.
+The existing focused app-host browser gate includes the new suite without adding
+a runner. Actual app-host CI remains pending, and the broader suite is not claimed
+green. Canonical and local Project Truth caveats retain that verification gap.
+
+Guidance and inspected owners: root/personal AGENTS, continuous-code-quality,
+bmux-testing migration/behavioral/local-vs-CI references, architecture file/API/
+concurrency guidance and shared-behavior. BrowserProfileRepository owns persisted
+selection and profile stores; BrowserPanel init/reattach owns the active WebKit
+store; Workspace's existing new-browser and detach/attach paths retain panel
+identity and choose the destination scope. No production files, shipped strings,
+or localization catalogs change; this is contributor test documentation only.
+
+### Claude SessionEnd replacement scope fixture
+
+The legacy consumed-workspace test seeded the active session in a sibling pane
+while expecting it to suppress cleanup in the exiting pane. The maintained
+ClaudeHookSessionStore.isCurrent policy explicitly permits independent sibling
+panes (upstream issue 5908) and suppresses a replaced session in the same pane.
+Actual baseline app-host logs fail only the two visible cleanup assertions;
+consumption already succeeds. An isolated unchanged build 773 CLI probe reproduces
+the distinction with both explicit session IDs and surface fallback routing.
+
+The migrated Swift Testing suite seeds a replacement in the same pane. Its old
+record is most recently updated, so fallback consumes that record; the explicit
+active boundary still controls cleanup. Four cases cover legacy workspace-only
+active state and current per-surface state, with and without an explicit session
+ID. They retain the different caller/consumed workspace, consumed-record deletion,
+and no PID/status/notification cleanup assertions, and add preservation of the
+active record and both active boundaries plus exact resume-clear targeting.
+The sibling-pane and stale-turn tests remain unchanged. No production policy or
+routing changes are included; workspace-wide notification semantics are not
+redesigned by this fixture repair.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing and migration/wiring
+references, bmux-architecture, bmux-shared-behavior and bmux-socket-policy. Complete
+consume/isCurrent/fallback/active-slot migration and SessionEnd caller paths were
+inspected. The fixture owns temporary state and process I/O; it uses the shared
+async CLISocketFixture transport from the notification fixture maintenance and
+owned output files to avoid blocking cooperative pipe readers. It contacts no
+real app socket and does not modify real preferences or hook state.
+
+All four native cases pass against unchanged build 773, with warning-free focused
+compilation. A temporary negative control restores the erroneous sibling-pane
+active record and fails all four cases, preserving the protection being tested. Actual app-host CI and broad-suite integration remain pending in the
+canonical/local focused-gate caveat. There are no shipped strings or catalog
+changes; changed text is contributor verification documentation only.
+
+### Cloud attach retry fixture contract
+
+The old `testDefaultFreestyleSSHAttachHonorsGenericCloudRetryEnvironment` failed
+because it promoted the backend's `vm_cloud_service_unavailable` to a top-level
+socket error and expected obsolete `0s` wording. The current chain is HTTP 502
+from the VM route, `VMClientError.httpStatus` formatting, then
+`TerminalController.v2VmCall` wrapping that description with socket code
+`vm_error`. HTTP status remains in the description and the CLI already retries
+it. The introducing commit `bd0b24b74` also used the localized zero-delay label
+`now`; this slice changes no retry or presentation policy.
+
+`CloudAttachRetryContractTests` replaces only that legacy method. Its fixture
+uses the actual native formatter and reviewed shared `CLISocketFixture` with
+owned file capture. Twenty-one cases exercise SSH, PTY and session-PTY attach:
+generic environment precedence, legacy fallback, zero retry limit, non-default
+attach, reconnect notice suppression, permanent failure and missing VM. Requests
+retain exact VM/session/attachment parameters; retries get fresh request IDs;
+final errors and exit 1 remain observable. Missing VMs never trigger creation or
+another mutation. Responses always fail, so no SSH or WebSocket connection starts.
+All other methods in VMDefaultCloudCommandTests remain byte-identical.
+
+Actual unchanged build 773 passes all 21 cases with warning-free focused compile.
+A temporary negative-control fixture sets the generic limit to zero for the three
+override cases: exactly those cases fail their count/notice assertions while the
+other 18 pass. The original baseline failure and independent socket diagnosis are
+retained. Actual app-host execution of the new suite remains pending; the broader
+baseline suite is not claimed green. The existing focused browser app-host step
+includes this suite without adding a runner; canonical/local Project Truth
+caveats track the open verification gate.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing migration/
+behavior/local-CI references, architecture file/API/concurrency rules, shared
+behavior, socket focus policy and observability error propagation/safe logging.
+Inspected boundaries include both shared CLI attach retry loops, SocketClient
+error formatting, VMClient HTTP errors, the socket VM adapter and VM route error
+policy. Bare typed socket errors remain unsupported by the current classifier;
+no new typed socket contract or production classifier expansion is introduced.
+No shipped strings, localization catalogs, app settings or runtime files change.
+
+## Local maintenance integration checkpoint (2026-10-12)
+
+The isolated `maintenance-validation` branch composes the following published
+heads from `ce17e9888a6dce4d2e5755795946b68cf52f0329`. This is a local validation
+checkpoint, not a merge into main, a published CI result, or an app build.
+
+| PR | Published source commit |
+| --- | --- |
+| #141 | `00b4a21d4069f53857fb0b87a17a347b4668d06e` |
+| #142 | `5117031ee1f6054f5246de3f76ba6a5153bd2101` |
+| #143 | `81cfc3b0369a74a0a42d92f1b84e1393eeaa2716` |
+| #144 | `4b3c2a5314aad630c1429a32dac8a557b3c047b5` |
+| #145 | `b275c76c3d1a14aec865f07de8d7b2cfa96c92cc` |
+| #146 | `7f48a469821734062ad0c8de95da690cea3e5f4c` |
+| #147 | `537681592de0f1a51b00308a2fa3834f31959b49` |
+| #148 | `bcdee5e1638ba65e6c1d2af7bad6df533f6e0226` |
+| #149 | `2b8592920ed58232e9506c14ba6e4842d2982f14` |
+| #150 | `cf9e78dcb5df8dbc4dbadd82df673492ad33cbdf` |
+| #151 | `6e366325cbcc173a2ae2f1ec58bb4979feccae3d` |
+| #152 | `637ae2ede4f18445487574e29988b1aa1befca04` |
+| #153 | `36114abc088693f49a5162089461e8eb76560a00` |
+| #154 | `b25ad79c66f064dfad82754642666b5fcf22a2a8` |
+| #155 | `950d8bbd4be55e5f31c09606a5997faf5c5ab039` |
+| #156 | `d5350d19b490fc1d3505dfeb635513be0d672c49` |
+| #157 | `78cbde9b63acb7ea92929ca17ce9e4bc73fd68fb` |
+| #158 | `83ff7d17c9cefb5be4ca644c558ea60251b67073` |
+| #159 | `994e34f6512abf871b839b7957d56f2739671314` |
+| #160 | `d58ea8aaa63284b48302763446964f74cbd94524` |
+| #161 | `93abeaa9bc8560190dc40b0464bfa1901eff73b7` |
+| #162 | `90503d88c5f4cb0f69745dfb6b886755fe3ece12` |
+
+PR142's authoritative framework-aware test runner is integrated before the
+maintenance suites. All source-head focused selectors and the full legacy suite
+remain enabled. Merge resolution unions test wiring and canonical/local caveats;
+generated documents are regenerated. Repeated group references to the single
+shared CLISocketFixture are removed without duplicating its source build entry.
+
+The published PR143 and PR148 fixes follow actual test-only CI failures: browser
+startup migration produced four issues in job 114950761885; SSH cleanup produced
+seven diagnostic issues in job 114953934391. The latter suite completed before the
+old runner terminated other active Swift Testing work and incorrectly returned
+success. Its green job badge is not a passing-suite claim.
+
+PR151, PR153 and PR155 contain only their published failing tests here. Their
+reviewed production fixes remain excluded until actual red CI is captured. The
+PR150 managed-attach fixture follow-up is included with its listener-only
+SO_NOSIGPIPE correction in the one shared socket fixture. Ten lifecycle checks
+pass on both 773 and 779, and missing-attach and unprotected-write negative
+controls establish sensitivity. The targeted combined-source transport batch described below passes.
+Existing user builds 773 and 775 remain untouched.
+
+Local checks pass: framework-aware PTY helper behavior, four exit-reporting tests,
+app-host retry/attempt guards, sharding coverage, Xcode normalization, test wiring
+(479 files), strict determinism (zero findings), source budget against ce17, YAML
+parsing, and focused-selector preservation across every listed input. The source
+budget permits existing incidental growth of five MainWindowFocusController
+lines; no budget waiver was added.
+No full combined test-target compilation or suite execution, dynamic/Release
+artifact verification, or complete authoritative CI run has occurred yet. These remain
+required gates; separate local native results do not substitute for them.
+
+Reassessment follows root/personal AGENTS, continuous-code-quality, bmux-testing,
+architecture and shared-behavior guidance. The accumulated production changes
+retain existing browser theme resolution, matte appearance ownership and the
+shared safe PTY diagnostic classifier. Held initializer, reconnect and rejected
+ambient-target changes have not been accepted implicitly through conflicts.
+There are no new shipped strings in this integration-only resolution.
+
+### Shared socket fixture integration check
+
+The exact merged sources at `7e0a5f667` compile without warnings against the
+existing isolated build 778 module and CLI. The batch passes 43 parameter cases
+across nine test functions and five suites: Claude notification routing and PID
+lifecycle, Codex rejected ambient recovery, Claude SessionEnd scope, and Cloud
+attach retry contracts. The shared listener-only SO_NOSIGPIPE correction is used
+by every case; no helper implementation is substituted. The only standalone
+harness seams select the existing CLI path and invoke Swift Testing.
+
+Logs: `/tmp/maintenance-shared-socket-compile.log` and
+`/tmp/maintenance-shared-socket-native.log` (exit 0, 0.647 seconds). This is
+combined test-source/transport proof, not full integration proof: build 778
+contains the reviewed but still unpublished PR155 runtime correction, whereas
+the local composition still includes that PR's test-only published head. No app
+was built, launched, reloaded or quit. Complete combined compilation/runtime and
+authoritative CI/artifact gates remain open.
+
+
+## Managed appearance startup fixture contract
+
+Three legacy `KeyboardShortcutSettingsFileStoreStartupTests` methods expected
+neither application appearance nor terminal synchronization during launch and
+reload. The retained base app-host log reports 18 assertion failures across
+those methods. Commit `e788e5606` intentionally applies application appearance
+at launch while withholding terminal synchronization, then synchronizes on a
+changed reload. The former global environment override also allowed unrelated
+appearance observers to enter the fixture's recorded calls.
+
+`ManagedAppearanceStartupContractTests` replaces only those three methods with
+constructor-injected effects, a private notification center, disabled watchers
+and an owned settings file. Each synchronous MainActor case restores the exact
+three touched application-domain defaults values (including absent keys, without
+promoting registered/global fallbacks); no global environment provider or settings-store
+replacement is used. Dark, light and system launch cases assert one application
+appearance, zero startup terminal synchronization, an inert deferred drain and
+unchanged reload, then one changed-mode application and synchronization with the
+exact source. Repeated reload/deferred calls add no effects. System startup uses
+the injected system appearance; switching back to system clears the app override.
+All other legacy methods remain byte-identical.
+
+Focused Swift 6 compilation is warning-free against unchanged build 777. All
+three native cases pass. An additional native runner registers a system fallback
+and verifies all three originally absent application-domain keys stay absent
+after the suite, while the registered fallback remains visible. Each case seeds
+the legacy auto value before import so host registration cannot skip the import.
+A temporary negative control reinstating the obsolete
+no-launch-appearance and no-reload-sync expectations fails exactly six assertions
+across those three cases. No app build, launch, user settings change or production
+edit is required. Actual app-host execution remains pending; the existing focused
+browser app-host step includes the suite, tracked by matching canonical/local
+Project Truth caveats. Broader legacy CI is not claimed green.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing migration,
+behavior and local/CI references, architecture ownership/file/concurrency rules,
+and shared behavior. Reviewed owners are the file store's init/reload/managed
+side-effect pipeline and AppearanceSettings' injected launch/live application.
+The existing UserDefaults-backed production storage remains unchanged; synchronous
+ownership avoids yielding while test defaults are installed. No shipped copy or
+localization catalog changes are introduced.
+
+The reviewed PR161 fixture is now included: the same appearance owner is checked
+through constructor-injected effects, with exact application-domain defaults
+restored after each synchronous case. All 21 source-head selector sets remain
+present; the final local wiring count is 479. Determinism, source budget, sharding,
+normalization and Project Truth checks pass again after this addition. This
+test-only integration does not alter the earlier shared-socket runtime result.
+
+### Agent launch environment persistence fixture
+
+The legacy session-start fixture rejected every socket request, including the
+current `surface.list` identity validation. Its persisted-record assertion failed
+on the base branch because the hook correctly ignored that inaccessible target.
+The replacement models an accessible workspace and surface through the actual
+bundled CLI. Two Swift Testing cases preserve the exact environment allowlist
+assertion: `CODEX_HOME` survives, while `PATH`, `SHELL` and other fixture state do
+not. A home path with spaces remains covered. Captured executable, launch cwd,
+source and sanitized arguments are also checked.
+
+This is a test-only baseline repair for the matte integration. Runtime routing,
+launch capture trust and the environment policy are unchanged. All other legacy
+tests in WorkspaceRemoteConnectionTests remain byte-for-byte unchanged. The
+fixture owns its temporary directory, process environment, output files and
+mock socket; shared CLISocketFixture owns asynchronous transport and cleanup.
+No real app socket, preferences or running build is touched.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing with migration,
+regression/wiring and local-vs-CI references, bmux-architecture file/API discipline,
+and bmux-shared-behavior/socket policy. The session-start target validation,
+AgentLaunchCaptureTrust, launch sanitizer and environment policy paths were
+inspected. Both native cases pass unchanged build 773 with warning-free focused
+compilation. A temporary negative control restoring the old rejecting mock fails
+both persisted-session assertions. Actual app-host CI and combined full-suite
+validation remain pending in the canonical/local focused-gate caveat. No shipped
+strings or catalogs change; localization audit covers contributor notes only.
+
+### First combined CI dispatch boundary
+
+PR162's reviewed session-start environment fixture is included with the existing
+shared socket helper. The composition now preserves all focused selectors from
+22 exact published heads and wires 481 test files. The conflicting adjacent
+legacy launch-environment and Codex Stop methods were both already migrated;
+resolution removes only the former from the prior integrated file.
+
+One ordinary push of this validation branch and manual dispatch of CI and
+Project Truth is authorized. No PR or main merge is created, and no source PR
+branch changes. The existing workflow runs all four full native shards, focused
+gates, package tests, build/lag, Release and unchanged-artifact relocation checks.
+It adds eight macOS jobs and ten Linux CI jobs, plus one Linux Project Truth job;
+queue time and execution results are unknown. The dispatch uses its own branch
+concurrency group with cancellation disabled. No existing run is canceled.
+Held PR151/153/155 production fixes remain excluded; expected regression failures
+are evidence to inspect, not a reason to weaken gates. Subsequent new PRs do not
+supersede or silently rerun this exact batch. The separate native proof above
+remains limited to its recorded source/artifact pairing.
+### SSH workspace creation fixture
+
+The legacy SSH creation test omitted the terminal surface ID from its
+`workspace.create` response and rejected `surface.list`. Persistent SSH PTY
+startup therefore correctly failed target resolution and attempted rollback,
+instead of reaching the configuration assertions. The fixture now represents
+the current create response. A second case exercises the supported fallback
+where an older create response omits the surface but `surface.list` supplies it.
+
+Both Swift Testing cases retain the original exit/output, ordered requests,
+window selection, SSH destination/port/identity/options, relay/auth metadata and
+nonempty startup-command assertions. Every other legacy test remains unchanged.
+No production code, terminal rendering, network service or running app changes.
+The fixture owns its process environment, state/output files and mock socket;
+the reviewed shared CLISocketFixture owns asynchronous transport and cleanup.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing and migration/wiring/
+local-vs-CI references, architecture file/API discipline and socket focus policy.
+The complete workspace create/resolve/configure/select/rollback owner was
+inspected. Both cases pass unchanged build 773 with warning-free focused
+compilation. A temporary negative control restoring the omitted surface and
+rejected lookup fails both cases on the original observable assertions.
+App-host CI and combined full-suite verification remain pending under the
+canonical/local focused-gate caveat. Localization audit: no shipped strings or
+catalogs change; contributor verification documentation only.
+### SSH agent environment fixtures
+
+Two legacy SSH agent tests relied on obsolete fixture assumptions. The tilde
+case changed `HOME` but not Foundation's home override, so the owned candidate
+was not found and the inherited agent path won. The caller-socket case required
+all `ssh_options` to be absent, although the CLI now adds multiplexing defaults.
+Neither failure demonstrates a production forwarding defect.
+
+The migrated Swift Testing cases own both `HOME` and `CFFIXED_USER_HOME`, the
+caller agent path and the optional tilde candidate. They verify the exact path
+in both workspace initial environment and remote configuration, preserve the
+explicit tilde option, and check that the no-option path adds no ForwardAgent
+override while permitting other defaults. A missing-candidate control verifies
+fallback to the owned caller path. Every other legacy method remains unchanged.
+The existence-only lookup uses owned empty files; no agent traffic is sent.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing with migration,
+wiring and local-vs-CI references, architecture/file discipline and shared/socket
+policy. Complete SSHAgentSocketResolver path resolution and the CLI forwarding
+selection/create/configure owners were inspected. Process environment, outputs
+and mock socket are isolated; transport uses the reviewed CLISocketFixture.
+No production, OpenSSH policy, terminal renderer or running app changes.
+
+Three native cases pass unchanged build 773 with warning-free compilation. A
+temporary negative control restoring HOME-only isolation and the nil-options
+assertion reproduces both original failures; the missing-candidate control
+still passes. Actual app-host CI and combined full-suite verification remain
+pending under the canonical/local focused-gate caveat. Localization audit: no
+shipped strings or catalogs change; contributor verification notes only.
+
+### SSH PTY bridge lifecycle fixtures
+
+Four legacy CLI tests expected an initial resize before every bridge EOF/reset,
+but their mock accepted only one RPC connection. Since `643906256`, resize uses
+an independent bounded connection and pending resize may be cancelled by EOF.
+The baseline app-host logs fail only that method-array expectation; the exit,
+error, detach and local attach-end assertions pass.
+
+`SSHPTYLifecycleContractTests` migrates those four methods to sixteen real-CLI
+cases: running session, gone session, absent surface and reset, each with a pipe
+(80×24) or PTY (132×43), and immediate or resize-acknowledged bridge closure.
+Immediate closure preserves the exact lifecycle sequence and validates any
+resize that wins cancellation. The second path closes only after the RPC mock
+writes the complete resize reply and requires exactly one resize with the exact
+workspace/session/attachment/token/dimensions before session reconciliation.
+Running sessions still return 254 and detach; gone/reset sessions return zero
+and clear the local surface; absent surfaces never detach or clear one.
+
+Ownership follows `AGENTS.md`, the continuous-code-quality skill, bmux testing
+migration/behavior/local-vs-CI references, architecture concurrency/file rules,
+and socket focus policy. The maintained `643906256` adjacent cleanup test and
+`CLISSHPTYResizeInputTests` establish the separate connection and native PTY
+contracts. The shared `CLISocketFixture` retains its reviewed transport and
+adds an optional response-written AsyncStream signal; the bridge and output
+channel own and join their native readiness sources. These tests use only
+owned loopback sockets, temporary homes, subprocesses and descriptors. No
+production or renderer behavior changes, global settings, app launches or
+new user-facing copy are involved.
+
+Local native compilation against unchanged build 773 is warning-free; all
+sixteen cases pass. A transport negative control suppressing resize requests
+fails all eight acknowledgement-gated cases at the bounded process deadline,
+while the eight immediate-close cases still pass. This demonstrates that
+accepting cancellation does not remove positive resize coverage. The focused
+browser-proxy app-host invocation includes this suite. Actual app-host CI
+execution remains pending under `ssh_pty_lifecycle_fixture_verification`;
+these local results do not establish full-suite acceptance.
+
+The output-channel fixture resolves each PTY path with `ttyname_r` and an owned
+buffer so parallel cases cannot race over `ttyname` static storage. A temporary
+concurrent native probe retained eight PTYs at once across eight batches and
+verified distinct paths plus exact marker delivery to each corresponding master.
+The sixteen CLI cases and constructor-failure cleanup proof also pass after
+this correction; app-host CI remains pending.
+### Consolidated SSH transport fixtures review boundary
+
+This branch consolidates #150, #160, #164, #167, #168, preserving each published source commit in
+its ancestry. Original branches remain available; superseded pull requests
+link to their replacement. This changes review organization, not application
+behavior. The preserved source heads are:
+
+- #150: `cf9e78dcb5df8dbc4dbadd82df673492ad33cbdf`
+- #160: `d58ea8aaa63284b48302763446964f74cbd94524`
+- #164: `d10e0deaa2e8d34e6f2f17057f43dd8a3d3021b5`
+- #167: `0d1223d04ad3f65f95c280d8d60050f11b808a21`
+- #168: `a289576a0c25890594493b489e43b8a0047c89cb`
+
+The native-settings and SSH replacement PRs depend on #142 for authoritative
+CI exit reporting. The agent-session replacement stacks on SSH to share one
+reviewed socket fixture. Existing focused selectors, full-suite coverage and
+canonical/local verification caveats remain intact. No failed, incomplete or
+cancelled run is treated as green. The original combined validation branch
+remains unchanged and does not verify these new heads.
+
+Local consolidation checks cover source ancestry, test-content preservation,
+Xcode wiring, selector discovery, determinism, file budgets and generated state.
+Full app-host compilation/execution and required checks on the replacement heads
+remain pending. No app build, launch, settings or localization catalog changes
+are part of this consolidation.
+
+A combined native run of the SSH and agent fixture sources against existing
+build 773 executed 22 test functions in 14 suites and failed with three
+fixture errors: one immediate-close SSH PTY case returned POSIX EIO; two Codex
+Stop cases returned POSIX EINVAL. These are unresolved concurrency-sensitive
+verification failures, not a green combined result. Compilation succeeded with
+a non-Sendable callback warning inherited from the unchanged PR150
+SSHExitedPTYClient fixture, whose callback crosses a legacy queue boundary. Prior isolated passes apply to their individual fixtures and artifacts;
+they do not establish combined-suite success; neither the warning nor the new combined failures is waived.
+
+
+### Consolidated socket cancellation follow-up
+
+The first replacement run completed all four app-host jobs with failures; the
+full-suite assertions and deadlines remain authoritative. The shared fixture
+error was reproduced locally with the same 22 test functions and 14 suites:
+operation-labelled diagnostics identified `EPIPE` when replying to a
+`workspace.remote.pty_resize` that the CLI canceled after bridge closure. The
+fixture now closes only that client connection, preserves the captured request,
+and emits no response-written acknowledgment for the canceled reply. Other
+write errors still fail. The eight resize-acknowledged cases and all lifecycle
+assertions are unchanged.
+
+The legacy RPC callback fixture now documents and narrows its immutable transfer
+to the protocol-supplied delivery queue, matching the existing subscription
+ownership contract. Swift 6 compilation is warning-free. The combined native
+batch passes against the existing build 773 artifact after the shared fix and
+the agent branch's duplicate-server removal. This is focused fixture evidence,
+not proof that all replacement-head app-host tests pass.
+
+Both inherited CI reporting capabilities are restored in Project Truth. The
+new exact-head checks remain required. Existing broad failures, including
+inspector crashes, terminal readiness assertions and a stale-control-socket
+process deadline, are not waived by the focused result.
+## Codex monitor lease fixture (2026-10-12)
+
+The existing Option/Alt invocation also selects `CodexMonitorLeaseTests` before
+unchanged full coverage. Canonical and local Project Truth caveat
+`codex_monitor_lease_fixture_verification` tracks actual pushed-head app-host
+verification as pending. No runner, retry or deadline policy changes.
+
+The old `testCodexPromptSubmitRetiresPreviousMonitorLeaseForSameSession` submitted
+two unfinished turns and expected the second to replace the first lease. That
+fixture predates the nested-turn stack policy: lease coverage arrived in
+`92c8229d6`, then `e43ac6dd3` made unfinished overlapping turns nested. Default
+subagent suppression intentionally preserves the parent lease. Baseline CI
+`/tmp/matte-base-apphost4.log:73562` records the stale expectation.
+
+Only that method migrates to Swift Testing. A sequential case supplies an
+authentic prior-turn `task_complete` transcript, verifies one new active lease,
+exact session/workspace/surface/turn, depth one, and retirement of the former
+lease. The monitor may already remove its retired record; if the record remains,
+`retiredAt` must be set. Record removal is normal retirement completion, not a
+persistence requirement. A separate unfinished nested case preserves the exact
+first lease while recording depth two and both turn IDs.
+
+`CodexMonitorLeaseFixture` owns the protocol, isolated child environment, files,
+lease snapshots and detached monitor cleanup. It reuses the reviewed async
+`CLISocketFixture`, including listener-inherited SIGPIPE protection, readiness
+sources, partial writes and awaited descriptor teardown. `CommandRunner` uses
+owned positional stdin/stdout/stderr files with the original five-second process
+deadline. Snapshots occur after native hook completion; there is no test polling
+or arbitrary accept count. Cleanup matches only the actual CLI plus this
+fixture's unique lease path, including the transient nohup command, and joins
+native process-exit observation before deleting owned files. DispatchSource
+process observation is a narrow OS-lifecycle bridge behind an async method;
+Foundation has no Process handle for these CLI-owned detached descendants.
+No real app socket, user configuration or preferences are used.
+
+Unchanged build 773 passes both cases in the native harness. A temporary control
+replaces `task_complete` with `task_started` and produces five sequential-case
+failures, including `retiredAt`; another disables subagent suppression and
+produces two nested-lease failures. Logs are
+`/tmp/codex-monitor-lease-native-green.log`,
+`/tmp/codex-monitor-lease-negative-completion.log`, and
+`/tmp/codex-monitor-lease-negative-nesting.log`. The earlier five-scenario native
+diagnosis and history are in `/tmp/codex-monitor-lease-diagnosis.md`.
+These are focused local results, not full app-host green. This correction changes
+no production code, shipped strings or localization catalogs and requires no app
+build or launch.
+
+Guidance: root/personal AGENTS, continuous-code-quality, testing migration and
+behavioral quality, architecture file/concurrency rules, shared behavior, socket
+policy and Xcode wiring. Maintained behavioral references are
+`testNestedCodexPromptAndStopDoNotReplaceParentResumeBinding` and
+`testCodexStopAfterInterruptedPriorTurnStillNotifies`; lease mutation stays in the
+CLI session/monitor owners. All other legacy methods remain byte-identical. Project normalization/wiring
+(433 files), strict determinism (zero findings), base-aware source budgets, shard
+coverage (2,006 selectors), shard tests, runner-policy guards and Project Truth
+validation/generation/freshness pass. New fixture compilation is warning-free.
+### Respawn window option protocol fixture
+
+The legacy window-option regression expected `surface.send_text`; the maintained
+`respawn-pane` path uses `surface.respawn` with both a shell command and the
+original `tmux_start_command`. Consequently the old mock rejected the valid RPC
+before it could check that `--window` stayed out of the command text.
+
+The migrated Swift Testing case covers the window option before and after a
+positional command, plus explicit `--command`. It preserves window lookup,
+focused-surface targeting, request order and successful completion checks. It
+asserts the original command is exactly `echo fresh`, then executes the emitted
+shell command in the owned fixture environment and checks its output. Every
+other legacy test remains unchanged. There is no runtime or terminal change.
+
+Guidance: root AGENTS, continuous-code-quality, bmux-testing migration/wiring and
+local-vs-CI references, architecture/file discipline, shared-behavior and socket
+focus policy. The CLI option parser, respawn owner and shell-command builder were
+inspected. The test owns temporary files/process state; the shared reviewed
+CLISocketFixture provides joined asynchronous transport. No real app socket,
+preference, window or surface is targeted.
+
+All three cases pass unchanged build 773 with warning-free focused compilation.
+A temporary negative control restoring the obsolete send-text mock fails all
+three cases. Actual app-host CI and combined full-suite validation remain
+pending under the canonical/local focused-gate caveat. Localization audit: no
+shipped strings or catalogs change; contributor verification notes only.
+### Consolidated agent session fixtures review boundary
+
+This branch consolidates #146, #152, #157, #159, #162, #165, #166, preserving each published source commit in
+its ancestry. Original branches remain available; superseded pull requests
+link to their replacement. This changes review organization, not application
+behavior. The preserved source heads are:
+
+- #146: `7f48a469821734062ad0c8de95da690cea3e5f4c`
+- #152: `637ae2ede4f18445487574e29988b1aa1befca04`
+- #157: `78cbde9b63acb7ea92929ca17ce9e4bc73fd68fb`
+- #159: `994e34f6512abf871b839b7957d56f2739671314`
+- #162: `90503d88c5f4cb0f69745dfb6b886755fe3ece12`
+- #165: `34f10e69b8fc9b554014ff830d775648dc0cb368`
+- #166: `971a35dfc91986d943ca74a8485139c7f31d8ae7`
+
+### Agent fixtures after shared transport correction
+
+Codex Stop now uses `CLISocketFixture` with its existing response model and
+unchanged transcript, status and notification assertions. The duplicate server
+was removed from the test target. Controlled native diagnostics reproduced
+`EINVAL` while that duplicate configured an accepted socket after its peer had
+closed; the shared transport configures the inherited option only on its listener.
+The corrected SSH transport and both inherited CI capability entries are merged
+from the SSH replacement once.
+
+The first agent replacement's focused invocation failed five issues across 41
+test functions in 10 suites: two session-start process deadlines and three SSH
+PTY fixture errors. The timeout cases do not reproduce in the focused native
+batch; their existing deadline assertion now includes the owned request trace
+for diagnosis. No deadline or behavior expectation is relaxed. The combined
+22-function, 14-suite native batch against existing build 773 passes with
+warning-free compilation after these corrections. Broader app-host assertions,
+crashes and deadlines remain unresolved until new exact-head CI demonstrates
+completion. No application or terminal-engine code changes.
+### Consolidated native settings fixtures review boundary
+
+This branch consolidates #145, #147, #149, #154, #156, #158, #161, preserving each published source commit in
+its ancestry. Original branches remain available; superseded pull requests
+link to their replacement. This changes review organization, not application
+behavior. The preserved source heads are:
+
+- #145: `b275c76c3d1a14aec865f07de8d7b2cfa96c92cc`
+- #147: `537681592de0f1a51b00308a2fa3834f31959b49`
+- #149: `2b8592920ed58232e9506c14ba6e4842d2982f14`
+- #154: `b25ad79c66f064dfad82754642666b5fcf22a2a8`
+- #156: `d5350d19b490fc1d3505dfeb635513be0d672c49`
+- #158: `83ff7d17c9cefb5be4ca644c558ea60251b67073`
+- #161: `c3644da9c64d4498dbe5d7cae855c17029773457`
+
+The native-settings and SSH replacement PRs depend on #142 for authoritative
+CI exit reporting. The agent-session replacement stacks on SSH to share one
+reviewed socket fixture. Existing focused selectors, full-suite coverage and
+canonical/local verification caveats remain intact. No failed, incomplete or
+cancelled run is treated as green. The original combined validation branch
+remains unchanged and does not verify these new heads.
+
+Local consolidation checks cover source ancestry, test-content preservation,
+Xcode wiring, selector discovery, determinism, file budgets and generated state.
+Full app-host compilation/execution and required checks on the replacement heads
+remain pending. No app build, launch, settings or localization catalog changes
+are part of this consolidation.
+### Deferred browser initialization verification (2026-10-12)
+
+PR 151 test-only CI job 114962906951 reproduced all four deferred-state
+assertions and ended with TEST FAILED. The one-line fix refreshes the existing lifecycle projection at
+initializer exit, covering deferred URL and URLRequest early returns without
+starting navigation or adding a state owner. Tagged build 777
+(`browser-initial-lifecycle`) succeeds without launching or replacing an active
+preview. The four focused cases pass against that native artifact in an isolated
+HOME (two deferred constructors and two empty-panel controls); the same tests
+report four initial-state issues against unchanged build 774. Focused compilation
+is warning-free. The app build retains 149 warning lines, matching the previous
+build, so this is not an app-wide warning-free claim. Unrelated discard/portal gates are outside this maintenance slice. Existing prewarmed adoption was inspected but not separately exercised by
+these four cases. The same four cases were revalidated on October 13 against
+the unchanged build 777 artifact. Exact fixed-head app-host CI remains pending.
+No shipped strings changed.
+## Rejected ambient workspace fallback regression
+
+`WorkspaceFallbackContractTests` replaces only the legacy trigger-flash stale
+caller test. Eighteen actual CLI cases cover trigger-flash and notify with an
+explicit surface shorthand: stale/absent/valid ambient identity, validated TTY
+recovery, explicit valid/invalid workspace targets, window targeting, missing
+current selection and selection RPC failure. The socket fixture accepts exactly
+the intended workspace/surface pair and notification payload, rejects unexpected
+commands (including focus mutations), and checks explicit invalid requests fail
+without falling back to a different target. Valid ambient and TTY recovery cases
+return the intended identity at index 0 unfocused, alongside a different focused
+surface at index 1. Flash must retain the identity surface; notify's explicit
+`--surface 0` must retain index selection. Other fallback scenarios keep their
+actual target focused. The reviewed shared CLISocketFixture is reused
+byte-for-byte, with owned file capture and joined socket cleanup.
+
+On unchanged build 773, six cases fail with 18 assertions: the two stale-ambient
+success paths and their missing-current/server-error controls. Twelve controls
+pass. Compilation is warning-free. The shared fallback owner rejects the stale
+workspace through surface.list and tries a validated TTY binding, but then calls
+resolveWorkspaceId(nil), which rereads that rejected BMUX_WORKSPACE_ID. The
+correction at this exhausted fallback boundary reuses currentWorkspaceId with an
+optional window context; the general omitted-selector policy stays unchanged.
+Explicit target and window routing remain authoritative.
+
+Test-only CI job 114995800376 reproduced the six affected cases with 18
+assertion failures and TEST FAILED. Isolated build 780
+(workspace-fallback-recovery, never launched) passes all 18 cases against its
+actual CLI, including the focused decoys. An input-only negative control selects
+decoy index 1 in the four ambient/TTY cases and fails exactly their identity
+assertions. A wrong-current-workspace negative control also rejects incorrect
+flash and notification targets. Native compiles are warning-free; the changed
+CLI file has no compiler warnings. Existing app concurrency/deprecation,
+optional cargo and asset warnings remain outside this repair. The new
+missing-selection callsite preserves English wording and has parsed
+English/Japanese catalog entries. Exact fixed-head app-host CI remains required.
+The focused suite joins the existing browser app-host step without
+an additional runner, tracked by matching canonical/local Project Truth caveats.
+Broader legacy CI is not claimed green. Other WorkspaceRemoteConnectionTests
+methods remain byte-identical.
+
+Guidance: root/personal AGENTS, continuous-code-quality, architecture ownership,
+file/API/concurrency rules, Swift Testing migration/behavior/local-CI guidance,
+shared behavior and socket threading/focus policy. Relevant inspected owners are
+both command branches, workspace/surface normalization, fallback selection,
+validated TTY lookup and current-workspace query. No global environment mutation,
+app focus operation, renderer edit or user app action is part of this slice.
+No shipped strings or localization catalogs changed in the test-only commit.
+
+The final source-budget check found the fallback repair grew the already oversized
+CLI by three lines. The adjacent unused `resolveSurfaceIdForClaudeHook` private
+forwarder was removed; repository-wide search confirmed it had no callers. The
+shared `resolveSurfaceIdAllowingFallback` owner remains unchanged. This reduces
+source size without moving responsibilities or raising the legacy budget.
+Independent review cleared the removal. Final isolated build 782 succeeds, and
+its actual bundled CLI passes all eighteen routing cases. Warning-free native
+fixture compilation, the source budget and Project Truth validation/freshness
+checks pass. Exact published-head app-host CI remains pending.
+
+### Notification timeout evidence on the replacement head
+
+Run 38416355276, job 115363087236, completed the focused Claude notification
+suite in 0.256 seconds. In the full Swift Testing wave, three of its four cases
+then failed the migrated five-second process deadline (later found to omit the original
+20-second CI minimum); that suite took 19.129
+seconds. Many unrelated process tests timed out in the same wave. Earlier
+session-start failures occurred in a focused invocation, so broad concurrency
+alone is not an established explanation for both failures.
+
+Controlled native execution against unchanged build 773 passed the six launch
+and notification cases, the same cases alongside seven original caller/Sentry
+cases, and a MainActor caller control. These results do not reproduce the CI
+failure or justify changing scheduling, process ownership, or deadlines. The
+notification fixture now retains its owned request trace and output-file read
+results on timeout. All success-path assertions remain unchanged. Four actual
+notification cases pass locally; an owned fake child intentionally exceeding the
+existing deadline fails all four cases and reports both output markers. This is
+diagnostic coverage, not a timeout repair or a full-suite pass. No app behavior,
+user preferences, localization strings, or active app builds changed.
+
+### Initial resize acknowledgement diagnosis
+
+Run 38415496749, focused app-host job 115360361616, completed 35 test functions
+in five suites with eight failures: every acknowledged-resize SSH PTY case hit
+the then-configured five-second process deadline. The later deadline-policy audit
+found that migration had omitted the original 20-second CI minimum. All eight immediate-close variants
+passed. This is a remaining failure after the earlier per-client EPIPE fix.
+The maintained CLI still requests its initial resize, using a single RPC with a
+50-millisecond deadline; failure of that request is a candidate, not an established
+cause. The run exposes no tested CLI artifact for an exact-binary local replay.
+
+The fixture now reports its owned requests, handshake, bridge completion, existing
+resize-observed/input-ended flags and output on failure. It adds no mutable state,
+retry, signal, deadline or scheduling change. Sixteen cases pass against unchanged
+build 773 with warning-free Swift 6 compilation. A temporary control suppressing
+only the resize acknowledgement event fails the eight acknowledgement cases and
+passes the eight immediate-close cases; diagnostics show the actual resize request,
+handshake and missing observation. That demonstrates diagnostic sensitivity, not
+that CI lost the same event. Actual CI traces and a causal correction remain required.
+
+Normal completion now drains the finished response-observation stream before
+finishing the bridge event stream. The sole caller joins and finishes its socket
+producer before returning; canceling the consumer first could discard queued
+observations from the diagnostic snapshot. Errors still cancel and join the
+consumer, so a throw before producer startup cannot hang cleanup. This preserves
+the existing bridge-close predicate. The CLI deadline is five seconds locally;
+the deadline-policy correction restores its original 20-second CI minimum. It guarantees
+only consumed or queued observations, not delivery of every kernel EOF event.
+
+All sixteen native CLI cases still pass, as do temporary finished-response and
+pre-producer-error cleanup controls, with warning-free Swift 6 compilation. The
+old race cannot be forced deterministically through the current fixture boundary
+without an artificial scheduling hook; no source-shape test or timing assumption
+was added. This diagnostic correction does not establish the CI timeout cause.
+
+## Browser inspector window ownership verification
+
+The consolidated native app-host run for PR 170 at `45acbff54` still crashes in
+browser inspector fixtures. Retained earlier logs identify ten cases that die
+around native close/autorelease cleanup. An isolated native lifetime control
+reproduces the default `NSWindow.isReleasedWhenClosed` ownership conflict; setting
+that policy to false at construction avoids the control's crash. This supports
+the fixture diagnosis, but does not establish that full WebKit behaviors pass.
+
+Seventeen affected cases (sixteen direct-window cases and one adjacent synchronous
+close observer) move incrementally to one serialized Swift Testing suite.
+Directly owned windows use retained ownership from construction, including early
+close actions. App-created main windows retain the existing application owner.
+Teardown covers partial setup, panel/portal detachment, inspector associations and
+windows. Original routing, visibility, inspector-call, parent-identity and geometry
+assertions remain; untouched legacy case bodies remain in their original suite.
+Temporary shortcut values preserve application-domain provenance and routing
+captures end synchronously before an await.
+
+A DEBUG-only per-panel lifecycle observation stream replaces the migrated cases'
+run-loop polling. The stream reports completed synchronous mutations; consumers
+recheck authoritative transition intent, pending intent, settle work and detached
+close resolution. Existing transition/close decisions and timers are unchanged.
+Subscriber removal and panel close finish streams; termination holds no strong
+panel reference. The existing 2.85-second failure deadline is cancellable and is
+not used to settle or poll state. Seven additional owner-level cases cover queued
+replacement, no-change, close-resolution replacement, subscriber removal, consumer
+cancellation, observation-owner deinitialization and panel close. Settled state covers
+visibility transitions and detached-close resolution; it does not claim that all
+WebKit restore or dock-normalization work is idle.
+Explicit native layout calls replace fixed waits in portal/hosting cases.
+
+The existing focused browser invocation includes
+`BrowserInspectorWindowOwnershipTests` before unchanged full-suite coverage. Its
+matching canonical/local caveat remains open until actual app-host execution
+verifies all 24 cases and clean native teardown. No local foreground UI test or
+app launch is authorized by this fixture work. The minimal ownership control and
+compile/static checks must not be reported as full app-host verification.
+
+The complete affected source compiles without warnings in the test target's
+configured Swift 5 mode against the isolated `browser-inspector-readiness-repair`
+DEBUG module. The new suite and fixtures also compile in Swift 6 with the unchanged
+legacy hook prefix imported from a Swift 5 support module; the complete legacy
+file still has four nonisolated mutable globals that prevent a full Swift 6 check.
+Seven observation cases pass in an owned native harness with isolated HOME and
+app activation prohibited. This exercises the actual built lifecycle owner; it
+is not execution of the seventeen window/UI cases or full app-host coverage.
+
+The focused app-host job `115430721439` ran 71 test functions across nine suites
+and completed with exactly three issues in the window-close observer case: no
+inspector close before `willClose`, no close count, and retained visible state.
+XCTest composition disables `.browserAndDevTools`,
+so this case now installs an explicitly enabled, scoped runtime only for the
+synchronous close action and restores the original runtime after owned teardown.
+It starts no background services and retains every original assertion. An owned,
+offscreen control against the same built owner fails with the default disabled
+capability, still fails after responder-swizzle installation, and passes when only
+the browser capability is enabled. The actual main-window case still needs the
+next app-host run; this control does not claim that foreground UI verification.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing migration,
+behavior and local/CI references, architecture ownership/file/concurrency rules,
+debugging runtime pitfalls, shared behavior and native project wiring. No shipped
+strings or localization catalogs change; this section is contributor verification
+prose. This repair is integrated into PR 170; no separate PR is introduced.
+
+## Maintenance validation refresh (2026-10-13)
+
+This local composition replaces the earlier 87f0c2b5e candidate, retained on
+`maintenance-validation-before-oct13`. The earlier CI run cannot verify this
+composition. It includes the existing SSH and agent fixture diagnostics, the
+browser inspector ownership/observation repair, the browser initializer lifecycle
+fix, the workspace fallback fix and its source-budget cleanup, and the corrected
+whole-suite SSH reconnect regression selector. Source ancestry and focused
+selectors remain preserved; the obsolete reconnect method selector that ran zero
+tests is deliberately replaced by its enclosing suite.
+
+The complete Codex rejected-target and SSH manual-reconnect runtime corrections
+are included after their test-only CI runs produced the expected nonzero
+failures. The fixed Codex CLI passes sixteen routing cases and thirteen valid
+Stop cases against isolated build 781; reconnect passes twenty-five cases against
+unchanged isolated build 779. These native results do not replace fixed-head
+app-host gates. Seven browser observation cases pass against the isolated DEBUG
+module. Earlier focused app-host execution passed the migrated inspector cases
+except one window-close case; its explicit capability fixture correction still
+needs the fixed-head app-host run.
+SSH resize-acknowledgement and shared CLI process timeouts remain unresolved:
+added diagnostics preserve existing assertions, process deadlines and scheduling.
+
+The final combined native and artifact gates remain open. No incomplete,
+cancelled or older-head run is accepted as green, and no main-branch merge has
+occurred. Running user builds 773/775 were not modified. These are contributor
+verification notes; no shipped UI strings or localization catalogs change in
+this integration.
+
+## Global search shortcut conflict verification
+
+PR 170 job `115525529711` failed the legacy configured Show/Hide collision case:
+the recorder returned `conflictsWithAction(showHideAllWindows)`, while the test
+expected `reservedBySystem`. The named-action rejection was introduced by
+`1a95cbba8` for actionable recorder feedback and remains the shared validator's
+policy. This correction changes only that legacy test, not shortcut policy or
+Settings behavior.
+
+`GlobalSearchShortcutConflictTests` exercises the real validator through an owned
+managed settings file. It retains the exact configured target, adds a nil normalized
+shortcut assertion, distinguishes a hardcoded system reservation, and checks
+nonconflicting/unbound acceptance and configured-conflict precedence over the
+later system-wide chord rejection. Setup and restoration run synchronously on
+MainActor; managed-default metadata preserves persistent-domain provenance and
+volatile domains are restored. The fixture never calls `resetAll`, persists a
+shortcut, starts a watcher, or suspends with the scoped store installed.
+
+The existing focused browser/settings invocation includes the new suite. Its
+canonical/local caveat remains open until actual fixed-head app-host execution.
+Native build 773 owner verification passes four functions/six parameter cases
+in 0.046 seconds. Restoring the old generic expectation in a temporary control
+fails exactly once; temporary success/throw controls also verify store identity,
+persisted-key absence and volatile-domain restoration. These results do not
+establish full-suite or CI success. The native harness uses the
+target's Swift 5 mode without warnings; forcing Swift 6 exposes the retained
+legacy owner's nonisolated mutable `settingsFileStore`, not a new concurrency
+suppression. Governing sources are root/personal AGENTS, continuous-code-quality,
+bmux-testing migration/behavior/local-CI, architecture and shared-behavior rules.
+No production code or shipped strings change; localization catalogs are untouched.
+
+### Bounded app-host process diagnostics
+
+Broad tests on all eight PR shards and the focused shard 1 invocation enable the
+existing observer after acquiring the GUI-host lock. For a manual diagnostic
+dispatch, set `app_host_process_diagnostics` to true to enable those same
+invocations. Artifact upload runs even after failure and ignores absent output
+when an invocation did not run.
+
+The observer starts numeric process snapshots at the Swift Testing start marker
+and stops after 30 seconds. It records PID, parent PID, Darwin state, elapsed time,
+cumulative CPU nanoseconds and thread count only for the exact DerivedData Debug
+host and its bundled CLI descendants. It never reads arguments or environment.
+CLI stack eligibility requires one observed second alive; the host requires two.
+At most eight one-second samples run, at most two concurrently, at 10ms intervals.
+This has diagnostic overhead and may perturb scheduling; it is not a timeout fix.
+
+The sample worker has five seconds to finish, including symbol processing after
+the one-second capture. This allowance does not change native test deadlines, the
+30-second observation window, sample count/concurrency, or the observer shutdown
+bounds. The command explicitly directs its output to `/dev/stdout`, backed by an
+unlinked temporary file, so `sample` does not also create its default raw report.
+Artifacts retain only counted stack symbol frames, excluding dynamic thread/queue
+labels, headers, paths and binary image inventories. Each invocation/attempt gets a unique directory, uploaded even
+on failure. Missing logs are retried on the next observation tick. On test exit,
+the observer receives EOF; bounded shutdown escalates only against its own process
+group. Diagnostic errors never replace the test command's native exit status.
+
+The actual PR171 focused failure (job 115488618879, 41 functions/10 suites, 19 issues)
+remains unresolved. Local synthetic subprocess/filter/privacy checks do not prove
+macOS 15 app-host capture or identify a missing CommandRunner callback. The next
+combined dispatch must supply that evidence without changing test deadlines.
+
+Published D2 diagnostic evidence showed the host sampler killed with status -9
+at its previous two-second worker deadline, without a call graph. An owned ready
+Python child sampled locally took 2.430 seconds including symbol processing.
+Later warm runs with explicit stdout output finished in 1.257–1.634 seconds; these
+do not reproduce the slower run. They did retain 15 sanitized symbol frames,
+created no default raw report, and joined both the sampler and owned target.
+
+A temporary controlled-worker proof exercised the actual observer with pipe
+readiness and a virtual clock: at 2.5 seconds the old allowance killed the worker,
+while five seconds allowed real output and successful completion. Overrun and
+stop controls killed and joined the worker and closed its unlinked capture.
+Existing status/forced-stop tests retain the native command's result. This repairs
+diagnostic collection only; it does not identify the CLI failure cause. Actual
+macOS 15 app-host graph collection remains pending. No app or user process was
+sampled for local proof, and no arguments, environment, or raw payload entered
+its artifacts.
+
+### Remote tmux CRLF record parsing
+
+Current app-host job 115525529711 failed the existing
+`preservesNameWhitespaceAndStripsLineTerminator` assertion. Swift Character
+splitting treats CRLF as one grapheme, so splitting on an LF Character leaves
+CRLF in a name and can merge several records. The shared parser now splits the LF
+substring; its existing single trailing-CR removal and empty-line handling remain.
+The transport, remote commands, malformed-record policy and name whitespace are
+unchanged.
+
+Test-only commit `b95727d60` adds LF/CRLF multi-record controls with blank lines,
+Unicode/padded names, embedded colons and an unterminated final record. Against
+the unchanged production parser, the complete suite compiled without warnings and
+failed exactly two issues: the existing assertion and the new CRLF case. The
+fix in `7f3c6513e` passes all nine functions (ten cases). These are actual compiled
+parser/value sources with unchanged test assertions, not source-text tests.
+The earlier actual CI failure supplies the existing regression red evidence;
+no failing result was hidden or changed to an expected failure.
+
+Root/personal AGENTS, continuous-code-quality, bmux-testing, architecture and
+shared-behavior guidance were applied to the complete parser, session value,
+transport caller and tests. The parser remains the single session-record owner;
+no new state, dependencies, user-facing strings or localization keys are added.
+Fresh isolated combined builds 783 and 784 succeeded without launch; build 783
+executed all nine parser functions (ten cases) successfully with warning-free
+focused compilation. The app/runtime source in this publication is unchanged
+from that verified parser correction. Full combined app-host CI remains open.
+
+### Remote tmux parser regression execution
+
+The test-only CRLF coverage at `b95727d60` did not execute in broad shard 3:
+job 115627514126 of run 38494255765 stopped after a 300-second idle deadline
+with exit 124 during unrelated legacy XCTest execution. This is a coverage
+blocker, not evidence that the parser regression failed.
+
+The existing first focused app-host invocation now also selects
+`RemoteTmuxSessionListParserTests`, so Swift Testing executes the LF/CRLF cases
+before broad legacy XCTest work. The full shard selectors, runner count,
+deadlines and assertions are unchanged. Test-only focused job 115650904190
+of run 38501744697 then executed the parser suite and failed exactly the
+existing whitespace assertion and new CRLF multi-record case, with exit 65.
+The full focused invocation reported 44 functions / 6 suites / 20 issues: the
+two parser failures plus 18 CLI deadline failures, which remain unresolved.
+The reviewed parser correction is published with both source ancestries retained.
+Fixed-head parser and full combined CI verification remain pending.
+
+## Download quarantine boundary verification
+
+PR 170's browser/settings job fails the two URL readback assertions in
+`webDownloadQuarantineMetadataMarksRemoteDownloads`. LaunchServices preserves
+quarantine type, agent and timestamp but can omit the optional URL fields. The
+same result occurs with the unchanged writer in an owned native file and in a
+bundled helper with `LSFileQuarantineEnabled`; it is not unique to an unbundled
+command-line harness. The SDK's `LSQuarantine.h` documents these URLs as present
+“if available”.
+
+`BrowserDownloadQuarantineMetadata` owns the exact pure value submitted by the
+existing URL writer. It preserves the existing HTTP(S) filter, credential/query/
+fragment removal, type, timestamp, agent and optional bundle identifier. The
+writer still owns native persistence and throws the same errors. Both session
+and WKDownload callers retain their existing temp-file marking before move or
+replacement and final-path marking. This extraction adds no settings, callbacks,
+state owner, rendering changes or error suppression.
+
+`BrowserDownloadQuarantineTests` checks exact outgoing sanitized URLs and all
+other metadata, unsupported schemes, empty/absent bundle identifiers, actual
+native quarantine persistence and nil/local-source bypass. Native readback must
+still contain the type, agent and timestamp; any returned URL must be typed and
+match the exact sanitized value. Outbound assertions use the actual resource
+values passed to the writer, so optional OS readback cannot hide a sanitization
+regression. The focused browser/settings invocation includes this suite, and the
+existing filename-resolution suite retains its other assertions.
+
+The extracted source and focused suite compile in Swift 6 without warnings.
+Five functions/nine parameter cases pass locally on macOS 26. A temporary
+control bypassing sanitization fails with ten exact URL assertions, while native
+persistence checks still pass. Subsequent committed-module verification passed
+as recorded below; full app-host execution remains pending and the canonical/local
+caveat stays open. Native readback evidence does not claim macOS 15 CI success.
+
+Retained policy caveat: the existing writer sets origin equal to the sanitized
+download URL. The SDK recommends a distinct referring page or no origin to avoid
+redownloading when the origin is opened. This boundary correction deliberately
+preserves that existing policy; choosing a referring page belongs to a separate
+browser download behavior change.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux architecture
+ownership/file/concurrency rules, bmux-testing behavior/migration/local-CI and
+Xcode wiring rules, and the SDK quarantine contract. Complete shared writer and
+both caller flows received independent review. No user-facing strings, settings,
+menus or help text change; localization catalogs are untouched. This correction
+is integrated into PR 170, with no new PR.
+
+### Combined artifact 784 verification
+
+The fresh isolated maintenance-integration build succeeded at combined source
+`9a5f2cc88` without launch; its reviewed production sources match this PR.
+Quarantine metadata and panel appearance passed six functions/eleven cases in
+strict Swift 6 with no compiler warnings. The two FilePreview shortcut cases
+passed in the actual Swift 5 test-target mode with no compiler warnings. The
+existing mutable static settings owner prevents forcing that fixture into Swift 6,
+as documented above. Build warning budget was 126/221; this is not a claim of a
+warning-free app build. The earlier build 783 separately passed the parser,
+Global Search, reconnect and remote-working-directory owner checks.
+
+These focused native results do not replace macOS 15 app-host execution or the
+full dependency-complete CI gates, which remain open. No active user app was
+rebuilt, launched, quit or replaced.
+## File preview save-shortcut fixture verification
+
+Actual app-host jobs `115439961432` and `115439961123` accept the configured and
+chorded save events, but the two legacy tests write empty files. Both construct
+`SavingTextView()` with a nil text container. Native build 773 reproduces the
+failure before key dispatch: this view has no text storage or container and its
+string stays empty after assignment. Production uses `makeFilePreviewTextView`,
+the explicit TextKit 1 factory introduced by `a86c58363`; the factory preserves
+text and both real shortcut/save paths write the expected content.
+
+Only those two methods migrate to `FilePreviewSaveShortcutTests`. Storage and
+content preconditions guard the native fixture. Original key handling, chord
+prefix no-save and final file assertions remain, with an additional remapped
+old-default negative control. The existing editing protocol's test adapter
+captures the actual panel save Task so the test can await completion without the
+legacy yield loop. No save, routing or timeout policy changes. Managed shortcut
+setup/restoration is synchronous and finishes before any await; owned files and
+panels are released afterward. Other legacy test bodies remain unchanged.
+
+An owned native four-case control compares both constructors through the actual
+panel save owner; requiring intended content fails exactly the two bare-editor
+cases and passes both factory cases. The corrected two-case suite compiles
+without warnings in target Swift 5 mode and passes against unchanged build 773. Forced
+Swift 6 compilation is blocked by the existing mutable static
+`KeyboardShortcutSettings.settingsFileStore` owner, as in the Global Search
+fixture; no suppression or new unsafe declaration is added. That legacy owner
+migration remains outside this test-only correction.
+The focused browser/settings gate includes it, and the canonical/local caveat
+stays open pending fixed-head app-host CI. These local results do not claim
+full-suite success or execution on CI's macOS 15 runner.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux-testing migration,
+behavior and local/CI references, architecture/concurrency and shared-behavior
+rules, and debugging runtime pitfalls. Production code and shipped strings are
+unchanged; no localization catalog edits are required.
+
+## Panel appearance compositing verification
+
+App-host job `115439961299` fails the legacy transparent-opacity case because it
+expects background alpha 0.42 while the shared chrome background is opaque.
+Commit `379033c4b` intentionally changed `GhosttyBackgroundTheme.color` to
+`WindowAppearanceSnapshot.compositedTerminalColor`; `WindowChromeColorResolver`
+blends the terminal RGB over the resolved window background and returns alpha 1.
+`PanelAppearance` independently preserves clear content for transparent terminals.
+
+Only that method migrates to `PanelAppearanceCompositingTests`. Aqua and Dark Aqua
+cases retain clear-content, disabled-fill and zero-content-alpha assertions with
+the original tolerance. Expected RGB is calculated independently from the terminal
+color, 0.42 opacity and the appearance-resolved window background. Scoped native
+drawing appearance restores the previous appearance without changing application
+or user settings. All other legacy methods remain unchanged.
+
+The focused browser/settings gate includes the new suite. Unchanged build 773
+native proof passes both appearances; restoring the original 0.42-alpha assertion
+fails exactly both cases. The matching canonical/local caveat stays open until
+fixed-head app-host CI verifies the migrated suite. No production policy, rendering
+or shipped copy changes. Governing guidance is root/personal AGENTS,
+continuous-code-quality, bmux-testing migration/behavior/local-CI, architecture,
+shared behavior and OS-sensitive debugging; localization catalogs are untouched.
+
+
+## Titlebar product contract fixture verification
+
+The remaining titlebar failures assume a default sidebar width equal to its
+minimum and a control list without voice input. Commit `2c783a9ee` intentionally
+increased the workspace-card default to 340pt while retaining the 240pt resize
+minimum, and `d5c2a521f` added the voice-input control and its shortcut hint.
+The shared padding owner follows the visible sidebar width and uses the minimum
+when hidden; the control and minimal-mode routing both include voice input.
+The old fixtures conflict with these maintained product changes.
+
+`TitlebarProductContractTests` replaces only those two expectations. It checks
+the existing width policy and the helper’s exact 352pt/252pt output for an
+explicit 240pt absolute-minimum input, and
+retains the full ordered hint-action assertion with voice input between
+notifications and new workspace. Existing minimum-width no-shift, wider-sidebar,
+fullscreen and other hint-policy tests remain unchanged. These controlled
+helper inputs do not claim the live configured-minimum default, whose separate
+policy caveat remains recorded. The new suite is wired
+into the native test target and focused browser/settings gate. No production
+layout, navigation, shortcuts, settings or strings change.
+
+Both old expectations fail against the unchanged build 784 app module with
+exactly two issues. The corrected two functions pass in Swift 6 without warnings
+against that same module. This local macOS 26 evidence does not establish the
+macOS 15 full app-host result; the canonical/local caveat stays open pending CI.
+Governing sources are root/personal AGENTS, continuous-code-quality, bmux-testing
+migration/behavior/local-CI/wiring rules, architecture ownership, and maintained
+ContentView padding and UpdateTitlebarAccessory control/hint consumers. The
+localization audit finds no changed shipped text or catalogs; this section is
+contributor verification prose. This correction belongs to PR 170, not a new PR.
+
+
+### Completed-close history and batched mobile frame fixtures
+
+The PR 169 shard 2 run `115650904163` failed the existing repeated-close history
+case with an empty shared store and the batched mobile frame case with a one-second
+signal timeout. The history test now observes its exact tab's completed
+`Workspace.didCloseTab` callback through a fully forwarding, per-controller
+Bonsplit delegate. It captures the resulting history before another suite can
+clear the shared store, then retains the original prompt, repeated-close,
+panel-removal, title and detail assertions. It restores the original delegate
+before tearing down its panels and isolated defaults. The ten-second deadline
+remains, without polling.
+
+The mobile fixture parks both callbacks with async streams before allowing the
+first to close. A test-target extension enters the existing actor-owned response
+drain before releasing that operation: this captures the task handles before
+`close` clears them. Every success, timeout and cancellation path releases the
+owned gates and joins those tasks. The original request payloads, exact
+`["workspace.list"]` assertion and one-second signal deadlines remain. No
+production owner, app-host selector or runtime deadline changes.
+
+Both exact cases pass together against the unchanged build 784 module. A
+controlled clear after the real close reproduces the old nil-history assertion,
+while the completed-close snapshot passes. An authorization-tail control proves
+that the old `isSubscribed` round-trip can return before authorization returns;
+it does not establish which signal timed out on CI. Missing-first and
+missing-second controls preserve the one-second failure and verify that the
+fixture deallocates after joining callbacks. A temporary exact copy of the
+mobile connection owner, with only its post-authorization close/cancellation
+guard removed, causes the unchanged method assertion to detect the additional
+`terminal.input` delivery. No repository production code is altered by that
+negative control. Fixed-head app-host verification remains pending.
+
+This bounded correction follows root/personal AGENTS, continuous-code-quality,
+bmux-testing migration/behavior/local-CI guidance, architecture concurrency and
+file ownership, and the real Workspace/Bonsplit and MobileHostConnection
+completion boundaries. The localization audit finds no changed shipped strings,
+settings, menus or catalogs; this section is contributor verification prose.
+
+
+### Narrow titlebar reservations
+
+The matte titlebar applied its leading-control reservation to both edges. Native
+measurements at 600/700pt with the default 352pt reservation gave the title zero
+width and moved the build badge beyond the trailing edge. `WorkspaceTitlebarLayout`
+now reserves the existing leading width once and measures the optional badge.
+It keeps the title centered in the titlebar band when it fits, otherwise truncates
+within the actual interval between controls and badge. It uses only existing theme
+gaps/insets and preserves the folder view, badge accessibility and control owner.
+
+Offscreen native verification against build 784 covered 80 combinations per theme:
+300/600/700/1092/1100pt, visible/hidden sidebar reservations, short/long titles,
+100/200% fonts and badge presence/absence. The 1092/1100pt short-title light PNGs
+remain byte-identical; at 600pt the default title is fully visible and the badge
+has its original 8pt trailing inset. No measured title slot overlaps the reserved
+controls or badge. The existing 300pt case with 352pt leading controls still has
+no title interval; this correction does not redesign those controls. The existing
+28pt band versus 30pt text at 200% is a separate vertical constraint, not a claim
+of complete magnification support. The same horizontal matrix was inspected in
+dark and light without ordering or activating a window.
+
+Root/personal AGENTS, continuous-code-quality, architecture file/concurrency rules,
+bmux-debugging runtime guidance and bmux-testing local/CI boundaries govern this
+slice. No layout-mirroring test or new CI selector is introduced for this reversible
+visual correction. Integrated tagged build and app-host verification remain pending.
+The localization audit preserves the existing English/Japanese badge accessibility
+key and folder tooltip; no shipped text or localization catalog changes.
+
+### Native socket readiness under combined CLI load
+
+Final carrier `95595b830` run `38509817630`, app-host shard one, failed with
+fifteen CLI deadlines and two browser-readiness errors. The CLI failures include
+all eight acknowledged-resize variants. These results remain failures; this
+fixture correction does not establish that every timeout has the same cause.
+
+A temporary per-instance event counter reproduced unbounded duplicate native
+readiness delivery: level-triggered callbacks kept yielding while the async I/O
+consumer had not yet drained the descriptor. On the same unlaunched build 785
+and frozen 38-function/18-suite source matrix, the old helper emitted 1,467,210
+notifications and reached 78,718 pending events in one fixture. The corrected
+boundary emitted 1,028 notifications and peaked at three pending events per
+fixture. Both same-artifact executions passed (old 5.469s, corrected 4.930s).
+An earlier old-helper execution on build 784 failed eight resize cases. These
+samples prove redundant queue growth, not deterministic timeout causality or a
+failure-frequency comparison; counter instrumentation also adds overhead.
+
+`CLISocketReadiness` owns one native descriptor/source lifetime. A synchronous
+three-state guard only balances the native callback's suspend against the sole
+I/O consumer's acknowledgement or cancellation. This is the architecture's
+native-callback compare-and-set carve-out, not a lock over capture/parser state.
+The handler yields once and suspends; the I/O task services its token and rearms
+it. The completion event is separate and reliable, and the final pass still
+accepts and reads all queued clients even when tests withhold native delivery.
+Weak callback ownership prevents a source/owner cycle. Teardown installs the
+cancel handler before cancel, balances a suspended source once, and joins its
+file-descriptor close. The sole serving task owns teardown; acknowledgements
+after closure are inert. Response parsing, complete-write acknowledgements,
+EPIPE handling, final-drain backpressure errors and all deadlines are unchanged.
+
+The seven existing transport cases pass with the proposed boundary, including
+withheld listener/client delivery, one-way/mixed frames, operation failure and
+backpressure. Three temporary native lifecycle controls verify armed/suspended
+closure, descriptor invalidation, owner deallocation and rearming for subsequent
+input. No source-shape test or new scheduling hook is added. The intermediate RPC-only non-instrumented source on build 785 completed all
+38 functions/18 suites with one remaining acknowledged-resize timeout
+(`running`, pipe stdout); the other seventeen suites and all seven transport
+cases passed. The same shipping source passes all sixteen SSH lifecycle cases
+in isolation (0.110s) and all three native source-lifecycle controls. Strict
+Swift 6 compilation is warning-free. The full matrix is still red, and neither
+the isolated result nor reduced queue growth resolves that timeout or proves
+its cause. Actual fixed-head app-host verification remains required.
+The independent CommandRunner blocking-reader caveat remains open.
+
+Guidance: root/personal AGENTS, continuous-code-quality, bmux architecture
+concurrency/file discipline, testing regression/local-CI rules, shared behavior
+and socket policy. Only test infrastructure and contributor evidence change;
+there are no production changes, new shipped strings or localization entries.
+
+
+The remaining resize case prompted inspection of `SSHPTYLifecycleBridge`, which
+had an independent level-triggered readiness stream. A temporary native counter
+measured up to 13,407 pending events for one bridge's single accept, handshake and
+EOF while the RPC fixture was already bounded; that matrix had two resize
+failures. The bridge now reuses the same descriptor owner. Its listener stays
+suspended after the single expected client is accepted; input rearms after a
+read and remains suspended after EOF until joined closure. The synthetic resize
+acknowledgement remains an independent reliable event. Existing SO_NOSIGPIPE
+configuration precedes listen so accepted descriptors inherit it before any
+producer connects. The close predicate and all lifecycle assertions are intact.
+
+The resulting exact non-instrumented source passes all 38 functions in 18 suites
+on build 785 (4.571s), including all sixteen SSH lifecycle and seven transport
+cases; strict Swift 6 compilation is warning-free. This resolves both measured
+unbounded queue owners, but does not prove the cause of every macOS 15 CI timeout.
+The earlier failing matrices remain part of the evidence, and the final
+combined app-host gate is still required. A temporary control that suppresses
+only resize-response observations still fails exactly the eight acknowledgement
+cases at the local five-second deadline; all eight immediate-close controls
+pass. This verifies that the new native-source lifecycle does not fabricate the
+resize event or weaken the bridge completion predicate.
+
+
+### Persistent SSH child-exit sibling tracking
+
+Final C run `38509817630` shard 4 failed the existing split persistent-PTY
+child-exit case: closing one child left both panels visible but cleared the
+sibling's active-session tracking. The same case reproduces against unlaunched
+native build 785, with only the active-count and sibling-tracking assertions
+failing. Last-surface disconnect and already-ended-attach controls pass. The
+sibling's saved PTY session ID and remote configuration remain unchanged.
+
+`Workspace.markPersistentRemotePTYAttachFailed` now invokes workspace-wide
+disconnect only when its active remote surface set is empty, matching the
+existing session-ended owner. Per-panel cleanup, placeholder handling, browser
+status and directory notifications remain on the same path. This preserves
+last-surface teardown without stopping a sibling's shared remote controller.
+
+The baseline probe used an owned HOME and XCTest environment established before
+execution, no foreground windows, and the existing SSH cleanup override. Its
+`autoConnect: false` fixture has no live controller, so live controller identity
+preservation remains source-reviewed only. Source parsing and diff checks pass;
+fixed-code native execution and actual macOS 15 app-host verification remain
+pending. Shard 4 ended with exit 124, leaving full-suite coverage incomplete.
+The canonical `persistent_pty_child_exit_verification` and existing full-suite
+caveats remain open. No deadline, assertion or runner policy changed. The
+localization audit finds no shipped string or catalog changes; this is
+contributor verification prose.
+
+
+### Workspace close ownership verification
+
+Authoritative combined shard 2 failed the existing
+`TabManagerWorkspaceOwnershipTests.testCloseWorkspaceIgnoresWorkspaceNotOwnedByManager`.
+The exact test also fails against unlaunched native build 785: an external
+workspace loses its panel and title map even though the manager's tab list and
+selection remain unchanged. The owned-HOME native probe reports exactly these
+two assertions; its focused compile is warning-free.
+
+`TabManager.closeWorkspace` now requires the passed workspace instance to belong
+to the manager before any coalescer, remote tmux, history, notification or teardown
+side effects. The existing last-workspace protection is unchanged. Current
+callers resolve owned model instances; checking reference identity prevents a
+foreign object from being destroyed through this reference-taking API. Workspace
+IDs are immutable and freshly allocated by the initializer, so no artificial
+same-ID test seam was introduced.
+
+The existing actual CI regression supplies the red evidence. Parsing and project
+state checks pass; the fixed native artifact and complete app-host suite remain
+pending under `workspace_close_ownership_verification`. No test assertion,
+deadline, localization catalog or shipped wording changed.
+
+
+### Portal geometry and workspace contract fixtures
+
+Four legacy cases now use the current owners: hidden anchorless terminals are
+pruned while visible entries remain available for drag recovery; typed terminal
+subview counts exclude portal chrome; deferred external geometry explicitly uses
+its two-hop queue path; workspace creation inherits font lineage into a clean
+config; PR publication is observed through `workspaceDisplayMetadataDidChange`.
+The four functions run as five Swift Testing cases, including both anchor-loss
+visibility states. Only their legacy bodies and the moved config fixture were
+removed; the remaining legacy cases are unchanged. Existing full app-host
+coverage remains the gate, with no selector, runner or timeout changes.
+
+The owned offscreen native harness against existing build 785 compiles these
+sources in Swift 6. It never activates or opens an app, and sets test mode,
+XCTest identity and isolated HOME/config paths before loading the module.
+Original native probes failed; corrected cases pass locally. Input controls for
+visible retention, immediate geometry delivery, wrong font lineage and changed
+PR state exercise the retained count, hit-test, font and deduplication assertions.
+Disabled-Sentry breadcrumb diagnostics are present in the standalone harness;
+these are runtime diagnostics, not compiler warnings or a full app-host result.
+Fixed-head app-host execution remains pending.
+### Claude resume and disabled git-watch fixture contracts
+
+Final C run `38509817630` shard 4 exposed three stale Claude command expectations
+and two disabled-git-watch fixtures with overlong Unix socket paths. Unchanged
+native build 785 reproduced all three command failures. The generated commands
+correctly use sorted environment assignments and the maintained optional cwd
+guard outside the portable `/bin/sh` wrapper. Owned executable probes verified
+configuration selection, preserve-environment flags, cwd and resume/model/
+permission arguments without changing production rendering.
+
+The shell fixture's old bind helper silently truncated paths beyond Darwin's
+104-byte `sun_path` capacity. An owned overlong-path probe reproduced all eight
+failed assertions: the full path was absent, so both prompt hooks returned
+before clearing git state. Shortening only the owned parent made both original
+cases pass. The replacement uses a short owned `/tmp` directory and explicitly
+checks UTF-8 byte capacity before binding.
+
+`SessionIndexClaudeResumeCommandTests` migrates the three Claude cases into
+actual command execution, including quoting and omitted unconfigured roots.
+`NoGitWatchShellIntegrationTests` retains all six assertions for each interactive
+shell. `NoGitWatchShellFixture` owns the socket and shell home;
+`ShellContractProcess` observes native process termination before launch and
+joins it before resources are released. Its original five-second shell deadline
+is followed only on failure by the maintained 200ms owned-process termination
+grace and escalation. All five migrated cases pass against native build 786 in
+Swift 6 without warnings. Spawn-failure, timeout and cancellation controls retain
+their original errors and verify that an owned child ignoring SIGTERM has exited
+before return. Injected bind/fcntl failures each close the descriptor once and
+remove the root; an overlong-path control fails before creating a descriptor.
+Negative command copies detect incorrect preserve-environment flags and missing
+cwd guards, and both shell cases reject enabled git watching. Actual fixed-head
+macOS 15 app-host verification remains pending; the canonical/local
+`claude_resume_and_no_git_watch_fixture_verification` caveat stays open. No
+production policy, deadline extension, serialization or assertion weakening is
+introduced. Shard 4's exit 124 still leaves full-suite coverage incomplete. The
+localization audit finds only test diagnostics and contributor prose, with no
+shipped strings or catalog changes.
+
+
+## Welcome shortcut window ownership verification
+
+The final C shard-3 run (38509817630, job 115676261545) twice crashed after
+`testWelcomeWindowSidebarShortcutsUseSharedToggleCommands` in XCTest object
+cleanup. The migrated `WelcomeWindowShortcutTests` retains its NSWindow from
+construction through `performClose`, preserving all eight command metadata,
+handler and visibility expectations. The real queued right-sidebar action is
+observed through its FIFO event-delivery boundary, with the original one-second
+failure deadline; no polling or settling delay remains in the migrated case.
+
+The existing offscreen NSWindow lifetime control crashes with the default
+release-on-close policy and exits cleanly with retained ownership. Exact new
+sources typecheck without warnings against build 786 in the test target's Swift 5
+mode. Swift 6 rejects the existing imported mutable `settingsFileStore` boundary;
+no suppression or production ownership change was added. Actual Welcome window
+routing remains an app-host CI gate; the primitive and typecheck do not establish
+that result. Existing full shard coverage is unchanged. No local foreground
+window, app launch or runtime build was used for this correction.
+
+
+
+
+### Grok hook connection fixture correction
+
+Combined run 38509817630, shard 3 job 115676261545, failed
+`testGrokStopFallbackCompletionsFireForTwoConcurrentThreads`
+and `testGrokNotificationStillFiresOnRepeatedPromptWhenFeedTelemetryDoesNotReply`.
+Their mock accepted exactly one connection per invocation. Owned traces against
+the unchanged 773 CLI show each hook also opens a separate one-way `feed.push`
+connection. With the old per-invocation accept budget, the next server consumes
+that queued telemetry connection while the next hook's RPC waits until its
+local five-second deadline. An unrestricted owned server runs the same
+session-start and prompt in under 0.2 seconds each.
+
+The two tests now use the shared `CLISocketFixture`, with no connection-count
+limit, and the reviewed `ShellContractProcess` to join each owned process before
+capture drains its input. File-backed input/output, short socket roots and an
+isolated hook store retain the original target, transcript, status, notification
+and duplicate-suppression assertions. Current id-less telemetry receives no reply;
+the repeated-prompt case verifies that telemetry actually arrived. The shell
+process owner is shared with the Claude/shell contract fixtures, not duplicated
+in the final integration. Its constructor injects the failure deadline and
+termination grace, retaining the existing five-second and 200-millisecond defaults.
+Focused spawn-failure, deadline escalation and cancellation controls pass with
+short injected durations; each verifies the owned child has exited before cleanup.
+
+Exact native build 786 execution passes both cases with a warning-free Swift 6
+compile. This corrects a measured fixture protocol mismatch; it does not explain
+the separate Antigravity detached-worker timeouts or clear the existing process
+scheduling caveat. Full app-host verification remains open. No production code,
+production CLI deadline, shared runner policy or shipped localization changed.
+The fixture deadline-policy correction below restores the original CI allowance.
+
+### Antigravity hook fixture completion boundary
+
+Combined run 38509817630 shard 3 failed the Antigravity stop/notification
+lifecycle case. Its detached mock launched 128 blocking accept workers before
+running any hook. A controlled native probe using the unchanged legacy process
+helper returned `/usr/bin/true` with status zero but `timedOut=true` after 7.019
+seconds under those workers; without them it returned normally in 0.065 seconds.
+This proves a false timeout at that fixture boundary, not the cause of every
+subprocess failure in the combined run.
+
+The migrated case uses the existing asynchronous socket fixture and joined shell
+process owner, with five seconds locally and the restored original 20-second CI
+minimum. All original background-work,
+missing-fullyIdle, shared-status, completion, session-end routing, duplicate,
+permission and error assertions remain. Each invocation captures completed RPC
+and id-less telemetry producers without preallocating blocking accept workers.
+The owned responder supports current routing/resume requests and rejects unknown
+commands; id-less telemetry receives no response.
+
+Unchanged build 786 passes the full lifecycle case in 0.917 seconds with a
+warning-free Swift 6 compile. Removing captured notifications in a temporary
+control fails five original notification assertions. Local proof does not replace
+fixed app-host and full-suite verification; the canonical/local caveat remains
+open. No production, shared runner or shipped string changed. The fixture
+deadline-policy correction below restores the original CI allowance.
+
+### Workspace runtime close fixture ownership
+
+Combined run 38509817630 shard 3 crashed while closing a workspace whose test
+installed the invalid native pointer `0x5282`. Intercepting only native free did
+not protect the earlier focus/occlusion calls. The migrated test attaches a real
+terminal to an owned retained window, subscribes before attachment, and awaits
+its actual runtime-ready event under the original three-second failure bound.
+It retains confirmation, workspace removal, remaining-workspace count and runtime
+detachment assertions, and verifies closed lifecycle plus idempotent teardown.
+
+The old global free override selected a DEBUG-only utility-coordinator branch.
+Ordinary explicit teardown schedules native free on the next MainActor turn;
+deinitialization has a separate utility policy. Off-main and exact-pointer checks
+therefore belong to the existing package coordinator's injected-free tests. No
+invalid pointer enters live Ghostty, and no new global override is installed.
+The real-runtime test does not claim to observe native free count or its thread.
+
+Native build 786 executes the real workspace close successfully without activation;
+the coordinator checks execute against the same compiled package owner. Focused
+Swift 6 compilation is warning-free. Full app-host verification remains pending,
+and the canonical/local caveat stays open. Production lifecycle/threading and
+shipped strings are unchanged.
+
+
+## Markdown rendering window ownership verification
+
+The final C shard-2 job 115676261618 identifies four Markdown rendering cases in
+XCTest object cleanup. `MarkdownWindowRenderingTests` migrates those cases while
+retaining their windows from construction through close. All 118 expectations
+remain: heading position (3), local image boundaries (12), data images (5), and
+remote image consent/security (98). The other 24 legacy test bodies are unchanged.
+
+The fixture owns navigation completion and DOM observations instead of XCTest
+expectations or polling. The existing five-second navigation and three-second
+image deadlines are retained; copied/reverted button states share one eight-second
+budget. DOM load/error events and MutationObserver check the actual predicate,
+including an initial-ready check. Completion removes listeners and observers;
+native cancellation queues cleanup on the same page, and pagehide/phase expiry
+also disconnect. Closing removes the script handler, stops loading, detaches the
+delegate/view, cancels owned scheme work and releases the retained window.
+
+Exact new sources compile without warnings in both the actual Swift 5 target mode
+and Swift 6 against build 786. A temporary offscreen minimal-HTML WebKit probe
+passes seven cases covering initial readiness, mutation, real image load/error,
+deadline, cancellation and navigation replacement. Actual observer counts return
+to zero and the script handler is absent after close; omitting disconnection in a
+temporary negative control fails six cleanup assertions. Full rendering,
+navigation, security and scroll execution remains app-host CI verification; a primitive window-lifetime control
+or a minimal offscreen WebKit observer probe does not establish those outcomes.
+No production renderer, timeout policy, CI selector or app runtime was changed.
+
+### Titlebar sizing and command-palette metadata fixture contracts
+
+Final-C run `38509817630` shard 2 failed
+`TitlebarControlsSizingPolicyTests.testTitlebarControlsUseDeterministicContentSize`
+and `CommandPaletteSwitcherSearchIndexerTests.testKeywordsIncludeDirectoryBranchAndPortMetadata`.
+The former expected the old 152/139-point widths; the current classic/compact
+controls reserve 238/233 points for seven 28-point targets and shortcut hints.
+The latter expected a compound branch fragment as an independent token; the
+package retains the full branch and splits surface components at path, punctuation,
+and whitespace delimiters, so the compound query still matches the full branch.
+
+Only those two methods migrate to Swift Testing. The titlebar case preserves its
+0.001 tolerance and height assertion, renders the actual ordinary and split
+controls, and verifies seven contained hit lanes, action dispatch, and noninteractive
+gaps. Its synchronous main-actor fixture snapshots and restores exact persistent
+values and argument/registration fallbacks separately for the six shortcut keys,
+font magnification, and constructor-owned backup/import/legacy metadata. It also
+restores shortcut file-store identity. A constructor-owned empty settings file
+disables fallback paths and watching; SwiftUI debug settings use an isolated
+defaults suite. No global fixture value crosses an await.
+The search case retains directory, basename, full-branch and port assertions and
+requires component tokens plus successful compound-query matching.
+
+Native 786 verification on local macOS 26 passed both functions (three parameter
+cases), with temporary seeded-settings restoration controls. Success and throwing-body
+controls preserve originally absent persistent keys despite argument/registration
+fallback values, restore store identity, and remove the owned directory. The
+original expectations produced exactly three failures in a controlled temporary
+copy. Independent rendering and hit tests show that the old widths clip the
+forward-history target. Package controls covered all delimiters, full-value
+retention, workspace/surface ranking, and rejected unrelated or branch-removed
+queries. No production code, deadline, or assertion tolerance changed.
+
+The current Swift 5 target compile is warning-free. A Swift 6 probe rejects the
+existing nonisolated mutable `KeyboardShortcutSettings.settingsFileStore` seam,
+including the maintained test isolation pattern; no suppression or unsafe
+annotation was introduced. Complete accessory/hint-window composition, macOS 15,
+and fixed-head app-host CI remain unverified. The prior full-suite exit-124
+incomplete result remains open under
+`titlebar_search_metadata_fixture_verification`.
+### Initial terminal runtime readiness fixtures
+
+The two initial-input/initial-command cases previously asserted a positive runtime
+creation count synchronously, before the asynchronous command-shim prerequisite
+finished. Native build 786 reproduces zero immediate attempts with the hidden
+startup window already present, followed by a ready runtime and positive count
+at the real `terminalSurfaceDidBecomeReady` event.
+
+The migrated parameterized case subscribes before constructing either panel and
+retains both original hidden-window and positive-attempt assertions. It also
+checks the ready native runtime and absence of a user window. It never attaches
+a visible window to force creation. The original tests had no asynchronous
+failure deadline; a new injected three-second readiness bound matches the adjacent
+real-runtime close fixture, with no sleep used for settling. Both cases pass
+against build 786 with warning-free Swift 6 compilation. Full app-host verification
+remains pending; production startup and shipped strings are unchanged.
+
+## Notification-record restore fixture verification
+
+Four legacy unread restore cases expected synthetic indicators even when their
+snapshots contained actual unread notification records. `Workspace` restores
+those records and deliberately suppresses duplicate synthetic indicators;
+`TerminalNotificationStore.unreadCount` counts the records plus one independent
+manual/panel-derived indicator. The original four cases failed seven assertions
+against unchanged native build 786; the corrected record-backed expectations
+passed all four on the same artifact.
+
+`WorkspaceNotificationRestoreTests` migrates only those four methods to Swift
+Testing, retaining badge visibility, mark-read and independent manual-unread
+transitions. A fifth no-record control retains the legacy visual-only indicator
+contract. `NotificationRestoreFixture` swaps the existing app notification store
+synchronously on MainActor and scopes all mutation/cleanup to its own workspace
+IDs; it tears down every owned panel and restores the previous store on throw.
+No shared-store reset, production change, new selector or deadline is introduced.
+
+Exact-source Swift 6 native execution uses the existing build 786 module with
+isolated HOME/config, test mode before module initialization, an owned bundle
+identity and prohibited activation. All five cases pass; a temporary control
+that removes restored records fails the four record-backed cases while the
+legacy control still passes. Owned normal/throw cleanup preserves an unrelated
+record and its manual-unread flag. These are focused native results, not a full
+app-host result; fixed-head macOS app-host verification remains pending under
+`notification_record_restore_fixture_verification`. The localization audit
+covers only test diagnostics and contributor documentation: no shipped copy or
+localization catalogs changed.
+### Grok payload lifecycle fixture completion
+
+The actual shard-4 failure
+`testGrokNotificationHookUsesPayloadMessageAndStopDoesNotSendGenericNotification`
+used the same detached blocking-accept helper with 80 worker slots. Its migrated
+scenario now reuses the joined Grok fixture. All 24 static hook calls and payloads
+are preserved, including the neutral-message loop. The 46 semantic assertions
+retain transcript/cwd/session isolation, persisted notification state, oversized
+and partial-multibyte history handling, generic/fallback/internal notification
+behavior, statuses and target checks. Process deadline, exit and output checks
+remain in the shared invocation owner, with no deadline increase.
+
+A separate `/usr/bin/true` probe with 80 workers did not reproduce a timeout;
+the 128-worker Antigravity control is not proof that 80 workers caused this
+particular CI failure. This removes the demonstrated shared helper's detached
+blocking-worker lifecycle risk, while actual CI attribution remains open.
+Native 786 runs this full scenario plus both prior Grok cases successfully in
+1.697 seconds with warning-free Swift 6 compilation. A temporary wrong-target
+capture control fails 12 original notification target assertions. The canonical
+Grok verification caveat remains open for full app-host execution. No production
+hook, transcript parsing, socket policy or shipped string changed.
+### Tagged CLI socket-home fixture paths
+
+Final-C run `38509817630` shard 2 rejected the stable socket paths in
+`testBundledCLIInTaggedDebugAppPrefersItsOwnSocketWithoutEnvironmentOverride`,
+`testBundledCLIInTaggedDebugAppTreatsCaseVariantStableEnvSocketAsImplicitDefault`,
+and `testBundledCLISkipsIdentifierlessNestedAppWhenResolvingTaggedSocket` before
+launching the CLI: the platform temporary-directory prefix plus fixture UUID and
+canonical `.local/state/bmux/bmux.sock` suffix exceeded Darwin's Unix socket path
+capacity (`NSPOSIXErrorDomain` 63).
+
+The shared helper now creates its unique owned home under `/tmp`; canonical
+`BmuxStateDirectory` layout, responder capacity guard, bundle-resolution inputs,
+response assertions, and deadlines remain unchanged. Native 786 reproduces all
+three original long-path rejections. With the short root, the case-variant test
+passes; the other two get through socket setup and send `ping`, then fail with
+receive-timeout `EINVAL` (22). An owned CLI control receives `TAGGED` and fails
+with both default and explicit five-second timeouts, while `PONG` succeeds with
+both. The retained multiline response path configures a 0.12-second idle timeout
+for `TAGGED`; `PONG` completes without that transition. This separate runtime
+failure remains unresolved; no response or assertion was weakened to hide it.
+
+Full three-case acceptance and fixed-head app-host CI remain open under
+`cli_socket_home_fixture_verification`; the prior full-suite exit-124 incomplete
+result is unchanged. Existing responder stop does not join its accept worker,
+and the legacy fake-bundle helper lacks directory cleanup; this root-only change
+does not claim to repair those retained lifecycle limitations.
+
+### Mixed signatures in pre-sign universal CLI artifacts
+
+Final-C Release job `115681649397` in run `38509817630` failed the unsigned
+Release CLI artifact gate with a universal-binary signature error. A real owned
+reproduction with an ad-hoc signed arm64 slice and an unsigned x86_64 slice
+produces the same error. `codesign -d` inspects the native architecture by default,
+but `codesign --verify --strict` checks every architecture. The prior verifier
+therefore detected the native signature and incorrectly rejects the permitted
+unsigned sibling slice.
+
+The test-only regression commit extends `tests/test_bundled_cli_artifact.py`,
+already run by the existing shard-3 artifact gate. Real arm64/x86_64 fixtures
+exercise mixed signed/unsigned CLI and framework targets independently. Their
+acceptance cases require relocated execution and archive preservation of complete
+Mach-O bytes and framework symlink destinations. Corruption controls first verify
+both signatures, corrupt only the nonhost slice, confirm the native signature
+still validates, and require verifier rejection before execution. The framework
+control uses a thin CLI so the invalid extra framework architecture cannot hide
+behind checking only the executable's architecture list.
+
+Local macOS 26 execution currently runs 14 cases: the two mixed-signature
+acceptance cases fail at the existing signature gate as intended; the other 12
+pass, including both nonhost corruption controls. The mixed cases' archive and
+relocation assertions remain pending behind that expected failure. No verifier,
+workflow, shipped artifact, or signing policy changed in this test-only commit.
+Only disposable test fixtures are signed, stripped, or corrupted.
+
+Under `bundled_cli_mixed_signature_regression_verification`, the existing CI gate
+must record the regression failure before the implementation commit. The fix
+must inspect every architecture present in each signature target, preserve
+framework-bundle signature ownership and deduplication, permit unsigned slices,
+and strictly verify every signed slice without modifying artifact bytes. Full
+Release/fresh-runner and app-host verification, including the prior exit-124
+incomplete native suite, remain open.
+### Sidebar terminal hit boundary fixture
+
+The failed C `testHostViewStopsSidebarPassThroughJustInsideTerminalContent` used a full-width terminal over an unrelated internal split and a stale two-point overlap. The maintained `SidebarResizeInteraction` reserves four content-side points; `WindowTerminalHostView` detects the sidebar from the leading hosted-content edge and intentionally rejects sidebar routing for full-width content. `SidebarTerminalHitBoundaryTests` replaces only that case with an owned retained offscreen window and a terminal starting at x=120, with no internal split. A synthetic pointer tests pass-through at x=124 and a concrete hosted-terminal hit at x=125. Both original pass-through/content outcomes remain required. No rendering, hit-testing policy, or typing-sensitive production path changes.
+
+The new suite participates in the existing broad test sharding; workflow selectors are unchanged. Actual C failure and the root's native original-boundary negative are retained. Exact-source strict Swift6 compilation is warning-free; unchanged build786 passes the migrated case in0.058s. A temporary copy restoring the two/three-point boundary fails exactly the original hosted-hit requirement. Full macOS15 app-host verification remains pending. Only test diagnostics and contributor documentation changed; no shipped localized strings were added.
+
+## Closed-peer CLI receive regression gate
+
+The short socket-home correction exposes a separate receive failure: after an
+unrecognized newline-terminated reply, `SocketClient.send` changes to its
+multiline idle timeout. Darwin returns EINVAL when that socket's peer has already
+closed. Native socketpair controls establish that peer state, not `timeval`
+size/stride, causes the option-setting error.
+
+`tests/test_cli_closed_peer_receive.py` drives the actual built CLI through a
+short owned Unix socket. After receiving its complete ping request, the fixture
+stops only its owned child, observes native stop acknowledgment, writes the
+response and closes the peer before resuming. This establishes ordering without
+polling or sleeps. A scoped three-second harness deadline retains the existing
+CLI test bound; the production response/idle timeouts are unchanged. Cleanup
+resumes a stopped child before killing/joining it, removes owned files and socket,
+and restores the process alarm handler/timer. HOME/config and telemetry test
+settings are isolated; no app or user socket is opened.
+
+Against unchanged native build 786, three functions exercise six scenarios:
+PONG, empty EOF and truncated EOF pass, while complete TAGGED, Unicode multiline
+and final-unterminated-line responses fail with the same receive-timeout EINVAL.
+Temporary deadline controls before accept and while writing to the stopped
+child confirm joined child cleanup, removed socket/home and restored signal
+state. This is test-only red evidence, not a production fix or full CLI pass.
+
+The shard-3 bundled CLI artifact step first builds and executes native linkage,
+then invokes both independent Python regressions against that exact artifact.
+It retains both exit codes and fails when either is nonzero; dependency-closure
+verification and archive creation follow only after success. No failure is waived.
+G run `38593929044`, job `115958161129`, executed all three socket test functions
+at 2026-10-14 16:25:54 UTC. Exactly the complete TAGGED, Unicode multiline and
+final-unterminated-line scenarios failed with receive-timeout EINVAL; PONG and
+both EOF error controls passed. The step exited 1. This is the required actual
+CI red, distinct from D2's missing-artifact setup failure.
+
+### Closed-peer receive correction
+
+`CLISocketReceiver` owns the receive-timeout syscall/cache and byte-read mechanics;
+its descriptor is borrowed from `SocketClient`, which retains socket lifetime,
+request/framing policy, timeout sanitization and operation telemetry. If Darwin
+rejects a timeout change with EINVAL, one nonblocking receive must actually return
+bytes or EOF before the unchanged parser proceeds. Would-block or any other read
+failure preserves the original configuration error. Other configuration errors
+remain strict, as do connect/authentication/event-stream configuration calls.
+Only successful configuration updates the cache; closing the client resets it.
+No deadline, retry, polling, JSON/PONG classification, output whitespace or error
+message changes. Existing operation phase and byte counts continue to describe
+received data; no payload logging is added.
+
+The complete extracted `SocketClient` source compiles warning-free in target
+Swift 5 mode and passes the unchanged three-function/six-scenario Python suite.
+Strict Swift 6 receiver controls cover an 18 KB Unicode reply across three reads,
+final EOF, ordinary live-peer timeout and invalid descriptor. Invalid-timeval
+control returns EDOM on this host and remains an error. A temporary syscall-result
+injection (not shipped) supplies EINVAL while real native receives return EAGAIN
+or EBADF; both retain the original EINVAL message and leave the cache unchanged.
+Fresh isolated build 788 (`maintenance-closed-peer`) succeeded on integrated
+`fc303bcc862415cb2e74ef255aeeb9616d75891e` in 175 seconds and was not launched.
+Its bundled CLI passes the unchanged three-function/six-scenario closed-peer
+regression, existing socket-operation deadline suite and broken-stdout SIGPIPE
+checks with owned temporary homes and sockets. Additional built-artifact controls
+preserve exact JSON output, an 18,024-byte Unicode multiline reply, and an
+18,015-byte reply with an unterminated final line. The receiver and CLI compile
+without warnings; the app build retains 127 distinct warning lines in existing
+app code/assets. Fixed-head run `38600136921` subsequently passed all three
+closed-peer tests (six scenarios) and all 14 artifact tests in shard 3 at 17:31 UTC
+on October 14. This resolves the specific receive-regression verification caveat;
+the final combined candidate still requires every configured merge gate.
+Existing shipped error text is byte-identical;
+no new user-facing copy needs translation.
+
+## Browser portal presentation fixture migration
+
+The three `BrowserWindowPortalLifecycleTests` failures in final-C native shard 2
+(run `38509817630`) are migrated to
+`BrowserPortalPresentationContractTests`. The external split-resize test now
+observes the real `WKWebView.displayIfNeeded` boundary through a per-instance
+`AsyncStream`, accepting only a redraw at the resized anchor width. The old
+250ms run-loop wait becomes a cancellable 250ms failure deadline. It preserves
+the visible-slot, narrower-frame, repaint, and unchanged-reattach assertions.
+
+Ordinary portal hide/show repaints without WebKit lifecycle reattachment; the
+positive control explicitly marks hidden-host adoption and requires reattachment
+and flag clearing. Transient anchor removal preserves the visible attached slot
+and its frame until rebind; rebind must reuse that slot and repaint. These
+contracts are in the existing portal and rendering-state owners, both unchanged
+from the main baseline. No production behavior changes in this migration.
+
+All three cases passed locally against unlaunched Debug artifact 786 in both
+Swift 5 and Swift 6 compilation modes, without warnings or window activation.
+Temporary old-expectation controls failed all three cases. Separate native
+controls covered buffered display delivery, missing-signal deadline, cancellation,
+and finished-stream behavior. Each test tears down its portal and owned window;
+web views use nonpersistent storage. The remaining legacy test bytes are unchanged.
+
+This is focused native-module evidence, not a complete app-host test-target or
+macOS 15 result. Integrated fixed-head CI, full-suite execution, and visual
+WebKit rendering remain open under
+`browser_portal_presentation_fixture_verification`. Contributor verification
+notes and test diagnostics add no product UI or localization keys.
+
+### Native Xcode project syntax verification
+
+D activation job115706442232 failed before build or benchmark: Xcode could not parse three newly added Markdown test extension paths containing `+`. Source wiring and normalization had passed because those checks do not parse OpenStep syntax. Quoting only those three `PBXFileReference.path` values fixes the native parser failure; file identities and target membership are unchanged. Native Xcode project loading also exposed one duplicate `ShellContractProcess.swift` navigator membership; removing that duplicate leaves its single file reference and Sources entry intact. `scripts/check-pbxproj.sh` now also runs Apple's `plutil -lint` on macOS, alongside the unchanged object-version and normalization checks. Linux retains its existing checks without a new dependency or custom parser.
+
+An owned temporary copy of the exact D project fails the native guard; the corrected project passes. No metadata-string assertion test was added: the native parser exercises the actual failing boundary. An isolated `xcodebuild -list` now passes project parsing but stops at this sibling worktree’s missing `GhosttyKit.xcframework`; full dependency-resolved project loading remains pending in the initialized integration tree. The failed activation run does not constitute Release-signature or closed-peer regression evidence; both named test-only reds still require actual execution. No app build, launch, active-app replacement, or runtime behavior change is part of this correction. Corrected-head CI remains pending.
+
+### Typed input and Korean Return runtime readiness
+
+Run 38509817630 shard 3 (job 115676261545) reported missing native input in
+`testDirectInsertTextUsesTypedInputSemantics` and retained marked text plus a
+missing Return in `testReturnAfterKoreanCommitAlsoSendsReturnToSurface`.
+The direct-input case passed on retry; Korean Return failed again. Neither
+failure recorded whether the terminal runtime was ready.
+
+Both cases now use the existing `TerminalNativeInputDeliveryTests` ready-surface
+fixture, which subscribes before attachment and requires the runtime before
+installing synchronous input probes. The original exact text/keycode assertions
+and real Korean `keyDown` path remain; the Korean case also requires exactly one
+interpretation and one forwarded Return. Prior observer, layout and interpreter
+hooks are restored before any suspension. The old synchronous cases used 50ms
+settling without an explicit failure deadline; the migrated cases adopt the
+existing suite's one-minute outer test limit. The helper and runtime timeout
+policy, input owners, workflow selectors and production behavior are unchanged.
+
+An owned, offscreen native probe on unchanged build 786 reproduced both missing
+input signatures before readiness and delivered the expected inputs after the
+actual ready notification. The two migrated cases pass against that same module. A temporary copy bypassing
+only readiness fails both cases with five issues, including all four original
+behavior oracles. This establishes the fixture precondition, not the exact macOS 15 CI cause.
+The complete affected files compile without warnings in the test target's Swift
+5 mode. Strict Swift 6 still encounters the existing nonisolated
+`KeyboardLayout.debugInputSourceIdOverride` and legacy CJK support boundary; no
+suppression or production hook was added. Fixed-head macOS app-host verification
+remains pending.
+
+### Remote agent fork fixture path ownership
+
+`WorkspacePanelGitBranchTests.testForkAgentWorkspaceLaunchInRemoteWorkspacePreservesRemoteContext` supplied an agent socket path that did not exist. The maintained `WorkspaceRemoteConfiguration.resolvedAgentSocketPath` deliberately accepts only existing paths and falls back to the caller's agent environment. Native artifact 786 reproduced all four agent-environment mismatches with an absent owned path; creating that path made all original checks pass.
+
+The case now lives in `WorkspaceRemoteForkLaunchTests` using Swift Testing. It owns a unique temporary directory and an existence-only placeholder, matching the resolution boundary already used by `SSHAgentEnvironmentTests`. No SSH connection or agent traffic is started. All 15 original behavior assertions remain, including remote options, launch command/input, four agent path projections and discarded relay/socket ownership. Workspace panels and temporary files are released on every exit. Untouched legacy test methods are byte-identical.
+
+The migrated case passes against native artifact 786 in Swift 5 and Swift 6 without compiler warnings; removing only placeholder creation fails the same four assertions. This is focused native-module evidence, not a full app-host pass. Integrated CI remains pending. No product behavior, workflow selectors, deadlines or user-facing strings changed; localization catalogs need no updates.
+
+### Default cloud proxy retry state
+
+The actual combined C case `testDefaultCloudProxyOnlyErrorsDoNotPolluteConnectedSidebar` fails when a default cloud workspace clears an old proxy-only sidebar artifact during reconnect: the model becomes reconnecting instead of retaining connected state. Native artifact 786 reproduces exactly that assertion, while the other original assertions pass. The shared state-update owner already preserves the default cloud connection on the initial proxy-only error; its retry predicate currently only includes ordinary SSH workspaces.
+
+The existing case is migrated to `CloudProxyRetryStateTests` with all ten original assertions retained and explicit teardown for both owned workspaces. Its source compiles warning-free in Swift 6 against artifact 786 and reproduces the same single failure. No additional workflow selector or deadline is introduced. Non-proxy disconnection, persistent SSH daemon failure, WebSocket transport failure and ordinary SSH proxy behavior remain required controls for the scoped production correction. Fixed-artifact and full app-host checks remain pending under `default_cloud_proxy_retry_state_verification`.
+
+The local correction reuses the existing default-cloud policy in the retry predicate, only when the prior sidebar artifact is classified as proxy-only. Existing details, status cleanup, notifications, logging and error classifications remain owned by the same path. No new diagnostics, secrets, product copy or localization keys are introduced; existing status projections remain the observable verification boundary.
+
+Five temporary controls passed against unchanged artifact 786: default-cloud non-proxy error/disconnection and retry without a proxy artifact, ordinary SSH proxy retry, WebSocket transport failure, and persistent-PTY daemon failure. They establish the retained baseline before the required fixed-artifact rerun; they do not verify the new predicate. The correction changes one shared predicate line with zero file growth. Isolated build 787 now passes the original regression and all five preserved controls, compiled without Swift 6 warnings. Integrated app-host CI remains required.
+## Deleted agent-hook working directory regression
+
+Final-C shard 3 (run `38509817630`, job `115676261545`) failed the existing
+`SessionPersistenceTests.testRestoreDoesNotPassDeletedAgentHookCwdToTerminalRuntime`
+assertion because restore passes a deleted directory to the terminal runtime.
+The same case also rejected a valid brace group in the outer zsh launcher's
+post-agent footer. `SessionRestoreDeletedDirectoryTests` migrates exactly that
+case to Swift Testing and scopes the fish-safe brace assertion to the actual
+inline startup command. It preserves the nil runtime-cwd, resume arguments,
+saved-path, and guarded fallback assertions, with isolated defaults and explicit
+workspace/launcher cleanup.
+
+Against unchanged unlaunched native artifact 786, the migrated test compiles in
+Swift 6 without warnings and fails only the original nil-cwd assertion. The
+shell assertions pass. The restore policy now keeps a guarded local cwd only if it is an existing
+directory, through a constructor-injected filesystem predicate. Remote gating
+and directory metadata remain separate. The focused Swift 6 policy harness
+passes all eight existing policy methods and six temporary directory-control
+variants. Isolated build 787 also passes the migrated regression plus nine
+workspace controls: existing, missing, file and unmounted directories; remote
+and local launch ownership; process-detected binding cwd; and scrambled
+unmounted-volume reports. Compilation is warning-free under Swift 6. The complete
+package graph and integrated app-host suite remain pending. Existing local
+agent-hook directories, process-detected binding cwd, remote nil-cwd behavior,
+and unmounted-volume metadata must retain their contracts. Full integrated
+app-host/macOS 15 verification remains open under
+`deleted_agent_hook_cwd_regression`. No product-facing strings change.
+
+### Closed-peer gate build prerequisite
+
+D2 run38521190849 shard3 job115712647469 executed all14 bundled-artifact tests and failed exactly the two mixed signed/unsigned slice regressions. The closed-peer suite executed zero tests because its expected CLI did not yet exist: the earlier split-theme check builds only its package, not the app. That setup error is not socket regression proof.
+
+The existing `BundledCLILinkageTests` xcodebuild invocation now runs before both Python regression commands in the same step, supplying the exact bundled CLI prerequisite. Both Python exit statuses are still collected and enforced; dependency-closure verification and archive creation remain afterward. No job, selector, test deadline, or failure policy is removed. Corrected-order actual closed-peer execution remains pending under the existing open verification caveat. No runtime or product copy changes are included.
+The test-only source ran all14 cases in D2 CI run38521190849, shard3 job115712647469. Exactly the two mixed-signature cases failed at codesign inspection; the other12 passed, including nonhost corruption controls. The separate closed-peer suite executed zero cases because its app build prerequisite was missing, so that setup error does not provide socket regression proof.
+
+The verifier now enumerates each closure Mach-O's actual architectures and deduplicates signature checks by existing bundle-or-file target plus architecture. Display and strict verification use the same explicit architecture. Unsigned slices retain the existing pre-sign allowance; signed slices, including extra framework architectures absent from a thin CLI, must verify. Staging, archive creation, executable bytes, framework symlinks, and relocated execution are unchanged. No shipped artifact is signed or modified.
+
+All14 real-artifact tests pass locally on macOS26 in8.122s after the fix, including both mixed targets' relocated execution and exact archived bytes/symlinks and both corrupt-nonhost rejection controls. This is local artifact evidence, not final CI green. The open `bundled_cli_mixed_signature_regression_verification` caveat now records captured CI red and local fixed coverage; full Release/fresh-runner and app-host verification, including the prior exit124 incomplete native suite, remain required. Diagnostic signature counts now describe architecture slices. No product-facing copy or localization keys changed.
+
+### Resume cwd and captured fork command contracts
+
+Final C's shard 3 job 115676261545 failed the old SessionEntry Claude cwd string
+assertion, and shard 2 job 115676261618 failed the captured Codex re-fork prompt
+omission assertion. The shared cwd guard was adopted by `f2123dc2c` (#6580), then
+made fish-safe by `5265559d5` (#6328). Codex captured-fork tag replay was deliberate
+in `9374b139e` (#6803); resume still strips those tags, as maintained package
+coverage requires.
+
+The two legacy methods migrate to Swift Testing. Claude now executes the actual
+command using the existing owned `ShellContractProcess` and verifies cwd plus
+exact session argv. `AgentForkCommandContractTests` retains all eleven original
+fork command/context checks, correcting only deliberate captured-tag retention.
+Its executed direct/Teams fork-versus-resume controls verify the exact target,
+argument ordering, tag boundary, cwd and `CODEX_HOME`. No production parser,
+command policy or workflow selector changes.
+
+The affected suites and shared process helper compile warning-free under Swift 6
+against unchanged native build 786. Five functions (nine expanded cases) pass.
+Owned native generation followed by shell execution also passes fourteen sh/zsh
+scenarios, including the existing missing-cwd policy. These probes do not launch
+real agents or activate the app. Fixed-head app-host verification remains pending.
+### Sidebar pull request projection fixture
+
+Run 38509817630 shard 2 (job 115676261618) failed the background-PR-empty
+assertion in `testSidebarPullRequestsTrackFocusedPanelOnly`. The maintained
+`Workspace.sidebarPullRequestsInDisplayOrder` aggregates valid PRs from every
+panel; `Workspace.pullRequest` separately projects the focused panel's PR.
+The original fixture incorrectly required these two projections to coincide.
+
+The case now lives in `WorkspacePullRequestFocusContractTests`. It retains the
+original focused nil and post-focus PR assertions, requires the background PR
+in the sidebar aggregate, and verifies that switching back clears only the
+focused projection. The synchronous fixture owns and tears down its workspace
+panels; it introduces no observation, polling, deadlines or shared hooks.
+All other legacy methods remain byte-identical. An isolated native build 786
+probe reproduced the original empty-list failure and passed the corrected
+projection contract. Fixed-head app-host verification remains pending. There
+are no product strings, production changes or workflow selector changes.
+
+### Combined repair build 787 and D2 outcome
+
+The initialized integration tree loads through Xcode's native project parser,
+and D2 run `38521190849` passed Swift packages, build/lag checks, and web/Linux
+checks. The separate D2 activation benchmark passed. All four native shards
+failed; shards 2 and 4 timed out before completing broad coverage. Release
+failed at the mixed-signature audit captured above. These are unresolved gates,
+not successful validation of the complete change.
+
+Isolated `maintenance-runtime-repairs` build 787 compiled source `1d72f1417`
+without launching or replacing the running previews. Native cloud and directory
+controls above exercise this exact artifact. The integrated tree passes native
+project parsing, normalization, wiring for 553 test files, strict determinism,
+and the main-base Swift file budget. The warning budget reports 126 retained
+warnings against 221 allowed, matching build 786; no warning allowance changed.
+The tagged reload compiles the app, not the complete test target. The next CI
+run must execute that target and all configured gates on the published commit.
+
+### Notification focus event fixture
+
+Run 38509817630 shard 2 failed all five dismissal/flash results in
+`testFocusPanelDismissesUnreadNotificationWithDismissFlash`. The maintained
+`FocusSurfaceBroadcaster` explicitly defers delivery; the original test asserted
+before the real focus notification reached `TabManager` and its shared dismissal model.
+The existing synchronous `flush()` boundary preserves that event path without a
+sleep, fabricated notification, or production behavior change.
+
+`NotificationFocusEventTests` retains every original focus, unread, indicator,
+and flash assertion and verifies unread state before delivery. It seeds only its
+owned workspace's records, clears only those records, and restores app composition,
+focus override and exact persisted defaults before returning on the MainActor.
+Teardown focus delivery is flushed before restoring the original optional app
+delegate; native nil/existing-delegate controls verify identity restoration.
+No delivery-handler override or shared notification reset is installed. All other
+legacy methods remain byte-identical. Native artifact 786 passes the migrated
+case; removing only the final flush reproduces the five original failures.
+Actual-target Swift 5 compilation is warning-free. Forced Swift 6 still rejects
+the existing imported mutable `AppFocusState.overrideIsFocused` seam; this repair
+does not suppress or alter that legacy owner. Fixed-head app-host verification
+remains pending. No shipped strings or workflow selectors changed.
+### IME, modifier and terminal focus fixture readiness
+
+Seven additional failures from C run 38509817630 and D2 are now covered in
+`TerminalNativeInputDeliveryTests` and `TerminalSurfaceRecoveryTests`: Option-N
+dead-key composition, shifted backquote, Option-Delete, Zhuyin marked text,
+responder loss during recovery, inactive visibility restoration, and direct
+focus refresh. Only those seven legacy methods move; their exact input modifiers,
+text/key arrays, marked-text, focus and redraw assertions remain. Backquote uses
+the existing per-view interpreter hook to commit no text, explicitly exercising
+the real fallback instead of depending on the machine's input-source behavior.
+
+`TerminalRuntimeReadinessFixture` owns the notification subscription before
+attachment or recovery, plus an injected cancellable failure deadline. Initial
+readiness is bounded at three seconds; recovery retains the original explicit
+five-second bound. The migrated tests also inherit their suites' one-minute outer
+limit, replacing unbounded synchronous cases with 50ms settling. Process-wide
+input hooks exist only in synchronous bodies after readiness and are restored
+before suspension. Owned windows are retained at construction and closed after
+terminal teardown. No production input policy, workflow selector or clipboard
+behavior changes; paste-routing, Kitty output and notification-flash cases remain
+outside this correction.
+
+Unchanged native build 786 reproduces missing input/focus preconditions without
+readiness, then passes the preserved assertions with actual runtime events.
+These controlled results establish fixture prerequisites, not the exact macOS 15
+CI scheduling cause. The complete affected suites compile without warnings in
+the test target's Swift 5 mode and pass 14 functions (15 cases) in an owned,
+offscreen native process. A temporary exact-source copy omitting initial readiness
+fails all seven migrated cases with nine behavior issues. Two temporary lifecycle
+controls verify missing-event timeout, cancellation/join, and observer closure.
+Strict Swift 6 retains the existing imported
+`KeyboardLayout.debugInputSourceIdOverride` and legacy CJK hook isolation gap;
+no suppression or runtime hook was introduced. The shared readiness owner and
+complete recovery suite also compile without warnings in strict Swift 6; the
+async fixture body explicitly retains MainActor isolation. Fixed-head macOS app-host
+verification remains pending.
+
+### Keydown notification surface-flash fixture
+
+The C app-host failure in
+`testTerminalKeyDownDismissesUnreadWhenSurfaceIsAlreadyFirstResponder` cleared
+unread state but counted zero renderer flashes. Its ambient overlay preferences
+could select a valid workspace-pane flash instead, and it did not establish the
+native runtime before keydown. These are proven fixture preconditions; the
+actual failing CI preference value is unknown.
+
+`NotificationKeyDownTests` preserves the real F1 action, first-responder and unread
+assertions, and the exact one-renderer-flash result. Its owned fixture awaits the
+real runtime-ready event, then synchronously installs and restores app composition,
+focus and exact persisted preferences with an explicit enabled surface target.
+Only its unique workspace notification is seeded and cleared. The renderer queues
+one callback; the maintained FIFO event-delivery pattern observes that callback
+with the original one-second failure bound after all global overrides are restored.
+No polling, shared counter reset, clipboard access, production change or new
+workflow selector is introduced.
+
+Unchanged native artifact 786 passes the migrated case with warning-free target
+Swift 5 compilation. A temporary ready-runtime control retaining the original
+renderer assertion fails exactly once when only the target changes to a workspace
+pane; the explicit surface target passes. This proves preference isolation matters,
+not that it caused the CI failure. The imported mutable `AppFocusState` seam still
+prevents forced Swift 6 checking, as in the adjacent focus fixture. Fixed-head
+macOS 15 app-host completion remains pending.
+### Fork-command fixture compiler inference
+
+E run 38585955198 shards 2 and 4 (jobs 115929521031 and 115929521191)
+failed before tests: Xcode 26.3 could not type-check an expression in
+`AgentForkCommandContractTests`. The retained console output names the file but
+omits the expression location. The same source compiles with local Swift 6.3.3
+in the target's Swift 5 language mode, so the older compiler failure has not
+been reproduced locally.
+
+The measured local inference hotspot is the final macro assertion combining
+`Array(fields.dropFirst())` with a concatenated expected argument array. Both
+arrays now have explicit `[String]` local bindings before their unchanged
+comparison. The expected fields, order, all eleven fork-command variants, and
+executed argument/cwd/environment assertions remain identical. No command,
+process fixture, timeout, test selection or compiler setting changes.
+
+The complete affected fork and Claude resume fixtures compile without warnings
+and pass five functions (nine cases) against unchanged native build 786.
+This focused check does not replace full test-target compilation: the next
+integrated batch must compile the entire `bmuxTests` target with CI's Xcode 26.3
+and run the app-host tests. That gate remains open.
+
+### Combined native test-target compilation after E
+
+The combined revision `3a3f5f7ee` passed a complete `bmux-unit`
+`build-for-testing` with Xcode 26.6 (Swift 6.3.3), using the target's Swift 5
+language mode. The compiler input contained all 557 wired test files plus 14
+shared source files. This used a new isolated derived-data path and bundle IDs;
+no tests or app were launched and existing preview artifacts were untouched.
+The local SDK's existing `BMUX_SKIP_ZIG_BUILD=1` workaround was retained.
+
+The repaired fork assertion and all newly added or rewritten fixture owners
+compiled without warnings. The full target still emitted 404 distinct warning
+lines, predominantly legacy XCTest import diagnostics repeated across compiler
+batches, alongside existing app/test warnings. Modified legacy files retain
+unchanged import and unused-result warnings; no warnings were suppressed and no
+warning budget was relaxed. This is compilation evidence, not a passing test
+suite. CI's Xcode 26.3 compilation and complete app-host execution remain open.
+Run 38585955198 shard 2 (job 115929521031) and shard 4 (job 115929521191)
+failed before tests because Xcode 26.3 could not type-check an expression in
+`AgentForkCommandContractTests`. The subsequently available shard 3 diagnostic
+identifies line 345: `prefix + (resume ? ... : ...)`, not the final macro
+comparison. The initial typed-comparison correction alone left that expression
+unchanged. The correction now also uses an explicitly typed `[String]` branch
+value followed by a separate prefix concatenation. Both branches retain exact
+argument values and order; the final comparison keeps its explicit array types.
+
+The local Swift 6.3.3 compiler accepts the original expression, so the older CI
+compiler failure has not been reproduced locally. No compiler limits or flags
+were relaxed. The complete affected fork and Claude resume fixtures compile
+without warnings in Swift 5 target mode and Swift 6, and five test functions
+(nine parameter cases) pass against unchanged build 786. All eleven original
+fork-command assertions and actual argv/cwd/environment checks remain intact.
+The next integrated batch must compile the entire `bmuxTests` target with CI's
+Xcode 26.3 toolchain before these local results count as a repaired compiler gate.
+### Paste shortcut binding fixture contracts
+
+The three terminal paste cases from run 38509817630 shard 4 asserted a forced
+AppKit paste action after a menu miss. Commit `a90bc5480` deliberately delegates
+that path to Ghostty bindings so user overrides win. `GhosttyPasteShortcutBindingTests`
+now exercises the real `NSWindow.performKeyEquivalent` entrypoint for Command-V,
+Command-Shift-V, and Command-V after runtime release. It preserves consumption,
+terminal association, exact modifiers/key, and immediate runtime recreation,
+while expecting one native binding event instead of the obsolete direct action.
+
+`GhosttyPasteShortcutFixture` owns a manual-I/O terminal, retained offscreen
+window, and per-surface config. Actual Ghostty `text:` bindings emit distinct
+bytes; neither the general pasteboard nor the global Ghostty config is changed.
+A synchronous runtime-ready observer reinstalls only the owned config during
+recreation. Menu/input probes and that observer are restored before the output
+wait. Existing `TerminalRuntimeReadinessFixture` subscribes before mounting.
+Initial readiness and output each have an injected three-second failure bound,
+with cancellation and joined tasks. The old cases used a 50ms settling delay
+and had no output deadline; these bounded waits are new fixture behavior.
+
+Exact repository sources compile without warnings in Swift 5 target mode and
+Swift 6 against unchanged native build 786. All three parameter cases pass in
+an isolated test-mode process; wrong binding output and duplicate real dispatch
+controls fail their exact output and single-forward assertions respectively.
+These controls prove custom binding precedence, action execution, output and
+runtime recovery. Actual default clipboard payload delivery remains untested.
+Fixed-head macOS app-host verification is pending; local macOS results do not
+resolve the macOS 15 CI boundary. No production policy, workflow selector or
+terminal rendering changes are included.
+
+### Exact conditional inference correction: combined compilation
+
+After E shard 3 identified the failing conditional expression at line 345,
+revision `8e79b921f` passed complete incremental `bmux-unit build-for-testing`
+with Xcode 26.6 in Swift 5 mode. All 559 test files plus 14 shared sources were
+compiler inputs. The exact conditional correction and both paste-binding
+fixture files compiled without warnings. The retained CJK fixture emitted only
+its existing XCTest import warning. The incremental log contains 158 distinct
+warning lines; that count is not comparable to the preceding fresh build.
+No app or tests were launched. Xcode 26.3 compilation and execution still gate
+merge; the earlier local build did not prove the conditional compiled in CI.
+
+### Browser omnibar arrow context fixtures
+
+Run 38509817630 shard 2 (job 115676261618) reported empty field-editor key arrays
+in the two omnibar restoration cases. Their random panel IDs and unregistered
+windows did not satisfy `focusedBrowserAddressBarPanelIdForShortcutEvent`'s real
+window-context, selected-workspace and browser-panel guards. The marked and
+unmarked controls on unchanged build 786 reproduce that boundary: an unknown
+window reports handled but delivers no editor key; a valid context delivers 123.
+
+`BrowserOmnibarArrowRoutingTests` preserves both original native window dispatch
+and exact `[123]` destination assertions, first-responder transitions, marked-text
+state, event modifiers and field-editor identity. It adds explicit field-resolution
+and restored-editor identity checks. `BrowserOmnibarArrowFixture` composes the real
+`MainWindowContext` directly, following the maintained popover-focus fixture, and
+uses the real panel's web view and `focusBrowserAddressBar(in:)` action. It avoids
+`registerMainWindow`'s listener and persistence side effects. All setup, dispatch
+and shared delegate/active-manager restoration are synchronous on MainActor;
+owned panels and retained windows are closed. No clock bound, polling, production
+seam, workflow selector or unrelated legacy case changes.
+
+The new sources compile without warnings in Swift 5 and Swift 6. Both cases pass
+in an isolated, nonactivating native 786 process. Removing only context composition
+fails both original destination checks plus the four added resolution/restoration
+checks. Temporary controls verify cleanup with both absent and existing delegates
+and active managers; the owned socket path stays absent and no listener starts.
+Native logs include existing disabled-Sentry breadcrumb diagnostics; these are
+runtime diagnostics, not compiler warnings. Fixed-head macOS app-host verification
+remains pending; the native check does not replace that gate.
+
+### Kitty clear-history PTY fixture
+
+C run 38509817630 shard 4 failed the Kitty clear-history test before either raw
+input assertion: neither terminal-visible marker was found. The legacy reader
+used `GHOSTTY_POINT_SURFACE`, which this Ghostty runtime maps to history only.
+The maintained complete-text reader uses `GHOSTTY_POINT_SCREEN`. An owned native
+787 child emitted both markers and exited normally while the old reader returned
+empty; reading the complete screen saw both. A nearby uncorrelated CI PTY-close
+line does not establish that this test's child exited.
+
+The migrated single test keeps a real PTY, the actual zsh keyboard-reset bytes,
+clear-screen action, synthetic key press/release, exact ASCII capture and absence
+of printable CSI fragments. Owned per-surface title notifications acknowledge
+that Ghostty parsed each preceding visible marker. Raw mode precedes readiness;
+a separate owned PTY control proved that the former ordering could discard input.
+The original five-second output bounds and child input bounds remain unchanged.
+There is no foreground activation, clipboard access, production hook or polling.
+
+Actual build787 passes the migrated test with warning-free Swift6 compilation.
+The original read-domain negative reproduces the marker failure; omitting the
+reset produces the Kitty release sequence instead of one ASCII byte. Temporary
+cleanup controls cover cancellation, output timeout, a spawned child held before
+PID publication, and closing before runtime creation. The existing synchronous
+native-free test seam returns before owned files are removed; the held children
+are alive before close and absent afterward. No new process-kill policy is added.
+These local controls do not establish complete macOS15 app-host or final integrated
+suite success; that gate remains open.
+### Text-box clipboard timeout completion fixture
+
+The actual C app-host failure in
+`testTextBoxSubmitClipboardReadTimeoutRestoresPasteboard` used a synchronous
+RunLoop wait while the real timeout posts its completion onto MainActor.
+`TextBoxClipboardTimeoutTests` now awaits the existing dispatch completion
+through a buffered AsyncStream. It retains all three dispatch events, the
+`paste_from_clipboard` key assertion, the original one-second completion bound,
+the temporary PNG, and exact restoration of the seeded string. The debug zero
+timeout override is restored synchronously after dispatch captures it.
+
+The existing `FakeTextBoxSubmitSurface` moves unchanged into a shared test file;
+legacy callers retain their behavior. Cleanup uses the existing synchronous
+`debugResetForTesting` boundary before restoring every original pasteboard item
+and representation, including on timeout or cancellation. This prevents a late
+runner from restoring its temporary snapshot over the outer snapshot. The
+two current Swift Testing general-pasteboard writers and TextBox dispatch callers
+share this serialized suite; remaining users are XCTest cases. This isolation
+must be reassessed if another asynchronous writer is introduced.
+
+Focused source compiles warning-free in Swift 5 and Swift 6. The entire retained
+shortcut-routing container and its maintained support compile in Swift 5, with
+three existing unused-local warnings and no new warnings. An owned native build
+786 probe uses the exact shared fake and only baseline/wait events: the old
+synchronous one-second wait does not complete, then awaiting the actual signal
+completes successfully. This probe never reads or writes the general pasteboard
+and does not prove clipboard restoration. The real general-pasteboard case was
+compiled but deliberately not executed locally; isolated macOS app-host CI must
+verify its full restoration contract. No production policy, timeout extension,
+workflow selector or shipped text changes are included.
+
+### Combined native fixture compilation
+
+Revision `41d77c34d` passed complete incremental `bmux-unit build-for-testing`
+with local Xcode 26.6 in Swift 5 mode. All 565 wired test files and 14 shared
+sources were compiler inputs. The omnibar arrow, Kitty clear-history and
+clipboard timeout fixtures and extracted clipboard fake compiled without
+warnings. The incremental build retained 163 distinct warning lines; this is
+not comparable to the earlier fresh build's warning count. No warning budget
+was relaxed. No app or tests were launched, and the existing preview artifacts
+were not replaced. Actual clipboard restoration, real inspector windows and
+the complete macOS 15 app-host run remain CI verification boundaries.
+
+### Native symbol point size and configured dimensions
+
+D2 shard 2 (`115712647490`) failed the existing clamped-symbol test: AppKit
+returned a 2-by-2 image for a one-point medium question-mark symbol, while the
+test expected a 1-by-1 image. The maintained raster-sizing correction
+`e3c4357a2` deliberately preserves valid configured symbol dimensions rather
+than forcing square point-size dimensions. Point size and image extent are
+different native API values.
+
+The fixture now compares the returned image with AppKit's actual configuration
+at the explicit one-point minimum and medium weight, matching the neighboring
+non-square symbol test. It retains the template-image assertion and all other
+sizing, cache, invalid-input and unknown-symbol tests. No production rendering
+or cache policy changes. Against unchanged build 786, the original complete
+seven-test suite reproduces exactly the 2-by-2 versus 1-by-1 failure; the
+corrected suite passes all seven cases. Local compilation is warning-free.
+Fixed-head app-host CI remains required; no test selector or gate is relaxed.
+### Detached inspector manual-close observation
+
+D2 shard 2 failed
+`BrowserDeveloperToolsVisibilityPersistenceTests.testDetachedInspectorWindowWillCloseWaitsForManualCloseState`
+at its 2.85-second synchronous wait and final preferred-visibility assertion.
+The same case passed twice in C shard 3; this is not a claim of a C failure.
+An owned native diagnostic retained preferred visibility after the synchronous
+wait, then cleared it when the existing lifecycle stream allowed owner work to
+complete. RunLoop-in-async warnings belong only to that temporary negative proof.
+
+The single migrated method now lives beside the existing inspector transition
+tests. It subscribes before show/close and uses the unchanged fixture's 2.85-second
+bounded lifecycle wait, including closeCount == 1 and both hidden-state predicates.
+All ten original assertions and real NSWindow visibility/close actions remain.
+A raw willClose must leave the inspector open until its explicit manual-close
+state is observed. The observer, retained window and panel use existing cleanup;
+no shared fixture, production hook, chorded-close case or PBX membership changes.
+
+The affected real-window source compiles warning-free in the target's Swift 5
+language mode. Local execution uses only a temporary offscreen visibility
+stand-in: that diagnostic plus seven unchanged lifecycle-observation controls
+pass against frozen build 787. Omitting only the async wait fails the original
+preferred-visibility assertion. These are diagnostic/control results, not a
+passing execution of the real-window test. The committed real NSWindow case,
+complete Xcode 26.3 target and macOS 15 app-host suite remain required CI gates.
+### File preview inset fixture uses its real text stack
+
+D2 shard 4 (`115712647520`) failed both line-fragment-padding assertions in
+`testTextEditorInsetsReapplyWhenMovedBetweenWindows`: the convenience
+`SavingTextView()` has no text container. The actual editor is constructed by
+`makeFilePreviewTextView()`, which owns an explicit TextKit 1 stack. The fixture
+now uses that maintained factory and moves into the existing Swift Testing
+TextKit suite; exactly one legacy method is removed.
+
+Both window transitions still reset and verify horizontal/vertical insets and
+line-fragment padding. Added identity checks verify the editor moved to each
+window and retained its original text container. The two retained offscreen
+windows detach content and close synchronously; no application activation,
+settings mutation, production change or timing wait is introduced.
+
+An owned native build 786 control reproduces exactly the two nil-padding
+failures with the old constructor, while the real factory passes both moves.
+The complete corrected TextKit suite passes all eight tests locally in Swift
+5 target mode without warnings. Fixed-head macOS app-host execution remains
+required.
+
+Strict Swift 6 compilation of the complete existing TextKit suite still rejects
+its unchanged legacy `KeyboardShortcutSettings.settingsFileStore` references.
+The migrated inset case itself adds no settings access or shared mutable state;
+no suppression or production concurrency change is included.
+### Browser Find routing context fixtures
+
+Final C shard 2 failed the menu assertion in
+`testCmdFDoesNotPreflightIntoPageWhenWebInspectorResponderIsFocused`.
+The app-before-menu policy introduced in `e133650645` intentionally sends Find
+to the selected browser when the event window owns a main-window context.
+`BrowserFindShortcutRoutingTests` now covers that real graph and the absent-context
+menu fallback through the same `BmuxWebView.performKeyEquivalent` entrypoint.
+Both cases retain Cmd+F/key code 3, inspector first responder, consumed=true,
+and zero WKWebView preflight events. The owned context opens browser search
+without invoking the menu; the absent context invokes the menu once and leaves
+browser search closed. Only the obsolete unconditional-menu expectation changes.
+
+The synchronous fixture composes a direct `MainWindowContext`, retains its
+closed window, and restores its menu, existing WK hook, shared delegate, active
+manager and prior route-retirer. It neither registers a listener nor activates
+a window. No production code, clipboard, timeout or CI selector changes.
+All other bytes of `BrowserConfigTests.swift` remain unchanged.
+The scoped settings fixture uses an owned JSON file, private notification center
+and no watchers to bind Find to Cmd+F and leave Find in Directory unbound.
+It restores the original store and exact persisted/argument/registration values
+of the three settings bookkeeping keys before the existing store setter notifies.
+A temporary prior Cmd+G control exposed two false failures without isolation;
+with isolation it passes and preserves the remap, store and defaults provenance.
+
+Against unchanged native build 786, both cases pass. Restoring the old menu
+expectation fails exactly the registered case. Temporary absent/existing
+collaborator controls verify menu/hook restoration, detached views, closed panels
+and no owned socket listener. The complete affected BrowserConfig container and
+actual support sources compile without warnings in target Swift 5 mode. The new
+window-graph fixture owner also passes strict Swift 6. Combined strict checking
+is blocked by the four retained mutable globals in BrowserConfig's existing
+WK/inspector hook support and the imported nonisolated
+`KeyboardShortcutSettings.settingsFileStore` static used by scoped settings
+fixtures. No suppression, replacement hook or production isolation change was added.
+Native logs retain the existing disabled-Sentry breadcrumb diagnostics.
+These offscreen probes do not replace integrated app-host execution, which
+remains pending. No product strings or localization catalogs changed.
+
+### Final browser and native-fixture compile checkpoint
+
+Revision `05cc59084` passed complete incremental `bmux-unit build-for-testing`
+with local Xcode 26.6: 568 test files plus 14 shared sources were compiler
+inputs. The latest Find, symbol, inset, inspector and preceding fixture owners
+emitted no warnings. The full incremental build retained 158 distinct warning
+lines; historical warning counts are not directly comparable. This build ran
+no tests and did not launch or replace a preview app. The older CI compiler
+and complete fixed-head native execution remain required.
+
+On published G, job `115958161129` actually ran the closed-peer CLI regression
+at 16:25 UTC on October 14. All three expected TAGGED/Unicode/final-line cases
+failed with receive-timeout EINVAL; PONG and both EOF error controls passed.
+The preceding native CLI linkage test succeeded. This supplies the required
+test-only CI red; it does not yet verify a production receive correction.
+
+### Shortcut parser lookup attribution fixture
+
+D2 shard 2 recorded 672 shortcut lookups in
+`testLegacySettingsShortcutBindingsParseWithoutRuntimeConflictLookup`, while
+its parsed Cmd+1 binding and default/private notification counts remained valid.
+The settings-file parser uses `normalizedSettingsFileShortcut`; initialization
+also writes managed-default bookkeeping. A `UserDefaults.didChangeNotification`
+subscriber can legitimately validate a live global-search shortcut during those
+writes. A controlled subscriber reproduces the same three 224-lookup sequences;
+this is causal local evidence, not a captured CI subscriber stack.
+
+`ShortcutSettingsParsingContractTests` scopes the zero-lookup assertion to the
+actual pure normalization call, restores the previous lookup observer, and then
+constructs the complete fallback-file store. Both subscriber-off and
+subscriber-on cases retain the live Cmd+2 browser conflict, normalized Cmd+1
+output, zero default shortcut notifications and one private notification. The
+enabled subscriber must execute; its callback count is not fixed. Its validation
+calls do not register a system hotkey. Synchronous MainActor ownership restores
+the original store and persisted/volatile provenance of the three bookkeeping
+keys. No production policy, observer suppression, timing limit or CI selector
+changes accompany this one-method migration.
+
+Against unchanged build 786, both cases pass. A temporary control substituting
+runtime recorder normalization fails the zero-lookup and normalized-output
+assertions in both cases (four issues). Target-mode Swift 5 compilation is
+warning-free. Strict Swift 6 checking still rejects the existing imported mutable
+`settingsFileStore` and `shortcutLookupObserver` statics; no suppression was added.
+Integrated app-host and full test-target verification remain pending. No app was
+launched and no general clipboard or user settings file was changed.
+
+### Local Git status root-alias regression
+
+The unchanged build 788 provider returns no status for local explorer roots whose
+lexical alias differs from Git's physical repository root. An owned native run of
+all six existing `FileExplorerGitStatusProviderTests` methods fails the quoted
+filename and sibling-prefix positive assertions; index preservation, type-change
+mapping, and both SSH controls pass. Raw Git output contains the modified files;
+the local parser filters them out before returning the dictionary.
+
+A test-only parameterized regression adds an explicit owned symlink to a real Git
+repository. Its physical-root control uses `git rev-parse --show-toplevel`; the
+alias case requires file and parent-directory keys in the requested namespace,
+with exact key membership and sibling-prefix exclusion. Both cases modify a
+quoted/escaped filename and a sibling path. Repository preparation uses the
+existing joined shell-process owner, isolated HOME/config, explicit author and
+committer identities, disabled commit signing and empty owned hooks/templates.
+Cleanup removes the owned repository, symlink, home and process captures.
+
+Against unchanged build 788, the complete seven-method suite compiles without
+warnings in Swift 6. The new physical case passes; its symlink case fails three
+assertions (file, parent and exact keys). The two original nil-status failures
+remain, giving five issues across eight cases. All original test methods and
+helpers remain unchanged. This is deliberate test-only red evidence: the new
+regression still needs its separate CI-red commit before publishing a production
+correction. No app, Git provider, SSH parser, user configuration or global setting
+is changed by this slice. Full fixed-head Xcode 26.3/macOS 15 app-host verification
+remains pending.
+
+### Queued text submission completion fixture
+
+G shard 2 job 115958161026 fails the two final assertions in
+`testTextBoxSubmitKeepsQueuedRunForStillActiveSurfaceWhenAnotherSurfaceFinishes`:
+the active surface has sent neither queued text and only the unrelated surface
+has completed. The existing clipboard-read observer posts a MainActor task; the
+legacy synchronous RunLoop wait prevents that task from resuming. A native
+build 788 event-only control preserves both surfaces, the active queue and real
+clipboard-read notification. After the original one-second synchronous wait it
+has the same incomplete state; awaiting actual completion then produces both
+texts and all three completions in order. This probe omits only the file-paste
+event and never accesses the general clipboard, so it does not establish the
+pasteboard transaction or its restoration.
+
+The exact case migrates into `TextBoxClipboardTimeoutTests`. Both tests share
+a scoped snapshot/attachment/cleanup helper and serialize only their shared
+general-pasteboard transactions. The migrated case retains the actual PNG paste,
+all five original output/key/order assertions, the ten-second runner timeout
+and both one-second completion bounds. The timeout override is captured during
+dispatch and restored synchronously before suspension. Buffered completion
+streams preserve already-completed events and their deadlines are cancelled
+and joined. Cleanup resets owned runners and restores every prior pasteboard
+representation before removing the attachment directory. No production policy,
+CI selector or user-facing string changes.
+
+The safe event-only native control passes on unchanged build 788; actual
+general-pasteboard execution is reserved for isolated app-host CI. The complete
+two-case suite and unchanged fake compile locally; full integrated target and
+actual fixed-head CI remain pending. Every untouched legacy byte is retained.
+### Tmux launch identity endpoint fixture
+
+G shard 2 job 115958161026 failed
+`testTmuxCompatEnvStampsLaunchSurfaceNotFocusedPane` before protocol handling:
+its platform temporary-directory path was 108 bytes, exceeding Darwin's
+104-byte `sockaddr_un.sun_path` capacity. The legacy bind helper asserts the
+length nonfatally and then still copies the path; its possible out-of-bounds
+write remains separately scoped legacy-helper debt. The diagnostic did not
+repeat that unsafe copy or weaken the length check.
+
+`CLITmuxLaunchIdentityTests` migrates only that case to the maintained
+`CLISocketFixture` and `CommandRunner`, with a short owned `/tmp` directory,
+explicit child environment and owned stdout/stderr files. The socket fixture's
+throwing length guard and joined asynchronous serving remain unchanged. The test
+retains the real `__debug-tmux-compat-env` entrypoint, distinct launch/focused
+identities, all five workspace/surface/panel/tab assertions and the 30-second
+process deadline. It additionally requires native success and one actual
+`system.identify` request: a missing focused context otherwise preserves the
+inherited IDs and can satisfy every original output assertion. Canonical pane
+lookup still receives the original unsupported response. No production code,
+shared helper, CLI timeout policy or CI selector changed.
+
+Against unchanged build 788, a safely rejected 108-byte endpoint yields no
+requests yet satisfies the five old identity checks. A short endpoint serves
+`system.identify` and the canonical pane lookups, preserving those checks.
+The migrated native test passes; a temporary missing-endpoint control fails
+exactly the new request assertion. Its full sources and actual bundled-CLI
+locator typecheck without warnings in Swift 5 and Swift 6. Native execution
+uses a temporary locator for the exact existing CLI; bundle discovery itself
+remains an integrated app-host concern. Owned processes, connections and files
+are cleaned without accessing the user's app or socket. Full app-host/test-target
+verification remains pending. No product strings or localization catalogs changed.
+### Orphan workspace shortcut routing fixture
+
+G shard 2 failed the pruning assertion in
+`testCustomCmdTNewWorkspacePrunesOrphanedContextWithoutLiveWindow`.
+`synchronizeShortcutRoutingContext` prefers an addressable/focused live context
+before the cached active manager; an ambient captured live window can therefore
+replace the intended orphan before workspace creation evaluates it. The fixture
+now owns both a live and a windowless direct `MainWindowContext`, explicitly
+selects the orphan manager and clears/restores the existing captured-window seam.
+It does not register a window, start listeners or activate an app.
+
+`OrphanWorkspaceShortcutTests` retains Cmd+T/key 17/window number zero, the
+windowless precondition, handled=true, unchanged orphan workspace count and the
+pruned-context assertion. It also verifies the existing owned live context
+receives routing without a new context or visible window. The synchronous
+fixture tears down all panels, retains its window through close and restores the
+prior delegate, active manager and focused-window override. It reattaches the
+prior delegate as route-retirer when present; it does not reset the registry
+when the prior delegate is nil. Owned JSON binds New Workspace to Cmd+T; its constructor-owned store has no
+watchers or external fallback paths. Exact persisted/volatile provenance of
+three bookkeeping keys and the prior settings store are restored. No production
+policy, new hook, selector or deadline changes are included. The old 50 ms
+run-loop settling calls are removed because the real routing/pruning operation
+is synchronous.
+
+Against unchanged build 788, the migrated case passes. A temporary focused-live
+control fails the original pruning assertion and the added context-key assertion,
+while handled/count assertions remain valid. Nil/existing prior-delegate controls
+also pass, preserving active/focused owners, a previous Cmd+G remap, settings
+provenance and panel/window cleanup. Swift 5 compilation is warning-free; the
+new graph owner separately passes strict Swift 6. Combined strict checking still
+rejects the existing imported mutable `settingsFileStore` static, without a
+suppression or production isolation change. Native logs retain existing disabled
+Sentry breadcrumb diagnostics. Full integrated app-host/test-target verification
+remains pending. No product copy or localization catalog changed.
+
+### Broad shard 2 process diagnostic coverage
+
+G job 115958161026 recorded a main-thread AppHang, repeated host crashes and
+CLI timeouts before the broad invocation reached its 900-second watchdog. The
+existing opt-in diagnostic environment was set only for the focused shard 1
+invocation. Its uploaded stack files contained no usable call graph and cannot
+establish the cause of the separate broad shard 2 failures.
+
+The initial diagnostic change also wrapped the broad shard 2 invocation. Its native
+Swift Testing start marker, 30-second observation window, eight-sample maximum,
+two-worker concurrency limit, one-second samples and five-second worker
+completion allowance are unchanged. Selection still requires the exact owned
+DerivedData host and CLI descendants; artifacts omit arguments, environment,
+payloads and raw sample headers. The existing upload moves after the broad
+invocation and runs on either selected shard even after failure. All command
+exit statuses, native test deadlines, selectors and retries remain unchanged.
+
+This adds at most eight bounded samples to the implicated broad invocation when
+the existing manual input is enabled. Sampling overhead is diagnostic overhead,
+not a test repair or proof of timeout causality. Automatic runs were disabled in
+that initial change; the broad PR coverage described below supersedes that routing.
+The host sample occurs once near two seconds, and the observation window ends
+30 seconds after the Swift Testing marker. G shard 2 reported its later host
+hang near 49 seconds, so this coverage may miss that hang; it first supplies
+startup and child-process scheduling evidence. Usable actual macOS 15 call
+graphs remain pending.
+### Agent launch producer cleanup ordering
+
+G's broad shard 2 (run `38593929044`, job `115958161026`) recorded both
+agent-launch fixture cases timing out. Its main-thread hang, crashes, and final
+900-second watchdog failure remain unresolved; the roughly 61-second suite
+completion does not establish when each five-second CLI timer fired.
+
+A separate controlled native probe of unchanged build 788 established a cleanup
+contract mismatch: `CommandRunner` returned a timeout while its owned child was
+still alive, and socket unlink plus fixture-directory removal preceded child
+exit. This occurred both when the child honored SIGTERM and when it ignored it;
+the latter exit observation followed about 208 ms later, consistent with the
+existing 200 ms escalation grace. Both owned children were subsequently observed
+exited and absent. This proves cleanup ordering, not the cause of G's longer stall.
+
+Only `AgentLaunchEnvironmentFixture` now uses the maintained
+`ShellContractProcess`, with the same five-second deadline and 200 ms termination
+grace. It invokes the actual bundled CLI directly with the same arguments and
+environment; the process owner supplies null stdin and solely owns stdout/stderr
+files. A captured result carries success or the original failure through the
+socket's final drain, after producer exit. Failure context includes only owned
+requests and output, then the original error propagates. Owned directory removal failures also record
+a test issue instead of disappearing in teardown. Environment allowlist,
+executable, arguments, working directory, source and persisted identity assertions
+are unchanged. No production process owner, socket policy or test deadline changes.
+
+Against unchanged build 788, both existing parameterized cases pass in 0.205 s
+with warning-free Swift 6 compilation. An injected directory-removal failure
+records the expected issue; this final three-case run completes in 0.206 s. Temporary exact-fixture controls exercise
+TERM-ignoring timeout and cancellation: the child is absent before producer return
+and before socket cleanup, original errors and request context remain visible,
+and owned exit observation plus directory cleanup complete. Both controls pass
+in 5.503 s with exactly the two deliberately expected failure issues. The
+controls use only owned children and add observational timestamps to a temporary
+socket-helper copy; no diagnostic hook or extra test is committed.
+
+Guidance and complete owners reassessed: root AGENTS, continuous-code-quality,
+bmux-testing, architecture/concurrency, debugging, shared behavior, observability,
+`CommandRunner`, `ShellContractProcess`, shared socket lifecycle, launch target
+validation and the existing assertions. Canonical and local caveat
+`agent_launch_joined_producer_verification` retains actual app-host verification
+as pending. No UI or shipped text changes; localization scope is contributor
+verification notes only.
+### Titlebar hit-test event context
+
+G2 recorded 28 nil-hit assertions in the two style cases of
+`TitlebarControlsContentContractTests`. On unchanged build 788, an owned native
+application supplying a mouse-down event passes both cases; supplying a key-down
+event reproduces all 28 failures. That establishes the fixture's ambient-event
+dependency, but the actual event during the CI failure was not recorded.
+
+`MinimalModeSidebarControlActionView.hitTest` now reads `NSApp.currentEvent` once
+and forwards it to internal `performHitTest(at:currentEvent:)`, following the
+maintained `WindowTerminalHostView` boundary. The pointer gate, nil-event behavior,
+context-menu eligibility, enabled/revealed checks, geometry and existing telemetry
+are unchanged. No global override, swizzle, new product API or new logging is added.
+
+The existing two style cases pass explicit left/right mouse-down, key-down and nil
+contexts. They retain content sizes, seven 28pt control frames, hit edges, gaps,
+accessibility identifiers and exact action order, and cover disabled/unrevealed
+rejection and outside bounds. Settings remain synchronously scoped and restored;
+no test deadline, CI selector or production action changes. Product text and
+localization catalogs are unchanged; the added prose is contributor verification
+material, not localized product content.
+
+Root-owned isolated build 789 contains the unchanged reviewed production seam.
+The exact corrected suite compiles without warnings in the target's Swift 5 mode
+and passes both style cases against that artifact. A temporary owned application
+supplying an ambient key-down event also passes both cases, while the original
+ambient-dependent suite failed 28 assertions in the earlier controlled probe.
+One redundant test unwrap exposed by compilation was removed without changing
+its comparison. The native harness uses an isolated home and test-mode environment
+before module loading and prohibits activation; no user window or clipboard is
+accessed. Integrated fixed-head app-host verification remains pending.
+
+### Legacy CLI socket setup failure boundary
+
+G shard 2 reported a 108-byte Unix endpoint against the 104-byte `sun_path`
+capacity. The legacy notification support helper used nonfatal XCTest checks,
+then continued into the unchecked copy or returned a failed listener. The
+current tmux fixture migration removes that observed long-path caller, but
+remaining legacy callers still share this setup owner.
+
+`bindUnixSocket` now rejects oversized UTF-8 paths before unlinking or creating
+a descriptor. Socket creation, bind and listen failures throw a captured POSIX
+error; failures after creation close only the owned descriptor. A listen failure
+also unlinks the endpoint this helper successfully bound before caller ownership
+was transferred. Bind failure does not unlink a possibly unrelated path. Successful
+address encoding, backlog and caller-owned close/unlink semantics are unchanged.
+The shared legacy process runner and other server helpers are outside this
+bounded correction; their existing blocking/task cleanup risks remain open.
+
+A temporary native harness compiled the complete actual support file in Swift 5
+mode without warnings. Five controls passed: 108-byte rejection preserved an
+existing sentinel and descriptor count, missing-parent and directory bind errors
+preserved errno without leaking descriptors, and normal plus maximum 103-byte
+paths connected/accepted and transferred an exact byte. A safe original-helper missing-parent control failed because it returned a
+listener instead of throwing; its returned descriptor was closed by the harness.
+No unsafe original buffer copy was executed. The harness's minimal XCTest host is temporary, not a shipped
+Swift Testing adapter or new fixture API. Full integrated test-target and macOS 15
+app-host execution remain pending.
+
+### SSH agent forwarding joined producer
+
+Current candidate 995 job 115978363652 completed 115 tests in 27 suites with
+three issues. One SSH agent case (explicit tilde path, missing candidate) timed
+out, while its other two cases passed; both agent-launch cases also timed out.
+The SSH fixture still returned a `CommandRunner` timeout result before its owned
+child had joined, violating the shared socket fixture's producer-completion
+contract. Independent owned-child controls established this cleanup ordering
+gap; they do not establish the cause of the CI deadline.
+
+The three SSH agent variants now use the existing `ShellContractProcess` with
+five seconds locally, the restored original 20-second CI minimum and the same
+200 ms termination grace. Direct argv,
+environment, cwd and null stdin are unchanged. The process owner alone writes
+stdout/stderr. Success or captured failure joins before socket final drain;
+after capture, failure records only owned requests/output and rethrows the
+original error. Owned root removal failures are visible. Status, empty stderr,
+exact two RPC methods, both agent paths, workspace and option assertions remain
+unchanged. No shared helper, runtime API, serialization or deadline changed.
+
+Actual bundled CLI build 788 passes all three original parameter cases in
+0.478 seconds; complete source compilation in Swift 6 emits no warnings.
+Temporary exact-method timeout and cancellation controls also pass (two cases,
+5.404 seconds, two expected recorded issues). Their TERM-ignoring children are
+already absent at producer return and socket-source join, before owned root
+removal; original error types and request/output context remain visible. Native
+exit observations join, and all roots disappear. The fixed-head macOS 15 app-host
+execution remains pending. Neither this resource correction nor local success resolves the wider process scheduling
+risk or proves the six-second CI stall repaired.
+### File-preview and notification test-window ownership
+
+G shard 4, job `115958161892`, repeatedly crashed during XCTest cleanup after
+`FilePreviewPanelTextSavingTests.testPendingTextFocusAppliesWhenTextViewAttaches`
+and the notification open, latest-unread/no-op, and fallback-unread cases in
+`TerminalNotificationSocketActionTests`. Its XCTest invalid-object cleanup frame
+matches the previously measured raw-window close lifetime failure. This is
+supporting evidence for the constructor ownership repair, not proof that every
+shard crash or idle timeout has the same cause.
+
+The two existing window constructors now set `isReleasedWhenClosed = false`
+before returning or presenting the owned window. All test bodies, assertions,
+actual Unix-socket requests, navigation/read/no-op/fallback behavior and failure
+bounds are byte-for-byte unchanged. Only the pending-focus case calls the
+file-preview helper; the three notification cases request its window-bearing
+fixture. No new API, workflow selector, production code or product string changes.
+
+An offscreen Swift 6 AppKit control exercises both exact window sizes/style,
+close, autorelease-pool drain and final ARC release successfully. The earlier
+unsafe-close negative control is retained, not replayed. No notification case
+was executed locally because its real route raises a window and may activate the
+application. Complete target compilation and the four fixed-head app-host cases
+remain pending; the primitive control is not a full-case pass.
+
+This helper-only correction leaves existing notification-fixture debt explicit:
+shared delegate/store/listener mutation across suspension, whole-store replacement
+that discards queued/unread metadata, socket-readiness polling and window
+foregrounding. Those responsibilities are unchanged and are not claimed isolated
+or repaired by the retained-window setting. No XCTest case body is being migrated
+or rewritten as part of this constructor-only lifetime correction.
+
+### Combined producer and window-ownership compile checkpoint
+
+Revision `7983d988b91dfa4a09469de5770396db69099a0e` passes the complete
+`bmux-unit build-for-testing` with local Xcode 26.6: all 573 wired test files
+and 14 shared sources are compiler inputs. This includes the joined agent-launch
+and SSH-agent producers, throwing legacy socket setup, retained test windows,
+explicit titlebar event context, and preceding shortcut/clipboard/tmux fixtures.
+Authenticated Project Truth, native project parsing and normalization, test
+wiring, strict determinism and the existing Swift file-length budget also pass.
+
+The build retains 405 distinct warning lines. The changed titlebar owner and
+new Swift Testing fixtures emit none. Touched legacy support files retain three
+XCTest import-consistency diagnostics and one redundant Void-result diagnostic;
+all four are present in the prior compile, with the last shifted by the window
+constructor line. No warning suppression or budget change was made. Other
+retained warnings include legacy concurrency, deprecations and unused results.
+Compilation does not establish app-host runtime success. The four affected
+window cases and broader timing/host-crash behavior still require CI.
+
+Build 789 remains the isolated verified production artifact; the source changes
+after its build are test/documentation-only. No running preview was rebuilt,
+launched or replaced. All 19 original fixture source heads and current PRs
+169/170 remain ancestors. The older G workflow was canceled after comparing its
+Release production inputs with the successful E Release build; this is recorded
+as cancellation, not a passing gate. Diagnostic run `38605111245` retains the
+separate test-only Git-root alias regression and bounded process sampling.
+
+### Partial Claude hook context construction cleanup
+
+The shared Claude hook context factory also removes its owned temporary directory
+when CLI lookup or listener construction throws before ownership reaches callers.
+Cleanup errors remain visible through the existing test failure channel while the
+original setup error is rethrown. The listener helper still owns descriptor and
+bound-path cleanup; successful context cleanup is unchanged. Other callers that
+create directories before binding already install a defer or XCTest teardown.
+
+A temporary native harness used the actual factory and bind-helper bodies with
+controlled lookup/path inputs. Lookup failure, bind failure, successful ownership
+transfer and cleanup-error reporting all passed, with original errors preserved,
+no remaining owned roots and unchanged descriptor counts. Original-factory lookup
+and bind controls each failed specifically on the leaked root. Swift 5 compilation
+was warning-free. No permanent test adapter, production API, case-body change or
+app operation was introduced; integrated target compilation remains required.
+
+### Terminal file launch directory identity
+
+H shard 3 reports two working-directory string mismatches in
+`TerminalDefaultFileOpenRequestTests`: Foundation's decoded parent-directory
+path retains a trailing slash, while the expected `.path` string omits it.
+The complete request initializer and both AppDelegate launch paths use the
+result as a directory, not an exact serialized identifier. Both spellings
+identify the same directory. No application change is needed for this mismatch.
+
+Only the two launch cases migrate to `TerminalDefaultFileLaunchContractTests`.
+They compare directory URLs without resolving symlinks and retain the exact
+quoted executable input, including the apostrophe/space case. The executable
+case still creates a real owned executable and cleanup errors remain visible.
+The plain-text and script-named-directory rejection tests remain unchanged.
+The new file is wired into the native test target; no selector or deadline changes.
+
+Against unchanged build 789, both original string assertions fail exactly as in
+macOS 15 CI. Both corrected cases pass with warning-free Swift 5 and Swift 6
+compilation. Temporary wrong-sibling and unquoted-input controls fail their
+respective assertions, showing the new oracle still rejects incorrect behavior.
+These native checks use an isolated test-mode process and do not launch or
+activate a window, execute the fixture script, or change user settings. Complete
+integrated target compilation and fixed-head app-host execution remain pending.
+No product strings or localization catalogs changed; added prose is contributor
+verification material.
+
+
+### Hook prompt stable workspace identity
+
+H shard 3 reports one outdated workspace identity assertion in the hook prompt
+session test. The accepted `ecf7190a7` implementation records the persistent
+workspace ID for both hook and transcript evidence; the runtime resolves a live
+workspace before passing `workspace.stableId`. This matches the merged workspace
+association capability and its production lifecycle coverage. The old assertion
+still expected the transient `runtime-workspace` fixture value.
+
+Only that existing hook/backfill case migrates to Swift Testing. Its session
+workspace assertion now expects the supplied stable ID; every other prompt,
+turn, display, backfill and synthetic-identity assertion is preserved. The
+existing capturing client is shared within the test target; production identity
+policy and other legacy cases are unchanged. The new test file is wired into
+Xcode without changing CI selection.
+
+An isolated native test process linked to unchanged build 789 reproduces the
+original single mismatch and passes the corrected complete case. Swift 5 and
+strict Swift 6 compilation are warning-free. Native project parsing, 575-file
+wiring, strict determinism, the existing file-length budget and Project Truth
+validate/generate/check pass. Integrated test-target compilation and exact-head
+macOS app-host execution remain pending. No application window, external service,
+user settings or product strings are changed; the prose is contributor evidence.
+
+### Closed retained main-window routing
+
+H run `38600136921`, shard 3 job `115978363675`, failed all three
+closed-window presentation assertions in
+`ClosedMainWindowRoutingTests.testClosedMainWindowIsNotListedOrFocusableWhileItsObjectsLinger`.
+The unregistered, ordered-out window remained listed, accepted focus, and became
+visible. The original test also requires its retained manager to remain
+resolvable. Its recovered-visible companion passed. The affected routing owners
+are unchanged between H995 and J `7d6838c7e`.
+
+Two temporary native controls on unchanged build 788 distinguished the test's
+unregister/orderOut path from real `NSWindow.close` through `WindowCloseObserver`.
+Both removed the registered context but retained list membership, window identity,
+manager identity, and focus acceptance. The two controls passed in 0.231 seconds;
+Swift 6 compilation emitted no warnings. They used owned HOME/test-mode state,
+disabled sockets, never-presented windows, guarded startup/persistence, and the
+existing nonfocus socket policy for the focus call. Thus they establish routing
+acceptance, not visible-window behavior. Disabled-Sentry breadcrumb diagnostics
+were present in the unlaunched native harness.
+
+The correction keeps one computed presentation rule in the existing window
+identity owner: registered windows remain eligible even when hidden; orphaned
+windows must be visible or miniaturized. Window identity, list/search/scripting
+projections, and stale-search-hit actions use that rule. The weak recovery ledger,
+manager lookup, surface lookup, history, inspector cleanup, memory accounting,
+and quit checks retain their existing resource scope. The existing complete
+ordered window-state projection is named `retainedMainWindowStates` for terminal
+diagnostics and provenance workspace resolution; those two callers retain their
+previous population, ordering, and identity semantics. This does not change PE
+contracts, storage, session identity, or the separate SessionProvenance failure.
+
+The exact original regression and recovered-visible test remain unchanged.
+The original H failure is the red evidence; no additional permanent regression
+or deadline change is included. Isolated build 790 passes a fresh tagged reload
+and six native controls (two test functions), with warning-free strict Swift 6
+probe compilation. They cover close/unregister, registered hidden windows,
+presentation projections, retained manager/provenance/diagnostic mapping, cached
+weak-window fallback, and stale-search selection preservation. Visible and
+miniaturized positive cases use temporary getter facts; no window was presented.
+Full test-target compilation and real-window macOS 15 app-host verification
+remain pending under `closed_main_window_routing_verification`. Local offscreen
+evidence does not close those gates. Source review and the
+existing CI window-list/focus assertions remain the operational acceptance path;
+no new telemetry or user-facing strings are introduced.
+
+Local static verification passed: all five affected Swift sources parse without
+diagnostics; the actual-main `ce17e9888a6dce4d2e5755795946b68cf52f0329`
+file budget passes; all 574 test files remain wired; Project Truth validation,
+generation and freshness pass. The retained ordered enumeration was checked
+against the prior body, and the two resource callers have only the intended
+method-name substitutions. These checks do not establish fixed-runtime behavior.
+
+### Focused Git metadata publication boundary
+
+H shard 3's focused-branch duplicate test still expects `Workspace.objectWillChange`
+to fire for the first Git update. The accepted sidebar extraction `f5f58c4b3b`
+moved that state into `WorkspaceSidebarMetadataModel`; Workspace forwards its
+values, and the sidebar's composed publisher observes the model's subjects.
+The adjacent sidebar-publication test already uses that maintained boundary.
+
+The failing case moves into the existing Swift Testing observation suite. It
+checks both stored branch values, a positive first sidebar notification, no
+notification for an identical refresh, and no whole-workspace publication for
+either update. Subscriptions are canceled and owned panels torn down. Other
+legacy tests and production owners remain unchanged; no new file or CI selector
+is needed.
+
+Unchanged build 789 reproduces the old single failed expectation. The corrected
+native case passes; temporary forced workspace publication and a nonidentical
+branch update trigger the three expected failures. Swift 5 and strict Swift 6
+compilation are warning-free. These are owned test-mode processes without window
+presentation. Strict determinism, existing file budgets, wiring, and Project
+Truth validation/generation/freshness pass. Full integrated target compilation
+and exact-head app-host execution remain pending. No product strings changed;
+this section records contributor verification only.
+
+### Notification focus completion boundary
+
+H shard 3 failed only the notification-focus test's artificial 100 ms delayed
+expectation; its subsequent focus, unread-indicator and dismissal-flash assertions
+passed. The existing `FocusSurfaceBroadcaster.flush()` is the causal delivery
+boundary already used by `NotificationFocusEventTests`. The timer does not prove
+that delivery occurred and can fail independently of the intended behavior.
+
+The legacy case now shares that existing Swift Testing fixture as a second
+parameter: direct panel focus and notification-triggered manager focus. Both
+check unread state before the action, the actual selected panel afterward,
+unread/indicator removal, and exactly one dismissal flash with the expected panel
+and reason. Notification state is seeded through the existing scoped restoration
+method, which preserves the supplied record without adding a restored-state flag.
+This avoids external delivery and global delivery-hook replacement. The fixture
+flushes prior work before installing its synchronous composition, restores
+preferences and shared references, and tears down only its owned workspaces.
+
+Both native cases pass against unchanged build 789. Omitting the notification
+focus action in a temporary negative control produces six expected failures.
+Swift 5 compilation is warning-free. Strict Swift 6 rejects both the original
+fixture and this revision at the same three accesses to the existing nonisolated
+`AppFocusState.overrideIsFocused` test override; no new access or suppression is
+introduced. The synchronous MainActor scope is retained. Full target compilation
+in the repository's configured language mode and exact-head app-host execution
+remain required. The unlaunched harness reports disabled-Sentry breadcrumb
+messages; it does not start telemetry or display windows. No product text changes.
+
+
+### Isolated window-routing build checkpoint
+
+Build 790 (`maintenance-closed-window-routing`) contains the merged five-file
+window-routing repair and passes the tagged Debug build. It was not launched.
+The integration source is `d6ff5b7e3`; the build began from the identical merged
+application files just before the merge commit was recorded. Subsequent local
+changes are test and evidence-only. Existing builds 775 and 786–789 remain intact.
+
+The build reports 131 distinct retained warning lines. Changed window-identity,
+recovery, search and provenance owners have none. The two diagnostics in the
+legacy TerminalController file (redundant responder cast and deprecated window
+capture) match build 789 exactly. Nothing was suppressed. The isolated native
+probe reports disabled-Sentry breadcrumb messages without starting telemetry.
+Combined test-target compilation, latest-head app-host and Release gates remain
+open; this checkpoint is not merge approval or proof of real window focus.
+
+## CLI telemetry producer completion
+
+The three existing `BMUXCLISentryTelemetryRegressionTests` cases now await
+`ShellContractProcess`. Their original two-second or five-second deadline remains
+an actual failure boundary: timeout, spawn failure, and cancellation throw after
+the owned producer is joined. Successful status, expected error text, capture
+probe absence/presence, and durable-store probe assertions remain intact. The
+former `timedOut` assertions are enforced by that throwing boundary, not replaced
+with a successful timeout result. Owned-root cleanup failures are visible test
+issues. Standard output and error are captured separately and combined only for
+the existing substring checks and diagnostics; cross-stream ordering is not an
+asserted contract. No production telemetry, SDK configuration, or helper policy
+changes are included.
+
+The shared runner also sets the child's working directory to the owned fixture
+root instead of inheriting the app-host directory. The tested `ping` failures use
+explicit absolute socket endpoints and HOME-based relay credentials; their error
+selection does not depend on repository working-directory configuration. The
+existing environment and probe paths remain unchanged.
+
+In the prior app-host run, two cases reported `timedOut=true` with status 1 and
+complete expected error output. A temporary owned-shell counterexample retained
+the original two/five-second waits while withholding only the separately queued
+exit waiter: both returned that same contradictory result after independent
+termination observation. Normal-delivery controls and the unchanged shared
+runner returned the expected status and output. Every withheld worker and child
+was joined before cleanup. This establishes a permitted false-timeout ordering,
+not the measured cause or frequency of the CI failures. The temporary proof and
+complete changed suite/support compile warning-free in Swift 6; the complete
+suite/support also typecheck warning-free in the target's Swift 5 mode.
+
+The original telemetry cases were not executed locally: their environment enables
+the real Sentry capture/store path. Their complete assertions remain an isolated
+app-host CI gate. The broader error-output suite's similar legacy waiter remains
+outside this bounded correction. Existing shared-runner close-error handling is
+unchanged; this slice does not claim a new audit of every helper consumer.
+
+### Plain attachment and deferred Traditional Chinese keypad readiness
+
+H shard 3 reports a plain attached terminal with no runtime and zero creation
+attempts after a fixed 50 ms wait, and a Traditional Chinese keypad case with
+no fallback event before its one-second deadline. Runtime creation waits for
+asynchronous Claude shim preparation before incrementing the attempt count;
+keyDown returns before interpretation when no runtime is available. CI did not
+record the exact pending creation gate, so this is a demonstrated fixture
+boundary rather than attribution of every CI delay to shim preparation.
+
+The plain attachment case moves to `TerminalInitialRuntimeReadinessTests`,
+subscribes before attachment and uses the maintained three-second readiness
+bound. Surface identity, initial nil runtime/no headless window, final runtime
+and creation-attempt assertions remain. It does not force input creation.
+`TerminalDeferredNumpadCommitTests` retains real key 83 with numericPad input, Pinyin
+source, and the actual `DispatchQueue.main.async` post-keyDown insertText callback.
+The fallback and completed callback must each leave exactly one digit. Hooks
+are installed and restored separately within each synchronous phase; none span
+an await. An owned completion stream keeps the original one-second callback
+failure bound; timeout/cancellation invalidates pending work and joins the
+cancellable deadline. Retained windows and runtime teardown own all resources.
+Only those two legacy methods are removed; all other legacy bytes are unchanged.
+
+Unchanged build 789 native verification passes three functions/four cases,
+including the retained initial-command/input controls, with warning-free target
+Swift 5 compilation. A controlled duplicate commit fails the exact final text
+array assertion. Omitted completion fails at the original one-second bound;
+cancellation before queued delivery invalidates the callback and preserves
+prior hooks and the input-source override. Readiness controls reproduce nil/zero at 50 ms and an absent
+keypad event without readiness, followed by real runtime completion. These
+probes use owned HOME/test-mode processes and never show or activate windows.
+Strict Swift 6 compilation remains blocked by the existing imported
+`KeyboardLayout.debugInputSourceIdOverride` mutable-static declaration; no
+suppression or production change is introduced. Actual installed IME delivery
+and integrated fixed-head app-host execution remain unverified. No workflow
+selector, runtime timeout, product string or localization catalog changes.
+
+## Git root-alias regression admission
+
+`FileExplorerGitStatusProviderTests` is also selected by the existing first
+focused shard-one invocation. The I diagnostic run completed that invocation
+with 115 functions in 27 suites and six CLI timeout issues, then skipped the
+broad shard containing the alias regression. That result is a coverage block,
+not evidence that the newly added alias case ran or failed.
+
+Selecting the complete wired Swift Testing suite exercises both physical-root
+and symbolic-link parameter cases without depending on later broad execution.
+The broad shard selector, all existing focused selectors, job count, wrapper,
+deadlines, and assertions remain unchanged. At this selector-only checkpoint no Git status production correction
+was included; named actual regression failure was required before that fix.
+The workflow change follows the maintained conservative all-area CI routing rule.
+
+### Combined window-routing and fixture checkpoint
+
+The combined `bmux-unit` target passes `build-for-testing` with 576 wired test
+files and 14 shared sources at application/test revision `346e015e5`. The
+subsequent Git-alias focused-selector change touches workflow and evidence only.
+The compile uses its isolated derived-data directory and does not launch an app
+or replace builds 775 and 786–790. Build 790 remains the isolated runtime proof
+for the closed-window routing change.
+
+This complete compile reports 405 distinct warning lines. The new Swift Testing
+owners and changed window routing, search, and provenance owners have none.
+Remaining diagnostics match previously recorded builds after normalizing source
+line shifts and metadata-process timestamps: legacy XCTest imports, unused test
+results, concurrency annotations, and the existing terminal-controller cast and
+window-capture deprecation. No diagnostic or warning budget was suppressed.
+Native project parsing, all 576 test-file wiring entries, strict determinism,
+Swift file budgets, package grouping and lockfile policy pass.
+
+This is compilation evidence, not an app-host suite pass. The older diagnostic
+run still reports additional agent-session routing and fixture failures; their
+causes are being checked independently. At that checkpoint named Git-alias regression execution,
+all fixed-head macOS shards and the remaining release/validation gates remain
+required before merging.
+
+### Remaining obsolete dead-PID restore oracle
+
+I shard two still executes `RestorableAgentSessionIndexTests`' Gemini case that
+expects a dead saved PID to erase the session snapshot. Accepted commit
+`9374b139e1` deliberately preserves restorable snapshots and clears live-process
+evidence. The earlier maintenance correction removed the corresponding Codex
+oracle in `SessionPersistenceTests`; this separate Gemini oracle remained. Only
+that obsolete method and its contradictory comment are removed here. Production
+restore behavior and every other legacy case remain unchanged.
+
+The maintained `RestorableAgentSessionStalePIDTests` covers snapshot retention,
+empty process IDs, no live-process flag, Codex fork construction, and precedence
+of a scoped live record over a newer stale record. A temporary parameterized
+control also verifies Gemini kind, session identity and working directory on
+unchanged build 790: two functions/three cases pass with warning-free strict
+Swift 6 compilation. It uses an owned HOME and hook directory and never launches
+the app or contacts a service. This is a policy correction, not a new product fix.
+
+The temporary extra parameter is not added to the permanent suite: its existing
+synchronous environment override is serialized only within that suite, so an
+unrelated concurrent loader can still observe it. Expanding that global fixture
+would worsen a retained isolation risk. No new environment swap, production
+injection seam or broad concurrency refactor is introduced. Actual fixed-head
+app-host coverage remains required; the existing suite is not claimed globally
+isolated. No shipped strings or localization catalogs change.
+
+### Grok saved-route and missing-cwd connection fixtures
+
+I (`0f7fa7fcb`, shard 2) reports 34 assertions over 41.016 seconds in
+`testGrokSessionEndDoesNotDropRoutingForLaterChatMessages` and eight over
+10.277 seconds in `testGrokStopNotificationFallsBackWhenTranscriptCwdIsUnavailable`.
+Both first failures capture the prior SessionStart's one-way `feed.push` on the
+legacy fixture's sole accepted connection. Eight and two five-second process
+terminations respectively account for most assertions; later assertions inspect
+incomplete or displaced captures. The session record remains present.
+
+The two cases now use the existing `GrokHookConnectionFixture` and Swift Testing.
+The full eleven-action two-turn sequence preserves saved-route lookup without
+ambient IDs, scoped clear/status/notification assertions, both internal-message
+forms, and exact feed-only SessionEnd output. The three-action missing-cwd case
+preserves generic completion and duplicate suppression. The fixture omits cwd
+from payload and environment together, and unsets the shell wrapper's synthesized
+`PWD` before exec only for that absent input. Existing payload/transcript and
+concurrent-thread cases retain their original source. Each producer keeps the
+local five-second deadline, restored original 20-second CI minimum and unchanged
+200-millisecond termination grace; success and
+failure join before socket capture drains and files are removed. Cleanup failures
+are visible test issues. No production or shared socket/process helper changes.
+
+Owned CLI controls on frozen build 790 reproduce the boundary: one accept per
+action produces a 5.002-second prompt or Stop timeout, while continuous acceptance
+completes those calls in 0.094 and 0.075 seconds with the same responses. ID-less
+feed receives no reply. All child processes and socket tasks join before owned
+roots are removed. A temporary missing-cwd probe initially failed because its
+shell added PWD; retaining that negative and removing only the injected value
+restored the actual nil-cwd contract. This does not establish a cause for every
+I failure or the separate sibling-status case.
+
+The final source's five Grok tests, including the three existing shared-fixture
+callers, pass against the actual build-790 CLI in 2.044 seconds on macOS 26.3.
+Standalone Swift 6 compilation reports no warnings. Only bundle lookup is adapted
+for that standalone executable; the socket, process, fixture, and test sources are
+compiled unchanged. Full macOS 15 app-host execution remains pending under the
+existing `grok_hook_connection_fixture_verification` caveat. No tagged app was
+launched or rebuilt for this test-only migration.
+
+### Browser preload fixture window ownership
+
+The I shard-three run crashes during XCTest teardown after the background-preload
+consumption case starts. Matching XCTestCore image UUIDs and frame offsets in
+the same run identify the memory-check teardown boundary; they do not identify
+the invalid object. The case owns a raw borderless NSWindow and closes it before
+Swift releases its reference. A never-presented native window control reproduces
+SIGSEGV with the default release-on-close policy and completes with
+`isReleasedWhenClosed = false`.
+
+Only that case moves to `BrowserBackgroundPreloadOwnershipTests`, retaining all
+three preload assertions, navigation actions and defer order. Its real-host
+window now follows the retained ownership policy already used by the production
+background preload host. No production browser behavior, deadline or selector
+changes. The primitive ran in an owned HOME with activation prohibited; the full
+preloader case is not claimed locally executed and remains an actual macOS 15
+app-host verification gate. The complete migrated case typechecks against build
+790 modules in Swift 5 and strict Swift 6 without warnings. Wiring (577 files),
+native PBX parsing, normalization, main-base source budget, strict determinism
+and local Project Truth validation/generation/freshness checks pass. No shipped
+copy or localization catalogs change.
+
+### Hermes hook phase ownership
+
+The I shard 2 run reported 15 issues across two Hermes hook cases: three
+expectation-only timeouts in notification handling, followed by process timeouts
+and missing downstream commands/state in session-end/finalize. The old fixtures
+started fixed accept workers per invocation on one shared listener; their single
+expectation completed when any worker exited, without joining surplus workers.
+A bounded socket-only control shows both surplus workers serving later phases
+and a prior one-way feed connection being consumed by the next phase's worker.
+These controls establish fixture ownership defects, not the exact historical
+CI schedule or a Hermes production-policy defect.
+
+`HermesHookProcessContractTests` migrates only those two cases. Its fixture uses
+`ShellContractProcess`, `CLISocketFixture` and `CLISocketReadiness` unchanged.
+Each invocation joins the CLI, drains queued one-way telemetry, joins socket
+cleanup and returns that phase's commands before another invocation starts.
+The session store persists across phases in an owned short-path root. The eight
+original requested five-second process deadlines remain locally, with the original
+20-second CI minimum restored by the shared fixture policy. Timeout throws after
+termination/join and retains output/request diagnostics. Cleanup errors are visible test issues;
+only a genuinely missing store file means absence, while malformed/unreadable
+state fails instead of satisfying the final deletion assertion.
+
+All 45 original behavior oracles remain: 37 direct assertions and eight throwing
+no-timeout boundaries. They cover exact status/stdout, completion and permission
+payloads, approval cleanup without duplicate feed, persisted session fields,
+non-destructive per-turn session-end and destructive finalize. The responder
+models `surface.resume.clear` with surface/source/checkpoint, matching the CLI;
+that request intentionally does not carry `workspace_id`.
+
+An owned, non-app-host executable against unchanged build 790 passed both original
+contracts across eight phases. The synthetic old-worker control and forced-error
+cleanup are separate evidence; no real user socket, application activation or
+external telemetry was used. The exact migrated sources and actual bundle locator compile without warnings
+in Swift 5 and Swift 6; both cases pass against build 790. Temporary negative
+controls reject a wrong notification payload, substituting session-end for
+finalize, malformed JSON and a present malformed session record. A stopped owned
+child reaches the local five-second failure boundary, is killed/joined,
+and leaves neither its socket nor root behind; the timeout remains a test issue.
+Integrated app-host verification is still required before claiming the 15 CI
+issues resolved. No workflow selector or production code changes here.
+
+### Tmux split rejection fixture joins owned work
+
+I (`0f7fa7fcb`, shard 3) reports three failures in
+`CLITmuxCompatRemoteSplitTests.splitPrintCarriesPreMutationRemoteRejection`:
+the server semaphore times out, the CLI is terminated with status 15 and empty
+stderr, and the expected pre-mutation rejection is missing. Its approximately
+62-second span includes the 30-second child deadline followed by a separate
+30-second server wait. The log does not identify whether the global-queue server
+worker started, accepted, or handled a request. This is not the Grok fixture's
+separate one-way connection mismatch, and the macOS 15 cause remains unproven.
+
+The exact case now uses `CLISocketFixture` and `ShellContractProcess`, keeping
+its original 30-second producer bound, direct CLI argv, null stdin, routing IDs,
+`remote_tmux_unsupported_options=["-P"]` checks, rejection text, nonzero exit, and
+absence of an "already applied" message. The shared process owner's existing
+200-millisecond termination grace applies; no timeout is extended. Captured
+success or failure joins the producer before the socket's final drain and
+resource cleanup. Failed processes rethrow after joined capture with owned
+request/output context; directory cleanup failures become test issues. The
+other two respawn cases and their legacy helpers remain unchanged, including
+their unresolved lifecycle risk. No production, shared helper, or selector changes.
+
+An owned build-790 CLI trace through the maintained helpers observes
+`surface.list`, `surface.current`, `surface.list`, then `surface.split`; each
+response is written before the producer joins, followed by joined socket and
+observer cleanup. It returns the exact remote rejection and status 1 in
+0.039 seconds. The final repository case passes in 0.047 seconds with warning-free
+Swift 6 compilation. Two temporary source controls retain the original assertions:
+omitting `-P` fails the option-forwarding assertion, while returning an accepted
+split fails the nonzero-exit and rejection-text assertions. These are local
+contract checks on macOS 26.3, not a reproduction or disproof of the CI stall.
+Only standalone bundle lookup is adapted; the test and shared owners compile
+unchanged. No app was loaded, launched, or rebuilt. Actual macOS 15 app-host
+verification remains open as `tmux_split_rejection_fixture_verification`.
+
+## Korean marked-text runtime readiness
+
+Integration I shard 3 reported no composing key event in the Korean marked-text
+fixture. It sent a key after a 50 ms run-loop delay without checking runtime
+readiness. The Swift Testing replacement subscribes before attachment and waits
+on the existing readiness helper with its three-second failure bound. It keeps
+the original marked text, Korean source, event and three composition assertions.
+The MainActor event phase saves and restores existing probes without suspension;
+the existing input-handler seam replaces a process-wide method swizzle. The
+retained window is never presented, and teardown closes its runtime and window.
+
+Against frozen build 790 the migrated native case passes (one test, 0.112s).
+Removing marked text fails all three composition assertions; removing the runtime
+fails the required event assertion. These controls preserve coverage and establish
+the preconditions; they do not prove the cause of the macOS 15 CI failure. Full
+app-host verification remains pending. Swift 5 compilation is warning-free. Strict
+Swift 6 still diagnoses the existing mutable nonisolated
+`KeyboardLayout.debugInputSourceIdOverride`; no suppression or production change
+is introduced. No shipped UI strings or localization catalogs change.
+
+## Local Git root alias correction
+
+K (`b34092aa9`) focused shard one, job `116035338905` in run
+`38616518883`, executes the test-only alias regression: the physical-root
+control passes and the symbolic-link case fails its two modified-status checks
+and exact key-set check. The two older quoted-name/sibling-prefix cases also
+fail. This is actual macOS CI red before the production correction.
+
+`GitStatusProvider.fetchStatus` now resolves both existing local roots with the
+same Foundation operation before containment and parent propagation, then maps
+returned keys into the caller's requested root. Individual status entries stay
+lexical so deleted paths, renamed paths and symlink files keep their identities.
+The SSH path is unchanged because its roots belong to the remote filesystem.
+FileExplorerStore continues to own refresh/publication and receives keys matching
+its existing row paths; no UI layout, terminal, model or navigation owner changes.
+
+The candidate owner compiled with strict Swift 6 and no warnings against frozen
+build 790 dependencies. All seven existing functions (eight parameter cases)
+pass, including index non-mutation, quoting, sibling exclusion and SSH controls.
+Three temporary entry-mapping cases also pass: deleted/renamed/symlink entries,
+a requested trailing slash, and an alias to filesystem root plus direct root.
+These initial controls compiled the source candidate. The subsequent isolated
+`maintenance-git-root-alias` reload passes at `ad50d343e`, producing build 791
+without launching or replacing a running app. All seven provider functions/eight
+parameter cases then pass against that compiled app (1.470s, strict Swift 6, no
+warnings). Its application warning categories match build 790 after source-line
+and metadata-timestamp normalization. Fixed-head macOS CI remains required.
+No user-facing strings or localization catalogs change.
+
+
+## Closed-stderr CLI error contract
+
+Integration I shard 3 reported a timeout, exit-status mismatch and missing Usage
+text in `testCLIErrorPathDoesNotCrashWhenStderrIsClosed`. The fixture inherited
+its socket and process environment and waited for a global-queue exit worker.
+The accepted `f48922aa94` CLI policy deliberately replaced full Usage on stdout
+and exit 1 for unknown commands with a short stderr error and exit 2. Normal
+unknown-command dispatch still connects and authenticates before selecting that
+error, so an ambient socket failure can exercise a different error path.
+
+Only that case moves to `CLIStderrClosedContractTests`. It uses the existing
+joined socket and process owners, an owned short socket/root/environment, an
+explicit fixture password, and shell `exec` with stderr closed. The password
+prevents fallback to user credential lookup. The original five-second child
+failure bound remains; the shared owner's 200 ms termination grace applies.
+Successful completion requires the exact owned authentication exchange, normal
+exit 2, and empty stdout/stderr. The shared process result now carries the existing
+Foundation termination reason as a Boolean, distinguishing exit 2 from SIGINT 2. The throwing runner rejects a timeout after joining the
+child; socket final drain and visible directory cleanup follow. All remaining
+legacy case bytes and helpers stay unchanged; their lifecycle risks are not
+claimed resolved. No production or selector changes are made; the shared deadline precision correction below retains the same configured durations.
+
+The exact new source passes against frozen build 790 in a standalone Swift 6
+harness (one case, 0.242s; no compiler warnings), with only bundled-CLI lookup
+adapted. A temporary open-stderr control retains exit 2 and observes the short
+unknown-command error. Restoring the two obsolete exit-1/Usage assertions fails
+exactly twice. Two owned-shell controls both return numeric status 2 but distinguish
+normal exit from self-SIGINT through the new result field; both pass. These prove the current error contract, not the historical CI
+waiter stall. An earlier owned file/pipe comparison did not reproduce pipe
+capacity blocking. No app was loaded or launched, no runtime rebuilt, and no
+external telemetry was sent. Actual macOS 15 app-host verification remains open
+as `cli_closed_stderr_contract_verification`. No shipped UI/help/settings strings
+or localization catalogs changed.
+
+## Four-agent one-way feed fixture ownership
+
+The I shard-three run records eight issues in the non-actionable feed test:
+Gemini, Kiro, Hermes and Antigravity each miss server observation and record
+zero feed requests, while all child exit, stdout and timeout assertions pass.
+The relevant test, dispatcher, classifier and socket resolver are unchanged
+between I and K. These sources do not take the Claude/Codex running-state
+reconciliation path, so the separate Hermes lifecycle diagnosis does not
+establish this failure's cause.
+
+`FeedHookNoResponseContractTests` retains the exact four payload variants and
+all original behavior oracles. Its owned fixture supplies an explicit private
+password, avoiding ambient password-file/Keychain fallback, and acknowledges
+authentication separately. Feed requests receive no response. The existing
+`ShellContractProcess` joins the child within the original three-second failure
+bound; a throwing timeout replaces the former `!timedOut` assertion. Existing
+`CLISocketFixture` then drains sent bytes and joins socket cleanup before the
+separate original five-second feed-observation bound completes. Authentication
+is excluded from feed capture/count and diagnostics never include credentials.
+Only the one legacy method and its unused input-value type are removed; the
+other two cases and shared helpers are unchanged. The new suite preserves the
+original sequential four-agent execution. No workflow selector or product
+behavior changes.
+
+Exact-source Swift 5 and Swift 6 compilations are warning-free; unchanged build
+790 passes all four variants in isolated owned-home processes. Compiling the
+complete retained legacy container also succeeds, with its existing redundant
+Void-result discard warning in the socket address helper; that helper is unchanged.
+A temporary withheld-authentication control preserves exit zero and exact
+empty-object stdout while failing both feed-observation/count oracles for each agent.
+The control demonstrates a possible boundary, not historical CI causality:
+the old log lacks accepted-connection and authentication evidence. The
+production 50ms best-effort connect/auth/write policy remains unchanged and
+can still drop delivery under load. Integrated fixed-head app-host execution
+remains required; local success is not proof that the historical failures are
+resolved. No app activation, user socket, clipboard, preference, or external
+telemetry operation is part of these probes.
+
+## SSH creation producer ownership
+
+K focused shard one (`116035338905`) times out in both parameter cases of
+`SSHWorkspaceCreationTests` at the fixture's CommandRunner result. That runner
+can report its deadline before joining the child and detached pipe readers.
+The fixture now uses the existing ShellContractProcess owner at the same
+five-second bound, preserving failures until the producer and final socket drain
+are joined. The subprocess runs the same SSH creation arguments with null stdin,
+owned cwd/output files and environment. Explicit fixture authentication prevents
+user credential fallback and is asserted separately from the original RPC list.
+Cleanup failures now produce test issues. No production runner or CLI changes.
+
+The complete original test file and all create, rename, configure, select and
+output assertions are unchanged. Both variants pass against frozen CLI 790
+(one function/two cases, 0.550s) with strict Swift 6 and no warnings. An incorrect
+remote state response fails the original exact stdout assertion in both cases.
+These establish the CLI contract and fixture ownership, not the historical CI
+timeout cause; fixed-head macOS 15 execution remains required. No UI strings,
+CLI help or localized catalogs change.
+
+## Remote loopback bridge navigation fixture
+
+Integration I shard 3 reports the two-second loading assertion twice in
+`BrowserPanelRemoteStoreTests.testRemoteWorkspaceRuntimeBridgeAliasesMultipleLoopbackPortsFromSamePage`.
+Neither attempt reports a failure in its six-URL JavaScript equality afterward.
+The old helper polled native WebKit state and returned after recording a timeout;
+the case did not explicitly close its panel. Concurrent slow WebContent launch
+logs cannot be attributed to this panel, so the macOS 15 cause remains unproven.
+
+The exact case now uses Swift Testing and a cohesive owned-panel fixture. Native
+KVO observation subscribes before HTML loading without an initial false event;
+buffered events trigger a MainActor check of current `WKWebView.isLoading`.
+The original two-second failure deadline still begins after `loadHTMLString`
+returns. Cancellation joins the event/deadline tasks. A timeout records bounded
+native phase, loading/progress, URL class, and elapsed timestamps, then retains
+the original JavaScript equality flow. No arbitrary URLs or payloads enter the
+diagnostics. Teardown invalidates observations, finishes the stream, and closes
+the panel. Only the named legacy case and its exclusive polling helper were
+removed; the remaining suite and production bridge/proxy behavior are unchanged.
+
+Frozen build 790 on macOS 26.3 passes both the original waiter and a native-signal
+control. The migrated case passes with all six original URL results: HTTP ports
+3000/8000, the API subdomain, cleartext WebSocket port 5173, and unchanged TLS
+WebSocket/HTTPS hosts. A temporary omitted-bridge control fails the original
+URL equality; suppressed signal delivery fails the original two-second bound
+and produces the phase diagnostic while the URL equality still succeeds.
+A cancellation control triggered by native load start joins its waiter and
+confirms the observation stream ends and the panel delegate is cleared.
+
+These native probes first prove a process-local Foundation HTTP(S) denial before
+dynamically loading the app module, then install an owned WebKit HTTP(S) deny
+rule before HTML. This fences the constructor's unrelated script prefetch and
+favicon work; no proxy, window, or external network is used. The fence and cleanup
+observations exist only in temporary diagnostic adapters. Source compilation uses
+Swift 6; local evidence does not reproduce or disprove the historical CI timeout.
+Actual macOS 15 app-host verification remains open under
+`browser_remote_loopback_fixture_verification`.
+
+## Shared shell fixture deadline precision
+
+A final boundary review found that the shared `ShellContractProcess` slept for
+its injected duration only after the timeout child was scheduled. Delayed
+scheduling could therefore extend the intended failure bound. The owner now
+captures a monotonic start immediately after successful `Process.run()` and
+sleeps until that start plus the existing duration. SIGTERM escalation likewise
+captures its start before scheduling the existing grace task. The configured
+defaults remain five seconds and 200 ms, and every caller-specific duration is
+unchanged. Process exit, timeout and cancellation still join the child before
+returning or releasing fixture resources; no new clock, mode or public API is
+introduced. This corrects deadline anchoring, not the historical CI stall cause.
+
+Temporary controls through the actual shared owner pass in Swift 6 with no
+compiler warnings: normal exit 2 versus SIGINT 2, spawn failure preserving the
+original error, deadline escalation of a SIGTERM-ignoring child, and native-ready
+triggered cancellation of that child. Both failure paths verify the owned PID
+is gone after the joined return. The cancellation probe joins its native
+readiness source through the existing fixture primitive. These local controls
+do not replace the integrated test-target and macOS app-host gates. No app,
+network telemetry, user settings or clipboard was accessed.
+
+## Integrated repair batch L verification
+
+The complete `bmux-unit` target builds at `ebe8398460c527dafbc0cf334fa7034c82fb54ff`,
+including 585 wired test files and 14 shared sources. Normalized warning categories
+are 249 versus 250 in the prior complete K compilation, with no new categories;
+existing warnings remain visible. Build 791 separately verifies the compiled
+Git-root alias correction, with seven functions/eight parameter cases passing.
+Authenticated Project Truth, wiring, project normalization, strict determinism,
+actual-main Swift budgets, package grouping and lockfile policy pass. All 21
+preserved source heads remain ancestors. These results do not establish a
+full-suite pass: exact published-head macOS app-host gates remain required.
+
+K shard two exposes additional failures. The old 11pt font oracle and a restore
+fixture that never creates its requested directory conflict with accepted 13pt
+and existing-directory policies. Other native/CLI timeouts still need evidence;
+concurrent suites and large failure payloads are observed, but no universal
+scheduler cause has been established. No deadlines or gates are waived.
+
+A separate unchanged Markdown case reproduces its exact CI ratio failure in an
+owned native probe against compiled build 791 on macOS 26.3. Baseline SVG/prose
+DOM dimensions are 240/22; at native page zoom 2 they are 480/22.5. Native WebKit
+snapshots show diagram labels at roughly four times their initial visible size
+while prose doubles. The shell multiplies SVG dimensions in addition to native
+page zoom; CSS DOM rectangles alone do not measure visible zoom. The original
+wide-diagram assertion also fails in this probe. No production correction is
+included yet. Fit behavior, physical-unit test assertions, and fixed-head macOS
+execution remain open under `markdown_mermaid_double_zoom_verification`.
+The probe retains an owned, never-presented window and uses bundled inline
+assets; it does not launch or replace a preview or claim WindowServer focus
+coverage. Test diagnostics and contributor notes introduce no shipped strings.
+
+## SSH agent fixture failure summaries
+
+Candidate K's broad shard 2 still reports a timeout in the joined SSH agent
+fixture. Its failure diagnostic interpolated entire captured requests, including
+a generated terminal startup script, plus both output files. The first complete
+log interval contains about 528 KB between the inner issue and the rethrown
+error; that log interval is not evidence of child-exit or scheduler latency.
+The captured sequence includes `workspace.create` without
+`workspace.remote.configure`; final-drain capture does not prove a timely reply.
+
+The fixture now reports request count and total byte count, at most eight method
+categories, and stdout/stderr file byte counts or a read-error code. Method
+categories allow only the two expected RPC names; malformed and other requests
+receive fixed labels. It does not log startup scripts, request values, output
+contents, authentication text or paths. The original error is still recorded and
+rethrown, and all successful protocol/path/options assertions remain unchanged.
+No process deadline, concurrency, socket response or production code changes.
+
+A temporary runtime control through the exact summary method uses an 800 KB
+synthetic payload/output, verifies a sub-300-byte summary without its sentinel,
+and retains method/count and missing-file error evidence. The complete affected
+fixture compiles in Swift 6 without warnings. This bounded output correction
+does not resolve or attribute the actual app-host timeout, which remains open
+under `ssh_agent_joined_producer_verification`.
+
+### Browser chrome shipped-default contract
+
+K shard 2 (`38616518883`) failed the browser chrome reference-font assertion:
+the shared shipped default is 13, but the test still pinned 11. The accepted
+13pt default predates K; this assertion reads immutable declarations, not mutable
+app-host settings. The test now compares the chrome anchor with
+`GhosttyConfig.defaultSurfaceTabBarFontSize`; the maintained terminal-core config
+test independently pins the shipped value to 13. All scale, legacy-size, clamp
+and invalid-input assertions remain unchanged. Stale numeric comments were removed.
+
+The complete metrics suite passes against unchanged build 791 in an isolated
+native harness (seven functions, eleven cases). Restoring the old literal produces
+exactly the original 13-versus-11 failure. Target Swift 5 and strict Swift 6 compile
+without warnings. No production behavior, config, timing, selector or runtime
+ownership changed. Integrated macOS app-host verification remains pending.
+
+### OMX HUD restore directory precondition
+
+K shard 2 (`38616518883`) failed the OMX HUD restore cwd assertion after the
+fixture supplied a unique directory path without creating it. The accepted
+restore policy preserves saved directory metadata but omits an unavailable local
+cwd from guarded terminal startup. The migrated Swift Testing case creates its
+owned directory and retains the original saved HUD command, fresh launcher,
+launcher-path and requested-cwd assertions. Both workspaces, the generated
+launcher and owned directory are cleaned up; cleanup errors fail the test. All
+other legacy method bytes remain unchanged.
+
+Unchanged build 791 passes the exact migrated case under Swift 5 and strict
+Swift 6, both without warnings. The old container and new suite also compile
+together in the target Swift 5 mode. A temporary missing-directory control fails
+exactly the original cwd equality, while a separate control confirms nil runtime
+cwd and preserved snapshot metadata. A diagnostic copy emitting only its owned
+paths verifies the root and generated launcher are removed after completion.
+The harness uses isolated HOME/config and test mode before module initialization;
+Foundation chooses its OS temporary root on this host, so resource ownership is
+by unique directory and launcher paths, not an assumed TMPDIR override. No
+window, terminal runtime, shell command, user preferences or app launch is
+required. No production, deadline, selector or shared-helper behavior changed.
+Integrated macOS app-host verification remains pending.
+
+## Mermaid physical zoom regression gate
+
+The regression now converts DOM CSS geometry into native view points using
+`WKWebView.pageZoom`. It preserves the original proportional prose/SVG, wide-fit,
+resize, left-edge and export checks, and adds a fresh-at-2x render compared with
+an independent 1x view plus content-cap change/restore checks. The fixture
+composes the maintained retained-window rendering owner and cancellable DOM
+observation; the original ten-second geometry deadline is unchanged. The
+focused shard-one gate includes both cases so a broad-suite abort cannot hide
+the regression. The test-only commit preceded the production correction.
+
+Owned build-791 native probes fail the physical geometry checks. Additional
+instrumentation observes the production global error handler replacing the page
+with a generic script-error message immediately after resize observation. A
+control changing only the observer's synchronous geometry write to next-frame
+delivery removes that page replacement while retaining five geometry failures.
+The error is generic, so this does not identify its JavaScript stack; it supports
+a resize-delivery feedback correction without suppressing errors or increasing
+deadlines. [CI run 38630476342, attempt 2](https://github.com/BrianBusby/bmux/actions/runs/38630476342/job/116091487642)
+on test-only integration head `76a5e4731cf13d8d60badf0b1b93c854a97c1233`
+then failed five intended geometry assertions, independently of its additional
+deadline failure and unrelated native issues.
+
+The correction leaves native `pageZoom` as the sole visible scale. The shell
+fits SVGs against the nominal unzoomed viewport and content cap, and coalesces
+resize-driven writes into one cancellable animation frame. The existing native
+coordinator forwards content-cap changes to that same shell owner. No polling,
+error suppression or deadline increase is introduced. A classic scrollbar can
+change the nominal fit by its gutter width; exact proportional baseline width
+is not promised across scrollbar appearance changes. Existing fit, resize,
+left-edge and export assertions remain intact.
+
+Both unchanged regression cases pass against the actual build-792 app module
+and bundled shell in 0.352 seconds. This isolated native probe does not establish
+integrated app-host CI success; that gate remains pending.
+No shipped UI strings, terminal engine, user settings or active preview changed.
+
+### Split workspace title notification delivery
+
+L shard 4 failed the focused split-workspace title test's one-second polling
+assertion. The migrated Swift Testing case injects owned settings and the
+maintained notification-coalescer scheduler. It posts the original notification,
+requires its recorded callback, checks that titles have not changed before
+delivery, then advances that callback. All original initial-title, split-focus,
+panel-count, updated-title, custom-title and sibling-title assertions remain.
+The fixture tears down its owned panels and defaults; no global hook or production
+mutation is needed. All other legacy test bytes remain unchanged.
+
+The exact migrated case passes against unchanged build 791 in target Swift 5
+and strict Swift 6 with no compiler warnings. Retaining the imported coalescer
+callback type avoids an implicit Swift 6 Sendable conversion at the Swift 5
+module boundary. Withholding delivery produces exactly the two original final
+title failures. The one-second polling wait is replaced by explicit scheduler
+control, not a longer timeout; elapsed production timer behavior is not covered
+by this fixture. The historical CI timer/settings state was not captured, so
+this proves the maintained completion boundary without assigning the CI cause.
+No production, shared-helper or selector change was made. Integrated macOS
+app-host verification remains pending.
+
+### Palette selection shortcut fixture ownership
+
+L shard 2 rejected the final shortcut events in
+`testChordedCommandPaletteNextShortcutMovesSelection` and
+`testRemappedCommandPalettePreviousShortcutDoesNotConsumeControlP`; their
+missing-notification timeouts followed those synchronous rejections. The exact
+historical rejecting gate remains unassigned. The original fixture constructs a
+full application window, holds shared settings during a nested XCTest wait, and
+leaves the settings constructor's additional fallback path enabled.
+
+The two migrated cases retain the original shortcut setters, key codes,
+modifiers, handled results, target and selection-delta assertions. An owned
+retained window, direct main-window context and genuine field-editor property
+establish the route without activation or listener startup. A prewritten empty
+settings file disables all fallbacks; synchronous cleanup restores the previous
+app/active manager, settings store, persisted keys and volatile domains. The
+handler posts selection notifications synchronously, so its return replaces the
+original 150ms inverted and one-second notification waits; these are removed,
+not extended. The remaining legacy cases are unchanged.
+
+Frozen build 791 runs the exact new two-case suite successfully with zero
+Swift 5 compile diagnostics, including compilation of the remaining legacy
+container. Temporary multiline-editor, wrong-window and wrong-binding controls
+reject the original positive oracles; the settings control demonstrates owned
+fallback import versus an isolated primary. This establishes boundary
+sensitivity, not the cause of the macOS 15 CI failure. Standalone Swift 6
+compilation remains blocked by the imported mutable
+`KeyboardShortcutSettings.settingsFileStore` declaration; no suppression or
+production concurrency change is included. Integrated full-target compilation
+and fixed-head app-host verification remain pending. No workflow selector or
+production behavior changes in this slice.
+
+### Kiro lifecycle no-response fixture ownership
+
+`CLIHookNoResponseTests.genericLifecycleFeedTelemetryDoesNotWaitForSocketResponse`
+now composes the maintained socket and shell process fixtures. The Kiro launch,
+SessionStart payload, routing replies, unanswered id-less `feed.push`, exit status
+and stdout assertions remain intact. The producer keeps its three-second failure
+bound and the feed observation keeps its separate five-second bound. A captured
+producer error propagates after the child exits and the socket's final input drain
+and native readiness sources join; only then can owned files be removed.
+
+The exact migrated case passed against unchanged CLI build 791 on macOS 26.3.
+Temporary controls withhold initial authentication before lifecycle subprocesses
+can start; timeout and cancellation retain their errors and prove the owned PID
+is gone before producer/socket completion and root cleanup. These controls do not
+change shipped fixture APIs. The unchanged eight-megabyte no-read case and its
+helpers remain byte-identical, including their existing redundant Void-result
+compiler warning and legacy worker ownership risks.
+
+This addresses a concrete fixture lifetime gap, not a demonstrated cause of the
+K2/L4 app-host timeouts. Full target compilation and actual macOS 15 app-host
+verification remain pending under `kiro_lifecycle_feed_fixture_verification`.
+
+## Retired optional app-host failure evidence
+
+The optional collector has been removed. Review `4289216424` identified that
+its synchronous result-directory scan and up-to-64-MiB log copy still ran inside
+the native watchdog after xcodebuild exited. Near the existing deadline, staging
+could replace native exit 65 with watchdog exit 124. Removing the optional
+collector avoids adding another diagnostic lifecycle to the native test owner.
+
+The wrapper no longer snapshots or stages failure evidence. Its native logs,
+process sampler, cancellation handling, socket guards, retry policy and exit
+status propagation remain unchanged. The workflow no longer runs the collector
+or uploads its sanitized reports; it retains the sampler upload and every native
+product gate. The exclusive collector tests are removed. Cancellation coverage
+now contains eleven scenarios: only the two retired defer-phase TERM/INT cases
+and their unused fixture branches were removed.
+
+Automated per-attempt JSON reports, result-bundle attribution and matching-image
+UUID symbolication are no longer provided by this enhancement. Native logs and
+the separate process sampler remain available. This is abandonment of the
+optional enhancement, not proof that symbolication or hang diagnosis is complete.
+The canonical and local `app_host_failure_evidence_verification` caveat is
+superseded with that explicit disposition. Existing Q/R artifacts remain historical
+evidence; their records below do not promise future collector artifacts.
+
+## Live-surface recovery window precondition
+
+The migrated live-surface recovery socket case keeps every original registry
+identity and ping/capabilities/tree/current/workspace/surface/pane/health/split
+assertion. It now presents its retained window with `orderBack(nil)` and requires
+visibility before unregistering. Accepted routing policy distinguishes retained
+surface identity from eligible window presentation; an unregistered hidden window
+is deliberately absent from presentation-oriented APIs.
+
+A synchronous owned fixture composes the real window context directly, avoiding
+registration's shared listener and session-save side effects. The existing
+unregister seam still invokes the actual discard-and-remember route owner.
+Cleanup tears down every owned panel, including the split, forgets only the owned
+recoverable route, closes the retained window, and restores the prior app, active
+manager and route-retirer collaborator without suspension. No production routing,
+API, selector or timeout policy changes.
+
+The exact permanent source compiles warning-free in target Swift 5 and strict
+Swift 6 against unchanged build 791. Temporary direct-context controls never
+present a window: a controlled visibility fact exercises the complete API body,
+and a hidden fact retains the original presentation failures. These establish the
+routing precondition and fixture cleanup, not real WindowServer presentation.
+The permanent `orderBack` case is compiled only locally; its actual app-host run
+remains pending under `live_surface_recovery_window_fixture_verification`.
+
+### Bash relay refresh completion observation
+
+`BashRelayPromptRefreshTests` migrates only the original Bash prompt-refresh
+case from `GhosttyConfigTests`. The real `_bmux_detach_bg` still invokes an owned
+fast CLI stub with the original argv. The stub appends its log first, then only
+`surface.ports_kick` emits one newline through an owned FIFO. Bash opens the FIFO
+before invoking the prompt and uses builtin `read -t 1` immediately afterward.
+This replaces the first-nonempty-log predicate, which could observe the separate
+pwd callback before refresh. Missing completion exits nonzero before reading the
+log; exact refresh JSON, status-zero and no-prompt-noise assertions remain.
+
+The existing `ShellContractProcess` retains the five-second whole-process bound
+and joins parent Bash on success, failure and cancellation. The FIFO writer uses
+its own O_RDWR open, so one bounded token does not wait for parent reader
+admission. Temporary native controls cover normal completion, missing token,
+cancellation, no other reader, and failed log append. No diagnostic phase FIFO
+or process observation framework is added to the permanent test.
+
+The fast detached stubs remain untracked, as in the original test. A late stub
+may race owned directory removal; joining Bash does not establish descendant
+termination. This known risk is retained explicitly, while cleanup failures are
+visible. Local Bash verification does not establish the historical macOS 15 CI
+schedule. Actual app-host verification remains pending under
+`bash_relay_refresh_fixture_verification`; no production script changes apply.
+
+### Historical app-host collector watchdog boundary regression
+
+This section records the now-retired collector and its earlier verification.
+The optional enhancement was subsequently removed as described above; none of
+these historical controls or report capabilities remains an active gate.
+
+Actual test-only CI run 38762790883 reproduced native exit 65 being replaced by
+watchdog exit 124 while the collector report still recorded 65. The earlier run
+38762136559 stopped before the diagnostic tool entered; it was a harness startup
+failure, not proof of this bug. The same early limit was reproduced locally after
+moving collection, so the owned behavioral control now pairs a three-second
+watchdog with a four-second tool. The original implementation still fails
+124-versus-65 with that pair; production retains its 900-second native bound.
+
+The wrapper now freezes each failed attempt's exit status, elapsed time, result
+bundle names and bounded private log. External diagnostic tools run in one
+`always()` step after native testing, before the existing report-only upload.
+Collection uses the same console-session owner as capture so private files remain
+readable and removable on runners whose agent is outside that login session.
+Retries, machine locking and authoritative native exit handling are unchanged.
+Later invocations cannot overwrite the saved log or add their result names to an
+earlier attempt. An interrupted wrapper that never finalizes its snapshot reports
+unavailable native status and result attribution instead of guessing. It may lack
+native log evidence; this limitation remains explicit.
+
+Pending data is bounded to 64 attempt directories, 2 MiB per state file, 64 MiB per
+saved log and 128 MiB of saved logs in aggregate. Numeric crash and restart data
+for all retained attempts is parsed before external tools consume the shared
+30-second batch budget. Exhausted tool budgets retain unsymbolicated numeric
+records. Private state and logs are deleted after collection, including handled
+cancellation; only sanitized reports are uploaded. A killed runner cannot run
+cleanup or upload, so actual CI artifact delivery remains a required check.
+
+Sixteen behavioral controls cover the actual workflow/watchdog boundary, deferred
+attempt identity, overwritten source logs, later bundles, exhausted tools, caps,
+unfinished snapshots, failure/cancellation cleanup, privacy and UUID checks.
+Existing native-exit, retry and attempt controls also pass. Final macOS controls
+pass all sixteen. A Linux run before the console-owner invocation adjustment also
+passed sixteen; the final Linux run passed the watchdog regression but recorded
+one timeout in the unchanged two-second output-limit worker control. A separate
+owned worker probe completed in 0.039 seconds, which does not explain that timeout.
+The final Linux result remains fifteen passes and one error, not a clean rerun.
+Fixed-head Linux workflow guard 116531176822 subsequently passed all sixteen
+controls in 8.884 seconds at commit `119d6a9b5`. This does not erase the local
+Linux timeout above. No Xcode, application,
+external service or user process runs in these controls. Q subsequently verified
+real deferred artifact delivery (recorded below); complete symbolication coverage
+and hang diagnosis remained unverified when the optional collector was abandoned.
+
+### Session write capture and background window teardown
+
+O shard 3 (`38758720078`, job `116505698417`) reports a Main Thread Checker
+violation on `com.bmuxterm.app.sessionPersistence`: `AppDelegate` destruction
+releases `WindowDecorationsController`, whose deinitializer removes views off
+main. The exception is attributed to the active inspector fallback test; the
+log does not identify which fixture created or last released that delegate.
+
+`persistSessionSnapshot` now captures its existing immutable, Sendable snapshot
+store instead of retaining the app delegate solely for save/remove calls. The
+closure is explicitly Sendable. Snapshot, geometry and crash-removal policy,
+serial write ordering and synchronous termination/debug writes stay unchanged.
+This corrects the persistence ownership boundary without changing inspector
+behavior or moving arbitrary UI teardown onto another queue.
+
+A temporary executable copies the exact original/candidate method bodies into
+an owned lifetime probe. Eight controls preserve save, remove, geometry and
+synchronous behavior while showing original asynchronous captures release the
+owner off-main and store-only captures release it on main before queued work.
+This is a copied-method ownership proof, not execution of the compiled app
+method; the actual UI teardown evidence is the O stack. Its original method
+retains the pre-existing non-Sendable closure-conversion warning; the candidate
+has none. Committed-source build 794 completed in 296 seconds without launch.
+Twelve exact existing persistence cases pass against its compiled module: ten
+AppDelegate policy cases and two owned-file repository round trips. Swift 6 probe
+compilation has no warnings. These cases do not directly call the private async
+write closure or reproduce UI destruction. The full test target compiles at
+`14c0e7ae9` (598 test files and 14 shared sources), with no new warning messages
+relative to the prior complete compile. Actual inspector and macOS 15 app-host
+verification remain pending under
+`session_write_store_capture_verification`.
+
+### Claude session replacement phase ownership
+
+Two Claude session replacement cases in O shard 3 (run 38758720078, job
+116505698417) recorded seven socket-expectation timeouts without failed product
+oracles. Their shared legacy helper starts four independent accept workers per
+phase, but its expectation completes after any one worker closes. Remaining
+workers can consume later phases without satisfying the later expectation.
+
+A bounded owned control with the unchanged build 793 CLI demonstrated that
+ordering: the first phase completed with two workers still accepting; those
+workers served the next successful hook while its gated phase captured nothing
+and timed out at the original five-second observation bound. All eight workers
+were explicitly released and joined before removing the listener and owned root,
+including an injected-failure control. This proves a possible fixture failure,
+not the historical CI interleaving.
+
+`ClaudeSessionPhaseTests` retains the exact nine subprocess phases and all 24
+original assertion intents. Throwing joined execution preserves each no-timeout
+check and its local five-second child deadline; the original 20-second CI minimum
+is restored by the deadline-policy correction below. The obsolete per-phase socket
+expectation is replaced by the maintained producer-complete final drain and
+awaited socket cleanup, rather than a longer wait or a connection count. Owned
+authentication bypasses Keychain, authentication requests are excluded from
+business assertions, and one-way feed events receive no response. The other ten
+legacy helper callers and all shared transport/process owners remain unchanged.
+
+Exact-source Swift 5 and Swift 6 compilation is warning-free; both native cases
+pass using an owned test bundle and the unchanged build 793 CLI. Input controls
+that stop the current session instead of the stale session, or repeat startup
+instead of submitting the new prompt, fail the retained business assertions.
+Actual integrated app-host verification remains pending under
+`claude_session_phase_fixture_verification`. No production or workflow changes
+apply. The production best-effort feed timing policy remains unchanged.
+
+### Broad PR host diagnostic coverage
+
+O's broad shards reported cross-family failures and AppHang records, including
+owned operations lasting longer than their failure bounds. These observations
+justify collecting the existing bounded process stacks on every broad PR shard;
+they do not establish a shared scheduler cause or justify timeout increases or
+serializing suites. The sampler implementation and native test/retry deadlines
+are unchanged: one 30-second observation window, at most eight one-second samples
+and two concurrent workers, with the existing five-second worker completion bound.
+
+Each process identity is sampled once after its minimum age (host two seconds,
+CLI one second). The window begins at the Swift Testing start marker, so it may
+miss earlier XCTest hangs or later failures. This change does not promise a stack
+at the exact hang. Samples add bounded overhead and may affect scheduling.
+Artifacts retain only existing allowlisted numeric process records and sanitized
+symbol frames; raw headers, arguments, environment, paths and image inventories
+remain excluded. Actual macOS 15 artifact delivery and useful call graphs remain
+open verification, to be assessed on the next complete candidate run.
+
+### O broad native completion and cancellation boundary
+
+All four broad native shards failed in run 38758720078. The original synchronous
+collector delivered sanitized reports on shards 1, 3 and 4; shard 2 explicitly
+uploaded no report files after outer cancellation. Shards 2 and 3 continued
+printing native output after the 900-second outer watchdog terminated its wrapper.
+An owned executable control confirms that sending TERM to the existing Bash
+wrapper leaves its PTY helper and command alive; the control then explicitly
+releases and joins both. This is a concrete existing cancellation ownership gap,
+not evidence that it caused the earlier test failures. A bounded repair remains
+separate from the deferred collector. No native failure or timeout is waived.
+
+### Codex persistent hook installation fixture
+
+O shard 2 (run 38758720078) recorded a zero-versus-one prompt-hook count at
+`CLIGenericHookPersistenceTests.swift:1515`. The installer already generates
+persistent executable script paths; the old count searched those paths for inline
+shell invocation text. The maintained installer removes legacy owned entries and
+inserts one `UserPromptSubmit` entry. The fixture now counts actual configured
+entries and separately reads their generated script bodies, preserving bundled
+CLI/socket routing and obsolete-command rejection assertions.
+
+The isolated process owns HOME, CFFIXED_USER_HOME, CODEX_HOME and XDG directories;
+script paths must remain under that root before reads. This matters because the
+script writer uses Foundation's current-user home, which HOME alone did not
+isolate in the failing runner. The existing joined process owner retains the
+original local five-second failure bound and 20-second CI minimum, and joins
+before owned directory cleanup.
+No generated hook executes and no socket, Keychain or external service is used.
+
+Exact-source Swift 5 and Swift 6 compilation is warning-free, and the native case
+passes against unchanged build 794. The old inline-text oracle still fails zero
+versus one; a control that duplicates the actual generated prompt entry fails two
+versus one even though both entries share the same script body. Other legacy
+cases and shared helpers are unchanged. Integrated app-host verification remains
+pending under `codex_hook_installation_fixture_verification`; no production or
+workflow policy changes apply.
+
+### Migrated CLI process CI deadline policy
+
+Review comment 4285721683 identified that the Claude session and Codex installer
+migrations retained the requested five seconds but bypassed
+`CLINotifyProcessTestSupport.processTimeout`. That existing helper uses the host
+`CI=true` or `GITHUB_ACTIONS=true` environment to enforce a 20-second minimum.
+The origin audit found the same omission in thirteen migrated execution owners:
+Claude session phases, installer, Hermes, Grok, Antigravity, Claude session-end,
+Codex rejected ambient routing, Claude notification routing, SSH agent forwarding,
+SSH PTY lifecycle, respawn CLI invocation, Cloud attach retry and stale SSH control
+socket execution. The correction restores their original CI policy; it does not
+increase their original local requests or production timeouts.
+
+`CLIProcessTestTimeout` is one immutable test policy shared by the retained legacy
+helper and those affected callers. It reads the host environment, independently
+of each child's deliberately restricted environment. The mixed Claude notification
+fixture receives its timeout from the routing caller; PID lifecycle cases keep
+their original direct five seconds. Respawn's separately added shell execution
+also keeps five seconds. Feed hooks, stderr/Sentry, launch/creation, Codex stop and
+monitor, manual SSH and unrelated shell fixtures never inherited this policy.
+Launch/creation later adopt it explicitly as documented below; the other listed
+fixtures remain unchanged. The tmux launch case already requested 30 seconds. Shared
+process runners, socket observation deadlines, termination grace and all behavior
+assertions remain unchanged.
+
+Temporary Swift 6 controls verify 28 exact environment/request combinations and
+execute the unchanged joined process owner: a finite owned child exceeds a short
+local request and fails, while the identical child completes under CI policy.
+Both child PIDs are gone before cleanup. These local controls prove the selected
+policy and ownership boundary, not the cause of historical app-host stalls.
+Fixed-head macOS 15 app-host verification remains pending.
+
+### Q focused failure evidence and process sampling
+
+Q run 38770214680, job 116546261120, failed its focused invocation with native
+status 65: AgentLaunchEnvironment had two parameter failures, SSHWorkspaceCreation
+had two, and SSHAgentEnvironment had three. Broad shard 1 was skipped, so its
+automatic process observer could not capture these earlier failures. The focused
+invocation now enables the same existing observer on PR events as on explicit
+diagnostic dispatches. Its duration, sample limits, filtering, shutdown owner,
+artifact upload and test deadlines are unchanged. The host is sampled once after
+two observed seconds; the 30-second window can still miss later hangs. Actual
+focused call graphs and a cause for the timeout cluster remain unverified.
+
+The deferred failure collector did deliver artifact 11992708159 from that job.
+Its unique attempt-1-Af2Wo9 report retained native status 65, 124 test functions,
+121 passes and three failed identities matching those seven parameter cases.
+It reported zero crash/restart records and no collector errors, with explicit
+omissions for oversized lines and parameter nodes. This verifies deferred report
+delivery through the existing GitHub artifact channel, not hang-stack capture
+or matching-image symbolication. The report contains no raw log or result bundle.
+
+The inherited CI deadline restoration covers SSHAgentEnvironment; AgentLaunch
+and SSHWorkspaceCreation did not originate from the CI20 timeout owner and keep
+their original five-second process bounds. Neither diagnostics nor the deadline
+audit establishes the cause of their current failures. This workflow-only change
+adds no app behavior or localized product strings; no localization catalog changes
+are required.
+
+### App-host cancellation ownership regression
+
+The thirteen-case results below are historical and include two collector-defer
+cases. After retiring the optional collector, the current guard retains the
+other eleven scenarios and all their cancellation/ownership assertions.
+
+Before the repair, the Bash wrapper ran its foreground PTY helper without a
+cancellation trap. The PTY helper handled its own idle/post-test deadlines but
+had no external termination handler. An owned native control sent TERM to the real wrapper: the
+wrapper exited while its helper and ready stub remained alive. Releasing only
+the owned stub allowed the helper to reap it and close the output pipe. This
+proves a cancellation ownership gap, not the cause of O's prolonged output after
+the broad 900-second watchdog or the complete console-session chain.
+
+`test_ci_app_host_cancellation.py` exercises the actual owners under Linux with
+an owned xcodebuild stub and the real machine lock at an owned path. Cases cover
+TERM/INT at the PTY, wrapper, second retry attempt, and evidence-defer boundaries,
+plus a same-PTY-group descendant, the enabled process observer and its existing-
+output-directory fallback, and a stubborn
+child under the existing outer watchdog's five-second termination allowance.
+The desired contract is cancellation status `128 + signal`, no subsequent retry,
+joined direct child, stopped owned group descendants, and closed output before
+the wrapper returns. No native 900-second, idle, post-test, or retry policy is
+changed by the repair.
+
+Each scenario runs in a dedicated Linux subreaper process. The guard itself is
+also an isolated subreaper and owns each temporary root, so an outer scenario
+timeout still joins adopted descendants before removing their files. Captured processes
+are signaled through pidfds, so cleanup cannot signal a reused PID. Assertions
+capture failures before cleanup; a finally path releases/kills and reaps only
+owned descendants, then removes the owned root. An exited grandchild may be
+adopted and reaped by the test; this is distinct from requiring its PTY helper
+to waitpid a process that is not its direct child. macOS skips this Linux-only
+ownership harness, which does not claim sudo/launchctl or testmanagerd-created
+session coverage. Linux cannot load the MacProcesses libproc backend: the
+sampler-enabled case proves the real diagnostics command-forwarding chain, not
+a live macOS sampling worker cancellation. Existing diagnostics tests separately
+exercise owned observer stop/join behavior. The existing native prompt/watchdog/
+status controls remain.
+
+The unchanged production owners fail all 13 controls in a cached local Linux
+container with networking disabled and the repository mounted read-only; all
+13 scenarios complete owned cleanup. A temporary control that deliberately
+wedges the ready scenario confirms outer-timeout child joins and root removal. A first container attempt lacked execute
+permission on its temporary mount and is excluded from regression evidence.
+The corrected GitHub run `38772618395`, guard `116552085440`, reached all
+13 intended ownership failures, completed all 13 owned cleanups, and reported
+no setup/readiness/API errors. This is the actual CI red for the production fix;
+the earlier setup failure below is excluded.
+
+The first test-only GitHub run, `38771908182` / guard `116549614354`, failed
+before scenario readiness: Python 3.9 formats a signal enum as `Signals.SIGTERM`
+rather than an integer, so scenario argument parsing raised `ValueError`.
+That run is not production regression evidence. The follow-up explicitly
+serializes `str(int(signum))`; no cancellation owner, deadline, or oracle changes.
+The numeric argv round trip was verified with local Python 3.9.6. The full
+Linux guard subsequently established the valid red recorded above.
+
+The repair stays in the three existing lifecycle owners. Bash retains its sole
+asynchronous job through signal forwarding and wait, including native execution,
+evidence snapshot/defer, and retry boundaries. It checks the shell job table,
+never post-reap PID liveness, and resumes stopped owned jobs to process cancellation.
+Its internal request is TERM because asynchronous Bash children initially inherit
+ignored INT; the wrapper still returns the first external signal as 130 or 143.
+A temporary pre-handler barrier proves old INT forwarding permits native work
+after cancellation, while TERM forwarding stops that child before native work starts.
+The PTY helper installs TERM/INT/SIGCHLD handlers and a wakeup pipe before fork;
+its child resets handlers and closes those descriptors before exec. SIGCHLD is
+only a wakeup hint. The leader remains unreaped through the final owned-group
+KILL, then receives a waitpid join. Normal PTY EOF still waits for actual exit,
+with cancellation remaining observable. The normal five-second termination
+grace remains; external cancellation limits that grace to three seconds from
+its first signal. This also shortens an already-running cleanup when cancellation
+arrives during an idle/post-test timeout.
+
+Diagnostics uses the same forwarding owner when its output directory cannot be
+created. Cancellation closes the stop pipe and signals the observer group while
+the PTY helper cleans up. Observer cleanup uses the remaining four-second
+cancellation allowance, leaving a margin before the unchanged outer five-second
+KILL. Normal observer shutdown remains bounded by three seconds, a half-second
+TERM grace, and one second after KILL. No sampling duration, rate, window,
+concurrency, native deadline, retry limit, lock policy, or console routing changed.
+Darwin can report EPERM when signaling a group containing only an unreaped
+zombie; the fallback signals only that still-owned leader before joining it.
+
+Local Linux checks pass all 13 regression scenarios and the original helper
+controls. All 12 existing diagnostics tests pass on macOS. Temporary macOS
+controls exercise real Bash 3.2 without monitor mode, TERM/INT forwarding,
+stopped jobs, cancellation after PTY EOF, and a stubborn child (about 3.03s).
+Two controlled fork-boundary cases run the actual helper main function and
+verify a single leader waitpid join for startup cancellation and an already-exited
+child. A temporary Linux control combines a stubborn PTY child with a live
+stubborn observer and worker: cancellation returns 143 in about 3.05s, both
+direct leaders are joined, and all owned processes have stopped before return;
+the test subreaper then joins its adopted worker and removes the owned root.
+These controls add no permanent seam or extra committed regression case.
+Four additional owned macOS controls deliver TERM/INT during an already-running
+idle/post-test cleanup. All preserve cancellation status 143/130 after the join
+(in about 3.02–3.07s); absent cancellation, the original 124/125 results remain.
+A direct diagnostics pre-handler control confirms caught INT resets to default
+at exec and returns 130 before work begins, so only Bash normalizes its internal
+request to TERM. All 16 existing failure-evidence tests also pass.
+
+`app_host_cancellation_ownership_verification` stays open pending fixed actual CI.
+The native console sudo/launchctl chain and testmanagerd-created sessions are
+outside these owned process-group proofs. The observed O watchdog overrun is
+motivation, not a proven complete historical cause. No app was launched or built.
+
+
+### Integrated cancellation CI evidence
+
+Fixed-source run 38776426265 at b9100e8e1 completed all 13 cancellation
+scenarios under Python 3.9, with every owned child joined and its fixture root
+removed. The original noninteractive-helper controls also passed. The complete
+workflow guard failed afterward because the new cleanup helper expressed its
+six-second failure deadline as a duration assertion. Follow-up ee3a3ed52 uses
+an explicit TimeoutError at the same deadline; all 13 Linux controls and the
+strict determinism gate pass locally. This preserves the cleanup bound and does
+not add a lint exception. Complete integrated CI remains required.
+
+The full integrated bmux-unit target at 4b9c79553 compiles 600 test files plus
+14 shared sources with no new warning messages relative to the earlier complete
+compile. Subsequent integration changes only Python, Bash, workflow and evidence
+documents. Authenticated Project Truth passes at 6bab8abd7. The configured PR
+Swift-size gate passes its speculative merge with main, retaining the documented
+incidental growth allowances of six, five and one lines; the unparameterized
+global scan still reports inherited baseline overages. No budget was changed.
+
+### Selected test-window close ownership after R
+
+R shard 2's NSZombie diagnostic run `38780179312` (workflow-only head
+`01632defb9`) records four explicit messages sent to deallocated `NSWindow`
+instances. Normal R shards 2 and 4 also crash in Objective-C release/concurrency
+cleanup paths. R4 did not enable NSZombie, so its object class is unproven;
+parallel test output and entrypoint-only app frames do not identify an allocation
+or establish a one-to-one mapping from cases to crashes.
+
+Eight raw constructor sites now use `isReleasedWhenClosed = false`: two helpers in
+`WindowKeyDownReplayGuardTests`, the local window in
+`TerminalNotificationOpenPanelFallbackTests`, two local windows in
+`RemoteTmuxSessionRenameTitleTests`, and the shared private constructor used by three `WindowTitleTemplateTests` cases.
+The three identical title-template constructors share one private `@MainActor`
+helper to keep the suite below its file limit. All four files already use Swift
+Testing. These constructors feed nine selected cases that retain Swift window references
+and explicitly close them. The title tests' `TabManager.window` reference is weak;
+it does not supply controller ownership. This follows the existing retained-close
+fixture policy. All original actions, assertions, cleanup, routing, settings and
+failure bounds remain unchanged, as do product window controllers and constructors
+whose callers only order windows out.
+
+A temporary Swift 6 offscreen AppKit control passes eight constructor-shape
+checks through close, autorelease-pool drain and final ARC release, with compiler
+warnings treated as errors. It uses an owned home and prohibited activation; no
+app or user window is launched or activated. This is a primitive ownership check,
+not execution of the nine full test cases. Full test-target compilation and
+fixed-head macOS 15 app-host execution remain pending. The independent local-undo
+assertion failure in `terminalHostedEditableResponderKeepsLocalUndo` remains
+unresolved; this change does not weaken it or claim to repair it. No new runtime,
+workflow selector, test framework, serialized suite or localized product string
+is introduced. Existing shared-menu/defaults/notification-state fixture risks
+remain outside this constructor-only repair.
+
+## CI flags across console and XCTest boundaries
+
+The R source (`a31a5cb2`) selected the restored CLI fixture allowance from the
+**test host's** `CI` or `GITHUB_ACTIONS` value, but neither process boundary
+explicitly transported that policy. The console-session allowlist now preserves
+both flags and their `TEST_RUNNER_` counterparts when present. The existing PTY
+owner copies a present raw flag to its prefixed counterpart only when no explicit
+test-host override exists. Unset stays unset; false and empty overrides remain
+exact. Timeout values, schemes and explicit CLI child environments are unchanged.
+
+`tests/test_ci_test_host_environment.py` executes the real shell and PTY helpers
+with owned subprocesses. Its console shims model an environment-resetting sudo
+hop without invoking privileged tools. It covers unset, true, false and empty
+values, explicit test-runner overrides, fallback execution and native exit
+preservation. A forced timeout releases the owned probe, joins through the PTY
+owner and rethrows the timeout. Only allowlisted fixture values are captured.
+
+The test-only commit `39d1d7549` failed the actual workflow guard with exactly 44
+missing-flag assertions and zero errors in five tests (12.688 seconds):
+[run 38814688184, job 116696279171](https://github.com/BrianBusby/bmux/actions/runs/38814688184/job/116696279171).
+The fixed source passes all five local tests, including the 100 matrix
+invocations and cleanup control (28.266 seconds). Existing PTY/watchdog,
+exit-reporting, retry and attempt-budget guards pass. The Linux-only cancellation
+guard skips on macOS and remains a CI check. The fix changes only the two existing
+transport owners; fixed-head CI and native app-host verification remain pending.
+
+The modeled reset is not evidence of a particular runner's sudo configuration.
+Native `xcodebuild` documents `TEST_RUNNER_` prefix stripping. The R SSH durations
+were consistent with the local timeout branch, but the failed host's environment
+was not captured, so this does not establish its historical hang cause.
+Forwarding `CI` also restores existing strict Cargo/bundled-library checks in the
+Nucleo build script and test. The unaffected CLI runners' five-second deadlines
+remain unchanged.
+
+## Claude startup session restoration eligibility
+
+R (`a31a5cb2`) failed
+`CLINotifyProcessIntegrationRegressionTests.testClaudeSessionStartRecordIsNotRestorableUntilPrompt`
+at the legacy helper's separate five-second socket expectation. The CLI exit and
+persistence assertions did not fail. That helper starts four independent accept
+workers on a shared listener and fulfills its expectation when any worker closes;
+it does not join the surplus workers before the next phase. The historical R
+worker ordering remains unmeasured.
+
+The exact case now joins `ClaudeSessionPhaseTests` and its maintained fixture.
+The startup and prompt CLI producers each complete before their owned socket's
+final drain and cleanup. All seven original assertion intents remain: two
+no-timeout outcomes (now throwing joined runs), two zero exit statuses, startup
+ineligibility, the exact transcript path and eligibility after the prompt. Store
+reads still throw for absent, malformed or incorrectly shaped data.
+
+The process bound remains local five seconds / original host-CI minimum twenty
+seconds. The old **separate five-second server expectation is replaced**, not
+retained: completion is tied to the joined producer and final socket drain.
+Owned authentication, HOME/CFFIXED/XDG paths and disabled CLI telemetry come from
+the existing fixture unchanged. There is no production, helper or selector
+change. All other legacy method bytes remain unchanged; their shared listener
+ownership risk is outside this exact-case correction. Fixed-head app-host
+verification remains pending.
+
+The final exact-source suite and shared owners compile without warnings in Swift
+5 and Swift 6. The migrated case passes against frozen build 794 in both modes
+(0.261s / 0.057s); no app is launched. Temporary controls retain the real CLI
+path: replacing prompt-submit with another session-start fails the final
+eligibility assertion, and a different transcript input fails the exact-path
+assertion. Each control records exactly one intended failure and completes owned
+producer/socket/root cleanup. These controls establish oracle sensitivity, not
+the historical R worker interleaving.
+
+## Console watchdog ownership regression
+
+R run 38777932066 shard 3 printed its 900-second native timeout at
+18:19:58 UTC, but the output pipeline remained until the job deadline at
+18:51:00. Runner cleanup reported an orphan tee process. The deferred report
+retained native_status_unavailable, not a native completion status. The existing
+13 Linux cancellation controls passed; they did not cover sudo/launchctl.
+
+The new behavioral guard executes the actual workflow through an owned console
+supervisor whose child has a separate session. On unchanged source, native
+0/65/124 statuses pass, but timeout leaves the output pipeline open. Its Linux
+subreaper joins all expected-red descendants before deleting temporary files.
+No privileged command or app runs. This models the missing ownership boundary;
+it does not reproduce the actual runner's sudo configuration. The test-only
+commit precedes moving the unchanged deadline inside the console session.
+Actual CI run 38819984008 at regression-only 7b9aebc48 reproduces the single
+pipeline-open assertion after 15 seconds; native 0/65/124 controls pass and the
+owned descendants are joined. The complete guard reports two tests, one failure.
+
+The broad native workflow now invokes its deadline owner after entering the
+console session. It launches the existing app-host wrapper directly, preserving
+the 900-second default, explicit integer overrides and five-second termination
+grace. An empty override retains the original default; nonpositive integers
+retain immediate timeout behavior. The owner checks cancellation in bounded
+100ms waits, sends TERM and CONT to its direct child, then joins or escalates
+within the existing grace. Popen owns child identity; no process scan or new
+subtree implementation is introduced. Native statuses remain authoritative,
+timeout returns 124, and an external interrupt retains 128 plus its first signal,
+including during deadline cleanup. Existing retry and tee handling stay outside
+this owner; focused invocations and their deadlines are unchanged.
+
+Four behavioral tests pass locally on Linux, including the unchanged pipeline
+regression, native status/default controls and six TERM/INT controls across
+running, stopped and timeout-cleanup children. All four workflow exit-reporting
+guards also pass. The historical 13 cancellation controls additionally passed with
+the new deadline owner around the actual app-host wrapper, including sampler,
+retry, deferred-evidence and stubborn-child cases; every owned fixture joined
+and was removed. The current guard retains eleven controls after removing the
+optional collector and its two defer-phase cases. These tests model the console
+boundary without privileges; actual fixed-head macOS sudo/launchctl cleanup
+remains unverified. The removed collector no longer produces diagnostic reports;
+native logs and the optional process sampler remain available.
+
+## Crash-report symlink fixture ownership
+
+R run 38777932066 shard 4 on macOS 15.7.9 failed
+`CrashDiagnosticSessionPolicyTests.terminalDefaultFileOpenIgnoresSymlinkedGhosttyCrashReportsInBmuxCrashDirectory`
+at line 39: the initializer returned a launch request instead of nil. The fixture
+created a link to an ambient crash-report path without creating its destination.
+Actual unchanged build 794 on macOS 26.3 accepts the dangling link, then rejects
+the same link once its target exists. That establishes a missing fixture
+precondition locally; the historical CI target state was not recorded.
+
+The exact test now owns a temporary home, real crash report, and symlink, with
+visible cleanup failures. `TerminalDefaultFileOpenRequest` takes explicit home
+and environment inputs whose defaults preserve existing callers. Both lexical
+and resolved-path guards forward those inputs to the existing crash-storage
+policy. The complete request type moves into its own source file to respect the
+legacy file's hard length limit. Session pruning retains its lexical semantics;
+no global settings, filesystem policy, or execution eligibility changes.
+
+The exact repaired method passes when compiled with the candidate request owner
+and build 794's unchanged policy. A temporary copy omitting only the target write
+fails the original nil assertion. Nine temporary classifications cover dangling
+and existing targets, direct paths, outside executable eligibility, injected XDG
+lexical/resolved paths, omitted XDG state, and snapshot alias preservation.
+Compilation uses Swift 6 with warnings as errors. All owned processes and roots
+are cleaned up. That checkpoint used local source-plus-existing-module evidence,
+not a rebuilt app or macOS 15 fixed-head result. The integrated build and test
+compilation results are recorded below; macOS 15 app-host verification is pending.
+
+The integrated correction also passes against fresh isolated build 795 (tag
+`maintenance-crash-fixture`): the exact repaired test and both unchanged terminal
+launch contracts pass (three tests). Removing only the target-file write in a
+temporary test copy reproduces the original nil assertion. No production source
+is substituted in these checks; they link the new app module. The complete
+`bmux-unit` test target compiles on integrated `f3346c1bb`. Neither build nor
+complete test compile introduces warning messages relative to the previous
+complete builds; retained warnings remain. The app was not launched. Integrated
+macOS 15 app-host verification remains pending.
+
+## Agent launch and SSH creation CI process allowance
+
+S (`00aa09b39`, run 38821520072, focused shard-1 job 116720337780)
+failed both parameter cases in `AgentLaunchEnvironmentTests` and both in
+`SSHWorkspaceCreationTests` with the direct five-second process timeout. The
+eight issues are each fixture's diagnostic plus its propagated error, covering
+four cases. The suite aggregates were 6.921 and 6.928 seconds. The captured
+Agent requests ended at `surface.resume.set`; requests are captured before reply
+writing and final draining can occur after producer timeout, so this does not
+establish successful reply delivery. SSH stdout/stderr were empty. Four process
+samples had no call graphs, and recorded PIDs could not be assigned to cases.
+
+These two execution owners now explicitly adopt `CLIProcessTestTimeout`: local
+requests remain five seconds, while host `CI=true` or `GITHUB_ACTIONS=true`
+selects the existing 20-second minimum. This is a new policy adoption, not
+restoration of an inherited allowance. The larger CI scheduling allowance is
+inferred to be appropriate for this concurrent app-host workload; it is not a
+proven explanation of the historical timeouts. Child environments, protocol and
+functional assertions, parallelism, 200-millisecond termination grace, producer
+join and final socket drain are unchanged. Shared runners and production code
+are unchanged.
+
+Before adoption, temporary instrumentation against frozen CLI build 795 on
+macOS 26.3 passed all four original cases: Agent in 0.413 seconds and SSH in
+0.629 seconds. Native replies and status-zero completion preceded asynchronous
+consumption. A separate copied-runner control deliberately held consumption
+after native exit at 0.118 seconds; the original five-second deadline won and
+cleanup still joined. That establishes sensitivity under artificial scheduling,
+not the S cause. Empty stdout in S weighs against a normally completed child
+being misclassified, since successful CLI completion prints the required result.
+
+Exact candidate source compiled with Swift 6 warnings-as-errors and passed all
+four cases against CLI 795 in 0.467 seconds with the local five-second bound.
+The maintained policy controls passed 28 environment/request combinations plus
+an owned finite-process local-timeout/CI-completion pair, joining both children
+before cleanup. The complete integrated test target compiles at `9694b662c`.
+Fixed-head macOS 15 app-host results remain an integration gate; neither the
+local pass nor policy adoption establishes that S is repaired. The existing
+`agent_launch_environment_fixture_focused_gate_verification` and
+`ssh_workspace_creation_fixture_focused_gate_verification` caveats remain open.
+
+## Terminal inheritance rejects unowned runtime surfaces
+
+S (`00aa09b39`, run 38821520072) shard 2 restarted after starting
+`WorkspaceSplitWorkingDirectoryTests.testNewTerminalSplitSkipsFreedInheritedSurfacePointer`
+and again after starting
+`testNewTerminalSurfaceSkipsFreedInheritedSurfacePointer`. The log records native
+surface closure before each subsequent app-host launch, but contains no native
+stack assigning either termination to a particular source instruction. This
+association alone does not prove the historical crash cause.
+
+Source inspection found a concrete shared-path defect: `inheritedTerminalConfig`
+read the raw `surface` property and immediately passed it to
+`ghostty_surface_inherited_config`. The native wrapper dereferences its surface
+without an ownership check. The existing regression helper unregisters and frees
+the native surface while deliberately retaining a non-nil Swift property.
+`withExtendedLifetime` retains the Swift model, not the freed native allocation.
+
+The shared inheritance owner now calls the existing
+`liveSurfaceForGhosttyAccess(reason:)` guard. It validates registry ownership
+before native allocation probing, quarantines an unowned wrapper, and permits
+the existing candidate/fallback search to continue. Both split and nested
+surface creation use this owner; candidate priority, font lineage, working
+directory policy and all original regression assertions remain unchanged.
+No Ghostty/submodule change or new state, lifecycle policy or test hook is added.
+
+On unchanged build 795, four temporary Swift 6 controls compiled warning-free
+and passed in 0.341 seconds: an owned manual-I/O surface in a retained, invisible
+window could create a split or nested surface; after the owned free helper, a
+direct call to the existing guard quarantined the pointer and both creation
+actions still succeeded. Runtime readiness used the existing native signal with
+the original two-second bound. The unsafe old free-to-inheritance path was never
+called. These controls establish the existing guard and safe setup, not the new
+Workspace call site. A proposed still-allocated/unregistered control was not
+executed because later quarantine could release its live callback leases.
+
+Fresh isolated build 796 (`maintenance-surface-guard`, source `24f440488`)
+passes all four native controls in 0.209 seconds. The freed cases now call the
+actual split/surface creation owner without a preparatory guard: both return a
+new panel and quarantine the source with reason `workspace.inheritConfig`. The
+live controls preserve their source. Swift 6 compilation reports no warnings;
+owned windows remain invisible and all resources are cleaned up. The full app
+build and integrated `bmux-unit` compilation pass; no new warning messages are
+introduced relative to prior complete builds. The app was not launched.
+
+These checks use macOS 26.3 and owned manual-I/O surfaces. The original macOS 15
+app-host cases remain pending under `terminal_inherited_surface_guard_verification`;
+the original foreground helper and unchecked old freed-pointer path were not
+run locally.
+
+### Native test-host shared-resource isolation
+
+The `bmux-unit` scheme explicitly disables parallel test execution for its
+`bmuxTests` target. Its suites share one AppKit application, window/focus state,
+process-wide runtime settings and routing collaborators. `@MainActor` protects
+synchronous actor jobs, but async fixtures can retain those resources across
+suspension. A suite's `.serialized` trait orders its own descendants; it does
+not exclude unrelated suites. The existing machine lock orders app-host
+invocations, not tests inside the same host.
+
+Exact S shard 2 recorded 435 test-start events before its first completion,
+then 709 functions in 105 suites with 86 issues. That establishes overlapping
+scheduling, not the cause of every failure. The bounded sampler observed one
+host and 28 CLI identities, with a peak of 21 processes in one snapshot; its
+eight stack files contain no call graph. No deadlock or shared-state overwrite
+is inferred from those numeric observations.
+
+An owned, hostless Xcode control ran two unrelated Swift Testing suites against
+one file transaction resource. Both retain the same exclusive-ownership and
+read-back assertions across actual asynchronous file I/O. With the scheme
+attribute omitted, native exit 65 reports exactly one ownership failure and
+records two active transactions. Adding only `parallelizable="NO"` gives native
+exit 0, two tests in two suites, and complete first-transaction exit before the
+second enters. No sleep, GUI application, user settings or product test was used.
+The temporary target emitted existing scaffolding warnings about headermap style
+and absent AppIntents metadata; neither is a bmux source warning.
+
+This uses the existing Xcode target setting, not a private environment flag or
+new test plan. All selected tests, assertions, four shards, retries, socket
+checks and the 900-second broad deadline remain unchanged. Standalone package
+parallelism is unchanged. The local control uses Testing Library 1902; S used
+1501, so full fixed-head app-host execution remains required.
+
+Serial host execution is not assumed to fit the existing budget. S reached
+Swift Testing about 615 seconds after the broad wrapper started, leaving about
+285 seconds of its 900-second budget. Summed overlapping test durations are not
+a serial-runtime prediction. Actual CI must verify both complete coverage and
+elapsed time; no deadline increase or coverage reduction is included. Remaining
+failures still require their own evidence. This gate remains open under
+`app_host_shared_resource_isolation_verification`.
+
+
+### Workspace chrome color contract verification
+
+Exact S (`00aa09b39`, run `38821520072`, shard 4) failed five legacy
+`WorkspaceChromeColorTests` cases with nine alpha-string expectations. The
+production helper already matches actual main `ce17e9888`: it composites the
+terminal RGB over the appearance's window background and emits opaque RGB.
+That contract predates this branch in backdrop refactor `379033c4b`; the
+observed `#7E878F` is consistent with the light appearance, not evidence of a
+settings overwrite or a new matte regression.
+
+The six existing cases now use Swift Testing with synchronous aqua/darkAqua
+scopes. An independent sRGB channel blend computes expected bytes without
+calling the production compositor or hex formatter. Opaque `#112233`, clear
+pane/local shared backdrops, semantic background and custom `#33AAFF` border
+assertions remain. No settings, runtime code, deadlines or selectors change.
+The remaining legacy file is byte-identical after removing only this class.
+
+The exact new source compiled with Swift 6 warnings-as-errors and passed six
+functions/twelve appearance cases against frozen build 796 on macOS 26.3
+in 0.002 seconds. A temporary copy restoring only the old alpha oracle failed
+the same five functions with eighteen issues across both appearances; opaque
+and other role assertions remained intact. Both owned-process runs removed
+their temporary homes; no window was constructed or app activated. This is
+local native evidence, not macOS 15 app-host completion. Integrated full-target
+compilation and actual CI remain pending under
+`workspace_chrome_color_contract_verification`.
+
+### Portal geometry and drop-overlay completion fixtures
+
+Two named S shard 2 legacy failures now use their actual completion boundaries.
+The window-scoped geometry case completes the existing bind-triggered FIFO work
+before moving either anchor, then invokes the original scheduled first-window
+entrypoint. All seven stale/current hit assertions remain. Retained offscreen
+windows and manual I/O preserve real portal geometry without starting shells;
+owned surfaces detach and tear down before the windows close.
+
+The browser overlay case retains all nine z-order, frame, hit-routing and hidden
+state assertions. It observes native animation-group completion instead of
+running the RunLoop for a presumed settling duration. The original 250ms interval
+is now an explicit failure cap anchored before the action; the timer and stream
+consumer are cancelled and joined. No animation policy, production seam, adjacent
+legacy case or test selector changes.
+
+The exact migrated sources compile under Swift 6 without warnings against frozen
+build 795, and the two cases pass in an isolated, never-presented native harness.
+Temporary controls reproduce the two unrelated-window failures when initial work
+remains queued; explicitly scheduling both windows fails the same two assertions.
+Omitting the overlay clear action fails its hidden-state assertion while retaining
+the other outcomes. These demonstrate completion and target sensitivity, not the
+historical CI interleaving. The old geometry setup already pumped the RunLoop, so
+its precise failure cause remains unknown. Local macOS 26 native completion does
+not establish macOS 15 callback ordering; fixed-head app-host verification remains
+open under `portal_animation_completion_fixture_verification`.
+
+### Markdown atomic file reload fixture verification
+
+Exact S shard 4 (`00aa09b39`, run `38821520072`) printed
+`MarkdownPanelTests.testOpenMarkdownPanelReloadsWhenFileChangesOnDisk` before
+an app-host restart involving freed-pointer/XCTest/concurrency frames. This
+ordering does not attribute the crash to this case or establish a watcher bug.
+The bounded migration removes only that legacy method, replacing its XCTest
+expectation with the existing content publisher's native async sequence.
+
+The initial published value establishes subscription before the real atomic
+file write. A structured task group observes the updated value and cancels and
+joins the losing waiter. Its absolute three-second failure deadline is captured
+before observation setup and the write, conservatively including that setup;
+there is no extra readiness allowance, polling, artificial delay or production
+watcher change. All five original content/availability/text/dirty assertions
+remain. The panel closes on every exit before owned directory removal, whose
+failures are now visible. The existing production watcher cancels its native
+sources asynchronously; this test does not add a source-join API or claim one.
+
+Exact new source compiled with Swift 6 warnings-as-errors, zero warnings, and
+passed against frozen build 796 on macOS 26.3 in 0.014 seconds. A temporary copy
+omitting only the external write failed with the intended timeout after 3.188
+seconds; that wall duration includes scheduling and joined cleanup, not a
+changed deadline. Both isolated processes removed their owned homes, created
+no window and activated no application. The private observation method keeps
+the existing async publisher outside a closure shape rejected by this Swift
+compiler's region checker, without unsafe annotations or warning suppression.
+Full integrated compilation and macOS 15 app-host verification remain pending
+under `markdown_file_reload_fixture_verification`.
+
+### Notification settings retry fixture verification
+
+The exact legacy `NotificationDockBadgeTests.testNotificationSettingsPromptRetriesUntilWindowExists`
+case now uses one synchronous Swift Testing scope. Its existing test hook calls
+`promptToEnableNotifications` and `presentNotificationSettingsPrompt` directly;
+the injected scheduler only appends a retry block, and the native alert probe
+calls completion synchronously. The former main-queue sentinel and one-second
+XCTest wait were unrelated to that completion contract. Removing them does not
+change a production retry deadline, presentation policy or scheduler.
+
+All five count assertions remain: no sheet or modal before a window, one queued
+retry, then one sheet and no modal after invoking that retry. The Not Now
+response must not open a settings URL. A retained 480-by-320 titled window is
+never presented, and explicitly closes at synchronous teardown. Only the
+existing settings-prompt hooks reset; notification records, delivery hooks,
+AppDelegate and unrelated singleton state are not reset. The existing private
+singleton initializer/test-hook seam remains unchanged; no new production seam
+or broad fixture owner is introduced.
+
+Exact source compiled without warnings in Swift 5 and Swift 6 with
+warnings-as-errors. Actual frozen build 796 on macOS 26.3 passed the one case
+in 0.056 seconds. Temporary controls that omit the retry or call the native
+probe's modal path retain the original assertions and fail meaningfully. Each
+isolated process owns its HOME/config/tmp, disables telemetry before module
+use, prohibits activation and removes its owned root. No real sheet/modal or
+application launch occurs. Historical S app-host failure causality remains
+unproven; this repairs a concrete fixture completion/ownership mismatch.
+Integrated full-target compilation and macOS 15 app-host execution remain
+pending under `notification_settings_retry_fixture_verification`.
+
+### Same-directory Git snapshot observation ownership
+
+The S shard-3 legacy coalescing case timed out waiting one second for its first
+reader notification, while the remaining read-count and three-panel projection
+checks passed. Its exclusive blocking reader also retained an uncancellable
+second-count continuation after the successful inverted check. The exact case
+now uses Swift Testing and an actor-owned buffered count stream. It still invokes
+the actual watch-settings change entrypoint, creates three real terminal panels
+in one owned directory, and checks one read, maximum concurrency one, all three
+branch projections, and final read count one.
+
+The original first-read one-second bound, 200-millisecond absence window, and
+three-second snapshot application bound remain. Snapshot completion observes the
+real workspace metadata notification after mutation. Each observation cancels and
+joins its deadline task; cleanup stops the maintained services, releases every
+owned reader gate, waits for active readers to reach zero, and finishes remaining
+streams before panel teardown and restoration of the original watch setting.
+Stopping the services cancels their work and clears the host; it is not a join of
+all internal service tasks. The original shared UserDefaults scope remains a
+known boundary: serial native tests do not isolate unrelated app callbacks.
+
+Exact-source native build-795 proof passed the migrated case; a different-directory
+control failed all four coalescing checks while preserving panel publication.
+Temporary reader controls covered cancellation before registration, cancellation
+plus release/drain after registration, explicit release/drain, and a missing-count
+timeout, with owned work joined and homes removed. Strict Swift 6 compilation had
+no warnings. These controls establish fixture cleanup and regression sensitivity,
+not the historical CI timeout's cause. Fixed-head macOS 15 app-host verification
+remains pending; no production implementation, selector, or deadline changed.
+
+### Grok sibling status and owned connection completion
+
+S (`00aa09b39`) shard 4 reported three missing protocol assertions in
+`testGrokCompletionDoesNotResetStatusWhileSiblingSessionRuns`: the running
+prompt's notification clear and Running status, then the completing session's
+notification. Its process status and timeout assertions passed. The legacy
+server admitted one connection per action despite the CLI's separate one-way
+feed connection, and released resources without joining its server worker.
+
+The exact five-action scenario now uses Swift Testing with the maintained
+joined process/socket owners. Both starts supply ambient IDs; Stop, prompt and
+completion omit them. The running surface stays focused while the completing
+session must notify its separately saved surface. Original RPC error responses,
+all status/output/protocol assertions, local five-second producer bound and
+inherited CI twenty-second policy remain. Joined completion replaces the old
+separate five-second server expectation with a final drain that does not await
+future input. No production logic, shared runner, selector or deadline changed.
+
+The new sibling fixture and existing four-case Grok connection fixture provide
+an explicit owned socket password and accept only that exact authentication.
+Owned HOME alone does not fence the CLI's Keychain fallback. Initial temporary
+probes missed that distinction; their logs contained no auth values, but they
+are not claimed Keychain-free. Corrected controls supply the same owned auth in
+both server modes. The one-accept control consumed the previous feed connection's
+auth request and timed out subsequent producers; continuous serving passed all
+five actions. This is a concrete fixture admission problem, not proof of S's
+exact timing or authentication sequence.
+
+Actual build-796 CLI verification passed all five tests across both suites in
+0.872 seconds with strict Swift 6 compilation and no warnings. Temporary
+wrong-status and wrong-target expectations failed with two issues. A separate
+five-action proof used the existing response-written signal to confirm completed
+clear/status/notification writes, with no response to idless feed messages.
+Every owned producer and server was joined before root removal, including the
+controlled timeout paths. Local macOS 26 CLI evidence does not substitute for
+integrated macOS 15 app-host coverage, which remains pending.
+
+### Candidate T integrated local verification
+
+The combined source at `f251d6324aff5630e77fab16aafea0266ef28044` passes
+`bmux-unit` build-for-testing with the isolated maintenance test bundle and
+derived-data directory. This supersedes the earlier pending integrated
+compilation notes for the chrome, geometry, overlay, Markdown, notification,
+Git snapshot and Grok fixture slices; their macOS 15 app-host results remain
+pending. All 609 test files pass the wiring check. Strict test determinism,
+PBX normalization, the configured speculative-main Swift length budget and
+authenticated Project Truth CI pass. All 21 approved source heads remain
+ancestors. Production sources, CLI, packages, resources and dependency pointers
+are unchanged from the separately built and natively checked build 796.
+
+The complete compile emits existing warnings; it is not warning-free. Its
+16 distinct warning messages also occur in prior complete integration logs.
+An origin audit maps all 189 physical warning sites to unchanged main-branch
+statements or the exact relocated XCTest bundle helper. No new warning cause
+was found; existing actor-isolation and import warnings remain risks, and a
+same-toolchain baseline rebuild was not repeated. The latest focused fixture
+sources compile with strict Swift 6 and no warnings.
+The old S run's first, second and fourth native shards failed; Release and
+UI/typing checks passed. Its third shard is canceled. The terminal log records the known two legacy
+fixture failures, then 457 Swift Testing starts with no completions. The
+300-second idle timeout and 900-second broad deadline both fired; termination
+or pipeline completion remained unresolved until cancellation. That shard has
+no passing verdict, and the cause of that completion gap is not established. The final published T head still requires its own
+actual CI and review gates before merge; local compilation and controlled
+native probes do not replace those gates.
+
+### Dock pane close confirmation ownership
+
+T shard 4 last started
+`DockControlDefinitionDecodingTests.dockPaneClosePromptListsEveryTabThatWillClose`
+before an AppHang record and incomplete broad coverage. The fixture installed a
+manager's confirmation handler without registering its window context. The Dock
+resolves confirmation through its registered owner; a missing owner bypasses that
+handler and reaches the production modal-alert fallback. This is a demonstrated
+fixture routing hazard, not attribution from a last-started test alone.
+
+The exact case now retains an owned windowless context, verifies manager routing
+before requesting close, and observes its real confirmation callback through a
+buffered stream. A cancellable one-second missing-callback failure bound replaces
+ten unbounded scheduler yields; it is a new explicit bound, not a restored old
+timeout. The original close rejection, title, two-tab message and Command-D
+assertions remain. The task captures its manager synchronously, so the fixture
+restores the prior shared delegate and nonnil route-retirer before awaiting.
+Context and panels are torn down after observation. The owned rejection handler
+stays attached until manager release, so even a close task delayed beyond a
+failed observation cannot fall through to a real modal after cleanup. Finishing
+the observation does not claim cancellation of that production task.
+
+Actual build-796 safe controls observed missing-owner nil without invoking close,
+then registered-owner identity and the expected callback with both panels retained
+and the queued close task's pending set cleared. The exact revised case passes;
+an omitted-signal control fails at the new one-second bound while retaining its
+safe rejection handler and removing the owned home. No real alert, presented
+window, app launch or production change was used. The focused case compiles under
+strict Swift 6 without warnings. The unchanged full-suite `v2Result` helper at
+line 38 retains its pre-existing Swift 5 actor-isolation warning and Swift 6 error;
+baseline and candidate were compared without suppression. A same-flow scan found
+no other unregistered Dock confirmation handler: WindowDockLifecycleTests already
+registers both managers. Integrated target and macOS 15 app-host verification
+remain pending.
+
+### Persistent PTY daemon bootstrap contract ownership
+
+T shard 4 failed `testPersistentPTYBootstrapReinstallsOldDaemonMissingPTYCapability`
+at its two-second semaphore wait, followed by a missing SCP destination. The
+bootstrap runs on the coordinator's utility queue; its host publications do not
+wait for the main actor. The log does not establish a main-actor deadlock or a
+missing Go executable as the historical cause.
+
+The reinstall contract now lives in `BmuxRemoteSession` and calls the actual
+bootstrap owner with `coordinator.requiredDaemonCapabilities`. It retains the
+original two-second completion bound, nonnil destination, and exact remote-path
+prefix. Ordered probe/hello/upload assertions prevent unconditional reinstall
+from passing. A daemon advertising every required capability must complete
+without an upload. Only the named legacy method was removed.
+
+The fixture uses an owned, checksum-verified cached daemon through the existing
+manifest repository and build-info seams. This replaces the original incidental
+fake-Go scaffolding; it does not claim permanent Go-builder coverage. An invalid
+URL, checked before execution, makes an unexpected cache miss fail locally before
+network I/O. No session `start`, orphan cleanup, reachability, proxy, or SSH
+control-master cleanup runs. The dispatched bootstrap worker and observations
+are joined before cache deletion. The two original process-environment flags are
+restored synchronously before completion, including failure; no HOME or PATH is
+changed. The suite is serialized, and existing package CI runs each
+`BmuxRemoteSession` suite in a separate process. This does not isolate arbitrary
+future background environment consumers.
+
+This ownership move removes one monolithic
+`Workspace.configureRemoteConnection`-to-missing-capability-to-SCP check. The
+unchanged Workspace tests retain persistent configuration, child-exit state,
+PTY snapshot identity, and real configuration-to-relay composition coverage.
+Existing package tests pin the preserve flag's required wire capabilities and
+the coordinator's capability projection. These constituent checks are explicitly
+not an identical end-to-end Workspace reinstall test.
+
+Actual build 796 passes both migrated cases in an owned native harness; exact
+source compiles in Swift 6 with warnings treated as errors. The package compiles
+and runs both selected cases successfully, with existing dependency import and
+concurrent-capture warnings retained. Temporary controls prove missing-cache
+code 25 without network, exact seeded flag restoration, and cancellation joining
+work before cleanup. Advertising complete capabilities to the positive test
+fails its required upload assertion. These local results do not establish the
+old macOS 15 CI cause; fixed-head package and integrated app-host verification
+remain pending. No production runtime, timeout policy, or workflow changed.
+
+### Managed shortcut authority fixtures
+
+The two legacy New Tab shortcut cases contradicted the file-authoritative policy
+accepted in `fdbf2d10e9` and failed in candidate T. Their Swift Testing replacements
+exercise the actual settings lookup and setter: a managed binding wins over an
+existing persisted value without erasing it, UI writes and reset cannot replace
+a managed binding, and removing management restores the prior value or default.
+No production shortcut behavior changes. The remaining legacy methods are unchanged.
+
+The synchronous fixture follows the maintained Find settings owner: private
+notification centers, no file watchers, owned JSON files, and exact restoration
+of the affected persistent values, provenance keys, volatile domains and prior
+settings store before returning. The suite does not suspend while globals are
+changed; its serialization alone would not isolate other suites. Existing default
+notification delivery and the imported mutable settings store remain shared-owner
+risks, bounded here by the native target's existing serialization policy.
+
+Actual build 796 passes both cases with Swift 5 and no warnings. A missing-binding
+negative produces six issues, and an owned-process seeded-state control verifies
+restoration after both successful cases and a thrown failure. Strict Swift 6
+rejects the pre-existing imported mutable `settingsFileStore` owner; no suppression
+or production concurrency change is added. The integrated test-target compile
+and macOS 15 hosted run remain required. These test-only strings are not product
+UI or localized documentation surfaces.
+
+### Agent-session queue and stream contracts after candidate T
+
+T shard 1 (`final-t-shard1-0140.log`, run 38831441428) reports the explicit
+OpenCode username mismatch and the missing second Claude message suffix, then
+starts `testCodexInputQueueBeforeThreadIsBounded` at 01:23:28 UTC. The native
+300-second idle guard fires at 01:28:55. These source paths are unchanged from
+main `ce17e9888`; this does not dismiss the failures. The queue test can await
+the second submission before supplying responses while that submission owns
+the sole queue slot. Its replacement observes first submission entry and the
+actual `thread/start` writer boundary, preserving pre-initialize rejection and
+the original count/method/first-prompt assertions. A new one-second failure
+bound replaces the formerly unbounded test flow; it is not an increased old
+deadline. Existing startup-error notification releases queued continuations before
+owned tasks join, including the transition between startup request IDs and
+parent cancellation. Cleanup runs when the deadline task is canceled as well
+as when it expires. No polling, new provider API or runtime scheduling change is
+introduced.
+
+The auth test now expects the encoded `bmux:secret` value it actually supplies.
+Claude's accumulator counts only raw delta events in its incremental accounting;
+full assistant messages already reconcile their complete text in the existing
+message owner. Counting their returned suffix again leaked that suffix into the
+next message and suppressed text. All five existing accumulator tests retain
+their original assertions.
+
+Owned in-memory native checks against frozen build 796 reproduced the original
+two assertion failures, with the other four contracts passing. The corrected
+queue passed against that unchanged module; restoring the original submission
+ordering triggered the new one-second failure bound, and cancellation returned
+after the owned task join. The candidate accumulator source plus actual 796
+Codex/auth owners pass seven focused cases and five additional temporary
+message-ID, Unicode, reset and retention controls. Swift 6 compilation reports
+no warnings. Fresh isolated build 797 subsequently passes twelve actual built-module
+contracts and controls; the complete integrated test target compiles at
+504c97420. Fixed-head macOS 15 app-host results remain required. No app, window, provider process,
+network service or user state was used. The last-start record supports this
+source diagnosis but is not a captured historical task stack.
+
+### Notification settings sheet fixture
+
+Candidate T failed the legacy sheet case only at an artificial one-second
+main-queue drain. The actual alert factory, sheet completion and URL opener are
+synchronous injected boundaries. The exact case now shares the maintained
+NotificationSettingsPromptTests suite and alert probe, retaining the sheet count,
+zero modal calls and exact bundle-encoded settings URL assertions. A retained,
+never-presented window closes after hook reset on every path. The old case and
+its now-unused alert spy are removed; other legacy tests are unchanged.
+
+Actual build 796 passes both prompt cases with strict Swift 6 and no warnings.
+A temporary second-button substitution fails the Open Settings URL assertion
+while the Not Now case still passes. No production delay, permission, URL-opening
+or alert behavior changes. There is no asynchronous wait to lengthen; the removed
+one-second sentinel observed unrelated queue delivery. Historical macOS 15
+scheduling cause remains unproven, and the integrated hosted run is still required.
+The existing shared prompt-hook owner is restored synchronously without suspension;
+this does not claim isolation from arbitrary external mutation of that owner.
+No user-facing strings or localization catalogs change.
+
+### Tagged theme notification and ambiguous Claude workflow fixtures
+
+T shard 1 reported four theme-target issues and one sessions-list timeout. The
+theme fixture generated an `active-theme-UUID` socket but expected only the
+`active.theme` bundle prefix. The CLI preserves the full normalized suffix. The
+corrected fixture uses an owned hexadecimal suffix, independently constructs the
+complete expected bundle, and retains real distributed notification, phase, socket
+and stale-bundle checks. Parsed JSON identifies the exact target and the generated
+configuration remains beneath the owned home. No running app matches that unique
+bundle target.
+
+The ambiguous Claude workflow case returned status zero and complete JSON while
+the old helper reported a timeout. That helper waits on a separately queued exit
+waiter before draining its pipe. The log does not establish output saturation or
+a scheduling cause. The exact case now uses the maintained file-backed
+`ShellContractProcess`, retaining all session/restorability/fork assertions and
+owning HOME, CFFIXED_USER_HOME, XDG and agent paths. Both cases preserve their
+original five-second process bound in local and CI runs; the theme notification
+retains its separate five-second delivery bound. The throwing process wait joins
+before file cleanup. Notification subscription precedes launch and its consumer
+and deadline are cancelled and joined before observer removal. Shared legacy
+helpers, other cases, production behavior and workflow selectors are unchanged.
+
+Native build 796 passes both cases. Temporary controls fail both obsolete
+theme-target comparisons and all five session business assertions when ambiguity
+is removed. Exact-source Swift 6 compilation is warning-free. The execution
+harness substitutes only bundle discovery with the frozen CLI path; the actual
+bundle locator is separately typechecked unchanged. Full fixed-head macOS 15
+app-host verification remains pending;
+local evidence does not identify the historical sessions timeout cause.
+
+### Workspace stress profile queue delivery
+
+Candidate T reported 50 failures from the stress profile's one-second main-queue
+poll, then reached the broad native deadline. The synchronous MainActor test spun
+RunLoop while waiting for a callback queued on DispatchQueue.main. The stress
+suite now uses Swift Testing and suspends on a buffered FIFO delivery event after
+TabManager's queued selection effects, with an absolute one-second failure
+bound. It throws on the first missing delivery instead of recording a failure
+and repeating the full workload. The boundary does not claim all descendant
+work, timers, or rendering has settled.
+
+Both profile cases retain their default 48 workspaces, 10 tabs per workspace,
+six switch passes, functional assertions, optional p95 budgets, and report
+attachments. The selection profile still measures dispatch, first queue delivery,
+unfocus, second queue delivery, and their total. Queue/total measurements now
+include async suspension and resumption overhead; they are not interchangeable
+with historical nested-runloop timings. Batch actions retain synchronous timings.
+The existing autoWelcomeIfNeeded initializer argument replaces a temporary global
+welcome preference override, and owned panels are torn down on success or failure.
+No production code, workflow selector, workload size, or budget is changed.
+
+The actual build 797 module passes both complete profiles locally in 2.514 seconds
+with warning-free Swift 6 compilation. A temporary withheld FIFO callback fails
+once at the original one-second bound and still completes cleanup and the batch
+case. This local macOS 26 result does not replace
+fixed-head macOS 15 CI coverage. The earlier broad-run pipeline completion gap
+remains a separate unresolved issue.
+
+### Native deadline termination evidence
+
+All four candidate T native jobs printed their 900-second deadline before normal
+workflow cancellation; runner cleanup later reported orphaned `tee` processes.
+The optional failure collector was absent from T, so its removal did not resolve
+this completion gap. Existing local full-chain controls pass and do not identify
+the actual macOS 15 cause. T's third shard was still advancing through tests at
+its deadline; the final symbol test identity is not evidence of a hang in that
+test. Native jobs canceled after observed failures are not passing coverage.
+
+The existing deadline owner now emits `native_test_deadline_lifecycle` records
+to the same GitHub step stderr: termination requested, grace expired, kill sent,
+child joined, and owner exit. Records contain fixed phase names, numeric process
+IDs and exit codes; an exceptional exit has a null code. No command arguments,
+paths, environment or test payloads are added. The final marker runs in `finally`;
+it distinguishes a returned owner from a pending child wait when delivery succeeds.
+A closed diagnostic channel cannot replace the native result. No new collector,
+artifact, retry, signal policy or deadline is introduced; native 900 seconds and
+termination grace five seconds remain unchanged. Local status controls verify
+behavior, while actual runner delivery and the pipeline cause remain pending.
+
+### Binding-only agent resume state
+
+The two T binding-only resume regressions reproduce against build 797: the
+approved launcher exists, but its running state is nil and the binding remains
+after prompt-idle. Workspace's derived startup-command predicate required a
+restorable-agent snapshot even for a valid agent-hook binding. That contradicted
+the existing binding-only state branch and the corresponding startup-input
+predicate. The predicate now recognizes either an agent resume command or an
+already-approved agent-hook binding command. Approval, launch selection, remote
+policy, and input handling are unchanged.
+
+This lets the existing owner preserve the resumed working directory during the
+run and clear the binding when the shell reports prompt-idle. Both existing
+regressions and their assertions are unchanged; actual CI and a native build 797
+probe provide the failing-before evidence. Independent source review covered the
+approval/launcher, restoration, directory rescue, and prompt-idle cleanup owners.
+Fresh isolated build 798 passes both unchanged regressions and three controls
+for disabled auto-resume, unapproved bindings and non-agent state (five cases,
+0.133 seconds, strict Swift 6 without warnings). Fixed-head macOS 15 CI remains
+pending.
+
+### Terminal pointer notification dismissal fixture
+
+T's direct mouse interaction case reported a blocked one-second main-queue drain
+and a zero flash count. The exact case now shares the existing keyboard fixture's
+owned terminal/window, synchronous composition overrides, and buffered renderer
+callback observation. Both still send real AppKit input to GhosttyNSView and
+assert first-responder setup, unread state before input, dismissal after input,
+and exactly one flash. The existing renderer callback is observed with the same
+one-second failure bound; globals and preferences are restored before suspension.
+The renamed NotificationInteractionFixture owns both input modes rather than
+copying the keyboard setup. No terminal rendering or production behavior changes.
+
+The mouse fixture seeds an unread session record for its own workspace, matching
+the maintained keyboard fixture, instead of replacing the entire shared store and
+invoking notification delivery. Delivery itself is not this dismissal contract.
+It captures a per-surface flash-count delta rather than resetting all counters,
+flushes setup focus before seeding unread state, and closes its owned window and
+panels. The old now-empty XCTest class and its unused helpers are removed.
+
+Actual build 797 passes both input cases in 0.438 seconds with warning-free
+compilation in the repository's Swift 5 language mode. Omitting only the pointer
+event in a temporary control fails both dismissal and flash assertions while the
+keyboard case still passes. Strict Swift 6 compilation
+still rejects the three existing imported AppFocusState.overrideIsFocused accesses;
+this retained production global is not newly suppressed or declared concurrency
+safe. Fixed-head macOS 15 app-host coverage remains pending. The local result does
+not establish which queued stage caused the historical CI failure.
+
+### Sidebar tool deferred focus contract
+
+T's nonfocused sidebar tool creation case failed its one-second main-queue
+expectation; its six focus and panel assertions did not fail. The exact case now
+uses Swift Testing with three buffered FIFO deliveries, preserving the owner's
+two nested focus reassertions and its queued reconciliation. Each delivery keeps
+its original one-second failure bound, captured before enqueueing; cancellation
+joins the event and deadline tasks. This is observation of the existing event
+sequence, not a longer settling delay or a claim that all descendant work ended.
+
+All six original assertions remain: distinct panel identity, tool type, files
+mode, original focused panel, original selected tab, and sidebar-tool surface
+kind. The fixture tears down its owned workspace panels and remote connection
+on every path. No production focus behavior, global override, or selector changes.
+
+The exact migrated case passes against build 797 in 0.042 seconds with warning-free
+Swift 6 compilation. Explicitly focusing the new tool fails the two original
+focus assertions; withholding FIFO delivery fails the one-second observation.
+These controls establish contract sensitivity, not the historical macOS 15
+scheduler cause. Integrated app-host verification remains pending.
+
+### Kiro deny and Codex late-prompt Feed contract
+
+T shard 3 failed two assertions inside the appended Codex phase of
+`testKiroFeedDenyUsesPreToolUseExitCodeTwo`: the CLI timed out and stdout was
+empty. Kiro deny behavior, Codex status zero and both late-PR extraction checks
+passed. The failure does not identify an exact stalled owner. Its legacy mock
+launched 80 unjoined accept workers; the migrated whole method uses the maintained
+joined socket/process owners, explicit fixture authentication and isolated homes,
+configuration, state and provenance paths. The original local five-second /
+host-CI minimum twenty-second producer policy and separate five-second feed
+observation bound remain. Kiro receives the actual permission-deny response and
+retains status two, stderr and feed event/source/PID checks. Codex retains the
+long prompt, status/stdout, and PR URL in both tool input and context.
+
+The Codex phase explicitly uses the existing visible-mutation suppression policy
+and a disabled auto-name response. This keeps its asserted feed behavior while
+preventing detached naming/monitor processes from outliving fixture cleanup. It
+no longer exercises parent workspace association and monitor-launch composition.
+Dedicated `CLICodexHookPEAssociationTests` cover persisted stable/runtime workspace
+association, and `CodexMonitorLeaseTests.nextPromptRespectsPriorTurnCompletion`
+covers prompt/lease identity and retirement. Existing direct monitor tests in
+`WorkspaceRemoteConnectionTests` cover transcript error/input behavior. These are
+retained constituent contracts, not a claim of equivalent whole composition or
+a new verification result for those tests.
+
+One-way Codex feed telemetry gets no response; authentication is validated
+separately. Failure is retained until producer exit and socket drain, then
+reported and rethrown before owned paths are removed. The original 50ms
+best-effort feed transport budget remains a loaded-host risk. No production,
+shared helper or workflow selector changes accompany this fixture correction.
+Native proof and negative controls are recorded in the slice handoff; integrated
+fixed-head macOS 15 app-host verification remains pending.
+
+### Nested split-divider cache validity
+
+The unchanged nested-insertion regression fails against build 797 while the
+other six portal hit-testing performance cases pass. A native AppKit control
+observed one added child and zero `subviews` KVO deliveries. The shared cache
+invalidator had relied on that notification to discover new splits below an
+existing layout container, leaving a warmed empty cache valid indefinitely.
+
+The invalidator now keeps weak child-identity snapshots of the same bounded set
+of root, direct-child and split-related containers it already observes. Both
+terminal and browser portal cache hits check those snapshots before reuse;
+insertion, removal or reordering triggers the existing region collection path.
+This does not recursively inspect arbitrary descendants on every hit and does not
+add work to the terminal's non-pointer guard. Geometry notifications and hidden
+state observation remain unchanged. The snapshots do not retain windows or views.
+
+Three temporary native controls of the candidate invalidator pass with strict
+Swift 6 compilation: insertion/removal invalidation, weak ownership, and 1,000
+unchanged-cache checks. Fresh isolated build 799 subsequently passes all seven
+unchanged portal cases (0.062 seconds) and seven temporary browser counterparts
+(0.065 seconds), with strict Swift 6 compilation and no warnings. These establish
+cache behavior, not a pointer-latency measurement. Fixed-head performance gates
+and macOS 15 coverage remain required. No terminal rendering code is changed.
+
+### Claude idle reminders after an idle Stop
+
+The T shard 3 failure expected an idle reminder to set Needs input. Accepted main
+policy `f62cae83f04967788c61f0a35aca61eb0e9fb154` keeps a generic idle heartbeat Idle
+unless the session was already waiting for input. The exact existing case now
+uses the maintained joined Claude session fixture, retaining Stop then
+Notification, both successful hook results, and `c=idle-reminder;p=0`. It asserts
+Idle and no Needs input in the notification phase only, plus the persisted false
+pending-work flag. No production notification or lifecycle policy changes.
+
+This case explicitly retains its original five-second process limit on every
+host. The fixture's existing callers keep their local five-second / CI twenty-second
+policy through the unchanged default. Each producer exits before the socket phase
+is drained and the owned root is removed. Explicit synthetic authentication and a
+disabled auto-title response prevent ambient Keychain lookup and detached naming.
+The other cases in the old background-work suite are unchanged and retain their
+legacy accept-worker ownership risk.
+
+All four joined session cases pass against actual build 797 with strict Swift 6
+and zero warnings. Reinstating the old Needs input oracle produces one issue;
+a permission-prompt negative produces the three intended classification/status
+issues while the other session cases pass. These controls establish the accepted
+contract, not the historical CI scheduling cause. Integrated test-target compilation
+and fixed-head macOS 15 execution remain required. No localized product text changed.
+
+
+## Canvas split shortcut initial panes
+
+The two `AppDelegateSurfaceShortcutRoutingTests` Cmd+D and Cmd+Shift+D cases
+synchronize the actual workspace panel IDs into `canvasModel` immediately after
+switching to canvas mode. `setLayoutMode` seeds only usable measured split
+frames; `CanvasRootView.sync` normally supplies missing panel descriptors later.
+The fixtures previously required an original canvas frame before that view sync.
+All existing window creation, settings, event dispatch, geometry, pane-count,
+focus and cleanup assertions remain unchanged. No production behavior, deadline,
+selector or shared helper changed.
+
+An owned, never-presented window and direct routing context against frozen native
+build 797 supplied a bounded model/shortcut proof: both cases passed after sync;
+omitting sync failed both original frame requirements; swapping the two real
+shortcuts failed both directional placement assertions. This temporary harness
+used private settings and an isolated process home, with telemetry disabled.
+It does not replace the original app-host window coverage. Capturing a raw window
+as focused correctly triggered the existing hidden/unattached-terminal split
+suppression; the successful temporary control routed by the event window with
+no captured key window. A nil capture falls back to `NSApp.keyWindow`, so this
+is not a permanent ambient-focus isolation fixture or proof of the historical
+macOS 15 CI schedule.
+
+The exact complete source compiles in the target Swift 5 mode against build 797,
+retaining the baseline redundant `try` warning in the unrelated numbered-surface
+case. A strict Swift 6 attempt remains blocked by the existing imported mutable
+`KeyboardShortcutSettings.settingsFileStore` owner. No warning or concurrency
+suppression was added. Fixed-head execution of the original two app-host cases
+remains pending; no local window presentation or app rebuild was performed.
+
+### Same-path Find scope fixture
+
+The workspace-identity reset test now establishes its initial query through the
+existing Files-to-Find presentation transition, which synchronously submits the
+field value to the injected search controller. It checks that submission before
+publishing the original nonempty snapshot, then changes only the workspace UUID
+while retaining the same local root path. Both original field/snapshot reset
+assertions remain. This removes an incidental run-loop debounce polling wait;
+it is coverage of workspace scope reset, not typing-debounce scheduling.
+
+The fixture clears its workspace root at teardown to cancel directory watching
+and loads. Existing local-provider/Git-status composition is unchanged. Against
+build 799 the exact case passes with strict Swift 6 compilation and no warnings
+(0.026 seconds); retaining the first UUID in a temporary negative control fails
+both original reset assertions. Fixed-head macOS 15 app-host execution remains
+pending. No production source or user-facing string changes.
+
+### Identity-only session linkage completion
+
+T shard 3 failed the monitor-transcript plus identity-hook association assertion
+with `no_canonical_association`. Immediately afterward SQLite reported the
+fixture database, WAL and shared-memory files unlinked while still open. The
+missing association does not identify whether the writer was pending or failed;
+the cleanup messages independently establish invalid file lifetime ownership.
+The recorder was present, and an earlier native original-case pass disproved a
+missing-recorder explanation.
+
+The exact case moves to Swift Testing and awaits the maintained runtime's tracked
+background work before reading factual projection. A same-actor entry captures
+the task handles before timeout cleanup can clear them. Its original one-second
+bound covers completion and the final read; timeout and parent cancellation stop
+the runtime, then join the captured producer and deadline tasks. The async graph
+scope releases SQLite before the outer owned directory cleanup, whose errors are
+reported. Owned workspace panels are torn down on every path.
+
+All six import, direct-read and linked-session assertions remain, with the same
+transcript structure and identity-only hook. The unasserted optional display cache
+is omitted to avoid independent refresh tasks; the unchanged following legacy
+test retains display-projection coverage. Hook lookup, raw-output storage and
+repository paths are owned, and event delivery is injected off. No production
+association policy, package API, roadmap capability or deadline changes.
+
+The exact case passes against native build 797 in 0.304 seconds with warning-free
+Swift 6 compilation. Temporary controlled writer gating distinguishes missing
+association before append from available projection after completion. Timeout,
+parent cancellation and rejected-write controls retain failures and verify weak
+runtime/client release plus zero owned SQLite descriptors before deletion. The
+native runner uses an activation-prohibited application with no windows; the
+first pure-parser bootstrap lacked NSApplication and failed its Ghostty
+precondition, so that attempt is not counted as test evidence. The importer is
+compiled from its existing CLI/test-target sources and uses only local Git reads
+under the isolated environment. Whole app-host/macOS 15 verification remains
+pending; these controls do not establish the historical scheduler cause.
+
+AD shard 7 later failed only this case with generic `timedOut` (1.662 seconds).
+The log does not identify whether persistence, projection or result consumption
+was late. A controlled build-801 run completed the real factual projection at
+7.88ms, then held only result delivery; the old task-group timer won at 1.025s.
+This proves consumer-scheduling sensitivity, not the historical AD cause.
+
+The same-file fixture now publishes the complete factual projection and its
+arrival timestamp into a first-result buffer from the captured producer. A
+background-work completion alone cannot establish success. The original absolute
+one-second deadline includes the projection read; late or missing results still
+fail. Timer and producer cancellation, runtime stop and captured producer join
+complete before result interpretation or SQLite cleanup. Parent cancellation is
+authoritative even with buffered success. Failure-only diagnostics identify the
+background/projection/completed phase and elapsed arrival without session or
+path payloads. No production or shared-observer API changed.
+
+The exact case and importer compile warning-free in configured Swift 5 and strict
+Swift 6 against immutable build 801. Controlled timely-result/delayed-consumer,
+missing/late result, cancellation before capture and before/after buffering, and
+unexpected-clock-error checks pass. Omitting the hook still fails the original
+availability assertion. All controls observe weak runtime/client release and
+zero owned SQLite descriptors before deletion. The first strict Swift 6 attempt
+correctly required explicit MainActor isolation on the private diagnostic phase
+carrier; it was corrected without suppression. The desktop was not presented,
+and actual integrated macOS 15 verification remains pending. Evidence:
+`/tmp/ad-prompt-completion-proof/handoff.md`.
+
+### Codex prompt cache and fallback launch fixture
+
+The exact prompt-cache case now supplies the missing-path condition required by
+`spawnDetachedAgentAutoName` before expecting `BMUX_BUNDLED_CLI_PATH` to launch
+its owned stub. The real CLI starts through an owned executable symlink; the
+first authenticated socket response removes that symlink only. The application
+binary is never modified. The former absolute executable remained valid and
+correctly took precedence over the bundled fallback, so its logging stub was
+not selected. A temporary `exec -a` control also showed Foundation retains the
+absolute executable in `ProcessInfo.arguments` despite a changed Swift argv0.
+
+The migrated Swift Testing case retains successful hook status and exact output,
+launcher existence, hooks/codex/auto-name and prompt-submit trigger arguments,
+user prompt caching, and sequence 1. Explicit visible-mutation suppression keeps
+unrelated detached monitors and association work outside this cache/launch test;
+the production cache and auto-name probe still execute. This is fallback-launch
+coverage, not coverage of primary-executable priority or monitor composition.
+The owned responder preserves original surface routing and fallback errors, uses
+synthetic authentication, and the real producer and socket worker are joined.
+The original process allowance remains five seconds locally and twenty on CI.
+
+The original one-second post-hook observation now awaits a native FIFO signal
+that is the stub's final action after writing every argument. Both ends open the
+FIFO read/write, so a canceled observer cannot leave a blocked writer. Success
+proves all observable owned writes completed, not a waitpid join of the detached
+stub. A late stub after failure can only fail to open paths below the removed
+owned root; it cannot recreate that root or touch user paths. No process registry,
+PID admission framework, polling, production seam or deadline increase was added.
+
+Native build 797 controls exercise the real CLI with isolated home/config/state,
+no installed provider executable, and telemetry disabled. Initial temporary
+responder attempts lacked the required surface topology and returned before
+naming; that setup failure is retained separately from the corrected positive.
+The exact source compiles with strict Swift 6 and zero warnings; its real-CLI
+case passes in 0.195 seconds. Omitting the final signal fails the original
+one-second observation; omitting the prompt fails the original cached-message
+requirement after successful launch. All owned roots are removed in both controls.
+Integrated target compilation and fixed-head macOS 15 execution remain pending.
+No product strings or localization catalogs changed.
+
+
+## Option-digit terminal focus prerequisite
+
+`terminalKeyEquivalentRoutesActiveOptionDigitWorkspaceShortcut` now subscribes
+to the maintained buffered readiness owner before presenting its real test
+window, checks the live surface, and explicitly moves terminal focus after
+window display. Its new three-second readiness failure cap replaces the former
+50 ms run-loop settling delay; the old delay was not a readiness contract.
+The existing workspace order, initial selection, exact terminal first responder,
+real `window.performKeyEquivalent` consumption and Option+2 target assertions
+remain. The Option+digit binding and all shortcut settings mutations stay in a
+synchronous scope after the readiness await, with an explicit cancellation check
+before the assertions. No production, helper, selector or timeout-policy change
+is included.
+
+An owned build 797 manual-I/O terminal probe demonstrates the setup boundary:
+focus before attachment has no UI window; after real attachment and layout,
+explicit focus selects the exact Ghostty responder even while runtime creation
+is still pending. The separate after-readiness control also passes. Omitting
+only the post-attachment focus request fails the intended focus check. Windows
+remain unpresented, no shell child is started, and all probe resources are owned.
+This proves the attachment/focus boundary, not the original full app-host route
+or its historical macOS 15 failure cause. The permanent real-window case is
+compiled locally and left for CI execution.
+
+The exact complete suite and unchanged shared helpers compile in target Swift 5
+without warnings. Strict Swift 6 still diagnoses the pre-existing imported
+mutable settings-store references in the unrelated conditional-binding case and
+shared settings restoration helper. The existing close-window 50 ms cleanup
+and shared settings owner are retained limitations; this slice does not claim
+to replace those lifecycles. Fixed-head macOS 15 app-host verification is pending.
+
+### Pending diff viewer ordering fixture
+
+T shard 2 failed only the combined selected-page redirect and cached-alternate
+start predicate at legacy line 1716. Initial pending-page, open-before-Git and
+final CLI/patch assertions did not fail. The log does not identify which part of
+the combined predicate missed its five-second bound. Historical unchanged local
+runs both passed and failed; supplying a stable `origin/main` avoided unrelated
+missing-base searches, without establishing the historical CI cause.
+
+The exact case moves to Swift Testing with an owned Git/gh environment. The gh
+stub returns no PR without external access; Git advertises `origin/main` and
+preserves the original selected patch and empty cached alternate. FIFO readiness
+signals replace polling. The cached-start signal is emitted after the real CLI
+writes the selected redirect; the fixture reads that redirect while cached Git
+is still held. All pending payload, title, markup, release ordering, live CLI,
+exit/output and final patch assertions remain.
+
+The three CLI phases each retain their original five-second failure deadline.
+The existing joined process helper adds a fifteen-second outer ceiling, derived
+from those phases; this does not replace or extend any phase. Socket capture
+joins its final drain and checks the original five-second completion bound.
+The fake Git gate has a new five-second failure exit using Bash's built-in read.
+Native child and HTTP-server cleanup each have a separate five-second failure
+bound, so this is not a claim that the total test budget is unchanged.
+
+The process and socket use the maintained joined helpers. Error paths release
+both Git gates before canceling and joining the direct CLI. Announced Git PIDs
+are observed through native exit sources; the HTTP server is checked against
+this fixture's manifest root and executable before termination and native exit
+observation. Cleanup runs in a retained task independent of caller cancellation,
+then joins before directory removal; errors are visible. This is not a general
+descendant-join guarantee: a fast Git child not yet announced when the CLI exits
+can retain a short startup tail, and cancellation before HTTP manifest publication
+still has the inherited server-admission gap. The controls cover the observed
+open/phase boundaries. The bounded Git gate eliminates the old unbounded wait;
+no PID admission framework or production process policy is introduced.
+
+Native build 797 passes the exact case with strict Swift 6 compilation. Temporary
+omit-release, cancellation and early-failure controls retain their errors and
+remove their owned roots after joined cleanup. The first candidate trapped in a
+new DispatchSource callback that inherited MainActor isolation; explicit
+Sendable native callbacks corrected that fixture defect. Its owned viewer was
+independently identity-checked, stopped and observed exited before root removal.
+That attempt is not evidence of the historical CI failure. Full integrated
+app-host/macOS 15 execution remains pending. No production or user-facing string
+changes are included.
+
+### Visible terminal responder repair readiness
+
+The T shard-2 failure in
+`testWindowSendEventRepairsVisibleSameWindowResponderDriftForFocusedTerminalTyping`
+reported the three-second XCTest readiness notification wait; later live-surface,
+focus, repair-count and key-forwarding assertions did not fail. This does not
+establish a notification-filter defect or the historical scheduling cause.
+The exact case now uses Swift Testing and the maintained buffered
+`TerminalRuntimeReadinessFixture`, subscribed before the real window is shown
+and displayed. It retains the three-second readiness bound, both one-second
+focus bounds and a cancellable, joined thirty-second outer allowance.
+
+Focus waits observe the actual surface-ID-bearing first-responder notification,
+then retain the original responder, visible-drift, repair-count and forwarded-key
+assertions. Their absolute deadlines are captured before task scheduling. The
+repair override and both debug observers are installed and restored around only
+the synchronous `window.sendEvent` call, before any await. The owned window's
+cleanup is registered by ID immediately after creation; the existing close
+confirmation owner is restored synchronously, without the old settling run loop.
+Unrelated legacy methods and shared XCTest helpers are unchanged. The new plain
+unmodified `a` case does not carry the legacy suite's unrelated global shortcut
+reset or focused-window capture across suspension; it retains the actual app-host
+window and native event route. An explicit no-active-recorder precondition just
+before synchronous dispatch preserves the original inactive-recorder prerequisite
+without resetting unrelated global recorder state.
+
+Exact new sources compile without warnings in target Swift 5 and strict Swift 6
+against frozen build 797. Owned manual-I/O offscreen controls on macOS 26 verify
+actual native focus delivery, a missing-focus one-second failure, joined waiter
+cancellation and removal before late delivery. They use an isolated home and
+process-local telemetry fence, with no visible window, activation or shell child.
+The permanent visible-window case was compiled but not executed locally. Its
+macOS 15 app-host behavior, complete target compilation and combined CI remain
+pending; these controls neither reproduce nor disprove the historical CI cause.
+
+### Candidate U integrated local verification
+
+The complete `bmux-unit` target builds successfully at
+`504c97420f2debdcdc2f356137f2f37fa4d22737` after all observed T failure groups
+received scoped repairs. The subsequent publication commit changes verification
+notes only. Build 799 contains identical production Swift, CLI, package-source,
+resource and dependency content; subsequent integrations affect tests and notes.
+No validation app was launched or replaced the user's running preview.
+
+All 629 test files are wired, the project parses natively, strict test determinism
+has zero findings, and the configured speculative-main-merge Swift file budget
+passes. All 21 approved prerequisite heads remain ancestors, including both
+maintenance PR heads and the matte branch. The final incremental compilation
+emits warnings at sixteen affected-file locations; their exact source lines
+are unchanged from T. These include existing XCTest import consistency and
+library-evolution warnings, a non-Sendable legacy socket-handler conversion,
+actor-isolated ObservableObject conformance, unused local values and an immediate
+legacy cleanup defer. No warning suppression or wider migration is included.
+Earlier full-build actor-isolation warnings remain recorded; this incremental
+comparison is not a warning-free full-baseline claim.
+
+New native fixture files compile in strict Swift 6 where recorded in their
+individual sections. Existing imported mutable-global limitations in the
+Option-digit and pointer paths remain explicit. The original visible-window
+Option-digit, canvas and responder-repair compositions require actual app-host
+CI; offscreen controls are boundary evidence, not those complete executions.
+Pending-diff and Codex fallback fixtures retain documented detached-child
+admission/exit limits. No maintenance change adds shipped UI/help text or changes
+a localization catalog.
+
+T's four native shards were cancelled after actual failures and their 900-second
+deadlines; they are not passing evidence. The numeric watchdog diagnostics do
+not claim to fix the unresolved historical deadline-to-pipeline completion gap.
+Candidate U requires its own native, release, performance, package and companion
+gates before merge; no check or threshold is waived.
+
+### Task-group assertion macro compatibility
+
+Candidate U native shards 2 and 4 failed compilation before test execution in
+the pending-diff batch. The package job independently reported the same direct `group.next()`
+assertion form in `RemoteDaemonBootstrapFixture`: its Testing macro expanded the
+call through an immutable closure parameter, making the mutating `next()` call
+invalid. Local Testing 1902 expands this form differently, which explains why
+strict local compilation had not exposed the older-toolchain failure.
+
+The two affected fixture owners now await `group.next()` into a local optional
+value before passing that value to `#require`. Each still awaits exactly once;
+phase deadlines, cancellation, group joins, error propagation and all behavioral
+assertions remain unchanged. The U-introduced Dock and session-link sites already
+place `await` inside the macro argument; they do not use the direct-call argument
+shape shown by the CI failure and are unchanged.
+
+The unchanged bootstrap contract cases and pending-diff positive/cleanup
+controls are verified locally against frozen build 797 with strict Swift 6.
+Local expansion confirms the corrected macro receives only the resulting value.
+Only the current toolchain is installed locally; this is not an execution of
+CI's older Testing plugin. Corrected package and app-host CI remain required.
+No production code, timeout policy or permanent syntax-only tests are changed.
+
+### WebAuthn relay Promise result fixture
+
+Candidate V shard 2 reported WKErrorDomain code 5 in
+`webAuthnPageBridgeRelaysCredentialGetThroughContentWorldHandler`, before its five
+credential/handler assertions. The test passed an async JavaScript IIFE to
+`evaluateJavaScript`, which returned an unsupported Promise. The fixture now uses
+WebKit's `callAsyncJavaScript` Promise-resolution boundary in the page content
+world. The original bridge scripts, request payload, native reply, and all five
+assertions remain unchanged. Its reply-handler closure carries the current SDK's
+required MainActor/Sendable annotations; no native authentication code changes.
+
+The exact corrected test method passed against frozen native build 799 on local
+macOS 26.3, with the unchanged method body apart from the invocation correction.
+Restoring the original invocation in a temporary copy reproduced the same code-5
+failure. The complete test file compiled in strict Swift 6 without warnings.
+These owned-process controls install a Foundation network fence before loading
+the module and a WebKit HTTP(S) deny rule in the temporary load helper before
+loading HTML. They use no visible windows, user credentials, or external services.
+Each runner joined and removed its owned home. The committed helper retains its
+existing didFinish/error completion behavior; no deadline is added or extended.
+
+This is test-boundary evidence, not a production passkey ceremony or a macOS 15
+app-host result. The separate inspector-close completion and popup-detachment
+failures in V remain unresolved by this change. Fixed-head app-host CI is required.
+
+
+### V2 CLI and non-focus browser split completion
+
+Candidate V shard 2 failed three unchanged legacy cases: the non-focus browser
+split's one-second queue expectation, the every-theme-write command's no-timeout
+assertion, and the transcript-backed Claude session command's no-timeout assertion.
+The latter two reported successful exit status and complete output. Their shared
+legacy runner waits for a worker's process-completion signal before draining its
+pipe. That ordering is an ownership risk, not proof of the historical timeout's
+cause. The earlier tagged-theme and ambiguous-session corrections were different
+cases; these exact three original methods were unchanged from actual main.
+
+The two CLI cases now use the maintained `ShellContractProcess` producer and
+join its bounded operation before cleanup. Each command retains its original
+five-second local and CI bound; neither adopts the twenty-second CI policy used
+by other hook fixtures. The theme case retains three actual writes, three config
+values, three real distributed notifications with the exact owned bundle identity
+and `final` phase, and no socket RPC. `BMUXTestExpectation.wait(timeout:)` used a
+fresh five-second wait for each fulfillment, so the replacement retains five
+seconds per notification. Its unique bundle identity cannot target an existing
+app. The session case retains the original transcript, stored false-restorable
+flag, status and all seven status/data expectations, with a throwing process
+deadline replacing the old no-timeout boolean. Both own HOME, CFFIXED_USER_HOME,
+XDG paths, credentials and cleanup; shared process/socket/notification owners are
+unchanged.
+
+The browser case retains the actual `newBrowserSplit(... focus: false)` action
+and both identity/focus assertions. Its finite main-queue delivery bridge follows
+the owner's two nested focus reassertions and their queued focus reconciliation:
+three FIFO deliveries under one absolute one-second failure bound. This is a
+source-specific event boundary, not a sleep or a general queue-drain guarantee.
+The stream and deadline tasks cancel and join; owned panels are torn down.
+
+Frozen build 797 native controls passed both CLI cases in target Swift 5 and
+strict Swift 6, and the browser case in strict Swift 6. Omitting the third theme
+write failed notification delivery; an empty transcript failed four original
+restorable/fork assertions; requesting browser focus failed the original focus
+preservation assertion. Exact repository sources and maintained helpers typecheck
+in Swift 5 and Swift 6 without warnings. The executable CLI proof substitutes
+only the bundle locator with the exact frozen CLI path; the real locator is
+separately typechecked. All other legacy bytes are unchanged. No production code,
+selector, shared helper or user-facing text changes. Fixed-head macOS 15 app-host
+execution and the integrated full test-target build remain required; these local
+controls do not establish the historical scheduler or process timeout cause.
+
+### Dock prompt callback event ordering
+
+Candidate V reports `DockCloseConfirmationMissing` in the registered-owner Dock
+pane case. The prior fixture raced a callback-consuming task against a deadline
+task. A controlled build-799 reproduction records the real callback before its
+one-second deadline, holds only its consumer, and still gets the timeout error.
+This demonstrates a fixture observation hazard; V did not record callback
+arrival timestamps, so it does not establish the historical CI cause.
+
+The exact case now places callback and deadline events into one first-event
+buffer. The callback carries its monotonic arrival timestamp; an event arriving
+after the original absolute one-second deadline is rejected even if timer
+execution is delayed. The timer is a structured child, cancelled and joined on
+completion or parent cancellation. The registered manager, real close request,
+rejection, title, two-tab message and Command-D assertions are unchanged. The
+late-safe rejection handler remains attached; observing failure does not claim
+to cancel the production close task. No product behavior or timeout changes.
+
+Strict Swift 6 build-799 controls pass the exact case and an on-time callback
+whose consumer is withheld until the deadline. Omitted callback and deliberately
+late publication of the real prompt payload each fail with the expected missing
+confirmation error. Parent cancellation after the real handler runs joins the
+timer before returning. All probes use an owned home, process-local telemetry
+fence and prohibited activation, without presenting a window or touching a
+running app. These are macOS 26 controls; complete target and corrected macOS 15
+app-host verification remain required. No shipped UI or localization strings
+change.
+
+The complete Dock file compiles in the repository's Swift 5 mode with its existing
+nonisolated `v2Result` access to the MainActor `TerminalController.shared` warning
+at line 38. Both the unchanged V file and this file reject that same access in
+strict Swift 6; the modified case and its support compile warning-free in strict
+Swift 6. No suppression or unrelated socket-helper rewrite is included.
+
+### Popup termination controller ownership fixture
+
+Candidate V shard 2's `floatingPopupClosesWhenWebContentProcessTerminates`
+cleared both WebKit delegates and hid its retained window, but failed the immediate
+`webView.window == nil` assertion. The popup controller's existing lifecycle
+contract releases its self-retention and opener registration on close; it does not
+promise to detach the view hierarchy from a window retained by the caller.
+
+The fixture now captures the window delegate weakly and checks controller release
+after a synchronous autorelease pool containing construction and termination.
+The opener, popup window, and web view remain retained across that check. Both
+original delegate-clear assertions and the hidden-window assertion remain. No
+production behavior, presentation action, deadline, or cleanup policy changes.
+
+Against frozen native build 799 on macOS 26.3, the exact corrected method passed
+in 0.098 seconds; omitting only termination failed the controller and both delegate
+assertions in 0.227 seconds. The complete test file compiled in strict Swift 6
+without warnings. A preliminary immediate weak-reference check remained nonnil
+until autorelease drainage, so immediate deallocation is not the asserted contract.
+The native ownership control retained attachment even after controller release.
+
+These controls intercept only `BrowserPopupPanel.makeKeyAndOrderFront` in an
+owned diagnostic process, preventing presentation. They therefore verify actual
+controller teardown, not visible-window behavior. The committed test retains real
+presentation and the original visibility assertion. Foundation network interception
+is verified before module loading; telemetry is disabled and home/environment
+paths are owned. No HTML is loaded or external request forwarded. Every owned
+runner exits and is joined before its home is removed. Fixed-head app-host CI on
+macOS 15 remains required; this does not resolve the separate inspector failures.
+
+### V4 terminal search and window restoration prerequisites
+
+Candidate V shard 4's search-typing repair case failed its legacy three-second
+terminal-ready notification expectation. The stranded right-sidebar restoration
+case separately failed initial terminal focus and then three restoration checks.
+These are distinct boundaries: the search case already selects Terminal, while
+the stranded-sidebar case used `createMainWindow()` whose default is Chat.
+`ContentView` omits live terminal content for Chat and supplies false content
+visibility to `WorkspacePortalRenderingPlan`. The latter case now explicitly
+selects Terminal, matching its two neighboring tests. Its actual window creation,
+sidebar registration/removal, restoration action, every assertion and existing
+one-second focus/cleanup helper bounds are otherwise unchanged. The retained
+polling helper is not expanded or credited as a new completion mechanism.
+
+Only the failed search case moves from XCTest to Swift Testing. It subscribes
+with the maintained buffered terminal-ready owner before presentation, then
+checks the real surface and requests focus. The original three-second readiness,
+one-second terminal-focus and thirty-second outer allowance remain. Its actual
+search overlay is mounted through `setSearchOverlay`; a finite FIFO delivery
+follows the owner's single queued mutation before one native layout pass resolves
+the real editable field. This replaces the three-second layout/yield polling
+loop without a production seam. The explicit `selectText`/`makeFirstResponder`
+call is checked synchronously, replacing its old one-second responder polling.
+The original simulated same-window drift, unmodified keycode-zero `sendEvent`,
+exact one repair, responder identity and first-character assertions remain.
+
+A pre-dispatch native text-change observation replaces the final one-second poll.
+Its absolute deadline and the outer allowance are captured before scheduling;
+stream/deadline tasks cancel and join. Global repair probes are installed and
+restored only inside synchronous dispatch. A no-recorder precondition retains
+that input prerequisite without resetting unrelated settings across suspension.
+Window-ID cleanup is registered immediately after creation; close-confirmation
+state is restored synchronously. Other legacy cases and shared helpers are
+unchanged.
+
+Actual production portal-plan values confirmed disabled/enabled rendering for
+the caller's Chat/Terminal inputs. This pure value proof does not mount the full
+app window. Frozen build 797 offscreen manual-I/O controls confirmed the real
+queued overlay mount, native editable field, immediate field-editor focus and
+actual key-driven text-change notification. Omitting the overlay failed the
+mount prerequisite; omitting the key failed the one-second text-event boundary.
+Owned HOME and launch-only telemetry settings isolated these probes; no app
+window was presented. The exact final test sources and maintained support compile
+without warnings in both Swift 5 and Swift 6. The permanent visible cases were
+not executed locally. Fixed-head macOS 15 app-host execution remains required;
+these controls do not establish why V's original notification wait timed out.
+No production code, runtime hooks, selector, deadline policy or shipped text is
+changed. Native global serialization does not isolate unrelated background work.
+
+
+### Remaining V non-focus split and Option-digit prerequisites
+
+The completed V shard 3 log records two further non-focus split failures only at
+the legacy one-second main-queue expectation. Their subsequent panel, pane and
+selected-tab assertions did not fail. The terminal split and delayed stale-browser
+selection cases now join the existing native non-focus split suite. The same
+three FIFO deliveries follow the owner's two queued reassertions and subsequent
+focus reconciliation. Buffered events preserve every delivery even if a consumer
+resumes later. The ordinary terminal/browser cases consume all three under one
+absolute one-second bound. The stale-selection case retains three sequential
+one-second phase bounds, its actual queued Bonsplit `didSelectTab` call, and all
+three final focus projections. Its owned callback is invalidated before teardown
+on failure, and successful delivery is asserted. No generic queue drain, runtime
+mutation, copied polling or wider deadline replaces those contracts.
+
+The failed Option-digit terminal key-equivalent case separately still created
+its window with the default Chat tab. It now explicitly selects Terminal; every
+other byte, including the three-second runtime prerequisite, real window route,
+exact key payload, synchronous shortcut isolation and all workspace assertions,
+is unchanged. Chat omits terminal content and disables portal rendering, so
+waiting for a runtime cannot substitute for selecting the required content. The
+other Option-digit cases exercise generic responders and retain their existing
+tab selection.
+
+Frozen build 797 executed the complete three-case non-focus suite successfully
+in strict Swift 6. Changing the splits to request focus failed four original
+focus/pane assertions across the same three tests. The complete affected files
+compile in target Swift 5; strict Swift 6 native split compilation is clean.
+The complete Option-digit fixture's strict-Swift-6 attempt retains the existing
+imported mutable `KeyboardShortcutSettings.settingsFileStore` isolation gap; no
+suppression or settings-owner change is included. The pure production portal-plan
+control and owned offscreen attachment/focus controls support the Option-digit
+prerequisite, but the complete visible key-equivalent case remains CI-only.
+Historical V scheduling cause, fixed-head macOS 15 execution and the integrated
+full test-target build remain unverified here. Other legacy cases, shared helpers,
+selectors, product code and user-facing text are unchanged.
+
+## Codex pending turn-write fixture completion (V follow-up)
+
+V (`5307ec8379bd5a3fd2f046924dbef0c1baa594e7`) shard 1 last reported
+`testCodexSubmitBlocksReentrantTurnWhileWriteIsPending` before its idle and
+outer watchdog limits. Its single yield did not establish that `thread/start`
+had registered response ID 2; an early reply can be ignored, leaving the later
+pending-write yield loop unbounded. An owned build-797 control deliberately
+held the initialized writer, proved the early reply was ignored, and contrasted
+ordered reply delivery. That proves the fixture ordering defect, not the exact
+historical CI scheduling sequence.
+
+`CodexPendingTurnWriteTests` now observes the injected writer's actual
+`thread/start` and held `turn/start` boundaries. The thread writer is explicitly
+MainActor and does not suspend, so the session stores its request ID before the
+consumer can supply the reply. The test retains rejection of the second submit,
+four emitted lines, and the first prompt text. A new one-second absolute failure
+bound contains the previously unbounded fixture; it does not alter a production
+timeout. Expiry and parent cancellation finish the owned release stream and
+supply the existing startup error protocol. The structured group and explicit
+first-submission await join the fixture's tasks before returning. This is not a
+new general session shutdown API or a claim that every internal session task is
+independently joined.
+
+The exact new source passed against frozen build 799 on macOS 26 with Swift 6
+warnings-as-errors. Four temporary controls passed for omitted thread signal,
+omitted release, and parent cancellation at the thread and turn boundaries;
+held-turn controls recorded the first submission joined before fixture return.
+All probe processes and owned homes were removed. No production source, user
+settings, network requests, windows, or app launches changed. Integrated test
+compilation and actual fixed-head macOS 15 execution remain root-owned gates.
+
+
+### App-host lock cancellation of a stopped command
+
+V's four broad native invocations reached their unchanged 900-second watchdog.
+Numeric diagnostics show each outer owner killed and joined its direct lock
+process and returned 124; the output pipeline remained open until workflow
+cancellation. This establishes a subtree/output completion gap, not a missing
+timer. The available early process samples do not establish that V's Bash
+command was stopped.
+
+A separate owned-process control demonstrates a concrete lock-owner hazard:
+`app_host_test_lock.py` forwards TERM/INT to its direct command without resuming
+it. A stopped Bash command cannot run its cancellation trap, so its PTY subtree
+and output pipe remain alive. The regression adds two cases to the existing
+Linux subreaper harness. Each verifies the actual parent chain, stops the owned
+Bash through a pidfd, observes its stopped state, then requires the existing
+signal status, descendant joins, output EOF and no-retry contract. Expected-red
+cleanup resumes that same owned child and joins all descendants before removing
+its temporary root. No broad process matching or app execution is used.
+
+The regression-only commit was published in candidate W-red `8f11bfa7004`.
+Actual CI run `38854766648`, guard `116823656929`, passed the original eleven
+cases and failed both stopped-child cases at the existing eight-second bound.
+All thirteen scenarios confirmed owned subtree joins and temporary-root removal.
+
+The lock now forwards the original TERM/INT and then SIGCONT to its direct
+`Popen` command. This lets a stopped shell run its existing cancellation trap;
+the lock continues waiting for that command while holding its existing lock.
+There is no process scan, new process group, retry or deadline extension.
+All thirteen local Linux cancellation controls pass with the correction,
+including signal status, joined descendants, output EOF and no native retry.
+The complete existing noninteractive helper guard also passes locally. On
+macOS 26, the real fixed-source outer owner, lock, Bash wrapper, sampler, PTY and
+tee composition passes both normal and stopped-Bash controls (5.118 and 5.154
+seconds). Both retain status 124, observe owned process exits and tee EOF,
+reacquire the lock and remove owned roots; the stopped case observes actual STOP
+before cancellation. Direct normal exit 0/65 controls preserve status and output.
+No app, privileged console hop or user state is involved. Fixed-head CI remains
+required. The controlled stopped-child failure is not proof of the historical V
+cause; its early samples did not establish STOP.
+
+### Fork cache refresh live-process scope prerequisite
+
+Candidate V's `forkAvailabilitySnapshotRefreshesWhenProcessScopeChanges` supplied
+live workspace and surface IDs in its process snapshot but only `PWD` in the
+process arguments environment. Fork validation independently checks the current
+process identity, matching `BMUX_WORKSPACE_ID` and `BMUX_SURFACE_ID`, and launch
+arguments. The fixture now supplies its existing live IDs through that environment
+provider. Its stale hook record, process transition, three refreshes and all three
+assertions are unchanged; production validation remains strict.
+
+The exact-case native control on frozen build 797 failed the final live-session
+assertion with the original missing scope and with deliberately wrong scope.
+Matching IDs passed in 0.004 seconds. These controls used injected process facts,
+an owned hook-store root and isolated launch settings; no real process scan,
+app presentation or user settings mutation was needed. Strict Swift 6 compilation
+was warning-free. This is a supplied-data correction, not a cache policy or
+completion change. Existing lock and best-effort temporary-directory cleanup in
+the untouched fixture remain unchanged. No deadline, selector, runtime code,
+shared helper or shipped text changes. Full integrated macOS 15 execution remains
+pending; local macOS 26 evidence does not substitute for that gate.
+
+
+### Native shard capacity under sequential app-host execution
+
+V's four broad invocations reached the unchanged 900-second native limit before
+completing their selected tests. Shard 3 spent about 591 seconds in XCTest, then
+reached only the early Swift Testing suites before the deadline. Two passing
+AppDelegate shortcut suites alone consumed about 125 seconds. Shards 2 and 4
+reached later Workspace suites. Counting test declarations balances the current
+sharder weights but does not balance measured native execution time.
+
+The existing deterministic algorithm now partitions broad coverage across eight
+jobs. No selector, test assertion, native deadline, retry or focused gate is
+removed or extended. Focused assignments stay on shards 1–4; shards 5–8 add broad
+execution only. The stable aggregate `tests` job still depends on the complete
+app-host matrix. Broad process sampling retains the same per-invocation bounds.
+
+At V, both four- and eight-way partitions contain exactly the same 2,055 selectors
+once each. The behavioral guard verifies union, disjointness, extension-method
+coverage, balanced source weights and the existing focused exclusions for both
+partition sizes. Eight-way source weights are 809–810 rather than 1,618–1,619.
+A lower-bound estimate using completed V XCTest methods and unrenamed Swift
+suites distributes 246–454 seconds of known work per new bucket. This omits
+unexecuted or interrupted tests, display-named suites, partial suites, build and
+host overhead; it is not a guarantee that every final invocation fits 900 seconds.
+
+Four additional macOS jobs increase runner demand, repeated build/setup work and
+potential queue time. Actual completion on the final CI toolchain remains the
+gate. The stopped-child cancellation hazard and historical V output-pipe gap
+remain separate from capacity; adding shards is not credited with fixing them.
+
+### Terminal search-overlay mouse ownership
+
+Candidate V shard 2's two search-overlay mouse-release cases failed their
+one-second mount wait and then required an overlay that was absent. The fixture
+now observes the native owner's single queued overlay mutation through a buffered
+FIFO delivery, then performs native layout under the original absolute one-second
+mount cap. A new, separate three-second runtime-readiness prerequisite subscribes
+before offscreen attachment. This is new coverage of a previously implicit
+prerequisite, not an unchanged or restored original deadline.
+
+Pointer forwarding also requires a focused owning Workspace before mouse-down.
+The old bare random-workspace surface did not supply that graph. A cohesive
+fixture now owns a manual-I/O surface, retained window and real terminal panel,
+attaches the panel through `Workspace(initialDetachedSurface:)`, and supplies an
+owned direct main-window context. Actual workspace focus establishes the pointer
+prerequisite. AppDelegate, active-manager and route-retirer state are scoped to
+synchronous graph construction, mouse dispatch and teardown; no shared override
+crosses an await. Panels close before the context is removed. Buffered observation
+and deadline tasks cancel and join; window and runtime cleanup cover failed setup.
+No shell, listener, user window presentation or production override is required.
+Permanent coverage deliberately uses offscreen native dispatch and manual I/O in
+place of the old presented window and normal terminal I/O. It still exercises
+actual Ghostty mouse events, the real overlay and released-surface handling; it
+does not claim real user-input delivery or window-activation coverage.
+
+Both original mouse paths and their assertions remain: terminal mouse-down owns
+the release; overlay drag retains it; overlay mouse-up clears it; releasing the
+runtime before overlay mouse-up still clears pending selection. The released
+case uses the current guarded runtime accessor, never a saved raw surface pointer.
+Native build 799 controls passed both paths; missing context failed the pending
+selection prerequisite despite a live runtime, missing mount failed overlay
+availability, and omitted mouse-up failed the final clear assertion. The controls
+used owned HOME and launch-only telemetry settings, strict Swift 6 compilation,
+and joined processes with removed temporary roots. These local macOS 26 results
+do not establish the historical macOS 15 mount-timeout cause. Integrated app-host
+execution remains required. No runtime code, selector, shared helper, shipped
+text or localization catalog changes are included.
+
+### Welcome shortcut delivery failure context
+
+V's `sidebarShortcutsUseSharedToggleCommands` failed with
+`rightSidebarDeliveryTimedOut`. The handled and left-sidebar assertions passed;
+the timeout prevented the final right-sidebar visibility assertion. The current
+fixture races stream consumption with its one-second timer, so this report alone
+does not distinguish a missing queued callback from delayed consumer scheduling.
+No historical cause or behavior correction is claimed.
+
+The same owned fixture now reports `event=welcome_shortcut_delivery` only when
+that timeout occurs. Fields contain elapsed time since wait entry, callback
+publication time relative to that entry (possibly negative for buffered delivery),
+capture/completion flags, the handled result, registered-context presence and
+native/final visibility facts. It does not expose window IDs, titles, paths,
+settings contents or process environments. Reading these existing facts does not
+invoke routing predicates or mutate production state.
+
+The original key events, real queued shared toggle, synchronous settings restore,
+callback FIFO ordering, task-group cancellation/join, relative one-second timer
+and all test assertions are unchanged. The retained competing-consumer race and
+late queued callback/default restoration behavior remain investigation limits.
+An owned never-presented fixture control verifies buffered success and missing-
+callback failure details; it does not execute the original presented shortcut
+composition or prove the macOS 15 cause. Full next-candidate CI remains required.
+No production hook, global logging configuration, timeout increase or UI string
+change is introduced.
+
+### Expired pending-open Escape failure diagnostics
+
+Candidate V's `testEscapeDoesNotConsumeWhenMenuTriggeredPendingOpenStateExpires`
+remains an unresolved full app-host observation. A narrow build 799 control
+confirmed that an owned twenty-second-old pending request lets Escape pass while
+a fresh request consumes it. That control does not reproduce the original real
+main-window composition and is not evidence of a historical CI timing cause.
+
+Only that existing case moves to Swift Testing, retaining actual
+`createMainWindow()` with default Chat, `makeKey`, the twenty-second seed,
+visibility-false update, plain keycode-53 event, consumed-false assertion, global
+no-dismiss observation for 0.2 seconds and thirty-second outer allowance. The
+incidental fifty-millisecond RunLoop settling after `makeKey` and window close is
+removed; no stronger focus state, replacement settling delay or product behavior
+is imposed. The original mount/visibility path remains in CI, not an offscreen
+replacement. No real-window execution is performed locally for this diagnostic.
+
+The fixture preserves default shortcut binding isolation and persisted provenance
+using the maintained Welcome fixture pattern. Recorder/chord reset and focused
+window capture remain inside synchronous creation/dispatch: the existing capture
+begin/end methods call `debugResetShortcutRoutingStateForTesting`, including
+pending-chord reset. Settings and focus capture restore before the asynchronous
+no-dismiss observation. The original
+observer starts after seeding and before Escape, still observes all dismiss
+notifications, and is removed before window cleanup. A buffered stream retains
+synchronous notifications; its absolute observation deadline cancels and joins
+the losing child. Window-ID cleanup is owned immediately after creation, including
+failed lookup, and close-confirmation state restores synchronously.
+
+Failure comments now carry bounded entry/final facts: raw pending flag, stored
+visibility, key/main/captured-window identity comparisons, a fixed responder
+category, recorder activity, modal window and attached-sheet presence. These
+reads do not prune pending state or invoke routing predicates. They include no
+query, results, title, path, environment, raw event or user text. The diagnostics
+identify existing state rather than selecting a product fix or changing the
+expected outcome.
+
+Exact new sources compile warning-free in target Swift 5 against build 799.
+Strict Swift 6 still rejects the maintained imported mutable `settingsFileStore`
+owner; no concurrency suppression or production change is introduced. Existing
+shared application/background state can still affect this real composition even
+with native test serialization. Integrated compilation and macOS 15 execution
+remain required, and the original failure is not marked resolved. No selector,
+shared helper, runtime code, shipped text or localization catalog changes.
+
+## Inspector close failure diagnostics (V follow-up)
+
+V's four detached-inspector cases failed the existing 2.85-second transition
+wait; the chord case also retained its visible window and preferred-open state.
+Safe build-799 controls completed locally, including inactive synthetic event
+delivery, so no production fix or event-coverage replacement is justified by
+those positives. The historical macOS 15 cause remains unresolved.
+
+The existing waiter now retains at most 12 allowlisted snapshots (entry and
+consumed events), total consumed-event count, elapsed time and final raw settled,
+preferred-open and pending-close state in its existing failure message. The
+chord case records three synchronous before/prefix/suffix snapshots of active,
+native-key, captured-routing identity, visible and preferred-open booleans in
+its existing final assertion messages. It emits no URLs, titles, identifiers,
+event payloads or raw global logs, and adds no observers or runtime hooks.
+Predicate evaluations and short-circuit behavior, NSApp event dispatch, original
+assertions, the 2.85-second timer race and structured cleanup remain unchanged.
+
+These are consumer and final-state diagnostics. The existing Void event stream
+does not carry producer timestamps, and a false wait result still means deadline
+or stream closure; it is not relabeled as a proven timer firing. Timer tasks are
+not instrumented with extra actor hops. The initial strict Swift 6-only check missed a configured Swift 5 parser
+incompatibility in the chord diagnostic closure, which the integrated full-target
+build caught. The closure now puts MainActor on its explicit variable type,
+matching the existing fixture pattern. Focused compilation of both changed files
+and their maintained dependencies passes with warnings-as-errors in both Swift 5
+and strict Swift 6. No visible-window native execution was performed for this
+change. Root owns the corrected full-target build and actual app-host execution,
+including whether the failure messages arrive on macOS 15.
+
+
+### Cold compilation outside the native test allowance
+
+Fixed W (`c8b35a6bd`, run 38856996751) native shards 6 and 8 exited 124
+while still compiling the app, before any native test markers. Their first cold
+build consumed the 900-second broad test allowance; unlike shards 1–4, these
+shards had no preceding focused app-host invocation to populate DerivedData.
+Both failures then terminated and joined the owned child and closed the log
+pipeline. This evidence concerns build placement, not a test failure or a new
+cancellation failure.
+
+The broad step now runs `build-for-testing` before the existing timed
+`test-without-building` invocation. One argument array owns project, scheme,
+configuration, DerivedData, package resolution, destination, shard selectors and
+build settings for both actions. Both execute through the existing console-user
+wrapper. Compilation uses the existing noninteractive PTY owner with the same
+idle fallback (explicit idle value, legacy timeout value, then 300 seconds), a
+separate per-shard build log and the unchanged 75-minute job limit. The console-user PTY owner creates the build
+log under RUNNER_TEMP and appends the one possible package retry; the
+existing tee stream also captures it. A failed build returns immediately without
+starting native tests. The app-host wrapper remains test-only because successful
+invocations require socket-listener evidence.
+
+The test chain retains its 900-second total deadline, machine lock, retry policy,
+process sampler, socket guards, selectors and authoritative native status. The
+existing single SwiftPM cache-recovery retry calls the whole build/test function,
+so clearing DerivedData always precedes a rebuild. Focused gates, artifact
+uploads and package coverage are unchanged. The job budget now explicitly owns
+cold compilation; successful complete build/test runtime on macOS CI remains
+unverified.
+
+Temporary executable controls run the extracted workflow with owned command
+boundaries and real console fallback, PTY, lock and deadline owners. The old
+cold-build composition exits 124, while the split composition completes a build
+longer than the same short diagnostic test cap and then passes. Build failure
+skips tests; native 65 and 124 survive; a package-resolution failure causes
+build/build/test ordering after cache clearing. No real app build or launch is
+performed by these controls. Existing exit-reporting fixtures treat compilation
+as a successful prerequisite so their native outcome assertions retain their
+original meaning. No source-string regression test or new runner framework is
+added; final integrated CI remains the actual Xcode artifact gate.
+
+### Legacy remote cwd trust fixture identity
+
+Fixed W native shard 4 (job 116831461888) reported one failure in the legacy
+remote-restore directory case: the final presented directory remained nil. The
+test had created a second terminal with `focus: true`, persisted that focus, then
+reported a trusted directory for the original background panel. The maintained
+`Workspace+SidebarDirectories` projection intentionally returns the focused
+terminal's effective directory or nil; a background remote report cannot replace
+that focus. Both this policy and the original test are unchanged from main
+`ce17e9888`. All preceding trust assertions passed in the failed CI case.
+
+The exact existing case now explicitly focuses the original panel before taking
+the snapshot, selects its snapshot entry by panel UUID instead of array position,
+and verifies that restore selects its mapped panel. Every original assertion is
+retained: persisted raw metadata remains untrusted, ordinary directory reports
+are rejected, sidebar/filesystem/git projections remain suppressed, and only the
+trusted remote report enables the reported and presented directory. A separate
+cohesive Swift Testing file keeps the original 498-line container below the file
+limit; every other case and the original shared helper remain unchanged.
+
+Both workspace graphs own teardown. The existing SSH cleanup override is saved
+and restored synchronously after both graphs tear down so cleanup cannot launch
+SSH. The maintained automated-test restore policy prevents automatic connection;
+no production trust policy or runtime seam changes. No timeout, selector or gate
+is relaxed.
+
+Owned build-799 controls reproduce the original final failure and an explicit
+background-focus negative. The focused, identity-indexed fixture passes; omitting
+the trusted report still fails reported and presented directory assertions. All
+runtime surfaces remain uncreated in these controls, with no window attachment,
+network or external SSH, and every owned process and temporary home is cleaned
+up. Exact final source compiles in configured Swift 5 and strict Swift 6 without
+warnings and passes the native control. Actual macOS 15 CI execution remains pending; this evidence does
+not establish broader restore behavior across OS versions.
+
+## Terminal overlay completion fixtures (fixed W follow-up)
+
+Fixed W (`c8b35a6bd98e425799e40aee064f2e8b219994b0`, run 38856996751,
+job 116831461888) failed three legacy `GhosttySurfaceOverlayTests` cases.
+Drop-hover attachment and geometry passed, then the final hidden assertion
+failed. Escape stopped at a missing mounted field before either key event.
+Split-like rebind lacked its overlay before either bind; the later failures
+therefore do not establish that rebind removed it. The production search-mount
+and drop animation owners are unchanged from main `ce17e9888`.
+
+Exactly those three cases now live in `TerminalDropZoneOverlayContractTests`
+and `TerminalSearchOverlayLifecycleTests`. They retain parent attachment and all
+four geometry values, initial and both rebind overlay assertions, empty-search
+Escape dismissal and zero terminal release assertions. Native animation-group
+completion observes drop hiding; a FIFO signal observes the existing single
+queued search mutation. The old fixed 250ms/50ms settling intervals now serve as
+completion failure bounds with the same duration values; they were not previously
+event-based deadlines. Escape additionally requires native runtime readiness in
+its first 50ms phase, a mounted field and its real first responder. Manual I/O
+avoids unrelated shell startup. Retained windows, portal teardown, surface free
+and normal teardown own cleanup without production hooks or shared-helper changes.
+
+The permanent Escape case retains its presented window and original
+`NSApp.sendEvent` key-down/key-up pair. The existing static key observer is saved
+and restored only around synchronous dispatch: `keyUp` and `sendGhosttyKey`
+invoke it synchronously. The original dismissal release count is captured
+separately, then a subsequent plain Escape key-up goes through the same NSApp
+path and must produce cumulative count one. This calibration prevents a zero
+count from passing when AppKit never delivers releases to the terminal. Its
+returned original count excludes unrelated later events that the old RunLoop
+interval could observe. The final 50ms FIFO phase observes
+queued dismissal work, not additional release callbacks; no global override is
+held across an await.
+
+Frozen build 799 controls passed original drop/rebind oracles and Escape with an
+actual live terminal and field editor; omission controls failed their intended
+assertions. Before adding delivery calibration, the migrated three cases passed with only
+the Escape presentation call omitted in the local harness. With calibration,
+the two non-keyboard cases pass and offscreen Escape intentionally fails the
+subsequent-release assertion, exposing the delivery gap. That offscreen
+adaptation is not shipped.
+Both configured Swift 5 and strict Swift 6 warnings-as-errors compilation cover
+the exact permanent sources. The inactive local AppKit release did not consume
+the terminal suppression flag: subsequent direct native releases consumed it,
+then reached the observer. This supports suppression-owner sensitivity but does
+not verify presented end-to-end key-up delivery. The permanent calibration uses
+only NSApp delivery, never direct handler calls, and still needs actual app-host
+verification. Root owns full-target compilation
+and actual macOS 15 app-host verification; local positives do not prove the
+historical CI scheduling cause. No runtime behavior or product strings changed.
+
+
+### Codex approval reply observation
+
+Fixed W shard 1 failed the full-access approval contract at its first indexed
+response read: `sentLines[4]` had no result. The complete Codex app-server owner
+snapshots permission decisions synchronously when requests arrive, then schedules
+response writes asynchronously. Another `turn/start` can occupy that output
+position. The permission-response schema and decision owner are unchanged from
+main; no policy correction is made here.
+
+Only the existing case moves into a cohesive in-memory Swift Testing suite. It
+observes the actual `thread/start` write before supplying the thread response,
+then observes all four approval response IDs and requires exactly one matching
+reply for each. It retains the blocked overlapping full-access submission,
+standard command decline and empty permissions, full-access session acceptance
+and enabled network permission. No absolute message-array position or arbitrary
+`Task.yield` is used as completion evidence. The same-actor writer does not
+suspend; a buffered event is published after recording the write.
+
+The original case had no explicit observation deadline. A new one-second absolute
+failure bound follows the maintained input-queue fixture pattern. Structured
+observation/timer children cancel and join; cleanup injects the existing startup
+failure event to release any queued submission continuation and finishes the
+owned stream. No provider process, socket, window, global hook or production seam
+is introduced. Internal app-server response tasks remain the production owner's
+responsibility; the test observes their writer completion rather than claiming
+access to their task handles.
+
+An ordinary build-799 observation passed both positional and keyed oracles; it
+does not reproduce CI scheduling. A controlled injected writer then held approval
+replies until the subsequent turn request was recorded. Position four became
+`turn/start`, reproducing the missing-result failure; after releasing every held
+write, keyed assertions passed with the same permission outcomes. A wrong
+standard approval expectation still failed. This establishes sensitivity to a
+permitted ordering, not the historical CI interleaving. Exact-source configured
+Swift 5 and strict Swift 6 compilation and native controls are recorded in the
+handoff; actual integrated macOS 15 verification remains pending. No permission
+mode, runtime behavior, selector or existing gate is changed.
+
+### Native notification burst completion
+
+W shard 2 recorded callback timeouts and zero values in the existing latest-action
+and separate-burst coalescer cases before the job was cancelled. The tests used
+blocking XCTest waits around the default main-queue timer. The separate-burst
+case also scheduled its second signal after an arbitrary 50ms interval. The
+actual CI failure does not establish a production timer defect or its scheduling
+cause.
+
+Only these two cases move to Swift Testing. An owned stream observes the real
+`NotificationBurstCoalescer` default scheduler at its unchanged 10ms delay. The
+latest action must deliver value two. The separate-burst case waits for the first
+native flush before sending the second signal, then requires values one and two
+and exactly two callbacks. One absolute one-second deadline covers the entire
+case, including both bursts; no fake timer, direct flush substitution or timeout
+increase supplies the assertions. Structured observation and deadline tasks are
+cancelled and joined. On every exit, the existing `flushNow` cancels any remaining
+owned native timer before the stream finishes. Its cleanup action runs after the
+observation outcome and cannot turn a thrown timeout into success.
+
+A hostless Foundation executable compiled the exact production coalescer source
+with the new cases: both real-timer controls passed. Withholding the latest
+callback produced the expected one-second failure while the two-burst case still
+passed. Configured Swift 5 and strict Swift 6 compilation are warning-free. The
+first temporary compilation lacked the Testing framework search path; a later
+inline actor closure exposed a Swift region-checker diagnostic, resolved by a
+cohesive actor-isolated consumer method without a suppression or production
+change. No app, window, provider process, network or user setting is involved.
+The unchanged third coalescing case remains in its original suite. Root owns the
+combined test-target build and actual macOS 15 CI verification.
+
+### LaunchServices scheduling fixture restores application composition
+
+Fixed-W native shard 1 passed the detached-inspector chord case in its focused
+stage, then failed it after the broad legacy batch. Its new failure diagnostics
+showed an active app, native key inspector, and matching routing window at both
+strokes. The sole lifecycle event settled with visible intent still true after
+0.759 seconds; the 2.85-second wait ended with the inspector still open. This
+is not evidence that a successful close merely reached the observer late.
+
+The preceding `AppDelegateLaunchServicesRegistrationTests` scheduling case
+constructed an `AppDelegate` without restoring the prior composition. The
+constructor replaces both `AppDelegate.shared` and the terminal registry's weak
+route-retirer, while the real shortcut monitor captures its original owner weakly.
+Later snapshot tests restore the already-replaced shared value. The four final
+legacy recorder cases stop recording and remove their owned monitors; the
+following sidebar browser cases do not construct delegates. This establishes a
+fixture ownership leak, not the exact historical inspector failure mechanism.
+
+The exact scheduling case now lives in `LaunchServicesRegistrationSchedulingTests`.
+Its synchronous scope snapshots the original delegate before construction and
+restores both known composition owners on exit, following the maintained browser
+shortcut fixtures. All three original deferred-registration/count assertions,
+URL input, and injected scheduler/register operations remain. No LaunchServices
+registration, application launch, monitor replacement, or production change is
+introduced. The separate advertised-target case remains untouched.
+
+Frozen build 799 runs the exact new source plus nil/existing-delegate restoration
+controls. The copied original body retains all scheduling assertions but fails
+both identity-restoration controls. These are owned-process, telemetry-disabled
+checks without windows or external registration. The registry collaborator has
+no snapshot getter; its restoration is source-reviewed against the maintained
+composition pattern, not claimed as an independently observed callback result.
+Configured Swift 5 and strict Swift 6 warnings-as-errors compilation and local
+static/Project Truth gates cover this slice. Full-target and actual macOS 15
+app-host verification remain integration gates; no local proof claims the
+inspector chord is fixed.
+
+
+### File-preview pending-focus fixture retains its owned window through close
+
+Actual Y native shard 6 restarted after a main-thread bad-pointer dereference at
+`0x20`, with `FilePreviewReviewFeedbackTests.testFocusCoordinatorKeepsPendingFocusUntilEndpointHasWindow`
+the final started legacy case. The crash's exact image mapping places the first
+two frames in libobjc at offsets `0x8028`/`0xc040` and the next in XCTestCore at
+`0x47270` (UUID `8690f5b824b63fc2a90b8e0a5f149efe`). These frames and the last
+printed identity do not establish the released object's class or an exact
+causal test. Later 293 Swift Testing cases passing does not erase that crash.
+
+The focused source review found the case explicitly closing a Swift-owned
+`NSWindow` without disabling release-on-close. Its synchronous focus coordinator
+holds weak endpoint references and records pending intent until the view gains
+a window; no task or delayed callback belongs to that coordinator. The exact
+case now lives in `FilePreviewPendingFocusTests`, with the same borderless
+320-by-240 window, original missing-window rejection and final first-responder
+identity assertions, and content-detach/close cleanup. It sets
+`isReleasedWhenClosed = false`, matching the maintained file-preview text-editor
+fixture. Only its exclusive responder helper moves with it; production and all
+other legacy cases remain unchanged.
+
+Owned, nonpresented controls against frozen build 799 measured the original
+window default as true, then set it false before any close. Both original focus
+assertions and a separate weak-window release-after-scope control pass. Omitting
+content attachment fails the responder assertion while retained cleanup still
+passes. The unsafe original release-on-close sequence was not executed. Exact
+migrated-source controls and configured Swift 5/strict Swift 6 warnings-as-errors
+compilation cover this slice, alongside local Project Truth, PBX, determinism,
+and actual-main file-budget checks. Root owns integrated target compilation and
+macOS 15 verification; no local result identifies the historical crashed object.
+No application was launched or window presented, and no product strings changed.
+
+
+The first migration used a suite name already declared by an untouched legacy
+class in `WindowAndDragTests.swift`. Focused source compilation did not include
+that class and therefore missed the target-wide collision; the integrated gate
+correctly rejected it. The suite and its file are now `FilePreviewPendingFocusTests`.
+The existing legacy class stays unchanged. Full selector inventory validation
+(`python3 scripts/ci/bmux_unit_test_shard.py --validate`) now accompanies the
+focused configured Swift 5/strict Swift 6 compilation; no test behavior changed.
+
+### File-explorer shortcut event-window ownership
+
+Two Y native-shard-5 failures returned false without committing selection even
+though their native first-responder and placement-matcher assertions passed.
+Those cases used an unregistered About window and depended on an ambient main
+window context. The unchanged main-window resolver can reject that setup before
+file-explorer dispatch or choose another main window as the preferred target.
+The historical CI return branch was not captured.
+
+The two cases now own a direct `MainWindowContext` for their event window and
+still invoke `handleConfiguredShortcutKeyEquivalent`, preserving the original
+pane-shadowing, child-responder and commit-count assertions. The fixture uses a
+retained offscreen native window instead of presenting the old auxiliary window;
+it verifies actual handler/responder routing, not user activation or presented
+window behavior. Registration's listener/session-save side effects are not used.
+Owned settings clear only the primary/alias/rename keys and restore persisted
+provenance, volatile domains and the original store synchronously. The empty
+owned file excludes configured when-clause overrides. Pane dispatch precedes
+rename and other app-wide matching; the owned context has no active palette or
+right-sidebar mode. No broader settings reset is added. The existing settings-store setter still
+posts its default-center change notification; synchronous restoration does not
+claim isolation from unrelated app-host background observers.
+
+Frozen build 799 reproduces four original routing/count failures without the
+context and passes both cases with it. An unregistered event remains rejected
+with another owned context present. The original unresolved-window negative and
+all other legacy bytes remain unchanged; its presented composition is compiled
+locally and left to CI. Exact configured Swift 5 source compilation is
+warning-free. A strict Swift 6 attempt remains blocked by the imported legacy
+mutable `KeyboardShortcutSettings.settingsFileStore` owner; no suppression was
+added. Actual macOS 15 app-host verification remains pending. No production
+routing policy, timeout, selector or runtime artifact changed.
+
+### Y8 redundant browser visibility completion fixture
+
+Y `ff3e6e5ed4620ca676bf3198fd26ff870071c263`, native shard 8 job
+`116851734607`, failed only the native `about:blank` loading precondition in
+`testRedundantVisibleNotificationsDoNotChurnLiveWebView` at 07:40:34 UTC.
+The seven subsequent visibility, publication, identity, and metadata assertions
+reported no failures. The same log reports several WebContent launches taking
+1.90–1.94 seconds, without enough identity evidence to map them to this panel.
+
+`BrowserVisibleNotificationTests` preserves the initial navigation, all eight
+assertions, and 32 repeated visibility notes. Its native KVO subscription precedes
+the synchronous current-state check after construction; buffered delivery and a
+structured canceled/joined deadline replace the nested RunLoop wait. The absolute
+one-second bound still starts immediately after construction. Observation and
+stream cleanup precede panel closure. The existing lifecycle publisher remains
+synchronously observed so transient churn cannot be lost.
+
+Actual protected build 799 on macOS 26 passed the exact migrated case in 0.114
+seconds. A temporary delivery omission failed only readiness at the unchanged
+bound (1.085 seconds including construction); cancellation after waiter entry
+joined the case and confirmed panel navigation-delegate teardown (0.092 seconds).
+Configured Swift 5 and strict Swift 6 compilation passed with warnings as errors.
+The earlier comparison passed native observation but failed the original RunLoop
+body in an async MainActor harness. That harness is not the original synchronous
+XCTest entry and does not prove the historical macOS 15 cause. Native startup
+pressure may still exceed one second; no deadline increase, retry, load stub, or
+production change is included. Full integrated target and fixed-head macOS 15
+execution remain required. No user-facing or localized product strings changed.
+
+### Session fork diagnostics join CLI completion
+
+Y native shard 8 failed only the five-second `timedOut` assertion in
+`testSessionsListForkDiagnosticsUseForkCommandBuilder`; status was zero and all
+remaining JSON/fork assertions passed. The legacy helper waits on a worker's
+`waitUntilExit` semaphore before draining its merged output pipe. This couples
+completion observation and output handling, but the recorded failure does not
+establish a full pipe, the actual child-exit timestamp, or a historical scheduler
+cause.
+
+The exact case moves to the serialized `CLISessionForkDiagnosticTests` suite and
+uses the maintained `ShellContractProcess`. Its throwing, joined completion
+retains the original plain five-second process bound on both local and CI hosts;
+this case never inherited the separate twenty-second CI minimum. The runner
+owns regular output files, observes termination, and joins before fixture cleanup.
+Its existing 200-millisecond termination grace replaces the legacy helper's
+one-second TERM and one-second KILL waits; the primary failure bound is unchanged.
+All seven status/JSON expectations, strict decoding, captured exec-mode arguments,
+fixed IDs/timestamps, literal diagnostic directory and fake PID remain. No captured
+agent executable is launched. Owned HOME/CFFIXED/XDG/CODEX/Claude paths and an
+allowlisted environment prevent ambient history, credential or telemetry access.
+Other cases and both shared process helpers remain unchanged.
+
+Frozen build 799 passed the exact case in configured Swift 5 (0.025 seconds) and
+strict Swift 6 (0.238 seconds), with warnings-as-errors compilation. A temporary
+control changing only captured Codex arguments from exec mode to interactive
+mode failed exactly the three fork-support/reason/startup-input expectations
+(0.024 seconds). The standalone execution substitutes the explicit frozen CLI
+path for bundle discovery; the unchanged real bundle locator is typechecked.
+Owned fixture roots were removed after joined completion. This is diagnostic
+JSON coverage, not agent launch or socket-delivery coverage. Full-target and
+actual macOS 15 app-host verification remain root integration gates; local success
+does not identify the historical timeout cause. No production, selector or
+shared timeout policy changed.
+
+### Agent liveness fixture observes its watch reload
+
+Y native shard 1 failed both final assertions in
+`forkAvailabilityIgnoresDeadUnrelatedPanelChildProcess`: after a synthetic agent
+changed panel scope, the previous validated snapshot was still available. The
+first `prepareForkAvailabilityProbe` starts the owned index's directory watch and
+an asynchronous reload. `refreshForkAvailabilityNow` does not join that reload
+when it is already active. The test previously mutated process scope and treated
+that call as completion, although the preceding watch reload could still publish.
+
+The exact case subscribes before prepare and observes the existing
+`sharedLiveAgentIndexDidChange` notification before changing process scope. It
+also observes the refresh scheduled by the final failed prepare before removing
+owned files. Both observations have a new absolute one-second failure-containment
+bound; the original case had no equivalent completion wait. Notification delivery
+supplies completion, while structured observation/deadline tasks cancel and join.
+The subscription is identity-filtered and removed on every exit. No production
+API, process scan, watcher policy, or fork-security rule changes. A loader-local
+`FileManager` removes the original non-Sendable capture in this touched case.
+All seven original assertions remain, including false preparation and no available
+snapshot after scope changes. Preparation means validation readiness generally;
+this case retains an unvalidated index entry, distinct from a validated missing
+entry for which the existing API can return true.
+
+The exact original case reproduced both failures against frozen build 799. The
+ordered fixture passes with the original assertions; a temporary reversed final
+Boolean fails. Withheld completion and unchanged-scope controls exercise the new
+containment and original scope rejection respectively. Configured Swift 5 and
+strict Swift 6 verify the touched case without warnings; the original captured
+FileManager fails strict Swift 6. The service's private background task has no
+public cancellation/join handle: successful notifications establish those reloads
+completed, but a missing-event failure does not prove service-task termination.
+That existing limitation remains explicit. Local probes own their filesystem and
+telemetry-disabled process and create no windows or external agent processes.
+Integrated target and actual macOS 15 verification remain pending; there is no
+claim that local scheduling proves every historical CI interleaving.
+
+### Editable terminal child Undo owns its native menu context
+
+Y native shard 1 consumed Cmd+Z without invoking the editable child's Undo. The
+fixture installed a nil-target menu item and selected a responder in an offscreen
+window, but never made that window key. Event window metadata does not establish
+AppKit's application-wide nil-target menu context. The exact case now presents
+its retained window, requires the actual application key-window identity, and
+reestablishes the editable responder before the original event. Cleanup restores
+the previous visible key window. The original consumed-event, single-Undo and
+no-terminal-forwarding assertions remain; production routing is unchanged.
+
+An isolated build 799 native probe reproduces the original single Undo-count
+failure with the correct local first responder but no matching application
+action target. Nonactivating presentation cannot make the owned window key in
+that inactive process, so it fails the new prerequisite instead of establishing
+a positive result. No explicit menu target or fake key-window override is used.
+Actual active macOS 15 app-host verification remains required; the local probe
+does not establish the historical CI action target. No user app was activated,
+replaced, or rebuilt, and no product strings changed.
+
+### Y1 terminal overlay mounting and runtime setup
+
+Y `ff3e6e5ed4620ca676bf3198fd26ff870071c263`, native shard 1, reported
+four missing-overlay assertions in the legacy workspace-switch visibility-toggle
+case. The initial mount failed before the three binds, so the later failures do
+not establish overlay loss during toggling. The exact case now joins the existing
+`TerminalSearchOverlayLifecycleTests` owner: same geometry, search text, four
+oracles, and true/false/true bindings, using its manual-I/O surface, retained
+window, queued mutation completion, and explicit portal/surface/window teardown.
+The former 50 ms settling interval is now a 50 ms completion failure bound.
+
+The same run's Escape case failed earlier with `runtimeReadinessTimedOut`; it did
+not exercise overlay mounting or key-up calibration. An actual build 799 owned
+bundle-shaped bootstrap with exact copied wrapper resources reproduced the 50 ms
+failure: the deadline fired at 51.3 ms and native readiness arrived afterward
+(consumer at 100.8 ms). A bare bootstrap without those resources passed. Manual
+I/O still traverses asynchronous bundled-shim preparation before native runtime
+creation. This establishes a setup-fidelity gap and late readiness in that local
+control, not an attribution of all elapsed time to file I/O or proof of the exact
+historical macOS 15 schedule.
+
+Escape runtime preparation now explicitly adopts the maintained three-second
+setup allowance used by native input/search responder fixtures. This is a new
+setup-bound adoption, not preservation of the old 50 ms runtime wait. Actual
+search mounting and dismissal retain their separate 50 ms completion bounds.
+The permanent presented window, real `NSApp.sendEvent` down/up pair, original
+nil-search/zero-release oracles, and subsequent-key-up delivery calibration are
+unchanged. No production timing or shared readiness owner changed.
+
+Configured Swift 5 and strict Swift 6 compile the exact source with warnings as
+errors. Owned offscreen controls preserve the explicit local inactive key-up
+delivery limitation; they cannot establish the presented calibration on macOS 15.
+The bundle-shaped offscreen run passed visibility-toggle and rebind, reached the
+original Escape nil-search/zero-release assertions, and failed only inactive
+key-up calibration (three cases, one issue, 0.166 seconds). Withholding the ready
+notification failed setup at 3.267 seconds including construction; both overlay
+cases still passed. Every owned process joined before its temporary root was
+removed. Root owns the integrated test target and actual presented app-host gate. No user-facing or
+localized product strings changed.
+
+### Welcome shortcut completion containment
+
+Y native shard 3 delivered the real Welcome right-sidebar toggle after 1.328
+seconds. Its diagnostics recorded handled, registered, key and visible state as
+true, with the expected final sidebar state, but the fixture's one-second timer
+had already failed. That is measured late functional delivery, not evidence of
+an on-time callback losing a task-group race or a product shortcut failure.
+Window registration and synchronous settings restoration also enqueue work; the
+log does not identify which preceding work accounts for the delay.
+
+The fixture now gives its actual FIFO completion three seconds, captured as an
+absolute deadline before task creation. This is an explicit new test-containment
+budget, not a claim that the old bound is unchanged or that three seconds is a
+product latency target. Both real shortcut handlers, all original label/default
+and routing/visibility assertions, settings scope, callback ordering and joined
+observation cleanup remain unchanged. No sleep is used to settle state, and no
+production timing or global timeout policy changes.
+
+Frozen build 799 compiles the exact fixture in configured Swift 5 without
+warnings. Owned, never-presented temporary controls verify buffered success and
+missing callback failure with the existing allowlisted diagnostic; the latter
+still records no callback and joined cancellation under the new bound. The
+original presented shortcut case was not executed locally. Its actual macOS 15
+verification, and the historical source of main-queue delay, remain pending.
+Imported mutable settings-owner strict Swift 6 limitations are unchanged. No
+user app, persistent user settings or product-facing strings were changed.
+### Minimal-mode heavy-body coverage follows the current shell
+
+Y native shard 7 reported two missing initial body counters and one root-body
+reevaluation in `testMinimalModeToggleDoesNotReevaluateChromeHeavyBodies`.
+The default chat branch never mounts terminal workspace content, and the old
+vertical-sidebar probe measured a layout no longer called by the current shell.
+The fixture now selects the terminal branch explicitly and the existing DEBUG
+sidebar probe observes `WorkspaceReferenceRail`. All six original intents remain:
+three bodies must actually render, then none may reevaluate for the mode change.
+
+The retained offscreen window owns seven manual-IO workspace graphs. Buffered
+body/mode observations and native transaction completion replace the old twenty
+RunLoop settling iterations. Each observation has a new explicit one-second
+failure cap; this was not an original behavioral deadline. Transaction completion
+covers that transaction, not arbitrary future SwiftUI work. Cleanup unmounts the
+view, discards only its app-host window context, stops its metadata observation,
+and tears down all owned panels. No shared delegate is swapped across suspension.
+The original app-host registration/session and delayed startup-task composition
+remain an integration boundary; service cancellation is not a global task join.
+
+Owned macOS 26/build 799 controls mount the actual terminal root/workspace bodies;
+a matched no-toggle phase leaves both counters zero. A mode change reevaluates
+both once. SwiftUI `_printChanges` attributes that update to four root AppStorage
+Double titlebar-inset fields even when their explicit values remain unchanged.
+A temporary minimal AppStorage leaf reproduces the unrelated-key invalidation;
+a filtered leaf observer preserves real inset changes while avoiding parent-body
+reevaluation for mode changes. Current-rail projection controls are meaningful
+but are not substituted for the new actual rail-body assertion. These results do
+not establish historical macOS 15 scheduling or full rendering quiescence.
+
+The first staged commit (`dec581bcb`) intentionally retained the product
+invalidation for red coverage. The separate fix (`2cd07dd22`) isolates inset
+observation at the existing leaf boundary. No product-facing strings changed.
+
+The separate production correction moves the four inset AppStorage properties
+into `WorkspaceTitlebarInsetChangeObserver`, following the existing mode-observer
+leaf pattern. It publishes the same clamped value snapshot; an equality guard
+prevents unrelated defaults notifications from writing root state. The existing
+titlebar apply and traffic-light synchronization callbacks remain unchanged.
+The constructor seeds the snapshot from its explicit defaults store before the
+first render, and the observer reads that same store. Production callers retain
+`.standard`; the owned fixture supplies its existing suite. This avoids a default
+value frame before appearance and avoids SwiftUI's private defaultAppStorage
+lookup API. There is no global cache, timer, navigation or output-policy change.
+
+A temporary harness compiling the actual observer against build 799 passed the
+mode-write control (0.089 seconds) and nondefault first-render inset91 control
+(0.095 seconds). Changing the real inset72→80 reevaluated the parent once and
+failed the noninvalidation negative (0.082 seconds). The observer typechecks in
+configured Swift5 and strict Swift6 with warnings as errors. These leaf controls
+did not claim complete modified-root success; the subsequent exact-root proof
+below supplies that local evidence. Complete target and macOS15 CI remain gates.
+The full existing visibility container also retains five strict6 actor-isolation
+errors in untouched synchronous static-helper tests; its configured Swift5 check
+passes. No suppression or unrelated migration is included.
+
+Root-built isolated build800 (`e239ec808`) then ran the exact committed alignment
+fixture without adapters. All three initial body assertions passed; root,
+workspace and current-rail bodies each reevaluated once after the mode write,
+failing precisely the three noninvalidation assertions (one test, 0.508 seconds).
+Root-built fixed801 (`f14ecfff9`) passed the exact same six intents (0.495 seconds).
+A temporary control changing the actual inset72→96 instead of mode failed the
+same three noninvalidation assertions (0.622 seconds), confirming live edits still
+reach the parent and current content. The actual801 observer with an initial
+custom inset91 retained that value on first render and ignored the unrelated
+mode change. These owned processes used retained offscreen windows, manual-IO
+workspaces, isolated homes and startup telemetry fences; every process joined
+before its home was removed. No running user app was launched or changed.
+
+The exact complete containing test file compiled in configured Swift5 with zero
+warnings. Focused configured5/strict6 validation and previously reported legacy
+strict6 limitations remain separate. Root-owned full target and macOS15 app-host
+execution still cover registration/session/startup composition absent from the
+nil-AppDelegate temporary process. Native transaction completion remains scoped
+to that transaction; neither the green run nor the timing proves global SwiftUI
+quiescence or a historical CI scheduler cause.
+
+### Workspace terminal focus recovery completion
+
+Y (`ff3e6e5ed4620ca676bf3198fd26ff870071c263`) shard 7 recorded ten
+assertion failures across six `WorkspaceTerminalFocusRecoverySwiftTests` cases.
+The automatic-focus snapshot already reported an active app and key window;
+another case still had a pending automatic apply after its RunLoop wait.
+The seventh no-steal case passed. This does not establish that native runtime
+startup, window activation, or a single scheduler condition caused every failure.
+
+The seven existing cases now share an owned manual-I/O terminal fixture. It
+requires the app-host delegate and registers its unique workspace context without
+replacing `AppDelegate.shared` or the delegate's active manager across suspension.
+Dock cases retain unique unregistered workspace IDs and use the existing dock
+focus fallback. The fixture retains and closes its window, tears down native
+surfaces and owned contexts, and observes actual queued main-thread focus work.
+Each original 50ms settling interval is now an absolute 50ms completion failure
+bound with canceled and joined deadline/consumer tasks; no runtime-readiness
+allowance or production timing policy is added.
+
+Initial workspace reconciliation can restore selected-panel visibility. The two
+reveal cases therefore establish and assert their hidden prerequisite after
+initial delivery, before the original reveal action. The dock tiny-geometry case
+sizes the authoritative host to zero, then restores it to 180 by 220; pending
+layout can no longer replace a manually zeroed child with a usable host size.
+All original focus, deferral, reparent, find-restoration, and no-steal assertions
+remain. The dock setup now constrains both host and child, rather than only the
+child; the other five recovery cases retain their original inner-view geometry.
+
+Owned build 799 controls reproduce the original ten assertion failures with the
+RunLoop adaptation. FIFO alone fixes three cases but exposes the visibility and
+geometry prerequisites above. The corrected seven-case control passes; omitting
+geometry restoration fails the six final-focus oracles, and omitting reveal fails
+the five corresponding responder/focus oracles. Timeout and cancellation controls
+join before native/window/context cleanup and preserve the app-host delegate and
+manager identities. Exact configured Swift 5 and strict Swift 6 source compilation
+is warning-free. Native execution uses only an offscreen key-status window
+adaptation; real presentation and macOS 15 remain integration gates. This local
+proof does not claim the exact historical CI scheduling cause or full graph
+quiescence from one queued event.
+### Restoring delegate composition before inspector routing
+
+Candidate Y shard 3 executed the disabled-browser agent-chat action test before
+its inspector chord case. The action test constructed an `AppDelegate`, whose
+initializer replaces `AppDelegate.shared` and the terminal registry's weak route
+retirer, without restoring either. The action still correctly returned false.
+The fixture now owns its manager/panels and restores the prior application
+composition synchronously. Its unchanged disabled-browser assertion passes;
+build 799 controls with both an existing and absent prior delegate fail against
+the original fixture and pass against the corrected fixture.
+
+The bounded audit used the actual preceding Y shard-3 identities, rather than
+all constructors in files selected by that shard. Two `ClosedMainWindowRoutingTests`
+cases and the durable closed-window restore case already restored shared state
+but omitted the known application's route-retirer attachment. Their cleanup now
+reattaches it. The two routing cases migrate in place to a serialized Swift Testing
+suite, retain every routing/lingering-window assertion, restore the prior active
+manager, and close retained windows/tear down owned panels only after assertions.
+The durable case also closes only its owned restored windows through the existing
+no-history discard path, tears down panels, and restores its prior active manager;
+identity assertions and the existing async context gate are unchanged.
+Unselected snapshot constructors were excluded; selected nil-coalescing delegate
+accesses do not replace an existing application owner.
+
+This repairs concrete test composition leaks; it does not prove they caused Y's
+inspector chord failure. The original local event monitor captures its delegate,
+while the inspector fixture consults shared state, so continuity matters, but no
+monitor was replaced or bypassed in verification. Registry restoration is checked
+against its maintained composition contract, not a private-state getter. Configured
+Swift 5 and strict Swift 6 compile all three complete affected files and maintained
+test support without warnings. Two never-presented native windows exercise real
+close notifications, context removal, panel teardown and active-manager restoration;
+omitting close fails that lifecycle control. The presented routing cases and whole combined
+macOS 15 target remain CI verification; the local controls never present a window.
+All temporary process homes and processes are owned and removed/joined. No product
+behavior or user-visible strings changed, so no localization entries are required.
+### Workspace filter selection identity regression
+
+PR 171 review body `5543944260` identified a hidden-selection warning defect:
+when two workspaces have the same title and only the unselected one matches the
+filters, `WorkspaceTabFilterBar` treats the selected workspace as visible. The
+warning and its existing “Show it” action are consequently absent. This finding
+was verified from the review body and source; a zero unresolved-thread count is
+not evidence that review findings are absent or resolved.
+
+The first regression commit exposes the existing body-used semantic visibility
+property internally without changing its title-based predicate. Five Swift
+Testing cases evaluate that actual view property through constant bindings:
+duplicate-title hidden selection, visible selection, no selection, no filters,
+and a distinct-title hidden selection. The duplicate-title case fails at runtime
+while the four controls pass. This is not a source-text or screenshot assertion.
+
+Local configured Swift 5 and strict Swift 6 warnings-as-errors compile the full
+current view source, adding only a testable-import preamble for its isolated
+module, against protected build 799 dependencies. No native window or app is
+launched. This source-level runtime proof does not claim that the frozen app
+binary contains the new internal seam.
+
+Actual test-first CI red is confirmed on integration `c4d1` in run `38876211760`,
+shard 4: `duplicateTitleDoesNotMakeFilteredSelectionVisible` fails at line 16 at
+09:11:18, with exactly one issue across the five regression cases. The broad
+batch reports 292 tests in 43 suites, one issue, and exits 65. The archived log is
+`/tmp/z-red-shard4-terminal.log`.
+
+The follow-up passes the rail's existing selected workspace ID into the filter
+bar and compares visible item IDs. The title remains display text; the warning
+and existing reveal action share the same semantic predicate. All five unchanged
+scenario assertions pass in configured Swift 5 and strict Swift 6 source-level
+runtime controls, with zero compiler warnings. Fixed build 802 passed, and all
+five cases passed on macOS 15 in AF shard 2 (0.031 seconds). The latest integrated
+head still requires its own CI result; the earlier AF run was not wholly green.
+The existing warning and reveal-action catalog keys have English and Japanese
+translations; no user-facing strings change in this regression slice.
+
+### Space shortcut native keyboard-layout isolation
+
+Z-red run `38876211760`, shard 6, crashes on background Thread 18 at
+09:19:38 through libdispatch and HIToolbox, followed by app and test frames.
+`KeyboardShortcutSpaceKeyTests.shortcutConfigParsingRoundTripsSpaceKey` is the
+last printed start, but that alone does not identify a parallel test's stack.
+The exact CI app UUID is `e1a53d8e28ee3af28389195b54329b7d` and test UUID is
+`31b16f42b2b43f4ca8e7beaedd1f5327`; matching-image symbols are not available.
+Local image addresses were not substituted for those frames.
+
+The three-case Swift Testing suite was nonisolated. Its space-key loop calls
+`ShortcutStroke.resolvedKeyCode()` with the real default provider, which enters
+`KeyboardLayout.character`, `TISCopyCurrentKeyboardInputSource`, and native
+layout translation before falling back to the physical space key. The suite now
+uses `@MainActor`, matching maintained native shortcut fixtures. All original
+case bodies, assertions, parser inputs, settings-file ownership, and native
+provider calls remain unchanged; no production isolation or shortcut policy is
+modified.
+
+A temporary safe control replaced only those six default-provider calls with the
+existing injected provider and checked its execution thread. The original suite
+reported six off-main boundary failures without calling native TIS off-main.
+This is an executable scheduling control, not exact CI frame symbolication. The
+unchanged three cases with the actor annotation and actual build 801 module pass
+in both configured Swift 5 and strict Swift 6 with zero compiler warnings.
+Owned HOME and telemetry/network fences precede module loading; processes join
+before owned directory deletion. No app, window, input-source selection, or
+user settings are activated or changed. Full integrated target and macOS 15 CI
+remain pending. No product-facing strings or localization keys change.
+
+### Zsh relay prompt-refresh completion
+
+Z shard 6 failed the legacy refresh assertion after observing only `report_pwd`.
+`ZshRelayPromptRefreshTests` migrates that single case: the actual ZDOTDIR
+bootstrap and `_bmux_precmd` still dispatch both relay RPCs, but their owned stubs
+write complete messages to one FIFO descriptor inherited from the main shell.
+Two reads share one absolute one-second observation deadline, preserving the
+original 20 × 50 ms failure cap without first-nonempty polling. The exact refresh
+method, workspace, surface and reason assertion and status-zero outcome remain.
+
+`ShellContractProcess` retains the plain five-second local/CI producer deadline;
+its existing 200 ms TERM grace replaces the old helper's unbounded termination
+wait. The main shell is joined before root cleanup. Detached exits are not joined:
+the two bounded writes fit in the inherited O_RDWR FIFO without a reader, and
+workers never reopen or write fixture paths. Cancellation may prevent a late
+stub from loading its already-removed script; it cannot leave a blocked FIFO
+open or a late path writer. This is not general descendant containment.
+
+Configured Swift 5 and strict Swift 6 compile without warnings and the exact
+case passes locally. A controlled original ordering captures only `report_pwd`;
+missing-refresh and wrong-reason variants fail the retained oracles. An
+event-driven cancellation control joins the parent and removes its root.
+These establish completion sensitivity, not the historical CI interleaving;
+integrated macOS 15 verification remains open in
+`zsh_relay_refresh_completion_verification`. No production shell code changes.
+
+### Minimal-mode event failure phases
+
+Z run `38876211760`, shard 7, reports `eventTimedOut` from the minimal-mode
+body fixture without identifying which of its four native observations failed.
+The initial diagnostic slice added failure-only `minimal_mode_event_timeout` details: mount
+bodies, mount transaction, mode notification or final transaction, elapsed time,
+three body counts, and whether its own window is registered. It emits no raw
+window identifiers, settings, paths or unconditional runtime logs. Existing
+one-second phase bounds, task-group cancellation/join, and all six assertions
+remained unchanged in that diagnostic slice; it did not claim a repair.
+
+Exact build 801 controls pass with and without an owned registered delegate.
+Temporary omission controls report each of the four phases at the original
+bound. Actual Z also logs reentrant hosting layout and ongoing startup during
+the case; these facts do not yet identify the failed phase or its cause. Local
+macOS 26 controls do not disprove the macOS 15 failure. Actual CI diagnostic
+delivery and the underlying timeout remain pending; no production or localized
+product strings change.
+
+That diagnostic task boundary explicitly marked its actor-isolated predicate and event
+consumer Sendable. This resolves the Swift 6 region-checker failure without an
+unsafe annotation or ownership change. The complete fixture and exact minimal
+case compile in configured Swift 5 and strict Swift 6; the full unchanged
+visibility suite compiles in configured Swift 5. Five unrelated legacy helper
+actor-call diagnostics still prevent strict Swift 6 compilation of that whole
+suite. The temporary controls use the existing dispatch-main bootstrap; they do
+not establish equivalence to the app-host NSApplication event loop.
+
+
+### Markdown scroll restoration frame completion
+
+Actual Z7 `keepsVisibleHeadingPositionAfterContentUpdate` reported 7068 points
+of heading drift against its unchanged 6-point tolerance. The rendering fixture
+previously awaited only synchronous JavaScript evaluation. The shell's initial
+render captures a near-top scroll state and then restores it in two nested
+animation frames; those queued callbacks can overwrite the test's later scroll.
+
+`MarkdownRenderTestFixture.renderMarkdownForScrollObservation` registers its own two nested
+frames immediately after the renderer in the same JavaScript evaluation. FIFO
+registration places each renderer restore before the corresponding fixture
+frame. Completion uses the existing message stream, absolute deadline, and
+cancellation registry. A new explicit render timeout defaults to five seconds;
+the previous evaluation await was unbounded. Only the scroll-position case uses
+this boundary. The existing `renderMarkdown` behavior remains unchanged for
+image, diagram, and security cases, which retain their own observations and do
+not acquire a new displayed-frame requirement. All three original scroll assertions and the 6-point
+tolerance remain unchanged; no production code changes.
+
+An owned build-801 WebKit process with a temporary controlled RAF queue delivered
+the actual shell callbacks after the old boundary and reproduced exactly 7068
+points of drift. The fixed boundary retained heading top 48.25 before and after
+rendering, satisfying all three assertions. Withheld-frame timeout and
+entry-triggered cancellation controls joined the operation and removed its JS
+registration and pending fixture frame. The remaining renderer callback is
+page-owned and released by fixture close; it is not represented as a joined
+production task. Owned processes joined and temporary homes were removed.
+
+These controlled callbacks are not a displayed native-frame proof. Local native
+frame delivery remained absent while the desktop was locked
+(`CGSSessionScreenIsLocked=True`); all owned windows and processes were closed,
+and further visibility experiments stopped. Native displayed completion on an
+unlocked desktop or actual CI remains pending, along with root's integrated
+full-target verification. The preserved fixture presentation is unchanged.
+Evidence: `/tmp/z7-markdown-scroll-proof/controlled-old.log`,
+`corrected-controlled-fixed.log`, and the source/cleanup packet in that
+directory. The final scoped method passes all controlled cases in 5.679 seconds;
+configured Swift 5 and strict Swift 6 compile with zero warnings. Local Project
+Truth validation/generation/check, strict determinism, selector validation, and
+the actual-main file budget pass.
+
+### Z8 redraw fixture delegate restoration
+
+Z shard 8 executed `MainWindowFocusRedrawTests` before the detached-inspector
+chord failure. The redraw case constructed an `AppDelegate`, replacing both
+`AppDelegate.shared` and the registry's weak route retirer, but only removed its
+window context. The installed shortcut monitor captures its startup delegate;
+matching the current shared delegate's routing window therefore does not prove
+that the monitor and fixture use the same owner.
+
+The exact redraw case now uses Swift Testing and restores its previous shared
+delegate and active manager after closing the retained, never-presented window,
+unregistering the context, and tearing down its panels. When the prior delegate
+exists it is reattached as route retirer, following maintained fixture ownership.
+With no prior delegate, the registry's weak fixture reference expires on release;
+this does not claim restoration of an unknown nondelegate collaborator. Both real
+key-lifecycle handlers, the split geometry, and the original redraw assertion
+remain unchanged. No inspector action, diagnostic, or timeout changes.
+
+A nonvisible build-799 control preserves the redraw assertion but fails the
+predecessor-identity check with the old cleanup; the repaired case restores a
+seeded delegate and active manager. Configured Swift 5 and strict Swift 6 compile
+without warnings and pass the final case and ownership control. A temporary
+omit-regain-key variant also passes the original `needsDisplay` assertion in this
+offscreen harness: the root remains dirty immediately after clearing its flag,
+including after clearing the four known fixture views deepest-first. Resignation
+is not established as the cause; redraw sensitivity remains unverified locally.
+The scope retains that original assertion rather than changing its behavior.
+Owned processes join
+before HOME cleanup; no app startup, key-window presentation, or user preferences
+are involved. The session was locked during diagnosis. Actual installed-monitor
+identity and the macOS 15 inspector result remain unverified, tracked by
+`z_inspector_redraw_precursor_verification`; this is a proven fixture leak, not
+proof of the historical chord failure's cause.
+
+
+### Terminal focus FIFO arrival boundary
+
+Actual Z3 reports `focusDeliveryTimedOut` in all seven
+`WorkspaceTerminalFocusRecoverySwiftTests` cases (6.363 seconds total). The
+previous error had no phase, so it does not identify initial preparation versus
+a later focus mutation. Original main-branch tests used 50ms RunLoop settling;
+the migrated helper used that interval as a completion-failure bound.
+
+A controlled native FIFO arrived at 0.046ms, but holding only its async consumer
+let the helper's 50ms timer win at 51.015ms. This demonstrates an observation
+scheduling defect without proving the historical Z3 timing. The corrected
+helper preserves the first producer/deadline event in a buffered stream and
+validates the producer's actual timestamp against the same absolute 50ms bound.
+The timer publishes on the same actor and is canceled and joined before the
+result escapes. Late producer delivery still fails even if the deadline task
+was delayed. Parent cancellation remains authoritative, including after a
+successful event was buffered; a later native callback retains only a terminated
+continuation, not the closed fixture graph. Unexpected clock errors propagate
+after the timer joins; only cancellation is ignored.
+
+All seven test bodies, 40 original expectations and three prerequisite checks
+remain unchanged. Failure-only diagnostics now identify `prepare` or the test's
+function/line, producer versus deadline event, arrival and observation times,
+and the unchanged deadline. They contain no raw workspace IDs or payloads.
+This is a test-fixture correction, not a product focus-policy or timing change.
+
+Temporary exact-helper controls cover timely producer/delayed consumer success,
+late/missing producer failure, cancellation, buffered-success cancellation,
+joined timer, weak fixture release, owned window teardown and late signal
+termination. An owned, nonpresented build-801 preparation probe measured first
+FIFO arrival at 8–15ms and later delivery below 1ms; it does not reproduce CI.
+No presentation or key acquisition was attempted while the desktop was locked.
+Native presented macOS 15 and integrated CI remain verification gates. Sources,
+logs and the explicit harness adaptations are in
+`/tmp/z3-focus-delivery-proof/handoff.md`.
+
+The exact permanent fixture and all seven unchanged cases compile in configured
+Swift 5 and strict Swift 6 with warnings-as-errors and zero warnings. Local
+Project Truth validate/generate/check, strict determinism, selector validation,
+and actual-main file budgets pass. Root owns full-target and CI verification.
+
+
+### Shared native main-queue delivery for terminal overlays and focus
+
+Actual Z1 reports `deliveryTimedOut` in
+`searchOverlaySurvivesPortalRebindDuringSplitLikeChurn` (0.314 seconds).
+That case has only one queued-mutation wait, before its initial overlay
+assertion, so the failed phase is the initial search-overlay mount. The same
+suite's Escape case passed its subsequent-key-up delivery calibration, and the
+visibility-churn case passed. The archived error has no producer timestamp and
+does not establish why the mount wait expired.
+
+The legacy helper raced async stream consumption against its 50ms timer. In a
+controlled process, the action's queued mutation preceded the native FIFO
+marker at 0.042ms, but a deliberately held consumer let the timer win at
+60.016ms. This demonstrates the same observation defect as the focus helper;
+it does not reproduce historical Z1 scheduling or prove a product mount bug.
+
+`NativeMainQueueDelivery` owns this single test-only FIFO boundary as a value
+configured with its immutable duration. Both consumers construct a 50ms instance.
+It captures the absolute deadline before the synchronous action,
+then enqueues the marker after the action's native mutation. First-event
+buffering preserves a timely producer despite late consumption; actual late
+producer timestamps and missing producers still fail. The timer is canceled
+and joined, parent cancellation remains authoritative, and a queued marker
+captures only the continuation. Unexpected clock errors propagate. This does
+not promise completion of later work enqueued by the native mutation, including
+search-field focus retries.
+
+The overlay suite calls the shared owner directly; the focus fixture retains
+its semantic method and fixed 50ms policy. All ten case actions, assertions,
+window/portal teardown, Escape routing/calibration and native mutation owners
+remain unchanged. The overlay's four callee names change; the seven focus
+case bodies remain byte-identical. Failure-only output contains a stable
+`native_main_queue_delivery_timeout` event, caller phase/line, arrival source,
+arrival/observation time and deadline, with no raw object IDs or payloads.
+
+Temporary exact-owner controls verify action-before-marker ordering and that
+an action exhausting the 50ms budget fails. Narrow scheduling controls verify
+timely producer/late consumer success, late/missing producer failures,
+cancellation, buffered-success cancellation, timer join and terminated late
+signals without retaining the action's owned graph. Both Swift 5 and strict
+Swift 6 controls pass with warnings-as-errors. An initial temporary control ran
+its deliberately blocking action concurrently with the normal control and
+correctly timed out both; those artificial controls now run serially. This
+changes no committed suite scheduling.
+
+The desktop remains locked. No presentation or responder operation was run for
+this slice; local controls do not establish presented macOS 15 behavior.
+Integrated full-target compilation and actual CI remain root-owned gates.
+The bounded proof and exact source provenance are recorded in
+`/tmp/z1-overlay-delivery-proof/handoff.md`. No production or localization surface
+changes are included.
+
+A follow-up corrected the original no-case namespace enum, which violated
+`bmux-architecture` despite the earlier passing controls. The owner is now a
+configured struct with instance delivery and private instance helpers. The five
+call sites retain their actions, caller diagnostics and 50ms duration. Native
+`DispatchQueue.main.async` is retained specifically to observe FIFO ordering
+after an AppKit mutation already enqueued by the action; an unstructured Task
+would not preserve that queue ordering. This is not a settling delay.
+
+The configured owner passes the same two exact-source controls and six temporary
+scheduling/cancellation controls in both Swift 5 and strict Swift 6, with zero
+warnings. All three affected files and seven unchanged focus cases compile in
+both modes against frozen build 801. No presented case was executed; the locked
+desktop and integrated macOS 15 verification gap remain. Follow-up evidence is
+in `/tmp/native-main-queue-value-proof/handoff.md`.
+
+### Minimal-mode observation decision ownership
+
+Four native build-801 controls hold only the fixture's asynchronous consumer.
+Actual body, mode and transaction callbacks arrive before each original
+one-second deadline, yet the prior timer race reports a timeout in every phase.
+The mount-body control includes events buffered before the wait. This establishes
+consumer-scheduling sensitivity, not the historical Z7 failing phase or cause.
+
+`MinimalModeBodyFixture` now records the first decision synchronously at event
+observation. Buffered events are evaluated once when a wait registers against
+then-current body counts, discarding unmatched events through the first match
+and retaining later events. New callbacks evaluate the active predicate
+synchronously. One bounded result stream carries success or failure; its timer
+uses the same wait identity and cannot overwrite a recorded match. A callback
+after the unchanged absolute deadline fails even if the timer was delayed.
+The structured timer joins before return, all clock errors reach the same result
+owner, and parent cancellation remains authoritative after buffered success.
+Stored matchers clear on completion, cancellation and close; no shared delivery
+helper or production seam changes. All six original assertions remain unchanged.
+
+The four delayed-consumer controls now pass. Four omitted-event and four late
+event controls still fail at their exact phase; cancellation and a pending-wait
+clock error exercise cleanup and propagation. A FIFO control verifies retained
+future events, discarded unmatched events and current-count evaluation after
+reset. Weak fixture release, cleared registration and closed/detached windows
+are checked; AppKit may retain the window beyond fixture release. A saved actual
+transaction callback safely returns after its fixture is released. Sources and
+first harness outcomes are preserved in `/tmp/z-minimal-event-decision-proof`.
+
+Configured Swift 5 and strict Swift 6 exact-case verification use protected 801
+under native `NSApplication.run`, with owned settings and activation prohibited.
+The complete unchanged visibility suite retains its previously documented
+strict-Swift-6 helper limitations; configured Swift 5 compiles that full source.
+No desktop presentation, app build, or user settings changes occur. Actual
+macOS 15 acceptance is now recorded by the complete six-oracle case passing in
+AF shard 7 (2.185 seconds). The historical timeout phase and latest integrated
+head's CI remain open in `minimal_mode_failure_phase_diagnostics_verification`.
+
+
+### Markdown fixture callback-arrival ownership
+
+Final review of the Z7 scroll-frame fixture found that its existing operation
+still raced async callback consumption against the deadline task. An owned,
+nonpresented whole-fixture control supplied a timely callback but held its
+consumer; the old operation returned `deadlineExceeded`. This is a controlled
+boundary counterexample, not attribution of the historical scroll drift.
+
+The existing operation now records the first native callback result and arrival
+time in a buffered stream. Its timer publishes on the same actor; the parent
+consumes directly, cancels and joins the timer, then checks cancellation before
+returning a result. A late callback still fails even if timer delivery was late.
+Callback errors and unexpected clock errors propagate. All JavaScript, native
+callback callers, registration IDs, cleanup and deadline-start sites remain
+unchanged. No rendering, image or navigation deadline is extended.
+
+Temporary whole-fixture controls cover timely callbacks, delayed consumers,
+late and missing callbacks, cancellation, buffered-success cancellation and
+callback errors. All seven pass in configured Swift 5 and strict Swift 6 with
+zero compiler warnings. Native nonpresented WebKit controls verify registry
+cleanup after success, observation error, timeout and registered cancellation.
+An initial temporary 50ms DOM control expired before registration; the timeout
+cleanup control therefore uses the fixture's existing 3s image deadline to
+exercise an actual registered observer. That change is confined to the probe.
+The 50ms native operation controls retain their original bound.
+
+One harness cleanup encountered a late WebKit cache write after its process
+exited. The exact owned root was removed; the temporary runner now retries only
+that root's `ENOTEMPTY` cleanup within 3s and reports failure if it cannot remove
+it. This is not a claim that WebKit XPC processes are joined. Fixture release,
+cleared native registrations and queued DOM cleanup are checked separately.
+
+The complete fixture and its rendering, image-consent and Mermaid callers
+compile in Swift 5 and strict Swift 6 without warnings. All displayed-window
+behavior remains unchanged and was not executed while the desktop was locked.
+AF shard 5 subsequently passed all four rendering cases on macOS 15
+(2.714 seconds), including displayed scroll restoration (0.521 seconds).
+This supplies the displayed-frame CI acceptance without claiming a new local
+presentation proof. Source adaptations, controls and limits are recorded in
+`/tmp/markdown-operation-arrival-proof/handoff.md`. Root owns integrated
+full-target and CI verification; no production or localization surface changed.
+
+
+### AD initial terminal search-overlay setup
+
+Published `56309fde9` failed only the rebind case in native shard 8:
+its initial mount FIFO producer arrived at 66.901ms, observed at 101.693ms,
+beyond the 50ms bound. This is a late producer, not the previously corrected
+late-consumer race. The three attachment/rebind assertions had not run.
+
+The original test called `setSearchOverlay` synchronously and then ran the
+RunLoop for 50ms; it asserted attachment, not elapsed mounting performance.
+The migrated bound included synchronous hosting construction and FIFO delivery.
+All three initial mounts now adopt the existing mouse-overlay fixture's explicit
+one-second setup policy, anchored before the same native action. This is a NEW
+setup-bound adoption, not restoration of an unchanged deadline. Post-Escape
+delivery and focus delivery remain 50ms; all attachment, visibility, dismissal
+and real subsequent-key-up calibration assertions remain unchanged. There is
+no production timing or shared delivery-owner change.
+
+An owned, never-presented build 801 control measured synchronous construction
+at 0.528ms and queued delivery at 18.818ms; a separate post-action-bound control
+measured 0.533ms and 19.691ms. Both passed all three rebind assertions. Those
+local measurements do not partition the actual AD delay or prove macOS 15
+scheduling. Exact-source rebind positive and omitted-mount negative results,
+configured Swift 5/strict Swift 6 compilation and cleanup are recorded in
+`/tmp/ad-overlay-mount-proof/handoff.md`. Those local controls did not verify
+presented Escape delivery while the desktop was locked. AF shard 7 subsequently
+passed all three cases on macOS 15 (1.257 seconds), including the real subsequent
+key-up calibration. The latest integrated head's CI remains pending. No
+localization surface changes.
+
+
+### AD deferred terminal search-field attachment and focus
+
+AD native shard 3 failed the legacy deferred-search case while synchronously
+polling the RunLoop for its field. An owned build 801 control reproduced that
+mount boundary; following the actual queued attach with the existing native
+FIFO observer and one hosting layout pass exposed the field promptly. The
+exact case now uses Swift Testing and retains the original field and automatic
+field-editor ownership assertions. No direct focus request is added.
+
+The first one-second bound starts after synchronous `setSearchOverlay`, matching
+the original polling helper. The second one-second bound uses the duration-configured
+`TerminalSearchFieldFocusObservation` value to observe native
+`NSWindow.firstResponder` KVO, subscribed before checking current ownership.
+The original predicate is preserved: the field itself, or a field editor whose
+delegate is that field. Matching native arrival is timestamped synchronously
+and buffered before async consumption; native arrival and timer publication
+are serialized by the same MainActor owner. Cancellation remains authoritative and
+the failure timer is canceled and joined. The token is invalidated on every
+return before owned window/context/panel teardown. This token seam is the
+architecture allowance for AppKit KVO-only observation, not a new runtime hook.
+The owner also supports the separate terminal-focus fixture's initial search-field
+prerequisite, keeping both callers on the same automatic-focus contract.
+
+The fixture retains the original logical-key window and real
+`makeKeyAndOrderFront` in CI, but owns a manual-IO terminal, its workspace,
+registered context and retained window. It requires the app-host delegate
+instead of replacing shared delegate/manager state across suspension. Local
+controls substitute only nonactivating `orderFrontRegardless`; they neither
+activate the app nor explicitly focus a responder. Automatic focus succeeds
+with `NSApp.keyWindow` still different and the app inactive. A temporary editing
+notification probe incorrectly timed out despite actual field-editor ownership;
+responder observation corrects that diagnostic seam. This does not establish
+the historical AD scheduling cause or prove the real presented macOS 15 case.
+
+Configured Swift 5/strict Swift 6 compilation, native omission, delayed-consumer
+and cancellation controls, exact untouched legacy bytes and cleanup evidence
+are recorded in `/tmp/ad-search-field-proof/handoff.md`. Root owns integrated
+full-target and CI verification. No production or localization surface changes.
+
+
+### AD focus delivery functional containment and geometry ownership
+
+All seven AD native-shard-2 focus recovery failures identify `phase=prepare`
+at the shared fixture's line 85. Native FIFO producer arrivals range from
+75.815ms to 443.905ms, beyond 50ms, before any case-body oracle. Later phases
+were not reached; AD supplies no measurement of their latency.
+
+The fixture adopts a one-second functional failure cap for initial and
+subsequent FIFO deliveries. This is a NEW policy, not restoration of an
+unchanged deadline. The original seven tests used fixed 50ms RunLoop settling,
+without elapsed-performance assertions; maintained native portal queue-drain
+fixtures use one-second containment. Delivery still returns at its first
+native marker without additional settling. Production and the shared FIFO
+owner are unchanged.
+
+Owned build 801 controls with both 50ms and one-second bounds exposed the same
+five geometry-related assertion failures. Native layout legitimately restored
+a zero-sized child from its usable host. Explicit-responder and reparent cases
+now set geometry through the authoritative host. Automatic/find cases require
+a usable host: the fixture queues child geometry after reveal's synchronous
+layout and before its queued focus callback, then captures immutable facts
+after that callback and before later layout can resize the child. Both weak
+callbacks stop when the fixture closes. The observation owns a separate file;
+there is no new production hook or shared delivery API. These two native FIFO
+blocks require the documented ordering and are not interchangeable with tasks.
+
+All forty original focus expectations and three precondition expectations
+retain their intent, including intermediate deferral, final recovery, and
+no-steal checks; case setup and intermediate observation sites change. Four
+additional geometry expectations verify tiny child and usable host premises.
+Seven owned logical-key cases pass. Omitting queued geometry fails four
+assertions; omitting reveal fails five. Omitting explicit recovery fails four
+cases, while automatic/find can recover through legitimate AppKit layout;
+those two controls do not prove that explicit recovery is the sole producer.
+
+A later strict Swift 6 control preserved a final Find recovery failure despite
+passing intermediate deferral observations. Initial overlay mount can still
+own forced field-focus retries after an early terminal intent. Find setup now
+completes real mount/layout and automatic field focus using the shared native
+responder observer before setting terminal intent and testing hidden/tiny
+recovery. Native mount delivery and field-focus observation each have a one-second
+failure cap.
+This removes an unsatisfied setup prerequisite without claiming that it proves
+the scheduler history of the preserved failure or AD.
+
+Configured Swift 5/strict Swift 6 compilation, positive and negative controls,
+and queued cancellation/closed-fixture cleanup are recorded in
+`/tmp/ad-focus-delivery-proof/handoff.md`. Initial controls were never presented;
+final field-focus controls use an owned nonactivating presented logical-key
+window and verify unchanged frontmost process. Permanent tests retain normal
+NSWindow and original presentation. Local controls do not prove native key
+acquisition; AF shard 1 subsequently passed all seven presented cases on macOS 15
+(5.159 seconds). The latest integrated head's CI remains pending. No user app was
+activated or replaced by these local controls, and no localization surface changes.
+
+
+### CLI process completion and stale Codex rows (AF8)
+
+AF8's stale-Codex session-list case failed only its completion assertion; the
+returned `limit: null`, four-row payload identifies the third `--all` command.
+The old synchronous helper waits for a GCD reaper before draining its pipe.
+An owned build 802 replay passed all fourteen original assertions, both with
+termination tracing and with the original no-handler shape. Holding only the
+third reaper reproduced a timeout despite a successful native exit and complete
+output. This demonstrates an observation hazard, not the historical CI cause.
+
+The exact case now uses the maintained file-output process owner for default,
+cwd-filtered, and `--all` requests, each at its original plain five-second local
+and CI bound. Its four records, filtering, launch/transcript flags, status and
+strict JSON checks remain. HOME, CFFIXED_USER_HOME, XDG roots and provider stores
+are owned; session listing performs no provider launch or socket operation.
+
+Before adopting that owner, controlled tests exposed its separate asynchronous
+consumer race and a cancelled-parent success return. `ShellContractProcess`
+now records one immutable native termination receipt synchronously, checks its
+arrival against the same post-spawn absolute deadline, joins the owned process
+and timer, then checks parent cancellation before reading output. Its result
+shape, separate stdout/stderr files (including error diagnostics), caller
+bounds, and 200 ms default TERM grace remain. The exact-case migration changes
+the old helper's two one-second cleanup waits to that maintained joined grace;
+it does not increase the command deadline or claim to join descendants.
+
+The private one-shot synchronous guard follows the architecture carve-out:
+Process termination and expiry must claim the first result without an actor hop
+that could reorder arrival. It guards only one Boolean; output and lifecycle
+state stay with the process owner. Exposed receipt/result values have separate
+files. All 29 existing caller files were inspected; none changes API or timeout.
+
+Configured Swift 5 and strict Swift 6 build 802 controls pass the exact case,
+held-consumer and cancellation checks. Removing transcript metadata, launch
+metadata, or the cwd match fails the preserved semantic assertions. Additional
+owned controls cover late exit, missing exit with SIGKILL escalation, clock
+failure, cancellation before/after spawn, nonzero and signal statuses, spawn
+failure, output diagnostics and completion release. Temporary instrumentation
+and the first failed harness attempt remain in
+`/tmp/af8-shell-completion-proof/handoff.md`; no control seam ships. Integrated
+macOS 15/full-target verification and the original CI scheduling cause remain
+pending. The other synchronous legacy callers are unchanged. No production,
+app presentation, localized string or user configuration changes.
+
+### OpenCode version-probe output ownership (AF1)
+
+AF1 failed the existing launch-working-directory fork-support assertion in
+0.165 seconds. The original case passes against owned build 802. An exact-source
+controlled probe nevertheless demonstrates a real capture race: its readability
+callback can consume the version bytes, pause before appending them, and lose to
+process-exit completion, which returns an empty buffer. Reversing only those two
+controlled boundaries restores the supported-version result. This establishes an
+output-ownership defect, not the historical AF1 schedule.
+
+`OpenCodeProbeCommandOutput` now owns the process, a single merged-pipe reader,
+and their joined completion. The blocking reader runs on a retained detached
+task using only its raw descriptor, as allowed for process pipe I/O, and is joined
+before the descriptor closes or output is parsed. The configured three-second
+absolute deadline still starts before `Process.run`; cancellation acts on the
+process only after launch returns. TERM retains its 500 ms escalation grace.
+The native-exit cleanup stream remains independent of parent cancellation.
+A separate one-shot synchronous receipt claims native exit or deadline before
+asynchronous consumption; its tiny Boolean lock follows the documented callback
+arbitration carve-out, with no ongoing process state behind the lock. Cancellation
+is checked before spawn and after all joins before returning success.
+
+Environment sanitization, relative PATH resolution, working directory, merged
+stderr, version threshold and cache policy remain with the existing owners. Only
+the failed XCTest method moves to Swift Testing, preserving its original stub,
+snapshot and assertion; owned-directory cleanup failures now report a test issue.
+The unrelated `ProcessTerminationGate` and general `CommandRunner` are unchanged.
+
+Configured Swift 5 and strict Swift 6 focused controls pass. Temporary controls
+cover merged/nonzero output, output exceeding pipe capacity, spawn failure,
+cancellation before launch and during execution, and stubborn-child timeout and
+reaping at the original three-second/500 ms policy. Exact-owner instrumentation
+holds the sole reader after exit and holds receipt publication after its claim:
+output remains complete, cancellation cannot return buffered success, and a later
+deadline cannot displace the claimed exit. Existing unsupported-version cache and
+environment controls pass. Proof provenance and retained original counterexample
+are in `/tmp/af-opencode-probe-proof/handoff.md`; no control hook ships.
+
+The pre-existing inherited-pipe limitation remains: a descendant retaining the
+write end can delay EOF after the direct child exits. This change joins that
+reader rather than abandoning it and does not claim descendant containment.
+Expected unavailable/unsupported probes still fall back to unavailable fork
+support, not incidents; low-level read errors retain the existing process-pipe
+logger. No new telemetry, raw command output/path/environment logging, localized
+surface or sampling change is introduced. The fresh isolated tagged build 803
+completed, and the exact migrated case passed against its actual module in
+0.138 seconds, without production-source substitution. An actual-module
+cancellation control also passed in 0.654 seconds, including the existing
+500 ms grace for a TERM-ignoring child; it returned nil and confirmed the child
+was reaped. These are complete control durations, not isolated cancel-to-TERM
+latencies. User dogfood and the latest integrated head's CI remain pending;
+build 802 is untouched.
+
+### Remote shell UTF-8 completion ownership (AF6)
+
+AF6 reported only the legacy missing-locale case's no-timeout assertion after
+6.007 seconds; status zero and the exact three `C.UTF-8` values passed. Its
+unchanged synchronous helper waits for a GCD reaper before draining pipes.
+That observation boundary can lag native exit; the historical AF6 schedule is
+not established. The exact case now uses the repaired `ShellContractProcess`
+with its original plain five-second command bound and unchanged generated
+locale script, `/usr/bin/env` empty-locale arguments, shell and output oracle.
+The throwing call retains the no-timeout intent and joins before owned-root
+cleanup. The maintained 200 ms TERM grace plus escalation/join replaces the
+legacy one-second TERM wait; it does not extend the command deadline.
+
+Configured Swift 5 and strict Swift 6 exact-source controls pass, with warnings
+as errors. Omitting only the setup lines fails the original output predicate
+(`||`), while exit status and completion still pass. Only the failed case moves
+to Swift Testing; the existing-UTF-8 neighbor and legacy helper remain unchanged.
+The fixture owns HOME/CFFIXED/XDG/TMPDIR and output files, with no app, provider,
+socket, network or user configuration access. Evidence is recorded in
+`/tmp/af6-utf8-locale-proof/handoff.md`. Integrated macOS 15 verification remains
+pending; the earlier AF8 shared-owner lifecycle controls are reused rather than
+repeated. No production policy or localized surface changes.
+
+### Bounded acceptance reconciliation after AF
+
+AF run `38927526693` tested exact head
+`7bc74648b1d5ce6c66bd48c172bd19170ffa3898` on macOS 15. The following
+specific results are accepted evidence for source owners unchanged in published
+`2107e86f46c90b2142cbf6d286b9ffa09285cf83`; they are not evidence that
+AF was wholly green. That run failed three separate process cases.
+
+| Scope | Actual AF result | Archived receipt |
+| --- | --- | --- |
+| Terminal focus recovery | Seven cases passed; 5.159s | `/tmp/af-shard1-terminal.log:67057` |
+| Terminal overlay lifecycle | Three cases, including real Escape key-up calibration, passed; 1.257s | `/tmp/af-shard7-terminal.log:166104` |
+| Markdown rendering | Four cases passed; 2.714s, including scroll restoration at 0.521s | `/tmp/af-shard5-terminal.log:81825` |
+| Selected-workspace filter visibility | Five cases passed; 0.031s | `/tmp/af-shard2-terminal.log:118444` |
+| Minimal-mode body invalidation | Complete six-oracle case passed; 2.185s | `/tmp/af-shard7-terminal.log:167636` |
+
+The seven related current verification caveats remain open for the latest
+integrated head's CI. Historical failure attribution, native cleanup limits and
+local-proof qualifications remain as documented; these passing cases do not
+identify the historical minimal-mode timeout phase. The OpenCode caveat
+separately records completed build 803 and actual-module checks while retaining
+user dogfood, latest integrated-head CI and inherited-pipe limitations. No
+runtime, test, timeout or assertion changes accompany this reconciliation.

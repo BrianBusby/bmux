@@ -4354,7 +4354,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     ) {
         guard snapshot != nil || removeWhenEmpty || persistedGeometryData != nil else { return }
 
-        let writeBlock = {
+        let writeBlock: @Sendable () -> Void = { [sessionSnapshotStore] in
             Self.removeLegacyPersistedWindowGeometry()
             if let persistedGeometryData {
                 UserDefaults.standard.set(
@@ -4364,14 +4364,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             }
             if let snapshot {
                 Self.clearCrashOnlyPrimarySnapshotRemovalMarker()
-                _ = self.sessionSnapshotStore.save(snapshot, fileURL: nil)
+                _ = sessionSnapshotStore.save(snapshot, fileURL: nil)
             } else if removeWhenEmpty {
                 if preserveManualRestoreBackupOnMissingPrimary {
                     Self.markCrashOnlyPrimarySnapshotRemoval()
                 } else {
                     Self.clearCrashOnlyPrimarySnapshotRemovalMarker()
                 }
-                self.sessionSnapshotStore.removeSnapshot(fileURL: nil)
+                sessionSnapshotStore.removeSnapshot(fileURL: nil)
             }
         }
 
@@ -5487,9 +5487,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         // never re-route the keystroke to the terminal. Symmetric with
         // applyFirstResponderIfNeeded's foreign focus guard.
         if let firstResponder,
-           shouldRespectForeignFirstResponder(firstResponder, in: window, isRightSidebarOwner: {
-               isRightSidebarFocusResponder($0, in: window)
-           }) {
+           WindowKeyboardFocusRouting(appDelegate: self, window: window).respects(firstResponder) {
             return
         }
         guard let context = contextForMainWindow(window) ?? contextForMainTerminalWindow(window),
@@ -6852,7 +6850,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
 
     func syncKeyboardFocusAfterFirstResponderChange(in window: NSWindow?) {
-        keyboardFocusCoordinator(for: window)?.syncAfterResponderChange()
+        WindowKeyboardFocusRouting(appDelegate: self, window: window).synchronizeAfterResponderChange()
     }
 
     @discardableResult
@@ -16873,6 +16871,7 @@ private extension NSApplication {
     }
 
     @objc func bmux_applicationSendEvent(_ event: NSEvent) {
+        WindowKeyboardFocusRouting(appDelegate: AppDelegate.shared, window: event.window ?? keyWindow).recordChromeInput(event)
 #if DEBUG
         let typingTimingStart = event.type == .keyDown ? BmuxTypingTiming.start() : nil
         let phaseTotalStart = event.type == .keyDown ? ProcessInfo.processInfo.systemUptime : 0

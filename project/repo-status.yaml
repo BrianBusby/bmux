@@ -22,6 +22,12 @@ execution_telemetry:
   live_codex_evidence_convergence_correctness: implemented
 
 local_capabilities:
+  matte_skin_theme_tokens: implemented
+  matte_skin_surface_styles: implemented
+  matte_skin_sidebar: implemented
+  matte_skin_main_panel: implemented
+  native_ci_exit_status_reporting: implemented
+  native_ci_framework_completion_watchdog: implemented
   managed_connected_codex_runtime: under_observation
   ordinary_cli_read_only_chat: under_observation
   ordinary_cli_shared_control: not_implemented
@@ -136,6 +142,79 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: app_host_cancellation_ownership_verification
+    status: open
+  - id: session_write_store_capture_verification
+    # Build 794 and twelve compiled policy/store cases pass; full teardown CI remains open.
+    status: open
+  - id: bash_relay_refresh_fixture_verification
+    status: open
+  - id: palette_selection_shortcut_fixture_verification
+    status: open
+  - id: kiro_lifecycle_feed_fixture_verification
+    status: open
+  - id: split_workspace_title_delivery_fixture_verification
+    status: open
+  - id: omx_hud_restore_directory_fixture_verification
+    status: open
+  - id: browser_chrome_default_contract_verification
+    status: open
+  - id: feed_hook_no_response_fixture_verification
+    status: open
+  - id: browser_omnibar_arrow_fixture_verification
+    status: open
+  - id: terminal_paste_binding_fixture_verification
+    status: open
+  - id: session_resume_fork_contract_fixture_verification
+    # E shard 3 identifies the conditional argument expression; typed branches await the compiler gate.
+    status: open
+  - id: terminal_native_input_delivery_fixture_verification
+    # Includes seven input readiness migrations and the Kitty real-PTY complete-screen fixture.
+    status: open
+  - id: native_app_host_full_suite_failures
+    status: open
+  - id: workspace_close_ownership_verification
+    status: open
+  - id: antigravity_hook_lifecycle_fixture_verification
+    status: open
+  - id: terminal_initial_runtime_readiness_verification
+    status: open
+  - id: workspace_runtime_close_fixture_verification
+    status: open
+  - id: grok_hook_connection_fixture_verification
+    status: open
+  - id: persistent_pty_child_exit_verification
+    status: open
+  - id: claude_resume_and_no_git_watch_fixture_verification
+    status: open
+  - id: ssh_cleanup_error_idempotency_verification
+    status: open
+  - id: claude_notification_target_fixture_verification
+    status: open
+  - id: codex_rejected_ambient_identity_verification
+    status: open
+  - id: resume_policy_execution_fixture_verification
+    status: open
+  - id: browser_remote_store_fixture_verification
+    status: open
+  - id: matte_skin_bonsplit_custom_styling_deferred
+    status: open
+  - id: matte_skin_chrome_preference_verification
+    status: open
+  - id: matte_skin_custom_terminal_inset_verification
+    status: resolved
+  - id: matte_skin_terminal_preference_precedence
+    status: resolved
+  - id: matte_skin_rejected_config_appearance_verification
+    status: resolved
+  - id: matte_skin_full_app_host_verification
+    status: open
+  - id: matte_skin_ci_compiler_compatibility
+    status: resolved
+  - id: cloud_attach_retry_fixture_verification
+    status: open
+  - id: managed_appearance_startup_fixture_verification
+    status: open
   - id: configured_codex_placeholder_startup_dogfood
     status: open
   - id: codex_update_workspace_exit_native_dogfood
@@ -185,4 +264,396 @@ local_caveats:
   - id: remote_mobile_open_architecture_decisions
     status: open
   - id: hybrid_focus_render_capture
+    status: open
+  - id: bundled_cli_mixed_signature_regression_verification
+    status: open
+  - id: bundled_cli_artifact_relocation_verification
+    status: open
+  - id: browser_discard_policy_focused_gate_verification
+    status: open
+  - id: codex_stop_fixture_app_host_verification
+    status: open
+  - id: command_runner_parallel_pipe_capture
+    status: open
+  - id: browser_legacy_theme_startup_migration_verification
+    status: open
+  - id: browser_background_compositing_focused_gate_verification
+    status: open
+  - id: right_sidebar_shortcut_fixture_app_host_verification
+    status: open
+  - id: ssh_startup_lifecycle_focused_gate_verification
+    status: open
+  - id: ssh_manual_reconnect_handoff_regression
+    status: open
+  - id: browser_discard_restore_focused_gate_verification
+    status: open
+  - id: sidebar_minimum_default_and_configured_range_consistency
+    status: open
+  - id: sidebar_width_persistence_focused_gate_verification
+    status: open
+  - id: claude_session_end_scope_focused_gate_verification
+    status: open
+  - id: maintenance_combined_validation_pending
+    status: open
+  - id: agent_launch_joined_producer_verification
+    status: open
+  - id: agent_launch_environment_fixture_focused_gate_verification
+    status: open
+  - id: ssh_workspace_creation_fixture_focused_gate_verification
+    status: open
+  - id: ssh_agent_environment_fixture_focused_gate_verification
+    status: open
+  - id: ssh_pty_lifecycle_fixture_verification
+    status: open
+  - id: codex_monitor_lease_fixture_verification
+    status: open
+  - id: respawn_window_protocol_fixture_focused_gate_verification
+    status: open
+  - id: browser_deferred_initial_lifecycle_verification
+    status: open
+  - id: workspace_fallback_regression_verification
+    status: open
+  - id: ssh_manual_reconnect_nonzero_regression
+    status: resolved
+  - id: native_portal_workspace_contract_fixture_verification
+    status: open
+  - id: native_history_and_batched_frame_fixture_verification
+    status: open
+  - id: markdown_window_retained_fixture_verification
+    status: open
+  - id: notification_record_restore_fixture_verification
+    status: open
+  - id: welcome_window_retained_fixture_verification
+    status: open
+  - id: browser_inspector_window_ownership_verification
+    # Includes raw detached-inspector close observation; real-window execution remains pending.
+    status: open
+  - id: remote_restore_working_directory_regression
+    status: open
+  - id: global_search_shortcut_conflict_verification
+    status: open
+  - id: focused_app_host_process_diagnostics_verification
+    # Broad PR shards and focused shard 1 use the bounded observer; actual call graphs remain pending.
+    status: open
+  - id: remote_tmux_crlf_record_parsing_verification
+    status: open
+  - id: browser_download_quarantine_boundary_verification
+    status: open
+  - id: file_preview_save_shortcut_fixture_verification
+    status: open
+  - id: panel_appearance_compositing_fixture_verification
+    status: open
+  - id: titlebar_narrow_window_layout_verification
+    status: open
+  - id: titlebar_search_metadata_fixture_verification
+    status: open
+  - id: file_explorer_git_root_alias_regression
+    status: open
+  - id: cli_closed_peer_receive_regression_verification
+    status: resolved
+  - id: cli_socket_home_fixture_verification
+    status: open
+  - id: titlebar_product_contract_fixture_verification
+    status: open
+  - id: project_truth_http_retry_verification
+    status: resolved
+  - id: cli_socket_capture_completion_verification
+    status: open
+  - id: remote_tmux_parser_focused_gate_verification
+    status: open
+  - id: project_truth_full_suite_verification
+    status: resolved
+
+  - id: cli_socket_readiness_coalescing_verification
+    status: open
+
+  - id: sidebar_terminal_hit_boundary_verification
+    status: open
+
+  - id: browser_portal_presentation_fixture_verification
+    status: open
+
+  - id: native_xcode_project_parse_verification
+    status: open
+
+  - id: remote_agent_fork_fixture_verification
+    status: open
+
+  - id: default_cloud_proxy_retry_state_verification
+    status: open
+
+  - id: deleted_agent_hook_cwd_regression
+    status: open
+
+  - id: sidebar_pr_focus_contract_fixture_verification
+    status: open
+
+  - id: notification_focus_event_fixture_verification
+    status: open
+
+  - id: notification_keydown_fixture_verification
+    status: open
+
+  - id: textbox_clipboard_timeout_fixture_verification
+    status: open
+
+  - id: native_symbol_size_fixture_verification
+    status: open
+
+  - id: file_preview_inset_fixture_verification
+    status: open
+
+  - id: browser_find_routing_fixture_verification
+    status: open
+
+  - id: shortcut_parser_lookup_attribution_verification
+    status: open
+  - id: browser_remote_loopback_fixture_verification
+    status: open
+  - id: tmux_split_rejection_fixture_verification
+    status: open
+  - id: tmux_launch_identity_fixture_verification
+    status: open
+  - id: orphan_workspace_shortcut_fixture_verification
+    status: open
+  - id: titlebar_hit_test_event_context_verification
+    status: open
+  - id: native_window_close_ownership_verification
+    status: open
+
+  - id: terminal_file_launch_directory_contract_verification
+    status: open
+
+  - id: closed_main_window_routing_verification
+    status: open
+
+  - id: sidebar_git_publication_fixture_verification
+    status: open
+
+  - id: notification_focus_completion_fixture_verification
+    status: open
+
+  - id: hook_prompt_stable_workspace_fixture_verification
+    status: open
+
+  - id: cli_telemetry_joined_producer_verification
+    status: open
+
+  - id: terminal_attachment_deferred_ime_fixture_verification
+    status: open
+
+  - id: gemini_stale_pid_obsolete_oracle_verification
+    status: open
+
+  - id: browser_preload_window_ownership_verification
+    status: open
+
+  - id: hermes_hook_phase_fixture_verification
+    status: open
+
+  - id: korean_marked_text_runtime_readiness_verification
+    status: open
+
+  - id: cli_closed_stderr_contract_verification
+    status: open
+
+  - id: terminal_inherited_surface_guard_verification
+    status: open
+
+  - id: ssh_creation_joined_producer_verification
+    status: open
+
+  - id: markdown_mermaid_double_zoom_verification
+    status: open
+
+  - id: app_host_failure_evidence_verification
+    status: superseded
+
+  - id: live_surface_recovery_window_fixture_verification
+    status: open
+
+  - id: claude_session_phase_fixture_verification
+    status: open
+
+  - id: codex_hook_installation_fixture_verification
+    status: open
+
+  - id: migrated_cli_process_ci_deadline_verification
+    status: open
+
+  - id: ci_test_host_environment_propagation_verification
+    status: open
+
+  - id: app_host_shared_resource_isolation_verification
+    status: open
+
+  - id: workspace_chrome_color_contract_verification
+    status: open
+
+  - id: portal_animation_completion_fixture_verification
+    status: open
+
+  - id: markdown_file_reload_fixture_verification
+    status: open
+
+  - id: notification_settings_retry_fixture_verification
+    status: open
+
+  - id: workspace_git_snapshot_observation_verification
+    status: open
+
+  - id: grok_sibling_status_fixture_verification
+    status: open
+
+  - id: dock_close_confirmation_owner_verification
+    status: open
+
+  - id: remote_daemon_bootstrap_contract_verification
+    status: open
+
+  - id: managed_shortcut_authority_fixture_verification
+    status: open
+
+  - id: agent_session_stream_contract_verification
+    status: open
+
+  - id: notification_settings_sheet_fixture_verification
+    status: open
+
+  - id: theme_session_cli_fixture_verification
+    status: open
+
+  - id: workspace_stress_delivery_verification
+    status: open
+
+  - id: native_deadline_exit_diagnostics_verification
+    status: open
+
+  - id: binding_only_resume_state_verification
+    status: open
+
+  - id: terminal_pointer_notification_fixture_verification
+    status: open
+
+  - id: sidebar_tool_focus_delivery_verification
+    status: open
+
+  - id: kiro_codex_feed_contract_verification
+    status: open
+
+  - id: nested_split_divider_cache_verification
+    status: open
+
+  - id: claude_idle_reminder_contract_verification
+    status: open
+
+  - id: canvas_split_shortcut_initial_panes_verification
+    status: open
+
+  - id: find_workspace_scope_fixture_verification
+    status: open
+
+  - id: deferred_terminal_search_focus_fixture_verification
+    status: open
+
+  - id: prompt_session_link_completion_fixture_verification
+    status: open
+
+  - id: codex_prompt_cache_fallback_fixture_verification
+    status: open
+
+  - id: option_digit_terminal_focus_fixture_verification
+    status: open
+
+  - id: pending_diff_ordering_fixture_verification
+    status: open
+
+  - id: visible_terminal_responder_readiness_verification
+    status: open
+
+  - id: v2_cli_and_browser_completion_fixture_verification
+    status: open
+
+  - id: v4_terminal_search_and_window_restore_fixture_verification
+    status: open
+
+  - id: v_tail_nonfocus_and_option_terminal_fixture_verification
+    status: open
+
+  - id: app_host_lock_stopped_child_verification
+    status: open
+
+  - id: fork_live_process_scope_fixture_verification
+    status: open
+
+  - id: app_host_eight_shard_capacity_verification
+    status: open
+
+  - id: terminal_search_overlay_mouse_fixture_verification
+    status: open
+
+  - id: welcome_shortcut_delivery_diagnostic_verification
+    status: open
+
+  - id: command_palette_expired_escape_diagnostics
+    status: open
+
+  - id: app_host_cold_build_deadline_boundary
+    status: open
+
+  - id: legacy_remote_directory_trust_fixture_verification
+    status: open
+
+  - id: codex_approval_response_observation_verification
+    status: open
+
+  - id: notification_burst_native_completion_verification
+    status: open
+
+  - id: file_explorer_shortcut_context_fixture_verification
+    status: open
+
+  - id: browser_visible_notification_completion_verification
+    status: open
+
+  - id: session_fork_diagnostic_completion_verification
+    status: open
+
+  - id: editable_terminal_undo_key_context_verification
+    status: open
+
+  - id: terminal_overlay_runtime_setup_verification
+    status: open
+
+  - id: minimal_mode_current_shell_invalidation_verification
+    status: open
+
+  - id: workspace_terminal_focus_completion_verification
+    status: open
+
+  - id: workspace_filter_selection_identity_verification
+    status: open
+
+  - id: keyboard_space_native_layout_isolation_verification
+    status: open
+
+  - id: zsh_relay_refresh_completion_verification
+    status: open
+
+  - id: minimal_mode_failure_phase_diagnostics_verification
+    status: open
+
+  - id: markdown_scroll_frame_completion_verification
+    status: open
+
+  - id: z_inspector_redraw_precursor_verification
+    status: open
+
+  - id: workspace_focus_delivery_arrival_verification
+    status: open
+
+  - id: cli_process_native_completion_verification
+    status: open
+
+  - id: opencode_probe_output_ownership_verification
     status: open
