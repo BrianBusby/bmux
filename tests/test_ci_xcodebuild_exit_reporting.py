@@ -49,8 +49,11 @@ class WorkflowExitReportingTests(unittest.TestCase):
             fixture.write_text(json.dumps(outcomes))
             counter = root / "attempts"
             runner = """#!/usr/bin/env python3
-import json, os
+import json, os, sys
 from pathlib import Path
+# Compilation is a separate prerequisite; these outcomes model native tests.
+if sys.argv[-1:] == ["build-for-testing"]:
+    raise SystemExit(0)
 counter = Path(os.environ['REPORTING_TEST_COUNTER'])
 attempt = int(counter.read_text()) if counter.exists() else 0
 counter.write_text(str(attempt + 1))

@@ -50,6 +50,12 @@ print("owned native awaiting cancellation", flush=True)
 while True:
     signal.pause()
 ''')
+            # Keep the build prerequisite separate from the native deadline probe.
+            executable(scripts / "xcodebuild_noninteractive.py", f"#!{sys.executable}\n" + '''
+import sys
+assert sys.argv[-1] == "build-for-testing"
+raise SystemExit(0)
+''')
             executable(scripts / "bmux_unit_test_shard.py", '''import pathlib, sys
 pathlib.Path(sys.argv[-1]).write_text('-only-testing:bmuxTests/OwnedFixture\\n')
 ''')

@@ -6669,3 +6669,45 @@ and their maintained dependencies passes with warnings-as-errors in both Swift 5
 and strict Swift 6. No visible-window native execution was performed for this
 change. Root owns the corrected full-target build and actual app-host execution,
 including whether the failure messages arrive on macOS 15.
+
+
+### Cold compilation outside the native test allowance
+
+Fixed W (`c8b35a6bd`, run 38856996751) native shards 6 and 8 exited 124
+while still compiling the app, before any native test markers. Their first cold
+build consumed the 900-second broad test allowance; unlike shards 1–4, these
+shards had no preceding focused app-host invocation to populate DerivedData.
+Both failures then terminated and joined the owned child and closed the log
+pipeline. This evidence concerns build placement, not a test failure or a new
+cancellation failure.
+
+The broad step now runs `build-for-testing` before the existing timed
+`test-without-building` invocation. One argument array owns project, scheme,
+configuration, DerivedData, package resolution, destination, shard selectors and
+build settings for both actions. Both execute through the existing console-user
+wrapper. Compilation uses the existing noninteractive PTY owner with the same
+idle fallback (explicit idle value, legacy timeout value, then 300 seconds), a
+separate per-shard build log and the unchanged 75-minute job limit. The console-user PTY owner creates the build
+log under RUNNER_TEMP and appends the one possible package retry; the
+existing tee stream also captures it. A failed build returns immediately without
+starting native tests. The app-host wrapper remains test-only because successful
+invocations require socket-listener evidence.
+
+The test chain retains its 900-second total deadline, machine lock, retry policy,
+process sampler, socket guards, selectors and authoritative native status. The
+existing single SwiftPM cache-recovery retry calls the whole build/test function,
+so clearing DerivedData always precedes a rebuild. Focused gates, artifact
+uploads and package coverage are unchanged. The job budget now explicitly owns
+cold compilation; successful complete build/test runtime on macOS CI remains
+unverified.
+
+Temporary executable controls run the extracted workflow with owned command
+boundaries and real console fallback, PTY, lock and deadline owners. The old
+cold-build composition exits 124, while the split composition completes a build
+longer than the same short diagnostic test cap and then passes. Build failure
+skips tests; native 65 and 124 survive; a package-resolution failure causes
+build/build/test ordering after cache clearing. No real app build or launch is
+performed by these controls. Existing exit-reporting fixtures treat compilation
+as a successful prerequisite so their native outcome assertions retain their
+original meaning. No source-string regression test or new runner framework is
+added; final integrated CI remains the actual Xcode artifact gate.
