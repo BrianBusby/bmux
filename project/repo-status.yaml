@@ -504,3 +504,6 @@ local_caveats:
 
   - id: grok_sibling_status_fixture_verification
     status: open
+
+  - id: canvas_split_shortcut_initial_panes_verification
+    status: open

@@ -6459,3 +6459,8 @@ caveats:
     title: Grok sibling completion uses owned authenticated joined connections and preserves saved-route status assertions; native build 796 passes five cases, integrated macOS 15 app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: canvas_split_shortcut_initial_panes_verification
+    title: Canvas split shortcut fixtures synchronize existing panel descriptors before geometry assertions; owned native controls pass, original app-host window verification remains pending
+    status: open
+    owner: bmux
