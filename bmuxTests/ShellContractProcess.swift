@@ -13,13 +13,6 @@ struct ShellContractProcess {
         self.terminationGrace = terminationGrace
     }
 
-    struct Result: Sendable {
-        let status: Int32
-        let terminatedNormally: Bool
-        let stdout: String
-        let stderr: String
-    }
-
     enum Failure: Error { case timedOut }
 
     func run(executable: String, arguments: [String], environment: [String: String]) async throws -> Result {
@@ -39,48 +32,66 @@ struct ShellContractProcess {
         process.standardInput = FileHandle.nullDevice
         process.standardOutput = output
         process.standardError = errors
+        let completion = ShellContractProcessCompletion()
         let (events, signal) = AsyncStream<Int32>.makeStream()
         process.terminationHandler = { ended in
+            completion.record(status: ended.terminationStatus)
             signal.yield(ended.terminationStatus)
             signal.finish()
         }
+        defer { process.terminationHandler = nil }
         do { try process.run() } catch {
             signal.finish()
             throw error
         }
-        let startedAt = ContinuousClock.now
-        // This retained consumer is joined on success, failure and cancellation.
+        let end = ContinuousClock.now.advanced(by: deadline)
+        // This retained consumer joins native exit; its scheduling never decides timeliness.
         let exit = Task { () -> Int32 in
             for await status in events { return status }
             return process.terminationStatus
         }
-        let status = try await withThrowingTaskGroup(of: Int32.self) { group in
-            defer { group.cancelAll() }
-            group.addTask { await exit.value }
-            group.addTask {
-                // Original interactive-shell failure deadline, never a settling delay.
-                try await ContinuousClock().sleep(until: startedAt.advanced(by: deadline))
-                throw Failure.timedOut
-            }
-            do {
-                guard let status = try await group.next() else { throw CancellationError() }
-                return status
-            } catch {
-                // Escalation happens inside the group, before its exit waiter can be joined.
-                let terminationStartedAt = ContinuousClock.now
-                if process.isRunning { process.terminate() }
-                let grace = Task {
-                    // Match CommandRunner's genuine owned-process SIGTERM grace period.
-                    do { try await ContinuousClock().sleep(until: terminationStartedAt.advanced(by: terminationGrace)) }
-                    catch { return }
-                    if process.isRunning { kill(process.processIdentifier, SIGKILL) }
+        let status: Int32
+        do {
+            status = try await withTaskCancellationHandler {
+                try await withThrowingTaskGroup(of: Void.self) { group in
+                    defer { group.cancelAll() }
+                    group.addTask {
+                        do {
+                            // Original injected process failure deadline, never a settling delay.
+                            try await ContinuousClock().sleep(until: end)
+                            completion.fail(Failure.timedOut)
+                        } catch is CancellationError {
+                            return
+                        } catch { completion.fail(error) }
+                    }
+                    for await outcome in completion.results {
+                        let receipt = try outcome.get()
+                        guard receipt.observedAt <= end else { throw Failure.timedOut }
+                        return receipt.status
+                    }
+                    throw CancellationError()
                 }
-                _ = await exit.value
-                grace.cancel()
-                await grace.value
-                throw error
+            } onCancel: {
+                completion.fail(CancellationError())
             }
+        } catch {
+            let originalError = error
+            let terminationStartedAt = ContinuousClock.now
+            if process.isRunning { process.terminate() }
+            let grace = Task {
+                // Preserve the injected owned-process SIGTERM grace period before escalation.
+                do { try await ContinuousClock().sleep(until: terminationStartedAt.advanced(by: terminationGrace)) }
+                catch { return }
+                if process.isRunning { kill(process.processIdentifier, SIGKILL) }
+            }
+            _ = await exit.value
+            grace.cancel()
+            await grace.value
+            try Task.checkCancellation()
+            throw originalError
         }
+        _ = await exit.value
+        try Task.checkCancellation()
         return Result(
             status: status, terminatedNormally: process.terminationReason == .exit,
             stdout: try String(contentsOf: stdout, encoding: .utf8),

@@ -7853,3 +7853,48 @@ window and verify unchanged frontmost process. Permanent tests retain normal
 NSWindow and original presentation. Local controls do not prove native key
 acquisition or fixed presented macOS 15 behavior. No user app is activated or replaced,
 and no localization surface changes.
+
+
+### CLI process completion and stale Codex rows (AF8)
+
+AF8's stale-Codex session-list case failed only its completion assertion; the
+returned `limit: null`, four-row payload identifies the third `--all` command.
+The old synchronous helper waits for a GCD reaper before draining its pipe.
+An owned build 802 replay passed all fourteen original assertions, both with
+termination tracing and with the original no-handler shape. Holding only the
+third reaper reproduced a timeout despite a successful native exit and complete
+output. This demonstrates an observation hazard, not the historical CI cause.
+
+The exact case now uses the maintained file-output process owner for default,
+cwd-filtered, and `--all` requests, each at its original plain five-second local
+and CI bound. Its four records, filtering, launch/transcript flags, status and
+strict JSON checks remain. HOME, CFFIXED_USER_HOME, XDG roots and provider stores
+are owned; session listing performs no provider launch or socket operation.
+
+Before adopting that owner, controlled tests exposed its separate asynchronous
+consumer race and a cancelled-parent success return. `ShellContractProcess`
+now records one immutable native termination receipt synchronously, checks its
+arrival against the same post-spawn absolute deadline, joins the owned process
+and timer, then checks parent cancellation before reading output. Its result
+shape, separate stdout/stderr files (including error diagnostics), caller
+bounds, and 200 ms default TERM grace remain. The exact-case migration changes
+the old helper's two one-second cleanup waits to that maintained joined grace;
+it does not increase the command deadline or claim to join descendants.
+
+The private one-shot synchronous guard follows the architecture carve-out:
+Process termination and expiry must claim the first result without an actor hop
+that could reorder arrival. It guards only one Boolean; output and lifecycle
+state stay with the process owner. Exposed receipt/result values have separate
+files. All 29 existing caller files were inspected; none changes API or timeout.
+
+Configured Swift 5 and strict Swift 6 build 802 controls pass the exact case,
+held-consumer and cancellation checks. Removing transcript metadata, launch
+metadata, or the cwd match fails the preserved semantic assertions. Additional
+owned controls cover late exit, missing exit with SIGKILL escalation, clock
+failure, cancellation before/after spawn, nonzero and signal statuses, spawn
+failure, output diagnostics and completion release. Temporary instrumentation
+and the first failed harness attempt remain in
+`/tmp/af8-shell-completion-proof/handoff.md`; no control seam ships. Integrated
+macOS 15/full-target verification and the original CI scheduling cause remain
+pending. The other synchronous legacy callers are unchanged. No production,
+app presentation, localized string or user configuration changes.

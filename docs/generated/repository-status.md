@@ -364,3 +364,4 @@ Repository: `BrianBusby/bmux`
 | `markdown_scroll_frame_completion_verification` | open |
 | `z_inspector_redraw_precursor_verification` | open |
 | `workspace_focus_delivery_arrival_verification` | open |
+| `cli_process_native_completion_verification` | open |

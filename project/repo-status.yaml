@@ -651,3 +651,6 @@ local_caveats:
 
   - id: workspace_focus_delivery_arrival_verification
     status: open
+
+  - id: cli_process_native_completion_verification
+    status: open

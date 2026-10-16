@@ -6752,3 +6752,8 @@ caveats:
     title: Focus and overlay fixtures share a duration-configured native FIFO arrival owner with one-second focus completion and initial overlay mount setup bounds, while post-Escape remains 50ms; Swift 5 and 6 controls pass, fixed presented macOS 15 verification remains open
     status: open
     owner: bmux
+
+  - id: cli_process_native_completion_verification
+    title: CLI process fixtures preserve synchronous native completion and joined parent cancellation at existing bounds; exact stale-Codex default/cwd/all controls pass with owned build 802, historical AF8 timeout cause and integrated macOS 15 verification remain unresolved
+    status: open
+    owner: bmux
