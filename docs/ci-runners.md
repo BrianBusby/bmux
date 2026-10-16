@@ -7201,3 +7201,42 @@ This first staged commit intentionally retains the product invalidation for red
 coverage. The follow-up isolates the inset observation at the existing leaf
 boundary. Exact new probe execution, fresh tagged production build, complete test
 target, and macOS 15 CI remain pending. No product-facing strings changed.
+### Workspace terminal focus recovery completion
+
+Y (`ff3e6e5ed4620ca676bf3198fd26ff870071c263`) shard 7 recorded ten
+assertion failures across six `WorkspaceTerminalFocusRecoverySwiftTests` cases.
+The automatic-focus snapshot already reported an active app and key window;
+another case still had a pending automatic apply after its RunLoop wait.
+The seventh no-steal case passed. This does not establish that native runtime
+startup, window activation, or a single scheduler condition caused every failure.
+
+The seven existing cases now share an owned manual-I/O terminal fixture. It
+requires the app-host delegate and registers its unique workspace context without
+replacing `AppDelegate.shared` or the delegate's active manager across suspension.
+Dock cases retain unique unregistered workspace IDs and use the existing dock
+focus fallback. The fixture retains and closes its window, tears down native
+surfaces and owned contexts, and observes actual queued main-thread focus work.
+Each original 50ms settling interval is now an absolute 50ms completion failure
+bound with canceled and joined deadline/consumer tasks; no runtime-readiness
+allowance or production timing policy is added.
+
+Initial workspace reconciliation can restore selected-panel visibility. The two
+reveal cases therefore establish and assert their hidden prerequisite after
+initial delivery, before the original reveal action. The dock tiny-geometry case
+sizes the authoritative host to zero, then restores it to 180 by 220; pending
+layout can no longer replace a manually zeroed child with a usable host size.
+All original focus, deferral, reparent, find-restoration, and no-steal assertions
+remain. The dock setup now constrains both host and child, rather than only the
+child; the other five recovery cases retain their original inner-view geometry.
+
+Owned build 799 controls reproduce the original ten assertion failures with the
+RunLoop adaptation. FIFO alone fixes three cases but exposes the visibility and
+geometry prerequisites above. The corrected seven-case control passes; omitting
+geometry restoration fails the six final-focus oracles, and omitting reveal fails
+the five corresponding responder/focus oracles. Timeout and cancellation controls
+join before native/window/context cleanup and preserve the app-host delegate and
+manager identities. Exact configured Swift 5 and strict Swift 6 source compilation
+is warning-free. Native execution uses only an offscreen key-status window
+adaptation; real presentation and macOS 15 remain integration gates. This local
+proof does not claim the exact historical CI scheduling cause or full graph
+quiescence from one queued event.

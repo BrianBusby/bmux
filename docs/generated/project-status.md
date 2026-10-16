@@ -306,6 +306,7 @@ Regenerate with: ./scripts/project-docs generate
 | Y1 overlay fixtures observe queued mounting and adopt the maintained three-second runtime setup bound for Escape while retaining fifty-millisecond overlay phases and real key-up calibration; owned bundle controls isolate startup delay, presented macOS 15 verification remains pending (`terminal_overlay_runtime_setup_verification`) | Bmux | open |  |
 | Actual Y Welcome callback arrived after the one-second fixture bound with correct state; explicit three-second absolute functional containment retains all routing assertions, owned controls pass and macOS 15 verification remains pending (`welcome_shortcut_delivery_containment_verification`) | Bmux | open |  |
 | Current terminal and workspace-rail body coverage preserves all six minimal-mode assertions; owned build 799 proves unrelated inset AppStorage invalidation, isolated observer correction and fresh-build macOS 15 validation remain pending (`minimal_mode_current_shell_invalidation_verification`) | Bmux | open |  |
+| Seven terminal focus recovery cases observe queued work and establish authoritative visibility and geometry prerequisites within 50ms completion bounds; owned build 799 positive and omission controls pass, real presented macOS 15 verification remains pending (`workspace_terminal_focus_completion_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
