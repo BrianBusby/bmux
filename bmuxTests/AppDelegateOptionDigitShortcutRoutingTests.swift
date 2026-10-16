@@ -59,34 +59,40 @@ struct AppDelegateOptionDigitShortcutRoutingTests {
     }
 
     @Test
-    func terminalKeyEquivalentRoutesActiveOptionDigitWorkspaceShortcut() throws {
+    func terminalKeyEquivalentRoutesActiveOptionDigitWorkspaceShortcut() async throws {
+        let appDelegate = try #require(AppDelegate.shared)
+        let windowId = appDelegate.createMainWindow()
+        defer { closeWindow(withId: windowId) }
+
+        let testWindow = try #require(self.window(withId: windowId))
+        let manager = try #require(appDelegate.tabManagerFor(windowId: windowId))
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelId = try #require(workspace.focusedPanelId)
+        let terminalPanel = try #require(workspace.terminalPanel(for: panelId))
+
+        let secondWorkspace = manager.addTab(select: false)
+        _ = manager.reorderWorkspaceForAction(tabId: secondWorkspace.id, target: .end)
+        #expect(manager.tabs.last?.id == secondWorkspace.id)
+        #expect(manager.selectWorkspaceIndexForAction(0))
+        let readiness = TerminalRuntimeReadinessFixture(surface: terminalPanel.surface)
+        defer { readiness.close() }
+        terminalPanel.hostedView.setVisibleInUI(true)
+        terminalPanel.hostedView.setActive(true)
+        testWindow.makeKeyAndOrderFront(nil)
+        testWindow.displayIfNeeded()
+        if !terminalPanel.surface.hasLiveSurface {
+            try await readiness.wait(timeout: .seconds(3))
+        }
+        try Task.checkCancellation()
+        try #require(terminalPanel.surface.hasLiveSurface)
+        terminalPanel.hostedView.moveFocus()
+
+        #expect(
+            terminalPanel.hostedView.isSurfaceViewFirstResponder(),
+            "Expected terminal surface to own first responder before key-equivalent routing"
+        )
+
         try withIsolatedShortcutRoutingState {
-            let appDelegate = try #require(AppDelegate.shared)
-            let windowId = appDelegate.createMainWindow()
-            defer { closeWindow(withId: windowId) }
-
-            let testWindow = try #require(self.window(withId: windowId))
-            let manager = try #require(appDelegate.tabManagerFor(windowId: windowId))
-            let workspace = try #require(manager.selectedWorkspace)
-            let panelId = try #require(workspace.focusedPanelId)
-            let terminalPanel = try #require(workspace.terminalPanel(for: panelId))
-
-            let secondWorkspace = manager.addTab(select: false)
-            _ = manager.reorderWorkspaceForAction(tabId: secondWorkspace.id, target: .end)
-            #expect(manager.tabs.last?.id == secondWorkspace.id)
-            #expect(manager.selectWorkspaceIndexForAction(0))
-            terminalPanel.hostedView.setVisibleInUI(true)
-            terminalPanel.hostedView.setActive(true)
-            terminalPanel.hostedView.moveFocus()
-            testWindow.makeKeyAndOrderFront(nil)
-            testWindow.displayIfNeeded()
-            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.05))
-
-            #expect(
-                terminalPanel.hostedView.isSurfaceViewFirstResponder(),
-                "Expected terminal surface to own first responder before key-equivalent routing"
-            )
-
             let optionWorkspaceNumber = optionDigitWorkspaceShortcut()
 
             try withTemporaryShortcut(action: .selectWorkspaceByNumber, shortcut: optionWorkspaceNumber) {

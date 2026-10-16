@@ -6549,3 +6549,8 @@ caveats:
     title: Codex prompt cache and detached fallback launch retain original assertions with an owned missing-path precondition and final-write signal; native controls pass, fixed-head macOS 15 execution remains pending
     status: open
     owner: bmux
+
+  - id: option_digit_terminal_focus_fixture_verification
+    title: Option-digit fixture observes native readiness before explicit focus and keeps real key-equivalent assertions; fixed-head macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux

@@ -333,3 +333,4 @@ Repository: `BrianBusby/bmux`
 | `find_workspace_scope_fixture_verification` | open |
 | `prompt_session_link_completion_fixture_verification` | open |
 | `codex_prompt_cache_fallback_fixture_verification` | open |
+| `option_digit_terminal_focus_fixture_verification` | open |

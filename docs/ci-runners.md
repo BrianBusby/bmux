@@ -6009,3 +6009,35 @@ one-second observation; omitting the prompt fails the original cached-message
 requirement after successful launch. All owned roots are removed in both controls.
 Integrated target compilation and fixed-head macOS 15 execution remain pending.
 No product strings or localization catalogs changed.
+
+
+## Option-digit terminal focus prerequisite
+
+`terminalKeyEquivalentRoutesActiveOptionDigitWorkspaceShortcut` now subscribes
+to the maintained buffered readiness owner before presenting its real test
+window, checks the live surface, and explicitly moves terminal focus after
+window display. Its new three-second readiness failure cap replaces the former
+50 ms run-loop settling delay; the old delay was not a readiness contract.
+The existing workspace order, initial selection, exact terminal first responder,
+real `window.performKeyEquivalent` consumption and Option+2 target assertions
+remain. The Option+digit binding and all shortcut settings mutations stay in a
+synchronous scope after the readiness await, with an explicit cancellation check
+before the assertions. No production, helper, selector or timeout-policy change
+is included.
+
+An owned build 797 manual-I/O terminal probe demonstrates the setup boundary:
+focus before attachment has no UI window; after real attachment and layout,
+explicit focus selects the exact Ghostty responder even while runtime creation
+is still pending. The separate after-readiness control also passes. Omitting
+only the post-attachment focus request fails the intended focus check. Windows
+remain unpresented, no shell child is started, and all probe resources are owned.
+This proves the attachment/focus boundary, not the original full app-host route
+or its historical macOS 15 failure cause. The permanent real-window case is
+compiled locally and left for CI execution.
+
+The exact complete suite and unchanged shared helpers compile in target Swift 5
+without warnings. Strict Swift 6 still diagnoses the pre-existing imported
+mutable settings-store references in the unrelated conditional-binding case and
+shared settings restoration helper. The existing close-window 50 ms cleanup
+and shared settings owner are retained limitations; this slice does not claim
+to replace those lifecycles. Fixed-head macOS 15 app-host verification is pending.
