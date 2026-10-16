@@ -522,3 +522,6 @@ local_caveats:
 
   - id: theme_session_cli_fixture_verification
     status: open
+
+  - id: terminal_pointer_notification_fixture_verification
+    status: open

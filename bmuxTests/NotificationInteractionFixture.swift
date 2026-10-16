@@ -7,9 +7,11 @@ import Testing
 @testable import bmux
 #endif
 
-/// Owns the terminal and synchronous composition used by a real keydown dismissal.
+/// Owns the terminal and synchronous composition used by real terminal input dismissal.
 @MainActor
-final class NotificationKeyDownFixture {
+final class NotificationInteractionFixture {
+    enum Input { case keyDown, mouseDown }
+
     private let manager = TabManager()
     private let window: NSWindow
 
@@ -30,7 +32,7 @@ final class NotificationKeyDownFixture {
         content.layoutSubtreeIfNeeded()
         panel.hostedView.layoutSubtreeIfNeeded()
         if panel.surface.surface == nil { try await readiness.wait(timeout: .seconds(3)) }
-        try #require(panel.surface.surface != nil, "Runtime must exist before testing keydown dismissal")
+        try #require(panel.surface.surface != nil, "Runtime must exist before testing input dismissal")
     }
 
     func close() {
@@ -44,7 +46,7 @@ final class NotificationKeyDownFixture {
     }
 
     /// Restores all composition and preference overrides before returning its queued result.
-    func pressF1(assertState: (Bool, Bool, Bool) -> Void) throws -> AsyncStream<Int> {
+    func interact(_ input: Input, assertState: (Bool, Bool, Bool) -> Void) throws -> AsyncStream<Int> {
         FocusSurfaceBroadcaster.shared.flush()
         let previousDelegate = AppDelegate.shared
         let app = previousDelegate ?? AppDelegate()
@@ -82,7 +84,7 @@ final class NotificationKeyDownFixture {
         let view = try #require(panel.hostedView.subviews.compactMap { $0 as? NSScrollView }.first?
             .documentView?.subviews.first as? GhosttyNSView)
         let becameFirstResponder = window.makeFirstResponder(view)
-        // Finish setup focus delivery before seeding the unread record for the keydown action.
+        // Finish setup focus delivery before seeding the unread record for the input action.
         FocusSurfaceBroadcaster.shared.flush()
         store.restoreSessionNotifications([
             TerminalNotification(id: UUID(), tabId: workspace.id, surfaceId: panel.id,
@@ -91,10 +93,20 @@ final class NotificationKeyDownFixture {
         let unreadBefore = store.hasUnreadNotification(forTabId: workspace.id, surfaceId: panel.id)
         let panelID = panel.id
         let before = GhosttySurfaceScrollView.flashCount(for: panelID)
-        let event = try #require(NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [],
-            timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
-            context: nil, characters: "", charactersIgnoringModifiers: "", isARepeat: false, keyCode: 122))
-        view.keyDown(with: event)
+        switch input {
+        case .keyDown:
+            let event = try #require(NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [],
+                timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
+                context: nil, characters: "", charactersIgnoringModifiers: "", isARepeat: false, keyCode: 122))
+            view.keyDown(with: event)
+        case .mouseDown:
+            let point = view.convert(NSPoint(x: 20, y: 20), to: nil)
+            let event = try #require(NSEvent.mouseEvent(with: .leftMouseDown, location: point,
+                modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                windowNumber: window.windowNumber, context: nil, eventNumber: 0,
+                clickCount: 1, pressure: 1))
+            view.mouseDown(with: event)
+        }
         assertState(becameFirstResponder, unreadBefore,
                     store.hasUnreadNotification(forTabId: workspace.id, surfaceId: panel.id))
         let delivery = AsyncStream<Int>.makeStream(bufferingPolicy: .bufferingNewest(1))
@@ -108,7 +120,8 @@ final class NotificationKeyDownFixture {
     }
 
     func awaitFlash(_ events: AsyncStream<Int>, timeout: Duration = .seconds(1)) async throws -> Int {
-        try await withThrowingTaskGroup(of: Int.self) { group in
+        let deadline = ContinuousClock.now.advanced(by: timeout)
+        let count = try await withThrowingTaskGroup(of: Int.self) { group in
             defer { group.cancelAll() }
             group.addTask {
                 for await count in events { return count }
@@ -116,11 +129,13 @@ final class NotificationKeyDownFixture {
             }
             group.addTask {
                 // The original one-second queue-drain failure bound, not a settling delay.
-                try await ContinuousClock().sleep(for: timeout)
+                try await ContinuousClock().sleep(until: deadline)
                 throw Failure.rendererDeliveryTimedOut
             }
             return try await group.next() ?? 0
         }
+        try Task.checkCancellation()
+        return count
     }
 
     private enum Failure: Error { case rendererDeliveryTimedOut }

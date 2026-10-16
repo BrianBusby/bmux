@@ -6489,3 +6489,8 @@ caveats:
     title: Tagged theme notification and ambiguous Claude workflow fixtures own their CLI completion and paths; fixed-head macOS 15 app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: terminal_pointer_notification_fixture_verification
+    title: Pointer and keyboard dismissal share owned input and renderer delivery fixtures; native build 797 passes, fixed-head macOS 15 coverage and legacy AppFocusState isolation remain pending
+    status: open
+    owner: bmux

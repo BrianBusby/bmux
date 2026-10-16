@@ -263,6 +263,7 @@ Regenerate with: ./scripts/project-docs generate
 | Codex queue observes owned submission and RPC boundaries, OpenCode auth matches the explicit username, and Claude final text is not counted as pending delta; focused native checks pass, fresh runtime and macOS 15 app-host verification remain pending (`agent_session_stream_contract_verification`) | Bmux | open |  |
 | Settings sheet fixture observes synchronous injected alert completion and retains its window; build 796 controls pass, integrated macOS 15 verification remains pending (`notification_settings_sheet_fixture_verification`) | Bmux | open |  |
 | Tagged theme notification and ambiguous Claude workflow fixtures own their CLI completion and paths; fixed-head macOS 15 app-host verification remains pending (`theme_session_cli_fixture_verification`) | Bmux | open |  |
+| Pointer and keyboard dismissal share owned input and renderer delivery fixtures; native build 797 passes, fixed-head macOS 15 coverage and legacy AppFocusState isolation remain pending (`terminal_pointer_notification_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

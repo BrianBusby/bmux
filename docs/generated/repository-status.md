@@ -321,3 +321,4 @@ Repository: `BrianBusby/bmux`
 | `agent_session_stream_contract_verification` | open |
 | `notification_settings_sheet_fixture_verification` | open |
 | `theme_session_cli_fixture_verification` | open |
+| `terminal_pointer_notification_fixture_verification` | open |
