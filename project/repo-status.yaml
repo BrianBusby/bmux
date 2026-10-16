@@ -633,3 +633,6 @@ local_caveats:
 
   - id: keyboard_space_native_layout_isolation_verification
     status: open
+
+  - id: minimal_mode_failure_phase_diagnostics_verification
+    status: open

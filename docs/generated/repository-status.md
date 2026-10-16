@@ -358,3 +358,4 @@ Repository: `BrianBusby/bmux`
 | `workspace_terminal_focus_completion_verification` | open |
 | `workspace_filter_selection_identity_verification` | open |
 | `keyboard_space_native_layout_isolation_verification` | open |
+| `minimal_mode_failure_phase_diagnostics_verification` | open |

@@ -310,6 +310,7 @@ Regenerate with: ./scripts/project-docs generate
 | Actual shard-3 precursor fixtures restore shared delegate and known route-retirer composition with scoped resource cleanup; build 799 identity controls pass, historical inspector causality and presented macOS 15 acceptance remain pending (`inspector_precursor_delegate_composition_verification`) | Bmux | open |  |
 | PR 171 review 5543944260 duplicate-title filter warning has actual CI red in run 38876211760 shard 4 and an identity-based fix with five local passing cases in Swift 5 and 6; fixed integrated build and CI green remain pending (`workspace_filter_selection_identity_verification`) | Bmux | open |  |
 | Z shard 6 background HIToolbox crash has a source-supported main-actor shortcut fixture repair with three local native cases passing in Swift 5 and 6; matched CI symbols and fixed macOS 15 CI remain pending (`keyboard_space_native_layout_isolation_verification`) | Bmux | open |  |
+| Minimal-mode fixture reports the failing native event phase with elapsed time, body counts and owned registration under unchanged one-second bounds; local phase controls pass, actual macOS 15 timeout cause and diagnostic delivery remain unresolved (`minimal_mode_failure_phase_diagnostics_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
