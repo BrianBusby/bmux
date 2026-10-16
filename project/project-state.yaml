@@ -6429,3 +6429,8 @@ caveats:
     title: Native test target explicitly disables in-process parallelization for shared AppKit and runtime state; hostless controls pass, full app-host coverage and unchanged 900-second budget remain unverified
     status: open
     owner: bmux
+
+  - id: workspace_chrome_color_contract_verification
+    title: Workspace chrome tests follow opaque compositing in scoped light and dark appearances; native build 796 passes, integrated macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux

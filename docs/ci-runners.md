@@ -5281,3 +5281,31 @@ a serial-runtime prediction. Actual CI must verify both complete coverage and
 elapsed time; no deadline increase or coverage reduction is included. Remaining
 failures still require their own evidence. This gate remains open under
 `app_host_shared_resource_isolation_verification`.
+
+
+### Workspace chrome color contract verification
+
+Exact S (`00aa09b39`, run `38821520072`, shard 4) failed five legacy
+`WorkspaceChromeColorTests` cases with nine alpha-string expectations. The
+production helper already matches actual main `ce17e9888`: it composites the
+terminal RGB over the appearance's window background and emits opaque RGB.
+That contract predates this branch in backdrop refactor `379033c4b`; the
+observed `#7E878F` is consistent with the light appearance, not evidence of a
+settings overwrite or a new matte regression.
+
+The six existing cases now use Swift Testing with synchronous aqua/darkAqua
+scopes. An independent sRGB channel blend computes expected bytes without
+calling the production compositor or hex formatter. Opaque `#112233`, clear
+pane/local shared backdrops, semantic background and custom `#33AAFF` border
+assertions remain. No settings, runtime code, deadlines or selectors change.
+The remaining legacy file is byte-identical after removing only this class.
+
+The exact new source compiled with Swift 6 warnings-as-errors and passed six
+functions/twelve appearance cases against frozen build 796 on macOS 26.3
+in 0.002 seconds. A temporary copy restoring only the old alpha oracle failed
+the same five functions with eighteen issues across both appearances; opaque
+and other role assertions remained intact. Both owned-process runs removed
+their temporary homes; no window was constructed or app activated. This is
+local native evidence, not macOS 15 app-host completion. Integrated full-target
+compilation and actual CI remain pending under
+`workspace_chrome_color_contract_verification`.
