@@ -513,3 +513,6 @@ local_caveats:
 
   - id: managed_shortcut_authority_fixture_verification
     status: open
+
+  - id: agent_session_stream_contract_verification
+    status: open

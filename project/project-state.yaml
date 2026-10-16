@@ -6474,3 +6474,8 @@ caveats:
     title: Managed shortcut fixtures follow file-authoritative bindings and restore owned settings; native build 796 controls pass, integrated macOS 15 verification remains pending
     status: open
     owner: bmux
+
+  - id: agent_session_stream_contract_verification
+    title: Codex queue observes owned submission and RPC boundaries, OpenCode auth matches the explicit username, and Claude final text is not counted as pending delta; focused native checks pass, fresh runtime and macOS 15 app-host verification remain pending
+    status: open
+    owner: bmux

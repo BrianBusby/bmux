@@ -260,6 +260,7 @@ Regenerate with: ./scripts/project-docs generate
 | Dock pane prompt fixture registers its owner and observes the real rejection callback with a one-second failure bound; native build 796 passes, integrated macOS 15 coverage and existing suite isolation warning remain pending (`dock_close_confirmation_owner_verification`) | Bmux | open |  |
 | Persistent PTY reinstall contract uses the owning package and verified owned cache; original two-second oracles pass locally, fixed-head package CI and retained Workspace integration coverage remain pending (`remote_daemon_bootstrap_contract_verification`) | Bmux | open |  |
 | Managed shortcut fixtures follow file-authoritative bindings and restore owned settings; native build 796 controls pass, integrated macOS 15 verification remains pending (`managed_shortcut_authority_fixture_verification`) | Bmux | open |  |
+| Codex queue observes owned submission and RPC boundaries, OpenCode auth matches the explicit username, and Claude final text is not counted as pending delta; focused native checks pass, fresh runtime and macOS 15 app-host verification remain pending (`agent_session_stream_contract_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

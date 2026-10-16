@@ -318,3 +318,4 @@ Repository: `BrianBusby/bmux`
 | `dock_close_confirmation_owner_verification` | open |
 | `remote_daemon_bootstrap_contract_verification` | open |
 | `managed_shortcut_authority_fixture_verification` | open |
+| `agent_session_stream_contract_verification` | open |
