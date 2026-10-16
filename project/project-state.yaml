@@ -6689,7 +6689,7 @@ caveats:
     owner: bmux
 
   - id: terminal_overlay_runtime_setup_verification
-    title: Y1 overlay fixtures observe queued mounting and adopt the maintained three-second runtime setup bound for Escape while retaining fifty-millisecond overlay phases and real key-up calibration; owned bundle controls isolate startup delay, presented macOS 15 verification remains pending
+    title: AD initial overlay mounting adopts the maintained one-second setup bound after an actual 66.9ms FIFO arrival exceeded 50ms; Escape runtime setup remains three seconds and post-Escape delivery remains 50ms with real key-up calibration, fixed macOS 15 verification pending
     status: open
     owner: bmux
 
@@ -6744,6 +6744,6 @@ caveats:
     owner: bmux
 
   - id: workspace_focus_delivery_arrival_verification
-    title: Z3 focus and Z1 overlay fixtures share a duration-configured value owner for native FIFO producer-arrival completion at unchanged 50ms bounds; Swift 5 and 6 ordering and cancellation controls pass, while historical scheduling attribution and presented macOS 15 verification remain open
+    title: Focus and overlay fixtures share a duration-configured native FIFO arrival owner with 50ms focus and post-Escape bounds and a new one-second initial overlay mount setup bound; Swift 5 and 6 controls pass, while historical scheduling attribution and fixed macOS 15 verification remain open
     status: open
     owner: bmux

@@ -31,7 +31,7 @@ struct TerminalSearchOverlayLifecycleTests {
 
         let searchState = TerminalSurface.SearchState(needle: "")
         surface.searchState = searchState
-        try await NativeMainQueueDelivery(duration: .milliseconds(50)).deliver {
+        try await NativeMainQueueDelivery(duration: .seconds(1)).deliver {
             hostedView.setSearchOverlay(searchState: searchState)
         }
         hostedView.layoutSubtreeIfNeeded()
@@ -62,7 +62,7 @@ struct TerminalSearchOverlayLifecycleTests {
         contentView.addSubview(anchorA)
         contentView.addSubview(anchorB)
         let hostedView = surface.hostedView
-        try await NativeMainQueueDelivery(duration: .milliseconds(50)).deliver {
+        try await NativeMainQueueDelivery(duration: .seconds(1)).deliver {
             hostedView.setSearchOverlay(searchState: TerminalSurface.SearchState(needle: "split"))
         }
         #expect(hostedView.debugHasSearchOverlay())
@@ -84,7 +84,7 @@ struct TerminalSearchOverlayLifecycleTests {
         let anchor = NSView(frame: NSRect(x: 40, y: 40, width: 220, height: 160))
         contentView.addSubview(anchor)
         let hostedView = surface.hostedView
-        try await NativeMainQueueDelivery(duration: .milliseconds(50)).deliver {
+        try await NativeMainQueueDelivery(duration: .seconds(1)).deliver {
             hostedView.setSearchOverlay(searchState: TerminalSurface.SearchState(needle: "workspace"))
         }
         #expect(hostedView.debugHasSearchOverlay())
