@@ -346,3 +346,4 @@ Repository: `BrianBusby/bmux`
 | `welcome_shortcut_delivery_diagnostic_verification` | open |
 | `command_palette_expired_escape_diagnostics` | open |
 | `app_host_cold_build_deadline_boundary` | open |
+| `legacy_remote_directory_trust_fixture_verification` | open |

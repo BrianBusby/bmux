@@ -292,6 +292,7 @@ Regenerate with: ./scripts/project-docs generate
 | Expired pending-open Escape fixture preserves the real main-window route and original no-dismiss bounds with raw-state failure diagnostics; target compilation passes, full macOS 15 failure attribution remains pending (`command_palette_expired_escape_diagnostics`) | Bmux | open |  |
 | Inspector close failure diagnostics preserve actions and deadlines; explicit closure typing passes Swift 5 and 6 focused compilation after the integrated parser failure, corrected full-target build and actual macOS 15 cause remain pending (`inspector_close_failure_diagnostics`) | Bmux | open |  |
 | Cold app-host compilation precedes the unchanged 900-second native test deadline with shared build arguments and rebuild on package retry; owned executable controls pass, actual macOS CI build and test completion remain pending (`app_host_cold_build_deadline_boundary`) | Bmux | open |  |
+| Legacy remote cwd trust fixture targets the original panel identity and restores it focused before testing presented directory; build 799 positive and trust-negative controls pass, actual macOS 15 CI remains pending (`legacy_remote_directory_trust_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

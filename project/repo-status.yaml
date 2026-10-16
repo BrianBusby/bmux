@@ -597,3 +597,6 @@ local_caveats:
 
   - id: app_host_cold_build_deadline_boundary
     status: open
+
+  - id: legacy_remote_directory_trust_fixture_verification
+    status: open

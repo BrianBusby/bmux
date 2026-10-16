@@ -6632,3 +6632,8 @@ caveats:
     title: Cold app-host compilation precedes the unchanged 900-second native test deadline with shared build arguments and rebuild on package retry; owned executable controls pass, actual macOS CI build and test completion remain pending
     status: open
     owner: bmux
+
+  - id: legacy_remote_directory_trust_fixture_verification
+    title: Legacy remote cwd trust fixture targets the original panel identity and restores it focused before testing presented directory; build 799 positive and trust-negative controls pass, actual macOS 15 CI remains pending
+    status: open
+    owner: bmux
