@@ -282,6 +282,7 @@ Regenerate with: ./scripts/project-docs generate
 | Visible terminal responder repair uses buffered readiness and native focus delivery with original bounds; offscreen controls and strict compilation pass, actual app-host verification remains pending (`visible_terminal_responder_readiness_verification`) | Bmux | open |  |
 | Three V2 fixture migrations retain joined five-second CLI producers and finite browser focus delivery; native positive and negative controls pass, fixed-head macOS 15 app-host execution remains pending (`v2_cli_and_browser_completion_fixture_verification`) | Bmux | open |  |
 | V4 terminal search repair uses buffered readiness and native overlay delivery while stranded-sidebar restoration explicitly selects Terminal; strict compilation and offscreen boundary controls pass, full macOS 15 window cases remain pending (`v4_terminal_search_and_window_restore_fixture_verification`) | Bmux | open |  |
+| Fork cache refresh fixture supplies matching live workspace and surface environment identities; missing and wrong scope controls fail while the corrected native case passes, fixed-head macOS 15 verification remains pending (`fork_live_process_scope_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

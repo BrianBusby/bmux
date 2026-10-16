@@ -573,3 +573,6 @@ local_caveats:
 
   - id: v4_terminal_search_and_window_restore_fixture_verification
     status: open
+
+  - id: fork_live_process_scope_fixture_verification
+    status: open

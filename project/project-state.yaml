@@ -6582,3 +6582,8 @@ caveats:
     title: V4 terminal search repair uses buffered readiness and native overlay delivery while stranded-sidebar restoration explicitly selects Terminal; strict compilation and offscreen boundary controls pass, full macOS 15 window cases remain pending
     status: open
     owner: bmux
+
+  - id: fork_live_process_scope_fixture_verification
+    title: Fork cache refresh fixture supplies matching live workspace and surface environment identities; missing and wrong scope controls fail while the corrected native case passes, fixed-head macOS 15 verification remains pending
+    status: open
+    owner: bmux

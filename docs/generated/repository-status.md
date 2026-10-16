@@ -338,3 +338,4 @@ Repository: `BrianBusby/bmux`
 | `visible_terminal_responder_readiness_verification` | open |
 | `v2_cli_and_browser_completion_fixture_verification` | open |
 | `v4_terminal_search_and_window_restore_fixture_verification` | open |
+| `fork_live_process_scope_fixture_verification` | open |
