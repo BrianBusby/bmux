@@ -61,7 +61,7 @@ struct AppDelegateOptionDigitShortcutRoutingTests {
     @Test
     func terminalKeyEquivalentRoutesActiveOptionDigitWorkspaceShortcut() async throws {
         let appDelegate = try #require(AppDelegate.shared)
-        let windowId = appDelegate.createMainWindow()
+        let windowId = appDelegate.createMainWindow(initialPrimaryTab: .terminal)
         defer { closeWindow(withId: windowId) }
 
         let testWindow = try #require(self.window(withId: windowId))

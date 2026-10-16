@@ -6582,3 +6582,8 @@ caveats:
     title: V4 terminal search repair uses buffered readiness and native overlay delivery while stranded-sidebar restoration explicitly selects Terminal; strict compilation and offscreen boundary controls pass, full macOS 15 window cases remain pending
     status: open
     owner: bmux
+
+  - id: v_tail_nonfocus_and_option_terminal_fixture_verification
+    title: Remaining V non-focus split cases retain native queued selection and original phase bounds while Option-digit explicitly mounts Terminal; native split controls pass, full macOS 15 app-host verification remains pending
+    status: open
+    owner: bmux
