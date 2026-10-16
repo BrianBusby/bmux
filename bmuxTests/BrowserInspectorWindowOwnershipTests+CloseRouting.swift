@@ -43,7 +43,7 @@ extension BrowserInspectorWindowOwnershipTests {
         defer { fixture.closeWindow(inspectorWindow) }
 
         var routingSnapshots: [String] = []
-        let recordRouting = { @MainActor (phase: String) in
+        let recordRouting: @MainActor (String) -> Void = { phase in
             routingSnapshots.append("phase=\(phase) active=\(NSApp.isActive) " +
                 "nativeKey=\(inspectorWindow.isKeyWindow) " +
                 "routingMatches=\(AppDelegate.shared?.shortcutRoutingKeyWindow === inspectorWindow) " +
