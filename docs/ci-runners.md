@@ -7100,3 +7100,43 @@ a positive result. No explicit menu target or fake key-window override is used.
 Actual active macOS 15 app-host verification remains required; the local probe
 does not establish the historical CI action target. No user app was activated,
 replaced, or rebuilt, and no product strings changed.
+
+### Y1 terminal overlay mounting and runtime setup
+
+Y `ff3e6e5ed4620ca676bf3198fd26ff870071c263`, native shard 1, reported
+four missing-overlay assertions in the legacy workspace-switch visibility-toggle
+case. The initial mount failed before the three binds, so the later failures do
+not establish overlay loss during toggling. The exact case now joins the existing
+`TerminalSearchOverlayLifecycleTests` owner: same geometry, search text, four
+oracles, and true/false/true bindings, using its manual-I/O surface, retained
+window, queued mutation completion, and explicit portal/surface/window teardown.
+The former 50 ms settling interval is now a 50 ms completion failure bound.
+
+The same run's Escape case failed earlier with `runtimeReadinessTimedOut`; it did
+not exercise overlay mounting or key-up calibration. An actual build 799 owned
+bundle-shaped bootstrap with exact copied wrapper resources reproduced the 50 ms
+failure: the deadline fired at 51.3 ms and native readiness arrived afterward
+(consumer at 100.8 ms). A bare bootstrap without those resources passed. Manual
+I/O still traverses asynchronous bundled-shim preparation before native runtime
+creation. This establishes a setup-fidelity gap and late readiness in that local
+control, not an attribution of all elapsed time to file I/O or proof of the exact
+historical macOS 15 schedule.
+
+Escape runtime preparation now explicitly adopts the maintained three-second
+setup allowance used by native input/search responder fixtures. This is a new
+setup-bound adoption, not preservation of the old 50 ms runtime wait. Actual
+search mounting and dismissal retain their separate 50 ms completion bounds.
+The permanent presented window, real `NSApp.sendEvent` down/up pair, original
+nil-search/zero-release oracles, and subsequent-key-up delivery calibration are
+unchanged. No production timing or shared readiness owner changed.
+
+Configured Swift 5 and strict Swift 6 compile the exact source with warnings as
+errors. Owned offscreen controls preserve the explicit local inactive key-up
+delivery limitation; they cannot establish the presented calibration on macOS 15.
+The bundle-shaped offscreen run passed visibility-toggle and rebind, reached the
+original Escape nil-search/zero-release assertions, and failed only inactive
+key-up calibration (three cases, one issue, 0.166 seconds). Withholding the ready
+notification failed setup at 3.267 seconds including construction; both overlay
+cases still passed. Every owned process joined before its temporary root was
+removed. Root owns the integrated test target and actual presented app-host gate. No user-facing or
+localized product strings changed.

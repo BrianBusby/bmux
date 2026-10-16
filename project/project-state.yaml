@@ -6687,3 +6687,8 @@ caveats:
     title: Editable terminal-child Undo requires its real native key-window menu context with original routing assertions retained; isolated inactive build 799 reproduces missing target, active macOS 15 positive verification remains pending
     status: open
     owner: bmux
+
+  - id: terminal_overlay_runtime_setup_verification
+    title: Y1 overlay fixtures observe queued mounting and adopt the maintained three-second runtime setup bound for Escape while retaining fifty-millisecond overlay phases and real key-up calibration; owned bundle controls isolate startup delay, presented macOS 15 verification remains pending
+    status: open
+    owner: bmux

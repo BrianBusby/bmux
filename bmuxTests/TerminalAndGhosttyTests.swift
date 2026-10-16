@@ -4142,43 +4142,6 @@ final class GhosttySurfaceOverlayTests: XCTestCase {
         }
         XCTAssertNil(weakSurface, "Mounted search overlay must not retain TerminalSurface")
     }
-
-    func testSearchOverlaySurvivesPortalVisibilityToggleDuringWorkspaceSwitchLikeChurn() {
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 480, height: 320),
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        defer { window.orderOut(nil) }
-        let portal = WindowTerminalPortal(window: window)
-
-        guard let contentView = window.contentView else {
-            XCTFail("Expected content view")
-            return
-        }
-
-        let anchor = NSView(frame: NSRect(x: 40, y: 40, width: 220, height: 160))
-        contentView.addSubview(anchor)
-
-        let surface = makeTrackedTerminalSurface()
-        let hostedView = surface.hostedView
-        hostedView.setSearchOverlay(searchState: TerminalSurface.SearchState(needle: "workspace"))
-        RunLoop.current.run(until: Date().addingTimeInterval(0.05))
-        XCTAssertTrue(hostedView.debugHasSearchOverlay())
-
-        portal.bind(hostedView: hostedView, to: anchor, visibleInUI: true)
-        XCTAssertTrue(hostedView.debugHasSearchOverlay())
-
-        portal.bind(hostedView: hostedView, to: anchor, visibleInUI: false)
-        XCTAssertTrue(hostedView.debugHasSearchOverlay())
-
-        portal.bind(hostedView: hostedView, to: anchor, visibleInUI: true)
-        XCTAssertTrue(
-            hostedView.debugHasSearchOverlay(),
-            "Workspace-switch-like visibility toggles should not unmount terminal search overlay"
-        )
-    }
 }
 
 

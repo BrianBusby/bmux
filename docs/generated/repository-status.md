@@ -353,3 +353,4 @@ Repository: `BrianBusby/bmux`
 | `browser_visible_notification_completion_verification` | open |
 | `session_fork_diagnostic_completion_verification` | open |
 | `editable_terminal_undo_key_context_verification` | open |
+| `terminal_overlay_runtime_setup_verification` | open |

@@ -25,7 +25,8 @@ struct TerminalSearchOverlayLifecycleTests {
         contentView.layoutSubtreeIfNeeded()
         hostedView.setVisibleInUI(true)
         hostedView.setActive(true)
-        if !surface.hasLiveSurface { try await readiness.wait(timeout: .milliseconds(50)) }
+        // Native runtime setup includes asynchronous bundled-shim preparation, separate from overlay delivery.
+        if !surface.hasLiveSurface { try await readiness.wait(timeout: .seconds(3)) }
         try #require(surface.hasLiveSurface)
 
         let searchState = TerminalSurface.SearchState(needle: "")
@@ -69,6 +70,33 @@ struct TerminalSearchOverlayLifecycleTests {
         #expect(hostedView.debugHasSearchOverlay())
         portal.bind(hostedView: hostedView, to: anchorB, visibleInUI: true)
         #expect(hostedView.debugHasSearchOverlay(), "Split-like anchor churn must not unmount terminal search")
+    }
+
+    @Test func searchOverlaySurvivesPortalVisibilityToggleDuringWorkspaceSwitchLikeChurn() async throws {
+        let window = makeWindow(width: 480, height: 320)
+        let portal = WindowTerminalPortal(window: window)
+        let surface = makeSurface()
+        defer {
+            portal.tearDown()
+            close(surface: surface, window: window)
+        }
+        let contentView = try #require(window.contentView)
+        let anchor = NSView(frame: NSRect(x: 40, y: 40, width: 220, height: 160))
+        contentView.addSubview(anchor)
+        let hostedView = surface.hostedView
+        try await deliverQueuedMutation(within: .milliseconds(50)) {
+            hostedView.setSearchOverlay(searchState: TerminalSurface.SearchState(needle: "workspace"))
+        }
+        #expect(hostedView.debugHasSearchOverlay())
+        portal.bind(hostedView: hostedView, to: anchor, visibleInUI: true)
+        #expect(hostedView.debugHasSearchOverlay())
+        portal.bind(hostedView: hostedView, to: anchor, visibleInUI: false)
+        #expect(hostedView.debugHasSearchOverlay())
+        portal.bind(hostedView: hostedView, to: anchor, visibleInUI: true)
+        #expect(
+            hostedView.debugHasSearchOverlay(),
+            "Workspace-switch-like visibility toggles should not unmount terminal search overlay"
+        )
     }
 
     private func makeSurface() -> TerminalSurface {
