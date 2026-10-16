@@ -543,3 +543,6 @@ local_caveats:
 
   - id: nested_split_divider_cache_verification
     status: open
+
+  - id: claude_idle_reminder_contract_verification
+    status: open

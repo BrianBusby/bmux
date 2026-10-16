@@ -6524,3 +6524,8 @@ caveats:
     title: Shared terminal and browser divider caches validate bounded weak child snapshots instead of relying on subviews KVO; fresh portal integration, latency and macOS 15 coverage remain pending
     status: open
     owner: bmux
+
+  - id: claude_idle_reminder_contract_verification
+    title: Claude idle reminders retain Idle and cached not-pending metadata through joined phases with original five-second limits; native build 797 passes, fixed-head macOS 15 verification remains pending
+    status: open
+    owner: bmux

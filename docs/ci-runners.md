@@ -5859,3 +5859,28 @@ unchanged-cache checks. This is candidate-source validation, not yet a freshly
 built portal integration or a pointer-latency measurement. The full existing
 portal suite, browser counterpart, performance gates and fixed-head macOS 15
 coverage remain required before merge. No terminal rendering code is changed.
+
+### Claude idle reminders after an idle Stop
+
+The T shard 3 failure expected an idle reminder to set Needs input. Accepted main
+policy `f62cae83f04967788c61f0a35aca61eb0e9fb154` keeps a generic idle heartbeat Idle
+unless the session was already waiting for input. The exact existing case now
+uses the maintained joined Claude session fixture, retaining Stop then
+Notification, both successful hook results, and `c=idle-reminder;p=0`. It asserts
+Idle and no Needs input in the notification phase only, plus the persisted false
+pending-work flag. No production notification or lifecycle policy changes.
+
+This case explicitly retains its original five-second process limit on every
+host. The fixture's existing callers keep their local five-second / CI twenty-second
+policy through the unchanged default. Each producer exits before the socket phase
+is drained and the owned root is removed. Explicit synthetic authentication and a
+disabled auto-title response prevent ambient Keychain lookup and detached naming.
+The other cases in the old background-work suite are unchanged and retain their
+legacy accept-worker ownership risk.
+
+All four joined session cases pass against actual build 797 with strict Swift 6
+and zero warnings. Reinstating the old Needs input oracle produces one issue;
+a permission-prompt negative produces the three intended classification/status
+issues while the other session cases pass. These controls establish the accepted
+contract, not the historical CI scheduling cause. Integrated test-target compilation
+and fixed-head macOS 15 execution remain required. No localized product text changed.

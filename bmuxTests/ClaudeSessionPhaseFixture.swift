@@ -9,9 +9,11 @@ final class ClaudeSessionPhaseFixture {
     let surfaceId = "22222222-2222-2222-2222-222222222222"
     var commands: [String] = []
     private let cli: String
+    private let processTimeout: TimeInterval
 
-    init(cli: String) throws {
+    init(cli: String, processTimeout: TimeInterval = CLIProcessTestTimeout().seconds(5)) throws {
         self.cli = cli
+        self.processTimeout = processTimeout
         root = URL(fileURLWithPath: "/tmp/cl-phase-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     }
@@ -37,8 +39,8 @@ final class ClaudeSessionPhaseFixture {
             "BMUX_CLI_SENTRY_DISABLED": "1", "BMUX_CLAUDE_HOOK_SENTRY_DISABLED": "1"
         ]
         let server = CLISocketFixture(path: socket, response: responder())
-        // Retain local five seconds and the original host-CI minimum of twenty seconds.
-        let runner = ShellContractProcess(root: root, deadline: .seconds(CLIProcessTestTimeout().seconds(5)))
+        // Callers retain their original process bound; existing callers use the host-CI policy.
+        let runner = ShellContractProcess(root: root, deadline: .seconds(processTimeout))
         let (outcome, phaseCommands) = try await server.capture { @Sendable [cli] in
             // Capture failure as data so queued requests are drained before rethrowing.
             do {
@@ -85,6 +87,7 @@ final class ClaudeSessionPhaseFixture {
             case "surface.list":
                 #expect(params["workspace_id"] as? String == workspace)
                 result = ["surfaces": [["id": surface, "ref": "surface:1", "index": 1, "focused": true]]]
+            case "workspace.set_auto_title": result = ["enabled": false, "applied": false]
             case "system.top": result = ["windows": []]
             case "debug.terminals": result = ["terminals": []]
             case "surface.resume.set":
