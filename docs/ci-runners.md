@@ -5969,3 +5969,43 @@ precondition, so that attempt is not counted as test evidence. The importer is
 compiled from its existing CLI/test-target sources and uses only local Git reads
 under the isolated environment. Whole app-host/macOS 15 verification remains
 pending; these controls do not establish the historical scheduler cause.
+
+### Codex prompt cache and fallback launch fixture
+
+The exact prompt-cache case now supplies the missing-path condition required by
+`spawnDetachedAgentAutoName` before expecting `BMUX_BUNDLED_CLI_PATH` to launch
+its owned stub. The real CLI starts through an owned executable symlink; the
+first authenticated socket response removes that symlink only. The application
+binary is never modified. The former absolute executable remained valid and
+correctly took precedence over the bundled fallback, so its logging stub was
+not selected. A temporary `exec -a` control also showed Foundation retains the
+absolute executable in `ProcessInfo.arguments` despite a changed Swift argv0.
+
+The migrated Swift Testing case retains successful hook status and exact output,
+launcher existence, hooks/codex/auto-name and prompt-submit trigger arguments,
+user prompt caching, and sequence 1. Explicit visible-mutation suppression keeps
+unrelated detached monitors and association work outside this cache/launch test;
+the production cache and auto-name probe still execute. This is fallback-launch
+coverage, not coverage of primary-executable priority or monitor composition.
+The owned responder preserves original surface routing and fallback errors, uses
+synthetic authentication, and the real producer and socket worker are joined.
+The original process allowance remains five seconds locally and twenty on CI.
+
+The original one-second post-hook observation now awaits a native FIFO signal
+that is the stub's final action after writing every argument. Both ends open the
+FIFO read/write, so a canceled observer cannot leave a blocked writer. Success
+proves all observable owned writes completed, not a waitpid join of the detached
+stub. A late stub after failure can only fail to open paths below the removed
+owned root; it cannot recreate that root or touch user paths. No process registry,
+PID admission framework, polling, production seam or deadline increase was added.
+
+Native build 797 controls exercise the real CLI with isolated home/config/state,
+no installed provider executable, and telemetry disabled. Initial temporary
+responder attempts lacked the required surface topology and returned before
+naming; that setup failure is retained separately from the corrected positive.
+The exact source compiles with strict Swift 6 and zero warnings; its real-CLI
+case passes in 0.195 seconds. Omitting the final signal fails the original
+one-second observation; omitting the prompt fails the original cached-message
+requirement after successful launch. All owned roots are removed in both controls.
+Integrated target compilation and fixed-head macOS 15 execution remain pending.
+No product strings or localization catalogs changed.
