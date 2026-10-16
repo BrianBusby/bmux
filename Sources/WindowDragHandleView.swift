@@ -679,13 +679,6 @@ enum MinimalModeTitlebarDebugSettings {
     }
 }
 
-struct MinimalModeTitlebarDebugSnapshot: Equatable {
-    let leftControlsLeadingInset: Double
-    let leftControlsTopInset: Double
-    let trafficLightTabBarLeadingInset: Double
-    let trafficLightTitlebarLeadingInset: Double
-}
-
 enum MinimalModeSidebarTitlebarControlsMetrics {
     static var leadingInset: CGFloat {
         leadingInset()

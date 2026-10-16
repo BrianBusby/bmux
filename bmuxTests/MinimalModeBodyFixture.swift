@@ -49,7 +49,7 @@ final class MinimalModeBodyFixture {
 
     func mount() async throws {
         let notifications = TerminalNotificationStore.shared
-        let root = ContentView(updateViewModel: UpdateStateModel(), windowId: windowID, initialPrimaryTab: .terminal)
+        let root = ContentView(updateViewModel: UpdateStateModel(), windowId: windowID, initialPrimaryTab: .terminal, titlebarDefaults: defaults)
             .environmentObject(manager)
             .environmentObject(notifications)
             .environmentObject(notifications.sidebarUnread)
