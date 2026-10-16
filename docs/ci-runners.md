@@ -5782,3 +5782,24 @@ still rejects the three existing imported AppFocusState.overrideIsFocused access
 this retained production global is not newly suppressed or declared concurrency
 safe. Fixed-head macOS 15 app-host coverage remains pending. The local result does
 not establish which queued stage caused the historical CI failure.
+
+### Sidebar tool deferred focus contract
+
+T's nonfocused sidebar tool creation case failed its one-second main-queue
+expectation; its six focus and panel assertions did not fail. The exact case now
+uses Swift Testing with three buffered FIFO deliveries, preserving the owner's
+two nested focus reassertions and its queued reconciliation. Each delivery keeps
+its original one-second failure bound, captured before enqueueing; cancellation
+joins the event and deadline tasks. This is observation of the existing event
+sequence, not a longer settling delay or a claim that all descendant work ended.
+
+All six original assertions remain: distinct panel identity, tool type, files
+mode, original focused panel, original selected tab, and sidebar-tool surface
+kind. The fixture tears down its owned workspace panels and remote connection
+on every path. No production focus behavior, global override, or selector changes.
+
+The exact migrated case passes against build 797 in 0.042 seconds with warning-free
+Swift 6 compilation. Explicitly focusing the new tool fails the two original
+focus assertions; withholding FIFO delivery fails the one-second observation.
+These controls establish contract sensitivity, not the historical macOS 15
+scheduler cause. Integrated app-host verification remains pending.

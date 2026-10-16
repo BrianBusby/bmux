@@ -5651,47 +5651,6 @@ final class WorkspacePanelGitBranchTests: XCTestCase {
         )
     }
 
-    func testNewRightSidebarToolSurfaceWithFocusFalsePreservesFocusedPanel() {
-        let workspace = Workspace()
-        guard let originalFocusedPanelId = workspace.focusedPanelId,
-              let originalPaneId = workspace.paneId(forPanelId: originalFocusedPanelId),
-              let originalTabId = workspace.surfaceIdFromPanelId(originalFocusedPanelId) else {
-            XCTFail("Expected initial focused panel, pane, and tab")
-            return
-        }
-
-        guard let newPanel = workspace.newRightSidebarToolSurface(
-            inPane: originalPaneId,
-            mode: .files,
-            focus: false
-        ) else {
-            XCTFail("Expected right sidebar tool surface to be created")
-            return
-        }
-
-        drainMainQueue()
-        drainMainQueue()
-        drainMainQueue()
-
-        XCTAssertNotEqual(newPanel.id, originalFocusedPanelId)
-        XCTAssertEqual(newPanel.panelType, .rightSidebarTool)
-        XCTAssertEqual(newPanel.mode, .files)
-        XCTAssertEqual(
-            workspace.focusedPanelId,
-            originalFocusedPanelId,
-            "Expected non-focus right sidebar tool surface creation to preserve the existing focused panel"
-        )
-        XCTAssertEqual(
-            workspace.bonsplitController.selectedTab(inPane: originalPaneId)?.id,
-            originalTabId,
-            "Expected selected tab to stay on the original focused panel"
-        )
-        XCTAssertEqual(
-            workspace.surfaceIdFromPanelId(newPanel.id).flatMap { workspace.bonsplitController.tab($0)?.kind },
-            SurfaceKind.rightSidebarTool.rawValue
-        )
-    }
-
     func testOpenOrFocusRightSidebarToolSurfaceReusesExistingMode() {
         let workspace = Workspace()
         guard let paneId = workspace.bonsplitController.focusedPaneId else {

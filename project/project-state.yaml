@@ -6509,3 +6509,8 @@ caveats:
     title: Pointer and keyboard dismissal share owned input and renderer delivery fixtures; native build 797 passes, fixed-head macOS 15 coverage and legacy AppFocusState isolation remain pending
     status: open
     owner: bmux
+
+  - id: sidebar_tool_focus_delivery_verification
+    title: Sidebar tool focus preservation observes all three deferred owner phases with unchanged one-second bounds; native build 797 passes, integrated macOS 15 verification remains pending
+    status: open
+    owner: bmux

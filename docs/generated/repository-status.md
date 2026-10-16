@@ -325,3 +325,4 @@ Repository: `BrianBusby/bmux`
 | `native_deadline_exit_diagnostics_verification` | open |
 | `binding_only_resume_state_verification` | open |
 | `terminal_pointer_notification_fixture_verification` | open |
+| `sidebar_tool_focus_delivery_verification` | open |
