@@ -3980,69 +3980,6 @@ final class GhosttySurfaceOverlayTests: XCTestCase {
         )
     }
 
-    func testSearchOverlayFocusesSearchFieldAfterDeferredAttach() {
-        let previousAppDelegate = AppDelegate.shared
-        let appDelegate = previousAppDelegate ?? AppDelegate()
-        let originalTabManager = appDelegate.tabManager
-        let manager = TabManager()
-        let windowId = appDelegate.registerMainWindowContextForTesting(tabManager: manager)
-        AppDelegate.shared = appDelegate
-        appDelegate.tabManager = manager
-
-        let window = KeyStatusTestWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 360, height: 240),
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        defer {
-            appDelegate.unregisterMainWindowContextForTesting(windowId: windowId)
-            appDelegate.tabManager = originalTabManager
-            AppDelegate.shared = previousAppDelegate
-            window.orderOut(nil)
-        }
-
-        guard let workspace = manager.selectedWorkspace,
-              let terminalPanel = workspace.focusedTerminalPanel else {
-            XCTFail("Expected initial focused terminal panel")
-            return
-        }
-
-        let surface = terminalPanel.surface
-        let hostedView = terminalPanel.hostedView
-        surfacesToRelease.append(surface)
-
-        guard let contentView = window.contentView else {
-            XCTFail("Expected content view")
-            return
-        }
-        hostedView.frame = contentView.bounds
-        hostedView.autoresizingMask = [.width, .height]
-        contentView.addSubview(hostedView)
-
-        window.makeKeyAndOrderFront(nil)
-        window.displayIfNeeded()
-        contentView.layoutSubtreeIfNeeded()
-        hostedView.setVisibleInUI(true)
-        hostedView.setActive(true)
-
-        let searchState = TerminalSurface.SearchState(needle: "")
-        surface.searchState = searchState
-        hostedView.setSearchOverlay(searchState: searchState)
-        waitUntil(description: "search overlay to mount and expose field") {
-            self.findEditableTextField(in: hostedView) != nil
-        }
-
-        guard let searchField = findEditableTextField(in: hostedView) else {
-            XCTFail("Expected mounted find text field")
-            return
-        }
-
-        waitUntil(description: "search field to become first responder") {
-            self.firstResponderOwnsTextField(window.firstResponder, textField: searchField)
-        }
-    }
-
     func testStartOrFocusTerminalSearchReusesExistingSearchState() {
         let surface = makeTrackedTerminalSurface()
         let existingSearchState = TerminalSurface.SearchState(needle: "existing")

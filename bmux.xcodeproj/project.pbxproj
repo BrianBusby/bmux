@@ -752,6 +752,8 @@
 		DEBDADADADADADADAD000001 /* DebugDogfoodCredentialResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBDADADADADADADAD000002 /* DebugDogfoodCredentialResolver.swift */; };
 		DEBDADADADADADADAD000003 /* DebugDogfoodCredentialResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBDADADADADADADAD000004 /* DebugDogfoodCredentialResolverTests.swift */; };
 		A500D010A1B2C3D4E5F60718 /* DebugLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = A500D011A1B2C3D4E5F60718 /* DebugLogging.swift */; };
+		EA6D3C0009D64E55B8D557F8 /* DeferredTerminalSearchFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EA1A6EE9D4D4E24A447FF7E /* DeferredTerminalSearchFixture.swift */; };
+		65740D7AF95043BCBABF7B73 /* DeferredTerminalSearchFocusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC49F544A7294E5190FFE0AA /* DeferredTerminalSearchFocusTests.swift */; };
 		A5001F000000000000000001 /* DetachedFolderDragIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5001F000000000000000002 /* DetachedFolderDragIcon.swift */; };
 		B05553C10000000000000001 /* DetachedFolderPathLookupCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = B05553C10000000000000002 /* DetachedFolderPathLookupCache.swift */; };
 		B0555303B0555303B0555303 /* DetachedFolderPathLookupCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0555304B0555304B0555304 /* DetachedFolderPathLookupCacheTests.swift */; };
@@ -1780,6 +1782,7 @@
 		AC0A317D658C4DD299300002 /* TerminalRuntimeReadinessFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC0A317D658C4DD299300001 /* TerminalRuntimeReadinessFixture.swift */; };
 		D5671001D5671001D5671001 /* TerminalScrollSpeedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5671002D5671002D5671002 /* TerminalScrollSpeedSettings.swift */; };
 		D5671101D5671101D5671101 /* TerminalScrollSpeedSettingsFileStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5671102D5671102D5671102 /* TerminalScrollSpeedSettingsFileStoreTests.swift */; };
+		B2510BAC7E434BE7832AB14F /* TerminalSearchFieldFocusObservation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD6B4479FE6D4B46B4AA8919 /* TerminalSearchFieldFocusObservation.swift */; };
 		C0DE53350000000000000001 /* TerminalSearchOverlayHostingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE53350000000000000002 /* TerminalSearchOverlayHostingView.swift */; };
 		68B3A64AB2A44E349ADFBE3F /* TerminalSearchOverlayLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49AA52F10DD4107BBAEBDC3 /* TerminalSearchOverlayLifecycleTests.swift */; };
 		A13EF928AC4C46A9B7500002 /* TerminalSearchOverlayMouseFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A13EF928AC4C46A9B7500001 /* TerminalSearchOverlayMouseFixture.swift */; };
@@ -2885,6 +2888,8 @@
 		DEBDADADADADADADAD000002 /* DebugDogfoodCredentialResolver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DebugDogfoodCredentialResolver.swift; sourceTree = "<group>"; };
 		DEBDADADADADADADAD000004 /* DebugDogfoodCredentialResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugDogfoodCredentialResolverTests.swift; sourceTree = "<group>"; };
 		A500D011A1B2C3D4E5F60718 /* DebugLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/DebugLogging.swift; sourceTree = "<group>"; };
+		9EA1A6EE9D4D4E24A447FF7E /* DeferredTerminalSearchFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeferredTerminalSearchFixture.swift; sourceTree = "<group>"; };
+		EC49F544A7294E5190FFE0AA /* DeferredTerminalSearchFocusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeferredTerminalSearchFocusTests.swift; sourceTree = "<group>"; };
 		A5001F000000000000000002 /* DetachedFolderDragIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetachedFolderDragIcon.swift; sourceTree = "<group>"; };
 		B05553C10000000000000002 /* DetachedFolderPathLookupCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetachedFolderPathLookupCache.swift; sourceTree = "<group>"; };
 		B0555304B0555304B0555304 /* DetachedFolderPathLookupCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetachedFolderPathLookupCacheTests.swift; sourceTree = "<group>"; };
@@ -3879,6 +3884,7 @@
 		AC0A317D658C4DD299300001 /* TerminalRuntimeReadinessFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalRuntimeReadinessFixture.swift"; sourceTree = "<group>"; };
 		D5671002D5671002D5671002 /* TerminalScrollSpeedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/TerminalScrollSpeedSettings.swift; sourceTree = "<group>"; };
 		D5671102D5671102D5671102 /* TerminalScrollSpeedSettingsFileStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalScrollSpeedSettingsFileStoreTests.swift; sourceTree = "<group>"; };
+		AD6B4479FE6D4B46B4AA8919 /* TerminalSearchFieldFocusObservation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSearchFieldFocusObservation.swift; sourceTree = "<group>"; };
 		C0DE53350000000000000002 /* TerminalSearchOverlayHostingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Find/TerminalSearchOverlayHostingView.swift; sourceTree = "<group>"; };
 		B49AA52F10DD4107BBAEBDC3 /* TerminalSearchOverlayLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalSearchOverlayLifecycleTests.swift"; sourceTree = "<group>"; };
 		A13EF928AC4C46A9B7500001 /* TerminalSearchOverlayMouseFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalSearchOverlayMouseFixture.swift"; sourceTree = "<group>"; };
@@ -5856,6 +5862,9 @@
 				C27B8138A41C48ADA02715A7 /* CLITranscriptBackedClaudeSessionTests.swift */,
 				5C3D646943BA4696A9DDA9CC /* CLIThemeWriteReloadTests.swift */,
 				160662F01AFC45128C8D00E2 /* VisibleTerminalResponderRepairTests.swift */,
+				9EA1A6EE9D4D4E24A447FF7E /* DeferredTerminalSearchFixture.swift */,
+				EC49F544A7294E5190FFE0AA /* DeferredTerminalSearchFocusTests.swift */,
+				AD6B4479FE6D4B46B4AA8919 /* TerminalSearchFieldFocusObservation.swift */,
 				EC41976AD10B4C4BAA49AE16 /* TerminalFocusDeliveryFixture.swift */,
 				40B4A40D8CD44AAAA2402FA2 /* TerminalSearchResponderRepairTests.swift */,
 				A66D4C5FC3254F81B6A0B711 /* KoreanMarkedTextRuntimeTests.swift */,
@@ -8503,6 +8512,8 @@
 				AA5269A0C0DE0016FACE0016 /* ContentViewFileDropOverlayInstallationTests.swift in Sources */,
 				C65930010000000000000002 /* CrashDiagnosticSessionPolicyTests.swift in Sources */,
 				DEBDADADADADADADAD000003 /* DebugDogfoodCredentialResolverTests.swift in Sources */,
+				EA6D3C0009D64E55B8D557F8 /* DeferredTerminalSearchFixture.swift in Sources */,
+				65740D7AF95043BCBABF7B73 /* DeferredTerminalSearchFocusTests.swift in Sources */,
 				B0555303B0555303B0555303 /* DetachedFolderPathLookupCacheTests.swift in Sources */,
 				DE71CE000000000000000002 /* DeviceRegistryClientTests.swift in Sources */,
 				D1FFC0DE000000000000C002 /* DiffCommentStoreTests.swift in Sources */,
@@ -8830,6 +8841,7 @@
 				5F7C1048D1764084C7EBF979 /* TerminalPortalGeometryContractTests.swift in Sources */,
 				AC0A317D658C4DD299300002 /* TerminalRuntimeReadinessFixture.swift in Sources */,
 				D5671101D5671101D5671101 /* TerminalScrollSpeedSettingsFileStoreTests.swift in Sources */,
+				B2510BAC7E434BE7832AB14F /* TerminalSearchFieldFocusObservation.swift in Sources */,
 				68B3A64AB2A44E349ADFBE3F /* TerminalSearchOverlayLifecycleTests.swift in Sources */,
 				A13EF928AC4C46A9B7500002 /* TerminalSearchOverlayMouseFixture.swift in Sources */,
 				C0DE53360000000000000001 /* TerminalSearchOverlayMouseReleaseTests.swift in Sources */,

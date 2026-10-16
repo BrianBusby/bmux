@@ -331,6 +331,7 @@ Repository: `BrianBusby/bmux`
 | `claude_idle_reminder_contract_verification` | open |
 | `canvas_split_shortcut_initial_panes_verification` | open |
 | `find_workspace_scope_fixture_verification` | open |
+| `deferred_terminal_search_focus_fixture_verification` | open |
 | `prompt_session_link_completion_fixture_verification` | open |
 | `codex_prompt_cache_fallback_fixture_verification` | open |
 | `option_digit_terminal_focus_fixture_verification` | open |
