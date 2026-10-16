@@ -6539,3 +6539,8 @@ caveats:
     title: Same-path Find scope reset uses real presentation query submission with original reset assertions; build 799 passes, fixed-head macOS 15 app-host coverage remains pending
     status: open
     owner: bmux
+
+  - id: prompt_session_link_completion_fixture_verification
+    title: Identity-only session linkage fixture joins hook persistence within its original one-second bound and releases SQLite before cleanup; native build 797 passes, integrated macOS 15 verification remains pending
+    status: open
+    owner: bmux

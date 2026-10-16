@@ -1227,6 +1227,7 @@
 		A5C0DE0000000000000000B4 /* ProjectPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C0DE0000000000000000B3 /* ProjectPanelView.swift */; };
 		A5C0DE0000000000000000BC /* ProjectSchemesTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C0DE0000000000000000BB /* ProjectSchemesTabView.swift */; };
 		A5C0DE0000000000000000B8 /* ProjectTargetsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5C0DE0000000000000000B7 /* ProjectTargetsTabView.swift */; };
+		2FB8009E2AF749269C069F50 /* PromptSessionLinkCompletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 815B4F2659FA47D8A3240A9B /* PromptSessionLinkCompletionTests.swift */; };
 		CE0E06200000000000000001 /* PromptSessionLinkProductionLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E06200000000000000002 /* PromptSessionLinkProductionLifecycleTests.swift */; };
 		CE0E06100000000000000001 /* PromptSessionLinkProjectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E06100000000000000002 /* PromptSessionLinkProjectionTests.swift */; };
 		CE0C00010000000000000001 /* ProvenanceAppendEventRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0C00010000000000000002 /* ProvenanceAppendEventRequest.swift */; };
@@ -3319,6 +3320,7 @@
 		A5C0DE0000000000000000B3 /* ProjectPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ProjectPanelView.swift; sourceTree = "<group>"; };
 		A5C0DE0000000000000000BB /* ProjectSchemesTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ProjectSchemesTabView.swift; sourceTree = "<group>"; };
 		A5C0DE0000000000000000B7 /* ProjectTargetsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ProjectTargetsTabView.swift; sourceTree = "<group>"; };
+		815B4F2659FA47D8A3240A9B /* PromptSessionLinkCompletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptSessionLinkCompletionTests.swift; sourceTree = "<group>"; };
 		CE0E06200000000000000002 /* PromptSessionLinkProductionLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptSessionLinkProductionLifecycleTests.swift; sourceTree = "<group>"; };
 		CE0E06100000000000000002 /* PromptSessionLinkProjectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptSessionLinkProjectionTests.swift; sourceTree = "<group>"; };
 		CE0C00010000000000000002 /* ProvenanceAppendEventRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvenanceAppendEventRequest.swift; sourceTree = "<group>"; };
@@ -5668,6 +5670,7 @@
 				0EAEC7433DF04AC8A922C0CA /* ManagedCodexRuntimeTests.swift */,
 				A9E040000000000000000001 /* CodexAppServerSessionTests.swift */,
 				31E525759EF945DE958FA04F /* CodexInputQueueTests.swift */,
+				815B4F2659FA47D8A3240A9B /* PromptSessionLinkCompletionTests.swift */,
 				D72260010000000000000002 /* AgentHibernationPortalVisibilityTests.swift */,
 				D36A00020000000000000002 /* AgentHibernationTests.swift */,
 				C1AC71040000000000000002 /* AgentHibernationMobileInputTests.swift */,
@@ -8546,6 +8549,7 @@
 				B8E9500A0000000000000001 /* PostHogAnalyticsPropertiesTests.swift in Sources */,
 				DE71CE00000000000000000A /* PresenceHeartbeatClientTests.swift in Sources */,
 				C47110010000000000000001 /* ProcessPipeReadCrashRegressionTests.swift in Sources */,
+				2FB8009E2AF749269C069F50 /* PromptSessionLinkCompletionTests.swift in Sources */,
 				CE0E06200000000000000001 /* PromptSessionLinkProductionLifecycleTests.swift in Sources */,
 				CE0E06100000000000000001 /* PromptSessionLinkProjectionTests.swift in Sources */,
 				A64610020000000000000001 /* QuitConfirmationAlertPresenterTests.swift in Sources */,

@@ -1,0 +1,257 @@
+import BMUXAgentLaunch
+import BmuxAgentChat
+import Foundation
+import ProvenanceEngineContracts
+import ProvenanceEngineSDK
+import Testing
+
+#if canImport(bmux_DEV)
+@testable import bmux_DEV
+#elseif canImport(bmux)
+@testable import bmux
+#endif
+
+@MainActor
+struct PromptSessionLinkCompletionTests {
+    @Test func monitorTranscriptAndIdentityHookConvergeWithoutDisplayMetadataSeed() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-prompt-session-link-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer {
+            do {
+                try FileManager.default.removeItem(at: root)
+            } catch {
+                Issue.record(error, "Could not remove owned session-link files")
+            }
+        }
+        // The async scope releases the SQLite client graph before its files are removed.
+        try await exerciseIdentityLink(root: root)
+    }
+
+    private func exerciseIdentityLink(root: URL) async throws {
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: root.appendingPathComponent("provenance.sqlite"))
+        let repositoryRoot = root.appendingPathComponent("repository").path
+        let gitSnapshot = WorkProvenanceGitSnapshot(
+            repositoryRoot: repositoryRoot,
+            commonDirectory: "\(repositoryRoot)/.git",
+            remoteSlug: "manaflow-ai/bmux",
+            branch: "harden-pe-session-readiness",
+            headCommit: "def456",
+            isDirty: false
+        )
+        let sessionID = "codex-monitor-session"
+        let surfaceID = UUID()
+        let promptText = "Show the factual Session data for this workspace."
+        let transcriptURL = root.appendingPathComponent("rollout-\(sessionID).jsonl")
+        try Self.writeCodexTranscript(
+            sessionID: sessionID,
+            repositoryRoot: repositoryRoot,
+            promptText: promptText,
+            to: transcriptURL
+        )
+
+        let importer = CLIProvenanceCodexTranscriptImporter(client: client)
+        var liveImportState = CLIProvenanceCodexTranscriptImporter.LiveImportState()
+        let importResult = try await importer.importLiveTranscriptAppend(
+            at: transcriptURL,
+            state: &liveImportState
+        )
+        #expect(importResult.fileReport.threads == 1)
+        #expect(importResult.fileReport.turns == 1)
+        #expect(importResult.fileReport.prompts == 1)
+        let directProjection = try await client.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: sessionID)
+        )
+        #expect(directProjection.snapshot?.session.id == sessionID)
+
+        let manager = TabManager()
+        defer { manager.tabs.forEach { $0.teardownAllPanels() } }
+        let workspace = manager.tabs[0]
+        workspace.currentDirectory = repositoryRoot
+        let observationService = WorkProvenanceObservationService(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: gitSnapshot])
+        )
+        let runtime = WorkProvenanceRuntime(
+            observationService: observationService,
+            agentSessionFactualProjectionStore: AgentSessionFactualProjectionStore(client: client),
+            codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder(
+                client: client,
+                gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: gitSnapshot])
+            )
+        )
+        defer { runtime.stop() }
+        runtime.start(tabManager: manager)
+
+        let transcriptService = AgentChatTranscriptService(
+            registry: AgentChatSessionRegistry(hookStore: AgentChatHookSessionStore(homeDirectory: root)),
+            resolver: AgentChatTranscriptResolver(
+                homeDirectory: root,
+                environment: ["CODEX_HOME": root.appendingPathComponent("empty-codex").path]
+            ),
+            rawOutputStore: ChatRawTerminalOutputFileStore(rootDirectory: root.appendingPathComponent("raw-output")),
+            hasEventSubscribers: { false },
+            emitEventPayload: { _ in },
+            recordTaskWorkspaceDirectory: { _, _ in }
+        )
+        transcriptService.recordSessionLifecycleChanges(with: runtime)
+        transcriptService.noteHookEvent(WorkstreamEvent(
+            sessionId: "codex-\(sessionID)",
+            hookEventName: .userPromptSubmit,
+            source: "codex",
+            workspaceId: workspace.id.uuidString,
+            surfaceId: surfaceID.uuidString,
+            transcriptPath: nil,
+            cwd: repositoryRoot,
+            requestId: "identity-only-hook",
+            receivedAt: Date(timeIntervalSince1970: 1_725_000_123)
+        ))
+
+        let result = try await factualProjectionAfterCompletion(
+            runtime: runtime,
+            stableWorkspaceID: workspace.stableId
+        )
+        guard case .available(let projection) = result else {
+            Issue.record("Expected monitor transcript plus identity hook to converge to an available factual projection; got \(result)")
+            return
+        }
+        #expect(projection.session.id == sessionID)
+    }
+
+    private func factualProjectionAfterCompletion(
+        runtime: WorkProvenanceRuntime,
+        stableWorkspaceID: UUID,
+        timeout: Duration = .seconds(1)
+    ) async throws -> AgentSessionFactualProjectionReadResult {
+        let deadline = ContinuousClock.now.advanced(by: timeout)
+        var ownedProducer: Task<Void, Never>?
+        await withCheckedContinuation { entered in
+            ownedProducer = Task { @MainActor in
+                // Same-actor entry captures task handles before timeout cleanup can clear them.
+                entered.resume()
+                await runtime.waitForBackgroundTasks()
+            }
+        }
+        let producer = try #require(ownedProducer)
+        do {
+            return try await withThrowingTaskGroup(of: AgentSessionFactualProjectionReadResult.self) { group in
+                defer { group.cancelAll() }
+                group.addTask {
+                    await producer.value
+                    try Task.checkCancellation()
+                    return await runtime.agentSessionFactualProjection(stableWorkspaceID: stableWorkspaceID)
+                }
+                group.addTask { try await expire(runtime: runtime, deadline: deadline) }
+                return try #require(await group.next())
+            }
+        } catch {
+            runtime.stop()
+            await producer.value
+            throw error
+        }
+    }
+
+    private func expire(
+        runtime: WorkProvenanceRuntime,
+        deadline: ContinuousClock.Instant
+    ) async throws -> AgentSessionFactualProjectionReadResult {
+        // Cancel producers on timeout or parent cancellation; the captured waiter still joins them.
+        defer { runtime.stop() }
+        try await ContinuousClock().sleep(until: deadline)
+        throw CompletionFailure.timedOut
+    }
+
+    private enum CompletionFailure: Error { case timedOut }
+
+    private static func codexPromptTranscriptLines(
+        sessionID: String,
+        repositoryRoot: String,
+        promptText: String,
+        timestampMinute: String = "2026-08-21T10:00",
+        turnID: String = "turn-monitor-1",
+        startedAt: Int = 1_787_325_602
+    ) throws -> [String] {
+        [
+            try codexTranscriptLine(
+                ordinal: 0,
+                type: "session_meta",
+                timestamp: "\(timestampMinute):00Z",
+                payload: [
+                    "session_id": sessionID,
+                    "id": sessionID,
+                    "timestamp": "\(timestampMinute):00Z",
+                    "cwd": repositoryRoot,
+                    "originator": "codex-tui",
+                    "source": "cli",
+                    "model_provider": "openai"
+                ]
+            ),
+            try codexTranscriptLine(
+                ordinal: 1,
+                type: "response_item",
+                timestamp: "\(timestampMinute):01Z",
+                payload: [
+                    "type": "message",
+                    "role": "user",
+                    "content": [
+                        [
+                            "type": "input_text",
+                            "text": promptText
+                        ]
+                    ]
+                ]
+            ),
+            try codexTranscriptLine(
+                ordinal: 2,
+                type: "event_msg",
+                timestamp: "\(timestampMinute):02Z",
+                payload: [
+                    "type": "task_started",
+                    "turn_id": turnID,
+                    "started_at": startedAt
+                ]
+            )
+        ]
+    }
+
+    private static func writeCodexTranscript(
+        sessionID: String,
+        repositoryRoot: String,
+        promptText: String,
+        to url: URL
+    ) throws {
+        let lines = try codexPromptTranscriptLines(
+            sessionID: sessionID,
+            repositoryRoot: repositoryRoot,
+            promptText: promptText
+        )
+        try lines.joined(separator: "\n")
+            .appending("\n")
+            .write(to: url, atomically: true, encoding: .utf8)
+    }
+
+    private static func codexTranscriptLine(
+        ordinal: Int,
+        type: String,
+        timestamp: String,
+        payload: [String: Any]
+    ) throws -> String {
+        let object: [String: Any] = [
+            "timestamp": timestamp,
+            "ordinal": ordinal,
+            "type": type,
+            "payload": payload
+        ]
+        let data = try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    private struct FakeGitInspector: WorkProvenanceGitInspecting {
+        let snapshotsByDirectory: [String: WorkProvenanceGitSnapshot]
+
+        func snapshot(for directory: String) async -> WorkProvenanceGitSnapshot? {
+            snapshotsByDirectory[directory]
+        }
+    }
+}

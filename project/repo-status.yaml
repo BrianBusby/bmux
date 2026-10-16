@@ -552,3 +552,6 @@ local_caveats:
 
   - id: find_workspace_scope_fixture_verification
     status: open
+
+  - id: prompt_session_link_completion_fixture_verification
+    status: open
