@@ -5293,32 +5293,6 @@ final class WorkspacePanelGitBranchTests: XCTestCase {
         }
     }
 
-    func testBrowserSplitWithFocusFalsePreservesOriginalFocusedPanel() {
-        let workspace = Workspace()
-        guard let originalFocusedPanelId = workspace.focusedPanelId else {
-            XCTFail("Expected initial focused panel")
-            return
-        }
-
-        guard let browserSplitPanel = workspace.newBrowserSplit(
-            from: originalFocusedPanelId,
-            orientation: .horizontal,
-            focus: false
-        ) else {
-            XCTFail("Expected browser split panel to be created")
-            return
-        }
-
-        drainMainQueue()
-
-        XCTAssertNotEqual(browserSplitPanel.id, originalFocusedPanelId)
-        XCTAssertEqual(
-            workspace.focusedPanelId,
-            originalFocusedPanelId,
-            "Expected non-focus browser split to preserve pre-split focus"
-        )
-    }
-
     func testTerminalSplitWithFocusFalsePreservesOriginalFocusedPanel() {
         let workspace = Workspace()
         guard let originalFocusedPanelId = workspace.focusedPanelId else {

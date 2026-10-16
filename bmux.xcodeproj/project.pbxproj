@@ -656,8 +656,10 @@
 		B789ABCE1400000000000001 /* CLIStderrClosedContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B789ABCE1400000000000002 /* CLIStderrClosedContractTests.swift */; };
 		C12984000000000000000004 /* CLIStdioSIGPIPERegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C12984000000000000000003 /* CLIStdioSIGPIPERegressionTests.swift */; };
 		7CEC69E2C7804D36B0B172AC /* CLIThemeTargetContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322E640EE6854E11BD8C1ED4 /* CLIThemeTargetContractTests.swift */; };
+		8AC20FFD4FB845A7A5E55C47 /* CLIThemeWriteReloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C3D646943BA4696A9DDA9CC /* CLIThemeWriteReloadTests.swift */; };
 		B05553B10000000000000001 /* CLITmuxCompatRemoteSplitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B05553B10000000000000002 /* CLITmuxCompatRemoteSplitTests.swift */; };
 		48B76B39985043AFAFB73E54 /* CLITmuxLaunchIdentityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74478AB8036341AC999204A2 /* CLITmuxLaunchIdentityTests.swift */; };
+		C5869DB53AE34F9181D37A6B /* CLITranscriptBackedClaudeSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27B8138A41C48ADA02715A7 /* CLITranscriptBackedClaudeSessionTests.swift */; };
 		C10D51700000000000000002 /* ClosedItemHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10D51700000000000000001 /* ClosedItemHistory.swift */; };
 		7375A0037375A0037375A003 /* ClosedMainWindowRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7375A0047375A0047375A004 /* ClosedMainWindowRoutingTests.swift */; };
 		032A6F24128742F0A09E4E20 /* ClosedTabHistoryObservation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A72BEFA1942DBB63DB789 /* ClosedTabHistoryObservation.swift */; };
@@ -2031,6 +2033,7 @@
 		CA52B0180000000000000000 /* WorkspaceLayoutMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA52C0180000000000000000 /* WorkspaceLayoutMode.swift */; };
 		0F2C25F9170130F8DC09DD1B /* WorkspaceManualUnreadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D301919B10F22B8708E8883 /* WorkspaceManualUnreadTests.swift */; };
 		C1AC71080000000000000001 /* WorkspaceMoveToTopActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1AC71080000000000000002 /* WorkspaceMoveToTopActionTests.swift */; };
+		A3403C5150CB4103B9A2405E /* WorkspaceNonFocusBrowserSplitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D251E5A6AD74AADAE6E1215 /* WorkspaceNonFocusBrowserSplitTests.swift */; };
 		B744A228E4B84FF182959A41 /* WorkspaceNotificationRestoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12F0B189611A457895D0EC5B /* WorkspaceNotificationRestoreTests.swift */; };
 		C628587B170F499896C57240 /* WorkspaceOMXHudRestoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2A81E60A1E448BEBED15023 /* WorkspaceOMXHudRestoreTests.swift */; };
 		CD465201BC6B4E328A393EA8 /* WorkspacePanelContentHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9359BAC13CE47928469F07A /* WorkspacePanelContentHostView.swift */; };
@@ -2762,8 +2765,10 @@
 		B789ABCE1400000000000002 /* CLIStderrClosedContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIStderrClosedContractTests.swift"; sourceTree = "<group>"; };
 		C12984000000000000000003 /* CLIStdioSIGPIPERegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIStdioSIGPIPERegressionTests.swift; sourceTree = "<group>"; };
 		322E640EE6854E11BD8C1ED4 /* CLIThemeTargetContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIThemeTargetContractTests.swift"; sourceTree = "<group>"; };
+		5C3D646943BA4696A9DDA9CC /* CLIThemeWriteReloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIThemeWriteReloadTests.swift"; sourceTree = "<group>"; };
 		B05553B10000000000000002 /* CLITmuxCompatRemoteSplitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLITmuxCompatRemoteSplitTests.swift; sourceTree = "<group>"; };
 		74478AB8036341AC999204A2 /* CLITmuxLaunchIdentityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLITmuxLaunchIdentityTests.swift"; sourceTree = "<group>"; };
+		C27B8138A41C48ADA02715A7 /* CLITranscriptBackedClaudeSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLITranscriptBackedClaudeSessionTests.swift"; sourceTree = "<group>"; };
 		C10D51700000000000000001 /* ClosedItemHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedItemHistory.swift; sourceTree = "<group>"; };
 		7375A0047375A0047375A004 /* ClosedMainWindowRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedMainWindowRoutingTests.swift; sourceTree = "<group>"; };
 		D89A72BEFA1942DBB63DB789 /* ClosedTabHistoryObservation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ClosedTabHistoryObservation.swift"; sourceTree = "<group>"; };
@@ -4077,6 +4082,7 @@
 		CA52C0180000000000000000 /* WorkspaceLayoutMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceLayoutMode.swift"; sourceTree = "<group>"; };
 		1D301919B10F22B8708E8883 /* WorkspaceManualUnreadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceManualUnreadTests.swift; sourceTree = "<group>"; };
 		C1AC71080000000000000002 /* WorkspaceMoveToTopActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceMoveToTopActionTests.swift; sourceTree = "<group>"; };
+		9D251E5A6AD74AADAE6E1215 /* WorkspaceNonFocusBrowserSplitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceNonFocusBrowserSplitTests.swift"; sourceTree = "<group>"; };
 		12F0B189611A457895D0EC5B /* WorkspaceNotificationRestoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceNotificationRestoreTests.swift; sourceTree = "<group>"; };
 		A2A81E60A1E448BEBED15023 /* WorkspaceOMXHudRestoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceOMXHudRestoreTests.swift"; sourceTree = "<group>"; };
 		A9359BAC13CE47928469F07A /* WorkspacePanelContentHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Panels/WorkspacePanelContentHostView.swift"; sourceTree = "<group>"; };
@@ -5779,6 +5785,9 @@
 				AA5269A0C0DE0019FACE0019 /* WorkspacePopoverFocusRoutingTests.swift */,
 				AA5269A0C0DE0023FACE0023 /* TerminalSurfaceRecoveryTests.swift */,
 				AC0A317D658C4DD299300001 /* TerminalRuntimeReadinessFixture.swift */,
+				9D251E5A6AD74AADAE6E1215 /* WorkspaceNonFocusBrowserSplitTests.swift */,
+				C27B8138A41C48ADA02715A7 /* CLITranscriptBackedClaudeSessionTests.swift */,
+				5C3D646943BA4696A9DDA9CC /* CLIThemeWriteReloadTests.swift */,
 				160662F01AFC45128C8D00E2 /* VisibleTerminalResponderRepairTests.swift */,
 				EC41976AD10B4C4BAA49AE16 /* TerminalFocusDeliveryFixture.swift */,
 				A66D4C5FC3254F81B6A0B711 /* KoreanMarkedTextRuntimeTests.swift */,
@@ -8363,8 +8372,10 @@
 				B789ABCE1400000000000001 /* CLIStderrClosedContractTests.swift in Sources */,
 				C12984000000000000000004 /* CLIStdioSIGPIPERegressionTests.swift in Sources */,
 				7CEC69E2C7804D36B0B172AC /* CLIThemeTargetContractTests.swift in Sources */,
+				8AC20FFD4FB845A7A5E55C47 /* CLIThemeWriteReloadTests.swift in Sources */,
 				B05553B10000000000000001 /* CLITmuxCompatRemoteSplitTests.swift in Sources */,
 				48B76B39985043AFAFB73E54 /* CLITmuxLaunchIdentityTests.swift in Sources */,
+				C5869DB53AE34F9181D37A6B /* CLITranscriptBackedClaudeSessionTests.swift in Sources */,
 				7375A0037375A0037375A003 /* ClosedMainWindowRoutingTests.swift in Sources */,
 				032A6F24128742F0A09E4E20 /* ClosedTabHistoryObservation.swift in Sources */,
 					30DFF011841489FD729F9EE0 /* CloudAttachRetryContractTests.swift in Sources */,
@@ -8786,6 +8797,7 @@
 				C9A57001C9A57001C9A57001 /* WorkspaceGroupTests.swift in Sources */,
 				0F2C25F9170130F8DC09DD1B /* WorkspaceManualUnreadTests.swift in Sources */,
 				C1AC71080000000000000001 /* WorkspaceMoveToTopActionTests.swift in Sources */,
+				A3403C5150CB4103B9A2405E /* WorkspaceNonFocusBrowserSplitTests.swift in Sources */,
 				B744A228E4B84FF182959A41 /* WorkspaceNotificationRestoreTests.swift in Sources */,
 				C628587B170F499896C57240 /* WorkspaceOMXHudRestoreTests.swift in Sources */,
 				AA5269A0C0DE0020FACE0020 /* WorkspacePopoverFocusRoutingTests.swift in Sources */,
