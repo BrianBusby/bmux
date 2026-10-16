@@ -5336,3 +5336,33 @@ historical CI interleaving. The old geometry setup already pumped the RunLoop, s
 its precise failure cause remains unknown. Local macOS 26 native completion does
 not establish macOS 15 callback ordering; fixed-head app-host verification remains
 open under `portal_animation_completion_fixture_verification`.
+
+### Markdown atomic file reload fixture verification
+
+Exact S shard 4 (`00aa09b39`, run `38821520072`) printed
+`MarkdownPanelTests.testOpenMarkdownPanelReloadsWhenFileChangesOnDisk` before
+an app-host restart involving freed-pointer/XCTest/concurrency frames. This
+ordering does not attribute the crash to this case or establish a watcher bug.
+The bounded migration removes only that legacy method, replacing its XCTest
+expectation with the existing content publisher's native async sequence.
+
+The initial published value establishes subscription before the real atomic
+file write. A structured task group observes the updated value and cancels and
+joins the losing waiter. Its absolute three-second failure deadline is captured
+before observation setup and the write, conservatively including that setup;
+there is no extra readiness allowance, polling, artificial delay or production
+watcher change. All five original content/availability/text/dirty assertions
+remain. The panel closes on every exit before owned directory removal, whose
+failures are now visible. The existing production watcher cancels its native
+sources asynchronously; this test does not add a source-join API or claim one.
+
+Exact new source compiled with Swift 6 warnings-as-errors, zero warnings, and
+passed against frozen build 796 on macOS 26.3 in 0.014 seconds. A temporary copy
+omitting only the external write failed with the intended timeout after 3.188
+seconds; that wall duration includes scheduling and joined cleanup, not a
+changed deadline. Both isolated processes removed their owned homes, created
+no window and activated no application. The private observation method keeps
+the existing async publisher outside a closure shape rejected by this Swift
+compiler's region checker, without unsafe annotations or warning suppression.
+Full integrated compilation and macOS 15 app-host verification remain pending
+under `markdown_file_reload_fixture_verification`.

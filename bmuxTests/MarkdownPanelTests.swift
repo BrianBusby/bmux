@@ -301,40 +301,6 @@ final class MarkdownPanelTests: XCTestCase {
         XCTAssertTrue(reopenedMarkdownPanels.contains { ObjectIdentifier($0) == originalMarkdownPanelID })
     }
 
-    func testOpenMarkdownPanelReloadsWhenFileChangesOnDisk() async throws {
-        let fileManager = FileManager.default
-        let directoryURL = fileManager.temporaryDirectory
-            .appendingPathComponent("bmux-markdown-panel-tests-\(UUID().uuidString)", isDirectory: true)
-        try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
-        defer { try? fileManager.removeItem(at: directoryURL) }
-
-        let fileURL = directoryURL.appendingPathComponent("live.md")
-        let originalContent = "# Original\n\nBody before save.\n"
-        let updatedContent = "# Updated\n\nBody after external save.\n"
-        try originalContent.write(to: fileURL, atomically: true, encoding: .utf8)
-
-        let panel = MarkdownPanel(workspaceId: UUID(), filePath: fileURL.path)
-        defer { panel.close() }
-
-        XCTAssertEqual(panel.content, originalContent)
-        XCTAssertFalse(panel.isFileUnavailable)
-
-        let reloaded = expectation(description: "markdown file change reloaded")
-        let cancellable = panel.$content.dropFirst().sink { content in
-            if content == updatedContent {
-                reloaded.fulfill()
-            }
-        }
-        defer { cancellable.cancel() }
-
-        try updatedContent.write(to: fileURL, atomically: true, encoding: .utf8)
-
-        await fulfillment(of: [reloaded], timeout: 3)
-        XCTAssertEqual(panel.content, updatedContent)
-        XCTAssertEqual(panel.textContent, updatedContent)
-        XCTAssertFalse(panel.isDirty)
-    }
-
     func testMarkdownRendererSessionReusesCoordinatorAcrossViewRecreation() {
         let session = MarkdownRendererSession()
         let panelId = UUID()
