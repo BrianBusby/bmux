@@ -6677,3 +6677,8 @@ caveats:
     title: Session fork diagnostic fixture joins CLI completion within its original plain five-second local and CI bound; build 799 positive and fork-mode negative controls pass, historical timeout cause and integrated macOS 15 verification remain unresolved
     status: open
     owner: bmux
+
+  - id: agent_liveness_watch_completion_verification
+    title: Agent liveness fixture observes its actual watch reload before scope mutation and final refresh before cleanup; all seven original assertions and owned build 799 controls pass, integrated macOS 15 and private-task failure cleanup remain pending
+    status: open
+    owner: bmux

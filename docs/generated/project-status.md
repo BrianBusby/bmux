@@ -301,6 +301,7 @@ Regenerate with: ./scripts/project-docs generate
 | Two file-explorer shortcut cases own their real event-window context with all routing assertions retained; offscreen build 799 controls pass, presented macOS 15 CI and legacy settings-owner strict concurrency remain unverified (`file_explorer_shortcut_context_fixture_verification`) | Bmux | open |  |
 | Redundant browser visibility fixture observes native loading within its original one-second bound; build 799 positive and omission controls pass locally, actual macOS 15 verification and historical startup latency remain unresolved (`browser_visible_notification_completion_verification`) | Bmux | open |  |
 | Session fork diagnostic fixture joins CLI completion within its original plain five-second local and CI bound; build 799 positive and fork-mode negative controls pass, historical timeout cause and integrated macOS 15 verification remain unresolved (`session_fork_diagnostic_completion_verification`) | Bmux | open |  |
+| Agent liveness fixture observes its actual watch reload before scope mutation and final refresh before cleanup; all seven original assertions and owned build 799 controls pass, integrated macOS 15 and private-task failure cleanup remain pending (`agent_liveness_watch_completion_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

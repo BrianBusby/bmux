@@ -7043,3 +7043,40 @@ JSON coverage, not agent launch or socket-delivery coverage. Full-target and
 actual macOS 15 app-host verification remain root integration gates; local success
 does not identify the historical timeout cause. No production, selector or
 shared timeout policy changed.
+
+### Agent liveness fixture observes its watch reload
+
+Y native shard 1 failed both final assertions in
+`forkAvailabilityIgnoresDeadUnrelatedPanelChildProcess`: after a synthetic agent
+changed panel scope, the previous validated snapshot was still available. The
+first `prepareForkAvailabilityProbe` starts the owned index's directory watch and
+an asynchronous reload. `refreshForkAvailabilityNow` does not join that reload
+when it is already active. The test previously mutated process scope and treated
+that call as completion, although the preceding watch reload could still publish.
+
+The exact case subscribes before prepare and observes the existing
+`sharedLiveAgentIndexDidChange` notification before changing process scope. It
+also observes the refresh scheduled by the final failed prepare before removing
+owned files. Both observations have a new absolute one-second failure-containment
+bound; the original case had no equivalent completion wait. Notification delivery
+supplies completion, while structured observation/deadline tasks cancel and join.
+The subscription is identity-filtered and removed on every exit. No production
+API, process scan, watcher policy, or fork-security rule changes. A loader-local
+`FileManager` removes the original non-Sendable capture in this touched case.
+All seven original assertions remain, including false preparation and no available
+snapshot after scope changes. Preparation means validation readiness generally;
+this case retains an unvalidated index entry, distinct from a validated missing
+entry for which the existing API can return true.
+
+The exact original case reproduced both failures against frozen build 799. The
+ordered fixture passes with the original assertions; a temporary reversed final
+Boolean fails. Withheld completion and unchanged-scope controls exercise the new
+containment and original scope rejection respectively. Configured Swift 5 and
+strict Swift 6 verify the touched case without warnings; the original captured
+FileManager fails strict Swift 6. The service's private background task has no
+public cancellation/join handle: successful notifications establish those reloads
+completed, but a missing-event failure does not prove service-task termination.
+That existing limitation remains explicit. Local probes own their filesystem and
+telemetry-disabled process and create no windows or external agent processes.
+Integrated target and actual macOS 15 verification remain pending; there is no
+claim that local scheduling proves every historical CI interleaving.
