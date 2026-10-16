@@ -6729,7 +6729,7 @@ caveats:
     owner: bmux
 
   - id: minimal_mode_failure_phase_diagnostics_verification
-    title: Minimal-mode fixture reports the failing native event phase with elapsed time, body counts and owned registration under unchanged one-second bounds; local phase controls pass, actual macOS 15 timeout cause and diagnostic delivery remain unresolved
+    title: Minimal-mode fixture records native event decisions before async consumption under unchanged one-second bounds; four delayed-consumer counterexamples and bounded omission, late-event and cleanup controls pass locally, actual macOS 15 verification and historical timeout phase remain unresolved
     status: open
     owner: bmux
 
