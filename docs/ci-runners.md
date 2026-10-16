@@ -7416,12 +7416,12 @@ integrated macOS 15 verification remains open in
 
 Z run `38876211760`, shard 7, reports `eventTimedOut` from the minimal-mode
 body fixture without identifying which of its four native observations failed.
-The fixture now adds failure-only `minimal_mode_event_timeout` details: mount
+The initial diagnostic slice added failure-only `minimal_mode_event_timeout` details: mount
 bodies, mount transaction, mode notification or final transaction, elapsed time,
 three body counts, and whether its own window is registered. It emits no raw
 window identifiers, settings, paths or unconditional runtime logs. Existing
 one-second phase bounds, task-group cancellation/join, and all six assertions
-remain unchanged; this is diagnosis, not a claimed repair.
+remained unchanged in that diagnostic slice; it did not claim a repair.
 
 Exact build 801 controls pass with and without an owned registered delegate.
 Temporary omission controls report each of the four phases at the original
@@ -7431,7 +7431,7 @@ macOS 26 controls do not disprove the macOS 15 failure. Actual CI diagnostic
 delivery and the underlying timeout remain pending; no production or localized
 product strings change.
 
-The task boundary now explicitly marks its actor-isolated predicate and event
+That diagnostic task boundary explicitly marked its actor-isolated predicate and event
 consumer Sendable. This resolves the Swift 6 region-checker failure without an
 unsafe annotation or ownership change. The complete fixture and exact minimal
 case compile in configured Swift 5 and strict Swift 6; the full unchanged
@@ -7557,3 +7557,40 @@ The exact permanent fixture and all seven unchanged cases compile in configured
 Swift 5 and strict Swift 6 with warnings-as-errors and zero warnings. Local
 Project Truth validate/generate/check, strict determinism, selector validation,
 and actual-main file budgets pass. Root owns full-target and CI verification.
+
+### Minimal-mode observation decision ownership
+
+Four native build-801 controls hold only the fixture's asynchronous consumer.
+Actual body, mode and transaction callbacks arrive before each original
+one-second deadline, yet the prior timer race reports a timeout in every phase.
+The mount-body control includes events buffered before the wait. This establishes
+consumer-scheduling sensitivity, not the historical Z7 failing phase or cause.
+
+`MinimalModeBodyFixture` now records the first decision synchronously at event
+observation. Buffered events are evaluated once when a wait registers against
+then-current body counts, discarding unmatched events through the first match
+and retaining later events. New callbacks evaluate the active predicate
+synchronously. One bounded result stream carries success or failure; its timer
+uses the same wait identity and cannot overwrite a recorded match. A callback
+after the unchanged absolute deadline fails even if the timer was delayed.
+The structured timer joins before return, all clock errors reach the same result
+owner, and parent cancellation remains authoritative after buffered success.
+Stored matchers clear on completion, cancellation and close; no shared delivery
+helper or production seam changes. All six original assertions remain unchanged.
+
+The four delayed-consumer controls now pass. Four omitted-event and four late
+event controls still fail at their exact phase; cancellation and a pending-wait
+clock error exercise cleanup and propagation. A FIFO control verifies retained
+future events, discarded unmatched events and current-count evaluation after
+reset. Weak fixture release, cleared registration and closed/detached windows
+are checked; AppKit may retain the window beyond fixture release. A saved actual
+transaction callback safely returns after its fixture is released. Sources and
+first harness outcomes are preserved in `/tmp/z-minimal-event-decision-proof`.
+
+Configured Swift 5 and strict Swift 6 exact-case verification use protected 801
+under native `NSApplication.run`, with owned settings and activation prohibited.
+The complete unchanged visibility suite retains its previously documented
+strict-Swift-6 helper limitations; configured Swift 5 compiles that full source.
+No desktop presentation, app build, or user settings changes occur. Actual
+macOS 15 integrated verification remains open in
+`minimal_mode_failure_phase_diagnostics_verification`.
