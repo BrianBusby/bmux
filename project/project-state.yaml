@@ -6524,3 +6524,8 @@ caveats:
     title: Shared terminal and browser divider caches validate bounded weak child snapshots instead of relying on subviews KVO; fresh portal integration, latency and macOS 15 coverage remain pending
     status: open
     owner: bmux
+
+  - id: find_workspace_scope_fixture_verification
+    title: Same-path Find scope reset uses real presentation query submission with original reset assertions; build 799 passes, fixed-head macOS 15 app-host coverage remains pending
+    status: open
+    owner: bmux

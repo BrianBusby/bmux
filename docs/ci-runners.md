@@ -5859,3 +5859,20 @@ unchanged-cache checks. This is candidate-source validation, not yet a freshly
 built portal integration or a pointer-latency measurement. The full existing
 portal suite, browser counterpart, performance gates and fixed-head macOS 15
 coverage remain required before merge. No terminal rendering code is changed.
+
+### Same-path Find scope fixture
+
+The workspace-identity reset test now establishes its initial query through the
+existing Files-to-Find presentation transition, which synchronously submits the
+field value to the injected search controller. It checks that submission before
+publishing the original nonempty snapshot, then changes only the workspace UUID
+while retaining the same local root path. Both original field/snapshot reset
+assertions remain. This removes an incidental run-loop debounce polling wait;
+it is coverage of workspace scope reset, not typing-debounce scheduling.
+
+The fixture clears its workspace root at teardown to cancel directory watching
+and loads. Existing local-provider/Git-status composition is unchanged. Against
+build 799 the exact case passes with strict Swift 6 compilation and no warnings
+(0.026 seconds); retaining the first UUID in a temporary negative control fails
+both original reset assertions. Fixed-head macOS 15 app-host execution remains
+pending. No production source or user-facing string changes.
