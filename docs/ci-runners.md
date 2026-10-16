@@ -7703,3 +7703,31 @@ Actual displayed scroll-frame completion remains an unlocked-desktop or CI
 gate. Source adaptations, controls and limits are recorded in
 `/tmp/markdown-operation-arrival-proof/handoff.md`. Root owns integrated
 full-target and CI verification; no production or localization surface changed.
+
+
+### AD initial terminal search-overlay setup
+
+Published `56309fde9` failed only the rebind case in native shard 8:
+its initial mount FIFO producer arrived at 66.901ms, observed at 101.693ms,
+beyond the 50ms bound. This is a late producer, not the previously corrected
+late-consumer race. The three attachment/rebind assertions had not run.
+
+The original test called `setSearchOverlay` synchronously and then ran the
+RunLoop for 50ms; it asserted attachment, not elapsed mounting performance.
+The migrated bound included synchronous hosting construction and FIFO delivery.
+All three initial mounts now adopt the existing mouse-overlay fixture's explicit
+one-second setup policy, anchored before the same native action. This is a NEW
+setup-bound adoption, not restoration of an unchanged deadline. Post-Escape
+delivery and focus delivery remain 50ms; all attachment, visibility, dismissal
+and real subsequent-key-up calibration assertions remain unchanged. There is
+no production timing or shared delivery-owner change.
+
+An owned, never-presented build 801 control measured synchronous construction
+at 0.528ms and queued delivery at 18.818ms; a separate post-action-bound control
+measured 0.533ms and 19.691ms. Both passed all three rebind assertions. Those
+local measurements do not partition the actual AD delay or prove macOS 15
+scheduling. Exact-source rebind positive and omitted-mount negative results,
+configured Swift 5/strict Swift 6 compilation and cleanup are recorded in
+`/tmp/ad-overlay-mount-proof/handoff.md`. The locked desktop prevents presented
+Escape verification; fixed-head app-host CI remains required. No localization
+surface changes.
