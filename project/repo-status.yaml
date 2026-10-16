@@ -528,3 +528,6 @@ local_caveats:
 
   - id: native_deadline_exit_diagnostics_verification
     status: open
+
+  - id: binding_only_resume_state_verification
+    status: open

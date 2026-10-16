@@ -6499,3 +6499,8 @@ caveats:
     title: Native deadline owner records numeric termination and final-exit phases; local status controls pass, actual macOS console pipeline completion diagnosis remains pending
     status: open
     owner: bmux
+
+  - id: binding_only_resume_state_verification
+    title: Approved agent-hook launch commands participate in existing running-state and directory cleanup ownership without requiring a separate agent snapshot; fresh runtime and fixed-head macOS 15 verification remain pending
+    status: open
+    owner: bmux

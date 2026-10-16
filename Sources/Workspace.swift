@@ -1412,10 +1412,9 @@ extension Workspace {
                 workingDirectory: workingDirectory,
                 unguardedWorkingDirectory: suppressWorkspaceRemoteStartupCommand ? savedWorkingDirectory : workingDirectory
             )
-            let restoredAgentWillRunStartupCommand = restorableAgent != nil && (
+            let restoredAgentWillRunStartupCommand =
                 restoredAgentResumeLaunch?.initialCommand != nil ||
                 (restoredBindingLaunch?.initialCommand != nil && resumeBinding?.isAgentHookBinding == true)
-            )
             let restoredAgentWillRunStartupInput =
                 restoredAgentResumeLaunch?.initialInput != nil ||
                 (restoredBindingLaunch?.initialInput != nil && resumeBinding?.isAgentHookBinding == true)
