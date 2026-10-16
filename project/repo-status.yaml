@@ -609,3 +609,6 @@ local_caveats:
 
   - id: file_explorer_shortcut_context_fixture_verification
     status: open
+
+  - id: browser_visible_notification_completion_verification
+    status: open

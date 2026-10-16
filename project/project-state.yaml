@@ -6667,3 +6667,8 @@ caveats:
     title: Two file-explorer shortcut cases own their real event-window context with all routing assertions retained; offscreen build 799 controls pass, presented macOS 15 CI and legacy settings-owner strict concurrency remain unverified
     status: open
     owner: bmux
+
+  - id: browser_visible_notification_completion_verification
+    title: Redundant browser visibility fixture observes native loading within its original one-second bound; build 799 positive and omission controls pass locally, actual macOS 15 verification and historical startup latency remain unresolved
+    status: open
+    owner: bmux

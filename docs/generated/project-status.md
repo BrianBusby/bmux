@@ -299,6 +299,7 @@ Regenerate with: ./scripts/project-docs generate
 | LaunchServices scheduling test restores its original delegate and route-retirer composition; native 799 scheduling and identity controls pass, historical inspector routing linkage and macOS 15 app-host verification remain unproven (`launch_services_scheduling_fixture_ownership_verification`) | Bmux | open |  |
 | FilePreviewPendingFocusTests retains its owned window through explicit close and preserves both focus assertions; native 799 ownership controls pass, exact historical crash object and macOS 15 verification remain unresolved (`file_preview_pending_focus_window_ownership_verification`) | Bmux | open |  |
 | Two file-explorer shortcut cases own their real event-window context with all routing assertions retained; offscreen build 799 controls pass, presented macOS 15 CI and legacy settings-owner strict concurrency remain unverified (`file_explorer_shortcut_context_fixture_verification`) | Bmux | open |  |
+| Redundant browser visibility fixture observes native loading within its original one-second bound; build 799 positive and omission controls pass locally, actual macOS 15 verification and historical startup latency remain unresolved (`browser_visible_notification_completion_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
