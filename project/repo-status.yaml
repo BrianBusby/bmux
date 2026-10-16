@@ -585,3 +585,6 @@ local_caveats:
 
   - id: app_host_eight_shard_capacity_verification
     status: open
+
+  - id: terminal_search_overlay_mouse_fixture_verification
+    status: open

@@ -287,6 +287,7 @@ Regenerate with: ./scripts/project-docs generate
 | Actual CI proves stopped-child cancellation fails without resume; the lock now forwards the original signal then resumes its owned command and all thirteen local cancellation cases pass, fixed-head CI and historical V pipe completion cause remain unresolved (`app_host_lock_stopped_child_verification`) | Bmux | open |  |
 | Fork cache refresh fixture supplies matching live workspace and surface environment identities; missing and wrong scope controls fail while the corrected native case passes, fixed-head macOS 15 verification remains pending (`fork_live_process_scope_fixture_verification`) | Bmux | open |  |
 | Eight deterministic native shards preserve the complete selector partition and unchanged 900-second bound; measured V workload supports added capacity, final CI completion and increased runner queue cost remain pending (`app_host_eight_shard_capacity_verification`) | Bmux | open |  |
+| Search-overlay mouse fixtures own a real focused workspace and native mount delivery with a new three-second runtime prerequisite and original one-second mount cap; build 799 controls pass, integrated macOS 15 verification remains pending (`terminal_search_overlay_mouse_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

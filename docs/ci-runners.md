@@ -6529,3 +6529,41 @@ Four additional macOS jobs increase runner demand, repeated build/setup work and
 potential queue time. Actual completion on the final CI toolchain remains the
 gate. The stopped-child cancellation hazard and historical V output-pipe gap
 remain separate from capacity; adding shards is not credited with fixing them.
+
+### Terminal search-overlay mouse ownership
+
+Candidate V shard 2's two search-overlay mouse-release cases failed their
+one-second mount wait and then required an overlay that was absent. The fixture
+now observes the native owner's single queued overlay mutation through a buffered
+FIFO delivery, then performs native layout under the original absolute one-second
+mount cap. A new, separate three-second runtime-readiness prerequisite subscribes
+before offscreen attachment. This is new coverage of a previously implicit
+prerequisite, not an unchanged or restored original deadline.
+
+Pointer forwarding also requires a focused owning Workspace before mouse-down.
+The old bare random-workspace surface did not supply that graph. A cohesive
+fixture now owns a manual-I/O surface, retained window and real terminal panel,
+attaches the panel through `Workspace(initialDetachedSurface:)`, and supplies an
+owned direct main-window context. Actual workspace focus establishes the pointer
+prerequisite. AppDelegate, active-manager and route-retirer state are scoped to
+synchronous graph construction, mouse dispatch and teardown; no shared override
+crosses an await. Panels close before the context is removed. Buffered observation
+and deadline tasks cancel and join; window and runtime cleanup cover failed setup.
+No shell, listener, user window presentation or production override is required.
+Permanent coverage deliberately uses offscreen native dispatch and manual I/O in
+place of the old presented window and normal terminal I/O. It still exercises
+actual Ghostty mouse events, the real overlay and released-surface handling; it
+does not claim real user-input delivery or window-activation coverage.
+
+Both original mouse paths and their assertions remain: terminal mouse-down owns
+the release; overlay drag retains it; overlay mouse-up clears it; releasing the
+runtime before overlay mouse-up still clears pending selection. The released
+case uses the current guarded runtime accessor, never a saved raw surface pointer.
+Native build 799 controls passed both paths; missing context failed the pending
+selection prerequisite despite a live runtime, missing mount failed overlay
+availability, and omitted mouse-up failed the final clear assertion. The controls
+used owned HOME and launch-only telemetry settings, strict Swift 6 compilation,
+and joined processes with removed temporary roots. These local macOS 26 results
+do not establish the historical macOS 15 mount-timeout cause. Integrated app-host
+execution remains required. No runtime code, selector, shared helper, shipped
+text or localization catalog changes are included.
