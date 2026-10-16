@@ -6657,3 +6657,8 @@ caveats:
     title: LaunchServices scheduling test restores its original delegate and route-retirer composition; native 799 scheduling and identity controls pass, historical inspector routing linkage and macOS 15 app-host verification remain unproven
     status: open
     owner: bmux
+
+  - id: workspace_terminal_focus_completion_verification
+    title: Seven terminal focus recovery cases observe queued work and establish authoritative visibility and geometry prerequisites within 50ms completion bounds; owned build 799 positive and omission controls pass, real presented macOS 15 verification remains pending
+    status: open
+    owner: bmux
