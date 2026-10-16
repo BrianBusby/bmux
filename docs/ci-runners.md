@@ -5426,3 +5426,40 @@ timeout, with owned work joined and homes removed. Strict Swift 6 compilation ha
 no warnings. These controls establish fixture cleanup and regression sensitivity,
 not the historical CI timeout's cause. Fixed-head macOS 15 app-host verification
 remains pending; no production implementation, selector, or deadline changed.
+
+### Grok sibling status and owned connection completion
+
+S (`00aa09b39`) shard 4 reported three missing protocol assertions in
+`testGrokCompletionDoesNotResetStatusWhileSiblingSessionRuns`: the running
+prompt's notification clear and Running status, then the completing session's
+notification. Its process status and timeout assertions passed. The legacy
+server admitted one connection per action despite the CLI's separate one-way
+feed connection, and released resources without joining its server worker.
+
+The exact five-action scenario now uses Swift Testing with the maintained
+joined process/socket owners. Both starts supply ambient IDs; Stop, prompt and
+completion omit them. The running surface stays focused while the completing
+session must notify its separately saved surface. Original RPC error responses,
+all status/output/protocol assertions, local five-second producer bound and
+inherited CI twenty-second policy remain. Joined completion replaces the old
+separate five-second server expectation with a final drain that does not await
+future input. No production logic, shared runner, selector or deadline changed.
+
+The new sibling fixture and existing four-case Grok connection fixture provide
+an explicit owned socket password and accept only that exact authentication.
+Owned HOME alone does not fence the CLI's Keychain fallback. Initial temporary
+probes missed that distinction; their logs contained no auth values, but they
+are not claimed Keychain-free. Corrected controls supply the same owned auth in
+both server modes. The one-accept control consumed the previous feed connection's
+auth request and timed out subsequent producers; continuous serving passed all
+five actions. This is a concrete fixture admission problem, not proof of S's
+exact timing or authentication sequence.
+
+Actual build-796 CLI verification passed all five tests across both suites in
+0.872 seconds with strict Swift 6 compilation and no warnings. Temporary
+wrong-status and wrong-target expectations failed with two issues. A separate
+five-action proof used the existing response-written signal to confirm completed
+clear/status/notification writes, with no response to idless feed messages.
+Every owned producer and server was joined before root removal, including the
+controlled timeout paths. Local macOS 26 CLI evidence does not substitute for
+integrated macOS 15 app-host coverage, which remains pending.

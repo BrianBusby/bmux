@@ -35,6 +35,7 @@ final class GrokHookConnectionFixture {
             "HOME": root.path, "CFFIXED_USER_HOME": root.path,
             "PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "BMUX_SOCKET_PATH": socket,
             "BMUX_AGENT_HOOK_STATE_DIR": root.path, "BMUX_CLI_SENTRY_DISABLED": "1",
+            "BMUX_SOCKET_PASSWORD": "grok-hook-owned-password",
             "GROK_HOME": root.appendingPathComponent("grok-home").path,
         ]
         if let workingDirectory { environment["PWD"] = workingDirectory }
@@ -87,6 +88,10 @@ final class GrokHookConnectionFixture {
     private func responder(surface: String, stallFeed: Bool) -> @Sendable (String) throws -> String? {
         let workspace = workspaceID, surfaces = surfaceIDs
         return { line in
+            if line.hasPrefix("auth ") {
+                guard line == "auth grok-hook-owned-password" else { throw NSError(domain: "GrokHookAuthenticationMismatch", code: 1) }
+                return "OK"
+            }
             guard line.hasPrefix("{") else {
                 try #require(["set_agent_pid ", "set_agent_lifecycle ", "clear_notifications ", "set_status ", "notify_target_async "]
                     .contains { line.hasPrefix($0) }, "Unexpected command: \(line)")
