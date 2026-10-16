@@ -678,6 +678,8 @@
 		A16DDFEAE3624CA78A8722AA /* CodexInputQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E525759EF945DE958FA04F /* CodexInputQueueTests.swift */; };
 		BFDECAF433606DDF43C5C9E9 /* CodexMonitorLeaseFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84E9551C306FED32C2E511E /* CodexMonitorLeaseFixture.swift */; };
 		BA725DCA94CE06AF2DB27886 /* CodexMonitorLeaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFC748EC2172953F16171141 /* CodexMonitorLeaseTests.swift */; };
+		9D4DEB363F0C415886D53BBE /* CodexPromptCacheFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA373517C49B478D9C6F5643 /* CodexPromptCacheFixture.swift */; };
+		04A5798A473D4A50B8932268 /* CodexPromptCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E865F84DC57A477B8115DD44 /* CodexPromptCacheTests.swift */; };
 		D33A912E16C53A8AF2B9AA4B /* CodexRejectedAmbientFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A8679C50A0E07FA9D5B592 /* CodexRejectedAmbientFixture.swift */; };
 		12A544D5266A33F06D4ABE0F /* CodexRejectedAmbientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC77452333507F58CDC2C89 /* CodexRejectedAmbientTests.swift */; };
 		6C7E826EEE2845C8B8EC7907 /* CodexStopHookFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9C446F48F56479E8DA8F918 /* CodexStopHookFixture.swift */; };
@@ -2777,6 +2779,8 @@
 		31E525759EF945DE958FA04F /* CodexInputQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexInputQueueTests.swift; sourceTree = "<group>"; };
 		F84E9551C306FED32C2E511E /* CodexMonitorLeaseFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexMonitorLeaseFixture.swift; sourceTree = "<group>"; };
 		DFC748EC2172953F16171141 /* CodexMonitorLeaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexMonitorLeaseTests.swift; sourceTree = "<group>"; };
+		EA373517C49B478D9C6F5643 /* CodexPromptCacheFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CodexPromptCacheFixture.swift"; sourceTree = "<group>"; };
+		E865F84DC57A477B8115DD44 /* CodexPromptCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CodexPromptCacheTests.swift"; sourceTree = "<group>"; };
 		C5A8679C50A0E07FA9D5B592 /* CodexRejectedAmbientFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexRejectedAmbientFixture.swift; sourceTree = "<group>"; };
 		1EC77452333507F58CDC2C89 /* CodexRejectedAmbientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexRejectedAmbientTests.swift; sourceTree = "<group>"; };
 		B9C446F48F56479E8DA8F918 /* CodexStopHookFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopHookFixture.swift; sourceTree = "<group>"; };
@@ -6025,6 +6029,7 @@
 					583061CE94AE4D01B93357B9 /* HermesHookProcessContractTests.swift */,
 					52646665E7E94656A2037E54 /* HermesHookProcessFixture.swift */,
 				ED74C632748346D09D2B3467 /* ClaudeSessionPhaseTests.swift */,
+				E865F84DC57A477B8115DD44 /* CodexPromptCacheTests.swift */,
 				18CC53E330BC4400B7292BE1 /* CLIAmbiguousClaudeWorkflowTests.swift */,
 				6D8052EF822F4004A13044BB /* ThemeReloadObservation.swift */,
 				322E640EE6854E11BD8C1ED4 /* CLIThemeTargetContractTests.swift */,
@@ -6032,6 +6037,7 @@
 				D2EDCEF599524403AC9184C7 /* AgentFeedContractFixture.swift */,
 				1C33E6ADB46945C6BCF8ED0C /* CodexHookInstallationContractTests.swift */,
 				2E559DC04A90425A9853E653 /* ClaudeSessionPhaseFixture.swift */,
+				EA373517C49B478D9C6F5643 /* CodexPromptCacheFixture.swift */,
 				919DCAF7D0DD44A796A899FF /* CLIProcessTestTimeout.swift */,
 					56851DBE797C46F5ADDAAEC6 /* AgentLaunchEnvironmentTests.swift */,
 					9960810488AB4C6EAF7B5662 /* AgentLaunchEnvironmentFixture.swift */,
@@ -8355,6 +8361,8 @@
 				A16DDFEAE3624CA78A8722AA /* CodexInputQueueTests.swift in Sources */,
 				BFDECAF433606DDF43C5C9E9 /* CodexMonitorLeaseFixture.swift in Sources */,
 				BA725DCA94CE06AF2DB27886 /* CodexMonitorLeaseTests.swift in Sources */,
+				9D4DEB363F0C415886D53BBE /* CodexPromptCacheFixture.swift in Sources */,
+				04A5798A473D4A50B8932268 /* CodexPromptCacheTests.swift in Sources */,
 				D33A912E16C53A8AF2B9AA4B /* CodexRejectedAmbientFixture.swift in Sources */,
 				12A544D5266A33F06D4ABE0F /* CodexRejectedAmbientTests.swift in Sources */,
 				6C7E826EEE2845C8B8EC7907 /* CodexStopHookFixture.swift in Sources */,

@@ -6544,3 +6544,8 @@ caveats:
     title: Identity-only session linkage fixture joins hook persistence within its original one-second bound and releases SQLite before cleanup; native build 797 passes, integrated macOS 15 verification remains pending
     status: open
     owner: bmux
+
+  - id: codex_prompt_cache_fallback_fixture_verification
+    title: Codex prompt cache and detached fallback launch retain original assertions with an owned missing-path precondition and final-write signal; native controls pass, fixed-head macOS 15 execution remains pending
+    status: open
+    owner: bmux
