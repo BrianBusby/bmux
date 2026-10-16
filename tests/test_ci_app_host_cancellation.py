@@ -159,6 +159,7 @@ def run_scenario(phase: str, signum: int, directory: str) -> None:
     owned: dict[int, int] = {}
     release: set[int] = set()
     failure = None
+    stopped = None
     try:
         deadline = time.monotonic() + 5
         data = b""
@@ -174,6 +175,24 @@ def run_scenario(phase: str, signum: int, directory: str) -> None:
             release.add(record["grandchild"])
         # PTY helper is the ready stub's parent.
         owned[record["parent"]] = os.pidfd_open(record["parent"])
+        if phase == "lock-stopped":
+            # The ready stub identifies its PTY parent, whose parent must be
+            # the Bash command owned directly by this invocation's lock.
+            def parent_of(pid: int) -> int:
+                fields = Path(f"/proc/{pid}/status").read_text().splitlines()
+                return int(next(line.split()[1] for line in fields if line.startswith("PPid:")))
+            stopped = parent_of(record["parent"])
+            assert parent_of(stopped) == proc.pid, "Bash is not the spawned lock's child"
+            owned[stopped] = os.pidfd_open(stopped)
+            signal_owned(owned[stopped], signal.SIGSTOP)
+            stop_deadline = time.monotonic() + 1
+            while True:
+                state = Path(f"/proc/{stopped}/status").read_text().splitlines()
+                if next(line.split()[1] for line in state if line.startswith("State:")) == "T":
+                    break
+                if time.monotonic() >= stop_deadline:
+                    raise TimeoutError("owned Bash did not enter stopped state")
+                select.select([], [], [], 0.01)  # Observe the owned stop before cancellation.
         proc.send_signal(signum)
         status = proc.wait(timeout=5 if phase == "stubborn" else 8)
         # Stubborn cancellation must finish before the existing outer KILL at 5s.
@@ -196,6 +215,10 @@ def run_scenario(phase: str, signum: int, directory: str) -> None:
         failure = error
     finally:
         os.close(ready)
+        if stopped is not None and stopped in owned:
+            # The red implementation cannot resume its stopped child. Release
+            # that exact pidfd before the existing subreaper joins the subtree.
+            signal_owned(owned[stopped], signal.SIGCONT)
         reap_owned_children(proc, owned, release)
         try:
             output = proc.communicate(timeout=2)[0]  # EOF after descendants reaped.
@@ -217,7 +240,7 @@ def main() -> int:
         return 0
     become_subreaper()
     failures = []
-    scenarios = [(phase, signum) for phase in ("pty", "pty-group", "wrapper", "retry")
+    scenarios = [(phase, signum) for phase in ("pty", "pty-group", "wrapper", "retry", "lock-stopped")
                  for signum in (signal.SIGTERM, signal.SIGINT)]
     scenarios += [("sampler", signal.SIGTERM), ("stubborn", signal.SIGTERM),
                   ("diagnostics-fallback", signal.SIGTERM)]

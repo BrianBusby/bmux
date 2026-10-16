@@ -6592,3 +6592,8 @@ caveats:
     title: Codex pending-write fixture observes real request boundaries and joins its held submission on timeout or cancellation; build 799 passes local controls, integrated macOS 15 verification remains pending
     status: open
     owner: bmux
+
+  - id: app_host_lock_stopped_child_verification
+    title: Owned stopped-child controls reproduce missing resume in app-host lock cancellation; regression-only CI red and bounded owner correction remain pending, historical V pipe completion cause is unresolved
+    status: open
+    owner: bmux

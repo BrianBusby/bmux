@@ -6437,3 +6437,29 @@ held-turn controls recorded the first submission joined before fixture return.
 All probe processes and owned homes were removed. No production source, user
 settings, network requests, windows, or app launches changed. Integrated test
 compilation and actual fixed-head macOS 15 execution remain root-owned gates.
+
+
+### App-host lock cancellation of a stopped command
+
+V's four broad native invocations reached their unchanged 900-second watchdog.
+Numeric diagnostics show each outer owner killed and joined its direct lock
+process and returned 124; the output pipeline remained open until workflow
+cancellation. This establishes a subtree/output completion gap, not a missing
+timer. The available early process samples do not establish that V's Bash
+command was stopped.
+
+A separate owned-process control demonstrates a concrete lock-owner hazard:
+`app_host_test_lock.py` forwards TERM/INT to its direct command without resuming
+it. A stopped Bash command cannot run its cancellation trap, so its PTY subtree
+and output pipe remain alive. The regression adds two cases to the existing
+Linux subreaper harness. Each verifies the actual parent chain, stops the owned
+Bash through a pidfd, observes its stopped state, then requires the existing
+signal status, descendant joins, output EOF and no-retry contract. Expected-red
+cleanup resumes that same owned child and joins all descendants before removing
+its temporary root. No broad process matching or app execution is used.
+
+The original eleven cancellation cases pass locally; both new cases time out at
+the existing eight-second observation bound. This commit contains tests only.
+Actual regression CI red is required before the minimal forwarding correction.
+The normal native deadline, retry policy and cancellation grace are unchanged.
+The controlled stopped-child failure is not proof of the historical V cause.

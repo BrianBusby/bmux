@@ -576,3 +576,6 @@ local_caveats:
 
   - id: v_tail_nonfocus_and_option_terminal_fixture_verification
     status: open
+
+  - id: app_host_lock_stopped_child_verification
+    status: open

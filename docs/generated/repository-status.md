@@ -339,3 +339,4 @@ Repository: `BrianBusby/bmux`
 | `v2_cli_and_browser_completion_fixture_verification` | open |
 | `v4_terminal_search_and_window_restore_fixture_verification` | open |
 | `v_tail_nonfocus_and_option_terminal_fixture_verification` | open |
+| `app_host_lock_stopped_child_verification` | open |
