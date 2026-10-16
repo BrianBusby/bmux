@@ -356,3 +356,4 @@ Repository: `BrianBusby/bmux`
 | `terminal_overlay_runtime_setup_verification` | open |
 | `minimal_mode_current_shell_invalidation_verification` | open |
 | `workspace_terminal_focus_completion_verification` | open |
+| `workspace_filter_selection_identity_verification` | open |

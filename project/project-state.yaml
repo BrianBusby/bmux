@@ -6712,3 +6712,8 @@ caveats:
     title: Actual shard-3 precursor fixtures restore shared delegate and known route-retirer composition with scoped resource cleanup; build 799 identity controls pass, historical inspector causality and presented macOS 15 acceptance remain pending
     status: open
     owner: bmux
+
+  - id: workspace_filter_selection_identity_verification
+    title: PR 171 review 5543944260 duplicate-title filter warning has a runtime-failing semantic-view regression and four passing controls; actual CI red and identity-based fix verification remain pending
+    status: open
+    owner: bmux

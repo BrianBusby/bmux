@@ -7299,3 +7299,27 @@ omitting close fails that lifecycle control. The presented routing cases and who
 macOS 15 target remain CI verification; the local controls never present a window.
 All temporary process homes and processes are owned and removed/joined. No product
 behavior or user-visible strings changed, so no localization entries are required.
+### Workspace filter selection identity regression
+
+PR 171 review body `5543944260` identified a hidden-selection warning defect:
+when two workspaces have the same title and only the unselected one matches the
+filters, `WorkspaceTabFilterBar` treats the selected workspace as visible. The
+warning and its existing “Show it” action are consequently absent. This finding
+was verified from the review body and source; a zero unresolved-thread count is
+not evidence that review findings are absent or resolved.
+
+The first regression commit exposes the existing body-used semantic visibility
+property internally without changing its title-based predicate. Five Swift
+Testing cases evaluate that actual view property through constant bindings:
+duplicate-title hidden selection, visible selection, no selection, no filters,
+and a distinct-title hidden selection. The duplicate-title case fails at runtime
+while the four controls pass. This is not a source-text or screenshot assertion.
+
+Local configured Swift 5 and strict Swift 6 warnings-as-errors compile the full
+current view source, adding only a testable-import preamble for its isolated
+module, against protected build 799 dependencies. No native window or app is
+launched. This source-level runtime proof does not claim that the frozen app
+binary contains the new internal seam; integrated target and actual CI red remain
+separate gates. The production fix and its green verification are still pending.
+The existing warning and reveal-action catalog keys have English and Japanese
+translations; no user-facing strings change in this regression slice.
