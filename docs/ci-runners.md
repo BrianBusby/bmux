@@ -5492,3 +5492,48 @@ or pipeline completion remained unresolved until cancellation. That shard has
 no passing verdict, and the cause of that completion gap is not established. The final published T head still requires its own
 actual CI and review gates before merge; local compilation and controlled
 native probes do not replace those gates.
+
+### Persistent PTY daemon bootstrap contract ownership
+
+T shard 4 failed `testPersistentPTYBootstrapReinstallsOldDaemonMissingPTYCapability`
+at its two-second semaphore wait, followed by a missing SCP destination. The
+bootstrap runs on the coordinator's utility queue; its host publications do not
+wait for the main actor. The log does not establish a main-actor deadlock or a
+missing Go executable as the historical cause.
+
+The reinstall contract now lives in `BmuxRemoteSession` and calls the actual
+bootstrap owner with `coordinator.requiredDaemonCapabilities`. It retains the
+original two-second completion bound, nonnil destination, and exact remote-path
+prefix. Ordered probe/hello/upload assertions prevent unconditional reinstall
+from passing. A daemon advertising every required capability must complete
+without an upload. Only the named legacy method was removed.
+
+The fixture uses an owned, checksum-verified cached daemon through the existing
+manifest repository and build-info seams. This replaces the original incidental
+fake-Go scaffolding; it does not claim permanent Go-builder coverage. An invalid
+URL, checked before execution, makes an unexpected cache miss fail locally before
+network I/O. No session `start`, orphan cleanup, reachability, proxy, or SSH
+control-master cleanup runs. The dispatched bootstrap worker and observations
+are joined before cache deletion. The two original process-environment flags are
+restored synchronously before completion, including failure; no HOME or PATH is
+changed. The suite is serialized, and existing package CI runs each
+`BmuxRemoteSession` suite in a separate process. This does not isolate arbitrary
+future background environment consumers.
+
+This ownership move removes one monolithic
+`Workspace.configureRemoteConnection`-to-missing-capability-to-SCP check. The
+unchanged Workspace tests retain persistent configuration, child-exit state,
+PTY snapshot identity, and real configuration-to-relay composition coverage.
+Existing package tests pin the preserve flag's required wire capabilities and
+the coordinator's capability projection. These constituent checks are explicitly
+not an identical end-to-end Workspace reinstall test.
+
+Actual build 796 passes both migrated cases in an owned native harness; exact
+source compiles in Swift 6 with warnings treated as errors. The package compiles
+and runs both selected cases successfully, with existing dependency import and
+concurrent-capture warnings retained. Temporary controls prove missing-cache
+code 25 without network, exact seeded flag restoration, and cancellation joining
+work before cleanup. Advertising complete capabilities to the positive test
+fails its required upload assertion. These local results do not establish the
+old macOS 15 CI cause; fixed-head package and integrated app-host verification
+remain pending. No production runtime, timeout policy, or workflow changed.
