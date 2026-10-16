@@ -7945,3 +7945,26 @@ support, not incidents; low-level read errors retain the existing process-pipe
 logger. No new telemetry, raw command output/path/environment logging, localized
 surface or sampling change is introduced. A fresh isolated whole-app build,
 user-approved dogfood and fixed macOS 15 CI remain required; build 802 is untouched.
+
+### Remote shell UTF-8 completion ownership (AF6)
+
+AF6 reported only the legacy missing-locale case's no-timeout assertion after
+6.007 seconds; status zero and the exact three `C.UTF-8` values passed. Its
+unchanged synchronous helper waits for a GCD reaper before draining pipes.
+That observation boundary can lag native exit; the historical AF6 schedule is
+not established. The exact case now uses the repaired `ShellContractProcess`
+with its original plain five-second command bound and unchanged generated
+locale script, `/usr/bin/env` empty-locale arguments, shell and output oracle.
+The throwing call retains the no-timeout intent and joins before owned-root
+cleanup. The maintained 200 ms TERM grace plus escalation/join replaces the
+legacy one-second TERM wait; it does not extend the command deadline.
+
+Configured Swift 5 and strict Swift 6 exact-source controls pass, with warnings
+as errors. Omitting only the setup lines fails the original output predicate
+(`||`), while exit status and completion still pass. Only the failed case moves
+to Swift Testing; the existing-UTF-8 neighbor and legacy helper remain unchanged.
+The fixture owns HOME/CFFIXED/XDG/TMPDIR and output files, with no app, provider,
+socket, network or user configuration access. Evidence is recorded in
+`/tmp/af6-utf8-locale-proof/handoff.md`. Integrated macOS 15 verification remains
+pending; the earlier AF8 shared-owner lifecycle controls are reused rather than
+repeated. No production policy or localized surface changes.
