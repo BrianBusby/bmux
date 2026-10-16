@@ -257,6 +257,7 @@ Regenerate with: ./scripts/project-docs generate
 | Notification settings retry fixture follows synchronous injected callbacks and retains its window; native build 796 passes, integrated macOS 15 app-host verification remains pending (`notification_settings_retry_fixture_verification`) | Bmux | open |  |
 | Same-directory Git snapshot fixture owns count observations and reader cleanup; native controls pass, integrated macOS 15 app-host verification remains pending (`workspace_git_snapshot_observation_verification`) | Bmux | open |  |
 | Grok sibling completion uses owned authenticated joined connections and preserves saved-route status assertions; native build 796 passes five cases, integrated macOS 15 app-host verification remains pending (`grok_sibling_status_fixture_verification`) | Bmux | open |  |
+| Settings sheet fixture observes synchronous injected alert completion and retains its window; build 796 controls pass, integrated macOS 15 verification remains pending (`notification_settings_sheet_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

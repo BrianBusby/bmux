@@ -48,4 +48,36 @@ struct NotificationSettingsPromptTests {
         #expect(alert.runModalCallCount == 0)
         #expect(openedURLs.isEmpty, "Not Now must not open notification settings")
     }
+
+    @Test func promptUsesSheetAndNeverRunsModal() throws {
+        let store = TerminalNotificationStore.shared
+        let alert = NotificationSettingsPromptAlertProbe()
+        alert.response = .alertFirstButtonReturn
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 480, height: 320),
+            styleMask: [.titled], backing: .buffered, defer: false
+        )
+        // Swift owns this never-presented window through close and scope exit.
+        window.isReleasedWhenClosed = false
+        var openedURL: URL?
+        store.configureNotificationSettingsPromptHooksForTesting(
+            windowProvider: { window },
+            alertFactory: { alert },
+            scheduler: { _, block in block() },
+            urlOpener: { openedURL = $0 }
+        )
+        defer {
+            store.resetNotificationSettingsPromptHooksForTesting()
+            window.close()
+        }
+
+        store.promptToEnableNotificationsForTesting()
+        #expect(alert.beginSheetModalCallCount == 1)
+        #expect(alert.runModalCallCount == 0)
+        let encodedBundleIdentifier = try #require(Bundle.main.bundleIdentifier?
+            .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed))
+        #expect(openedURL?.absoluteString ==
+            "x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=\(encodedBundleIdentifier)")
+    }
+
 }

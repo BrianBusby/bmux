@@ -5492,3 +5492,23 @@ or pipeline completion remained unresolved until cancellation. That shard has
 no passing verdict, and the cause of that completion gap is not established. The final published T head still requires its own
 actual CI and review gates before merge; local compilation and controlled
 native probes do not replace those gates.
+
+### Notification settings sheet fixture
+
+Candidate T failed the legacy sheet case only at an artificial one-second
+main-queue drain. The actual alert factory, sheet completion and URL opener are
+synchronous injected boundaries. The exact case now shares the maintained
+NotificationSettingsPromptTests suite and alert probe, retaining the sheet count,
+zero modal calls and exact bundle-encoded settings URL assertions. A retained,
+never-presented window closes after hook reset on every path. The old case and
+its now-unused alert spy are removed; other legacy tests are unchanged.
+
+Actual build 796 passes both prompt cases with strict Swift 6 and no warnings.
+A temporary second-button substitution fails the Open Settings URL assertion
+while the Not Now case still passes. No production delay, permission, URL-opening
+or alert behavior changes. There is no asynchronous wait to lengthen; the removed
+one-second sentinel observed unrelated queue delivery. Historical macOS 15
+scheduling cause remains unproven, and the integrated hosted run is still required.
+The existing shared prompt-hook owner is restored synchronously without suspension;
+this does not claim isolation from arbitrary external mutation of that owner.
+No user-facing strings or localization catalogs change.

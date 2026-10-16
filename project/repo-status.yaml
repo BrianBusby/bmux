@@ -504,3 +504,6 @@ local_caveats:
 
   - id: grok_sibling_status_fixture_verification
     status: open
+
+  - id: notification_settings_sheet_fixture_verification
+    status: open
