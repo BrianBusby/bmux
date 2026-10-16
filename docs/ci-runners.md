@@ -7481,3 +7481,37 @@ directory. The final scoped method passes all controlled cases in 5.679 seconds;
 configured Swift 5 and strict Swift 6 compile with zero warnings. Local Project
 Truth validation/generation/check, strict determinism, selector validation, and
 the actual-main file budget pass.
+
+### Z8 redraw fixture delegate restoration
+
+Z shard 8 executed `MainWindowFocusRedrawTests` before the detached-inspector
+chord failure. The redraw case constructed an `AppDelegate`, replacing both
+`AppDelegate.shared` and the registry's weak route retirer, but only removed its
+window context. The installed shortcut monitor captures its startup delegate;
+matching the current shared delegate's routing window therefore does not prove
+that the monitor and fixture use the same owner.
+
+The exact redraw case now uses Swift Testing and restores its previous shared
+delegate and active manager after closing the retained, never-presented window,
+unregistering the context, and tearing down its panels. When the prior delegate
+exists it is reattached as route retirer, following maintained fixture ownership.
+With no prior delegate, the registry's weak fixture reference expires on release;
+this does not claim restoration of an unknown nondelegate collaborator. Both real
+key-lifecycle handlers, the split geometry, and the original redraw assertion
+remain unchanged. No inspector action, diagnostic, or timeout changes.
+
+A nonvisible build-799 control preserves the redraw assertion but fails the
+predecessor-identity check with the old cleanup; the repaired case restores a
+seeded delegate and active manager. Configured Swift 5 and strict Swift 6 compile
+without warnings and pass the final case and ownership control. A temporary
+omit-regain-key variant also passes the original `needsDisplay` assertion in this
+offscreen harness: the root remains dirty immediately after clearing its flag,
+including after clearing the four known fixture views deepest-first. Resignation
+is not established as the cause; redraw sensitivity remains unverified locally.
+The scope retains that original assertion rather than changing its behavior.
+Owned processes join
+before HOME cleanup; no app startup, key-window presentation, or user preferences
+are involved. The session was locked during diagnosis. Actual installed-monitor
+identity and the macOS 15 inspector result remain unverified, tracked by
+`z_inspector_redraw_precursor_verification`; this is a proven fixture leak, not
+proof of the historical chord failure's cause.

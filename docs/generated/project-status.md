@@ -313,6 +313,7 @@ Regenerate with: ./scripts/project-docs generate
 | Zsh prompt-refresh fixture observes both inherited-FIFO callbacks within the original one-second phase and joins its five-second shell; local Swift 5 and 6 controls pass, detached exits and integrated macOS 15 verification remain unproven (`zsh_relay_refresh_completion_verification`) | Bmux | open |  |
 | Minimal-mode fixture reports the failing native event phase with elapsed time, body counts and owned registration under unchanged one-second bounds; local phase controls pass, actual macOS 15 timeout cause and diagnostic delivery remain unresolved (`minimal_mode_failure_phase_diagnostics_verification`) | Bmux | open |  |
 | Z7 markdown scroll drift has a controlled stale-frame counterexample and fixture completion fix with timeout and cancellation cleanup; actual displayed native-frame verification is pending an unlocked desktop or CI (`markdown_scroll_frame_completion_verification`) | Bmux | open |  |
+| Z8 executed redraw fixture now restores shared delegate and active manager with native 799 identity and redraw controls; actual installed-monitor attribution and macOS 15 inspector verification remain open (`z_inspector_redraw_precursor_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

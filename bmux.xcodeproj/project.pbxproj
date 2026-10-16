@@ -1020,6 +1020,7 @@
 		D1F0A00500000000000000E1 /* MacPresenceDecisionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1F0A00500000000000000E2 /* MacPresenceDecisionCache.swift */; };
 		D1F0A00200000000000000B1 /* MacPresenceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1F0A00200000000000000B2 /* MacPresenceMonitor.swift */; };
 		2F0C05000000000000000002 /* MainWindowFocusController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F0C05000000000000000001 /* MainWindowFocusController.swift */; };
+		18B1E1987CEA4DB2A9B64859 /* MainWindowFocusRedrawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3AACD33806B4B37A469CFBB /* MainWindowFocusRedrawTests.swift */; };
 		6512F0C06512F0C06512F002 /* MainWindowFocusRestoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6512F0C06512F0C06512F001 /* MainWindowFocusRestoreTests.swift */; };
 		B37A00000000000000000005 /* MainWindowFocusTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B37A00000000000000000006 /* MainWindowFocusTypes.swift */; };
 		A6D1F0300000000000000002 /* MainWindowVisibilityController+Lifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D1F0300000000000000001 /* MainWindowVisibilityController+Lifecycle.swift */; };
@@ -3148,6 +3149,7 @@
 		D1F0A00500000000000000E2 /* MacPresenceDecisionCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacPresenceDecisionCache.swift; sourceTree = "<group>"; };
 		D1F0A00200000000000000B2 /* MacPresenceMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacPresenceMonitor.swift; sourceTree = "<group>"; };
 		2F0C05000000000000000001 /* MainWindowFocusController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowFocusController.swift; sourceTree = "<group>"; };
+		A3AACD33806B4B37A469CFBB /* MainWindowFocusRedrawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainWindowFocusRedrawTests.swift"; sourceTree = "<group>"; };
 		6512F0C06512F0C06512F001 /* MainWindowFocusRestoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowFocusRestoreTests.swift; sourceTree = "<group>"; };
 		B37A00000000000000000006 /* MainWindowFocusTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowFocusTypes.swift; sourceTree = "<group>"; };
 		A6D1F0300000000000000001 /* MainWindowVisibilityController+Lifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "App/MainWindowVisibilityController+Lifecycle.swift"; sourceTree = "<group>"; };
@@ -5906,6 +5908,7 @@
 				D765F48E62DB41949A952E22 /* GenericLifecycleFeedNoResponseFixture.swift */,
 				5D10D640C66D48559BA44F32 /* BashRelayPromptRefreshTests.swift */,
 				4BD97AE2493D4A7FA64F92A8 /* ZshRelayPromptRefreshTests.swift */,
+				A3AACD33806B4B37A469CFBB /* MainWindowFocusRedrawTests.swift */,
 				F888C5A85D54408584752031 /* OrphanWorkspaceShortcutTests.swift */,
 				8FD8055070584B2498072294 /* OrphanWorkspaceShortcutSettingsFixture.swift */,
 				9E199B01F53842F19C9D820F /* OrphanWorkspaceShortcutFixture.swift */,
@@ -8589,6 +8592,7 @@
 				89233176B2014E188C43A2C7 /* LaunchServicesRegistrationSchedulingTests.swift in Sources */,
 				FAD796FBD691455C94B81C5E /* LiveSurfaceRecoverySocketTests.swift in Sources */,
 				489757ED79714A0A850504F5 /* LiveSurfaceRecoveryWindowFixture.swift in Sources */,
+				18B1E1987CEA4DB2A9B64859 /* MainWindowFocusRedrawTests.swift in Sources */,
 				6512F0C06512F0C06512F002 /* MainWindowFocusRestoreTests.swift in Sources */,
 				17C9F5BA0DD14EDC8C3E5001 /* MainWindowVisibilityControllerTests.swift in Sources */,
 				A6D1F0100000000000000002 /* MainWindowVisibilityLifecycleTests.swift in Sources */,

@@ -642,3 +642,6 @@ local_caveats:
 
   - id: markdown_scroll_frame_completion_verification
     status: open
+
+  - id: z_inspector_redraw_precursor_verification
+    status: open

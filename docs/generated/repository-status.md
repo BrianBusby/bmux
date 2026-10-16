@@ -361,3 +361,4 @@ Repository: `BrianBusby/bmux`
 | `zsh_relay_refresh_completion_verification` | open |
 | `minimal_mode_failure_phase_diagnostics_verification` | open |
 | `markdown_scroll_frame_completion_verification` | open |
+| `z_inspector_redraw_precursor_verification` | open |

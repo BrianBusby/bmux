@@ -6737,3 +6737,8 @@ caveats:
     title: Z7 markdown scroll drift has a controlled stale-frame counterexample and fixture completion fix with timeout and cancellation cleanup; actual displayed native-frame verification is pending an unlocked desktop or CI
     status: open
     owner: bmux
+
+  - id: z_inspector_redraw_precursor_verification
+    title: Z8 executed redraw fixture now restores shared delegate and active manager with native 799 identity and redraw controls; actual installed-monitor attribution and macOS 15 inspector verification remain open
+    status: open
+    owner: bmux
