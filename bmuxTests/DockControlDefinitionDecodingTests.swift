@@ -363,11 +363,22 @@ struct DockControlDefinitionDecodingTests {
     @MainActor
     func dockPaneClosePromptListsEveryTabThatWillClose() async throws {
         let previousAppDelegate = AppDelegate.shared
+        var needsDelegateRestoration = true
+        func restoreDelegate() {
+            guard needsDelegateRestoration else { return }
+            AppDelegate.shared = previousAppDelegate
+            if let previousAppDelegate {
+                GhosttyApp.terminalSurfaceRegistry.attachRouteRetirer(previousAppDelegate)
+            }
+            needsDelegateRestoration = false
+        }
+        defer { restoreDelegate() }
         let appDelegate = AppDelegate()
         let manager = TabManager()
         AppDelegate.shared = appDelegate
         appDelegate.tabManager = manager
-        defer { AppDelegate.shared = previousAppDelegate }
+        let windowId = appDelegate.registerMainWindowContextForTesting(tabManager: manager)
+        defer { appDelegate.unregisterMainWindowContextForTesting(windowId: windowId) }
 
         let workspace = try #require(manager.tabs.first)
         defer { workspace.teardownAllPanels() }
@@ -385,15 +396,32 @@ struct DockControlDefinitionDecodingTests {
             cleanPanel.surface.setNeedsConfirmCloseOverrideForTesting(nil)
         }
 
-        var capturedPrompt: (title: String, message: String, acceptCmdD: Bool)?
+        try #require(appDelegate.dockReferenceTabManager(for: store) === manager)
+        typealias Prompt = (title: String, message: String, acceptCmdD: Bool)
+        let (prompts, signal) = AsyncStream<Prompt>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        defer { signal.finish() }
+        // Keep the owned rejection handler safe if the queued close task outlives a failed observation.
         manager.confirmCloseHandler = { title, message, acceptCmdD in
-            capturedPrompt = (title, message, acceptCmdD)
+            signal.yield((title, message, acceptCmdD))
             return false
         }
 
+        let deadline = ContinuousClock.now.advanced(by: .seconds(1))
         #expect(!store.splitTabBar(store.bonsplitController, shouldClosePane: rootPane))
-        for _ in 0..<10 where capturedPrompt == nil {
-            await Task.yield()
+        // The queued close task already captured its registered manager; do not swap globals across await.
+        restoreDelegate()
+        let capturedPrompt = try await withThrowingTaskGroup(of: Prompt.self) { group in
+            defer { group.cancelAll() }
+            group.addTask {
+                for await prompt in prompts { return prompt }
+                throw CancellationError()
+            }
+            group.addTask {
+                // A missing callback is a bounded failure, not a settling delay or yield-count guess.
+                try await ContinuousClock().sleep(until: deadline)
+                throw NSError(domain: "DockCloseConfirmationMissing", code: 1)
+            }
+            return try #require(try await group.next())
         }
 
         let expectedMessage = String(
@@ -405,9 +433,9 @@ struct DockControlDefinitionDecodingTests {
             Int64(2),
             "• Terminal\n• Terminal"
         )
-        #expect(capturedPrompt?.title == String(localized: "dialog.closePane.title", defaultValue: "Close pane?"))
-        #expect(capturedPrompt?.message == expectedMessage)
-        #expect(capturedPrompt?.acceptCmdD == false)
+        #expect(capturedPrompt.title == String(localized: "dialog.closePane.title", defaultValue: "Close pane?"))
+        #expect(capturedPrompt.message == expectedMessage)
+        #expect(capturedPrompt.acceptCmdD == false)
     }
 
     @Test("Dock browser closes when WebKit requests close")

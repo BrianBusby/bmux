@@ -6459,3 +6459,8 @@ caveats:
     title: Grok sibling completion uses owned authenticated joined connections and preserves saved-route status assertions; native build 796 passes five cases, integrated macOS 15 app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: dock_close_confirmation_owner_verification
+    title: Dock pane prompt fixture registers its owner and observes the real rejection callback with a one-second failure bound; native build 796 passes, integrated macOS 15 coverage and existing suite isolation warning remain pending
+    status: open
+    owner: bmux

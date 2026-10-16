@@ -504,3 +504,6 @@ local_caveats:
 
   - id: grok_sibling_status_fixture_verification
     status: open
+
+  - id: dock_close_confirmation_owner_verification
+    status: open
