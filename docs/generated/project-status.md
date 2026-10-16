@@ -255,6 +255,7 @@ Regenerate with: ./scripts/project-docs generate
 | Two portal geometry and overlay fixtures preserve their scheduled-action and animation-completion assertions; native controls pass, fixed-head app-host verification remains pending (`portal_animation_completion_fixture_verification`) | Bmux | open |  |
 | Markdown atomic file reload uses the existing content sequence with a joined three-second wait; native build 796 passes, integrated macOS 15 app-host verification remains pending (`markdown_file_reload_fixture_verification`) | Bmux | open |  |
 | Notification settings retry fixture follows synchronous injected callbacks and retains its window; native build 796 passes, integrated macOS 15 app-host verification remains pending (`notification_settings_retry_fixture_verification`) | Bmux | open |  |
+| Same-directory Git snapshot fixture owns count observations and reader cleanup; native controls pass, integrated macOS 15 app-host verification remains pending (`workspace_git_snapshot_observation_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

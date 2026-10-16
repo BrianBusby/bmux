@@ -5396,3 +5396,33 @@ application launch occurs. Historical S app-host failure causality remains
 unproven; this repairs a concrete fixture completion/ownership mismatch.
 Integrated full-target compilation and macOS 15 app-host execution remain
 pending under `notification_settings_retry_fixture_verification`.
+
+### Same-directory Git snapshot observation ownership
+
+The S shard-3 legacy coalescing case timed out waiting one second for its first
+reader notification, while the remaining read-count and three-panel projection
+checks passed. Its exclusive blocking reader also retained an uncancellable
+second-count continuation after the successful inverted check. The exact case
+now uses Swift Testing and an actor-owned buffered count stream. It still invokes
+the actual watch-settings change entrypoint, creates three real terminal panels
+in one owned directory, and checks one read, maximum concurrency one, all three
+branch projections, and final read count one.
+
+The original first-read one-second bound, 200-millisecond absence window, and
+three-second snapshot application bound remain. Snapshot completion observes the
+real workspace metadata notification after mutation. Each observation cancels and
+joins its deadline task; cleanup stops the maintained services, releases every
+owned reader gate, waits for active readers to reach zero, and finishes remaining
+streams before panel teardown and restoration of the original watch setting.
+Stopping the services cancels their work and clears the host; it is not a join of
+all internal service tasks. The original shared UserDefaults scope remains a
+known boundary: serial native tests do not isolate unrelated app callbacks.
+
+Exact-source native build-795 proof passed the migrated case; a different-directory
+control failed all four coalescing checks while preserving panel publication.
+Temporary reader controls covered cancellation before registration, cancellation
+plus release/drain after registration, explicit release/drain, and a missing-count
+timeout, with owned work joined and homes removed. Strict Swift 6 compilation had
+no warnings. These controls establish fixture cleanup and regression sensitivity,
+not the historical CI timeout's cause. Fixed-head macOS 15 app-host verification
+remains pending; no production implementation, selector, or deadline changed.

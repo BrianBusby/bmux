@@ -498,3 +498,6 @@ local_caveats:
 
   - id: notification_settings_retry_fixture_verification
     status: open
+
+  - id: workspace_git_snapshot_observation_verification
+    status: open

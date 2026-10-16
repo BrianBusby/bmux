@@ -313,3 +313,4 @@ Repository: `BrianBusby/bmux`
 | `portal_animation_completion_fixture_verification` | open |
 | `markdown_file_reload_fixture_verification` | open |
 | `notification_settings_retry_fixture_verification` | open |
+| `workspace_git_snapshot_observation_verification` | open |
