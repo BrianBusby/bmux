@@ -17,7 +17,8 @@ struct WorkspaceTabFilterBar: View {
         WorkspaceTabFilterProjection().visibleItems(items, filters: filters)
     }
 
-    private var isSelectionHidden: Bool {
+    /// Semantic visibility state used by the warning and its reveal action.
+    var isSelectionHidden: Bool {
         guard !filters.isEmpty, let selectedWorkspaceTitle else { return false }
         return !visibleItems.contains { $0.title == selectedWorkspaceTitle }
     }

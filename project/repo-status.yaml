@@ -624,3 +624,6 @@ local_caveats:
 
   - id: minimal_mode_current_shell_invalidation_verification
     status: open
+
+  - id: workspace_filter_selection_identity_verification
+    status: open

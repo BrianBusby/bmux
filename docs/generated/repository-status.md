@@ -355,3 +355,4 @@ Repository: `BrianBusby/bmux`
 | `editable_terminal_undo_key_context_verification` | open |
 | `terminal_overlay_runtime_setup_verification` | open |
 | `minimal_mode_current_shell_invalidation_verification` | open |
+| `workspace_filter_selection_identity_verification` | open |
