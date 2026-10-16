@@ -283,6 +283,7 @@ Regenerate with: ./scripts/project-docs generate
 | Three V2 fixture migrations retain joined five-second CLI producers and finite browser focus delivery; native positive and negative controls pass, fixed-head macOS 15 app-host execution remains pending (`v2_cli_and_browser_completion_fixture_verification`) | Bmux | open |  |
 | V4 terminal search repair uses buffered readiness and native overlay delivery while stranded-sidebar restoration explicitly selects Terminal; strict compilation and offscreen boundary controls pass, full macOS 15 window cases remain pending (`v4_terminal_search_and_window_restore_fixture_verification`) | Bmux | open |  |
 | Remaining V non-focus split cases retain native queued selection and original phase bounds while Option-digit explicitly mounts Terminal; native split controls pass, full macOS 15 app-host verification remains pending (`v_tail_nonfocus_and_option_terminal_fixture_verification`) | Bmux | open |  |
+| Codex pending-write fixture observes real request boundaries and joins its held submission on timeout or cancellation; build 799 passes local controls, integrated macOS 15 verification remains pending (`codex_pending_turn_write_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
