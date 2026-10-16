@@ -430,6 +430,7 @@
 		507AE9BDBA5E46B0A08EC52A /* BrowserDownloadQuarantineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8F3FE785124071B49B5A1C /* BrowserDownloadQuarantineTests.swift */; };
 		C67540110000000000000001 /* BrowserDownloadRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67540110000000000000002 /* BrowserDownloadRecord.swift */; };
 		C67540120000000000000001 /* BrowserDownloadsToolbarButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C67540120000000000000002 /* BrowserDownloadsToolbarButton.swift */; };
+		99E7B18BC2344BDD9FE10A9F /* BrowserDropZoneOverlayContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2FCD62D4114FA7A703483F /* BrowserDropZoneOverlayContractTests.swift */; };
 		C2035A010000000000000001 /* BrowserErrorPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2035A010000000000000002 /* BrowserErrorPage.swift */; };
 		C2035A020000000000000001 /* BrowserErrorPageContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2035A020000000000000002 /* BrowserErrorPageContent.swift */; };
 		C2035A0C000000000000001 /* BrowserErrorPageRetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2035A0C000000000000002 /* BrowserErrorPageRetry.swift */; };
@@ -2514,6 +2515,7 @@
 		5E8F3FE785124071B49B5A1C /* BrowserDownloadQuarantineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserDownloadQuarantineTests.swift; sourceTree = "<group>"; };
 		C67540110000000000000002 /* BrowserDownloadRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserDownloadRecord.swift; sourceTree = "<group>"; };
 		C67540120000000000000002 /* BrowserDownloadsToolbarButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserDownloadsToolbarButton.swift; sourceTree = "<group>"; };
+		8F2FCD62D4114FA7A703483F /* BrowserDropZoneOverlayContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BrowserDropZoneOverlayContractTests.swift"; sourceTree = "<group>"; };
 		C2035A010000000000000002 /* BrowserErrorPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserErrorPage.swift; sourceTree = "<group>"; };
 		C2035A020000000000000002 /* BrowserErrorPageContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserErrorPageContent.swift; sourceTree = "<group>"; };
 		C2035A0C000000000000002 /* BrowserErrorPageRetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/BrowserErrorPageRetry.swift; sourceTree = "<group>"; };
@@ -5785,6 +5787,7 @@
 				47591E108B126B7F552379E7 /* ConfigSnapshotTabManager.swift */,
 				40D97D31E44313C0986B3466 /* WorkspaceCreationConfigSanitizationTests.swift */,
 				89940315419C5A8615528C91 /* TerminalPortalGeometryContractTests.swift */,
+				8F2FCD62D4114FA7A703483F /* BrowserDropZoneOverlayContractTests.swift */,
 					BFE62B5417910DCEC3E7F197 /* BrowserInspectorWindowOwnershipTests.swift */,
 					B1F0D1030000000000000002 /* BrowserDeveloperToolsTestSupport.swift */,
 				B1F0C0060000000000000002 /* BrowserDeveloperToolsDockControlNormalizerTests.swift */,
@@ -8171,6 +8174,7 @@
 				BA1540010000000000000001 /* BrowserDiscardReadinessTests.swift in Sources */,
 				C59240010000000000000003 /* BrowserDownloadFilenameResolverTests.swift in Sources */,
 				507AE9BDBA5E46B0A08EC52A /* BrowserDownloadQuarantineTests.swift in Sources */,
+				99E7B18BC2344BDD9FE10A9F /* BrowserDropZoneOverlayContractTests.swift in Sources */,
 				A5008381 /* BrowserFindJavaScriptTests.swift in Sources */,
 				6F72BB55D4BB4B9EAC8932B6 /* BrowserFindShortcutFixture.swift in Sources */,
 				EE869682A2F2433BA8280E5F /* BrowserFindShortcutRoutingTests.swift in Sources */,

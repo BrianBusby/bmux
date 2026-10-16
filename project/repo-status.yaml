@@ -486,3 +486,6 @@ local_caveats:
 
   - id: app_host_shared_resource_isolation_verification
     status: open
+
+  - id: portal_animation_completion_fixture_verification
+    status: open

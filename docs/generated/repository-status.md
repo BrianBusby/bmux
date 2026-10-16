@@ -309,3 +309,4 @@ Repository: `BrianBusby/bmux`
 | `migrated_cli_process_ci_deadline_verification` | open |
 | `ci_test_host_environment_propagation_verification` | open |
 | `app_host_shared_resource_isolation_verification` | open |
+| `portal_animation_completion_fixture_verification` | open |

@@ -251,6 +251,7 @@ Regenerate with: ./scripts/project-docs generate
 | Crash-report symlink fixture owns an existing report and isolated home; build 795 and complete test target compile pass, macOS 15 app-host verification remains pending (`crash_report_symlink_fixture_verification`) | Bmux | open |  |
 | CI flags now cross console and XCTest boundaries after actual test-only CI red; fixed-head guard and native app-host verification remain pending (`ci_test_host_environment_propagation_verification`) | Bmux | open |  |
 | Native test target explicitly disables in-process parallelization for shared AppKit and runtime state; hostless controls pass, full app-host coverage and unchanged 900-second budget remain unverified (`app_host_shared_resource_isolation_verification`) | Bmux | open |  |
+| Two portal geometry and overlay fixtures preserve their scheduled-action and animation-completion assertions; native controls pass, fixed-head app-host verification remains pending (`portal_animation_completion_fixture_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
