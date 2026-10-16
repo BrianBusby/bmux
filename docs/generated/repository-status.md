@@ -351,3 +351,4 @@ Repository: `BrianBusby/bmux`
 | `notification_burst_native_completion_verification` | open |
 | `file_explorer_shortcut_context_fixture_verification` | open |
 | `browser_visible_notification_completion_verification` | open |
+| `session_fork_diagnostic_completion_verification` | open |

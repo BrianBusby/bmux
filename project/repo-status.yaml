@@ -612,3 +612,6 @@ local_caveats:
 
   - id: browser_visible_notification_completion_verification
     status: open
+
+  - id: session_fork_diagnostic_completion_verification
+    status: open

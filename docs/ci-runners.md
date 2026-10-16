@@ -7008,3 +7008,38 @@ XCTest entry and does not prove the historical macOS 15 cause. Native startup
 pressure may still exceed one second; no deadline increase, retry, load stub, or
 production change is included. Full integrated target and fixed-head macOS 15
 execution remain required. No user-facing or localized product strings changed.
+
+### Session fork diagnostics join CLI completion
+
+Y native shard 8 failed only the five-second `timedOut` assertion in
+`testSessionsListForkDiagnosticsUseForkCommandBuilder`; status was zero and all
+remaining JSON/fork assertions passed. The legacy helper waits on a worker's
+`waitUntilExit` semaphore before draining its merged output pipe. This couples
+completion observation and output handling, but the recorded failure does not
+establish a full pipe, the actual child-exit timestamp, or a historical scheduler
+cause.
+
+The exact case moves to the serialized `CLISessionForkDiagnosticTests` suite and
+uses the maintained `ShellContractProcess`. Its throwing, joined completion
+retains the original plain five-second process bound on both local and CI hosts;
+this case never inherited the separate twenty-second CI minimum. The runner
+owns regular output files, observes termination, and joins before fixture cleanup.
+Its existing 200-millisecond termination grace replaces the legacy helper's
+one-second TERM and one-second KILL waits; the primary failure bound is unchanged.
+All seven status/JSON expectations, strict decoding, captured exec-mode arguments,
+fixed IDs/timestamps, literal diagnostic directory and fake PID remain. No captured
+agent executable is launched. Owned HOME/CFFIXED/XDG/CODEX/Claude paths and an
+allowlisted environment prevent ambient history, credential or telemetry access.
+Other cases and both shared process helpers remain unchanged.
+
+Frozen build 799 passed the exact case in configured Swift 5 (0.025 seconds) and
+strict Swift 6 (0.238 seconds), with warnings-as-errors compilation. A temporary
+control changing only captured Codex arguments from exec mode to interactive
+mode failed exactly the three fork-support/reason/startup-input expectations
+(0.024 seconds). The standalone execution substitutes the explicit frozen CLI
+path for bundle discovery; the unchanged real bundle locator is typechecked.
+Owned fixture roots were removed after joined completion. This is diagnostic
+JSON coverage, not agent launch or socket-delivery coverage. Full-target and
+actual macOS 15 app-host verification remain root integration gates; local success
+does not identify the historical timeout cause. No production, selector or
+shared timeout policy changed.

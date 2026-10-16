@@ -6672,3 +6672,8 @@ caveats:
     title: Redundant browser visibility fixture observes native loading within its original one-second bound; build 799 positive and omission controls pass locally, actual macOS 15 verification and historical startup latency remain unresolved
     status: open
     owner: bmux
+
+  - id: session_fork_diagnostic_completion_verification
+    title: Session fork diagnostic fixture joins CLI completion within its original plain five-second local and CI bound; build 799 positive and fork-mode negative controls pass, historical timeout cause and integrated macOS 15 verification remain unresolved
+    status: open
+    owner: bmux
