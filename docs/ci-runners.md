@@ -7439,3 +7439,45 @@ visibility suite compiles in configured Swift 5. Five unrelated legacy helper
 actor-call diagnostics still prevent strict Swift 6 compilation of that whole
 suite. The temporary controls use the existing dispatch-main bootstrap; they do
 not establish equivalence to the app-host NSApplication event loop.
+
+
+### Markdown scroll restoration frame completion
+
+Actual Z7 `keepsVisibleHeadingPositionAfterContentUpdate` reported 7068 points
+of heading drift against its unchanged 6-point tolerance. The rendering fixture
+previously awaited only synchronous JavaScript evaluation. The shell's initial
+render captures a near-top scroll state and then restores it in two nested
+animation frames; those queued callbacks can overwrite the test's later scroll.
+
+`MarkdownRenderTestFixture.renderMarkdownForScrollObservation` registers its own two nested
+frames immediately after the renderer in the same JavaScript evaluation. FIFO
+registration places each renderer restore before the corresponding fixture
+frame. Completion uses the existing message stream, absolute deadline, and
+cancellation registry. A new explicit render timeout defaults to five seconds;
+the previous evaluation await was unbounded. Only the scroll-position case uses
+this boundary. The existing `renderMarkdown` behavior remains unchanged for
+image, diagram, and security cases, which retain their own observations and do
+not acquire a new displayed-frame requirement. All three original scroll assertions and the 6-point
+tolerance remain unchanged; no production code changes.
+
+An owned build-801 WebKit process with a temporary controlled RAF queue delivered
+the actual shell callbacks after the old boundary and reproduced exactly 7068
+points of drift. The fixed boundary retained heading top 48.25 before and after
+rendering, satisfying all three assertions. Withheld-frame timeout and
+entry-triggered cancellation controls joined the operation and removed its JS
+registration and pending fixture frame. The remaining renderer callback is
+page-owned and released by fixture close; it is not represented as a joined
+production task. Owned processes joined and temporary homes were removed.
+
+These controlled callbacks are not a displayed native-frame proof. Local native
+frame delivery remained absent while the desktop was locked
+(`CGSSessionScreenIsLocked=True`); all owned windows and processes were closed,
+and further visibility experiments stopped. Native displayed completion on an
+unlocked desktop or actual CI remains pending, along with root's integrated
+full-target verification. The preserved fixture presentation is unchanged.
+Evidence: `/tmp/z7-markdown-scroll-proof/controlled-old.log`,
+`corrected-controlled-fixed.log`, and the source/cleanup packet in that
+directory. The final scoped method passes all controlled cases in 5.679 seconds;
+configured Swift 5 and strict Swift 6 compile with zero warnings. Local Project
+Truth validation/generation/check, strict determinism, selector validation, and
+the actual-main file budget pass.

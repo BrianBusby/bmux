@@ -22,7 +22,7 @@ struct MarkdownWindowRenderingTests {
 
         try await fixture.loadShell(baseURL: FileManager.default.temporaryDirectory.appendingPathComponent("scroll.md"))
 
-        try await fixture.renderMarkdown(fixture.scrollSmokeMarkdown(extraBeforeSection20: false))
+        try await fixture.renderMarkdownForScrollObservation(fixture.scrollSmokeMarkdown(extraBeforeSection20: false))
         let before = try await fixture.evaluateScrollSnapshot(
             """
             (function() {
@@ -41,7 +41,7 @@ struct MarkdownWindowRenderingTests {
 
         #expect((before["max"] ?? 0) > (1_000))
 
-        try await fixture.renderMarkdown(fixture.scrollSmokeMarkdown(extraBeforeSection20: true))
+        try await fixture.renderMarkdownForScrollObservation(fixture.scrollSmokeMarkdown(extraBeforeSection20: true))
         let after = try await fixture.evaluateScrollSnapshot(
             """
             (function() {
