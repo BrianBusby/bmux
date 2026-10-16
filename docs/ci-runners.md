@@ -6162,3 +6162,26 @@ deadlines; they are not passing evidence. The numeric watchdog diagnostics do
 not claim to fix the unresolved historical deadline-to-pipeline completion gap.
 Candidate U requires its own native, release, performance, package and companion
 gates before merge; no check or threshold is waived.
+
+### Task-group assertion macro compatibility
+
+Candidate U native shards 2 and 4 failed compilation before test execution in
+the pending-diff batch. The package job independently reported the same direct `group.next()`
+assertion form in `RemoteDaemonBootstrapFixture`: its Testing macro expanded the
+call through an immutable closure parameter, making the mutating `next()` call
+invalid. Local Testing 1902 expands this form differently, which explains why
+strict local compilation had not exposed the older-toolchain failure.
+
+The two affected fixture owners now await `group.next()` into a local optional
+value before passing that value to `#require`. Each still awaits exactly once;
+phase deadlines, cancellation, group joins, error propagation and all behavioral
+assertions remain unchanged. The U-introduced Dock and session-link sites already
+place `await` inside the macro argument; they do not use the direct-call argument
+shape shown by the CI failure and are unchanged.
+
+The unchanged bootstrap contract cases and pending-diff positive/cleanup
+controls are verified locally against frozen build 797 with strict Swift 6.
+Local expansion confirms the corrected macro receives only the resulting value.
+Only the current toolchain is installed locally; this is not an execution of
+CI's older Testing plugin. Corrected package and app-host CI remain required.
+No production code, timeout policy or permanent syntax-only tests are changed.

@@ -102,7 +102,8 @@ final class RemoteDaemonBootstrapFixture: Sendable {
                     throw Failure.deadline
                 }
                 defer { group.cancelAll() }
-                return try await #require(group.next())
+                let result = try await group.next()
+                return try #require(result)
             }
             let errorCode = await worker.value
             try Task.checkCancellation()

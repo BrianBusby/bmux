@@ -159,7 +159,10 @@ final class PendingDiffOrderingFixture {
                 try await ContinuousClock().sleep(until: deadline)
                 throw Failure.deadline(phase)
             }
-            do { return try await #require(group.next()) } catch {
+            do {
+                let result = try await group.next()
+                return try #require(result)
+            } catch {
                 onFailure()
                 throw error
             }
