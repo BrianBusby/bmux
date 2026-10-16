@@ -1724,6 +1724,7 @@
 		3F189A2743FE4B8CAE6C826A /* TerminalDefaultFileOpenRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9899C03FBE85455293256686 /* TerminalDefaultFileOpenRequest.swift */; };
 		B11080BE1D294201936767BF /* TerminalDeferredNumpadCommitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73A43E372B9D4332B14D0462 /* TerminalDeferredNumpadCommitTests.swift */; };
 		0D56BE882EAD4B67AC44F96D /* TerminalDirectoryOpenSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B8E2E03F4A64C61B729CF19 /* TerminalDirectoryOpenSupport.swift */; };
+		D2BFF48DA9F24330B25D0DED /* TerminalDropZoneOverlayContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63267DD2C91B4F0DBC94B469 /* TerminalDropZoneOverlayContractTests.swift */; };
 		E5C0F1A0E5C0F1A0E5C0F1A0 /* TerminalFindEscapeRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5C0F1A1E5C0F1A1E5C0F1A1 /* TerminalFindEscapeRouting.swift */; };
 		BD4943A8CD634E99BC5910CB /* TerminalFocusDeliveryFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC41976AD10B4C4BAA49AE16 /* TerminalFocusDeliveryFixture.swift */; };
 		A5FB1303 /* TerminalForegroundCommandCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB1304 /* TerminalForegroundCommandCapture.swift */; };
@@ -1767,6 +1768,7 @@
 		D5671001D5671001D5671001 /* TerminalScrollSpeedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5671002D5671002D5671002 /* TerminalScrollSpeedSettings.swift */; };
 		D5671101D5671101D5671101 /* TerminalScrollSpeedSettingsFileStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5671102D5671102D5671102 /* TerminalScrollSpeedSettingsFileStoreTests.swift */; };
 		C0DE53350000000000000001 /* TerminalSearchOverlayHostingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE53350000000000000002 /* TerminalSearchOverlayHostingView.swift */; };
+		68B3A64AB2A44E349ADFBE3F /* TerminalSearchOverlayLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49AA52F10DD4107BBAEBDC3 /* TerminalSearchOverlayLifecycleTests.swift */; };
 		A13EF928AC4C46A9B7500002 /* TerminalSearchOverlayMouseFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A13EF928AC4C46A9B7500001 /* TerminalSearchOverlayMouseFixture.swift */; };
 		C0DE53360000000000000001 /* TerminalSearchOverlayMouseReleaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE53360000000000000002 /* TerminalSearchOverlayMouseReleaseTests.swift */; };
 		65DB13069E2C457594114E30 /* TerminalSearchResponderRepairTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40B4A40D8CD44AAAA2402FA2 /* TerminalSearchResponderRepairTests.swift */; };
@@ -3804,6 +3806,7 @@
 		9899C03FBE85455293256686 /* TerminalDefaultFileOpenRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalDefaultFileOpenRequest.swift"; sourceTree = "<group>"; };
 		73A43E372B9D4332B14D0462 /* TerminalDeferredNumpadCommitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalDeferredNumpadCommitTests.swift"; sourceTree = "<group>"; };
 		6B8E2E03F4A64C61B729CF19 /* TerminalDirectoryOpenSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/TerminalDirectoryOpenSupport.swift; sourceTree = "<group>"; };
+		63267DD2C91B4F0DBC94B469 /* TerminalDropZoneOverlayContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalDropZoneOverlayContractTests.swift"; sourceTree = "<group>"; };
 		E5C0F1A1E5C0F1A1E5C0F1A1 /* TerminalFindEscapeRouting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/TerminalFindEscapeRouting.swift; sourceTree = "<group>"; };
 		EC41976AD10B4C4BAA49AE16 /* TerminalFocusDeliveryFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalFocusDeliveryFixture.swift"; sourceTree = "<group>"; };
 		A5FB1304 /* TerminalForegroundCommandCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalForegroundCommandCapture.swift; sourceTree = "<group>"; };
@@ -3847,6 +3850,7 @@
 		D5671002D5671002D5671002 /* TerminalScrollSpeedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/TerminalScrollSpeedSettings.swift; sourceTree = "<group>"; };
 		D5671102D5671102D5671102 /* TerminalScrollSpeedSettingsFileStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalScrollSpeedSettingsFileStoreTests.swift; sourceTree = "<group>"; };
 		C0DE53350000000000000002 /* TerminalSearchOverlayHostingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Find/TerminalSearchOverlayHostingView.swift; sourceTree = "<group>"; };
+		B49AA52F10DD4107BBAEBDC3 /* TerminalSearchOverlayLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalSearchOverlayLifecycleTests.swift"; sourceTree = "<group>"; };
 		A13EF928AC4C46A9B7500001 /* TerminalSearchOverlayMouseFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalSearchOverlayMouseFixture.swift"; sourceTree = "<group>"; };
 		C0DE53360000000000000002 /* TerminalSearchOverlayMouseReleaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSearchOverlayMouseReleaseTests.swift; sourceTree = "<group>"; };
 		40B4A40D8CD44AAAA2402FA2 /* TerminalSearchResponderRepairTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalSearchResponderRepairTests.swift"; sourceTree = "<group>"; };
@@ -5882,6 +5886,8 @@
 				40D97D31E44313C0986B3466 /* WorkspaceCreationConfigSanitizationTests.swift */,
 				89940315419C5A8615528C91 /* TerminalPortalGeometryContractTests.swift */,
 				8F2FCD62D4114FA7A703483F /* BrowserDropZoneOverlayContractTests.swift */,
+				B49AA52F10DD4107BBAEBDC3 /* TerminalSearchOverlayLifecycleTests.swift */,
+				63267DD2C91B4F0DBC94B469 /* TerminalDropZoneOverlayContractTests.swift */,
 				76ED30720A0E4D52BA6ED4CB /* WorkspaceGitSnapshotCoalescingTests.swift */,
 				BF17A74A79F34CA48DCFE258 /* BlockingWorkspaceGitMetadataReader.swift */,
 					BFE62B5417910DCEC3E7F197 /* BrowserInspectorWindowOwnershipTests.swift */,
@@ -8742,6 +8748,7 @@
 				6190C0126190C0126190C012 /* TerminalCopyOnSelectManagedConfigLayeringTests.swift in Sources */,
 				53FCE170B803439CAB6FD90C /* TerminalDefaultFileLaunchContractTests.swift in Sources */,
 				B11080BE1D294201936767BF /* TerminalDeferredNumpadCommitTests.swift in Sources */,
+				D2BFF48DA9F24330B25D0DED /* TerminalDropZoneOverlayContractTests.swift in Sources */,
 				BD4943A8CD634E99BC5910CB /* TerminalFocusDeliveryFixture.swift in Sources */,
 				C2DBE3A4A10590FD99515813 /* TerminalInitialRuntimeReadinessTests.swift in Sources */,
 				E59CA2221BE74239907D34DF /* TerminalKeyRepeatDeliveryTests.swift in Sources */,
@@ -8757,6 +8764,7 @@
 				5F7C1048D1764084C7EBF979 /* TerminalPortalGeometryContractTests.swift in Sources */,
 				AC0A317D658C4DD299300002 /* TerminalRuntimeReadinessFixture.swift in Sources */,
 				D5671101D5671101D5671101 /* TerminalScrollSpeedSettingsFileStoreTests.swift in Sources */,
+				68B3A64AB2A44E349ADFBE3F /* TerminalSearchOverlayLifecycleTests.swift in Sources */,
 				A13EF928AC4C46A9B7500002 /* TerminalSearchOverlayMouseFixture.swift in Sources */,
 				C0DE53360000000000000001 /* TerminalSearchOverlayMouseReleaseTests.swift in Sources */,
 				65DB13069E2C457594114E30 /* TerminalSearchResponderRepairTests.swift in Sources */,

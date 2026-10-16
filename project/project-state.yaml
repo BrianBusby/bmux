@@ -6637,3 +6637,8 @@ caveats:
     title: Legacy remote cwd trust fixture targets the original panel identity and restores it focused before testing presented directory; build 799 positive and trust-negative controls pass, actual macOS 15 CI remains pending
     status: open
     owner: bmux
+
+  - id: terminal_overlay_completion_fixture_verification
+    title: Three terminal overlay cases observe native completion with preserved intervals and oracles; drop and rebind controls pass, Escape delivery calibration exposes the offscreen gap and awaits presented macOS 15 app-host verification
+    status: open
+    owner: bmux
