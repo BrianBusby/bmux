@@ -6657,3 +6657,8 @@ caveats:
     title: LaunchServices scheduling test restores its original delegate and route-retirer composition; native 799 scheduling and identity controls pass, historical inspector routing linkage and macOS 15 app-host verification remain unproven
     status: open
     owner: bmux
+
+  - id: session_fork_diagnostic_completion_verification
+    title: Session fork diagnostic fixture joins CLI completion within its original plain five-second local and CI bound; build 799 positive and fork-mode negative controls pass, historical timeout cause and integrated macOS 15 verification remain unresolved
+    status: open
+    owner: bmux

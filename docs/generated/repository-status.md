@@ -349,3 +349,4 @@ Repository: `BrianBusby/bmux`
 | `legacy_remote_directory_trust_fixture_verification` | open |
 | `codex_approval_response_observation_verification` | open |
 | `notification_burst_native_completion_verification` | open |
+| `session_fork_diagnostic_completion_verification` | open |
