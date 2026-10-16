@@ -6797,3 +6797,34 @@ only NSApp delivery, never direct handler calls, and still needs actual app-host
 verification. Root owns full-target compilation
 and actual macOS 15 app-host verification; local positives do not prove the
 historical CI scheduling cause. No runtime behavior or product strings changed.
+
+### Native notification burst completion
+
+W shard 2 recorded callback timeouts and zero values in the existing latest-action
+and separate-burst coalescer cases before the job was cancelled. The tests used
+blocking XCTest waits around the default main-queue timer. The separate-burst
+case also scheduled its second signal after an arbitrary 50ms interval. The
+actual CI failure does not establish a production timer defect or its scheduling
+cause.
+
+Only these two cases move to Swift Testing. An owned stream observes the real
+`NotificationBurstCoalescer` default scheduler at its unchanged 10ms delay. The
+latest action must deliver value two. The separate-burst case waits for the first
+native flush before sending the second signal, then requires values one and two
+and exactly two callbacks. One absolute one-second deadline covers the entire
+case, including both bursts; no fake timer, direct flush substitution or timeout
+increase supplies the assertions. Structured observation and deadline tasks are
+cancelled and joined. On every exit, the existing `flushNow` cancels any remaining
+owned native timer before the stream finishes. Its cleanup action runs after the
+observation outcome and cannot turn a thrown timeout into success.
+
+A hostless Foundation executable compiled the exact production coalescer source
+with the new cases: both real-timer controls passed. Withholding the latest
+callback produced the expected one-second failure while the two-burst case still
+passed. Configured Swift 5 and strict Swift 6 compilation are warning-free. The
+first temporary compilation lacked the Testing framework search path; a later
+inline actor closure exposed a Swift region-checker diagnostic, resolved by a
+cohesive actor-isolated consumer method without a suppression or production
+change. No app, window, provider process, network or user setting is involved.
+The unchanged third coalescing case remains in its original suite. Root owns the
+combined test-target build and actual macOS 15 CI verification.

@@ -6642,3 +6642,8 @@ caveats:
     title: Three terminal overlay cases observe native completion with preserved intervals and oracles; drop and rebind controls pass, Escape delivery calibration exposes the offscreen gap and awaits presented macOS 15 app-host verification
     status: open
     owner: bmux
+
+  - id: notification_burst_native_completion_verification
+    title: Two notification coalescer cases observe real native timer callbacks within the original one-second total bound; latest-action and separate-burst controls pass, actual macOS 15 verification remains pending
+    status: open
+    owner: bmux
