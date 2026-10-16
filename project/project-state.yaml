@@ -6612,3 +6612,8 @@ caveats:
     title: Search-overlay mouse fixtures own a real focused workspace and native mount delivery with a new three-second runtime prerequisite and original one-second mount cap; build 799 controls pass, integrated macOS 15 verification remains pending
     status: open
     owner: bmux
+
+  - id: welcome_shortcut_delivery_diagnostic_verification
+    title: Welcome shortcut timeout retains its original route and one-second observer while reporting bounded callback and native window state; historical V timeout cause and next macOS 15 execution remain unresolved
+    status: open
+    owner: bmux

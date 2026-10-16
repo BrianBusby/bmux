@@ -343,3 +343,4 @@ Repository: `BrianBusby/bmux`
 | `fork_live_process_scope_fixture_verification` | open |
 | `app_host_eight_shard_capacity_verification` | open |
 | `terminal_search_overlay_mouse_fixture_verification` | open |
+| `welcome_shortcut_delivery_diagnostic_verification` | open |

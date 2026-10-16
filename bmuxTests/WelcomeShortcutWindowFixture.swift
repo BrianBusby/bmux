@@ -17,6 +17,10 @@ final class WelcomeShortcutWindowFixture {
     private let sidebar = SidebarState(isVisible: true)
     private let explorer: FileExplorerState
     private var priorVisibility: CFPropertyList?
+    private var captureDelivered = false
+    private var completionDeliveredAt: TimeInterval?
+    private var completionVisibility: Bool?
+    private var rightHandled = false
 
     init(appDelegate: AppDelegate) {
         self.appDelegate = appDelegate
@@ -73,12 +77,16 @@ final class WelcomeShortcutWindowFixture {
             // event in FIFO delivery, preserving the defaults value at execution time.
             DispatchQueue.main.async {
                 self.priorVisibility = Self.persistedValue("fileExplorer.isVisible")
+                self.captureDelivered = true
             }
             let rightHandled = appDelegate.debugHandleCustomShortcut(event: right)
+            self.rightHandled = rightHandled
             DispatchQueue.main.async { [self] in
                 MainActor.assumeIsolated {
                     let visible = explorer.isVisible
                     Self.restore(keys: ["fileExplorer.isVisible"], values: [self.priorVisibility])
+                    completionDeliveredAt = ProcessInfo.processInfo.systemUptime
+                    completionVisibility = visible
                     completion.continuation.yield(visible)
                     completion.continuation.finish()
                 }
@@ -89,18 +97,32 @@ final class WelcomeShortcutWindowFixture {
     }
 
     func awaitRightSidebarToggle(_ events: AsyncStream<Bool>, timeout: Duration = .seconds(1)) async throws -> Bool {
-        try await withThrowingTaskGroup(of: Bool.self) { group in
-            defer { group.cancelAll() }
-            group.addTask {
-                for await visible in events { return visible }
-                throw CancellationError()
+        let started = ProcessInfo.processInfo.systemUptime
+        do {
+            return try await withThrowingTaskGroup(of: Bool.self) { group in
+                defer { group.cancelAll() }
+                group.addTask {
+                    for await visible in events { return visible }
+                    throw CancellationError()
+                }
+                group.addTask {
+                    // Original one-second failure deadline; never a settling or polling delay.
+                    try await ContinuousClock().sleep(for: timeout)
+                    throw FixtureFailure.rightSidebarDeliveryTimedOut("timer expired")
+                }
+                return try await group.next() ?? false
             }
-            group.addTask {
-                // Original one-second failure deadline; never a settling or polling delay.
-                try await ContinuousClock().sleep(for: timeout)
-                throw FixtureFailure.rightSidebarDeliveryTimedOut
-            }
-            return try await group.next() ?? false
+        } catch FixtureFailure.rightSidebarDeliveryTimedOut {
+            let elapsed = ProcessInfo.processInfo.systemUptime - started
+            let callback = completionDeliveredAt.map { String(format: "%.3f", $0 - started) } ?? "none"
+            let visible = completionVisibility.map { $0 ? "1" : "0" } ?? "none"
+            let registered = appDelegate.mainWindowContexts[ObjectIdentifier(window)] != nil
+            throw FixtureFailure.rightSidebarDeliveryTimedOut(
+                "event=welcome_shortcut_delivery elapsed=\(String(format: "%.3f", elapsed)) callback_elapsed=\(callback) " +
+                "capture=\(captureDelivered) callback_visible=\(visible) handled=\(rightHandled) " +
+                "registered=\(registered) native_visible=\(window.isVisible) key=\(window.isKeyWindow) " +
+                "final_visible=\(explorer.isVisible)"
+            )
         }
     }
 
@@ -152,5 +174,5 @@ final class WelcomeShortcutWindowFixture {
         }
     }
 
-    private enum FixtureFailure: Error { case rightSidebarDeliveryTimedOut }
+    private enum FixtureFailure: Error { case rightSidebarDeliveryTimedOut(String) }
 }

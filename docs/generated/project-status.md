@@ -288,6 +288,7 @@ Regenerate with: ./scripts/project-docs generate
 | Fork cache refresh fixture supplies matching live workspace and surface environment identities; missing and wrong scope controls fail while the corrected native case passes, fixed-head macOS 15 verification remains pending (`fork_live_process_scope_fixture_verification`) | Bmux | open |  |
 | Eight deterministic native shards preserve the complete selector partition and unchanged 900-second bound; measured V workload supports added capacity, final CI completion and increased runner queue cost remain pending (`app_host_eight_shard_capacity_verification`) | Bmux | open |  |
 | Search-overlay mouse fixtures own a real focused workspace and native mount delivery with a new three-second runtime prerequisite and original one-second mount cap; build 799 controls pass, integrated macOS 15 verification remains pending (`terminal_search_overlay_mouse_fixture_verification`) | Bmux | open |  |
+| Welcome shortcut timeout retains its original route and one-second observer while reporting bounded callback and native window state; historical V timeout cause and next macOS 15 execution remain unresolved (`welcome_shortcut_delivery_diagnostic_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

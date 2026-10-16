@@ -588,3 +588,6 @@ local_caveats:
 
   - id: terminal_search_overlay_mouse_fixture_verification
     status: open
+
+  - id: welcome_shortcut_delivery_diagnostic_verification
+    status: open
