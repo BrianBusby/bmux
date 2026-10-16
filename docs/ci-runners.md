@@ -7385,3 +7385,29 @@ Owned HOME and telemetry/network fences precede module loading; processes join
 before owned directory deletion. No app, window, input-source selection, or
 user settings are activated or changed. Full integrated target and macOS 15 CI
 remain pending. No product-facing strings or localization keys change.
+
+### Zsh relay prompt-refresh completion
+
+Z shard 6 failed the legacy refresh assertion after observing only `report_pwd`.
+`ZshRelayPromptRefreshTests` migrates that single case: the actual ZDOTDIR
+bootstrap and `_bmux_precmd` still dispatch both relay RPCs, but their owned stubs
+write complete messages to one FIFO descriptor inherited from the main shell.
+Two reads share one absolute one-second observation deadline, preserving the
+original 20 × 50 ms failure cap without first-nonempty polling. The exact refresh
+method, workspace, surface and reason assertion and status-zero outcome remain.
+
+`ShellContractProcess` retains the plain five-second local/CI producer deadline;
+its existing 200 ms TERM grace replaces the old helper's unbounded termination
+wait. The main shell is joined before root cleanup. Detached exits are not joined:
+the two bounded writes fit in the inherited O_RDWR FIFO without a reader, and
+workers never reopen or write fixture paths. Cancellation may prevent a late
+stub from loading its already-removed script; it cannot leave a blocked FIFO
+open or a late path writer. This is not general descendant containment.
+
+Configured Swift 5 and strict Swift 6 compile without warnings and the exact
+case passes locally. A controlled original ordering captures only `report_pwd`;
+missing-refresh and wrong-reason variants fail the retained oracles. An
+event-driven cancellation control joins the parent and removes its root.
+These establish completion sensitivity, not the historical CI interleaving;
+integrated macOS 15 verification remains open in
+`zsh_relay_refresh_completion_verification`. No production shell code changes.

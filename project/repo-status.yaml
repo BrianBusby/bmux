@@ -633,3 +633,6 @@ local_caveats:
 
   - id: keyboard_space_native_layout_isolation_verification
     status: open
+
+  - id: zsh_relay_refresh_completion_verification
+    status: open

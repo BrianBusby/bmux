@@ -4621,54 +4621,6 @@ final class ZshShellIntegrationHandoffTests: XCTestCase {
         XCTAssertFalse(output.contains("surface_id"), output)
     }
 
-    func testShellIntegrationRelayPromptRefreshUsesRefreshReasonInZsh() throws {
-        let fileManager = FileManager.default
-        let root = fileManager.temporaryDirectory
-            .appendingPathComponent("bmux-zsh-relay-precmd-\(UUID().uuidString)")
-        let binDir = root.appendingPathComponent("bin", isDirectory: true)
-        let logPath = root.appendingPathComponent("relay.log", isDirectory: false)
-
-        try fileManager.createDirectory(at: binDir, withIntermediateDirectories: true)
-        defer { try? fileManager.removeItem(at: root) }
-
-        try writeExecutableScript(
-            at: binDir.appendingPathComponent("bmux", isDirectory: false),
-            contents: """
-            #!/bin/sh
-            printf '%s\\n' "$*" >> "\(logPath.path)"
-            exit 0
-            """
-        )
-
-        let output = try runInteractiveZsh(
-            bmuxLoadGhosttyIntegration: false,
-            bmuxLoadShellIntegration: true,
-            command: """
-            : > "\(logPath.path)"
-            _BMUX_TTY_REPORTED=1
-            _BMUX_PORTS_LAST_RUN=-999
-            _bmux_precmd
-            repeat 20; do
-              [[ -s "\(logPath.path)" ]] && break
-              sleep 0.05
-            done
-            cat "\(logPath.path)"
-            """,
-            extraEnvironment: [
-                "PATH": "\(binDir.path):/usr/bin:/bin:/usr/sbin:/sbin",
-                "BMUX_SOCKET_PATH": "127.0.0.1:64011",
-                "BMUX_WORKSPACE_ID": "11111111-1111-1111-1111-111111111111",
-                "BMUX_TAB_ID": "22222222-2222-2222-2222-222222222222",
-                "BMUX_PANEL_ID": "22222222-2222-2222-2222-222222222222",
-            ]
-        )
-
-        XCTAssertTrue(
-            output.contains(#"rpc surface.ports_kick {"workspace_id":"11111111-1111-1111-1111-111111111111","reason":"refresh","surface_id":"22222222-2222-2222-2222-222222222222"}"#),
-            output
-        )
-    }
-
     func testShellIntegrationRelayReportTTYUsesWorkspaceIDInBash() throws {
         let fileManager = FileManager.default
         let root = fileManager.temporaryDirectory
