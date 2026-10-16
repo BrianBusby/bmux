@@ -516,3 +516,6 @@ local_caveats:
 
   - id: agent_session_stream_contract_verification
     status: open
+
+  - id: notification_settings_sheet_fixture_verification
+    status: open

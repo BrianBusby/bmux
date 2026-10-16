@@ -3,6 +3,7 @@ import AppKit
 /// Records presentation at the native alert boundary without displaying a sheet or modal UI.
 @MainActor
 final class NotificationSettingsPromptAlertProbe: NSAlert {
+    var response: NSApplication.ModalResponse = .alertSecondButtonReturn
     private(set) var beginSheetModalCallCount = 0
     private(set) var runModalCallCount = 0
 
@@ -11,11 +12,11 @@ final class NotificationSettingsPromptAlertProbe: NSAlert {
         completionHandler handler: ((NSApplication.ModalResponse) -> Void)?
     ) {
         beginSheetModalCallCount += 1
-        handler?(.alertSecondButtonReturn)
+        handler?(response)
     }
 
     override func runModal() -> NSApplication.ModalResponse {
         runModalCallCount += 1
-        return .alertSecondButtonReturn
+        return response
     }
 }

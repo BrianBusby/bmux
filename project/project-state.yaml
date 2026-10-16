@@ -6479,3 +6479,8 @@ caveats:
     title: Codex queue observes owned submission and RPC boundaries, OpenCode auth matches the explicit username, and Claude final text is not counted as pending delta; focused native checks pass, fresh runtime and macOS 15 app-host verification remain pending
     status: open
     owner: bmux
+
+  - id: notification_settings_sheet_fixture_verification
+    title: Settings sheet fixture observes synchronous injected alert completion and retains its window; build 796 controls pass, integrated macOS 15 verification remains pending
+    status: open
+    owner: bmux
