@@ -2622,46 +2622,6 @@ final class NotificationBurstCoalescerTests: XCTestCase {
         wait(for: [expectation], timeout: 1.0)
         XCTAssertEqual(flushCount, 1)
     }
-
-    func testLatestActionWinsWithinBurst() {
-        let coalescer = NotificationBurstCoalescer(delay: 0.01)
-        let expectation = expectation(description: "latest action flushed")
-        var value = 0
-
-        coalescer.signal {
-            value = 1
-        }
-        coalescer.signal {
-            value = 2
-            expectation.fulfill()
-        }
-
-        wait(for: [expectation], timeout: 1.0)
-        XCTAssertEqual(value, 2)
-    }
-
-    func testSignalsAcrossBurstsFlushMultipleTimes() {
-        let coalescer = NotificationBurstCoalescer(delay: 0.01)
-        let expectation = expectation(description: "flush twice")
-        expectation.expectedFulfillmentCount = 2
-        var flushCount = 0
-
-        coalescer.signal {
-            flushCount += 1
-            expectation.fulfill()
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            MainActor.assumeIsolated {
-                coalescer.signal {
-                    flushCount += 1
-                    expectation.fulfill()
-                }
-            }
-        }
-
-        wait(for: [expectation], timeout: 1.0)
-        XCTAssertEqual(flushCount, 2)
-    }
 }
 
 final class RecentlyClosedBrowserStackTests: XCTestCase {

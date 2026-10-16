@@ -348,3 +348,4 @@ Repository: `BrianBusby/bmux`
 | `app_host_cold_build_deadline_boundary` | open |
 | `legacy_remote_directory_trust_fixture_verification` | open |
 | `codex_approval_response_observation_verification` | open |
+| `notification_burst_native_completion_verification` | open |

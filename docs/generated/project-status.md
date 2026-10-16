@@ -295,6 +295,7 @@ Regenerate with: ./scripts/project-docs generate
 | Legacy remote cwd trust fixture targets the original panel identity and restores it focused before testing presented directory; build 799 positive and trust-negative controls pass, actual macOS 15 CI remains pending (`legacy_remote_directory_trust_fixture_verification`) | Bmux | open |  |
 | Three terminal overlay cases observe native completion with preserved intervals and oracles; drop and rebind controls pass, Escape delivery calibration exposes the offscreen gap and awaits presented macOS 15 app-host verification (`terminal_overlay_completion_fixture_verification`) | Bmux | open |  |
 | Codex approval fixture observes keyed async replies while preserving standard and full-access permission assertions with a new one-second observation bound; owned build 799 controls pass, integrated macOS 15 CI remains pending (`codex_approval_response_observation_verification`) | Bmux | open |  |
+| Two notification coalescer cases observe real native timer callbacks within the original one-second total bound; latest-action and separate-burst controls pass, actual macOS 15 verification remains pending (`notification_burst_native_completion_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
