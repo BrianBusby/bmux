@@ -7378,8 +7378,9 @@ The follow-up passes the rail's existing selected workspace ID into the filter
 bar and compares visible item IDs. The title remains display text; the warning
 and existing reveal action share the same semantic predicate. All five unchanged
 scenario assertions pass in configured Swift 5 and strict Swift 6 source-level
-runtime controls, with zero compiler warnings. Fixed integrated target, fresh
-tagged runtime build, and actual CI green remain pending root verification.
+runtime controls, with zero compiler warnings. Fixed build 802 passed, and all
+five cases passed on macOS 15 in AF shard 2 (0.031 seconds). The latest integrated
+head still requires its own CI result; the earlier AF run was not wholly green.
 The existing warning and reveal-action catalog keys have English and Japanese
 translations; no user-facing strings change in this regression slice.
 
@@ -7687,8 +7688,9 @@ under native `NSApplication.run`, with owned settings and activation prohibited.
 The complete unchanged visibility suite retains its previously documented
 strict-Swift-6 helper limitations; configured Swift 5 compiles that full source.
 No desktop presentation, app build, or user settings changes occur. Actual
-macOS 15 integrated verification remains open in
-`minimal_mode_failure_phase_diagnostics_verification`.
+macOS 15 acceptance is now recorded by the complete six-oracle case passing in
+AF shard 7 (2.185 seconds). The historical timeout phase and latest integrated
+head's CI remain open in `minimal_mode_failure_phase_diagnostics_verification`.
 
 
 ### Markdown fixture callback-arrival ownership
@@ -7726,8 +7728,10 @@ cleared native registrations and queued DOM cleanup are checked separately.
 The complete fixture and its rendering, image-consent and Mermaid callers
 compile in Swift 5 and strict Swift 6 without warnings. All displayed-window
 behavior remains unchanged and was not executed while the desktop was locked.
-Actual displayed scroll-frame completion remains an unlocked-desktop or CI
-gate. Source adaptations, controls and limits are recorded in
+AF shard 5 subsequently passed all four rendering cases on macOS 15
+(2.714 seconds), including displayed scroll restoration (0.521 seconds).
+This supplies the displayed-frame CI acceptance without claiming a new local
+presentation proof. Source adaptations, controls and limits are recorded in
 `/tmp/markdown-operation-arrival-proof/handoff.md`. Root owns integrated
 full-target and CI verification; no production or localization surface changed.
 
@@ -7755,9 +7759,11 @@ measured 0.533ms and 19.691ms. Both passed all three rebind assertions. Those
 local measurements do not partition the actual AD delay or prove macOS 15
 scheduling. Exact-source rebind positive and omitted-mount negative results,
 configured Swift 5/strict Swift 6 compilation and cleanup are recorded in
-`/tmp/ad-overlay-mount-proof/handoff.md`. The locked desktop prevents presented
-Escape verification; fixed-head app-host CI remains required. No localization
-surface changes.
+`/tmp/ad-overlay-mount-proof/handoff.md`. Those local controls did not verify
+presented Escape delivery while the desktop was locked. AF shard 7 subsequently
+passed all three cases on macOS 15 (1.257 seconds), including the real subsequent
+key-up calibration. The latest integrated head's CI remains pending. No
+localization surface changes.
 
 
 ### AD deferred terminal search-field attachment and focus
@@ -7851,8 +7857,9 @@ and queued cancellation/closed-fixture cleanup are recorded in
 final field-focus controls use an owned nonactivating presented logical-key
 window and verify unchanged frontmost process. Permanent tests retain normal
 NSWindow and original presentation. Local controls do not prove native key
-acquisition or fixed presented macOS 15 behavior. No user app is activated or replaced,
-and no localization surface changes.
+acquisition; AF shard 1 subsequently passed all seven presented cases on macOS 15
+(5.159 seconds). The latest integrated head's CI remains pending. No user app was
+activated or replaced by these local controls, and no localization surface changes.
 
 
 ### CLI process completion and stale Codex rows (AF8)
@@ -7943,8 +7950,14 @@ reader rather than abandoning it and does not claim descendant containment.
 Expected unavailable/unsupported probes still fall back to unavailable fork
 support, not incidents; low-level read errors retain the existing process-pipe
 logger. No new telemetry, raw command output/path/environment logging, localized
-surface or sampling change is introduced. A fresh isolated whole-app build,
-user-approved dogfood and fixed macOS 15 CI remain required; build 802 is untouched.
+surface or sampling change is introduced. The fresh isolated tagged build 803
+completed, and the exact migrated case passed against its actual module in
+0.138 seconds, without production-source substitution. An actual-module
+cancellation control also passed in 0.654 seconds, including the existing
+500 ms grace for a TERM-ignoring child; it returned nil and confirmed the child
+was reaped. These are complete control durations, not isolated cancel-to-TERM
+latencies. User dogfood and the latest integrated head's CI remain pending;
+build 802 is untouched.
 
 ### Remote shell UTF-8 completion ownership (AF6)
 
@@ -7968,3 +7981,27 @@ socket, network or user configuration access. Evidence is recorded in
 `/tmp/af6-utf8-locale-proof/handoff.md`. Integrated macOS 15 verification remains
 pending; the earlier AF8 shared-owner lifecycle controls are reused rather than
 repeated. No production policy or localized surface changes.
+
+### Bounded acceptance reconciliation after AF
+
+AF run `38927526693` tested exact head
+`7bc74648b1d5ce6c66bd48c172bd19170ffa3898` on macOS 15. The following
+specific results are accepted evidence for source owners unchanged in published
+`2107e86f46c90b2142cbf6d286b9ffa09285cf83`; they are not evidence that
+AF was wholly green. That run failed three separate process cases.
+
+| Scope | Actual AF result | Archived receipt |
+| --- | --- | --- |
+| Terminal focus recovery | Seven cases passed; 5.159s | `/tmp/af-shard1-terminal.log:67057` |
+| Terminal overlay lifecycle | Three cases, including real Escape key-up calibration, passed; 1.257s | `/tmp/af-shard7-terminal.log:166104` |
+| Markdown rendering | Four cases passed; 2.714s, including scroll restoration at 0.521s | `/tmp/af-shard5-terminal.log:81825` |
+| Selected-workspace filter visibility | Five cases passed; 0.031s | `/tmp/af-shard2-terminal.log:118444` |
+| Minimal-mode body invalidation | Complete six-oracle case passed; 2.185s | `/tmp/af-shard7-terminal.log:167636` |
+
+The seven related current verification caveats remain open for the latest
+integrated head's CI. Historical failure attribution, native cleanup limits and
+local-proof qualifications remain as documented; these passing cases do not
+identify the historical minimal-mode timeout phase. The OpenCode caveat
+separately records completed build 803 and actual-module checks while retaining
+user dogfood, latest integrated-head CI and inherited-pipe limitations. No
+runtime, test, timeout or assertion changes accompany this reconciliation.
