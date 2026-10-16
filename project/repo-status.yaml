@@ -510,3 +510,6 @@ local_caveats:
 
   - id: remote_daemon_bootstrap_contract_verification
     status: open
+
+  - id: managed_shortcut_authority_fixture_verification
+    status: open

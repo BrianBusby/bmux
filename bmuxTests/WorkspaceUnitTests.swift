@@ -1559,39 +1559,6 @@ final class KeyboardShortcutSettingsFileStoreTests: XCTestCase {
         XCTAssertEqual(invalidPrimaryStore.activeSourcePath, primaryURL.path)
     }
 
-    func testPersistedShortcutOverridesSettingsFileShortcutValues() throws {
-        let directoryURL = try makeTemporaryDirectory()
-        defer { try? FileManager.default.removeItem(at: directoryURL) }
-
-        let settingsFileURL = directoryURL.appendingPathComponent("bmux.json", isDirectory: false)
-        try writeSettingsFile(
-            """
-            {
-              "shortcuts": {
-                "newTab": ["ctrl+b", "c"]
-              }
-            }
-            """,
-            to: settingsFileURL
-        )
-
-        KeyboardShortcutSettings.setShortcut(
-            StoredShortcut(key: "n", command: true, shift: false, option: false, control: false),
-            for: .newTab
-        )
-
-        KeyboardShortcutSettings.settingsFileStore = KeyboardShortcutSettingsFileStore(
-            primaryPath: settingsFileURL.path,
-            fallbackPath: nil,
-            startWatching: false
-        )
-
-        XCTAssertEqual(
-            KeyboardShortcutSettings.shortcut(for: .newTab),
-            StoredShortcut(key: "n", command: true, shift: false, option: false, control: false)
-        )
-        XCTAssertTrue(KeyboardShortcutSettings.isManagedBySettingsFile(.newTab))
-    }
 
     @MainActor
     func testReloadConfigurationReloadsShortcutSettingsFile() throws {
@@ -1746,54 +1713,6 @@ final class KeyboardShortcutSettingsFileStoreTests: XCTestCase {
 #endif
     }
 
-    func testSettingsFileShortcutCanBeOverriddenFromUI() throws {
-        let directoryURL = try makeTemporaryDirectory()
-        defer { try? FileManager.default.removeItem(at: directoryURL) }
-
-        let settingsFileURL = directoryURL.appendingPathComponent("bmux.json", isDirectory: false)
-        let missingSettingsFileURL = directoryURL.appendingPathComponent("missing.json", isDirectory: false)
-        let editedShortcut = StoredShortcut(key: "n", command: true, shift: false, option: false, control: false)
-        let managedShortcut = StoredShortcut(key: "b", command: false, shift: false, option: false, control: true, chordKey: "c")
-
-        try writeSettingsFile(
-            """
-            {
-              "shortcuts": {
-                "newTab": ["ctrl+b", "c"]
-              }
-            }
-            """,
-            to: settingsFileURL
-        )
-
-        KeyboardShortcutSettings.settingsFileStore = KeyboardShortcutSettingsFileStore(
-            primaryPath: settingsFileURL.path,
-            fallbackPath: nil,
-            startWatching: false
-        )
-
-        XCTAssertEqual(KeyboardShortcutSettings.shortcut(for: .newTab), managedShortcut)
-
-        KeyboardShortcutSettings.setShortcut(
-            editedShortcut,
-            for: .newTab
-        )
-
-        XCTAssertEqual(KeyboardShortcutSettings.shortcut(for: .newTab), editedShortcut)
-
-        KeyboardShortcutSettings.resetShortcut(for: .newTab)
-
-        XCTAssertEqual(KeyboardShortcutSettings.shortcut(for: .newTab), managedShortcut)
-
-        KeyboardShortcutSettings.settingsFileStore = KeyboardShortcutSettingsFileStore(
-            primaryPath: missingSettingsFileURL.path,
-            fallbackPath: nil,
-            startWatching: false
-        )
-
-        XCTAssertFalse(KeyboardShortcutSettings.isManagedBySettingsFile(.newTab))
-        XCTAssertEqual(KeyboardShortcutSettings.shortcut(for: .newTab), KeyboardShortcutSettings.Action.newTab.defaultShortcut)
-    }
 
     func testSystemWideHotkeySettingsPreserveInvalidManagedShortcutWithoutFallingBackToDefault() throws {
         let directoryURL = try makeTemporaryDirectory()

@@ -317,3 +317,4 @@ Repository: `BrianBusby/bmux`
 | `grok_sibling_status_fixture_verification` | open |
 | `dock_close_confirmation_owner_verification` | open |
 | `remote_daemon_bootstrap_contract_verification` | open |
+| `managed_shortcut_authority_fixture_verification` | open |

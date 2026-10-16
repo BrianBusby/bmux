@@ -6469,3 +6469,8 @@ caveats:
     title: Persistent PTY reinstall contract uses the owning package and verified owned cache; original two-second oracles pass locally, fixed-head package CI and retained Workspace integration coverage remain pending
     status: open
     owner: bmux
+
+  - id: managed_shortcut_authority_fixture_verification
+    title: Managed shortcut fixtures follow file-authoritative bindings and restore owned settings; native build 796 controls pass, integrated macOS 15 verification remains pending
+    status: open
+    owner: bmux

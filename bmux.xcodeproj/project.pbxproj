@@ -1014,6 +1014,8 @@
 		67752F5C979F4E65A7A9D5DF /* ManagedCodexRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40BC923C3EC142C8A924777F /* ManagedCodexRuntime.swift */; };
 		474F90F423114F9A9D6A7F94 /* ManagedCodexRuntimeError.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4B4FA4FC33B475396984771 /* ManagedCodexRuntimeError.swift */; };
 		F6BCA12F3F234A4CA1BA6A8A /* ManagedCodexRuntimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EAEC7433DF04AC8A922C0CA /* ManagedCodexRuntimeTests.swift */; };
+		FB0D201409B247C7B8997599 /* ManagedShortcutAuthorityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87EA622322644CEA90557688 /* ManagedShortcutAuthorityTests.swift */; };
+		4C965C2C20DD48DBA9A891D0 /* ManagedShortcutSettingsFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 974C58579AB84A908CD3E6AC /* ManagedShortcutSettingsFixture.swift */; };
 		A9D9000000000000000F0017 /* markdown-viewer in Resources */ = {isa = PBXBuildFile; fileRef = A9D9000000000000000F0016 /* markdown-viewer */; };
 		F5168A040000000000000001 /* MarkdownFontFamily.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5168A040000000000000002 /* MarkdownFontFamily.swift */; };
 		F5168A070000000000000001 /* MarkdownFontFamilyCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5168A070000000000000002 /* MarkdownFontFamilyCache.swift */; };
@@ -3096,6 +3098,8 @@
 		40BC923C3EC142C8A924777F /* ManagedCodexRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ManagedCodexRuntime.swift; sourceTree = "<group>"; };
 		B4B4FA4FC33B475396984771 /* ManagedCodexRuntimeError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ManagedCodexRuntimeError.swift; sourceTree = "<group>"; };
 		0EAEC7433DF04AC8A922C0CA /* ManagedCodexRuntimeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedCodexRuntimeTests.swift; sourceTree = "<group>"; };
+		87EA622322644CEA90557688 /* ManagedShortcutAuthorityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ManagedShortcutAuthorityTests.swift"; sourceTree = "<group>"; };
+		974C58579AB84A908CD3E6AC /* ManagedShortcutSettingsFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ManagedShortcutSettingsFixture.swift"; sourceTree = "<group>"; };
 		A9D9000000000000000F0016 /* markdown-viewer */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder; path = "markdown-viewer"; sourceTree = "<group>"; };
 		F5168A040000000000000002 /* MarkdownFontFamily.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownFontFamily.swift; sourceTree = "<group>"; };
 		F5168A070000000000000002 /* MarkdownFontFamilyCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/MarkdownFontFamilyCache.swift; sourceTree = "<group>"; };
@@ -5768,6 +5772,8 @@
 				D36090020000000000000006 /* BmuxMainWindowFullScreenCapabilityTests.swift */,
 					730600010000000000000001 /* MainWindowVisibleFrameFitCoreTests.swift */,
 					970226F3C99D0D937CD00539 /* BrowserConfigTests.swift */,
+				974C58579AB84A908CD3E6AC /* ManagedShortcutSettingsFixture.swift */,
+				87EA622322644CEA90557688 /* ManagedShortcutAuthorityTests.swift */,
 				9C9DB4F640E04D5A829039A0 /* BrowserFindShortcutSettingsFixture.swift */,
 				F0C29643A9CF40DD936A13AB /* LiveSurfaceRecoveryWindowFixture.swift */,
 				17D08EE100244919901E2C8C /* LiveSurfaceRecoverySocketTests.swift */,
@@ -8435,6 +8441,8 @@
 				DA9021000000000000000001 /* ManagedAppearanceStartupContractTests.swift in Sources */,
 				5E380B9351E24110A01CA392 /* ManagedCodexDownloadFixture.swift in Sources */,
 				F6BCA12F3F234A4CA1BA6A8A /* ManagedCodexRuntimeTests.swift in Sources */,
+				FB0D201409B247C7B8997599 /* ManagedShortcutAuthorityTests.swift in Sources */,
+				4C965C2C20DD48DBA9A891D0 /* ManagedShortcutSettingsFixture.swift in Sources */,
 				D7470002D7470002D7470002 /* MarkdownLinkBoundaryRegressionTests.swift in Sources */,
 				A6D14D760EF84965AF0F0404 /* MarkdownMermaidStubHandler.swift in Sources */,
 				A6D14D760EF84965AF0F0402 /* MarkdownMermaidTestFixture.swift in Sources */,
