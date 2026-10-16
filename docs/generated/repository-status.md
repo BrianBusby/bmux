@@ -359,3 +359,4 @@ Repository: `BrianBusby/bmux`
 | `workspace_filter_selection_identity_verification` | open |
 | `keyboard_space_native_layout_isolation_verification` | open |
 | `zsh_relay_refresh_completion_verification` | open |
+| `z_inspector_redraw_precursor_verification` | open |

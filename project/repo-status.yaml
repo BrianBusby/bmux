@@ -636,3 +636,6 @@ local_caveats:
 
   - id: zsh_relay_refresh_completion_verification
     status: open
+
+  - id: z_inspector_redraw_precursor_verification
+    status: open
