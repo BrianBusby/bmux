@@ -335,3 +335,4 @@ Repository: `BrianBusby/bmux`
 | `codex_prompt_cache_fallback_fixture_verification` | open |
 | `option_digit_terminal_focus_fixture_verification` | open |
 | `pending_diff_ordering_fixture_verification` | open |
+| `visible_terminal_responder_readiness_verification` | open |

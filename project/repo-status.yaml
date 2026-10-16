@@ -564,3 +564,6 @@ local_caveats:
 
   - id: pending_diff_ordering_fixture_verification
     status: open
+
+  - id: visible_terminal_responder_readiness_verification
+    status: open

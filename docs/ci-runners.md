@@ -6088,3 +6088,38 @@ independently identity-checked, stopped and observed exited before root removal.
 That attempt is not evidence of the historical CI failure. Full integrated
 app-host/macOS 15 execution remains pending. No production or user-facing string
 changes are included.
+
+### Visible terminal responder repair readiness
+
+The T shard-2 failure in
+`testWindowSendEventRepairsVisibleSameWindowResponderDriftForFocusedTerminalTyping`
+reported the three-second XCTest readiness notification wait; later live-surface,
+focus, repair-count and key-forwarding assertions did not fail. This does not
+establish a notification-filter defect or the historical scheduling cause.
+The exact case now uses Swift Testing and the maintained buffered
+`TerminalRuntimeReadinessFixture`, subscribed before the real window is shown
+and displayed. It retains the three-second readiness bound, both one-second
+focus bounds and a cancellable, joined thirty-second outer allowance.
+
+Focus waits observe the actual surface-ID-bearing first-responder notification,
+then retain the original responder, visible-drift, repair-count and forwarded-key
+assertions. Their absolute deadlines are captured before task scheduling. The
+repair override and both debug observers are installed and restored around only
+the synchronous `window.sendEvent` call, before any await. The owned window's
+cleanup is registered by ID immediately after creation; the existing close
+confirmation owner is restored synchronously, without the old settling run loop.
+Unrelated legacy methods and shared XCTest helpers are unchanged. The new plain
+unmodified `a` case does not carry the legacy suite's unrelated global shortcut
+reset or focused-window capture across suspension; it retains the actual app-host
+window and native event route. An explicit no-active-recorder precondition just
+before synchronous dispatch preserves the original inactive-recorder prerequisite
+without resetting unrelated global recorder state.
+
+Exact new sources compile without warnings in target Swift 5 and strict Swift 6
+against frozen build 797. Owned manual-I/O offscreen controls on macOS 26 verify
+actual native focus delivery, a missing-focus one-second failure, joined waiter
+cancellation and removal before late delivery. They use an isolated home and
+process-local telemetry fence, with no visible window, activation or shell child.
+The permanent visible-window case was compiled but not executed locally. Its
+macOS 15 app-host behavior, complete target compilation and combined CI remain
+pending; these controls neither reproduce nor disprove the historical CI cause.

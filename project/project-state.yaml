@@ -6559,3 +6559,8 @@ caveats:
     title: Pending diff ordering fixture owns Git and gh setup, retains original five-second phase assertions and joins CLI/socket/native viewer cleanup; native build 797 passes while macOS 15 execution and pre-announcement child tails remain explicit limits
     status: open
     owner: bmux
+
+  - id: visible_terminal_responder_readiness_verification
+    title: Visible terminal responder repair uses buffered readiness and native focus delivery with original bounds; offscreen controls and strict compilation pass, actual app-host verification remains pending
+    status: open
+    owner: bmux

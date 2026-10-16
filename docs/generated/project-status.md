@@ -277,6 +277,7 @@ Regenerate with: ./scripts/project-docs generate
 | Codex prompt cache and detached fallback launch retain original assertions with an owned missing-path precondition and final-write signal; native controls pass, fixed-head macOS 15 execution remains pending (`codex_prompt_cache_fallback_fixture_verification`) | Bmux | open |  |
 | Option-digit fixture observes native readiness before explicit focus and keeps real key-equivalent assertions; fixed-head macOS 15 app-host verification remains pending (`option_digit_terminal_focus_fixture_verification`) | Bmux | open |  |
 | Pending diff ordering fixture owns Git and gh setup, retains original five-second phase assertions and joins CLI/socket/native viewer cleanup; native build 797 passes while macOS 15 execution and pre-announcement child tails remain explicit limits (`pending_diff_ordering_fixture_verification`) | Bmux | open |  |
+| Visible terminal responder repair uses buffered readiness and native focus delivery with original bounds; offscreen controls and strict compilation pass, actual app-host verification remains pending (`visible_terminal_responder_readiness_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
