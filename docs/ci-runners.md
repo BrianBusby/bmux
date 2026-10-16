@@ -6185,3 +6185,53 @@ Local expansion confirms the corrected macro receives only the resulting value.
 Only the current toolchain is installed locally; this is not an execution of
 CI's older Testing plugin. Corrected package and app-host CI remain required.
 No production code, timeout policy or permanent syntax-only tests are changed.
+
+
+### V4 terminal search and window restoration prerequisites
+
+Candidate V shard 4's search-typing repair case failed its legacy three-second
+terminal-ready notification expectation. The stranded right-sidebar restoration
+case separately failed initial terminal focus and then three restoration checks.
+These are distinct boundaries: the search case already selects Terminal, while
+the stranded-sidebar case used `createMainWindow()` whose default is Chat.
+`ContentView` omits live terminal content for Chat and supplies false content
+visibility to `WorkspacePortalRenderingPlan`. The latter case now explicitly
+selects Terminal, matching its two neighboring tests. Its actual window creation,
+sidebar registration/removal, restoration action, every assertion and existing
+one-second focus/cleanup helper bounds are otherwise unchanged. The retained
+polling helper is not expanded or credited as a new completion mechanism.
+
+Only the failed search case moves from XCTest to Swift Testing. It subscribes
+with the maintained buffered terminal-ready owner before presentation, then
+checks the real surface and requests focus. The original three-second readiness,
+one-second terminal-focus and thirty-second outer allowance remain. Its actual
+search overlay is mounted through `setSearchOverlay`; a finite FIFO delivery
+follows the owner's single queued mutation before one native layout pass resolves
+the real editable field. This replaces the three-second layout/yield polling
+loop without a production seam. The explicit `selectText`/`makeFirstResponder`
+call is checked synchronously, replacing its old one-second responder polling.
+The original simulated same-window drift, unmodified keycode-zero `sendEvent`,
+exact one repair, responder identity and first-character assertions remain.
+
+A pre-dispatch native text-change observation replaces the final one-second poll.
+Its absolute deadline and the outer allowance are captured before scheduling;
+stream/deadline tasks cancel and join. Global repair probes are installed and
+restored only inside synchronous dispatch. A no-recorder precondition retains
+that input prerequisite without resetting unrelated settings across suspension.
+Window-ID cleanup is registered immediately after creation; close-confirmation
+state is restored synchronously. Other legacy cases and shared helpers are
+unchanged.
+
+Actual production portal-plan values confirmed disabled/enabled rendering for
+the caller's Chat/Terminal inputs. This pure value proof does not mount the full
+app window. Frozen build 797 offscreen manual-I/O controls confirmed the real
+queued overlay mount, native editable field, immediate field-editor focus and
+actual key-driven text-change notification. Omitting the overlay failed the
+mount prerequisite; omitting the key failed the one-second text-event boundary.
+Owned HOME and launch-only telemetry settings isolated these probes; no app
+window was presented. The exact final test sources and maintained support compile
+without warnings in both Swift 5 and Swift 6. The permanent visible cases were
+not executed locally. Fixed-head macOS 15 app-host execution remains required;
+these controls do not establish why V's original notification wait timed out.
+No production code, runtime hooks, selector, deadline policy or shipped text is
+changed. Native global serialization does not isolate unrelated background work.
