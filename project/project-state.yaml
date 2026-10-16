@@ -6489,3 +6489,8 @@ caveats:
     title: Tagged theme notification and ambiguous Claude workflow fixtures own their CLI completion and paths; fixed-head macOS 15 app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: workspace_stress_delivery_verification
+    title: Workspace stress profiles preserve workload and timing categories while awaiting bounded FIFO delivery; native build 797 passes locally, fixed-head macOS 15 verification remains pending
+    status: open
+    owner: bmux
