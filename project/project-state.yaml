@@ -6657,3 +6657,8 @@ caveats:
     title: LaunchServices scheduling test restores its original delegate and route-retirer composition; native 799 scheduling and identity controls pass, historical inspector routing linkage and macOS 15 app-host verification remain unproven
     status: open
     owner: bmux
+
+  - id: agent_liveness_watch_completion_verification
+    title: Agent liveness fixture observes its actual watch reload before scope mutation and final refresh before cleanup; all seven original assertions and owned build 799 controls pass, integrated macOS 15 and private-task failure cleanup remain pending
+    status: open
+    owner: bmux
