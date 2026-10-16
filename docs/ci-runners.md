@@ -6904,3 +6904,36 @@ Configured Swift 5 and strict Swift 6 warnings-as-errors compilation and local
 static/Project Truth gates cover this slice. Full-target and actual macOS 15
 app-host verification remain integration gates; no local proof claims the
 inspector chord is fixed.
+
+### File-explorer shortcut event-window ownership
+
+Two Y native-shard-5 failures returned false without committing selection even
+though their native first-responder and placement-matcher assertions passed.
+Those cases used an unregistered About window and depended on an ambient main
+window context. The unchanged main-window resolver can reject that setup before
+file-explorer dispatch or choose another main window as the preferred target.
+The historical CI return branch was not captured.
+
+The two cases now own a direct `MainWindowContext` for their event window and
+still invoke `handleConfiguredShortcutKeyEquivalent`, preserving the original
+pane-shadowing, child-responder and commit-count assertions. The fixture uses a
+retained offscreen native window instead of presenting the old auxiliary window;
+it verifies actual handler/responder routing, not user activation or presented
+window behavior. Registration's listener/session-save side effects are not used.
+Owned settings clear only the primary/alias/rename keys and restore persisted
+provenance, volatile domains and the original store synchronously. The empty
+owned file excludes configured when-clause overrides. Pane dispatch precedes
+rename and other app-wide matching; the owned context has no active palette or
+right-sidebar mode. No broader settings reset is added. The existing settings-store setter still
+posts its default-center change notification; synchronous restoration does not
+claim isolation from unrelated app-host background observers.
+
+Frozen build 799 reproduces four original routing/count failures without the
+context and passes both cases with it. An unregistered event remains rejected
+with another owned context present. The original unresolved-window negative and
+all other legacy bytes remain unchanged; its presented composition is compiled
+locally and left to CI. Exact configured Swift 5 source compilation is
+warning-free. A strict Swift 6 attempt remains blocked by the imported legacy
+mutable `KeyboardShortcutSettings.settingsFileStore` owner; no suppression was
+added. Actual macOS 15 app-host verification remains pending. No production
+routing policy, timeout, selector or runtime artifact changed.

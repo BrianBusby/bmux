@@ -606,3 +606,6 @@ local_caveats:
 
   - id: notification_burst_native_completion_verification
     status: open
+
+  - id: file_explorer_shortcut_context_fixture_verification
+    status: open
