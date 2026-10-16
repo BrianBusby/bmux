@@ -6534,3 +6534,8 @@ caveats:
     title: Canvas split shortcut fixtures synchronize existing panel descriptors before geometry assertions; owned native controls pass, original app-host window verification remains pending
     status: open
     owner: bmux
+
+  - id: find_workspace_scope_fixture_verification
+    title: Same-path Find scope reset uses real presentation query submission with original reset assertions; build 799 passes, fixed-head macOS 15 app-host coverage remains pending
+    status: open
+    owner: bmux

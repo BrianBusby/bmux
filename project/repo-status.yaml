@@ -549,3 +549,6 @@ local_caveats:
 
   - id: canvas_split_shortcut_initial_panes_verification
     status: open
+
+  - id: find_workspace_scope_fixture_verification
+    status: open

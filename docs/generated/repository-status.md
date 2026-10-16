@@ -330,3 +330,4 @@ Repository: `BrianBusby/bmux`
 | `nested_split_divider_cache_verification` | open |
 | `claude_idle_reminder_contract_verification` | open |
 | `canvas_split_shortcut_initial_panes_verification` | open |
+| `find_workspace_scope_fixture_verification` | open |
