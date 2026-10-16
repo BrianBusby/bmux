@@ -139,4 +139,38 @@ struct ClaudeSessionPhaseTests {
             "UserPromptSubmit marks the session eligible for resume."
         )
     }
+
+    @Test
+    func idlePromptAfterIdleStopTagsNotPending() async throws {
+        let context = try ClaudeSessionPhaseFixture(
+            cli: BundledCLITestSupport.bundledCLIPath(for: ClaudeSessionPhaseFixture.self),
+            processTimeout: 5
+        )
+        defer { context.cleanup() }
+        let session = "idle-after-idle"
+        let stop = try await context.run(
+            arguments: ["hooks", "claude", "stop"],
+            standardInput: #"{"session_id":"\#(session)","cwd":"/tmp/x","hook_event_name":"Stop","last_assistant_message":"ok","background_tasks":[],"session_crons":[]}"#
+        )
+        #expect(stop.status == 0, "\(stop.stderr)")
+        #expect(stop.stdout == "OK\n")
+
+        let notificationStart = context.commands.count
+        let notification = try await context.run(
+            arguments: ["hooks", "claude", "notification"],
+            standardInput: #"{"session_id":"\#(session)","cwd":"/tmp/x","hook_event_name":"Notification","message":"Claude is waiting for your input","notification_type":"idle_prompt"}"#
+        )
+        #expect(notification.status == 0, "\(notification.stderr)")
+        #expect(notification.stdout == "OK\n")
+        let commands = Array(context.commands.dropFirst(notificationStart))
+        #expect(commands.contains { $0.hasPrefix("notify_target_async ") && $0.contains("c=idle-reminder;p=0") })
+        #expect(commands.contains { $0.hasPrefix("set_status claude_code Idle ") })
+        #expect(!commands.contains { $0.hasPrefix("set_status claude_code Needs input ") })
+
+        let state = try #require(JSONSerialization.jsonObject(with: Data(contentsOf:
+            context.root.appendingPathComponent("claude-hook-sessions.json"))) as? [String: Any])
+        let sessions = try #require(state["sessions"] as? [String: Any])
+        let record = try #require(sessions[session] as? [String: Any])
+        #expect(record["hadPendingBackgroundWorkAtStop"] as? Bool == false)
+    }
 }

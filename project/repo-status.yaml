@@ -540,3 +540,6 @@ local_caveats:
 
   - id: kiro_codex_feed_contract_verification
     status: open
+
+  - id: claude_idle_reminder_contract_verification
+    status: open

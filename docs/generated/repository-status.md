@@ -327,3 +327,4 @@ Repository: `BrianBusby/bmux`
 | `terminal_pointer_notification_fixture_verification` | open |
 | `sidebar_tool_focus_delivery_verification` | open |
 | `kiro_codex_feed_contract_verification` | open |
+| `claude_idle_reminder_contract_verification` | open |

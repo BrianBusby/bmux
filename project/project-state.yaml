@@ -6519,3 +6519,8 @@ caveats:
     title: Kiro deny and Codex late-PR feed contract uses owned joined producers and excludes detached monitor composition; fixed-head macOS 15 app-host verification remains pending
     status: open
     owner: bmux
+
+  - id: claude_idle_reminder_contract_verification
+    title: Claude idle reminders retain Idle and cached not-pending metadata through joined phases with original five-second limits; native build 797 passes, fixed-head macOS 15 verification remains pending
+    status: open
+    owner: bmux
