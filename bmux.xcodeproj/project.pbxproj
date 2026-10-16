@@ -1967,6 +1967,7 @@
 		D70500000000000000000002 /* WorkspaceCardFilterProjectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D70500000000000000000001 /* WorkspaceCardFilterProjectionTests.swift */; };
 		5FE4A89C7C324DC4A4210089 /* WorkspaceCardHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE4A89C7C324DC4A4210088 /* WorkspaceCardHeader.swift */; };
 		0DE10753682147109ED3F6D1 /* WorkspaceCardTitlePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBCA5194B18149D9AE082ED1 /* WorkspaceCardTitlePresentation.swift */; };
+		BCC762A6FE24494C979FD941 /* WorkspaceChromeColorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D910AAD9E9CF49EFB0723284 /* WorkspaceChromeColorTests.swift */; };
 		2B8DED84A9639827A076738B /* WorkspaceChromeFocusOwner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0A74FE284041FD5D1EE481 /* WorkspaceChromeFocusOwner.swift */; };
 		70B0C7FAF05A2241EA2AAD03 /* WorkspaceChromeFocusScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE6AB21F4880B7F24ABFA5C /* WorkspaceChromeFocusScope.swift */; };
 		782847153A0FBBC4B95757F8 /* WorkspaceChromeHostingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 332BCE0035280194AED785AF /* WorkspaceChromeHostingView.swift */; };
@@ -3984,6 +3985,7 @@
 		D70500000000000000000001 /* WorkspaceCardFilterProjectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceCardFilterProjectionTests.swift; sourceTree = "<group>"; };
 		5FE4A89C7C324DC4A4210088 /* WorkspaceCardHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/WorkspaceCardHeader.swift; sourceTree = "<group>"; };
 		BBCA5194B18149D9AE082ED1 /* WorkspaceCardTitlePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/WorkspaceCardTitlePresentation.swift; sourceTree = "<group>"; };
+		D910AAD9E9CF49EFB0723284 /* WorkspaceChromeColorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceChromeColorTests.swift; sourceTree = "<group>"; };
 		AB0A74FE284041FD5D1EE481 /* WorkspaceChromeFocusOwner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/WorkspaceChromeFocusOwner.swift; sourceTree = "<group>"; };
 		CBE6AB21F4880B7F24ABFA5C /* WorkspaceChromeFocusScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/WorkspaceChromeFocusScope.swift; sourceTree = "<group>"; };
 		332BCE0035280194AED785AF /* WorkspaceChromeHostingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sidebar/WorkspaceChromeHostingView.swift; sourceTree = "<group>"; };
@@ -5826,6 +5828,7 @@
 				C74F64737EFB491990703348 /* BrowserHiddenWebViewDiscardPolicyTests.swift */,
 				C92A8919A7DF464B98FBB3CB /* BrowserUnderPageBackgroundTests.swift */,
 				C36EA76CD0B5432888F99604 /* GhosttyBackgroundThemeTests.swift */,
+				D910AAD9E9CF49EFB0723284 /* WorkspaceChromeColorTests.swift */,
 				B6585002B6585002B658PW02 /* BrowserPrewarmedWebViewPoolTests.swift */,
 				58C7B1B978620BE162CC057E /* BrowserPanelTests.swift */,
 				C42660040000000000000002 /* BrowserPDFPreviewActionRegressionTests.swift */,
@@ -8657,6 +8660,7 @@
 				A11EAE000000000000000000 /* WorkspaceAppearanceConfigResolutionTests.swift in Sources */,
 				C0DEB0550000000000000003 /* WorkspaceBrowserActionsTests.swift in Sources */,
 				D70500000000000000000002 /* WorkspaceCardFilterProjectionTests.swift in Sources */,
+				BCC762A6FE24494C979FD941 /* WorkspaceChromeColorTests.swift in Sources */,
 				D7AB3605C10DEF0000000001 /* WorkspaceCloseTabsContextMenuTests.swift in Sources */,
 				F7000000A1B2C3D4E5F60718 /* WorkspaceContentViewVisibilityTests.swift in Sources */,
 				C3E6BB5965C9BECFBF836CC4 /* WorkspaceCreationConfigSanitizationTests.swift in Sources */,
