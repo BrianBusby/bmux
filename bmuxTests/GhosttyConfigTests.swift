@@ -1905,60 +1905,6 @@ final class BrowserPanelWebViewLifecycleTests: XCTestCase {
         panel.close()
         XCTAssertEqual(panel.webViewLifecycleState, .closing)
     }
-
-
-    /// Regression guard for the issue #5303 render loop: `BrowserPanelView.onAppear`
-    /// re-fired on every CoreAnimation commit and re-asserted webview visibility,
-    /// which restored + re-navigated the webview repeatedly. Once the webview is live
-    /// and visible, redundant visibility notifications (the shape a spurious appear
-    /// produces) must be no-ops: no lifecycle churn and no webview replacement, so no
-    /// re-navigation is issued.
-    func testRedundantVisibleNotificationsDoNotChurnLiveWebView() {
-        let panel = BrowserPanel(
-            workspaceId: UUID(),
-            initialURL: URL(string: "about:blank")!,
-            isRemoteWorkspace: false
-        )
-        defer { panel.close() }
-
-        let deadline = Date().addingTimeInterval(1.0)
-        while panel.webView.isLoading,
-              RunLoop.main.run(mode: .default, before: deadline),
-              Date() < deadline {}
-        XCTAssertFalse(panel.webView.isLoading, "Timed out waiting for about:blank to finish loading")
-
-        panel.noteWebViewVisibility(true, reason: "test.visible.first")
-        XCTAssertEqual(panel.webViewLifecycleState, .liveVisible)
-
-        let webViewAfterFirst = panel.webView
-        let instanceIDAfterFirst = panel.webViewInstanceID
-        let reasonAfterFirst = panel.webViewLastVisibilityChangeReason
-        let changeAtAfterFirst = panel.webViewLastVisibilityChangeAt
-
-        var observedStates: [BrowserWebViewLifecycleState] = []
-        var cancellable: AnyCancellable?
-        cancellable = panel.$webViewLifecycleState.dropFirst().sink { state in
-            observedStates.append(state)
-        }
-        defer { cancellable?.cancel() }
-
-        // Simulate `.onAppear` re-firing many times in one commit storm.
-        for index in 0..<32 {
-            panel.noteWebViewVisibility(true, reason: "test.visible.spurious-\(index)")
-        }
-
-        XCTAssertEqual(panel.webViewLifecycleState, .liveVisible)
-        XCTAssertTrue(observedStates.isEmpty, "Redundant visible notes churned lifecycle: \(observedStates)")
-        XCTAssertTrue(panel.webView === webViewAfterFirst, "A live webview must not be replaced by redundant visibility notes")
-        XCTAssertEqual(panel.webViewInstanceID, instanceIDAfterFirst)
-        XCTAssertEqual(
-            panel.webViewLastVisibilityChangeReason,
-            reasonAfterFirst,
-            "Redundant visible notes must early-return without recording a new transition"
-        )
-        XCTAssertEqual(panel.webViewLastVisibilityChangeAt, changeAtAfterFirst)
-    }
-
 }
 
 @MainActor

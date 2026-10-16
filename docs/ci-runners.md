@@ -6904,3 +6904,33 @@ Configured Swift 5 and strict Swift 6 warnings-as-errors compilation and local
 static/Project Truth gates cover this slice. Full-target and actual macOS 15
 app-host verification remain integration gates; no local proof claims the
 inspector chord is fixed.
+
+
+### Y8 redundant browser visibility completion fixture
+
+Y `ff3e6e5ed4620ca676bf3198fd26ff870071c263`, native shard 8 job
+`116851734607`, failed only the native `about:blank` loading precondition in
+`testRedundantVisibleNotificationsDoNotChurnLiveWebView` at 07:40:34 UTC.
+The seven subsequent visibility, publication, identity, and metadata assertions
+reported no failures. The same log reports several WebContent launches taking
+1.90–1.94 seconds, without enough identity evidence to map them to this panel.
+
+`BrowserVisibleNotificationTests` preserves the initial navigation, all eight
+assertions, and 32 repeated visibility notes. Its native KVO subscription precedes
+the synchronous current-state check after construction; buffered delivery and a
+structured canceled/joined deadline replace the nested RunLoop wait. The absolute
+one-second bound still starts immediately after construction. Observation and
+stream cleanup precede panel closure. The existing lifecycle publisher remains
+synchronously observed so transient churn cannot be lost.
+
+Actual protected build 799 on macOS 26 passed the exact migrated case in 0.114
+seconds. A temporary delivery omission failed only readiness at the unchanged
+bound (1.085 seconds including construction); cancellation after waiter entry
+joined the case and confirmed panel navigation-delegate teardown (0.092 seconds).
+Configured Swift 5 and strict Swift 6 compilation passed with warnings as errors.
+The earlier comparison passed native observation but failed the original RunLoop
+body in an async MainActor harness. That harness is not the original synchronous
+XCTest entry and does not prove the historical macOS 15 cause. Native startup
+pressure may still exceed one second; no deadline increase, retry, load stub, or
+production change is included. Full integrated target and fixed-head macOS 15
+execution remain required. No user-facing or localized product strings changed.

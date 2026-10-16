@@ -297,6 +297,7 @@ Regenerate with: ./scripts/project-docs generate
 | Codex approval fixture observes keyed async replies while preserving standard and full-access permission assertions with a new one-second observation bound; owned build 799 controls pass, integrated macOS 15 CI remains pending (`codex_approval_response_observation_verification`) | Bmux | open |  |
 | Two notification coalescer cases observe real native timer callbacks within the original one-second total bound; latest-action and separate-burst controls pass, actual macOS 15 verification remains pending (`notification_burst_native_completion_verification`) | Bmux | open |  |
 | LaunchServices scheduling test restores its original delegate and route-retirer composition; native 799 scheduling and identity controls pass, historical inspector routing linkage and macOS 15 app-host verification remain unproven (`launch_services_scheduling_fixture_ownership_verification`) | Bmux | open |  |
+| Redundant browser visibility fixture observes native loading within its original one-second bound; build 799 positive and omission controls pass locally, actual macOS 15 verification and historical startup latency remain unresolved (`browser_visible_notification_completion_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 
