@@ -6529,3 +6529,8 @@ caveats:
     title: Claude idle reminders retain Idle and cached not-pending metadata through joined phases with original five-second limits; native build 797 passes, fixed-head macOS 15 verification remains pending
     status: open
     owner: bmux
+
+  - id: canvas_split_shortcut_initial_panes_verification
+    title: Canvas split shortcut fixtures synchronize existing panel descriptors before geometry assertions; owned native controls pass, original app-host window verification remains pending
+    status: open
+    owner: bmux

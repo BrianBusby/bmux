@@ -5884,3 +5884,34 @@ a permission-prompt negative produces the three intended classification/status
 issues while the other session cases pass. These controls establish the accepted
 contract, not the historical CI scheduling cause. Integrated test-target compilation
 and fixed-head macOS 15 execution remain required. No localized product text changed.
+
+
+## Canvas split shortcut initial panes
+
+The two `AppDelegateSurfaceShortcutRoutingTests` Cmd+D and Cmd+Shift+D cases
+synchronize the actual workspace panel IDs into `canvasModel` immediately after
+switching to canvas mode. `setLayoutMode` seeds only usable measured split
+frames; `CanvasRootView.sync` normally supplies missing panel descriptors later.
+The fixtures previously required an original canvas frame before that view sync.
+All existing window creation, settings, event dispatch, geometry, pane-count,
+focus and cleanup assertions remain unchanged. No production behavior, deadline,
+selector or shared helper changed.
+
+An owned, never-presented window and direct routing context against frozen native
+build 797 supplied a bounded model/shortcut proof: both cases passed after sync;
+omitting sync failed both original frame requirements; swapping the two real
+shortcuts failed both directional placement assertions. This temporary harness
+used private settings and an isolated process home, with telemetry disabled.
+It does not replace the original app-host window coverage. Capturing a raw window
+as focused correctly triggered the existing hidden/unattached-terminal split
+suppression; the successful temporary control routed by the event window with
+no captured key window. A nil capture falls back to `NSApp.keyWindow`, so this
+is not a permanent ambient-focus isolation fixture or proof of the historical
+macOS 15 CI schedule.
+
+The exact complete source compiles in the target Swift 5 mode against build 797,
+retaining the baseline redundant `try` warning in the unrelated numbered-surface
+case. A strict Swift 6 attempt remains blocked by the existing imported mutable
+`KeyboardShortcutSettings.settingsFileStore` owner. No warning or concurrency
+suppression was added. Fixed-head execution of the original two app-host cases
+remains pending; no local window presentation or app rebuild was performed.

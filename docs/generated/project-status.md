@@ -271,6 +271,7 @@ Regenerate with: ./scripts/project-docs generate
 | Kiro deny and Codex late-PR feed contract uses owned joined producers and excludes detached monitor composition; fixed-head macOS 15 app-host verification remains pending (`kiro_codex_feed_contract_verification`) | Bmux | open |  |
 | Shared terminal and browser divider caches validate bounded weak child snapshots instead of relying on subviews KVO; fresh portal integration, latency and macOS 15 coverage remain pending (`nested_split_divider_cache_verification`) | Bmux | open |  |
 | Claude idle reminders retain Idle and cached not-pending metadata through joined phases with original five-second limits; native build 797 passes, fixed-head macOS 15 verification remains pending (`claude_idle_reminder_contract_verification`) | Bmux | open |  |
+| Canvas split shortcut fixtures synchronize existing panel descriptors before geometry assertions; owned native controls pass, original app-host window verification remains pending (`canvas_split_shortcut_initial_panes_verification`) | Bmux | open |  |
 
 ## Automatic Checkpoints
 

@@ -546,3 +546,6 @@ local_caveats:
 
   - id: claude_idle_reminder_contract_verification
     status: open
+
+  - id: canvas_split_shortcut_initial_panes_verification
+    status: open

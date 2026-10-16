@@ -329,3 +329,4 @@ Repository: `BrianBusby/bmux`
 | `kiro_codex_feed_contract_verification` | open |
 | `nested_split_divider_cache_verification` | open |
 | `claude_idle_reminder_contract_verification` | open |
+| `canvas_split_shortcut_initial_panes_verification` | open |
