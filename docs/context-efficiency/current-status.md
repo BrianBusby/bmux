@@ -53,8 +53,9 @@ same conversation on return. Light, narrow, Focus and broader recovery remain
 unverified. The supplied build-612 screenshot remains before-state evidence for
 the removed shared perimeter.
 
-The user-selected implementation is `shared_session_chat`, tracked in the root
-manifests. See [the shared-session control decision](../product/shared-session-control-decision.md)
+The `shared_session_chat` implementation is delivered through merged PR #139,
+which includes the exact head of PR #126. Acceptance remains under observation
+in the root manifests. See [the shared-session control decision](../product/shared-session-control-decision.md)
 for the capability matrix and evidence. Chat-first startup uses the existing
 shared-host launch path: a plain idle local shell can start a new connected
 Codex terminal when Chat opens, and its first prompt can be sent from Chat.
