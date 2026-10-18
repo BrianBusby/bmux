@@ -53,9 +53,8 @@ coordinator or new regression. Existing XCTest import/actor warnings and the tes
 host WebKit pasteboard diagnostic remain outside this patch.
 Localization audit: no new UI text or message keys. The existing loading, new-session
 notification and failure strings all have translated English and Japanese entries.
-The native repo menu and real Codex provider acceptance still require a fresh
-user-approved isolated build; tests use the existing connected-host fixture. A fresh tagged
-app build requires user agreement under AGENTS.md's active-dogfood rule.
+The user approved a separate tagged build and native verification; the results
+are recorded below. Focused tests use the existing connected-host fixture.
 No new user-facing text was added; existing localized loading/error UI stays
 in use. No Session roadmap gate, provider capability or persistence policy is
 advanced by this regression correction.
@@ -84,8 +83,7 @@ Sanitized logs live in `/private/tmp/bmux-codex162-compatibility/`.
 Ownership reassessment: keep the existing host service and exact version gate;
 add only this empirically verified release, preserving fail-closed handling for
 unverified versions. Do not broaden interrupt/approval/settings capabilities,
-downgrade the installed CLI, or alter user settings. Full native launcher
-acceptance remains pending the version-gate correction and refreshed isolated app.
+downgrade the installed CLI, or alter user settings. The refreshed native launcher result is recorded below.
 
 The 0.162.0 test-only case failed with `CodexControlError.unsupported` before the
 gate change. After it, all 29 focused launch and ownership tests pass, including
@@ -93,3 +91,26 @@ actual provider-version metadata and rejection of 0.163.0. Version test logs:
 `/tmp/bmux-repo-codex162-red.log` and `/tmp/bmux-repo-codex162-green.log`.
 Project-docs validation, regeneration and freshness checks pass with 0.162.0
 recorded under observation. No new UI strings were introduced.
+
+## Native build 723 verification
+
+The user-approved `repo-codex-startup` tagged reload succeeded on pushed runtime
+commit `c262d0b7c` and launched build 723 separately. Build 721 was left running.
+Using the actual sidebar AI Repo Launcher, selecting **bmux (Codex)** and
+**Launch Normally** created a new connected session with an editable Chat composer.
+One harmless prompt requested only `Ready.` without tools or file changes.
+Terminal visibly ran Codex 0.162.0 in `~/repos/bmux` and displayed the prompt and
+completed `Ready.` reply. Returning to Chat displayed the same prompt and reply
+and an available composer. No duplicate submission was made.
+
+Immediately after submission, Chat briefly displayed “The shared connection is
+unavailable. Continue in Terminal.” The prompt nevertheless completed and the
+message was absent on return to Chat. Its cause is not established; record it as
+a remaining connection-feedback observation, not proof of failed delivery or a
+resolved recovery issue. User dogfood, broader recovery and interruption remain
+open. No video was recorded.
+
+Final ownership review retains the configured coordinator, stable Workspace
+respawn and exact host-version boundary; neither fix adds another mutation path.
+No new UI strings were introduced, and the existing loading/new-session/failure
+keys were checked for translated English and Japanese entries.
