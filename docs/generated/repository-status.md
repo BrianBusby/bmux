@@ -18,8 +18,8 @@ Repository: `BrianBusby/bmux`
 
 ## Release
 
-- Latest tag: None
-- Release status: untagged
+- Latest tag: build-715
+- Release status: prerelease
 
 ## Local Capabilities
 
@@ -193,7 +193,7 @@ Repository: `BrianBusby/bmux`
 | `matte_skin_ci_compiler_compatibility` | resolved |
 | `cloud_attach_retry_fixture_verification` | open |
 | `managed_appearance_startup_fixture_verification` | open |
-| `configured_codex_placeholder_startup_dogfood` | open |
+| `configured_codex_placeholder_startup_dogfood` | monitoring |
 | `codex_update_workspace_exit_native_dogfood` | open |
 | `expanded_prior_turn_system_appearance_contrast` | monitoring |
 | `expanded_prior_turn_visual_acceptance` | open |

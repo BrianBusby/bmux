@@ -742,6 +742,8 @@ esac
         tag = local["release"]["latest_tag"]
         if tag:
             provider.tags[(local["repository"], tag)] = project_docs.TagEvidence(target_sha="a" * 40)
+            if local["release"]["release_status"] in ("released", "prerelease"):
+                provider.releases.add((local["repository"], tag))
         return provider
 
     def test_github_evidence_valid_fixture_passes(self):

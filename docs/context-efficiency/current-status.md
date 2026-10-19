@@ -53,8 +53,9 @@ same conversation on return. Light, narrow, Focus and broader recovery remain
 unverified. The supplied build-612 screenshot remains before-state evidence for
 the removed shared perimeter.
 
-The user-selected implementation is `shared_session_chat`, tracked in the root
-manifests. See [the shared-session control decision](../product/shared-session-control-decision.md)
+The `shared_session_chat` implementation is delivered through merged PR #139,
+which includes the exact head of PR #126. Acceptance remains under observation
+in the root manifests. See [the shared-session control decision](../product/shared-session-control-decision.md)
 for the capability matrix and evidence. Chat-first startup uses the existing
 shared-host launch path: a plain idle local shell can start a new connected
 Codex terminal when Chat opens, and its first prompt can be sent from Chat.
@@ -66,7 +67,7 @@ closure. Failed startup offers an explicit retry; provider actions are never
 blindly resent. New ChatGPT startup checks the connected client catalog and uses its default
 only when the saved model is unavailable; valid hidden models and custom/API
 providers retain their configuration. This writes no global configuration.
-Configured repository and new-tab Codex launches reserve their own connected host and replace the owned placeholder with the connected PTY. The [build 721 startup follow-up](../implementation-notes/repo-codex-startup.md) covers placeholders that start during host preparation; native acceptance remains pending. Startup shows loading in Chat and Terminal; replacement preserves the logical surface, tab, selection and canvas membership. Native build 700 verified the actual bmux and companycam-mobile repository menus, first Chat-only prompts, completed replies, Terminal click/typing, return to the same conversation and latest-prompt footer reconciliation. Literal supported launch options and workspace environment values are preserved; setup scripts, compound/resume commands, custom executable paths and commands sent into an existing terminal keep their ordinary CLI behavior. Connected transcript prompts now replay resource acquisition through the existing
+Configured repository and new-tab Codex launches reserve their own connected host and replace the owned placeholder with the connected PTY. The [build 721 startup follow-up](../implementation-notes/repo-codex-startup.md) covers placeholders that start during host preparation and the installed Codex 0.162.0 version gate; build 723 verified the native repo menu and a completed reply in Terminal and Chat. User dogfood and a transient connection-feedback observation remain open. Startup shows loading in Chat and Terminal; replacement preserves the logical surface, tab, selection and canvas membership. Native build 700 verified the actual bmux and companycam-mobile repository menus, first Chat-only prompts, completed replies, Terminal click/typing, return to the same conversation and latest-prompt footer reconciliation. Literal supported launch options and workspace environment values are preserved; setup scripts, compound/resume commands, custom executable paths and commands sent into an existing terminal keep their ordinary CLI behavior. Connected transcript prompts now replay resource acquisition through the existing
 prompt-mention PR resolver only after PE accepts the current prompt and the live
 registry session and exact terminal panel still match.
 Initial transcript discovery runs the existing bounded prompt seeder, including

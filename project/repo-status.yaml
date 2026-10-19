@@ -133,8 +133,8 @@ local_capabilities:
   remote_general_internet_route: planned
 
 release:
-  latest_tag:
-  release_status: untagged
+  latest_tag: build-715
+  release_status: prerelease
 
 component_releases:
   provenance_engine:
@@ -216,7 +216,7 @@ local_caveats:
   - id: managed_appearance_startup_fixture_verification
     status: open
   - id: configured_codex_placeholder_startup_dogfood
-    status: open
+    status: monitoring
   - id: codex_update_workspace_exit_native_dogfood
     status: open
   - id: expanded_prior_turn_system_appearance_contrast
