@@ -547,38 +547,17 @@ import Testing
         #expect(colorHex == "#56CCF2")
     }
 
-    @Test func foregroundIsBlackInLightAppearance() {
-        let foreground = WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(
-            repoColorHex: "#56CCF2",
-            colorScheme: .light
-        )
+    @Test func foregroundIsVioletInLightAppearance() {
+        let foreground = WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(colorScheme: .light)
 
-        #expect(foreground.usingColorSpace(.sRGB)?.hexString(includeAlpha: true) == "#000000FF")
+        #expect(foreground.usingColorSpace(.sRGB)?.hexString(includeAlpha: true) == "#6D28D9FF")
+        #expect(bmuxContrastRatio(foreground: foreground, background: .white) >= 4.5)
     }
 
-    @Test func foregroundUsesBrightRepoColorInDarkAppearance() {
-        let foreground = WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(
-            repoColorHex: "#2F80ED",
-            colorScheme: .dark
-        )
-        let matchingRepoForeground = WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(
-            repoColorHex: "#2F80ED",
-            colorScheme: .dark
-        )
-        let otherRepoForeground = WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(
-            repoColorHex: "#F2C94C",
-            colorScheme: .dark
-        )
-        let foregroundHex = foreground.usingColorSpace(.sRGB)?.hexString(includeAlpha: true)
-        let matchingRepoForegroundHex = matchingRepoForeground
-            .usingColorSpace(.sRGB)?
-            .hexString(includeAlpha: true)
-        let otherRepoForegroundHex = otherRepoForeground
-            .usingColorSpace(.sRGB)?
-            .hexString(includeAlpha: true)
+    @Test func foregroundIsLimeInDarkAppearance() {
+        let foreground = WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(colorScheme: .dark)
 
-        #expect(foregroundHex == matchingRepoForegroundHex)
-        #expect(foregroundHex != otherRepoForegroundHex)
+        #expect(foreground.usingColorSpace(.sRGB)?.hexString(includeAlpha: true) == "#47FF57FF")
         #expect(bmuxContrastRatio(foreground: foreground, background: .black) >= 4.5)
     }
 }

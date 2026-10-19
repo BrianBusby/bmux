@@ -18,21 +18,14 @@ enum WorkspaceRepoBadgeAppearanceColorPolicy {
         return repoBadgeAppearance?.colorHex
     }
 
-    static func foregroundNSColor(
-        repoColorHex: String,
-        colorScheme: ColorScheme
-    ) -> NSColor {
+    static func foregroundNSColor(colorScheme: ColorScheme) -> NSColor {
         switch colorScheme {
         case .light:
-            return .black
+            return NSColor(hex: "#6D28D9") ?? .systemPurple
         case .dark:
-            return WorkspaceTabColorSettings.displayNSColor(
-                hex: repoColorHex,
-                colorScheme: colorScheme,
-                forceBright: true
-            ) ?? NSColor.white.withAlphaComponent(0.86)
+            return NSColor(hex: "#47FF57") ?? .systemGreen
         @unknown default:
-            return .black
+            return .labelColor
         }
     }
 }

@@ -13734,7 +13734,7 @@ struct TabItemView: View, Equatable {
                         if let repoBadgeAppearance = workspaceSnapshot.repoBadgeAppearance {
                             Text(repoBadgeAppearance.name)
                                 .font(magnifiedFont(scaledFontSize(10), weight: .medium))
-                                .foregroundColor(repoBadgeForegroundColor(for: repoBadgeAppearance))
+                                .foregroundColor(repoBadgeForegroundColor)
                                 .lineLimit(1)
                                 .truncationMode(.middle)
                         }
@@ -14626,11 +14626,8 @@ struct TabItemView: View, Equatable {
         ) ?? NSColor(hex: hex) ?? .gray
     }
 
-    private func repoBadgeForegroundColor(for appearance: WorkspaceRepoBadgeAppearance) -> Color {
-        Color(nsColor: WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(
-            repoColorHex: appearance.colorHex,
-            colorScheme: colorScheme
-        ))
+    private var repoBadgeForegroundColor: Color {
+        Color(nsColor: WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(colorScheme: colorScheme))
     }
 
     private var accessibilityTitle: String {
