@@ -7,6 +7,7 @@ import Testing
 @testable import bmux
 #endif
 
+@MainActor
 @Suite struct KeyboardShortcutSpaceKeyTests {
     @Test func shortcutConfigParsingRoundTripsReturnKey() throws {
         let shortcut = try #require(StoredShortcut.parseConfig("return", allowBareFirstStroke: true))

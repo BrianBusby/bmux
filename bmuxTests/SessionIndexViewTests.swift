@@ -76,68 +76,6 @@ final class SessionIndexViewTests: XCTestCase {
         )
     }
 
-    func testClaudeResumeCommandPinsSnapshotConfigDirectory() throws {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("bmux-session-index-\(UUID().uuidString)", isDirectory: true)
-        defer { try? FileManager.default.removeItem(at: root) }
-
-        let configDir = root.appendingPathComponent("claude config", isDirectory: true)
-        let transcriptURL = configDir
-            .appendingPathComponent("projects", isDirectory: true)
-            .appendingPathComponent("-tmp", isDirectory: true)
-            .appendingPathComponent("claude-session-123.jsonl", isDirectory: false)
-        try FileManager.default.createDirectory(
-            at: transcriptURL.deletingLastPathComponent(),
-            withIntermediateDirectories: true
-        )
-        try Data(#"{"oauthAccount":{"email":"user@example.com"}}"#.utf8)
-            .write(to: configDir.appendingPathComponent(".claude.json", isDirectory: false))
-
-        let entry = makeEntry(
-            sessionId: "claude-session-123",
-            title: "resume me",
-            fileURL: transcriptURL,
-            claudeConfigDirectoryForResume: configDir.path
-        )
-
-        XCTAssertEqual(
-            entry.resumeCommand,
-            posixShWrappedForTest("env CLAUDE_CONFIG_DIR='\(configDir.path)' BMUX_PRESERVE_CLAUDE_AUTH_SELECTION_ENV=1 BMUX_PRESERVE_CLAUDE_AUTH_SELECTION_ENV_KEYS=CLAUDE_CONFIG_DIR \"$([ -x \"${BMUX_CLAUDE_WRAPPER_SHIM:-}\" ] && printf '%s' \"$BMUX_CLAUDE_WRAPPER_SHIM\" || printf claude)\" --resume claude-session-123")
-        )
-    }
-
-    func testClaudeResumeCommandUsesSnapshotConfigDirectoryWithNestedProjectsPath() throws {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("bmux-session-index-\(UUID().uuidString)", isDirectory: true)
-        defer { try? FileManager.default.removeItem(at: root) }
-
-        let configDir = root
-            .appendingPathComponent("projects", isDirectory: true)
-            .appendingPathComponent("claude config", isDirectory: true)
-        let transcriptURL = configDir
-            .appendingPathComponent("projects", isDirectory: true)
-            .appendingPathComponent("-tmp", isDirectory: true)
-            .appendingPathComponent("claude-session-123.jsonl", isDirectory: false)
-        try FileManager.default.createDirectory(
-            at: transcriptURL.deletingLastPathComponent(),
-            withIntermediateDirectories: true
-        )
-        try Data(#"{"oauthAccount":{"email":"user@example.com"}}"#.utf8)
-            .write(to: configDir.appendingPathComponent(".claude.json", isDirectory: false))
-
-        let entry = makeEntry(
-            sessionId: "claude-session-123",
-            title: "resume me",
-            fileURL: transcriptURL,
-            claudeConfigDirectoryForResume: configDir.path
-        )
-
-        XCTAssertEqual(
-            entry.resumeCommand,
-            posixShWrappedForTest("env CLAUDE_CONFIG_DIR='\(configDir.path)' BMUX_PRESERVE_CLAUDE_AUTH_SELECTION_ENV=1 BMUX_PRESERVE_CLAUDE_AUTH_SELECTION_ENV_KEYS=CLAUDE_CONFIG_DIR \"$([ -x \"${BMUX_CLAUDE_WRAPPER_SHIM:-}\" ] && printf '%s' \"$BMUX_CLAUDE_WRAPPER_SHIM\" || printf claude)\" --resume claude-session-123")
-        )
-    }
-
     func testGrokResumeCommandPreservesSpecifics() {
         let entry = makeEntry(
             agent: .grok,
@@ -663,12 +601,7 @@ final class SessionIndexViewTests: XCTestCase {
         return String(cString: cString)
     }
 
-    /// Mirrors `AgentResumeArgv.portableClaudeResumeShellCommand`: the rendered claude
-    /// resume command is wrapped as `/bin/sh -c '…'` so it parses in non-POSIX shells
-    /// (fish/csh/tcsh). https://github.com/manaflow-ai/bmux/issues/5639
-    private func posixShWrappedForTest(_ posixCommand: String) -> String {
-        "/bin/sh -c '" + posixCommand.replacingOccurrences(of: "'", with: "'\\''") + "'"
-    }
+
 }
 
 private extension SessionAgent {

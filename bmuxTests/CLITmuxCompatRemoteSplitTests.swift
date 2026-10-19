@@ -3,24 +3,18 @@ import Foundation
 import Testing
 
 @Suite(.serialized) struct CLITmuxCompatRemoteSplitTests {
-    @Test func splitPrintCarriesPreMutationRemoteRejection() throws {
+    @Test func splitPrintCarriesPreMutationRemoteRejection() async throws {
         let cliPath = try BundledCLITestSupport.bundledCLIPath(for: CLITmuxCompatRemoteSplitBundleToken.self)
-        let tmpDir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("bmux-tmux-compat-print-\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: tmpDir) }
-
-        let socketPath = Self.makeSocketPath("tmuxprint")
-        let listenerFD = try Self.bindUnixSocket(at: socketPath)
+        let root = URL(fileURLWithPath: "/tmp").appendingPathComponent("tmux-split-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer {
-            Darwin.close(listenerFD)
-            unlink(socketPath)
+            do { try FileManager.default.removeItem(at: root) }
+            catch { Issue.record(error, "Could not remove owned tmux split fixture directory") }
         }
-
+        let socketPath = root.appendingPathComponent("socket").path
         let workspaceId = "11111111-1111-1111-1111-111111111111"
         let surfaceId = "22222222-2222-2222-2222-222222222222"
-        let state = ServerState()
-        let handled = Self.startMockServer(listenerFD: listenerFD, state: state) { line in
+        let server = CLISocketFixture(path: socketPath) { line in
             guard let payload = Self.jsonObject(line),
                   let id = payload["id"] as? String,
                   let method = payload["method"] as? String else {
@@ -33,12 +27,10 @@ import Testing
                 ])
             case "surface.split":
                 let params = payload["params"] as? [String: Any] ?? [:]
-                state.expect(params["workspace_id"] as? String == workspaceId, "workspace_id did not match")
-                state.expect(params["surface_id"] as? String == surfaceId, "surface_id did not match")
-                state.expect(
-                    params["remote_tmux_unsupported_options"] as? [String] == ["-P"],
-                    "surface.split did not carry remote_tmux_unsupported_options=[\"-P\"]"
-                )
+                #expect(params["workspace_id"] as? String == workspaceId, "workspace_id did not match")
+                #expect(params["surface_id"] as? String == surfaceId, "surface_id did not match")
+                #expect(params["remote_tmux_unsupported_options"] as? [String] == ["-P"],
+                    "surface.split did not carry remote_tmux_unsupported_options=[\"-P\"]")
                 return Self.v2Response(id: id, ok: false, error: [
                     "code": "invalid_params",
                     "message": "Not supported when targeting a remote tmux mirror workspace (the request is routed to tmux and these options cannot be applied): -P",
@@ -47,29 +39,29 @@ import Testing
                 return Self.v2Response(id: id, ok: false, error: ["code": "unsupported", "message": method])
             }
         }
-
-        let result = Self.runProcess(
-            executablePath: cliPath,
-            arguments: ["__tmux-compat", "split-window", "-P"],
-            environment: [
-                "BMUX_SOCKET_PATH": socketPath,
-                "BMUX_WORKSPACE_ID": workspaceId,
-                "BMUX_SURFACE_ID": surfaceId,
-                "HOME": tmpDir.path,
-                "PATH": ProcessInfo.processInfo.environment["PATH"] ?? "/usr/bin:/bin",
-                "BMUX_CLI_SENTRY_DISABLED": "1",
-            ],
-            timeout: 30
-        )
-        #expect(handled.wait(timeout: .now() + 30) == .success)
-
-        #expect(state.errorSnapshot() == [])
-        #expect(!result.timedOut, Comment(rawValue: result.stderr))
+        let (outcome, commands) = try await server.capture {
+            // Join the CLI on both outcomes before the socket's final drain releases its descriptors.
+            do {
+                return Result<ShellContractProcess.Result, any Error>.success(try await ShellContractProcess(
+                    root: root, deadline: .seconds(30), terminationGrace: .milliseconds(200)
+                ).run(executable: cliPath, arguments: ["__tmux-compat", "split-window", "-P"], environment: [
+                    "BMUX_SOCKET_PATH": socketPath, "BMUX_WORKSPACE_ID": workspaceId, "BMUX_SURFACE_ID": surfaceId,
+                    "HOME": root.path, "CFFIXED_USER_HOME": root.path,
+                    "PATH": ProcessInfo.processInfo.environment["PATH"] ?? "/usr/bin:/bin",
+                    "BMUX_CLI_SENTRY_DISABLED": "1",
+                ]))
+            } catch { return .failure(error) }
+        }
+        let result: ShellContractProcess.Result
+        do { result = try outcome.get() }
+        catch {
+            let output = Result { try String(contentsOf: root.appendingPathComponent("stdout"), encoding: .utf8) }
+            let errors = Result { try String(contentsOf: root.appendingPathComponent("stderr"), encoding: .utf8) }
+            Issue.record(error, "Tmux split failed after requests: \(commands); stdout: \(output); stderr: \(errors)")
+            throw error
+        }
         #expect(result.status != 0)
-        #expect(
-            result.stderr.contains("Not supported when targeting a remote tmux mirror workspace"),
-            Comment(rawValue: result.stderr)
-        )
+        #expect(result.stderr.contains("Not supported when targeting a remote tmux mirror workspace"), Comment(rawValue: result.stderr))
         #expect(!result.stderr.contains("already applied"), Comment(rawValue: result.stderr))
     }
 

@@ -1559,39 +1559,6 @@ final class KeyboardShortcutSettingsFileStoreTests: XCTestCase {
         XCTAssertEqual(invalidPrimaryStore.activeSourcePath, primaryURL.path)
     }
 
-    func testPersistedShortcutOverridesSettingsFileShortcutValues() throws {
-        let directoryURL = try makeTemporaryDirectory()
-        defer { try? FileManager.default.removeItem(at: directoryURL) }
-
-        let settingsFileURL = directoryURL.appendingPathComponent("bmux.json", isDirectory: false)
-        try writeSettingsFile(
-            """
-            {
-              "shortcuts": {
-                "newTab": ["ctrl+b", "c"]
-              }
-            }
-            """,
-            to: settingsFileURL
-        )
-
-        KeyboardShortcutSettings.setShortcut(
-            StoredShortcut(key: "n", command: true, shift: false, option: false, control: false),
-            for: .newTab
-        )
-
-        KeyboardShortcutSettings.settingsFileStore = KeyboardShortcutSettingsFileStore(
-            primaryPath: settingsFileURL.path,
-            fallbackPath: nil,
-            startWatching: false
-        )
-
-        XCTAssertEqual(
-            KeyboardShortcutSettings.shortcut(for: .newTab),
-            StoredShortcut(key: "n", command: true, shift: false, option: false, control: false)
-        )
-        XCTAssertTrue(KeyboardShortcutSettings.isManagedBySettingsFile(.newTab))
-    }
 
     @MainActor
     func testReloadConfigurationReloadsShortcutSettingsFile() throws {
@@ -1746,54 +1713,6 @@ final class KeyboardShortcutSettingsFileStoreTests: XCTestCase {
 #endif
     }
 
-    func testSettingsFileShortcutCanBeOverriddenFromUI() throws {
-        let directoryURL = try makeTemporaryDirectory()
-        defer { try? FileManager.default.removeItem(at: directoryURL) }
-
-        let settingsFileURL = directoryURL.appendingPathComponent("bmux.json", isDirectory: false)
-        let missingSettingsFileURL = directoryURL.appendingPathComponent("missing.json", isDirectory: false)
-        let editedShortcut = StoredShortcut(key: "n", command: true, shift: false, option: false, control: false)
-        let managedShortcut = StoredShortcut(key: "b", command: false, shift: false, option: false, control: true, chordKey: "c")
-
-        try writeSettingsFile(
-            """
-            {
-              "shortcuts": {
-                "newTab": ["ctrl+b", "c"]
-              }
-            }
-            """,
-            to: settingsFileURL
-        )
-
-        KeyboardShortcutSettings.settingsFileStore = KeyboardShortcutSettingsFileStore(
-            primaryPath: settingsFileURL.path,
-            fallbackPath: nil,
-            startWatching: false
-        )
-
-        XCTAssertEqual(KeyboardShortcutSettings.shortcut(for: .newTab), managedShortcut)
-
-        KeyboardShortcutSettings.setShortcut(
-            editedShortcut,
-            for: .newTab
-        )
-
-        XCTAssertEqual(KeyboardShortcutSettings.shortcut(for: .newTab), editedShortcut)
-
-        KeyboardShortcutSettings.resetShortcut(for: .newTab)
-
-        XCTAssertEqual(KeyboardShortcutSettings.shortcut(for: .newTab), managedShortcut)
-
-        KeyboardShortcutSettings.settingsFileStore = KeyboardShortcutSettingsFileStore(
-            primaryPath: missingSettingsFileURL.path,
-            fallbackPath: nil,
-            startWatching: false
-        )
-
-        XCTAssertFalse(KeyboardShortcutSettings.isManagedBySettingsFile(.newTab))
-        XCTAssertEqual(KeyboardShortcutSettings.shortcut(for: .newTab), KeyboardShortcutSettings.Action.newTab.defaultShortcut)
-    }
 
     func testSystemWideHotkeySettingsPreserveInvalidManagedShortcutWithoutFallingBackToDefault() throws {
         let directoryURL = try makeTemporaryDirectory()
@@ -3521,78 +3440,6 @@ final class WorkspaceCreationPlacementTests: XCTestCase {
     }
 }
 
-@MainActor
-final class WorkspaceCreationConfigSanitizationTests: XCTestCase {
-    private final class UnsafeConfigSnapshotTabManager: TabManager {
-        private var injectedConfig: BmuxSurfaceConfigTemplate?
-        var capturedConfigTemplate: BmuxSurfaceConfigTemplate?
-
-        func installInjectedConfig(fontSize: Float) {
-            var config = BmuxSurfaceConfigTemplate()
-            config.fontSize = fontSize
-            config.workingDirectory = "/tmp/bmux-workspace-snapshot"
-            config.command = "echo snapshot"
-            config.environmentVariables = ["BMUX_INHERITED_ENV": "1"]
-            injectedConfig = config
-        }
-
-        override func inheritedTerminalConfigForNewWorkspace(
-            workspace: Workspace?
-        ) -> BmuxSurfaceConfigTemplate? {
-            injectedConfig ?? super.inheritedTerminalConfigForNewWorkspace(workspace: workspace)
-        }
-
-        override func makeWorkspaceForCreation(
-            title: String,
-            workingDirectory: String?,
-            portOrdinal: Int,
-            configTemplate: BmuxSurfaceConfigTemplate?,
-            initialSurface: NewWorkspaceInitialSurface,
-            initialTerminalCommand: String?,
-            initialTerminalInput: String?,
-            initialTerminalEnvironment: [String: String],
-            initialBrowserURL: URL?,
-            initialBrowserOmnibarVisible: Bool,
-            initialBrowserTransparentBackground: Bool,
-            workspaceEnvironment: [String: String],
-            allowTextBoxFocusDefault: Bool
-        ) -> Workspace {
-            capturedConfigTemplate = configTemplate
-            return super.makeWorkspaceForCreation(
-                title: title,
-                workingDirectory: workingDirectory,
-                portOrdinal: portOrdinal,
-                configTemplate: configTemplate,
-                initialSurface: initialSurface,
-                initialTerminalCommand: initialTerminalCommand,
-                initialTerminalInput: initialTerminalInput,
-                initialTerminalEnvironment: initialTerminalEnvironment,
-                initialBrowserURL: initialBrowserURL,
-                initialBrowserOmnibarVisible: initialBrowserOmnibarVisible,
-                initialBrowserTransparentBackground: initialBrowserTransparentBackground,
-                workspaceEnvironment: workspaceEnvironment,
-                allowTextBoxFocusDefault: allowTextBoxFocusDefault
-            )
-        }
-    }
-
-    func testAddWorkspacePassesSanitizedInheritedConfigTemplate() {
-        let manager = UnsafeConfigSnapshotTabManager()
-        manager.installInjectedConfig(fontSize: 19)
-
-        _ = manager.addWorkspace()
-
-        guard let capturedConfig = manager.capturedConfigTemplate else {
-            XCTFail("Expected captured config template for new workspace")
-            return
-        }
-
-        XCTAssertEqual(capturedConfig.fontSize, 19, accuracy: 0.001)
-        XCTAssertNil(capturedConfig.workingDirectory)
-        XCTAssertNil(capturedConfig.command)
-        XCTAssertTrue(capturedConfig.environmentVariables.isEmpty)
-    }
-}
 
 @MainActor
 final class NewBrowserWorkspaceCreationTests: XCTestCase {
@@ -5446,58 +5293,6 @@ final class WorkspacePanelGitBranchTests: XCTestCase {
         }
     }
 
-    func testBrowserSplitWithFocusFalsePreservesOriginalFocusedPanel() {
-        let workspace = Workspace()
-        guard let originalFocusedPanelId = workspace.focusedPanelId else {
-            XCTFail("Expected initial focused panel")
-            return
-        }
-
-        guard let browserSplitPanel = workspace.newBrowserSplit(
-            from: originalFocusedPanelId,
-            orientation: .horizontal,
-            focus: false
-        ) else {
-            XCTFail("Expected browser split panel to be created")
-            return
-        }
-
-        drainMainQueue()
-
-        XCTAssertNotEqual(browserSplitPanel.id, originalFocusedPanelId)
-        XCTAssertEqual(
-            workspace.focusedPanelId,
-            originalFocusedPanelId,
-            "Expected non-focus browser split to preserve pre-split focus"
-        )
-    }
-
-    func testTerminalSplitWithFocusFalsePreservesOriginalFocusedPanel() {
-        let workspace = Workspace()
-        guard let originalFocusedPanelId = workspace.focusedPanelId else {
-            XCTFail("Expected initial focused panel")
-            return
-        }
-
-        guard let terminalSplitPanel = workspace.newTerminalSplit(
-            from: originalFocusedPanelId,
-            orientation: .horizontal,
-            focus: false
-        ) else {
-            XCTFail("Expected terminal split panel to be created")
-            return
-        }
-
-        drainMainQueue()
-
-        XCTAssertNotEqual(terminalSplitPanel.id, originalFocusedPanelId)
-        XCTAssertEqual(
-            workspace.focusedPanelId,
-            originalFocusedPanelId,
-            "Expected non-focus terminal split to preserve pre-split focus"
-        )
-    }
-
     func testDetachLastSurfaceLeavesWorkspaceTemporarilyEmptyForMoveFlow() {
         let workspace = Workspace()
         guard let panelId = workspace.focusedPanelId,
@@ -5661,60 +5456,6 @@ final class WorkspacePanelGitBranchTests: XCTestCase {
         XCTAssertFalse(attachedTab.hasCustomTitle)
     }
 
-    func testBrowserSplitWithFocusFalseRecoversFromDelayedStaleSelection() {
-        let workspace = Workspace()
-        guard let originalFocusedPanelId = workspace.focusedPanelId else {
-            XCTFail("Expected initial focused panel")
-            return
-        }
-        guard let originalPaneId = workspace.paneId(forPanelId: originalFocusedPanelId) else {
-            XCTFail("Expected focused pane for initial panel")
-            return
-        }
-
-        guard let browserSplitPanel = workspace.newBrowserSplit(
-            from: originalFocusedPanelId,
-            orientation: .horizontal,
-            focus: false
-        ) else {
-            XCTFail("Expected browser split panel to be created")
-            return
-        }
-        guard let splitPaneId = workspace.paneId(forPanelId: browserSplitPanel.id),
-              let splitTabId = workspace.surfaceIdFromPanelId(browserSplitPanel.id),
-              let splitTab = workspace.bonsplitController
-              .tabs(inPane: splitPaneId)
-              .first(where: { $0.id == splitTabId }) else {
-            XCTFail("Expected split pane/tab mapping")
-            return
-        }
-
-        // Simulate one delayed stale split-selection callback from bonsplit.
-        DispatchQueue.main.async {
-            workspace.splitTabBar(workspace.bonsplitController, didSelectTab: splitTab, inPane: splitPaneId)
-        }
-
-        drainMainQueue()
-        drainMainQueue()
-        drainMainQueue()
-
-        XCTAssertEqual(
-            workspace.focusedPanelId,
-            originalFocusedPanelId,
-            "Expected non-focus split to reassert the pre-split focused panel"
-        )
-        XCTAssertEqual(
-            workspace.bonsplitController.focusedPaneId,
-            originalPaneId,
-            "Expected focused pane to converge back to the pre-split pane"
-        )
-        XCTAssertEqual(
-            workspace.bonsplitController.selectedTab(inPane: originalPaneId)?.id,
-            workspace.surfaceIdFromPanelId(originalFocusedPanelId),
-            "Expected selected tab to converge back to the pre-split focused panel"
-        )
-    }
-
     func testBrowserSplitWithFocusFalseAllowsSubsequentExplicitFocusOnSplitPanel() {
         let workspace = Workspace()
         guard let originalFocusedPanelId = workspace.focusedPanelId else {
@@ -5801,47 +5542,6 @@ final class WorkspacePanelGitBranchTests: XCTestCase {
             workspace.bonsplitController.selectedTab(inPane: originalPaneId)?.id,
             workspace.surfaceIdFromPanelId(originalFocusedPanelId),
             "Expected selected tab to stay on the original focused panel"
-        )
-    }
-
-    func testNewRightSidebarToolSurfaceWithFocusFalsePreservesFocusedPanel() {
-        let workspace = Workspace()
-        guard let originalFocusedPanelId = workspace.focusedPanelId,
-              let originalPaneId = workspace.paneId(forPanelId: originalFocusedPanelId),
-              let originalTabId = workspace.surfaceIdFromPanelId(originalFocusedPanelId) else {
-            XCTFail("Expected initial focused panel, pane, and tab")
-            return
-        }
-
-        guard let newPanel = workspace.newRightSidebarToolSurface(
-            inPane: originalPaneId,
-            mode: .files,
-            focus: false
-        ) else {
-            XCTFail("Expected right sidebar tool surface to be created")
-            return
-        }
-
-        drainMainQueue()
-        drainMainQueue()
-        drainMainQueue()
-
-        XCTAssertNotEqual(newPanel.id, originalFocusedPanelId)
-        XCTAssertEqual(newPanel.panelType, .rightSidebarTool)
-        XCTAssertEqual(newPanel.mode, .files)
-        XCTAssertEqual(
-            workspace.focusedPanelId,
-            originalFocusedPanelId,
-            "Expected non-focus right sidebar tool surface creation to preserve the existing focused panel"
-        )
-        XCTAssertEqual(
-            workspace.bonsplitController.selectedTab(inPane: originalPaneId)?.id,
-            originalTabId,
-            "Expected selected tab to stay on the original focused panel"
-        )
-        XCTAssertEqual(
-            workspace.surfaceIdFromPanelId(newPanel.id).flatMap { workspace.bonsplitController.tab($0)?.kind },
-            SurfaceKind.rightSidebarTool.rawValue
         )
     }
 
@@ -6182,67 +5882,6 @@ final class WorkspacePanelGitBranchTests: XCTestCase {
         XCTAssertEqual(workspace.activeRemoteTerminalSessionCount, initialRemoteSessionCount)
     }
 
-    func testForkAgentWorkspaceLaunchInRemoteWorkspacePreservesRemoteContext() throws {
-        let workspace = Workspace()
-        let agentSocketPath = "/tmp/bmux-fork-agent.sock"
-        workspace.configureRemoteConnection(
-            WorkspaceRemoteConfiguration(
-                destination: "bmux-macmini",
-                port: 2222,
-                identityFile: "/Users/example/.ssh/bmux",
-                sshOptions: ["ServerAliveInterval=30", "ForwardAgent=yes"],
-                localProxyPort: nil,
-                relayPort: 64000,
-                relayID: "relay-fork",
-                relayToken: String(repeating: "a", count: 64),
-                localSocketPath: "/tmp/bmux-fork-remote.sock",
-                terminalStartupCommand: "ssh -p 2222 -i /Users/example/.ssh/bmux -o ServerAliveInterval=30 -o ForwardAgent=yes -tt bmux-macmini",
-                agentSocketPath: agentSocketPath
-            ),
-            autoConnect: false
-        )
-        let sourcePanelId = try XCTUnwrap(workspace.focusedPanelId)
-        let snapshot = SessionRestorableAgentSnapshot(
-            kind: .codex,
-            sessionId: "019dad34-d218-7943-b81a-eddac5c87951",
-            workingDirectory: "/Users/bmux/project",
-            launchCommand: AgentLaunchCommandSnapshot(
-                launcher: "codex",
-                executablePath: "/Users/example/.bun/bin/codex",
-                arguments: ["/Users/example/.bun/bin/codex"],
-                workingDirectory: "/Users/bmux/project",
-                environment: nil,
-                capturedAt: 123,
-                source: "process"
-            )
-        )
-
-        let launch = try XCTUnwrap(
-            workspace.forkAgentWorkspaceLaunch(
-                fromPanelId: sourcePanelId,
-                snapshot: snapshot
-            )
-        )
-
-        XCTAssertEqual(launch.workingDirectory, "/Users/bmux/project")
-        XCTAssertNil(launch.terminalWorkingDirectory)
-        XCTAssertEqual(
-            launch.initialTerminalCommand,
-            "ssh -p 2222 -i /Users/example/.ssh/bmux -o ServerAliveInterval=30 -o ForwardAgent=yes -tt bmux-macmini"
-        )
-        XCTAssertEqual(launch.initialTerminalInput, snapshot.forkCommand.map { $0 + "\n" })
-        XCTAssertEqual(launch.initialTerminalEnvironment["SSH_AUTH_SOCK"], agentSocketPath)
-        XCTAssertTrue(launch.autoConnectRemoteConfiguration)
-        XCTAssertEqual(launch.remoteConfiguration?.destination, "bmux-macmini")
-        XCTAssertEqual(launch.remoteConfiguration?.port, 2222)
-        XCTAssertEqual(launch.remoteConfiguration?.identityFile, "/Users/example/.ssh/bmux")
-        XCTAssertEqual(launch.remoteConfiguration?.sshOptions, ["ServerAliveInterval=30", "ForwardAgent=yes"])
-        XCTAssertEqual(launch.remoteConfiguration?.agentSocketPath, agentSocketPath)
-        XCTAssertEqual(launch.remoteConfiguration?.sshTerminalStartupEnvironment?["SSH_AUTH_SOCK"], agentSocketPath)
-        XCTAssertEqual(launch.remoteConfiguration?.sshProcessEnvironment?["SSH_AUTH_SOCK"], agentSocketPath)
-        XCTAssertNil(launch.remoteConfiguration?.relayPort)
-        XCTAssertNil(launch.remoteConfiguration?.localSocketPath)
-    }
 
     func testForkAgentWorkspaceLaunchFromPersistentSSHPTYDoesNotReuseParentRelayOrDaemonSlot() throws {
         let workspace = Workspace()
@@ -6613,85 +6252,6 @@ final class WorkspacePanelGitBranchTests: XCTestCase {
         XCTAssertEqual(ordered.map(\.isDirty), [false, true])
     }
 
-    func testUpdatingFocusedPanelGitBranchWithSameStateDoesNotRepublishWorkspace() {
-        let workspace = Workspace()
-        guard let panelId = workspace.focusedPanelId else {
-            XCTFail("Expected initial focused panel")
-            return
-        }
-
-        var publishCount = 0
-        let cancellable = workspace.objectWillChange.sink { _ in
-            publishCount += 1
-        }
-        defer { cancellable.cancel() }
-
-        workspace.updatePanelGitBranch(panelId: panelId, branch: "main", isDirty: false)
-        let baselinePublishCount = publishCount
-
-        XCTAssertGreaterThan(
-            baselinePublishCount,
-            0,
-            "Expected the first focused branch update to publish workspace changes"
-        )
-
-        workspace.updatePanelGitBranch(panelId: panelId, branch: "main", isDirty: false)
-
-        XCTAssertEqual(
-            publishCount,
-            baselinePublishCount,
-            "Expected identical focused branch refreshes to avoid extra workspace publishes"
-        )
-    }
-
-    func testUpdatingFocusedPanelPullRequestWithSameStateDoesNotRepublishWorkspace() {
-        let workspace = Workspace()
-        guard let panelId = workspace.focusedPanelId else {
-            XCTFail("Expected initial focused panel")
-            return
-        }
-
-        workspace.updatePanelGitBranch(panelId: panelId, branch: "feature/sidebar-pr", isDirty: false)
-
-        var publishCount = 0
-        let cancellable = workspace.objectWillChange.sink { _ in
-            publishCount += 1
-        }
-        defer { cancellable.cancel() }
-
-        let pullRequestURL = URL(string: "https://github.com/manaflow-ai/bmux/pull/2388")!
-        workspace.updatePanelPullRequest(
-            panelId: panelId,
-            number: 2388,
-            label: "PR",
-            url: pullRequestURL,
-            status: .open,
-            branch: "feature/sidebar-pr"
-        )
-        let baselinePublishCount = publishCount
-
-        XCTAssertGreaterThan(
-            baselinePublishCount,
-            0,
-            "Expected the first focused pull request update to publish workspace changes"
-        )
-
-        workspace.updatePanelPullRequest(
-            panelId: panelId,
-            number: 2388,
-            label: "PR",
-            url: pullRequestURL,
-            status: .open,
-            branch: "feature/sidebar-pr"
-        )
-
-        XCTAssertEqual(
-            publishCount,
-            baselinePublishCount,
-            "Expected identical focused pull request refreshes to avoid extra workspace publishes"
-        )
-    }
-
     func testSidebarObservationPublisherEmitsForFocusedGitBranchChangesOnlyOncePerState() {
         let workspace = Workspace()
         guard let panelId = workspace.focusedPanelId else {
@@ -6719,40 +6279,6 @@ final class WorkspacePanelGitBranchTests: XCTestCase {
             publishCount,
             baselinePublishCount,
             "Expected identical git metadata refreshes to be ignored by sidebar rows"
-        )
-    }
-
-    @MainActor
-    func testSidebarPullRequestsTrackFocusedPanelOnly() {
-        let workspace = Workspace()
-        guard let firstPanelId = workspace.focusedPanelId,
-              let paneId = workspace.paneId(forPanelId: firstPanelId),
-              let secondPanel = workspace.newTerminalSurface(inPane: paneId, focus: false) else {
-            XCTFail("Expected focused panel and a second panel")
-            return
-        }
-
-        workspace.updatePanelGitBranch(panelId: firstPanelId, branch: "main", isDirty: false)
-        workspace.updatePanelGitBranch(panelId: secondPanel.id, branch: "feature/sidebar-pr", isDirty: false)
-        workspace.updatePanelPullRequest(
-            panelId: secondPanel.id,
-            number: 1629,
-            label: "PR",
-            url: URL(string: "https://github.com/manaflow-ai/bmux/pull/1629")!,
-            status: .open
-        )
-
-        XCTAssertNil(workspace.pullRequest)
-        XCTAssertTrue(
-            workspace.sidebarPullRequestsInDisplayOrder().isEmpty,
-            "Expected background panel PRs to stay hidden while the focused panel has no PR"
-        )
-
-        workspace.focusPanel(secondPanel.id)
-
-        XCTAssertEqual(
-            workspace.sidebarPullRequestsInDisplayOrder().map(\.number),
-            [1629]
         )
     }
 

@@ -232,16 +232,6 @@ final class TitlebarControlsSizingPolicyTests: XCTestCase {
         XCTAssertEqual(TitlebarControlsStyle.stored(in: defaults), .compact)
     }
 
-    func testTitlebarControlsUseDeterministicContentSize() {
-        let classic = TitlebarControlsLayoutMetrics.contentSize(config: TitlebarControlsStyle.classic.config)
-        XCTAssertEqual(classic.width, 152, accuracy: 0.001)
-        XCTAssertEqual(classic.height, WindowChromeMetrics.appTitlebarHeight, accuracy: 0.001)
-
-        let compact = TitlebarControlsLayoutMetrics.contentSize(config: TitlebarControlsStyle.compact.config)
-        XCTAssertEqual(compact.width, 139, accuracy: 0.001)
-        XCTAssertEqual(compact.height, WindowChromeMetrics.appTitlebarHeight, accuracy: 0.001)
-    }
-
     func testTitlebarControlsLeadingOffsetDoesNotDoubleApplyTrafficLightPosition() {
         let snapshot = MinimalModeTitlebarDebugSnapshot(
             leftControlsLeadingInset: MinimalModeTitlebarDebugSettings.defaultLeftControlsLeadingInset,

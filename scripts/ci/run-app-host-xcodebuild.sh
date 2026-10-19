@@ -29,6 +29,42 @@ if [ -z "${BMUX_APP_HOST_TEST_LOCK_ACTIVE:-}" ]; then
     "$lock_file" "$lock_wait_seconds" "$0" "$@"
 fi
 
+# Keep the lock holder alive until every foreground phase has joined. Bash's
+# wait is interrupted by traps, so a signal forwards first and then resumes wait.
+active_pid=""
+cancel_signal=0
+wait_interrupted=0
+cancel_owned_phase() {
+  wait_interrupted=1
+  [ "$cancel_signal" -ne 0 ] || cancel_signal="$1"
+  if [ -n "$active_pid" ]; then
+    # Async Bash jobs inherit ignored INT until their interpreter installs a
+    # handler. TERM cancels that startup interval; our result retains 128 + INT.
+    kill -TERM %+ 2>/dev/null || true
+    kill -CONT %+ 2>/dev/null || true  # Let a stopped owned phase handle cancellation.
+  fi
+}
+trap 'cancel_owned_phase 15' TERM
+trap 'cancel_owned_phase 2' INT
+run_owned_phase() {
+  [ "$cancel_signal" -eq 0 ] || exit "$((128 + cancel_signal))"
+  "$@" <&0 &
+  active_pid=$!
+  # Covers cancellation between launch and registration of the owned child.
+  [ "$cancel_signal" -eq 0 ] || cancel_owned_phase "$cancel_signal"
+  local child_status=0
+  while true; do
+    wait_interrupted=0
+    if wait "$active_pid"; then child_status=0; else child_status=$?; fi
+    [ "$wait_interrupted" -ne 0 ] || break
+    # Consult Bash job ownership, never a potentially reused post-wait PID.
+    [ "$(jobs -p)" = "$active_pid" ] || break
+  done
+  active_pid=""
+  [ "$cancel_signal" -eq 0 ] || exit "$((128 + cancel_signal))"
+  return "$child_status"
+}
+
 # Resolve a CI-scoped root so app-host cleanup targets every CI app-host on this
 # Mac (this run AND orphans left by previous runs, which live under a different
 # per-run DerivedData path), while never matching a human's tagged dev build
@@ -48,7 +84,7 @@ kill_stale_app_host() {
   # unrelated dev build outside the runner work area. If we cannot identify the
   # root, do nothing rather than risk an unrelated process.
   [ -n "$ci_app_host_root" ] && \
-    pkill -f "${ci_app_host_root%/}/.*Build/Products/.*bmux DEV" 2>/dev/null || true
+    run_owned_phase pkill -f "${ci_app_host_root%/}/.*Build/Products/.*bmux DEV" 2>/dev/null || true
 }
 
 attempt=1
@@ -61,9 +97,20 @@ while [ "$attempt" -le "$max_attempts" ]; do
   # establish communication with the test runner" flake. Start each attempt from
   # a clean slate.
   kill_stale_app_host
+  diagnostic_command=(scripts/ci/xcodebuild_noninteractive.py xcodebuild "$@")
+  if [ "${BMUX_APP_HOST_PROCESS_DIAGNOSTICS:-0}" = "1" ] && [ -n "$derived_data_path" ]; then
+    diagnostic_root="${log_dir%/}/bmux-process-diagnostics"
+    if mkdir -p "$diagnostic_root" && invocation_dir="$(mktemp -d "$diagnostic_root/attempt-${attempt}-XXXXXX")"; then
+      diagnostic_command=(python3 scripts/ci/app_host_process_diagnostics.py
+        --root "$derived_data_path" --log "$log_path" --output "$invocation_dir/capture" --
+        "${diagnostic_command[@]}")
+    else
+      echo "Process diagnostics unavailable: output directory" >&2
+    fi
+  fi
   set +e
   BMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH="$log_path" \
-    scripts/ci/xcodebuild_noninteractive.py xcodebuild "$@"
+    run_owned_phase "${diagnostic_command[@]}"
   status=$?
   set -e
 

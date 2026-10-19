@@ -193,7 +193,7 @@ struct WorkspaceForkConversationContextMenuTests {
                     capturedAtProvider: { snapshot.sampledAt.timeIntervalSince1970 },
                     processArgumentsProvider: { pid in
                         pid == processId
-                            ? BmuxTopProcessArguments(arguments: [executable, "--session", sessionId], environment: ["PWD": cwd.path])
+                            ? BmuxTopProcessArguments(arguments: [executable, "--session", sessionId], environment: ["PWD": cwd.path, "BMUX_WORKSPACE_ID": liveWorkspaceId.uuidString, "BMUX_SURFACE_ID": livePanelId.uuidString])
                             : nil
                     },
                     processIdentityProvider: { $0 == processId ? processIdentity : nil }

@@ -1,4 +1,5 @@
 import AppKit
+import BmuxAppKitSupportUI
 import Bonsplit
 import Combine
 import BmuxFoundation
@@ -61,7 +62,7 @@ enum TitlebarControlsStyle: Int, CaseIterable, Identifiable {
             return TitlebarControlsStyleConfig(
                 spacing: 6,
                 iconSize: HeaderChromeControlMetrics.iconSize,
-                buttonSize: HeaderChromeControlMetrics.buttonSize,
+                buttonSize: MatteTheme(colorScheme: .dark).layout.minimumHitSize,
                 badgeSize: 12,
                 badgeOffset: CGSize(width: 3, height: -3),
                 groupBackground: false,
@@ -74,7 +75,7 @@ enum TitlebarControlsStyle: Int, CaseIterable, Identifiable {
             return TitlebarControlsStyleConfig(
                 spacing: 5,
                 iconSize: 11,
-                buttonSize: 18,
+                buttonSize: MatteTheme(colorScheme: .dark).layout.minimumHitSize,
                 badgeSize: 11,
                 badgeOffset: CGSize(width: 3, height: -3),
                 groupBackground: false,
@@ -87,7 +88,7 @@ enum TitlebarControlsStyle: Int, CaseIterable, Identifiable {
             return TitlebarControlsStyleConfig(
                 spacing: 7,
                 iconSize: 13,
-                buttonSize: 22,
+                buttonSize: MatteTheme(colorScheme: .dark).layout.minimumHitSize,
                 badgeSize: 13,
                 badgeOffset: CGSize(width: 3, height: -3),
                 groupBackground: false,
@@ -100,7 +101,7 @@ enum TitlebarControlsStyle: Int, CaseIterable, Identifiable {
             return TitlebarControlsStyleConfig(
                 spacing: 5,
                 iconSize: 12,
-                buttonSize: 20,
+                buttonSize: MatteTheme(colorScheme: .dark).layout.minimumHitSize,
                 badgeSize: 12,
                 badgeOffset: CGSize(width: 3, height: -3),
                 groupBackground: false,
@@ -113,7 +114,7 @@ enum TitlebarControlsStyle: Int, CaseIterable, Identifiable {
             return TitlebarControlsStyleConfig(
                 spacing: 6,
                 iconSize: 12,
-                buttonSize: 21,
+                buttonSize: MatteTheme(colorScheme: .dark).layout.minimumHitSize,
                 badgeSize: 12,
                 badgeOffset: CGSize(width: 3, height: -3),
                 groupBackground: false,
@@ -798,83 +799,12 @@ func focusHistoryNavigationAvailability(preferredWindow: NSWindow?) -> FocusHist
 private struct TitlebarControlButtonStyle: ButtonStyle {
     let config: TitlebarControlsStyleConfig
     let foregroundColor: Color
+    @Environment(\.colorScheme) private var colorScheme
 
     func makeBody(configuration: Configuration) -> some View {
-        TitlebarControlButtonStyleBody(
-            configuration: configuration,
-            config: config,
-            foregroundColor: foregroundColor
-        )
-    }
-}
-
-private struct TitlebarControlButtonStyleBody: View {
-    let configuration: ButtonStyle.Configuration
-    let config: TitlebarControlsStyleConfig
-    let foregroundColor: Color
-    @State private var isHovering = false
-    @Environment(\.isEnabled) private var isEnabled
-
-    var body: some View {
-        configuration.label
+        MatteButtonStyle(config.buttonBackground ? .raised : .flat, theme: MatteTheme(colorScheme: colorScheme))
+            .makeBody(configuration: configuration)
             .frame(width: config.buttonSize, height: config.buttonSize)
-            .foregroundStyle(foregroundColor.opacity(foregroundOpacity))
-            .background {
-                if backgroundOpacity > 0 {
-                    RoundedRectangle(cornerRadius: config.buttonCornerRadius, style: .continuous)
-                        .fill(foregroundColor.opacity(backgroundOpacity))
-                } else if config.buttonBackground {
-                    RoundedRectangle(cornerRadius: config.buttonCornerRadius, style: .continuous)
-                        .fill(Color(nsColor: .controlBackgroundColor).opacity(0.45))
-                }
-            }
-            .overlay {
-                if borderOpacity > 0 {
-                    RoundedRectangle(cornerRadius: config.buttonCornerRadius, style: .continuous)
-                        .stroke(foregroundColor.opacity(borderOpacity), lineWidth: 0.5)
-                }
-            }
-            .scaleEffect(titlebarControlPressedScale(isPressed: configuration.isPressed))
-            .animation(.easeOut(duration: 0.08), value: configuration.isPressed)
-            .animation(.easeInOut(duration: 0.12), value: isHovering)
-            .contentShape(Rectangle())
-            .onHover { hovering in
-                if titlebarControlsShouldTrackButtonHover(config: config) {
-                    isHovering = hovering
-                }
-            }
-    }
-
-    private var foregroundOpacity: Double {
-        titlebarControlForegroundOpacity(
-            isHovering: isHovering,
-            isPressed: configuration.isPressed,
-            isEnabled: isEnabled
-        )
-    }
-
-    private var backgroundOpacity: Double {
-        let baseOpacity = titlebarControlBackgroundOpacity(
-            config: config,
-            isHovering: isHovering,
-            isPressed: configuration.isPressed,
-            isEnabled: isEnabled
-        )
-        let activeHoverOpacity = titlebarControlActiveHoverBackgroundOpacity(
-            isHovering: isHovering,
-            isPressed: configuration.isPressed,
-            isEnabled: isEnabled
-        )
-        return max(baseOpacity, activeHoverOpacity)
-    }
-
-    private var borderOpacity: Double {
-        titlebarControlBorderOpacity(
-            config: config,
-            isHovering: isHovering,
-            isPressed: configuration.isPressed,
-            isEnabled: isEnabled
-        )
     }
 }
 
@@ -911,6 +841,8 @@ private final class TitlebarControlRightClickNSView: NSView {
 }
 
 struct TitlebarControlsView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject var notificationStore: TerminalNotificationStore
     @ObservedObject var viewModel: TitlebarControlsViewModel
     let onToggleSidebar: () -> Void
@@ -975,6 +907,7 @@ struct TitlebarControlsView: View {
         let _ = shortcutRefreshTick
         let _ = appearanceRefreshTick
         let _ = globalFontPercent
+        let motion = MatteTheme(colorScheme: colorScheme).motion(reduceMotion: reduceMotion)
         let style = TitlebarControlsStyle.stored(rawValue: styleRawValue)
         let config = style.config
         let additionalButtonCount = onShowRepoAgentLaunchers == nil ? 0 : 1
@@ -992,7 +925,7 @@ struct TitlebarControlsView: View {
             .contentShape(Rectangle())
             .opacity(shouldShowControls ? 1 : 0)
             .allowsHitTesting(shouldShowControls)
-            .animation(.easeInOut(duration: 0.14), value: shouldShowControls)
+            .animation(reduceMotion ? nil : .timingCurve(motion.curve.x1, motion.curve.y1, motion.curve.x2, motion.curve.y2, duration: motion.controlDuration), value: shouldShowControls)
             .background(
                 WindowAccessor(refreshID: showModifierHoldHints) { window in
                     let nextWindowNumber = window.windowNumber

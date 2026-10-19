@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import tempfile
@@ -48,8 +49,11 @@ class WorkflowExitReportingTests(unittest.TestCase):
             fixture.write_text(json.dumps(outcomes))
             counter = root / "attempts"
             runner = """#!/usr/bin/env python3
-import json, os
+import json, os, sys
 from pathlib import Path
+# Compilation is a separate prerequisite; these outcomes model native tests.
+if sys.argv[-1:] == ["build-for-testing"]:
+    raise SystemExit(0)
 counter = Path(os.environ['REPORTING_TEST_COUNTER'])
 attempt = int(counter.read_text()) if counter.exists() else 0
 counter.write_text(str(attempt + 1))
@@ -69,6 +73,7 @@ raise SystemExit(status)
             executable(root / "bin/sleep", "#!/usr/bin/env python3\nimport time\ntime.sleep(0.01)\n")
             if tee_fails:
                 executable(root / "bin/tee", "#!/usr/bin/env python3\nimport sys\nfrom pathlib import Path\ndata=sys.stdin.read()\nPath(sys.argv[1]).write_text(data)\nprint(data, end='')\nraise SystemExit(73)\n")
+            shutil.copy2(ROOT / "scripts/ci/run-unit-tests-with-timeout.py", root / "scripts/ci")
             script = workflow_script(filename, WORKFLOWS[filename])
             # Isolate the two legacy hardcoded log destinations, preserving all
             # shell control flow and command-status handling from the workflow.

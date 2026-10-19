@@ -42,16 +42,15 @@ extension CLINotifyProcessIntegrationRegressionTests {
     }
 
     func bindUnixSocket(at path: String) throws -> Int32 {
-        unlink(path)
-        let fd = Darwin.socket(AF_UNIX, SOCK_STREAM, 0)
-        XCTAssertGreaterThanOrEqual(fd, 0)
-
         var addr = sockaddr_un()
         addr.sun_family = sa_family_t(AF_UNIX)
         let maxPathLength = MemoryLayout.size(ofValue: addr.sun_path)
         let utf8 = Array(path.utf8)
-        XCTAssertLessThan(utf8.count, maxPathLength)
-        _ = withUnsafeMutablePointer(to: &addr.sun_path) { pointer in
+        guard utf8.count < maxPathLength else { throw POSIXError(.ENAMETOOLONG) }
+        unlink(path)
+        let fd = Darwin.socket(AF_UNIX, SOCK_STREAM, 0)
+        guard fd >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
+        withUnsafeMutablePointer(to: &addr.sun_path) { pointer in
             pointer.withMemoryRebound(to: CChar.self, capacity: maxPathLength) { buffer in
                 for index in 0..<utf8.count {
                     buffer[index] = CChar(bitPattern: utf8[index])
@@ -65,8 +64,17 @@ extension CLINotifyProcessIntegrationRegressionTests {
                 Darwin.bind(fd, sockaddrPtr, socklen_t(MemoryLayout<sockaddr_un>.size))
             }
         }
-        XCTAssertEqual(bindResult, 0)
-        XCTAssertEqual(Darwin.listen(fd, 1), 0)
+        guard bindResult == 0 else {
+            let failure = POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+            Darwin.close(fd)
+            throw failure
+        }
+        guard Darwin.listen(fd, 1) == 0 else {
+            let failure = POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+            Darwin.close(fd)
+            unlink(path)
+            throw failure
+        }
         return fd
     }
 
@@ -336,11 +344,7 @@ extension CLINotifyProcessIntegrationRegressionTests {
     }
 
     func processTimeout(_ requested: TimeInterval) -> TimeInterval {
-        let env = ProcessInfo.processInfo.environment
-        guard env["GITHUB_ACTIONS"] == "true" || env["CI"] == "true" else {
-            return requested
-        }
-        return max(requested, 20)
+        CLIProcessTestTimeout().seconds(requested)
     }
 
     func jsonObject(_ line: String) -> [String: Any]? {

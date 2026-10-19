@@ -47,6 +47,41 @@ struct FilePreviewTextEditorTextKitTests {
         #expect(textView.layoutManager?.allowsNonContiguousLayout == true)
     }
 
+    @Test("text preview editor reapplies insets when moved between windows")
+    func editorInsetsReapplyWhenMovedBetweenWindows() throws {
+        _ = NSApplication.shared
+        let textView = SavingTextView.makeFilePreviewTextView()
+        let textContainer = try #require(textView.textContainer)
+        var windows: [NSWindow] = []
+        defer {
+            textView.removeFromSuperview()
+            for window in windows {
+                window.contentView = nil
+                window.close()
+            }
+        }
+        for _ in 0..<2 {
+            textView.textContainerInset = .zero
+            textContainer.lineFragmentPadding = 5
+            let window = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 480, height: 320),
+                styleMask: [.titled], backing: .buffered, defer: false
+            )
+            window.isReleasedWhenClosed = false
+            windows.append(window)
+            let content = try #require(window.contentView)
+            let scrollView = NSScrollView(frame: content.bounds)
+            scrollView.autoresizingMask = [.width, .height]
+            content.addSubview(scrollView)
+            scrollView.documentView = textView
+            #expect(textView.window === window)
+            #expect(textView.textContainer === textContainer)
+            #expect(textView.textContainerInset.width == FilePreviewTextEditorLayout.textContainerInset.width)
+            #expect(textView.textContainerInset.height == FilePreviewTextEditorLayout.textContainerInset.height)
+            #expect(textContainer.lineFragmentPadding == FilePreviewTextEditorLayout.lineFragmentPadding)
+        }
+    }
+
     @Test("text preview editor handles standard zoom key equivalents")
     func editorHandlesStandardZoomKeyEquivalents() throws {
         try withDefaultShortcutSettings {

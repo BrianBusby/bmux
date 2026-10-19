@@ -12,6 +12,7 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     var liveChatContent: ((@escaping () -> Void) -> AnyView)?
     var liveTerminalContent: AnyView?
     var onPrimaryTabChange: ((Bool) -> Void)?
+    var onPrimaryTabsHostChange: (@MainActor (NSView, Bool) -> Void)?
     var workspaceLabel: String?
     var sessionTitle: String?
     var sessionDescription: String?
@@ -90,6 +91,7 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
                     liveChatContent: liveChatContent,
                     liveTerminalContent: liveTerminalContent,
                     onPrimaryTabChange: onPrimaryTabChange,
+                    onPrimaryTabsHostChange: onPrimaryTabsHostChange,
                     initialPrimaryTab: initialPrimaryTab ?? .session,
                     stableWorkspaceID: stableWorkspaceID,
                     workspaceLabel: workspaceLabel,

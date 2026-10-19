@@ -36,92 +36,53 @@ extension LargeSuiteTests {
     )
 
 
+def partition(root: Path, directory: Path, total: int) -> tuple[list[str], list[int]]:
+    selectors: list[str] = []
+    weights: list[int] = []
+    for shard in range(1, total + 1):
+        output = directory / f"shard-{total}-{shard}.args"
+        result = subprocess.run(
+            [sys.executable, str(HELPER), "--root", str(root),
+             "--shard-index", str(shard), "--shard-total", str(total),
+             "--output", str(output)],
+            text=True, capture_output=True, check=True,
+        )
+        selectors.extend(output.read_text(encoding="utf-8").splitlines())
+        weights.append(int(result.stdout.splitlines()[0].split("weight ", 1)[1].split(",", 1)[0]))
+    assert len(selectors) == len(set(selectors)), f"{total} shards duplicate selectors"
+    assert max(weights) - min(weights) <= 1, f"{total} shard weights are unbalanced: {weights}"
+    return selectors, weights
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory() as tmp:
         tmp_root = Path(tmp)
         test_root = tmp_root / "bmuxTests"
         test_root.mkdir()
         write_large_suite_fixture(test_root)
-
-        selectors: list[str] = []
-        for shard in range(1, 5):
-            output = tmp_root / f"shard-{shard}.args"
-            result = subprocess.run(
-                [
-                    sys.executable,
-                    str(HELPER),
-                    "--root",
-                    str(tmp_root),
-                    "--shard-index",
-                    str(shard),
-                    "--shard-total",
-                    "4",
-                    "--output",
-                    str(output),
-                ],
-                text=True,
-                capture_output=True,
-                check=False,
-            )
-            if result.returncode != 0:
-                print(result.stdout, end="")
-                print(result.stderr, end="", file=sys.stderr)
-                print(f"FAIL: shard helper exited {result.returncode}")
-                return 1
-            selectors.extend(output.read_text(encoding="utf-8").splitlines())
-
-    extension_selector = "-only-testing:bmuxTests/LargeSuiteTests/testExtensionRegression"
-    if selectors.count(extension_selector) != 1:
-        print(f"FAIL: expected extension selector exactly once, got {selectors.count(extension_selector)}")
-        return 1
-
-    suite_selector = "-only-testing:bmuxTests/LargeSuiteTests"
-    if suite_selector in selectors:
-        print("FAIL: large suite should be method-sharded, not selected as a whole suite")
-        return 1
+        expected = {f"-only-testing:bmuxTests/LargeSuiteTests/testGenerated{index:02d}"
+                    for index in range(1, 41)}
+        expected.add("-only-testing:bmuxTests/LargeSuiteTests/testExtensionRegression")
+        for total in (4, 8):
+            selectors, _ = partition(tmp_root, tmp_root, total)
+            assert set(selectors) == expected, f"{total} shards lost or added fixture tests"
 
     with tempfile.TemporaryDirectory() as tmp:
-        output = Path(tmp) / "repo-shard.args"
-        focused_shards: dict[str, int] = {}
-        for shard in range(1, 5):
-            result = subprocess.run(
-                [
-                    sys.executable,
-                    str(HELPER),
-                    "--root",
-                    str(ROOT),
-                    "--shard-index",
-                    str(shard),
-                    "--shard-total",
-                    "4",
-                    "--output",
-                    str(output),
-                ],
-                text=True,
-                capture_output=True,
-                check=False,
-            )
-            if result.returncode != 0:
-                print(result.stdout, end="")
-                print(result.stderr, end="", file=sys.stderr)
-                print(f"FAIL: repo shard helper exited {result.returncode}")
-                return 1
-            shard_selectors = output.read_text(encoding="utf-8").splitlines()
-            for focused_selector in (
-                "-only-testing:bmuxTests/BrowserSystemProxyMirrorTests",
-                "-only-testing:bmuxTests/GhosttyOptionAsAltModsTests",
-            ):
-                if focused_selector in shard_selectors:
-                    print(f"FAIL: focused gate selector should not be folded into shard: {focused_selector}")
-                    return 1
-            first_line = result.stdout.splitlines()[0]
-            focused_shards[f"shard-{shard}"] = int(first_line.split("weight ", 1)[1].split(",", 1)[0])
+        directory = Path(tmp)
+        discovered = subprocess.run(
+            [sys.executable, str(HELPER), "--root", str(ROOT), "--list"],
+            text=True, capture_output=True, check=True,
+        )
+        expected = {"-only-testing:" + line.split("\t", 1)[0]
+                    for line in discovered.stdout.splitlines()}
+        for total in (4, 8):
+            selectors, weights = partition(ROOT, directory, total)
+            assert set(selectors) == expected, f"{total} shards lost or added repository selectors"
+            for focused in ("BrowserSystemProxyMirrorTests", "GhosttyOptionAsAltModsTests"):
+                assert f"-only-testing:bmuxTests/{focused}" not in selectors, "focused gate duplicated"
+            print(f"PASS: {total} shards cover {len(selectors)} selectors exactly once; weights {weights}")
 
-    if max(focused_shards.values()) - min(focused_shards.values()) > 1:
-        print(f"FAIL: shard weights drifted out of balance: {focused_shards}")
-        return 1
-
-    print("PASS: bmuxTests sharding covers extension methods, balances weights, and leaves focused gates explicit")
+    print("PASS: extension methods and focused gates retain their original ownership")
     return 0
 
 

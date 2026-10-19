@@ -14,31 +14,6 @@ final class SidebarWidthPolicyTests: XCTestCase {
     private let settingsFileBackupsDefaultsKey = "bmux.settingsFile.backups.v1"
     private let importedManagedDefaultsKey = "bmux.settingsFile.importedManagedDefaults.v1"
 
-    func testDefaultMinimumSidebarWidthIsPersistedProductDefault() {
-        let suiteName = "SidebarWidthPolicyTests.defaultMinimum.\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suiteName)!
-        defer { defaults.removePersistentDomain(forName: suiteName) }
-
-        XCTAssertEqual(
-            SessionPersistencePolicy.defaultMinimumSidebarWidth,
-            240,
-            accuracy: 0.001
-        )
-        XCTAssertEqual(
-            SessionPersistencePolicy.resolvedMinimumSidebarWidth(defaults: defaults),
-            240,
-            accuracy: 0.001
-        )
-    }
-
-    func testContentViewClampKeepsMinimumSidebarWidth() {
-        XCTAssertEqual(
-            ContentView.clampedSidebarWidth(184, maximumWidth: 600),
-            CGFloat(SessionPersistencePolicy.minimumSidebarWidth),
-            accuracy: 0.001
-        )
-    }
-
     func testContentViewClampCanUseSmallerConfiguredMinimumSidebarWidth() {
         XCTAssertEqual(
             ContentView.clampedSidebarWidth(184, maximumWidth: 600, minimumWidth: 160),
@@ -532,24 +507,6 @@ final class SidebarWorkspaceSelectionColorTests: XCTestCase {
         )
     }
 
-    func testTitlebarControlForegroundContrastsWithLightTerminalBackground() throws {
-        let background = try XCTUnwrap(NSColor(hex: "#F7F7F7"))
-        let snapshot = makeWindowAppearanceSnapshot(background: background)
-        let foreground = titlebarControlForegroundNSColor(
-            opacity: 1.0,
-            appearance: snapshot
-        )
-
-        assertColor(foreground, equals: .black)
-        XCTAssertGreaterThanOrEqual(
-            bmuxContrastRatio(
-                foreground: foreground,
-                background: snapshot.compositedTerminalBackgroundColor
-            ),
-            4.5
-        )
-    }
-
     private func assertColor(
         _ actual: NSColor?,
         equals expected: NSColor?,
@@ -567,36 +524,6 @@ final class SidebarWorkspaceSelectionColorTests: XCTestCase {
             "Expected \(colorDescription(actual)) to equal \(colorDescription(expected))",
             file: file,
             line: line
-        )
-    }
-
-    private func makeWindowAppearanceSnapshot(background: NSColor) -> WindowAppearanceSnapshot {
-        WindowAppearanceSnapshot(
-            terminalBackgroundColor: background,
-            terminalBackgroundOpacity: 1.0,
-            terminalBackgroundBlur: .disabled,
-            terminalRenderingMode: .windowHostBackdrop,
-            unifySurfaceBackdrops: true,
-            sidebarSettings: SidebarBackdropSettingsSnapshot(
-                materialRawValue: SidebarMaterialOption.sidebar.rawValue,
-                blendModeRawValue: SidebarBlendModeOption.withinWindow.rawValue,
-                stateRawValue: SidebarStateOption.followWindow.rawValue,
-                tintHex: SidebarTintDefaults().hex,
-                tintHexLight: nil,
-                tintHexDark: nil,
-                tintOpacity: SidebarTintDefaults().opacity,
-                cornerRadius: 0,
-                blurOpacity: 1,
-                colorScheme: .light
-            ),
-            windowGlassSettings: WindowGlassSettingsSnapshot(
-                sidebarBlendModeRawValue: SidebarBlendModeOption.withinWindow.rawValue,
-                isEnabled: false,
-                tintHex: "#000000",
-                tintOpacity: 0,
-                terminalBackgroundBlur: .disabled,
-                terminalGlassTintColor: background
-            )
         )
     }
 

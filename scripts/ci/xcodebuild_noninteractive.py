@@ -69,36 +69,33 @@ def post_test_timeout_seconds() -> float | None:
     return seconds
 
 
-def terminate_child(pid: int) -> None:
-    try:
-        os.killpg(pid, signal.SIGTERM)
-    except ProcessLookupError:
-        return
-    except OSError:
+def terminate_child(pid: int, wake_fd: int, cancellation: list) -> None:
+    # Keep the leader unreaped until the final group signal: its PID anchors the
+    # owned process-group identity even if TERM exits the leader before workers.
+    def send(sig: int) -> None:
         try:
-            os.kill(pid, signal.SIGTERM)
-        except ProcessLookupError:
-            return
+            os.killpg(pid, sig)
+        except (ProcessLookupError, PermissionError):
+            try:
+                # Darwin reports EPERM for a group containing only a zombie;
+                # the unreaped child also covers the pre-setsid startup boundary.
+                os.kill(pid, sig)
+            except ProcessLookupError:
+                pass
 
+    send(signal.SIGTERM)
     deadline = time.monotonic() + 5
     while time.monotonic() < deadline:
-        try:
-            finished, _ = os.waitpid(pid, os.WNOHANG)
-        except ChildProcessError:
-            return
-        if finished:
-            return
-        time.sleep(0.1)
-
-    try:
-        os.killpg(pid, signal.SIGKILL)
-    except ProcessLookupError:
-        return
-    except OSError:
-        try:
-            os.kill(pid, signal.SIGKILL)
-        except ProcessLookupError:
-            return
+        if cancellation[0]:
+            deadline = min(deadline, cancellation[1] + 3)
+        if select.select([wake_fd], [], [], max(0, deadline - time.monotonic()))[0]:
+            events = os.read(wake_fd, 4096)
+            # SIGCHLD is only a state-change hint (including stop/continue).
+            # Escalation is already authorized here; this does not declare exit.
+            if int(signal.SIGCHLD) in events:
+                break
+    send(signal.SIGKILL)
+    os.waitpid(pid, 0)
 
 
 def write_child_output(chunk: bytes, log_file: BinaryIO | None, stdout_fd: int) -> None:
@@ -161,109 +158,166 @@ def main() -> int:
         ),
     )
 
-    pid, fd = pty.fork()
-    if pid == 0:
-        try:
-            os.setsid()
-        except OSError:
-            pass
-        os.execvp(sys.argv[1], sys.argv[1:])
+    # XCTest hosts need the same CI classification as the invoking process.
+    # Preserve explicit test-host overrides, including empty or false values.
+    for name in ("CI", "GITHUB_ACTIONS"):
+        if name in os.environ:
+            os.environ.setdefault(f"TEST_RUNNER_{name}", os.environ[name])
 
-    prompt_window = b""
-    pending_line = b""
-    timed_out = False
-    post_test_timed_out = False
-    while True:
-        select_timeout = None
-        if deadline is not None:
-            remaining = deadline - time.monotonic()
-            if remaining <= 0:
-                timed_out = True
+    wake_read, wake_write = os.pipe()
+    os.set_blocking(wake_read, False)
+    os.set_blocking(wake_write, False)
+    cancellation = [0, None]
+    previous = {}
+    previous_wakeup = signal.set_wakeup_fd(wake_write)
+
+    def receive(sig, frame):
+        if sig != signal.SIGCHLD and not cancellation[0]:
+            cancellation[:] = [sig, time.monotonic()]
+
+    pid, fd = None, None
+    try:
+        for signum in (signal.SIGTERM, signal.SIGINT, signal.SIGCHLD):
+            previous[signum] = signal.signal(signum, receive)
+        if cancellation[0]:
+            return 128 + cancellation[0]
+        pid, fd = pty.fork()
+        if pid == 0:
+            signal.set_wakeup_fd(-1)
+            os.close(wake_read)
+            os.close(wake_write)
+            for signum in previous:
+                signal.signal(signum, signal.SIG_DFL)
+            try:
+                os.setsid()
+            except OSError:
+                pass
+            os.execvp(sys.argv[1], sys.argv[1:])
+
+        prompt_window = b""
+        pending_line = b""
+        timed_out = False
+        post_test_timed_out = False
+        while True:
+            if cancellation[0]:
+                terminate_child(pid, wake_read, cancellation)
+                return 128 + cancellation[0]
+            select_timeout = None
+            if deadline is not None:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    timed_out = True
+                    break
+                select_timeout = min(1, remaining)
+            if post_test_deadline is not None:
+                remaining = post_test_deadline - time.monotonic()
+                if remaining <= 0:
+                    post_test_timed_out = True
+                    break
+                select_timeout = min(select_timeout if select_timeout is not None else remaining, remaining, 1)
+
+            try:
+                readable, _, _ = select.select([fd, wake_read], [], [], select_timeout)
+            except OSError:
                 break
-            select_timeout = min(1, remaining)
-        if post_test_deadline is not None:
-            remaining = post_test_deadline - time.monotonic()
-            if remaining <= 0:
-                post_test_timed_out = True
+            if wake_read in readable:
+                os.read(wake_read, 4096)
+                if cancellation[0]:
+                    continue
+            if not readable:
+                continue
+            if fd not in readable:
+                continue
+
+            try:
+                chunk = os.read(fd, 4096)
+            except OSError:
                 break
-            select_timeout = min(select_timeout if select_timeout is not None else remaining, remaining, 1)
+            if not chunk:
+                break
 
-        try:
-            readable, _, _ = select.select([fd], [], [], select_timeout)
-        except OSError:
-            break
-        if not readable:
-            continue
-        if fd not in readable:
-            continue
-
-        try:
-            chunk = os.read(fd, 4096)
-        except OSError:
-            break
-        if not chunk:
-            break
-
-        write_child_output(chunk, log_file, stdout_fd)
-        if timeout:
-            deadline = time.monotonic() + timeout
-        prompt_window = (prompt_window + chunk)[-4096:]
-        # XCTest's Selected-tests summary precedes Swift Testing. The cleanup
-        # watchdog applies between frameworks and after completion, never while
-        # a framework is executing; the general idle watchdog still applies.
-        # Consume complete lines once so noise cannot rediscover old markers.
-        lines = (pending_line + chunk).split(b"\n")
-        pending_line = lines.pop()[-4096:]
-        for line in lines:
-            # Swift Testing styles glyphs on this PTY; normalize only parser input.
-            line = ANSI_SGR_RE.sub(b"", line)
-            selected_match = SELECTED_TESTS_DONE_RE.search(line)
-            if selected_match:
-                selected_tests_failed |= selected_match.group(1) == b"failed"
-                if post_test_timeout:
+            write_child_output(chunk, log_file, stdout_fd)
+            if timeout:
+                deadline = time.monotonic() + timeout
+            prompt_window = (prompt_window + chunk)[-4096:]
+            # XCTest's Selected-tests summary precedes Swift Testing. The cleanup
+            # watchdog applies between frameworks and after completion, never while
+            # a framework is executing; the general idle watchdog still applies.
+            # Consume complete lines once so noise cannot rediscover old markers.
+            lines = (pending_line + chunk).split(b"\n")
+            pending_line = lines.pop()[-4096:]
+            for line in lines:
+                # Swift Testing styles glyphs on this PTY; normalize only parser input.
+                line = ANSI_SGR_RE.sub(b"", line)
+                selected_match = SELECTED_TESTS_DONE_RE.search(line)
+                if selected_match:
+                    selected_tests_failed |= selected_match.group(1) == b"failed"
+                    if post_test_timeout:
+                        post_test_deadline = time.monotonic() + post_test_timeout
+                elif SELECTED_TESTS_STARTED in line or SWIFT_TESTING_STARTED in line:
+                    post_test_deadline = None
+                elif post_test_timeout and SWIFT_TESTING_DONE_RE.search(line):
                     post_test_deadline = time.monotonic() + post_test_timeout
-            elif SELECTED_TESTS_STARTED in line or SWIFT_TESTING_STARTED in line:
-                post_test_deadline = None
-            elif post_test_timeout and SWIFT_TESTING_DONE_RE.search(line):
-                post_test_deadline = time.monotonic() + post_test_timeout
-        if SWIFT_CRASH_PROMPT in prompt_window:
-            # The Swift crash backtracer asks for one key. Send q to choose the
-            # noninteractive quit path and let xcodebuild continue reporting.
-            os.write(fd, b"q")
-            prompt_window = b""
+            if SWIFT_CRASH_PROMPT in prompt_window:
+                # The Swift crash backtracer asks for one key. Send q to choose the
+                # noninteractive quit path and let xcodebuild continue reporting.
+                os.write(fd, b"q")
+                prompt_window = b""
 
-    if timed_out:
-        assert timeout is not None
-        print(f"Idle timed out after {timeout:g}s: {' '.join(sys.argv[1:])}", file=sys.stderr)
-        if log_file is not None:
-            log_file.write(
-                f"Idle timed out after {timeout:g}s: {' '.join(sys.argv[1:])}\n".encode()
+        if timed_out:
+            assert timeout is not None
+            print(f"Idle timed out after {timeout:g}s: {' '.join(sys.argv[1:])}", file=sys.stderr)
+            if log_file is not None:
+                log_file.write(
+                    f"Idle timed out after {timeout:g}s: {' '.join(sys.argv[1:])}\n".encode()
+                )
+                log_file.close()
+            terminate_child(pid, wake_read, cancellation)
+            return 128 + cancellation[0] if cancellation[0] else TIMEOUT_EXIT_CODE
+
+        if post_test_timed_out:
+            assert post_test_timeout is not None
+            message = (
+                f"Post-test timed out after {post_test_timeout:g}s; terminating "
+                f"xcodebuild after test framework completion"
             )
-            log_file.close()
-        terminate_child(pid)
-        return TIMEOUT_EXIT_CODE
+            print(message, file=sys.stderr)
+            if log_file is not None:
+                log_file.write(f"{message}\n".encode())
+                log_file.close()
+            terminate_child(pid, wake_read, cancellation)
+            if cancellation[0]:
+                return 128 + cancellation[0]
+            # XCTest may finish before Swift Testing. Even a success marker cannot
+            # establish the native process result when the runner must kill it.
+            if selected_tests_failed:
+                return POST_TEST_FAILED_EXIT_CODE
+            return TIMEOUT_EXIT_CODE
 
-    if post_test_timed_out:
-        assert post_test_timeout is not None
-        message = (
-            f"Post-test timed out after {post_test_timeout:g}s; terminating "
-            f"xcodebuild after test framework completion"
-        )
-        print(message, file=sys.stderr)
+        # EOF is not proof of exit: a child may close its PTY and keep running.
+        while True:
+            if cancellation[0]:
+                terminate_child(pid, wake_read, cancellation)
+                return 128 + cancellation[0]
+            finished, status = os.waitpid(pid, os.WNOHANG)
+            if finished:
+                break
+            select.select([wake_read], [], [])
+            os.read(wake_read, 4096)
         if log_file is not None:
-            log_file.write(f"{message}\n".encode())
             log_file.close()
-        terminate_child(pid)
-        # XCTest may finish before Swift Testing. Even a success marker cannot
-        # establish the native process result when the runner must kill it.
-        if selected_tests_failed:
-            return POST_TEST_FAILED_EXIT_CODE
-        return TIMEOUT_EXIT_CODE
-
-    _, status = os.waitpid(pid, 0)
-    if log_file is not None:
-        log_file.close()
-    return child_exit_code(status)
+        return child_exit_code(status)
+    finally:
+        if pid != 0:  # The exec-failure child already released its wakeup descriptors.
+            signal.set_wakeup_fd(previous_wakeup)
+            for signum, handler in previous.items():
+                signal.signal(signum, handler)
+            os.close(wake_read)
+            os.close(wake_write)
+            if fd is not None:
+                os.close(fd)
+            if log_file is not None and not log_file.closed:
+                log_file.close()
 
 
 if __name__ == "__main__":

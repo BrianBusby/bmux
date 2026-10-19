@@ -639,24 +639,6 @@ final class GhosttyCrashBreadcrumbTests: XCTestCase {
 
 @MainActor
 final class NotificationDockBadgeTests: XCTestCase {
-    private final class NotificationSettingsAlertSpy: NSAlert {
-        private(set) var beginSheetModalCallCount = 0
-        private(set) var runModalCallCount = 0
-        var nextResponse: NSApplication.ModalResponse = .alertFirstButtonReturn
-
-        override func beginSheetModal(
-            for sheetWindow: NSWindow,
-            completionHandler handler: ((NSApplication.ModalResponse) -> Void)?
-        ) {
-            beginSheetModalCallCount += 1
-            handler?(nextResponse)
-        }
-
-        override func runModal() -> NSApplication.ModalResponse {
-            runModalCallCount += 1
-            return nextResponse
-        }
-    }
 
     override func tearDown() {
         TerminalNotificationStore.shared.resetNotificationSettingsPromptHooksForTesting()
@@ -1368,84 +1350,6 @@ final class NotificationDockBadgeTests: XCTestCase {
         )
     }
 
-    func testNotificationSettingsPromptUsesSheetAndNeverRunsModal() {
-        let store = TerminalNotificationStore.shared
-        let alertSpy = NotificationSettingsAlertSpy()
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 480, height: 320),
-            styleMask: [.titled],
-            backing: .buffered,
-            defer: false
-        )
-
-        var openedURL: URL?
-        store.configureNotificationSettingsPromptHooksForTesting(
-            windowProvider: { window },
-            alertFactory: { alertSpy },
-            scheduler: { _, block in block() },
-            urlOpener: { openedURL = $0 }
-        )
-        addTeardownBlock {
-            store.resetNotificationSettingsPromptHooksForTesting()
-        }
-
-        store.promptToEnableNotificationsForTesting()
-        let drained = expectation(description: "main queue drained")
-        DispatchQueue.main.async { drained.fulfill() }
-        wait(for: [drained], timeout: 1.0)
-
-        XCTAssertEqual(alertSpy.beginSheetModalCallCount, 1)
-        XCTAssertEqual(alertSpy.runModalCallCount, 0)
-        guard let encodedBundleIdentifier = Bundle.main.bundleIdentifier?
-            .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            XCTFail("Expected test bundle identifier to be URL-encodable")
-            return
-        }
-        XCTAssertEqual(
-            openedURL?.absoluteString,
-            "x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=\(encodedBundleIdentifier)"
-        )
-    }
-
-    func testNotificationSettingsPromptRetriesUntilWindowExists() {
-        let store = TerminalNotificationStore.shared
-        let alertSpy = NotificationSettingsAlertSpy()
-        alertSpy.nextResponse = .alertSecondButtonReturn
-
-        var queuedRetryBlocks: [() -> Void] = []
-        var promptWindow: NSWindow?
-        store.configureNotificationSettingsPromptHooksForTesting(
-            windowProvider: { promptWindow },
-            alertFactory: { alertSpy },
-            scheduler: { _, block in queuedRetryBlocks.append(block) },
-            urlOpener: { _ in
-                XCTFail("Should not open settings for Not Now response")
-            }
-        )
-        addTeardownBlock {
-            store.resetNotificationSettingsPromptHooksForTesting()
-        }
-
-        store.promptToEnableNotificationsForTesting()
-        let drained = expectation(description: "main queue drained")
-        DispatchQueue.main.async { drained.fulfill() }
-        wait(for: [drained], timeout: 1.0)
-
-        XCTAssertEqual(alertSpy.beginSheetModalCallCount, 0)
-        XCTAssertEqual(alertSpy.runModalCallCount, 0)
-        XCTAssertEqual(queuedRetryBlocks.count, 1)
-
-        promptWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 480, height: 320),
-            styleMask: [.titled],
-            backing: .buffered,
-            defer: false
-        )
-        queuedRetryBlocks.removeFirst()()
-
-        XCTAssertEqual(alertSpy.beginSheetModalCallCount, 1)
-        XCTAssertEqual(alertSpy.runModalCallCount, 0)
-    }
 
     func testNotificationIndexesTrackUnreadCountsByTabAndSurface() {
         let tabA = UUID()

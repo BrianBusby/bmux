@@ -66,7 +66,7 @@ extension AppDelegate {
     }
 
     private func liveRecoverableMainWindow(windowId: UUID, cachedWindow: NSWindow?) -> NSWindow? {
-        cachedWindow ?? windowForMainWindowId(windowId)
+        cachedWindow ?? retainedMainWindow(for: windowId)
     }
 
     private func sortedRecoverableMainWindowRoutes() -> [RecoverableMainWindowRoute] {
@@ -169,6 +169,7 @@ extension AppDelegate {
             )
         }
         for snapshot in recoverableMainWindowRouteSnapshots() where seen.insert(snapshot.windowId).inserted {
+            guard isMainWindowPresentationEligible(windowId: snapshot.windowId, window: snapshot.window) else { continue }
             summaries.append(
                 MainWindowSummary(
                     windowId: snapshot.windowId,
@@ -210,7 +211,8 @@ extension AppDelegate {
             }
         }
         for snapshot in recoverableMainWindowRouteSnapshots() {
-            guard snapshot.tabManager.tabs.contains(where: { $0.id == workspaceId }) else {
+            guard snapshot.tabManager.tabs.contains(where: { $0.id == workspaceId }),
+                  isMainWindowPresentationEligible(windowId: snapshot.windowId, window: snapshot.window) else {
                 continue
             }
             return snapshot.window
@@ -219,6 +221,12 @@ extension AppDelegate {
     }
 
     private func scriptableMainWindow(for window: NSWindow) -> ScriptableMainWindowState? {
+        guard let state = retainedMainWindowState(for: window),
+              isMainWindowPresentationEligible(windowId: state.windowId, window: state.window) else { return nil }
+        return state
+    }
+
+    private func retainedMainWindowState(for window: NSWindow) -> ScriptableMainWindowState? {
         if let context = contextForMainTerminalWindow(window, reindex: false) {
             return ScriptableMainWindowState(
                 windowId: context.windowId,
@@ -276,11 +284,18 @@ extension AppDelegate {
     }
 
     func scriptableMainWindows() -> [ScriptableMainWindowState] {
+        retainedMainWindowStates().filter {
+            isMainWindowPresentationEligible(windowId: $0.windowId, window: $0.window)
+        }
+    }
+
+    /// Preserves ordered manager/resource identities for diagnostics and runtime observation.
+    func retainedMainWindowStates() -> [ScriptableMainWindowState] {
         var results: [ScriptableMainWindowState] = []
         var seen: Set<UUID> = []
 
         for window in NSApp.orderedWindows {
-            guard let state = scriptableMainWindow(for: window) else { continue }
+            guard let state = retainedMainWindowState(for: window) else { continue }
             guard seen.insert(state.windowId).inserted else { continue }
             results.append(state)
         }
@@ -321,7 +336,8 @@ extension AppDelegate {
                 window: window
             )
         }
-        guard let snapshot = recoverableMainWindowRouteSnapshot(windowId: windowId) else { return nil }
+        guard let snapshot = recoverableMainWindowRouteSnapshot(windowId: windowId),
+              isMainWindowPresentationEligible(windowId: snapshot.windowId, window: snapshot.window) else { return nil }
         return ScriptableMainWindowState(
             windowId: snapshot.windowId,
             tabManager: snapshot.tabManager,
@@ -339,7 +355,8 @@ extension AppDelegate {
             )
         }
         for snapshot in recoverableMainWindowRouteSnapshots() {
-            guard snapshot.tabManager.tabs.contains(where: { $0.id == tabId }) else {
+            guard snapshot.tabManager.tabs.contains(where: { $0.id == tabId }),
+                  isMainWindowPresentationEligible(windowId: snapshot.windowId, window: snapshot.window) else {
                 continue
             }
             return ScriptableMainWindowState(

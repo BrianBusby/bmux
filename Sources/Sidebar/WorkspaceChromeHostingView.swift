@@ -1,0 +1,25 @@
+import AppKit
+import SwiftUI
+
+/// Reports the lifetime of one dedicated workspace chrome host, independently of rendering.
+@MainActor
+final class WorkspaceChromeHostingView<Content: View>: NSHostingView<Content> {
+    var isFocusScopeEnabled = true
+    var onKeyboardFocusVisibilityChange: ((Bool) -> Void)?
+    var showsKeyboardFocus = true {
+        didSet {
+            if showsKeyboardFocus != oldValue { onKeyboardFocusVisibilityChange?(showsKeyboardFocus) }
+        }
+    }
+    var onAttachmentChange: (@MainActor (NSView, Bool) -> Void)?
+
+    override func viewWillMove(toWindow newWindow: NSWindow?) {
+        if window != nil, window !== newWindow { onAttachmentChange?(self, false) }
+        super.viewWillMove(toWindow: newWindow)
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window != nil { onAttachmentChange?(self, isFocusScopeEnabled) }
+    }
+}

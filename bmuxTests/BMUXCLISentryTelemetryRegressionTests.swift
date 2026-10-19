@@ -8,31 +8,32 @@ private final class BMUXCLISentryTelemetryBundleToken {}
     private struct ProcessRunResult {
         let status: Int32
         let stdout: String
-        let timedOut: Bool
     }
 
-    @Test func staleSocketConnectRefusalDoesNotCaptureSentryTelemetry() throws {
+    @Test func staleSocketConnectRefusalDoesNotCaptureSentryTelemetry() async throws {
         let cliPath = try bundledCLIPath()
         let root = URL(
             fileURLWithPath: "/tmp/bmux-sr-\(UUID().uuidString.prefix(8))",
             isDirectory: true
         )
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: root) }
+        defer {
+            do { try FileManager.default.removeItem(at: root) }
+            catch { Issue.record(error, "Could not remove owned CLI telemetry fixture directory") }
+        }
 
         let socketPath = root.appendingPathComponent("bmux.sock", isDirectory: false).path
         try createStaleSocketFile(at: socketPath)
         defer { unlink(socketPath) }
 
         let probePath = root.appendingPathComponent("sentry-probe.txt", isDirectory: false).path
-        let result = runProcess(
-            executablePath: cliPath,
+        let result = try await runProcess(
+            root: root, executablePath: cliPath,
             arguments: ["ping"],
             environment: sentryProbeEnvironment(socketPath: socketPath, probePath: probePath),
             timeout: 5
         )
 
-        #expect(!result.timedOut, Comment(rawValue: result.stdout))
         #expect(result.status != 0, Comment(rawValue: result.stdout))
         #expect(result.stdout.lowercased().contains("connection refused"), Comment(rawValue: result.stdout))
         #expect(
@@ -41,23 +42,25 @@ private final class BMUXCLISentryTelemetryBundleToken {}
         )
     }
 
-    @Test func missingSocketDoesNotCaptureSentryTelemetry() throws {
+    @Test func missingSocketDoesNotCaptureSentryTelemetry() async throws {
         let cliPath = try bundledCLIPath()
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-cli-sentry-missing-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: root) }
+        defer {
+            do { try FileManager.default.removeItem(at: root) }
+            catch { Issue.record(error, "Could not remove owned CLI telemetry fixture directory") }
+        }
 
         let socketPath = root.appendingPathComponent("missing.sock", isDirectory: false).path
         let probePath = root.appendingPathComponent("sentry-probe.txt", isDirectory: false).path
-        let result = runProcess(
-            executablePath: cliPath,
+        let result = try await runProcess(
+            root: root, executablePath: cliPath,
             arguments: ["ping"],
             environment: sentryProbeEnvironment(socketPath: socketPath, probePath: probePath),
             timeout: 5
         )
 
-        #expect(!result.timedOut, Comment(rawValue: result.stdout))
         #expect(result.status != 0, Comment(rawValue: result.stdout))
         #expect(result.stdout.lowercased().contains("socket not found"), Comment(rawValue: result.stdout))
         #expect(
@@ -66,12 +69,15 @@ private final class BMUXCLISentryTelemetryBundleToken {}
         )
     }
 
-    @Test func unexpectedSocketTelemetryStoresWithoutBlockingForSentryFlush() throws {
+    @Test func unexpectedSocketTelemetryStoresWithoutBlockingForSentryFlush() async throws {
         let cliPath = try bundledCLIPath()
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-cli-sentry-flush-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: root) }
+        defer {
+            do { try FileManager.default.removeItem(at: root) }
+            catch { Issue.record(error, "Could not remove owned CLI telemetry fixture directory") }
+        }
 
         let socketPath = "127.0.0.1:\(try unusedRelayPort())"
         let captureProbePath = root.appendingPathComponent("sentry-capture-probe.txt", isDirectory: false).path
@@ -79,14 +85,13 @@ private final class BMUXCLISentryTelemetryBundleToken {}
         var environment = sentryProbeEnvironment(socketPath: socketPath, probePath: captureProbePath)
         environment["BMUX_CLI_SENTRY_STORE_PROBE_PATH"] = storeProbePath
 
-        let result = runProcess(
-            executablePath: cliPath,
+        let result = try await runProcess(
+            root: root, executablePath: cliPath,
             arguments: ["ping"],
             environment: environment,
             timeout: 2
         )
 
-        #expect(!result.timedOut, Comment(rawValue: result.stdout))
         #expect(result.status != 0, Comment(rawValue: result.stdout))
         #expect(result.stdout.contains("Missing relay auth metadata"), Comment(rawValue: result.stdout))
         #expect(
@@ -197,47 +202,25 @@ private final class BMUXCLISentryTelemetryBundleToken {}
         )
     }
 
+    /// Returns only after the producer exits; timeout and cancellation fail after owned cleanup.
     private func runProcess(
+        root: URL,
         executablePath: String,
         arguments: [String],
         environment: [String: String],
         timeout: TimeInterval
-    ) -> ProcessRunResult {
-        let process = Process()
-        let stdoutPipe = Pipe()
-        process.executableURL = URL(fileURLWithPath: executablePath)
-        process.arguments = arguments
-        process.environment = environment
-        process.standardInput = FileHandle.nullDevice
-        process.standardOutput = stdoutPipe
-        process.standardError = stdoutPipe
-
+    ) async throws -> ProcessRunResult {
+        let runner = ShellContractProcess(root: root, deadline: .seconds(timeout))
         do {
-            try process.run()
+            let result = try await runner.run(
+                executable: executablePath, arguments: arguments, environment: environment
+            )
+            return ProcessRunResult(status: result.status, stdout: result.stdout + result.stderr)
         } catch {
-            return ProcessRunResult(status: -1, stdout: String(describing: error), timedOut: false)
+            let output = Result { try String(contentsOf: root.appendingPathComponent("stdout"), encoding: .utf8) }
+            let errors = Result { try String(contentsOf: root.appendingPathComponent("stderr"), encoding: .utf8) }
+            Issue.record(error, "CLI telemetry producer failed after joining; stdout: \(output); stderr: \(errors)")
+            throw error
         }
-
-        let exitSignal = DispatchSemaphore(value: 0)
-        DispatchQueue.global(qos: .userInitiated).async {
-            process.waitUntilExit()
-            exitSignal.signal()
-        }
-
-        let timedOut = exitSignal.wait(timeout: .now() + timeout) == .timedOut
-        if timedOut {
-            process.terminate()
-            if exitSignal.wait(timeout: .now() + 1) == .timedOut,
-               process.isRunning {
-                kill(process.processIdentifier, SIGKILL)
-                _ = exitSignal.wait(timeout: .now() + 1)
-            }
-        }
-
-        return ProcessRunResult(
-            status: process.terminationStatus,
-            stdout: String(data: stdoutPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? "",
-            timedOut: timedOut
-        )
     }
 }

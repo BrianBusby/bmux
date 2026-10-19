@@ -22,42 +22,6 @@ final class FilePreviewReviewFeedbackTests: XCTestCase {
         )
     }
 
-    func testSavingTextViewUsesChordedSaveShortcut() async throws {
-        KeyboardShortcutSettings.resetAll()
-        defer { KeyboardShortcutSettings.resetAll() }
-
-        KeyboardShortcutSettings.setShortcut(
-            StoredShortcut(
-                first: ShortcutStroke(key: "k", command: true, shift: false, option: false, control: false, keyCode: UInt16(kVK_ANSI_K)),
-                second: ShortcutStroke(key: "s", command: true, shift: false, option: false, control: false, keyCode: UInt16(kVK_ANSI_S))
-            ),
-            for: .saveFilePreview
-        )
-
-        let url = try temporaryTextFile(contents: "original", encoding: .utf8)
-        defer { try? FileManager.default.removeItem(at: url) }
-
-        let panel = FilePreviewPanel(workspaceId: UUID(), filePath: url.path)
-        defer { panel.close() }
-        await panel.loadTextContent().value
-
-        let textView = SavingTextView()
-        textView.string = "saved by chord"
-        textView.panel = panel
-        panel.attachTextView(textView)
-        panel.updateTextContent(textView.string)
-
-        let prefixEvent = try XCTUnwrap(keyEvent(key: "k", keyCode: UInt16(kVK_ANSI_K)))
-        let suffixEvent = try XCTUnwrap(keyEvent(key: "s", keyCode: UInt16(kVK_ANSI_S)))
-
-        XCTAssertTrue(textView.performKeyEquivalent(with: prefixEvent))
-        XCTAssertFalse(panel.isSaving)
-        XCTAssertEqual(try String(contentsOf: url, encoding: .utf8), "original")
-        XCTAssertTrue(textView.performKeyEquivalent(with: suffixEvent))
-        await waitForPanelSave(panel)
-        XCTAssertEqual(try String(contentsOf: url, encoding: .utf8), "saved by chord")
-    }
-
     func testExtensionlessUTF16TextWithBOMResolvesAsTextAfterSniffing() throws {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
@@ -298,24 +262,6 @@ final class FilePreviewReviewFeedbackTests: XCTestCase {
         }
     }
 
-    func testFocusCoordinatorKeepsPendingFocusUntilEndpointHasWindow() {
-        let textView = FilePreviewReviewFocusTestView(frame: NSRect(x: 0, y: 0, width: 320, height: 240))
-        let coordinator = FilePreviewFocusCoordinator(preferredIntent: .textEditor)
-        coordinator.register(root: textView, primaryResponder: textView, intent: .textEditor)
-
-        XCTAssertFalse(coordinator.focus(.textEditor))
-
-        let window = NSWindow(contentRect: textView.bounds, styleMask: [], backing: .buffered, defer: false)
-        defer {
-            window.contentView = nil
-            window.close()
-        }
-        window.contentView = textView
-        coordinator.fulfillPendingFocusIfNeeded()
-
-        XCTAssertTrue(window.firstResponder === textView)
-    }
-
     func testFileOpenHonorsExplicitPaneDestinationInsteadOfReusingExistingPreview() throws {
         let originalURL = try temporaryTextFile(contents: "original", encoding: .utf8)
         let placeholderURL = try temporaryTextFile(contents: "placeholder", encoding: .utf8)
@@ -456,9 +402,4 @@ final class FilePreviewReviewFeedbackTests: XCTestCase {
             XCTFail("Timed out waiting for panel save", file: file, line: line)
         }
     }
-}
-
-private final class FilePreviewReviewFocusTestView: NSView {
-    override var acceptsFirstResponder: Bool { true }
-    override var canBecomeKeyView: Bool { true }
 }

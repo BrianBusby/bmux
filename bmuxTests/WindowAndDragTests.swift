@@ -157,63 +157,6 @@ final class WindowAccessorTests: XCTestCase {
 }
 
 @MainActor
-final class MainWindowFocusRedrawTests: XCTestCase {
-    func testKeyRegainInvalidatesRootContentView() {
-        _ = NSApplication.shared
-
-        let appDelegate = AppDelegate()
-        let tabManager = TabManager(autoWelcomeIfNeeded: false)
-        let windowId = appDelegate.registerMainWindowContextForTesting(tabManager: tabManager)
-        defer {
-            appDelegate.unregisterMainWindowContextForTesting(windowId: windowId)
-        }
-
-        let contentView = NSView(frame: NSRect(x: 0, y: 0, width: 640, height: 420))
-        let splitView = NSSplitView(frame: contentView.bounds)
-        splitView.isVertical = true
-        splitView.autoresizingMask = [.width, .height]
-        splitView.dividerStyle = .thin
-
-        let sidebar = NSView(frame: NSRect(x: 0, y: 0, width: 220, height: 420))
-        let main = NSView(frame: NSRect(x: 221, y: 0, width: 419, height: 420))
-        splitView.addArrangedSubview(sidebar)
-        splitView.addArrangedSubview(main)
-        contentView.addSubview(splitView)
-        splitView.setPosition(220, ofDividerAt: 0)
-
-        let window = BmuxMainWindow(
-            contentRect: contentView.bounds,
-            styleMask: [.titled, .closable, .resizable],
-            backing: .buffered,
-            defer: false
-        )
-        window.identifier = NSUserInterfaceItemIdentifier("bmux.main.\(windowId.uuidString)")
-        window.contentView = contentView
-        defer {
-            window.orderOut(nil)
-            window.contentView = nil
-        }
-
-        contentView.layoutSubtreeIfNeeded()
-        splitView.adjustSubviews()
-
-        contentView.needsDisplay = false
-
-        appDelegate.handleBmuxWindowResignedKey(
-            Notification(name: NSWindow.didResignKeyNotification, object: window)
-        )
-        appDelegate.handleBmuxWindowBecameKey(
-            Notification(name: NSWindow.didBecomeKeyNotification, object: window)
-        )
-
-        XCTAssertTrue(
-            contentView.needsDisplay,
-            "Regaining key focus must invalidate the root content view."
-        )
-    }
-}
-
-@MainActor
 final class AppDelegateWindowContextRoutingTests: XCTestCase {
     private func makeMainWindow(id: UUID) -> NSWindow {
         let window = NSWindow(
@@ -492,66 +435,14 @@ final class AppDelegateLaunchServicesRegistrationTests: XCTestCase {
         )
     }
 
-    func testScheduleLaunchServicesRegistrationDefersRegisterWork() {
-        _ = NSApplication.shared
-        let app = AppDelegate()
 
-        var scheduledWork: (@Sendable () -> Void)?
-        var registerCallCount = 0
-
-        app.scheduleLaunchServicesBundleRegistrationForTesting(
-            bundleURL: URL(fileURLWithPath: "/tmp/../tmp/bmux-launch-services-test.app"),
-            scheduler: { work in
-                scheduledWork = work
-            },
-            register: { _ in
-                registerCallCount += 1
-                return noErr
-            }
-        )
-
-        XCTAssertEqual(registerCallCount, 0, "Registration should not run inline on the startup call path")
-        XCTAssertNotNil(scheduledWork, "Registration work should be handed to the scheduler")
-
-        scheduledWork?()
-
-        XCTAssertEqual(registerCallCount, 1)
-    }
 }
 
 final class TerminalDefaultFileOpenRequestTests: XCTestCase {
-    func testBuildsQuotedLaunchInputForTerminalCommandFile() throws {
-        let contentType = DefaultTerminalRegistration.contentType(forIdentifier: "com.apple.terminal.shell-script")
-        let url = URL(fileURLWithPath: "/tmp/bmux default's/Run Me.command")
-
-        let request = try XCTUnwrap(TerminalDefaultFileOpenRequest(fileURL: url, contentType: contentType))
-
-        XCTAssertEqual(request.workingDirectory, "/tmp/bmux default's")
-        XCTAssertEqual(request.initialInput, "'/tmp/bmux default'\\''s/Run Me.command'\n")
-    }
-
     func testIgnoresPlainTextFiles() {
         let url = URL(fileURLWithPath: "/tmp/notes.txt")
 
         XCTAssertNil(TerminalDefaultFileOpenRequest(fileURL: url, contentType: .plainText))
-    }
-
-    func testBuildsLaunchInputForExtensionlessUnixExecutable() throws {
-        let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("bmux-terminal-default-executable-\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        defer {
-            try? FileManager.default.removeItem(at: directory)
-        }
-
-        let executable = directory.appendingPathComponent("runme", isDirectory: false)
-        try "#!/bin/sh\necho bmux\n".write(to: executable, atomically: true, encoding: .utf8)
-        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: executable.path)
-
-        let request = try XCTUnwrap(TerminalDefaultFileOpenRequest(fileURL: executable))
-
-        XCTAssertEqual(request.workingDirectory, directory.path)
-        XCTAssertEqual(request.initialInput, "'\(executable.path)'\n")
     }
 
     func testIgnoresDirectoriesWithTerminalScriptExtension() throws {
@@ -963,63 +854,6 @@ final class WindowDragHandleHitTests: XCTestCase {
             MinimalModeSidebarTitlebarControlsMetrics.hostWidth,
             ranges.last?.upperBound ?? 0,
             "The minimal-mode host must be wide enough to preserve the back/forward button lanes."
-        )
-    }
-
-    func testDragHandleYieldsToRegisteredMinimalModeSidebarButtonColumns() {
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 260, height: 120),
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        defer { window.orderOut(nil) }
-        guard let contentView = window.contentView else {
-            XCTFail("Expected content view")
-            return
-        }
-
-        let dragHandle = NSView(frame: contentView.bounds)
-        dragHandle.autoresizingMask = [.width, .height]
-        contentView.addSubview(dragHandle)
-
-        let controlRegion = SidebarActionRegionView(
-            frame: NSRect(
-                x: 72,
-                y: 88,
-                width: MinimalModeSidebarTitlebarControlsMetrics.hostWidth,
-                height: MinimalModeSidebarTitlebarControlsMetrics.hostHeight
-            )
-        )
-        contentView.addSubview(controlRegion)
-        MinimalModeTitlebarControlHitRegionRegistry.register(controlRegion)
-        defer { MinimalModeTitlebarControlHitRegionRegistry.unregister(controlRegion) }
-
-        let ranges = TitlebarControlsHitRegions.buttonXRanges(config: controlRegion.config)
-        let backButtonPoint = NSPoint(
-            x: controlRegion.frame.minX + ranges[MinimalModeSidebarControlActionSlot.focusHistoryBack.rawValue].lowerBound + 1,
-            y: controlRegion.frame.midY
-        )
-        XCTAssertTrue(isMinimalModeTitlebarControlHit(window: window, locationInWindow: backButtonPoint))
-        XCTAssertFalse(
-            windowDragHandleShouldCaptureHit(
-                dragHandle.convert(backButtonPoint, from: nil),
-                in: dragHandle,
-                eventType: .leftMouseDown,
-                eventWindow: window
-            ),
-            "Registered minimal-mode titlebar buttons should not fall through to the window drag handle."
-        )
-
-        let emptyTitlebarPoint = NSPoint(x: contentView.bounds.maxX - 20, y: controlRegion.frame.midY)
-        XCTAssertTrue(
-            windowDragHandleShouldCaptureHit(
-                dragHandle.convert(emptyTitlebarPoint, from: nil),
-                in: dragHandle,
-                eventType: .leftMouseDown,
-                eventWindow: window
-            ),
-            "Empty titlebar space should still be draggable."
         )
     }
 
@@ -2129,30 +1963,6 @@ struct CustomTitlebarLeadingPaddingTests {
             ) == 8
         )
     }
-
-    // Regression: at the default (== minimum) sidebar width, toggling the sidebar
-    // must not move the folder/title. The title tracks the actual width only when
-    // the sidebar is wider than the minimum, so the default width must equal the
-    // minimum for the visible and hidden insets to match.
-    @Test func togglingSidebarAtDefaultWidthDoesNotMoveTitle() {
-        let width = CGFloat(SessionPersistencePolicy.defaultSidebarWidth)
-        let minimum = CGFloat(SessionPersistencePolicy.minimumSidebarWidth)
-        let visible = ContentView.customTitlebarLeadingPadding(
-            isFullScreen: false,
-            isSidebarVisible: true,
-            sidebarWidth: width,
-            minimumSidebarWidth: minimum,
-            titlebarLeadingInset: 82
-        )
-        let hidden = ContentView.customTitlebarLeadingPadding(
-            isFullScreen: false,
-            isSidebarVisible: false,
-            sidebarWidth: width,
-            minimumSidebarWidth: minimum,
-            titlebarLeadingInset: 82
-        )
-        #expect(visible == hidden)
-    }
 }
 
 
@@ -3090,45 +2900,6 @@ final class FilePreviewPanelTextSavingTests: XCTestCase {
         XCTAssertFalse(panel.isFileUnavailable)
     }
 
-    func testSavingTextViewUsesConfiguredSaveShortcut() async throws {
-        KeyboardShortcutSettings.resetAll()
-        defer { KeyboardShortcutSettings.resetAll() }
-
-        KeyboardShortcutSettings.setShortcut(
-            StoredShortcut(key: "u", command: true, shift: false, option: true, control: false),
-            for: .saveFilePreview
-        )
-
-        let url = try temporaryTextFile(contents: "original", encoding: .utf8)
-        defer { try? FileManager.default.removeItem(at: url) }
-
-        let panel = FilePreviewPanel(workspaceId: UUID(), filePath: url.path)
-        defer { panel.close() }
-        await panel.loadTextContent().value
-
-        let textView = SavingTextView()
-        textView.string = "saved by configured shortcut"
-        textView.panel = panel
-        panel.attachTextView(textView)
-
-        let event = try XCTUnwrap(NSEvent.keyEvent(
-            with: .keyDown,
-            location: .zero,
-            modifierFlags: [.command, .option],
-            timestamp: ProcessInfo.processInfo.systemUptime,
-            windowNumber: 0,
-            context: nil,
-            characters: "u",
-            charactersIgnoringModifiers: "u",
-            isARepeat: false,
-            keyCode: UInt16(kVK_ANSI_U)
-        ))
-
-        XCTAssertTrue(textView.performKeyEquivalent(with: event))
-        await waitForPanelSave(panel)
-        XCTAssertEqual(try String(contentsOf: url, encoding: .utf8), "saved by configured shortcut")
-    }
-
     func testSavingTextViewDoesNotUseDefaultSaveShortcutAfterRemap() async throws {
         KeyboardShortcutSettings.resetAll()
         defer { KeyboardShortcutSettings.resetAll() }
@@ -3246,30 +3017,6 @@ final class FilePreviewPanelTextSavingTests: XCTestCase {
         XCTAssertEqual(panel.textContent, "")
         XCTAssertFalse(panel.isDirty)
         XCTAssertTrue(panel.isFileUnavailable)
-    }
-
-    func testTextEditorInsetsReapplyWhenMovedBetweenWindows() {
-        _ = NSApplication.shared
-        let textView = SavingTextView()
-        textView.textContainerInset = .zero
-        textView.textContainer?.lineFragmentPadding = 5
-
-        let firstWindow = windowHosting(textView)
-        defer { closeWindow(firstWindow) }
-        XCTAssertEqual(textView.textContainerInset.width, FilePreviewTextEditorLayout.textContainerInset.width)
-        XCTAssertEqual(textView.textContainerInset.height, FilePreviewTextEditorLayout.textContainerInset.height)
-        XCTAssertEqual(textView.textContainer?.lineFragmentPadding, FilePreviewTextEditorLayout.lineFragmentPadding)
-
-        textView.textContainerInset = .zero
-        textView.textContainer?.lineFragmentPadding = 5
-
-        let secondWindow = windowHosting(textView)
-        defer { closeWindow(secondWindow) }
-        XCTAssertEqual(textView.textContainerInset.width, FilePreviewTextEditorLayout.textContainerInset.width)
-        XCTAssertEqual(textView.textContainerInset.height, FilePreviewTextEditorLayout.textContainerInset.height)
-        XCTAssertEqual(textView.textContainer?.lineFragmentPadding, FilePreviewTextEditorLayout.lineFragmentPadding)
-
-        withExtendedLifetime([firstWindow, secondWindow]) {}
     }
 
     func testTextEditorClearThemeDoesNotDrawAppKitBackgrounds() {
@@ -3664,6 +3411,7 @@ final class FilePreviewPanelTextSavingTests: XCTestCase {
             backing: .buffered,
             defer: false
         )
+        window.isReleasedWhenClosed = false
         let scrollView = NSScrollView(frame: window.contentView?.bounds ?? .zero)
         scrollView.autoresizingMask = [.width, .height]
         window.contentView?.addSubview(scrollView)

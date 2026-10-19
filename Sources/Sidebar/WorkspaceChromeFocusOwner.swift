@@ -1,0 +1,146 @@
+import AppKit
+import SwiftUI
+
+/// Owns native focus inside the explicitly registered workspace chrome hosts.
+///
+/// Membership is resolved synchronously at AppKit responder changes, before
+/// SwiftUI's focus rendering. Per-key queries compare weak identities only.
+/// A detached or reparented popover must receive a fresh native focus change;
+/// merely reattaching its window never resurrects the previous grant.
+@MainActor
+final class WorkspaceChromeFocusOwner {
+    enum Scope: Sendable { case rail, filterPopover, primaryTabs }
+    private(set) var showsKeyboardFocus = true
+
+    private weak var railHost: NSView?
+    private weak var primaryTabsHost: NSView?
+    private weak var popoverHost: NSView?
+    private weak var owningWindow: NSWindow?
+    private weak var focusedHost: NSView?
+    private weak var responder: NSResponder?
+    private weak var lastNativeResponder: NSResponder?
+    private weak var lastNativeWindow: NSWindow?
+    private weak var hostWindow: NSWindow?
+    private weak var responderWindow: NSWindow?
+    // NSWindow exposes parenting only through KVO. Keep its synchronous token
+    // at this AppKit seam so detach/reattach cannot preserve stale ownership.
+    private var parentObservation: NSKeyValueObservation?
+
+    func register(_ host: NSView, scope: Scope, in window: NSWindow) {
+        if owningWindow !== window {
+            clearFocus()
+            railHost = nil
+            primaryTabsHost = nil
+            popoverHost = nil
+            parentObservation = nil
+            owningWindow = window
+        }
+        (host as? WorkspaceChromeHostingView<AnyView>)?.showsKeyboardFocus = showsKeyboardFocus
+        switch scope {
+        case .rail:
+            guard railHost !== host else { return }
+            if focusedHost === railHost { clearFocus() }
+            railHost = host
+        case .primaryTabs:
+            guard primaryTabsHost !== host else { return }
+            if focusedHost === primaryTabsHost { clearFocus() }
+            primaryTabsHost = host
+        case .filterPopover:
+            guard popoverHost !== host else { return }
+            if focusedHost === popoverHost { clearFocus() }
+            popoverHost = host
+            parentObservation = host.window?.observe(\.parent, options: [.prior]) { [weak self] _, change in
+                guard change.isPrior else { return }
+                // AppKit window parenting is main-thread-only; revoke inline,
+                // before the relationship changes, without an asynchronous gap.
+                MainActor.assumeIsolated {
+                    guard let self, self.focusedHost === self.popoverHost else { return }
+                    self.clearFocus()
+                }
+            }
+        }
+    }
+
+    /// Input changes presentation only; native responder ownership is untouched.
+    func recordInput(_ type: NSEvent.EventType) {
+        let visible: Bool
+        switch type {
+        case .keyDown: visible = true
+        case .leftMouseDown, .rightMouseDown, .otherMouseDown: visible = false
+        default: return
+        }
+        guard visible != showsKeyboardFocus else { return }
+        showsKeyboardFocus = visible
+        (railHost as? WorkspaceChromeHostingView<AnyView>)?.showsKeyboardFocus = visible
+        (primaryTabsHost as? WorkspaceChromeHostingView<AnyView>)?.showsKeyboardFocus = visible
+        (popoverHost as? WorkspaceChromeHostingView<AnyView>)?.showsKeyboardFocus = visible
+    }
+
+    func unregister(_ host: NSView, scope: Scope) {
+        if focusedHost === host { clearFocus() }
+        switch scope {
+        case .rail:
+            if railHost === host { railHost = nil }
+        case .primaryTabs:
+            if primaryTabsHost === host { primaryTabsHost = nil }
+        case .filterPopover:
+            if popoverHost === host {
+                popoverHost = nil
+                parentObservation = nil
+            }
+        }
+    }
+
+    /// Called only by the existing native first-responder-change hook.
+    func synchronize(responder: NSResponder?, in window: NSWindow) {
+        // Successful makeFirstResponder calls can repeat the current value.
+        // They must not resurrect a grant revoked by native host reparenting.
+        guard lastNativeResponder !== responder || lastNativeWindow !== window else { return }
+        lastNativeResponder = responder
+        lastNativeWindow = window
+        clearFocus()
+        guard owningWindow === window, let view = responder as? NSView,
+              let responderWindow = view.window else { return }
+        let host: NSView?
+        if let railHost, railHost.window === window,
+           responderWindow === window, view.isDescendant(of: railHost) {
+            host = railHost
+        } else if let primaryTabsHost, primaryTabsHost.window === window,
+                  responderWindow === window, view.isDescendant(of: primaryTabsHost) {
+            host = primaryTabsHost
+        } else if let popoverHost, let popoverWindow = popoverHost.window,
+                  popoverWindow.parent === window, responderWindow === popoverWindow,
+                  view.isDescendant(of: popoverHost) {
+            host = popoverHost
+        } else {
+            host = nil
+        }
+        guard let host else { return }
+        focusedHost = host
+        hostWindow = host.window
+        self.responder = responder
+        self.responderWindow = responderWindow
+    }
+
+    private func clearFocus() {
+        focusedHost = nil
+        hostWindow = nil
+        responder = nil
+        responderWindow = nil
+    }
+
+    /// Automatic focus repair must respect a live grant in a registered child
+    /// popover as well as chrome inside the main window.
+    func ownsCurrentFocus(in window: NSWindow) -> Bool {
+        guard let responder, responderWindow?.firstResponder === responder else { return false }
+        return owns(responder, in: window)
+    }
+
+    func owns(_ responder: NSResponder, in window: NSWindow) -> Bool {
+        guard owningWindow === window, let hostWindow,
+              focusedHost?.window === hostWindow,
+              hostWindow === window || hostWindow.parent === window,
+              let responderWindow, responderWindow === hostWindow else { return false }
+        return self.responder === responder && (responder as? NSView)?.window === responderWindow
+    }
+}

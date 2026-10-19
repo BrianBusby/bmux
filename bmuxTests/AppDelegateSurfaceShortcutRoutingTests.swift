@@ -236,6 +236,10 @@ struct AppDelegateSurfaceShortcutRoutingTests {
 
             window.makeKeyAndOrderFront(nil)
             workspace.setLayoutMode(.canvas)
+            // CanvasRootView normally reconciles descriptors after switching modes.
+            workspace.canvasModel.syncPanes(
+                panelIds: workspace.orderedPanelIds, focusedPanelId: focusedPanelId
+            )
             let originalBonsplitPaneCount = workspace.bonsplitController.allPaneIds.count
             let originalPanelIds = Set(workspace.panels.keys)
             let originalFrame = try #require(workspace.canvasModel.frame(of: focusedPanelId))
@@ -283,6 +287,10 @@ struct AppDelegateSurfaceShortcutRoutingTests {
 
             window.makeKeyAndOrderFront(nil)
             workspace.setLayoutMode(.canvas)
+            // CanvasRootView normally reconciles descriptors after switching modes.
+            workspace.canvasModel.syncPanes(
+                panelIds: workspace.orderedPanelIds, focusedPanelId: focusedPanelId
+            )
             let originalPanelIds = Set(workspace.panels.keys)
             let originalFrame = try #require(workspace.canvasModel.frame(of: focusedPanelId))
 

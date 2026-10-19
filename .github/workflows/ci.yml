@@ -6,6 +6,11 @@ on:
       - main
   pull_request:
   workflow_dispatch:
+    inputs:
+      app_host_process_diagnostics:
+        description: Enable bounded diagnostics for focused shard1 and all broad shards (automatic on PRs)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -123,6 +128,15 @@ jobs:
 
       - name: Validate xcodebuild noninteractive crash prompt guard
         run: python3 tests/test_ci_xcodebuild_noninteractive_helper.py
+
+      - name: Validate CI test-host environment propagation
+        run: python3 tests/test_ci_test_host_environment.py
+
+      - name: Test native timeout ownership across console sessions
+        run: python3 tests/test_ci_console_native_watchdog.py
+
+      - name: Test opt-in app-host process diagnostics
+        run: python3 tests/test_ci_app_host_process_diagnostics.py
 
       - name: Validate app-host xcodebuild retry guard
         run: ./tests/test_ci_app_host_xcodebuild_retry.sh
@@ -412,7 +426,7 @@ jobs:
     # transitive skip otherwise marks every macOS job skipped even when
     # linux-preflight itself succeeds. Require the direct needs explicitly.
     if: ${{ !cancelled() && needs.changes.result == 'success' && needs.linux-preflight.result == 'success' && needs.changes.outputs.macos == 'true' }}
-    name: app-host unit tests (${{ matrix.shard }}/4)
+    name: app-host unit tests (${{ matrix.shard }}/8)
     # App-host XCTest needs a runner that can broker testmanagerd control
     # sessions. Validated head-to-head that warp-macos-15-arm64-6x runs the
     # full app-host suite with 0 unexpected failures, so route through the
@@ -422,7 +436,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     env:
       BMUX_CI_XCODE_APP: ${{ vars.BMUX_CI_XCODE_APP_MACOS_15 }}
       BMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
@@ -432,8 +446,11 @@ jobs:
       BMUX_APP_HOST_SPLIT_THEME_REGRESSION_SHARD: "3"
       BMUX_APP_HOST_BROWSER_PROXY_REGRESSION_SHARD: "1"
       BMUX_APP_HOST_OPTION_ALT_REGRESSION_SHARD: "2"
+      BMUX_APP_HOST_SSH_MANUAL_RECONNECT_REGRESSION_SHARD: "3"
+      BMUX_APP_HOST_MATTE_REGRESSION_SHARD: "3"
       BMUX_APP_HOST_THEME_PICKER_REGRESSION_SHARD: "4"
       BMUX_APP_HOST_CLI_NO_SOCKET_REGRESSION_SHARD: "4"
+      BMUX_APP_HOST_CODEX_STOP_REGRESSION_SHARD: "4"
       # XCTest app-host crashes can leave xcodebuild waiting in Swift's crash
       # backtracer until the job timeout. Keep crash handling non-interactive
       # and cheap so xcodebuild can restart/finish the suite.
@@ -562,7 +579,9 @@ jobs:
             echo "::warning::Passwordless sudo unavailable; XCTest will use its default automation-mode setup"
           fi
 
-      - name: Run browser system proxy mirror regression
+      - name: Run browser settings and system proxy regressions
+        env:
+          BMUX_APP_HOST_PROCESS_DIAGNOSTICS: ${{ (github.event_name == 'pull_request' || inputs.app_host_process_diagnostics) && '1' || '0' }}
         if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_BROWSER_PROXY_REGRESSION_SHARD) }}
         run: |
           # Focused gate for https://github.com/manaflow-ai/bmux/issues/5888.
@@ -579,6 +598,34 @@ jobs:
             -destination "platform=macOS" \
             BMUX_SKIP_ZIG_BUILD=1 \
             -only-testing:bmuxTests/BrowserSystemProxyMirrorTests \
+            -only-testing:bmuxTests/BrowserHiddenWebViewDiscardPolicyTests \
+            -only-testing:bmuxTests/BrowserThemeSettingsTests \
+            -only-testing:bmuxTests/GhosttyBackgroundThemeTests \
+            -only-testing:bmuxTests/PanelAppearanceCompositingTests \
+            -only-testing:bmuxTests/TitlebarProductContractTests \
+            -only-testing:bmuxTests/BrowserUnderPageBackgroundTests \
+            -only-testing:bmuxTests/BrowserInitialLifecycleTests \
+            -only-testing:bmuxTests/BrowserDiscardReadinessTests \
+            -only-testing:bmuxTests/SidebarWidthPersistencePolicyTests \
+            -only-testing:bmuxTests/HermesResumeExecutionTests \
+            -only-testing:bmuxTests/RestorableAgentSessionStalePIDTests \
+            -only-testing:bmuxTests/BrowserRemoteStoreScopeTests \
+            -only-testing:bmuxTests/ClaudeSessionEndScopeTests \
+            -only-testing:bmuxTests/CloudAttachRetryContractTests \
+            -only-testing:bmuxTests/RemoteTmuxSessionListParserTests \
+            -only-testing:bmuxTests/FileExplorerGitStatusProviderTests \
+            -only-testing:bmuxTests/MarkdownMermaidZoomTests \
+            -only-testing:bmuxTests/ManagedAppearanceStartupContractTests \
+            -only-testing:bmuxTests/AgentLaunchEnvironmentTests \
+            -only-testing:bmuxTests/SSHWorkspaceCreationTests \
+            -only-testing:bmuxTests/SSHAgentEnvironmentTests \
+            -only-testing:bmuxTests/SSHPTYLifecycleContractTests \
+            -only-testing:bmuxTests/RespawnWindowProtocolTests \
+            -only-testing:bmuxTests/WorkspaceFallbackContractTests \
+            -only-testing:bmuxTests/GlobalSearchShortcutConflictTests \
+            -only-testing:bmuxTests/BrowserDownloadQuarantineTests \
+            -only-testing:bmuxTests/FilePreviewSaveShortcutTests \
+            -only-testing:bmuxTests/BrowserInspectorWindowOwnershipTests \
             test
 
       - name: Run Option/Alt sided-modifier regression
@@ -595,55 +642,234 @@ jobs:
             -destination "platform=macOS" \
             BMUX_SKIP_ZIG_BUILD=1 \
             -only-testing:bmuxTests/GhosttyOptionAsAltModsTests \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHPaneCloseSignalDoesNotReportSessionEndToSharedTransport \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHPaneCloseSignalDoesNotTerminateWrappedSSHChild \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupRetriesTransientSSHExitBeforeReportingSessionEnd \
+            -only-testing:bmuxTests/SSHStaleControlSocketTests \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupStopsAtConfiguredReconnectLimit \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupDoesNotRetryNonTransientSSHExit \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHSignalDerivedChildExitReportsSessionEnd \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHSignalDuringReconnectDelayDoesNotStartAnotherSSH \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupPrintsFinalErrorBannerWhenStderrIsCaptured \
+            -only-testing:bmuxTests/CLINotifyProcessIntegrationRegressionTests/testSSHStartupForwardsStdinToBackgroundedSSH \
+            -only-testing:bmuxTests/CodexMonitorLeaseTests \
+            test
+
+      - name: Verify bundled CLI artifact and native test
+        if: ${{ matrix.shard == 3 }}
+        run: |
+          set -euo pipefail
+          scripts/ci/run-in-console-session.sh \
+            scripts/ci/run-app-host-xcodebuild.sh \
+            -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
+            -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
+            -clonedSourcePackagesDirPath "$PWD/.ci-source-packages" \
+            -disableAutomaticPackageResolution \
+            -destination "platform=macOS" \
+            BMUX_SKIP_ZIG_BUILD=1 \
+            -only-testing:bmuxTests/BundledCLILinkageTests test
+          artifact_test_exit=0
+          if python3 tests/test_bundled_cli_artifact.py; then
+            :
+          else
+            artifact_test_exit=$?
+          fi
+          CLI_BIN="$BMUX_DERIVED_DATA_PATH/Build/Products/Debug/bmux DEV.app/Contents/Resources/bin/bmux"
+          socket_test_exit=0
+          if BMUX_CLI_BIN="$CLI_BIN" python3 tests/test_cli_closed_peer_receive.py; then
+            :
+          else
+            socket_test_exit=$?
+          fi
+          echo "Bundled CLI artifact tests: $artifact_test_exit; closed-peer receive tests: $socket_test_exit"
+          if [ "$artifact_test_exit" -ne 0 ]; then exit "$artifact_test_exit"; fi
+          if [ "$socket_test_exit" -ne 0 ]; then exit "$socket_test_exit"; fi
+          python3 scripts/verify-bundled-cli.py \
+            "$BMUX_DERIVED_DATA_PATH/Build/Products/Debug/bmux DEV.app" \
+            --archive "$RUNNER_TEMP/bmux-cli-debug.tar.gz"
+          du -h "$RUNNER_TEMP/bmux-cli-debug.tar.gz"
+
+      - name: Upload Debug CLI dependency closure
+        if: ${{ matrix.shard == 3 }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: bmux-cli-debug
+          path: ${{ runner.temp }}/bmux-cli-debug.tar.gz
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Run Codex Stop hook fixture regressions
+        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_CODEX_STOP_REGRESSION_SHARD) }}
+        run: |
+          set -euo pipefail
+          SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
+          scripts/ci/run-in-console-session.sh \
+            scripts/ci/run-app-host-xcodebuild.sh \
+            -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
+            -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
+            -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
+            -disableAutomaticPackageResolution \
+            -destination "platform=macOS" \
+            BMUX_SKIP_ZIG_BUILD=1 \
+            -only-testing:bmuxTests/CodexStopPayloadFailureTests \
+            -only-testing:bmuxTests/CodexStopTranscriptFailureTests \
+            -only-testing:bmuxTests/CodexStopTurnScopeTests \
+            test
+
+      - name: Run SSH cleanup error regression
+        if: ${{ matrix.shard == 1 }}
+        run: |
+          set -euo pipefail
+          scripts/ci/run-in-console-session.sh \
+            scripts/ci/run-app-host-xcodebuild.sh \
+            -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
+            -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
+            -clonedSourcePackagesDirPath "$PWD/.ci-source-packages" \
+            -disableAutomaticPackageResolution \
+            -destination "platform=macOS" \
+            BMUX_SKIP_ZIG_BUILD=1 \
+            -only-testing:bmuxTests/SSHCleanupErrorTests \
+            -only-testing:bmuxTests/RemotePTYErrorPolicyTests test
+
+      - name: Run right sidebar shortcut availability fixtures
+        if: ${{ matrix.shard == 3 }}
+        run: |
+          set -euo pipefail
+          SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
+          scripts/ci/run-in-console-session.sh \
+            scripts/ci/run-app-host-xcodebuild.sh \
+            -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
+            -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
+            -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
+            -disableAutomaticPackageResolution \
+            -destination "platform=macOS" \
+            BMUX_SKIP_ZIG_BUILD=1 \
+            -only-testing:bmuxTests/RightSidebarModeAvailabilityShortcutTests \
+            -only-testing:bmuxTests/RightSidebarModeShortcutHintTests \
+            test
+
+      - name: Run Claude notification target fixtures
+        if: ${{ matrix.shard == 2 }}
+        run: |
+          set -euo pipefail
+          scripts/ci/run-in-console-session.sh \
+            scripts/ci/run-app-host-xcodebuild.sh \
+            -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
+            -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
+            -clonedSourcePackagesDirPath "$PWD/.ci-source-packages" \
+            -disableAutomaticPackageResolution \
+            -destination "platform=macOS" \
+            BMUX_SKIP_ZIG_BUILD=1 \
+            -only-testing:bmuxTests/ClaudeNotificationTargetTests \
+            -only-testing:bmuxTests/ClaudeNotificationStatusLifecycleTests test
+
+      - name: Run SSH manual reconnect handoff regression
+        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_SSH_MANUAL_RECONNECT_REGRESSION_SHARD) }}
+        run: |
+          set -euo pipefail
+          SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
+          scripts/ci/run-in-console-session.sh \
+            scripts/ci/run-app-host-xcodebuild.sh \
+            -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
+            -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
+            -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
+            -disableAutomaticPackageResolution \
+            -destination "platform=macOS" \
+            BMUX_SKIP_ZIG_BUILD=1 \
+            -only-testing:bmuxTests/SSHStartupManualReconnectTests \
+            -only-testing:bmuxTests/SSHRemoteReconnectOwnerTests \
+            -only-testing:bmuxTests/SSHDisconnectedPlaceholderTests \
+            test
+
+      - name: Run Codex rejected ambient routing regressions
+        if: ${{ matrix.shard == 2 }}
+        run: |
+          set -euo pipefail
+          scripts/ci/run-in-console-session.sh \
+            scripts/ci/run-app-host-xcodebuild.sh \
+            -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
+            -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
+            -clonedSourcePackagesDirPath "$PWD/.ci-source-packages" \
+            -disableAutomaticPackageResolution \
+            -destination "platform=macOS" \
+            BMUX_SKIP_ZIG_BUILD=1 \
+            -only-testing:bmuxTests/CodexRejectedAmbientTests \
+            -only-testing:bmuxTests/CLISocketFixtureCompletionTests test
+
+      - name: Run matte chrome native regressions
+        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_MATTE_REGRESSION_SHARD) }}
+        run: |
+          # Run the affected native suites before unrelated legacy fixtures.
+          # Full-suite coverage below remains intact; incomplete runs fail.
+          set -euo pipefail
+          SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
+          scripts/ci/run-in-console-session.sh \
+            scripts/ci/run-app-host-xcodebuild.sh \
+            -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
+            -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
+            -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
+            -disableAutomaticPackageResolution \
+            -destination "platform=macOS" \
+            BMUX_SKIP_ZIG_BUILD=1 \
+            -only-testing:bmuxTests/MatteTitlebarContrastTests \
+            -only-testing:bmuxTests/MatteTerminalConfigurationTests \
+            -only-testing:bmuxTests/WorkspacePopoverFocusRoutingTests \
+            -only-testing:bmuxTests/MatteTerminalInsetRenderingTests \
+            -only-testing:bmuxTests/MatteTerminalBackdropCompositionTests \
+            -only-testing:bmuxTests/MatteChromePreferenceTests \
+            -only-testing:bmuxTests/TerminalSurfaceRecoveryTests \
+            -only-testing:bmuxTests/TerminalKeyRepeatDeliveryTests \
+            -only-testing:bmuxTests/TerminalNativeInputDeliveryTests \
+            -only-testing:bmuxTests/MatteTitlebarDragRoutingTests \
+            -only-testing:bmuxTests/ForeignFirstResponderPolicyTests \
+            -only-testing:bmuxTests/KeyboardFocusOwnerViewTests \
+            -only-testing:bmuxTests/RightSidebarHeaderChromeMetricsTests \
+            -only-testing:bmuxTests/SidebarWorkspaceGroupHeaderMetricsTests \
+            -only-testing:bmuxTests/ContentViewFileDropOverlayInstallationTests \
             test
 
       - name: Run unit tests
+        env:
+          BMUX_APP_HOST_PROCESS_DIAGNOSTICS: ${{ (github.event_name == 'pull_request' || inputs.app_host_process_diagnostics) && '1' || '0' }}
         run: |
           set -euo pipefail
           SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
           SHARD_ARGS="$RUNNER_TEMP/bmux-unit-shard-${{ matrix.shard }}.args"
           python3 scripts/ci/bmux_unit_test_shard.py \
             --shard-index "${{ matrix.shard }}" \
-            --shard-total 4 \
+            --shard-total 8 \
             --output "$SHARD_ARGS"
           ONLY_TESTING_ARGS=()
           while IFS= read -r arg; do
             [ -n "$arg" ] && ONLY_TESTING_ARGS+=("$arg")
           done < "$SHARD_ARGS"
+          XCODEBUILD_ARGS=(
+            -project bmux.xcodeproj -scheme bmux-unit -configuration Debug
+            -derivedDataPath "$BMUX_DERIVED_DATA_PATH"
+            -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR"
+            -disableAutomaticPackageResolution
+            -destination "platform=macOS"
+            "${ONLY_TESTING_ARGS[@]}"
+            BMUX_SKIP_ZIG_BUILD=1
+          )
           run_unit_tests() {
-            # These app-host tests create real SwiftUI/WebKit/Ghostty windows and
-            # intermittently crash inside XCTest's post-test memory checker or
-            # leave native display/WebKit work alive on GitHub macOS runners.
-            # When that happens, Swift's crash/backtrace handling or the stale
-            # app-host process keeps xcodebuild alive until the job-level timeout,
-            # hiding the actual unit test summary.
-            # The app-host wrapper also serializes GUI XCTest ownership per Mac,
-            # while still allowing shards on separate Macs to run in parallel.
+            # Cold compilation is bounded by the job and the existing idle
+            # watchdog, not the 900-second native test allowance. Rebuild here
+            # on the existing SwiftPM retry, which clears DerivedData.
+            local build_log="$RUNNER_TEMP/bmux-unit-build-shard-${{ matrix.shard }}.log"
+            scripts/ci/run-in-console-session.sh env \
+              BMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH="$build_log" \
+              BMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS="${BMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS:-${BMUX_XCODEBUILD_NONINTERACTIVE_TIMEOUT_SECONDS:-300}}" \
+              scripts/ci/xcodebuild_noninteractive.py xcodebuild \
+              "${XCODEBUILD_ARGS[@]}" build-for-testing 2>&1 || return $?
+
+            # The total deadline must own the test wrapper inside the console
+            # session. Signaling the outer sudo/launchctl PID can leave its
+            # console child alive and keep tee waiting for output forever.
             scripts/ci/run-in-console-session.sh \
+              python3 scripts/ci/run-unit-tests-with-timeout.py \
               scripts/ci/run-app-host-xcodebuild.sh \
-              -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
-              -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
-              -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
-              -disableAutomaticPackageResolution \
-              -destination "platform=macOS" \
-              "${ONLY_TESTING_ARGS[@]}" \
-              BMUX_SKIP_ZIG_BUILD=1 \
-              test 2>&1 &
-            local xcodebuild_pid=$!
-            local timeout_seconds="${BMUX_UNIT_TEST_TIMEOUT_SECONDS:-900}"
-            local deadline=$((SECONDS + timeout_seconds))
-            while kill -0 "$xcodebuild_pid" 2>/dev/null; do
-              if [ "$SECONDS" -ge "$deadline" ]; then
-                echo "xcodebuild unit test timeout after ${timeout_seconds}s; terminating"
-                kill -TERM "$xcodebuild_pid" 2>/dev/null || true
-                sleep 5
-                kill -KILL "$xcodebuild_pid" 2>/dev/null || true
-                wait "$xcodebuild_pid" 2>/dev/null || true
-                return 124
-              fi
-              sleep 5
-            done
-            wait "$xcodebuild_pid"
+              "${XCODEBUILD_ARGS[@]}" test-without-building 2>&1
           }
 
           # Stream output via tee so CI logs are visible in real time, while still
@@ -674,6 +900,14 @@ jobs:
           # XCTest handles genuine expected failures in the native exit status.
           # A partial log summary cannot turn a failure or timeout into success.
           exit "$EXIT_CODE"
+
+      - name: Upload app-host process diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: app-host-process-diagnostics-${{ matrix.shard }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/bmux-process-diagnostics/
+          if-no-files-found: ignore
 
       - name: Run bundled Ghostty theme picker helper regression
         if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_THEME_PICKER_REGRESSION_SHARD) }}
@@ -934,6 +1168,7 @@ jobs:
           # job), and their test runners link a C stub for the @_silgen_name
           # symbol instead of the GhosttyKit archive.
           PACKAGES=(
+            BmuxAppKitSupportUI
             BMUXAuthCore
             BmuxCanvasUI
             BmuxCore
@@ -1606,6 +1841,49 @@ jobs:
           lipo "$HELPER_BINARY" -verify_arch arm64 x86_64
           [[ "$SDK_VERSION" == 26.* ]]
 
+      - name: Verify and archive unsigned Release CLI
+        run: |
+          set -euo pipefail
+          python3 scripts/verify-bundled-cli.py \
+            build-universal/Build/Products/Release/bmux.app \
+            --archive "$RUNNER_TEMP/bmux-cli-release.tar.gz"
+          du -h "$RUNNER_TEMP/bmux-cli-release.tar.gz"
+
+      - name: Upload Release CLI dependency closure
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: bmux-cli-release
+          path: ${{ runner.temp }}/bmux-cli-release.tar.gz
+          if-no-files-found: error
+          retention-days: 3
+
+  bundled-cli-artifacts:
+    needs: [changes, app-host-unit-tests, release-build]
+    # Consume uploaded artifacts even if later, unrelated app-host tests fail.
+    if: ${{ !cancelled() && needs.changes.result == 'success' && needs.changes.outputs.macos == 'true' }}
+    runs-on: ${{ vars.MACOS_RUNNER_26 || 'blacksmith-6vcpu-macos-26' }}
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Download unmodified CLI artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: bmux-cli-*
+          path: cli-artifacts
+          merge-multiple: true
+
+      - name: Verify relocated Debug and Release artifacts without builder paths
+        run: |
+          set -euo pipefail
+          for configuration in debug release; do
+            mkdir "cli-artifacts/$configuration"
+            tar -xzf "cli-artifacts/bmux-cli-$configuration.tar.gz" -C "cli-artifacts/$configuration"
+            python3 scripts/verify-bundled-cli.py "cli-artifacts/$configuration/bmux.app" \
+              --require-absent-external-rpaths
+          done
+
   ci-status:
     needs:
       - changes
@@ -1621,6 +1899,7 @@ jobs:
       - agent-session-web-resources
       - tests-build-and-lag
       - release-build
+      - bundled-cli-artifacts
     if: ${{ always() }}
     runs-on: ${{ vars.LINUX_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }}
     steps:

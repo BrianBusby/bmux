@@ -189,26 +189,25 @@ final class FileSearchOutputPipelineTests: XCTestCase {
 @Suite("File search workspace scope")
 @MainActor
 struct FileSearchWorkspaceScopeTests {
-    private enum WaitTimeout: Error { case timedOut }
-
     @Test("Same-path local workspace switch resets Find search scope")
-    func samePathLocalWorkspaceSwitchResetsFindSearchScope() async throws {
+    func samePathLocalWorkspaceSwitchResetsFindSearchScope() throws {
         let store = FileExplorerStore()
+        defer { store.applyWorkspaceRoot(.none) }
         let state = FileExplorerState()
         let searchController = SpyFileSearchController()
         let coordinator = FileExplorerPanelView.Coordinator(store: store, state: state, onOpenFilePreview: { _ in })
-        let container = FileExplorerContainerView(coordinator: coordinator, presentation: .find, searchController: searchController)
+        let container = FileExplorerContainerView(coordinator: coordinator, presentation: .files, searchController: searchController)
         let rootPath = "/tmp/bmux-find-same-directory-test"
 
         store.applyWorkspaceRoot(.local(workspaceId: UUID(), path: rootPath))
         container.updateHeader(store: store)
-        container.updatePresentation(.find)
 
         let searchField = try #require(Self.findSearchField(in: container))
         searchController.searchRequests.removeAll()
         searchField.stringValue = "adfasdf"
-        container.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: searchField))
-        try await waitForSearchRequestCount(1, in: searchController)
+        // Opening Find submits its current query without depending on the typing debounce.
+        container.updatePresentation(.find)
+        #expect(searchController.searchRequests == ["adfasdf"])
         searchController.publish(FileSearchSnapshot(query: "adfasdf", results: [], status: .noMatches, isSearching: false))
 
         store.applyWorkspaceRoot(.local(workspaceId: UUID(), path: rootPath))
@@ -217,16 +216,6 @@ struct FileSearchWorkspaceScopeTests {
 
         #expect(searchField.stringValue == "")
         #expect(container.searchSnapshot == .empty)
-    }
-
-    private func waitForSearchRequestCount(_ expectedCount: Int, in searchController: SpyFileSearchController) async throws {
-        let deadline = Date().addingTimeInterval(1)
-        while Date() < deadline {
-            if searchController.searchRequests.count >= expectedCount { return }
-            try await Task.sleep(nanoseconds: 10_000_000)
-        }
-        Issue.record("Timed out waiting for \(expectedCount) file search requests")
-        throw WaitTimeout.timedOut
     }
 
     private static func findSearchField(in root: NSView) -> NSSearchField? {

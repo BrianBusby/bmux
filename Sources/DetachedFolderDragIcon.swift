@@ -4,12 +4,16 @@ import UniformTypeIdentifiers
 
 struct DetachedFolderDragIcon: NSViewRepresentable {
     let directory: String
+    var tintColor: NSColor? = nil
 
     func makeNSView(context: Context) -> DraggableFolderNSView {
-        DraggableFolderNSView(directory: directory)
+        let view = DraggableFolderNSView(directory: directory)
+        view.setPresentationTint(tintColor)
+        return view
     }
 
     func updateNSView(_ nsView: DraggableFolderNSView, context: Context) {
+        nsView.setPresentationTint(tintColor)
         if nsView.directory != directory {
             nsView.directory = directory
             nsView.updateIcon()
@@ -25,6 +29,7 @@ final class DraggableFolderNSView: NSView, NSDraggingSource {
 
     var directory: String
     private var imageView: FolderIconImageView!
+    private var presentationTint: NSColor?
     private var pendingDragEvent: NSEvent?
     private var pendingDragStartPoint: NSPoint?
     private let dragStartThresholdSquared: CGFloat = 9
@@ -95,12 +100,21 @@ final class DraggableFolderNSView: NSView, NSDraggingSource {
         }
     }
 
+    func setPresentationTint(_ color: NSColor?) {
+        guard presentationTint != color else { return }
+        presentationTint = color
+        updateIcon()
+    }
+
     func updateIcon() {
         #if DEBUG
         dispatchPrecondition(condition: .onQueue(.main))
         #endif
 
-        imageView.image = Self.genericFolderIcon(size: 16)
+        imageView.contentTintColor = presentationTint
+        imageView.image = presentationTint == nil
+            ? Self.genericFolderIcon(size: 16)
+            : NSImage(systemSymbolName: "folder", accessibilityDescription: nil)
     }
 
     func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {

@@ -1,8 +1,9 @@
 import SwiftUI
+import BmuxAppKitSupportUI
 import ProvenanceEngineContracts
 
 private extension Color {
-    static let bmuxLinkGreen = Color(red: 0.478, green: 0.620, blue: 0.416)
+    static let bmuxLinkGreen = Color(nsColor: MatteTheme.dynamicColor(.link))
 }
 
 struct AgentSessionCurrentTurnOverview: View {

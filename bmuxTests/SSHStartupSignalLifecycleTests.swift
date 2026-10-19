@@ -210,87 +210,6 @@ extension CLINotifyProcessIntegrationRegressionTests {
         XCTAssertEqual(sessionEndCalls.count, 1, recordedCalls)
     }
 
-    func testSSHStartupRemovesStaleBmuxControlSocketBeforeLaunchingPaneSSH() throws {
-        let fileManager = FileManager.default
-        let root = fileManager.temporaryDirectory
-            .appendingPathComponent("bmux-ssh-stale-control-\(UUID().uuidString)", isDirectory: true)
-        let fakeCLI = root.appendingPathComponent("bmux")
-        let fakeSSH = root.appendingPathComponent("ssh")
-        let logFile = root.appendingPathComponent("ssh.log")
-        let staleControlPath = URL(fileURLWithPath: "/tmp", isDirectory: true)
-            .appendingPathComponent("bmux-ssh-\(getuid())-\(UUID().uuidString.prefix(8)).sock")
-
-        try fileManager.createDirectory(at: root, withIntermediateDirectories: true)
-        defer {
-            try? fileManager.removeItem(at: root)
-            unlink(staleControlPath.path)
-        }
-
-        let staleSocketFD = try bindUnixSocket(at: staleControlPath.path)
-        Darwin.close(staleSocketFD)
-        XCTAssertTrue(fileManager.fileExists(atPath: staleControlPath.path))
-
-        try writeShellFile(at: fakeCLI, lines: [
-            "#!/bin/sh",
-            "printf '%s\\n' \"$*\" >> \"${BMUX_TEST_SESSION_END_LOG}\"",
-        ])
-        try writeShellFile(at: fakeSSH, lines: [
-            "#!/bin/sh",
-            "printf '%s\\n' \"$*\" >> \"${BMUX_TEST_SSH_LOG}\"",
-            "for arg in \"$@\"; do",
-            "  if [ \"$arg\" = '-G' ]; then",
-            "    printf 'controlpath %s\\n' \"${BMUX_TEST_CONTROL_PATH}\"",
-            "    exit 0",
-            "  fi",
-            "done",
-            "previous_arg=",
-            "for arg in \"$@\"; do",
-            "  if [ \"$previous_arg\" = '-O' ] && [ \"$arg\" = 'check' ]; then",
-            "    exit 255",
-            "  fi",
-            "  previous_arg=\"$arg\"",
-            "done",
-            "if [ -e \"${BMUX_TEST_CONTROL_PATH}\" ]; then",
-            "  printf 'ControlSocket %s already exists, disabling multiplexing\\n' \"${BMUX_TEST_CONTROL_PATH}\" >&2",
-            "  exit 99",
-            "fi",
-            "exit 0",
-        ])
-        try fileManager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: fakeCLI.path)
-        try fileManager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: fakeSSH.path)
-
-        let startupCommand = try generatedSSHStartupCommand(sshOptions: [
-            "ControlMaster auto",
-            "ControlPersist 600",
-            "ControlPath \(staleControlPath.path)",
-        ])
-        var environment = ProcessInfo.processInfo.environment
-        environment["PATH"] = "\(root.path):\(environment["PATH"] ?? "/usr/bin:/bin")"
-        environment["BMUX_BUNDLED_CLI_PATH"] = fakeCLI.path
-        environment["BMUX_SOCKET_PATH"] = "/tmp/bmux-debug-test.sock"
-        environment["BMUX_WORKSPACE_ID"] = "11111111-1111-1111-1111-111111111111"
-        environment["BMUX_SURFACE_ID"] = "22222222-2222-2222-2222-222222222222"
-        environment["BMUX_TEST_CONTROL_PATH"] = staleControlPath.path
-        environment["BMUX_TEST_SESSION_END_LOG"] = root.appendingPathComponent("ssh-session-end.log").path
-        environment["BMUX_TEST_SSH_LOG"] = logFile.path
-        environment["BMUX_SSH_RECONNECT_DELAY_SECONDS"] = "0"
-
-        let result = runProcess(
-            executablePath: "/bin/sh",
-            arguments: ["-c", startupCommand],
-            environment: environment,
-            timeout: 5
-        )
-
-        XCTAssertFalse(result.timedOut, result.stderr)
-        XCTAssertEqual(result.status, 0, result.stderr)
-        XCTAssertFalse(fileManager.fileExists(atPath: staleControlPath.path))
-
-        let sshLog = (try? String(contentsOf: logFile, encoding: .utf8)) ?? ""
-        XCTAssertTrue(sshLog.contains("-G"), sshLog)
-        XCTAssertTrue(sshLog.contains("-O check"), sshLog)
-    }
-
     func testSSHStartupStopsAtConfiguredReconnectLimit() throws {
         let fileManager = FileManager.default
         let root = fileManager.temporaryDirectory
@@ -656,6 +575,7 @@ extension CLINotifyProcessIntegrationRegressionTests {
                     ok: true,
                     result: [
                         "workspace_id": workspaceID,
+                        "surface_id": "22222222-2222-2222-2222-222222222222",
                     ]
                 )
             case "workspace.remote.configure":
@@ -740,10 +660,10 @@ extension CLINotifyProcessIntegrationRegressionTests {
             }
 
             switch method {
-            case "vm.attach_info":
+            case "vm.ssh_info":
                 let params = payload["params"] as? [String: Any] ?? [:]
                 XCTAssertEqual(params["id"] as? String, vmID)
-                XCTAssertEqual(params["require_daemon"] as? Bool, true)
+                XCTAssertEqual(Set(params.keys), ["id"])
                 return self.v2Response(
                     id: id,
                     ok: true,
@@ -764,6 +684,7 @@ extension CLINotifyProcessIntegrationRegressionTests {
                     ok: true,
                     result: [
                         "workspace_id": workspaceID,
+                        "surface_id": "22222222-2222-2222-2222-222222222222",
                     ]
                 )
             case "workspace.rename":

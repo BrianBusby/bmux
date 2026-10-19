@@ -22,12 +22,27 @@ struct GitStatusProvider: Sendable {
     }
 
     func fetchStatus(directory: String) -> [String: GitFileStatus] {
-        guard let repoRoot = gitRepoRoot(for: directory) else { return [:] }
-        return parseGitStatus(
-            output: runGit(in: repoRoot, arguments: ["status", "--porcelain=v1", "-z"]),
-            repoRoot: repoRoot,
-            explorerRoot: directory
+        guard let repoRoot = gitRepoRoot(for: directory), !repoRoot.isEmpty else { return [:] }
+        // Git reports a physical root; compare both roots in the same local namespace.
+        // Resolve roots only: status entries can describe deleted files or symbolic links.
+        let resolvedRepoRoot = URL(fileURLWithPath: repoRoot).resolvingSymlinksInPath().path
+        let resolvedExplorerRoot = Self.pathWithoutTrailingSlashes(
+            URL(fileURLWithPath: directory).resolvingSymlinksInPath().path
         )
+        let status = parseGitStatus(
+            output: runGit(in: repoRoot, arguments: ["status", "--porcelain=v1", "-z"]),
+            repoRoot: resolvedRepoRoot,
+            explorerRoot: resolvedExplorerRoot
+        )
+        // Rows retain the caller's path identity, including an alias to the repository.
+        let requestedRoot = Self.pathWithoutTrailingSlashes(directory)
+        let prefixLength = resolvedExplorerRoot == "/" ? 1 : resolvedExplorerRoot.count + 1
+        return Dictionary(uniqueKeysWithValues: status.map { path, value in
+            let relativePath = String(path.dropFirst(prefixLength))
+            let requestedPath = relativePath.isEmpty ? requestedRoot
+                : Self.absolutePath(repoRoot: requestedRoot, relativePath: relativePath)
+            return (requestedPath, value)
+        })
     }
 
     func fetchStatusSSH(

@@ -22,6 +22,9 @@ public enum ControlWorkspaceRemoteResolution: Sendable, Equatable {
     /// "Remote workspace is not configured", `reconnect` only). Carries the
     /// resolved workspace id for that payload.
     case notConfigured(workspaceID: UUID)
+    /// The explicit surface could not be replaced. The app supplies a localized
+    /// message from its resource bundle; callers must not treat this as acceptance.
+    case reconnectFailed(workspaceID: UUID, surfaceID: UUID, message: String)
     /// The mutation succeeded. Carries the owning window id (may be absent), the
     /// resolved workspace id, and the bridged `remoteStatusPayload()`.
     case resolved(windowID: UUID?, workspaceID: UUID, remoteStatus: JSONValue)

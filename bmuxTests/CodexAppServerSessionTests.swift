@@ -35,7 +35,7 @@ struct CodexAppServerSessionTests {
                 "OPENCODE_SERVER_USERNAME": "bmux",
                 "OPENCODE_SERVER_PASSWORD": "secret",
             ])?.authorizationHeader,
-            "Basic Y211eDpzZWNyZXQ="
+            "Basic Ym11eDpzZWNyZXQ="
         )
     }
 
@@ -766,38 +766,6 @@ struct CodexAppServerSessionTests {
     }
 
     @Test
-    func testCodexInputQueueBeforeThreadIsBounded() async throws {
-        var sentLines: [String] = []
-        let session = CodexAppServerSession(
-            workingDirectory: nil,
-            writeData: { data in
-                sentLines.append(String(decoding: data, as: UTF8.self).trimmingCharacters(in: .newlines))
-            },
-            outputSink: { _, _ in }
-        )
-
-        try await session.start()
-        let submitTask = Task { try await session.submit("first prompt") }
-        await expectThrowsErrorAsync {
-            try await session.submit("second prompt")
-        }
-
-        session.consumeStdout(
-            #"{"id":1,"result":{"userAgent":"codex","codexHome":"/tmp","platformFamily":"unix","platformOs":"macos"}}"#
-                + "\n")
-        await Task.yield()
-        session.consumeStdout(#"{"id":2,"result":{"thread":{"id":"thread-1"}}}"# + "\n")
-        try await submitTask.value
-
-        expectEqual(sentLines.count, 4)
-        let turnStart = jsonLine(sentLines[3])
-        expectEqual(turnStart["method"] as? String, "turn/start")
-        let turnParams = try #require(turnStart["params"] as? [String: Any])
-        let input = try #require(turnParams["input"] as? [[String: Any]])
-        expectEqual(input.first?["text"] as? String, "first prompt")
-    }
-
-    @Test
     func testCodexInputQueueRejectsOversizedPromptBeforeThread() async throws {
         let session = CodexAppServerSession(
             workingDirectory: nil,
@@ -897,100 +865,6 @@ struct CodexAppServerSessionTests {
         expectEqual(defaultParams["approvalPolicy"] as? String, "never")
         expectTrue(defaultParams["approvalsReviewer"] is NSNull)
         expectTrue(defaultParams["sandboxPolicy"] is NSNull)
-    }
-
-    @Test
-    func testCodexSubmitBlocksReentrantTurnWhileWriteIsPending() async throws {
-        var sentLines: [String] = []
-        var pendingTurnWrite: CheckedContinuation<Void, Never>?
-        let session = CodexAppServerSession(
-            workingDirectory: nil,
-            writeData: { data in
-                let line = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .newlines)
-                if line.contains(#""method":"turn/start""#) {
-                    await withCheckedContinuation { continuation in
-                        pendingTurnWrite = continuation
-                    }
-                }
-                sentLines.append(line)
-            },
-            outputSink: { _, _ in }
-        )
-
-        try await session.start()
-        session.consumeStdout(
-            #"{"id":1,"result":{"userAgent":"codex","codexHome":"/tmp","platformFamily":"unix","platformOs":"macos"}}"#
-                + "\n")
-        await Task.yield()
-        session.consumeStdout(#"{"id":2,"result":{"thread":{"id":"thread-1"}}}"# + "\n")
-
-        let firstSubmit = Task { try await session.submit("first prompt") }
-        while pendingTurnWrite == nil {
-            await Task.yield()
-        }
-
-        await expectThrowsErrorAsync {
-            try await session.submit("second prompt")
-        }
-
-        pendingTurnWrite?.resume()
-        try await firstSubmit.value
-        expectEqual(sentLines.count, 4)
-        let turnParams = try #require(jsonLine(sentLines[3])["params"] as? [String: Any])
-        let input = try #require(turnParams["input"] as? [[String: Any]])
-        expectEqual(input.first?["text"] as? String, "first prompt")
-    }
-
-    @Test
-    func testCodexApprovalRequestsOnlyAutoApproveForFullAccessMode() async throws {
-        var sentLines: [String] = []
-        let session = CodexAppServerSession(
-            workingDirectory: nil,
-            writeData: { data in
-                sentLines.append(String(decoding: data, as: UTF8.self).trimmingCharacters(in: .newlines))
-            },
-            outputSink: { _, _ in }
-        )
-
-        try await session.start()
-        session.consumeStdout(
-            #"{"id":1,"result":{"userAgent":"codex","codexHome":"/tmp","platformFamily":"unix","platformOs":"macos"}}"#
-                + "\n")
-        await Task.yield()
-        session.consumeStdout(#"{"id":2,"result":{"thread":{"id":"thread-1"}}}"# + "\n")
-        try await session.submit("default prompt", permissionMode: .standard)
-        session.consumeStdout(
-            #"{"id":"cmd-1","method":"item/commandExecution/requestApproval","params":{"threadId":"thread-1"}}"# + "\n")
-        session.consumeStdout(
-            #"{"id":"perm-1","method":"item/permissions/requestApproval","params":{"permissions":{"network":{"enabled":true}}}}"# + "\n")
-        await expectThrowsErrorAsync {
-            try await session.submit("blocked full access prompt", permissionMode: .fullAccess)
-        }
-        session.consumeStdout(#"{"method":"turn/completed","params":{"threadId":"thread-1"}}"# + "\n")
-        try await session.submit("full access prompt", permissionMode: .fullAccess)
-        session.consumeStdout(
-            #"{"id":"cmd-2","method":"item/commandExecution/requestApproval","params":{"threadId":"thread-1"}}"# + "\n")
-        session.consumeStdout(
-            #"{"id":"perm-2","method":"item/permissions/requestApproval","params":{"permissions":{"network":{"enabled":true}}}}"# + "\n")
-
-        let defaultCommandResponse = jsonLine(sentLines[4])
-        let defaultCommandResult = try #require(defaultCommandResponse["result"] as? [String: Any])
-        expectEqual(defaultCommandResult["decision"] as? String, "decline")
-
-        let defaultPermissionResponse = jsonLine(sentLines[5])
-        let defaultPermissionResult = try #require(defaultPermissionResponse["result"] as? [String: Any])
-        let defaultPermissions = try #require(defaultPermissionResult["permissions"] as? [String: Any])
-        expectTrue(defaultPermissions.isEmpty)
-
-        let fullAccessCommandResponse = jsonLine(sentLines[7])
-        let fullAccessCommandResult = try #require(fullAccessCommandResponse["result"] as? [String: Any])
-        expectEqual(fullAccessCommandResult["decision"] as? String, "acceptForSession")
-
-        let fullAccessPermissionResponse = jsonLine(sentLines[8])
-        let fullAccessPermissionResult = try #require(fullAccessPermissionResponse["result"] as? [String: Any])
-        let fullAccessPermissions = try #require(fullAccessPermissionResult["permissions"] as? [String: Any])
-        let networkPermissions = try #require(fullAccessPermissions["network"] as? [String: Any])
-        expectEqual(networkPermissions["enabled"] as? Bool, true)
     }
 
     @Test

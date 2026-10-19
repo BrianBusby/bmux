@@ -89,7 +89,7 @@ struct SharedLiveAgentIndexAgentLivenessTests {
             indexLoader: {
                 SharedLiveAgentIndexLoader(
                     homeDirectory: root.path,
-                    fileManager: fm,
+                    fileManager: FileManager(),
                     registry: registry,
                     processSnapshotProvider: { processSnapshot },
                     capturedAtProvider: { 42 },
@@ -108,6 +108,18 @@ struct SharedLiveAgentIndexAgentLivenessTests {
             }
         )
 
+        // Subscribe synchronously before prepare starts the existing watch reload.
+        let (reloads, continuation) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        let observer = NotificationCenter.default.addObserver(
+            forName: .sharedLiveAgentIndexDidChange, object: nil, queue: nil
+        ) { notification in
+            if notification.object as AnyObject? === sharedIndex { continuation.yield(()) }
+        }
+        defer {
+            NotificationCenter.default.removeObserver(observer)
+            continuation.finish()
+        }
+
         await sharedIndex.refreshForkAvailabilityNow(workspaceId: workspaceId, panelId: panelId)
 
         #expect(sharedIndex.index?.processIDs(workspaceId: workspaceId, panelId: panelId) == Set([agentPID, childPID]))
@@ -117,6 +129,9 @@ struct SharedLiveAgentIndexAgentLivenessTests {
         #expect(
             sharedIndex.snapshotForForkAvailability(workspaceId: workspaceId, panelId: panelId)?.sessionId == sessionId
         )
+
+        // refreshForkAvailabilityNow does not join a watch reload already in flight.
+        try await Self.waitForReload(reloads, timeout: .seconds(1))
 
         processArguments.withLock {
             $0 = BmuxTopProcessArguments(
@@ -134,6 +149,29 @@ struct SharedLiveAgentIndexAgentLivenessTests {
             "An async validation pass should stop an agent PID that moved to another panel from keeping the old panel forkable."
         )
         #expect(sharedIndex.snapshotForForkAvailability(workspaceId: workspaceId, panelId: panelId) == nil)
+
+        // The failed prepare schedules another validation; observe it before removing owned files.
+        try await Self.waitForReload(reloads, timeout: .seconds(1))
+    }
+
+    private static func waitForReload(_ reloads: AsyncStream<Void>, timeout: Duration) async throws {
+        let deadline = ContinuousClock.now.advanced(by: timeout)
+        let completed = try await withThrowingTaskGroup(of: Bool.self) { group in
+            defer { group.cancelAll() }
+            group.addTask {
+                for await _ in reloads { return true }
+                return false
+            }
+            group.addTask {
+                // Failure containment only; the actual notification determines completion.
+                try await Task.sleep(until: deadline, clock: .continuous)
+                return false
+            }
+            let result = try await group.next()
+            try Task.checkCancellation()
+            return result == true
+        }
+        try #require(completed, "The owned agent index reload did not complete")
     }
 
     @Test

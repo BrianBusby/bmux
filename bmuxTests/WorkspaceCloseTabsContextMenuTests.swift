@@ -113,12 +113,24 @@ struct WorkspaceCloseTabsContextMenuTests {
         defer { ClosedItemHistoryStore.shared.removeAll() }
 
         let fixture = try makeWorkspaceWithFourConfirmingTabs()
+        defer {
+            fixture.workspace.teardownAllPanels()
+            fixture.defaults.removePersistentDomain(forName: fixture.defaultsDomainName)
+        }
         let tabId = fixture.tabIds[2]
         let panelId = try #require(fixture.workspace.panelIdFromSurfaceId(tabId))
         let tab = try #require(fixture.workspace.bonsplitController.tab(tabId))
         fixture.workspace.bonsplitController.selectTab(tabId)
         fixture.workspace.focusPanel(panelId)
         fixture.workspace.markCloseHistoryEligible(panelId: panelId)
+        let controller = fixture.workspace.bonsplitController
+        let originalDelegate = try #require(controller.delegate)
+        let observation = ClosedTabHistoryObservation(delegate: originalDelegate, expectedTabID: tabId)
+        controller.delegate = observation
+        defer {
+            controller.delegate = originalDelegate
+            observation.finish()
+        }
 
         var promptCount = 0
         var repeatedCloseAttempted = false
@@ -132,20 +144,20 @@ struct WorkspaceCloseTabsContextMenuTests {
         }
 
         #expect(!fixture.workspace.splitTabBar(fixture.workspace.bonsplitController, shouldCloseTab: tab, inPane: fixture.paneId))
-        await waitForMainActorWork(timeout: 10) {
-            promptCount == 1 && fixture.workspace.panelIdFromSurfaceId(tabId) == nil
-        }
+        let closedHistory = try await observation.waitForClosedHistory()
 
         #expect(promptCount == 1)
         #expect(repeatedCloseAttempted)
         #expect(fixture.workspace.panelIdFromSurfaceId(tabId) == nil)
 
-        let entry = try #require(ClosedItemHistoryStore.shared.menuSnapshot().items.first)
+        let entry = try #require(closedHistory)
         #expect(entry.title == "Tab 3")
         #expect(entry.detail == "Tab")
     }
 
     private struct Fixture {
+        let defaults: UserDefaults
+        let defaultsDomainName: String
         let manager: TabManager
         let workspace: Workspace
         let paneId: PaneID
@@ -182,7 +194,14 @@ struct WorkspaceCloseTabsContextMenuTests {
             terminalPanel.surface.setNeedsConfirmCloseOverrideForTesting(true)
         }
 
-        return Fixture(manager: manager, workspace: workspace, paneId: paneId, tabIds: tabIds)
+        return Fixture(
+            defaults: defaults,
+            defaultsDomainName: suiteName,
+            manager: manager,
+            workspace: workspace,
+            paneId: paneId,
+            tabIds: tabIds
+        )
     }
 
     private func withManager(
@@ -242,18 +261,6 @@ struct WorkspaceCloseTabsContextMenuTests {
             if condition() { return }
             drainMainQueue()
             RunLoop.current.run(mode: .default, before: Date().addingTimeInterval(0.01))
-        } while Date() < deadline
-    }
-
-    private func waitForMainActorWork(
-        timeout: TimeInterval,
-        until condition: () -> Bool
-    ) async {
-        let deadline = Date().addingTimeInterval(timeout)
-        repeat {
-            if condition() { return }
-            await Task.yield()
-            try? await Task.sleep(nanoseconds: 10_000_000)
         } while Date() < deadline
     }
 }
