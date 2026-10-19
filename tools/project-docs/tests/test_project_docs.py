@@ -233,18 +233,29 @@ esac
         node["execution"]["active_agent"] = agent
         return node
 
-    def clear_current_work(self, shared, local, node_id: str = "post_merge_project_truth_reconciliation"):
-        node = self.roadmap_node(shared, node_id)
-        node["status"] = "implemented"
-        node["capability_maturity"] = "validated"
-        node["execution"]["assignment"] = "complete"
-        node["delivery_status"] = "merged"
-        node["acceptance_status"] = "implemented"
-        node["evidence"] = {"commits": [{"repository": "BrianBusby/bmux", "sha": "b" * 40}], "pull_requests": []}
-        for key in ("active_worktree", "active_branch", "active_agent", "active_session"):
-            node["execution"].pop(key, None)
+    def clear_current_work(self, shared, local):
+        # Isolate the scenario from whichever slices the live roadmap currently owns.
+        for node in shared["roadmap"]["nodes"]:
+            if not project_docs.is_active_implementation_slice(node):
+                continue
+            node["status"] = "implemented"
+            node["capability_maturity"] = "validated"
+            node["execution"]["assignment"] = "complete"
+            node["delivery_status"] = "merged"
+            node["acceptance_status"] = "implemented"
+            node["evidence"] = {"commits": [{"repository": "BrianBusby/bmux", "sha": "b" * 40}], "pull_requests": []}
+            for key in ("active_worktree", "active_branch", "active_agent", "active_session"):
+                node["execution"].pop(key, None)
         local["current_work"]["active_slice"] = {"id": None, "title": None, "state": "none_selected"}
         local["current_work"]["state"] = "none_selected"
+
+    def planned_slice(self, shared, node_id: str):
+        node = self.roadmap_node(shared, node_id)
+        node.update(status="planned", capability_maturity="gated", delivery_status="proposed",
+                    acceptance_status="proposed", evidence={"commits": [], "pull_requests": []})
+        node["execution"] = {"assignment": "planned", "assigned_to": node["owner"]}
+        for key in ("completed_at", "accepted_at", "acceptance_reason"):
+            node.pop(key, None)
         return node
 
     def make_runtime_slice_stale(self, shared, local):
@@ -270,8 +281,7 @@ esac
             "active_agent": "codex",
         }
         local["current_work"]["state"] = "active"
-        candidate = self.roadmap_node(shared, "app_runtime_service_lifecycle_migration")
-        candidate["capability_maturity"] = "gated"
+        self.planned_slice(shared, "app_runtime_service_lifecycle_migration")
         return node
 
     def test_valid_shared_manifest(self):
@@ -340,7 +350,7 @@ esac
             "commits": [{"repository": "BrianBusby/bmux", "sha": "a" * 40}],
             "pull_requests": [],
         }
-        candidate = self.roadmap_node(shared, "app_runtime_service_lifecycle_migration")
+        candidate = self.planned_slice(shared, "app_runtime_service_lifecycle_migration")
         candidate["capability_maturity"] = "ready"
         nodes = shared["roadmap"]["nodes"]
         ready_ids = {node["id"] for node in project_docs.dependency_ready_nodes(nodes)}
@@ -435,6 +445,13 @@ esac
 
     def test_generated_next_output_explains_blockers_and_frontier(self):
         context = project_docs.load_inputs(ROOT)
+        shared, local = context["shared"], context["repo_status"]
+        self.clear_current_work(shared, local)
+        self.planned_slice(shared, "post_merge_project_truth_reconciliation")
+        self.activate_slice(shared, "post_merge_project_truth_reconciliation", classification="serial")
+        candidate = self.planned_slice(shared, "app_runtime_service_lifecycle_migration")
+        candidate["title"] = "Background Service Lifecycle Migration"
+        candidate["capability_maturity"] = "ready"
         rendered = project_docs.render_next_work_text(context)
         self.assertIn("Primary frontier:", rendered)
         self.assertIn("Process Integrity (process_integrity)", rendered)
@@ -628,14 +645,10 @@ esac
             self.assertEqual([], project_docs.authored_generated_block_drift_issues(context))
 
             doc = repo / "docs/current-and-target-architecture.md"
-            doc.write_text(
-                doc.read_text(encoding="utf-8").replace(
-                    "Active implementation slice: Post-Merge Project Truth Reconciliation and Capability-Frontier Advancement",
-                    "Active implementation slice: stale",
-                    1,
-                ),
-                encoding="utf-8",
-            )
+            original = doc.read_text(encoding="utf-8")
+            stale = original.replace("- Active implementation slice:", "- Stale implementation slice:", 1)
+            self.assertNotEqual(original, stale)
+            doc.write_text(stale, encoding="utf-8")
             issues = project_docs.authored_generated_block_drift_issues(context)
             self.assertTrue(any(issue.name == "authored_generated_blocks_fresh" for issue in issues))
             with self.assertRaisesRegex(project_docs.ProjectDocsError, "Authored generated blocks are stale"):
@@ -658,6 +671,9 @@ esac
         provider.repositories.update(project_docs.collect_evidence_repositories(shared, [local]))
 
         def pr_evidence_for_delivery(delivery_status: str, owner: dict, pr: dict):
+            # A slice can retain merged PR evidence while a later delivery is open.
+            if pr.get("merged_at") and pr.get("merge_commit_sha"):
+                delivery_status = "merged"
             if delivery_status == "draft":
                 return project_docs.PullRequestEvidence(
                     state="open",
@@ -726,6 +742,8 @@ esac
         tag = local["release"]["latest_tag"]
         if tag:
             provider.tags[(local["repository"], tag)] = project_docs.TagEvidence(target_sha="a" * 40)
+            if local["release"]["release_status"] in ("released", "prerelease"):
+                provider.releases.add((local["repository"], tag))
         return provider
 
     def test_github_evidence_valid_fixture_passes(self):

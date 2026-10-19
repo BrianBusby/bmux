@@ -63,6 +63,22 @@ GitHub state, authentication failures, rate limits, and network failures are
 reported distinctly. `--skip-github` is reserved for offline diagnosis and unit
 tests, not CI.
 
+The shared GitHub GET provider makes at most three attempts for HTTP 500,
+502, 503, and 504, with one- and two-second delays. Each attempt retains the
+20-second request timeout, and failed responses close before a retry. Exhausted
+server failures remain network errors; missing evidence, authentication, rate
+limits, other HTTP errors, and transport failures do not retry. The Project Truth
+workflow runs the full unit suite, including provider regression tests, before
+validation and live evidence verification. Run it locally with:
+
+```bash
+PYTHONPATH=tools/project-docs python3 -m unittest discover -s tools/project-docs/tests
+```
+
+Behavior fixtures explicitly establish planned candidates and active assignments
+so completed roadmap work does not silently change the scenario. Historical
+merged PR evidence remains distinct from a slice’s newer open delivery.
+
 The CI command includes a read-only reconciliation guard for already recorded
 evidence. It fails when a PR would leave a merged delivery recorded as open,
 missing merge metadata that can be filled safely, completed delivery still active,
