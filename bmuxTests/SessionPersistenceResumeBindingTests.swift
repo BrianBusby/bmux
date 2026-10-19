@@ -1,6 +1,7 @@
 import Foundation
 import BmuxCore
 import Testing
+import Darwin
 
 #if canImport(bmux_DEV)
 @testable import bmux_DEV
@@ -519,32 +520,38 @@ import Testing
         process.executableURL = URL(fileURLWithPath: "/bin/zsh")
         process.arguments = [scriptPath]
         process.environment = environment
-        let stderr = Pipe()
+        let stderrURL = outputURL.deletingLastPathComponent().appendingPathComponent("launcher-stderr.txt")
+        FileManager.default.createFile(atPath: stderrURL.path, contents: nil)
+        let stderr = try FileHandle(forWritingTo: stderrURL)
+        defer { try? stderr.close() }
         process.standardOutput = FileHandle.nullDevice
         process.standardError = stderr
+        let exited = DispatchSemaphore(value: 0)
+        process.terminationHandler = { _ in exited.signal() }
 
         try process.run()
+        func stopLauncher() throws {
+            guard process.isRunning else { return }
+            process.terminate()
+            if exited.wait(timeout: .now() + 2) == .timedOut {
+                if process.isRunning { Darwin.kill(process.processIdentifier, SIGKILL) }
+                guard exited.wait(timeout: .now() + 2) == .success else {
+                    throw ResumeShellTimeout(shellDescription: "/bin/zsh \(scriptPath)", timeout: timeout)
+                }
+            }
+        }
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
             if let output = try? String(contentsOf: outputURL, encoding: .utf8),
                !output.isEmpty {
-                if process.isRunning {
-                    process.terminate()
-                    process.waitUntilExit()
-                }
+                try stopLauncher()
                 return
             }
             _ = RunLoop.current.run(mode: .default, before: Date().addingTimeInterval(0.02))
         }
 
-        if process.isRunning {
-            process.terminate()
-            process.waitUntilExit()
-        }
-        let errorText = String(
-            data: stderr.fileHandleForReading.readDataToEndOfFile(),
-            encoding: .utf8
-        ) ?? ""
+        try stopLauncher()
+        let errorText = (try? String(contentsOf: stderrURL, encoding: .utf8)) ?? ""
         Issue.record("Launcher did not produce Codex output within \(Int(timeout))s. stderr: \(errorText)")
         throw ResumeShellTimeout(shellDescription: "/bin/zsh \(scriptPath)", timeout: timeout)
     }
