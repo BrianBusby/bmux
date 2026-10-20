@@ -11,6 +11,44 @@ import Testing
 #endif
 @Suite
 struct WorkProvenanceObserverTests {
+    @MainActor
+    @Test
+    func closedWindowArchivesEveryWorkspaceUnlessHistoryIsSuppressed() async throws {
+        let originalAppDelegate = AppDelegate.shared
+        let appDelegate = AppDelegate()
+        AppDelegate.shared = appDelegate
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-closed-window-archive-\(UUID().uuidString)", isDirectory: true)
+        defer {
+            try? FileManager.default.removeItem(at: directory)
+            AppDelegate.shared = originalAppDelegate
+        }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(
+            databaseURL: directory.appendingPathComponent("provenance.sqlite")
+        )
+        let runtime = WorkProvenanceRuntime(
+            observationService: nil,
+            workspaceArchiveService: WorkProvenanceWorkspaceArchiveService(client: client),
+            initialLifecycleState: .ready
+        )
+        let manager = TabManager()
+        let first = try #require(manager.selectedWorkspace)
+        let second = manager.addWorkspace()
+        manager.workProvenanceRuntime = runtime
+        let windowID = appDelegate.registerMainWindowContextForTesting(tabManager: manager)
+        defer { appDelegate.unregisterMainWindowContextForTesting(windowId: windowID) }
+
+        appDelegate.suppressClosedWindowHistoryForTesting(windowId: windowID)
+        appDelegate.recordClosedWindowHistoryForTesting(windowId: windowID)
+        await runtime.waitForBackgroundTasks()
+        #expect(try await client.archivedWorkspaces(.init()).records.isEmpty)
+
+        appDelegate.recordClosedWindowHistoryForTesting(windowId: windowID)
+        await runtime.waitForBackgroundTasks()
+        let ids = Set(try await client.archivedWorkspaces(.init()).records.map(\.id))
+        #expect(ids == [first.stableId.uuidString, second.stableId.uuidString])
+    }
+
     @Test
     func workspaceArchiveServiceRecordsStableIdentityWhenDisplayIsMissing() async throws {
         let directory = FileManager.default.temporaryDirectory
