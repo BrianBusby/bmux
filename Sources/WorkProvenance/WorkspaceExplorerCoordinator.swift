@@ -21,6 +21,7 @@ final class WorkspaceExplorerCoordinator {
     private(set) var collectionTarget: WorkspaceExplorerCollectionTarget?
     private(set) var historyID: String?
     private(set) var catalog: WorkspaceExplorerCatalog?
+    private(set) var activeWorkspaceID: String?
     private var lastLoadResult: WorkspaceExplorerHistoryLoadResult?
     private var statusArrangement = WorkspaceExplorerStatusArrangement()
     private var liveStatusOverrides: [String: WorkspaceExplorerStatus] = [:]
@@ -31,10 +32,12 @@ final class WorkspaceExplorerCoordinator {
     private(set) var sessionsByWorkspaceID: [String: ProvenanceWorkspaceSessionPageResponse] = [:]
     private(set) var sessionLoadFailed = false
     private(set) var evidenceBySessionID: [String: SessionEvidence] = [:]
+    private var evidenceOrder: [String] = []
     private(set) var evidenceLoadingIDs: Set<String> = []
     private(set) var evidenceFailedIDs: Set<String> = []
     private(set) var clearFailed = false
     private(set) var reopenedTitle: String?
+    private(set) var reopenedWorkspaceID: String?
     private(set) var reopenFailed = false
     private var feedbackTask: Task<Void, Never>?
     private var focusTask: Task<Void, Never>?
@@ -92,6 +95,7 @@ final class WorkspaceExplorerCoordinator {
         do {
             let result = try await loadHistory()
             lastLoadResult = result
+            activeWorkspaceID = result.activeWorkspaceID
             liveStatusOverrides = Dictionary(uniqueKeysWithValues: result.items.filter(\.isOpen)
                 .map { ($0.id, $0.liveStatus) })
             let arrangement = activeArrangement
@@ -193,6 +197,10 @@ final class WorkspaceExplorerCoordinator {
         do {
             let (projection, outcome) = try await loadEvidence(id)
             evidenceBySessionID[id] = SessionEvidence(projection: projection, outcome: outcome)
+            evidenceOrder.append(id)
+            if evidenceOrder.count > 10 {
+                evidenceBySessionID.removeValue(forKey: evidenceOrder.removeFirst())
+            }
             evidenceFailedIDs.remove(id)
         } catch is CancellationError {
             return
@@ -235,6 +243,7 @@ final class WorkspaceExplorerCoordinator {
     func open(_ item: WorkspaceExplorerHistoryItem) {
         if let liveID = item.liveWorkspaceID {
             activateWorkspace(liveID)
+            activeWorkspaceID = item.id
         } else {
             showHistory(item.id)
         }
@@ -249,13 +258,17 @@ final class WorkspaceExplorerCoordinator {
         }
         reopenFailed = false
         reopenedTitle = item.title
-        await load()
+        reopenedWorkspaceID = item.id
+        let holdsClosedCard = scope.state == .closed
+        if !holdsClosedCard { await load() }
         feedbackTask?.cancel()
-        // Bounded, cancellable UI confirmation; the injected delay keeps tests deterministic.
+        // Bounded, cancellable confirmation lets a reopened card exit the Closed scope visibly.
         feedbackTask = Task { [feedbackDelay] in
             do { try await feedbackDelay(.seconds(1.1)) } catch { return }
             guard !Task.isCancelled else { return }
+            if holdsClosedCard { await load() }
             reopenedTitle = nil
+            reopenedWorkspaceID = nil
         }
         return true
     }
@@ -266,6 +279,8 @@ final class WorkspaceExplorerCoordinator {
             clearFailed = false
             sessionsByWorkspaceID.removeAll()
             evidenceBySessionID.removeAll()
+            evidenceOrder.removeAll()
+            historyID = nil
             await load()
         } catch {
             clearFailed = true

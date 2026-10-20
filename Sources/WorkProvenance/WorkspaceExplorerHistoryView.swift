@@ -54,9 +54,22 @@ struct WorkspaceExplorerHistoryView: View {
                     closed.formatted(date: .abbreviated, time: .shortened))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
-            Text(String(localized: "explorer.lastKnownMetadata", defaultValue:
-                "Last-known values recorded at close, not re-fetched."))
-                .font(.system(size: 11)).italic().foregroundStyle(.secondary)
+            if let display = item.archive?.displayAtClose ?? item.display {
+                HStack(spacing: 8) {
+                    Text(display.repositoryID ?? String(localized: "explorer.unknownRepository", defaultValue:
+                        "Unknown repository"))
+                    if let branch = display.branch { Text(branch).help(branch) }
+                    if let ticket = display.ticketIDs.first { Text(ticket) }
+                    if let number = display.pullRequestNumber { Text("#\(number)") }
+                }
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundStyle(.secondary).lineLimit(1)
+            }
+            if item.archive != nil {
+                Text(String(localized: "explorer.lastKnownMetadata", defaultValue:
+                    "Last-known values recorded at close, not re-fetched."))
+                    .font(.system(size: 11)).italic().foregroundStyle(.secondary)
+            }
             Text(page == nil ? String(localized: "explorer.readOnlyNotice", defaultValue:
                 "Read-only. No terminal connection, approvals, or prompts. Session count is separate from the workspace count.") :
                 String(format: String(localized: "explorer.readOnlySessionNotice", defaultValue:
@@ -156,8 +169,9 @@ struct WorkspaceExplorerHistoryView: View {
                 if let start = summary.session.startedAt {
                     Text(start, format: .dateTime.month().day().hour().minute())
                 }
-                Text("→")
                 if let activity = summary.lastActivityAt {
+                    Text("→")
+                    Text(String(localized: "explorer.lastActivity", defaultValue: "Last activity"))
                     Text(activity, format: .dateTime.month().day().hour().minute())
                 }
             }.font(.system(size: 11)).foregroundStyle(.secondary)
@@ -186,6 +200,8 @@ struct WorkspaceExplorerHistoryView: View {
                             }
                             ForEach(turn.assistantMessages.prefix(2), id: \.id) { message in
                                 Text(message.text).font(.system(size: 12)).lineLimit(4)
+                                Text(message.completedAt, format: .dateTime.month().day().hour().minute())
+                                    .font(.system(size: 10)).foregroundStyle(.secondary)
                             }
                         }
                         .padding(.leading, 8)

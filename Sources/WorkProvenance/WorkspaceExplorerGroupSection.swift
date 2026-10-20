@@ -6,16 +6,20 @@ struct WorkspaceExplorerGroupSection: View {
     let group: WorkspaceExplorerGroup
     let depth: Int
     let path: String
+    let cardGeometry: Namespace.ID
     let overview: Bool
     let collapsedPaths: Set<String>
     let activeFilters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey]
     let projectsByID: [String: WorkspaceExplorerProject]
     let itemsByID: [String: WorkspaceExplorerHistoryItem]
+    let workspacesByID: [String: WorkspaceExplorerWorkspace]
     let projectCounts: [String: WorkspaceExplorerCounts]
     let projectOpenTotals: [String: Int]
     let scope: WorkspaceExplorerScope
     let matchingCounts: [String: Int]
     let focusedProjectID: String?
+    let activeWorkspaceID: String?
+    let reopenedWorkspaceID: String?
     let onOpenProject: (String) -> Void
     let onOpenWorkspace: (WorkspaceExplorerHistoryItem) -> Void
     let onHistory: (WorkspaceExplorerHistoryItem) -> Void
@@ -34,11 +38,15 @@ struct WorkspaceExplorerGroupSection: View {
                         HStack(spacing: 6) {
                             Image(systemName: collapsedPaths.contains(path) ? "chevron.right" : "chevron.down")
                             Text(label)
+                                .textCase(depth >= 2 ? .uppercase : nil)
                             Text(groupCount).foregroundStyle(.secondary)
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .background(Color(nsColor: .controlColor), in: Capsule())
                         }
                     }
                     .buttonStyle(.plain)
-                    .font(.system(size: depth == 0 ? 15 : 13, weight: .semibold))
+                    .font(.system(size: depth == 0 ? 15 : depth == 1 ? 13 : 11,
+                        weight: depth == 0 ? .bold : .semibold))
                     if let key = group.filterValue, activeFilters[dimension] != key {
                         Button(String(localized: "explorer.focus", defaultValue: "Focus")) {
                             onFocus(dimension, key)
@@ -48,6 +56,7 @@ struct WorkspaceExplorerGroupSection: View {
                     }
                     Spacer()
                 }
+                if depth >= 2 { Divider() }
             }
             if !collapsedPaths.contains(path) {
                 if group.children.isEmpty {
@@ -56,11 +65,15 @@ struct WorkspaceExplorerGroupSection: View {
                     ForEach(Array(group.children.enumerated()), id: \.offset) { _, child in
                         WorkspaceExplorerGroupSection(group: child, depth: depth + 1,
                             path: path + "/" + String(reflecting: child.key),
+                            cardGeometry: cardGeometry,
                             overview: overview, collapsedPaths: collapsedPaths,
                             activeFilters: activeFilters, projectsByID: projectsByID,
-                            itemsByID: itemsByID, projectCounts: projectCounts,
+                            itemsByID: itemsByID, workspacesByID: workspacesByID,
+                            projectCounts: projectCounts,
                             projectOpenTotals: projectOpenTotals, scope: scope,
                             matchingCounts: matchingCounts, focusedProjectID: focusedProjectID,
+                            activeWorkspaceID: activeWorkspaceID,
+                            reopenedWorkspaceID: reopenedWorkspaceID,
                             onOpenProject: onOpenProject, onOpenWorkspace: onOpenWorkspace,
                             onHistory: onHistory, onReopen: onReopen,
                             onCardFilter: onCardFilter, onToggle: onToggle, onFocus: onFocus)
@@ -70,8 +83,20 @@ struct WorkspaceExplorerGroupSection: View {
         }
         .id(path)
         .padding(depth == 0 && group.dimension != nil ? 12 : 0)
+        .padding(.leading, depth == 1 && group.dimension != nil ? 12 : 0)
         .background(depth == 0 && group.dimension != nil ? Color(nsColor: .controlBackgroundColor).opacity(0.45) : .clear,
             in: RoundedRectangle(cornerRadius: 12))
+        .overlay {
+            if depth == 0 && group.dimension != nil {
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(Color(nsColor: .separatorColor), lineWidth: 1)
+            }
+        }
+        .overlay(alignment: .leading) {
+            if depth == 1 && group.dimension != nil {
+                Rectangle().fill(Color(nsColor: .separatorColor)).frame(width: 2)
+            }
+        }
     }
 
     private var cardGrid: some View {
@@ -82,23 +107,30 @@ struct WorkspaceExplorerGroupSection: View {
                     if let project = projectsByID[id] {
                         WorkspaceExplorerProjectCard(project: project,
                             counts: projectCounts[id] ?? WorkspaceExplorerCounts([], closedKnown: false),
+                            workspaces: workspacesByID.values.filter { workspace in
+                                workspace.projectIDs.contains(id) && scope.includes(workspace,
+                                    now: .now, calendar: .current)
+                            },
                             scope: scope, openTotal: projectOpenTotals[id] ?? 0,
                             matchingCount: matchingCounts[id],
-                            isFocused: focusedProjectID == id,
+                            isFocused: focusedProjectID == id, titleGeometry: cardGeometry,
                             onOpen: { onOpenProject(id) })
                             .id("project:\(id)")
+                            .matchedGeometryEffect(id: "project:\(id)", in: cardGeometry)
                             .transition(.opacity.combined(with: .scale(scale: 0.98)))
                     }
                 }
             } else {
                 ForEach(group.workspaceIDs, id: \.self) { id in
                     if let item = itemsByID[id] {
-                        WorkspaceExplorerWorkspaceCard(item: item,
+                        WorkspaceExplorerWorkspaceCard(item: item, isActive: activeWorkspaceID == id,
+                            isReopened: reopenedWorkspaceID == id,
                             onOpen: { onOpenWorkspace(item) },
                             onHistory: { onHistory(item) },
                             onReopen: { onReopen(item) },
                             onFilter: onCardFilter)
                             .id("workspace:\(id)")
+                            .matchedGeometryEffect(id: "workspace:\(id)", in: cardGeometry)
                             .transition(.opacity.combined(with: .scale(scale: 0.98)))
                     }
                 }
@@ -109,6 +141,11 @@ struct WorkspaceExplorerGroupSection: View {
 
     private var groupCount: String {
         if overview {
+            if scope.state == .all && group.counts.closedKnown {
+                return String(format: String(localized: "explorer.overviewGroupBreakdown", defaultValue:
+                    "%d projects · %d in scope (%d open · %d closed)"), group.projectIDs.count,
+                    group.counts.workspaces, group.counts.open, group.counts.closed)
+            }
             return String(format: String(localized: "explorer.overviewGroupCount", defaultValue:
                 "%d projects · %d in scope"), group.projectIDs.count, group.counts.workspaces)
         }

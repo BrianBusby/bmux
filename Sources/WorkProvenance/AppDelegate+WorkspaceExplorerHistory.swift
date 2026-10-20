@@ -79,7 +79,8 @@ extension AppDelegate {
                 eligibilityByID: eligibilityByID
             ),
             archiveAvailability: availability,
-            partialLiveActivity: partialLiveActivity
+            partialLiveActivity: partialLiveActivity,
+            activeWorkspaceID: tabManager?.selectedWorkspace?.stableId.uuidString
         )
     }
 

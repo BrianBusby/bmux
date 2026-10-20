@@ -106434,6 +106434,246 @@
         }
       }
     },
+    "explorer.activeTag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ACTIVE"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アクティブ"
+          }
+        }
+      }
+    },
+    "explorer.closedTag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CLOSED"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "終了済み"
+          }
+        }
+      }
+    },
+    "explorer.activeOutsideView": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active workspace “%@” is outside the current scope or filters. It stays active."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アクティブなワークスペース「%@」は現在の範囲またはフィルターの対象外です。アクティブなままです。"
+          }
+        }
+      }
+    },
+    "explorer.created": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "created"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作成"
+          }
+        }
+      }
+    },
+    "explorer.projectErrors": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d error"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エラー%d件"
+          }
+        }
+      }
+    },
+    "explorer.projectNeedsInput": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d needs input"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入力待ち%d件"
+          }
+        }
+      }
+    },
+    "explorer.projectRunning": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d running"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "実行中%d件"
+          }
+        }
+      }
+    },
+    "explorer.projectDisconnected": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d disconnected"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未接続%d件"
+          }
+        }
+      }
+    },
+    "explorer.projectClosed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d closed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "終了済み%d件"
+          }
+        }
+      }
+    },
+    "explorer.projectAllIdle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "all idle"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべて待機中"
+          }
+        }
+      }
+    },
+    "explorer.lastActivity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last activity"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最終アクティビティ"
+          }
+        }
+      }
+    },
+    "explorer.reopenedTag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REOPENED ✓"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再び開きました ✓"
+          }
+        }
+      }
+    },
+    "explorer.dogfoodWindow": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explorer History Fixture"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explorer 履歴のサンプル"
+          }
+        }
+      }
+    },
+    "explorer.overviewGroupBreakdown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d projects · %d in scope (%d open · %d closed)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d件のプロジェクト · 対象内%d件（開いている%d件 · 終了済み%d件）"
+          }
+        }
+      }
+    },
+    "explorer.matchOfScope": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d match filters / %d in scope"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d件がフィルターに一致 / 対象内%d件"
+          }
+        }
+      }
+    },
     "explorer.title": {
       "extractionState": "manual",
       "localizations": {

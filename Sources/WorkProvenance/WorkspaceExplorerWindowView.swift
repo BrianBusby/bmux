@@ -7,6 +7,7 @@ struct WorkspaceExplorerWindowView: View {
     @State private var model: WorkspaceExplorerCoordinator
     @State private var confirmsClearHistory = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Namespace private var cardGeometry
 
     init(loadHistory: @escaping WorkspaceExplorerCoordinator.Loader,
          reopenHistory: @escaping WorkspaceExplorerCoordinator.Reopener,
@@ -43,6 +44,11 @@ struct WorkspaceExplorerWindowView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
+                        if let title = outsideActiveWorkspaceTitle {
+                            notice(String(format: String(localized: "explorer.activeOutsideView", defaultValue:
+                                "Active workspace “%@” is outside the current scope or filters. It stays active."),
+                                title))
+                        }
                         if model.pendingStatusChangeCount > 0 {
                             HStack {
                                 Text(String(format: String(localized: "explorer.statusChanged", defaultValue:
@@ -94,6 +100,8 @@ struct WorkspaceExplorerWindowView: View {
                     value: model.activeArrangement.filters)
                 .animation(reduceMotion ? nil : .timingCurve(0.2, 0.7, 0.2, 1, duration: 0.2),
                     value: model.activeArrangement.collapsedPaths)
+                .animation(reduceMotion ? nil : .timingCurve(0.2, 0.7, 0.2, 1, duration: 0.28),
+                    value: model.collectionTarget)
             }
         }
         .frame(minWidth: 640, minHeight: 440)
@@ -113,6 +121,25 @@ struct WorkspaceExplorerWindowView: View {
         }
     }
 
+    private var outsideActiveWorkspaceTitle: String? {
+        guard let catalog = model.catalog, let activeID = model.activeWorkspaceID,
+              let item = catalog.items.first(where: { $0.id == activeID }),
+              let result = model.result() else { return nil }
+        if model.collectionTarget != nil {
+            return result.visibleWorkspaceIDs.contains(activeID) ? nil : item.title
+        }
+        guard let workspace = catalog.workspaces.first(where: { $0.id == activeID }) else { return nil }
+        let filters = model.overviewArrangement.filters
+        let projectFiltersPresent = filters[.projectOwner] != nil || filters[.projectStatus] != nil
+        let projectVisible = workspace.projectIDs.isEmpty ? !projectFiltersPresent :
+            workspace.projectIDs.contains { result.visibleProjectIDs.contains($0) }
+        let workspaceFilters = filters.filter { $0.key == .repository || $0.key == .bmuxStatus }
+        let workspaceVisible = model.projection?.collection(target: .all, scope: model.scope,
+            groupBy: [], filters: workspaceFilters, now: .now, calendar: .current)
+            .visibleWorkspaceIDs.contains(activeID) == true
+        return projectVisible && workspaceVisible ? nil : item.title
+    }
+
     private var header: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
@@ -128,6 +155,7 @@ struct WorkspaceExplorerWindowView: View {
                         Text("›").foregroundStyle(.secondary)
                     } else {
                         Text(collectionTitle(target))
+                            .matchedGeometryEffect(id: "title:\(titleIdentity(target))", in: cardGeometry)
                     }
                 } else {
                     Text(String(localized: "explorer.title", defaultValue: "Explorer"))
@@ -138,6 +166,8 @@ struct WorkspaceExplorerWindowView: View {
                     Text(String(localized: "explorer.readOnlyTag", defaultValue: "READ-ONLY HISTORY"))
                         .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(.secondary)
+                    Text(model.scope.summary)
+                        .font(.system(size: 11)).foregroundStyle(.secondary)
                 }
                 Spacer()
                 Button {
@@ -242,13 +272,18 @@ struct WorkspaceExplorerWindowView: View {
                         scope: WorkspaceExplorerScope(), groupBy: [], filters: [:],
                         now: .now, calendar: .current).counts.open ?? 0
                     WorkspaceExplorerProjectCard(project: nil, counts: unassigned.counts,
+                        workspaces: (model.catalog?.workspaces ?? []).filter { workspace in
+                            workspace.projectIDs.isEmpty && model.scope.includes(workspace,
+                                now: .now, calendar: .current)
+                        },
                         scope: model.scope, openTotal: openTotal,
                         matchingCount: overviewFilters.isEmpty ? nil : unassigned.visibleCounts.workspaces,
-                        isFocused: false,
+                        isFocused: false, titleGeometry: cardGeometry,
                         onOpen: { model.showCollection(.unassigned) })
                         .frame(maxWidth: 300)
                 }
-                if result.visibleProjectIDs.isEmpty && result.counts.workspaces == 0 {
+                if result.visibleProjectIDs.isEmpty &&
+                    (hasProjectFilter || (unassigned?.visibleCounts.workspaces ?? 0) == 0) {
                     emptyCollection
                 }
             }
@@ -258,7 +293,6 @@ struct WorkspaceExplorerWindowView: View {
 
     private func collection(target: WorkspaceExplorerCollectionTarget) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(collectionTitle(target)).font(.system(size: 18, weight: .bold))
             if let result = model.result() {
                 Text(collectionCount(result))
                     .font(.system(size: 13)).foregroundStyle(.secondary)
@@ -281,7 +315,14 @@ struct WorkspaceExplorerWindowView: View {
         case .all: label = String(localized: "explorer.count.all", defaultValue: "workspaces")
         case .closed: label = String(localized: "explorer.count.closed", defaultValue: "closed workspaces")
         }
-        let total = "\(count) \(label) · \(model.scope.summary)"
+        var total = "\(count) \(label)"
+        if model.scope.state == .all {
+            total += result.counts.closedKnown ?
+                " · " + String(format: String(localized: "explorer.count.breakdown", defaultValue:
+                    "%d open · %d closed"), result.counts.open, result.counts.closed) :
+                " · " + String(localized: "explorer.count.closedUnknown", defaultValue: "closed unknown")
+        }
+        total += " · \(model.scope.summary)"
         guard !model.activeArrangement.filters.isEmpty else { return total }
         return String(format: String(localized: "explorer.visibleOfTotal", defaultValue: "%d of %@"),
             result.visibleCounts.workspaces, total)
@@ -389,13 +430,18 @@ struct WorkspaceExplorerWindowView: View {
             return (project.id, total)
         }, uniquingKeysWith: { first, _ in first })
         return WorkspaceExplorerGroupSection(group: group, depth: 0, path: path,
+            cardGeometry: cardGeometry,
             overview: overview, collapsedPaths: arrangement.collapsedPaths,
             activeFilters: arrangement.filters,
             projectsByID: Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }),
             itemsByID: Dictionary(items.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }),
+            workspacesByID: Dictionary((model.catalog?.workspaces ?? []).map { ($0.id, $0) },
+                uniquingKeysWith: { first, _ in first }),
             projectCounts: counts, projectOpenTotals: openTotals, scope: model.scope,
             matchingCounts: matchingCounts,
             focusedProjectID: model.overviewArrangement.focusedProjectID,
+            activeWorkspaceID: model.activeWorkspaceID,
+            reopenedWorkspaceID: model.reopenedWorkspaceID,
             onOpenProject: { model.showCollection(.project($0)) },
             onOpenWorkspace: { model.open($0) },
             onHistory: { model.showHistory($0.id) },
@@ -403,6 +449,14 @@ struct WorkspaceExplorerWindowView: View {
             onCardFilter: { model.setFilter($0, value: $1) },
             onToggle: { model.toggleCollapsed($0) },
             onFocus: { model.setFilter($0, value: $1) })
+    }
+
+    private func titleIdentity(_ target: WorkspaceExplorerCollectionTarget) -> String {
+        switch target {
+        case .all: "all"
+        case .unassigned: "unassigned"
+        case .project(let id): id
+        }
     }
 
     private func collectionTitle(_ target: WorkspaceExplorerCollectionTarget) -> String {

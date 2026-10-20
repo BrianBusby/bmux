@@ -2062,12 +2062,15 @@
 		E71A17900000000000000030 /* WorkspaceExplorerArrangementBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000031 /* WorkspaceExplorerArrangementBar.swift */; };
 				E71A17900000000000000010 /* WorkspaceExplorerCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000011 /* WorkspaceExplorerCatalog.swift */; };
 		852988320891EF575F713B6E /* WorkspaceExplorerCollectionTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91677B4922B4D293ACAB5E79 /* WorkspaceExplorerCollectionTarget.swift */; };
+		E7A9EAA73EE74959BA212510 /* WorkspaceExplorerCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21250F /* WorkspaceExplorerCommands.swift */; };
 				E71A17900000000000000012 /* WorkspaceExplorerCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000013 /* WorkspaceExplorerCoordinator.swift */; };
 				E71A17900000000000000041 /* WorkspaceExplorerCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCoordinatorTests.swift; sourceTree = "<group>"; };
 				E71A17900000000000000040 /* WorkspaceExplorerCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000041 /* WorkspaceExplorerCoordinatorTests.swift */; };
 		D7B4C9C21F959AEA6EE692D1 /* WorkspaceExplorerCounts.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC4BD867012C047DEAFDDA87 /* WorkspaceExplorerCounts.swift */; };
 		E71A17900000000000000032 /* WorkspaceExplorerDimension+Display.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000033 /* WorkspaceExplorerDimension+Display.swift */; };
 		B56D4D47E1324E58DEEEB00E /* WorkspaceExplorerDimension.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76ECA4E9A1DC1B02E27DFF7 /* WorkspaceExplorerDimension.swift */; };
+		E7A9EAA73EE74959BA212210 /* WorkspaceExplorerDogfoodFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21220F /* WorkspaceExplorerDogfoodFixture.swift */; };
+		E7A9EAA73EE74959BA212310 /* WorkspaceExplorerDogfoodWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21230F /* WorkspaceExplorerDogfoodWindow.swift */; };
 		F154B954ACD7F29D752F9679 /* WorkspaceExplorerGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B19842F052C74A908E3ED2B /* WorkspaceExplorerGroup.swift */; };
 		E71A17900000000000000034 /* WorkspaceExplorerGroupKey+Display.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000035 /* WorkspaceExplorerGroupKey+Display.swift */; };
 		E71A17900000000000000001 /* WorkspaceExplorerGroupKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000002 /* WorkspaceExplorerGroupKey.swift */; };
@@ -2088,6 +2091,7 @@
 		8069B759A1281E3496FB25EE /* WorkspaceExplorerProjectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE1124DEA99B38BEE81A68A /* WorkspaceExplorerProjectionTests.swift */; };
 		E7A9EAA73EE74959BA21200E /* WorkspaceExplorerReopenEligibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21200D /* WorkspaceExplorerReopenEligibility.swift */; };
 		E7A9EAA73EE74959BA21200C /* WorkspaceExplorerReopenReason.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21200B /* WorkspaceExplorerReopenReason.swift */; };
+		E7A9EAA73EE74959BA212410 /* WorkspaceExplorerScenes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21240F /* WorkspaceExplorerScenes.swift */; };
 		1F830D96A89EEA457CA79352 /* WorkspaceExplorerScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C13DB01A1A56779EB92DA1 /* WorkspaceExplorerScope.swift */; };
 		8234457C7D9D6A45E2C2F57B /* WorkspaceExplorerStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A75009717859B41DB480B6F /* WorkspaceExplorerStatus.swift */; };
 		A74AD940B86D751B2A851105 /* WorkspaceExplorerStatusArrangement.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9D44D1B62895B2EF9CA80AF /* WorkspaceExplorerStatusArrangement.swift */; };
@@ -4189,10 +4193,13 @@
 		E71A17900000000000000031 /* WorkspaceExplorerArrangementBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceExplorerArrangementBar.swift"; sourceTree = "<group>"; };
 				E71A17900000000000000011 /* WorkspaceExplorerCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCatalog.swift; sourceTree = "<group>"; };
 		91677B4922B4D293ACAB5E79 /* WorkspaceExplorerCollectionTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCollectionTarget.swift; sourceTree = "<group>"; };
+		E7A9EAA73EE74959BA21250F /* WorkspaceExplorerCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCommands.swift; sourceTree = "<group>"; };
 				E71A17900000000000000013 /* WorkspaceExplorerCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCoordinator.swift; sourceTree = "<group>"; };
 		EC4BD867012C047DEAFDDA87 /* WorkspaceExplorerCounts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCounts.swift; sourceTree = "<group>"; };
 		E71A17900000000000000033 /* WorkspaceExplorerDimension+Display.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceExplorerDimension+Display.swift"; sourceTree = "<group>"; };
 		E76ECA4E9A1DC1B02E27DFF7 /* WorkspaceExplorerDimension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerDimension.swift; sourceTree = "<group>"; };
+		E7A9EAA73EE74959BA21220F /* WorkspaceExplorerDogfoodFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerDogfoodFixture.swift; sourceTree = "<group>"; };
+		E7A9EAA73EE74959BA21230F /* WorkspaceExplorerDogfoodWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerDogfoodWindow.swift; sourceTree = "<group>"; };
 		7B19842F052C74A908E3ED2B /* WorkspaceExplorerGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerGroup.swift; sourceTree = "<group>"; };
 		E71A17900000000000000035 /* WorkspaceExplorerGroupKey+Display.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceExplorerGroupKey+Display.swift"; sourceTree = "<group>"; };
 		E71A17900000000000000002 /* WorkspaceExplorerGroupKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerGroupKey.swift; sourceTree = "<group>"; };
@@ -4209,6 +4216,7 @@
 		38B2E1DC3876AD45216CB5D9 /* WorkspaceExplorerProjectionResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerProjectionResult.swift; sourceTree = "<group>"; };
 		E7A9EAA73EE74959BA21200D /* WorkspaceExplorerReopenEligibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerReopenEligibility.swift; sourceTree = "<group>"; };
 		E7A9EAA73EE74959BA21200B /* WorkspaceExplorerReopenReason.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerReopenReason.swift; sourceTree = "<group>"; };
+		E7A9EAA73EE74959BA21240F /* WorkspaceExplorerScenes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerScenes.swift; sourceTree = "<group>"; };
 		A9C13DB01A1A56779EB92DA1 /* WorkspaceExplorerScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerScope.swift; sourceTree = "<group>"; };
 		7A75009717859B41DB480B6F /* WorkspaceExplorerStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerStatus.swift; sourceTree = "<group>"; };
 		F9D44D1B62895B2EF9CA80AF /* WorkspaceExplorerStatusArrangement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerStatusArrangement.swift; sourceTree = "<group>"; };
@@ -6528,6 +6536,10 @@
 				E7A9EAA73EE74959BA21200B /* WorkspaceExplorerReopenReason.swift */,
 				E7A9EAA73EE74959BA21200D /* WorkspaceExplorerReopenEligibility.swift */,
 				E7A9EAA73EE74959BA21200F /* WorkspaceExplorerLiveWorkspace.swift */,
+				E7A9EAA73EE74959BA21250F /* WorkspaceExplorerCommands.swift */,
+				E7A9EAA73EE74959BA21240F /* WorkspaceExplorerScenes.swift */,
+				E7A9EAA73EE74959BA21230F /* WorkspaceExplorerDogfoodWindow.swift */,
+				E7A9EAA73EE74959BA21220F /* WorkspaceExplorerDogfoodFixture.swift */,
 				E7A9EAA73EE74959BA21210F /* WorkspaceExplorerLiveStatusMonitor.swift */,
 				E7A9EAA73EE74959BA212011 /* WorkspaceExplorerHistoryItem.swift */,
 				E7A9EAA73EE74959BA212013 /* WorkspaceExplorerArchiveAvailability.swift */,
@@ -8169,10 +8181,13 @@
 				E71A17900000000000000030 /* WorkspaceExplorerArrangementBar.swift in Sources */,
 				E71A17900000000000000010 /* WorkspaceExplorerCatalog.swift in Sources */,
 				852988320891EF575F713B6E /* WorkspaceExplorerCollectionTarget.swift in Sources */,
+				E7A9EAA73EE74959BA212510 /* WorkspaceExplorerCommands.swift in Sources */,
 				E71A17900000000000000012 /* WorkspaceExplorerCoordinator.swift in Sources */,
 				D7B4C9C21F959AEA6EE692D1 /* WorkspaceExplorerCounts.swift in Sources */,
 				E71A17900000000000000032 /* WorkspaceExplorerDimension+Display.swift in Sources */,
 				B56D4D47E1324E58DEEEB00E /* WorkspaceExplorerDimension.swift in Sources */,
+				E7A9EAA73EE74959BA212210 /* WorkspaceExplorerDogfoodFixture.swift in Sources */,
+				E7A9EAA73EE74959BA212310 /* WorkspaceExplorerDogfoodWindow.swift in Sources */,
 				F154B954ACD7F29D752F9679 /* WorkspaceExplorerGroup.swift in Sources */,
 				E71A17900000000000000034 /* WorkspaceExplorerGroupKey+Display.swift in Sources */,
 				E71A17900000000000000001 /* WorkspaceExplorerGroupKey.swift in Sources */,
@@ -8189,6 +8204,7 @@
 				103B23B35D0216BE90FD76F3 /* WorkspaceExplorerProjectionResult.swift in Sources */,
 				E7A9EAA73EE74959BA21200E /* WorkspaceExplorerReopenEligibility.swift in Sources */,
 				E7A9EAA73EE74959BA21200C /* WorkspaceExplorerReopenReason.swift in Sources */,
+				E7A9EAA73EE74959BA212410 /* WorkspaceExplorerScenes.swift in Sources */,
 				1F830D96A89EEA457CA79352 /* WorkspaceExplorerScope.swift in Sources */,
 				8234457C7D9D6A45E2C2F57B /* WorkspaceExplorerStatus.swift in Sources */,
 				A74AD940B86D751B2A851105 /* WorkspaceExplorerStatusArrangement.swift in Sources */,

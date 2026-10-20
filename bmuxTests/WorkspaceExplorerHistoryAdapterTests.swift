@@ -91,6 +91,29 @@ struct WorkspaceExplorerHistoryAdapterTests {
         #expect(received.last == .running)
     }
 
+#if DEBUG
+    @MainActor
+    @Test
+    func dogfoodFixtureKeepsHistoryWhenReopenedAndClearsOnlyArchiveCards() throws {
+        let fixture = WorkspaceExplorerDogfoodFixture()
+        let initial = fixture.load()
+        #expect(initial.items.filter(\.isOpen).count == 1)
+        #expect(initial.items.filter { !$0.isOpen }.count == 42)
+        let closed = try #require(initial.items.first { $0.title == "Inspect flashing details" })
+        let stableID = try #require(UUID(uuidString: closed.id))
+        #expect(fixture.sessions(stableID).sessions.count == 1)
+        #expect(fixture.reopen(stableID))
+        let reopened = fixture.load().items.filter { $0.id == closed.id }
+        #expect(reopened.count == 1)
+        #expect(reopened[0].isOpen)
+        #expect(reopened[0].archive != nil)
+        fixture.clear()
+        let cleared = fixture.load()
+        #expect(cleared.items.filter { !$0.isOpen }.isEmpty)
+        #expect(cleared.items.contains { $0.id == closed.id && $0.isOpen })
+    }
+#endif
+
     @Test
     func reopenedWorkspaceAppearsOnceAndKeepsItsArchive() {
         let stableID = UUID()

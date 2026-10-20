@@ -908,36 +908,18 @@ struct bmuxApp: App {
         .commands {
             SidebarCommands()
         }
-
         Window(String(localized: "settings.config.windowTitle", defaultValue: "Config"), id: ConfigSettingsView.windowID) {
             ConfigSettingsView()
                 .settingsRuntime(settingsRuntime)
                 .bmuxFontMagnificationEnvironment()
                 .bmuxAppearanceColorScheme(appearanceMode)
         }
-
-        Window(String(localized: "explorer.title", defaultValue: "Explorer"), id: "workspace-explorer") {
-            WorkspaceExplorerWindowView(
-                loadHistory: { try await appDelegate.loadWorkspaceExplorerHistory() },
-                reopenHistory: { appDelegate.reopenWorkspaceExplorerHistory(stableID: $0) },
-                activateWorkspace: { appDelegate.activateWorkspaceExplorerWorkspace(runtimeID: $0) },
-                loadSessions: { try await appDelegate.workspaceExplorerSessions(stableID: $0) },
-                loadEvidence: { try await appDelegate.workspaceExplorerSessionEvidence(sessionID: $0) },
-                loadMoreSessions: { try await appDelegate.workspaceExplorerSessions(stableID: $0, cursor: $1) },
-                clearArchive: { try await appDelegate.clearWorkspaceExplorerHistory() },
-                liveStatusWorkspaces: { appDelegate.workspaceExplorerLiveWorkspaces() }
-            )
-            .bmuxAppearanceColorScheme(appearanceMode)
-        }
-        .defaultSize(width: 980, height: 700)
+        WorkspaceExplorerScenes(appDelegate: appDelegate, appearanceMode: appearanceMode)
     }
-
     @CommandsBuilder
     private var windowAndViewCommands: some Commands {
+        WorkspaceExplorerCommands()
         CommandGroup(after: .windowArrangement) {
-            Button(String(localized: "explorer.openWindow", defaultValue: "Project & Workspace Explorer")) {
-                openWindow(id: "workspace-explorer")
-            }
             Button(String(localized: "menu.window.taskManager", defaultValue: "Task Manager...")) {
                 TaskManagerWindowController.shared.show()
             }
