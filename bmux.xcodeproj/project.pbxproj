@@ -2058,7 +2058,9 @@
 		CE0E01040000000000000001 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E01040000000000000002 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift */; };
 		72DB1838A0F1B710BFB45DC1 /* WorkspaceEnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B561A95C6DC21BA9C4B2BCDD /* WorkspaceEnvironmentTests.swift */; };
 		E7A9EAA73EE74959BA212014 /* WorkspaceExplorerArchiveAvailability.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA212013 /* WorkspaceExplorerArchiveAvailability.swift */; };
+				E71A17900000000000000010 /* WorkspaceExplorerCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000011 /* WorkspaceExplorerCatalog.swift */; };
 		852988320891EF575F713B6E /* WorkspaceExplorerCollectionTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91677B4922B4D293ACAB5E79 /* WorkspaceExplorerCollectionTarget.swift */; };
+				E71A17900000000000000012 /* WorkspaceExplorerCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000013 /* WorkspaceExplorerCoordinator.swift */; };
 		D7B4C9C21F959AEA6EE692D1 /* WorkspaceExplorerCounts.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC4BD867012C047DEAFDDA87 /* WorkspaceExplorerCounts.swift */; };
 		B56D4D47E1324E58DEEEB00E /* WorkspaceExplorerDimension.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76ECA4E9A1DC1B02E27DFF7 /* WorkspaceExplorerDimension.swift */; };
 		F154B954ACD7F29D752F9679 /* WorkspaceExplorerGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B19842F052C74A908E3ED2B /* WorkspaceExplorerGroup.swift */; };
@@ -4171,7 +4173,9 @@
 		CE0E01040000000000000002 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift; sourceTree = "<group>"; };
 		B561A95C6DC21BA9C4B2BCDD /* WorkspaceEnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceEnvironmentTests.swift; sourceTree = "<group>"; };
 		E7A9EAA73EE74959BA212013 /* WorkspaceExplorerArchiveAvailability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerArchiveAvailability.swift; sourceTree = "<group>"; };
+				E71A17900000000000000011 /* WorkspaceExplorerCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCatalog.swift; sourceTree = "<group>"; };
 		91677B4922B4D293ACAB5E79 /* WorkspaceExplorerCollectionTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCollectionTarget.swift; sourceTree = "<group>"; };
+				E71A17900000000000000013 /* WorkspaceExplorerCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCoordinator.swift; sourceTree = "<group>"; };
 		EC4BD867012C047DEAFDDA87 /* WorkspaceExplorerCounts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCounts.swift; sourceTree = "<group>"; };
 		E76ECA4E9A1DC1B02E27DFF7 /* WorkspaceExplorerDimension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerDimension.swift; sourceTree = "<group>"; };
 		7B19842F052C74A908E3ED2B /* WorkspaceExplorerGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerGroup.swift; sourceTree = "<group>"; };
@@ -6481,6 +6485,8 @@
 				B11A01ADF66B0FB73CFC25C0 /* WorkspaceExplorerProject.swift */,
 				E76ECA4E9A1DC1B02E27DFF7 /* WorkspaceExplorerDimension.swift */,
 				EC4BD867012C047DEAFDDA87 /* WorkspaceExplorerCounts.swift */,
+				E71A17900000000000000011 /* WorkspaceExplorerCatalog.swift */,
+				E71A17900000000000000013 /* WorkspaceExplorerCoordinator.swift */,
 				91677B4922B4D293ACAB5E79 /* WorkspaceExplorerCollectionTarget.swift */,
 				7B19842F052C74A908E3ED2B /* WorkspaceExplorerGroup.swift */,
 				38B2E1DC3876AD45216CB5D9 /* WorkspaceExplorerProjectionResult.swift */,
@@ -8126,7 +8132,9 @@
 				CE0E01060000000000000001 /* WorkspaceDisplayCurrentStateSubscription.swift in Sources */,
 				CE0E01040000000000000001 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift in Sources */,
 				E7A9EAA73EE74959BA212014 /* WorkspaceExplorerArchiveAvailability.swift in Sources */,
+				E71A17900000000000000010 /* WorkspaceExplorerCatalog.swift in Sources */,
 				852988320891EF575F713B6E /* WorkspaceExplorerCollectionTarget.swift in Sources */,
+				E71A17900000000000000012 /* WorkspaceExplorerCoordinator.swift in Sources */,
 				D7B4C9C21F959AEA6EE692D1 /* WorkspaceExplorerCounts.swift in Sources */,
 				B56D4D47E1324E58DEEEB00E /* WorkspaceExplorerDimension.swift in Sources */,
 				F154B954ACD7F29D752F9679 /* WorkspaceExplorerGroup.swift in Sources */,
