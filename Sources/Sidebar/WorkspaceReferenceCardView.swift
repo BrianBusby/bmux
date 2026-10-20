@@ -56,25 +56,15 @@ struct WorkspaceReferenceCardView: View {
                     if let projectTitle = card.projectTitle {
                         linkRow(icon: "folder", text: projectTitle, url: card.projectURL, control: .project)
                     }
-                    if repositoryName != nil || isSelected {
-                        HStack(spacing: theme.layout.workspaceCardHeaderGap) {
-                            if isSelected {
-                                Rectangle()
-                                    .frame(width: theme.layout.selectedMarkerSize, height: theme.layout.selectedMarkerSize)
-                                    .foregroundStyle(color(.selectionRing))
-                                    .accessibilityHidden(true)
-                            }
-                            if let repositoryName {
-                                Text(repositoryName)
-                                    .matteTypography(.repositoryLabel, theme: theme)
-                                    .foregroundStyle(Color(nsColor: WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(
-                                        colorScheme: colorScheme
-                                    )))
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
-                            }
-                        }
-                        .allowsHitTesting(false)
+                    if let repositoryName {
+                        Text(repositoryName)
+                            .matteTypography(.repositoryLabel, theme: theme)
+                            .foregroundStyle(Color(nsColor: WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(
+                                colorScheme: colorScheme
+                            )))
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .allowsHitTesting(false)
                     }
                     if let ticketID = card.ticketID {
                         ticketHeading(ticketID)
