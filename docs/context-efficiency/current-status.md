@@ -18,10 +18,17 @@ The managed provider-runtime follow-up is recorded in
 [implementation notes](../implementation-notes/managed-codex-runtime.md). It isolates
 connected Codex launches from global CLI updates without widening control capabilities.
 
-The Project and Workspace Explorer archive storage schema is prepared in
-`workspace-explorer-history`. PE schema version 26 adds a separately clearable
-archive table and a workspace-session index. The public archive contract,
-close producer, and native Explorer remain in the dependent slice.
+The Project and Workspace Explorer archive foundation is being implemented in
+`workspace-explorer-history`. PE now has a public, bounded close-snapshot archive
+contract keyed by the restart-stable workspace ID; archived metadata is retained
+until explicitly cleared, and restoration must leave the archive intact. The
+user-close path now records a last-known snapshot through that public contract.
+Its activity timestamp covers linked session lifecycle, prompt, and turn
+evidence. PE exposes the bounded workspace-keyed session query with partial
+coverage explicitly marked. Close capture is best effort until immediate-quit
+recovery or a bounded flush is added. The native Explorer, broader meaningful
+activity derivation, and read-only history UI are not yet implemented. See
+[the implementation record](../planning/workspace-explorer-implementation.md).
 
 ## Current Generated Truth
 

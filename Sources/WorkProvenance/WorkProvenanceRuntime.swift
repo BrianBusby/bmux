@@ -16,6 +16,7 @@ final class WorkProvenanceRuntime {
     let agentSessionSmartSessionStore: AgentSessionSmartSessionStore?
     private let workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription?
     private let sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder?
+    private let workspaceArchiveService: WorkProvenanceWorkspaceArchiveService?
     private let codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder?
     private lazy var promptEvidenceCoordinator = WorkProvenancePromptEvidenceCoordinator(
         recorder: codingAgentEvidenceRecorder, displayStore: workspaceDisplayCurrentStateStore,
@@ -51,6 +52,7 @@ final class WorkProvenanceRuntime {
         agentSessionSmartSessionStore: AgentSessionSmartSessionStore? = nil,
         workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription? = nil,
         sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder? = nil,
+        workspaceArchiveService: WorkProvenanceWorkspaceArchiveService? = nil,
         codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder? = nil,
         effectiveDatabaseURL: URL? = nil,
         startupErrorDescription: String? = nil,
@@ -75,6 +77,7 @@ final class WorkProvenanceRuntime {
         }
         self.workspaceDisplayCurrentStateSubscription = workspaceDisplayCurrentStateSubscription
         self.sessionLifecycleRecorder = sessionLifecycleRecorder
+        self.workspaceArchiveService = workspaceArchiveService
         self.codingAgentEvidenceRecorder = codingAgentEvidenceRecorder
         self.effectiveDatabaseURL = effectiveDatabaseURL
         self.startupErrorDescription = startupErrorDescription
@@ -119,6 +122,7 @@ final class WorkProvenanceRuntime {
                 sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder(
                     client: client
                 ),
+                workspaceArchiveService: WorkProvenanceWorkspaceArchiveService(client: client),
                 codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder(
                     client: client
                 ),
@@ -271,6 +275,35 @@ final class WorkProvenanceRuntime {
         guard acceptsLifecycleProducerWork, let sessionLifecycleRecorder else { return }
         trackBackgroundTask(Task {
             await sessionLifecycleRecorder.record(change, timestamp: timestamp)
+        })
+    }
+
+    /// Captures a user-closed workspace through PE's public archive contract.
+    func recordWorkspaceClosure(_ workspace: Workspace, at closedAt: Date = Date()) {
+        guard acceptsLifecycleProducerWork, let workspaceArchiveService else { return }
+        let stableID = workspace.stableId
+        let title = workspace.bmuxEventWorkspaceTitle
+        let createdAt = workspace.createdAt
+        let colorHex = workspace.customColor
+        trackBackgroundTask(Task {
+            do {
+                try await workspaceArchiveService.recordClosure(
+                    stableWorkspaceID: stableID,
+                    title: title,
+                    createdAt: createdAt,
+                    closedAt: closedAt,
+                    colorHex: colorHex
+                )
+            } catch {
+                sentryCaptureError(
+                    "Workspace archive write failed",
+                    category: "provenance",
+                    data: [
+                        "workspace_id": stableID.uuidString,
+                        "error_type": String(reflecting: type(of: error)),
+                    ]
+                )
+            }
         })
     }
 

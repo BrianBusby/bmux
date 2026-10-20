@@ -89,6 +89,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Session Work Model Contract Foundation | implemented |
 | Provenance Engine Sqlite Store | implemented |
 | Provenance Engine Turn Outcome Projection | implemented |
+| Provenance Engine Workspace Archive Contract | implemented |
 | Provenance Engine Workspace Archive Storage | implemented |
 | Provenance Engine Workspace Coding Agent Session Association | under observation |
 | Provenance Engine Workspace Display Current State | implemented |
