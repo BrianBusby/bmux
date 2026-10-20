@@ -547,10 +547,10 @@ import Testing
         #expect(colorHex == "#56CCF2")
     }
 
-    @Test func foregroundIsVioletInLightAppearance() {
+    @Test func foregroundIsElectricVioletInLightAppearance() {
         let foreground = WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(colorScheme: .light)
 
-        #expect(foreground.usingColorSpace(.sRGB)?.hexString(includeAlpha: true) == "#6D28D9FF")
+        #expect(foreground.usingColorSpace(.sRGB)?.hexString(includeAlpha: true) == "#A800FFFF")
         #expect(bmuxContrastRatio(foreground: foreground, background: .white) >= 4.5)
     }
 

@@ -21,7 +21,7 @@ enum WorkspaceRepoBadgeAppearanceColorPolicy {
     static func foregroundNSColor(colorScheme: ColorScheme) -> NSColor {
         switch colorScheme {
         case .light:
-            return NSColor(hex: "#6D28D9") ?? .systemPurple
+            return NSColor(hex: "#A800FF") ?? .systemPurple
         case .dark:
             return NSColor(hex: "#47FF57") ?? .systemGreen
         @unknown default:
