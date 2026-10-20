@@ -23,6 +23,8 @@ final class WorkspaceExplorerCoordinator {
     private(set) var catalog: WorkspaceExplorerCatalog?
     private var lastLoadResult: WorkspaceExplorerHistoryLoadResult?
     private var statusArrangement = WorkspaceExplorerStatusArrangement()
+    private var liveStatusOverrides: [String: WorkspaceExplorerStatus] = [:]
+    private let liveStatusMonitor: WorkspaceExplorerLiveStatusMonitor?
     var pendingStatusChangeCount: Int { statusArrangement.pendingWorkspaceIDs.count }
     private(set) var isLoading = false
     private(set) var loadFailed = false
@@ -52,6 +54,7 @@ final class WorkspaceExplorerCoordinator {
          loadEvidence: @escaping EvidenceLoader = { _ in throw CancellationError() },
          loadMoreSessions: @escaping MoreSessionsLoader = { _, _ in throw CancellationError() },
          clearArchive: @escaping Clearer,
+         liveStatusMonitor: WorkspaceExplorerLiveStatusMonitor? = nil,
          feedbackDelay: @escaping FeedbackDelay = { try await Task.sleep(for: $0) }) {
         self.loadHistory = loadHistory
         self.reopenHistory = reopenHistory
@@ -61,6 +64,7 @@ final class WorkspaceExplorerCoordinator {
         self.loadEvidence = loadEvidence
         self.clearArchive = clearArchive
         self.feedbackDelay = feedbackDelay
+        self.liveStatusMonitor = liveStatusMonitor
     }
 
     var activeArrangement: WorkspaceExplorerViewArrangement {
@@ -88,6 +92,8 @@ final class WorkspaceExplorerCoordinator {
         do {
             let result = try await loadHistory()
             lastLoadResult = result
+            liveStatusOverrides = Dictionary(uniqueKeysWithValues: result.items.filter(\.isOpen)
+                .map { ($0.id, $0.liveStatus) })
             let arrangement = activeArrangement
             let currentIDs = Set(result.items.map(\.id))
             for oldID in statusArrangement.pendingWorkspaceIDs where !currentIDs.contains(oldID) {
@@ -100,7 +106,11 @@ final class WorkspaceExplorerCoordinator {
                 statusArrangement.observe(workspaceID: item.id, status: item.liveStatus,
                     groupBy: arrangement.groupBy, filters: arrangement.filters)
             }
-            catalog = WorkspaceExplorerCatalog(result, arrangedStatuses: arrangedStatuses())
+            catalog = WorkspaceExplorerCatalog(result, liveStatuses: liveStatusOverrides,
+                arrangedStatuses: arrangedStatuses())
+            liveStatusMonitor?.start { [weak self] id, status in
+                self?.observeLiveStatus(id: id, status: status)
+            }
             loadFailed = false
         } catch is CancellationError {
             return
@@ -128,10 +138,22 @@ final class WorkspaceExplorerCoordinator {
         }
     }
 
+    func observeLiveStatus(id: String, status: WorkspaceExplorerStatus) {
+        guard let lastLoadResult, lastLoadResult.items.contains(where: { $0.id == id && $0.isOpen }) else { return }
+        guard statusArrangement.liveStatus(for: id) != status else { return }
+        liveStatusOverrides[id] = status
+        let arrangement = activeArrangement
+        statusArrangement.observe(workspaceID: id, status: status,
+            groupBy: arrangement.groupBy, filters: arrangement.filters)
+        catalog = WorkspaceExplorerCatalog(lastLoadResult, liveStatuses: liveStatusOverrides,
+            arrangedStatuses: arrangedStatuses())
+    }
+
     func applyPendingStatusArrangement() {
         statusArrangement.applyPending()
         if let lastLoadResult {
-            catalog = WorkspaceExplorerCatalog(lastLoadResult, arrangedStatuses: arrangedStatuses())
+            catalog = WorkspaceExplorerCatalog(lastLoadResult, liveStatuses: liveStatusOverrides,
+                arrangedStatuses: arrangedStatuses())
         }
     }
 

@@ -14,12 +14,14 @@ struct WorkspaceExplorerWindowView: View {
          loadSessions: @escaping WorkspaceExplorerCoordinator.SessionLoader,
          loadEvidence: @escaping WorkspaceExplorerCoordinator.EvidenceLoader,
          loadMoreSessions: @escaping WorkspaceExplorerCoordinator.MoreSessionsLoader,
-         clearArchive: @escaping WorkspaceExplorerCoordinator.Clearer) {
+         clearArchive: @escaping WorkspaceExplorerCoordinator.Clearer,
+         liveStatusWorkspaces: @escaping WorkspaceExplorerLiveStatusMonitor.WorkspaceSource) {
         _model = State(initialValue: WorkspaceExplorerCoordinator(
             loadHistory: loadHistory, reopenHistory: reopenHistory,
             activateWorkspace: activateWorkspace, loadSessions: loadSessions,
             loadEvidence: loadEvidence, loadMoreSessions: loadMoreSessions,
-            clearArchive: clearArchive))
+            clearArchive: clearArchive,
+            liveStatusMonitor: WorkspaceExplorerLiveStatusMonitor(workspaces: liveStatusWorkspaces)))
     }
 
     var body: some View {

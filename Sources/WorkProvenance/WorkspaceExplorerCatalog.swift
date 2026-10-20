@@ -9,8 +9,11 @@ struct WorkspaceExplorerCatalog {
     let partialLiveActivity: Bool
 
     init(_ result: WorkspaceExplorerHistoryLoadResult,
+         liveStatuses: [String: WorkspaceExplorerStatus] = [:],
          arrangedStatuses: [String: WorkspaceExplorerStatus] = [:]) {
-        items = result.items
+        items = result.items.map { item in
+            liveStatuses[item.id].map(item.withLiveStatus) ?? item
+        }
         archiveAvailable = result.archiveAvailability == .available
         partialLiveActivity = result.partialLiveActivity
 
@@ -23,7 +26,7 @@ struct WorkspaceExplorerCatalog {
         projects = namesByID.map { id, name in
             WorkspaceExplorerProject(id: id, name: name, owner: nil, status: nil)
         }.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
-        workspaces = result.items.map { item in
+        workspaces = items.map { item in
             let display = item.display
             let status = item.liveStatus
             return WorkspaceExplorerWorkspace(

@@ -73,6 +73,24 @@ struct WorkspaceExplorerHistoryAdapterTests {
         #expect(WorkspaceExplorerLiveWorkspace.verifiedStatus(of: workspace) == .running)
     }
 
+    @MainActor
+    @Test
+    func statusMonitorPublishesVerifiedLifecycleChanges() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelID = try #require(workspace.focusedPanelId)
+        workspace.agentPIDKeysByPanelId[panelID] = ["codex"]
+        workspace.agentPIDs["codex"] = getpid()
+        workspace.agentPIDProcessIdentitiesByKey["codex"] = Workspace.agentPIDProcessIdentity(pid: getpid())
+        let monitor = WorkspaceExplorerLiveStatusMonitor(workspaces: { [workspace] })
+        var received: [WorkspaceExplorerStatus] = []
+        monitor.start { _, status in received.append(status) }
+        workspace.agentLifecycleStatesByPanelId[panelID] = ["codex": .needsInput]
+        #expect(received.last == .needsInput)
+        workspace.agentLifecycleStatesByPanelId[panelID] = ["codex": .running]
+        #expect(received.last == .running)
+    }
+
     @Test
     func reopenedWorkspaceAppearsOnceAndKeepsItsArchive() {
         let stableID = UUID()
