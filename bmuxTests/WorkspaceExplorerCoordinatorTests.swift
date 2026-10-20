@@ -114,6 +114,49 @@ struct WorkspaceExplorerCoordinatorTests {
         #expect(model.catalog?.workspaces.first?.arrangedStatus == .running)
     }
 
+    @Test
+    func removingStatusGroupingOrFilterReconcilesPendingMembership() async {
+        let id = UUID()
+        let model = WorkspaceExplorerCoordinator(
+            loadHistory: {
+                let live = WorkspaceExplorerLiveWorkspace(stableID: id, runtimeID: UUID(),
+                    title: "Maple Street Roof Inspection", createdAt: .now,
+                    colorHex: nil, display: nil, lastActivityAt: .now,
+                    liveStatus: .needsInput)
+                return WorkspaceExplorerHistoryLoadResult(
+                    items: WorkspaceExplorerHistoryAdapter().join(live: [live], archived: [],
+                        eligibilityByID: [:]),
+                    archiveAvailability: .available, partialLiveActivity: false)
+            },
+            reopenHistory: { _ in false }, activateWorkspace: { _ in },
+            loadSessions: { id in ProvenanceWorkspaceSessionPageResponse(
+                workspaceID: id.uuidString, sessions: [], nextCursor: nil) },
+            clearArchive: { }
+        )
+        model.showCollection(.all)
+        model.setGroupBy([.bmuxStatus])
+        await model.load()
+        model.observeLiveStatus(id: id.uuidString, status: .running)
+        #expect(model.pendingStatusChangeCount == 1)
+        model.setGroupBy([])
+        #expect(model.pendingStatusChangeCount == 0)
+        #expect(model.catalog?.workspaces.first?.arrangedStatus == .running)
+
+        model.setFilter(.bmuxStatus, value: .bmuxStatus(.running))
+        model.observeLiveStatus(id: id.uuidString, status: .idle)
+        #expect(model.pendingStatusChangeCount == 1)
+        model.clearFilters()
+        #expect(model.pendingStatusChangeCount == 0)
+        #expect(model.catalog?.workspaces.first?.arrangedStatus == .idle)
+
+        model.setFilter(.bmuxStatus, value: .bmuxStatus(.idle))
+        model.observeLiveStatus(id: id.uuidString, status: .error)
+        #expect(model.pendingStatusChangeCount == 1)
+        model.undo()
+        #expect(model.pendingStatusChangeCount == 0)
+        #expect(model.catalog?.workspaces.first?.arrangedStatus == .error)
+    }
+
     private func session(_ id: String) -> ProvenanceSessionRecord {
         ProvenanceSessionRecord(id: id, agentKind: "codex", status: "completed", updatedAt: .now)
     }

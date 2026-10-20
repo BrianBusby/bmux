@@ -91,6 +91,29 @@ struct WorkspaceExplorerHistoryAdapterTests {
         #expect(received.last == .running)
     }
 
+    @MainActor
+    @Test
+    func statusMonitorUpdatesWhenVerifiedProcessIdentityChanges() async throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelID = try #require(workspace.focusedPanelId)
+        workspace.agentPIDKeysByPanelId[panelID] = ["codex"]
+        workspace.agentPIDs["codex"] = getpid()
+        workspace.agentPIDProcessIdentitiesByKey["codex"] = Workspace.agentPIDProcessIdentity(pid: getpid())
+        workspace.agentLifecycleStatesByPanelId[panelID] = ["codex": .running]
+        let monitor = WorkspaceExplorerLiveStatusMonitor(workspaces: { [workspace] })
+        var received: [WorkspaceExplorerStatus] = []
+        monitor.start { _, status in received.append(status) }
+
+        workspace.agentPIDProcessIdentitiesByKey.removeValue(forKey: "codex")
+        for _ in 0..<100 where received.last != .disconnected { await Task.yield() }
+        #expect(received.last == .disconnected)
+
+        workspace.agentPIDProcessIdentitiesByKey["codex"] = Workspace.agentPIDProcessIdentity(pid: getpid())
+        for _ in 0..<100 where received.last != .running { await Task.yield() }
+        #expect(received.last == .running)
+    }
+
 #if DEBUG
     @MainActor
     @Test
@@ -164,6 +187,33 @@ struct WorkspaceExplorerHistoryAdapterTests {
 
         #expect(items[0].lastActivityAt == archive.lastActivityAt)
         #expect(items[0].createdAt == archive.createdAt)
+    }
+
+    @Test
+    func reopenedWorkspaceKeepsArchivedProjectWhenLiveDisplayIsUnavailable() {
+        let stableID = UUID()
+        let closedAt = Date(timeIntervalSince1970: 1_800_000_000)
+        let archivedDisplay = ProvenanceWorkspaceDisplayRecord(
+            id: "display-at-close", workspaceID: stableID.uuidString,
+            projectLinks: [.init(id: "maple-roof", title: "Maple Street Roof Inspection")],
+            observedAt: closedAt, updatedAt: closedAt)
+        let archive = ProvenanceArchivedWorkspaceRecord(
+            id: stableID.uuidString, title: "Maple Street Roof Inspection",
+            createdAt: closedAt.addingTimeInterval(-3600), closedAt: closedAt,
+            lastActivityAt: closedAt, displayAtClose: archivedDisplay,
+            colorHex: nil, coverageCode: nil)
+        let live = WorkspaceExplorerLiveWorkspace(
+            stableID: stableID, runtimeID: UUID(), title: archive.title,
+            createdAt: closedAt, colorHex: nil, display: nil, lastActivityAt: nil)
+
+        let items = WorkspaceExplorerHistoryAdapter().join(
+            live: [live], archived: [archive], eligibilityByID: [:])
+        let catalog = WorkspaceExplorerCatalog(.init(items: items,
+            archiveAvailability: .available, partialLiveActivity: true))
+
+        #expect(items.count == 1)
+        #expect(items[0].display?.projectLinks.map(\.id) == ["maple-roof"])
+        #expect(catalog.workspaces[0].projectIDs == ["maple-roof"])
     }
 
     @Test
