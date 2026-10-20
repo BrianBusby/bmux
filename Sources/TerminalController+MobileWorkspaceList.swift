@@ -222,10 +222,12 @@ extension TerminalController {
         let ticket = display?.ticketLinks.first
         let project = display?.projectLinks.first
         let ownerName = ticket?.ownerName ?? livePullRequest?.ownerLogin ?? pullRequestSnapshot?.ownerLogin
-        let ownerAvatarURL = Self.mobileOwnerAvatarURL(
-            ownerLogin: livePullRequest?.ownerLogin ?? pullRequestSnapshot?.ownerLogin,
-            ownerURL: ticket?.ownerURL ?? livePullRequest?.ownerURL ?? pullRequestSnapshot?.ownerURL
-        )
+        let ownerAvatarURL = livePullRequest?.ownerAvatarURL
+            ?? pullRequestSnapshot?.ownerAvatarURL
+            ?? Self.mobileOwnerAvatarURL(
+                ownerLogin: livePullRequest?.ownerLogin ?? pullRequestSnapshot?.ownerLogin,
+                ownerURL: ticket?.ownerURL ?? livePullRequest?.ownerURL ?? pullRequestSnapshot?.ownerURL
+            )
         return [
             "id": workspace.id.uuidString,
             "window_id": v2OrNull(windowID?.uuidString),

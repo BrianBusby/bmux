@@ -221,6 +221,7 @@ actor WorkProvenanceObservationService {
             pullRequest = current.replacingResolvedMetadata(
                 login: current.ownerLogin ?? stored.pullRequestOwnerLogin,
                 url: current.ownerURL ?? stored.pullRequestOwnerURL,
+                avatarURL: current.ownerAvatarURL ?? stored.pullRequestOwnerAvatarURL,
                 title: current.title, branch: current.branch ?? stored.pullRequestBranch
             )
         }
@@ -254,6 +255,7 @@ actor WorkProvenanceObservationService {
             pullRequestURL: pullRequest?.url,
             pullRequestOwnerLogin: pullRequest?.ownerLogin,
             pullRequestOwnerURL: pullRequest?.ownerURL,
+            pullRequestOwnerAvatarURL: pullRequest?.ownerAvatarURL,
             pullRequestStatus: pullRequest?.status,
             pullRequestBranch: pullRequest?.branch,
             pullRequestIsStale: pullRequest?.isStale ?? false,
@@ -293,6 +295,7 @@ actor WorkProvenanceObservationService {
             pullRequestURL: pullRequest?.url,
             pullRequestOwnerLogin: pullRequest?.ownerLogin,
             pullRequestOwnerURL: pullRequest?.ownerURL,
+            pullRequestOwnerAvatarURL: pullRequest?.ownerAvatarURL,
             pullRequestStatus: pullRequest?.status,
             pullRequestBranch: pullRequest?.branch,
             pullRequestIsStale: pullRequest?.isStale ?? false,
@@ -371,6 +374,7 @@ actor WorkProvenanceObservationService {
         let existingOwnerURL = existingOwnerLogin.flatMap {
             Self.normalizedOwnerURL(pullRequest.ownerURL, login: $0)
         }
+        let existingAvatarURL = Self.normalizedNonEmpty(pullRequest.ownerAvatarURL)
 
         let resolvedMetadata = resolvedPullRequestOwnersByURL[pullRequest.url]
         let shouldFetchMetadata =
@@ -391,11 +395,13 @@ actor WorkProvenanceObservationService {
         let ownerURL = ownerLogin.flatMap {
             Self.normalizedOwnerURL(existingOwnerURL ?? metadata?.url, login: $0)
         }
+        let ownerAvatarURL = existingAvatarURL ?? Self.normalizedNonEmpty(metadata?.avatarURL)
         let title = existingTitle ?? Self.normalizedNonEmpty(metadata?.title)
         let branch = existingBranch ?? Self.normalizedNonEmpty(metadata?.branch)
         return pullRequest.replacingResolvedMetadata(
             login: ownerLogin,
             url: ownerURL,
+            avatarURL: ownerAvatarURL,
             title: title,
             branch: branch
         )

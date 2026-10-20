@@ -175,6 +175,7 @@ public struct PullRequestProbeService: Sendable {
                         urlString: matchedPullRequest.url,
                         ownerLogin: matchedPullRequest.ownerLogin,
                         ownerURLString: matchedPullRequest.ownerURLString,
+                        ownerAvatarURLString: matchedPullRequest.ownerAvatarURLString,
                         statusRawValue: status.rawValue,
                         branch: candidate.branch
                     )

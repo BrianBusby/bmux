@@ -197,6 +197,7 @@ private final class SidebarPullRequestCompatibilityReporter: PullRequestProbing 
                 url: currentPullRequest.url,
                 ownerLogin: currentPullRequest.ownerLogin,
                 ownerURL: currentPullRequest.ownerURL,
+                ownerAvatarURL: currentPullRequest.ownerAvatarURL,
                 status: nextStatus,
                 branch: currentPullRequest.branch,
                 isStale: false
