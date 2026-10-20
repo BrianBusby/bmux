@@ -18,6 +18,11 @@ The managed provider-runtime follow-up is recorded in
 [implementation notes](../implementation-notes/managed-codex-runtime.md). It isolates
 connected Codex launches from global CLI updates without widening control capabilities.
 
+The Project and Workspace Explorer archive storage schema is prepared in
+`workspace-explorer-history`. PE schema version 26 adds a separately clearable
+archive table and a workspace-session index. The public archive contract,
+close producer, and native Explorer remain in the dependent slice.
+
 ## Current Generated Truth
 
 - [Project status](../generated/project-status.md)

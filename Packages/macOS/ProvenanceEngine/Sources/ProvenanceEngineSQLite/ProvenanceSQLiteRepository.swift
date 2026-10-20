@@ -5531,6 +5531,7 @@ actor ProvenanceSQLiteRepository {
         + relatedSessionMigrations
         + artifactCollisionMigrations
         + workspaceCodingAgentSessionAssociationMigrations
+        + workspaceArchiveMigrations
 }
 
 extension ProvenanceSQLiteRepository: ProvenanceSessionLifecycleRecording {
