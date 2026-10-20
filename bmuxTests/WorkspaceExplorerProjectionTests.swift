@@ -75,6 +75,18 @@ struct WorkspaceExplorerProjectionTests {
     }
 
     @Test
+    func overviewWorkspaceFiltersMustMatchTheSameWorkspace() {
+        let input = workspace("input", projects: ["p1"], ago: 5, repository: "app", status: .needsInput)
+        let idle = workspace("idle", projects: ["p1"], ago: 10, repository: "bmux")
+        let projection = WorkspaceExplorerProjection(projects: projects,
+            workspaces: [input, idle], archiveAvailable: true)
+        let result = projection.overview(scope: .init(), groupBy: [],
+            filters: [.repository: .value("bmux"), .bmuxStatus: .bmuxStatus(.needsInput)],
+            now: now, calendar: calendar)
+        #expect(result.visibleProjectIDs.isEmpty)
+    }
+
+    @Test
     func unavailableArchiveLeavesClosedCountUnknown() {
         let open = workspace("open", projects: ["p1"], ago: 5)
         let projection = WorkspaceExplorerProjection(projects: projects, workspaces: [open], archiveAvailable: false)
