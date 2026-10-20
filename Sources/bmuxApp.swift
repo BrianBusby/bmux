@@ -915,11 +915,26 @@ struct bmuxApp: App {
                 .bmuxFontMagnificationEnvironment()
                 .bmuxAppearanceColorScheme(appearanceMode)
         }
+
+        Window(String(localized: "explorer.title", defaultValue: "Explorer"), id: "workspace-explorer") {
+            WorkspaceExplorerWindowView(
+                loadHistory: { try await appDelegate.loadWorkspaceExplorerHistory() },
+                reopenHistory: { appDelegate.reopenWorkspaceExplorerHistory(stableID: $0) },
+                activateWorkspace: { appDelegate.activateWorkspaceExplorerWorkspace(runtimeID: $0) },
+                loadSessions: { try await appDelegate.workspaceExplorerSessions(stableID: $0) },
+                clearArchive: { try await appDelegate.clearWorkspaceExplorerHistory() }
+            )
+            .bmuxAppearanceColorScheme(appearanceMode)
+        }
+        .defaultSize(width: 980, height: 700)
     }
 
     @CommandsBuilder
     private var windowAndViewCommands: some Commands {
         CommandGroup(after: .windowArrangement) {
+            Button(String(localized: "explorer.openWindow", defaultValue: "Project & Workspace Explorer")) {
+                openWindow(id: "workspace-explorer")
+            }
             Button(String(localized: "menu.window.taskManager", defaultValue: "Task Manager...")) {
                 TaskManagerWindowController.shared.show()
             }

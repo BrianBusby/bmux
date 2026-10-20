@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import ProvenanceEngineContracts
 
 /// Session-scoped Explorer navigation and arrangements, independent of live selection.
 @MainActor @Observable
@@ -7,6 +8,8 @@ final class WorkspaceExplorerCoordinator {
     typealias Loader = @MainActor () async throws -> WorkspaceExplorerHistoryLoadResult
     typealias Reopener = @MainActor (UUID) -> Bool
     typealias Activator = @MainActor (UUID) -> Void
+    typealias SessionLoader = @MainActor (UUID) async throws -> ProvenanceWorkspaceSessionPageResponse
+    typealias Clearer = @MainActor () async throws -> Void
 
     var scope = WorkspaceExplorerScope()
     var overviewArrangement = WorkspaceExplorerViewArrangement()
@@ -15,17 +18,25 @@ final class WorkspaceExplorerCoordinator {
     private(set) var catalog: WorkspaceExplorerCatalog?
     private(set) var isLoading = false
     private(set) var loadFailed = false
+    private(set) var sessionsByWorkspaceID: [String: ProvenanceWorkspaceSessionPageResponse] = [:]
+    private(set) var sessionLoadFailed = false
+    private(set) var clearFailed = false
     private var collectionArrangements: [String: WorkspaceExplorerViewArrangement] = [:]
 
     private let loadHistory: Loader
     private let reopenHistory: Reopener
     private let activateWorkspace: Activator
+    private let loadSessions: SessionLoader
+    private let clearArchive: Clearer
 
     init(loadHistory: @escaping Loader, reopenHistory: @escaping Reopener,
-         activateWorkspace: @escaping Activator) {
+         activateWorkspace: @escaping Activator, loadSessions: @escaping SessionLoader,
+         clearArchive: @escaping Clearer) {
         self.loadHistory = loadHistory
         self.reopenHistory = reopenHistory
         self.activateWorkspace = activateWorkspace
+        self.loadSessions = loadSessions
+        self.clearArchive = clearArchive
     }
 
     var activeArrangement: WorkspaceExplorerViewArrangement {
@@ -69,6 +80,18 @@ final class WorkspaceExplorerCoordinator {
 
     func backFromHistory() { historyID = nil }
 
+    func loadHistorySessions(for id: String) async {
+        guard let stableID = UUID(uuidString: id) else { return }
+        do {
+            sessionsByWorkspaceID[id] = try await loadSessions(stableID)
+            sessionLoadFailed = false
+        } catch is CancellationError {
+            return
+        } catch {
+            sessionLoadFailed = true
+        }
+    }
+
     func showOverview() {
         if case .project(let id) = collectionTarget { overviewArrangement.focusedProjectID = id }
         collectionTarget = nil
@@ -100,6 +123,17 @@ final class WorkspaceExplorerCoordinator {
               let id = UUID(uuidString: item.id), reopenHistory(id) else { return false }
         await load()
         return true
+    }
+
+    func clearHistory() async {
+        do {
+            try await clearArchive()
+            clearFailed = false
+            sessionsByWorkspaceID.removeAll()
+            await load()
+        } catch {
+            clearFailed = true
+        }
     }
 
     private func updateArrangement(_ change: (inout WorkspaceExplorerViewArrangement) -> Void) {
