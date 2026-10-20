@@ -20,16 +20,16 @@ struct WorkspaceExplorerProjection {
         }
         let workspaceFilters = filters.filter { $0.key == .repository || $0.key == .bmuxStatus }
         let visible = projectRows.filter { project, members in
-            filters.allSatisfy { dimension, value in
+            let projectMatches = filters.allSatisfy { dimension, value in
                 switch dimension {
                 case .projectOwner, .projectStatus:
                     return dimension.projectKey(project, workspaces: members) == value
-                case .repository, .bmuxStatus:
-                    return members.contains { workspaceMatches($0, filters: workspaceFilters) }
                 default:
                     return true
                 }
             }
+            return projectMatches && (workspaceFilters.isEmpty ||
+                members.contains { workspaceMatches($0, filters: workspaceFilters) })
         }
         let dimensions = Array(groupBy.filter(\.isOverviewDimension).uniqued().prefix(3))
         let groups = groupProjects(visible, dimensions: dimensions)
