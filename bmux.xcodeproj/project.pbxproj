@@ -974,6 +974,8 @@
 		B1F0C0030000000000000001 /* HostedInspectorDockControlScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0C0030000000000000002 /* HostedInspectorDockControlScript.swift */; };
 		B1F0C0040000000000000001 /* HostedInspectorDockControlScriptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F0C0040000000000000002 /* HostedInspectorDockControlScriptTests.swift */; };
 		CD0CFE6200000000CD0CFE62 /* HostSettingsActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0CFE6300000000CD0CFE63 /* HostSettingsActions.swift */; };
+		6A468C840492422DA4261A48 /* IMessageModeGroupSortSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A07C31F6E5F4B2F9B7F0B7E /* IMessageModeGroupSortSettings.swift */; };
+		22DD833C500940D8A2D45C7E /* IMessageModeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3102DCF3F4F4F74B090A1F8 /* IMessageModeSettings.swift */; };
 		F1C1AA21B7E84D10A1C10001 /* InactivePaneFirstClickFocusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C1AA20B7E84D10A1C10001 /* InactivePaneFirstClickFocusTests.swift */; };
 		DA7A10CA710E000000000004 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DA7A10CA710E000000000002 /* InfoPlist.xcstrings */; };
 		C0DEA7720000000000000001 /* InternalFlagsWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEA7720000000000000002 /* InternalFlagsWindow.swift */; };
@@ -1558,6 +1560,7 @@
 		B5ED8B8A7E40461C8DE8CC96 /* SidebarToolFocusContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A4505B76684B3CB3B568E3 /* SidebarToolFocusContractTests.swift */; };
 		BA1550010000000000000001 /* SidebarWidthPersistencePolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA1550010000000000000002 /* SidebarWidthPersistencePolicyTests.swift */; };
 		CA39C0304FE351A21C372429 /* SidebarWidthPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0171AF1F49F7547191CEE5 /* SidebarWidthPolicyTests.swift */; };
+		702276F63A2940CA87DDC19C /* SidebarWorkspaceCardAvatarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1915723736694097875A8A85 /* SidebarWorkspaceCardAvatarTests.swift */; };
 		91D220CB3532442C9E48A912 /* SidebarWorkspaceCardPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87F0E2C5C17740AC909B9D02 /* SidebarWorkspaceCardPresentationTests.swift */; };
 		D7AB34300000000000000005 /* SidebarWorkspaceDropPlannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AB34300000000000000006 /* SidebarWorkspaceDropPlannerTests.swift */; };
 		C9A57605C9A57605C9A57605 /* SidebarWorkspaceDropTargetWriters.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A57606C9A57606C9A57606 /* SidebarWorkspaceDropTargetWriters.swift */; };
@@ -1952,6 +1955,7 @@
 		D53200000000000000000006 /* WorkProvenanceRuntime+PromptResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = D53200000000000000000005 /* WorkProvenanceRuntime+PromptResources.swift */; };
 		756EB108F5337A59A8668D7C /* WorkProvenanceRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */; };
 		CE0E08060000000000000001 /* WorkProvenanceRuntimeLifecycleState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E08060000000000000002 /* WorkProvenanceRuntimeLifecycleState.swift */; };
+			C12C9276586E4007A66D21AC /* WorkProvenanceRuntimeResolutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDF402EAB33D4BDF97115899 /* WorkProvenanceRuntimeResolutionTests.swift */; };
 		CE0B00040000000000000001 /* WorkProvenanceSessionLifecycleRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0B00040000000000000002 /* WorkProvenanceSessionLifecycleRecorder.swift */; };
 		A801809D8020AD996B4C0997 /* WorkProvenanceSessionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 447E35CF777CC9B4432D5BFA /* WorkProvenanceSessionRecord.swift */; };
 		CE0D10170000000000000001 /* WorkProvenanceSessionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 447E35CF777CC9B4432D5BFA /* WorkProvenanceSessionRecord.swift */; };
@@ -3119,6 +3123,8 @@
 		B1F0C0030000000000000002 /* HostedInspectorDockControlScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/HostedInspectorDockControlScript.swift; sourceTree = "<group>"; };
 		B1F0C0040000000000000002 /* HostedInspectorDockControlScriptTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostedInspectorDockControlScriptTests.swift; sourceTree = "<group>"; };
 		CD0CFE6300000000CD0CFE63 /* HostSettingsActions.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HostSettingsActions.swift; sourceTree = "<group>"; };
+		3A07C31F6E5F4B2F9B7F0B7E /* IMessageModeGroupSortSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessageModeGroupSortSettings.swift; sourceTree = "<group>"; };
+		F3102DCF3F4F4F74B090A1F8 /* IMessageModeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessageModeSettings.swift; sourceTree = "<group>"; };
 		F1C1AA20B7E84D10A1C10001 /* InactivePaneFirstClickFocusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InactivePaneFirstClickFocusTests.swift; sourceTree = "<group>"; };
 		DA7A10CA710E000000000002 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		C0DEA7720000000000000002 /* InternalFlagsWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InternalFlagsWindow.swift; sourceTree = "<group>"; };
@@ -3675,6 +3681,7 @@
 		E9A4505B76684B3CB3B568E3 /* SidebarToolFocusContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarToolFocusContractTests.swift; sourceTree = "<group>"; };
 		BA1550010000000000000002 /* SidebarWidthPersistencePolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarWidthPersistencePolicyTests.swift; sourceTree = "<group>"; };
 		EE0171AF1F49F7547191CEE5 /* SidebarWidthPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarWidthPolicyTests.swift; sourceTree = "<group>"; };
+		1915723736694097875A8A85 /* SidebarWorkspaceCardAvatarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarWorkspaceCardAvatarTests.swift; sourceTree = "<group>"; };
 		87F0E2C5C17740AC909B9D02 /* SidebarWorkspaceCardPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarWorkspaceCardPresentationTests.swift; sourceTree = "<group>"; };
 		D7AB34300000000000000006 /* SidebarWorkspaceDropPlannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarWorkspaceDropPlannerTests.swift; sourceTree = "<group>"; };
 		C9A57606C9A57606C9A57606 /* SidebarWorkspaceDropTargetWriters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarWorkspaceDropTargetWriters.swift; sourceTree = "<group>"; };
@@ -4051,6 +4058,7 @@
 		D53200000000000000000005 /* WorkProvenanceRuntime+PromptResources.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkProvenanceRuntime+PromptResources.swift"; sourceTree = "<group>"; };
 		B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRuntime.swift; sourceTree = "<group>"; };
 		CE0E08060000000000000002 /* WorkProvenanceRuntimeLifecycleState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRuntimeLifecycleState.swift; sourceTree = "<group>"; };
+			BDF402EAB33D4BDF97115899 /* WorkProvenanceRuntimeResolutionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceRuntimeResolutionTests.swift; sourceTree = "<group>"; };
 		CE0B00040000000000000002 /* WorkProvenanceSessionLifecycleRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSessionLifecycleRecorder.swift; sourceTree = "<group>"; };
 		447E35CF777CC9B4432D5BFA /* WorkProvenanceSessionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSessionRecord.swift; sourceTree = "<group>"; };
 		CE0B00020000000000000002 /* WorkProvenanceSessionRelationshipRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceSessionRelationshipRecord.swift; sourceTree = "<group>"; };
@@ -4891,6 +4899,8 @@
 				D7AB00000000000000000016 /* Workspace+DetachedSurfaceTransfer.swift */,
 				C0DE1A050000000000000002 /* Workspace+LayoutCapture.swift */,
 				D7AB34400000000000000002 /* WorkspaceSurfaceConfig.swift */,
+				F3102DCF3F4F4F74B090A1F8 /* IMessageModeSettings.swift */,
+				3A07C31F6E5F4B2F9B7F0B7E /* IMessageModeGroupSortSettings.swift */,
 				1A1B2C3D4E5F607180000002 /* WorkspacePromptSubmit.swift */,
 				CE0E07300000000000000002 /* WorkspacePromptSubmit+SessionID.swift */,
 				CE0E07100000000000000002 /* WorkspaceSubmittedPromptMetadata.swift */,
@@ -6069,6 +6079,7 @@
 				46792DAA478444ED87B17B31 /* AutoNamingHookPayloadAdapterTests.swift */,
 				CE7000000000000000000002 /* ClaudeWrapperResumeEnvironmentTests.swift */,
 				F016B5C09357B3226FA2E014 /* SidebarWorkspaceSnapshotRefreshPolicyTests.swift */,
+				1915723736694097875A8A85 /* SidebarWorkspaceCardAvatarTests.swift */,
 				87F0E2C5C17740AC909B9D02 /* SidebarWorkspaceCardPresentationTests.swift */,
 				C0DE56110000000000000002 /* SidebarWorkspaceRowLineLimitPolicyTests.swift */,
 				C9A57514C9A57514C9A57514 /* SidebarScrollViewConfiguratorTests.swift */,
@@ -6340,6 +6351,7 @@
 				98BA6BEC6AA4AB09F34D2B70 /* ExpandedTurnPresentationTests.swift */,
 				CE2F03010000000000000002 /* AgentSessionSmartSessionStoreTests.swift */,
 
+					BDF402EAB33D4BDF97115899 /* WorkProvenanceRuntimeResolutionTests.swift */,
 					642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */,
 					CE0E03140000000000000002 /* WorkProvenanceLinearTicketLinkResolverTests.swift */,
 					CE0E03190000000000000002 /* WorkProvenancePullRequestOwnerResolverDefaultTests.swift */,
@@ -7369,6 +7381,8 @@
 				CD0CFE6000000000CD0CFE60 /* HostAccountFlow.swift in Sources */,
 				B1F0C0030000000000000001 /* HostedInspectorDockControlScript.swift in Sources */,
 				CD0CFE6200000000CD0CFE62 /* HostSettingsActions.swift in Sources */,
+				6A468C840492422DA4261A48 /* IMessageModeGroupSortSettings.swift in Sources */,
+				22DD833C500940D8A2D45C7E /* IMessageModeSettings.swift in Sources */,
 				C0DEA7720000000000000001 /* InternalFlagsWindow.swift in Sources */,
 				4D8B37E0E11A29997632765F /* InternalTabDragConfiguration.swift in Sources */,
 				A5FB1307 /* JSONCObjectEditor+Remove.swift in Sources */,
@@ -8810,6 +8824,7 @@
 				B5ED8B8A7E40461C8DE8CC96 /* SidebarToolFocusContractTests.swift in Sources */,
 				BA1550010000000000000001 /* SidebarWidthPersistencePolicyTests.swift in Sources */,
 				CA39C0304FE351A21C372429 /* SidebarWidthPolicyTests.swift in Sources */,
+					702276F63A2940CA87DDC19C /* SidebarWorkspaceCardAvatarTests.swift in Sources */,
 					91D220CB3532442C9E48A912 /* SidebarWorkspaceCardPresentationTests.swift in Sources */,
 				D7AB34300000000000000005 /* SidebarWorkspaceDropPlannerTests.swift in Sources */,
 				C135190000000000000000B1 /* SidebarWorkspaceGroupConfigOpenerTests.swift in Sources */,
@@ -8916,6 +8931,7 @@
 					CE0E03140000000000000001 /* WorkProvenanceLinearTicketLinkResolverTests.swift in Sources */,
 					8DCF06522BB39B4A966FFC83 /* WorkProvenanceObserverTests.swift in Sources */,
 					CE0E03190000000000000001 /* WorkProvenancePullRequestOwnerResolverDefaultTests.swift in Sources */,
+					C12C9276586E4007A66D21AC /* WorkProvenanceRuntimeResolutionTests.swift in Sources */,
 					B1581966C6355C46BC3ABE62 /* WorkProvenanceStoreTests.swift in Sources */,
 					CE0E03170000000000000001 /* WorkProvenanceWorkspaceResourceDiscoveryTests.swift in Sources */,
 					CE0E03180000000000000001 /* WorkProvenanceWorkspaceResourceDiscoveryTestSupport.swift in Sources */,
