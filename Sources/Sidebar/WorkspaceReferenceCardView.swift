@@ -51,8 +51,11 @@ struct WorkspaceReferenceCardView: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: theme.layout.cardContentGap) {
-            HStack(alignment: .center, spacing: theme.layout.workspaceCardHeaderGap) {
+            HStack(alignment: .top, spacing: theme.layout.workspaceCardHeaderGap) {
                 VStack(alignment: .leading, spacing: theme.layout.workspaceCardHeaderGap) {
+                    if let projectTitle = card.projectTitle {
+                        linkRow(icon: "folder", text: projectTitle, url: card.projectURL, control: .project)
+                    }
                     if repositoryName != nil || isSelected {
                         HStack(spacing: theme.layout.workspaceCardHeaderGap) {
                             if isSelected {
@@ -111,9 +114,6 @@ struct WorkspaceReferenceCardView: View {
                     .allowsHitTesting(false)
             }
 
-            if let projectTitle = card.projectTitle {
-                linkRow(icon: "folder", text: projectTitle, url: card.projectURL, control: .project)
-            }
             if let pullRequestText = card.pullRequestText {
                 linkRow(icon: "arrow.triangle.pull", text: pullRequestText, url: card.pullRequestURL, control: .pullRequest)
             }
