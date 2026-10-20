@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import ProvenanceEngineContracts
 import Testing
@@ -10,6 +11,52 @@ import Testing
 
 @Suite
 struct WorkspaceExplorerHistoryAdapterTests {
+    @MainActor
+    @Test
+    func recoverableWindowWorkspaceRemainsLiveDuringContextRecovery() throws {
+        _ = NSApplication.shared
+        let appDelegate = AppDelegate()
+        let registeredID = UUID()
+        let recoveredID = UUID()
+        let registeredWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 500, height: 320),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        let recoveredWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 500, height: 320),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        registeredWindow.identifier = NSUserInterfaceItemIdentifier("bmux.main.\(registeredID.uuidString)")
+        recoveredWindow.identifier = NSUserInterfaceItemIdentifier("bmux.main.\(recoveredID.uuidString)")
+        defer {
+            appDelegate.unregisterMainWindowContextForTesting(windowId: registeredID)
+            appDelegate.unregisterMainWindowContextForTesting(windowId: recoveredID)
+            registeredWindow.orderOut(nil)
+            recoveredWindow.orderOut(nil)
+        }
+        let registeredManager = TabManager()
+        let recoveredManager = TabManager()
+        appDelegate.registerMainWindow(
+            registeredWindow, windowId: registeredID, tabManager: registeredManager,
+            sidebarState: SidebarState(), sidebarSelectionState: SidebarSelectionState(),
+            fileExplorerState: FileExplorerState()
+        )
+        appDelegate.registerMainWindow(
+            recoveredWindow, windowId: recoveredID, tabManager: recoveredManager,
+            sidebarState: SidebarState(), sidebarSelectionState: SidebarSelectionState(),
+            fileExplorerState: FileExplorerState()
+        )
+        let recoveredWorkspace = try #require(recoveredManager.selectedWorkspace)
+
+        appDelegate.unregisterMainWindowContextForTesting(windowId: recoveredID)
+        #expect(appDelegate.recoverableMainWindowRoutes().contains { $0.windowId == recoveredID })
+        #expect(appDelegate.workspaceExplorerLiveWorkspaces().contains { $0.stableId == recoveredWorkspace.stableId })
+    }
+
     @Test
     func reopenedWorkspaceAppearsOnceAndKeepsItsArchive() {
         let stableID = UUID()
