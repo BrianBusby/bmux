@@ -30,6 +30,15 @@ struct WorkspaceExplorerStatusArrangement {
         arranged = live
     }
 
+    mutating func reconcile(
+        groupBy: [WorkspaceExplorerDimension],
+        filters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey]
+    ) {
+        if !groupBy.contains(.bmuxStatus) && filters[.bmuxStatus] == nil {
+            applyPending()
+        }
+    }
+
     mutating func remove(workspaceID: String) {
         live.removeValue(forKey: workspaceID)
         arranged.removeValue(forKey: workspaceID)

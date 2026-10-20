@@ -107,6 +107,7 @@ struct WorkspaceExplorerWindowView: View {
         .frame(minWidth: 640, minHeight: 440)
         .background(Color(nsColor: .windowBackgroundColor))
         .task { await model.load() }
+        .onDisappear { model.stopLiveStatusMonitoring() }
         .task(id: model.historyID) {
             if let id = model.historyID { await model.loadHistorySessions(for: id) }
         }

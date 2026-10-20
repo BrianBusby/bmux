@@ -19,7 +19,7 @@ struct WorkspaceExplorerHistoryAdapter {
                 lastActivityAt: [workspace.lastActivityAt, archiveByID[id]?.lastActivityAt]
                     .compactMap { $0 }.max(),
                 colorHex: workspace.colorHex,
-                display: workspace.display,
+                display: workspace.display ?? archiveByID[id]?.displayAtClose,
                 liveWorkspaceID: workspace.runtimeID,
                 liveStatus: workspace.liveStatus,
                 archive: archiveByID[id],

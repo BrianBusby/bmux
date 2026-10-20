@@ -161,6 +161,8 @@ final class WorkspaceExplorerCoordinator {
         }
     }
 
+    func stopLiveStatusMonitoring() { liveStatusMonitor?.stop() }
+
     private func arrangedStatuses() -> [String: WorkspaceExplorerStatus] {
         guard let lastLoadResult else { return [:] }
         return Dictionary(uniqueKeysWithValues: lastLoadResult.items.compactMap { item in
@@ -294,13 +296,32 @@ final class WorkspaceExplorerCoordinator {
 
     private func updateArrangement(_ change: (inout WorkspaceExplorerViewArrangement) -> Void) {
         guard let collectionTarget else {
+            let previousGroupBy = overviewArrangement.groupBy
+            let previousFilters = overviewArrangement.filters
             change(&overviewArrangement)
+            reconcileStatusArrangement(previousGroupBy: previousGroupBy, previousFilters: previousFilters)
             return
         }
         let key = key(for: collectionTarget)
         var arrangement = collectionArrangements[key] ?? WorkspaceExplorerViewArrangement()
+        let previousGroupBy = arrangement.groupBy
+        let previousFilters = arrangement.filters
         change(&arrangement)
         collectionArrangements[key] = arrangement
+        reconcileStatusArrangement(previousGroupBy: previousGroupBy, previousFilters: previousFilters)
+    }
+
+    private func reconcileStatusArrangement(
+        previousGroupBy: [WorkspaceExplorerDimension],
+        previousFilters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey]
+    ) {
+        let current = activeArrangement
+        guard previousGroupBy != current.groupBy || previousFilters != current.filters else { return }
+        statusArrangement.reconcile(groupBy: current.groupBy, filters: current.filters)
+        if let lastLoadResult {
+            catalog = WorkspaceExplorerCatalog(lastLoadResult, liveStatuses: liveStatusOverrides,
+                arrangedStatuses: arrangedStatuses())
+        }
     }
 
     private func key(for target: WorkspaceExplorerCollectionTarget) -> String {
