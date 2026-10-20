@@ -72,7 +72,7 @@ extension AppDelegate {
             }
         })
         return WorkspaceExplorerHistoryLoadResult(
-            items: WorkspaceExplorerHistoryAdapter.join(
+            items: WorkspaceExplorerHistoryAdapter().join(
                 live: live,
                 archived: archived,
                 eligibilityByID: eligibilityByID
@@ -103,7 +103,10 @@ extension AppDelegate {
     func workspaceExplorerLiveWorkspaces() -> [Workspace] {
         var managers: [TabManager] = []
         var seenManagers: Set<ObjectIdentifier> = []
-        for manager in mainWindowContexts.values.map(\.tabManager) + [tabManager].compactMap({ $0 }) {
+        let candidates = mainWindowContexts.values.map(\.tabManager)
+            + recoverableMainWindowRoutes().compactMap(\.tabManager)
+            + [tabManager].compactMap { $0 }
+        for manager in candidates {
             guard seenManagers.insert(ObjectIdentifier(manager)).inserted else { continue }
             managers.append(manager)
         }

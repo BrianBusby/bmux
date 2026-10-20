@@ -73,7 +73,7 @@ struct WorkspaceExplorerHistoryAdapterTests {
             lastActivityAt: closedAt.addingTimeInterval(60)
         )
 
-        let items = WorkspaceExplorerHistoryAdapter.join(
+        let items = WorkspaceExplorerHistoryAdapter().join(
             live: [live], archived: [archive], eligibilityByID: [:]
         )
 
@@ -101,7 +101,7 @@ struct WorkspaceExplorerHistoryAdapterTests {
             lastActivityAt: nil
         )
 
-        let items = WorkspaceExplorerHistoryAdapter.join(
+        let items = WorkspaceExplorerHistoryAdapter().join(
             live: [live], archived: [archive], eligibilityByID: [:]
         )
 
@@ -116,7 +116,7 @@ struct WorkspaceExplorerHistoryAdapterTests {
         let closedAt = Date(timeIntervalSince1970: 1_800_000_000)
         let archive = archivedRecord(id: stableID, closedAt: closedAt)
 
-        let items = WorkspaceExplorerHistoryAdapter.join(
+        let items = WorkspaceExplorerHistoryAdapter().join(
             live: [],
             archived: [archive],
             eligibilityByID: [stableID: .eligible(recordID: restoreRecordID)]

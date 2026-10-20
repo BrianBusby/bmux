@@ -1,61 +1,8 @@
 import Foundation
 import ProvenanceEngineContracts
 
-enum WorkspaceExplorerReopenReason: Equatable {
-    case historyLoading
-    case noRestoreSnapshot
-    case noDirectoryRecorded
-    case directoryRemoved
-    case noRestorablePanels
-    case alreadyOpen
-    case unsupportedRemoteRestore
-}
-
-enum WorkspaceExplorerReopenEligibility: Equatable {
-    case eligible(recordID: UUID)
-    case unavailable(WorkspaceExplorerReopenReason)
-}
-
-/// Immutable input captured from bmux's live workspace owner on the main actor.
-struct WorkspaceExplorerLiveWorkspace {
-    let stableID: UUID
-    let runtimeID: UUID
-    let title: String
-    let createdAt: Date
-    let colorHex: String?
-    let display: ProvenanceWorkspaceDisplayRecord?
-    let lastActivityAt: Date?
-}
-
-/// One logical workspace, even when a retained archive also exists for a live tab.
-struct WorkspaceExplorerHistoryItem: Identifiable {
-    let id: String
-    let title: String
-    let createdAt: Date?
-    let closedAt: Date?
-    let lastActivityAt: Date?
-    let colorHex: String?
-    let display: ProvenanceWorkspaceDisplayRecord?
-    let liveWorkspaceID: UUID?
-    let archive: ProvenanceArchivedWorkspaceRecord?
-    let reopenEligibility: WorkspaceExplorerReopenEligibility
-
-    var isOpen: Bool { liveWorkspaceID != nil }
-}
-
-enum WorkspaceExplorerArchiveAvailability: Equatable {
-    case available
-    case unavailable
-}
-
-struct WorkspaceExplorerHistoryLoadResult {
-    let items: [WorkspaceExplorerHistoryItem]
-    let archiveAvailability: WorkspaceExplorerArchiveAvailability
-    let partialLiveActivity: Bool
-}
-
-enum WorkspaceExplorerHistoryAdapter {
-    static func join(
+struct WorkspaceExplorerHistoryAdapter {
+    func join(
         live: [WorkspaceExplorerLiveWorkspace],
         archived: [ProvenanceArchivedWorkspaceRecord],
         eligibilityByID: [UUID: WorkspaceExplorerReopenEligibility]
@@ -96,4 +43,3 @@ enum WorkspaceExplorerHistoryAdapter {
         return open + closed
     }
 }
-
