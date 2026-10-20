@@ -64,7 +64,9 @@ struct WorkspaceReferenceCardView: View {
                             if let repositoryName {
                                 Text(repositoryName)
                                     .matteTypography(.repositoryLabel, theme: theme)
-                                    .foregroundStyle(color(.sage))
+                                    .foregroundStyle(Color(nsColor: WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(
+                                        colorScheme: colorScheme
+                                    )))
                                     .lineLimit(1)
                                     .truncationMode(.tail)
                             }
