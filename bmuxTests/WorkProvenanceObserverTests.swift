@@ -12,6 +12,33 @@ import Testing
 @Suite
 struct WorkProvenanceObserverTests {
     @Test
+    func workspaceArchiveServiceRecordsStableIdentityWhenDisplayIsMissing() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-workspace-archive-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(
+            databaseURL: directory.appendingPathComponent("provenance.sqlite")
+        )
+        let service = WorkProvenanceWorkspaceArchiveService(client: client)
+        let stableID = UUID()
+        let closedAt = Date(timeIntervalSince1970: 1_800_000_000)
+
+        try await service.recordClosure(
+            stableWorkspaceID: stableID,
+            title: "Maple Street Roof Inspection",
+            createdAt: closedAt.addingTimeInterval(-3600),
+            closedAt: closedAt,
+            colorHex: "#3B6FD6"
+        )
+
+        let records = try await client.archivedWorkspaces(.init()).records
+        #expect(records.count == 1)
+        #expect(records.first?.id == stableID.uuidString)
+        #expect(records.first?.title == "Maple Street Roof Inspection")
+        #expect(records.first?.lastActivityAt == nil)
+    }
+
+    @Test
     func linearWebLinkBuilderBuildsCompanyCamIssueAndProjectURLs() {
         let builder = LinearWebLinkBuilder()
 

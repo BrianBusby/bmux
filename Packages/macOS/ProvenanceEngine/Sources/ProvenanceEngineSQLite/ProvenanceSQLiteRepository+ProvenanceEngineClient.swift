@@ -13,6 +13,31 @@ extension ProvenanceSQLiteRepository: ProvenanceEngineClient {
         )
     }
 
+    func recordArchivedWorkspace(_ record: ProvenanceArchivedWorkspaceRecord) async throws {
+        try database.execute("BEGIN IMMEDIATE TRANSACTION")
+        do {
+            try persistArchivedWorkspace(record)
+            try database.execute("COMMIT")
+        } catch {
+            try? database.execute("ROLLBACK")
+            throw error
+        }
+    }
+
+    func clearArchivedWorkspaces(at timestamp: Date) async throws {
+        try clearArchivedWorkspaceRecords(at: timestamp)
+    }
+
+    func archivedWorkspaces(_ request: ProvenanceArchivedWorkspacePageRequest) async throws
+        -> ProvenanceArchivedWorkspacePageResponse {
+        try archivedWorkspacePage(request)
+    }
+
+    func workspaceSessions(_ request: ProvenanceWorkspaceSessionPageRequest) async throws
+        -> ProvenanceWorkspaceSessionPageResponse {
+        try workspaceSessionPage(request)
+    }
+
     func appendEvent(_ request: ProvenanceAppendEventRequest) async throws -> ProvenanceAppendEventResponse {
         try appendEvent(request.event)
         return ProvenanceAppendEventResponse(
