@@ -6,6 +6,7 @@ struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
     let id: UUID
     let hasActiveAIWork: Bool
     let title: String
+    let titleIsTicket: Bool
     let prompt: String?
     let branch: String?
     let isDirty: Bool?
@@ -38,6 +39,7 @@ struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
         id = workspace.id
         hasActiveAIWork = workspace.hasActiveAIWork
         title = titlePresentation.title
+        titleIsTicket = titlePresentation.usesTicketTitle
         prompt = provenance?.lastSubmittedPrompt ?? workspace.latestSubmittedMessage
         branch = context?.agentWorktreeBranch
         isDirty = branch == nil ? nil : context?.agentWorktree?.isDirty
