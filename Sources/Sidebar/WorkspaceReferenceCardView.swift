@@ -150,7 +150,6 @@ struct WorkspaceReferenceCardView: View {
             Text(text)
                 .underline(card.ticketURL != nil)
                 .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .matteTypography(.cardTitle, theme: theme)
         .frame(minHeight: theme.layout.minimumHitSize, alignment: .leading)
@@ -170,7 +169,6 @@ struct WorkspaceReferenceCardView: View {
                 .font(.system(size: theme.layout.smallIconSize, weight: .medium))
                 .frame(width: theme.layout.smallIconSize)
             Text(text).underline(url != nil).lineLimit(2).truncationMode(.tail)
-            Spacer(minLength: 0)
         }
         .matteTypography(.body, theme: theme)
         .frame(minHeight: theme.layout.minimumHitSize, alignment: .leading)
