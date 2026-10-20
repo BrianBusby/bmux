@@ -9,6 +9,49 @@ actor WorkProvenanceWorkspaceArchiveService {
         self.client = client
     }
 
+    /// Reads every retained archive page without imposing a UI-sized history cap.
+    func archivedWorkspaces() async throws -> [ProvenanceArchivedWorkspaceRecord] {
+        var records: [ProvenanceArchivedWorkspaceRecord] = []
+        var cursor: String?
+        var seenCursors: Set<String> = []
+        repeat {
+            try Task.checkCancellation()
+            let page = try await client.archivedWorkspaces(.init(limit: 500, cursor: cursor))
+            records.append(contentsOf: page.records)
+            cursor = page.nextCursor
+            if let cursor, !seenCursors.insert(cursor).inserted {
+                throw WorkspaceArchivePaginationError.repeatedCursor
+            }
+        } while cursor != nil
+        return records
+    }
+
+    func workspaceSessions(
+        stableWorkspaceID: UUID,
+        limit: Int = 50,
+        cursor: String? = nil
+    ) async throws -> ProvenanceWorkspaceSessionPageResponse {
+        try await client.workspaceSessions(.init(
+            workspaceID: stableWorkspaceID.uuidString,
+            limit: limit,
+            cursor: cursor
+        ))
+    }
+
+    func liveFacts(stableWorkspaceID: UUID) async throws
+        -> (display: ProvenanceWorkspaceDisplayRecord?, lastActivityAt: Date?) {
+        let workspaceID = stableWorkspaceID.uuidString
+        async let displayResponse = client.workspaceDisplay(.init(workspaceID: workspaceID))
+        async let sessionResponse = client.workspaceSessions(.init(workspaceID: workspaceID, limit: 1))
+        let display = try await displayResponse.display
+        let sessionActivity = try await sessionResponse.sessions.first?.lastActivityAt
+        return (display, [display?.lastSubmittedPromptSubmittedAt, sessionActivity].compactMap { $0 }.max())
+    }
+
+    func clearExplorerHistory(at timestamp: Date = Date()) async throws {
+        try await client.clearArchivedWorkspaces(at: timestamp)
+    }
+
     func recordClosure(
         stableWorkspaceID: UUID,
         title: String,
@@ -52,4 +95,8 @@ actor WorkProvenanceWorkspaceArchiveService {
         )
         try await client.recordArchivedWorkspace(record)
     }
+}
+
+private enum WorkspaceArchivePaginationError: Error {
+    case repeatedCursor
 }

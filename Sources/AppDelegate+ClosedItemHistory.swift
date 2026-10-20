@@ -88,7 +88,8 @@ extension AppDelegate {
     private func restoreClosedItem(
         _ entry: ClosedItemHistoryEntry,
         preferredTabManager: TabManager? = nil,
-        shouldActivate: Bool
+        shouldActivate: Bool,
+        allowsAgentResume: Bool = true
     ) -> Bool {
         switch entry {
         case .panel(let panelEntry):
@@ -106,7 +107,8 @@ extension AppDelegate {
                 workspaceEntry.windowId.flatMap { tabManagerFor(windowId: $0) }
                 ?? preferredTabManager
                 ?? tabManager
-            guard let manager, manager.restoreClosedWorkspace(workspaceEntry) else {
+            let restoredEntry = allowsAgentResume ? workspaceEntry : workspaceEntry.withoutAgentResume
+            guard let manager, manager.restoreClosedWorkspace(restoredEntry) else {
                 return false
             }
             activateMainWindowIfNeeded(for: manager, shouldActivate: shouldActivate)
@@ -161,7 +163,8 @@ extension AppDelegate {
     func reopenClosedHistoryItem(
         id: UUID,
         preferredTabManager: TabManager? = nil,
-        shouldActivate: Bool = true
+        shouldActivate: Bool = true,
+        allowsAgentResume: Bool = true
     ) -> Bool {
         guard let removed = ClosedItemHistoryStore.shared.removeRecord(id: id) else {
             return false
@@ -170,7 +173,8 @@ extension AppDelegate {
         if restoreClosedItem(
             removed.record.entry,
             preferredTabManager: preferredTabManager,
-            shouldActivate: shouldActivate
+            shouldActivate: shouldActivate,
+            allowsAgentResume: allowsAgentResume
         ) {
             return true
         }

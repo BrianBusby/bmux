@@ -8,7 +8,7 @@
 - Restore path: `Sources/ClosedItemHistory.swift`, `Sources/AppDelegate+ClosedItemHistory.swift`, and `Sources/TabManager.swift`.
 - PE boundary: `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts/ProvenanceEngineClient.swift` and its workspace/session response contracts.
 
-The PE archive foundation stores Explorer snapshots in a separately clearable table; these snapshots are excluded from the immutable ledger and its projection rebuild. An explicit clear removes Explorer archive entries, while the ledger and session evidence remain (user decision, 2026-10-20). The Explorer coordinator owns scope, navigation, and per-view arrangement state. Lazy rows receive immutable card snapshots and action closures. TabManager remains the owner of live activation and restoration. PE owns durable historical facts and bounded history queries. bmux supplies live presence and connection state through public contracts, never PE tables.
+The PE archive foundation stores Explorer snapshots in a separately clearable table; these snapshots are excluded from the immutable ledger and its projection rebuild. An explicit clear removes Explorer archive entries, while the ledger and session evidence remain (user decision, 2026-10-20). The Explorer coordinator owns scope, navigation, and per-view arrangement state. Lazy rows receive immutable card snapshots and action closures. TabManager remains the owner of live activation and restoration. PE owns durable historical facts and bounded history queries. bmux supplies live presence and connection state through public contracts, never PE tables. The adapter reads PE through its public client, joins by `Workspace.stableId`, and treats an archive read failure as closed count unknown while retaining live cards.
 
 ## Dependency audit on `origin/main` (2026-10-20)
 
@@ -25,7 +25,7 @@ The PE archive foundation stores Explorer snapshots in a separately clearable ta
 ## Delivery sequence
 
 1. PE close-snapshot archive foundation: public bounded read/write/clear contracts, version 26 clearable archive storage, stable-ID deduplication, and rebuild retention tests. The bmux user-close producer combines PE's linked session lifecycle, prompt, and turn activity with the last submitted prompt; broader activity sources remain.
-2. Add a bmux adapter that joins PE history with live TabManager presence. Reuse the existing restore action. Test close, reopen, missing worktree, and query failure.
+2. Add a bmux adapter that joins PE history with live TabManager presence. Reuse the existing restore action. Test close, reopen, missing worktree, and query failure. The `workspace-explorer-adapter` branch implements this boundary; Explorer reopen strips persisted agent and tmux startup commands before the existing restore action. Only direct local workspace snapshots with a present directory are eligible in this slice. A closed-window-only or remote snapshot remains readable but cannot be reopened from Explorer yet.
 3. Add a pure Explorer projection for scope, grouping, filter intersections, unique counts, and held status arrangement. Exercise `FIXTURES.md`, including multi-project overlap and missing metadata.
 4. Add native overview, project, and read-only detail views with localized English/Japanese copy. Preserve per-view navigation state and shared scope.
 5. Add motion and accessibility, then run focused tests, project-doc gates when status changes, tagged build, keyboard/reduced-motion and dense-fixture checks. Dogfood before merge.
@@ -34,6 +34,7 @@ The PE archive foundation stores Explorer snapshots in a separately clearable ta
 
 - Retain archived workspace metadata and captured session summaries until explicitly cleared (user decision, 2026-10-20). Clearing hides Explorer records but preserves PE session evidence. Add the UI clear path and make coverage visible; do not imply complete historical capture for pre-feature records.
 - Freeze project, PR, and ticket metadata at close for read-only detail. Open cards may use current authoritative display facts.
-- Verify restored workspace IDs through the real TabManager path.
+- Verify restored workspace IDs through the real TabManager path and retain the archive record after restore. The focused adapter tests exercise this path.
+- Local restore eligibility checks the recorded directory. Remote and closed-window-only snapshots are currently unavailable for targeted Explorer reopen; the existing recently closed menu keeps its own restoration behavior.
 - Close capture currently runs asynchronously and can be canceled by immediate app termination. Reconcile persisted recently-closed snapshots on startup, or provide a bounded termination flush, before calling capture durable for every close.
 - Verify period/date and animation behavior on supported macOS versions.

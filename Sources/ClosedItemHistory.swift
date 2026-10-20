@@ -178,6 +178,30 @@ final class ClosedItemHistoryStore: ObservableObject {
         !records.isEmpty
     }
 
+    var hasLoadedPersistedRecords: Bool {
+        didFinishPersistedRecordsLoad
+    }
+
+    /// The restore stack is separate from PE's retained archive. Only a direct
+    /// workspace snapshot can be reopened as one workspace without consuming
+    /// a closed window's other workspaces.
+    func workspaceRestoreRecord(stableId: UUID) -> ClosedItemHistoryRecord? {
+        records.reversed().first { record in
+            guard case .workspace(let entry) = record.entry else { return false }
+            return entry.snapshot.stableId == stableId
+        }
+    }
+
+    func workspaceRestoreRecordsByStableID() -> [UUID: ClosedItemHistoryRecord] {
+        var latest: [UUID: ClosedItemHistoryRecord] = [:]
+        for record in records {
+            guard case .workspace(let entry) = record.entry,
+                  let stableID = entry.snapshot.stableId else { continue }
+            latest[stableID] = record
+        }
+        return latest
+    }
+
     func push(_ entry: ClosedItemHistoryEntry) {
         push(ClosedItemHistoryRecord(entry: entry))
     }
