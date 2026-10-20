@@ -1977,9 +1977,8 @@ class TabManager: ObservableObject {
         guard tabs.count > 1, tabs.contains(where: { $0 === workspace }) else { return }
         panelTitleUpdateCoalescer.flushNow()
         sentryBreadcrumb("workspace.close", data: ["tabCount": tabs.count - 1])
-        // User-initiated close of a mirrored remote tmux session kills it on the
-        // remote. (App quit tears down windows without calling closeWorkspace, so
-        // quitting still leaves remote sessions alive.)
+        if recordHistory { workProvenanceRuntime?.recordWorkspaceClosure(workspace) }
+        // Explicit mirror close kills its remote session; app quit leaves it running.
         if workspace.isRemoteTmuxMirror {
             AppDelegate.shared?.remoteTmuxController.handleWorkspaceClosed(workspaceId: workspace.id)
         }

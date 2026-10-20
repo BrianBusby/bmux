@@ -16668,11 +16668,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 
     private func recordClosedWindowHistoryIfNeeded(for context: MainWindowContext) {
         let shouldSuppressClosedWindowHistory = closedWindowHistorySuppressedWindowIds.remove(context.windowId) != nil
-        guard !shouldSuppressClosedWindowHistory,
-              !isTerminatingApp,
-              !isApplyingSessionRestore else {
-            return
-        }
+        guard !shouldSuppressClosedWindowHistory, !isTerminatingApp, !isApplyingSessionRestore else { return }
+        context.tabManager.workProvenanceRuntime?.recordWindowClosure(context.tabManager.tabs)
         let restorableAgentIndex = SharedLiveAgentIndex.shared.currentIndexSchedulingRefresh()
             ?? RestorableAgentSessionIndex.load()
         guard let snapshot = closeWindowSnapshotPruningCrashDiagnostics(

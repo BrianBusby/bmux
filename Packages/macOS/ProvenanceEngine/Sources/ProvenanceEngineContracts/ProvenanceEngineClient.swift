@@ -54,6 +54,26 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
     func workspaceDisplay(_ request: ProvenanceWorkspaceDisplayRequest) async throws
         -> ProvenanceWorkspaceDisplayResponse
 
+    /// Retains the last-known facts for a closed logical workspace.
+    ///
+    /// Restoration does not delete the archive record. A later closure of the
+    /// same stable workspace ID replaces its last-close snapshot. Archive
+    /// snapshots are separately clearable and are not ledger events.
+    func recordArchivedWorkspace(_ record: ProvenanceArchivedWorkspaceRecord) async throws
+
+    /// Returns a bounded page of closed-workspace archive records.
+    func archivedWorkspaces(_ request: ProvenanceArchivedWorkspacePageRequest) async throws
+        -> ProvenanceArchivedWorkspacePageResponse
+
+    /// Returns bounded, observed sessions linked to one stable workspace ID.
+    func workspaceSessions(_ request: ProvenanceWorkspaceSessionPageRequest) async throws
+        -> ProvenanceWorkspaceSessionPageResponse
+
+    /// Explicitly clears retained closed-workspace metadata snapshots.
+    ///
+    /// This does not erase the immutable provenance ledger or session evidence.
+    func clearArchivedWorkspaces(at timestamp: Date) async throws
+
     /// Returns the canonical PE-owned association between one workspace and coding-agent session.
     ///
     /// - Parameter request: Query parameters for the workspace session association projection.
@@ -170,6 +190,28 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
 }
 
 public extension ProvenanceEngineClient {
+    /// Explicit unavailable result for clients that have not adopted workspace archiving.
+    func recordArchivedWorkspace(_ record: ProvenanceArchivedWorkspaceRecord) async throws {
+        throw ProvenanceWorkspaceArchiveUnavailableError()
+    }
+
+    /// Explicit unavailable result for clients that have not adopted workspace archiving.
+    func clearArchivedWorkspaces(at timestamp: Date) async throws {
+        throw ProvenanceWorkspaceArchiveUnavailableError()
+    }
+
+    /// Explicit unavailable result for clients that have not adopted workspace archiving.
+    func archivedWorkspaces(_ request: ProvenanceArchivedWorkspacePageRequest) async throws
+        -> ProvenanceArchivedWorkspacePageResponse {
+        throw ProvenanceWorkspaceArchiveUnavailableError()
+    }
+
+    /// Explicit unavailable result for clients without workspace history queries.
+    func workspaceSessions(_ request: ProvenanceWorkspaceSessionPageRequest) async throws
+        -> ProvenanceWorkspaceSessionPageResponse {
+        throw ProvenanceWorkspaceArchiveUnavailableError()
+    }
+
     /// Records one normalized child-session lifecycle transition.
     ///
     /// - Parameter request: Normalized lifecycle request supplied by a client adapter.

@@ -16,6 +16,7 @@ final class WorkProvenanceRuntime {
     let agentSessionSmartSessionStore: AgentSessionSmartSessionStore?
     private let workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription?
     private let sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder?
+    let workspaceArchiveService: WorkProvenanceWorkspaceArchiveService?
     private let codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder?
     private lazy var promptEvidenceCoordinator = WorkProvenancePromptEvidenceCoordinator(
         recorder: codingAgentEvidenceRecorder, displayStore: workspaceDisplayCurrentStateStore,
@@ -40,7 +41,7 @@ final class WorkProvenanceRuntime {
             executionTelemetryProjectionService != nil || !backgroundTasksByID.isEmpty
     }
 
-    private var acceptsLifecycleProducerWork: Bool { lifecycleState != .stopping && lifecycleState != .stopped }
+    var acceptsLifecycleProducerWork: Bool { lifecycleState != .stopping && lifecycleState != .stopped }
     private var acceptsObservationProducerWork: Bool { lifecycleState == .starting || lifecycleState == .ready }
 
     init(
@@ -51,6 +52,7 @@ final class WorkProvenanceRuntime {
         agentSessionSmartSessionStore: AgentSessionSmartSessionStore? = nil,
         workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription? = nil,
         sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder? = nil,
+        workspaceArchiveService: WorkProvenanceWorkspaceArchiveService? = nil,
         codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder? = nil,
         effectiveDatabaseURL: URL? = nil,
         startupErrorDescription: String? = nil,
@@ -75,6 +77,7 @@ final class WorkProvenanceRuntime {
         }
         self.workspaceDisplayCurrentStateSubscription = workspaceDisplayCurrentStateSubscription
         self.sessionLifecycleRecorder = sessionLifecycleRecorder
+        self.workspaceArchiveService = workspaceArchiveService
         self.codingAgentEvidenceRecorder = codingAgentEvidenceRecorder
         self.effectiveDatabaseURL = effectiveDatabaseURL
         self.startupErrorDescription = startupErrorDescription
@@ -119,6 +122,7 @@ final class WorkProvenanceRuntime {
                 sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder(
                     client: client
                 ),
+                workspaceArchiveService: WorkProvenanceWorkspaceArchiveService(client: client),
                 codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder(
                     client: client
                 ),
@@ -247,7 +251,7 @@ final class WorkProvenanceRuntime {
         }
     }
 
-    private func trackBackgroundTask(_ task: Task<Void, Never>) {
+    func trackBackgroundTask(_ task: Task<Void, Never>) {
         let id = UUID()
         backgroundTasksByID[id] = task
         Task { @MainActor [weak self] in

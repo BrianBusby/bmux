@@ -30,6 +30,9 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
     /// Queries current display metadata for a workspace.
     case queryWorkspaceDisplay = "query_workspace_display"
 
+    /// Records, queries, and explicitly clears archived workspace snapshots.
+    case workspaceArchive = "workspace_archive"
+
     /// Queries the canonical workspace-to-coding-agent-session association.
     case queryWorkspaceCodingAgentSessionAssociation = "query_workspace_coding_agent_session_association"
 
@@ -81,6 +84,7 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
         .queryWorktrees,
         .queryCurrentContext,
         .queryWorkspaceDisplay,
+        .workspaceArchive,
         .queryWorkspaceCodingAgentSessionAssociation,
         .queryFactualSessionProjection,
         .queryFactualSessionTurnDetail,
