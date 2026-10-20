@@ -9,6 +9,29 @@ struct WorkspaceExplorerWorkspaceCard: View {
     let onReopen: () -> Void
     let onFilter: (WorkspaceExplorerDimension, WorkspaceExplorerGroupKey) -> Void
 
+    private var reopenReason: String {
+        if case .unavailable(let reason) = item.reopenEligibility {
+            return reason.localizedDescription
+        }
+        return ""
+    }
+
+    private var statusLabel: String {
+        item.isOpen ? WorkspaceExplorerGroupKey.bmuxStatus(item.liveStatus)
+            .displayName(projectsByID: [:]) :
+            String(localized: "explorer.closed", defaultValue: "Closed")
+    }
+
+    private var statusColor: Color {
+        guard item.isOpen else { return .secondary }
+        switch item.liveStatus {
+        case .error: .red
+        case .needsInput: .orange
+        case .running: .green
+        case .idle, .disconnected, .closedHistorical: .secondary
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Button(action: onOpen) {
@@ -26,13 +49,12 @@ struct WorkspaceExplorerWorkspaceCard: View {
                             .lineLimit(1).truncationMode(.middle).help(branch)
                     }
                     HStack(spacing: 5) {
-                        Image(systemName: item.isOpen ? "circle" : "clock")
-                        Text(item.isOpen ?
-                            String(localized: "explorer.status.disconnected", defaultValue: "Disconnected") :
-                            String(localized: "explorer.closed", defaultValue: "Closed"))
+                        Image(systemName: item.liveStatus == .disconnected ? "circle" : "circle.fill")
+                            .font(.system(size: 7))
+                        Text(statusLabel)
                     }
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(statusColor)
                     if let activity = item.lastActivityAt {
                         Text(activity, style: .relative).font(.system(size: 11)).foregroundStyle(.secondary)
                     }
@@ -84,6 +106,7 @@ struct WorkspaceExplorerWorkspaceCard: View {
             } else {
                 Text(String(localized: "explorer.reopenUnavailable", defaultValue: "Reopen unavailable"))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
+                    .help(reopenReason)
             }
         }
         .padding(.leading, 16).padding(.trailing, 12).padding(.vertical, 10)

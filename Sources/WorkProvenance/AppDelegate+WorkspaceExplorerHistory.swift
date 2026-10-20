@@ -54,7 +54,8 @@ extension AppDelegate {
                 createdAt: workspace.createdAt,
                 colorHex: workspace.customColor,
                 display: facts?.display,
-                lastActivityAt: facts?.lastActivityAt
+                lastActivityAt: facts?.lastActivityAt,
+                liveStatus: WorkspaceExplorerLiveWorkspace.verifiedStatus(of: workspace)
             )
         }
         let liveIDs = Set(currentWorkspaces.map(\.stableId))
@@ -91,6 +92,15 @@ extension AppDelegate {
             throw WorkspaceExplorerHistoryLoadError.archiveUnavailable
         }
         return try await service.workspaceSessions(stableWorkspaceID: stableID, limit: limit, cursor: cursor)
+    }
+
+    func workspaceExplorerSessionEvidence(sessionID: String) async throws -> (
+        ProvenanceFactualSessionProjectionResponse, ProvenanceSessionOutcomeResponse
+    ) {
+        guard let service = workProvenanceRuntime?.workspaceArchiveService else {
+            throw WorkspaceExplorerHistoryLoadError.archiveUnavailable
+        }
+        return try await service.sessionEvidence(sessionID: sessionID)
     }
 
     func clearWorkspaceExplorerHistory() async throws {

@@ -922,6 +922,8 @@ struct bmuxApp: App {
                 reopenHistory: { appDelegate.reopenWorkspaceExplorerHistory(stableID: $0) },
                 activateWorkspace: { appDelegate.activateWorkspaceExplorerWorkspace(runtimeID: $0) },
                 loadSessions: { try await appDelegate.workspaceExplorerSessions(stableID: $0) },
+                loadEvidence: { try await appDelegate.workspaceExplorerSessionEvidence(sessionID: $0) },
+                loadMoreSessions: { try await appDelegate.workspaceExplorerSessions(stableID: $0, cursor: $1) },
                 clearArchive: { try await appDelegate.clearWorkspaceExplorerHistory() }
             )
             .bmuxAppearanceColorScheme(appearanceMode)

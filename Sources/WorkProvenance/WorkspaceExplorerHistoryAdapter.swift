@@ -21,6 +21,7 @@ struct WorkspaceExplorerHistoryAdapter {
                 colorHex: workspace.colorHex,
                 display: workspace.display,
                 liveWorkspaceID: workspace.runtimeID,
+                liveStatus: workspace.liveStatus,
                 archive: archiveByID[id],
                 reopenEligibility: .unavailable(.alreadyOpen)
             )
@@ -35,6 +36,7 @@ struct WorkspaceExplorerHistoryAdapter {
                 colorHex: record.colorHex,
                 display: record.displayAtClose,
                 liveWorkspaceID: nil,
+                liveStatus: .closedHistorical,
                 archive: record,
                 reopenEligibility: UUID(uuidString: record.id)
                     .flatMap { eligibilityByID[$0] } ?? .unavailable(.noRestoreSnapshot)

@@ -8,6 +8,7 @@ struct WorkspaceExplorerProjectCard: View {
     let scope: WorkspaceExplorerScope
     let openTotal: Int
     let matchingCount: Int?
+    let isFocused: Bool
     let onOpen: () -> Void
 
     var body: some View {
@@ -32,7 +33,8 @@ struct WorkspaceExplorerProjectCard: View {
             .background(Color(nsColor: .controlBackgroundColor),
                 in: RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(Color(nsColor: .separatorColor), lineWidth: 1))
+                .strokeBorder(isFocused ? Color.accentColor : Color(nsColor: .separatorColor),
+                    lineWidth: isFocused ? 2 : 1))
         }
         .buttonStyle(.plain)
     }

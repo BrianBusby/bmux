@@ -57,6 +57,22 @@ struct WorkspaceExplorerHistoryAdapterTests {
         #expect(appDelegate.workspaceExplorerLiveWorkspaces().contains { $0.stableId == recoveredWorkspace.stableId })
     }
 
+    @MainActor
+    @Test
+    func liveStatusRequiresMatchingAgentProcessIdentity() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelID = try #require(workspace.focusedPanelId)
+        workspace.agentPIDKeysByPanelId[panelID] = ["codex"]
+        workspace.agentPIDs["codex"] = getpid()
+        workspace.agentLifecycleStatesByPanelId[panelID] = ["codex": .needsInput]
+        #expect(WorkspaceExplorerLiveWorkspace.verifiedStatus(of: workspace) == .disconnected)
+        workspace.agentPIDProcessIdentitiesByKey["codex"] = Workspace.agentPIDProcessIdentity(pid: getpid())
+        #expect(WorkspaceExplorerLiveWorkspace.verifiedStatus(of: workspace) == .needsInput)
+        workspace.agentLifecycleStatesByPanelId[panelID] = ["codex": .running]
+        #expect(WorkspaceExplorerLiveWorkspace.verifiedStatus(of: workspace) == .running)
+    }
+
     @Test
     func reopenedWorkspaceAppearsOnceAndKeepsItsArchive() {
         let stableID = UUID()

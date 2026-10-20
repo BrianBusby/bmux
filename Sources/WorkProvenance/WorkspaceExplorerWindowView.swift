@@ -6,15 +6,19 @@ import SwiftUI
 struct WorkspaceExplorerWindowView: View {
     @State private var model: WorkspaceExplorerCoordinator
     @State private var confirmsClearHistory = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(loadHistory: @escaping WorkspaceExplorerCoordinator.Loader,
          reopenHistory: @escaping WorkspaceExplorerCoordinator.Reopener,
          activateWorkspace: @escaping WorkspaceExplorerCoordinator.Activator,
          loadSessions: @escaping WorkspaceExplorerCoordinator.SessionLoader,
+         loadEvidence: @escaping WorkspaceExplorerCoordinator.EvidenceLoader,
+         loadMoreSessions: @escaping WorkspaceExplorerCoordinator.MoreSessionsLoader,
          clearArchive: @escaping WorkspaceExplorerCoordinator.Clearer) {
         _model = State(initialValue: WorkspaceExplorerCoordinator(
             loadHistory: loadHistory, reopenHistory: reopenHistory,
             activateWorkspace: activateWorkspace, loadSessions: loadSessions,
+            loadEvidence: loadEvidence, loadMoreSessions: loadMoreSessions,
             clearArchive: clearArchive))
     }
 
@@ -37,6 +41,25 @@ struct WorkspaceExplorerWindowView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
+                        if model.pendingStatusChangeCount > 0 {
+                            HStack {
+                                Text(String(format: String(localized: "explorer.statusChanged", defaultValue:
+                                    "%d workspaces changed status"), model.pendingStatusChangeCount))
+                                Button(String(localized: "explorer.updateArrangement", defaultValue:
+                                    "Update arrangement")) { model.applyPendingStatusArrangement() }
+                            }
+                            .font(.system(size: 12)).padding(10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                        }
+                        if let title = model.reopenedTitle {
+                            notice(String(format: String(localized: "explorer.reopenedConfirmation", defaultValue:
+                                "Reopened “%@” — history retained, no agent resumed"), title))
+                        }
+                        if model.reopenFailed {
+                            notice(String(localized: "explorer.reopenFailed", defaultValue:
+                                "Workspace could not be reopened. Its history remains available."))
+                        }
                         if model.clearFailed {
                             notice(String(localized: "explorer.clearFailed", defaultValue:
                                 "Explorer history could not be cleared. Try again."))
@@ -59,6 +82,16 @@ struct WorkspaceExplorerWindowView: View {
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .scrollPosition(id: Binding(
+                    get: { model.activeArrangement.scrollAnchorID },
+                    set: { model.setScrollAnchor($0) }
+                ))
+                .animation(reduceMotion ? nil : .timingCurve(0.2, 0.7, 0.2, 1, duration: 0.25),
+                    value: model.activeArrangement.groupBy)
+                .animation(reduceMotion ? nil : .timingCurve(0.2, 0.7, 0.2, 1, duration: 0.2),
+                    value: model.activeArrangement.filters)
+                .animation(reduceMotion ? nil : .timingCurve(0.2, 0.7, 0.2, 1, duration: 0.2),
+                    value: model.activeArrangement.collapsedPaths)
             }
         }
         .frame(minWidth: 640, minHeight: 440)
@@ -175,11 +208,16 @@ struct WorkspaceExplorerWindowView: View {
         VStack(alignment: .leading, spacing: 14) {
             if let result = model.result() {
                 HStack {
-                    Text(String(format: result.counts.workspaces == 1 ?
-                        String(localized: "explorer.overviewCountOne", defaultValue: "%d projects · %d workspace") :
-                        String(localized: "explorer.overviewCount", defaultValue: "%d projects · %d workspaces"),
-                        result.inScopeProjectIDs.count,
-                        result.counts.workspaces))
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(String(format: String(localized: "explorer.overviewScopedCount", defaultValue:
+                            "%d projects · %d workspaces · %@"), result.inScopeProjectIDs.count,
+                            result.counts.workspaces, model.scope.summary))
+                        if !model.activeArrangement.filters.isEmpty {
+                            Text(String(format: String(localized: "explorer.projectsShown", defaultValue:
+                                "%d of %d projects shown"), result.visibleProjectIDs.count,
+                                result.inScopeProjectIDs.count))
+                        }
+                    }
                     Spacer()
                     Button(String(localized: "explorer.allWorkspaces", defaultValue: "All workspaces")) {
                         model.showCollection(.all)
@@ -204,6 +242,7 @@ struct WorkspaceExplorerWindowView: View {
                     WorkspaceExplorerProjectCard(project: nil, counts: unassigned.counts,
                         scope: model.scope, openTotal: openTotal,
                         matchingCount: overviewFilters.isEmpty ? nil : unassigned.visibleCounts.workspaces,
+                        isFocused: false,
                         onOpen: { model.showCollection(.unassigned) })
                         .frame(maxWidth: 300)
                 }
@@ -212,16 +251,14 @@ struct WorkspaceExplorerWindowView: View {
                 }
             }
         }
+        .scrollTargetLayout()
     }
 
     private func collection(target: WorkspaceExplorerCollectionTarget) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(collectionTitle(target)).font(.system(size: 18, weight: .bold))
             if let result = model.result() {
-                Text(String(format: result.counts.workspaces == 1 ?
-                    String(localized: "explorer.workspaceCountOne", defaultValue: "%d workspace") :
-                    String(localized: "explorer.workspaceCount", defaultValue: "%d workspaces"),
-                    result.counts.workspaces))
+                Text(collectionCount(result))
                     .font(.system(size: 13)).foregroundStyle(.secondary)
                 arrangementBar
                 ForEach(Array(result.groups.enumerated()), id: \.offset) { _, group in
@@ -231,6 +268,21 @@ struct WorkspaceExplorerWindowView: View {
                 if result.visibleWorkspaceIDs.isEmpty { emptyCollection }
             }
         }
+        .scrollTargetLayout()
+    }
+
+    private func collectionCount(_ result: WorkspaceExplorerProjectionResult) -> String {
+        let count = result.counts.workspaces
+        let label: String
+        switch model.scope.state {
+        case .open: label = String(localized: "explorer.count.open", defaultValue: "open workspaces")
+        case .all: label = String(localized: "explorer.count.all", defaultValue: "workspaces")
+        case .closed: label = String(localized: "explorer.count.closed", defaultValue: "closed workspaces")
+        }
+        let total = "\(count) \(label) · \(model.scope.summary)"
+        guard !model.activeArrangement.filters.isEmpty else { return total }
+        return String(format: String(localized: "explorer.visibleOfTotal", defaultValue: "%d of %@"),
+            result.visibleCounts.workspaces, total)
     }
 
     private var emptyCollection: some View {
@@ -248,9 +300,31 @@ struct WorkspaceExplorerWindowView: View {
                 ContentUnavailableView {
                     Label(String(localized: "explorer.noActivity", defaultValue: "No activity in this period"),
                         systemImage: "clock")
+                } description: {
+                    Text(String(format: String(localized: "explorer.anyTimeTotal", defaultValue:
+                        "%d workspaces at any time. Capture may also be incomplete."), anyTimeWorkspaceCount))
                 } actions: {
                     Button(String(localized: "explorer.anyTime", defaultValue: "Any time")) {
                         model.scope.period = .anyTime
+                    }
+                }
+            } else if model.scope.state == .open {
+                ContentUnavailableView {
+                    Label(String(localized: "explorer.noOpenWorkspaces", defaultValue:
+                        "No open workspaces"), systemImage: "square.grid.2x2")
+                } description: {
+                    if model.catalog?.archiveAvailable == true {
+                        Text(String(format: String(localized: "explorer.closedRetained", defaultValue:
+                            "%d closed workspaces retained."), closedWorkspaceCount))
+                    } else {
+                        Text(String(localized: "explorer.count.closedUnknown", defaultValue: "closed unknown"))
+                    }
+                } actions: {
+                    Button(String(localized: "explorer.showAll", defaultValue: "Show all")) {
+                        model.scope.state = .all
+                    }
+                    Button(String(localized: "explorer.showClosed", defaultValue: "Show closed")) {
+                        model.scope.state = .closed
                     }
                 }
             } else {
@@ -258,6 +332,20 @@ struct WorkspaceExplorerWindowView: View {
                     "No workspaces in this scope"), systemImage: "square.grid.2x2")
             }
         }
+    }
+
+    private var anyTimeWorkspaceCount: Int {
+        guard let projection = model.projection else { return 0 }
+        return projection.collection(target: model.collectionTarget ?? .all,
+            scope: WorkspaceExplorerScope(state: .all, period: .anyTime),
+            groupBy: [], filters: [:], now: .now, calendar: .current).counts.workspaces
+    }
+
+    private var closedWorkspaceCount: Int {
+        guard let projection = model.projection else { return 0 }
+        return projection.collection(target: model.collectionTarget ?? .all,
+            scope: WorkspaceExplorerScope(state: .closed, period: .anyTime),
+            groupBy: [], filters: [:], now: .now, calendar: .current).counts.closed
     }
 
     private var arrangementBar: some View {
@@ -305,6 +393,7 @@ struct WorkspaceExplorerWindowView: View {
             itemsByID: Dictionary(items.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }),
             projectCounts: counts, projectOpenTotals: openTotals, scope: model.scope,
             matchingCounts: matchingCounts,
+            focusedProjectID: model.overviewArrangement.focusedProjectID,
             onOpenProject: { model.showCollection(.project($0)) },
             onOpenWorkspace: { model.open($0) },
             onHistory: { model.showHistory($0.id) },
@@ -327,8 +416,13 @@ struct WorkspaceExplorerWindowView: View {
             if let item = model.catalog?.items.first(where: { $0.id == id }) {
                 WorkspaceExplorerHistoryView(item: item, page: model.sessionsByWorkspaceID[id],
                     period: model.scope.period, loadFailed: model.sessionLoadFailed,
+                    evidenceBySessionID: model.evidenceBySessionID,
+                    evidenceLoadingIDs: model.evidenceLoadingIDs,
+                    evidenceFailedIDs: model.evidenceFailedIDs,
                     onOpenLive: { model.open(item) },
-                    onReopen: { Task { _ = await model.reopen(item) } })
+                    onReopen: { Task { _ = await model.reopen(item) } },
+                    onLoadEvidence: { sessionID in Task { await model.loadSessionEvidence(for: sessionID) } },
+                    onLoadMore: { Task { await model.loadMoreHistorySessions(for: id) } })
                     .id(id)
             }
         }

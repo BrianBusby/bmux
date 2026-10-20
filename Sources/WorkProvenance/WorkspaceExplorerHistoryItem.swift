@@ -11,6 +11,7 @@ struct WorkspaceExplorerHistoryItem: Identifiable {
     let colorHex: String?
     let display: ProvenanceWorkspaceDisplayRecord?
     let liveWorkspaceID: UUID?
+    let liveStatus: WorkspaceExplorerStatus
     let archive: ProvenanceArchivedWorkspaceRecord?
     let reopenEligibility: WorkspaceExplorerReopenEligibility
 

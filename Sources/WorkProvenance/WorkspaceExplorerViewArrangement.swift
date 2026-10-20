@@ -6,6 +6,7 @@ struct WorkspaceExplorerViewArrangement {
     private(set) var filters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey] = [:]
     private(set) var collapsedPaths: Set<String> = []
     var scrollOffset: CGFloat = 0
+    var scrollAnchorID: String?
     var selectedWorkspaceID: String?
     var focusedProjectID: String?
     private var undoStack: [Snapshot] = []

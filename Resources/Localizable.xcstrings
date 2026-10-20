@@ -105842,6 +105842,598 @@
         }
       }
     },
+    "explorer.lastActive": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last active"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最終アクティビティ"
+          }
+        }
+      }
+    },
+    "explorer.closedAt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closed at"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "終了日時"
+          }
+        }
+      }
+    },
+    "explorer.reopenReason": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No supported local restoration snapshot is available."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "対応するローカル復元スナップショットがありません。"
+          }
+        }
+      }
+    },
+    "explorer.lastKnownMetadata": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last-known values recorded at close, not re-fetched."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最終確認値は終了時に記録されたもので、再取得されていません。"
+          }
+        }
+      }
+    },
+    "explorer.artifacts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artifacts"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "成果物"
+          }
+        }
+      }
+    },
+    "explorer.coverageTranscript": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captured evidence only — terminal scrollback may not be retained."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取得済みの記録のみ表示しています。ターミナルのスクロール履歴は保持されていない場合があります。"
+          }
+        }
+      }
+    },
+    "explorer.viewSessionDetail": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View session detail"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッションの詳細を表示"
+          }
+        }
+      }
+    },
+    "explorer.activeLast24Hours": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active in last 24 hours"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "過去24時間にアクティビティあり"
+          }
+        }
+      }
+    },
+    "explorer.activeToday": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active today"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日アクティビティあり"
+          }
+        }
+      }
+    },
+    "explorer.activeLast7Days": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active in last 7 days"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "過去7日間にアクティビティあり"
+          }
+        }
+      }
+    },
+    "explorer.overviewScopedCount": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d projects · %d workspaces · %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d件のプロジェクト · %d件のワークスペース · %@"
+          }
+        }
+      }
+    },
+    "explorer.projectsShown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d of %d projects shown"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d / %d件のプロジェクトを表示"
+          }
+        }
+      }
+    },
+    "explorer.visibleOfTotal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d of %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d / %@"
+          }
+        }
+      }
+    },
+    "explorer.overviewGroupCount": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d projects · %d in scope"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d件のプロジェクト · 対象内%d件"
+          }
+        }
+      }
+    },
+    "explorer.workspaceGroupBreakdown": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d · %d open · %d closed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d件 · 開いている%d件 · 終了済み%d件"
+          }
+        }
+      }
+    },
+    "explorer.reopenedConfirmation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopened “%@” — history retained, no agent resumed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」を再び開きました — 履歴は保持され、エージェントは再開されていません"
+          }
+        }
+      }
+    },
+    "explorer.reopenFailed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workspace could not be reopened. Its history remains available."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ワークスペースを再び開けませんでした。履歴は引き続き利用できます。"
+          }
+        }
+      }
+    },
+    "explorer.readOnlySessionNotice": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read-only. No terminal connection, approvals, or prompts. Showing %d sessions with activity %@; session count is separate from the workspace count."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "読み取り専用。ターミナル接続、承認、プロンプトはありません。%2$@にアクティビティがあるセッションを%1$d件表示。セッション数はワークスペース数とは別です。"
+          }
+        }
+      }
+    },
+    "explorer.loadMoreSessions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load more retained sessions"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保持されたセッションをさらに読み込む"
+          }
+        }
+      }
+    },
+    "explorer.outsidePeriod": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OUTSIDE SELECTED PERIOD"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選択期間外"
+          }
+        }
+      }
+    },
+    "explorer.startedBeforePeriod": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "STARTED BEFORE THIS PERIOD"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この期間より前に開始"
+          }
+        }
+      }
+    },
+    "explorer.statusChanged": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d workspaces changed status"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d件のワークスペースの状態が変更されました"
+          }
+        }
+      }
+    },
+    "explorer.updateArrangement": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update arrangement"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配置を更新"
+          }
+        }
+      }
+    },
+    "explorer.reopen.historyLoading": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History is still loading."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "履歴を読み込み中です。"
+          }
+        }
+      }
+    },
+    "explorer.reopen.noRestoreSnapshot": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No restoration snapshot is available."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "復元スナップショットがありません。"
+          }
+        }
+      }
+    },
+    "explorer.reopen.noDirectoryRecorded": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No local directory was recorded."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ローカルディレクトリが記録されていません。"
+          }
+        }
+      }
+    },
+    "explorer.reopen.directoryRemoved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recorded directory no longer exists."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "記録されたディレクトリは存在しません。"
+          }
+        }
+      }
+    },
+    "explorer.reopen.noRestorablePanels": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No restorable panels were recorded."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "復元可能なパネルが記録されていません。"
+          }
+        }
+      }
+    },
+    "explorer.reopen.alreadyOpen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This workspace is already open."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このワークスペースはすでに開いています。"
+          }
+        }
+      }
+    },
+    "explorer.reopen.unsupportedRemoteRestore": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remote restoration is not supported here."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ここではリモート復元はサポートされていません。"
+          }
+        }
+      }
+    },
+    "explorer.anyTimeTotal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d workspaces at any time. Capture may also be incomplete."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全期間で%d件のワークスペースがあります。記録が不完全な場合もあります。"
+          }
+        }
+      }
+    },
+    "explorer.noOpenWorkspaces": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No open workspaces"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開いているワークスペースはありません"
+          }
+        }
+      }
+    },
+    "explorer.closedRetained": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d closed workspaces retained."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "終了したワークスペースを%d件保持しています。"
+          }
+        }
+      }
+    },
+    "explorer.showAll": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show all"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべて表示"
+          }
+        }
+      }
+    },
+    "explorer.showClosed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show closed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "終了済みを表示"
+          }
+        }
+      }
+    },
+    "explorer.showAllSessionsCount": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show all retained sessions (%d)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保持されたすべてのセッションを表示（%d件）"
+          }
+        }
+      }
+    },
+    "explorer.showLoadedSessionsCount": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show all loaded sessions (%d)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "読み込み済みのセッションをすべて表示（%d件）"
+          }
+        }
+      }
+    },
     "explorer.title": {
       "extractionState": "manual",
       "localizations": {

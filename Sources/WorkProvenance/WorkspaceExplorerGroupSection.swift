@@ -15,6 +15,7 @@ struct WorkspaceExplorerGroupSection: View {
     let projectOpenTotals: [String: Int]
     let scope: WorkspaceExplorerScope
     let matchingCounts: [String: Int]
+    let focusedProjectID: String?
     let onOpenProject: (String) -> Void
     let onOpenWorkspace: (WorkspaceExplorerHistoryItem) -> Void
     let onHistory: (WorkspaceExplorerHistoryItem) -> Void
@@ -59,7 +60,7 @@ struct WorkspaceExplorerGroupSection: View {
                             activeFilters: activeFilters, projectsByID: projectsByID,
                             itemsByID: itemsByID, projectCounts: projectCounts,
                             projectOpenTotals: projectOpenTotals, scope: scope,
-                            matchingCounts: matchingCounts,
+                            matchingCounts: matchingCounts, focusedProjectID: focusedProjectID,
                             onOpenProject: onOpenProject, onOpenWorkspace: onOpenWorkspace,
                             onHistory: onHistory, onReopen: onReopen,
                             onCardFilter: onCardFilter, onToggle: onToggle, onFocus: onFocus)
@@ -67,6 +68,7 @@ struct WorkspaceExplorerGroupSection: View {
                 }
             }
         }
+        .id(path)
         .padding(depth == 0 && group.dimension != nil ? 12 : 0)
         .background(depth == 0 && group.dimension != nil ? Color(nsColor: .controlBackgroundColor).opacity(0.45) : .clear,
             in: RoundedRectangle(cornerRadius: 12))
@@ -82,7 +84,10 @@ struct WorkspaceExplorerGroupSection: View {
                             counts: projectCounts[id] ?? WorkspaceExplorerCounts([], closedKnown: false),
                             scope: scope, openTotal: projectOpenTotals[id] ?? 0,
                             matchingCount: matchingCounts[id],
+                            isFocused: focusedProjectID == id,
                             onOpen: { onOpenProject(id) })
+                            .id("project:\(id)")
+                            .transition(.opacity.combined(with: .scale(scale: 0.98)))
                     }
                 }
             } else {
@@ -93,21 +98,26 @@ struct WorkspaceExplorerGroupSection: View {
                             onHistory: { onHistory(item) },
                             onReopen: { onReopen(item) },
                             onFilter: onCardFilter)
+                            .id("workspace:\(id)")
+                            .transition(.opacity.combined(with: .scale(scale: 0.98)))
                     }
                 }
             }
         }
+        .scrollTargetLayout()
     }
 
     private var groupCount: String {
         if overview {
-            return String(format: String(localized: "explorer.groupProjectCount", defaultValue: "%d projects"),
-                group.projectIDs.count)
+            return String(format: String(localized: "explorer.overviewGroupCount", defaultValue:
+                "%d projects · %d in scope"), group.projectIDs.count, group.counts.workspaces)
         }
-        return String(format: group.counts.workspaces == 1 ?
-            String(localized: "explorer.workspaceCountOne", defaultValue: "%d workspace") :
-            String(localized: "explorer.workspaceCount", defaultValue: "%d workspaces"),
-            group.counts.workspaces)
+        if scope.state == .all && group.counts.closedKnown {
+            return String(format: String(localized: "explorer.workspaceGroupBreakdown", defaultValue:
+                "%d · %d open · %d closed"), group.counts.workspaces,
+                group.counts.open, group.counts.closed)
+        }
+        return group.counts.workspaces.formatted()
     }
 
     private var label: String {

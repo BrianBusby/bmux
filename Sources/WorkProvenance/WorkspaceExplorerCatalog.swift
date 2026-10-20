@@ -8,7 +8,8 @@ struct WorkspaceExplorerCatalog {
     let archiveAvailable: Bool
     let partialLiveActivity: Bool
 
-    init(_ result: WorkspaceExplorerHistoryLoadResult) {
+    init(_ result: WorkspaceExplorerHistoryLoadResult,
+         arrangedStatuses: [String: WorkspaceExplorerStatus] = [:]) {
         items = result.items
         archiveAvailable = result.archiveAvailability == .available
         partialLiveActivity = result.partialLiveActivity
@@ -24,8 +25,7 @@ struct WorkspaceExplorerCatalog {
         }.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
         workspaces = result.items.map { item in
             let display = item.display
-            // Until a verified per-session connection signal is available, a live item is disconnected.
-            let status: WorkspaceExplorerStatus = .disconnected
+            let status = item.liveStatus
             return WorkspaceExplorerWorkspace(
                 id: item.id,
                 title: item.title,
@@ -39,7 +39,7 @@ struct WorkspaceExplorerCatalog {
                 lastActivityAt: item.lastActivityAt,
                 isClosed: !item.isOpen,
                 liveStatus: status,
-                arrangedStatus: status
+                arrangedStatus: arrangedStatuses[item.id] ?? status
             )
         }
     }
