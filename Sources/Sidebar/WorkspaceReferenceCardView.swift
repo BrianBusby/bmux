@@ -56,6 +56,9 @@ struct WorkspaceReferenceCardView: View {
                     if let projectTitle = card.projectTitle {
                         linkRow(icon: "folder", text: projectTitle, url: card.projectURL, control: .project)
                     }
+                    if let ticketID = card.ticketID {
+                        ticketHeading(ticketID)
+                    }
                     if let repositoryName {
                         Text(repositoryName)
                             .matteTypography(.repositoryLabel, theme: theme)
@@ -65,9 +68,6 @@ struct WorkspaceReferenceCardView: View {
                             .lineLimit(1)
                             .truncationMode(.tail)
                             .allowsHitTesting(false)
-                    }
-                    if let ticketID = card.ticketID {
-                        ticketHeading(ticketID)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
