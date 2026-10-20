@@ -183,11 +183,7 @@ struct WorkspaceReferenceCardView: View {
     @ViewBuilder
     private func ownerRow(_ name: String) -> some View {
         let label = HStack(spacing: 8) {
-            Text(card.ownerInitials ?? "")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(color(.textSecondary))
-                .frame(width: 24, height: 24)
-                .background(color(.chip), in: Circle())
+            ownerAvatar.accessibilityHidden(true)
             Text(name).matteTypography(.body, theme: theme).lineLimit(1)
         }
         .frame(minHeight: theme.layout.minimumHitSize)
@@ -197,6 +193,32 @@ struct WorkspaceReferenceCardView: View {
         } else {
             label.foregroundStyle(color(.textSecondary)).allowsHitTesting(false)
         }
+    }
+
+    @ViewBuilder
+    private var ownerAvatar: some View {
+        if let url = card.ownerAvatarURL {
+            AsyncImage(url: url) { phase in
+                if let image = phase.image {
+                    image.resizable()
+                        .scaledToFill()
+                        .frame(width: 29, height: 29)
+                        .clipShape(Circle())
+                } else {
+                    ownerInitialsCircle
+                }
+            }
+        } else {
+            ownerInitialsCircle
+        }
+    }
+
+    private var ownerInitialsCircle: some View {
+        Text(card.ownerInitials ?? "")
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(color(.textSecondary))
+            .frame(width: 29, height: 29)
+            .background(color(.chip), in: Circle())
     }
 
     private func updateFocus(_ control: Control, isFocused: Bool) {

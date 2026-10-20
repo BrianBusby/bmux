@@ -19,6 +19,7 @@ struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
     let pullRequestURL: URL?
     let ownerName: String?
     let ownerURL: URL?
+    let ownerAvatarURL: URL?
     let pullRequestOwnerLogin: String?
 
     var ownerInitials: String? {
@@ -59,20 +60,28 @@ struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
             pullRequestText = nil
             pullRequestURL = nil
         }
-        let pullRequestOwner: (name: String?, url: URL?)?
+        let pullRequestOwner: (name: String?, url: URL?, avatarURL: URL?)?
+        let matchingProvenancePullRequest = provenance?.pullRequest.flatMap { request in
+            workspace.pullRequest == nil || (workspace.pullRequest?.number == request.number
+                && (request.url == nil || workspace.pullRequest?.url == request.url)) ? request : nil
+        }
         if let request = workspace.pullRequest, let login = request.ownerLogin {
-            pullRequestOwner = (login, request.ownerURL)
-        } else if let request = provenance?.pullRequest,
-                  workspace.pullRequest == nil || (workspace.pullRequest?.number == request.number
-                      && workspace.pullRequest?.url == request.url) {
-            pullRequestOwner = (request.ownerLogin, request.ownerURL)
+            pullRequestOwner = (
+                login,
+                request.ownerURL ?? matchingProvenancePullRequest?.ownerURL,
+                request.ownerAvatarURL ?? matchingProvenancePullRequest?.ownerAvatarURL
+            )
+        } else if let request = matchingProvenancePullRequest {
+            pullRequestOwner = (request.ownerLogin, request.ownerURL, request.ownerAvatarURL)
         } else {
             pullRequestOwner = nil
         }
         pullRequestOwnerLogin = pullRequestOwner?.name
-        ownerName = context?.ticketLinks.first?.ownerName ?? pullRequestOwner?.name
-        ownerURL = context?.ticketLinks.first?.ownerName != nil
+        let ticketOwnerName = context?.ticketLinks.first?.ownerName
+        ownerName = ticketOwnerName ?? pullRequestOwner?.name
+        ownerURL = ticketOwnerName != nil
             ? context?.ticketLinks.first?.ownerURL
             : pullRequestOwner?.url
+        ownerAvatarURL = ticketOwnerName == nil ? pullRequestOwner?.avatarURL : nil
     }
 }
