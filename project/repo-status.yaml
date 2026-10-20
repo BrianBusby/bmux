@@ -49,6 +49,7 @@ local_capabilities:
   provenance_engine_workspace_display_durable_context: implemented
   provenance_engine_workspace_archive_storage: implemented
   provenance_engine_workspace_archive_contract: implemented
+  workspace_explorer_history_adapter: implemented
   provenance_engine_schema_identity_validation: implemented
   provenance_engine_producer_neutral_lifecycle_recording: implemented
   provenance_engine_richer_coding_agent_evidence: implemented
