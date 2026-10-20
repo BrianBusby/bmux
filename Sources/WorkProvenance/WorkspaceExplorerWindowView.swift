@@ -288,7 +288,6 @@ struct WorkspaceExplorerWindowView: View {
                 }
             }
         }
-        .scrollTargetLayout()
     }
 
     private func collection(target: WorkspaceExplorerCollectionTarget) -> some View {
@@ -304,7 +303,6 @@ struct WorkspaceExplorerWindowView: View {
                 if result.visibleWorkspaceIDs.isEmpty { emptyCollection }
             }
         }
-        .scrollTargetLayout()
     }
 
     private func collectionCount(_ result: WorkspaceExplorerProjectionResult) -> String {
