@@ -74,7 +74,7 @@ struct WorkspaceReferenceCardView: View {
                         .allowsHitTesting(false)
                     }
                     if let ticketID = card.ticketID {
-                        linkRow(icon: "ticket", text: ticketID, url: card.ticketURL, control: .ticket)
+                        ticketHeading(ticketID)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -102,12 +102,14 @@ struct WorkspaceReferenceCardView: View {
                 .accessibilityIdentifier("WorkspaceReferenceCard.close.\(card.id)")
             }
             .frame(minHeight: theme.layout.workspaceCardHeaderHeight)
-            Text(card.title)
-                .matteTypography(.cardTitle, theme: theme)
-                .foregroundStyle(color(.textPrimary))
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .allowsHitTesting(false)
+            if !card.titleIsTicket || card.ticketID == nil {
+                Text(card.title)
+                    .matteTypography(.cardTitle, theme: theme)
+                    .foregroundStyle(color(.textPrimary))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .allowsHitTesting(false)
+            }
 
             if let projectTitle = card.projectTitle {
                 linkRow(icon: "folder", text: projectTitle, url: card.projectURL, control: .project)
@@ -146,6 +148,29 @@ struct WorkspaceReferenceCardView: View {
         }
         let pieces = [card.branch, status].compactMap { $0 }
         return pieces.isEmpty ? nil : pieces.joined(separator: " · ")
+    }
+
+    @ViewBuilder
+    private func ticketHeading(_ ticketID: String) -> some View {
+        let text = card.titleIsTicket ? "\(ticketID)\n\(card.title)" : ticketID
+        let label = HStack(alignment: .firstTextBaseline, spacing: 5) {
+            Image(systemName: "ticket")
+                .font(.system(size: theme.layout.smallIconSize, weight: .medium))
+                .frame(width: theme.layout.smallIconSize)
+            Text(text)
+                .underline(card.ticketURL != nil)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .matteTypography(.cardTitle, theme: theme)
+        .frame(minHeight: theme.layout.minimumHitSize, alignment: .leading)
+        if let url = card.ticketURL {
+            MatteButton(hitExpansion: theme.layout.invisibleHitExpansion, action: { onOpenLink(url) },
+                        onFocusChange: { updateFocus(.ticket, isFocused: $0) }) { label }
+                .buttonStyle(MatteButtonStyle(.link, theme: theme, dimsWhenDisabled: isEnabled))
+        } else {
+            label.foregroundStyle(color(.textPrimary)).allowsHitTesting(false)
+        }
     }
 
     @ViewBuilder
