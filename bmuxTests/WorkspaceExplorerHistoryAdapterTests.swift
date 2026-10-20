@@ -253,6 +253,29 @@ struct WorkspaceExplorerHistoryAdapterTests {
 
     @MainActor
     @Test
+    func historyServiceProvidesSeparateLiveAndArchiveSnapshots() async throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let service = WorkspaceExplorerHistoryService(
+            archiveService: nil,
+            tabManagers: { [manager, manager] },
+            activeWorkspaceID: { workspace.stableId.uuidString },
+            restoreRecords: { [:] },
+            reopenEligibility: { _, _, _ in .unavailable(.noRestoreSnapshot) })
+
+        let live = try await service.liveSnapshot()
+        #expect(live.workspaces.map(\.stableID) == [workspace.stableId])
+        #expect(live.partialActivity)
+        let archive = try await service.archiveSnapshot()
+        let result = service.combine(live: live, archived: archive)
+        #expect(result.items.count == 1)
+        #expect(result.items[0].isOpen)
+        #expect(result.archiveAvailability == .unavailable)
+        #expect(result.activeWorkspaceID == workspace.stableId.uuidString)
+    }
+
+    @MainActor
+    @Test
     func explicitReopenUsesStableIdentityAndConsumesRestoreRecord() throws {
         let originalAppDelegate = AppDelegate.shared
         let appDelegate = AppDelegate()
