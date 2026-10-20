@@ -144,6 +144,36 @@ struct WorkspaceExplorerProjectionTests {
         } })
     }
 
+    @Test
+    func projectGroupingAndFocusUseProjectIdentityWhenNamesMatch() {
+        let namesakes = [
+            WorkspaceExplorerProject(id: "p1", name: "Review", owner: nil, status: nil),
+            WorkspaceExplorerProject(id: "p2", name: "Review", owner: nil, status: nil),
+        ]
+        let projection = WorkspaceExplorerProjection(projects: namesakes, workspaces: [
+            workspace("one", projects: ["p1"], ago: 1),
+            workspace("two", projects: ["p2"], ago: 1),
+        ], archiveAvailable: true)
+        let grouped = projection.collection(target: .all, scope: .init(), groupBy: [.project],
+            filters: [:], now: now, calendar: calendar)
+        #expect(grouped.groups.count == 2)
+        let focused = projection.collection(target: .all, scope: .init(), groupBy: [.project],
+            filters: [.project: "p1"], now: now, calendar: calendar)
+        #expect(focused.visibleWorkspaceIDs == ["one"])
+    }
+
+    @Test
+    func missingRepositoryBucketDoesNotMergeWithNamedRepository() {
+        let projection = WorkspaceExplorerProjection(projects: projects, workspaces: [
+            workspace("missing", projects: ["p1"], ago: 1, repository: nil),
+            workspace("named", projects: ["p1"], ago: 1, repository: "Unknown repository"),
+        ], archiveAvailable: true)
+        let grouped = projection.collection(target: .project("p1"), scope: .init(),
+            groupBy: [.repository], filters: [:], now: now, calendar: calendar)
+        #expect(grouped.groups.count == 2)
+        #expect(Set(grouped.groups.flatMap(\.workspaceIDs)) == ["missing", "named"])
+    }
+
     private var projects: [WorkspaceExplorerProject] {
         [.init(id: "p1", name: "Session experience", owner: "Brian", status: "Active"),
          .init(id: "p3", name: "Review workflow", owner: "Brian", status: "Planning"),
@@ -151,9 +181,10 @@ struct WorkspaceExplorerProjectionTests {
     }
 
     private func workspace(_ id: String, projects: [String], ago: TimeInterval,
+        repository: String? = "bmux",
         closed: Bool = false, prOwner: String? = nil, hasPR: Bool = false,
         status: WorkspaceExplorerStatus = .idle) -> WorkspaceExplorerWorkspace {
-        WorkspaceExplorerWorkspace(id: id, title: id, projectIDs: projects, repository: "bmux",
+        WorkspaceExplorerWorkspace(id: id, title: id, projectIDs: projects, repository: repository,
             tickets: [], ticketStatus: nil, pullRequestOwner: prOwner, pullRequestStatus: nil,
             hasPullRequest: hasPR || prOwner != nil, lastActivityAt: now.addingTimeInterval(-ago * 60),
             isClosed: closed, liveStatus: status, arrangedStatus: status)
