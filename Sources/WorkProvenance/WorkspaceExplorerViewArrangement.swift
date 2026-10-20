@@ -3,7 +3,7 @@ import Foundation
 /// Session-scoped arrangement for one overview or collection view.
 struct WorkspaceExplorerViewArrangement {
     private(set) var groupBy: [WorkspaceExplorerDimension] = []
-    private(set) var filters: [WorkspaceExplorerDimension: String] = [:]
+    private(set) var filters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey] = [:]
     private(set) var collapsedPaths: Set<String> = []
     var scrollOffset: CGFloat = 0
     var selectedWorkspaceID: String?
@@ -19,7 +19,7 @@ struct WorkspaceExplorerViewArrangement {
         groupBy = next
     }
 
-    mutating func setFilter(_ dimension: WorkspaceExplorerDimension, value: String?) {
+    mutating func setFilter(_ dimension: WorkspaceExplorerDimension, value: WorkspaceExplorerGroupKey?) {
         guard filters[dimension] != value else { return }
         saveUndo()
         filters[dimension] = value
@@ -48,7 +48,7 @@ struct WorkspaceExplorerViewArrangement {
 
     private struct Snapshot {
         let groupBy: [WorkspaceExplorerDimension]
-        let filters: [WorkspaceExplorerDimension: String]
+        let filters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey]
     }
 }
 

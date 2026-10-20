@@ -52,7 +52,8 @@ struct WorkspaceExplorerProjectionTests {
             workspaces: [brian, ada, unknown, noPR], archiveAvailable: true)
         let result = projection.collection(target: .project("p1"), scope: .init(),
             groupBy: [.repository, .pullRequestOwner, .bmuxStatus],
-            filters: [.repository: "bmux", .pullRequestOwner: "Brian"], now: now, calendar: calendar)
+            filters: [.repository: .value("bmux"), .pullRequestOwner: .value("Brian")],
+            now: now, calendar: calendar)
         #expect(result.counts.workspaces == 4)
         #expect(result.visibleWorkspaceIDs == ["brian"])
         let all = projection.collection(target: .project("p1"), scope: .init(), groupBy: [.pullRequestOwner],
@@ -67,7 +68,7 @@ struct WorkspaceExplorerProjectionTests {
         let projection = WorkspaceExplorerProjection(projects: projects,
             workspaces: [input, idle], archiveAvailable: true)
         let result = projection.overview(scope: .init(), groupBy: [],
-            filters: [.bmuxStatus: "Needs input"], now: now, calendar: calendar)
+            filters: [.bmuxStatus: .bmuxStatus(.needsInput)], now: now, calendar: calendar)
         #expect(result.visibleProjectIDs == ["p1"])
         #expect(result.matchingWorkspacesByProjectID["p1"] == 1)
         #expect(result.groups.first?.counts.workspaces == 2)
@@ -113,7 +114,7 @@ struct WorkspaceExplorerProjectionTests {
         view.scrollOffset = 250
         view.selectedWorkspaceID = "w"
         view.setGroupBy([.repository, .ticket])
-        view.setFilter(.ticket, value: "INP-2410")
+        view.setFilter(.ticket, value: .value("INP-2410"))
         view.toggleCollapsed("repo=bmux")
         view.undo()
         #expect(view.groupBy == [.repository, .ticket])
@@ -153,13 +154,19 @@ struct WorkspaceExplorerProjectionTests {
         let projection = WorkspaceExplorerProjection(projects: namesakes, workspaces: [
             workspace("one", projects: ["p1"], ago: 1),
             workspace("two", projects: ["p2"], ago: 1),
+            workspace("shared", projects: ["p1", "p2"], ago: 1),
+            workspace("scratch", projects: [], ago: 1),
         ], archiveAvailable: true)
         let grouped = projection.collection(target: .all, scope: .init(), groupBy: [.project],
             filters: [:], now: now, calendar: calendar)
-        #expect(grouped.groups.count == 2)
+        #expect(grouped.groups.count == 4)
         let focused = projection.collection(target: .all, scope: .init(), groupBy: [.project],
-            filters: [.project: "p1"], now: now, calendar: calendar)
+            filters: [.project: .project("p1")], now: now, calendar: calendar)
         #expect(focused.visibleWorkspaceIDs == ["one"])
+        #expect(Set(grouped.groups.compactMap(\.filterValue)) == [.project("p1"), .project("p2"), .unassigned])
+        let unassigned = projection.collection(target: .all, scope: .init(), groupBy: [.project],
+            filters: [.project: .unassigned], now: now, calendar: calendar)
+        #expect(unassigned.visibleWorkspaceIDs == ["scratch"])
     }
 
     @Test
@@ -172,6 +179,10 @@ struct WorkspaceExplorerProjectionTests {
             groupBy: [.repository], filters: [:], now: now, calendar: calendar)
         #expect(grouped.groups.count == 2)
         #expect(Set(grouped.groups.flatMap(\.workspaceIDs)) == ["missing", "named"])
+        let focused = projection.collection(target: .project("p1"), scope: .init(),
+            groupBy: [.repository], filters: [.repository: .missing("Unknown repository")],
+            now: now, calendar: calendar)
+        #expect(focused.visibleWorkspaceIDs == ["missing"])
     }
 
     private var projects: [WorkspaceExplorerProject] {

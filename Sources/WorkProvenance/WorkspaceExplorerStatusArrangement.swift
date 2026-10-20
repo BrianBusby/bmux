@@ -9,7 +9,7 @@ struct WorkspaceExplorerStatusArrangement {
         workspaceID: String,
         status: WorkspaceExplorerStatus,
         groupBy: [WorkspaceExplorerDimension],
-        filters: [WorkspaceExplorerDimension: String]
+        filters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey]
     ) {
         let previous = live[workspaceID] ?? arranged[workspaceID] ?? status
         live[workspaceID] = status
