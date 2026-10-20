@@ -16,7 +16,7 @@ final class WorkProvenanceRuntime {
     let agentSessionSmartSessionStore: AgentSessionSmartSessionStore?
     private let workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription?
     private let sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder?
-    private let workspaceArchiveService: WorkProvenanceWorkspaceArchiveService?
+    let workspaceArchiveService: WorkProvenanceWorkspaceArchiveService?
     private let codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder?
     private lazy var promptEvidenceCoordinator = WorkProvenancePromptEvidenceCoordinator(
         recorder: codingAgentEvidenceRecorder, displayStore: workspaceDisplayCurrentStateStore,
@@ -41,7 +41,7 @@ final class WorkProvenanceRuntime {
             executionTelemetryProjectionService != nil || !backgroundTasksByID.isEmpty
     }
 
-    private var acceptsLifecycleProducerWork: Bool { lifecycleState != .stopping && lifecycleState != .stopped }
+    var acceptsLifecycleProducerWork: Bool { lifecycleState != .stopping && lifecycleState != .stopped }
     private var acceptsObservationProducerWork: Bool { lifecycleState == .starting || lifecycleState == .ready }
 
     init(
@@ -251,7 +251,7 @@ final class WorkProvenanceRuntime {
         }
     }
 
-    private func trackBackgroundTask(_ task: Task<Void, Never>) {
+    func trackBackgroundTask(_ task: Task<Void, Never>) {
         let id = UUID()
         backgroundTasksByID[id] = task
         Task { @MainActor [weak self] in
@@ -275,35 +275,6 @@ final class WorkProvenanceRuntime {
         guard acceptsLifecycleProducerWork, let sessionLifecycleRecorder else { return }
         trackBackgroundTask(Task {
             await sessionLifecycleRecorder.record(change, timestamp: timestamp)
-        })
-    }
-
-    /// Captures a user-closed workspace through PE's public archive contract.
-    func recordWorkspaceClosure(_ workspace: Workspace, at closedAt: Date = Date()) {
-        guard acceptsLifecycleProducerWork, let workspaceArchiveService else { return }
-        let stableID = workspace.stableId
-        let title = workspace.bmuxEventWorkspaceTitle
-        let createdAt = workspace.createdAt
-        let colorHex = workspace.customColor
-        trackBackgroundTask(Task {
-            do {
-                try await workspaceArchiveService.recordClosure(
-                    stableWorkspaceID: stableID,
-                    title: title,
-                    createdAt: createdAt,
-                    closedAt: closedAt,
-                    colorHex: colorHex
-                )
-            } catch {
-                sentryCaptureError(
-                    "Workspace archive write failed",
-                    category: "provenance",
-                    data: [
-                        "workspace_id": stableID.uuidString,
-                        "error_type": String(reflecting: type(of: error)),
-                    ]
-                )
-            }
         })
     }
 
