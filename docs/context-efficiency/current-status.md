@@ -18,20 +18,22 @@ The managed provider-runtime follow-up is recorded in
 [implementation notes](../implementation-notes/managed-codex-runtime.md). It isolates
 connected Codex launches from global CLI updates without widening control capabilities.
 
-The Project and Workspace Explorer archive foundation merged in #175 and #177.
+The Project and Workspace Explorer archive foundation merged in #175 and #177;
+the bmux history adapter merged in #178.
 PE now has a public, bounded close-snapshot archive contract keyed by the
 restart-stable workspace ID; archived metadata is retained
 until explicitly cleared, and restoration must leave the archive intact. The
 user-close path now records a last-known snapshot through that public contract.
 Its activity timestamp covers linked session lifecycle, prompt, and turn
 evidence. PE exposes the bounded workspace-keyed session query with partial
-coverage explicitly marked. The `workspace-explorer-adapter` slice joins archive
+coverage explicitly marked. The adapter joins archive
 records to live workspace presence by stable ID, keeps open cards visible if
 history loading fails, and adds a targeted local-workspace reopen action that
 strips saved agent startup commands. Close capture is best effort until
-immediate-quit recovery or a bounded flush is added. The native Explorer,
-broader meaningful activity derivation, and read-only history UI are not yet
-implemented. See
+immediate-quit recovery or a bounded flush is added. The
+`workspace-explorer-projection` slice adds pure scope, grouping, filter,
+unique-count, and held-status rules. Its native view, broader meaningful
+activity derivation, and read-only history UI remain pending. See
 [the implementation record](../planning/workspace-explorer-implementation.md).
 
 ## Current Generated Truth
