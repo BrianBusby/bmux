@@ -1867,7 +1867,8 @@ actor ProvenanceSQLiteRepository {
                 latest_event_id,
                 latest_event_sequence,
                 observed_at_seconds,
-                updated_at_seconds
+                updated_at_seconds,
+                pull_request_owner_avatar_url
             FROM provenance_workspace_display
             WHERE workspace_id = ?
             ORDER BY updated_at_seconds DESC, rowid DESC
@@ -1924,6 +1925,7 @@ actor ProvenanceSQLiteRepository {
             pullRequestURL: query.string(at: 8),
             pullRequestOwnerLogin: query.string(at: 9),
             pullRequestOwnerURL: query.string(at: 10),
+            pullRequestOwnerAvatarURL: query.string(at: 29),
             pullRequestStatus: query.string(at: 11),
             pullRequestBranch: query.string(at: 12),
             pullRequestIsStale: query.int(at: 13) != 0,
@@ -3464,8 +3466,9 @@ actor ProvenanceSQLiteRepository {
                 latest_event_id,
                 latest_event_sequence,
                 observed_at_seconds,
-                updated_at_seconds
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                updated_at_seconds,
+                pull_request_owner_avatar_url
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 workspace_id = excluded.workspace_id,
                 repository_id = excluded.repository_id,
@@ -3477,6 +3480,7 @@ actor ProvenanceSQLiteRepository {
                 pull_request_url = excluded.pull_request_url,
                 pull_request_owner_login = excluded.pull_request_owner_login,
                 pull_request_owner_url = excluded.pull_request_owner_url,
+                pull_request_owner_avatar_url = excluded.pull_request_owner_avatar_url,
                 pull_request_status = excluded.pull_request_status,
                 pull_request_branch = excluded.pull_request_branch,
                 pull_request_is_stale = excluded.pull_request_is_stale,
@@ -3540,6 +3544,7 @@ actor ProvenanceSQLiteRepository {
         }
         try upsert.bind(merged.observedAt.timeIntervalSince1970, at: 28)
         try upsert.bind(merged.updatedAt.timeIntervalSince1970, at: 29)
+        try upsert.bind(merged.pullRequestOwnerAvatarURL, at: 30)
 
         _ = try upsert.step()
     }
@@ -3612,6 +3617,7 @@ actor ProvenanceSQLiteRepository {
         let pullRequestURL: String?
         let pullRequestOwnerLogin: String?
         let pullRequestOwnerURL: String?
+        let pullRequestOwnerAvatarURL: String?
         let pullRequestStatus: String?
         let pullRequestBranch: String?
         let pullRequestIsStale: Bool
@@ -3622,6 +3628,7 @@ actor ProvenanceSQLiteRepository {
                 "pull_request_url",
                 "pull_request_owner_login",
                 "pull_request_owner_url",
+                "pull_request_owner_avatar_url",
                 "pull_request_status",
                 "pull_request_branch",
                 "pull_request_is_stale",
@@ -3632,6 +3639,7 @@ actor ProvenanceSQLiteRepository {
             pullRequestURL = nil
             pullRequestOwnerLogin = nil
             pullRequestOwnerURL = nil
+            pullRequestOwnerAvatarURL = nil
             pullRequestStatus = nil
             pullRequestBranch = nil
             pullRequestIsStale = false
@@ -3656,6 +3664,19 @@ actor ProvenanceSQLiteRepository {
                 incomingValue: incoming.pullRequestOwnerURL,
                 existingValue: existing?.pullRequestOwnerURL
             )
+            if let incomingURL = incoming.pullRequestURL,
+               incomingURL != existing?.pullRequestURL,
+               existing?.pullRequestOwnerAvatarURL != nil,
+               incoming.pullRequestOwnerAvatarURL == nil {
+                markCleared("pull_request_owner_avatar_url")
+                pullRequestOwnerAvatarURL = nil
+            } else {
+                pullRequestOwnerAvatarURL = stringField(
+                    "pull_request_owner_avatar_url",
+                    incomingValue: incoming.pullRequestOwnerAvatarURL,
+                    existingValue: existing?.pullRequestOwnerAvatarURL
+                )
+            }
             pullRequestStatus = stringField(
                 "pull_request_status",
                 incomingValue: incoming.pullRequestStatus,
@@ -3670,6 +3691,7 @@ actor ProvenanceSQLiteRepository {
                 || incoming.pullRequestURL != nil
                 || incoming.pullRequestOwnerLogin != nil
                 || incoming.pullRequestOwnerURL != nil
+                || incoming.pullRequestOwnerAvatarURL != nil
                 || incoming.pullRequestStatus != nil
                 || incoming.pullRequestBranch != nil
                 || incoming.pullRequestIsStale
@@ -3771,6 +3793,7 @@ actor ProvenanceSQLiteRepository {
             pullRequestURL: pullRequestURL,
             pullRequestOwnerLogin: pullRequestOwnerLogin,
             pullRequestOwnerURL: pullRequestOwnerURL,
+            pullRequestOwnerAvatarURL: pullRequestOwnerAvatarURL,
             pullRequestStatus: pullRequestStatus,
             pullRequestBranch: pullRequestBranch,
             pullRequestIsStale: pullRequestIsStale,
@@ -5531,6 +5554,7 @@ actor ProvenanceSQLiteRepository {
         + relatedSessionMigrations
         + artifactCollisionMigrations
         + workspaceCodingAgentSessionAssociationMigrations
+        + workspaceDisplayOwnerAvatarMigrations
 }
 
 extension ProvenanceSQLiteRepository: ProvenanceSessionLifecycleRecording {

@@ -742,7 +742,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let summary = try await repository.storageSummary()
         #expect(summary == ProvenanceSQLiteStorageSummary(
-            schemaVersion: 25,
+            schemaVersion: 26,
             eventCount: 0,
             latestEventSequence: nil,
             repositoryCount: 0,
@@ -2768,6 +2768,7 @@ struct ProvenanceSQLiteDatabaseTests {
             pullRequestURL: "https://github.com/BrianBusby/bmux/pull/42",
             pullRequestOwnerLogin: "BrianBusby",
             pullRequestOwnerURL: "https://github.com/BrianBusby",
+            pullRequestOwnerAvatarURL: "https://avatars.githubusercontent.com/u/42?v=4",
             pullRequestStatus: "open",
             pullRequestBranch: "canonical-domain-mutation-paths",
             pullRequestIsStale: false,
@@ -2811,6 +2812,7 @@ struct ProvenanceSQLiteDatabaseTests {
             pullRequestURL: "https://github.com/BrianBusby/bmux/pull/42",
             pullRequestOwnerLogin: "BrianBusby",
             pullRequestOwnerURL: "https://github.com/BrianBusby",
+            pullRequestOwnerAvatarURL: "https://avatars.githubusercontent.com/u/42?v=4",
             pullRequestStatus: "open",
             pullRequestBranch: "canonical-domain-mutation-paths",
             pullRequestIsStale: false,
@@ -2876,6 +2878,7 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(actualDisplay.pullRequestURL == expectedDisplay.pullRequestURL)
         #expect(actualDisplay.pullRequestOwnerLogin == expectedDisplay.pullRequestOwnerLogin)
         #expect(actualDisplay.pullRequestOwnerURL == expectedDisplay.pullRequestOwnerURL)
+        #expect(actualDisplay.pullRequestOwnerAvatarURL == expectedDisplay.pullRequestOwnerAvatarURL)
         #expect(actualDisplay.pullRequestStatus == expectedDisplay.pullRequestStatus)
         #expect(actualDisplay.pullRequestBranch == expectedDisplay.pullRequestBranch)
         #expect(actualDisplay.pullRequestIsStale == expectedDisplay.pullRequestIsStale)

@@ -417,6 +417,9 @@ extension SidebarGitMetadataService {
                     title: pullRequest.title,
                     label: pullRequest.label,
                     url: pullRequest.url,
+                    ownerLogin: pullRequest.ownerLogin,
+                    ownerURL: pullRequest.ownerURL,
+                    ownerAvatarURL: pullRequest.ownerAvatarURL,
                     status: pullRequest.status,
                     branch: pullRequest.branch,
                     isStale: false

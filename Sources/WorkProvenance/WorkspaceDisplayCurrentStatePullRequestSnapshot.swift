@@ -8,6 +8,7 @@ struct WorkspaceDisplayCurrentStatePullRequestSnapshot: Equatable, Sendable {
     let url: URL?
     let ownerLogin: String?
     let ownerURL: URL?
+    let ownerAvatarURL: URL?
     let status: String?
     let branch: String?
     let isStale: Bool
@@ -19,6 +20,8 @@ struct WorkspaceDisplayCurrentStatePullRequestSnapshot: Equatable, Sendable {
         self.ownerLogin = display.pullRequestOwnerLogin?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         let ownerURL = display.pullRequestOwnerURL?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         self.ownerURL = ownerURL.flatMap(URL.init(string:))
+        let avatarURL = display.pullRequestOwnerAvatarURL?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        self.ownerAvatarURL = avatarURL.flatMap(URL.init(string:))
         self.status = display.pullRequestStatus?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         self.branch = display.pullRequestBranch?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         self.isStale = display.pullRequestIsStale

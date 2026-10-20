@@ -60,6 +60,7 @@ private final class PromptMentionProbeCommandRunner: CommandRunning, @unchecked 
         url: String = "https://github.com/manaflow-ai/bmux/pull/1",
         ownerLogin: String? = nil,
         ownerURLString: String? = nil,
+        ownerAvatarURLString: String? = nil,
         updatedAt: String?,
         mergedAt: String? = nil,
         headRefName: String? = nil,
@@ -71,6 +72,7 @@ private final class PromptMentionProbeCommandRunner: CommandRunning, @unchecked 
             url: url,
             ownerLogin: ownerLogin,
             ownerURLString: ownerURLString,
+            ownerAvatarURLString: ownerAvatarURLString,
             updatedAt: updatedAt,
             mergedAt: mergedAt,
             headRefName: headRefName,
@@ -140,6 +142,7 @@ private final class PromptMentionProbeCommandRunner: CommandRunning, @unchecked 
         #expect(pullRequest.title == "Show prompt-linked PR titles in workspace tabs")
         #expect(pullRequest.ownerLogin == "BrianBusby")
         #expect(pullRequest.ownerURLString == "https://github.com/BrianBusby")
+        #expect(pullRequest.ownerAvatarURLString == "https://github.com/BrianBusby.png")
         let invocations = await runner.invocations
         #expect(invocations == [[
             "pr",
@@ -209,7 +212,7 @@ private final class PromptMentionProbeCommandRunner: CommandRunning, @unchecked 
             "html_url": "https://github.com/manaflow-ai/bmux/pull/5277",
             "updated_at": "2026-06-03T10:00:00Z",
             "merged_at": "2026-06-03T10:00:00Z",
-            "user": {"login": "BrianBusby", "html_url": "https://github.com/BrianBusby"},
+            "user": {"login": "BrianBusby", "html_url": "https://github.com/BrianBusby", "avatar_url": "https://avatars.githubusercontent.com/u/42?v=4"},
             "head": {"ref": "feat-bmux-git"},
             "base": {"ref": "main"}
           },
@@ -237,6 +240,7 @@ private final class PromptMentionProbeCommandRunner: CommandRunning, @unchecked 
         #expect(items[0].baseRefName == "main")
         #expect(items[0].ownerLogin == "BrianBusby")
         #expect(items[0].ownerURLString == "https://github.com/BrianBusby")
+        #expect(items[0].ownerAvatarURLString == "https://avatars.githubusercontent.com/u/42?v=4")
 
         #expect(items[1].state == "open")
         #expect(PullRequestStatus(githubState: items[1].state) == .open)
@@ -264,6 +268,7 @@ private final class PromptMentionProbeCommandRunner: CommandRunning, @unchecked 
             url: "https://github.com/o/r/pull/7",
             ownerLogin: "octocat",
             ownerURLString: "https://github.com/octocat",
+            ownerAvatarURLString: "https://avatars.githubusercontent.com/u/1?v=4",
             updatedAt: "2026-06-01T00:00:00Z",
             headRefName: "feat/x"
         )
@@ -289,6 +294,7 @@ private final class PromptMentionProbeCommandRunner: CommandRunning, @unchecked 
         #expect(resolved.statusRawValue == PullRequestStatus.open.rawValue)
         #expect(resolved.ownerLogin == "octocat")
         #expect(resolved.ownerURLString == "https://github.com/octocat")
+        #expect(resolved.ownerAvatarURLString == "https://avatars.githubusercontent.com/u/1?v=4")
 
         guard case .transientFailure = results[1].resolution else {
             Issue.record("expected transientFailure for branch with transient lookup")

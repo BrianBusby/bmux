@@ -341,6 +341,7 @@ extension PullRequestProbeService {
             url: pullRequest.htmlURL,
             ownerLogin: pullRequest.user?.login,
             ownerURLString: pullRequest.user?.htmlURL,
+            ownerAvatarURLString: pullRequest.user?.avatarURL,
             updatedAt: pullRequest.updatedAt,
             mergedAt: pullRequest.mergedAt,
             headRefName: pullRequest.head.ref,

@@ -211,7 +211,8 @@ struct WorkProvenanceObserverTests {
             pullRequestOwnerResolver: FakePullRequestOwnerResolver(ownersByURL: [
                 "https://github.com/manaflow-ai/bmux/pull/42": WorkProvenancePullRequestOwner(
                     login: "brianbusby",
-                    url: "https://github.com/brianbusby"
+                    url: "https://github.com/brianbusby",
+                    avatarURL: "https://avatars.githubusercontent.com/u/42?v=4"
                 )
             ]),
             ticketLinkResolver: WorkProvenanceLinearTicketLinkResolver(
@@ -235,6 +236,7 @@ struct WorkProvenanceObserverTests {
                 url: "https://github.com/manaflow-ai/bmux/pull/41",
                 ownerLogin: "octocat",
                 ownerURL: "https://github.com/octocat",
+                ownerAvatarURL: "https://avatars.githubusercontent.com/u/1?v=4",
                 status: "open",
                 branch: "ste-1964-canonical-domain-mutation-paths",
                 isStale: false
@@ -267,6 +269,8 @@ struct WorkProvenanceObserverTests {
         )
 
         await service.observeWorkspaceSnapshot(firstWorkspace)
+        let firstDisplay = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: stableWorkspaceID.uuidString))
+        #expect(firstDisplay.display?.pullRequestOwnerAvatarURL == "https://avatars.githubusercontent.com/u/1?v=4")
         await service.observeWorkspaceSnapshot(secondWorkspace)
 
         let worktrees = try await client.worktrees(ProvenanceWorktreeListRequest())
@@ -281,6 +285,7 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.pullRequestURL == "https://github.com/manaflow-ai/bmux/pull/42")
         #expect(display.display?.pullRequestOwnerLogin == "brianbusby")
         #expect(display.display?.pullRequestOwnerURL == "https://github.com/brianbusby")
+        #expect(display.display?.pullRequestOwnerAvatarURL == "https://avatars.githubusercontent.com/u/42?v=4")
         #expect(display.display?.pullRequestStatus == "merged")
         #expect(display.display?.pullRequestBranch == "ste-1964-canonical-domain-mutation-paths")
         #expect(display.display?.pullRequestIsStale == true)
@@ -379,6 +384,7 @@ struct WorkProvenanceObserverTests {
                 "https://github.com/CompanyCam/Company-Cam-API/pull/26171": WorkProvenancePullRequestOwner(
                     login: "BrianBusby",
                     url: "https://github.com/BrianBusby",
+                    avatarURL: "https://avatars.githubusercontent.com/u/42?v=4",
                     title: "INP-2122 Promote/Edit starter template Dash form cleanup",
                     branch: "inp-2122-edit-starter-template-dash-form-cleanup"
                 )
@@ -417,6 +423,7 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.pullRequestURL == "https://github.com/CompanyCam/Company-Cam-API/pull/26171")
         #expect(display.display?.pullRequestOwnerLogin == "BrianBusby")
         #expect(display.display?.pullRequestOwnerURL == "https://github.com/BrianBusby")
+        #expect(display.display?.pullRequestOwnerAvatarURL == "https://avatars.githubusercontent.com/u/42?v=4")
         #expect(display.display?.pullRequestBranch == "inp-2122-edit-starter-template-dash-form-cleanup")
         #expect(display.display?.ticketIDs == ["INP-2122"])
         #expect(display.display?.ticketLinks == [

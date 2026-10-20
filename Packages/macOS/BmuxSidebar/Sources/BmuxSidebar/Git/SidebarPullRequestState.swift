@@ -14,6 +14,8 @@ public struct SidebarPullRequestState: Equatable, Sendable {
     public let ownerLogin: String?
     /// The PR author's GitHub profile URL, if known.
     public let ownerURL: URL?
+    /// The PR author's avatar image URL, if known.
+    public let ownerAvatarURL: URL?
     /// Lifecycle status.
     public let status: SidebarPullRequestStatus
     /// The PR's branch, normalized (trimmed, nil when empty).
@@ -29,6 +31,7 @@ public struct SidebarPullRequestState: Equatable, Sendable {
         url: URL,
         ownerLogin: String? = nil,
         ownerURL: URL? = nil,
+        ownerAvatarURL: URL? = nil,
         status: SidebarPullRequestStatus,
         branch: String? = nil,
         isStale: Bool = false
@@ -41,6 +44,7 @@ public struct SidebarPullRequestState: Equatable, Sendable {
         let normalizedOwnerLogin = ownerLogin?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         self.ownerLogin = normalizedOwnerLogin.isEmpty ? nil : normalizedOwnerLogin
         self.ownerURL = ownerURL
+        self.ownerAvatarURL = ownerAvatarURL
         self.status = status
         self.branch = branch?.normalizedSidebarBranchName
         self.isStale = isStale

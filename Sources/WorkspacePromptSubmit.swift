@@ -291,6 +291,7 @@ extension Workspace {
             url: existing.url,
             ownerLogin: existing.ownerLogin,
             ownerURL: existing.ownerURL,
+            ownerAvatarURL: existing.ownerAvatarURL,
             status: existing.status,
             isStale: false,
             bindToCurrentBranch: false,

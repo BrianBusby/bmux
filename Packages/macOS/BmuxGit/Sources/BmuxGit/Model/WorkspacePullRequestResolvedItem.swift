@@ -13,6 +13,8 @@ public struct WorkspacePullRequestResolvedItem: Sendable {
     public let ownerLogin: String?
     /// The PR author's GitHub profile URL string, if known.
     public let ownerURLString: String?
+    /// The PR author's avatar image URL string, if known.
+    public let ownerAvatarURLString: String?
     /// The ``PullRequestStatus`` raw value (`"open"`/`"merged"`/`"closed"`),
     /// kept as a string so app-side status enums can bridge via `rawValue`.
     public let statusRawValue: String
@@ -26,6 +28,7 @@ public struct WorkspacePullRequestResolvedItem: Sendable {
         urlString: String,
         ownerLogin: String? = nil,
         ownerURLString: String? = nil,
+        ownerAvatarURLString: String? = nil,
         statusRawValue: String,
         branch: String
     ) {
@@ -34,6 +37,7 @@ public struct WorkspacePullRequestResolvedItem: Sendable {
         self.urlString = urlString
         self.ownerLogin = ownerLogin
         self.ownerURLString = ownerURLString
+        self.ownerAvatarURLString = ownerAvatarURLString
         self.statusRawValue = statusRawValue
         self.branch = branch
     }

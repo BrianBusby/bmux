@@ -21,6 +21,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
                 pullRequestURL: "https://github.com/example/repo/pull/9182",
                 pullRequestOwnerLogin: "brian",
                 pullRequestOwnerURL: "https://github.com/brian",
+                pullRequestOwnerAvatarURL: "https://avatars.githubusercontent.com/u/42?v=4",
                 pullRequestStatus: "open",
                 pullRequestBranch: "feature/cc-1842-upload-retries",
                 ticketIDs: ["CC-1842"],
@@ -65,6 +66,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
         #expect(display.pullRequestURL == "https://github.com/example/repo/pull/9182")
         #expect(display.pullRequestOwnerLogin == "brian")
         #expect(display.pullRequestOwnerURL == "https://github.com/brian")
+        #expect(display.pullRequestOwnerAvatarURL == "https://avatars.githubusercontent.com/u/42?v=4")
         #expect(display.pullRequestStatus == "open")
         #expect(display.pullRequestBranch == "feature/cc-1842-upload-retries")
         #expect(display.ticketIDs == ["CC-1842"])
@@ -86,6 +88,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
             display: Self.workspaceDisplay(
                 pullRequestNumber: 42,
                 pullRequestURL: "https://github.com/example/repo/pull/42",
+                pullRequestOwnerAvatarURL: "https://avatars.githubusercontent.com/u/42?v=4",
                 pullRequestStatus: "open",
                 pullRequestBranch: "feature/pr-42",
                 observedAt: baseTime
@@ -110,6 +113,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
 
         #expect(display.pullRequestNumber == 42)
         #expect(display.pullRequestURL == "https://github.com/example/repo/pull/42")
+        #expect(display.pullRequestOwnerAvatarURL == "https://avatars.githubusercontent.com/u/42?v=4")
         #expect(display.pullRequestStatus == "open")
         #expect(display.pullRequestBranch == "feature/pr-42")
         #expect(display.pullRequestIsStale)
@@ -129,6 +133,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
             display: Self.workspaceDisplay(
                 pullRequestNumber: 42,
                 pullRequestURL: "https://github.com/example/repo/pull/42",
+                pullRequestOwnerAvatarURL: "https://avatars.githubusercontent.com/u/42?v=4",
                 pullRequestStatus: "open",
                 pullRequestBranch: "feature/pr-42",
                 observedAt: baseTime
@@ -150,11 +155,48 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
         ).display)
         #expect(display.pullRequestNumber == nil)
         #expect(display.pullRequestURL == nil)
+        #expect(display.pullRequestOwnerAvatarURL == nil)
         #expect(display.pullRequestStatus == nil)
         #expect(display.pullRequestBranch == nil)
         #expect(display.pullRequestIsStale == false)
         #expect(display.clearedFields.contains("pull_request"))
         #expect(display.fieldMetadata["pull_request"]?.isExplicitlyCleared == true)
+    }
+
+    @Test
+    func newPullRequestDoesNotRetainPreviousOwnersAvatar() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let baseTime = Date(timeIntervalSince1970: 1_810_000_250)
+
+        try await Self.appendWorkspaceDisplay(
+            eventID: "event-workspace-display-first-pr",
+            timestamp: baseTime,
+            display: Self.workspaceDisplay(
+                pullRequestNumber: 41,
+                pullRequestURL: "https://github.com/example/repo/pull/41",
+                pullRequestOwnerAvatarURL: "https://avatars.githubusercontent.com/u/41?v=4",
+                observedAt: baseTime
+            ),
+            into: repository
+        )
+        try await Self.appendWorkspaceDisplay(
+            eventID: "event-workspace-display-next-pr",
+            timestamp: baseTime.addingTimeInterval(1),
+            display: Self.workspaceDisplay(
+                pullRequestNumber: 42,
+                pullRequestURL: "https://github.com/example/repo/pull/42",
+                observedAt: baseTime.addingTimeInterval(1)
+            ),
+            into: repository
+        )
+
+        let display = try #require(try await repository.workspaceDisplay(
+            ProvenanceWorkspaceDisplayRequest(workspaceID: Self.workspaceID)
+        ).display)
+        #expect(display.pullRequestNumber == 42)
+        #expect(display.pullRequestOwnerAvatarURL == nil)
     }
 
     @Test
@@ -488,6 +530,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
         pullRequestURL: String? = nil,
         pullRequestOwnerLogin: String? = nil,
         pullRequestOwnerURL: String? = nil,
+        pullRequestOwnerAvatarURL: String? = nil,
         pullRequestStatus: String? = nil,
         pullRequestBranch: String? = nil,
         pullRequestIsStale: Bool = false,
@@ -514,6 +557,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
             pullRequestURL: pullRequestURL,
             pullRequestOwnerLogin: pullRequestOwnerLogin,
             pullRequestOwnerURL: pullRequestOwnerURL,
+            pullRequestOwnerAvatarURL: pullRequestOwnerAvatarURL,
             pullRequestStatus: pullRequestStatus,
             pullRequestBranch: pullRequestBranch,
             pullRequestIsStale: pullRequestIsStale,

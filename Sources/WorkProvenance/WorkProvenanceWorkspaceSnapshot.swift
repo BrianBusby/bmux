@@ -9,6 +9,7 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
         let url: String
         let ownerLogin: String?
         let ownerURL: String?
+        let ownerAvatarURL: String?
         let status: String
         let branch: String?
         let isStale: Bool
@@ -19,6 +20,7 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
             url: String,
             ownerLogin: String?,
             ownerURL: String?,
+            ownerAvatarURL: String? = nil,
             status: String,
             branch: String?,
             isStale: Bool
@@ -28,6 +30,7 @@ struct WorkProvenanceWorkspaceSnapshot: Equatable, Sendable {
             self.url = url
             self.ownerLogin = ownerLogin
             self.ownerURL = ownerURL
+            self.ownerAvatarURL = ownerAvatarURL
             self.status = status
             self.branch = branch
             self.isStale = isStale
@@ -151,6 +154,7 @@ extension WorkProvenanceWorkspaceSnapshot.PullRequest {
     func replacingResolvedMetadata(
         login: String?,
         url: String?,
+        avatarURL: String?,
         title: String?,
         branch: String?
     ) -> Self {
@@ -160,6 +164,7 @@ extension WorkProvenanceWorkspaceSnapshot.PullRequest {
             url: self.url,
             ownerLogin: login,
             ownerURL: url,
+            ownerAvatarURL: avatarURL,
             status: status,
             branch: branch ?? self.branch,
             isStale: isStale
@@ -177,6 +182,7 @@ private extension Workspace {
             url: state.url.absoluteString,
             ownerLogin: state.ownerLogin,
             ownerURL: state.ownerURL?.absoluteString,
+            ownerAvatarURL: state.ownerAvatarURL?.absoluteString,
             status: state.status.rawValue,
             branch: state.branch,
             isStale: state.isStale

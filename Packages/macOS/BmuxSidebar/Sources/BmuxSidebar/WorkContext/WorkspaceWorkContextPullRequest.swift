@@ -20,6 +20,9 @@ public struct WorkspaceWorkContextPullRequest: Equatable, Sendable {
     /// The PR author's GitHub profile URL, if known.
     public let ownerURL: URL?
 
+    /// The PR author's avatar image URL, if known.
+    public let ownerAvatarURL: URL?
+
     /// The pull-request lifecycle status.
     public let status: SidebarPullRequestStatus
 
@@ -40,6 +43,7 @@ public struct WorkspaceWorkContextPullRequest: Equatable, Sendable {
     ///   - url: The pull-request URL.
     ///   - ownerLogin: The PR author's GitHub login, if known.
     ///   - ownerURL: The PR author's GitHub profile URL, if known.
+    ///   - ownerAvatarURL: The PR author's avatar image URL, if known.
     ///   - status: The pull-request lifecycle status.
     ///   - branch: The branch associated with the pull request, when known.
     ///   - source: Where this pull-request value came from.
@@ -51,6 +55,7 @@ public struct WorkspaceWorkContextPullRequest: Equatable, Sendable {
         url: URL,
         ownerLogin: String? = nil,
         ownerURL: URL? = nil,
+        ownerAvatarURL: URL? = nil,
         status: SidebarPullRequestStatus,
         branch: String?,
         source: WorkspaceWorkContextSource,
@@ -64,6 +69,7 @@ public struct WorkspaceWorkContextPullRequest: Equatable, Sendable {
         let normalizedOwnerLogin = ownerLogin?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         self.ownerLogin = normalizedOwnerLogin.isEmpty ? nil : normalizedOwnerLogin
         self.ownerURL = ownerURL
+        self.ownerAvatarURL = ownerAvatarURL
         self.status = status
         self.branch = branch?.normalizedSidebarBranchName
         self.source = source
