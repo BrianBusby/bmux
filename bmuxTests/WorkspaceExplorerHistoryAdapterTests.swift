@@ -57,6 +57,86 @@ struct WorkspaceExplorerHistoryAdapterTests {
         #expect(appDelegate.workspaceExplorerLiveWorkspaces().contains { $0.stableId == recoveredWorkspace.stableId })
     }
 
+    @MainActor
+    @Test
+    func liveStatusRequiresMatchingAgentProcessIdentity() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelID = try #require(workspace.focusedPanelId)
+        workspace.agentPIDKeysByPanelId[panelID] = ["codex"]
+        workspace.agentPIDs["codex"] = getpid()
+        workspace.agentLifecycleStatesByPanelId[panelID] = ["codex": .needsInput]
+        #expect(WorkspaceExplorerLiveWorkspace.verifiedStatus(of: workspace) == .disconnected)
+        workspace.agentPIDProcessIdentitiesByKey["codex"] = Workspace.agentPIDProcessIdentity(pid: getpid())
+        #expect(WorkspaceExplorerLiveWorkspace.verifiedStatus(of: workspace) == .needsInput)
+        workspace.agentLifecycleStatesByPanelId[panelID] = ["codex": .running]
+        #expect(WorkspaceExplorerLiveWorkspace.verifiedStatus(of: workspace) == .running)
+    }
+
+    @MainActor
+    @Test
+    func statusMonitorPublishesVerifiedLifecycleChanges() throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelID = try #require(workspace.focusedPanelId)
+        workspace.agentPIDKeysByPanelId[panelID] = ["codex"]
+        workspace.agentPIDs["codex"] = getpid()
+        workspace.agentPIDProcessIdentitiesByKey["codex"] = Workspace.agentPIDProcessIdentity(pid: getpid())
+        let monitor = WorkspaceExplorerLiveStatusMonitor(workspaces: { [workspace] })
+        var received: [WorkspaceExplorerStatus] = []
+        monitor.start { _, status in received.append(status) }
+        workspace.agentLifecycleStatesByPanelId[panelID] = ["codex": .needsInput]
+        #expect(received.last == .needsInput)
+        workspace.agentLifecycleStatesByPanelId[panelID] = ["codex": .running]
+        #expect(received.last == .running)
+    }
+
+    @MainActor
+    @Test
+    func statusMonitorUpdatesWhenVerifiedProcessIdentityChanges() async throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let panelID = try #require(workspace.focusedPanelId)
+        workspace.agentPIDKeysByPanelId[panelID] = ["codex"]
+        workspace.agentPIDs["codex"] = getpid()
+        workspace.agentPIDProcessIdentitiesByKey["codex"] = Workspace.agentPIDProcessIdentity(pid: getpid())
+        workspace.agentLifecycleStatesByPanelId[panelID] = ["codex": .running]
+        let monitor = WorkspaceExplorerLiveStatusMonitor(workspaces: { [workspace] })
+        var received: [WorkspaceExplorerStatus] = []
+        monitor.start { _, status in received.append(status) }
+
+        workspace.agentPIDProcessIdentitiesByKey.removeValue(forKey: "codex")
+        for _ in 0..<100 where received.last != .disconnected { await Task.yield() }
+        #expect(received.last == .disconnected)
+
+        workspace.agentPIDProcessIdentitiesByKey["codex"] = Workspace.agentPIDProcessIdentity(pid: getpid())
+        for _ in 0..<100 where received.last != .running { await Task.yield() }
+        #expect(received.last == .running)
+    }
+
+#if DEBUG
+    @MainActor
+    @Test
+    func dogfoodFixtureKeepsHistoryWhenReopenedAndClearsOnlyArchiveCards() throws {
+        let fixture = WorkspaceExplorerDogfoodFixture()
+        let initial = fixture.load()
+        #expect(initial.items.filter(\.isOpen).count == 1)
+        #expect(initial.items.filter { !$0.isOpen }.count == 42)
+        let closed = try #require(initial.items.first { $0.title == "Inspect flashing details" })
+        let stableID = try #require(UUID(uuidString: closed.id))
+        #expect(fixture.sessions(stableID).sessions.count == 1)
+        #expect(fixture.reopen(stableID))
+        let reopened = fixture.load().items.filter { $0.id == closed.id }
+        #expect(reopened.count == 1)
+        #expect(reopened[0].isOpen)
+        #expect(reopened[0].archive != nil)
+        fixture.clear()
+        let cleared = fixture.load()
+        #expect(cleared.items.filter { !$0.isOpen }.isEmpty)
+        #expect(cleared.items.contains { $0.id == closed.id && $0.isOpen })
+    }
+#endif
+
     @Test
     func reopenedWorkspaceAppearsOnceAndKeepsItsArchive() {
         let stableID = UUID()
@@ -110,6 +190,33 @@ struct WorkspaceExplorerHistoryAdapterTests {
     }
 
     @Test
+    func reopenedWorkspaceKeepsArchivedProjectWhenLiveDisplayIsUnavailable() {
+        let stableID = UUID()
+        let closedAt = Date(timeIntervalSince1970: 1_800_000_000)
+        let archivedDisplay = ProvenanceWorkspaceDisplayRecord(
+            id: "display-at-close", workspaceID: stableID.uuidString,
+            projectLinks: [.init(id: "maple-roof", title: "Maple Street Roof Inspection")],
+            observedAt: closedAt, updatedAt: closedAt)
+        let archive = ProvenanceArchivedWorkspaceRecord(
+            id: stableID.uuidString, title: "Maple Street Roof Inspection",
+            createdAt: closedAt.addingTimeInterval(-3600), closedAt: closedAt,
+            lastActivityAt: closedAt, displayAtClose: archivedDisplay,
+            colorHex: nil, coverageCode: nil)
+        let live = WorkspaceExplorerLiveWorkspace(
+            stableID: stableID, runtimeID: UUID(), title: archive.title,
+            createdAt: closedAt, colorHex: nil, display: nil, lastActivityAt: nil)
+
+        let items = WorkspaceExplorerHistoryAdapter().join(
+            live: [live], archived: [archive], eligibilityByID: [:])
+        let catalog = WorkspaceExplorerCatalog(.init(items: items,
+            archiveAvailability: .available, partialLiveActivity: true))
+
+        #expect(items.count == 1)
+        #expect(items[0].display?.projectLinks.map(\.id) == ["maple-roof"])
+        #expect(catalog.workspaces[0].projectIDs == ["maple-roof"])
+    }
+
+    @Test
     func closedWorkspaceRetainsSnapshotAndRestoreEligibility() {
         let stableID = UUID()
         let restoreRecordID = UUID()
@@ -142,6 +249,29 @@ struct WorkspaceExplorerHistoryAdapterTests {
         #expect(result.archiveAvailability == .unavailable)
         #expect(result.items.contains(where: { $0.id == workspace.stableId.uuidString && $0.isOpen }))
         #expect(result.partialLiveActivity)
+    }
+
+    @MainActor
+    @Test
+    func historyServiceProvidesSeparateLiveAndArchiveSnapshots() async throws {
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let service = WorkspaceExplorerHistoryService(
+            archiveService: nil,
+            tabManagers: { [manager, manager] },
+            activeWorkspaceID: { workspace.stableId.uuidString },
+            restoreRecords: { [:] },
+            reopenEligibility: { _, _, _ in .unavailable(.noRestoreSnapshot) })
+
+        let live = try await service.liveSnapshot()
+        #expect(live.workspaces.map(\.stableID) == [workspace.stableId])
+        #expect(live.partialActivity)
+        let archive = try await service.archiveSnapshot()
+        let result = service.combine(live: live, archived: archive)
+        #expect(result.items.count == 1)
+        #expect(result.items[0].isOpen)
+        #expect(result.archiveAvailability == .unavailable)
+        #expect(result.activeWorkspaceID == workspace.stableId.uuidString)
     }
 
     @MainActor

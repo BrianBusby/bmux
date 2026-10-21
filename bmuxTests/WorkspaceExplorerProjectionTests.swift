@@ -62,6 +62,24 @@ struct WorkspaceExplorerProjectionTests {
     }
 
     @Test
+    func ticketPillFilterMatchesAWorkspaceWithSeveralTickets() {
+        let base = workspace("multiple", projects: ["p1"], ago: 5)
+        let multiple = WorkspaceExplorerWorkspace(id: base.id, title: base.title,
+            projectIDs: base.projectIDs, repository: base.repository,
+            tickets: ["BMUX-1", "BMUX-2"], ticketStatus: nil,
+            pullRequestOwner: nil, pullRequestStatus: nil, hasPullRequest: false,
+            lastActivityAt: base.lastActivityAt, isClosed: false,
+            liveStatus: .idle, arrangedStatus: .idle)
+        let projection = WorkspaceExplorerProjection(projects: projects,
+            workspaces: [multiple], archiveAvailable: true)
+        let result = projection.collection(target: .project("p1"), scope: .init(),
+            groupBy: [.ticket], filters: [.ticket: .value("BMUX-2")],
+            now: now, calendar: calendar)
+        #expect(result.visibleWorkspaceIDs == ["multiple"])
+        #expect(result.groups.first?.value == "Multiple tickets")
+    }
+
+    @Test
     func overviewMatchCountDoesNotShrinkProjectCardCount() {
         let input = workspace("input", projects: ["p1"], ago: 5, status: .needsInput)
         let idle = workspace("idle", projects: ["p1"], ago: 10)

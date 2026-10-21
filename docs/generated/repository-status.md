@@ -136,6 +136,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Display Ticket Link Facts | implemented |
 | Workspace Display Ticket Title Sidebar | implemented |
 | Workspace Explorer History Adapter | implemented |
+| Workspace Explorer Native View | under observation |
 | Workspace Explorer Projection | implemented |
 | Workspace Launch Canonical Mutation Path | planned |
 

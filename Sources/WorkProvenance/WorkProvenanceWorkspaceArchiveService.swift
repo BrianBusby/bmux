@@ -38,6 +38,14 @@ actor WorkProvenanceWorkspaceArchiveService {
         ))
     }
 
+    func sessionEvidence(sessionID: String) async throws -> (
+        ProvenanceFactualSessionProjectionResponse, ProvenanceSessionOutcomeResponse
+    ) {
+        async let projection = client.factualSessionProjection(.init(sessionID: sessionID))
+        async let outcome = client.sessionOutcome(.init(sessionID: sessionID))
+        return try await (projection, outcome)
+    }
+
     func liveFacts(stableWorkspaceID: UUID) async throws
         -> (display: ProvenanceWorkspaceDisplayRecord?, lastActivityAt: Date?) {
         let workspaceID = stableWorkspaceID.uuidString

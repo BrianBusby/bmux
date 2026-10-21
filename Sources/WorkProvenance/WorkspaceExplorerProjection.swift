@@ -105,6 +105,9 @@ struct WorkspaceExplorerProjection {
         filters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey]
     ) -> Bool {
         filters.allSatisfy { dimension, value in
+            if dimension == .ticket, case .value(let ticket) = value {
+                return workspace.tickets.contains(ticket)
+            }
             return dimension.workspaceKey(workspace) == value
         }
     }
@@ -116,7 +119,7 @@ struct WorkspaceExplorerProjection {
     ) -> [WorkspaceExplorerGroup] {
         guard let dimension = dimensions.first else {
             return [WorkspaceExplorerGroup(
-                dimension: nil, value: nil, filterValue: nil, projectIDs: [], workspaceIDs: members.map(\.id),
+                dimension: nil, key: nil, value: nil, filterValue: nil, projectIDs: [], workspaceIDs: members.map(\.id),
                 counts: WorkspaceExplorerCounts(members, closedKnown: archiveAvailable), children: []
             )]
         }
@@ -124,7 +127,7 @@ struct WorkspaceExplorerProjection {
         return buckets.keys.sorted { dimension.precedes($0, $1, projectNames: names) }.map { key in
             let bucket = buckets[key] ?? []
             return WorkspaceExplorerGroup(
-                dimension: dimension, value: key.label(projectNames: names),
+                dimension: dimension, key: key, value: key.label(projectNames: names),
                 filterValue: key.supportsFocus(in: dimension, overview: false) ? key : nil,
                 projectIDs: [], workspaceIDs: bucket.map(\.id),
                 counts: WorkspaceExplorerCounts(bucket, closedKnown: archiveAvailable),
@@ -140,7 +143,7 @@ struct WorkspaceExplorerProjection {
         let members = rows.flatMap(\.1)
         guard let dimension = dimensions.first else {
             return [WorkspaceExplorerGroup(
-                dimension: nil, value: nil, filterValue: nil, projectIDs: rows.map { $0.0.id },
+                dimension: nil, key: nil, value: nil, filterValue: nil, projectIDs: rows.map { $0.0.id },
                 workspaceIDs: Array(Set(members.map(\.id))).sorted(),
                 counts: WorkspaceExplorerCounts(members, closedKnown: archiveAvailable), children: []
             )]
@@ -152,7 +155,7 @@ struct WorkspaceExplorerProjection {
             let bucket = buckets[key] ?? []
             let bucketMembers = bucket.flatMap(\.1)
             return WorkspaceExplorerGroup(
-                dimension: dimension, value: key.label(),
+                dimension: dimension, key: key, value: key.label(),
                 filterValue: key.supportsFocus(in: dimension, overview: true) ? key : nil,
                 projectIDs: bucket.map { $0.0.id },
                 workspaceIDs: Array(Set(bucketMembers.map(\.id))).sorted(),
