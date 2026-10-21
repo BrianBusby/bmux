@@ -105858,6 +105858,22 @@
         }
       }
     },
+    "explorer.lastRecordedStatus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last recorded: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最後に記録された状態: %@"
+          }
+        }
+      }
+    },
     "explorer.closedAt": {
       "localizations": {
         "en": {

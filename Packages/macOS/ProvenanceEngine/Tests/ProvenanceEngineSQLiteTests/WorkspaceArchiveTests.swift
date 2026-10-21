@@ -44,6 +44,17 @@ struct WorkspaceArchiveTests {
     }
 
     @Test
+    func olderArchiveJSONWithoutStatusRemainsReadable() throws {
+        let json = Data("""
+            {"id":"stable-a","title":"Roof Inspection","createdAt":null,
+             "closedAt":100,"lastActivityAt":null,"displayAtClose":null,
+             "colorHex":null,"coverageCode":null}
+            """.utf8)
+        let record = try JSONDecoder().decode(ProvenanceArchivedWorkspaceRecord.self, from: json)
+        #expect(record.lastRecordedStatusCode == nil)
+    }
+
+    @Test
     func workspaceSessionsUseWorkEventsRatherThanMetadataRefreshForActivity() async throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("pe-workspace-sessions-tests")
@@ -103,7 +114,7 @@ struct WorkspaceArchiveTests {
         let older = ProvenanceArchivedWorkspaceRecord(
             id: "stable-a", title: "Maple Street Roof Inspection", createdAt: now.addingTimeInterval(-3600),
             closedAt: now, lastActivityAt: now.addingTimeInterval(-60), displayAtClose: nil,
-            colorHex: "#3B6FD6", coverageCode: "codex_only"
+            colorHex: "#3B6FD6", coverageCode: "codex_only", lastRecordedStatusCode: "running"
         )
         let newer = ProvenanceArchivedWorkspaceRecord(
             id: "stable-b", title: "Warehouse Safety Checklist", createdAt: now,
@@ -137,7 +148,7 @@ struct WorkspaceArchiveTests {
         let first = ProvenanceArchivedWorkspaceRecord(
             id: "stable-a", title: "Roof Inspection", createdAt: nil,
             closedAt: Date(timeIntervalSince1970: 100), lastActivityAt: nil,
-            displayAtClose: nil, colorHex: nil, coverageCode: nil
+            displayAtClose: nil, colorHex: nil, coverageCode: nil, lastRecordedStatusCode: "running"
         )
         let second = ProvenanceArchivedWorkspaceRecord(
             id: "stable-a", title: "Roof Inspection Follow-up", createdAt: nil,
@@ -149,6 +160,7 @@ struct WorkspaceArchiveTests {
         try await repository.recordArchivedWorkspace(first)
         #expect(try await repository.storageSummary().eventCount == 0)
         #expect(try await repository.archivedWorkspaces(.init()).records == [second])
+        #expect(try await repository.archivedWorkspaces(.init()).records.first?.lastRecordedStatusCode == nil)
         try await repository.clearArchivedWorkspaces(at: Date(timeIntervalSince1970: 250))
         #expect(try await repository.archivedWorkspaces(.init()).records.isEmpty)
         #expect(try await repository.storageSummary().eventCount == 0)

@@ -57,7 +57,7 @@ final class WorkspaceExplorerHistoryService {
             WorkspaceExplorerLiveWorkspace(stableID: workspace.stableId, runtimeID: workspace.id,
                 title: workspace.bmuxEventWorkspaceTitle, createdAt: workspace.createdAt,
                 colorHex: workspace.customColor, display: nil, lastActivityAt: nil,
-                liveStatus: WorkspaceExplorerLiveWorkspace.verifiedStatus(of: workspace))
+                liveStatus: WorkspaceExplorerStatus.verified(of: workspace))
         }, partialActivity: true, activeWorkspaceID: activeWorkspaceID())
         return combine(live: live, archived: ArchiveSnapshot(records: [],
             availability: archiveService == nil ? .unavailable : .pending),
@@ -116,7 +116,7 @@ final class WorkspaceExplorerHistoryService {
                 colorHex: workspace.customColor,
                 display: facts?.display,
                 lastActivityAt: facts?.lastActivityAt,
-                liveStatus: WorkspaceExplorerLiveWorkspace.verifiedStatus(of: workspace)
+                liveStatus: WorkspaceExplorerStatus.verified(of: workspace)
             )
         }
         return LiveSnapshot(workspaces: live, partialActivity: partialActivity,

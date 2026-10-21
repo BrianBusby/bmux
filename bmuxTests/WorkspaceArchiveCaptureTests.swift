@@ -68,7 +68,8 @@ struct WorkspaceArchiveCaptureTests {
             title: "Maple Street Roof Inspection",
             createdAt: closedAt.addingTimeInterval(-3600),
             closedAt: closedAt,
-            colorHex: "#3B6FD6"
+            colorHex: "#3B6FD6",
+            lastRecordedStatusCode: nil
         )
 
         let records = try await client.archivedWorkspaces(.init()).records
@@ -114,7 +115,8 @@ struct WorkspaceArchiveCaptureTests {
         try await service.recordClosure(stableWorkspaceID: second.stableId,
             title: second.customTitle ?? "Cedar Street Roof Inspection",
             createdAt: closedAt.addingTimeInterval(-3600),
-            closedAt: closedAt.addingTimeInterval(-1), colorHex: nil)
+            closedAt: closedAt.addingTimeInterval(-1), colorHex: nil,
+            lastRecordedStatusCode: nil)
         try await service.recoverClosures(candidates)
         let recovered = try await client.archivedWorkspaces(.init()).records
         #expect(Set(recovered.map(\.id)) == [first.stableId.uuidString, second.stableId.uuidString])
@@ -143,7 +145,8 @@ struct WorkspaceArchiveCaptureTests {
         let firstClose = Date(timeIntervalSince1970: 1_800_000_000)
         try await service.recordClosure(stableWorkspaceID: stableID,
             title: "Maple Street Roof Inspection", createdAt: firstClose.addingTimeInterval(-3600),
-            closedAt: firstClose, colorHex: nil)
+            closedAt: firstClose, colorHex: nil,
+            lastRecordedStatusCode: "running")
 
         let laterClose = firstClose.addingTimeInterval(600)
         try await service.recoverClosures([WorkspaceArchiveRecoveryCandidate(
@@ -154,6 +157,7 @@ struct WorkspaceArchiveCaptureTests {
         #expect(record.closedAt == laterClose)
         #expect(record.title == "Maple Street Follow-up")
         #expect(record.createdAt == firstClose.addingTimeInterval(-3600))
+        #expect(record.lastRecordedStatusCode == nil)
     }
 
     @MainActor

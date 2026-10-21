@@ -23,7 +23,7 @@ final class WorkspaceExplorerLiveStatusMonitor {
             changeTasks.append(Task { [weak workspace] in
                 for await _ in runtimeChanges {
                     guard !Task.isCancelled, let workspace else { break }
-                    onChange(workspaceID, WorkspaceExplorerLiveWorkspace.verifiedStatus(of: workspace))
+                    onChange(workspaceID, WorkspaceExplorerStatus.verified(of: workspace))
                 }
             })
             let lifecycle = workspace.agentLifecycleStatesByPanelIdPublisher.map { _ in () }
@@ -33,7 +33,7 @@ final class WorkspaceExplorerLiveStatusMonitor {
                 // Workspace publishers are mutated on the main actor; fail loudly if that contract changes.
                 MainActor.assumeIsolated {
                     guard let workspace else { return }
-                    onChange(workspaceID, WorkspaceExplorerLiveWorkspace.verifiedStatus(of: workspace))
+                    onChange(workspaceID, WorkspaceExplorerStatus.verified(of: workspace))
                 }
             })
         }

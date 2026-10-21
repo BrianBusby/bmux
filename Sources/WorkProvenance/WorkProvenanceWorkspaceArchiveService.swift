@@ -94,7 +94,8 @@ actor WorkProvenanceWorkspaceArchiveService {
         title: String,
         createdAt: Date,
         closedAt: Date,
-        colorHex: String?
+        colorHex: String?,
+        lastRecordedStatusCode: String?
     ) async throws {
         let display: ProvenanceWorkspaceDisplayRecord?
         do {
@@ -128,7 +129,8 @@ actor WorkProvenanceWorkspaceArchiveService {
                 .compactMap { $0 }.max(),
             displayAtClose: display,
             colorHex: colorHex,
-            coverageCode: nil
+            coverageCode: nil,
+            lastRecordedStatusCode: lastRecordedStatusCode
         )
         try await client.recordArchivedWorkspace(record)
     }

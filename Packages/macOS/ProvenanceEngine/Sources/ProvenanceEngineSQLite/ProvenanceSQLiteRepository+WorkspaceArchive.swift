@@ -24,7 +24,8 @@ extension ProvenanceSQLiteRepository {
             lastActivityAt: latestActivity,
             displayAtClose: record.displayAtClose,
             colorHex: record.colorHex,
-            coverageCode: record.coverageCode ?? previous?.coverageCode
+            coverageCode: record.coverageCode ?? previous?.coverageCode,
+            lastRecordedStatusCode: record.lastRecordedStatusCode
         )
         let json = try payloadEncoder.encode(retained)
         guard let jsonString = String(data: json, encoding: .utf8) else {

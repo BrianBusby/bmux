@@ -24,39 +24,4 @@ struct WorkspaceExplorerLiveWorkspace {
         self.lastActivityAt = lastActivityAt
         self.liveStatus = liveStatus
     }
-
-    /// Hook lifecycle data is used only while its connection or process identity is verified.
-    @MainActor
-    static func verifiedStatus(of workspace: Workspace) -> WorkspaceExplorerStatus {
-        if workspace.remoteDisplayTarget != nil && workspace.remoteConnectionState == .error {
-            return .error
-        }
-        let remoteVerified = workspace.remoteDisplayTarget != nil &&
-            workspace.remoteConnectionState == .connected
-        var states: [WorkspaceExplorerStatus] = []
-        var hasVerifiedProcess = false
-        for (panelID, keys) in workspace.agentPIDKeysByPanelId where workspace.panels[panelID] != nil {
-            for key in keys {
-                let verified: Bool
-                if workspace.remoteDisplayTarget != nil {
-                    verified = remoteVerified
-                } else if let pid = workspace.agentPIDs[key],
-                          let recorded = workspace.agentPIDProcessIdentitiesByKey[key] {
-                    verified = Workspace.agentPIDProcessIdentity(pid: pid) == recorded
-                } else {
-                    verified = false
-                }
-                guard verified else { continue }
-                hasVerifiedProcess = true
-                switch workspace.agentLifecycleStatesByPanelId[panelID]?[key] {
-                case .needsInput: states.append(.needsInput)
-                case .running: states.append(.running)
-                case .idle: states.append(.idle)
-                case .unknown, .none: break
-                }
-            }
-        }
-        return WorkspaceExplorerStatus.derived(
-            from: states, connectionVerified: hasVerifiedProcess || remoteVerified)
-    }
 }
