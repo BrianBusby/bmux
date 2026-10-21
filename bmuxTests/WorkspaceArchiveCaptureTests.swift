@@ -77,4 +77,50 @@ struct WorkspaceArchiveCaptureTests {
         #expect(records.first?.title == "Maple Street Roof Inspection")
         #expect(records.first?.lastActivityAt == nil)
     }
+
+    @MainActor
+    @Test
+    func savedCloseSnapshotsRecoverMissingArchiveWithoutUndoingClear() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-workspace-recovery-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(
+            databaseURL: directory.appendingPathComponent("provenance.sqlite")
+        )
+        let manager = TabManager()
+        let first = try #require(manager.selectedWorkspace)
+        first.customTitle = "Maple Street Roof Inspection"
+        let second = manager.addWorkspace()
+        second.customTitle = "Cedar Street Roof Inspection"
+        let closedAt = Date().addingTimeInterval(10)
+        let direct = ClosedItemHistoryRecord(closedAt: closedAt,
+            entry: .workspace(ClosedWorkspaceHistoryEntry(workspaceId: first.id,
+                windowId: nil, workspaceIndex: 0,
+                snapshot: first.sessionSnapshot(includeScrollback: false))))
+        let window = SessionWindowSnapshot(frame: nil, display: nil,
+            tabManager: manager.sessionSnapshot(includeScrollback: false),
+            sidebar: SessionSidebarSnapshot(isVisible: true, selection: .tabs, width: nil))
+        let windowRecord = ClosedItemHistoryRecord(closedAt: closedAt.addingTimeInterval(-1),
+            entry: .window(ClosedWindowHistoryEntry(snapshot: window)))
+        let candidates = WorkspaceArchiveRecoveryCandidate.from(
+            records: [windowRecord, direct], excluding: [])
+        #expect(candidates.count == 2)
+        #expect(candidates.first(where: { $0.stableID == first.stableId })?.closedAt == closedAt)
+        #expect(WorkspaceArchiveRecoveryCandidate.from(
+            records: [windowRecord, direct], excluding: [first.stableId]).map(\.stableID) ==
+            [second.stableId])
+
+        let service = WorkProvenanceWorkspaceArchiveService(client: client)
+        try await service.recoverClosures(candidates)
+        let recovered = try await client.archivedWorkspaces(.init()).records
+        #expect(Set(recovered.map(\.id)) == [first.stableId.uuidString, second.stableId.uuidString])
+        #expect(recovered.first(where: { $0.id == first.stableId.uuidString })?.createdAt == nil)
+        #expect(recovered.first(where: { $0.id == first.stableId.uuidString })?.title ==
+            "Maple Street Roof Inspection")
+
+        try await service.clearExplorerHistory(at: closedAt.addingTimeInterval(1))
+        let restartedService = WorkProvenanceWorkspaceArchiveService(client: client)
+        try await restartedService.recoverClosures(candidates)
+        #expect(try await client.archivedWorkspaces(.init()).records.isEmpty)
+    }
 }
