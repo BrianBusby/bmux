@@ -84,9 +84,15 @@ final class WorkspaceExplorerCoordinator {
     var projection: WorkspaceExplorerProjection? { catalog?.projection }
 
     func result(now: Date = .now, calendar: Calendar = .current) -> WorkspaceExplorerProjectionResult? {
-        guard let projection else { return nil }
+        guard let catalog else { return nil }
+        let projection = catalog.projection
         let arrangement = activeArrangement
         if let collectionTarget {
+            if catalog.liveMetadataPending {
+                guard collectionTarget == .all else { return nil }
+                return projection.collection(target: .all, scope: scope,
+                    groupBy: [], filters: [:], now: now, calendar: calendar)
+            }
             return projection.collection(target: collectionTarget, scope: scope,
                 groupBy: arrangement.groupBy, filters: arrangement.filters,
                 now: now, calendar: calendar)
@@ -101,7 +107,7 @@ final class WorkspaceExplorerCoordinator {
         isLoading = true
         defer { if generation == loadGeneration { isLoading = false } }
         observedStatusIDs.removeAll()
-        if let loadPresence, catalog?.archiveAvailability != .available {
+        if let loadPresence, catalog == nil || catalog?.liveMetadataPending == true {
             present(loadPresence())
             loadFailed = false
         }

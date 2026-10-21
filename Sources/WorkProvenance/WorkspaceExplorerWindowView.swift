@@ -292,14 +292,22 @@ struct WorkspaceExplorerWindowView: View {
                 Text(WorkspaceExplorerCountPresentation.collection(result, scope: model.scope,
                     archiveAvailability: model.catalog?.archiveAvailability ?? .unavailable,
                     liveMetadataPending: model.catalog?.liveMetadataPending == true,
-                    hasFilters: !model.activeArrangement.filters.isEmpty))
+                    hasFilters: !model.activeArrangement.filters.isEmpty &&
+                        model.catalog?.liveMetadataPending != true))
                     .font(.system(size: 13)).foregroundStyle(.secondary)
                 arrangementBar
+                if model.catalog?.liveMetadataPending == true {
+                    Text(WorkspaceExplorerCountPresentation.loadingProjects)
+                        .font(.system(size: 12)).foregroundStyle(.secondary)
+                }
                 ForEach(Array(result.groups.enumerated()), id: \.offset) { _, group in
                     groupSection(group, path: "collection/\(String(reflecting: group.key))", overview: false,
                         matchingCounts: [:])
                 }
                 if result.visibleWorkspaceIDs.isEmpty { emptyCollection }
+            } else if model.catalog?.liveMetadataPending == true {
+                ContentUnavailableView(WorkspaceExplorerCountPresentation.loadingProjects,
+                    systemImage: "clock")
             }
         }
     }
