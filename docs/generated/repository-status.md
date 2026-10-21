@@ -141,6 +141,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Explorer Filter Transition | under observation |
 | Workspace Explorer Group Accessibility | under observation |
 | Workspace Explorer History Adapter | implemented |
+| Workspace Explorer History Page Lifecycle | under observation |
 | Workspace Explorer Live Breadcrumb | under observation |
 | Workspace Explorer Live History Header | under observation |
 | Workspace Explorer Live Topology Refresh | under observation |

@@ -2111,6 +2111,8 @@
 		E7A9EAA73EE74959BA212410 /* WorkspaceExplorerScenes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21240F /* WorkspaceExplorerScenes.swift */; };
 		1F830D96A89EEA457CA79352 /* WorkspaceExplorerScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C13DB01A1A56779EB92DA1 /* WorkspaceExplorerScope.swift */; };
 		A9E1C06F8D24453FB2C317AF /* WorkspaceExplorerScopeControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E1C06F8D24453FB2C317AE /* WorkspaceExplorerScopeControls.swift */; };
+				FAD145AB2CC344EE8899A001 /* WorkspaceExplorerSessionPageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerSessionPageTests.swift; sourceTree = "<group>"; };
+				FAD145AB2CC344EE8899A002 /* WorkspaceExplorerSessionPageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD145AB2CC344EE8899A001 /* WorkspaceExplorerSessionPageTests.swift */; };
 		8234457C7D9D6A45E2C2F57B /* WorkspaceExplorerStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A75009717859B41DB480B6F /* WorkspaceExplorerStatus.swift */; };
 		A74AD940B86D751B2A851105 /* WorkspaceExplorerStatusArrangement.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9D44D1B62895B2EF9CA80AF /* WorkspaceExplorerStatusArrangement.swift */; };
 		E71A17900000000000000064 /* WorkspaceExplorerTitlebarContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000065 /* WorkspaceExplorerTitlebarContent.swift */; };
@@ -6472,6 +6474,7 @@
 				4FE1124DEA99B38BEE81A68A /* WorkspaceExplorerProjectionTests.swift */,
 				E71A17900000000000000067 /* WorkspaceExplorerLiveNavigationTests.swift */,
 				E71A17900000000000000041 /* WorkspaceExplorerCoordinatorTests.swift */,
+				FAD145AB2CC344EE8899A001 /* WorkspaceExplorerSessionPageTests.swift */,
 				E71A17900000000000000043 /* WorkspaceExplorerExitTransitionTests.swift */,
 					642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */,
 					CE0E03140000000000000002 /* WorkProvenanceLinearTicketLinkResolverTests.swift */,
@@ -9181,6 +9184,7 @@
 				E7A9EAA73EE74959BA212006 /* WorkspaceExplorerHistoryAdapterTests.swift in Sources */,
 				E71A17900000000000000066 /* WorkspaceExplorerLiveNavigationTests.swift in Sources */,
 				8069B759A1281E3496FB25EE /* WorkspaceExplorerProjectionTests.swift in Sources */,
+				FAD145AB2CC344EE8899A002 /* WorkspaceExplorerSessionPageTests.swift in Sources */,
 				FBA900000000000000000003 /* WorkspaceFallbackContractTests.swift in Sources */,
 				FBA900000000000000000001 /* WorkspaceFallbackFixture.swift in Sources */,
 				8CF06AC906024F35AFAA8963 /* WorkspaceFilterSelectionVisibilityTests.swift in Sources */,
