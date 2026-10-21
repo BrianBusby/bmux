@@ -6,6 +6,24 @@ import Testing
 @Suite
 struct WorkspaceArchiveTests {
     @Test
+    func archiveTableIsRestoredForExistingSchema26WithoutIt() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("pe-workspace-archive-repair-tests")
+            .appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("provenance.sqlite")
+        _ = try ProvenanceSQLiteRepository(url: url,
+            migrations: ProvenanceSQLiteRepository.migrations.filter { $0.version <= 25 })
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        try database.execute("UPDATE provenance_metadata SET value = '26' WHERE key = 'schema_version'")
+        try database.setUserVersion(26)
+
+        let reopened = try ProvenanceSQLiteRepository(url: url)
+        #expect(try await reopened.archivedWorkspaces(.init()).records.isEmpty)
+        #expect(try await reopened.schemaVersion() == 27)
+    }
+
+    @Test
     func workspaceSessionsUseWorkEventsRatherThanMetadataRefreshForActivity() async throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("pe-workspace-sessions-tests")
