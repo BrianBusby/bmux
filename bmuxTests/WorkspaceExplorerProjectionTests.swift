@@ -13,6 +13,51 @@ struct WorkspaceExplorerProjectionTests {
     private let calendar = Calendar(identifier: .gregorian)
 
     @Test
+    func pendingArchiveAndActivityNeverPresentZeroAsAClosedOrScopedCount() {
+        let projection = WorkspaceExplorerProjection(projects: [],
+            workspaces: [workspace("live", projects: [], ago: 5)], archiveAvailable: false)
+        let closedScope = WorkspaceExplorerScope(state: .closed, period: .anyTime)
+        let closed = projection.collection(target: .all, scope: closedScope,
+            groupBy: [], filters: [:], now: now, calendar: calendar)
+        let closedHeader = WorkspaceExplorerCountPresentation.collection(closed,
+            scope: closedScope, archiveAvailability: .pending,
+            liveMetadataPending: true, hasFilters: false)
+        #expect(closedHeader.contains(WorkspaceExplorerArchiveAvailability.pending.closedCountLabel ?? ""))
+        #expect(!closedHeader.contains("0 closed"))
+        let unavailableOverview = projection.overview(scope: closedScope, groupBy: [],
+            filters: [:], now: now, calendar: calendar)
+        let unavailableHeader = WorkspaceExplorerCountPresentation.overviewLines(unavailableOverview,
+            scope: closedScope, archiveAvailability: .unavailable,
+            liveMetadataPending: false, hasFilters: false).joined(separator: " ")
+        #expect(unavailableHeader.contains(WorkspaceExplorerArchiveAvailability.unavailable.closedCountLabel ?? ""))
+        #expect(!unavailableHeader.contains("0 projects"))
+
+        let periodScope = WorkspaceExplorerScope(state: .open, period: .last24Hours)
+        let period = projection.overview(scope: periodScope, groupBy: [],
+            filters: [:], now: now, calendar: calendar)
+        let periodHeader = WorkspaceExplorerCountPresentation.overviewLines(period,
+            scope: periodScope, archiveAvailability: .pending,
+            liveMetadataPending: true, hasFilters: false).joined(separator: " ")
+        #expect(periodHeader.contains(WorkspaceExplorerCountPresentation.loadingProjects) == false)
+        #expect(!periodHeader.contains("0 workspaces"))
+        #expect(!periodHeader.contains("0 projects"))
+    }
+
+    @Test
+    func provisionalOverviewAvoidsProjectTotalsWhileOpenPresenceRemainsCounted() {
+        let projection = WorkspaceExplorerProjection(projects: [],
+            workspaces: [workspace("live", projects: [], ago: 5)], archiveAvailable: false)
+        let scope = WorkspaceExplorerScope(state: .all, period: .anyTime)
+        let result = projection.overview(scope: scope, groupBy: [], filters: [:],
+            now: now, calendar: calendar)
+        let lines = WorkspaceExplorerCountPresentation.overviewLines(result, scope: scope,
+            archiveAvailability: .pending, liveMetadataPending: true, hasFilters: false)
+        #expect(lines.contains(WorkspaceExplorerCountPresentation.loadingProjects))
+        #expect(lines.joined(separator: " ").contains("0 projects") == false)
+        #expect(lines.joined(separator: " ").contains("1"))
+    }
+
+    @Test
     func scopeAndUniqueCountsAcrossProjects() {
         let shared = workspace("shared", projects: ["p1", "p3"], ago: 60)
         let first = workspace("first", projects: ["p1"], ago: 10)
