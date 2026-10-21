@@ -45,7 +45,7 @@ struct WorkspaceExplorerGroupSection: View {
                             Image(systemName: collapsedPaths.contains(path) ? "chevron.right" : "chevron.down")
                             Text(label)
                                 .textCase(depth >= 2 ? .uppercase : nil)
-                            Text(groupCount).foregroundStyle(.secondary)
+                            Text(groupCount).foregroundStyle(.primary)
                                 .padding(.horizontal, 6).padding(.vertical, 2)
                                 .background(Color(nsColor: .controlColor), in: Capsule())
                         }
