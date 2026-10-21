@@ -107,6 +107,41 @@ struct WorkspaceArchiveTests {
     }
 
     @Test
+    func completedCommandCountsAsWorkspaceActivity() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("pe-workspace-activity-tests")
+            .appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let repository = try ProvenanceSQLiteRepository(url: directory.appendingPathComponent("provenance.sqlite"))
+        let base = Date(timeIntervalSince1970: 1_800_000_000)
+        let session = ProvenanceSessionRecord(id: "session-a", agentKind: "codex",
+            workspaceID: "stable-a", status: "completed",
+            startedAt: base, updatedAt: base.addingTimeInterval(900))
+        try await repository.appendEvent(ProvenanceEvent(eventType: .sessionObserved,
+            timestamp: session.updatedAt, sessionID: session.id, source: .observed,
+            confidence: .high, payload: ProvenanceEventPayload(session: session)))
+        let command = ProvenanceCodingAgentCommandRecord(id: "command-a", sessionID: session.id,
+            provider: "codex", command: "swift test", status: "succeeded",
+            completedAt: base.addingTimeInterval(300), source: .observed, confidence: .high)
+        try await repository.appendEvent(ProvenanceEvent(eventType: .codingAgentCommandCompleted,
+            timestamp: command.completedAt, sessionID: session.id, source: .observed,
+            confidence: .high, payload: ProvenanceEventPayload(codingAgentCommand: command)))
+        let page = try await repository.workspaceSessions(.init(workspaceID: "stable-a"))
+        #expect(page.sessions.first?.lastActivityAt == command.completedAt)
+        let message = ProvenanceCodingAgentAssistantMessageRecord(id: "message-a",
+            sessionID: session.id, provider: "codex", text: "The tests pass.",
+            completedAt: base.addingTimeInterval(500), source: .observed, confidence: .high)
+        try await repository.appendEvent(ProvenanceEvent(eventType: .codingAgentAssistantMessageCompleted,
+            timestamp: message.completedAt, sessionID: session.id, source: .observed,
+            confidence: .high, payload: ProvenanceEventPayload(codingAgentAssistantMessage: message)))
+        let afterMessage = try await repository.workspaceSessions(.init(workspaceID: "stable-a"))
+        #expect(afterMessage.sessions.first?.lastActivityAt == message.completedAt)
+        _ = try await repository.rebuildProjectionsFromEventLedger()
+        let rebuilt = try await repository.workspaceSessions(.init(workspaceID: "stable-a"))
+        #expect(rebuilt.sessions.first?.lastActivityAt == message.completedAt)
+    }
+
+    @Test
     func archiveSurvivesClientReopenAndPaginatesByStableIdentity() async throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("pe-workspace-archive-tests")
