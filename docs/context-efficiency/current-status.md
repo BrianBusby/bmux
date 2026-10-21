@@ -38,15 +38,17 @@ explicit reopen, per-view arrangements, and a Debug history fixture. Its native
 view is under observation. The `workspace-explorer-staged-loading` slice is
 under observation: it publishes live cards immediately, then resolves retained
 history and closed counts without resetting view state.
-The current `workspace-explorer-close-recovery` branch also adds a tab-list
-invalidation path for an already open Explorer window. New live workspaces appear
+Merged PR #182 adds a tab-list invalidation path for an already open Explorer window. New live workspaces appear
 as uncounted provisional cards while PE facts load. PE schema version 27 repairs
 existing version-26 stores that lack the archive table; this was observed in
 the tagged build's retained-history error state. Recovery now runs in an
 actor and reuses the archive read on ordinary refreshes, rereading only after
-a replay attempt. These changes remain under dogfood observation. Broader meaningful
-activity derivation, complete project metadata, status-at-close capture,
-keyboard and reduced-motion dogfood, and a breadcrumb in
+a replay attempt. These changes remain under dogfood observation. The active
+`workspace-explorer-motion-accessibility` slice stabilizes group identities during
+reordering, improves card keyboard focus and grouping controls, and orders scope
+as Open, Closed, All with Open as the default. Broader meaningful activity
+derivation, complete project metadata, status-at-close capture,
+reduced-motion dogfood, and a breadcrumb in
 the existing live workspace surface remain open. See
 [the implementation record](../planning/workspace-explorer-implementation.md).
 

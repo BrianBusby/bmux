@@ -107438,13 +107438,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Move earlier"
+            "value": "Move %@ earlier"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "前へ移動"
+            "value": "「%@」を前へ移動"
           }
         }
       }
@@ -107455,13 +107455,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Move later"
+            "value": "Move %@ later"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "後へ移動"
+            "value": "「%@」を後へ移動"
           }
         }
       }
@@ -107472,13 +107472,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove grouping"
+            "value": "Remove %@ grouping"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "グループ化を解除"
+            "value": "「%@」のグループ化を解除"
           }
         }
       }

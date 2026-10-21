@@ -17,23 +17,27 @@ struct WorkspaceExplorerArrangementBar: View {
             HStack(spacing: 6) {
                 Text(String(localized: "explorer.groupBy", defaultValue: "Group by:"))
                     .foregroundStyle(.secondary)
-                ForEach(Array(groupBy.enumerated()), id: \.offset) { index, dimension in
+                ForEach(groupBy, id: \.self) { dimension in
+                    let index = groupBy.firstIndex(of: dimension) ?? 0
                     HStack(spacing: 2) {
                         Button {
                             move(index, by: -1)
                         } label: { Image(systemName: "chevron.left") }
                         .disabled(index == 0)
-                        .accessibilityLabel(String(localized: "explorer.moveEarlier", defaultValue: "Move earlier"))
+                        .accessibilityLabel(String(format: String(localized: "explorer.moveEarlier", defaultValue:
+                            "Move %@ earlier"), dimension.displayName))
                         Text(dimension.displayName)
                         Button {
                             move(index, by: 1)
                         } label: { Image(systemName: "chevron.right") }
                         .disabled(index == groupBy.count - 1)
-                        .accessibilityLabel(String(localized: "explorer.moveLater", defaultValue: "Move later"))
+                        .accessibilityLabel(String(format: String(localized: "explorer.moveLater", defaultValue:
+                            "Move %@ later"), dimension.displayName))
                         Button {
                             onGroupBy(groupBy.filter { $0 != dimension })
                         } label: { Image(systemName: "xmark") }
-                        .accessibilityLabel(String(localized: "explorer.removeGroup", defaultValue: "Remove grouping"))
+                        .accessibilityLabel(String(format: String(localized: "explorer.removeGroup", defaultValue:
+                            "Remove %@ grouping"), dimension.displayName))
                     }
                     .buttonStyle(.plain)
                     .padding(.horizontal, 7).padding(.vertical, 5)

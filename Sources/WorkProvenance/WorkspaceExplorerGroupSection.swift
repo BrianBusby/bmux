@@ -64,9 +64,9 @@ struct WorkspaceExplorerGroupSection: View {
                 if group.children.isEmpty {
                     cardGrid
                 } else {
-                    ForEach(Array(group.children.enumerated()), id: \.offset) { _, child in
+                    ForEach(group.children, id: \.identity) { child in
                         WorkspaceExplorerGroupSection(group: child, depth: depth + 1,
-                            path: path + "/" + String(reflecting: child.key),
+                            path: path + "/" + child.identity,
                             cardGeometry: cardGeometry,
                             overview: overview, collapsedPaths: collapsedPaths,
                             activeFilters: activeFilters, projectsByID: projectsByID,
