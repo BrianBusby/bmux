@@ -92,14 +92,18 @@ struct WorkspaceArchiveTests {
         #expect(first.sessions.map(\.id) == ["session-a"])
         #expect(first.sessions.first?.lastActivityAt == prompt.submittedAt)
         #expect(first.partialCoverage)
+        #expect(first.totalCount == 2)
         let second = try await repository.workspaceSessions(.init(
             workspaceID: "stable-a", limit: 1, cursor: first.nextCursor
         ))
         #expect(second.sessions.map(\.id) == ["session-b"])
         #expect(second.nextCursor == nil)
+        #expect(second.totalCount == 2)
+        #expect(try await repository.workspaceSessions(.init(workspaceID: "unknown")).totalCount == 0)
         _ = try await repository.rebuildProjectionsFromEventLedger()
-        #expect(try await repository.workspaceSessions(.init(workspaceID: "stable-a")).sessions.map(\.id)
-                == ["session-a", "session-b"])
+        let rebuilt = try await repository.workspaceSessions(.init(workspaceID: "stable-a"))
+        #expect(rebuilt.sessions.map(\.id) == ["session-a", "session-b"])
+        #expect(rebuilt.totalCount == 2)
     }
 
     @Test
