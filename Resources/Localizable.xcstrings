@@ -106018,6 +106018,27 @@
         }
       }
     },
+    "explorer.projectsLoading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Loading project information…" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "プロジェクト情報を読み込み中…" } }
+      }
+    },
+    "explorer.activityLoading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Loading workspace activity…" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ワークスペースのアクティビティを読み込み中…" } }
+      }
+    },
+    "explorer.workspaceDetailsLoading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Workspace details loading…" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ワークスペースの詳細を読み込み中…" } }
+      }
+    },
     "explorer.projectsShown": {
       "localizations": {
         "en": {
@@ -108134,6 +108155,13 @@
             "value": "開いているワークスペース"
           }
         }
+      }
+    },
+    "explorer.count.openTotal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d open workspaces" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%d 件の開いているワークスペース" } }
       }
     },
     "explorer.count.openPeriod": {

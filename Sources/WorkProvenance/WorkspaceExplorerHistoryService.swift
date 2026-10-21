@@ -56,7 +56,8 @@ final class WorkspaceExplorerHistoryService {
                 liveStatus: WorkspaceExplorerLiveWorkspace.verifiedStatus(of: workspace))
         }, partialActivity: true, activeWorkspaceID: activeWorkspaceID())
         return combine(live: live, archived: ArchiveSnapshot(records: [],
-            availability: archiveService == nil ? .unavailable : .pending))
+            availability: archiveService == nil ? .unavailable : .pending),
+            liveMetadataPending: true)
     }
 
     func archiveSnapshot() async throws -> ArchiveSnapshot {
@@ -110,7 +111,8 @@ final class WorkspaceExplorerHistoryService {
             activeWorkspaceID: activeWorkspaceID())
     }
 
-    func combine(live: LiveSnapshot, archived: ArchiveSnapshot) -> WorkspaceExplorerHistoryLoadResult {
+    func combine(live: LiveSnapshot, archived: ArchiveSnapshot,
+                 liveMetadataPending: Bool = false) -> WorkspaceExplorerHistoryLoadResult {
         let liveIDs = Set(live.workspaces.map(\.stableID))
         let records = archived.records.isEmpty ? [:] : restoreRecords()
         let eligibilityByID = Dictionary(uniqueKeysWithValues: archived.records.compactMap { record in
@@ -126,6 +128,7 @@ final class WorkspaceExplorerHistoryService {
             ),
             archiveAvailability: archived.availability,
             partialLiveActivity: live.partialActivity,
+            liveMetadataPending: liveMetadataPending,
             activeWorkspaceID: live.activeWorkspaceID
         )
     }

@@ -6,6 +6,7 @@ struct WorkspaceExplorerWorkspaceCard: View {
     let item: WorkspaceExplorerHistoryItem
     let isActive: Bool
     let isReopened: Bool
+    let metadataPending: Bool
     let onOpen: () -> Void
     let onHistory: () -> Void
     let onReopen: () -> Void
@@ -90,48 +91,54 @@ struct WorkspaceExplorerWorkspaceCard: View {
             }
             .buttonStyle(.plain)
             .focused($hasKeyboardFocus)
-            HStack(spacing: 6) {
-                let tickets = item.display?.ticketIDs ?? []
-                if tickets.count == 1, let ticket = tickets.first {
-                    Button(ticket) { onFilter(.ticket, .value(ticket)) }
-                        .font(.system(size: 11, design: .monospaced))
-                        .buttonStyle(.bordered)
-                        .controlSize(.mini)
-                } else {
-                    Text(tickets.isEmpty ? String(localized: "explorer.noTicket", defaultValue: "No ticket") :
-                        String(localized: "explorer.multipleTickets", defaultValue: "Multiple tickets"))
-                        .italic().font(.system(size: 11)).foregroundStyle(.secondary)
-                }
-                if let repository = item.display?.repositoryID {
-                    Button(repository) { onFilter(.repository, .value(repository)) }
-                        .font(.system(size: 11, design: .monospaced))
-                        .buttonStyle(.bordered)
-                        .controlSize(.mini)
-                        .lineLimit(1)
-                } else {
-                    Text(String(localized: "explorer.unknownRepository", defaultValue: "Unknown repository"))
-                        .italic().font(.system(size: 11)).foregroundStyle(.secondary)
-                }
-            }
-            if let number = item.display?.pullRequestNumber {
-                HStack(spacing: 4) {
-                    Text("#\(number)").font(.system(size: 11, design: .monospaced))
-                    if let owner = item.display?.pullRequestOwnerLogin {
-                        Button(owner) { onFilter(.pullRequestOwner, .value(owner)) }
-                            .buttonStyle(.plain)
-                            .foregroundStyle(Color.accentColor)
-                    } else {
-                        Text(String(localized: "explorer.unknownPROwner", defaultValue: "Unknown PR owner"))
-                            .italic().foregroundStyle(.secondary)
-                    }
-                    if let status = item.display?.pullRequestStatus {
-                        Text("· " + status)
-                    }
-                }
-                .font(.system(size: 11)).lineLimit(1)
-            } else {
-                Text(String(localized: "explorer.noPR", defaultValue: "No PR"))
+            if metadataPending {
+                Text(String(localized: "explorer.workspaceDetailsLoading", defaultValue:
+                    "Workspace details loading…"))
                     .font(.system(size: 11)).italic().foregroundStyle(.secondary)
+            } else {
+                HStack(spacing: 6) {
+                    let tickets = item.display?.ticketIDs ?? []
+                    if tickets.count == 1, let ticket = tickets.first {
+                        Button(ticket) { onFilter(.ticket, .value(ticket)) }
+                            .font(.system(size: 11, design: .monospaced))
+                            .buttonStyle(.bordered)
+                            .controlSize(.mini)
+                    } else {
+                        Text(tickets.isEmpty ? String(localized: "explorer.noTicket", defaultValue: "No ticket") :
+                            String(localized: "explorer.multipleTickets", defaultValue: "Multiple tickets"))
+                            .italic().font(.system(size: 11)).foregroundStyle(.secondary)
+                    }
+                    if let repository = item.display?.repositoryID {
+                        Button(repository) { onFilter(.repository, .value(repository)) }
+                            .font(.system(size: 11, design: .monospaced))
+                            .buttonStyle(.bordered)
+                            .controlSize(.mini)
+                            .lineLimit(1)
+                    } else {
+                        Text(String(localized: "explorer.unknownRepository", defaultValue: "Unknown repository"))
+                            .italic().font(.system(size: 11)).foregroundStyle(.secondary)
+                    }
+                }
+                if let number = item.display?.pullRequestNumber {
+                    HStack(spacing: 4) {
+                        Text("#\(number)").font(.system(size: 11, design: .monospaced))
+                        if let owner = item.display?.pullRequestOwnerLogin {
+                            Button(owner) { onFilter(.pullRequestOwner, .value(owner)) }
+                                .buttonStyle(.plain)
+                                .foregroundStyle(Color.accentColor)
+                        } else {
+                            Text(String(localized: "explorer.unknownPROwner", defaultValue: "Unknown PR owner"))
+                                .italic().foregroundStyle(.secondary)
+                        }
+                        if let status = item.display?.pullRequestStatus {
+                            Text("· " + status)
+                        }
+                    }
+                    .font(.system(size: 11)).lineLimit(1)
+                } else {
+                    Text(String(localized: "explorer.noPR", defaultValue: "No PR"))
+                        .font(.system(size: 11)).italic().foregroundStyle(.secondary)
+                }
             }
             HStack(spacing: 4) {
                 if let last = item.lastActivityAt {

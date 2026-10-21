@@ -7,6 +7,7 @@ struct WorkspaceExplorerCatalog {
     let workspaces: [WorkspaceExplorerWorkspace]
     let archiveAvailability: WorkspaceExplorerArchiveAvailability
     let partialLiveActivity: Bool
+    let liveMetadataPending: Bool
 
     var archiveAvailable: Bool { archiveAvailability == .available }
 
@@ -18,6 +19,7 @@ struct WorkspaceExplorerCatalog {
         }
         archiveAvailability = result.archiveAvailability
         partialLiveActivity = result.partialLiveActivity
+        liveMetadataPending = result.liveMetadataPending
 
         var namesByID: [String: String] = [:]
         for item in result.items {

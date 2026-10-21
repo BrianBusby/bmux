@@ -21,6 +21,7 @@ struct WorkspaceExplorerGroupSection: View {
     let focusedProjectID: String?
     let activeWorkspaceID: String?
     let reopenedWorkspaceID: String?
+    let metadataPending: Bool
     let onOpenProject: (String) -> Void
     let onOpenWorkspace: (WorkspaceExplorerHistoryItem) -> Void
     let onHistory: (WorkspaceExplorerHistoryItem) -> Void
@@ -76,6 +77,7 @@ struct WorkspaceExplorerGroupSection: View {
                             matchingCounts: matchingCounts, focusedProjectID: focusedProjectID,
                             activeWorkspaceID: activeWorkspaceID,
                             reopenedWorkspaceID: reopenedWorkspaceID,
+                            metadataPending: metadataPending,
                             onOpenProject: onOpenProject, onOpenWorkspace: onOpenWorkspace,
                             onHistory: onHistory, onReopen: onReopen,
                             onCardFilter: onCardFilter, onToggle: onToggle, onFocus: onFocus)
@@ -128,6 +130,7 @@ struct WorkspaceExplorerGroupSection: View {
                     if let item = itemsByID[id] {
                         WorkspaceExplorerWorkspaceCard(item: item, isActive: activeWorkspaceID == id,
                             isReopened: reopenedWorkspaceID == id,
+                            metadataPending: metadataPending,
                             onOpen: { onOpenWorkspace(item) },
                             onHistory: { onHistory(item) },
                             onReopen: { onReopen(item) },

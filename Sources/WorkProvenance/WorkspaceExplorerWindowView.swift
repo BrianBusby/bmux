@@ -128,6 +128,7 @@ struct WorkspaceExplorerWindowView: View {
 
     private var outsideActiveWorkspaceTitle: String? {
         guard let catalog = model.catalog, let activeID = model.activeWorkspaceID,
+              !catalog.liveMetadataPending,
               let item = catalog.items.first(where: { $0.id == activeID }),
               let result = model.result() else { return nil }
         if model.collectionTarget != nil {
@@ -204,16 +205,12 @@ struct WorkspaceExplorerWindowView: View {
             if let result = model.result() {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(String(format: String(localized: "explorer.overviewScopedCount", defaultValue:
-                            "%d projects · %d workspaces · %@"), result.inScopeProjectIDs.count,
-                            result.counts.workspaces, model.scope.summary))
-                        if let qualifier = model.catalog?.archiveAvailability.closedCountLabel {
-                            Text(qualifier)
-                        }
-                        if !model.activeArrangement.filters.isEmpty {
-                            Text(String(format: String(localized: "explorer.projectsShown", defaultValue:
-                                "%d of %d projects shown"), result.visibleProjectIDs.count,
-                                result.inScopeProjectIDs.count))
+                        ForEach(WorkspaceExplorerCountPresentation.overviewLines(result,
+                            scope: model.scope,
+                            archiveAvailability: model.catalog?.archiveAvailability ?? .unavailable,
+                            liveMetadataPending: model.catalog?.liveMetadataPending == true,
+                            hasFilters: !model.activeArrangement.filters.isEmpty), id: \.self) { line in
+                            Text(line)
                         }
                     }
                     Spacer()
@@ -223,36 +220,68 @@ struct WorkspaceExplorerWindowView: View {
                 }
                 .font(.system(size: 13)).foregroundStyle(.secondary)
                 arrangementBar
-                ForEach(Array(result.groups.enumerated()), id: \.offset) { _, group in
-                    groupSection(group, path: "overview/\(String(reflecting: group.key))", overview: true,
-                        matchingCounts: model.activeArrangement.filters.isEmpty ? [:] :
-                            result.matchingWorkspacesByProjectID)
+                if model.catalog?.liveMetadataPending == true {
+                    pendingOverview
+                } else {
+                    populatedOverview(result)
                 }
-                let overviewFilters = model.activeArrangement.filters
-                let unassignedFilters = overviewFilters.filter { $0.key == .repository || $0.key == .bmuxStatus }
-                let hasProjectFilter = overviewFilters[.projectOwner] != nil || overviewFilters[.projectStatus] != nil
-                let unassigned = model.projection?.collection(target: .unassigned, scope: model.scope,
-                    groupBy: [], filters: unassignedFilters, now: .now, calendar: .current)
-                if !hasProjectFilter, let unassigned, unassigned.visibleCounts.workspaces > 0 {
-                    let openTotal = model.projection?.collection(target: .unassigned,
-                        scope: WorkspaceExplorerScope(), groupBy: [], filters: [:],
-                        now: .now, calendar: .current).counts.open ?? 0
-                    WorkspaceExplorerProjectCard(project: nil, counts: unassigned.counts,
-                        workspaces: (model.catalog?.workspaces ?? []).filter { workspace in
-                            workspace.projectIDs.isEmpty && model.scope.includes(workspace,
-                                now: .now, calendar: .current)
-                        },
-                        scope: model.scope, archiveAvailability: model.catalog?.archiveAvailability ?? .unavailable,
-                        openTotal: openTotal,
-                        matchingCount: overviewFilters.isEmpty ? nil : unassigned.visibleCounts.workspaces,
-                        isFocused: false, titleGeometry: cardGeometry,
-                        onOpen: { model.showCollection(.unassigned) })
-                        .frame(maxWidth: 300)
+            }
+        }
+    }
+
+    private var pendingOverview: some View {
+        Group {
+            if model.scope.period != .anyTime {
+                ContentUnavailableView(WorkspaceExplorerCountPresentation.loadingActivity,
+                    systemImage: "clock")
+            } else if model.scope.state == .closed {
+                ContentUnavailableView(String(localized: "explorer.historyLoadingTitle", defaultValue:
+                    "Loading retained history…"), systemImage: "clock")
+            } else if !model.activeArrangement.filters.isEmpty {
+                ContentUnavailableView(WorkspaceExplorerCountPresentation.loadingProjects,
+                    systemImage: "clock")
+            } else if let pending = model.projection?.collection(target: .all, scope: model.scope,
+                      groupBy: [], filters: [:], now: .now, calendar: .current) {
+                ForEach(Array(pending.groups.enumerated()), id: \.offset) { _, group in
+                    groupSection(group, path: "pending/\(String(reflecting: group.key))", overview: false,
+                        matchingCounts: [:])
                 }
-                if result.visibleProjectIDs.isEmpty &&
-                    (hasProjectFilter || (unassigned?.visibleCounts.workspaces ?? 0) == 0) {
-                    emptyCollection
-                }
+                if pending.visibleWorkspaceIDs.isEmpty { emptyCollection }
+            }
+        }
+    }
+
+    private func populatedOverview(_ result: WorkspaceExplorerProjectionResult) -> some View {
+        Group {
+            ForEach(Array(result.groups.enumerated()), id: \.offset) { _, group in
+                groupSection(group, path: "overview/\(String(reflecting: group.key))", overview: true,
+                    matchingCounts: model.activeArrangement.filters.isEmpty ? [:] :
+                        result.matchingWorkspacesByProjectID)
+            }
+            let overviewFilters = model.activeArrangement.filters
+            let unassignedFilters = overviewFilters.filter { $0.key == .repository || $0.key == .bmuxStatus }
+            let hasProjectFilter = overviewFilters[.projectOwner] != nil || overviewFilters[.projectStatus] != nil
+            let unassigned = model.projection?.collection(target: .unassigned, scope: model.scope,
+                groupBy: [], filters: unassignedFilters, now: .now, calendar: .current)
+            if !hasProjectFilter, let unassigned, unassigned.visibleCounts.workspaces > 0 {
+                let openTotal = model.projection?.collection(target: .unassigned,
+                    scope: WorkspaceExplorerScope(), groupBy: [], filters: [:],
+                    now: .now, calendar: .current).counts.open ?? 0
+                WorkspaceExplorerProjectCard(project: nil, counts: unassigned.counts,
+                    workspaces: (model.catalog?.workspaces ?? []).filter { workspace in
+                        workspace.projectIDs.isEmpty && model.scope.includes(workspace,
+                            now: .now, calendar: .current)
+                    },
+                    scope: model.scope, archiveAvailability: model.catalog?.archiveAvailability ?? .unavailable,
+                    openTotal: openTotal,
+                    matchingCount: overviewFilters.isEmpty ? nil : unassigned.visibleCounts.workspaces,
+                    isFocused: false, titleGeometry: cardGeometry,
+                    onOpen: { model.showCollection(.unassigned) })
+                    .frame(maxWidth: 300)
+            }
+            if result.visibleProjectIDs.isEmpty &&
+                (hasProjectFilter || (unassigned?.visibleCounts.workspaces ?? 0) == 0) {
+                emptyCollection
             }
         }
     }
@@ -260,7 +289,10 @@ struct WorkspaceExplorerWindowView: View {
     private func collection(target: WorkspaceExplorerCollectionTarget) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             if let result = model.result() {
-                Text(collectionCount(result))
+                Text(WorkspaceExplorerCountPresentation.collection(result, scope: model.scope,
+                    archiveAvailability: model.catalog?.archiveAvailability ?? .unavailable,
+                    liveMetadataPending: model.catalog?.liveMetadataPending == true,
+                    hasFilters: !model.activeArrangement.filters.isEmpty))
                     .font(.system(size: 13)).foregroundStyle(.secondary)
                 arrangementBar
                 ForEach(Array(result.groups.enumerated()), id: \.offset) { _, group in
@@ -272,33 +304,12 @@ struct WorkspaceExplorerWindowView: View {
         }
     }
 
-    private func collectionCount(_ result: WorkspaceExplorerProjectionResult) -> String {
-        let count = result.counts.workspaces
-        let label: String
-        switch model.scope.state {
-        case .open: label = String(localized: "explorer.count.open", defaultValue: "open workspaces")
-        case .all: label = String(localized: "explorer.count.all", defaultValue: "workspaces")
-        case .closed: label = String(localized: "explorer.count.closed", defaultValue: "closed workspaces")
-        }
-        var total = "\(count) \(label)"
-        if model.scope.state == .all {
-            total += result.counts.closedKnown ?
-                " · " + String(format: String(localized: "explorer.count.breakdown", defaultValue:
-                    "%d open · %d closed"), result.counts.open, result.counts.closed) :
-                " · " + (model.catalog?.archiveAvailability.closedCountLabel ?? "")
-        } else if model.scope.state == .closed,
-                  let qualifier = model.catalog?.archiveAvailability.closedCountLabel {
-            total += " · " + qualifier
-        }
-        total += " · \(model.scope.summary)"
-        guard !model.activeArrangement.filters.isEmpty else { return total }
-        return String(format: String(localized: "explorer.visibleOfTotal", defaultValue: "%d of %@"),
-            result.visibleCounts.workspaces, total)
-    }
-
     private var emptyCollection: some View {
         Group {
-            if model.catalog?.archiveAvailability == .pending &&
+            if model.catalog?.liveMetadataPending == true && model.scope.period != .anyTime {
+                ContentUnavailableView(String(localized: "explorer.activityLoading", defaultValue:
+                    "Loading workspace activity…"), systemImage: "clock")
+            } else if model.catalog?.archiveAvailability == .pending &&
                 (model.scope.state != .open || model.scope.period != .anyTime) {
                 ContentUnavailableView(String(localized: "explorer.historyLoadingTitle", defaultValue:
                     "Loading retained history…"), systemImage: "clock")
@@ -418,6 +429,7 @@ struct WorkspaceExplorerWindowView: View {
             focusedProjectID: model.overviewArrangement.focusedProjectID,
             activeWorkspaceID: model.activeWorkspaceID,
             reopenedWorkspaceID: model.reopenedWorkspaceID,
+            metadataPending: model.catalog?.liveMetadataPending == true,
             onOpenProject: { model.showCollection(.project($0)) },
             onOpenWorkspace: { model.open($0) },
             onHistory: { model.showHistory($0.id) },

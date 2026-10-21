@@ -118,6 +118,7 @@ final class WorkspaceExplorerCoordinator {
                 present(WorkspaceExplorerHistoryLoadResult(items: lastLoadResult.items,
                     archiveAvailability: .unavailable,
                     partialLiveActivity: lastLoadResult.partialLiveActivity,
+                    liveMetadataPending: lastLoadResult.liveMetadataPending,
                     activeWorkspaceID: lastLoadResult.activeWorkspaceID),
                     preserveObservedStatuses: true)
             }
