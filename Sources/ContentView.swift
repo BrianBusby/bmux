@@ -850,6 +850,7 @@ struct ContentView: View {
     var updateViewModel: UpdateStateModel
     let windowId: UUID
     let initialPrimaryTab: AgentSessionFactualProjectionMode
+    let explorerLiveNavigation: WorkspaceExplorerLiveNavigation?
     @EnvironmentObject var tabManager: TabManager
     // ContentView observes the coalesced unread projection, NOT the notification
     // store. Reading `notificationStore` directly here would re-render the entire
@@ -976,6 +977,7 @@ struct ContentView: View {
         updateViewModel: UpdateStateModel,
         windowId: UUID,
         initialPrimaryTab: AgentSessionFactualProjectionMode = .chat,
+        explorerLiveNavigation: WorkspaceExplorerLiveNavigation? = nil,
         titlebarDefaults: UserDefaults = .standard
     ) {
         self.titlebarDefaults = titlebarDefaults
@@ -983,9 +985,9 @@ struct ContentView: View {
         self.updateViewModel = updateViewModel
         self.windowId = windowId
         self.initialPrimaryTab = initialPrimaryTab
+        self.explorerLiveNavigation = explorerLiveNavigation
         _bmuxShellTerminalVisible = State(initialValue: initialPrimaryTab == .terminal)
     }
-
     private struct CommandPaletteRestoreFocusTarget {
         let workspaceId: UUID
         let panelId: UUID
@@ -2056,13 +2058,11 @@ struct ContentView: View {
             )
                 .allowsHitTesting(false)
 
-            WorkspaceTitlebarPresentation(
-                directory: focusedDirectory,
+            WorkspaceExplorerTitlebarContent(navigation: explorerLiveNavigation,
+                selectedWorkspaceID: tabManager.selectedTabId, directory: focusedDirectory,
                 title: titlebarText,
-                buildNumber: AppBuildIdentityFormatter.buildNumber(),
                 reservedControlWidth: leadingPadding + (isFullScreen && !sidebarState.isVisible ? fullscreenControlsWidth : 0),
-                theme: MatteTheme(colorScheme: colorScheme)
-            )
+                colorScheme: colorScheme)
             .frame(height: titlebarContentHeight)
             .padding(.top, 2)
         }

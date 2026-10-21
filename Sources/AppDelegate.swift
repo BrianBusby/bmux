@@ -1034,8 +1034,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
 #endif
 
     var mainWindowContexts: [ObjectIdentifier: MainWindowContext] = [:]
+    let workspaceExplorerLiveNavigation = WorkspaceExplorerLiveNavigation()
     private var mainWindowControllers: [MainWindowController] = []
-
     /// Tracks the cascade point for new windows, matching Ghostty's upstream algorithm.
     /// Reset to `.zero` so the first window seeds the point from its own position.
     private var lastCascadePoint = NSPoint.zero
@@ -9156,7 +9156,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         }
 #endif
 
-        let root = ContentView(updateViewModel: updateViewModel, windowId: windowId, initialPrimaryTab: initialPrimaryTab)
+        let root = ContentView(updateViewModel: updateViewModel, windowId: windowId, initialPrimaryTab: initialPrimaryTab, explorerLiveNavigation: workspaceExplorerLiveNavigation)
             .environmentObject(tabManager)
             .environmentObject(notificationStore)
             .environmentObject(notificationStore.sidebarUnread)

@@ -47,13 +47,9 @@ a replay attempt. These changes remain under dogfood observation. Merged PR #183
 stabilizes group identities during reordering, improves card keyboard focus and
 grouping controls, and orders scope as Open, Closed, All with Open as the default.
 Merged PR #184 holds the previous result and counts while excluded cards fade
-for 170 ms, then commits the latest filter or scope result. The active
-`workspace-explorer-status-at-close` slice captures verified status before a
-workspace closes, stores it in PE's optional archive snapshot field, and
-shows it only as historical context. Older records have no recorded status;
+for 170 ms, then commits the latest filter or scope result. Merged PR #185 captures verified status before a workspace closes, stores it in PE's optional archive snapshot field, and shows it only as historical context. The active `workspace-explorer-live-breadcrumb` slice adds an Explorer-origin return route to the existing live workspace titlebar while keeping the separate Explorer window and its saved collection arrangement. Older records have no recorded status;
 a later close without one does not reuse the earlier value. Broader meaningful
-activity derivation, complete project metadata, reduced-motion dogfood, and a
-breadcrumb in the existing live workspace surface remain open. See
+activity derivation, complete project metadata, reduced-motion dogfood, and live breadcrumb dogfood remain open. See
 [the implementation record](../planning/workspace-explorer-implementation.md).
 
 ## Current Generated Truth

@@ -59,6 +59,7 @@ local_capabilities:
   workspace_explorer_motion_accessibility: under_observation
   workspace_explorer_filter_transition: under_observation
   workspace_explorer_status_at_close: under_observation
+  workspace_explorer_live_breadcrumb: under_observation
   provenance_engine_workspace_archive_schema_repair: under_observation
   provenance_engine_schema_identity_validation: implemented
   provenance_engine_producer_neutral_lifecycle_recording: implemented

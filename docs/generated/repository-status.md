@@ -140,6 +140,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Explorer Close Recovery | under observation |
 | Workspace Explorer Filter Transition | under observation |
 | Workspace Explorer History Adapter | implemented |
+| Workspace Explorer Live Breadcrumb | under observation |
 | Workspace Explorer Live Topology Refresh | under observation |
 | Workspace Explorer Motion Accessibility | under observation |
 | Workspace Explorer Native View | under observation |
