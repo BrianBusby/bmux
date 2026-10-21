@@ -39,7 +39,13 @@ extension ProvenanceSQLiteRepository {
                                   WHERE p.session_id = linked.id), 0),
                         COALESCE((SELECT MAX(COALESCE(t.completed_at_seconds, t.started_at_seconds))
                                   FROM provenance_coding_agent_turns t
-                                  WHERE t.session_id = linked.id), 0)
+                                  WHERE t.session_id = linked.id), 0),
+                        COALESCE((SELECT MAX(c.completed_at_seconds)
+                                  FROM provenance_coding_agent_commands c
+                                  WHERE c.session_id = linked.id), 0),
+                        COALESCE((SELECT MAX(m.completed_at_seconds)
+                                  FROM provenance_coding_agent_assistant_messages m
+                                  WHERE m.session_id = linked.id), 0)
                     ) AS activity_at_seconds,
                     COUNT(*) OVER() AS total_count
                 FROM linked

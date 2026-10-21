@@ -143,6 +143,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Explorer Live Breadcrumb | under observation |
 | Workspace Explorer Live History Header | under observation |
 | Workspace Explorer Live Topology Refresh | under observation |
+| Workspace Explorer Meaningful Activity | under observation |
 | Workspace Explorer Motion Accessibility | under observation |
 | Workspace Explorer Native View | under observation |
 | Workspace Explorer Projection | implemented |
