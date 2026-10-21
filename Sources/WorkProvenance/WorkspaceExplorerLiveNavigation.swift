@@ -17,6 +17,9 @@ final class WorkspaceExplorerLiveNavigation {
         guard explorerWindow !== window else { return }
         if let closeObserver { NotificationCenter.default.removeObserver(closeObserver) }
         explorerWindow = window
+#if DEBUG
+        bmuxDebugLog("explorer.live.register windowVisible=\(window.isVisible)")
+#endif
         closeObserver = NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification, object: window, queue: .main
         ) { [weak self] _ in
@@ -25,6 +28,9 @@ final class WorkspaceExplorerLiveNavigation {
     }
 
     func unregister() {
+#if DEBUG
+        bmuxDebugLog("explorer.live.unregister")
+#endif
         if let closeObserver { NotificationCenter.default.removeObserver(closeObserver) }
         closeObserver = nil
         explorerWindow = nil
@@ -33,10 +39,13 @@ final class WorkspaceExplorerLiveNavigation {
 
     func opened(workspaceID: UUID, from collectionTitle: String) {
         origin = Origin(workspaceID: workspaceID, collectionTitle: collectionTitle)
+#if DEBUG
+        bmuxDebugLog("explorer.live.opened hasWindow=\(explorerWindow != nil) windowVisible=\(explorerWindow?.isVisible == true)")
+#endif
     }
 
     func origin(for selectedWorkspaceID: UUID?) -> Origin? {
-        guard explorerWindow?.isVisible == true,
+        guard explorerWindow != nil,
               origin?.workspaceID == selectedWorkspaceID else { return nil }
         return origin
     }
