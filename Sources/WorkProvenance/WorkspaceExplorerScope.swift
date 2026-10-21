@@ -1,3 +1,4 @@
+import BmuxWorkspaces
 import Foundation
 
 /// Explorer-wide presence and meaningful-activity eligibility.
@@ -6,9 +7,7 @@ struct WorkspaceExplorerScope: Equatable {
         case open, all, closed
     }
 
-    enum Period: Equatable {
-        case anyTime, last24Hours, today, last7Days
-    }
+    typealias Period = WorkspaceExplorerActivityClock.Period
 
     var state: State = .open
     var period: Period = .anyTime
