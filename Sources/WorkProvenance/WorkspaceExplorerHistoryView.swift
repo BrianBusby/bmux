@@ -54,6 +54,12 @@ struct WorkspaceExplorerHistoryView: View {
                     closed.formatted(date: .abbreviated, time: .shortened))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
+            if let recorded = item.lastRecordedStatus {
+                Text(String(format: String(localized: "explorer.lastRecordedStatus",
+                    defaultValue: "Last recorded: %@"),
+                    WorkspaceExplorerGroupKey.bmuxStatus(recorded).displayName(projectsByID: [:])))
+                    .font(.system(size: 11)).foregroundStyle(.secondary)
+            }
             if let display = item.archive?.displayAtClose ?? item.display {
                 HStack(spacing: 8) {
                     Text(display.repositoryID ?? String(localized: "explorer.unknownRepository", defaultValue:

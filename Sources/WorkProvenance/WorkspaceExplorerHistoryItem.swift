@@ -17,6 +17,11 @@ struct WorkspaceExplorerHistoryItem: Identifiable {
 
     var isOpen: Bool { liveWorkspaceID != nil }
 
+    var lastRecordedStatus: WorkspaceExplorerStatus? {
+        guard let code = archive?.lastRecordedStatusCode else { return nil }
+        return WorkspaceExplorerStatus(archiveCode: code)
+    }
+
     func withLiveStatus(_ status: WorkspaceExplorerStatus) -> Self {
         Self(id: id, title: title, createdAt: createdAt, closedAt: closedAt,
             lastActivityAt: lastActivityAt, colorHex: colorHex, display: display,

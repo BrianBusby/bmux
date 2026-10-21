@@ -22,10 +22,21 @@ public struct ProvenanceArchivedWorkspaceRecord: Codable, Equatable, Sendable, I
     public let colorHex: String?
     /// Stable capture-limitation code for a client to localize, when known.
     public let coverageCode: String?
+    /// Opaque client status code captured at this close, when known.
+    public let lastRecordedStatusCode: String?
 
     /// Creates the last-known record for a closed logical workspace.
     ///
     /// The caller supplies `lastActivityAt` only from a meaningful work event.
+    /// - Parameter id: Restart-stable logical workspace ID.
+    /// - Parameter title: Workspace title at close.
+    /// - Parameter createdAt: First creation time, when known.
+    /// - Parameter closedAt: Time of this close.
+    /// - Parameter lastActivityAt: Most recent meaningful work event, when known.
+    /// - Parameter displayAtClose: Display facts frozen at close, when available.
+    /// - Parameter colorHex: Identity color at close, when available.
+    /// - Parameter coverageCode: Stable capture limitation code, when known.
+    /// - Parameter lastRecordedStatusCode: Opaque client status at this close, when known.
     public init(
         id: String,
         title: String,
@@ -34,7 +45,8 @@ public struct ProvenanceArchivedWorkspaceRecord: Codable, Equatable, Sendable, I
         lastActivityAt: Date?,
         displayAtClose: ProvenanceWorkspaceDisplayRecord?,
         colorHex: String?,
-        coverageCode: String?
+        coverageCode: String?,
+        lastRecordedStatusCode: String? = nil
     ) {
         self.id = id
         self.title = title
@@ -44,5 +56,6 @@ public struct ProvenanceArchivedWorkspaceRecord: Codable, Equatable, Sendable, I
         self.displayAtClose = displayAtClose
         self.colorHex = colorHex
         self.coverageCode = coverageCode
+        self.lastRecordedStatusCode = lastRecordedStatusCode
     }
 }

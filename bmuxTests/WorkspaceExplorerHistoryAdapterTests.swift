@@ -67,11 +67,11 @@ struct WorkspaceExplorerHistoryAdapterTests {
         workspace.agentPIDKeysByPanelId[panelID] = ["codex"]
         workspace.agentPIDs["codex"] = getpid()
         workspace.agentLifecycleStatesByPanelId[panelID] = ["codex": .needsInput]
-        #expect(WorkspaceExplorerLiveWorkspace.verifiedStatus(of: workspace) == .disconnected)
+        #expect(WorkspaceExplorerStatus.verified(of: workspace) == .disconnected)
         workspace.agentPIDProcessIdentitiesByKey["codex"] = Workspace.agentPIDProcessIdentity(pid: getpid())
-        #expect(WorkspaceExplorerLiveWorkspace.verifiedStatus(of: workspace) == .needsInput)
+        #expect(WorkspaceExplorerStatus.verified(of: workspace) == .needsInput)
         workspace.agentLifecycleStatesByPanelId[panelID] = ["codex": .running]
-        #expect(WorkspaceExplorerLiveWorkspace.verifiedStatus(of: workspace) == .running)
+        #expect(WorkspaceExplorerStatus.verified(of: workspace) == .running)
     }
 
     @MainActor
@@ -391,6 +391,31 @@ struct WorkspaceExplorerHistoryAdapterTests {
         #expect(safe.hibernation == nil)
         #expect(safe.wasAgentRunning == false)
         #expect(entry.withoutAgentResume.snapshot.stableId == snapshot.stableId)
+    }
+
+    @Test
+    func closeArchiveRetainsVerifiedStatusAsHistoricalContext() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-explorer-close-status-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(
+            databaseURL: directory.appendingPathComponent("provenance.sqlite"))
+        let service = WorkProvenanceWorkspaceArchiveService(client: client)
+        let stableID = UUID()
+        let closedAt = Date(timeIntervalSince1970: 1_800_000_000)
+
+        try await service.recordClosure(stableWorkspaceID: stableID,
+            title: "Maple Street Roof Inspection", createdAt: closedAt.addingTimeInterval(-3600),
+            closedAt: closedAt, colorHex: nil,
+            lastRecordedStatusCode: WorkspaceExplorerStatus.needsInput.archiveCode)
+        let archived = try await service.archivedWorkspaces()
+        let item = try #require(WorkspaceExplorerHistoryAdapter().join(
+            live: [], archived: archived, eligibilityByID: [:]).first)
+
+        #expect(archived.count == 1)
+        #expect(archived[0].lastRecordedStatusCode == "needs_input")
+        #expect(item.liveStatus == .closedHistorical)
+        #expect(item.lastRecordedStatus == .needsInput)
     }
 
     private func archivedRecord(id: UUID, closedAt: Date) -> ProvenanceArchivedWorkspaceRecord {

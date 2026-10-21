@@ -156,6 +156,12 @@ struct WorkspaceExplorerWorkspaceCard: View {
                 }
             }
             .font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
+            if let recorded = item.lastRecordedStatus, !item.isOpen {
+                Text(String(format: String(localized: "explorer.lastRecordedStatus",
+                    defaultValue: "Last recorded: %@"),
+                    WorkspaceExplorerGroupKey.bmuxStatus(recorded).displayName(projectsByID: [:])))
+                    .font(.system(size: 11)).foregroundStyle(.secondary)
+            }
             if item.isOpen {
                 if item.archive != nil {
                     Button(String(localized: "explorer.historyShort", defaultValue: "History"), action: onHistory)

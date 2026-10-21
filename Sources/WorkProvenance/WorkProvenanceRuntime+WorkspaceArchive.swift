@@ -32,6 +32,7 @@ extension WorkProvenanceRuntime {
         let title = workspace.bmuxEventWorkspaceTitle
         let createdAt = workspace.createdAt
         let colorHex = workspace.customColor
+        let statusCode = WorkspaceExplorerStatus.verified(of: workspace).archiveCode
         trackArchiveTask(Task {
             do {
                 try await workspaceArchiveService.recordClosure(
@@ -39,7 +40,8 @@ extension WorkProvenanceRuntime {
                     title: title,
                     createdAt: createdAt,
                     closedAt: closedAt,
-                    colorHex: colorHex
+                    colorHex: colorHex,
+                    lastRecordedStatusCode: statusCode
                 )
             } catch {
                 sentryCaptureError(
