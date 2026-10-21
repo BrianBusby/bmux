@@ -16,6 +16,7 @@ struct WorkspaceExplorerGroupSection: View {
     let projectCounts: [String: WorkspaceExplorerCounts]
     let projectOpenTotals: [String: Int]
     let scope: WorkspaceExplorerScope
+    let now: Date
     let archiveAvailability: WorkspaceExplorerArchiveAvailability
     let matchingCounts: [String: Int]
     let exitingProjectIDs: Set<String>
@@ -89,7 +90,7 @@ struct WorkspaceExplorerGroupSection: View {
                             activeFilters: activeFilters, projectsByID: projectsByID,
                             itemsByID: itemsByID, workspacesByID: workspacesByID,
                             projectCounts: projectCounts,
-                            projectOpenTotals: projectOpenTotals, scope: scope,
+                            projectOpenTotals: projectOpenTotals, scope: scope, now: now,
                             archiveAvailability: archiveAvailability,
                             matchingCounts: matchingCounts,
                             exitingProjectIDs: exitingProjectIDs, exitingWorkspaceIDs: exitingWorkspaceIDs,
@@ -132,7 +133,7 @@ struct WorkspaceExplorerGroupSection: View {
                             counts: projectCounts[id] ?? WorkspaceExplorerCounts([], closedKnown: false),
                             workspaces: workspacesByID.values.filter { workspace in
                                 workspace.projectIDs.contains(id) && scope.includes(workspace,
-                                    now: .now, calendar: .current)
+                                    now: now, calendar: .current)
                             },
                             scope: scope, archiveAvailability: archiveAvailability,
                             openTotal: projectOpenTotals[id] ?? 0,

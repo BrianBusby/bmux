@@ -7,6 +7,7 @@ struct WorkspaceExplorerHistoryView: View {
     let item: WorkspaceExplorerHistoryItem
     let page: ProvenanceWorkspaceSessionPageResponse?
     let period: WorkspaceExplorerScope.Period
+    let now: Date
     let loadFailed: Bool
     let evidenceBySessionID: [String: WorkspaceExplorerCoordinator.SessionEvidence]
     let evidenceLoadingIDs: Set<String>
@@ -141,9 +142,9 @@ struct WorkspaceExplorerHistoryView: View {
     private var periodStart: Date? {
         switch period {
         case .anyTime: nil
-        case .last24Hours: Date.now.addingTimeInterval(-24 * 60 * 60)
-        case .today: Calendar.current.startOfDay(for: .now)
-        case .last7Days: Date.now.addingTimeInterval(-7 * 24 * 60 * 60)
+        case .last24Hours: now.addingTimeInterval(-24 * 60 * 60)
+        case .today: Calendar.current.startOfDay(for: now)
+        case .last7Days: now.addingTimeInterval(-7 * 24 * 60 * 60)
         }
     }
 
@@ -155,7 +156,7 @@ struct WorkspaceExplorerHistoryView: View {
             lastActivityAt: activity, isClosed: !item.isOpen,
             liveStatus: .disconnected, arrangedStatus: .disconnected)
         return WorkspaceExplorerScope(state: .all, period: period)
-            .includes(sample, now: .now, calendar: .current)
+            .includes(sample, now: now, calendar: .current)
     }
 
     private func sessionCard(_ summary: ProvenanceWorkspaceSessionSummary) -> some View {

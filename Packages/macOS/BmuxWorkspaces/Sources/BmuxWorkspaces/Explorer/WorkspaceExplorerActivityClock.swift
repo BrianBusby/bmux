@@ -1,7 +1,7 @@
 public import Foundation
 public import Observation
 
-/// Supplies a sampled instant for Explorer activity projections.
+/// Publishes time only when an Explorer activity window can change membership.
 @MainActor @Observable
 public final class WorkspaceExplorerActivityClock {
     /// An Explorer activity period, independent of workspace open or closed state.
@@ -20,14 +20,15 @@ public final class WorkspaceExplorerActivityClock {
     public private(set) var now: Date
     private let currentDate: @MainActor () -> Date
     private let sleep: @MainActor (Duration) async throws -> Void
+    private var deadlineTask: Task<Void, Never>?
 
     /// Creates a clock. Inject time and the deadline sleeper for deterministic tests.
     /// - Parameters:
     ///   - currentDate: Supplies the current instant when scheduling and publishing.
-    ///   - sleep: Waits for a deadline when scheduling is enabled.
+    ///   - sleep: Waits until a membership deadline; defaults to a cancellable task sleep.
     public init(currentDate: @escaping @MainActor () -> Date = { .now },
                 sleep: @escaping @MainActor (Duration) async throws -> Void = {
-                    // A bounded, cancellable sleep will fire at the next membership deadline.
+                    // A bounded, cancellable sleep fires at the next membership deadline.
                     try await Task.sleep(for: $0)
                 }) {
         self.currentDate = currentDate
@@ -35,15 +36,54 @@ public final class WorkspaceExplorerActivityClock {
         self.now = currentDate()
     }
 
-    /// Resamples time when activity dates or the selected period change.
+    /// Reschedules for the selected period and known meaningful activity dates.
     /// - Parameters:
     ///   - period: The activity window to track.
     ///   - activityDates: Meaningful work events that may cross the window boundary.
     ///   - calendar: Calendar used to find local midnight for Today.
     public func configure(period: Period, activityDates: [Date], calendar: Calendar = .current) {
+        deadlineTask?.cancel()
         now = currentDate()
+        guard let deadline = Self.nextDeadline(after: now, period: period,
+                                               activityDates: activityDates, calendar: calendar) else {
+            deadlineTask = nil
+            return
+        }
+        deadlineTask = Task { [weak self, sleep, currentDate] in
+            do { try await sleep(.seconds(max(0, deadline.timeIntervalSince(currentDate())))) }
+            catch { return }
+            guard !Task.isCancelled, let self else { return }
+            self.configure(period: period, activityDates: activityDates, calendar: calendar)
+        }
     }
 
-    /// Stops deadline work when Explorer closes.
-    public func stop() {}
+    /// Cancels the current deadline when Explorer closes.
+    public func stop() {
+        deadlineTask?.cancel()
+        deadlineTask = nil
+    }
+
+    /// Returns the earliest instant when period membership may change.
+    /// - Parameters:
+    ///   - now: The currently published instant.
+    ///   - period: The activity window to track.
+    ///   - activityDates: Meaningful work events that may enter or leave the window.
+    ///   - calendar: Calendar used to find local midnight for Today.
+    /// - Returns: The next membership deadline, or `nil` when no deadline is needed.
+    public static func nextDeadline(after now: Date, period: Period,
+                                    activityDates: [Date], calendar: Calendar = .current) -> Date? {
+        switch period {
+        case .anyTime:
+            return nil
+        case .today:
+            return calendar.dateInterval(of: .day, for: now)?.end
+        case .last24Hours, .last7Days:
+            let window: TimeInterval = period == .last24Hours ? 24 * 60 * 60 : 7 * 24 * 60 * 60
+            return activityDates.compactMap { date in
+                let arrival = date > now ? date : nil
+                let expiry = date.addingTimeInterval(window + 0.001)
+                return [arrival, expiry].compactMap { $0 }.filter { $0 > now }.min()
+            }.min()
+        }
+    }
 }
