@@ -14,6 +14,7 @@ struct WorkspaceExplorerProjectCard: View {
     let titleGeometry: Namespace.ID
     let onOpen: () -> Void
     @State private var isHovered = false
+    @FocusState private var hasKeyboardFocus: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
 
@@ -65,6 +66,10 @@ struct WorkspaceExplorerProjectCard: View {
             .offset(y: isHovered && !reduceMotion ? -1 : 0)
         }
         .buttonStyle(.plain)
+        .focused($hasKeyboardFocus)
+        .overlay(RoundedRectangle(cornerRadius: 14)
+            .strokeBorder(hasKeyboardFocus ? Color.accentColor : .clear, lineWidth: 2)
+            .padding(-2).allowsHitTesting(false))
         .onHover { isHovered = $0 }
     }
 

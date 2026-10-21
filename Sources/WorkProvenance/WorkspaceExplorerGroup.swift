@@ -11,4 +11,9 @@ struct WorkspaceExplorerGroup {
     let workspaceIDs: [String]
     let counts: WorkspaceExplorerCounts
     let children: [WorkspaceExplorerGroup]
+
+    /// A bucket keeps its view identity when membership or sort position changes.
+    var identity: String {
+        String(reflecting: dimension) + "/" + String(reflecting: key)
+    }
 }

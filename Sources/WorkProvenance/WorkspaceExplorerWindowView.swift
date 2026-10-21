@@ -252,8 +252,8 @@ struct WorkspaceExplorerWindowView: View {
                     systemImage: "clock")
             } else if let pending = model.projection?.collection(target: .all, scope: model.scope,
                       groupBy: [], filters: [:], now: .now, calendar: .current) {
-                ForEach(Array(pending.groups.enumerated()), id: \.offset) { _, group in
-                    groupSection(group, path: "pending/\(String(reflecting: group.key))", overview: false,
+                ForEach(pending.groups, id: \.identity) { group in
+                    groupSection(group, path: "pending/\(group.identity)", overview: false,
                         matchingCounts: [:])
                 }
                 if pending.visibleWorkspaceIDs.isEmpty && model.visiblePendingWorkspaceItems.isEmpty { emptyCollection }
@@ -263,8 +263,8 @@ struct WorkspaceExplorerWindowView: View {
 
     private func populatedOverview(_ result: WorkspaceExplorerProjectionResult) -> some View {
         Group {
-            ForEach(Array(result.groups.enumerated()), id: \.offset) { _, group in
-                groupSection(group, path: "overview/\(String(reflecting: group.key))", overview: true,
+            ForEach(result.groups, id: \.identity) { group in
+                groupSection(group, path: "overview/\(group.identity)", overview: true,
                     matchingCounts: model.activeArrangement.filters.isEmpty ? [:] :
                         result.matchingWorkspacesByProjectID)
             }
@@ -310,8 +310,8 @@ struct WorkspaceExplorerWindowView: View {
                     Text(WorkspaceExplorerCountPresentation.loadingProjects)
                         .font(.system(size: 12)).foregroundStyle(.secondary)
                 }
-                ForEach(Array(result.groups.enumerated()), id: \.offset) { _, group in
-                    groupSection(group, path: "collection/\(String(reflecting: group.key))", overview: false,
+                ForEach(result.groups, id: \.identity) { group in
+                    groupSection(group, path: "collection/\(group.identity)", overview: false,
                         matchingCounts: [:])
                 }
                 if result.visibleWorkspaceIDs.isEmpty && model.visiblePendingWorkspaceItems.isEmpty { emptyCollection }

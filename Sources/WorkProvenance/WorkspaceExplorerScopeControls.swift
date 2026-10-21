@@ -11,10 +11,10 @@ struct WorkspaceExplorerScopeControls: View {
             HStack(spacing: 2) {
                 scopeButton(String(localized: "explorer.open", defaultValue: "Open"),
                     state: .open)
-                scopeButton(String(localized: "explorer.all", defaultValue: "All"),
-                    state: .all)
                 scopeButton(String(localized: "explorer.closed", defaultValue: "Closed"),
                     state: .closed)
+                scopeButton(String(localized: "explorer.all", defaultValue: "All"),
+                    state: .all)
             }
             .padding(2)
             .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))

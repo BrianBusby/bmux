@@ -188,7 +188,7 @@ struct WorkspaceExplorerWorkspaceCard: View {
                     dash: item.isOpen ? [] : [5, 3])))
         .overlay(RoundedRectangle(cornerRadius: 12)
             .strokeBorder(hasKeyboardFocus ? Color.accentColor : .clear, lineWidth: 2)
-            .padding(-2))
+            .padding(-2).allowsHitTesting(false))
         .shadow(color: .black.opacity(colorScheme == .dark ? (isHovered ? 0.5 : 0.45) :
             (isHovered ? 0.15 : 0.07)), radius: isHovered ? 10 : 4, y: isHovered ? 4 : 2)
         .offset(y: isHovered && !reduceMotion ? -1 : 0)
