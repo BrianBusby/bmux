@@ -40,11 +40,12 @@ extension ProvenanceSQLiteRepository {
                         COALESCE((SELECT MAX(COALESCE(t.completed_at_seconds, t.started_at_seconds))
                                   FROM provenance_coding_agent_turns t
                                   WHERE t.session_id = linked.id), 0)
-                    ) AS activity_at_seconds
+                    ) AS activity_at_seconds,
+                    COUNT(*) OVER() AS total_count
                 FROM linked
             )
             SELECT id, agent_kind, workspace_id, surface_id, worktree_id, cwd,
-                   status, started_at_seconds, updated_at_seconds, activity_at_seconds
+                   status, started_at_seconds, updated_at_seconds, activity_at_seconds, total_count
             FROM ordered
             WHERE (? IS NULL OR activity_at_seconds < ?
                    OR (activity_at_seconds = ? AND id < ?))
@@ -61,16 +62,19 @@ extension ProvenanceSQLiteRepository {
         try query.bind(limit + 1, at: 7)
         var sessions: [ProvenanceWorkspaceSessionSummary] = []
         var lastKey: (Double, String)?
+        var totalCount = 0
         while try query.step() {
             guard let id = query.string(at: 0), let agentKind = query.string(at: 1),
                   let status = query.string(at: 6), let updatedAt = query.double(at: 8),
                   let activity = query.double(at: 9) else {
                 throw ProvenanceSQLiteError.sqlite(message: "invalid workspace session row")
             }
+            totalCount = query.int(at: 10)
             if sessions.count == limit {
                 let next = lastKey.map { "\(String($0.0.bitPattern, radix: 16))|\($0.1)" }
                 return ProvenanceWorkspaceSessionPageResponse(
-                    workspaceID: workspaceID, sessions: sessions, nextCursor: next
+                    workspaceID: workspaceID, sessions: sessions, nextCursor: next,
+                    totalCount: totalCount
                 )
             }
             let session = ProvenanceSessionRecord(
@@ -87,7 +91,8 @@ extension ProvenanceSQLiteRepository {
             lastKey = (activity, id)
         }
         return ProvenanceWorkspaceSessionPageResponse(
-            workspaceID: workspaceID, sessions: sessions, nextCursor: nil
+            workspaceID: workspaceID, sessions: sessions, nextCursor: nil,
+            totalCount: totalCount
         )
     }
 }

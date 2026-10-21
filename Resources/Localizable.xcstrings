@@ -106904,19 +106904,19 @@
         }
       }
     },
-    "explorer.backToCollection": {
+    "explorer.viewRetainedHistoryCount": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Back to %@"
+            "value": "View retained history (%d sessions)"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@に戻る"
+            "value": "保持された履歴を表示（%d件のセッション）"
           }
         }
       }

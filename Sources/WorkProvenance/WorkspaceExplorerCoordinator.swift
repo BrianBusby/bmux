@@ -9,7 +9,7 @@ final class WorkspaceExplorerCoordinator {
     typealias PresenceLoader = @MainActor () -> WorkspaceExplorerHistoryLoadResult
     typealias Reopener = @MainActor (UUID) -> Bool
     typealias Activator = @MainActor (UUID) -> Void
-    typealias LiveOpenHandler = @MainActor (UUID, String) -> Void
+    typealias LiveOpenHandler = @MainActor (WorkspaceExplorerHistoryItem, WorkspaceExplorerCollectionTarget?, String) -> Void
     typealias SessionLoader = @MainActor (UUID) async throws -> ProvenanceWorkspaceSessionPageResponse
     typealias MoreSessionsLoader = @MainActor (UUID, String) async throws -> ProvenanceWorkspaceSessionPageResponse
     typealias EvidenceLoader = @MainActor (String) async throws -> (
@@ -71,7 +71,7 @@ final class WorkspaceExplorerCoordinator {
     init(loadHistory: @escaping Loader, loadPresence: PresenceLoader? = nil,
          reopenHistory: @escaping Reopener,
          activateWorkspace: @escaping Activator,
-         onOpenLive: @escaping LiveOpenHandler = { _, _ in },
+         onOpenLive: @escaping LiveOpenHandler = { _, _, _ in },
          loadSessions: @escaping SessionLoader,
          loadEvidence: @escaping EvidenceLoader = { _ in throw CancellationError() },
          loadMoreSessions: @escaping MoreSessionsLoader = { _, _ in throw CancellationError() },
@@ -375,7 +375,7 @@ final class WorkspaceExplorerCoordinator {
         if let liveID = item.liveWorkspaceID {
             let title = collectionTarget?.title(projects: catalog?.projects ?? [])
                 ?? String(localized: "explorer.allProjects", defaultValue: "All projects")
-            onOpenLive(liveID, title)
+            onOpenLive(item, collectionTarget, title)
             activateWorkspace(liveID)
             activeWorkspaceID = item.id
         } else {

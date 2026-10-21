@@ -13,8 +13,12 @@ struct WorkspaceExplorerTitlebarContent: View {
     var body: some View {
         if let origin = navigation?.origin(for: selectedWorkspaceID) {
             WorkspaceExplorerLiveBreadcrumb(collectionTitle: origin.collectionTitle,
-                workspaceTitle: title, leadingPadding: reservedControlWidth,
-                onBack: { navigation?.returnToExplorer() })
+                hasCollection: origin.collectionTarget != nil, workspaceTitle: title,
+                retainedSessionCount: navigation?.retainedSessionCount,
+                leadingPadding: reservedControlWidth,
+                onAllProjects: { navigation?.returnToOverview() },
+                onCollection: { navigation?.returnToCollection() },
+                onHistory: { navigation?.openHistory() })
         } else {
             WorkspaceTitlebarPresentation(directory: directory, title: title,
                 buildNumber: AppBuildIdentityFormatter.buildNumber(),

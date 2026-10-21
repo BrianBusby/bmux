@@ -10,6 +10,8 @@ public struct ProvenanceWorkspaceSessionPageResponse: Codable, Equatable, Sendab
     public let sessions: [ProvenanceWorkspaceSessionSummary]
     /// Continuation token for the next page, if any.
     public let nextCursor: String?
+    /// Unique linked sessions across all pages, when supplied by the reader.
+    public let totalCount: Int?
     /// True because PE only returns linked, observed lifecycle/prompt/turn evidence.
     public let partialCoverage: Bool
 
@@ -20,18 +22,21 @@ public struct ProvenanceWorkspaceSessionPageResponse: Codable, Equatable, Sendab
     ///   - workspaceID: Restart-stable workspace ID.
     ///   - sessions: Linked sessions in activity order.
     ///   - nextCursor: Continuation token for another page.
+    ///   - totalCount: Unique linked sessions across all pages, when known.
     ///   - partialCoverage: Whether capture can omit unobserved sessions.
     public init(
         schemaVersion: Int = 1,
         workspaceID: String,
         sessions: [ProvenanceWorkspaceSessionSummary],
         nextCursor: String?,
+        totalCount: Int? = nil,
         partialCoverage: Bool = true
     ) {
         self.schemaVersion = schemaVersion
         self.workspaceID = workspaceID
         self.sessions = sessions
         self.nextCursor = nextCursor
+        self.totalCount = totalCount
         self.partialCoverage = partialCoverage
     }
 }
