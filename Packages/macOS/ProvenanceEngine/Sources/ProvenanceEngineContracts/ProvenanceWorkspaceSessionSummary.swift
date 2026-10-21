@@ -1,10 +1,10 @@
 import Foundation
 
-/// Session activity directly verified from lifecycle, prompt, or turn evidence.
+/// Session activity directly verified from lifecycle, prompt, turn, command, or assistant-message evidence.
 public struct ProvenanceWorkspaceSessionSummary: Codable, Equatable, Sendable, Identifiable {
     /// The observed PE session projection.
     public let session: ProvenanceSessionRecord
-    /// Latest accepted lifecycle, prompt, or turn activity; nil when unobserved.
+    /// Latest accepted work activity; nil when unobserved.
     public let lastActivityAt: Date?
 
     /// Stable PE session identity.
