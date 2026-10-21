@@ -147,6 +147,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Explorer Meaningful Activity | under observation |
 | Workspace Explorer Motion Accessibility | under observation |
 | Workspace Explorer Native View | under observation |
+| Workspace Explorer Plan File Activity | under observation |
 | Workspace Explorer Projection | implemented |
 | Workspace Explorer Staged Loading | under observation |
 | Workspace Explorer Status At Close | under observation |
