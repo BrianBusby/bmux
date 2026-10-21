@@ -253,6 +253,27 @@ struct WorkspaceExplorerHistoryAdapterTests {
 
     @MainActor
     @Test
+    func recoveryFailureDoesNotBlockLiveExplorerSnapshot() async throws {
+        struct RecoveryFailure: Error {}
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        let service = WorkspaceExplorerHistoryService(
+            archiveService: nil,
+            recoverArchive: { throw RecoveryFailure() },
+            tabManagers: { [manager] },
+            activeWorkspaceID: { workspace.stableId.uuidString },
+            restoreRecords: { [:] },
+            reopenEligibility: { _, _, _ in .unavailable(.noRestoreSnapshot) })
+
+        let result = try await service.load()
+
+        #expect(result.archiveAvailability == .unavailable)
+        #expect(!result.liveMetadataPending)
+        #expect(result.items.contains { $0.id == workspace.stableId.uuidString && $0.isOpen })
+    }
+
+    @MainActor
+    @Test
     func historyServiceProvidesSeparateLiveAndArchiveSnapshots() async throws {
         let manager = TabManager()
         let workspace = try #require(manager.selectedWorkspace)

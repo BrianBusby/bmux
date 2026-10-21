@@ -11,6 +11,65 @@ import Testing
 @Suite @MainActor
 struct WorkspaceExplorerCoordinatorTests {
     @Test
+    func newWorkspaceAppearsWhileExplorerRefreshes() async {
+        let first = WorkspaceExplorerLiveWorkspace(stableID: UUID(), runtimeID: UUID(),
+            title: "Maple Street Roof Inspection", createdAt: .now,
+            colorHex: nil, display: nil, lastActivityAt: nil, liveStatus: .disconnected)
+        let second = WorkspaceExplorerLiveWorkspace(stableID: UUID(), runtimeID: UUID(),
+            title: "Cedar Street Roof Inspection", createdAt: .now,
+            colorHex: nil, display: nil, lastActivityAt: nil, liveStatus: .disconnected)
+        let adapter = WorkspaceExplorerHistoryAdapter()
+        var live = [first]
+        var loads = 0
+        let started = AsyncStream<Void>.makeStream()
+        let release = AsyncStream<Void>.makeStream()
+        let model = WorkspaceExplorerCoordinator(loadHistory: {
+            loads += 1
+            if loads == 2 {
+                started.continuation.yield()
+                var iterator = release.stream.makeAsyncIterator()
+                _ = await iterator.next()
+            }
+            return WorkspaceExplorerHistoryLoadResult(
+                items: adapter.join(live: live, archived: [], eligibilityByID: [:]),
+                archiveAvailability: .available, partialLiveActivity: false)
+        }, loadPresence: {
+            WorkspaceExplorerHistoryLoadResult(
+                items: adapter.join(live: live, archived: [], eligibilityByID: [:]),
+                archiveAvailability: .pending, partialLiveActivity: true,
+                liveMetadataPending: true)
+        }, reopenHistory: { _ in false }, activateWorkspace: { _ in },
+           loadSessions: { id in ProvenanceWorkspaceSessionPageResponse(
+               workspaceID: id.uuidString, sessions: [], nextCursor: nil) }, clearArchive: { })
+        await model.load()
+        model.setGroupBy([.repository])
+        live.append(second)
+        let refresh = Task { await model.refreshForTopologyChange() }
+        var iterator = started.stream.makeAsyncIterator()
+        _ = await iterator.next()
+        #expect(model.pendingWorkspaceItems.map(\.id) == [second.stableID.uuidString])
+        #expect(model.catalog?.items.map(\.id) == [first.stableID.uuidString])
+        #expect(model.activeArrangement.groupBy == [.repository])
+        release.continuation.yield()
+        await refresh.value
+        #expect(model.pendingWorkspaceItems.isEmpty)
+        #expect(Set(model.catalog?.items.map(\.id) ?? []) ==
+            [first.stableID.uuidString, second.stableID.uuidString])
+    }
+
+    @Test
+    func workspaceListMutationNotifiesExplorerWithoutPolling() {
+        let manager = TabManager()
+        let monitor = WorkspaceExplorerWorkspaceChangeMonitor(tabManagers: { [manager] })
+        var changes = 0
+        monitor.start { changes += 1 }
+        #expect(changes == 0)
+        _ = manager.addWorkspace()
+        #expect(changes > 0)
+        monitor.stop()
+    }
+
+    @Test
     func overviewAndProjectKeepIndependentArrangementsWhileScopeTravels() async {
         let model = WorkspaceExplorerCoordinator(
             loadHistory: { WorkspaceExplorerHistoryLoadResult(items: [],
