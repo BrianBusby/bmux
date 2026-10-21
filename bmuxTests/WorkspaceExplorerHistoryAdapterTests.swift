@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import ProvenanceEngineContracts
+import ProvenanceEngineSDK
 import Testing
 
 #if canImport(bmux_DEV)
