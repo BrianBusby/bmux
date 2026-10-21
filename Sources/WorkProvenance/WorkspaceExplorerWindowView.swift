@@ -9,7 +9,8 @@ struct WorkspaceExplorerWindowView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var cardGeometry
 
-    init(loadHistory: @escaping WorkspaceExplorerCoordinator.Loader,
+    init(loadPresence: WorkspaceExplorerCoordinator.PresenceLoader? = nil,
+         loadHistory: @escaping WorkspaceExplorerCoordinator.Loader,
          reopenHistory: @escaping WorkspaceExplorerCoordinator.Reopener,
          activateWorkspace: @escaping WorkspaceExplorerCoordinator.Activator,
          loadSessions: @escaping WorkspaceExplorerCoordinator.SessionLoader,
@@ -18,7 +19,7 @@ struct WorkspaceExplorerWindowView: View {
          clearArchive: @escaping WorkspaceExplorerCoordinator.Clearer,
          liveStatusWorkspaces: @escaping WorkspaceExplorerLiveStatusMonitor.WorkspaceSource) {
         _model = State(initialValue: WorkspaceExplorerCoordinator(
-            loadHistory: loadHistory, reopenHistory: reopenHistory,
+            loadHistory: loadHistory, loadPresence: loadPresence, reopenHistory: reopenHistory,
             activateWorkspace: activateWorkspace, loadSessions: loadSessions,
             loadEvidence: loadEvidence, loadMoreSessions: loadMoreSessions,
             clearArchive: clearArchive,
@@ -72,10 +73,13 @@ struct WorkspaceExplorerWindowView: View {
                             notice(String(localized: "explorer.clearFailed", defaultValue:
                                 "Explorer history could not be cleared. Try again."))
                         }
-                        if model.catalog?.archiveAvailable == false {
-                            notice(String(localized: "explorer.historyUnavailable", defaultValue:
-                                "History could not be loaded. Showing open workspaces only; closed counts are unknown."))
-                        } else if model.catalog?.partialLiveActivity == true {
+                        if model.scope.state != .open, let catalog = model.catalog {
+                            WorkspaceExplorerArchiveNotice(availability: catalog.archiveAvailability) {
+                                Task { await model.load() }
+                            }
+                        }
+                        if model.catalog?.archiveAvailability != .pending &&
+                            model.catalog?.partialLiveActivity == true {
                             notice(String(localized: "explorer.partialActivity", defaultValue:
                                 "Some live activity could not be verified. Time filters may omit those workspaces."))
                         }
@@ -187,54 +191,12 @@ struct WorkspaceExplorerWindowView: View {
                 .accessibilityLabel(String(localized: "explorer.moreActions", defaultValue: "Explorer actions"))
             }
             .font(.system(size: 18, weight: .bold))
-            if model.historyID == nil { scopeControls }
+            if model.historyID == nil {
+                WorkspaceExplorerScopeControls(scope: model.scope,
+                    onState: { model.scope.state = $0 }, onPeriod: { model.scope.period = $0 })
+            }
         }
         .padding(16)
-    }
-
-    private var scopeControls: some View {
-        HStack(spacing: 12) {
-            HStack(spacing: 2) {
-                scopeButton(String(localized: "explorer.open", defaultValue: "Open"),
-                    selected: model.scope.state == .open) { model.scope.state = .open }
-                scopeButton(String(localized: "explorer.all", defaultValue: "All"),
-                    selected: model.scope.state == .all) { model.scope.state = .all }
-                scopeButton(String(localized: "explorer.closed", defaultValue: "Closed"),
-                    selected: model.scope.state == .closed) { model.scope.state = .closed }
-            }
-            .padding(2)
-            .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
-            Menu(periodTitle(model.scope.period)) {
-                periodOption(.anyTime)
-                periodOption(.last24Hours)
-                periodOption(.today)
-                periodOption(.last7Days)
-            }
-            Spacer()
-        }
-        .font(.system(size: 12))
-    }
-
-    private func scopeButton(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {
-        Button(title, action: action)
-            .buttonStyle(.plain)
-            .padding(.horizontal, 12).padding(.vertical, 5)
-            .background(selected ? Color.accentColor.opacity(0.18) : Color.clear,
-                in: RoundedRectangle(cornerRadius: 6))
-            .accessibilityAddTraits(selected ? .isSelected : [])
-    }
-
-    private func periodOption(_ period: WorkspaceExplorerScope.Period) -> some View {
-        Button(periodTitle(period)) { model.scope.period = period }
-    }
-
-    private func periodTitle(_ period: WorkspaceExplorerScope.Period) -> String {
-        switch period {
-        case .anyTime: String(localized: "explorer.anyTime", defaultValue: "Any time")
-        case .last24Hours: String(localized: "explorer.last24Hours", defaultValue: "Last 24 hours")
-        case .today: String(localized: "explorer.today", defaultValue: "Today")
-        case .last7Days: String(localized: "explorer.last7Days", defaultValue: "Last 7 days")
-        }
     }
 
     private var overview: some View {
@@ -245,6 +207,9 @@ struct WorkspaceExplorerWindowView: View {
                         Text(String(format: String(localized: "explorer.overviewScopedCount", defaultValue:
                             "%d projects · %d workspaces · %@"), result.inScopeProjectIDs.count,
                             result.counts.workspaces, model.scope.summary))
+                        if let qualifier = model.catalog?.archiveAvailability.closedCountLabel {
+                            Text(qualifier)
+                        }
                         if !model.activeArrangement.filters.isEmpty {
                             Text(String(format: String(localized: "explorer.projectsShown", defaultValue:
                                 "%d of %d projects shown"), result.visibleProjectIDs.count,
@@ -277,7 +242,8 @@ struct WorkspaceExplorerWindowView: View {
                             workspace.projectIDs.isEmpty && model.scope.includes(workspace,
                                 now: .now, calendar: .current)
                         },
-                        scope: model.scope, openTotal: openTotal,
+                        scope: model.scope, archiveAvailability: model.catalog?.archiveAvailability ?? .unavailable,
+                        openTotal: openTotal,
                         matchingCount: overviewFilters.isEmpty ? nil : unassigned.visibleCounts.workspaces,
                         isFocused: false, titleGeometry: cardGeometry,
                         onOpen: { model.showCollection(.unassigned) })
@@ -319,7 +285,10 @@ struct WorkspaceExplorerWindowView: View {
             total += result.counts.closedKnown ?
                 " · " + String(format: String(localized: "explorer.count.breakdown", defaultValue:
                     "%d open · %d closed"), result.counts.open, result.counts.closed) :
-                " · " + String(localized: "explorer.count.closedUnknown", defaultValue: "closed unknown")
+                " · " + (model.catalog?.archiveAvailability.closedCountLabel ?? "")
+        } else if model.scope.state == .closed,
+                  let qualifier = model.catalog?.archiveAvailability.closedCountLabel {
+            total += " · " + qualifier
         }
         total += " · \(model.scope.summary)"
         guard !model.activeArrangement.filters.isEmpty else { return total }
@@ -329,7 +298,14 @@ struct WorkspaceExplorerWindowView: View {
 
     private var emptyCollection: some View {
         Group {
-            if !model.activeArrangement.filters.isEmpty {
+            if model.catalog?.archiveAvailability == .pending &&
+                (model.scope.state != .open || model.scope.period != .anyTime) {
+                ContentUnavailableView(String(localized: "explorer.historyLoadingTitle", defaultValue:
+                    "Loading retained history…"), systemImage: "clock")
+            } else if model.catalog?.archiveAvailability == .unavailable && model.scope.state == .closed {
+                ContentUnavailableView(String(localized: "explorer.historyUnavailableTitle", defaultValue:
+                    "Retained history unavailable"), systemImage: "exclamationmark.triangle")
+            } else if !model.activeArrangement.filters.isEmpty {
                 ContentUnavailableView {
                     Label(String(localized: "explorer.noFilterMatches", defaultValue:
                         "No workspaces match these filters"), systemImage: "line.3.horizontal.decrease.circle")
@@ -359,7 +335,7 @@ struct WorkspaceExplorerWindowView: View {
                         Text(String(format: String(localized: "explorer.closedRetained", defaultValue:
                             "%d closed workspaces retained."), closedWorkspaceCount))
                     } else {
-                        Text(String(localized: "explorer.count.closedUnknown", defaultValue: "closed unknown"))
+                        Text(model.catalog?.archiveAvailability.closedCountLabel ?? "")
                     }
                 } actions: {
                     Button(String(localized: "explorer.showAll", defaultValue: "Show all")) {
@@ -437,6 +413,7 @@ struct WorkspaceExplorerWindowView: View {
             workspacesByID: Dictionary((model.catalog?.workspaces ?? []).map { ($0.id, $0) },
                 uniquingKeysWith: { first, _ in first }),
             projectCounts: counts, projectOpenTotals: openTotals, scope: model.scope,
+            archiveAvailability: model.catalog?.archiveAvailability ?? .unavailable,
             matchingCounts: matchingCounts,
             focusedProjectID: model.overviewArrangement.focusedProjectID,
             activeWorkspaceID: model.activeWorkspaceID,

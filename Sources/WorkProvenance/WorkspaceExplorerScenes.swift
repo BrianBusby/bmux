@@ -9,6 +9,7 @@ struct WorkspaceExplorerScenes: Scene {
     var body: some Scene {
         Window(String(localized: "explorer.title", defaultValue: "Explorer"), id: "workspace-explorer") {
             WorkspaceExplorerWindowView(
+                loadPresence: { appDelegate.workspaceExplorerPresence() },
                 loadHistory: { try await appDelegate.loadWorkspaceExplorerHistory() },
                 reopenHistory: { appDelegate.reopenWorkspaceExplorerHistory(stableID: $0) },
                 activateWorkspace: { appDelegate.activateWorkspaceExplorerWorkspace(runtimeID: $0) },

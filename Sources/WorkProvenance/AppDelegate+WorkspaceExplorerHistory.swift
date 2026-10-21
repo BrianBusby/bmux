@@ -24,6 +24,10 @@ extension AppDelegate {
         try await workspaceExplorerHistoryService().load()
     }
 
+    func workspaceExplorerPresence() -> WorkspaceExplorerHistoryLoadResult {
+        workspaceExplorerHistoryService().presenceSnapshot()
+    }
+
     func workspaceExplorerSessions(stableID: UUID, limit: Int = 50, cursor: String? = nil) async throws
         -> ProvenanceWorkspaceSessionPageResponse {
         try await workspaceExplorerHistoryService().sessions(stableID: stableID, limit: limit, cursor: cursor)

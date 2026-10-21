@@ -32,12 +32,14 @@ history loading fails, and adds a targeted local-workspace reopen action that
 strips saved agent startup commands. Close capture is best effort until
 immediate-quit recovery or a bounded flush is added. The
 `workspace-explorer-projection` slice adds pure scope, grouping, filter,
-unique-count, and held-status rules. Draft PR #180 adds a separate native
+unique-count, and held-status rules. Merged PR #180 adds a separate native
 Project and Workspace Explorer window with read-only retained session detail,
 explicit reopen, per-view arrangements, and a Debug history fixture. Its native
-view is under observation. Broader meaningful activity derivation, complete
-project metadata, status-at-close capture, staged live-first loading while the
-archive is pending, keyboard and reduced-motion dogfood, and a breadcrumb in
+view is under observation. The `workspace-explorer-staged-loading` slice is
+under observation: it publishes live cards immediately, then resolves retained
+history and closed counts without resetting view state. Broader meaningful
+activity derivation, complete project metadata, status-at-close capture,
+keyboard and reduced-motion dogfood, and a breadcrumb in
 the existing live workspace surface remain open. See
 [the implementation record](../planning/workspace-explorer-implementation.md).
 

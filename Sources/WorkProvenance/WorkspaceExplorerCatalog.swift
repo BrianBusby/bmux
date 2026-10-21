@@ -5,8 +5,10 @@ struct WorkspaceExplorerCatalog {
     let items: [WorkspaceExplorerHistoryItem]
     let projects: [WorkspaceExplorerProject]
     let workspaces: [WorkspaceExplorerWorkspace]
-    let archiveAvailable: Bool
+    let archiveAvailability: WorkspaceExplorerArchiveAvailability
     let partialLiveActivity: Bool
+
+    var archiveAvailable: Bool { archiveAvailability == .available }
 
     init(_ result: WorkspaceExplorerHistoryLoadResult,
          liveStatuses: [String: WorkspaceExplorerStatus] = [:],
@@ -14,7 +16,7 @@ struct WorkspaceExplorerCatalog {
         items = result.items.map { item in
             liveStatuses[item.id].map(item.withLiveStatus) ?? item
         }
-        archiveAvailable = result.archiveAvailability == .available
+        archiveAvailability = result.archiveAvailability
         partialLiveActivity = result.partialLiveActivity
 
         var namesByID: [String: String] = [:]

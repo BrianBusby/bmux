@@ -40,11 +40,23 @@ final class WorkspaceExplorerHistoryService {
         self.reopenEligibility = reopenEligibility
     }
 
-    /// Live and archive phases stay separate so the UI can stage open cards in a later slice.
+    /// Enriched live facts and retained history complete after the immediate presence snapshot.
     func load() async throws -> WorkspaceExplorerHistoryLoadResult {
         async let archived = archiveSnapshot()
         let live = try await liveSnapshot()
         return combine(live: live, archived: try await archived)
+    }
+
+    /// Shows current tabs before any PE query can delay the first Explorer render.
+    func presenceSnapshot() -> WorkspaceExplorerHistoryLoadResult {
+        let live = LiveSnapshot(workspaces: liveWorkspaces().map { workspace in
+            WorkspaceExplorerLiveWorkspace(stableID: workspace.stableId, runtimeID: workspace.id,
+                title: workspace.bmuxEventWorkspaceTitle, createdAt: workspace.createdAt,
+                colorHex: workspace.customColor, display: nil, lastActivityAt: nil,
+                liveStatus: WorkspaceExplorerLiveWorkspace.verifiedStatus(of: workspace))
+        }, partialActivity: true, activeWorkspaceID: activeWorkspaceID())
+        return combine(live: live, archived: ArchiveSnapshot(records: [],
+            availability: archiveService == nil ? .unavailable : .pending))
     }
 
     func archiveSnapshot() async throws -> ArchiveSnapshot {
@@ -100,7 +112,7 @@ final class WorkspaceExplorerHistoryService {
 
     func combine(live: LiveSnapshot, archived: ArchiveSnapshot) -> WorkspaceExplorerHistoryLoadResult {
         let liveIDs = Set(live.workspaces.map(\.stableID))
-        let records = restoreRecords()
+        let records = archived.records.isEmpty ? [:] : restoreRecords()
         let eligibilityByID = Dictionary(uniqueKeysWithValues: archived.records.compactMap { record in
             UUID(uuidString: record.id).map { stableID in
                 (stableID, reopenEligibility(stableID, liveIDs, records[stableID]))

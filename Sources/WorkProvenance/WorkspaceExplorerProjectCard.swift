@@ -7,6 +7,7 @@ struct WorkspaceExplorerProjectCard: View {
     let counts: WorkspaceExplorerCounts
     let workspaces: [WorkspaceExplorerWorkspace]
     let scope: WorkspaceExplorerScope
+    let archiveAvailability: WorkspaceExplorerArchiveAvailability
     let openTotal: Int
     let matchingCount: Int?
     let isFocused: Bool
@@ -105,7 +106,7 @@ struct WorkspaceExplorerProjectCard: View {
                 String(localized: "explorer.count.all", defaultValue: "workspaces") :
                 String(localized: "explorer.count.allPeriod", defaultValue: "matching workspaces")
             guard counts.closedKnown else {
-                return label + " · " + String(localized: "explorer.count.closedUnknown", defaultValue: "closed unknown")
+                return label + " · " + (archiveAvailability.closedCountLabel ?? "")
             }
             return label + " · " + String(format: String(localized: "explorer.count.breakdown", defaultValue:
                 "%d open · %d closed"), counts.open, counts.closed)

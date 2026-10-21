@@ -16,6 +16,7 @@ struct WorkspaceExplorerGroupSection: View {
     let projectCounts: [String: WorkspaceExplorerCounts]
     let projectOpenTotals: [String: Int]
     let scope: WorkspaceExplorerScope
+    let archiveAvailability: WorkspaceExplorerArchiveAvailability
     let matchingCounts: [String: Int]
     let focusedProjectID: String?
     let activeWorkspaceID: String?
@@ -71,6 +72,7 @@ struct WorkspaceExplorerGroupSection: View {
                             itemsByID: itemsByID, workspacesByID: workspacesByID,
                             projectCounts: projectCounts,
                             projectOpenTotals: projectOpenTotals, scope: scope,
+                            archiveAvailability: archiveAvailability,
                             matchingCounts: matchingCounts, focusedProjectID: focusedProjectID,
                             activeWorkspaceID: activeWorkspaceID,
                             reopenedWorkspaceID: reopenedWorkspaceID,
@@ -111,7 +113,8 @@ struct WorkspaceExplorerGroupSection: View {
                                 workspace.projectIDs.contains(id) && scope.includes(workspace,
                                     now: .now, calendar: .current)
                             },
-                            scope: scope, openTotal: projectOpenTotals[id] ?? 0,
+                            scope: scope, archiveAvailability: archiveAvailability,
+                            openTotal: projectOpenTotals[id] ?? 0,
                             matchingCount: matchingCounts[id],
                             isFocused: focusedProjectID == id, titleGeometry: cardGeometry,
                             onOpen: { onOpenProject(id) })

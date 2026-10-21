@@ -106759,6 +106759,57 @@
         }
       }
     },
+    "explorer.historyLoadingTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading retained history…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保持された履歴を読み込み中…"
+          }
+        }
+      }
+    },
+    "explorer.historyLoading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading retained history… Closed workspaces are not counted until the query completes."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保持された履歴を読み込み中… クエリが完了するまで、閉じたワークスペースは数に含めません。"
+          }
+        }
+      }
+    },
+    "explorer.historyUnavailableTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retained history unavailable"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保持された履歴を利用できません"
+          }
+        }
+      }
+    },
     "explorer.historyUnavailable": {
       "extractionState": "manual",
       "localizations": {
@@ -108132,6 +108183,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "一致するワークスペース"
+          }
+        }
+      }
+    },
+    "explorer.count.closedPending": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "closed pending"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "閉じた数は読み込み中"
           }
         }
       }

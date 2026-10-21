@@ -263,6 +263,11 @@ struct WorkspaceExplorerHistoryAdapterTests {
             restoreRecords: { [:] },
             reopenEligibility: { _, _, _ in .unavailable(.noRestoreSnapshot) })
 
+        let presence = service.presenceSnapshot()
+        #expect(presence.items.map(\.id) == [workspace.stableId.uuidString])
+        #expect(presence.items[0].isOpen)
+        #expect(presence.archiveAvailability == .unavailable)
+        #expect(presence.partialLiveActivity)
         let live = try await service.liveSnapshot()
         #expect(live.workspaces.map(\.stableID) == [workspace.stableId])
         #expect(live.partialActivity)
