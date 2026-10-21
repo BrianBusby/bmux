@@ -18,6 +18,8 @@ struct WorkspaceExplorerGroupSection: View {
     let scope: WorkspaceExplorerScope
     let archiveAvailability: WorkspaceExplorerArchiveAvailability
     let matchingCounts: [String: Int]
+    let exitingProjectIDs: Set<String>
+    let exitingWorkspaceIDs: Set<String>
     let focusedProjectID: String?
     let activeWorkspaceID: String?
     let reopenedWorkspaceID: String?
@@ -29,6 +31,7 @@ struct WorkspaceExplorerGroupSection: View {
     let onCardFilter: (WorkspaceExplorerDimension, WorkspaceExplorerGroupKey) -> Void
     let onToggle: (String) -> Void
     let onFocus: (WorkspaceExplorerDimension, WorkspaceExplorerGroupKey) -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -74,7 +77,9 @@ struct WorkspaceExplorerGroupSection: View {
                             projectCounts: projectCounts,
                             projectOpenTotals: projectOpenTotals, scope: scope,
                             archiveAvailability: archiveAvailability,
-                            matchingCounts: matchingCounts, focusedProjectID: focusedProjectID,
+                            matchingCounts: matchingCounts,
+                            exitingProjectIDs: exitingProjectIDs, exitingWorkspaceIDs: exitingWorkspaceIDs,
+                            focusedProjectID: focusedProjectID,
                             activeWorkspaceID: activeWorkspaceID,
                             reopenedWorkspaceID: reopenedWorkspaceID,
                             metadataPending: metadataPending,
@@ -123,6 +128,10 @@ struct WorkspaceExplorerGroupSection: View {
                             .id("project:\(id)")
                             .matchedGeometryEffect(id: "project:\(id)", in: cardGeometry)
                             .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                            .opacity(exitingProjectIDs.contains(id) ? 0 : 1)
+                            .allowsHitTesting(!exitingProjectIDs.contains(id))
+                            .accessibilityHidden(exitingProjectIDs.contains(id))
+                            .animation(reduceMotion ? nil : .easeOut(duration: 0.17), value: exitingProjectIDs.contains(id))
                     }
                 }
             } else {
@@ -138,6 +147,10 @@ struct WorkspaceExplorerGroupSection: View {
                             .id("workspace:\(id)")
                             .matchedGeometryEffect(id: "workspace:\(id)", in: cardGeometry)
                             .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                            .opacity(exitingWorkspaceIDs.contains(id) ? 0 : 1)
+                            .allowsHitTesting(!exitingWorkspaceIDs.contains(id))
+                            .accessibilityHidden(exitingWorkspaceIDs.contains(id))
+                            .animation(reduceMotion ? nil : .easeOut(duration: 0.17), value: exitingWorkspaceIDs.contains(id))
                     }
                 }
             }

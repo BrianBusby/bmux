@@ -138,6 +138,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Display Ticket Title Sidebar | implemented |
 | Workspace Explorer Archive Recovery Actor | under observation |
 | Workspace Explorer Close Recovery | under observation |
+| Workspace Explorer Filter Transition | under observation |
 | Workspace Explorer History Adapter | implemented |
 | Workspace Explorer Live Topology Refresh | under observation |
 | Workspace Explorer Motion Accessibility | under observation |
