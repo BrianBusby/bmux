@@ -1,33 +1,36 @@
 import Foundation
+import ProvenanceEngineContracts
 
 /// Reconciles persisted close snapshots with PE's durable Explorer archive.
-@MainActor
-final class WorkspaceExplorerArchiveRecoveryService {
-    typealias SavedRecords = @MainActor () async -> [ClosedItemHistoryRecord]
-    typealias WaitForWrites = @MainActor () async -> Void
-    typealias LiveWorkspaceIDs = @MainActor () -> Set<UUID>
+actor WorkspaceExplorerArchiveRecoveryService {
+    typealias SavedCandidates = @MainActor @Sendable () async -> [WorkspaceArchiveRecoveryCandidate]
+    typealias WaitForWrites = @MainActor @Sendable () async -> Void
+    typealias LiveWorkspaceIDs = @MainActor @Sendable () -> Set<UUID>
 
-    private let archiveService: WorkProvenanceWorkspaceArchiveService?
-    private let savedRecords: SavedRecords
+    private let archiveService: WorkProvenanceWorkspaceArchiveService
+    private let savedCandidates: SavedCandidates
     private let waitForWrites: WaitForWrites
     private let liveWorkspaceIDs: LiveWorkspaceIDs
 
-    init(archiveService: WorkProvenanceWorkspaceArchiveService?,
-         savedRecords: @escaping SavedRecords,
+    init(archiveService: WorkProvenanceWorkspaceArchiveService,
+         savedCandidates: @escaping SavedCandidates,
          waitForWrites: @escaping WaitForWrites,
          liveWorkspaceIDs: @escaping LiveWorkspaceIDs) {
         self.archiveService = archiveService
-        self.savedRecords = savedRecords
+        self.savedCandidates = savedCandidates
         self.waitForWrites = waitForWrites
         self.liveWorkspaceIDs = liveWorkspaceIDs
     }
 
-    func recover() async throws {
-        guard let archiveService else { return }
-        let records = await savedRecords()
+    func recover() async throws -> [ProvenanceArchivedWorkspaceRecord] {
+        let candidates = await savedCandidates()
         await waitForWrites()
-        let candidates = WorkspaceArchiveRecoveryCandidate.from(
-            records: records, excluding: liveWorkspaceIDs())
-        try await archiveService.recoverClosures(candidates)
+        let liveIDs = await liveWorkspaceIDs()
+        let eligible = candidates.filter { !liveIDs.contains($0.stableID) }
+        let existing = try await archiveService.archivedWorkspaces()
+        guard try await archiveService.recoverClosures(eligible, existing: existing) else {
+            return existing
+        }
+        return try await archiveService.archivedWorkspaces()
     }
 }

@@ -57,6 +57,14 @@ and newer re-close snapshots. Build 830 exposed the missing archive table and
 prompted the schema-27 repair. A revised tagged build and user dogfood remain
 pending before merging PR #182.
 
+The recovery follow-up moves persistence/PE reconciliation into an actor. The
+main-actor inputs produce Sendable close candidates and live IDs. Normal
+refreshes reuse one archive read; a replay attempt rereads to reflect PE's
+authoritative merge and clear marker. If replay fails, archive completeness is
+unknown, so Explorer follows the specified open-only/closed-unknown state even
+when older PE rows could still be read. This is a count-integrity choice, not
+evidence that the older rows were deleted.
+
 ## Dependency audit on `origin/main` (2026-10-20)
 
 | Design need | Current evidence | Required work |

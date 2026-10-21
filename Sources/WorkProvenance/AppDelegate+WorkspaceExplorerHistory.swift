@@ -11,14 +11,24 @@ extension AppDelegate {
 
     private func workspaceExplorerHistoryService() -> WorkspaceExplorerHistoryService {
         let archiveService = workProvenanceRuntime?.workspaceArchiveService
-        let recovery = WorkspaceExplorerArchiveRecoveryService(
-            archiveService: archiveService,
-            savedRecords: { await ClosedItemHistoryStore.shared.recordsAfterPersistedLoad() },
-            waitForWrites: { await self.workProvenanceRuntime?.waitForArchiveTasks() },
-            liveWorkspaceIDs: { Set(self.workspaceExplorerTabManagers().flatMap(\.tabs).map(\.stableId)) })
+        let recoverArchive: WorkspaceExplorerHistoryService.RecoverArchive?
+        if let archiveService {
+            let recovery = WorkspaceExplorerArchiveRecoveryService(
+                archiveService: archiveService,
+                savedCandidates: {
+                    WorkspaceArchiveRecoveryCandidate.from(
+                        records: await ClosedItemHistoryStore.shared.recordsAfterPersistedLoad(),
+                        excluding: [])
+                },
+                waitForWrites: { await self.workProvenanceRuntime?.waitForArchiveTasks() },
+                liveWorkspaceIDs: { Set(self.workspaceExplorerTabManagers().flatMap(\.tabs).map(\.stableId)) })
+            recoverArchive = { try await recovery.recover() }
+        } else {
+            recoverArchive = nil
+        }
         return WorkspaceExplorerHistoryService(
             archiveService: archiveService,
-            recoverArchive: { try await recovery.recover() },
+            recoverArchive: recoverArchive,
             tabManagers: { self.workspaceExplorerTabManagers() },
             activeWorkspaceID: { self.tabManager?.selectedWorkspace?.stableId.uuidString },
             restoreRecords: { ClosedItemHistoryStore.shared.workspaceRestoreRecordsByStableID() },

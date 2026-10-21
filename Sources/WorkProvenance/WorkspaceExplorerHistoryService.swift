@@ -10,7 +10,7 @@ final class WorkspaceExplorerHistoryService {
     typealias ReopenEligibility = @MainActor (
         UUID, Set<UUID>, ClosedItemHistoryRecord?
     ) -> WorkspaceExplorerReopenEligibility
-    typealias RecoverArchive = @MainActor () async throws -> Void
+    typealias RecoverArchive = @MainActor () async throws -> [ProvenanceArchivedWorkspaceRecord]
 
     struct LiveSnapshot {
         let workspaces: [WorkspaceExplorerLiveWorkspace]
@@ -69,12 +69,17 @@ final class WorkspaceExplorerHistoryService {
             return ArchiveSnapshot(records: [], availability: .unavailable)
         }
         do {
-            try await recoverArchive?()
-            return ArchiveSnapshot(records: try await archiveService.archivedWorkspaces(),
-                availability: .available)
+            let records: [ProvenanceArchivedWorkspaceRecord]
+            if let recoverArchive {
+                records = try await recoverArchive()
+            } else {
+                records = try await archiveService.archivedWorkspaces()
+            }
+            return ArchiveSnapshot(records: records, availability: .available)
         } catch is CancellationError {
             throw CancellationError()
         } catch {
+            // Recovery failures leave archive completeness unknown, even if older rows remain readable.
             sentryCaptureError("Workspace Explorer archive load failed", category: "provenance",
                 data: ["error_type": String(reflecting: type(of: error))])
             return ArchiveSnapshot(records: [], availability: .unavailable)
