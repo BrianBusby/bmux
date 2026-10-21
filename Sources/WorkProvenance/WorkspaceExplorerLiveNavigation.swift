@@ -45,8 +45,8 @@ final class WorkspaceExplorerLiveNavigation {
     }
 
     func origin(for selectedWorkspaceID: UUID?) -> Origin? {
-        guard explorerWindow != nil,
-              origin?.workspaceID == selectedWorkspaceID else { return nil }
+        guard let origin, origin.workspaceID == selectedWorkspaceID,
+              explorerWindow != nil else { return nil }
         return origin
     }
 
