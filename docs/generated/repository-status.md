@@ -139,6 +139,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Explorer Archive Recovery Actor | under observation |
 | Workspace Explorer Close Recovery | under observation |
 | Workspace Explorer Filter Transition | under observation |
+| Workspace Explorer Group Accessibility | under observation |
 | Workspace Explorer History Adapter | implemented |
 | Workspace Explorer Live Breadcrumb | under observation |
 | Workspace Explorer Live History Header | under observation |

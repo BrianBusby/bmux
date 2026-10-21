@@ -31,6 +31,7 @@ struct WorkspaceExplorerGroupSection: View {
     let onCardFilter: (WorkspaceExplorerDimension, WorkspaceExplorerGroupKey) -> Void
     let onToggle: (String) -> Void
     let onFocus: (WorkspaceExplorerDimension, WorkspaceExplorerGroupKey) -> Void
+    @FocusState private var disclosureFocused: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -50,6 +51,17 @@ struct WorkspaceExplorerGroupSection: View {
                         }
                     }
                     .buttonStyle(.plain)
+                    .focused($disclosureFocused)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 6)
+                            .strokeBorder(disclosureFocused ? Color.accentColor : .clear, lineWidth: 2)
+                            .padding(-3).allowsHitTesting(false)
+                    }
+                    .accessibilityLabel(String(format: String(localized: "explorer.groupDisclosureLabel",
+                        defaultValue: "%1$@: %2$@, %3$@"), dimension.displayName, label, groupCount))
+                    .accessibilityValue(collapsedPaths.contains(path) ?
+                        String(localized: "explorer.collapsed", defaultValue: "Collapsed") :
+                        String(localized: "explorer.expanded", defaultValue: "Expanded"))
                     .font(.system(size: depth == 0 ? 15 : depth == 1 ? 13 : 11,
                         weight: depth == 0 ? .bold : .semibold))
                     if let key = group.filterValue, activeFilters[dimension] != key {
@@ -58,6 +70,8 @@ struct WorkspaceExplorerGroupSection: View {
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
+                        .accessibilityLabel(String(format: String(localized: "explorer.focusGroup",
+                            defaultValue: "Focus on %1$@ in %2$@"), label, dimension.displayName))
                     }
                     Spacer()
                 }
