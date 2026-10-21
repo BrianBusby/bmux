@@ -137,6 +137,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Display Ticket Link Facts | implemented |
 | Workspace Display Ticket Title Sidebar | implemented |
 | Workspace Explorer Archive Recovery Actor | under observation |
+| Workspace Explorer Card Hit Target | under observation |
 | Workspace Explorer Close Recovery | under observation |
 | Workspace Explorer Filter Transition | under observation |
 | Workspace Explorer Group Accessibility | under observation |
