@@ -17,14 +17,14 @@ struct WorkspaceExplorerCoordinatorTests {
             colorHex: nil, display: nil, lastActivityAt: nil, liveStatus: .idle)
         let item = WorkspaceExplorerHistoryAdapter().join(live: [workspace], archived: [],
             eligibilityByID: [:])[0]
-        var opened: (UUID, String)?
+        var opened: (WorkspaceExplorerHistoryItem, WorkspaceExplorerCollectionTarget?, String)?
         var activated: UUID?
         let model = WorkspaceExplorerCoordinator(
             loadHistory: { WorkspaceExplorerHistoryLoadResult(items: [item],
                 archiveAvailability: .available, partialLiveActivity: false) },
             reopenHistory: { _ in false },
             activateWorkspace: { activated = $0 },
-            onOpenLive: { opened = ($0, $1) },
+            onOpenLive: { opened = ($0, $1, $2) },
             loadSessions: { id in ProvenanceWorkspaceSessionPageResponse(
                 workspaceID: id.uuidString, sessions: [], nextCursor: nil) },
             clearArchive: { }
@@ -33,8 +33,9 @@ struct WorkspaceExplorerCoordinatorTests {
         model.showCollection(.unassigned)
         model.setGroupBy([.repository])
         model.open(item)
-        #expect(opened?.0 == workspace.runtimeID)
-        #expect(opened?.1 == String(localized: "explorer.unassigned", defaultValue: "Unassigned workspaces"))
+        #expect(opened?.0.id == workspace.stableID.uuidString)
+        #expect(opened?.1 == .unassigned)
+        #expect(opened?.2 == String(localized: "explorer.unassigned", defaultValue: "Unassigned workspaces"))
         #expect(activated == workspace.runtimeID)
         #expect(model.collectionTarget == .unassigned)
         #expect(model.activeArrangement.groupBy == [.repository])

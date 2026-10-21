@@ -25,7 +25,8 @@ struct WorkspaceExplorerWindowView: View {
         _model = State(initialValue: WorkspaceExplorerCoordinator(
             loadHistory: loadHistory, loadPresence: loadPresence, reopenHistory: reopenHistory,
             activateWorkspace: activateWorkspace,
-            onOpenLive: { liveNavigation?.opened(workspaceID: $0, from: $1) },
+            onOpenLive: { item, target, title in
+                liveNavigation?.opened(item: item, target: target, from: title, loadSessions: loadSessions) },
             loadSessions: loadSessions,
             loadEvidence: loadEvidence, loadMoreSessions: loadMoreSessions,
             clearArchive: clearArchive,
@@ -122,7 +123,7 @@ struct WorkspaceExplorerWindowView: View {
         }
         .frame(minWidth: 640, minHeight: 440)
         .background(Color(nsColor: .windowBackgroundColor))
-        .background(WindowAccessor { window in liveNavigation?.register(window: window) })
+        .background(WindowAccessor { window in liveNavigation?.register(window: window, coordinator: model) })
         .task {
             model.startWorkspaceChangeMonitoring()
             await model.load()
