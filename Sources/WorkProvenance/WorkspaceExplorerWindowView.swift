@@ -129,7 +129,6 @@ struct WorkspaceExplorerWindowView: View {
         }
         .onDisappear {
             model.stopLiveStatusMonitoring()
-            liveNavigation?.unregister()
         }
         .task(id: model.historyID) {
             if let id = model.historyID { await model.loadHistorySessions(for: id) }

@@ -11,12 +11,22 @@ final class WorkspaceExplorerLiveNavigation {
 
     private(set) var origin: Origin?
     @ObservationIgnored private weak var explorerWindow: NSWindow?
+    @ObservationIgnored private var closeObserver: NSObjectProtocol?
 
     func register(window: NSWindow) {
+        guard explorerWindow !== window else { return }
+        if let closeObserver { NotificationCenter.default.removeObserver(closeObserver) }
         explorerWindow = window
+        closeObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: window, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.unregister() }
+        }
     }
 
     func unregister() {
+        if let closeObserver { NotificationCenter.default.removeObserver(closeObserver) }
+        closeObserver = nil
         explorerWindow = nil
         origin = nil
     }
