@@ -64,6 +64,7 @@ local_capabilities:
   workspace_explorer_meaningful_activity: under_observation
   workspace_explorer_group_accessibility: under_observation
   workspace_explorer_plan_file_activity: under_observation
+  # Page state belongs to BmuxWorkspaces; Explorer navigation remains in the app coordinator.
   workspace_explorer_history_page_lifecycle: under_observation
   provenance_engine_workspace_archive_schema_repair: under_observation
   provenance_engine_schema_identity_validation: implemented

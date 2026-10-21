@@ -1,3 +1,4 @@
+import BmuxWorkspaces
 import Foundation
 import Observation
 import ProvenanceEngineContracts

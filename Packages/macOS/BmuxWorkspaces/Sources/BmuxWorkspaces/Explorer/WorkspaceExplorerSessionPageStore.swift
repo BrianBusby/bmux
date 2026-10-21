@@ -1,34 +1,52 @@
-import Foundation
-import Observation
-import ProvenanceEngineContracts
+public import Foundation
+public import Observation
+public import ProvenanceEngineContracts
 
 /// Owns retained-session pages and rejects responses from superseded requests.
+///
+/// Inject loaders to test without starting the app.
+/// ```swift
+/// let store = WorkspaceExplorerSessionPageStore(
+///     loadFirst: { id in try await archive.firstPage(for: id) },
+///     loadNext: { id, cursor in try await archive.nextPage(for: id, cursor: cursor) })
+/// ```
 @MainActor @Observable
-final class WorkspaceExplorerSessionPageStore {
-    typealias FirstLoader = @MainActor (UUID) async throws -> ProvenanceWorkspaceSessionPageResponse
-    typealias NextLoader = @MainActor (UUID, String) async throws -> ProvenanceWorkspaceSessionPageResponse
+public final class WorkspaceExplorerSessionPageStore {
+    /// Loads the first page for a stable workspace ID.
+    public typealias FirstLoader = @MainActor (UUID) async throws -> ProvenanceWorkspaceSessionPageResponse
+    /// Loads a continuation page for a workspace ID and opaque cursor.
+    public typealias NextLoader = @MainActor (UUID, String) async throws -> ProvenanceWorkspaceSessionPageResponse
 
     private let loadFirst: FirstLoader
     private let loadNext: NextLoader
-    private(set) var pagesByWorkspaceID: [String: ProvenanceWorkspaceSessionPageResponse] = [:]
-    private(set) var failedWorkspaceIDs: Set<String> = []
+    /// Cached retained-session pages keyed by stable workspace ID.
+    public private(set) var pagesByWorkspaceID: [String: ProvenanceWorkspaceSessionPageResponse] = [:]
+    /// Workspace IDs whose latest page request failed.
+    public private(set) var failedWorkspaceIDs: Set<String> = []
     private var generationByWorkspaceID: [String: Int] = [:]
     private var nextRequestByWorkspaceID: [String: UUID] = [:]
     private var navigationRevision = 0
     private var activeWorkspaceID: String?
 
-    init(loadFirst: @escaping FirstLoader, loadNext: @escaping NextLoader) {
+    /// Creates a store with injected retained-session loaders.
+    /// - Parameters:
+    ///   - loadFirst: Loads the first page for a workspace.
+    ///   - loadNext: Loads the page after an opaque cursor.
+    public init(loadFirst: @escaping FirstLoader, loadNext: @escaping NextLoader) {
         self.loadFirst = loadFirst
         self.loadNext = loadNext
     }
 
-    func activate(_ id: String?) {
+    /// Selects a history item and invalidates responses from earlier navigation.
+    /// - Parameter id: Stable workspace ID, or `nil` when leaving history.
+    public func activate(_ id: String?) {
         guard activeWorkspaceID != id else { return }
         activeWorkspaceID = id
         navigationRevision &+= 1
     }
 
-    func clear() {
+    /// Clears cached pages and invalidates outstanding requests.
+    public func clear() {
         navigationRevision &+= 1
         activeWorkspaceID = nil
         pagesByWorkspaceID.removeAll()
@@ -37,7 +55,9 @@ final class WorkspaceExplorerSessionPageStore {
         nextRequestByWorkspaceID.removeAll()
     }
 
-    func loadFirstPage(for id: String) async {
+    /// Replaces the cached first page if this remains the latest request.
+    /// - Parameter id: Stable workspace ID to load.
+    public func loadFirstPage(for id: String) async {
         guard let stableID = UUID(uuidString: id) else { return }
         let generation = (generationByWorkspaceID[id] ?? 0) &+ 1
         generationByWorkspaceID[id] = generation
@@ -58,7 +78,9 @@ final class WorkspaceExplorerSessionPageStore {
         }
     }
 
-    func loadNextPage(for id: String) async {
+    /// Appends a unique continuation page if its cursor remains current.
+    /// - Parameter id: Stable workspace ID to load.
+    public func loadNextPage(for id: String) async {
         guard let stableID = UUID(uuidString: id),
               let current = pagesByWorkspaceID[id],
               let cursor = current.nextCursor,

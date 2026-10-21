@@ -23,6 +23,7 @@ let package = Package(
         .package(path: "../BMUXDebugLog"),
         // BmuxTestSupport backs FileOpen/ PreferredEditorService UI-test capture.
         .package(path: "../BmuxTestSupport"),
+        .package(path: "../ProvenanceEngine"),
     ],
     targets: [
         .target(
@@ -32,6 +33,7 @@ let package = Package(
                 .product(name: "Bonsplit", package: "bonsplit"),
                 .product(name: "BMUXDebugLog", package: "BMUXDebugLog"),
                 .product(name: "BmuxTestSupport", package: "BmuxTestSupport"),
+                .product(name: "ProvenanceEngineContracts", package: "ProvenanceEngine"),
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
@@ -45,6 +47,7 @@ let package = Package(
                 "BmuxWorkspaces",
                 .product(name: "Bonsplit", package: "bonsplit"),
                 .product(name: "BmuxTestSupport", package: "BmuxTestSupport"),
+                .product(name: "ProvenanceEngineContracts", package: "ProvenanceEngine"),
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
