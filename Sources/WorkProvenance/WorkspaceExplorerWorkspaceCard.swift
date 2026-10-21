@@ -182,16 +182,20 @@ struct WorkspaceExplorerWorkspaceCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(isActive && item.isOpen ? Color.accentColor.opacity(0.1) :
             Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
+        .contentShape(RoundedRectangle(cornerRadius: 10))
+        .onTapGesture(perform: onOpen)
         .overlay(alignment: .leading) {
             RoundedRectangle(cornerRadius: 2)
                 .fill(item.colorHex.flatMap(NSColor.init(hex:)).map(Color.init(nsColor:)) ?? .accentColor)
                 .frame(width: 4).padding(.leading, 4).padding(.vertical, 9)
+                .allowsHitTesting(false)
         }
         .overlay(RoundedRectangle(cornerRadius: 10)
             .strokeBorder(isActive && item.isOpen ? Color.accentColor :
                 Color(nsColor: .separatorColor),
                 style: StrokeStyle(lineWidth: isActive && item.isOpen ? 2 : 1,
                     dash: item.isOpen ? [] : [5, 3])))
+            .allowsHitTesting(false)
         .overlay(RoundedRectangle(cornerRadius: 12)
             .strokeBorder(hasKeyboardFocus ? Color.accentColor : .clear, lineWidth: 2)
             .padding(-2).allowsHitTesting(false))
