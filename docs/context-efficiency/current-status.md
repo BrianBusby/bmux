@@ -43,13 +43,14 @@ as uncounted provisional cards while PE facts load. PE schema version 27 repairs
 existing version-26 stores that lack the archive table; this was observed in
 the tagged build's retained-history error state. Recovery now runs in an
 actor and reuses the archive read on ordinary refreshes, rereading only after
-a replay attempt. These changes remain under dogfood observation. The active
-`workspace-explorer-motion-accessibility` slice stabilizes group identities during
-reordering, improves card keyboard focus and grouping controls, and orders scope
-as Open, Closed, All with Open as the default. Broader meaningful activity
-derivation, complete project metadata, status-at-close capture,
-reduced-motion dogfood, and a breadcrumb in
-the existing live workspace surface remain open. See
+a replay attempt. These changes remain under dogfood observation. Merged PR #183
+stabilizes group identities during reordering, improves card keyboard focus and
+grouping controls, and orders scope as Open, Closed, All with Open as the default.
+The active `workspace-explorer-filter-transition` slice holds the previous
+result and counts while excluded cards fade for 170 ms, then commits the latest
+filter or scope result. Broader meaningful activity derivation, complete
+project metadata, status-at-close capture, reduced-motion dogfood, and a
+breadcrumb in the existing live workspace surface remain open. See
 [the implementation record](../planning/workspace-explorer-implementation.md).
 
 ## Current Generated Truth
