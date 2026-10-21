@@ -157,8 +157,217 @@ struct WorkspaceExplorerCoordinatorTests {
         #expect(model.catalog?.workspaces.first?.arrangedStatus == .error)
     }
 
+    @Test
+    func liveCardsStayUsableWhileArchiveLoadsAndArrangementSurvives() async {
+        let liveID = UUID()
+        let live = WorkspaceExplorerLiveWorkspace(stableID: liveID, runtimeID: UUID(),
+            title: "Maple Street Roof Inspection", createdAt: .now,
+            colorHex: nil, display: nil, lastActivityAt: nil, liveStatus: .idle)
+        let openItems = WorkspaceExplorerHistoryAdapter().join(live: [live], archived: [], eligibilityByID: [:])
+        let pending = WorkspaceExplorerHistoryLoadResult(items: openItems,
+            archiveAvailability: .pending, partialLiveActivity: true,
+            activeWorkspaceID: liveID.uuidString)
+        let closedID = UUID()
+        let closedAt = Date()
+        let archived = ProvenanceArchivedWorkspaceRecord(id: closedID.uuidString,
+            title: "Cedar Street Roof Inspection", createdAt: closedAt.addingTimeInterval(-3600),
+            closedAt: closedAt, lastActivityAt: closedAt, displayAtClose: nil,
+            colorHex: nil, coverageCode: nil)
+        let final = WorkspaceExplorerHistoryLoadResult(
+            items: WorkspaceExplorerHistoryAdapter().join(live: [live], archived: [archived],
+                eligibilityByID: [:]), archiveAvailability: .available,
+            partialLiveActivity: false, activeWorkspaceID: liveID.uuidString)
+        var activatedID: UUID?
+        let started = AsyncStream<Void>.makeStream()
+        let release = AsyncStream<Void>.makeStream()
+        let model = WorkspaceExplorerCoordinator(
+            loadHistory: {
+                started.continuation.yield()
+                var iterator = release.stream.makeAsyncIterator()
+                _ = await iterator.next()
+                return final
+            }, loadPresence: { pending },
+            reopenHistory: { _ in false }, activateWorkspace: { activatedID = $0 },
+            loadSessions: { id in ProvenanceWorkspaceSessionPageResponse(
+                workspaceID: id.uuidString, sessions: [], nextCursor: nil) }, clearArchive: { })
+        let task = Task { await model.load() }
+        var startedIterator = started.stream.makeAsyncIterator()
+        _ = await startedIterator.next()
+        #expect(model.catalog?.archiveAvailability == .pending)
+        #expect(model.result()?.counts.closedKnown == false)
+        model.open(openItems[0])
+        #expect(activatedID == live.runtimeID)
+        model.scope.state = .all
+        model.showCollection(.all)
+        model.setGroupBy([.workspaceState])
+        model.setScrollAnchor("workspace:" + liveID.uuidString)
+        release.continuation.yield()
+        await task.value
+        #expect(model.catalog?.items.count == 2)
+        #expect(model.result()?.counts.open == 1)
+        #expect(model.result()?.counts.closed == 1)
+        #expect(model.catalog?.archiveAvailability == .available)
+        #expect(model.activeArrangement.groupBy == [.workspaceState])
+        #expect(model.activeArrangement.scrollAnchorID == "workspace:" + liveID.uuidString)
+        #expect(model.scope.state == .all)
+    }
+
+    @Test
+    func refreshingKnownArchiveKeepsClosedCardsUntilReplacementArrives() async {
+        let liveID = UUID()
+        let closedID = UUID()
+        let live = WorkspaceExplorerLiveWorkspace(stableID: liveID, runtimeID: UUID(),
+            title: "Maple Street Roof Inspection", createdAt: .now,
+            colorHex: nil, display: nil, lastActivityAt: .now)
+        let archived = ProvenanceArchivedWorkspaceRecord(id: closedID.uuidString,
+            title: "Cedar Street Roof Inspection", createdAt: .now,
+            closedAt: .now, lastActivityAt: .now, displayAtClose: nil,
+            colorHex: nil, coverageCode: nil)
+        let joined = WorkspaceExplorerHistoryAdapter().join(live: [live], archived: [archived],
+            eligibilityByID: [:])
+        let known = WorkspaceExplorerHistoryLoadResult(items: joined,
+            archiveAvailability: .available, partialLiveActivity: false)
+        let pending = WorkspaceExplorerHistoryLoadResult(items: Array(joined.filter(\.isOpen)),
+            archiveAvailability: .pending, partialLiveActivity: true)
+        let started = AsyncStream<Void>.makeStream()
+        let release = AsyncStream<Void>.makeStream()
+        var loadCount = 0
+        let model = WorkspaceExplorerCoordinator(loadHistory: {
+            loadCount += 1
+            if loadCount == 2 {
+                started.continuation.yield()
+                var iterator = release.stream.makeAsyncIterator()
+                _ = await iterator.next()
+            }
+            return known
+        }, loadPresence: { pending }, reopenHistory: { _ in false },
+            activateWorkspace: { _ in }, loadSessions: { id in
+                ProvenanceWorkspaceSessionPageResponse(workspaceID: id.uuidString,
+                    sessions: [], nextCursor: nil)
+            }, clearArchive: { })
+        await model.load()
+        let refresh = Task { await model.load() }
+        var startedIterator = started.stream.makeAsyncIterator()
+        _ = await startedIterator.next()
+        #expect(model.catalog?.archiveAvailability == .available)
+        #expect(model.catalog?.items.count == 2)
+        release.continuation.yield()
+        await refresh.value
+        #expect(model.catalog?.items.count == 2)
+    }
+
+    @Test
+    func refreshKeepsKnownProjectMembershipWhenArchiveIsUnavailable() async {
+        let liveID = UUID()
+        let display = ProvenanceWorkspaceDisplayRecord(
+            id: "known-display", workspaceID: liveID.uuidString,
+            projectLinks: [.init(id: "maple-roof", title: "Maple Street Roof Inspection")],
+            observedAt: .now, updatedAt: .now)
+        let knownLive = WorkspaceExplorerLiveWorkspace(stableID: liveID, runtimeID: UUID(),
+            title: "Roof review", createdAt: .now, colorHex: nil,
+            display: display, lastActivityAt: .now)
+        let provisionalLive = WorkspaceExplorerLiveWorkspace(stableID: liveID, runtimeID: UUID(),
+            title: "Roof review", createdAt: .now, colorHex: nil,
+            display: nil, lastActivityAt: nil)
+        let adapter = WorkspaceExplorerHistoryAdapter()
+        let known = WorkspaceExplorerHistoryLoadResult(
+            items: adapter.join(live: [knownLive], archived: [], eligibilityByID: [:]),
+            archiveAvailability: .unavailable, partialLiveActivity: false)
+        let pending = WorkspaceExplorerHistoryLoadResult(
+            items: adapter.join(live: [provisionalLive], archived: [], eligibilityByID: [:]),
+            archiveAvailability: .pending, partialLiveActivity: true, liveMetadataPending: true)
+        let started = AsyncStream<Void>.makeStream()
+        let release = AsyncStream<Void>.makeStream()
+        var loadCount = 0
+        let model = WorkspaceExplorerCoordinator(loadHistory: {
+            loadCount += 1
+            if loadCount == 2 {
+                started.continuation.yield()
+                var iterator = release.stream.makeAsyncIterator()
+                _ = await iterator.next()
+            }
+            return known
+        }, loadPresence: { pending }, reopenHistory: { _ in false },
+            activateWorkspace: { _ in }, loadSessions: { id in
+                ProvenanceWorkspaceSessionPageResponse(workspaceID: id.uuidString,
+                    sessions: [], nextCursor: nil)
+            }, clearArchive: { })
+        await model.load()
+        model.showCollection(.project("maple-roof"))
+        let refresh = Task { await model.load() }
+        var startedIterator = started.stream.makeAsyncIterator()
+        _ = await startedIterator.next()
+        #expect(model.catalog?.liveMetadataPending == false)
+        #expect(model.result()?.visibleWorkspaceIDs == [liveID.uuidString])
+        #expect(model.catalog?.workspaces.first?.projectIDs == ["maple-roof"])
+        release.continuation.yield()
+        await refresh.value
+    }
+
+    @Test
+    func pendingAllCollectionDoesNotAssignUnknownProjectsOrShowFalseProjectResults() async {
+        let liveID = UUID()
+        let live = WorkspaceExplorerLiveWorkspace(stableID: liveID, runtimeID: UUID(),
+            title: "Roof review", createdAt: .now, colorHex: nil,
+            display: nil, lastActivityAt: nil)
+        let pending = WorkspaceExplorerHistoryLoadResult(
+            items: WorkspaceExplorerHistoryAdapter().join(live: [live], archived: [],
+                eligibilityByID: [:]), archiveAvailability: .pending,
+            partialLiveActivity: true, liveMetadataPending: true)
+        let started = AsyncStream<Void>.makeStream()
+        let release = AsyncStream<Void>.makeStream()
+        let model = WorkspaceExplorerCoordinator(loadHistory: {
+            started.continuation.yield()
+            var iterator = release.stream.makeAsyncIterator()
+            _ = await iterator.next()
+            return pending
+        }, loadPresence: { pending }, reopenHistory: { _ in false },
+            activateWorkspace: { _ in }, loadSessions: { id in
+                ProvenanceWorkspaceSessionPageResponse(workspaceID: id.uuidString,
+                    sessions: [], nextCursor: nil)
+            }, clearArchive: { })
+        let load = Task { await model.load() }
+        var startedIterator = started.stream.makeAsyncIterator()
+        _ = await startedIterator.next()
+        model.showCollection(.all)
+        model.setGroupBy([.project])
+        #expect(model.result()?.visibleWorkspaceIDs == [liveID.uuidString])
+        #expect(model.result()?.groups.count == 1)
+        #expect(model.result()?.groups.first?.dimension == nil)
+        model.showCollection(.unassigned)
+        #expect(model.result() == nil)
+        model.showCollection(.project("maple-roof"))
+        #expect(model.result() == nil)
+        release.continuation.yield()
+        await load.value
+    }
+
+    @Test
+    func failedArchiveLoadKeepsOpenCardsAndMarksClosedCountUnknown() async {
+        let liveID = UUID()
+        let live = WorkspaceExplorerLiveWorkspace(stableID: liveID, runtimeID: UUID(),
+            title: "Maple Street Roof Inspection", createdAt: .now,
+            colorHex: nil, display: nil, lastActivityAt: nil)
+        let pending = WorkspaceExplorerHistoryLoadResult(
+            items: WorkspaceExplorerHistoryAdapter().join(live: [live], archived: [], eligibilityByID: [:]),
+            archiveAvailability: .pending, partialLiveActivity: true)
+        let model = WorkspaceExplorerCoordinator(
+            loadHistory: { throw WorkspaceExplorerTestError.unavailable }, loadPresence: { pending },
+            reopenHistory: { _ in false }, activateWorkspace: { _ in },
+            loadSessions: { id in ProvenanceWorkspaceSessionPageResponse(
+                workspaceID: id.uuidString, sessions: [], nextCursor: nil) }, clearArchive: { })
+
+        await model.load()
+        #expect(model.loadFailed)
+        #expect(model.catalog?.archiveAvailability == .unavailable)
+        #expect(model.catalog?.items.map(\.id) == [liveID.uuidString])
+        #expect(model.result()?.counts.closedKnown == false)
+    }
+
     private func session(_ id: String) -> ProvenanceSessionRecord {
         ProvenanceSessionRecord(id: id, agentKind: "codex", status: "completed", updatedAt: .now)
     }
 
 }
+
+private enum WorkspaceExplorerTestError: Error { case unavailable }

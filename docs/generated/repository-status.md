@@ -138,6 +138,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Explorer History Adapter | implemented |
 | Workspace Explorer Native View | under observation |
 | Workspace Explorer Projection | implemented |
+| Workspace Explorer Staged Loading | under observation |
 | Workspace Launch Canonical Mutation Path | planned |
 
 ## Execution Telemetry

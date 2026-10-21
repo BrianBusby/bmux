@@ -16,10 +16,12 @@ struct WorkspaceExplorerGroupSection: View {
     let projectCounts: [String: WorkspaceExplorerCounts]
     let projectOpenTotals: [String: Int]
     let scope: WorkspaceExplorerScope
+    let archiveAvailability: WorkspaceExplorerArchiveAvailability
     let matchingCounts: [String: Int]
     let focusedProjectID: String?
     let activeWorkspaceID: String?
     let reopenedWorkspaceID: String?
+    let metadataPending: Bool
     let onOpenProject: (String) -> Void
     let onOpenWorkspace: (WorkspaceExplorerHistoryItem) -> Void
     let onHistory: (WorkspaceExplorerHistoryItem) -> Void
@@ -71,9 +73,11 @@ struct WorkspaceExplorerGroupSection: View {
                             itemsByID: itemsByID, workspacesByID: workspacesByID,
                             projectCounts: projectCounts,
                             projectOpenTotals: projectOpenTotals, scope: scope,
+                            archiveAvailability: archiveAvailability,
                             matchingCounts: matchingCounts, focusedProjectID: focusedProjectID,
                             activeWorkspaceID: activeWorkspaceID,
                             reopenedWorkspaceID: reopenedWorkspaceID,
+                            metadataPending: metadataPending,
                             onOpenProject: onOpenProject, onOpenWorkspace: onOpenWorkspace,
                             onHistory: onHistory, onReopen: onReopen,
                             onCardFilter: onCardFilter, onToggle: onToggle, onFocus: onFocus)
@@ -111,7 +115,8 @@ struct WorkspaceExplorerGroupSection: View {
                                 workspace.projectIDs.contains(id) && scope.includes(workspace,
                                     now: .now, calendar: .current)
                             },
-                            scope: scope, openTotal: projectOpenTotals[id] ?? 0,
+                            scope: scope, archiveAvailability: archiveAvailability,
+                            openTotal: projectOpenTotals[id] ?? 0,
                             matchingCount: matchingCounts[id],
                             isFocused: focusedProjectID == id, titleGeometry: cardGeometry,
                             onOpen: { onOpenProject(id) })
@@ -125,6 +130,7 @@ struct WorkspaceExplorerGroupSection: View {
                     if let item = itemsByID[id] {
                         WorkspaceExplorerWorkspaceCard(item: item, isActive: activeWorkspaceID == id,
                             isReopened: reopenedWorkspaceID == id,
+                            metadataPending: metadataPending,
                             onOpen: { onOpenWorkspace(item) },
                             onHistory: { onHistory(item) },
                             onReopen: { onReopen(item) },
