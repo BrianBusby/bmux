@@ -3,14 +3,33 @@ import ProvenanceEngineContracts
 
 @MainActor
 extension AppDelegate {
+    func workspaceExplorerTabManagers() -> [TabManager] {
+        mainWindowContexts.values.map(\.tabManager)
+            + recoverableMainWindowRoutes().compactMap(\.tabManager)
+            + [tabManager].compactMap { $0 }
+    }
+
     private func workspaceExplorerHistoryService() -> WorkspaceExplorerHistoryService {
-        WorkspaceExplorerHistoryService(
-            archiveService: workProvenanceRuntime?.workspaceArchiveService,
-            tabManagers: {
-                self.mainWindowContexts.values.map(\.tabManager)
-                    + self.recoverableMainWindowRoutes().compactMap(\.tabManager)
-                    + [self.tabManager].compactMap { $0 }
-            },
+        let archiveService = workProvenanceRuntime?.workspaceArchiveService
+        let recoverArchive: WorkspaceExplorerHistoryService.RecoverArchive?
+        if let archiveService {
+            let recovery = WorkspaceExplorerArchiveRecoveryService(
+                archiveService: archiveService,
+                savedCandidates: {
+                    WorkspaceArchiveRecoveryCandidate.from(
+                        records: await ClosedItemHistoryStore.shared.recordsAfterPersistedLoad(),
+                        excluding: [])
+                },
+                waitForWrites: { await self.workProvenanceRuntime?.waitForArchiveTasks() },
+                liveWorkspaceIDs: { Set(self.workspaceExplorerTabManagers().flatMap(\.tabs).map(\.stableId)) })
+            recoverArchive = { try await recovery.recover() }
+        } else {
+            recoverArchive = nil
+        }
+        return WorkspaceExplorerHistoryService(
+            archiveService: archiveService,
+            recoverArchive: recoverArchive,
+            tabManagers: { self.workspaceExplorerTabManagers() },
             activeWorkspaceID: { self.tabManager?.selectedWorkspace?.stableId.uuidString },
             restoreRecords: { ClosedItemHistoryStore.shared.workspaceRestoreRecordsByStableID() },
             reopenEligibility: { stableID, liveIDs, candidate in
@@ -21,7 +40,7 @@ extension AppDelegate {
     }
 
     func loadWorkspaceExplorerHistory() async throws -> WorkspaceExplorerHistoryLoadResult {
-        try await workspaceExplorerHistoryService().load()
+        return try await workspaceExplorerHistoryService().load()
     }
 
     func workspaceExplorerPresence() -> WorkspaceExplorerHistoryLoadResult {

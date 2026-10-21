@@ -1,6 +1,23 @@
 import Foundation
 
 extension WorkProvenanceRuntime {
+    func trackArchiveTask(_ task: Task<Void, Never>) {
+        let id = UUID()
+        archiveTasksByID[id] = task
+        trackBackgroundTask(task)
+        Task { @MainActor [weak self] in
+            await task.value
+            self?.archiveTasksByID[id] = nil
+        }
+    }
+
+    func waitForArchiveTasks() async {
+        let tasks = Array(archiveTasksByID.values)
+        for task in tasks {
+            await task.value
+        }
+    }
+
     /// Captures remaining workspaces after a user-initiated window close commits.
     func recordWindowClosure(_ workspaces: [Workspace], at closedAt: Date = Date()) {
         for workspace in workspaces {
@@ -15,7 +32,7 @@ extension WorkProvenanceRuntime {
         let title = workspace.bmuxEventWorkspaceTitle
         let createdAt = workspace.createdAt
         let colorHex = workspace.customColor
-        trackBackgroundTask(Task {
+        trackArchiveTask(Task {
             do {
                 try await workspaceArchiveService.recordClosure(
                     stableWorkspaceID: stableID,

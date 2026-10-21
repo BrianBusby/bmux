@@ -60,6 +60,35 @@ actor WorkProvenanceWorkspaceArchiveService {
         try await client.clearArchivedWorkspaces(at: timestamp)
     }
 
+    /// Repairs absent or older close events when the latest restore snapshot reached disk first.
+    func recoverClosures(_ candidates: [WorkspaceArchiveRecoveryCandidate]) async throws {
+        guard !candidates.isEmpty else { return }
+        _ = try await recoverClosures(candidates, existing: archivedWorkspaces())
+    }
+
+    /// Reuses the archive read from an Explorer refresh; a second read is needed only after a repair.
+    func recoverClosures(_ candidates: [WorkspaceArchiveRecoveryCandidate],
+                         existing records: [ProvenanceArchivedWorkspaceRecord]) async throws -> Bool {
+        let existing = Dictionary(uniqueKeysWithValues: records.map { ($0.id, $0) })
+        var repaired = false
+        for candidate in candidates where existing[candidate.stableID.uuidString]
+            .map({ $0.closedAt < candidate.closedAt }) ?? true {
+            try Task.checkCancellation()
+            try await client.recordArchivedWorkspace(ProvenanceArchivedWorkspaceRecord(
+                id: candidate.stableID.uuidString,
+                title: candidate.title,
+                createdAt: nil,
+                closedAt: candidate.closedAt,
+                lastActivityAt: nil,
+                displayAtClose: nil,
+                colorHex: candidate.colorHex,
+                coverageCode: "close_snapshot_recovery"
+            ))
+            repaired = true
+        }
+        return repaired
+    }
+
     func recordClosure(
         stableWorkspaceID: UUID,
         title: String,

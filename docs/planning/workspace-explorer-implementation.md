@@ -14,7 +14,56 @@ The PE archive foundation stores Explorer snapshots in a separately clearable ta
 
 The `workspace-explorer-staged-loading` branch starts from PR #180. It shows live workspace presence before PE activity and archive reads finish. The history service owns reads and joining; the coordinator owns pending/available/unavailable transitions, stale-load rejection, and preservation of scope, navigation, grouping, filters, and scroll. Cards still use the existing activation action. The view distinguishes pending and unknown closed counts and offers Retry after a failed read.
 
-Rules: root `AGENTS.md`, the bmux architecture, testing, and localization skills, and the continuous-code-quality skill. Patterns: `WorkspaceExplorerHistoryService`, `WorkspaceExplorerCoordinator`, `WorkspaceExplorerCatalog`, and the card snapshot boundary. Verification: 22 focused Explorer tests pass, the Swift file budget and pbxproj checks pass, English/Japanese keys were audited, and project-doc validation, generation, and freshness checks pass. Tagged builds 825 and 826 succeeded. Review found that the provisional overview mislabeled unknown project links as Unassigned and pending Closed/period headers printed zero. The correction shows live cards in a temporary flat overview and formats only verified counts. Thirty-six focused Explorer tests and isolated tagged build 827 passed on the first corrected runtime commit. A subsequent regression test showed that refreshing after an unavailable archive read could replace verified project links with provisional empty links; the first pending All workspaces view could also group those empty links as Unassigned. The coordinator now retains verified facts during refresh and holds project-specific results until PE metadata arrives. The two coordinator regression tests failed before the fix; all 38 focused Explorer tests, project-doc and pbxproj checks, and isolated tagged build 828 passed afterward. Build 828 launched and its tag-bound CLI responded; user dogfood remains pending. Before PE facts arrive, live cards have unknown activity and project metadata; the pending state must not claim that a period has no activity, that closed history is empty, or that project membership is Unassigned.
+Rules: root `AGENTS.md`, the bmux architecture, testing, and localization skills, and the continuous-code-quality skill. Patterns: `WorkspaceExplorerHistoryService`, `WorkspaceExplorerCoordinator`, `WorkspaceExplorerCatalog`, and the card snapshot boundary. Verification: 22 focused Explorer tests pass, the Swift file budget and pbxproj checks pass, English/Japanese keys were audited, and project-doc validation, generation, and freshness checks pass. Tagged builds 825 and 826 succeeded. Review found that the provisional overview mislabeled unknown project links as Unassigned and pending Closed/period headers printed zero. The correction shows live cards in a temporary flat overview and formats only verified counts. Thirty-six focused Explorer tests and isolated tagged build 827 passed on the first corrected runtime commit. A subsequent regression test showed that refreshing after an unavailable archive read could replace verified project links with provisional empty links; the first pending All workspaces view could also group those empty links as Unassigned. The coordinator now retains verified facts during refresh and holds project-specific results until PE metadata arrives. The two coordinator regression tests failed before the fix; all 38 focused Explorer tests, project-doc and pbxproj checks, and isolated tagged build 828 passed afterward. Build 828 launched and its tag-bound CLI responded; the user approved it and PR #181 merged as `1c76bd8a8`. Before PE facts arrive, live cards have unknown activity and project metadata; the pending state must not claim that a period has no activity, that closed history is empty, or that project membership is Unassigned.
+
+## Close-snapshot recovery slice
+
+Recovery waits for current-run archive writes before replaying persisted close snapshots. The history detail labels snapshots with limited metadata. A forced termination before the restore snapshot reaches disk remains outside this recovery path.
+
+During build 830 dogfood, an open Explorer did not subscribe to TabManager tab-list
+changes, so newly created workspaces could remain absent until an unrelated
+refresh. The coordinator now receives a collection-change signal and shows
+new workspaces as provisional, uncounted cards in the unfiltered overview or
+All workspaces view under an Any time Open/All scope while PE facts load. The monitor
+rebinds when main-window contexts change; project grouping and existing counts
+stay on the last verified catalog until enrichment completes. It does not poll.
+
+The same build showed `closed unknown` because its existing PE database had
+schema version 26 without the archive table. A read through PE's public client
+returned `no such table: provenance_archived_workspaces`; bmux did not inspect
+PE tables. PE version 27 adds an idempotent archive-table repair migration. It
+does not rewrite ledger evidence or rebuild the potentially large sessions index.
+An isolated version-26 fixture proves the missing-table failure before the fix
+and the repair afterward. The revised tagged build must be dogfooded before
+merging PR #182; build 830 remains in use and must not be replaced.
+
+The `workspace-explorer-close-recovery` branch starts from merged PR #181.
+`WorkspaceExplorerArchiveRecoveryService` owns the persisted-record wait,
+current-run archive-write wait, live-ID exclusion, and candidate reconciliation;
+AppDelegate supplies sources and `WorkspaceExplorerHistoryService` runs recovery
+concurrently with live fact loading. PE compares each saved close timestamp with
+the archived record and restores a newer snapshot after an interrupted re-close,
+while preserving richer earlier facts. Its clear marker still prevents replay of
+records that the user explicitly cleared. The restore store owns persistence;
+PE owns archive reads and writes through its public contract.
+
+The topology path observes the existing `WorkspacesModel.tabs` through Swift
+Observation. The Explorer monitor rebinds across main-window contexts. The coordinator owns pending-card visibility and status,
+so filtered, period, Closed, project, and history views do not show provisional
+cards or conflicting empty states. The new user-facing label has English and
+Japanese translations. The first recovery regression used a test-only commit;
+follow-up test-only commits cover topology changes, archive error fallback,
+and newer re-close snapshots. Build 830 exposed the missing archive table and
+prompted the schema-27 repair. A revised tagged build and user dogfood remain
+pending before merging PR #182.
+
+The recovery follow-up moves persistence/PE reconciliation into an actor. The
+main-actor inputs produce Sendable close candidates and live IDs. Normal
+refreshes reuse one archive read; a replay attempt rereads to reflect PE's
+authoritative merge and clear marker. If replay fails, archive completeness is
+unknown, so Explorer follows the specified open-only/closed-unknown state even
+when older PE rows could still be read. This is a count-integrity choice, not
+evidence that the older rows were deleted.
 
 ## Dependency audit on `origin/main` (2026-10-20)
 

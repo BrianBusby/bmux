@@ -53,6 +53,10 @@ local_capabilities:
   workspace_explorer_projection: implemented
   workspace_explorer_native_view: under_observation
   workspace_explorer_staged_loading: under_observation
+  workspace_explorer_close_recovery: under_observation
+  workspace_explorer_archive_recovery_actor: under_observation
+  workspace_explorer_live_topology_refresh: under_observation
+  provenance_engine_workspace_archive_schema_repair: under_observation
   provenance_engine_schema_identity_validation: implemented
   provenance_engine_producer_neutral_lifecycle_recording: implemented
   provenance_engine_richer_coding_agent_evidence: implemented
