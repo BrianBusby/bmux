@@ -142,6 +142,42 @@ struct WorkspaceArchiveTests {
     }
 
     @Test
+    func planAndFileChangeEvidenceAdvanceWorkspaceActivity() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("pe-workspace-plan-file-activity-tests")
+            .appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let repository = try ProvenanceSQLiteRepository(url: directory.appendingPathComponent("provenance.sqlite"))
+        let base = Date(timeIntervalSince1970: 1_800_000_000)
+        let session = ProvenanceSessionRecord(id: "session-a", agentKind: "codex",
+            workspaceID: "stable-a", status: "running", startedAt: base,
+            updatedAt: base.addingTimeInterval(900))
+        try await repository.appendEvent(ProvenanceEvent(eventType: .sessionObserved,
+            timestamp: session.updatedAt, sessionID: session.id, source: .observed,
+            confidence: .high, payload: ProvenanceEventPayload(session: session)))
+        let plan = ProvenanceCodingAgentPlanUpdateRecord(id: "plan-a", sessionID: session.id,
+            provider: "codex", steps: [], observedAt: base.addingTimeInterval(300),
+            source: .observed, confidence: .high)
+        try await repository.appendEvent(ProvenanceEvent(eventType: .codingAgentPlanUpdated,
+            timestamp: plan.observedAt, sessionID: session.id, source: .observed,
+            confidence: .high, payload: ProvenanceEventPayload(codingAgentPlanUpdate: plan)))
+        let afterPlan = try await repository.workspaceSessions(.init(workspaceID: "stable-a"))
+        #expect(afterPlan.sessions.first?.lastActivityAt == plan.observedAt)
+        let fileChange = ProvenanceCodingAgentFileChangeAttributionRecord(id: "file-a",
+            sessionID: session.id, provider: "codex", paths: ["Sources/RoofReport.swift"],
+            observedAt: base.addingTimeInterval(500), source: .observed, confidence: .high)
+        try await repository.appendEvent(ProvenanceEvent(eventType: .codingAgentFileChangeAttributed,
+            timestamp: fileChange.observedAt, sessionID: session.id, source: .observed,
+            confidence: .high,
+            payload: ProvenanceEventPayload(codingAgentFileChangeAttribution: fileChange)))
+        let afterFile = try await repository.workspaceSessions(.init(workspaceID: "stable-a"))
+        #expect(afterFile.sessions.first?.lastActivityAt == fileChange.observedAt)
+        _ = try await repository.rebuildProjectionsFromEventLedger()
+        let rebuilt = try await repository.workspaceSessions(.init(workspaceID: "stable-a"))
+        #expect(rebuilt.sessions.first?.lastActivityAt == fileChange.observedAt)
+    }
+
+    @Test
     func archiveSurvivesClientReopenAndPaginatesByStableIdentity() async throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("pe-workspace-archive-tests")
