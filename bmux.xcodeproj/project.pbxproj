@@ -2111,6 +2111,7 @@
 		E7A9EAA73EE74959BA212410 /* WorkspaceExplorerScenes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21240F /* WorkspaceExplorerScenes.swift */; };
 		1F830D96A89EEA457CA79352 /* WorkspaceExplorerScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C13DB01A1A56779EB92DA1 /* WorkspaceExplorerScope.swift */; };
 		A9E1C06F8D24453FB2C317AF /* WorkspaceExplorerScopeControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E1C06F8D24453FB2C317AE /* WorkspaceExplorerScopeControls.swift */; };
+		FAD145AB2CC344EE8899A004 /* WorkspaceExplorerSessionPageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD145AB2CC344EE8899A003 /* WorkspaceExplorerSessionPageStore.swift */; };
 				FAD145AB2CC344EE8899A001 /* WorkspaceExplorerSessionPageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerSessionPageTests.swift; sourceTree = "<group>"; };
 				FAD145AB2CC344EE8899A002 /* WorkspaceExplorerSessionPageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD145AB2CC344EE8899A001 /* WorkspaceExplorerSessionPageTests.swift */; };
 		8234457C7D9D6A45E2C2F57B /* WorkspaceExplorerStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A75009717859B41DB480B6F /* WorkspaceExplorerStatus.swift */; };
@@ -4254,6 +4255,7 @@
 		E7A9EAA73EE74959BA21240F /* WorkspaceExplorerScenes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerScenes.swift; sourceTree = "<group>"; };
 		A9C13DB01A1A56779EB92DA1 /* WorkspaceExplorerScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerScope.swift; sourceTree = "<group>"; };
 		A9E1C06F8D24453FB2C317AE /* WorkspaceExplorerScopeControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceExplorerScopeControls.swift"; sourceTree = "<group>"; };
+		FAD145AB2CC344EE8899A003 /* WorkspaceExplorerSessionPageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerSessionPageStore.swift; sourceTree = "<group>"; };
 		7A75009717859B41DB480B6F /* WorkspaceExplorerStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerStatus.swift; sourceTree = "<group>"; };
 		F9D44D1B62895B2EF9CA80AF /* WorkspaceExplorerStatusArrangement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerStatusArrangement.swift; sourceTree = "<group>"; };
 		E71A17900000000000000065 /* WorkspaceExplorerTitlebarContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerTitlebarContent.swift; sourceTree = "<group>"; };
@@ -6582,6 +6584,7 @@
 				38B2E1DC3876AD45216CB5D9 /* WorkspaceExplorerProjectionResult.swift */,
 				FC673044FFD440013D852111 /* WorkspaceExplorerProjection.swift */,
 				F9D44D1B62895B2EF9CA80AF /* WorkspaceExplorerStatusArrangement.swift */,
+				FAD145AB2CC344EE8899A003 /* WorkspaceExplorerSessionPageStore.swift */,
 				7B21B02932B3E6CB472466F1 /* WorkspaceExplorerViewArrangement.swift */,
 				E7A9EAA73EE74959BA21200B /* WorkspaceExplorerReopenReason.swift */,
 				E7A9EAA73EE74959BA21200D /* WorkspaceExplorerReopenEligibility.swift */,
@@ -8277,6 +8280,7 @@
 				E7A9EAA73EE74959BA212410 /* WorkspaceExplorerScenes.swift in Sources */,
 				1F830D96A89EEA457CA79352 /* WorkspaceExplorerScope.swift in Sources */,
 				A9E1C06F8D24453FB2C317AF /* WorkspaceExplorerScopeControls.swift in Sources */,
+				FAD145AB2CC344EE8899A004 /* WorkspaceExplorerSessionPageStore.swift in Sources */,
 				8234457C7D9D6A45E2C2F57B /* WorkspaceExplorerStatus.swift in Sources */,
 				A74AD940B86D751B2A851105 /* WorkspaceExplorerStatusArrangement.swift in Sources */,
 				E71A17900000000000000064 /* WorkspaceExplorerTitlebarContent.swift in Sources */,

@@ -42,8 +42,13 @@ final class WorkspaceExplorerCoordinator {
     var pendingStatusChangeCount: Int { statusArrangement.pendingWorkspaceIDs.count }
     private(set) var isLoading = false
     private(set) var loadFailed = false
-    private(set) var sessionsByWorkspaceID: [String: ProvenanceWorkspaceSessionPageResponse] = [:]
-    private(set) var sessionLoadFailed = false
+    let sessionPages: WorkspaceExplorerSessionPageStore
+    var sessionsByWorkspaceID: [String: ProvenanceWorkspaceSessionPageResponse] {
+        sessionPages.pagesByWorkspaceID
+    }
+    var sessionLoadFailed: Bool {
+        historyID.map { sessionPages.failedWorkspaceIDs.contains($0) } ?? false
+    }
     private(set) var evidenceBySessionID: [String: SessionEvidence] = [:]
     private var evidenceOrder: [String] = []
     private(set) var evidenceLoadingIDs: Set<String> = []
@@ -62,8 +67,6 @@ final class WorkspaceExplorerCoordinator {
     private let reopenHistory: Reopener
     private let activateWorkspace: Activator
     private let onOpenLive: LiveOpenHandler
-    private let loadSessions: SessionLoader
-    private let loadMoreSessions: MoreSessionsLoader
     private let loadEvidence: EvidenceLoader
     private let clearArchive: Clearer
     private let feedbackDelay: FeedbackDelay
@@ -84,8 +87,8 @@ final class WorkspaceExplorerCoordinator {
         self.reopenHistory = reopenHistory
         self.activateWorkspace = activateWorkspace
         self.onOpenLive = onOpenLive
-        self.loadSessions = loadSessions
-        self.loadMoreSessions = loadMoreSessions
+        self.sessionPages = WorkspaceExplorerSessionPageStore(loadFirst: loadSessions,
+            loadNext: loadMoreSessions)
         self.loadEvidence = loadEvidence
         self.clearArchive = clearArchive
         self.feedbackDelay = feedbackDelay
@@ -196,22 +199,7 @@ final class WorkspaceExplorerCoordinator {
     }
 
     func loadMoreHistorySessions(for id: String) async {
-        guard let stableID = UUID(uuidString: id),
-              let current = sessionsByWorkspaceID[id], let cursor = current.nextCursor else { return }
-        do {
-            let next = try await loadMoreSessions(stableID, cursor)
-            let known = Set(current.sessions.map(\.id))
-            sessionsByWorkspaceID[id] = ProvenanceWorkspaceSessionPageResponse(
-                workspaceID: current.workspaceID,
-                sessions: current.sessions + next.sessions.filter { !known.contains($0.id) },
-                nextCursor: next.nextCursor,
-                partialCoverage: current.partialCoverage || next.partialCoverage)
-            sessionLoadFailed = false
-        } catch is CancellationError {
-            return
-        } catch {
-            sessionLoadFailed = true
-        }
+        await sessionPages.loadNextPage(for: id)
     }
 
     func observeLiveStatus(id: String, status: WorkspaceExplorerStatus) {
@@ -278,23 +266,20 @@ final class WorkspaceExplorerCoordinator {
         overviewArrangement.focusedProjectID = nil
         collectionTarget = target
         historyID = nil
+        sessionPages.activate(nil)
     }
 
     func showHistory(_ id: String) {
         exitTransition.cancel()
         historyID = id
+        sessionPages.activate(id)
     }
-    func backFromHistory() { historyID = nil }
+    func backFromHistory() {
+        historyID = nil
+        sessionPages.activate(nil)
+    }
     func loadHistorySessions(for id: String) async {
-        guard let stableID = UUID(uuidString: id) else { return }
-        do {
-            sessionsByWorkspaceID[id] = try await loadSessions(stableID)
-            sessionLoadFailed = false
-        } catch is CancellationError {
-            return
-        } catch {
-            sessionLoadFailed = true
-        }
+        await sessionPages.loadFirstPage(for: id)
     }
 
     func loadSessionEvidence(for id: String) async {
@@ -329,6 +314,7 @@ final class WorkspaceExplorerCoordinator {
         }
         collectionTarget = nil
         historyID = nil
+        sessionPages.activate(nil)
     }
 
     func setGroupBy(_ dimensions: [WorkspaceExplorerDimension]) {
@@ -411,7 +397,7 @@ final class WorkspaceExplorerCoordinator {
         do {
             try await clearArchive()
             clearFailed = false
-            sessionsByWorkspaceID.removeAll()
+            sessionPages.clear()
             evidenceBySessionID.removeAll()
             evidenceOrder.removeAll()
             historyID = nil
