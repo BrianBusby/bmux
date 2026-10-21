@@ -132,6 +132,32 @@ struct WorkspaceArchiveCaptureTests {
 
     @MainActor
     @Test
+    func recoveryReplacesOlderClosureForSameWorkspace() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-workspace-reclose-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(
+            databaseURL: directory.appendingPathComponent("provenance.sqlite"))
+        let service = WorkProvenanceWorkspaceArchiveService(client: client)
+        let stableID = UUID()
+        let firstClose = Date(timeIntervalSince1970: 1_800_000_000)
+        try await service.recordClosure(stableWorkspaceID: stableID,
+            title: "Maple Street Roof Inspection", createdAt: firstClose.addingTimeInterval(-3600),
+            closedAt: firstClose, colorHex: nil)
+
+        let laterClose = firstClose.addingTimeInterval(600)
+        try await service.recoverClosures([WorkspaceArchiveRecoveryCandidate(
+            stableID: stableID, title: "Maple Street Follow-up",
+            closedAt: laterClose, colorHex: nil)])
+
+        let record = try #require(await client.archivedWorkspaces(.init()).records.first)
+        #expect(record.closedAt == laterClose)
+        #expect(record.title == "Maple Street Follow-up")
+        #expect(record.createdAt == firstClose.addingTimeInterval(-3600))
+    }
+
+    @MainActor
+    @Test
     func recoveryWaitsForPersistedRestoreRecords() async throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-restore-recovery-\(UUID().uuidString)", isDirectory: true)

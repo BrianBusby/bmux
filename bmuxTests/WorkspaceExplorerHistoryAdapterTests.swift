@@ -255,11 +255,20 @@ struct WorkspaceExplorerHistoryAdapterTests {
     @Test
     func recoveryFailureDoesNotBlockLiveExplorerSnapshot() async throws {
         struct RecoveryFailure: Error {}
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-explorer-recovery-failure-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(
+            databaseURL: directory.appendingPathComponent("provenance.sqlite"))
         let manager = TabManager()
         let workspace = try #require(manager.selectedWorkspace)
+        var recoveryCalled = false
         let service = WorkspaceExplorerHistoryService(
-            archiveService: nil,
-            recoverArchive: { throw RecoveryFailure() },
+            archiveService: WorkProvenanceWorkspaceArchiveService(client: client),
+            recoverArchive: {
+                recoveryCalled = true
+                throw RecoveryFailure()
+            },
             tabManagers: { [manager] },
             activeWorkspaceID: { workspace.stableId.uuidString },
             restoreRecords: { [:] },
@@ -268,6 +277,7 @@ struct WorkspaceExplorerHistoryAdapterTests {
         let result = try await service.load()
 
         #expect(result.archiveAvailability == .unavailable)
+        #expect(recoveryCalled)
         #expect(!result.liveMetadataPending)
         #expect(result.items.contains { $0.id == workspace.stableId.uuidString && $0.isOpen })
     }
