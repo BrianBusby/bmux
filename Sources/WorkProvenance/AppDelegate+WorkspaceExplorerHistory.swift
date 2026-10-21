@@ -21,7 +21,15 @@ extension AppDelegate {
     }
 
     func loadWorkspaceExplorerHistory() async throws -> WorkspaceExplorerHistoryLoadResult {
-        try await workspaceExplorerHistoryService().load()
+        if let archiveService = workProvenanceRuntime?.workspaceArchiveService {
+            let savedRecords = await ClosedItemHistoryStore.shared.recordsAfterPersistedLoad()
+            await workProvenanceRuntime?.waitForArchiveTasks()
+            let liveIDs = Set(workspaceExplorerLiveWorkspaces().map(\.stableId))
+            let candidates = WorkspaceArchiveRecoveryCandidate.from(
+                records: savedRecords, excluding: liveIDs)
+            try await archiveService.recoverClosures(candidates)
+        }
+        return try await workspaceExplorerHistoryService().load()
     }
 
     func workspaceExplorerPresence() -> WorkspaceExplorerHistoryLoadResult {

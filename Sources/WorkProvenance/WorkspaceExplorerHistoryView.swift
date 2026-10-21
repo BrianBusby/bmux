@@ -70,6 +70,11 @@ struct WorkspaceExplorerHistoryView: View {
                     "Last-known values recorded at close, not re-fetched."))
                     .font(.system(size: 11)).italic().foregroundStyle(.secondary)
             }
+            if item.archive?.coverageCode == "close_snapshot_recovery" {
+                Text(String(localized: "explorer.recoveredCloseSnapshot", defaultValue:
+                    "Recovered from a saved close snapshot. Creation time and project details may be unavailable."))
+                    .font(.system(size: 11)).italic().foregroundStyle(.secondary)
+            }
             Text(page == nil ? String(localized: "explorer.readOnlyNotice", defaultValue:
                 "Read-only. No terminal connection, approvals, or prompts. Session count is separate from the workspace count.") :
                 String(format: String(localized: "explorer.readOnlySessionNotice", defaultValue:

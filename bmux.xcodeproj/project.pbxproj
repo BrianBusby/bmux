@@ -667,8 +667,11 @@
 		48B76B39985043AFAFB73E54 /* CLITmuxLaunchIdentityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74478AB8036341AC999204A2 /* CLITmuxLaunchIdentityTests.swift */; };
 		C5869DB53AE34F9181D37A6B /* CLITranscriptBackedClaudeSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27B8138A41C48ADA02715A7 /* CLITranscriptBackedClaudeSessionTests.swift */; };
 		C10D51700000000000000002 /* ClosedItemHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10D51700000000000000001 /* ClosedItemHistory.swift */; };
+		C182A003C182A003C182A003 /* ClosedItemHistoryMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C182A004C182A004C182A004 /* ClosedItemHistoryMenuItem.swift */; };
+		C182A005C182A005C182A005 /* ClosedItemHistoryMenuSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = C182A006C182A006C182A006 /* ClosedItemHistoryMenuSnapshot.swift */; };
 		7375A0037375A0037375A003 /* ClosedMainWindowRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7375A0047375A0047375A004 /* ClosedMainWindowRoutingTests.swift */; };
 		032A6F24128742F0A09E4E20 /* ClosedTabHistoryObservation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89A72BEFA1942DBB63DB789 /* ClosedTabHistoryObservation.swift */; };
+		C182A007C182A007C182A007 /* ClosedWindowRestoreValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C182A008C182A008C182A008 /* ClosedWindowRestoreValidation.swift */; };
 		B9000025A1B2C3D4E5F60719 /* CloseWindowConfirmDialogUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000026A1B2C3D4E5F60719 /* CloseWindowConfirmDialogUITests.swift */; };
 		B9000023A1B2C3D4E5F60719 /* CloseWorkspaceCmdDUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000022A1B2C3D4E5F60719 /* CloseWorkspaceCmdDUITests.swift */; };
 		B900001AA1B2C3D4E5F60719 /* CloseWorkspaceConfirmDialogUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000019A1B2C3D4E5F60719 /* CloseWorkspaceConfirmDialogUITests.swift */; };
@@ -2028,6 +2031,7 @@
 		A11EAD000000000000000000 /* WorkspaceAppearanceResolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11EAD000000000000000001 /* WorkspaceAppearanceResolution.swift */; };
 		C176A004C176A004C176A004 /* WorkspaceArchiveCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceArchiveCaptureTests.swift; sourceTree = "<group>"; };
 		C176A003C176A003C176A003 /* WorkspaceArchiveCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C176A004C176A004C176A004 /* WorkspaceArchiveCaptureTests.swift */; };
+		C182A001C182A001C182A001 /* WorkspaceArchiveRecoveryCandidate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C182A002C182A002C182A002 /* WorkspaceArchiveRecoveryCandidate.swift */; };
 		A5F0C0010000000000000002 /* WorkspaceAttentionFlashRingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F0C0010000000000000001 /* WorkspaceAttentionFlashRingView.swift */; };
 		C0DEB0550000000000000003 /* WorkspaceBrowserActionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEB0550000000000000004 /* WorkspaceBrowserActionsTests.swift */; };
 		CA52B0160000000000000000 /* WorkspaceCanvasHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA52C0160000000000000000 /* WorkspaceCanvasHostView.swift */; };
@@ -2866,8 +2870,11 @@
 		74478AB8036341AC999204A2 /* CLITmuxLaunchIdentityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLITmuxLaunchIdentityTests.swift"; sourceTree = "<group>"; };
 		C27B8138A41C48ADA02715A7 /* CLITranscriptBackedClaudeSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLITranscriptBackedClaudeSessionTests.swift"; sourceTree = "<group>"; };
 		C10D51700000000000000001 /* ClosedItemHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedItemHistory.swift; sourceTree = "<group>"; };
+		C182A004C182A004C182A004 /* ClosedItemHistoryMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedItemHistoryMenuItem.swift; sourceTree = "<group>"; };
+		C182A006C182A006C182A006 /* ClosedItemHistoryMenuSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedItemHistoryMenuSnapshot.swift; sourceTree = "<group>"; };
 		7375A0047375A0047375A004 /* ClosedMainWindowRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedMainWindowRoutingTests.swift; sourceTree = "<group>"; };
 		D89A72BEFA1942DBB63DB789 /* ClosedTabHistoryObservation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ClosedTabHistoryObservation.swift"; sourceTree = "<group>"; };
+		C182A008C182A008C182A008 /* ClosedWindowRestoreValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedWindowRestoreValidation.swift; sourceTree = "<group>"; };
 		B9000026A1B2C3D4E5F60719 /* CloseWindowConfirmDialogUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloseWindowConfirmDialogUITests.swift; sourceTree = "<group>"; };
 		B9000022A1B2C3D4E5F60719 /* CloseWorkspaceCmdDUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloseWorkspaceCmdDUITests.swift; sourceTree = "<group>"; };
 		B9000019A1B2C3D4E5F60719 /* CloseWorkspaceConfirmDialogUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloseWorkspaceConfirmDialogUITests.swift; sourceTree = "<group>"; };
@@ -4163,6 +4170,7 @@
 		D7AB00000000000000000012 /* WorkspaceAdjacentPaneMoveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceAdjacentPaneMoveTests.swift; sourceTree = "<group>"; };
 		A11EAE000000000000000001 /* WorkspaceAppearanceConfigResolutionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceAppearanceConfigResolutionTests.swift; sourceTree = "<group>"; };
 		A11EAD000000000000000001 /* WorkspaceAppearanceResolution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceAppearanceResolution.swift; sourceTree = "<group>"; };
+		C182A002C182A002C182A002 /* WorkspaceArchiveRecoveryCandidate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceArchiveRecoveryCandidate.swift; sourceTree = "<group>"; };
 		A5F0C0010000000000000001 /* WorkspaceAttentionFlashRingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/WorkspaceAttentionFlashRingView.swift; sourceTree = "<group>"; };
 		C0DEB0550000000000000004 /* WorkspaceBrowserActionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceBrowserActionsTests.swift; sourceTree = "<group>"; };
 		CA52C0160000000000000000 /* WorkspaceCanvasHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceCanvasHostView.swift"; sourceTree = "<group>"; };
@@ -4929,6 +4937,9 @@
 				F0C05170000000000000001 /* FocusHistory.swift */,
 				C0DEFB100000000000000002 /* FocusSurfaceBroadcaster.swift */,
 				C10D51700000000000000001 /* ClosedItemHistory.swift */,
+				C182A004C182A004C182A004 /* ClosedItemHistoryMenuItem.swift */,
+				C182A006C182A006C182A006 /* ClosedItemHistoryMenuSnapshot.swift */,
+				C182A008C182A008C182A008 /* ClosedWindowRestoreValidation.swift */,
 				D1FFC0DE000000000000D001 /* DiffCommentSubmissionPool.swift */,
 				D1FFC0DE000000000000A001 /* DiffCommentStore.swift */,
 				E3309A04 /* TabManager+EqualizeSplits.swift */,
@@ -6516,6 +6527,7 @@
 				CE0E03020000000000000002 /* WorkProvenanceNoopPullRequestOwnerResolver.swift */,
 				3D7DBCA37AB70E107E41EE5E /* WorkProvenanceObservationService.swift */,
 				E7A9EAA73EE74959BA212002 /* WorkProvenanceWorkspaceArchiveService.swift */,
+				C182A002C182A002C182A002 /* WorkspaceArchiveRecoveryCandidate.swift */,
 				E7A9EAA73EE74959BA212003 /* WorkspaceExplorerHistoryAdapter.swift */,
 				A9C13DB01A1A56779EB92DA1 /* WorkspaceExplorerScope.swift */,
 				7A75009717859B41DB480B6F /* WorkspaceExplorerStatus.swift */,
@@ -7344,6 +7356,9 @@
 				A9F200000000000000000015 /* ClaudeStreamJSONAccumulator.swift in Sources */,
 				C46790000000000000000003 /* CLIForwardingLaunchRouter.swift in Sources */,
 				C10D51700000000000000002 /* ClosedItemHistory.swift in Sources */,
+				C182A003C182A003C182A003 /* ClosedItemHistoryMenuItem.swift in Sources */,
+				C182A005C182A005C182A005 /* ClosedItemHistoryMenuSnapshot.swift in Sources */,
+				C182A007C182A007C182A007 /* ClosedWindowRestoreValidation.swift in Sources */,
 				C10D00010000000000000001 /* CloudVMActionLauncher.swift in Sources */,
 				C0A1E5CE01C0A1E5CE01A001 /* CoalesceLatestPublisher.swift in Sources */,
 				A9F200000000000000000016 /* CodexAppServerQueuedInput.swift in Sources */,
@@ -8170,6 +8185,7 @@
 				A5001406 /* Workspace.swift in Sources */,
 				7D77A0EBBE3D8E05CDC16229 /* WorkspaceActionDispatcher.swift in Sources */,
 				A11EAD000000000000000000 /* WorkspaceAppearanceResolution.swift in Sources */,
+				C182A001C182A001C182A001 /* WorkspaceArchiveRecoveryCandidate.swift in Sources */,
 				A5F0C0010000000000000002 /* WorkspaceAttentionFlashRingView.swift in Sources */,
 				CA52B0160000000000000000 /* WorkspaceCanvasHostView.swift in Sources */,
 				5FE4A89C7C324DC4A4210089 /* WorkspaceCardHeader.swift in Sources */,

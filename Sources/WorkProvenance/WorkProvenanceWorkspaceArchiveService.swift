@@ -60,6 +60,25 @@ actor WorkProvenanceWorkspaceArchiveService {
         try await client.clearArchivedWorkspaces(at: timestamp)
     }
 
+    /// Repairs close events whose restore snapshot reached disk before the PE write completed.
+    func recoverClosures(_ candidates: [WorkspaceArchiveRecoveryCandidate]) async throws {
+        guard !candidates.isEmpty else { return }
+        let existingIDs = Set(try await archivedWorkspaces().map(\.id))
+        for candidate in candidates where !existingIDs.contains(candidate.stableID.uuidString) {
+            try Task.checkCancellation()
+            try await client.recordArchivedWorkspace(ProvenanceArchivedWorkspaceRecord(
+                id: candidate.stableID.uuidString,
+                title: candidate.title,
+                createdAt: nil,
+                closedAt: candidate.closedAt,
+                lastActivityAt: nil,
+                displayAtClose: nil,
+                colorHex: candidate.colorHex,
+                coverageCode: "close_snapshot_recovery"
+            ))
+        }
+    }
+
     func recordClosure(
         stableWorkspaceID: UUID,
         title: String,

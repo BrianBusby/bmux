@@ -29,6 +29,7 @@ final class WorkProvenanceRuntime {
     private var activationObservationTask: Task<Void, Never>?
     private var executionTelemetryProjectionService: ExecutionTelemetryProvenanceProjectionService?
     private var backgroundTasksByID: [UUID: Task<Void, Never>] = [:]
+    var archiveTasksByID: [UUID: Task<Void, Never>] = [:]
 
     private(set) var lifecycleState: WorkProvenanceRuntimeLifecycleState
     let effectiveDatabaseURL: URL?

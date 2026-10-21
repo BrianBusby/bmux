@@ -42,11 +42,11 @@ struct WorkspaceArchiveCaptureTests {
 
         appDelegate.suppressClosedWindowHistoryForTesting(windowId: windowID)
         appDelegate.recordClosedWindowHistoryForTesting(windowId: windowID)
-        await runtime.waitForBackgroundTasks()
+        await runtime.waitForArchiveTasks()
         #expect(try await client.archivedWorkspaces(.init()).records.isEmpty)
 
         appDelegate.recordClosedWindowHistoryForTesting(windowId: windowID)
-        await runtime.waitForBackgroundTasks()
+        await runtime.waitForArchiveTasks()
         let ids = Set(try await client.archivedWorkspaces(.init()).records.map(\.id))
         #expect(ids == [first.stableId.uuidString, second.stableId.uuidString])
     }
@@ -111,16 +111,46 @@ struct WorkspaceArchiveCaptureTests {
             [second.stableId])
 
         let service = WorkProvenanceWorkspaceArchiveService(client: client)
+        try await service.recordClosure(stableWorkspaceID: second.stableId,
+            title: second.customTitle ?? "Cedar Street Roof Inspection",
+            createdAt: closedAt.addingTimeInterval(-3600),
+            closedAt: closedAt.addingTimeInterval(-1), colorHex: nil)
         try await service.recoverClosures(candidates)
         let recovered = try await client.archivedWorkspaces(.init()).records
         #expect(Set(recovered.map(\.id)) == [first.stableId.uuidString, second.stableId.uuidString])
         #expect(recovered.first(where: { $0.id == first.stableId.uuidString })?.createdAt == nil)
         #expect(recovered.first(where: { $0.id == first.stableId.uuidString })?.title ==
             "Maple Street Roof Inspection")
+        #expect(recovered.first(where: { $0.id == second.stableId.uuidString })?.createdAt ==
+            closedAt.addingTimeInterval(-3600))
 
         try await service.clearExplorerHistory(at: closedAt.addingTimeInterval(1))
         let restartedService = WorkProvenanceWorkspaceArchiveService(client: client)
         try await restartedService.recoverClosures(candidates)
         #expect(try await client.archivedWorkspaces(.init()).records.isEmpty)
+    }
+
+    @MainActor
+    @Test
+    func recoveryWaitsForPersistedRestoreRecords() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-restore-recovery-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let fileURL = directory.appendingPathComponent("recently-closed.json")
+        let workspace = try #require(TabManager().selectedWorkspace)
+        workspace.customTitle = "Maple Street Roof Inspection"
+        let record = ClosedItemHistoryRecord(entry: .workspace(ClosedWorkspaceHistoryEntry(
+            workspaceId: workspace.id, windowId: nil, workspaceIndex: 0,
+            snapshot: workspace.sessionSnapshot(includeScrollback: false))))
+        let writer = ClosedItemHistoryStore(fileURL: fileURL, loadPersisted: false,
+            persistsRecordsSynchronously: true)
+        writer.push(record)
+
+        let reader = ClosedItemHistoryStore(fileURL: fileURL)
+        let loaded = await reader.recordsAfterPersistedLoad()
+        #expect(loaded.map(\.id) == [record.id])
+        #expect(WorkspaceArchiveRecoveryCandidate.from(records: loaded, excluding: [])
+            .map(\.stableID) == [workspace.stableId])
     }
 }

@@ -105906,6 +105906,22 @@
         }
       }
     },
+    "explorer.recoveredCloseSnapshot": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recovered from a saved close snapshot. Creation time and project details may be unavailable."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存された終了時のスナップショットから復元しました。作成日時やプロジェクトの詳細は利用できない場合があります。"
+          }
+        }
+      }
+    },
     "explorer.artifacts": {
       "localizations": {
         "en": {
