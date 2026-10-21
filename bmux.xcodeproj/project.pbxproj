@@ -2095,6 +2095,8 @@
 				E71A17900000000000000036 /* WorkspaceExplorerHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000037 /* WorkspaceExplorerHistoryView.swift */; };
 		E71A17900000000000000060 /* WorkspaceExplorerLiveBreadcrumb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000061 /* WorkspaceExplorerLiveBreadcrumb.swift */; };
 		E71A17900000000000000062 /* WorkspaceExplorerLiveNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000063 /* WorkspaceExplorerLiveNavigation.swift */; };
+				E71A17900000000000000067 /* WorkspaceExplorerLiveNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerLiveNavigationTests.swift; sourceTree = "<group>"; };
+				E71A17900000000000000066 /* WorkspaceExplorerLiveNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000067 /* WorkspaceExplorerLiveNavigationTests.swift */; };
 		E7A9EAA73EE74959BA212110 /* WorkspaceExplorerLiveStatusMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21210F /* WorkspaceExplorerLiveStatusMonitor.swift */; };
 		E7A9EAA73EE74959BA212010 /* WorkspaceExplorerLiveWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21200F /* WorkspaceExplorerLiveWorkspace.swift */; };
 		E8E201010000000000000004 /* WorkspaceExplorerPendingWorkspaceSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8E201010000000000000003 /* WorkspaceExplorerPendingWorkspaceSection.swift */; };
@@ -6468,6 +6470,7 @@
 					C176A004C176A004C176A004 /* WorkspaceArchiveCaptureTests.swift */,
 				E7A9EAA73EE74959BA212005 /* WorkspaceExplorerHistoryAdapterTests.swift */,
 				4FE1124DEA99B38BEE81A68A /* WorkspaceExplorerProjectionTests.swift */,
+				E71A17900000000000000067 /* WorkspaceExplorerLiveNavigationTests.swift */,
 				E71A17900000000000000041 /* WorkspaceExplorerCoordinatorTests.swift */,
 				E71A17900000000000000043 /* WorkspaceExplorerExitTransitionTests.swift */,
 					642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */,
@@ -9176,6 +9179,7 @@
 				E71A17900000000000000040 /* WorkspaceExplorerCoordinatorTests.swift in Sources */,
 				E71A17900000000000000042 /* WorkspaceExplorerExitTransitionTests.swift in Sources */,
 				E7A9EAA73EE74959BA212006 /* WorkspaceExplorerHistoryAdapterTests.swift in Sources */,
+				E71A17900000000000000066 /* WorkspaceExplorerLiveNavigationTests.swift in Sources */,
 				8069B759A1281E3496FB25EE /* WorkspaceExplorerProjectionTests.swift in Sources */,
 				FBA900000000000000000003 /* WorkspaceFallbackContractTests.swift in Sources */,
 				FBA900000000000000000001 /* WorkspaceFallbackFixture.swift in Sources */,
