@@ -9,6 +9,7 @@ final class WorkspaceExplorerCoordinator {
     typealias PresenceLoader = @MainActor () -> WorkspaceExplorerHistoryLoadResult
     typealias Reopener = @MainActor (UUID) -> Bool
     typealias Activator = @MainActor (UUID) -> Void
+    typealias LiveOpenHandler = @MainActor (UUID, String) -> Void
     typealias SessionLoader = @MainActor (UUID) async throws -> ProvenanceWorkspaceSessionPageResponse
     typealias MoreSessionsLoader = @MainActor (UUID, String) async throws -> ProvenanceWorkspaceSessionPageResponse
     typealias EvidenceLoader = @MainActor (String) async throws -> (
@@ -60,6 +61,7 @@ final class WorkspaceExplorerCoordinator {
     private let loadPresence: PresenceLoader?
     private let reopenHistory: Reopener
     private let activateWorkspace: Activator
+    private let onOpenLive: LiveOpenHandler
     private let loadSessions: SessionLoader
     private let loadMoreSessions: MoreSessionsLoader
     private let loadEvidence: EvidenceLoader
@@ -68,7 +70,9 @@ final class WorkspaceExplorerCoordinator {
 
     init(loadHistory: @escaping Loader, loadPresence: PresenceLoader? = nil,
          reopenHistory: @escaping Reopener,
-         activateWorkspace: @escaping Activator, loadSessions: @escaping SessionLoader,
+         activateWorkspace: @escaping Activator,
+         onOpenLive: @escaping LiveOpenHandler = { _, _ in },
+         loadSessions: @escaping SessionLoader,
          loadEvidence: @escaping EvidenceLoader = { _ in throw CancellationError() },
          loadMoreSessions: @escaping MoreSessionsLoader = { _, _ in throw CancellationError() },
          clearArchive: @escaping Clearer,
@@ -79,6 +83,7 @@ final class WorkspaceExplorerCoordinator {
         self.loadPresence = loadPresence
         self.reopenHistory = reopenHistory
         self.activateWorkspace = activateWorkspace
+        self.onOpenLive = onOpenLive
         self.loadSessions = loadSessions
         self.loadMoreSessions = loadMoreSessions
         self.loadEvidence = loadEvidence
@@ -103,7 +108,6 @@ final class WorkspaceExplorerCoordinator {
     var exitsUnassigned: Bool { exitTransition.presentation?.exitsUnassigned ?? false }
 
     var projection: WorkspaceExplorerProjection? { catalog?.projection }
-
     func result(now: Date = .now, calendar: Calendar = .current) -> WorkspaceExplorerProjectionResult? {
         if let presentation = exitTransition.presentation { return presentation.result }
         return projectedResult(now: now, calendar: calendar)
@@ -262,14 +266,12 @@ final class WorkspaceExplorerCoordinator {
         workspaceChangeMonitor?.stop()
         liveStatusMonitor?.stop()
     }
-
     private func arrangedStatuses() -> [String: WorkspaceExplorerStatus] {
         guard let lastLoadResult else { return [:] }
         return Dictionary(uniqueKeysWithValues: lastLoadResult.items.compactMap { item in
             statusArrangement.arrangedStatus(for: item.id).map { (item.id, $0) }
         })
     }
-
     func showCollection(_ target: WorkspaceExplorerCollectionTarget) {
         exitTransition.cancel()
         focusTask?.cancel()
@@ -282,9 +284,7 @@ final class WorkspaceExplorerCoordinator {
         exitTransition.cancel()
         historyID = id
     }
-
     func backFromHistory() { historyID = nil }
-
     func loadHistorySessions(for id: String) async {
         guard let stableID = UUID(uuidString: id) else { return }
         do {
@@ -373,6 +373,9 @@ final class WorkspaceExplorerCoordinator {
 
     func open(_ item: WorkspaceExplorerHistoryItem) {
         if let liveID = item.liveWorkspaceID {
+            let title = collectionTarget?.title(projects: catalog?.projects ?? [])
+                ?? String(localized: "explorer.allProjects", defaultValue: "All projects")
+            onOpenLive(liveID, title)
             activateWorkspace(liveID)
             activeWorkspaceID = item.id
         } else {

@@ -11,6 +11,36 @@ import Testing
 @Suite @MainActor
 struct WorkspaceExplorerCoordinatorTests {
     @Test
+    func openingLiveWorkspaceKeepsProjectRouteAndArrangement() async {
+        let workspace = WorkspaceExplorerLiveWorkspace(stableID: UUID(), runtimeID: UUID(),
+            title: "Maple Street Roof Inspection", createdAt: .now,
+            colorHex: nil, display: nil, lastActivityAt: nil, liveStatus: .idle)
+        let item = WorkspaceExplorerHistoryAdapter().join(live: [workspace], archived: [],
+            eligibilityByID: [:])[0]
+        var opened: (UUID, String)?
+        var activated: UUID?
+        let model = WorkspaceExplorerCoordinator(
+            loadHistory: { WorkspaceExplorerHistoryLoadResult(items: [item],
+                archiveAvailability: .available, partialLiveActivity: false) },
+            reopenHistory: { _ in false },
+            activateWorkspace: { activated = $0 },
+            onOpenLive: { opened = ($0, $1) },
+            loadSessions: { id in ProvenanceWorkspaceSessionPageResponse(
+                workspaceID: id.uuidString, sessions: [], nextCursor: nil) },
+            clearArchive: { }
+        )
+        await model.load()
+        model.showCollection(.unassigned)
+        model.setGroupBy([.repository])
+        model.open(item)
+        #expect(opened?.0 == workspace.runtimeID)
+        #expect(opened?.1 == String(localized: "explorer.unassigned", defaultValue: "Unassigned workspaces"))
+        #expect(activated == workspace.runtimeID)
+        #expect(model.collectionTarget == .unassigned)
+        #expect(model.activeArrangement.groupBy == [.repository])
+    }
+
+    @Test
     func newWorkspaceAppearsWhileExplorerRefreshes() async {
         let first = WorkspaceExplorerLiveWorkspace(stableID: UUID(), runtimeID: UUID(),
             title: "Maple Street Roof Inspection", createdAt: .now,

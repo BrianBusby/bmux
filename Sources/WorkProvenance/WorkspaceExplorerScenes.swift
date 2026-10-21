@@ -18,7 +18,8 @@ struct WorkspaceExplorerScenes: Scene {
                 loadMoreSessions: { try await appDelegate.workspaceExplorerSessions(stableID: $0, cursor: $1) },
                 clearArchive: { try await appDelegate.clearWorkspaceExplorerHistory() },
                 liveStatusWorkspaces: { appDelegate.workspaceExplorerLiveWorkspaces() },
-                workspaceTabManagers: { appDelegate.workspaceExplorerTabManagers() }
+                workspaceTabManagers: { appDelegate.workspaceExplorerTabManagers() },
+                liveNavigation: appDelegate.workspaceExplorerLiveNavigation
             )
             .bmuxAppearanceColorScheme(appearanceMode)
         }

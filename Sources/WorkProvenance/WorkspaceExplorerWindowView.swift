@@ -8,6 +8,7 @@ struct WorkspaceExplorerWindowView: View {
     @State private var confirmsClearHistory = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var cardGeometry
+    let liveNavigation: WorkspaceExplorerLiveNavigation?
 
     init(loadPresence: WorkspaceExplorerCoordinator.PresenceLoader? = nil,
          loadHistory: @escaping WorkspaceExplorerCoordinator.Loader,
@@ -18,10 +19,14 @@ struct WorkspaceExplorerWindowView: View {
          loadMoreSessions: @escaping WorkspaceExplorerCoordinator.MoreSessionsLoader,
          clearArchive: @escaping WorkspaceExplorerCoordinator.Clearer,
          liveStatusWorkspaces: @escaping WorkspaceExplorerLiveStatusMonitor.WorkspaceSource,
-         workspaceTabManagers: WorkspaceExplorerWorkspaceChangeMonitor.TabManagers? = nil) {
+         workspaceTabManagers: WorkspaceExplorerWorkspaceChangeMonitor.TabManagers? = nil,
+         liveNavigation: WorkspaceExplorerLiveNavigation? = nil) {
+        self.liveNavigation = liveNavigation
         _model = State(initialValue: WorkspaceExplorerCoordinator(
             loadHistory: loadHistory, loadPresence: loadPresence, reopenHistory: reopenHistory,
-            activateWorkspace: activateWorkspace, loadSessions: loadSessions,
+            activateWorkspace: activateWorkspace,
+            onOpenLive: { liveNavigation?.opened(workspaceID: $0, from: $1) },
+            loadSessions: loadSessions,
             loadEvidence: loadEvidence, loadMoreSessions: loadMoreSessions,
             clearArchive: clearArchive,
             liveStatusMonitor: WorkspaceExplorerLiveStatusMonitor(workspaces: liveStatusWorkspaces),
@@ -117,11 +122,14 @@ struct WorkspaceExplorerWindowView: View {
         }
         .frame(minWidth: 640, minHeight: 440)
         .background(Color(nsColor: .windowBackgroundColor))
+        .background(WindowAccessor { window in liveNavigation?.register(window: window) })
         .task {
             model.startWorkspaceChangeMonitoring()
             await model.load()
         }
-        .onDisappear { model.stopLiveStatusMonitoring() }
+        .onDisappear {
+            model.stopLiveStatusMonitoring()
+        }
         .task(id: model.historyID) {
             if let id = model.historyID { await model.loadHistorySessions(for: id) }
         }

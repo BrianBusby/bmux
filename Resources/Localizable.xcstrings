@@ -106904,6 +106904,23 @@
         }
       }
     },
+    "explorer.backToCollection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@に戻る"
+          }
+        }
+      }
+    },
     "explorer.allProjects": {
       "extractionState": "manual",
       "localizations": {
