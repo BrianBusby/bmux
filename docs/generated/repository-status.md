@@ -90,6 +90,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Sqlite Store | implemented |
 | Provenance Engine Turn Outcome Projection | implemented |
 | Provenance Engine Workspace Archive Contract | implemented |
+| Provenance Engine Workspace Archive Schema Repair | under observation |
 | Provenance Engine Workspace Archive Storage | implemented |
 | Provenance Engine Workspace Coding Agent Session Association | under observation |
 | Provenance Engine Workspace Display Current State | implemented |
@@ -137,6 +138,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Display Ticket Title Sidebar | implemented |
 | Workspace Explorer Close Recovery | under observation |
 | Workspace Explorer History Adapter | implemented |
+| Workspace Explorer Live Topology Refresh | under observation |
 | Workspace Explorer Native View | under observation |
 | Workspace Explorer Projection | implemented |
 | Workspace Explorer Staged Loading | under observation |

@@ -29,6 +29,15 @@ final class WorkspaceExplorerCoordinator {
     private var statusArrangement = WorkspaceExplorerStatusArrangement()
     private var liveStatusOverrides: [String: WorkspaceExplorerStatus] = [:]
     private let liveStatusMonitor: WorkspaceExplorerLiveStatusMonitor?
+    private let workspaceChangeMonitor: WorkspaceExplorerWorkspaceChangeMonitor?
+    private var topologyRefreshTask: Task<Void, Never>?
+    private(set) var pendingWorkspaceItems: [WorkspaceExplorerHistoryItem] = []
+    var visiblePendingWorkspaceItems: [WorkspaceExplorerHistoryItem] {
+        guard historyID == nil, scope.state != .closed, scope.period == .anyTime,
+              activeArrangement.filters.isEmpty,
+              collectionTarget == nil || collectionTarget == .all else { return [] }
+        return pendingWorkspaceItems
+    }
     var pendingStatusChangeCount: Int { statusArrangement.pendingWorkspaceIDs.count }
     private(set) var isLoading = false
     private(set) var loadFailed = false
@@ -63,6 +72,7 @@ final class WorkspaceExplorerCoordinator {
          loadMoreSessions: @escaping MoreSessionsLoader = { _, _ in throw CancellationError() },
          clearArchive: @escaping Clearer,
          liveStatusMonitor: WorkspaceExplorerLiveStatusMonitor? = nil,
+         workspaceChangeMonitor: WorkspaceExplorerWorkspaceChangeMonitor? = nil,
          feedbackDelay: @escaping FeedbackDelay = { try await Task.sleep(for: $0) }) {
         self.loadHistory = loadHistory
         self.loadPresence = loadPresence
@@ -74,6 +84,7 @@ final class WorkspaceExplorerCoordinator {
         self.clearArchive = clearArchive
         self.feedbackDelay = feedbackDelay
         self.liveStatusMonitor = liveStatusMonitor
+        self.workspaceChangeMonitor = workspaceChangeMonitor
     }
 
     var activeArrangement: WorkspaceExplorerViewArrangement {
@@ -157,6 +168,8 @@ final class WorkspaceExplorerCoordinator {
         }
         catalog = WorkspaceExplorerCatalog(result, liveStatuses: liveStatusOverrides,
             arrangedStatuses: arrangedStatuses())
+        let loadedIDs = Set(result.items.map(\.id))
+        pendingWorkspaceItems.removeAll { loadedIDs.contains($0.id) || !($0.isOpen) }
         liveStatusMonitor?.start { [weak self] id, status in
             self?.observeLiveStatus(id: id, status: status)
         }
@@ -182,6 +195,10 @@ final class WorkspaceExplorerCoordinator {
     }
 
     func observeLiveStatus(id: String, status: WorkspaceExplorerStatus) {
+        if let index = pendingWorkspaceItems.firstIndex(where: { $0.id == id }),
+           pendingWorkspaceItems[index].liveStatus != status {
+            pendingWorkspaceItems[index] = pendingWorkspaceItems[index].withLiveStatus(status)
+        }
         guard let lastLoadResult, lastLoadResult.items.contains(where: { $0.id == id && $0.isOpen }) else { return }
         guard statusArrangement.liveStatus(for: id) != status else { return }
         observedStatusIDs.insert(id)
@@ -201,7 +218,33 @@ final class WorkspaceExplorerCoordinator {
         }
     }
 
-    func stopLiveStatusMonitoring() { liveStatusMonitor?.stop() }
+    func startWorkspaceChangeMonitoring() {
+        workspaceChangeMonitor?.start { [weak self] in
+            guard let self else { return }
+            topologyRefreshTask?.cancel()
+            // TabManager publishes in willSet; read presence after its mutation returns.
+            topologyRefreshTask = Task { [weak self] in await self?.refreshForTopologyChange() }
+        }
+    }
+
+    func refreshForTopologyChange() async {
+        guard let loadPresence else { await load(); return }
+        let presence = loadPresence()
+        let knownIDs = Set((catalog?.items ?? []).map(\.id))
+        pendingWorkspaceItems = presence.items.filter { $0.isOpen && !knownIDs.contains($0.id) }
+        activeWorkspaceID = presence.activeWorkspaceID
+        liveStatusMonitor?.start { [weak self] id, status in
+            self?.observeLiveStatus(id: id, status: status)
+        }
+        await load()
+    }
+
+    func stopLiveStatusMonitoring() {
+        topologyRefreshTask?.cancel()
+        topologyRefreshTask = nil
+        workspaceChangeMonitor?.stop()
+        liveStatusMonitor?.stop()
+    }
 
     private func arrangedStatuses() -> [String: WorkspaceExplorerStatus] {
         guard let lastLoadResult else { return [:] }

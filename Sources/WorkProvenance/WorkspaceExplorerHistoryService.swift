@@ -10,6 +10,7 @@ final class WorkspaceExplorerHistoryService {
     typealias ReopenEligibility = @MainActor (
         UUID, Set<UUID>, ClosedItemHistoryRecord?
     ) -> WorkspaceExplorerReopenEligibility
+    typealias RecoverArchive = @MainActor () async throws -> Void
 
     struct LiveSnapshot {
         let workspaces: [WorkspaceExplorerLiveWorkspace]
@@ -27,8 +28,10 @@ final class WorkspaceExplorerHistoryService {
     private let activeWorkspaceID: ActiveWorkspaceID
     private let restoreRecords: RestoreRecords
     private let reopenEligibility: ReopenEligibility
+    private let recoverArchive: RecoverArchive?
 
     init(archiveService: WorkProvenanceWorkspaceArchiveService?,
+         recoverArchive: RecoverArchive? = nil,
          tabManagers: @escaping TabManagers,
          activeWorkspaceID: @escaping ActiveWorkspaceID,
          restoreRecords: @escaping RestoreRecords,
@@ -38,6 +41,7 @@ final class WorkspaceExplorerHistoryService {
         self.activeWorkspaceID = activeWorkspaceID
         self.restoreRecords = restoreRecords
         self.reopenEligibility = reopenEligibility
+        self.recoverArchive = recoverArchive
     }
 
     /// Enriched live facts and retained history complete after the immediate presence snapshot.
@@ -65,11 +69,14 @@ final class WorkspaceExplorerHistoryService {
             return ArchiveSnapshot(records: [], availability: .unavailable)
         }
         do {
+            try await recoverArchive?()
             return ArchiveSnapshot(records: try await archiveService.archivedWorkspaces(),
                 availability: .available)
         } catch is CancellationError {
             throw CancellationError()
         } catch {
+            sentryCaptureError("Workspace Explorer archive load failed", category: "provenance",
+                data: ["error_type": String(reflecting: type(of: error))])
             return ArchiveSnapshot(records: [], availability: .unavailable)
         }
     }

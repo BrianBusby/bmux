@@ -24,6 +24,26 @@ struct WorkspaceArchiveTests {
     }
 
     @Test
+    func schema27PreservesExistingArchivedWorkspace() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("pe-workspace-archive-upgrade-tests")
+            .appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("provenance.sqlite")
+        let older = try ProvenanceSQLiteRepository(url: url,
+            migrations: ProvenanceSQLiteRepository.migrations.filter { $0.version <= 26 })
+        let record = ProvenanceArchivedWorkspaceRecord(
+            id: "stable-a", title: "Maple Street Roof Inspection",
+            createdAt: nil, closedAt: Date(timeIntervalSince1970: 1_800_000_000),
+            lastActivityAt: nil, displayAtClose: nil, colorHex: nil, coverageCode: nil)
+        try await older.recordArchivedWorkspace(record)
+
+        let upgraded = try ProvenanceSQLiteRepository(url: url)
+        #expect(try await upgraded.archivedWorkspaces(.init()).records == [record])
+        #expect(try await upgraded.schemaVersion() == 27)
+    }
+
+    @Test
     func workspaceSessionsUseWorkEventsRatherThanMetadataRefreshForActivity() async throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("pe-workspace-sessions-tests")
@@ -104,7 +124,7 @@ struct WorkspaceArchiveTests {
         let reopenedClient = try ProvenanceSQLiteRepository(url: url)
         let afterRestore = try await reopenedClient.archivedWorkspaces(.init())
         #expect(afterRestore.records == [newer, older])
-        #expect(try await reopenedClient.schemaVersion() == 26)
+        #expect(try await reopenedClient.schemaVersion() == 27)
     }
 
     @Test

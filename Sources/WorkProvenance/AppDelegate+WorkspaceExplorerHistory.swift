@@ -3,14 +3,23 @@ import ProvenanceEngineContracts
 
 @MainActor
 extension AppDelegate {
+    func workspaceExplorerTabManagers() -> [TabManager] {
+        mainWindowContexts.values.map(\.tabManager)
+            + recoverableMainWindowRoutes().compactMap(\.tabManager)
+            + [tabManager].compactMap { $0 }
+    }
+
     private func workspaceExplorerHistoryService() -> WorkspaceExplorerHistoryService {
-        WorkspaceExplorerHistoryService(
-            archiveService: workProvenanceRuntime?.workspaceArchiveService,
-            tabManagers: {
-                self.mainWindowContexts.values.map(\.tabManager)
-                    + self.recoverableMainWindowRoutes().compactMap(\.tabManager)
-                    + [self.tabManager].compactMap { $0 }
-            },
+        let archiveService = workProvenanceRuntime?.workspaceArchiveService
+        let recovery = WorkspaceExplorerArchiveRecoveryService(
+            archiveService: archiveService,
+            savedRecords: { await ClosedItemHistoryStore.shared.recordsAfterPersistedLoad() },
+            waitForWrites: { await self.workProvenanceRuntime?.waitForArchiveTasks() },
+            liveWorkspaceIDs: { Set(self.workspaceExplorerTabManagers().flatMap(\.tabs).map(\.stableId)) })
+        return WorkspaceExplorerHistoryService(
+            archiveService: archiveService,
+            recoverArchive: { try await recovery.recover() },
+            tabManagers: { self.workspaceExplorerTabManagers() },
             activeWorkspaceID: { self.tabManager?.selectedWorkspace?.stableId.uuidString },
             restoreRecords: { ClosedItemHistoryStore.shared.workspaceRestoreRecordsByStableID() },
             reopenEligibility: { stableID, liveIDs, candidate in
@@ -21,14 +30,6 @@ extension AppDelegate {
     }
 
     func loadWorkspaceExplorerHistory() async throws -> WorkspaceExplorerHistoryLoadResult {
-        if let archiveService = workProvenanceRuntime?.workspaceArchiveService {
-            let savedRecords = await ClosedItemHistoryStore.shared.recordsAfterPersistedLoad()
-            await workProvenanceRuntime?.waitForArchiveTasks()
-            let liveIDs = Set(workspaceExplorerLiveWorkspaces().map(\.stableId))
-            let candidates = WorkspaceArchiveRecoveryCandidate.from(
-                records: savedRecords, excluding: liveIDs)
-            try await archiveService.recoverClosures(candidates)
-        }
         return try await workspaceExplorerHistoryService().load()
     }
 

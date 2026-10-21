@@ -20,7 +20,42 @@ Rules: root `AGENTS.md`, the bmux architecture, testing, and localization skills
 
 Recovery waits for current-run archive writes before replaying persisted close snapshots. The history detail labels snapshots with limited metadata. A forced termination before the restore snapshot reaches disk remains outside this recovery path.
 
-The `workspace-explorer-close-recovery` branch starts from merged PR #181. The close producer already saves a recently closed workspace or window snapshot, while its PE archive write runs in a background task; immediate app exit can interrupt that write. On Explorer load, bmux will await the restore store's persisted load, identify closed stable IDs missing from PE's public archive, and replay only those snapshots. Recovery uses the saved close time, title, and color; it does not invent a creation time or close-time project metadata. PE's clear marker prevents replay of records that the user explicitly cleared. Normal PE archive reads and writes stay in `WorkProvenanceWorkspaceArchiveService`; the restore store remains the owner of its persisted load lifecycle. Relevant rules are root `AGENTS.md`, `skills/bmux-architecture/SKILL.md`, `skills/bmux-testing/SKILL.md`, `skills/bmux-localization/SKILL.md`, and the continuous-code-quality skill. Patterns are `ClosedItemHistoryStore`, `WorkProvenanceRuntime+WorkspaceArchive`, and `WorkspaceExplorerHistoryService`. Test-only commit `90b6bd9cd` failed on the missing recovery API. The first implementation run passed three focused Swift Testing cases. A follow-up run includes persisted-load and current-run write ordering coverage. Project-doc validation, generation, and freshness checks passed; the new UI note has English and Japanese translations. Tagged build 829 succeeded on runtime commit `7f7e009fe`; the isolated app launched and its tag-bound CLI listed a selected workspace. User dogfood remains pending.
+During build 830 dogfood, an open Explorer did not subscribe to TabManager tab-list
+changes, so newly created workspaces could remain absent until an unrelated
+refresh. The coordinator now receives a collection-change signal and shows
+new workspaces as provisional, uncounted cards in the unfiltered overview or
+All workspaces view under an Any time Open/All scope while PE facts load. The monitor
+rebinds when main-window contexts change; project grouping and existing counts
+stay on the last verified catalog until enrichment completes. It does not poll.
+
+The same build showed `closed unknown` because its existing PE database had
+schema version 26 without the archive table. A read through PE's public client
+returned `no such table: provenance_archived_workspaces`; bmux did not inspect
+PE tables. PE version 27 adds an idempotent archive-table repair migration. It
+does not rewrite ledger evidence or rebuild the potentially large sessions index.
+An isolated version-26 fixture proves the missing-table failure before the fix
+and the repair afterward. The revised tagged build must be dogfooded before
+merging PR #182; build 830 remains in use and must not be replaced.
+
+The `workspace-explorer-close-recovery` branch starts from merged PR #181.
+`WorkspaceExplorerArchiveRecoveryService` owns the persisted-record wait,
+current-run archive-write wait, live-ID exclusion, and candidate reconciliation;
+AppDelegate supplies sources and `WorkspaceExplorerHistoryService` runs recovery
+concurrently with live fact loading. PE compares each saved close timestamp with
+the archived record and restores a newer snapshot after an interrupted re-close,
+while preserving richer earlier facts. Its clear marker still prevents replay of
+records that the user explicitly cleared. The restore store owns persistence;
+PE owns archive reads and writes through its public contract.
+
+The topology path observes the existing `WorkspacesModel.tabs` through Swift
+Observation. The Explorer monitor rebinds across main-window contexts. The coordinator owns pending-card visibility and status,
+so filtered, period, Closed, project, and history views do not show provisional
+cards or conflicting empty states. The new user-facing label has English and
+Japanese translations. The first recovery regression used a test-only commit;
+follow-up test-only commits cover topology changes, archive error fallback,
+and newer re-close snapshots. Build 830 exposed the missing archive table and
+prompted the schema-27 repair. A revised tagged build and user dogfood remain
+pending before merging PR #182.
 
 ## Dependency audit on `origin/main` (2026-10-20)
 

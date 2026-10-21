@@ -48,6 +48,15 @@ struct WorkspaceExplorerCoordinatorTests {
         var iterator = started.stream.makeAsyncIterator()
         _ = await iterator.next()
         #expect(model.pendingWorkspaceItems.map(\.id) == [second.stableID.uuidString])
+        #expect(model.visiblePendingWorkspaceItems.count == 1)
+        model.observeLiveStatus(id: second.stableID.uuidString, status: .running)
+        #expect(model.pendingWorkspaceItems.first?.liveStatus == .running)
+        model.scope.state = .closed
+        #expect(model.visiblePendingWorkspaceItems.isEmpty)
+        model.scope.state = .open
+        model.setFilter(.repository, value: .value("unknown"))
+        #expect(model.visiblePendingWorkspaceItems.isEmpty)
+        model.clearFilters()
         #expect(model.catalog?.items.map(\.id) == [first.stableID.uuidString])
         #expect(model.activeArrangement.groupBy == [.repository])
         release.continuation.yield()
@@ -58,14 +67,32 @@ struct WorkspaceExplorerCoordinatorTests {
     }
 
     @Test
-    func workspaceListMutationNotifiesExplorerWithoutPolling() {
+    func workspaceListMutationNotifiesExplorerWithoutPolling() async {
         let manager = TabManager()
         let monitor = WorkspaceExplorerWorkspaceChangeMonitor(tabManagers: { [manager] })
-        var changes = 0
-        monitor.start { changes += 1 }
-        #expect(changes == 0)
+        let changes = AsyncStream<Void>.makeStream()
+        monitor.start { changes.continuation.yield() }
         _ = manager.addWorkspace()
-        #expect(changes > 0)
+        var iterator = changes.stream.makeAsyncIterator()
+        #expect(await iterator.next() != nil)
+        monitor.stop()
+    }
+
+    @Test
+    func workspaceMonitorRebindsWhenWindowContextsChange() async {
+        let first = TabManager()
+        let second = TabManager()
+        var managers = [first]
+        let monitor = WorkspaceExplorerWorkspaceChangeMonitor(tabManagers: { managers })
+        let changes = AsyncStream<Void>.makeStream()
+        monitor.start { changes.continuation.yield() }
+        var iterator = changes.stream.makeAsyncIterator()
+        managers.append(second)
+        monitor.windowContextsChanged()
+        #expect(await iterator.next() != nil)
+        managers.removeLast()
+        monitor.windowContextsChanged()
+        #expect(await iterator.next() != nil)
         monitor.stop()
     }
 

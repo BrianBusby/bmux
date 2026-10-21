@@ -17,13 +17,17 @@ struct WorkspaceExplorerWindowView: View {
          loadEvidence: @escaping WorkspaceExplorerCoordinator.EvidenceLoader,
          loadMoreSessions: @escaping WorkspaceExplorerCoordinator.MoreSessionsLoader,
          clearArchive: @escaping WorkspaceExplorerCoordinator.Clearer,
-         liveStatusWorkspaces: @escaping WorkspaceExplorerLiveStatusMonitor.WorkspaceSource) {
+         liveStatusWorkspaces: @escaping WorkspaceExplorerLiveStatusMonitor.WorkspaceSource,
+         workspaceTabManagers: WorkspaceExplorerWorkspaceChangeMonitor.TabManagers? = nil) {
         _model = State(initialValue: WorkspaceExplorerCoordinator(
             loadHistory: loadHistory, loadPresence: loadPresence, reopenHistory: reopenHistory,
             activateWorkspace: activateWorkspace, loadSessions: loadSessions,
             loadEvidence: loadEvidence, loadMoreSessions: loadMoreSessions,
             clearArchive: clearArchive,
-            liveStatusMonitor: WorkspaceExplorerLiveStatusMonitor(workspaces: liveStatusWorkspaces)))
+            liveStatusMonitor: WorkspaceExplorerLiveStatusMonitor(workspaces: liveStatusWorkspaces),
+            workspaceChangeMonitor: workspaceTabManagers.map {
+                WorkspaceExplorerWorkspaceChangeMonitor(tabManagers: $0)
+            }))
     }
 
     var body: some View {
@@ -83,6 +87,9 @@ struct WorkspaceExplorerWindowView: View {
                             notice(String(localized: "explorer.partialActivity", defaultValue:
                                 "Some live activity could not be verified. Time filters may omit those workspaces."))
                         }
+                        WorkspaceExplorerPendingWorkspaceSection(items: model.visiblePendingWorkspaceItems,
+                            activeWorkspaceID: model.activeWorkspaceID,
+                            onOpen: { model.open($0) })
                         if let id = model.historyID {
                             history(id: id)
                         } else if let target = model.collectionTarget {
@@ -110,7 +117,10 @@ struct WorkspaceExplorerWindowView: View {
         }
         .frame(minWidth: 640, minHeight: 440)
         .background(Color(nsColor: .windowBackgroundColor))
-        .task { await model.load() }
+        .task {
+            model.startWorkspaceChangeMonitoring()
+            await model.load()
+        }
         .onDisappear { model.stopLiveStatusMonitoring() }
         .task(id: model.historyID) {
             if let id = model.historyID { await model.loadHistorySessions(for: id) }
@@ -246,7 +256,7 @@ struct WorkspaceExplorerWindowView: View {
                     groupSection(group, path: "pending/\(String(reflecting: group.key))", overview: false,
                         matchingCounts: [:])
                 }
-                if pending.visibleWorkspaceIDs.isEmpty { emptyCollection }
+                if pending.visibleWorkspaceIDs.isEmpty && model.visiblePendingWorkspaceItems.isEmpty { emptyCollection }
             }
         }
     }
@@ -279,7 +289,7 @@ struct WorkspaceExplorerWindowView: View {
                     onOpen: { model.showCollection(.unassigned) })
                     .frame(maxWidth: 300)
             }
-            if result.visibleProjectIDs.isEmpty &&
+            if model.visiblePendingWorkspaceItems.isEmpty && result.visibleProjectIDs.isEmpty &&
                 (hasProjectFilter || (unassigned?.visibleCounts.workspaces ?? 0) == 0) {
                 emptyCollection
             }
@@ -304,7 +314,7 @@ struct WorkspaceExplorerWindowView: View {
                     groupSection(group, path: "collection/\(String(reflecting: group.key))", overview: false,
                         matchingCounts: [:])
                 }
-                if result.visibleWorkspaceIDs.isEmpty { emptyCollection }
+                if result.visibleWorkspaceIDs.isEmpty && model.visiblePendingWorkspaceItems.isEmpty { emptyCollection }
             } else if model.catalog?.liveMetadataPending == true {
                 ContentUnavailableView(WorkspaceExplorerCountPresentation.loadingProjects,
                     systemImage: "clock")

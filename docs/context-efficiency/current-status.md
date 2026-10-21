@@ -37,7 +37,13 @@ Project and Workspace Explorer window with read-only retained session detail,
 explicit reopen, per-view arrangements, and a Debug history fixture. Its native
 view is under observation. The `workspace-explorer-staged-loading` slice is
 under observation: it publishes live cards immediately, then resolves retained
-history and closed counts without resetting view state. Broader meaningful
+history and closed counts without resetting view state.
+The current `workspace-explorer-close-recovery` branch also adds a tab-list
+invalidation path for an already open Explorer window. New live workspaces appear
+as uncounted provisional cards while PE facts load. PE schema version 27 repairs
+existing version-26 stores that lack the archive table; this was observed in
+the tagged build's retained-history error state. Both changes remain under
+dogfood observation. Broader meaningful
 activity derivation, complete project metadata, status-at-close capture,
 keyboard and reduced-motion dogfood, and a breadcrumb in
 the existing live workspace surface remain open. See
