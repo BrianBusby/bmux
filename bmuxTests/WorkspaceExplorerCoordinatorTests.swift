@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import ProvenanceEngineContracts
 import Testing
 
@@ -10,6 +11,19 @@ import Testing
 
 @Suite @MainActor
 struct WorkspaceExplorerCoordinatorTests {
+    @Test
+    func liveOriginInvalidatesTitlebarBeforeExplorerWindowRegisters() {
+        let navigation = WorkspaceExplorerLiveNavigation()
+        let changed = DispatchSemaphore(value: 0)
+        withObservationTracking {
+            _ = navigation.origin(for: nil)
+        } onChange: {
+            changed.signal()
+        }
+        navigation.opened(workspaceID: UUID(), from: "Unassigned workspaces")
+        #expect(changed.wait(timeout: .now()) == .success)
+    }
+
     @Test
     func openingLiveWorkspaceKeepsProjectRouteAndArrangement() async {
         let workspace = WorkspaceExplorerLiveWorkspace(stableID: UUID(), runtimeID: UUID(),
