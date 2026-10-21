@@ -12,7 +12,7 @@ public struct ProvenanceWorkspaceSessionPageResponse: Codable, Equatable, Sendab
     public let nextCursor: String?
     /// Unique linked sessions across all pages, when supplied by the reader.
     public let totalCount: Int?
-    /// True because PE only returns linked, observed lifecycle/prompt/turn evidence.
+    /// True because PE only returns linked, observed work evidence; capture may omit unobserved activity.
     public let partialCoverage: Bool
 
     /// Creates a page of linked sessions and its coverage signal.
