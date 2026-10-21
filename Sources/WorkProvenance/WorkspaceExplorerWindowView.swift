@@ -167,11 +167,11 @@ struct WorkspaceExplorerWindowView: View {
                 }
                 if let target = model.collectionTarget {
                     if model.historyID != nil {
-                        Button(collectionTitle(target)) { model.backFromHistory() }
+                        Button(target.title(projects: model.catalog?.projects ?? [])) { model.backFromHistory() }
                         Text("›").foregroundStyle(.secondary)
                     } else {
-                        Text(collectionTitle(target))
-                            .matchedGeometryEffect(id: "title:\(titleIdentity(target))", in: cardGeometry)
+                        Text(target.title(projects: model.catalog?.projects ?? []))
+                            .matchedGeometryEffect(id: "title:\(target.titleIdentity)", in: cardGeometry)
                     }
                 } else {
                     Text(String(localized: "explorer.title", defaultValue: "Explorer"))
@@ -463,22 +463,6 @@ struct WorkspaceExplorerWindowView: View {
             onCardFilter: { model.setFilter($0, value: $1, animated: !reduceMotion) },
             onToggle: { model.toggleCollapsed($0) },
             onFocus: { model.setFilter($0, value: $1, animated: !reduceMotion) })
-    }
-
-    private func titleIdentity(_ target: WorkspaceExplorerCollectionTarget) -> String {
-        switch target {
-        case .all: "all"
-        case .unassigned: "unassigned"
-        case .project(let id): id
-        }
-    }
-
-    private func collectionTitle(_ target: WorkspaceExplorerCollectionTarget) -> String {
-        switch target {
-        case .all: String(localized: "explorer.allWorkspaces", defaultValue: "All workspaces")
-        case .unassigned: String(localized: "explorer.unassigned", defaultValue: "Unassigned workspaces")
-        case .project(let id): model.catalog?.projects.first(where: { $0.id == id })?.name ?? id
-        }
     }
 
     private func history(id: String) -> some View {

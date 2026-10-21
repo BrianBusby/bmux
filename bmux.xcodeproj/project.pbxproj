@@ -2080,6 +2080,8 @@
 		E7A9EAA73EE74959BA212310 /* WorkspaceExplorerDogfoodWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21230F /* WorkspaceExplorerDogfoodWindow.swift */; };
 		9A443F000000000000000001 /* WorkspaceExplorerExitPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A443F000000000000000002 /* WorkspaceExplorerExitPresentation.swift */; };
 		9A443F000000000000000003 /* WorkspaceExplorerExitTransition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A443F000000000000000004 /* WorkspaceExplorerExitTransition.swift */; };
+				E71A17900000000000000043 /* WorkspaceExplorerExitTransitionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerExitTransitionTests.swift; sourceTree = "<group>"; };
+				E71A17900000000000000042 /* WorkspaceExplorerExitTransitionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000043 /* WorkspaceExplorerExitTransitionTests.swift */; };
 		F154B954ACD7F29D752F9679 /* WorkspaceExplorerGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B19842F052C74A908E3ED2B /* WorkspaceExplorerGroup.swift */; };
 		E71A17900000000000000034 /* WorkspaceExplorerGroupKey+Display.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000035 /* WorkspaceExplorerGroupKey+Display.swift */; };
 		E71A17900000000000000001 /* WorkspaceExplorerGroupKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000002 /* WorkspaceExplorerGroupKey.swift */; };
@@ -6461,6 +6463,7 @@
 				E7A9EAA73EE74959BA212005 /* WorkspaceExplorerHistoryAdapterTests.swift */,
 				4FE1124DEA99B38BEE81A68A /* WorkspaceExplorerProjectionTests.swift */,
 				E71A17900000000000000041 /* WorkspaceExplorerCoordinatorTests.swift */,
+				E71A17900000000000000043 /* WorkspaceExplorerExitTransitionTests.swift */,
 					642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */,
 					CE0E03140000000000000002 /* WorkProvenanceLinearTicketLinkResolverTests.swift */,
 					CE0E03190000000000000002 /* WorkProvenancePullRequestOwnerResolverDefaultTests.swift */,
@@ -9159,6 +9162,7 @@
 					CE0E01070000000000000001 /* WorkspaceDisplayCurrentStateSubscriptionTests.swift in Sources */,
 				72DB1838A0F1B710BFB45DC1 /* WorkspaceEnvironmentTests.swift in Sources */,
 				E71A17900000000000000040 /* WorkspaceExplorerCoordinatorTests.swift in Sources */,
+				E71A17900000000000000042 /* WorkspaceExplorerExitTransitionTests.swift in Sources */,
 				E7A9EAA73EE74959BA212006 /* WorkspaceExplorerHistoryAdapterTests.swift in Sources */,
 				8069B759A1281E3496FB25EE /* WorkspaceExplorerProjectionTests.swift in Sources */,
 				FBA900000000000000000003 /* WorkspaceFallbackContractTests.swift in Sources */,
