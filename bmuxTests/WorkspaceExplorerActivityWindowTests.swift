@@ -99,6 +99,42 @@ struct WorkspaceExplorerActivityWindowTests {
     }
 
     @Test
+    func hoveredCardStaysVisibleWhenItsActivityRefreshes() async {
+        let id = UUID()
+        let initialNow = Date(timeIntervalSince1970: 1_000_000)
+        var currentNow = initialNow
+        let clock = WorkspaceExplorerActivityClock(currentDate: { currentNow }, sleep: { _ in
+            throw CancellationError()
+        })
+        func historyItem(activity: Date) -> WorkspaceExplorerHistoryItem {
+            let live = WorkspaceExplorerLiveWorkspace(stableID: id, runtimeID: UUID(),
+                title: "Maple Street Roof Inspection", createdAt: initialNow,
+                colorHex: nil, display: nil, lastActivityAt: activity)
+            return WorkspaceExplorerHistoryAdapter().join(live: [live], archived: [],
+                eligibilityByID: [:])[0]
+        }
+        var loadedItem = historyItem(activity: initialNow)
+        let model = WorkspaceExplorerCoordinator(loadHistory: {
+            WorkspaceExplorerHistoryLoadResult(items: [loadedItem], archiveAvailability: .available,
+                partialLiveActivity: false)
+        }, reopenHistory: { _ in false }, activateWorkspace: { _ in },
+           loadSessions: { id in ProvenanceWorkspaceSessionPageResponse(
+               workspaceID: id.uuidString, sessions: [], nextCursor: nil) },
+           clearArchive: { }, activityClock: clock)
+        await model.load()
+        model.showCollection(.all)
+        model.setScopePeriod(.today)
+        model.activityArrangement.cardInteractionChanged(id: "workspace:\(id.uuidString)", active: true)
+        #expect(model.result()?.visibleWorkspaceIDs == [id.uuidString])
+
+        currentNow.addTimeInterval(60)
+        loadedItem = historyItem(activity: currentNow)
+        await model.load()
+        #expect(model.result()?.visibleWorkspaceIDs == [id.uuidString])
+        #expect(model.result()?.visibleCounts.workspaces == 1)
+    }
+
+    @Test
     func closingExplorerInvalidatesLateArchiveLoad() async {
         let initialNow = Date(timeIntervalSince1970: 1_000_000)
         var currentNow = initialNow
