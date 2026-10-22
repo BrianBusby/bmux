@@ -23,6 +23,9 @@ public final class WorkspaceExplorerActivityClock {
     private let calendarProvider: @MainActor () -> Calendar
     private let notificationCenter: NotificationCenter
     private var deadlineTask: Task<Void, Never>?
+    private var calendarChangeTask: Task<Void, Never>?
+    private var trackedPeriod: Period?
+    private var trackedActivityDates: [Date] = []
 
     /// Creates a clock. Inject time and the deadline sleeper for deterministic tests.
     /// - Parameters:
@@ -53,6 +56,21 @@ public final class WorkspaceExplorerActivityClock {
         deadlineTask?.cancel()
         now = currentDate()
         let calendar = calendar ?? calendarProvider()
+        trackedPeriod = period
+        trackedActivityDates = activityDates
+        if period == .today {
+            if calendarChangeTask == nil {
+                calendarChangeTask = Task { [weak self, notificationCenter] in
+                    for await _ in notificationCenter.notifications(named: .NSSystemTimeZoneDidChange) {
+                        guard !Task.isCancelled, let self, let period = self.trackedPeriod else { return }
+                        self.configure(period: period, activityDates: self.trackedActivityDates)
+                    }
+                }
+            }
+        } else {
+            calendarChangeTask?.cancel()
+            calendarChangeTask = nil
+        }
         guard let deadline = Self.nextDeadline(after: now, period: period,
                                                activityDates: activityDates, calendar: calendar) else {
             deadlineTask = nil
@@ -70,6 +88,10 @@ public final class WorkspaceExplorerActivityClock {
     public func stop() {
         deadlineTask?.cancel()
         deadlineTask = nil
+        calendarChangeTask?.cancel()
+        calendarChangeTask = nil
+        trackedPeriod = nil
+        trackedActivityDates = []
     }
 
     /// Returns the earliest instant when period membership may change.

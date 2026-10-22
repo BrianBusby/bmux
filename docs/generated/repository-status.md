@@ -154,6 +154,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Explorer Projection | implemented |
 | Workspace Explorer Staged Loading | under observation |
 | Workspace Explorer Status At Close | under observation |
+| Workspace Explorer Timezone Refresh | under observation |
 | Workspace Launch Canonical Mutation Path | planned |
 
 ## Execution Telemetry
