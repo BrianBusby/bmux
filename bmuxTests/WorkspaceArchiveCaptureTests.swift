@@ -58,7 +58,7 @@ struct WorkspaceArchiveCaptureTests {
             closedAt: closedAt, colorHex: nil))
         let recovery = WorkspaceExplorerArchiveRecoveryService(
             archiveService: archive,
-            savedCandidates: { try journal.candidates() },
+            savedCandidates: { try await journal.candidates() },
             waitForWrites: {}, liveWorkspaceIDs: { [] }
         )
 
@@ -69,14 +69,14 @@ struct WorkspaceArchiveCaptureTests {
         try await archive.clearExplorerHistory(at: clearedAt)
         try journal.record(.init(stableID: laterID, title: "Cedar Street Roof Inspection",
             closedAt: clearedAt.addingTimeInterval(1), colorHex: nil))
-        try journal.clear(through: clearedAt)
-        #expect(try journal.candidates().map(\.stableID) == [laterID])
+        try await journal.clear(through: clearedAt)
+        #expect(try await journal.candidates().map(\.stableID) == [laterID])
         #expect(try await recovery.recover().map(\.id) == [laterID.uuidString])
     }
 
     @MainActor
     @Test
-    func closeJournalStillRecordsWhenArchiveServiceDidNotStart() throws {
+    func closeJournalStillRecordsWhenArchiveServiceDidNotStart() async throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-close-without-pe-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -92,12 +92,12 @@ struct WorkspaceArchiveCaptureTests {
         let journal = WorkspaceExplorerCloseJournal(
             databaseURL: directory.appendingPathComponent("provenance.sqlite")
         )
-        #expect(try journal.candidates().map(\.stableID) == [workspace.stableId])
+        #expect(try await journal.candidates().map(\.stableID) == [workspace.stableId])
     }
 
     @MainActor
     @Test
-    func olderCloseCannotReplaceNewerJournalIdentity() throws {
+    func olderCloseCannotReplaceNewerJournalIdentity() async throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-close-order-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -111,7 +111,7 @@ struct WorkspaceArchiveCaptureTests {
         try journal.record(.init(stableID: stableID, title: "Maple Street Roof Inspection",
             closedAt: newer.addingTimeInterval(-100), colorHex: nil))
 
-        let retained = try #require(journal.candidates().first)
+        let retained = try #require(await journal.candidates().first)
         #expect(retained.title == "Cedar Street Roof Inspection")
         #expect(retained.closedAt == newer)
     }

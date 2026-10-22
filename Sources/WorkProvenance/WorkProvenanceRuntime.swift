@@ -33,9 +33,7 @@ final class WorkProvenanceRuntime {
 
     private(set) var lifecycleState: WorkProvenanceRuntimeLifecycleState
     let effectiveDatabaseURL: URL?
-    var workspaceCloseJournal: WorkspaceExplorerCloseJournal? {
-        effectiveDatabaseURL.map(WorkspaceExplorerCloseJournal.init(databaseURL:))
-    }
+    let workspaceCloseJournal: WorkspaceExplorerCloseJournal?
     let startupErrorDescription: String?
     let isEnabled: Bool
 
@@ -84,6 +82,7 @@ final class WorkProvenanceRuntime {
         self.workspaceArchiveService = workspaceArchiveService
         self.codingAgentEvidenceRecorder = codingAgentEvidenceRecorder
         self.effectiveDatabaseURL = effectiveDatabaseURL
+        self.workspaceCloseJournal = effectiveDatabaseURL.map(WorkspaceExplorerCloseJournal.init(databaseURL:))
         self.startupErrorDescription = startupErrorDescription
         self.isEnabled = observationService != nil
         self.lifecycleState = initialLifecycleState

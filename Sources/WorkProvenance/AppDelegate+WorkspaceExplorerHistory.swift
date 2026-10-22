@@ -19,7 +19,7 @@ extension AppDelegate {
                     let saved = WorkspaceArchiveRecoveryCandidate.from(
                         records: await ClosedItemHistoryStore.shared.recordsAfterPersistedLoad(),
                         excluding: [])
-                    let journal = try self.workProvenanceRuntime?.workspaceCloseJournal?.candidates() ?? []
+                    let journal = try await self.workProvenanceRuntime?.workspaceCloseJournal?.candidates() ?? []
                     return WorkspaceArchiveRecoveryCandidate.latest(saved + journal)
                 },
                 waitForWrites: { await self.workProvenanceRuntime?.waitForArchiveTasks() },
@@ -63,7 +63,7 @@ extension AppDelegate {
     func clearWorkspaceExplorerHistory() async throws {
         let clearedAt = Date()
         try await workspaceExplorerHistoryService().clearHistory(at: clearedAt)
-        try workProvenanceRuntime?.workspaceCloseJournal?.clear(through: clearedAt)
+        try await workProvenanceRuntime?.workspaceCloseJournal?.clear(through: clearedAt)
     }
 
     func workspaceExplorerLiveWorkspaces() -> [Workspace] {

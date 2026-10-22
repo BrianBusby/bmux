@@ -136,7 +136,10 @@ coalesces journal entries with persisted restore snapshots and lets PE reconcile
 them through its public archive contract. Clear Explorer history clears PE first,
 then removes journal entries at or before the same clear timestamp. A later close
 is preserved. The journal does not replace full restore snapshots or promise
-terminal scrollback capture. Rules: root `AGENTS.md`, continuous-code-quality,
+terminal scrollback capture. A journal actor owns the persistence source; its
+durability-critical close write is synchronous and serialized with actor-owned
+recovery reads and clear operations, which run off the main actor. Rules: root
+`AGENTS.md`, continuous-code-quality,
 bmux architecture/testing/dev-workflow, and the project-state rule. Patterns:
 `ClosedItemHistoryStore`, `WorkspaceExplorerArchiveRecoveryService`, and
 `WorkProvenanceWorkspaceArchiveService`. Focused tests, tagged build, real
