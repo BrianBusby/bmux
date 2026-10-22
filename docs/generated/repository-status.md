@@ -136,6 +136,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Display Ticket Enrichment Independent | under observation |
 | Workspace Display Ticket Link Facts | implemented |
 | Workspace Display Ticket Title Sidebar | implemented |
+| Workspace Explorer Activity Window Refresh | under observation |
 | Workspace Explorer Archive Recovery Actor | under observation |
 | Workspace Explorer Card Hit Target | under observation |
 | Workspace Explorer Close Recovery | under observation |

@@ -67,6 +67,7 @@ local_capabilities:
   # Page state belongs to BmuxWorkspaces; Explorer navigation remains in the app coordinator.
   workspace_explorer_history_page_lifecycle: under_observation
   workspace_explorer_card_hit_target: under_observation
+  workspace_explorer_activity_window_refresh: under_observation
   provenance_engine_workspace_archive_schema_repair: under_observation
   provenance_engine_schema_identity_validation: implemented
   provenance_engine_producer_neutral_lifecycle_recording: implemented
