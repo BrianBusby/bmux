@@ -13,9 +13,9 @@ public import ProvenanceEngineContracts
 @MainActor @Observable
 public final class WorkspaceExplorerSessionPageStore {
     /// Loads the first page for a stable workspace ID.
-    public typealias FirstLoader = @MainActor (UUID) async throws -> ProvenanceWorkspaceSessionPageResponse
+    public typealias FirstLoader = @MainActor @Sendable (UUID) async throws -> ProvenanceWorkspaceSessionPageResponse
     /// Loads a continuation page for a workspace ID and opaque cursor.
-    public typealias NextLoader = @MainActor (UUID, String) async throws -> ProvenanceWorkspaceSessionPageResponse
+    public typealias NextLoader = @MainActor @Sendable (UUID, String) async throws -> ProvenanceWorkspaceSessionPageResponse
 
     private let loadFirst: FirstLoader
     private let loadNext: NextLoader

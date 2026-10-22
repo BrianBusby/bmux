@@ -11,8 +11,8 @@ final class WorkspaceExplorerCoordinator {
     typealias Reopener = @MainActor (UUID) -> Bool
     typealias Activator = @MainActor (UUID) -> Void
     typealias LiveOpenHandler = @MainActor (WorkspaceExplorerHistoryItem, WorkspaceExplorerCollectionTarget?, String) -> Void
-    typealias SessionLoader = @MainActor (UUID) async throws -> ProvenanceWorkspaceSessionPageResponse
-    typealias MoreSessionsLoader = @MainActor (UUID, String) async throws -> ProvenanceWorkspaceSessionPageResponse
+    typealias SessionLoader = WorkspaceExplorerSessionPageStore.FirstLoader
+    typealias MoreSessionsLoader = WorkspaceExplorerSessionPageStore.NextLoader
     typealias EvidenceLoader = @MainActor (String) async throws -> (
         ProvenanceFactualSessionProjectionResponse, ProvenanceSessionOutcomeResponse
     )
