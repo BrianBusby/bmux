@@ -13,6 +13,36 @@ import Testing
 struct WorkspaceArchiveCaptureTests {
     @MainActor
     @Test
+    func closeWritesRecoveryIdentityBeforeAsynchronousArchiveCompletes() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-close-identity-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let databaseURL = directory.appendingPathComponent("provenance.sqlite")
+        let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
+        let runtime = WorkProvenanceRuntime(
+            observationService: nil,
+            workspaceArchiveService: WorkProvenanceWorkspaceArchiveService(client: client),
+            effectiveDatabaseURL: databaseURL,
+            initialLifecycleState: .ready
+        )
+        let manager = TabManager()
+        let workspace = try #require(manager.selectedWorkspace)
+        workspace.customTitle = "Maple Street Roof Inspection"
+        let closedAt = Date(timeIntervalSince1970: 1_800_000_000)
+
+        runtime.recordWorkspaceClosure(workspace, at: closedAt)
+
+        let recordURL = directory.appendingPathComponent("explorer-close-journal", isDirectory: true)
+            .appendingPathComponent("\(workspace.stableId.uuidString).json")
+        let data = try Data(contentsOf: recordURL)
+        let record = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        #expect(record["stableID"] as? String == workspace.stableId.uuidString)
+        #expect(record["title"] as? String == "Maple Street Roof Inspection")
+        #expect(record["closedAt"] as? TimeInterval == closedAt.timeIntervalSince1970)
+    }
+
+    @MainActor
+    @Test
     func closedWindowArchivesEveryWorkspaceUnlessHistoryIsSuppressed() async throws {
         let originalAppDelegate = AppDelegate.shared
         let appDelegate = AppDelegate()
