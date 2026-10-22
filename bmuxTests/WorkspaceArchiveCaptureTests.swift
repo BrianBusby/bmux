@@ -118,6 +118,36 @@ struct WorkspaceArchiveCaptureTests {
 
     @MainActor
     @Test
+    func clearingOldJournalEntriesPreservesConcurrentNewerClose() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-close-clear-race-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let journal = WorkspaceExplorerCloseJournal(
+            databaseURL: directory.appendingPathComponent("provenance.sqlite")
+        )
+        let clearedAt = Date(timeIntervalSince1970: 1_800_000_000)
+        for _ in 0..<20 {
+            let stableID = UUID()
+            try journal.record(.init(stableID: stableID, title: "Earlier close",
+                closedAt: clearedAt.addingTimeInterval(-1), colorHex: nil))
+            let newer = WorkspaceArchiveRecoveryCandidate(
+                stableID: stableID, title: "Later close",
+                closedAt: clearedAt.addingTimeInterval(1), colorHex: nil
+            )
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask { try await journal.clear(through: clearedAt) }
+                group.addTask { try journal.record(newer) }
+                try await group.waitForAll()
+            }
+            let retained = try #require(await journal.candidates()
+                .first(where: { $0.stableID == stableID }))
+            #expect(retained.title == "Later close")
+            #expect(retained.closedAt == newer.closedAt)
+        }
+    }
+
+    @MainActor
+    @Test
     func closedWindowArchivesEveryWorkspaceUnlessHistoryIsSuppressed() async throws {
         let originalAppDelegate = AppDelegate.shared
         let appDelegate = AppDelegate()
