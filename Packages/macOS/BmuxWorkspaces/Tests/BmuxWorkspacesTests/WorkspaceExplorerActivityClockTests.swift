@@ -26,4 +26,46 @@ struct WorkspaceExplorerActivityClockTests {
         #expect(WorkspaceExplorerActivityClock.nextDeadline(
             after: now, period: .today, activityDates: [], calendar: calendar) == nextMidnight)
     }
+
+    @Test
+    func todayReschedulesWhenSystemTimeZoneChanges() async throws {
+        let now = Date(timeIntervalSince1970: 1_767_268_800) // 2026-01-01 12:00 UTC
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+        let notifications = NotificationCenter()
+        let scheduled = AsyncStream<Duration>.makeStream()
+        let release = AsyncStream<Void>.makeStream()
+        let clock = WorkspaceExplorerActivityClock(currentDate: { now }, sleep: { duration in
+            scheduled.continuation.yield(duration)
+            var iterator = release.stream.makeAsyncIterator()
+            guard await iterator.next() != nil else { throw CancellationError() }
+        }, calendarProvider: { calendar }, notificationCenter: notifications)
+        clock.configure(period: .today, activityDates: [])
+        let first = try #require(await nextDuration(scheduled.stream))
+        #expect(first == .seconds(12 * 60 * 60))
+
+        calendar.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
+        notifications.post(name: .NSSystemTimeZoneDidChange, object: nil)
+        let updated = try #require(await nextDuration(scheduled.stream))
+        #expect(updated == .seconds(20 * 60 * 60))
+        clock.stop()
+        release.continuation.finish()
+    }
+
+    private func nextDuration(_ stream: AsyncStream<Duration>) async -> Duration? {
+        await withTaskGroup(of: Duration?.self) { group in
+            group.addTask {
+                var iterator = stream.makeAsyncIterator()
+                return await iterator.next()
+            }
+            group.addTask {
+                // A bounded test failure deadline; correctness waits on the scheduling signal.
+                try? await ContinuousClock().sleep(for: .seconds(5))
+                return nil
+            }
+            let value = await group.next() ?? nil
+            group.cancelAll()
+            return value
+        }
+    }
 }
