@@ -1182,6 +1182,7 @@ jobs:
             BmuxGit
             BmuxSettings
             BmuxSettingsUI
+            BmuxWorkspaces
             BmuxTerminal
             BmuxTerminalCore
             BmuxUpdater
