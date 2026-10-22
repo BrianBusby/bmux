@@ -167,9 +167,9 @@ final class WorkspaceExplorerHistoryService {
         return try await archiveService.sessionEvidence(sessionID: sessionID)
     }
 
-    func clearHistory() async throws {
+    func clearHistory(at timestamp: Date = Date()) async throws {
         guard let archiveService else { throw WorkspaceExplorerHistoryLoadError.archiveUnavailable }
-        try await archiveService.clearExplorerHistory()
+        try await archiveService.clearExplorerHistory(at: timestamp)
     }
 }
 

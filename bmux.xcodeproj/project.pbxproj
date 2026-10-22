@@ -2069,6 +2069,7 @@
 		E8E201010000000000000008 /* WorkspaceExplorerArchiveRecoveryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8E201010000000000000007 /* WorkspaceExplorerArchiveRecoveryService.swift */; };
 		E71A17900000000000000030 /* WorkspaceExplorerArrangementBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000031 /* WorkspaceExplorerArrangementBar.swift */; };
 				E71A17900000000000000010 /* WorkspaceExplorerCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000011 /* WorkspaceExplorerCatalog.swift */; };
+		C197A001C197A001C197A001 /* WorkspaceExplorerCloseJournal.swift in Sources */ = {isa = PBXBuildFile; fileRef = C197A002C197A002C197A002 /* WorkspaceExplorerCloseJournal.swift */; };
 		852988320891EF575F713B6E /* WorkspaceExplorerCollectionTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91677B4922B4D293ACAB5E79 /* WorkspaceExplorerCollectionTarget.swift */; };
 		E7A9EAA73EE74959BA212510 /* WorkspaceExplorerCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21250F /* WorkspaceExplorerCommands.swift */; };
 				E71A17900000000000000012 /* WorkspaceExplorerCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000013 /* WorkspaceExplorerCoordinator.swift */; };
@@ -4222,6 +4223,7 @@
 		E8E201010000000000000007 /* WorkspaceExplorerArchiveRecoveryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerArchiveRecoveryService.swift; sourceTree = "<group>"; };
 		E71A17900000000000000031 /* WorkspaceExplorerArrangementBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceExplorerArrangementBar.swift"; sourceTree = "<group>"; };
 				E71A17900000000000000011 /* WorkspaceExplorerCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCatalog.swift; sourceTree = "<group>"; };
+		C197A002C197A002C197A002 /* WorkspaceExplorerCloseJournal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCloseJournal.swift; sourceTree = "<group>"; };
 		91677B4922B4D293ACAB5E79 /* WorkspaceExplorerCollectionTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCollectionTarget.swift; sourceTree = "<group>"; };
 		E7A9EAA73EE74959BA21250F /* WorkspaceExplorerCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCommands.swift; sourceTree = "<group>"; };
 				E71A17900000000000000013 /* WorkspaceExplorerCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCoordinator.swift; sourceTree = "<group>"; };
@@ -6556,6 +6558,7 @@
 				3D7DBCA37AB70E107E41EE5E /* WorkProvenanceObservationService.swift */,
 				E7A9EAA73EE74959BA212002 /* WorkProvenanceWorkspaceArchiveService.swift */,
 				C182A002C182A002C182A002 /* WorkspaceArchiveRecoveryCandidate.swift */,
+				C197A002C197A002C197A002 /* WorkspaceExplorerCloseJournal.swift */,
 				E7A9EAA73EE74959BA212003 /* WorkspaceExplorerHistoryAdapter.swift */,
 				A9C13DB01A1A56779EB92DA1 /* WorkspaceExplorerScope.swift */,
 				7A75009717859B41DB480B6F /* WorkspaceExplorerStatus.swift */,
@@ -8246,6 +8249,7 @@
 				E8E201010000000000000008 /* WorkspaceExplorerArchiveRecoveryService.swift in Sources */,
 				E71A17900000000000000030 /* WorkspaceExplorerArrangementBar.swift in Sources */,
 				E71A17900000000000000010 /* WorkspaceExplorerCatalog.swift in Sources */,
+				C197A001C197A001C197A001 /* WorkspaceExplorerCloseJournal.swift in Sources */,
 				852988320891EF575F713B6E /* WorkspaceExplorerCollectionTarget.swift in Sources */,
 				E7A9EAA73EE74959BA212510 /* WorkspaceExplorerCommands.swift in Sources */,
 				E71A17900000000000000012 /* WorkspaceExplorerCoordinator.swift in Sources */,

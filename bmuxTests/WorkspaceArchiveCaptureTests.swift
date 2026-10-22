@@ -43,6 +43,81 @@ struct WorkspaceArchiveCaptureTests {
 
     @MainActor
     @Test
+    func journalRecoversWithoutRestoreSnapshotAndClearKeepsLaterCloses() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-close-journal-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let databaseURL = directory.appendingPathComponent("provenance.sqlite")
+        let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
+        let archive = WorkProvenanceWorkspaceArchiveService(client: client)
+        let journal = WorkspaceExplorerCloseJournal(databaseURL: databaseURL)
+        let firstID = UUID()
+        let laterID = UUID()
+        let closedAt = Date(timeIntervalSince1970: 1_800_000_000)
+        try journal.record(.init(stableID: firstID, title: "Maple Street Roof Inspection",
+            closedAt: closedAt, colorHex: nil))
+        let recovery = WorkspaceExplorerArchiveRecoveryService(
+            archiveService: archive,
+            savedCandidates: { try journal.candidates() },
+            waitForWrites: {}, liveWorkspaceIDs: { [] }
+        )
+
+        let recovered = try await recovery.recover()
+        #expect(recovered.map(\.id) == [firstID.uuidString])
+
+        let clearedAt = closedAt.addingTimeInterval(1)
+        try await archive.clearExplorerHistory(at: clearedAt)
+        try journal.record(.init(stableID: laterID, title: "Cedar Street Roof Inspection",
+            closedAt: clearedAt.addingTimeInterval(1), colorHex: nil))
+        try journal.clear(through: clearedAt)
+        #expect(try journal.candidates().map(\.stableID) == [laterID])
+        #expect(try await recovery.recover().map(\.id) == [laterID.uuidString])
+    }
+
+    @MainActor
+    @Test
+    func closeJournalStillRecordsWhenArchiveServiceDidNotStart() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-close-without-pe-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let runtime = WorkProvenanceRuntime(
+            observationService: nil,
+            effectiveDatabaseURL: directory.appendingPathComponent("provenance.sqlite"),
+            initialLifecycleState: .ready
+        )
+        let workspace = try #require(TabManager().selectedWorkspace)
+
+        runtime.recordWorkspaceClosure(workspace)
+
+        let journal = WorkspaceExplorerCloseJournal(
+            databaseURL: directory.appendingPathComponent("provenance.sqlite")
+        )
+        #expect(try journal.candidates().map(\.stableID) == [workspace.stableId])
+    }
+
+    @MainActor
+    @Test
+    func olderCloseCannotReplaceNewerJournalIdentity() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-close-order-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let journal = WorkspaceExplorerCloseJournal(
+            databaseURL: directory.appendingPathComponent("provenance.sqlite")
+        )
+        let stableID = UUID()
+        let newer = Date(timeIntervalSince1970: 1_800_000_100)
+        try journal.record(.init(stableID: stableID, title: "Cedar Street Roof Inspection",
+            closedAt: newer, colorHex: nil))
+        try journal.record(.init(stableID: stableID, title: "Maple Street Roof Inspection",
+            closedAt: newer.addingTimeInterval(-100), colorHex: nil))
+
+        let retained = try #require(journal.candidates().first)
+        #expect(retained.title == "Cedar Street Roof Inspection")
+        #expect(retained.closedAt == newer)
+    }
+
+    @MainActor
+    @Test
     func closedWindowArchivesEveryWorkspaceUnlessHistoryIsSuppressed() async throws {
         let originalAppDelegate = AppDelegate.shared
         let appDelegate = AppDelegate()

@@ -33,6 +33,9 @@ final class WorkProvenanceRuntime {
 
     private(set) var lifecycleState: WorkProvenanceRuntimeLifecycleState
     let effectiveDatabaseURL: URL?
+    var workspaceCloseJournal: WorkspaceExplorerCloseJournal? {
+        effectiveDatabaseURL.map(WorkspaceExplorerCloseJournal.init(databaseURL:))
+    }
     let startupErrorDescription: String?
     let isEnabled: Bool
 
