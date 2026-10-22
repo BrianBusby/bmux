@@ -106057,6 +106057,22 @@
         "ja": { "stringUnit": { "state": "translated", "value": "プロジェクト情報を読み込み中…" } }
       }
     },
+    "explorer.activityWindowChanged": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activity window changed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アクティビティの期間が変わりました"
+          }
+        }
+      }
+    },
     "explorer.activityLoading": {
       "extractionState": "manual",
       "localizations": {

@@ -9,7 +9,7 @@ struct WorkspaceExplorerHistoryView: View {
     let period: WorkspaceExplorerScope.Period
     let now: Date
     let loadFailed: Bool
-    let evidenceBySessionID: [String: WorkspaceExplorerCoordinator.SessionEvidence]
+    let evidenceBySessionID: [String: WorkspaceExplorerSessionEvidence]
     let evidenceLoadingIDs: Set<String>
     let evidenceFailedIDs: Set<String>
     let onOpenLive: () -> Void

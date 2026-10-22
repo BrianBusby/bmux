@@ -55,7 +55,7 @@ struct WorkspaceExplorerWindowView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        if let title = outsideActiveWorkspaceTitle {
+                        if let title = WorkspaceExplorerActiveWorkspaceVisibility.outsideTitle(model: model) {
                             notice(String(format: String(localized: "explorer.activeOutsideView", defaultValue:
                                 "Active workspace “%@” is outside the current scope or filters. It stays active."),
                                 title))
@@ -66,6 +66,17 @@ struct WorkspaceExplorerWindowView: View {
                                     "%d workspaces changed status"), model.pendingStatusChangeCount))
                                 Button(String(localized: "explorer.updateArrangement", defaultValue:
                                     "Update arrangement")) { model.applyPendingStatusArrangement() }
+                            }
+                            .font(.system(size: 12)).padding(10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                        }
+                        if model.activityArrangement.hasPendingUpdate {
+                            HStack {
+                                Text(String(localized: "explorer.activityWindowChanged", defaultValue:
+                                    "Activity window changed"))
+                                Button(String(localized: "explorer.updateArrangement", defaultValue:
+                                    "Update arrangement")) { model.activityArrangement.applyPending() }
                             }
                             .font(.system(size: 12)).padding(10)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -143,26 +154,6 @@ struct WorkspaceExplorerWindowView: View {
             Text(String(localized: "explorer.clearConfirmMessage", defaultValue:
                 "Archived Explorer cards and snapshots will be removed. Provenance session evidence remains."))
         }
-    }
-
-    private var outsideActiveWorkspaceTitle: String? {
-        guard let catalog = model.catalog, let activeID = model.activeWorkspaceID,
-              !catalog.liveMetadataPending,
-              let item = catalog.items.first(where: { $0.id == activeID }),
-              let result = model.result() else { return nil }
-        if model.collectionTarget != nil {
-            return result.visibleWorkspaceIDs.contains(activeID) ? nil : item.title
-        }
-        guard let workspace = catalog.workspaces.first(where: { $0.id == activeID }) else { return nil }
-        let filters = model.presentedFilters
-        let projectFiltersPresent = filters[.projectOwner] != nil || filters[.projectStatus] != nil
-        let projectVisible = workspace.projectIDs.isEmpty ? !projectFiltersPresent :
-            workspace.projectIDs.contains { result.visibleProjectIDs.contains($0) }
-        let workspaceFilters = filters.filter { $0.key == .repository || $0.key == .bmuxStatus }
-        let workspaceVisible = model.projection?.collection(target: .all, scope: model.presentedScope,
-            groupBy: [], filters: workspaceFilters, now: model.activityClock.now, calendar: .current)
-            .visibleWorkspaceIDs.contains(activeID) == true
-        return projectVisible && workspaceVisible ? nil : item.title
     }
 
     private var header: some View {
@@ -261,7 +252,7 @@ struct WorkspaceExplorerWindowView: View {
                 ContentUnavailableView(WorkspaceExplorerCountPresentation.loadingProjects,
                     systemImage: "clock")
             } else if let pending = model.projection?.collection(target: .all, scope: model.scope,
-                      groupBy: [], filters: [:], now: model.activityClock.now, calendar: .current) {
+                      groupBy: [], filters: [:], now: model.activityArrangement.now, calendar: model.activityArrangement.calendar) {
                 ForEach(pending.groups, id: \.identity) { group in
                     groupSection(group, path: "pending/\(group.identity)", overview: false,
                         matchingCounts: [:])
@@ -281,21 +272,22 @@ struct WorkspaceExplorerWindowView: View {
             let unassignedFilters = overviewFilters.filter { $0.key == .repository || $0.key == .bmuxStatus }
             let hasProjectFilter = overviewFilters[.projectOwner] != nil || overviewFilters[.projectStatus] != nil
             let unassigned = model.projection?.collection(target: .unassigned, scope: model.presentedScope,
-                groupBy: [], filters: unassignedFilters, now: model.activityClock.now, calendar: .current)
+                groupBy: [], filters: unassignedFilters, now: model.activityArrangement.now, calendar: model.activityArrangement.calendar)
             if !hasProjectFilter, let unassigned, unassigned.visibleCounts.workspaces > 0 {
                 let openTotal = model.projection?.collection(target: .unassigned,
                     scope: WorkspaceExplorerScope(), groupBy: [], filters: [:],
-                    now: model.activityClock.now, calendar: .current).counts.open ?? 0
+                    now: model.activityArrangement.now, calendar: model.activityArrangement.calendar).counts.open ?? 0
                 WorkspaceExplorerProjectCard(project: nil, counts: unassigned.counts,
                     workspaces: (model.catalog?.workspaces ?? []).filter { workspace in
                         workspace.projectIDs.isEmpty && model.presentedScope.includes(workspace,
-                            now: model.activityClock.now, calendar: .current)
+                            now: model.activityArrangement.now, calendar: model.activityArrangement.calendar)
                     },
                     scope: model.presentedScope, archiveAvailability: model.catalog?.archiveAvailability ?? .unavailable,
                     openTotal: openTotal,
                     matchingCount: overviewFilters.isEmpty ? nil : unassigned.visibleCounts.workspaces,
                     isFocused: false, titleGeometry: cardGeometry,
-                    onOpen: { model.showCollection(.unassigned) })
+                    onOpen: { model.showCollection(.unassigned) },
+                    onInteractionChanged: { model.activityArrangement.cardInteractionChanged(id: "unassigned", active: $0) })
                     .frame(maxWidth: 300)
                     .opacity(model.exitsUnassigned ? 0 : 1)
                     .allowsHitTesting(!model.exitsUnassigned)
@@ -399,14 +391,14 @@ struct WorkspaceExplorerWindowView: View {
         guard let projection = model.projection else { return 0 }
         return projection.collection(target: model.collectionTarget ?? .all,
             scope: WorkspaceExplorerScope(state: .all, period: .anyTime),
-            groupBy: [], filters: [:], now: model.activityClock.now, calendar: .current).counts.workspaces
+            groupBy: [], filters: [:], now: model.activityArrangement.now, calendar: model.activityArrangement.calendar).counts.workspaces
     }
 
     private var closedWorkspaceCount: Int {
         guard let projection = model.projection else { return 0 }
         return projection.collection(target: model.collectionTarget ?? .all,
             scope: WorkspaceExplorerScope(state: .closed, period: .anyTime),
-            groupBy: [], filters: [:], now: model.activityClock.now, calendar: .current).counts.closed
+            groupBy: [], filters: [:], now: model.activityArrangement.now, calendar: model.activityArrangement.calendar).counts.closed
     }
 
     private var arrangementBar: some View {
@@ -438,14 +430,14 @@ struct WorkspaceExplorerWindowView: View {
         let items = model.catalog?.items ?? []
         let counts = Dictionary(projects.map { project in
             let count = model.projection?.collection(target: .project(project.id), scope: model.presentedScope,
-                groupBy: [], filters: [:], now: model.activityClock.now, calendar: .current).counts ??
+                groupBy: [], filters: [:], now: model.activityArrangement.now, calendar: model.activityArrangement.calendar).counts ??
                 WorkspaceExplorerCounts([], closedKnown: false)
             return (project.id, count)
         }, uniquingKeysWith: { first, _ in first })
         let openTotals = Dictionary(projects.map { project in
             let total = model.projection?.collection(target: .project(project.id),
                 scope: WorkspaceExplorerScope(), groupBy: [], filters: [:],
-                now: model.activityClock.now, calendar: .current).counts.open ?? 0
+                now: model.activityArrangement.now, calendar: model.activityArrangement.calendar).counts.open ?? 0
             return (project.id, total)
         }, uniquingKeysWith: { first, _ in first })
         return WorkspaceExplorerGroupSection(group: group, depth: 0, path: path,
@@ -457,7 +449,7 @@ struct WorkspaceExplorerWindowView: View {
             workspacesByID: Dictionary((model.catalog?.workspaces ?? []).map { ($0.id, $0) },
                 uniquingKeysWith: { first, _ in first }),
             projectCounts: counts, projectOpenTotals: openTotals, scope: model.presentedScope,
-            now: model.activityClock.now,
+            now: model.activityArrangement.now, calendar: model.activityArrangement.calendar,
             archiveAvailability: model.catalog?.archiveAvailability ?? .unavailable,
             matchingCounts: matchingCounts,
             exitingProjectIDs: model.exitingProjectIDs, exitingWorkspaceIDs: model.exitingWorkspaceIDs,
@@ -471,14 +463,15 @@ struct WorkspaceExplorerWindowView: View {
             onReopen: { item in Task { _ = await model.reopen(item) } },
             onCardFilter: { model.setFilter($0, value: $1, animated: !reduceMotion) },
             onToggle: { model.toggleCollapsed($0) },
-            onFocus: { model.setFilter($0, value: $1, animated: !reduceMotion) })
+            onFocus: { model.setFilter($0, value: $1, animated: !reduceMotion) },
+            onCardInteractionChanged: { model.activityArrangement.cardInteractionChanged(id: $0, active: $1) })
     }
 
     private func history(id: String) -> some View {
         Group {
             if let item = model.catalog?.items.first(where: { $0.id == id }) {
                 WorkspaceExplorerHistoryView(item: item, page: model.sessionsByWorkspaceID[id],
-                    period: model.scope.period, now: model.activityClock.now, loadFailed: model.sessionLoadFailed,
+                    period: model.scope.period, now: model.activityArrangement.now, loadFailed: model.sessionLoadFailed,
                     evidenceBySessionID: model.evidenceBySessionID,
                     evidenceLoadingIDs: model.evidenceLoadingIDs,
                     evidenceFailedIDs: model.evidenceFailedIDs,

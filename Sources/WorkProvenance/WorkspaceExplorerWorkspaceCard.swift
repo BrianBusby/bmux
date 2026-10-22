@@ -11,8 +11,11 @@ struct WorkspaceExplorerWorkspaceCard: View {
     let onHistory: () -> Void
     let onReopen: () -> Void
     let onFilter: (WorkspaceExplorerDimension, WorkspaceExplorerGroupKey) -> Void
+    let onInteractionChanged: (Bool) -> Void
     @State private var isHovered = false
-    @FocusState private var hasKeyboardFocus: Bool
+    private enum FocusedControl: Hashable { case primary, ticket, repository, pullRequestOwner, history, reopen }
+    @FocusState private var focusedControl: FocusedControl?
+    private var hasKeyboardFocus: Bool { focusedControl != nil }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
 
@@ -90,7 +93,7 @@ struct WorkspaceExplorerWorkspaceCard: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .focused($hasKeyboardFocus)
+            .focused($focusedControl, equals: .primary)
             if metadataPending {
                 Text(String(localized: "explorer.workspaceDetailsLoading", defaultValue:
                     "Workspace details loading…"))
@@ -103,6 +106,7 @@ struct WorkspaceExplorerWorkspaceCard: View {
                             .font(.system(size: 11, design: .monospaced))
                             .buttonStyle(.bordered)
                             .controlSize(.mini)
+                            .focused($focusedControl, equals: .ticket)
                     } else {
                         Text(tickets.isEmpty ? String(localized: "explorer.noTicket", defaultValue: "No ticket") :
                             String(localized: "explorer.multipleTickets", defaultValue: "Multiple tickets"))
@@ -113,6 +117,7 @@ struct WorkspaceExplorerWorkspaceCard: View {
                             .font(.system(size: 11, design: .monospaced))
                             .buttonStyle(.bordered)
                             .controlSize(.mini)
+                            .focused($focusedControl, equals: .repository)
                             .lineLimit(1)
                     } else {
                         Text(String(localized: "explorer.unknownRepository", defaultValue: "Unknown repository"))
@@ -126,6 +131,7 @@ struct WorkspaceExplorerWorkspaceCard: View {
                             Button(owner) { onFilter(.pullRequestOwner, .value(owner)) }
                                 .buttonStyle(.plain)
                                 .foregroundStyle(Color.accentColor)
+                                .focused($focusedControl, equals: .pullRequestOwner)
                         } else {
                             Text(String(localized: "explorer.unknownPROwner", defaultValue: "Unknown PR owner"))
                                 .italic().foregroundStyle(.secondary)
@@ -166,12 +172,14 @@ struct WorkspaceExplorerWorkspaceCard: View {
                 if item.archive != nil {
                     Button(String(localized: "explorer.historyShort", defaultValue: "History"), action: onHistory)
                         .buttonStyle(.bordered).controlSize(.small)
+                        .focused($focusedControl, equals: .history)
                 }
             } else if isReopened {
                 EmptyView()
             } else if case .eligible = item.reopenEligibility {
                 Button(String(localized: "explorer.reopenShort", defaultValue: "Reopen"), action: onReopen)
                     .buttonStyle(.bordered).controlSize(.small)
+                    .focused($focusedControl, equals: .reopen)
             } else {
                 Text(String(localized: "explorer.reopenUnavailable", defaultValue: "Reopen unavailable"))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
@@ -202,6 +210,13 @@ struct WorkspaceExplorerWorkspaceCard: View {
         .shadow(color: .black.opacity(colorScheme == .dark ? (isHovered ? 0.5 : 0.45) :
             (isHovered ? 0.15 : 0.07)), radius: isHovered ? 10 : 4, y: isHovered ? 4 : 2)
         .offset(y: isHovered && !reduceMotion ? -1 : 0)
-        .onHover { isHovered = $0 }
+        .onHover { hovering in
+            isHovered = hovering
+            onInteractionChanged(hovering || hasKeyboardFocus)
+        }
+        .onChange(of: focusedControl) { _, focused in
+            onInteractionChanged(isHovered || focused != nil)
+        }
+        .onDisappear { onInteractionChanged(false) }
     }
 }

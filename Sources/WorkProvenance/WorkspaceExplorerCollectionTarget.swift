@@ -6,6 +6,14 @@ enum WorkspaceExplorerCollectionTarget: Equatable {
     case unassigned
     case project(String)
 
+    var arrangementKey: String {
+        switch self {
+        case .all: "all"
+        case .unassigned: "unassigned"
+        case .project(let id): "project:\(id)"
+        }
+    }
+
     var titleIdentity: String {
         switch self {
         case .all: "all"

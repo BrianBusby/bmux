@@ -53,6 +53,52 @@ struct WorkspaceExplorerActivityWindowTests {
     }
 
     @Test
+    func hoveredCardKeepsPeriodMembershipAndCountsUntilUpdate() async {
+        let id = UUID()
+        let initialNow = Date(timeIntervalSince1970: 1_000_000)
+        var currentNow = initialNow
+        let deadline = AsyncStream<Void>.makeStream()
+        let scheduled = AsyncStream<Void>.makeStream()
+        let clock = WorkspaceExplorerActivityClock(currentDate: { currentNow }, sleep: { _ in
+            scheduled.continuation.yield()
+            var iterator = deadline.stream.makeAsyncIterator()
+            guard await iterator.next() != nil else { throw CancellationError() }
+        })
+        let activity = initialNow.addingTimeInterval(-24 * 60 * 60 + 0.4)
+        let live = WorkspaceExplorerLiveWorkspace(stableID: id, runtimeID: UUID(),
+            title: "Maple Street Roof Inspection", createdAt: activity,
+            colorHex: nil, display: nil, lastActivityAt: activity)
+        let item = WorkspaceExplorerHistoryAdapter().join(live: [live], archived: [],
+            eligibilityByID: [:])[0]
+        let model = WorkspaceExplorerCoordinator(loadHistory: {
+            WorkspaceExplorerHistoryLoadResult(items: [item], archiveAvailability: .available,
+                partialLiveActivity: false)
+        }, reopenHistory: { _ in false }, activateWorkspace: { _ in },
+           loadSessions: { id in ProvenanceWorkspaceSessionPageResponse(
+               workspaceID: id.uuidString, sessions: [], nextCursor: nil) },
+           clearArchive: { }, activityClock: clock)
+        await model.load()
+        model.showCollection(.all)
+        model.setScopePeriod(.last24Hours)
+        model.activityArrangement.cardInteractionChanged(id: "workspace:\(id.uuidString)", active: true)
+        let didSchedule = await receivesSignal(scheduled.stream)
+        #expect(didSchedule)
+        guard didSchedule else { return }
+        let changed = AsyncStream<Void>.makeStream()
+        withObservationTracking({ _ = model.activityArrangement.hasPendingUpdate },
+            onChange: { changed.continuation.yield() })
+        currentNow.addTimeInterval(0.402)
+        deadline.continuation.yield()
+        #expect(await receivesSignal(changed.stream))
+        #expect(model.activityArrangement.hasPendingUpdate)
+        #expect(model.result()?.visibleWorkspaceIDs == [id.uuidString])
+        #expect(model.result()?.visibleCounts.workspaces == 1)
+        model.activityArrangement.applyPending()
+        #expect(model.result()?.visibleWorkspaceIDs.isEmpty == true)
+        #expect(model.result()?.visibleCounts.workspaces == 0)
+    }
+
+    @Test
     func closingExplorerInvalidatesLateArchiveLoad() async {
         let initialNow = Date(timeIntervalSince1970: 1_000_000)
         var currentNow = initialNow
