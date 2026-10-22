@@ -20,19 +20,27 @@ public final class WorkspaceExplorerActivityClock {
     public private(set) var now: Date
     private let currentDate: @MainActor () -> Date
     private let sleep: @MainActor (Duration) async throws -> Void
+    private let calendarProvider: @MainActor () -> Calendar
+    private let notificationCenter: NotificationCenter
     private var deadlineTask: Task<Void, Never>?
 
     /// Creates a clock. Inject time and the deadline sleeper for deterministic tests.
     /// - Parameters:
     ///   - currentDate: Supplies the current instant when scheduling and publishing.
     ///   - sleep: Waits until a membership deadline; defaults to a cancellable task sleep.
+    ///   - calendarProvider: Supplies the current local calendar when scheduling.
+    ///   - notificationCenter: Delivers system calendar change notifications.
     public init(currentDate: @escaping @MainActor () -> Date = { .now },
                 sleep: @escaping @MainActor (Duration) async throws -> Void = {
                     // A bounded, cancellable sleep fires at the next membership deadline.
                     try await Task.sleep(for: $0)
-                }) {
+                },
+                calendarProvider: @escaping @MainActor () -> Calendar = { .current },
+                notificationCenter: NotificationCenter = .default) {
         self.currentDate = currentDate
         self.sleep = sleep
+        self.calendarProvider = calendarProvider
+        self.notificationCenter = notificationCenter
         self.now = currentDate()
     }
 
@@ -41,9 +49,10 @@ public final class WorkspaceExplorerActivityClock {
     ///   - period: The activity window to track.
     ///   - activityDates: Meaningful work events that may cross the window boundary.
     ///   - calendar: Calendar used to find local midnight for Today.
-    public func configure(period: Period, activityDates: [Date], calendar: Calendar = .current) {
+    public func configure(period: Period, activityDates: [Date], calendar: Calendar? = nil) {
         deadlineTask?.cancel()
         now = currentDate()
+        let calendar = calendar ?? calendarProvider()
         guard let deadline = Self.nextDeadline(after: now, period: period,
                                                activityDates: activityDates, calendar: calendar) else {
             deadlineTask = nil
@@ -53,7 +62,7 @@ public final class WorkspaceExplorerActivityClock {
             do { try await sleep(.seconds(max(0, deadline.timeIntervalSince(currentDate())))) }
             catch { return }
             guard !Task.isCancelled, let self else { return }
-            self.configure(period: period, activityDates: activityDates, calendar: calendar)
+            self.configure(period: period, activityDates: activityDates)
         }
     }
 
