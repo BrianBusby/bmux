@@ -40,10 +40,10 @@ struct WorkspaceExplorerWindowView: View {
         VStack(alignment: .leading, spacing: 0) {
             header
             Divider()
-            if model.isLoading && model.catalog == nil {
+            if model.isLoading && model.presentedCatalog == nil {
                 ContentUnavailableView(String(localized: "explorer.loading", defaultValue: "Loading workspaces…"),
                     systemImage: "square.grid.2x2")
-            } else if model.loadFailed && model.catalog == nil {
+            } else if model.loadFailed && model.presentedCatalog == nil {
                 ContentUnavailableView {
                     Label(String(localized: "explorer.loadFailed", defaultValue: "Explorer could not load"),
                         systemImage: "exclamationmark.triangle")
@@ -73,10 +73,10 @@ struct WorkspaceExplorerWindowView: View {
                         }
                         if model.activityArrangement.hasPendingUpdate {
                             HStack {
-                                Text(String(localized: "explorer.activityWindowChanged", defaultValue:
-                                    "Activity window changed"))
+                                Text(String(localized: "explorer.arrangementChanged", defaultValue:
+                                    "Explorer arrangement changed"))
                                 Button(String(localized: "explorer.updateArrangement", defaultValue:
-                                    "Update arrangement")) { model.activityArrangement.applyPending() }
+                                    "Update arrangement")) { model.applyPendingActivityArrangement() }
                             }
                             .font(.system(size: 12)).padding(10)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -94,13 +94,13 @@ struct WorkspaceExplorerWindowView: View {
                             notice(String(localized: "explorer.clearFailed", defaultValue:
                                 "Explorer history could not be cleared. Try again."))
                         }
-                        if model.scope.state != .open, let catalog = model.catalog {
+                        if model.scope.state != .open, let catalog = model.presentedCatalog {
                             WorkspaceExplorerArchiveNotice(availability: catalog.archiveAvailability) {
                                 Task { await model.load() }
                             }
                         }
-                        if model.catalog?.archiveAvailability != .pending &&
-                            model.catalog?.partialLiveActivity == true {
+                        if model.presentedCatalog?.archiveAvailability != .pending &&
+                            model.presentedCatalog?.partialLiveActivity == true {
                             notice(String(localized: "explorer.partialActivity", defaultValue:
                                 "Some live activity could not be verified. Time filters may omit those workspaces."))
                         }
@@ -167,17 +167,17 @@ struct WorkspaceExplorerWindowView: View {
                 }
                 if let target = model.collectionTarget {
                     if model.historyID != nil {
-                        Button(target.title(projects: model.catalog?.projects ?? [])) { model.backFromHistory() }
+                        Button(target.title(projects: model.presentedCatalog?.projects ?? [])) { model.backFromHistory() }
                         Text("›").foregroundStyle(.secondary)
                     } else {
-                        Text(target.title(projects: model.catalog?.projects ?? []))
+                        Text(target.title(projects: model.presentedCatalog?.projects ?? []))
                             .matchedGeometryEffect(id: "title:\(target.titleIdentity)", in: cardGeometry)
                     }
                 } else {
                     Text(String(localized: "explorer.title", defaultValue: "Explorer"))
                 }
                 if let id = model.historyID,
-                   let item = model.catalog?.items.first(where: { $0.id == id }) {
+                   let item = model.presentedCatalog?.items.first(where: { $0.id == id }) {
                     Text(item.title)
                     Text(String(localized: "explorer.readOnlyTag", defaultValue: "READ-ONLY HISTORY"))
                         .font(.system(size: 10, weight: .bold))
@@ -218,8 +218,8 @@ struct WorkspaceExplorerWindowView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         ForEach(WorkspaceExplorerCountPresentation.overviewLines(result,
                             scope: model.presentedScope,
-                            archiveAvailability: model.catalog?.archiveAvailability ?? .unavailable,
-                            liveMetadataPending: model.catalog?.liveMetadataPending == true,
+                            archiveAvailability: model.presentedCatalog?.archiveAvailability ?? .unavailable,
+                            liveMetadataPending: model.presentedCatalog?.liveMetadataPending == true,
                             hasFilters: !model.presentedFilters.isEmpty), id: \.self) { line in
                             Text(line)
                         }
@@ -231,7 +231,7 @@ struct WorkspaceExplorerWindowView: View {
                 }
                 .font(.system(size: 13)).foregroundStyle(.secondary)
                 arrangementBar
-                if model.catalog?.liveMetadataPending == true {
+                if model.presentedCatalog?.liveMetadataPending == true {
                     pendingOverview
                 } else {
                     populatedOverview(result)
@@ -278,16 +278,16 @@ struct WorkspaceExplorerWindowView: View {
                     scope: WorkspaceExplorerScope(), groupBy: [], filters: [:],
                     now: model.activityArrangement.now, calendar: model.activityArrangement.calendar).counts.open ?? 0
                 WorkspaceExplorerProjectCard(project: nil, counts: unassigned.counts,
-                    workspaces: (model.catalog?.workspaces ?? []).filter { workspace in
+                    workspaces: (model.presentedCatalog?.workspaces ?? []).filter { workspace in
                         workspace.projectIDs.isEmpty && model.presentedScope.includes(workspace,
                             now: model.activityArrangement.now, calendar: model.activityArrangement.calendar)
                     },
-                    scope: model.presentedScope, archiveAvailability: model.catalog?.archiveAvailability ?? .unavailable,
+                    scope: model.presentedScope, archiveAvailability: model.presentedCatalog?.archiveAvailability ?? .unavailable,
                     openTotal: openTotal,
                     matchingCount: overviewFilters.isEmpty ? nil : unassigned.visibleCounts.workspaces,
                     isFocused: false, titleGeometry: cardGeometry,
                     onOpen: { model.showCollection(.unassigned) },
-                    onInteractionChanged: { model.activityArrangement.cardInteractionChanged(id: "unassigned", active: $0) })
+                    onInteractionChanged: { model.cardInteractionChanged(id: "unassigned", active: $0) })
                     .frame(maxWidth: 300)
                     .opacity(model.exitsUnassigned ? 0 : 1)
                     .allowsHitTesting(!model.exitsUnassigned)
@@ -306,13 +306,13 @@ struct WorkspaceExplorerWindowView: View {
         VStack(alignment: .leading, spacing: 14) {
             if let result = model.result() {
                 Text(WorkspaceExplorerCountPresentation.collection(result, scope: model.presentedScope,
-                    archiveAvailability: model.catalog?.archiveAvailability ?? .unavailable,
-                    liveMetadataPending: model.catalog?.liveMetadataPending == true,
+                    archiveAvailability: model.presentedCatalog?.archiveAvailability ?? .unavailable,
+                    liveMetadataPending: model.presentedCatalog?.liveMetadataPending == true,
                     hasFilters: !model.presentedFilters.isEmpty &&
-                        model.catalog?.liveMetadataPending != true))
+                        model.presentedCatalog?.liveMetadataPending != true))
                     .font(.system(size: 13)).foregroundStyle(.secondary)
                 arrangementBar
-                if model.catalog?.liveMetadataPending == true {
+                if model.presentedCatalog?.liveMetadataPending == true {
                     Text(WorkspaceExplorerCountPresentation.loadingProjects)
                         .font(.system(size: 12)).foregroundStyle(.secondary)
                 }
@@ -321,7 +321,7 @@ struct WorkspaceExplorerWindowView: View {
                         matchingCounts: [:])
                 }
                 if result.visibleWorkspaceIDs.isEmpty && model.visiblePendingWorkspaceItems.isEmpty { emptyCollection }
-            } else if model.catalog?.liveMetadataPending == true {
+            } else if model.presentedCatalog?.liveMetadataPending == true {
                 ContentUnavailableView(WorkspaceExplorerCountPresentation.loadingProjects,
                     systemImage: "clock")
             }
@@ -330,14 +330,14 @@ struct WorkspaceExplorerWindowView: View {
 
     private var emptyCollection: some View {
         Group {
-            if model.catalog?.liveMetadataPending == true && model.scope.period != .anyTime {
+            if model.presentedCatalog?.liveMetadataPending == true && model.scope.period != .anyTime {
                 ContentUnavailableView(String(localized: "explorer.activityLoading", defaultValue:
                     "Loading workspace activity…"), systemImage: "clock")
-            } else if model.catalog?.archiveAvailability == .pending &&
+            } else if model.presentedCatalog?.archiveAvailability == .pending &&
                 (model.scope.state != .open || model.scope.period != .anyTime) {
                 ContentUnavailableView(String(localized: "explorer.historyLoadingTitle", defaultValue:
                     "Loading retained history…"), systemImage: "clock")
-            } else if model.catalog?.archiveAvailability == .unavailable && model.scope.state == .closed {
+            } else if model.presentedCatalog?.archiveAvailability == .unavailable && model.scope.state == .closed {
                 ContentUnavailableView(String(localized: "explorer.historyUnavailableTitle", defaultValue:
                     "Retained history unavailable"), systemImage: "exclamationmark.triangle")
             } else if !model.activeArrangement.filters.isEmpty {
@@ -366,11 +366,11 @@ struct WorkspaceExplorerWindowView: View {
                     Label(String(localized: "explorer.noOpenWorkspaces", defaultValue:
                         "No open workspaces"), systemImage: "square.grid.2x2")
                 } description: {
-                    if model.catalog?.archiveAvailable == true {
+                    if model.presentedCatalog?.archiveAvailable == true {
                         Text(String(format: String(localized: "explorer.closedRetained", defaultValue:
                             "%d closed workspaces retained."), closedWorkspaceCount))
                     } else {
-                        Text(model.catalog?.archiveAvailability.closedCountLabel ?? "")
+                        Text(model.presentedCatalog?.archiveAvailability.closedCountLabel ?? "")
                     }
                 } actions: {
                     Button(String(localized: "explorer.showAll", defaultValue: "Show all")) {
@@ -414,7 +414,7 @@ struct WorkspaceExplorerWindowView: View {
         let arrangement = model.activeArrangement
         return WorkspaceExplorerArrangementBar(groupBy: arrangement.groupBy, filters: arrangement.filters,
             availableDimensions: dimensions,
-            projectsByID: Dictionary((model.catalog?.projects ?? []).map { ($0.id, $0) },
+            projectsByID: Dictionary((model.presentedCatalog?.projects ?? []).map { ($0.id, $0) },
                 uniquingKeysWith: { first, _ in first }),
             canUndo: arrangement.canUndo,
             onGroupBy: { model.setGroupBy($0) },
@@ -426,8 +426,8 @@ struct WorkspaceExplorerWindowView: View {
     private func groupSection(_ group: WorkspaceExplorerGroup, path: String, overview: Bool,
                               matchingCounts: [String: Int]) -> some View {
         let arrangement = model.activeArrangement
-        let projects = model.catalog?.projects ?? []
-        let items = model.catalog?.items ?? []
+        let projects = model.presentedCatalog?.projects ?? []
+        let items = model.presentedCatalog?.items ?? []
         let counts = Dictionary(projects.map { project in
             let count = model.projection?.collection(target: .project(project.id), scope: model.presentedScope,
                 groupBy: [], filters: [:], now: model.activityArrangement.now, calendar: model.activityArrangement.calendar).counts ??
@@ -446,17 +446,17 @@ struct WorkspaceExplorerWindowView: View {
             activeFilters: model.presentedFilters,
             projectsByID: Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }),
             itemsByID: Dictionary(items.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }),
-            workspacesByID: Dictionary((model.catalog?.workspaces ?? []).map { ($0.id, $0) },
+            workspacesByID: Dictionary((model.presentedCatalog?.workspaces ?? []).map { ($0.id, $0) },
                 uniquingKeysWith: { first, _ in first }),
             projectCounts: counts, projectOpenTotals: openTotals, scope: model.presentedScope,
             now: model.activityArrangement.now, calendar: model.activityArrangement.calendar,
-            archiveAvailability: model.catalog?.archiveAvailability ?? .unavailable,
+            archiveAvailability: model.presentedCatalog?.archiveAvailability ?? .unavailable,
             matchingCounts: matchingCounts,
             exitingProjectIDs: model.exitingProjectIDs, exitingWorkspaceIDs: model.exitingWorkspaceIDs,
             focusedProjectID: model.overviewArrangement.focusedProjectID,
             activeWorkspaceID: model.activeWorkspaceID,
             reopenedWorkspaceID: model.reopenedWorkspaceID,
-            metadataPending: model.catalog?.liveMetadataPending == true,
+            metadataPending: model.presentedCatalog?.liveMetadataPending == true,
             onOpenProject: { model.showCollection(.project($0)) },
             onOpenWorkspace: { model.open($0) },
             onHistory: { model.showHistory($0.id) },
@@ -464,12 +464,12 @@ struct WorkspaceExplorerWindowView: View {
             onCardFilter: { model.setFilter($0, value: $1, animated: !reduceMotion) },
             onToggle: { model.toggleCollapsed($0) },
             onFocus: { model.setFilter($0, value: $1, animated: !reduceMotion) },
-            onCardInteractionChanged: { model.activityArrangement.cardInteractionChanged(id: $0, active: $1) })
+            onCardInteractionChanged: { model.cardInteractionChanged(id: $0, active: $1) })
     }
 
     private func history(id: String) -> some View {
         Group {
-            if let item = model.catalog?.items.first(where: { $0.id == id }) {
+            if let item = model.presentedCatalog?.items.first(where: { $0.id == id }) {
                 WorkspaceExplorerHistoryView(item: item, page: model.sessionsByWorkspaceID[id],
                     period: model.scope.period, now: model.activityArrangement.now, loadFailed: model.sessionLoadFailed,
                     evidenceBySessionID: model.evidenceBySessionID,

@@ -142,6 +142,20 @@ pass; tagged build 859 compiled, and the Swift file/warning budgets, pbxproj,
 package policy, project-doc gates, and English/Japanese key audit pass. Human
 keyboard/pointer dogfood remains.
 
+The follow-up regression test on commit `351e53ea3` records that a hovered
+workspace disappeared when a fresh meaningful activity timestamp exceeded the
+held time. The presentation now holds the visible catalog as well as the time
+and calendar. It overlays current live status labels while retaining group
+membership and counts. New data that would change the arrangement sets the
+Update arrangement banner; applying it uses the latest catalog and time.
+All 114 BmuxWorkspaces package tests passed. A focused app regression also
+covers explicit Reopen while the closed card is hovered: the same logical card
+switches to Open immediately and counts update without waiting for hover exit.
+Explicit Reopen and Clear history reset the held presentation before reloading.
+Six focused app activity-window tests pass; a new isolated tagged build and
+human dogfood of this revised runtime are required. The user's earlier build
+860 approval does not cover either runtime correction.
+
 ## Open decisions and verification
 
 - Status-at-close slice (`workspace-explorer-status-at-close`): bmux uses the same `WorkspaceExplorerStatus.verified(of:)` resolver for live display and close capture, then passes an optional code through PE's public archive contract. PE stores the code without interpreting bmux state. Older archive JSON remains readable, and a later close without status does not reuse an earlier value. Closed cards and read-only history show localized historical context while the live badge remains Closed. Six PE archive tests and 21 focused bmux tests across the history adapter and archive capture suites passed. Project-doc gates passed. Isolated tagged build 837 succeeded and its tag-bound CLI responded. Real close/reopen dogfood remains.

@@ -51,6 +51,48 @@ struct WorkspaceExplorerCatalog {
         }
     }
 
+    private init(items: [WorkspaceExplorerHistoryItem], projects: [WorkspaceExplorerProject],
+                 workspaces: [WorkspaceExplorerWorkspace],
+                 archiveAvailability: WorkspaceExplorerArchiveAvailability,
+                 partialLiveActivity: Bool, liveMetadataPending: Bool) {
+        self.items = items
+        self.projects = projects
+        self.workspaces = workspaces
+        self.archiveAvailability = archiveAvailability
+        self.partialLiveActivity = partialLiveActivity
+        self.liveMetadataPending = liveMetadataPending
+    }
+
+    func withCurrentLiveStatuses(from current: Self?) -> Self {
+        guard let current else { return self }
+        let statusByID = Dictionary(current.items.map { ($0.id, $0.liveStatus) },
+            uniquingKeysWith: { first, _ in first })
+        return Self(items: items.map { item in
+            statusByID[item.id].map(item.withLiveStatus) ?? item
+        }, projects: projects, workspaces: workspaces.map { workspace in
+            statusByID[workspace.id].map(workspace.withLiveStatus) ?? workspace
+        }, archiveAvailability: archiveAvailability,
+            partialLiveActivity: partialLiveActivity, liveMetadataPending: liveMetadataPending)
+    }
+
+    func project(target: WorkspaceExplorerCollectionTarget?, scope: WorkspaceExplorerScope,
+                 arrangement: WorkspaceExplorerViewArrangement,
+                 now: Date, calendar: Calendar) -> WorkspaceExplorerProjectionResult? {
+        let projection = self.projection
+        if let target {
+            if liveMetadataPending {
+                guard target == .all else { return nil }
+                return projection.collection(target: .all, scope: scope,
+                    groupBy: [], filters: [:], now: now, calendar: calendar)
+            }
+            return projection.collection(target: target, scope: scope,
+                groupBy: arrangement.groupBy, filters: arrangement.filters,
+                now: now, calendar: calendar)
+        }
+        return projection.overview(scope: scope, groupBy: arrangement.groupBy,
+            filters: arrangement.filters, now: now, calendar: calendar)
+    }
+
     var projection: WorkspaceExplorerProjection {
         WorkspaceExplorerProjection(projects: projects, workspaces: workspaces,
             archiveAvailable: archiveAvailable)

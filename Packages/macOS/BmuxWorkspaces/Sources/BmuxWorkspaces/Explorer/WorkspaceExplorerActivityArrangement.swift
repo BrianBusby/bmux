@@ -9,13 +9,16 @@ public final class WorkspaceExplorerActivityArrangement {
     private var heldNow: Date?
     private var heldCalendar: Calendar?
     private var heldRevision: Int?
+    private var hasPendingDataChange = false
 
     /// The single time sample used for cards, groups, and counts.
     public var now: Date { heldNow ?? clock.now }
     /// The calendar sampled with the held activity time.
     public var calendar: Calendar { heldCalendar ?? clock.calendar }
     /// Whether a deadline has passed while the visible arrangement was held.
-    public var hasPendingUpdate: Bool { heldRevision.map { $0 != clock.automaticRevision } ?? false }
+    public var hasPendingUpdate: Bool { hasPendingDataChange || (heldRevision.map { $0 != clock.automaticRevision } ?? false) }
+    /// Whether any visible card is still hovered or keyboard-focused.
+    public var hasInteractingCards: Bool { !interactingCardIDs.isEmpty }
 
     /// Creates an arrangement around Explorer's existing deadline clock.
     public init(clock: WorkspaceExplorerActivityClock) { self.clock = clock }
@@ -30,6 +33,11 @@ public final class WorkspaceExplorerActivityArrangement {
         }
     }
 
+    /// Records a data change that would alter the presented arrangement.
+    public func markDataChangePending() {
+        if heldNow != nil { hasPendingDataChange = true }
+    }
+
     /// Applies the latest time only after the user requests the pending arrangement update.
     public func applyPending() {
         if interactingCardIDs.isEmpty { release() } else { capture() }
@@ -38,7 +46,7 @@ public final class WorkspaceExplorerActivityArrangement {
     /// Explicit scope changes use the current clock even if a card is still hovered.
     public func scopeChanged() { applyPending() }
 
-    /// Clears interaction state when the Explorer window closes.
+    /// Clears interaction state when the window closes or an explicit mutation changes card identity.
     public func stop() {
         interactingCardIDs.removeAll()
         release()
@@ -48,11 +56,13 @@ public final class WorkspaceExplorerActivityArrangement {
         heldNow = clock.now
         heldCalendar = clock.calendar
         heldRevision = clock.automaticRevision
+        hasPendingDataChange = false
     }
 
     private func release() {
         heldNow = nil
         heldCalendar = nil
         heldRevision = nil
+        hasPendingDataChange = false
     }
 }

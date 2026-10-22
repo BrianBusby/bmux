@@ -2063,6 +2063,7 @@
 		CE0E01040000000000000001 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E01040000000000000002 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift */; };
 		72DB1838A0F1B710BFB45DC1 /* WorkspaceEnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B561A95C6DC21BA9C4B2BCDD /* WorkspaceEnvironmentTests.swift */; };
 		D7B92A51F4E6475085169002 /* WorkspaceExplorerActiveWorkspaceVisibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7B92A51F4E6475085169001 /* WorkspaceExplorerActiveWorkspaceVisibility.swift */; };
+		D7B92A51F4E6475085169022 /* WorkspaceExplorerActivityPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7B92A51F4E6475085169021 /* WorkspaceExplorerActivityPresentation.swift */; };
 				E71A17900000000000000071 /* WorkspaceExplorerActivityWindowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerActivityWindowTests.swift; sourceTree = "<group>"; };
 				E71A17900000000000000070 /* WorkspaceExplorerActivityWindowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000071 /* WorkspaceExplorerActivityWindowTests.swift */; };
 		E7A9EAA73EE74959BA212014 /* WorkspaceExplorerArchiveAvailability.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA212013 /* WorkspaceExplorerArchiveAvailability.swift */; };
@@ -4220,6 +4221,7 @@
 		CE0E01040000000000000002 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift; sourceTree = "<group>"; };
 		B561A95C6DC21BA9C4B2BCDD /* WorkspaceEnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceEnvironmentTests.swift; sourceTree = "<group>"; };
 		D7B92A51F4E6475085169001 /* WorkspaceExplorerActiveWorkspaceVisibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerActiveWorkspaceVisibility.swift; sourceTree = "<group>"; };
+		D7B92A51F4E6475085169021 /* WorkspaceExplorerActivityPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerActivityPresentation.swift; sourceTree = "<group>"; };
 		E7A9EAA73EE74959BA212013 /* WorkspaceExplorerArchiveAvailability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerArchiveAvailability.swift; sourceTree = "<group>"; };
 		A9E1C06F8D24453FB2C317AC /* WorkspaceExplorerArchiveNotice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceExplorerArchiveNotice.swift"; sourceTree = "<group>"; };
 		E8E201010000000000000007 /* WorkspaceExplorerArchiveRecoveryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerArchiveRecoveryService.swift; sourceTree = "<group>"; };
@@ -6585,6 +6587,7 @@
 				E71A17900000000000000065 /* WorkspaceExplorerTitlebarContent.swift */,
 				E71A17900000000000000021 /* WorkspaceExplorerWindowView.swift */,
 				D7B92A51F4E6475085169001 /* WorkspaceExplorerActiveWorkspaceVisibility.swift */,
+				D7B92A51F4E6475085169021 /* WorkspaceExplorerActivityPresentation.swift */,
 				D7B92A51F4E6475085169011 /* WorkspaceExplorerSessionEvidence.swift */,
 				91677B4922B4D293ACAB5E79 /* WorkspaceExplorerCollectionTarget.swift */,
 				7B19842F052C74A908E3ED2B /* WorkspaceExplorerGroup.swift */,
@@ -8248,6 +8251,7 @@
 				CE0E01060000000000000001 /* WorkspaceDisplayCurrentStateSubscription.swift in Sources */,
 				CE0E01040000000000000001 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift in Sources */,
 				D7B92A51F4E6475085169002 /* WorkspaceExplorerActiveWorkspaceVisibility.swift in Sources */,
+				D7B92A51F4E6475085169022 /* WorkspaceExplorerActivityPresentation.swift in Sources */,
 				E7A9EAA73EE74959BA212014 /* WorkspaceExplorerArchiveAvailability.swift in Sources */,
 				A9E1C06F8D24453FB2C317AD /* WorkspaceExplorerArchiveNotice.swift in Sources */,
 				E8E201010000000000000008 /* WorkspaceExplorerArchiveRecoveryService.swift in Sources */,

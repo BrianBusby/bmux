@@ -4,7 +4,7 @@ import Foundation
 @MainActor
 enum WorkspaceExplorerActiveWorkspaceVisibility {
     static func outsideTitle(model: WorkspaceExplorerCoordinator) -> String? {
-        guard let catalog = model.catalog, let activeID = model.activeWorkspaceID,
+        guard let catalog = model.presentedCatalog, let activeID = model.activeWorkspaceID,
               !catalog.liveMetadataPending,
               let item = catalog.items.first(where: { $0.id == activeID }),
               let result = model.result() else { return nil }

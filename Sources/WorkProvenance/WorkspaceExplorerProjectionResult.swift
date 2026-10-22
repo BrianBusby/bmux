@@ -1,7 +1,7 @@
 import Foundation
 
 /// Counts before and after filters stay separate so card and header labels remain consistent.
-struct WorkspaceExplorerProjectionResult {
+struct WorkspaceExplorerProjectionResult: Equatable {
     let groups: [WorkspaceExplorerGroup]
     let inScopeProjectIDs: [String]
     let visibleProjectIDs: [String]

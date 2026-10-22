@@ -135,6 +135,45 @@ struct WorkspaceExplorerActivityWindowTests {
     }
 
     @Test
+    func reopeningHoveredClosedCardShowsOpenStateImmediately() async {
+        let id = UUID()
+        let now = Date(timeIntervalSince1970: 1_000_000)
+        let archive = ProvenanceArchivedWorkspaceRecord(id: id.uuidString,
+            title: "Maple Street Roof Inspection", createdAt: now.addingTimeInterval(-3_600),
+            closedAt: now, lastActivityAt: now, displayAtClose: nil, colorHex: nil,
+            coverageCode: nil)
+        let adapter = WorkspaceExplorerHistoryAdapter()
+        let closed = adapter.join(live: [], archived: [archive],
+            eligibilityByID: [id: .eligible(recordID: UUID())])[0]
+        var loadedItem = closed
+        let model = WorkspaceExplorerCoordinator(loadHistory: {
+            WorkspaceExplorerHistoryLoadResult(items: [loadedItem], archiveAvailability: .available,
+                partialLiveActivity: false)
+        }, reopenHistory: { requestedID in
+            guard requestedID == id else { return false }
+            let live = WorkspaceExplorerLiveWorkspace(stableID: id, runtimeID: UUID(),
+                title: archive.title, createdAt: archive.createdAt ?? now,
+                colorHex: nil, display: nil, lastActivityAt: now)
+            loadedItem = adapter.join(live: [live], archived: [archive], eligibilityByID: [:])[0]
+            return true
+        }, activateWorkspace: { _ in },
+           loadSessions: { id in ProvenanceWorkspaceSessionPageResponse(
+               workspaceID: id.uuidString, sessions: [], nextCursor: nil) },
+           clearArchive: { }, feedbackDelay: { _ in throw CancellationError() })
+        await model.load()
+        model.showCollection(.all)
+        model.setScopeState(.all)
+        model.cardInteractionChanged(id: "workspace:\(id.uuidString)", active: true)
+        #expect(model.presentedCatalog?.items.first?.isOpen == false)
+
+        #expect(await model.reopen(closed))
+        #expect(model.presentedCatalog?.items.first?.isOpen == true)
+        #expect(model.result()?.visibleWorkspaceIDs == [id.uuidString])
+        #expect(model.result()?.visibleCounts.open == 1)
+        #expect(model.result()?.visibleCounts.closed == 0)
+    }
+
+    @Test
     func closingExplorerInvalidatesLateArchiveLoad() async {
         let initialNow = Date(timeIntervalSince1970: 1_000_000)
         var currentNow = initialNow
