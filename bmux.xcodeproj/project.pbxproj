@@ -402,6 +402,7 @@
 		5E55200000000000000000B3 /* BmuxWindowing in Frameworks */ = {isa = PBXBuildFile; productRef = 5E55200000000000000000B2 /* BmuxWindowing */; };
 		730600040000000000000001 /* BmuxWindowing in Frameworks */ = {isa = PBXBuildFile; productRef = 5E55200000000000000000B2 /* BmuxWindowing */; };
 		E30750000000000000000004 /* BmuxWorkspaceDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30750000000000000000003 /* BmuxWorkspaceDefinition.swift */; };
+		A19700000000000000000003 /* BmuxWorkspacePersistence in Frameworks */ = {isa = PBXBuildFile; productRef = A19700000000000000000002 /* BmuxWorkspacePersistence */; };
 		E3B7A3000000000000000103 /* BmuxWorkspaces in Frameworks */ = {isa = PBXBuildFile; productRef = E3B7A3000000000000000102 /* BmuxWorkspaces */; };
 		B057B0017E57B0017E57B001 /* Bonsplit in Frameworks */ = {isa = PBXBuildFile; productRef = A5001262 /* Bonsplit */; };
 		D0B10010A1B2C3D4E5F60001 /* BonsplitTabBarDebug.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B10011A1B2C3D4E5F60001 /* BonsplitTabBarDebug.swift */; };
@@ -4402,6 +4403,7 @@
 				CDFEED0300000000CDFEED03 /* BmuxUpdater in Frameworks */,
 				CDFEED0600000000CDFEED06 /* BmuxUpdaterUI in Frameworks */,
 				5E55200000000000000000B3 /* BmuxWindowing in Frameworks */,
+				A19700000000000000000003 /* BmuxWorkspacePersistence in Frameworks */,
 				E3B7A3000000000000000103 /* BmuxWorkspaces in Frameworks */,
 				A5001006 /* GhosttyKit.xcframework in Frameworks */,
 				A5001290 /* MarkdownUI in Frameworks */,
@@ -6723,6 +6725,7 @@
 				E3B7A30000000000000000D2 /* BmuxNotifications */,
 				E3B7A30000000000000000F2 /* BmuxPanes */,
 				E3B7A3000000000000000102 /* BmuxWorkspaces */,
+				A19700000000000000000002 /* BmuxWorkspacePersistence */,
 				A500D013A1B2C3D4E5F60718 /* BMUXDebugLog */,
 				CD0CFE5200000000CD0CFE52 /* BmuxSettings */,
 				CFF12E0000000000000000A2 /* BmuxTestSupport */,
@@ -6828,6 +6831,7 @@
 				5E2701040000000000000002 /* BmuxFoundation */,
 				5E27010400000000000000A3 /* BmuxSettings */,
 				5E27010400000000000000A4 /* BmuxWorkspaces */,
+				A19700000000000000000004 /* BmuxWorkspacePersistence */,
 				C9A2B00000000000000000C2 /* BmuxAppKitSupportUI */,
 				D7032A060000000000000002 /* BmuxBrowser */,
 				5E55500000000000000000E2 /* BmuxCommandPalette */,
@@ -6909,6 +6913,7 @@
 				E3B7A30000000000000000D1 /* XCLocalSwiftPackageReference "BmuxNotifications" */,
 				E3B7A30000000000000000F1 /* XCLocalSwiftPackageReference "BmuxPanes" */,
 				E3B7A3000000000000000101 /* XCLocalSwiftPackageReference "BmuxWorkspaces" */,
+				A19700000000000000000001 /* XCLocalSwiftPackageReference "BmuxWorkspacePersistence" */,
 				C750100000000000000000A1 /* XCLocalSwiftPackageReference "BmuxControlSocket" */,
 				C9A2B00000000000000000B1 /* XCLocalSwiftPackageReference "BmuxAppKitSupportUI" */,
 				C9A2C00000000000000000C1 /* XCLocalSwiftPackageReference "BmuxFeedback" */,
@@ -9738,6 +9743,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/macOS/BmuxWorkspaces;
 		};
+		A19700000000000000000001 /* XCLocalSwiftPackageReference "BmuxWorkspacePersistence" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/macOS/BmuxWorkspacePersistence;
+		};
 		C750100000000000000000A1 /* XCLocalSwiftPackageReference "BmuxControlSocket" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/macOS/BmuxControlSocket;
@@ -9960,6 +9969,11 @@
 			package = E3B7A3000000000000000101 /* XCLocalSwiftPackageReference "BmuxWorkspaces" */;
 			productName = BmuxWorkspaces;
 		};
+		A19700000000000000000002 /* BmuxWorkspacePersistence */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A19700000000000000000001 /* XCLocalSwiftPackageReference "BmuxWorkspacePersistence" */;
+			productName = BmuxWorkspacePersistence;
+		};
 		C750100000000000000000A2 /* BmuxControlSocket */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C750100000000000000000A1 /* XCLocalSwiftPackageReference "BmuxControlSocket" */;
@@ -10074,6 +10088,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E3B7A3000000000000000101 /* XCLocalSwiftPackageReference "BmuxWorkspaces" */;
 			productName = BmuxWorkspaces;
+		};
+		A19700000000000000000004 /* BmuxWorkspacePersistence */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A19700000000000000000001 /* XCLocalSwiftPackageReference "BmuxWorkspacePersistence" */;
+			productName = BmuxWorkspacePersistence;
 		};
 		C9A2B00000000000000000C2 /* BmuxAppKitSupportUI */ = {
 			isa = XCSwiftPackageProductDependency;

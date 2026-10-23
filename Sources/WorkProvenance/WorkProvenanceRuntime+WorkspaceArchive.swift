@@ -1,5 +1,6 @@
 import Foundation
 import BmuxWorkspaces
+import BmuxWorkspacePersistence
 
 extension WorkProvenanceRuntime {
     func trackArchiveTask(_ task: Task<Void, Never>) {

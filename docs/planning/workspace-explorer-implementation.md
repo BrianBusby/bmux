@@ -129,17 +129,22 @@ The `workspace-explorer-timezone-refresh` branch starts from PR #193's merge. Th
 ### Close journal durability slice
 
 The `workspace-explorer-close-durability` branch starts from merged PR #195.
-Bmux owns a compact, atomic, per-workspace close journal beside its PE database.
+Bmux owns a compact, atomic close journal beside its PE database.
 The user-close producer writes stable identity, title, close time, and identity
 color synchronously before starting PE archive enrichment. Startup recovery
 coalesces journal entries with persisted restore snapshots and lets PE reconcile
 them through its public archive contract. Clear Explorer history clears PE first,
-then removes journal entries at or before the same clear timestamp. A later close
+then publishes a durable journal clear marker and removes entries at or before
+the same timestamp. A concurrent writer checks the marker after its atomic
+write and removes a now-cleared entry. Clear compacts superseded markers so
+close-time reads stay bounded. A later close
 is preserved. The journal does not replace full restore snapshots or promise
-terminal scrollback capture. A journal actor in `BmuxWorkspaces` owns the persistence source; its
-durability-critical close write is synchronous and serialized with actor-owned
-recovery reads and clear operations one file at a time, so an unbounded scan
-cannot hold a close. Recovery reads and clear run off the main actor. Rules: root
+terminal scrollback capture. A journal actor in `BmuxWorkspacePersistence` owns the persistence source; its
+durability-critical close write is synchronous and uses a distinct immutable
+file for each close, so independent app processes cannot overwrite one another.
+Recovery coalesces these files by logical workspace ID and keeps the latest
+close; the app runtime holds the journal through a protocol. Reads and clear
+run off the main actor. Rules: root
 `AGENTS.md`, continuous-code-quality,
 bmux architecture/testing/dev-workflow, and the project-state rule. Patterns:
 `ClosedItemHistoryStore`, `WorkspaceExplorerArchiveRecoveryService`, and
@@ -153,7 +158,7 @@ close/reopen dogfood, and force-quit inspection remain verification gates.
 - Verify restored workspace IDs through the real TabManager path and retain the archive record after restore. The focused adapter tests exercise this path.
 - Local restore eligibility checks the recorded directory. Remote and closed-window-only snapshots are currently unavailable for targeted Explorer reopen; the existing recently closed menu keeps its own restoration behavior.
 - PE enrichment remains asynchronous. The close journal protects the minimum identity record after its atomic write returns; disk write failure is reported and retains the existing archive-only fallback. Power loss and full restore-snapshot durability remain outside this guarantee.
-- PE's clear marker and journal-file deletion are separate writes. If the process exits between them, PE suppresses replay of the cleared records, but local journal metadata can remain until Clear Explorer history is retried.
+- PE's clear marker and journal cleanup are separate writes. If the process exits between them, PE suppresses replay; the journal marker suppresses it after publication, and a later recovery or Clear can finish removing any residual file. An abrupt exit in the small interval before the journal marker is published can leave local metadata until cleanup is retried.
 - The staged loading slice renders live presence before PE reads finish and marks closed counts pending, known, or unavailable. Live activity and project metadata remain unknown until the PE read completes, so a period filter can initially show a loading state. Verify retry and view-state preservation in the tagged build.
 - Verify period/date and animation behavior on supported macOS versions.
 - Xcode 26.6 (17F113) on this macOS 26.3 host stalls at `ExecuteExternalTool clang -v -E -dM` before Swift compilation; two isolated reload attempts and a legacy-build-system attempt reproduced it. A temporary local Clang wrapper that caps macro-probe output allowed source compilation and 27 focused tests to pass. The wrapper is not part of the repository. Tagged build 823 succeeded with the temporary workaround, and the Debug fixture exercised All scope, closed history, reopen, grouped cards, and project scroll restoration. Broader keyboard and reduced-motion dogfood remain open gates.

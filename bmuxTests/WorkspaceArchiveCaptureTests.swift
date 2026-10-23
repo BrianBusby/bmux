@@ -1,5 +1,6 @@
 import Foundation
 import BmuxWorkspaces
+import BmuxWorkspacePersistence
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
 import Testing
@@ -24,6 +25,7 @@ struct WorkspaceArchiveCaptureTests {
             observationService: nil,
             workspaceArchiveService: WorkProvenanceWorkspaceArchiveService(client: client),
             effectiveDatabaseURL: databaseURL,
+            workspaceCloseJournal: WorkspaceExplorerCloseJournal(databaseURL: databaseURL),
             initialLifecycleState: .ready
         )
         let manager = TabManager()
@@ -33,8 +35,10 @@ struct WorkspaceArchiveCaptureTests {
 
         runtime.recordWorkspaceClosure(workspace, at: closedAt)
 
-        let recordURL = directory.appendingPathComponent("explorer-close-journal", isDirectory: true)
-            .appendingPathComponent("\(workspace.stableId.uuidString).json")
+        let journalDirectory = directory.appendingPathComponent("explorer-close-journal", isDirectory: true)
+        let recordURL = try #require(FileManager.default.contentsOfDirectory(
+            at: journalDirectory, includingPropertiesForKeys: nil
+        ).first(where: { $0.pathExtension == "json" }))
         let data = try Data(contentsOf: recordURL)
         let record = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
         #expect(record["stableID"] as? String == workspace.stableId.uuidString)
@@ -93,6 +97,9 @@ struct WorkspaceArchiveCaptureTests {
         let runtime = WorkProvenanceRuntime(
             observationService: nil,
             effectiveDatabaseURL: directory.appendingPathComponent("provenance.sqlite"),
+            workspaceCloseJournal: WorkspaceExplorerCloseJournal(
+                databaseURL: directory.appendingPathComponent("provenance.sqlite")
+            ),
             initialLifecycleState: .ready
         )
         let workspace = try #require(TabManager().selectedWorkspace)
@@ -117,11 +124,14 @@ struct WorkspaceArchiveCaptureTests {
         let journal = WorkspaceExplorerCloseJournal(
             databaseURL: directory.appendingPathComponent("provenance.sqlite")
         )
+        let secondWriter = WorkspaceExplorerCloseJournal(
+            databaseURL: directory.appendingPathComponent("provenance.sqlite")
+        )
         let stableID = UUID()
         let newer = Date(timeIntervalSince1970: 1_800_000_100)
         try journal.record(.init(stableID: stableID, title: "Cedar Street Roof Inspection",
             closedAt: newer, colorHex: nil))
-        try journal.record(.init(stableID: stableID, title: "Maple Street Roof Inspection",
+        try secondWriter.record(.init(stableID: stableID, title: "Maple Street Roof Inspection",
             closedAt: newer.addingTimeInterval(-100), colorHex: nil))
 
         let retained = try #require(await journal.candidates().first)

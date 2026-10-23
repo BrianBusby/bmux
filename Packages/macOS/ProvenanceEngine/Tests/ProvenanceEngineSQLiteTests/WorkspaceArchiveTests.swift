@@ -282,7 +282,9 @@ struct WorkspaceArchiveTests {
             coverageCode: "close_snapshot_recovery"
         )
 
+        try await repository.recordArchivedWorkspace(fallback)
         try await repository.recordArchivedWorkspace(enriched)
+        #expect(try await repository.archivedWorkspaces(.init()).records == [enriched])
         try await repository.recordArchivedWorkspace(fallback)
 
         #expect(try await repository.archivedWorkspaces(.init()).records == [enriched])

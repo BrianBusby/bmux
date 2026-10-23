@@ -14,6 +14,18 @@ extension ProvenanceSQLiteRepository {
             return
         }
         let previous = try archivedWorkspace(id: workspaceID)
+        // The enclosing immediate transaction serializes writers. A later
+        // identity-only write for the same close must not erase recorded facts.
+        let incomingIdentityOnly = record.createdAt == nil && record.lastActivityAt == nil &&
+            record.displayAtClose == nil && record.lastRecordedStatusCode == nil
+        let previousIdentityOnly = previous.map {
+            $0.createdAt == nil && $0.lastActivityAt == nil &&
+                $0.displayAtClose == nil && $0.lastRecordedStatusCode == nil
+        } ?? false
+        if let previous, previous.closedAt == record.closedAt,
+           incomingIdentityOnly && !previousIdentityOnly {
+            return
+        }
         let earliestCreation = [previous?.createdAt, record.createdAt].compactMap { $0 }.min()
         let latestActivity = [previous?.lastActivityAt, record.lastActivityAt].compactMap { $0 }.max()
         let retained = ProvenanceArchivedWorkspaceRecord(
@@ -24,7 +36,9 @@ extension ProvenanceSQLiteRepository {
             lastActivityAt: latestActivity,
             displayAtClose: record.displayAtClose,
             colorHex: record.colorHex,
-            coverageCode: record.coverageCode ?? previous?.coverageCode,
+            coverageCode: previousIdentityOnly && !incomingIdentityOnly
+                ? record.coverageCode
+                : (record.coverageCode ?? previous?.coverageCode),
             lastRecordedStatusCode: record.lastRecordedStatusCode
         )
         let json = try payloadEncoder.encode(retained)

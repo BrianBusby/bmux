@@ -1,5 +1,6 @@
 import Foundation
 import BmuxWorkspaces
+import BmuxWorkspacePersistence
 import ProvenanceEngineContracts
 
 @MainActor
