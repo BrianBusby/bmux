@@ -847,7 +847,7 @@ struct ClaudeHookSurfaceResolutionSwiftTests {
         try Data(standardInput.utf8).write(to: input)
         return try await ShellContractProcess(
             root: root,
-            deadline: .seconds(CLIProcessTestTimeout().seconds(timeout))
+            deadline: .seconds(timeout)
         ).run(
             executable: "/bin/sh",
             arguments: ["-c", "input=$1; shift; exec \"$@\" <\"$input\"", "claude-hook", input.path, executablePath] + arguments,
