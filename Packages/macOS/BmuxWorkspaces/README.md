@@ -44,5 +44,6 @@ the app or using the user's archive. PE contracts provide the session values.
 `WorkspaceExplorerCloseJournal` retains one minimal identity file per logical
 workspace beside the PE database. Its synchronous write finishes before the app
 returns from a user close, while actor-owned recovery reads and clear run off the
-main actor. Bmux maps these records to PE's public archive contract; the journal
-does not read PE tables or retain session evidence.
+main actor. The journal directory is mode 0700, including when an older build
+created it with wider permissions. Bmux maps these records to PE's public
+archive contract; the journal does not read PE tables or retain session evidence.

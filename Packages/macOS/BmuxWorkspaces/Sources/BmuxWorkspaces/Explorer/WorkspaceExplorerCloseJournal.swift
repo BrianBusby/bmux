@@ -38,7 +38,14 @@ public actor WorkspaceExplorerCloseJournal {
     public nonisolated func record(_ candidate: WorkspaceExplorerCloseRecord) throws {
         try fileLock.withLock {
             try FileManager.default.createDirectory(
-                at: directoryURL, withIntermediateDirectories: true
+                at: directoryURL, withIntermediateDirectories: true,
+                attributes: [.posixPermissions: NSNumber(value: 0o700)]
+            )
+            // An older tagged build may have created this directory with a
+            // wider mode. Keep titles private even when the parent is 0755.
+            try FileManager.default.setAttributes(
+                [.posixPermissions: NSNumber(value: 0o700)],
+                ofItemAtPath: directoryURL.path
             )
             let destination = url(for: candidate.stableID)
             if let existing = try? readRecord(at: destination),
@@ -100,7 +107,7 @@ public actor WorkspaceExplorerCloseJournal {
         }
     }
 
-    private nonisolated static func isMissingFile(_ error: Error) -> Bool {
+    private nonisolated static func isMissingFile(_ error: any Error) -> Bool {
         let error = error as NSError
         return (error.domain == NSCocoaErrorDomain &&
                 (error.code == NSFileNoSuchFileError || error.code == NSFileReadNoSuchFileError)) ||

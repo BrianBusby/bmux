@@ -86,6 +86,10 @@ struct WorkspaceArchiveCaptureTests {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-close-without-pe-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: directory) }
+        let journalDirectory = directory.appendingPathComponent("explorer-close-journal")
+        try FileManager.default.createDirectory(at: journalDirectory,
+            withIntermediateDirectories: true,
+            attributes: [.posixPermissions: NSNumber(value: 0o755)])
         let runtime = WorkProvenanceRuntime(
             observationService: nil,
             effectiveDatabaseURL: directory.appendingPathComponent("provenance.sqlite"),
@@ -95,6 +99,9 @@ struct WorkspaceArchiveCaptureTests {
 
         runtime.recordWorkspaceClosure(workspace)
 
+        let permissions = try FileManager.default.attributesOfItem(
+            atPath: journalDirectory.path)[.posixPermissions] as? NSNumber
+        #expect(permissions?.intValue == 0o700)
         let journal = WorkspaceExplorerCloseJournal(
             databaseURL: directory.appendingPathComponent("provenance.sqlite")
         )
