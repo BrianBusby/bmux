@@ -215,6 +215,7 @@ Repository: `BrianBusby/bmux`
 | `matte_skin_ci_compiler_compatibility` | resolved |
 | `cloud_attach_retry_fixture_verification` | open |
 | `managed_appearance_startup_fixture_verification` | open |
+| `connected_codex_image_frame_compatibility` | monitoring |
 | `configured_codex_placeholder_startup_dogfood` | monitoring |
 | `codex_update_workspace_exit_native_dogfood` | open |
 | `expanded_prior_turn_system_appearance_contrast` | monitoring |
