@@ -54,6 +54,7 @@ local_capabilities:
   workspace_explorer_native_view: under_observation
   workspace_explorer_staged_loading: under_observation
   workspace_explorer_close_recovery: under_observation
+  # BmuxWorkspaces owns the close journal; the app maps records to PE archive candidates.
   workspace_explorer_close_journal: under_observation
   workspace_explorer_archive_recovery_actor: under_observation
   workspace_explorer_live_topology_refresh: under_observation
