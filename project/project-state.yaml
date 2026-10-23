@@ -6550,7 +6550,7 @@ caveats:
     owner: bmux
 
   - id: deferred_terminal_search_focus_fixture_verification
-    title: Deferred terminal search attachment uses native FIFO and actual responder observation with original one-second phase bounds; owned build 801 controls pass, original presented macOS 15 composition remains pending
+    title: Deferred terminal search attachment retains one-second native FIFO and responder bounds; isolated CI gate awaits macOS 15 verification after broad-shard queue-delay failures
     status: open
     owner: bmux
 
