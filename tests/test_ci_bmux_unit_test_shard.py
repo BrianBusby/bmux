@@ -78,7 +78,11 @@ def main() -> int:
         for total in (4, 8):
             selectors, weights = partition(ROOT, directory, total)
             assert set(selectors) == expected, f"{total} shards lost or added repository selectors"
-            for focused in ("BrowserSystemProxyMirrorTests", "GhosttyOptionAsAltModsTests"):
+            for focused in (
+                "BrowserSystemProxyMirrorTests",
+                "DeferredTerminalSearchFocusTests",
+                "GhosttyOptionAsAltModsTests",
+            ):
                 assert f"-only-testing:bmuxTests/{focused}" not in selectors, "focused gate duplicated"
             print(f"PASS: {total} shards cover {len(selectors)} selectors exactly once; weights {weights}")
 
