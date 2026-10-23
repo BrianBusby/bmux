@@ -257,4 +257,34 @@ struct WorkspaceArchiveTests {
         _ = try await repository.rebuildProjectionsFromEventLedger()
         #expect(try await repository.archivedWorkspaces(.init()).records == [reclosed])
     }
+
+    @Test
+    func recoveryFallbackCannotEraseEnrichedRecordForSameClose() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("pe-workspace-archive-tests")
+            .appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let repository = try ProvenanceSQLiteRepository(
+            url: directory.appendingPathComponent("provenance.sqlite")
+        )
+        let closedAt = Date(timeIntervalSince1970: 1_800_000_000)
+        let enriched = ProvenanceArchivedWorkspaceRecord(
+            id: "stable-a", title: "Maple Street Roof Inspection",
+            createdAt: closedAt.addingTimeInterval(-3600), closedAt: closedAt,
+            lastActivityAt: closedAt.addingTimeInterval(-60), displayAtClose: nil,
+            colorHex: "#3B6FD6", coverageCode: nil,
+            lastRecordedStatusCode: "running"
+        )
+        let fallback = ProvenanceArchivedWorkspaceRecord(
+            id: "stable-a", title: "Maple Street Roof Inspection",
+            createdAt: nil, closedAt: closedAt, lastActivityAt: nil,
+            displayAtClose: nil, colorHex: "#3B6FD6",
+            coverageCode: "close_snapshot_recovery"
+        )
+
+        try await repository.recordArchivedWorkspace(enriched)
+        try await repository.recordArchivedWorkspace(fallback)
+
+        #expect(try await repository.archivedWorkspaces(.init()).records == [enriched])
+    }
 }
