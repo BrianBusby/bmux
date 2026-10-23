@@ -83,14 +83,15 @@ extension BrowserInspectorWindowOwnershipTests {
             ))
 
             try main.withTemporaryShortcut(chordedCloseTab) {
+                let appDelegate = try #require(AppDelegate.shared)
                 recordRouting("before_prefix")
-                NSApp.sendEvent(prefixEvent)
+                #expect(appDelegate.handleConfiguredShortcutKeyEquivalent(prefixEvent))
                 recordRouting("after_prefix")
 
                 #expect(inspectorWindow.isVisible)
                 #expect(workspace.browserPanel(for: browserPanelId) != nil, "Close Tab chord prefix must not close the browser panel")
 
-                NSApp.sendEvent(suffixEvent)
+                #expect(appDelegate.handleConfiguredShortcutKeyEquivalent(suffixEvent))
                 recordRouting("after_suffix")
 
             }
