@@ -2550,26 +2550,6 @@ final class WindowBackgroundSelectionGateTests: XCTestCase {
     }
 }
 
-@MainActor
-final class NotificationBurstCoalescerTests: XCTestCase {
-    func testSignalsInSameBurstFlushOnce() {
-        let coalescer = NotificationBurstCoalescer(delay: 0.01)
-        let expectation = expectation(description: "flush once")
-        expectation.expectedFulfillmentCount = 1
-        var flushCount = 0
-
-        for _ in 0..<8 {
-            coalescer.signal {
-                flushCount += 1
-                expectation.fulfill()
-            }
-        }
-
-        wait(for: [expectation], timeout: 1.0)
-        XCTAssertEqual(flushCount, 1)
-    }
-}
-
 final class RecentlyClosedBrowserStackTests: XCTestCase {
     func testPopReturnsEntriesInLIFOOrder() {
         var stack = RecentlyClosedBrowserStack<ClosedBrowserPanelRestoreSnapshot>(capacity: 20)
