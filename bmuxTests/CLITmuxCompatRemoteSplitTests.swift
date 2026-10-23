@@ -65,6 +65,14 @@ import Testing
         #expect(!result.stderr.contains("already applied"), Comment(rawValue: result.stderr))
     }
 
+    private func serverCompleted(_ signal: DispatchSemaphore) async -> Bool {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                continuation.resume(returning: signal.wait(timeout: .now() + 30) == .success)
+            }
+        }
+    }
+
     private final class CapturedRespawn: @unchecked Sendable {
         private let lock = NSLock()
         private var commandValue: String?
@@ -94,7 +102,7 @@ import Testing
     private func respawnPaneForwardedCommand(
         _ command: String,
         extraEnvironment: [String: String] = [:]
-    ) throws -> (command: String, startCommand: String) {
+    ) async throws -> (command: String, startCommand: String) {
         let cliPath = try BundledCLITestSupport.bundledCLIPath(for: CLITmuxCompatRemoteSplitBundleToken.self)
         let tmpDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-tmux-compat-respawn-\(UUID().uuidString)", isDirectory: true)
@@ -146,15 +154,16 @@ import Testing
         for (key, value) in extraEnvironment {
             environment[key] = value
         }
-        let result = Self.runProcess(
-            executablePath: cliPath,
+        let result = try await ShellContractProcess(
+            root: tmpDir, deadline: .seconds(30), terminationGrace: .milliseconds(200)
+        ).run(
+            executable: cliPath,
             arguments: ["__tmux-compat", "respawn-pane", "-k", "--", command],
-            environment: environment,
-            timeout: 30
+            environment: environment
         )
-        #expect(handled.wait(timeout: .now() + 30) == .success)
+        #expect(await serverCompleted(handled))
         #expect(state.errorSnapshot() == [])
-        #expect(!result.timedOut, Comment(rawValue: result.stderr))
+        #expect(result.terminatedNormally, Comment(rawValue: result.stderr))
         #expect(result.status == 0, Comment(rawValue: result.stderr))
         guard let forwarded = captured.command, let startCommand = captured.startCommand else {
             throw CLITmuxCompatRespawnTestError.noRespawnCommand
@@ -174,12 +183,12 @@ import Testing
     /// through a POSIX shell (/bin/sh) so Ghostty execs the shell, not the expression.
     /// `tmux_start_command` stays the raw command so `#{pane_start_command}` / OMX-HUD
     /// detection keep reporting it.
-    @Test func respawnPaneRunsShellExpressionsThroughLoginShell() throws {
+    @Test func respawnPaneRunsShellExpressionsThroughLoginShell() async throws {
         let shellPrefix = "/bin/sh -c "
 
         // Claude Code teammate command: spaced `cd … && … claude` shell expression.
         let teammate = "cd /tmp/work && env CLAUDECODE=1 /opt/claude --agent-id alice@team --agent-name alice"
-        let teammateResult = try respawnPaneForwardedCommand(teammate)
+        let teammateResult = try await respawnPaneForwardedCommand(teammate)
         #expect(
             teammateResult.command.hasPrefix(shellPrefix),
             "teammate command must run through /bin/sh -c, got: \(teammateResult.command)"
@@ -194,7 +203,7 @@ import Testing
         )
 
         // Operator without surrounding whitespace must still be wrapped.
-        let noSpaceOperator = try respawnPaneForwardedCommand("echo one;echo two")
+        let noSpaceOperator = try await respawnPaneForwardedCommand("echo one;echo two")
         #expect(
             noSpaceOperator.command.hasPrefix(shellPrefix),
             "non-whitespace-separated operator must still be wrapped, got: \(noSpaceOperator.command)"
@@ -203,7 +212,7 @@ import Testing
         // A leading `NAME=value` assignment is shell syntax (`exec` cannot run a
         // program literally named `FOO=bar`), so it must be wrapped even with no
         // operators present.
-        let assignmentPrefix = try respawnPaneForwardedCommand("FOO=bar /opt/claude --resume x")
+        let assignmentPrefix = try await respawnPaneForwardedCommand("FOO=bar /opt/claude --resume x")
         #expect(
             assignmentPrefix.command.hasPrefix(shellPrefix),
             "assignment-prefixed command must be wrapped, got: \(assignmentPrefix.command)"
@@ -214,7 +223,7 @@ import Testing
         // to tell "already shelled" commands apart from shell expressions that
         // hide trailing operators with no whitespace (`-c "x";y`). The original is
         // carried verbatim inside the wrapper.
-        let shellForm = try respawnPaneForwardedCommand("/bin/sh -c \"opencode attach; sleep 1\"")
+        let shellForm = try await respawnPaneForwardedCommand("/bin/sh -c \"opencode attach; sleep 1\"")
         #expect(
             shellForm.command.hasPrefix(shellPrefix),
             "shell-invocation command must be wrapped, got: \(shellForm.command)"
@@ -236,12 +245,12 @@ import Testing
     /// opt-in in `BMUX_CLAUDE_TEAMS_SANDBOXED` — the decision is NOT re-derived from
     /// the respawn command text. OMO and the public `respawn-pane` never see that env
     /// and are unaffected.
-    @Test func respawnPaneInjectsClaudeTeamsTrustBypass() throws {
+    @Test func respawnPaneInjectsClaudeTeamsTrustBypass() async throws {
         // No --dangerously-skip-permissions substring in the command: the bypass must
         // come purely from the launcher's recorded opt-in marker.
         let teammate = "cd /tmp/work && env CLAUDECODE=1 /opt/claude --agent-id alice@team --agent-name alice"
 
-        let inTeams = try respawnPaneForwardedCommand(
+        let inTeams = try await respawnPaneForwardedCommand(
             teammate,
             extraEnvironment: ["BMUX_CLAUDE_TEAMS_SANDBOXED": "1"]
         )
@@ -264,7 +273,7 @@ import Testing
 
         // A bare `--dangerously-skip-permissions` substring in the command must NOT
         // grant the bypass on its own — only the recorded opt-in marker does.
-        let substringOnly = try respawnPaneForwardedCommand(
+        let substringOnly = try await respawnPaneForwardedCommand(
             "cd '/tmp/--dangerously-skip-permissions' && /opt/claude --agent-id a@t --agent-name a"
         )
         #expect(
@@ -273,7 +282,7 @@ import Testing
         )
 
         // No marker (OMO / public respawn-pane / non-opted-in claude-teams): no injection.
-        let outsideTeams = try respawnPaneForwardedCommand(teammate)
+        let outsideTeams = try await respawnPaneForwardedCommand(teammate)
         #expect(
             !outsideTeams.command.contains("CLAUDE_CODE_SANDBOXED"),
             "without the opt-in marker, respawn must not inject CLAUDE_CODE_SANDBOXED, got: \(outsideTeams.command)"
@@ -303,13 +312,6 @@ import Testing
             lock.unlock()
             return value
         }
-    }
-
-    private struct ProcessRunResult {
-        let status: Int32
-        let stdout: String
-        let stderr: String
-        let timedOut: Bool
     }
 
     private static func makeSocketPath(_ name: String) -> String {
@@ -433,52 +435,5 @@ import Testing
     private static func jsonObject(_ line: String) -> [String: Any]? {
         guard let data = line.data(using: .utf8) else { return nil }
         return try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-    }
-
-    private static func runProcess(
-        executablePath: String,
-        arguments: [String],
-        environment: [String: String],
-        timeout: TimeInterval
-    ) -> ProcessRunResult {
-        let process = Process()
-        let stdoutPipe = Pipe()
-        let stderrPipe = Pipe()
-        process.executableURL = URL(fileURLWithPath: executablePath)
-        process.arguments = arguments
-        process.environment = environment
-        process.standardInput = FileHandle.nullDevice
-        process.standardOutput = stdoutPipe
-        process.standardError = stderrPipe
-
-        do {
-            try process.run()
-        } catch {
-            return ProcessRunResult(status: -1, stdout: "", stderr: String(describing: error), timedOut: false)
-        }
-
-        let exitSignal = DispatchSemaphore(value: 0)
-        DispatchQueue.global(qos: .userInitiated).async {
-            process.waitUntilExit()
-            exitSignal.signal()
-        }
-
-        let timedOut = exitSignal.wait(timeout: .now() + timeout) == .timedOut
-        if timedOut {
-            process.terminate()
-            if exitSignal.wait(timeout: .now() + 1) == .timedOut {
-                kill(process.processIdentifier, SIGKILL)
-                _ = exitSignal.wait(timeout: .now() + 1)
-            }
-        }
-
-        let stdout = String(data: stdoutPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-        let stderr = String(data: stderrPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-        return ProcessRunResult(
-            status: process.isRunning ? SIGKILL : process.terminationStatus,
-            stdout: stdout,
-            stderr: stderr,
-            timedOut: timedOut
-        )
     }
 }
