@@ -1,4 +1,5 @@
 import Foundation
+import BmuxWorkspaces
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
 import Testing
@@ -58,7 +59,12 @@ struct WorkspaceArchiveCaptureTests {
             closedAt: closedAt, colorHex: nil))
         let recovery = WorkspaceExplorerArchiveRecoveryService(
             archiveService: archive,
-            savedCandidates: { try await journal.candidates() },
+            savedCandidates: {
+                try await journal.candidates().map {
+                    WorkspaceArchiveRecoveryCandidate(stableID: $0.stableID, title: $0.title,
+                        closedAt: $0.closedAt, colorHex: $0.colorHex)
+                }
+            },
             waitForWrites: {}, liveWorkspaceIDs: { [] }
         )
 
@@ -130,7 +136,7 @@ struct WorkspaceArchiveCaptureTests {
             let stableID = UUID()
             try journal.record(.init(stableID: stableID, title: "Earlier close",
                 closedAt: clearedAt.addingTimeInterval(-1), colorHex: nil))
-            let newer = WorkspaceArchiveRecoveryCandidate(
+            let newer = WorkspaceExplorerCloseRecord(
                 stableID: stableID, title: "Later close",
                 closedAt: clearedAt.addingTimeInterval(1), colorHex: nil
             )

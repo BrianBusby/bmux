@@ -1,9 +1,11 @@
-import Foundation
+public import Foundation
 
-/// A small, synchronous close record that survives termination before PE's
-/// asynchronous archive enrichment completes. One file per logical workspace
-/// avoids rewriting the unbounded recently-closed restore history on close.
-actor WorkspaceExplorerCloseJournal {
+/// Persists a minimal close identity before asynchronous archive enrichment.
+///
+/// One atomic file per logical workspace avoids rewriting restore history at
+/// close. Reads and clear run on this actor; the close write is synchronous so
+/// the caller can finish it before returning from workspace removal.
+public actor WorkspaceExplorerCloseJournal {
     private struct Record: Codable {
         static let currentVersion = 1
 
@@ -13,8 +15,8 @@ actor WorkspaceExplorerCloseJournal {
         let closedAt: Date
         let colorHex: String?
 
-        var candidate: WorkspaceArchiveRecoveryCandidate {
-            WorkspaceArchiveRecoveryCandidate(
+        var candidate: WorkspaceExplorerCloseRecord {
+            WorkspaceExplorerCloseRecord(
                 stableID: stableID, title: title, closedAt: closedAt, colorHex: colorHex
             )
         }
@@ -23,13 +25,17 @@ actor WorkspaceExplorerCloseJournal {
     private nonisolated let directoryURL: URL
     private nonisolated let fileLock = NSLock()
 
-    init(databaseURL: URL) {
+    /// Creates a journal beside the supplied Provenance Engine database.
+    /// - Parameter databaseURL: Location used to choose the journal directory.
+    public init(databaseURL: URL) {
         directoryURL = databaseURL.deletingLastPathComponent()
             .appendingPathComponent("explorer-close-journal", isDirectory: true)
     }
 
-    /// The close producer must finish this small atomic write before returning.
-    nonisolated func record(_ candidate: WorkspaceArchiveRecoveryCandidate) throws {
+    /// Writes an identity synchronously before the close producer returns.
+    /// - Parameter candidate: Latest close identity for one logical workspace.
+    /// - Throws: A filesystem or encoding error if the atomic write fails.
+    public nonisolated func record(_ candidate: WorkspaceExplorerCloseRecord) throws {
         try fileLock.withLock {
             try FileManager.default.createDirectory(
                 at: directoryURL, withIntermediateDirectories: true
@@ -50,8 +56,11 @@ actor WorkspaceExplorerCloseJournal {
         }
     }
 
-    func candidates() throws -> [WorkspaceArchiveRecoveryCandidate] {
-        var candidates: [WorkspaceArchiveRecoveryCandidate] = []
+    /// Returns all journaled close identities, skipping concurrent deletions.
+    /// - Returns: The retained identities in unspecified order.
+    /// - Throws: A filesystem or decoding error for any retained but unreadable file.
+    public func candidates() throws -> [WorkspaceExplorerCloseRecord] {
+        var candidates: [WorkspaceExplorerCloseRecord] = []
         for url in try recordURLs() {
             do {
                 try fileLock.withLock {
@@ -65,9 +74,10 @@ actor WorkspaceExplorerCloseJournal {
         return candidates
     }
 
-    /// PE's clear marker guards older records. Remove matching journal files
-    /// after PE accepts the clear, while keeping any close made during it.
-    func clear(through timestamp: Date) throws {
+    /// Removes identities cleared by PE while preserving later closes.
+    /// - Parameter timestamp: The clear time accepted by PE.
+    /// - Throws: A filesystem error if a retained file cannot be removed.
+    public func clear(through timestamp: Date) throws {
         for url in try recordURLs() {
             try fileLock.withLock {
                 let closedAt: Date?

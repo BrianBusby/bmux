@@ -136,7 +136,7 @@ coalesces journal entries with persisted restore snapshots and lets PE reconcile
 them through its public archive contract. Clear Explorer history clears PE first,
 then removes journal entries at or before the same clear timestamp. A later close
 is preserved. The journal does not replace full restore snapshots or promise
-terminal scrollback capture. A journal actor owns the persistence source; its
+terminal scrollback capture. A journal actor in `BmuxWorkspaces` owns the persistence source; its
 durability-critical close write is synchronous and serialized with actor-owned
 recovery reads and clear operations one file at a time, so an unbounded scan
 cannot hold a close. Recovery reads and clear run off the main actor. Rules: root

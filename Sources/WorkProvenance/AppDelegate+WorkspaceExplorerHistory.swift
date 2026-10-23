@@ -1,4 +1,5 @@
 import Foundation
+import BmuxWorkspaces
 import ProvenanceEngineContracts
 
 @MainActor
@@ -19,7 +20,11 @@ extension AppDelegate {
                     let saved = WorkspaceArchiveRecoveryCandidate.from(
                         records: await ClosedItemHistoryStore.shared.recordsAfterPersistedLoad(),
                         excluding: [])
-                    let journal = try await self.workProvenanceRuntime?.workspaceCloseJournal?.candidates() ?? []
+                    let journal = try await self.workProvenanceRuntime?.workspaceCloseJournal?.candidates()
+                        .map { WorkspaceArchiveRecoveryCandidate(
+                            stableID: $0.stableID, title: $0.title,
+                            closedAt: $0.closedAt, colorHex: $0.colorHex
+                        ) } ?? []
                     return WorkspaceArchiveRecoveryCandidate.latest(saved + journal)
                 },
                 waitForWrites: { await self.workProvenanceRuntime?.waitForArchiveTasks() },

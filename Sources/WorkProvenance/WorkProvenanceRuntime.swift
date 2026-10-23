@@ -1,6 +1,7 @@
 import AppKit
 import BMUXAgentLaunch
 import BmuxAgentChat
+import BmuxWorkspaces
 import Foundation
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK

@@ -1,4 +1,5 @@
 import Foundation
+import BmuxWorkspaces
 
 extension WorkProvenanceRuntime {
     func trackArchiveTask(_ task: Task<Void, Never>) {
@@ -34,7 +35,7 @@ extension WorkProvenanceRuntime {
         let colorHex = workspace.customColor
         let statusCode = WorkspaceExplorerStatus.verified(of: workspace).archiveCode
         do {
-            try workspaceCloseJournal?.record(WorkspaceArchiveRecoveryCandidate(
+            try workspaceCloseJournal?.record(WorkspaceExplorerCloseRecord(
                 stableID: stableID, title: title, closedAt: closedAt, colorHex: colorHex
             ))
         } catch {
