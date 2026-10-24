@@ -106818,6 +106818,57 @@
         }
       }
     },
+    "explorer.provenanceUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provenance Engine could not start. Repository and activity details may be missing."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provenance Engine を起動できませんでした。リポジトリとアクティビティの詳細が表示されない場合があります。"
+          }
+        }
+      }
+    },
+    "explorer.restartBmux": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restart bmux"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmux を再起動"
+          }
+        }
+      }
+    },
+    "explorer.restartFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmux could not restart. Quit and reopen the app to retry Provenance Engine."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmux を再起動できませんでした。Provenance Engine を再試行するには、アプリを終了して開き直してください。"
+          }
+        }
+      }
+    },
     "explorer.retry": {
       "extractionState": "manual",
       "localizations": {

@@ -6,9 +6,12 @@ import SwiftUI
 struct WorkspaceExplorerWindowView: View {
     @State private var model: WorkspaceExplorerCoordinator
     @State private var confirmsClearHistory = false
+    @State private var restartFailed = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var cardGeometry
     let liveNavigation: WorkspaceExplorerLiveNavigation?
+    let provenanceStartupFailed: @MainActor () -> Bool
+    let restartApp: @MainActor () throws -> Void
 
     init(loadPresence: WorkspaceExplorerCoordinator.PresenceLoader? = nil,
          loadHistory: @escaping WorkspaceExplorerCoordinator.Loader,
@@ -20,8 +23,12 @@ struct WorkspaceExplorerWindowView: View {
          clearArchive: @escaping WorkspaceExplorerCoordinator.Clearer,
          liveStatusWorkspaces: @escaping WorkspaceExplorerLiveStatusMonitor.WorkspaceSource,
          workspaceTabManagers: WorkspaceExplorerWorkspaceChangeMonitor.TabManagers? = nil,
+         provenanceStartupFailed: @escaping @MainActor () -> Bool = { false },
+         restartApp: @escaping @MainActor () throws -> Void = {},
          liveNavigation: WorkspaceExplorerLiveNavigation? = nil) {
         self.liveNavigation = liveNavigation
+        self.provenanceStartupFailed = provenanceStartupFailed
+        self.restartApp = restartApp
         _model = State(initialValue: WorkspaceExplorerCoordinator(
             loadHistory: loadHistory, loadPresence: loadPresence, reopenHistory: reopenHistory,
             activateWorkspace: activateWorkspace,
@@ -55,6 +62,23 @@ struct WorkspaceExplorerWindowView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
+                        if provenanceStartupFailed() {
+                            HStack(spacing: 8) {
+                                Text(String(localized: "explorer.provenanceUnavailable", defaultValue:
+                                    "Provenance Engine could not start. Repository and activity details may be missing."))
+                                Spacer()
+                                Button(String(localized: "explorer.restartBmux", defaultValue: "Restart bmux")) {
+                                    do { try restartApp() } catch { restartFailed = true }
+                                }
+                            }
+                            .font(.system(size: 12)).padding(10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.orange.opacity(0.16), in: RoundedRectangle(cornerRadius: 8))
+                        }
+                        if restartFailed {
+                            notice(String(localized: "explorer.restartFailed", defaultValue:
+                                "bmux could not restart. Quit and reopen the app to retry Provenance Engine."))
+                        }
                         if let title = WorkspaceExplorerActiveWorkspaceVisibility.outsideTitle(model: model) {
                             notice(String(format: String(localized: "explorer.activeOutsideView", defaultValue:
                                 "Active workspace “%@” is outside the current scope or filters. It stays active."),
@@ -99,10 +123,19 @@ struct WorkspaceExplorerWindowView: View {
                                 Task { await model.load() }
                             }
                         }
-                        if model.presentedCatalog?.archiveAvailability != .pending &&
+                        if !provenanceStartupFailed() && model.presentedCatalog?.archiveAvailability != .pending &&
                             model.presentedCatalog?.partialLiveActivity == true {
-                            notice(String(localized: "explorer.partialActivity", defaultValue:
-                                "Some live activity could not be verified. Time filters may omit those workspaces."))
+                            HStack(spacing: 8) {
+                                Text(String(localized: "explorer.partialActivity", defaultValue:
+                                    "Some live activity could not be verified. Time filters may omit those workspaces."))
+                                Spacer()
+                                Button(String(localized: "explorer.retry", defaultValue: "Retry")) {
+                                    Task { await model.load() }
+                                }
+                            }
+                            .font(.system(size: 12)).padding(10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
                         }
                         WorkspaceExplorerPendingWorkspaceSection(items: model.visiblePendingWorkspaceItems,
                             activeWorkspaceID: model.activeWorkspaceID,
