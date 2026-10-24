@@ -212,7 +212,7 @@ extension BMUXCLIErrorOutputRegressionTests {
         #expect(session["stored_pid_exists"] is NSNull)
     }
 
-    @Test func testSessionsListFlagsExistingUnscopedPIDAs06417RestoreRisk() throws {
+    @Test func testSessionsListFlagsExistingUnscopedPIDAs06417RestoreRisk() async throws {
         let cliPath = try bundledCLIPath()
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-sessions-list-pid-reuse-\(UUID().uuidString)", isDirectory: true)
@@ -260,15 +260,23 @@ extension BMUXCLIErrorOutputRegressionTests {
         environment["BMUX_AGENT_HOOK_STATE_DIR"] = stateDir.path
         environment["CODEX_HOME"] = codexHome.path
 
-        let result = runProcess(
-            executablePath: cliPath,
-            arguments: ["sessions", "list", "--agent", "codex", "--session", sessionId, "--json"],
-            environment: environment,
-            timeout: 5
-        )
+        let result: ShellContractProcess.Result
+        do {
+            result = try await ShellContractProcess(root: root, deadline: .seconds(5)).run(
+                executable: cliPath,
+                arguments: ["sessions", "list", "--agent", "codex", "--session", sessionId, "--json"],
+                environment: environment
+            )
+        } catch {
+            let stdout = (try? String(contentsOf: root.appendingPathComponent("stdout"), encoding: .utf8)) ?? ""
+            let stderr = (try? String(contentsOf: root.appendingPathComponent("stderr"), encoding: .utf8)) ?? ""
+            Issue.record(error, "sessions list failed; stdout: \(stdout); stderr: \(stderr)")
+            throw error
+        }
 
-        #expect(!result.timedOut, Comment(rawValue: result.stdout))
-        #expect(result.status == 0, Comment(rawValue: result.stdout))
+        let diagnostics = result.stdout + "\n" + result.stderr
+        #expect(result.terminatedNormally, Comment(rawValue: diagnostics))
+        #expect(result.status == 0, Comment(rawValue: diagnostics))
         let outputData = try #require(result.stdout.data(using: .utf8))
         let object = try #require(JSONSerialization.jsonObject(with: outputData) as? [String: Any])
         let sessions = try #require(object["sessions"] as? [[String: Any]])
