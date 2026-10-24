@@ -107,6 +107,31 @@ struct WorkspaceExplorerProjectionTests {
     }
 
     @Test
+    func repositoryGroupsShowNamesWhileFiltersKeepStableIDs() {
+        let mobile = workspace("mobile", projects: ["p1"], ago: 5,
+            repository: "repository-mobile")
+        let api = workspace("api", projects: ["p1"], ago: 10,
+            repository: "repository-api")
+        let projection = WorkspaceExplorerProjection(projects: projects,
+            workspaces: [mobile, api], archiveAvailable: true,
+            repositoryNamesByID: [
+                "repository-mobile": "companycam-mobile",
+                "repository-api": "Company-Cam-API",
+            ])
+        let grouped = projection.collection(target: .project("p1"), scope: .init(),
+            groupBy: [.repository], filters: [:], now: now, calendar: calendar)
+
+        #expect(grouped.groups.map(\.value) == ["Company-Cam-API", "companycam-mobile"])
+        #expect(grouped.groups.map(\.filterValue) == [
+            .value("repository-api"), .value("repository-mobile"),
+        ])
+        let filtered = projection.collection(target: .project("p1"), scope: .init(),
+            groupBy: [.repository], filters: [.repository: .value("repository-mobile")],
+            now: now, calendar: calendar)
+        #expect(filtered.visibleWorkspaceIDs == ["mobile"])
+    }
+
+    @Test
     func ticketPillFilterMatchesAWorkspaceWithSeveralTickets() {
         let base = workspace("multiple", projects: ["p1"], ago: 5)
         let multiple = WorkspaceExplorerWorkspace(id: base.id, title: base.title,
