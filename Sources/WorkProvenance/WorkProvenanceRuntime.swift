@@ -450,8 +450,13 @@ final class WorkProvenanceRuntime {
         }
         match.tabManager.objectWillChange.send()
         match.workspace.sidebarImmediateObservationChangeSubject.send(())
+        NotificationCenter.default.post(name: workspaceDisplayCurrentStateDidChangeNotification,
+            object: stableWorkspaceID)
         return true
     }
+
+    static let workspaceDisplayCurrentStateDidChangeNotification =
+        Notification.Name("bmux.workspaceDisplayCurrentStateDidChange")
 
     private func currentDisplayStableWorkspaceIDs() -> [UUID] {
         Self.stableWorkspaceIDs(in: workspaceResolutionTabManagers(for: nil))
