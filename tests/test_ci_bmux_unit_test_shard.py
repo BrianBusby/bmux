@@ -82,6 +82,7 @@ def main() -> int:
                 "BrowserSystemProxyMirrorTests",
                 "DeferredTerminalSearchFocusTests",
                 "GhosttyOptionAsAltModsTests",
+                "WorkspaceStressProfileTests",
             ):
                 assert f"-only-testing:bmuxTests/{focused}" not in selectors, "focused gate duplicated"
             print(f"PASS: {total} shards cover {len(selectors)} selectors exactly once; weights {weights}")

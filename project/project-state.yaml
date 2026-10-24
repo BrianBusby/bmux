@@ -6500,7 +6500,7 @@ caveats:
     owner: bmux
 
   - id: workspace_stress_delivery_verification
-    title: Workspace stress profiles preserve workload and timing categories while awaiting bounded FIFO delivery; native build 797 passes locally, fixed-head macOS 15 verification remains pending
+    title: Workspace stress profiles retain the one-second FIFO bound and full workload in a fresh-host macOS 15 gate after a broad shard failed near workspace 38; hosted verification remains pending
     status: open
     owner: bmux
 

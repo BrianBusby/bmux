@@ -5706,14 +5706,20 @@ include async suspension and resumption overhead; they are not interchangeable
 with historical nested-runloop timings. Batch actions retain synchronous timings.
 The existing autoWelcomeIfNeeded initializer argument replaces a temporary global
 welcome preference override, and owned panels are torn down on success or failure.
-No production code, workflow selector, workload size, or budget is changed.
+No production code, workload size, or budget is changed.
 
 The actual build 797 module passes both complete profiles locally in 2.514 seconds
 with warning-free Swift 6 compilation. A temporary withheld FIFO callback fails
 once at the original one-second bound and still completes cleanup and the batch
 case. This local macOS 26 result does not replace
-fixed-head macOS 15 CI coverage. The earlier broad-run pipeline completion gap
-remains a separate unresolved issue.
+fixed-head macOS 15 CI coverage. A later integrated macOS 15 broad shard reached 38 workspaces before its
+one-second queue-delivery bound failed. That app host had already run unrelated
+suites. The stress profiles now run as a focused gate in a fresh app host on
+shard 7 and are excluded from broad sharding. This keeps the 48-workspace,
+10-tab workload and one-second delivery bound while checking whether accumulated
+host state caused the failure. Hosted verification of the focused gate remains
+pending. The earlier broad-run pipeline completion gap remains a separate
+unresolved issue.
 
 ### Native deadline termination evidence
 

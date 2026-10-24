@@ -446,6 +446,7 @@ jobs:
       BMUX_APP_HOST_SPLIT_THEME_REGRESSION_SHARD: "3"
       BMUX_APP_HOST_BROWSER_PROXY_REGRESSION_SHARD: "1"
       BMUX_APP_HOST_DEFERRED_SEARCH_REGRESSION_SHARD: "5"
+      BMUX_APP_HOST_WORKSPACE_STRESS_REGRESSION_SHARD: "7"
       BMUX_APP_HOST_OPTION_ALT_REGRESSION_SHARD: "2"
       BMUX_APP_HOST_SSH_MANUAL_RECONNECT_REGRESSION_SHARD: "3"
       BMUX_APP_HOST_MATTE_REGRESSION_SHARD: "3"
@@ -843,6 +844,22 @@ jobs:
             -destination "platform=macOS" \
             BMUX_SKIP_ZIG_BUILD=1 \
             -only-testing:bmuxTests/DeferredTerminalSearchFocusTests \
+            test
+
+      - name: Run workspace stress profiles in a fresh app host
+        if: ${{ matrix.shard == fromJSON(env.BMUX_APP_HOST_WORKSPACE_STRESS_REGRESSION_SHARD) }}
+        run: |
+          set -euo pipefail
+          SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
+          scripts/ci/run-in-console-session.sh \
+            scripts/ci/run-app-host-xcodebuild.sh \
+            -project bmux.xcodeproj -scheme bmux-unit -configuration Debug \
+            -derivedDataPath "$BMUX_DERIVED_DATA_PATH" \
+            -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
+            -disableAutomaticPackageResolution \
+            -destination "platform=macOS" \
+            BMUX_SKIP_ZIG_BUILD=1 \
+            -only-testing:bmuxTests/WorkspaceStressProfileTests \
             test
 
       - name: Run unit tests

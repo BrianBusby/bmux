@@ -27,6 +27,7 @@ FOCUSED_GATE_SELECTORS = {
     "bmuxTests/BrowserSystemProxyMirrorTests",
     "bmuxTests/DeferredTerminalSearchFocusTests",
     "bmuxTests/GhosttyOptionAsAltModsTests",
+    "bmuxTests/WorkspaceStressProfileTests",
 }
 
 
