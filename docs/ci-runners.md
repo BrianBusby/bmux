@@ -7778,8 +7778,8 @@ field-editor ownership assertions. No direct focus request is added.
 A dedicated app-host CI gate runs this case alone on shard 5 and removes it
 from the broad test partition. Two broad-shard macOS 15 runs recorded native
 main-queue producer arrivals at 1.14s and 1.21s after long-running suites;
-the one-second assertion remains unchanged. The isolated gate still needs
-hosted verification.
+the one-second assertion remains unchanged. The isolated gate checks that
+bound on hosted macOS 15 while the broad-shard queue-delay caveat remains open.
 
 The first one-second bound starts after synchronous `setSearchOverlay`, matching
 the original polling helper. The second one-second bound uses the duration-configured
