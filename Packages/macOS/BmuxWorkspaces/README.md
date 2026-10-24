@@ -30,3 +30,11 @@ unguarded launches retain their selected cwd. Remote launches pass
 `usesLocalWorkingDirectory: false`, return nil for both values, and do not check
 the remote path on the local filesystem. The app retains saved directory metadata
 and unmounted-volume bindings independently of these runtime values.
+
+## Explorer retained-session pages
+
+`WorkspaceExplorerSessionPageStore` owns the Explorer history page cache and
+request generations. The app's Explorer coordinator supplies first-page and
+continuation loaders through its initializer; the store never accesses the PE
+database directly. Tests can inject deterministic async loaders without starting
+the app or using the user's archive. PE contracts provide the session values.

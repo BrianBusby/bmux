@@ -47,6 +47,32 @@ local_capabilities:
   provenance_engine_workspace_display_ticket_title_facts: implemented
   provenance_engine_workspace_display_project_link_facts: implemented
   provenance_engine_workspace_display_durable_context: implemented
+  provenance_engine_workspace_archive_storage: implemented
+  provenance_engine_workspace_archive_contract: implemented
+  workspace_explorer_history_adapter: implemented
+  workspace_explorer_projection: implemented
+  workspace_explorer_native_view: under_observation
+  workspace_explorer_staged_loading: under_observation
+  workspace_explorer_close_recovery: under_observation
+  # BmuxWorkspacePersistence owns the close journal; the app maps records to PE archive candidates.
+  workspace_explorer_close_journal: under_observation
+  workspace_explorer_archive_recovery_actor: under_observation
+  workspace_explorer_live_topology_refresh: under_observation
+  workspace_explorer_motion_accessibility: under_observation
+  workspace_explorer_filter_transition: under_observation
+  workspace_explorer_status_at_close: under_observation
+  workspace_explorer_live_breadcrumb: under_observation
+  workspace_explorer_live_history_header: under_observation
+  workspace_explorer_meaningful_activity: under_observation
+  workspace_explorer_group_accessibility: under_observation
+  workspace_explorer_plan_file_activity: under_observation
+  # Page state belongs to BmuxWorkspaces; Explorer navigation remains in the app coordinator.
+  workspace_explorer_history_page_lifecycle: under_observation
+  workspace_explorer_card_hit_target: under_observation
+  workspace_explorer_activity_window_refresh: under_observation
+  workspace_explorer_timezone_refresh: under_observation
+  workspace_explorer_automatic_arrangement_hold: under_observation
+  provenance_engine_workspace_archive_schema_repair: under_observation
   provenance_engine_schema_identity_validation: implemented
   provenance_engine_producer_neutral_lifecycle_recording: implemented
   provenance_engine_richer_coding_agent_evidence: implemented

@@ -1,6 +1,8 @@
 import AppKit
 import BMUXAgentLaunch
 import BmuxAgentChat
+import BmuxWorkspaces
+import BmuxWorkspacePersistence
 import Foundation
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
@@ -16,6 +18,7 @@ final class WorkProvenanceRuntime {
     let agentSessionSmartSessionStore: AgentSessionSmartSessionStore?
     private let workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription?
     private let sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder?
+    let workspaceArchiveService: WorkProvenanceWorkspaceArchiveService?
     private let codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder?
     private lazy var promptEvidenceCoordinator = WorkProvenancePromptEvidenceCoordinator(
         recorder: codingAgentEvidenceRecorder, displayStore: workspaceDisplayCurrentStateStore,
@@ -28,9 +31,11 @@ final class WorkProvenanceRuntime {
     private var activationObservationTask: Task<Void, Never>?
     private var executionTelemetryProjectionService: ExecutionTelemetryProvenanceProjectionService?
     private var backgroundTasksByID: [UUID: Task<Void, Never>] = [:]
+    var archiveTasksByID: [UUID: Task<Void, Never>] = [:]
 
     private(set) var lifecycleState: WorkProvenanceRuntimeLifecycleState
     let effectiveDatabaseURL: URL?
+    let workspaceCloseJournal: (any WorkspaceExplorerCloseJournaling)?
     let startupErrorDescription: String?
     let isEnabled: Bool
 
@@ -40,7 +45,7 @@ final class WorkProvenanceRuntime {
             executionTelemetryProjectionService != nil || !backgroundTasksByID.isEmpty
     }
 
-    private var acceptsLifecycleProducerWork: Bool { lifecycleState != .stopping && lifecycleState != .stopped }
+    var acceptsLifecycleProducerWork: Bool { lifecycleState != .stopping && lifecycleState != .stopped }
     private var acceptsObservationProducerWork: Bool { lifecycleState == .starting || lifecycleState == .ready }
 
     init(
@@ -51,8 +56,10 @@ final class WorkProvenanceRuntime {
         agentSessionSmartSessionStore: AgentSessionSmartSessionStore? = nil,
         workspaceDisplayCurrentStateSubscription: WorkspaceDisplayCurrentStateSubscription? = nil,
         sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder? = nil,
+        workspaceArchiveService: WorkProvenanceWorkspaceArchiveService? = nil,
         codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder? = nil,
         effectiveDatabaseURL: URL? = nil,
+        workspaceCloseJournal: (any WorkspaceExplorerCloseJournaling)? = nil,
         startupErrorDescription: String? = nil,
         initialLifecycleState: WorkProvenanceRuntimeLifecycleState = .notStarted
     ) {
@@ -75,8 +82,10 @@ final class WorkProvenanceRuntime {
         }
         self.workspaceDisplayCurrentStateSubscription = workspaceDisplayCurrentStateSubscription
         self.sessionLifecycleRecorder = sessionLifecycleRecorder
+        self.workspaceArchiveService = workspaceArchiveService
         self.codingAgentEvidenceRecorder = codingAgentEvidenceRecorder
         self.effectiveDatabaseURL = effectiveDatabaseURL
+        self.workspaceCloseJournal = workspaceCloseJournal
         self.startupErrorDescription = startupErrorDescription
         self.isEnabled = observationService != nil
         self.lifecycleState = initialLifecycleState
@@ -119,10 +128,12 @@ final class WorkProvenanceRuntime {
                 sessionLifecycleRecorder: WorkProvenanceSessionLifecycleRecorder(
                     client: client
                 ),
+                workspaceArchiveService: WorkProvenanceWorkspaceArchiveService(client: client),
                 codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder(
                     client: client
                 ),
-                effectiveDatabaseURL: location.databaseURL
+                effectiveDatabaseURL: location.databaseURL,
+                workspaceCloseJournal: WorkspaceExplorerCloseJournal(databaseURL: location.databaseURL)
             )
         } catch {
             let description = String(describing: error)
@@ -130,6 +141,7 @@ final class WorkProvenanceRuntime {
             return WorkProvenanceRuntime(
                 observationService: nil,
                 effectiveDatabaseURL: location.databaseURL,
+                workspaceCloseJournal: WorkspaceExplorerCloseJournal(databaseURL: location.databaseURL),
                 startupErrorDescription: description
             )
         }
@@ -247,7 +259,7 @@ final class WorkProvenanceRuntime {
         }
     }
 
-    private func trackBackgroundTask(_ task: Task<Void, Never>) {
+    func trackBackgroundTask(_ task: Task<Void, Never>) {
         let id = UUID()
         backgroundTasksByID[id] = task
         Task { @MainActor [weak self] in

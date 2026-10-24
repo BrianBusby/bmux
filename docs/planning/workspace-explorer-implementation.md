@@ -1,0 +1,196 @@
+# Project and Workspace Explorer implementation record
+
+## Sources and ownership
+
+- Design: `/Users/brianbusby/Downloads/design_handoff_workspace_explorer/README.md`, `FIXTURES.md`, and `prototype/Explorer v2.dc.html`.
+- Rules: root `AGENTS.md`; `skills/bmux-architecture/SKILL.md`, `skills/bmux-testing/SKILL.md`, `skills/bmux-localization/SKILL.md`, `skills/bmux-shared-behavior/SKILL.md`, and the continuous-code-quality skill.
+- Existing UI sources: `Sources/Sidebar/SidebarWorkspaceSnapshotBuilder.swift`, `Sources/WorkProvenance/WorkspaceDisplayCurrentStateSnapshot.swift`, and `Sources/ContentView.swift`.
+- Restore path: `Sources/ClosedItemHistory.swift`, `Sources/AppDelegate+ClosedItemHistory.swift`, and `Sources/TabManager.swift`.
+- PE boundary: `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineContracts/ProvenanceEngineClient.swift` and its workspace/session response contracts.
+
+The PE archive foundation stores Explorer snapshots in a separately clearable table; these snapshots are excluded from the immutable ledger and its projection rebuild. An explicit clear removes Explorer archive entries, while the ledger and session evidence remain (user decision, 2026-10-20). The Explorer coordinator owns scope, navigation, and per-view arrangement state. Lazy rows receive immutable card snapshots and action closures. TabManager remains the owner of live activation and restoration. PE owns durable historical facts and bounded history queries. The bmux `WorkspaceExplorerHistoryService` owns the PE/live-facts join and archive-unavailable fallback through separate live and archive read phases; AppDelegate injects routed TabManager, selection, and restoration sources and forwards calls. The adapter deduplicates by `Workspace.stableId` and uses recorded-at-close display facts only when a reopened live display read is unavailable. No Explorer code reads PE tables directly.
+
+## Staged history loading slice
+
+The `workspace-explorer-staged-loading` branch starts from PR #180. It shows live workspace presence before PE activity and archive reads finish. The history service owns reads and joining; the coordinator owns pending/available/unavailable transitions, stale-load rejection, and preservation of scope, navigation, grouping, filters, and scroll. Cards still use the existing activation action. The view distinguishes pending and unknown closed counts and offers Retry after a failed read.
+
+Rules: root `AGENTS.md`, the bmux architecture, testing, and localization skills, and the continuous-code-quality skill. Patterns: `WorkspaceExplorerHistoryService`, `WorkspaceExplorerCoordinator`, `WorkspaceExplorerCatalog`, and the card snapshot boundary. Verification: 22 focused Explorer tests pass, the Swift file budget and pbxproj checks pass, English/Japanese keys were audited, and project-doc validation, generation, and freshness checks pass. Tagged builds 825 and 826 succeeded. Review found that the provisional overview mislabeled unknown project links as Unassigned and pending Closed/period headers printed zero. The correction shows live cards in a temporary flat overview and formats only verified counts. Thirty-six focused Explorer tests and isolated tagged build 827 passed on the first corrected runtime commit. A subsequent regression test showed that refreshing after an unavailable archive read could replace verified project links with provisional empty links; the first pending All workspaces view could also group those empty links as Unassigned. The coordinator now retains verified facts during refresh and holds project-specific results until PE metadata arrives. The two coordinator regression tests failed before the fix; all 38 focused Explorer tests, project-doc and pbxproj checks, and isolated tagged build 828 passed afterward. Build 828 launched and its tag-bound CLI responded; the user approved it and PR #181 merged as `1c76bd8a8`. Before PE facts arrive, live cards have unknown activity and project metadata; the pending state must not claim that a period has no activity, that closed history is empty, or that project membership is Unassigned.
+
+## Close-snapshot recovery slice
+
+Recovery waits for current-run archive writes before replaying persisted close snapshots. The history detail labels snapshots with limited metadata. A forced termination before the restore snapshot reaches disk remains outside this recovery path.
+
+During build 830 dogfood, an open Explorer did not subscribe to TabManager tab-list
+changes, so newly created workspaces could remain absent until an unrelated
+refresh. The coordinator now receives a collection-change signal and shows
+new workspaces as provisional, uncounted cards in the unfiltered overview or
+All workspaces view under an Any time Open/All scope while PE facts load. The monitor
+rebinds when main-window contexts change; project grouping and existing counts
+stay on the last verified catalog until enrichment completes. It does not poll.
+
+The same build showed `closed unknown` because its existing PE database had
+schema version 26 without the archive table. A read through PE's public client
+returned `no such table: provenance_archived_workspaces`; bmux did not inspect
+PE tables. PE version 27 adds an idempotent archive-table repair migration. It
+does not rewrite ledger evidence or rebuild the potentially large sessions index.
+An isolated version-26 fixture proves the missing-table failure before the fix
+and the repair afterward. The revised tagged build must be dogfooded before
+merging PR #182; build 830 remains in use and must not be replaced.
+
+The `workspace-explorer-close-recovery` branch starts from merged PR #181.
+`WorkspaceExplorerArchiveRecoveryService` owns the persisted-record wait,
+current-run archive-write wait, live-ID exclusion, and candidate reconciliation;
+AppDelegate supplies sources and `WorkspaceExplorerHistoryService` runs recovery
+concurrently with live fact loading. PE compares each saved close timestamp with
+the archived record and restores a newer snapshot after an interrupted re-close,
+while preserving richer earlier facts. Its clear marker still prevents replay of
+records that the user explicitly cleared. The restore store owns persistence;
+PE owns archive reads and writes through its public contract.
+
+The topology path observes the existing `WorkspacesModel.tabs` through Swift
+Observation. The Explorer monitor rebinds across main-window contexts. The coordinator owns pending-card visibility and status,
+so filtered, period, Closed, project, and history views do not show provisional
+cards or conflicting empty states. The new user-facing label has English and
+Japanese translations. The first recovery regression used a test-only commit;
+follow-up test-only commits cover topology changes, archive error fallback,
+and newer re-close snapshots. Build 830 exposed the missing archive table and
+prompted the schema-27 repair. A revised tagged build and user dogfood remain
+pending before merging PR #182.
+
+The recovery follow-up moves persistence/PE reconciliation into an actor. The
+main-actor inputs produce Sendable close candidates and live IDs. Normal
+refreshes reuse one archive read; a replay attempt rereads to reflect PE's
+authoritative merge and clear marker. If replay fails, archive completeness is
+unknown, so Explorer follows the specified open-only/closed-unknown state even
+when older PE rows could still be read. This is a count-integrity choice, not
+evidence that the older rows were deleted.
+
+## Dependency audit on `origin/main` (2026-10-20)
+
+| Design need | Current evidence | Required work |
+| --- | --- | --- |
+| Stable workspace ID | `Workspace.stableId` is persisted in `SessionWorkspaceSnapshot.stableId` and PE display uses it. `Workspace.id` and the closed restore entry use a runtime UUID that changes on restore. | Key archive and Explorer cards by `stableId`; verify restore adoption and handle legacy snapshots without one. |
+| Project, ticket, PR facts | PE workspace display exposes links and PR fields for one workspace. | Add bounded historical enumeration/read. Project owner/status and ticket status lack a demonstrated source; use Unknown buckets until authoritative facts exist. |
+| Closed workspace archive | `ClosedItemHistoryStore.restoreFirstRestorable` removes a restored record. | PE's public close-snapshot archive and bmux's user-close producer exist; add workspace-keyed session history and explicit Explorer clear UI, keeping restore eligibility separate. |
+| Session history | PE exposes `sessionTree`, factual projection, and turn detail for known session IDs. | A bounded workspace-keyed session query now covers linked lifecycle, prompt, and turn evidence and reports partial coverage; use existing per-session detail contracts in the UI. |
+| Meaningful activity | Workspace display has observation/update and prompt times, but metadata refresh is not work. | Derive activity from accepted work events; never filter on projection update time. |
+| Live status | Error/Needs input/Running/Idle/Disconnected precedence is a design assumption. | Map to verified bmux session and connection signals and test precedence. |
+| Reopen | TabManager restores snapshots through existing actions. | Add targeted restore by logical workspace ID, report eligibility, preserve PE history, and never start an agent implicitly. |
+
+## Delivery sequence
+
+1. PE close-snapshot archive foundation: public bounded read/write/clear contracts, version 26 clearable archive storage, stable-ID deduplication, and rebuild retention tests. The bmux user-close producer combines PE's linked session lifecycle, prompt, and turn activity with the last submitted prompt; broader activity sources remain.
+2. Add a bmux adapter that joins PE history with live TabManager presence. Reuse the existing restore action. Test close, reopen, missing worktree, and query failure. The `workspace-explorer-adapter` branch implements this boundary; Explorer reopen strips persisted agent and tmux startup commands before the existing restore action. Only direct local workspace snapshots with a present directory are eligible in this slice. A closed-window-only or remote snapshot remains readable but cannot be reopened from Explorer yet.
+3. Add a pure Explorer projection for scope, grouping, filter intersections, unique counts, and held status arrangement. Exercise `FIXTURES.md`, including multi-project overlap and missing metadata. The `workspace-explorer-projection` branch owns this normalized model; a future native coordinator will adapt live/archive facts. Grouping and Focus use typed identities so project names and missing-data labels cannot merge distinct buckets. The English labels are internal and must be localized before display.
+4. Add native overview, project, and read-only detail views with localized English/Japanese copy. Preserve per-view navigation state and shared scope. PR #180 merged the native view: Explorer opens as a separate full-size native window from the Window menu, leaving the existing sidebar and Session/Chat/Terminal surfaces intact. The coordinator keeps shared scope and per-view grouping/filter/collapse; it reads PE through the bmux history adapter and uses existing TabManager activation/reopen paths. Initial overview, project, read-only session list, and explicit archive clear UI are present. Thirteen focused tests pass; a tagged build and live UI pass exercised overview → collection → live workspace, Focus, no-match, Clear filters, and returning to the saved collection grouping. The next implementation pass added per-view scroll anchors, a PID-identity/remote-connection-verified live status snapshot and event-driven lifecycle subscriptions, held status regrouping with an explicit update banner, richer read-only PE session evidence and paginated retained sessions, expanded counts and empty states, active workspace tagging/notice, reopen feedback and eligibility reasons, a return-to-project ring, matched card geometry with reduced-motion-aware transitions, and an isolated 40-card history fixture window in Debug builds. Twenty-seven focused tests pass with a temporary local compiler-probe workaround. The dense fixture restored a nearby project card after scrolling to the bottom, returning to the overview, and re-entering; precise pixel restoration is not guaranteed. The current view still needs verification of filter-exit timing and grouped motion, retained status-at-close coverage, complete project metadata from real sources, and history/reopen dogfood against real retained records. The existing Session/Chat/Terminal surface does not yet display an Explorer breadcrumb.
+5. Add motion and accessibility, then run focused tests, project-doc gates when status changes, tagged build, keyboard/reduced-motion and dense-fixture checks. Tagged build 833 received user approval and PR #183 merged as `a2d2b4cb2`. The `workspace-explorer-motion-accessibility` branch keeps group and grouping-chip view identities stable across reorder, adds a distinct keyboard focus ring to project cards, keeps workspace focus overlays from intercepting controls, and names the grouping dimension in move/remove accessibility labels. The state control order is Open, Closed, All; `WorkspaceExplorerScope` already defaults to Open. That bounded pass did not establish the requested filter-exit timing or a full keyboard/reduced-motion runtime pass. Focused coordinator and projection tests passed (27 tests, 2 suites) using the repository’s macOS 26 optional Ghostty-helper skip, and isolated tagged build 833 succeeded. The Debug fixture showed Open selected first, then Closed and All; a 42-closed-workspace grid remained readable with Repository › Ticket › bmux status grouping, and group collapse retained its count. The host did not expose focus movement through Tab, so the visible project keyboard ring and reduced-motion behavior still need user dogfood.
+
+6. Filter and scope exit timing (`workspace-explorer-filter-transition`): the Explorer coordinator chooses the result and a dedicated observable exit transition owns the cancellable 170 ms presentation phase for user changes that exclude cards. The old result, counts, and scope labels stay together during the fade; the latest result commits after the phase, and rapid changes cancel the prior task. The group section fades only excluded cards and disables their hit targets. Reduced motion commits immediately. Scroll-anchor writes stay out of arrangement mutation so scrolling cannot cancel the phase. This slice starts from merged PR #183 and uses its stable group identities. Twenty-eight focused coordinator/projection tests passed on the final source. Tagged build 835 exercised Open → All workspaces → Needs input no-match → Clear filters → Closed → Open. After a CI file-length repair, revised build 836 compiled, launched, and passed tag-bound CLI verification; the user approved it and PR #184 merged. Full reduced-motion and keyboard-only runtime passes remain open.
+
+## Live workspace breadcrumb slice
+
+Merged PR #185 records verified status at close. The `workspace-explorer-live-breadcrumb` branch starts from that merge. Explorer owns the saved collection arrangement; an app-composed, session-scoped live navigation model carries only the origin collection title and selected runtime workspace ID to the existing main window. Opening a live card leaves Explorer open and its grouping, filters, and scroll intact. The live titlebar offers a return to that Explorer window only while the originating workspace is selected. Ordinary workspace selection and the Session/Chat/Terminal content remain on their existing paths. Closing Explorer clears the return route. The retained-history action in the live header and full keyboard/reduced-motion dogfood remain later work. Rules: root `AGENTS.md`, bmux architecture/localization/testing/dev-workflow skills, and continuous-code-quality. Pattern references: `WorkspaceExplorerCoordinator`, `WorkspaceExplorerWindowView`, `ContentView.customTitlebar`, `WindowAccessor`, and `AppDelegate.activateWorkspaceExplorerWorkspace`. Fourteen focused coordinator tests passed, including the new live return route test. Builds 839–841 exposed a titlebar observation gap: the initial render checked for a registered Explorer window before reading the observable origin, so opening a workspace did not invalidate the titlebar. A separately wired regression test failed on that path before the fix; reading the origin first made all 15 focused tests pass. The Swift file-length and warning budgets, pbxproj normalization, localization key audit, and project-doc gates pass. Tagged build 842 compiled and launched; the tag-bound CLI responded. Local UI dogfood opened Explorer → Unassigned workspaces → live card, observed the Back to Unassigned workspaces button in the existing titlebar, and returned to the saved Explorer collection. User dogfood and merge approval remain.
+
+## Live header history slice
+
+The `workspace-explorer-live-history` branch starts from merged PR #186 (`abde794c5`). The Explorer coordinator remains the owner of overview, collection, and read-only history navigation; `WorkspaceExplorerLiveNavigation` holds only the session-scoped origin, a weak Explorer window/coordinator route, and an asynchronous retained-session count for the originating workspace. The existing main titlebar shows All projects → collection → workspace, with direct overview/collection return controls and a history action only when the count is positive. PE supplies an exact unique linked-session total on its bounded public workspace-session page; no bmux code reads PE tables. This count describes retained linked evidence, which may have partial capture coverage. The query cancels when the route changes or Explorer closes, and results for an older origin are ignored. Rules: root `AGENTS.md`, continuous-code-quality, bmux architecture, testing, localization, and dev-workflow skills. Patterns: `WorkspaceExplorerCoordinator.showHistory`, `WorkspaceExplorerWindowView` header, `WorkspaceExplorerLiveNavigation`, and `ProvenanceSQLiteRepository+WorkspaceSessions`. Verification: eight focused PE archive tests and 18 app tests across the Explorer coordinator/live-navigation suites passed; package policy, pbxproj, Swift file-length and warning budgets, English/Japanese localization, and project-doc gates passed. Tagged build 843 launched and its tag-bound CLI responded. Local UI dogfood verified Explorer → Unassigned workspaces → live titlebar, All projects returning to the overview, and the collection link returning to the saved collection. This isolated tag has no retained session for its live workspace; the positive-count History button awaits user dogfood against real retained evidence. User approval remains.
+
+## Meaningful activity evidence slice
+
+The `workspace-explorer-meaningful-activity` branch starts from merged PR #187 (`577e0b006`). PE owns the workspace-session activity query; bmux continues to read it through the public contract for live period eligibility and close capture. The query now includes completed coding-agent commands and visible assistant output alongside session starts, submitted prompts, and turn start/completion. Session `updatedAt` remains excluded because polling and metadata refresh are not meaningful work. The focused PE test failed before the query change and passed afterward, including a ledger projection rebuild. Other evidence classes and provider coverage remain to be audited; this slice does not claim complete activity capture. Tagged app dogfood and PR review remain.
+
+## Group accessibility pass
+
+The `workspace-explorer-accessibility-pass` branch starts from merged PR #188 (`dbb4fb94c`). The recursive group section owns disclosure and Focus controls and receives immutable snapshots from the Explorer window. Group disclosure now has a visible keyboard-focus outline and localized accessibility label/value that names its dimension, bucket, count, and expanded state. The Focus action names its target bucket and dimension for VoiceOver. No store reference crosses the lazy grid boundary. Rules: root `AGENTS.md`, continuous-code-quality, bmux architecture, localization, testing, debugging, and dev-workflow skills. Pattern references: project and workspace card focus overlays, `WorkspaceExplorerGroupSection`, and the existing reduced-motion environment gates. Twenty-nine focused Explorer coordinator/projection/exit-transition tests pass after the repository’s macOS 26 optional Zig-helper skip. English/Japanese localization keys, project-doc gates, package policy, and pbxproj checks pass. Build 845 compiled and the dense fixture AX tree verified localized disclosure labels, named Focus actions, and retained counts on collapse. The screenshot prompted a group-count contrast correction; a revised tagged build and user keyboard/reduced-motion dogfood remain. The host did not expose Tab focus movement, and this slice does not claim that pass.
+
+## Plan and file activity slice
+
+PR #189 merged as `f4dd5a93a` after build 846 dogfood. The `workspace-explorer-more-activity` branch starts from that merge. PE's existing workspace-session query now considers observed coding-agent plan updates and file-change attributions when deriving the last meaningful activity timestamp. The query still excludes session metadata refreshes, and bmux continues to read the public PE contract for period scope, retained-session order, and close capture. A focused ledger-backed test failed before the query change and passes after it, including a projection rebuild. Session/time indexes already cover both evidence tables. This slice does not change capture providers or claim complete history; real retained-record dogfood and the close-snapshot force-quit durability gap remain open.
+
+## History page lifecycle slice
+
+PR #190 merged as `ba4561ab9` after build 847 dogfood. The `workspace-explorer-history-pages` branch starts from that merge. `WorkspaceExplorerSessionPageStore` is a main-actor observable child of the Explorer coordinator in the existing `BmuxWorkspaces` domain package and owns retained-session pages, request generations, failure state, and one in-flight continuation per workspace. The coordinator still owns navigation and invalidates page responses when history is left or Explorer history is cleared. PE remains the source of session facts and the unique linked-session total; a later page preserves that total. The view receives immutable page values across the card boundary. Rules: root `AGENTS.md`, continuous-code-quality, bmux architecture/testing/dev-workflow, and the file-length budget. Pattern references: `WorkspaceExplorerCoordinator`, `WorkspaceExplorerHistoryView`, and PE's `ProvenanceWorkspaceSessionPageResponse`. A wired two-test regression commit failed for late first-page overwrite and dropped total; the correction passes those tests plus the existing coordinator suite (16 tests). Tagged build 848 compiled and launched; its tag-bound CLI responded. Review then identified the new app-target domain state owner as an architecture violation, so the store moved into `BmuxWorkspaces` with only a PE contracts dependency. The direct package test and 16 focused app tests pass; the Swift file budget, pbxproj/test wiring, package lock policy, and project-doc gates pass. Revised tagged build 849 compiled, launched, and answered through its tag-bound CLI. No changed-file compiler warnings or new UI strings. User approved build 849 and PR #191 merged as `ea7371371`; remaining macOS CI jobs were queued at merge and require follow-up.
+
+
+## Workspace card hit-target slice
+
+The `workspace-explorer-card-hit-target` branch starts from PR #191's merge. Workspace cards already expose a keyboard-focusable primary button for the title, branch, and status, plus independent ticket, repository, PR-owner, History, and Reopen controls. The card container now invokes the same primary open action for the remaining pointer target, including empty space and timeline rows; decorative overlays do not intercept it. The controls remain separate actions and keyboard focus stays on the primary button. Rules: root `AGENTS.md`, continuous-code-quality, bmux architecture/debugging/dev-workflow/testing/localization, and the Swift file budget. Pattern reference: the existing whole-card project button and workspace card action closures. Fourteen focused Explorer coordinator tests pass with the documented optional Zig-helper skip. Rebased tagged build 852 compiled. The macOS computer-use service failed to attach during pointer dogfood, so blank/timeline clicks and child filter controls still need human verification in build 852.
+
+## Activity-window refresh slice
+
+The `workspace-explorer-activity-window-refresh` branch starts from merged PR #192. The Explorer coordinator still owns scope and navigation; a cancellable observable clock in `BmuxWorkspaces` publishes only when a known meaningful-activity date can cross a rolling period boundary or local midnight arrives. The coordinator configures it from the loaded workspace and retained-session dates and passes one sampled time to the collection, overview and unassigned card projections, counts, active-workspace notice, and read-only history detail. Closing Explorer invalidates late archive loads and prevents page completions from restarting the clock. The clock stops when the Explorer window closes and resamples on appearance. No polling or metadata refresh is used as activity. Rules: root `AGENTS.md`, continuous-code-quality, bmux architecture/testing/dev-workflow, and the file-length budget. Pattern references: `WorkspaceExplorerCoordinator`, `WorkspaceExplorerScope`, `WorkspaceExplorerHistoryView`, and `WorkspaceExplorerSessionPageStore`. Verification: two package deadline tests and deterministic focused app regressions for expiry and late-load close pass; project-doc, package-lock, test-wiring, and Swift file-budget gates pass. The app test uses the documented optional Zig-helper skip. Original build 853 compiled with the optional Zig-helper skip; build 854 remains the user dogfood build. Review correction replaced the real-wait regression with injected manual time and a bounded signal, passed a single sampled time into overview and project-card counts, and stopped late archive/page completions from restarting the clock. The test-only commit fails on the missing deadline signal, and the final implementation passes three focused app tests plus two package deadline tests. Revised isolated build 855 compiled under `workspace-explorer-activity-clock-review` without replacing build 854; the user approved build 855 and PR #193 merged. A type-only warning fix passed the warning budget. The live time-zone-change caveat is addressed by the next slice. Automatic expiry currently reprojects cards immediately; preserving a hovered or keyboard-focused card until focus leaves remains a motion follow-up.
+
+## Live time-zone refresh slice
+
+The `workspace-explorer-timezone-refresh` branch starts from PR #193's merge. The existing `BmuxWorkspaces` activity clock owns Today's local-midnight deadline and now listens for the system time-zone-change notification only while Today is active. It resamples the current calendar and date, cancels the old deadline, and schedules the new one; switching to another period or closing Explorer cancels the listener. The injected calendar and notification center keep the clock testable without changing machine settings. Rules: root `AGENTS.md`, continuous-code-quality, bmux architecture/testing/dev-workflow, and the project-state rule. Pattern references: `WorkspaceExplorerActivityClock`, `WorkspaceExplorerCoordinator` start/stop lifecycle, and the existing manual-deadline test. The test-only commit fails on the old clock because the changed calendar never schedules a new midnight. The test fails at the old deadline and all three focused package tests pass after the fix, including five repeated notification runs. Project-doc, package-lock, test-wiring, and Swift file-budget checks pass. Tagged build 856 compiled under `workspace-explorer-timezone-refresh`; launch, PR review, and dogfood remain.
+
+## Automatic activity arrangement hold slice
+
+The `workspace-explorer-auto-update-focus` branch starts from merged PR #195.
+`WorkspaceExplorerActivityClock` remains the deadline and local-calendar owner.
+`WorkspaceExplorerActivityArrangement` in `BmuxWorkspaces` owns one held time/calendar
+sample and the set of hovered or keyboard-focused card IDs. The app coordinator
+uses that sample for projection; lazy card rows send interaction changes through
+closures. Automatic clock deadlines and time-zone changes advance a revision and
+show an Update arrangement banner while a card is being interacted with. Explicit
+scope changes and the banner action use the current sample. Rules: root
+`AGENTS.md`, continuous-code-quality, bmux architecture/testing/localization,
+and the 500-line Swift file budget. Patterns: the existing activity clock,
+coordinator, immutable group rows, and status arrangement banner. Verification:
+all 114 BmuxWorkspaces package tests and four focused app activity-window tests
+pass; tagged build 859 compiled, and the Swift file/warning budgets, pbxproj,
+package policy, project-doc gates, and English/Japanese key audit pass. Human
+keyboard/pointer dogfood remains.
+
+The follow-up regression test on commit `351e53ea3` records that a hovered
+workspace disappeared when a fresh meaningful activity timestamp exceeded the
+held time. The presentation now holds the visible catalog as well as the time
+and calendar. It overlays current live status labels while retaining group
+membership and counts. New data that would change the arrangement sets the
+Update arrangement banner; applying it uses the latest catalog and time.
+All 114 BmuxWorkspaces package tests passed. A focused app regression also
+covers explicit Reopen while the closed card is hovered: the same logical card
+switches to Open immediately and counts update without waiting for hover exit.
+Explicit Reopen and Clear history reset the held presentation before reloading.
+Six focused app activity-window tests pass; a new isolated tagged build and
+human dogfood of this revised runtime are required. The user's earlier build
+860 approval does not cover either runtime correction.
+
+## Open decisions and verification
+
+### Close journal durability slice
+
+The `workspace-explorer-close-durability` branch starts from merged PR #195.
+Bmux owns a compact, atomic close journal beside its PE database.
+The user-close producer writes stable identity, title, close time, and identity
+color synchronously before starting PE archive enrichment. Startup recovery
+coalesces journal entries with persisted restore snapshots and lets PE reconcile
+them through its public archive contract. Clear Explorer history clears PE first,
+then publishes a durable journal clear marker and removes entries at or before
+the same timestamp. A concurrent writer checks the marker after its atomic
+write and removes a now-cleared entry. Clear compacts superseded markers so
+close-time reads stay bounded. A later close
+is preserved. The journal does not replace full restore snapshots or promise
+terminal scrollback capture. A journal actor in `BmuxWorkspacePersistence` owns the persistence source; its
+durability-critical close write is synchronous and uses a distinct immutable
+file for each close, so independent app processes cannot overwrite one another.
+Recovery coalesces these files by logical workspace ID and keeps the latest
+close; the app runtime holds the journal through a protocol. Reads and clear
+run off the main actor. Rules: root
+`AGENTS.md`, continuous-code-quality,
+bmux architecture/testing/dev-workflow, and the project-state rule. Patterns:
+`ClosedItemHistoryStore`, `WorkspaceExplorerArchiveRecoveryService`, and
+`WorkProvenanceWorkspaceArchiveService`. Focused tests, tagged build, real
+close/reopen dogfood, and force-quit inspection remain verification gates.
+
+- Status-at-close slice (`workspace-explorer-status-at-close`): bmux uses the same `WorkspaceExplorerStatus.verified(of:)` resolver for live display and close capture, then passes an optional code through PE's public archive contract. PE stores the code without interpreting bmux state. Older archive JSON remains readable, and a later close without status does not reuse an earlier value. Closed cards and read-only history show localized historical context while the live badge remains Closed. Six PE archive tests and 21 focused bmux tests across the history adapter and archive capture suites passed. Project-doc gates passed. Isolated tagged build 837 succeeded and its tag-bound CLI responded. Real close/reopen dogfood remains.
+
+- Retain archived workspace metadata and captured session summaries until explicitly cleared (user decision, 2026-10-20). Clearing hides Explorer records but preserves PE session evidence. Add the UI clear path and make coverage visible; do not imply complete historical capture for pre-feature records.
+- Freeze project, PR, and ticket metadata at close for read-only detail. Open cards may use current authoritative display facts.
+- Verify restored workspace IDs through the real TabManager path and retain the archive record after restore. The focused adapter tests exercise this path.
+- Local restore eligibility checks the recorded directory. Remote and closed-window-only snapshots are currently unavailable for targeted Explorer reopen; the existing recently closed menu keeps its own restoration behavior.
+- PE enrichment remains asynchronous. The close journal protects the minimum identity record after its atomic write returns; disk write failure is reported and retains the existing archive-only fallback. Power loss and full restore-snapshot durability remain outside this guarantee.
+- PE's clear marker and journal cleanup are separate writes. If the process exits between them, PE suppresses replay; the journal marker suppresses it after publication, and a later recovery or Clear can finish removing any residual file. An abrupt exit in the small interval before the journal marker is published can leave local metadata until cleanup is retried.
+- The staged loading slice renders live presence before PE reads finish and marks closed counts pending, known, or unavailable. Live activity and project metadata remain unknown until the PE read completes, so a period filter can initially show a loading state. Verify retry and view-state preservation in the tagged build.
+- Verify period/date and animation behavior on supported macOS versions.
+- Xcode 26.6 (17F113) on this macOS 26.3 host stalls at `ExecuteExternalTool clang -v -E -dM` before Swift compilation; two isolated reload attempts and a legacy-build-system attempt reproduced it. A temporary local Clang wrapper that caps macro-probe output allowed source compilation and 27 focused tests to pass. The wrapper is not part of the repository. Tagged build 823 succeeded with the temporary workaround, and the Debug fixture exercised All scope, closed history, reopen, grouped cards, and project scroll restoration. Broader keyboard and reduced-motion dogfood remain open gates.

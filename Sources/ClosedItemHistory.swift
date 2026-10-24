@@ -80,50 +80,6 @@ struct ClosedItemHistoryRecord: Identifiable, Codable {
     }
 }
 
-struct ClosedItemHistoryMenuItem: Identifiable {
-    let id: UUID
-    let title: String
-    let detail: String
-    let closedAt: Date
-
-    var menuSubtitle: String {
-        let closed = String(
-            format: String(localized: "historyPane.closedAtFormat", defaultValue: "Closed %@"),
-            closedAt.formatted(date: .omitted, time: .shortened)
-        )
-        return String(
-            format: String(localized: "menu.history.menuItemSubtitleFormat", defaultValue: "%1$@, %2$@"),
-            detail,
-            closed
-        )
-    }
-
-    var menuTitle: String {
-        HistoryMenuLineFormatter.titleWithSubtitle(
-            title: title,
-            subtitle: menuSubtitle
-        )
-    }
-}
-
-struct ClosedItemHistoryMenuSnapshot {
-    let items: [ClosedItemHistoryMenuItem]
-    let totalItemCount: Int
-    let isLimited: Bool
-}
-
-enum ClosedWindowRestoreValidation {
-    static func hasUsableRestoredContent(
-        snapshot: SessionWindowSnapshot,
-        restoredPanelIdsByWorkspaceIndex: [[UUID: UUID]],
-        hasLivePanels: Bool
-    ) -> Bool {
-        guard hasLivePanels else { return false }
-        guard snapshot.hasRestorablePanels else { return true }
-        return restoredPanelIdsByWorkspaceIndex.contains { !$0.isEmpty }
-    }
-}
-
 @MainActor
 final class ClosedItemHistoryStore: ObservableObject {
     static let shared = ClosedItemHistoryStore(
@@ -137,6 +93,7 @@ final class ClosedItemHistoryStore: ObservableObject {
     private let fileURL: URL?
     private let persistsRecordsSynchronously: Bool
     private var didFinishPersistedRecordsLoad: Bool
+    private var persistedLoadWaiters: [CheckedContinuation<Void, Never>] = []
     private var needsPersistenceAfterPersistedRecordsLoad = false
     private var shouldDiscardPersistedRecordsOnLoad = false
     private var pendingPersistedRecordMutations: [PendingPersistedRecordMutation] = []
@@ -176,6 +133,40 @@ final class ClosedItemHistoryStore: ObservableObject {
 
     var canReopen: Bool {
         !records.isEmpty
+    }
+
+    var hasLoadedPersistedRecords: Bool {
+        didFinishPersistedRecordsLoad
+    }
+
+    /// Recovery must see persisted close records, including those still loading at startup.
+    func recordsAfterPersistedLoad() async -> [ClosedItemHistoryRecord] {
+        if !didFinishPersistedRecordsLoad {
+            await withCheckedContinuation { continuation in
+                persistedLoadWaiters.append(continuation)
+            }
+        }
+        return records
+    }
+
+    /// The restore stack is separate from PE's retained archive. Only a direct
+    /// workspace snapshot can be reopened as one workspace without consuming
+    /// a closed window's other workspaces.
+    func workspaceRestoreRecord(stableId: UUID) -> ClosedItemHistoryRecord? {
+        records.reversed().first { record in
+            guard case .workspace(let entry) = record.entry else { return false }
+            return entry.snapshot.stableId == stableId
+        }
+    }
+
+    func workspaceRestoreRecordsByStableID() -> [UUID: ClosedItemHistoryRecord] {
+        var latest: [UUID: ClosedItemHistoryRecord] = [:]
+        for record in records {
+            guard case .workspace(let entry) = record.entry,
+                  let stableID = entry.snapshot.stableId else { continue }
+            latest[stableID] = record
+        }
+        return latest
     }
 
     func push(_ entry: ClosedItemHistoryEntry) {
@@ -424,6 +415,9 @@ final class ClosedItemHistoryStore: ObservableObject {
         }
         didFinishPersistedRecordsLoad = true
         shouldDiscardPersistedRecordsOnLoad = false
+        let waiters = persistedLoadWaiters
+        persistedLoadWaiters.removeAll()
+        for waiter in waiters { waiter.resume() }
     }
 
     private func queuePersistedRecordMutationIfLoading(_ mutation: PendingPersistedRecordMutation) {

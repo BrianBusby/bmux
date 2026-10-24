@@ -18,6 +18,38 @@ The managed provider-runtime follow-up is recorded in
 [implementation notes](../implementation-notes/managed-codex-runtime.md). It isolates
 connected Codex launches from global CLI updates without widening control capabilities.
 
+The Project and Workspace Explorer archive foundation merged in #175 and #177;
+the bmux history adapter merged in #178.
+PE now has a public, bounded close-snapshot archive contract keyed by the
+restart-stable workspace ID; archived metadata is retained
+until explicitly cleared, and restoration must leave the archive intact. The
+user-close path now records a last-known snapshot through that public contract.
+Its activity timestamp covers linked session lifecycle, prompt, and turn
+evidence. PE exposes the bounded workspace-keyed session query with partial
+coverage explicitly marked. The adapter joins archive
+records to live workspace presence by stable ID, keeps open cards visible if
+history loading fails, and adds a targeted local-workspace reopen action that
+strips saved agent startup commands. Close capture can replay a persisted close snapshot after an interrupted PE
+write; termination before that restore snapshot reaches disk remains uncovered. The
+`workspace-explorer-projection` slice adds pure scope, grouping, filter,
+unique-count, and held-status rules. Merged PR #180 adds a separate native
+Project and Workspace Explorer window with read-only retained session detail,
+explicit reopen, per-view arrangements, and a Debug history fixture. Its native
+view is under observation. The `workspace-explorer-staged-loading` slice is
+under observation: it publishes live cards immediately, then resolves retained
+history and closed counts without resetting view state.
+Merged PR #182 adds a tab-list invalidation path for an already open Explorer window. New live workspaces appear
+as uncounted provisional cards while PE facts load. PE schema version 27 repairs
+existing version-26 stores that lack the archive table; this was observed in
+the tagged build's retained-history error state. Recovery now runs in an
+actor and reuses the archive read on ordinary refreshes, rereading only after
+a replay attempt. These changes remain under dogfood observation. Merged PR #183
+stabilizes group identities during reordering, improves card keyboard focus and
+grouping controls, and orders scope as Open, Closed, All with Open as the default.
+Merged PR #184 holds the previous result and counts while excluded cards fade
+for 170 ms, then commits the latest filter or scope result. Merged PR #185 captures verified status before a workspace closes, stores it in PE's optional archive snapshot field, and shows it only as historical context. Merged PR #186 adds an Explorer-origin return route to the existing live workspace titlebar while keeping the separate Explorer window and its saved collection arrangement. Merged PR #187 completes the All projects → collection → workspace chain and adds a retained-history action backed by PE’s exact linked-session count. Older records have no recorded status; a later close without one does not reuse the earlier value. Merged PR #188 adds completed command and assistant-output timestamps to PE workspace-session activity ordering; session metadata refreshes remain excluded. Merged PR #189 gives group disclosure and Focus controls distinct keyboard focus and VoiceOver meaning. Merged PR #190 adds plan updates and file-change attributions to meaningful activity. The active `workspace-explorer-history-pages` slice moves retained-session page requests into a child model so late or overlapping responses cannot replace newer history and PE’s unique session total remains available. Complete project metadata, close-snapshot force-quit durability, and reduced-motion dogfood remain open. See
+[the implementation record](../planning/workspace-explorer-implementation.md).
+
 ## Current Generated Truth
 
 - [Project status](../generated/project-status.md)

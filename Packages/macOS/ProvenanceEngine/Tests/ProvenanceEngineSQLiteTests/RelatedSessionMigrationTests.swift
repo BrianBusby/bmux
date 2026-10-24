@@ -13,7 +13,7 @@ struct RelatedSessionMigrationTests {
         let database = try ProvenanceSQLiteDatabase(url: url)
         let summary = try await repository.storageSummary()
 
-        #expect(try await repository.schemaVersion() == 26)
+        #expect(try await repository.schemaVersion() == 28)
         #expect(try Self.tableExists("provenance_related_session_revisions", in: database))
         #expect(try Self.tableExists("provenance_related_sessions", in: database))
         #expect(summary.relatedSessionRevisionCount == 0)
@@ -27,7 +27,7 @@ struct RelatedSessionMigrationTests {
 
         let oldRepository = try ProvenanceSQLiteRepository(
             url: url,
-            migrations: Array(ProvenanceSQLiteRepository.migrations.dropLast(4))
+            migrations: ProvenanceSQLiteRepository.migrations.filter { $0.version <= 22 }
         )
         let oldDatabase = try ProvenanceSQLiteDatabase(url: url)
 
@@ -38,10 +38,10 @@ struct RelatedSessionMigrationTests {
         let repository = try ProvenanceSQLiteRepository(url: url)
         let migratedDatabase = try ProvenanceSQLiteDatabase(url: url)
 
-        #expect(try await repository.schemaVersion() == 26)
+        #expect(try await repository.schemaVersion() == 28)
         #expect(try Self.tableExists("provenance_related_session_revisions", in: migratedDatabase))
         #expect(try Self.tableExists("provenance_related_sessions", in: migratedDatabase))
-        #expect(try await repository.schemaMigrationRecords(limit: 3).map(\.version) == [26, 25, 24])
+        #expect(try await repository.schemaMigrationRecords(limit: 3).map(\.version) == [28, 27, 26])
     }
 
     private static func tableExists(_ name: String, in database: ProvenanceSQLiteDatabase) throws -> Bool {

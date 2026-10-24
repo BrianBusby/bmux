@@ -7,6 +7,37 @@ import Testing
 @Suite
 struct ProvenanceSQLiteDatabaseTests {
     @Test
+    func opensDatabaseAndCreatesParentDirectory() throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+
+        _ = try ProvenanceSQLiteDatabase(url: url)
+
+        #expect(FileManager.default.fileExists(atPath: url.path))
+    }
+
+    @Test
+    func executesStatementsAndReportsUserVersionAndChanges() throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let database = try ProvenanceSQLiteDatabase(url: url)
+
+        try database.execute(
+            """
+            PRAGMA user_version = 7;
+            CREATE TABLE events (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL
+            );
+            INSERT INTO events (id, name) VALUES ('event-1', 'started');
+            """
+        )
+
+        #expect(try database.userVersion == 7)
+        #expect(database.changes == 1)
+    }
+
+    @Test
     func opensConnectionWithMultiProcessPragmas() throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
@@ -711,7 +742,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let summary = try await repository.storageSummary()
         #expect(summary == ProvenanceSQLiteStorageSummary(
-            schemaVersion: 26,
+            schemaVersion: 28,
             eventCount: 0,
             latestEventSequence: nil,
             repositoryCount: 0,
@@ -2737,7 +2768,6 @@ struct ProvenanceSQLiteDatabaseTests {
             pullRequestURL: "https://github.com/BrianBusby/bmux/pull/42",
             pullRequestOwnerLogin: "BrianBusby",
             pullRequestOwnerURL: "https://github.com/BrianBusby",
-            pullRequestOwnerAvatarURL: "https://avatars.githubusercontent.com/u/42?v=4",
             pullRequestStatus: "open",
             pullRequestBranch: "canonical-domain-mutation-paths",
             pullRequestIsStale: false,
@@ -2781,7 +2811,6 @@ struct ProvenanceSQLiteDatabaseTests {
             pullRequestURL: "https://github.com/BrianBusby/bmux/pull/42",
             pullRequestOwnerLogin: "BrianBusby",
             pullRequestOwnerURL: "https://github.com/BrianBusby",
-            pullRequestOwnerAvatarURL: "https://avatars.githubusercontent.com/u/42?v=4",
             pullRequestStatus: "open",
             pullRequestBranch: "canonical-domain-mutation-paths",
             pullRequestIsStale: false,
@@ -2847,7 +2876,6 @@ struct ProvenanceSQLiteDatabaseTests {
         #expect(actualDisplay.pullRequestURL == expectedDisplay.pullRequestURL)
         #expect(actualDisplay.pullRequestOwnerLogin == expectedDisplay.pullRequestOwnerLogin)
         #expect(actualDisplay.pullRequestOwnerURL == expectedDisplay.pullRequestOwnerURL)
-        #expect(actualDisplay.pullRequestOwnerAvatarURL == expectedDisplay.pullRequestOwnerAvatarURL)
         #expect(actualDisplay.pullRequestStatus == expectedDisplay.pullRequestStatus)
         #expect(actualDisplay.pullRequestBranch == expectedDisplay.pullRequestBranch)
         #expect(actualDisplay.pullRequestIsStale == expectedDisplay.pullRequestIsStale)

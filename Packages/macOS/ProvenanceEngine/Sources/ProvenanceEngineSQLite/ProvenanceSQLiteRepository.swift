@@ -5458,6 +5458,7 @@ actor ProvenanceSQLiteRepository {
         + relatedSessionMigrations
         + artifactCollisionMigrations
         + workspaceCodingAgentSessionAssociationMigrations
+        + workspaceArchiveMigrations
         + workspaceDisplayOwnerAvatarMigrations
 }
 

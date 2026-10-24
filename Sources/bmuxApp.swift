@@ -908,17 +908,17 @@ struct bmuxApp: App {
         .commands {
             SidebarCommands()
         }
-
         Window(String(localized: "settings.config.windowTitle", defaultValue: "Config"), id: ConfigSettingsView.windowID) {
             ConfigSettingsView()
                 .settingsRuntime(settingsRuntime)
                 .bmuxFontMagnificationEnvironment()
                 .bmuxAppearanceColorScheme(appearanceMode)
         }
+        WorkspaceExplorerScenes(appDelegate: appDelegate, appearanceMode: appearanceMode)
     }
-
     @CommandsBuilder
     private var windowAndViewCommands: some Commands {
+        WorkspaceExplorerCommands()
         CommandGroup(after: .windowArrangement) {
             Button(String(localized: "menu.window.taskManager", defaultValue: "Task Manager...")) {
                 TaskManagerWindowController.shared.show()
