@@ -1,7 +1,7 @@
 import Foundation
 
 /// Immutable grouped membership; collapsed state belongs to the view coordinator.
-struct WorkspaceExplorerGroup {
+struct WorkspaceExplorerGroup: Equatable {
     let dimension: WorkspaceExplorerDimension?
     let key: WorkspaceExplorerGroupKey?
     let value: String?

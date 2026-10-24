@@ -16,6 +16,14 @@ struct WorkspaceExplorerWorkspace: Identifiable {
     let liveStatus: WorkspaceExplorerStatus
     let arrangedStatus: WorkspaceExplorerStatus
 
+    func withLiveStatus(_ status: WorkspaceExplorerStatus) -> Self {
+        Self(id: id, title: title, projectIDs: projectIDs, repository: repository,
+            tickets: tickets, ticketStatus: ticketStatus, pullRequestOwner: pullRequestOwner,
+            pullRequestStatus: pullRequestStatus, hasPullRequest: hasPullRequest,
+            lastActivityAt: lastActivityAt, isClosed: isClosed, liveStatus: status,
+            arrangedStatus: arrangedStatus)
+    }
+
     var displayedStatus: WorkspaceExplorerStatus {
         isClosed ? .closedHistorical : liveStatus
     }

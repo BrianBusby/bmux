@@ -2064,6 +2064,8 @@
 		CE0E01070000000000000001 /* WorkspaceDisplayCurrentStateSubscriptionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E01070000000000000002 /* WorkspaceDisplayCurrentStateSubscriptionTests.swift */; };
 		CE0E01040000000000000001 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E01040000000000000002 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift */; };
 		72DB1838A0F1B710BFB45DC1 /* WorkspaceEnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B561A95C6DC21BA9C4B2BCDD /* WorkspaceEnvironmentTests.swift */; };
+		D7B92A51F4E6475085169002 /* WorkspaceExplorerActiveWorkspaceVisibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7B92A51F4E6475085169001 /* WorkspaceExplorerActiveWorkspaceVisibility.swift */; };
+		D7B92A51F4E6475085169022 /* WorkspaceExplorerActivityPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7B92A51F4E6475085169021 /* WorkspaceExplorerActivityPresentation.swift */; };
 				E71A17900000000000000071 /* WorkspaceExplorerActivityWindowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerActivityWindowTests.swift; sourceTree = "<group>"; };
 				E71A17900000000000000070 /* WorkspaceExplorerActivityWindowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000071 /* WorkspaceExplorerActivityWindowTests.swift */; };
 		E7A9EAA73EE74959BA212014 /* WorkspaceExplorerArchiveAvailability.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA212013 /* WorkspaceExplorerArchiveAvailability.swift */; };
@@ -2115,6 +2117,7 @@
 		E7A9EAA73EE74959BA212410 /* WorkspaceExplorerScenes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21240F /* WorkspaceExplorerScenes.swift */; };
 		1F830D96A89EEA457CA79352 /* WorkspaceExplorerScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C13DB01A1A56779EB92DA1 /* WorkspaceExplorerScope.swift */; };
 		A9E1C06F8D24453FB2C317AF /* WorkspaceExplorerScopeControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E1C06F8D24453FB2C317AE /* WorkspaceExplorerScopeControls.swift */; };
+		D7B92A51F4E6475085169012 /* WorkspaceExplorerSessionEvidence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7B92A51F4E6475085169011 /* WorkspaceExplorerSessionEvidence.swift */; };
 				FAD145AB2CC344EE8899A001 /* WorkspaceExplorerSessionPageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerSessionPageTests.swift; sourceTree = "<group>"; };
 				FAD145AB2CC344EE8899A002 /* WorkspaceExplorerSessionPageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD145AB2CC344EE8899A001 /* WorkspaceExplorerSessionPageTests.swift */; };
 		8234457C7D9D6A45E2C2F57B /* WorkspaceExplorerStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A75009717859B41DB480B6F /* WorkspaceExplorerStatus.swift */; };
@@ -4220,6 +4223,8 @@
 		CE0E01070000000000000002 /* WorkspaceDisplayCurrentStateSubscriptionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDisplayCurrentStateSubscriptionTests.swift; sourceTree = "<group>"; };
 		CE0E01040000000000000002 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift; sourceTree = "<group>"; };
 		B561A95C6DC21BA9C4B2BCDD /* WorkspaceEnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceEnvironmentTests.swift; sourceTree = "<group>"; };
+		D7B92A51F4E6475085169001 /* WorkspaceExplorerActiveWorkspaceVisibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerActiveWorkspaceVisibility.swift; sourceTree = "<group>"; };
+		D7B92A51F4E6475085169021 /* WorkspaceExplorerActivityPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerActivityPresentation.swift; sourceTree = "<group>"; };
 		E7A9EAA73EE74959BA212013 /* WorkspaceExplorerArchiveAvailability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerArchiveAvailability.swift; sourceTree = "<group>"; };
 		A9E1C06F8D24453FB2C317AC /* WorkspaceExplorerArchiveNotice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceExplorerArchiveNotice.swift"; sourceTree = "<group>"; };
 		E8E201010000000000000007 /* WorkspaceExplorerArchiveRecoveryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerArchiveRecoveryService.swift; sourceTree = "<group>"; };
@@ -4259,6 +4264,7 @@
 		E7A9EAA73EE74959BA21240F /* WorkspaceExplorerScenes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerScenes.swift; sourceTree = "<group>"; };
 		A9C13DB01A1A56779EB92DA1 /* WorkspaceExplorerScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerScope.swift; sourceTree = "<group>"; };
 		A9E1C06F8D24453FB2C317AE /* WorkspaceExplorerScopeControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceExplorerScopeControls.swift"; sourceTree = "<group>"; };
+		D7B92A51F4E6475085169011 /* WorkspaceExplorerSessionEvidence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerSessionEvidence.swift; sourceTree = "<group>"; };
 		7A75009717859B41DB480B6F /* WorkspaceExplorerStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerStatus.swift; sourceTree = "<group>"; };
 		F9D44D1B62895B2EF9CA80AF /* WorkspaceExplorerStatusArrangement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerStatusArrangement.swift; sourceTree = "<group>"; };
 		E71A17900000000000000065 /* WorkspaceExplorerTitlebarContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerTitlebarContent.swift; sourceTree = "<group>"; };
@@ -6585,6 +6591,9 @@
 				E71A17900000000000000063 /* WorkspaceExplorerLiveNavigation.swift */,
 				E71A17900000000000000065 /* WorkspaceExplorerTitlebarContent.swift */,
 				E71A17900000000000000021 /* WorkspaceExplorerWindowView.swift */,
+				D7B92A51F4E6475085169001 /* WorkspaceExplorerActiveWorkspaceVisibility.swift */,
+				D7B92A51F4E6475085169021 /* WorkspaceExplorerActivityPresentation.swift */,
+				D7B92A51F4E6475085169011 /* WorkspaceExplorerSessionEvidence.swift */,
 				91677B4922B4D293ACAB5E79 /* WorkspaceExplorerCollectionTarget.swift */,
 				7B19842F052C74A908E3ED2B /* WorkspaceExplorerGroup.swift */,
 				38B2E1DC3876AD45216CB5D9 /* WorkspaceExplorerProjectionResult.swift */,
@@ -8249,6 +8258,8 @@
 				CE0E01030000000000000001 /* WorkspaceDisplayCurrentStateStore.swift in Sources */,
 				CE0E01060000000000000001 /* WorkspaceDisplayCurrentStateSubscription.swift in Sources */,
 				CE0E01040000000000000001 /* WorkspaceDisplayCurrentStateTicketLinkSnapshot.swift in Sources */,
+				D7B92A51F4E6475085169002 /* WorkspaceExplorerActiveWorkspaceVisibility.swift in Sources */,
+				D7B92A51F4E6475085169022 /* WorkspaceExplorerActivityPresentation.swift in Sources */,
 				E7A9EAA73EE74959BA212014 /* WorkspaceExplorerArchiveAvailability.swift in Sources */,
 				A9E1C06F8D24453FB2C317AD /* WorkspaceExplorerArchiveNotice.swift in Sources */,
 				E8E201010000000000000008 /* WorkspaceExplorerArchiveRecoveryService.swift in Sources */,
@@ -8288,6 +8299,7 @@
 				E7A9EAA73EE74959BA212410 /* WorkspaceExplorerScenes.swift in Sources */,
 				1F830D96A89EEA457CA79352 /* WorkspaceExplorerScope.swift in Sources */,
 				A9E1C06F8D24453FB2C317AF /* WorkspaceExplorerScopeControls.swift in Sources */,
+				D7B92A51F4E6475085169012 /* WorkspaceExplorerSessionEvidence.swift in Sources */,
 				8234457C7D9D6A45E2C2F57B /* WorkspaceExplorerStatus.swift in Sources */,
 				A74AD940B86D751B2A851105 /* WorkspaceExplorerStatusArrangement.swift in Sources */,
 				E71A17900000000000000064 /* WorkspaceExplorerTitlebarContent.swift in Sources */,

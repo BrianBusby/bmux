@@ -17,6 +17,7 @@ struct WorkspaceExplorerGroupSection: View {
     let projectOpenTotals: [String: Int]
     let scope: WorkspaceExplorerScope
     let now: Date
+    let calendar: Calendar
     let archiveAvailability: WorkspaceExplorerArchiveAvailability
     let matchingCounts: [String: Int]
     let exitingProjectIDs: Set<String>
@@ -32,6 +33,7 @@ struct WorkspaceExplorerGroupSection: View {
     let onCardFilter: (WorkspaceExplorerDimension, WorkspaceExplorerGroupKey) -> Void
     let onToggle: (String) -> Void
     let onFocus: (WorkspaceExplorerDimension, WorkspaceExplorerGroupKey) -> Void
+    let onCardInteractionChanged: (String, Bool) -> Void
     @FocusState private var disclosureFocused: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -90,7 +92,7 @@ struct WorkspaceExplorerGroupSection: View {
                             activeFilters: activeFilters, projectsByID: projectsByID,
                             itemsByID: itemsByID, workspacesByID: workspacesByID,
                             projectCounts: projectCounts,
-                            projectOpenTotals: projectOpenTotals, scope: scope, now: now,
+                            projectOpenTotals: projectOpenTotals, scope: scope, now: now, calendar: calendar,
                             archiveAvailability: archiveAvailability,
                             matchingCounts: matchingCounts,
                             exitingProjectIDs: exitingProjectIDs, exitingWorkspaceIDs: exitingWorkspaceIDs,
@@ -100,7 +102,8 @@ struct WorkspaceExplorerGroupSection: View {
                             metadataPending: metadataPending,
                             onOpenProject: onOpenProject, onOpenWorkspace: onOpenWorkspace,
                             onHistory: onHistory, onReopen: onReopen,
-                            onCardFilter: onCardFilter, onToggle: onToggle, onFocus: onFocus)
+                            onCardFilter: onCardFilter, onToggle: onToggle, onFocus: onFocus,
+                            onCardInteractionChanged: onCardInteractionChanged)
                     }
                 }
             }
@@ -133,13 +136,14 @@ struct WorkspaceExplorerGroupSection: View {
                             counts: projectCounts[id] ?? WorkspaceExplorerCounts([], closedKnown: false),
                             workspaces: workspacesByID.values.filter { workspace in
                                 workspace.projectIDs.contains(id) && scope.includes(workspace,
-                                    now: now, calendar: .current)
+                                    now: now, calendar: calendar)
                             },
                             scope: scope, archiveAvailability: archiveAvailability,
                             openTotal: projectOpenTotals[id] ?? 0,
                             matchingCount: matchingCounts[id],
                             isFocused: focusedProjectID == id, titleGeometry: cardGeometry,
-                            onOpen: { onOpenProject(id) })
+                            onOpen: { onOpenProject(id) },
+                            onInteractionChanged: { onCardInteractionChanged("project:\(id)", $0) })
                             .id("project:\(id)")
                             .matchedGeometryEffect(id: "project:\(id)", in: cardGeometry)
                             .transition(.opacity.combined(with: .scale(scale: 0.98)))
@@ -158,7 +162,8 @@ struct WorkspaceExplorerGroupSection: View {
                             onOpen: { onOpenWorkspace(item) },
                             onHistory: { onHistory(item) },
                             onReopen: { onReopen(item) },
-                            onFilter: onCardFilter)
+                            onFilter: onCardFilter,
+                            onInteractionChanged: { onCardInteractionChanged("workspace:\(id)", $0) })
                             .id("workspace:\(id)")
                             .matchedGeometryEffect(id: "workspace:\(id)", in: cardGeometry)
                             .transition(.opacity.combined(with: .scale(scale: 0.98)))

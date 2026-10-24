@@ -124,6 +124,38 @@ The `workspace-explorer-activity-window-refresh` branch starts from merged PR #1
 
 The `workspace-explorer-timezone-refresh` branch starts from PR #193's merge. The existing `BmuxWorkspaces` activity clock owns Today's local-midnight deadline and now listens for the system time-zone-change notification only while Today is active. It resamples the current calendar and date, cancels the old deadline, and schedules the new one; switching to another period or closing Explorer cancels the listener. The injected calendar and notification center keep the clock testable without changing machine settings. Rules: root `AGENTS.md`, continuous-code-quality, bmux architecture/testing/dev-workflow, and the project-state rule. Pattern references: `WorkspaceExplorerActivityClock`, `WorkspaceExplorerCoordinator` start/stop lifecycle, and the existing manual-deadline test. The test-only commit fails on the old clock because the changed calendar never schedules a new midnight. The test fails at the old deadline and all three focused package tests pass after the fix, including five repeated notification runs. Project-doc, package-lock, test-wiring, and Swift file-budget checks pass. Tagged build 856 compiled under `workspace-explorer-timezone-refresh`; launch, PR review, and dogfood remain.
 
+## Automatic activity arrangement hold slice
+
+The `workspace-explorer-auto-update-focus` branch starts from merged PR #195.
+`WorkspaceExplorerActivityClock` remains the deadline and local-calendar owner.
+`WorkspaceExplorerActivityArrangement` in `BmuxWorkspaces` owns one held time/calendar
+sample and the set of hovered or keyboard-focused card IDs. The app coordinator
+uses that sample for projection; lazy card rows send interaction changes through
+closures. Automatic clock deadlines and time-zone changes advance a revision and
+show an Update arrangement banner while a card is being interacted with. Explicit
+scope changes and the banner action use the current sample. Rules: root
+`AGENTS.md`, continuous-code-quality, bmux architecture/testing/localization,
+and the 500-line Swift file budget. Patterns: the existing activity clock,
+coordinator, immutable group rows, and status arrangement banner. Verification:
+all 114 BmuxWorkspaces package tests and four focused app activity-window tests
+pass; tagged build 859 compiled, and the Swift file/warning budgets, pbxproj,
+package policy, project-doc gates, and English/Japanese key audit pass. Human
+keyboard/pointer dogfood remains.
+
+The follow-up regression test on commit `351e53ea3` records that a hovered
+workspace disappeared when a fresh meaningful activity timestamp exceeded the
+held time. The presentation now holds the visible catalog as well as the time
+and calendar. It overlays current live status labels while retaining group
+membership and counts. New data that would change the arrangement sets the
+Update arrangement banner; applying it uses the latest catalog and time.
+All 114 BmuxWorkspaces package tests passed. A focused app regression also
+covers explicit Reopen while the closed card is hovered: the same logical card
+switches to Open immediately and counts update without waiting for hover exit.
+Explicit Reopen and Clear history reset the held presentation before reloading.
+Six focused app activity-window tests pass; a new isolated tagged build and
+human dogfood of this revised runtime are required. The user's earlier build
+860 approval does not cover either runtime correction.
+
 ## Open decisions and verification
 
 ### Close journal durability slice

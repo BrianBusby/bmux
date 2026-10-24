@@ -138,6 +138,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Display Ticket Title Sidebar | implemented |
 | Workspace Explorer Activity Window Refresh | under observation |
 | Workspace Explorer Archive Recovery Actor | under observation |
+| Workspace Explorer Automatic Arrangement Hold | under observation |
 | Workspace Explorer Card Hit Target | under observation |
 | Workspace Explorer Close Journal | under observation |
 | Workspace Explorer Close Recovery | under observation |

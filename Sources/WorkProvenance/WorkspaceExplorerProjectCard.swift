@@ -13,6 +13,7 @@ struct WorkspaceExplorerProjectCard: View {
     let isFocused: Bool
     let titleGeometry: Namespace.ID
     let onOpen: () -> Void
+    let onInteractionChanged: (Bool) -> Void
     @State private var isHovered = false
     @FocusState private var hasKeyboardFocus: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -70,7 +71,14 @@ struct WorkspaceExplorerProjectCard: View {
         .overlay(RoundedRectangle(cornerRadius: 14)
             .strokeBorder(hasKeyboardFocus ? Color.accentColor : .clear, lineWidth: 2)
             .padding(-2).allowsHitTesting(false))
-        .onHover { isHovered = $0 }
+        .onHover { hovering in
+            isHovered = hovering
+            onInteractionChanged(hovering || hasKeyboardFocus)
+        }
+        .onChange(of: hasKeyboardFocus) { _, focused in
+            onInteractionChanged(isHovered || focused)
+        }
+        .onDisappear { onInteractionChanged(false) }
     }
 
     private var repositories: [String] {

@@ -18,6 +18,10 @@ public final class WorkspaceExplorerActivityClock {
 
     /// The time used by the current Explorer projection.
     public private(set) var now: Date
+    /// Calendar sampled with `now` for the current activity window.
+    public private(set) var calendar: Calendar
+    /// Advances only for automatic deadline or system time-zone resampling.
+    public private(set) var automaticRevision = 0
     private let currentDate: @MainActor () -> Date
     private let sleep: @MainActor (Duration) async throws -> Void
     private let calendarProvider: @MainActor () -> Calendar
@@ -45,6 +49,7 @@ public final class WorkspaceExplorerActivityClock {
         self.calendarProvider = calendarProvider
         self.notificationCenter = notificationCenter
         self.now = currentDate()
+        self.calendar = calendarProvider()
     }
 
     /// Reschedules for the selected period and known meaningful activity dates.
@@ -56,14 +61,15 @@ public final class WorkspaceExplorerActivityClock {
         deadlineTask?.cancel()
         now = currentDate()
         let calendar = calendar ?? calendarProvider()
+        self.calendar = calendar
         trackedPeriod = period
         trackedActivityDates = activityDates
         if period == .today {
             if calendarChangeTask == nil {
                 calendarChangeTask = Task { [weak self, notificationCenter] in
                     for await _ in notificationCenter.notifications(named: .NSSystemTimeZoneDidChange) {
-                        guard !Task.isCancelled, let self, let period = self.trackedPeriod else { return }
-                        self.configure(period: period, activityDates: self.trackedActivityDates)
+                        guard !Task.isCancelled, let self else { return }
+                        self.resampleForAutomaticChange()
                     }
                 }
             }
@@ -80,8 +86,14 @@ public final class WorkspaceExplorerActivityClock {
             do { try await sleep(.seconds(max(0, deadline.timeIntervalSince(currentDate())))) }
             catch { return }
             guard !Task.isCancelled, let self else { return }
-            self.configure(period: period, activityDates: activityDates)
+            self.resampleForAutomaticChange()
         }
+    }
+
+    func resampleForAutomaticChange() {
+        guard let trackedPeriod else { return }
+        configure(period: trackedPeriod, activityDates: trackedActivityDates)
+        automaticRevision &+= 1
     }
 
     /// Cancels the current deadline when Explorer closes.
