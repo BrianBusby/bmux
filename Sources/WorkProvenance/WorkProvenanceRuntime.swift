@@ -1,6 +1,8 @@
 import AppKit
 import BMUXAgentLaunch
 import BmuxAgentChat
+import BmuxWorkspaces
+import BmuxWorkspacePersistence
 import Foundation
 import ProvenanceEngineContracts
 import ProvenanceEngineSDK
@@ -33,6 +35,7 @@ final class WorkProvenanceRuntime {
 
     private(set) var lifecycleState: WorkProvenanceRuntimeLifecycleState
     let effectiveDatabaseURL: URL?
+    let workspaceCloseJournal: (any WorkspaceExplorerCloseJournaling)?
     let startupErrorDescription: String?
     let isEnabled: Bool
 
@@ -56,6 +59,7 @@ final class WorkProvenanceRuntime {
         workspaceArchiveService: WorkProvenanceWorkspaceArchiveService? = nil,
         codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder? = nil,
         effectiveDatabaseURL: URL? = nil,
+        workspaceCloseJournal: (any WorkspaceExplorerCloseJournaling)? = nil,
         startupErrorDescription: String? = nil,
         initialLifecycleState: WorkProvenanceRuntimeLifecycleState = .notStarted
     ) {
@@ -81,6 +85,7 @@ final class WorkProvenanceRuntime {
         self.workspaceArchiveService = workspaceArchiveService
         self.codingAgentEvidenceRecorder = codingAgentEvidenceRecorder
         self.effectiveDatabaseURL = effectiveDatabaseURL
+        self.workspaceCloseJournal = workspaceCloseJournal
         self.startupErrorDescription = startupErrorDescription
         self.isEnabled = observationService != nil
         self.lifecycleState = initialLifecycleState
@@ -127,7 +132,8 @@ final class WorkProvenanceRuntime {
                 codingAgentEvidenceRecorder: WorkProvenanceCodingAgentEvidenceRecorder(
                     client: client
                 ),
-                effectiveDatabaseURL: location.databaseURL
+                effectiveDatabaseURL: location.databaseURL,
+                workspaceCloseJournal: WorkspaceExplorerCloseJournal(databaseURL: location.databaseURL)
             )
         } catch {
             let description = String(describing: error)
@@ -135,6 +141,7 @@ final class WorkProvenanceRuntime {
             return WorkProvenanceRuntime(
                 observationService: nil,
                 effectiveDatabaseURL: location.databaseURL,
+                workspaceCloseJournal: WorkspaceExplorerCloseJournal(databaseURL: location.databaseURL),
                 startupErrorDescription: description
             )
         }

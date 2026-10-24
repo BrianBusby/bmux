@@ -7,6 +7,19 @@ struct WorkspaceArchiveRecoveryCandidate: Sendable {
     let closedAt: Date
     let colorHex: String?
 
+    static func latest(_ candidates: [Self]) -> [Self] {
+        var latest: [UUID: Self] = [:]
+        for candidate in candidates where latest[candidate.stableID]
+            .map({ $0.closedAt <= candidate.closedAt }) ?? true {
+            latest[candidate.stableID] = candidate
+        }
+        return latest.values.sorted {
+            $0.closedAt == $1.closedAt
+                ? $0.stableID.uuidString < $1.stableID.uuidString
+                : $0.closedAt > $1.closedAt
+        }
+    }
+
     static func from(
         records: [ClosedItemHistoryRecord],
         excluding liveIDs: Set<UUID>
@@ -29,10 +42,6 @@ struct WorkspaceArchiveRecoveryCandidate: Sendable {
                 }
             }
         }
-        return latest.values.sorted {
-            $0.closedAt == $1.closedAt
-                ? $0.stableID.uuidString < $1.stableID.uuidString
-                : $0.closedAt > $1.closedAt
-        }
+        return Self.latest(Array(latest.values))
     }
 }

@@ -1,4 +1,6 @@
 import Foundation
+import BmuxWorkspaces
+import BmuxWorkspacePersistence
 import ProvenanceEngineContracts
 
 @MainActor
@@ -16,9 +18,15 @@ extension AppDelegate {
             let recovery = WorkspaceExplorerArchiveRecoveryService(
                 archiveService: archiveService,
                 savedCandidates: {
-                    WorkspaceArchiveRecoveryCandidate.from(
+                    let saved = WorkspaceArchiveRecoveryCandidate.from(
                         records: await ClosedItemHistoryStore.shared.recordsAfterPersistedLoad(),
                         excluding: [])
+                    let journal = try await self.workProvenanceRuntime?.workspaceCloseJournal?.candidates()
+                        .map { WorkspaceArchiveRecoveryCandidate(
+                            stableID: $0.stableID, title: $0.title,
+                            closedAt: $0.closedAt, colorHex: $0.colorHex
+                        ) } ?? []
+                    return WorkspaceArchiveRecoveryCandidate.latest(saved + journal)
                 },
                 waitForWrites: { await self.workProvenanceRuntime?.waitForArchiveTasks() },
                 liveWorkspaceIDs: { Set(self.workspaceExplorerTabManagers().flatMap(\.tabs).map(\.stableId)) })
@@ -59,7 +67,9 @@ extension AppDelegate {
     }
 
     func clearWorkspaceExplorerHistory() async throws {
-        try await workspaceExplorerHistoryService().clearHistory()
+        let clearedAt = Date()
+        try await workspaceExplorerHistoryService().clearHistory(at: clearedAt)
+        try await workProvenanceRuntime?.workspaceCloseJournal?.clear(through: clearedAt)
     }
 
     func workspaceExplorerLiveWorkspaces() -> [Workspace] {

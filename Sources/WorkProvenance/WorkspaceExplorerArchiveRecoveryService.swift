@@ -3,7 +3,7 @@ import ProvenanceEngineContracts
 
 /// Reconciles persisted close snapshots with PE's durable Explorer archive.
 actor WorkspaceExplorerArchiveRecoveryService {
-    typealias SavedCandidates = @MainActor @Sendable () async -> [WorkspaceArchiveRecoveryCandidate]
+    typealias SavedCandidates = @MainActor @Sendable () async throws -> [WorkspaceArchiveRecoveryCandidate]
     typealias WaitForWrites = @MainActor @Sendable () async -> Void
     typealias LiveWorkspaceIDs = @MainActor @Sendable () -> Set<UUID>
 
@@ -23,7 +23,7 @@ actor WorkspaceExplorerArchiveRecoveryService {
     }
 
     func recover() async throws -> [ProvenanceArchivedWorkspaceRecord] {
-        let candidates = await savedCandidates()
+        let candidates = try await savedCandidates()
         await waitForWrites()
         let liveIDs = await liveWorkspaceIDs()
         let eligible = candidates.filter { !liveIDs.contains($0.stableID) }
