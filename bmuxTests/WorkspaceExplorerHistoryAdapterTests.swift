@@ -418,6 +418,37 @@ struct WorkspaceExplorerHistoryAdapterTests {
         #expect(item.lastRecordedStatus == .needsInput)
     }
 
+    @Test
+    func repositoryNamesComeFromPersistedRemoteSlugs() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-explorer-repository-names-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(
+            databaseURL: directory.appendingPathComponent("provenance.sqlite"))
+        let timestamp = Date(timeIntervalSince1970: 1_800_000_000)
+        let repository = ProvenanceRepositoryRecord(id: "repository-mobile",
+            path: "/repos/.worktrees/mobile-feature", remoteSlug: "companycam/companycam-mobile",
+            createdAt: timestamp, updatedAt: timestamp)
+        let worktree = ProvenanceWorktreeRecord(id: "worktree-mobile",
+            repositoryID: repository.id, path: repository.path, isDirty: false,
+            status: "active", updatedAt: timestamp)
+        for (type, payload) in [
+            (ProvenanceEngineContracts.ProvenanceEventType.repositoryObserved,
+                ProvenanceEngineContracts.ProvenanceEventPayload(repository: repository)),
+            (ProvenanceEngineContracts.ProvenanceEventType.worktreeObserved,
+                ProvenanceEngineContracts.ProvenanceEventPayload(worktree: worktree)),
+        ] {
+            _ = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(
+                event: ProvenanceEngineContracts.ProvenanceEvent(
+                eventType: type, timestamp: timestamp, source: .observed,
+                confidence: .high, payload: payload)))
+        }
+
+        let names = try await WorkProvenanceWorkspaceArchiveService(client: client)
+            .repositoryNames(for: [repository.id])
+        #expect(names[repository.id] == "companycam-mobile")
+    }
+
     private func archivedRecord(id: UUID, closedAt: Date) -> ProvenanceArchivedWorkspaceRecord {
         ProvenanceArchivedWorkspaceRecord(
             id: id.uuidString,

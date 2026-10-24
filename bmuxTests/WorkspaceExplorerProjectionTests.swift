@@ -125,6 +125,8 @@ struct WorkspaceExplorerProjectionTests {
         #expect(grouped.groups.map(\.filterValue) == [
             .value("repository-api"), .value("repository-mobile"),
         ])
+        #expect(WorkspaceExplorerGroupKey.value("repository-mobile").displayName(
+            projectsByID: [:], repositoryNamesByID: projection.repositoryNamesByID) == "companycam-mobile")
         let filtered = projection.collection(target: .project("p1"), scope: .init(),
             groupBy: [.repository], filters: [.repository: .value("repository-mobile")],
             now: now, calendar: calendar)

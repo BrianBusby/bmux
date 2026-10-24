@@ -282,6 +282,7 @@ struct WorkspaceExplorerWindowView: View {
                         workspace.projectIDs.isEmpty && model.presentedScope.includes(workspace,
                             now: model.activityArrangement.now, calendar: model.activityArrangement.calendar)
                     },
+                    repositoryNamesByID: model.presentedCatalog?.repositoryNamesByID ?? [:],
                     scope: model.presentedScope, archiveAvailability: model.presentedCatalog?.archiveAvailability ?? .unavailable,
                     openTotal: openTotal,
                     matchingCount: overviewFilters.isEmpty ? nil : unassigned.visibleCounts.workspaces,
@@ -416,6 +417,7 @@ struct WorkspaceExplorerWindowView: View {
             availableDimensions: dimensions,
             projectsByID: Dictionary((model.presentedCatalog?.projects ?? []).map { ($0.id, $0) },
                 uniquingKeysWith: { first, _ in first }),
+            repositoryNamesByID: model.presentedCatalog?.repositoryNamesByID ?? [:],
             canUndo: arrangement.canUndo,
             onGroupBy: { model.setGroupBy($0) },
             onFilter: { model.setFilter($0, value: $1, animated: !reduceMotion) },
@@ -445,6 +447,7 @@ struct WorkspaceExplorerWindowView: View {
             overview: overview, collapsedPaths: arrangement.collapsedPaths,
             activeFilters: model.presentedFilters,
             projectsByID: Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }),
+            repositoryNamesByID: model.presentedCatalog?.repositoryNamesByID ?? [:],
             itemsByID: Dictionary(items.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }),
             workspacesByID: Dictionary((model.presentedCatalog?.workspaces ?? []).map { ($0.id, $0) },
                 uniquingKeysWith: { first, _ in first }),
@@ -470,7 +473,9 @@ struct WorkspaceExplorerWindowView: View {
     private func history(id: String) -> some View {
         Group {
             if let item = model.presentedCatalog?.items.first(where: { $0.id == id }) {
-                WorkspaceExplorerHistoryView(item: item, page: model.sessionsByWorkspaceID[id],
+                WorkspaceExplorerHistoryView(item: item,
+                    repositoryNamesByID: model.presentedCatalog?.repositoryNamesByID ?? [:],
+                    page: model.sessionsByWorkspaceID[id],
                     period: model.scope.period, now: model.activityArrangement.now, loadFailed: model.sessionLoadFailed,
                     evidenceBySessionID: model.evidenceBySessionID,
                     evidenceLoadingIDs: model.evidenceLoadingIDs,

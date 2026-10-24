@@ -5,6 +5,15 @@ struct WorkspaceExplorerProjection {
     let projects: [WorkspaceExplorerProject]
     let workspaces: [WorkspaceExplorerWorkspace]
     let archiveAvailable: Bool
+    let repositoryNamesByID: [String: String]
+
+    init(projects: [WorkspaceExplorerProject], workspaces: [WorkspaceExplorerWorkspace],
+         archiveAvailable: Bool, repositoryNamesByID: [String: String] = [:]) {
+        self.projects = projects
+        self.workspaces = workspaces
+        self.archiveAvailable = archiveAvailable
+        self.repositoryNamesByID = repositoryNamesByID
+    }
 
     func overview(
         scope: WorkspaceExplorerScope,
@@ -124,10 +133,12 @@ struct WorkspaceExplorerProjection {
             )]
         }
         let buckets = Dictionary(grouping: members) { dimension.workspaceKey($0) }
-        return buckets.keys.sorted { dimension.precedes($0, $1, projectNames: names) }.map { key in
+        return buckets.keys.sorted { dimension.precedes($0, $1, projectNames: names,
+            repositoryNames: repositoryNamesByID) }.map { key in
             let bucket = buckets[key] ?? []
             return WorkspaceExplorerGroup(
-                dimension: dimension, key: key, value: key.label(projectNames: names),
+                dimension: dimension, key: key, value: key.label(projectNames: names,
+                    repositoryNames: dimension == .repository ? repositoryNamesByID : [:]),
                 filterValue: key.supportsFocus(in: dimension, overview: false) ? key : nil,
                 projectIDs: [], workspaceIDs: bucket.map(\.id),
                 counts: WorkspaceExplorerCounts(bucket, closedKnown: archiveAvailable),
@@ -151,11 +162,13 @@ struct WorkspaceExplorerProjection {
         let buckets = Dictionary(grouping: rows) { project, workspaces in
             dimension.projectKey(project, workspaces: workspaces)
         }
-        return buckets.keys.sorted { dimension.precedes($0, $1) }.map { key in
+        return buckets.keys.sorted { dimension.precedes($0, $1,
+            repositoryNames: repositoryNamesByID) }.map { key in
             let bucket = buckets[key] ?? []
             let bucketMembers = bucket.flatMap(\.1)
             return WorkspaceExplorerGroup(
-                dimension: dimension, key: key, value: key.label(),
+                dimension: dimension, key: key, value: key.label(
+                    repositoryNames: dimension == .repository ? repositoryNamesByID : [:]),
                 filterValue: key.supportsFocus(in: dimension, overview: true) ? key : nil,
                 projectIDs: bucket.map { $0.0.id },
                 workspaceIDs: Array(Set(bucketMembers.map(\.id))).sorted(),

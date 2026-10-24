@@ -1,7 +1,7 @@
 import Foundation
 import ProvenanceEngineContracts
 
-/// Captures the last PE display facts when bmux closes a logical workspace.
+/// Reads Explorer history facts and captures display metadata at workspace close.
 actor WorkProvenanceWorkspaceArchiveService {
     private let client: any ProvenanceEngineClient
 
@@ -24,6 +24,21 @@ actor WorkProvenanceWorkspaceArchiveService {
             }
         } while cursor != nil
         return records
+    }
+
+    /// Resolves stable repository identities to names already recorded by Provenance Engine.
+    func repositoryNames(for repositoryIDs: Set<String>) async throws -> [String: String] {
+        var names: [String: String] = [:]
+        for repositoryID in repositoryIDs.sorted() {
+            try Task.checkCancellation()
+            guard let repository = try await client.worktrees(.init(
+                repositoryID: repositoryID, limit: 1)).worktrees.first?.repository else { continue }
+            let slugName = repository.remoteSlug?.split(separator: "/").last.map(String.init)
+            let pathName = URL(fileURLWithPath: repository.path).lastPathComponent
+            let name = slugName.flatMap { $0.isEmpty ? nil : $0 } ?? pathName
+            if !name.isEmpty { names[repositoryID] = name }
+        }
+        return names
     }
 
     func workspaceSessions(

@@ -6,6 +6,7 @@ struct WorkspaceExplorerWorkspaceCard: View {
     let item: WorkspaceExplorerHistoryItem
     let isActive: Bool
     let isReopened: Bool
+    let repositoryName: String?
     let metadataPending: Bool
     let onOpen: () -> Void
     let onHistory: () -> Void
@@ -113,7 +114,7 @@ struct WorkspaceExplorerWorkspaceCard: View {
                             .italic().font(.system(size: 11)).foregroundStyle(.secondary)
                     }
                     if let repository = item.display?.repositoryID {
-                        Button(repository) { onFilter(.repository, .value(repository)) }
+                        Button(repositoryName ?? repository) { onFilter(.repository, .value(repository)) }
                             .font(.system(size: 11, design: .monospaced))
                             .buttonStyle(.bordered)
                             .controlSize(.mini)

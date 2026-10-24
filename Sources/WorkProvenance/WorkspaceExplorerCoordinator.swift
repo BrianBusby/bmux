@@ -145,7 +145,8 @@ final class WorkspaceExplorerCoordinator {
                     archiveAvailability: .unavailable,
                     partialLiveActivity: lastLoadResult.partialLiveActivity,
                     liveMetadataPending: lastLoadResult.liveMetadataPending,
-                    activeWorkspaceID: lastLoadResult.activeWorkspaceID),
+                    activeWorkspaceID: lastLoadResult.activeWorkspaceID,
+                    repositoryNamesByID: lastLoadResult.repositoryNamesByID),
                     preserveObservedStatuses: true)
             }
             loadFailed = true

@@ -6,6 +6,7 @@ struct WorkspaceExplorerArrangementBar: View {
     let filters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey]
     let availableDimensions: [WorkspaceExplorerDimension]
     let projectsByID: [String: WorkspaceExplorerProject]
+    let repositoryNamesByID: [String: String]
     let canUndo: Bool
     let onGroupBy: ([WorkspaceExplorerDimension]) -> Void
     let onFilter: (WorkspaceExplorerDimension, WorkspaceExplorerGroupKey?) -> Void
@@ -69,7 +70,8 @@ struct WorkspaceExplorerArrangementBar: View {
                     ForEach(availableDimensions + (availableDimensions.contains(.bmuxStatus) ? [] : [.bmuxStatus]),
                         id: \.self) { dimension in
                         if let key = filters[dimension] {
-                            Button(dimension.displayName + ": " + key.displayName(projectsByID: projectsByID) + " ×") {
+                            Button(dimension.displayName + ": " + key.displayName(projectsByID: projectsByID,
+                                repositoryNamesByID: dimension == .repository ? repositoryNamesByID : [:]) + " ×") {
                                 onFilter(dimension, nil)
                             }
                             .buttonStyle(.bordered)
