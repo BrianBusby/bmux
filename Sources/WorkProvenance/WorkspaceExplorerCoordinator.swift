@@ -141,12 +141,7 @@ final class WorkspaceExplorerCoordinator {
         } catch {
             guard generation == loadGeneration, !isStopped else { return }
             if let lastLoadResult, lastLoadResult.archiveAvailability == .pending {
-                present(WorkspaceExplorerHistoryLoadResult(items: lastLoadResult.items,
-                    archiveAvailability: .unavailable,
-                    partialLiveActivity: lastLoadResult.partialLiveActivity,
-                    liveMetadataPending: lastLoadResult.liveMetadataPending,
-                    activeWorkspaceID: lastLoadResult.activeWorkspaceID,
-                    repositoryNamesByID: lastLoadResult.repositoryNamesByID),
+                present(lastLoadResult.withArchiveAvailability(.unavailable),
                     preserveObservedStatuses: true)
             }
             loadFailed = true

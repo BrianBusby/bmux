@@ -21,4 +21,10 @@ struct WorkspaceExplorerHistoryLoadResult {
         self.activeWorkspaceID = activeWorkspaceID
         self.repositoryNamesByID = repositoryNamesByID
     }
+
+    func withArchiveAvailability(_ availability: WorkspaceExplorerArchiveAvailability) -> Self {
+        Self(items: items, archiveAvailability: availability,
+            partialLiveActivity: partialLiveActivity, liveMetadataPending: liveMetadataPending,
+            activeWorkspaceID: activeWorkspaceID, repositoryNamesByID: repositoryNamesByID)
+    }
 }
