@@ -32,4 +32,20 @@ import Testing
         ))
         #expect(immediateObservationCount == 1)
     }
+
+    @MainActor
+    @Test
+    func explorerRefreshesWhenAWorkspaceDisplayChanges() {
+        let manager = TabManager()
+        let workspace = Workspace(title: "Review roof inspection")
+        manager.tabs = [workspace]
+        let monitor = WorkspaceExplorerWorkspaceChangeMonitor(tabManagers: { [manager] })
+        var refreshCount = 0
+        monitor.start { refreshCount += 1 }
+        defer { monitor.stop() }
+
+        #expect(WorkProvenanceRuntime.notifyWorkspaceDisplayCurrentStateDidChange(
+            stableWorkspaceID: workspace.stableId, in: [manager]))
+        #expect(refreshCount == 1)
+    }
 }
