@@ -9,6 +9,8 @@ struct WorkspaceExplorerWindowView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var cardGeometry
     let liveNavigation: WorkspaceExplorerLiveNavigation?
+    let provenanceStartupFailed: @MainActor () -> Bool
+    let restartApp: @MainActor () throws -> Void
 
     init(loadPresence: WorkspaceExplorerCoordinator.PresenceLoader? = nil,
          loadHistory: @escaping WorkspaceExplorerCoordinator.Loader,
@@ -20,8 +22,12 @@ struct WorkspaceExplorerWindowView: View {
          clearArchive: @escaping WorkspaceExplorerCoordinator.Clearer,
          liveStatusWorkspaces: @escaping WorkspaceExplorerLiveStatusMonitor.WorkspaceSource,
          workspaceTabManagers: WorkspaceExplorerWorkspaceChangeMonitor.TabManagers? = nil,
+         provenanceStartupFailed: @escaping @MainActor () -> Bool = { false },
+         restartApp: @escaping @MainActor () throws -> Void = {},
          liveNavigation: WorkspaceExplorerLiveNavigation? = nil) {
         self.liveNavigation = liveNavigation
+        self.provenanceStartupFailed = provenanceStartupFailed
+        self.restartApp = restartApp
         _model = State(initialValue: WorkspaceExplorerCoordinator(
             loadHistory: loadHistory, loadPresence: loadPresence, reopenHistory: reopenHistory,
             activateWorkspace: activateWorkspace,
@@ -55,6 +61,12 @@ struct WorkspaceExplorerWindowView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
+                        WorkspaceExplorerProvenanceNotice(
+                            startupFailed: provenanceStartupFailed(),
+                            partialLiveActivity: model.presentedCatalog?.archiveAvailability != .pending &&
+                                model.presentedCatalog?.partialLiveActivity == true,
+                            restartApp: restartApp,
+                            onRetry: { Task { await model.load() } })
                         if let title = WorkspaceExplorerActiveWorkspaceVisibility.outsideTitle(model: model) {
                             notice(String(format: String(localized: "explorer.activeOutsideView", defaultValue:
                                 "Active workspace “%@” is outside the current scope or filters. It stays active."),
@@ -98,11 +110,6 @@ struct WorkspaceExplorerWindowView: View {
                             WorkspaceExplorerArchiveNotice(availability: catalog.archiveAvailability) {
                                 Task { await model.load() }
                             }
-                        }
-                        if model.presentedCatalog?.archiveAvailability != .pending &&
-                            model.presentedCatalog?.partialLiveActivity == true {
-                            notice(String(localized: "explorer.partialActivity", defaultValue:
-                                "Some live activity could not be verified. Time filters may omit those workspaces."))
                         }
                         WorkspaceExplorerPendingWorkspaceSection(items: model.visiblePendingWorkspaceItems,
                             activeWorkspaceID: model.activeWorkspaceID,
