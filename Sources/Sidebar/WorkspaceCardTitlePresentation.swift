@@ -4,12 +4,15 @@ import Foundation
 struct WorkspaceCardTitlePresentation: Equatable, Sendable {
     let title: String
     let description: String?
+    let usesTicketTitle: Bool
 
     init(workspaceTitle: String, ticketTitle: String?) {
         let normalizedTicket = ticketTitle?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let heading = normalizedTicket.flatMap { $0.isEmpty ? nil : $0 } ?? workspaceTitle
+        let ticketHeading = normalizedTicket.flatMap { $0.isEmpty ? nil : $0 }
+        let heading = ticketHeading ?? workspaceTitle
         let normalizedWorkspace = workspaceTitle.trimmingCharacters(in: .whitespacesAndNewlines)
         title = heading
+        usesTicketTitle = ticketHeading != nil
         description = !normalizedWorkspace.isEmpty
             && normalizedWorkspace != heading.trimmingCharacters(in: .whitespacesAndNewlines)
             ? workspaceTitle : nil

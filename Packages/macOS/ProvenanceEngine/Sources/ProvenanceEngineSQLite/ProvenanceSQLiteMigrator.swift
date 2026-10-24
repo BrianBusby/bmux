@@ -60,6 +60,10 @@ struct ProvenanceSQLiteMigrator: Sendable {
         try database.execute("BEGIN IMMEDIATE TRANSACTION")
         do {
             for migration in pendingMigrations {
+                if let addition = migration.conditionalColumnAddition,
+                   try !columnExists(addition.column, in: addition.table, database: database) {
+                    try database.execute(addition.statement)
+                }
                 for statement in migration.statements {
                     guard !statement.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                         continue
@@ -200,6 +204,20 @@ struct ProvenanceSQLiteMigrator: Sendable {
         )
         defer { query.finalize() }
         try query.bind(tableName, at: 1)
+        return try query.step()
+    }
+
+    private func columnExists(
+        _ columnName: String,
+        in tableName: String,
+        database: ProvenanceSQLiteDatabase
+    ) throws -> Bool {
+        let query = try database.prepare(
+            "SELECT 1 FROM pragma_table_info(?) WHERE name = ? LIMIT 1"
+        )
+        defer { query.finalize() }
+        try query.bind(tableName, at: 1)
+        try query.bind(columnName, at: 2)
         return try query.step()
     }
 

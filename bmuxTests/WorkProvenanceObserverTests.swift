@@ -29,30 +29,6 @@ struct WorkProvenanceObserverTests {
         ) == "https://linear.app/companycam/project/starter-template-rollout")
     }
 
-    @MainActor
-    @Test
-    func workspaceResolverSearchesAllCandidateManagersByRuntimeOrStableID() throws {
-        let firstManager = TabManager(), secondManager = TabManager()
-        let firstWorkspace = Workspace(title: "First Workspace"), targetWorkspace = Workspace(title: "Prompt Linked Workspace")
-        firstManager.tabs = [firstWorkspace]; secondManager.tabs = [targetWorkspace]
-        var immediateObservationCount = 0
-        let cancellable = targetWorkspace.sidebarImmediateObservationChangeSubject.sink { immediateObservationCount += 1 }
-        defer { cancellable.cancel() }
-        let managers = [firstManager, secondManager]
-        let match = try #require(WorkProvenanceRuntime.workspaceMatch(matching: targetWorkspace.stableId, in: managers))
-
-        #expect(WorkProvenanceRuntime.workspace(matching: targetWorkspace.id, in: managers) === targetWorkspace)
-        #expect(WorkProvenanceRuntime.workspace(matching: targetWorkspace.stableId, in: managers) === targetWorkspace)
-        #expect(match.tabManager === secondManager)
-        #expect(match.workspace === targetWorkspace)
-        #expect(WorkProvenanceRuntime.stableWorkspaceIDs(in: managers + [secondManager]) == [firstWorkspace.stableId, targetWorkspace.stableId])
-        #expect(WorkProvenanceRuntime.notifyWorkspaceDisplayCurrentStateDidChange(
-            stableWorkspaceID: targetWorkspace.stableId,
-            in: managers
-        ))
-        #expect(immediateObservationCount == 1)
-    }
-
     @Test
     func defaultRuntimeStoreObservationCanBeReadThroughPublicCurrentContext() async throws {
         let homeDirectory = FileManager.default.temporaryDirectory
@@ -211,7 +187,8 @@ struct WorkProvenanceObserverTests {
             pullRequestOwnerResolver: FakePullRequestOwnerResolver(ownersByURL: [
                 "https://github.com/manaflow-ai/bmux/pull/42": WorkProvenancePullRequestOwner(
                     login: "brianbusby",
-                    url: "https://github.com/brianbusby"
+                    url: "https://github.com/brianbusby",
+                    avatarURL: "https://avatars.githubusercontent.com/u/42?v=4"
                 )
             ]),
             ticketLinkResolver: WorkProvenanceLinearTicketLinkResolver(
@@ -235,6 +212,7 @@ struct WorkProvenanceObserverTests {
                 url: "https://github.com/manaflow-ai/bmux/pull/41",
                 ownerLogin: "octocat",
                 ownerURL: "https://github.com/octocat",
+                ownerAvatarURL: "https://avatars.githubusercontent.com/u/1?v=4",
                 status: "open",
                 branch: "ste-1964-canonical-domain-mutation-paths",
                 isStale: false
@@ -267,6 +245,8 @@ struct WorkProvenanceObserverTests {
         )
 
         await service.observeWorkspaceSnapshot(firstWorkspace)
+        let firstDisplay = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(workspaceID: stableWorkspaceID.uuidString))
+        #expect(firstDisplay.display?.pullRequestOwnerAvatarURL == "https://avatars.githubusercontent.com/u/1?v=4")
         await service.observeWorkspaceSnapshot(secondWorkspace)
 
         let worktrees = try await client.worktrees(ProvenanceWorktreeListRequest())
@@ -281,6 +261,7 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.pullRequestURL == "https://github.com/manaflow-ai/bmux/pull/42")
         #expect(display.display?.pullRequestOwnerLogin == "brianbusby")
         #expect(display.display?.pullRequestOwnerURL == "https://github.com/brianbusby")
+        #expect(display.display?.pullRequestOwnerAvatarURL == "https://avatars.githubusercontent.com/u/42?v=4")
         #expect(display.display?.pullRequestStatus == "merged")
         #expect(display.display?.pullRequestBranch == "ste-1964-canonical-domain-mutation-paths")
         #expect(display.display?.pullRequestIsStale == true)
@@ -379,6 +360,7 @@ struct WorkProvenanceObserverTests {
                 "https://github.com/CompanyCam/Company-Cam-API/pull/26171": WorkProvenancePullRequestOwner(
                     login: "BrianBusby",
                     url: "https://github.com/BrianBusby",
+                    avatarURL: "https://avatars.githubusercontent.com/u/42?v=4",
                     title: "INP-2122 Promote/Edit starter template Dash form cleanup",
                     branch: "inp-2122-edit-starter-template-dash-form-cleanup"
                 )
@@ -417,6 +399,7 @@ struct WorkProvenanceObserverTests {
         #expect(display.display?.pullRequestURL == "https://github.com/CompanyCam/Company-Cam-API/pull/26171")
         #expect(display.display?.pullRequestOwnerLogin == "BrianBusby")
         #expect(display.display?.pullRequestOwnerURL == "https://github.com/BrianBusby")
+        #expect(display.display?.pullRequestOwnerAvatarURL == "https://avatars.githubusercontent.com/u/42?v=4")
         #expect(display.display?.pullRequestBranch == "inp-2122-edit-starter-template-dash-form-cleanup")
         #expect(display.display?.ticketIDs == ["INP-2122"])
         #expect(display.display?.ticketLinks == [

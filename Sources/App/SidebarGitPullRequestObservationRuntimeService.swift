@@ -357,6 +357,7 @@ final class SidebarGitPullRequestObservationRuntimeService {
                         explicitURLString: pullRequest.ownerURLString,
                         ownerLogin: pullRequest.ownerLogin
                     ),
+                    ownerAvatarURL: pullRequest.ownerAvatarURLString.flatMap(URL.init(string:)),
                     status: SidebarPullRequestStatus(rawValue: status.rawValue) ?? .open,
                     branch: nil,
                     isStale: false,

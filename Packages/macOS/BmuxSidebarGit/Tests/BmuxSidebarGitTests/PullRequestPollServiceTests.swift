@@ -378,6 +378,7 @@ import BmuxGit
                         urlString: "https://github.com/o/r/pull/99",
                         ownerLogin: "octocat",
                         ownerURLString: "https://github.com/octocat",
+                        ownerAvatarURLString: "https://avatars.githubusercontent.com/u/1?v=4",
                         statusRawValue: PullRequestStatus.open.rawValue,
                         branch: "feature/x"
                     )),
@@ -394,6 +395,7 @@ import BmuxGit
         #expect(badge?.number == 99)
         #expect(badge?.ownerLogin == "octocat")
         #expect(badge?.ownerURL?.absoluteString == "https://github.com/octocat")
+        #expect(badge?.ownerAvatarURL?.absoluteString == "https://avatars.githubusercontent.com/u/1?v=4")
     }
 
     /// Disabling polling resets all tracking and clears every badge.

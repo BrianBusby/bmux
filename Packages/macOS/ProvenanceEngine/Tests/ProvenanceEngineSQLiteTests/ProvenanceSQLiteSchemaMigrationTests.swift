@@ -11,7 +11,7 @@ struct ProvenanceSQLiteSchemaMigrationTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
 
-        #expect(try await repository.schemaVersion() == 27)
+        #expect(try await repository.schemaVersion() == 28)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
         try Self.expectTables([
@@ -30,7 +30,7 @@ struct ProvenanceSQLiteSchemaMigrationTests {
             "provenance_artifact_collision_revisions", "provenance_artifact_collisions",
             "provenance_workspace_coding_agent_session_associations", "provenance_archived_workspaces",
         ], in: database)
-        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [27, 26, 25, 24, 23, 22, 21, 20, 19, 18])
+        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [28, 27, 26, 25, 24, 23, 22, 21, 20, 19])
     }
 
     @Test
@@ -51,10 +51,11 @@ struct ProvenanceSQLiteSchemaMigrationTests {
         let repository = try ProvenanceSQLiteRepository(url: url)
         let migratedDatabase = try ProvenanceSQLiteDatabase(url: url)
 
-        #expect(try await repository.schemaVersion() == 27)
-        #expect(try Self.firstString("SELECT value FROM provenance_metadata WHERE key = 'schema_version'", in: migratedDatabase) == "27")
+        #expect(try await repository.schemaVersion() == 28)
+        #expect(try Self.firstString("SELECT value FROM provenance_metadata WHERE key = 'schema_version'", in: migratedDatabase) == "28")
         #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_login", in: migratedDatabase))
         #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_url", in: migratedDatabase))
+        #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_avatar_url", in: migratedDatabase))
         #expect(try Self.tableHasColumn("provenance_workspace_display", "current_work_summary", in: migratedDatabase))
         #expect(try Self.tableHasColumn("provenance_workspace_display", "last_submitted_prompt", in: migratedDatabase))
         #expect(try Self.tableHasColumn("provenance_workspace_display", "last_submitted_prompt_submitted_at_seconds", in: migratedDatabase))
@@ -75,7 +76,47 @@ struct ProvenanceSQLiteSchemaMigrationTests {
         #expect(try Self.tableExists("provenance_artifact_collision_revisions", in: migratedDatabase))
         #expect(try Self.tableExists("provenance_workspace_coding_agent_session_associations", in: migratedDatabase))
         #expect(try Self.tableExists("provenance_archived_workspaces", in: migratedDatabase))
-        #expect(try await repository.schemaMigrationRecords(limit: 3).map(\.version) == [27, 26, 25])
+        #expect(try await repository.schemaMigrationRecords(limit: 3).map(\.version) == [28, 27, 26])
+    }
+
+    @Test
+    func repositoryAddsAvatarColumnToArchiveVersion27Database() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+
+        _ = try ProvenanceSQLiteRepository(
+            url: url,
+            migrations: ProvenanceSQLiteRepository.migrations.filter { $0.version <= 27 }
+        )
+        let oldDatabase = try ProvenanceSQLiteDatabase(url: url)
+        #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_avatar_url", in: oldDatabase) == false)
+
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let migratedDatabase = try ProvenanceSQLiteDatabase(url: url)
+        #expect(try await repository.schemaVersion() == 28)
+        #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_avatar_url", in: migratedDatabase))
+        #expect(try Self.tableExists("provenance_archived_workspaces", in: migratedDatabase))
+    }
+
+    @Test
+    func repositoryRetainsAvatarColumnFromEarlierVersion26Database() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+
+        _ = try ProvenanceSQLiteRepository(
+            url: url,
+            migrations: ProvenanceSQLiteRepository.migrations.filter { $0.version <= 25 }
+        )
+        let oldDatabase = try ProvenanceSQLiteDatabase(url: url)
+        try oldDatabase.execute("ALTER TABLE provenance_workspace_display ADD COLUMN pull_request_owner_avatar_url TEXT")
+        try oldDatabase.execute("UPDATE provenance_metadata SET value = '26' WHERE key = 'schema_version'")
+        try oldDatabase.setUserVersion(26)
+
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let migratedDatabase = try ProvenanceSQLiteDatabase(url: url)
+        #expect(try await repository.schemaVersion() == 28)
+        #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_avatar_url", in: migratedDatabase))
+        #expect(try Self.tableExists("provenance_archived_workspaces", in: migratedDatabase))
     }
 
     @Test
@@ -135,7 +176,7 @@ struct ProvenanceSQLiteSchemaMigrationTests {
 
         let repository = try ProvenanceSQLiteRepository(storageLocation: storageLocation)
 
-        #expect(try await repository.schemaVersion() == 27)
+        #expect(try await repository.schemaVersion() == 28)
         #expect(FileManager.default.fileExists(atPath: storageLocation.databaseURL.path))
     }
 

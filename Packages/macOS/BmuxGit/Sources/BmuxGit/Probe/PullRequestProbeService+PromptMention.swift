@@ -52,6 +52,7 @@ extension PullRequestProbeService {
             url: payload.url,
             ownerLogin: payload.author?.login,
             ownerURLString: payload.author?.url,
+            ownerAvatarURLString: payload.author?.login.map { "https://github.com/\($0).png" },
             updatedAt: nil,
             mergedAt: nil,
             headRefName: nil,

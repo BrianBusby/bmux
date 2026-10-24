@@ -4,11 +4,14 @@ import SwiftUI
 struct WorkspaceRepositoryLabel: View {
     let name: String
     let font: Font
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Text(name)
             .font(font)
-            .foregroundStyle(Color(red: 57 / 255, green: 1, blue: 20 / 255))
+            .foregroundStyle(Color(nsColor: WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(
+                colorScheme: colorScheme
+            )))
             .lineLimit(1)
             .truncationMode(.tail)
     }

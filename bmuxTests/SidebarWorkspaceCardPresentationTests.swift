@@ -99,6 +99,7 @@ import BMUXAgentLaunch
         let card = Self.referenceCard(workspace: workspace, provenance: provenance)
         let normalizedTicket = ticketTitle?.trimmingCharacters(in: .whitespacesAndNewlines)
         #expect(card.title == (normalizedTicket.flatMap { $0.isEmpty ? nil : $0 } ?? "Review roof inspection"))
+        #expect(card.titleIsTicket == (normalizedTicket?.isEmpty == false))
         #expect(card.prompt == "Check the latest inspection photos")
         #expect(card.ticketID == (ticketTitle == nil ? nil : "ROOF-42"))
         #expect(card.projectTitle == "Maple Street roof")
@@ -107,6 +108,25 @@ import BMUXAgentLaunch
         #expect(card.branch == "roof-inspection")
         #expect(card.isDirty == false)
         #expect(workspace.customDescription == "Check the latest inspection photos")
+    }
+
+    @MainActor @Test(arguments: [
+        ("Repair flashing", true),
+        ("Review roof inspection", true),
+        (" ", false),
+    ])
+    func referenceRailLinksOnlyDisplayedTicketTitles(ticketTitle: String, titleIsTicket: Bool) throws {
+        let workspace = Workspace(title: "Terminal")
+        workspace.setCustomTitle("Review roof inspection")
+        let url = "https://linear.app/example/issue/ROOF-42"
+        let provenance = try Self.referenceProvenance(
+            workspaceID: workspace.stableId, ticketTitle: ticketTitle, ticketURL: url
+        )
+        let card = Self.referenceCard(workspace: workspace, provenance: provenance)
+
+        #expect(card.ticketID == "ROOF-42")
+        #expect(card.ticketURL == URL(string: url))
+        #expect(card.titleIsTicket == titleIsTicket)
     }
 
     @MainActor @Test(arguments: [nil, "Repair flashing"] as [String?])
@@ -335,7 +355,7 @@ import BMUXAgentLaunch
         }
     }
 
-    @MainActor private static func referenceCard(
+    @MainActor static func referenceCard(
         workspace: Workspace, provenance: WorkspaceDisplayCurrentStateSnapshot?
     ) -> WorkspaceReferenceCardSnapshot {
         let title = SidebarWorkspaceTitleResolution(
@@ -346,14 +366,15 @@ import BMUXAgentLaunch
 
     private static func referenceProvenance(
         workspaceID: UUID, ticketTitle: String?, currentDirectory: String? = nil,
-        prompt: String = "Check the latest inspection photos", branch: String = "roof-inspection"
+        prompt: String = "Check the latest inspection photos", branch: String = "roof-inspection",
+        ticketURL: String? = nil
     ) throws -> WorkspaceDisplayCurrentStateSnapshot {
         let record = ProvenanceWorkspaceDisplayRecord(
             id: "roof-work", workspaceID: workspaceID.uuidString,
             currentDirectory: currentDirectory, title: "Older roof overview", branch: branch,
             pullRequestNumber: 42, pullRequestOwnerLogin: "sam", pullRequestStatus: "open", isDirty: false,
             ticketLinks: ticketTitle.map { [.init(
-                id: "ROOF-42", system: "linear", title: $0, ownerName: "Sam"
+                id: "ROOF-42", system: "linear", title: $0, url: ticketURL, ownerName: "Sam"
             )] } ?? [],
             projectLinks: [.init(id: "roof", system: "linear", title: "Maple Street roof")],
             currentWorkSummary: "Check the latest inspection photos", lastSubmittedPrompt: prompt,

@@ -38,6 +38,9 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
     /// Pull request author's profile URL, when known.
     public let pullRequestOwnerURL: String?
 
+    /// Pull request author's avatar image URL, when known.
+    public let pullRequestOwnerAvatarURL: String?
+
     /// Current pull request lifecycle status, such as `open`, `merged`, or `closed`.
     public let pullRequestStatus: String?
 
@@ -102,6 +105,7 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         case pullRequestURL
         case pullRequestOwnerLogin
         case pullRequestOwnerURL
+        case pullRequestOwnerAvatarURL
         case pullRequestStatus
         case pullRequestBranch
         case pullRequestIsStale
@@ -135,6 +139,7 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         pullRequestURL: String? = nil,
         pullRequestOwnerLogin: String? = nil,
         pullRequestOwnerURL: String? = nil,
+        pullRequestOwnerAvatarURL: String? = nil,
         pullRequestStatus: String? = nil,
         pullRequestBranch: String? = nil,
         pullRequestIsStale: Bool = false,
@@ -165,6 +170,7 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         self.pullRequestURL = pullRequestURL
         self.pullRequestOwnerLogin = pullRequestOwnerLogin
         self.pullRequestOwnerURL = pullRequestOwnerURL
+        self.pullRequestOwnerAvatarURL = pullRequestOwnerAvatarURL
         self.pullRequestStatus = pullRequestStatus
         self.pullRequestBranch = pullRequestBranch
         self.pullRequestIsStale = pullRequestIsStale
@@ -199,6 +205,7 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         self.pullRequestURL = try container.decodeIfPresent(String.self, forKey: .pullRequestURL)
         self.pullRequestOwnerLogin = try container.decodeIfPresent(String.self, forKey: .pullRequestOwnerLogin)
         self.pullRequestOwnerURL = try container.decodeIfPresent(String.self, forKey: .pullRequestOwnerURL)
+        self.pullRequestOwnerAvatarURL = try container.decodeIfPresent(String.self, forKey: .pullRequestOwnerAvatarURL)
         self.pullRequestStatus = try container.decodeIfPresent(String.self, forKey: .pullRequestStatus)
         self.pullRequestBranch = try container.decodeIfPresent(String.self, forKey: .pullRequestBranch)
         self.pullRequestIsStale = try container.decode(Bool.self, forKey: .pullRequestIsStale)

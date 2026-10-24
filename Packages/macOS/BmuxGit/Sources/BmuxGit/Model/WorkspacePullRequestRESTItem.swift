@@ -10,10 +10,12 @@ struct WorkspacePullRequestRESTItem: Decodable, Sendable {
     struct User: Decodable, Sendable {
         let login: String?
         let htmlURL: String?
+        let avatarURL: String?
 
         enum CodingKeys: String, CodingKey {
             case login
             case htmlURL = "html_url"
+            case avatarURL = "avatar_url"
         }
     }
 

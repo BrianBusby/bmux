@@ -51,28 +51,23 @@ struct WorkspaceReferenceCardView: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: theme.layout.cardContentGap) {
-            HStack(alignment: .center, spacing: theme.layout.workspaceCardHeaderGap) {
+            HStack(alignment: .top, spacing: theme.layout.workspaceCardHeaderGap) {
                 VStack(alignment: .leading, spacing: theme.layout.workspaceCardHeaderGap) {
-                    if repositoryName != nil || isSelected {
-                        HStack(spacing: theme.layout.workspaceCardHeaderGap) {
-                            if isSelected {
-                                Rectangle()
-                                    .frame(width: theme.layout.selectedMarkerSize, height: theme.layout.selectedMarkerSize)
-                                    .foregroundStyle(color(.selectionRing))
-                                    .accessibilityHidden(true)
-                            }
-                            if let repositoryName {
-                                Text(repositoryName)
-                                    .matteTypography(.repositoryLabel, theme: theme)
-                                    .foregroundStyle(color(.sage))
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
-                            }
-                        }
-                        .allowsHitTesting(false)
+                    if let projectTitle = card.projectTitle {
+                        linkRow(icon: "folder", text: projectTitle, url: card.projectURL, control: .project)
                     }
                     if let ticketID = card.ticketID {
-                        linkRow(icon: "ticket", text: ticketID, url: card.ticketURL, control: .ticket)
+                        ticketHeading(ticketID)
+                    }
+                    if let repositoryName {
+                        Text(repositoryName)
+                            .matteTypography(.repositoryLabel, theme: theme)
+                            .foregroundStyle(Color(nsColor: WorkspaceRepoBadgeAppearanceColorPolicy.foregroundNSColor(
+                                colorScheme: colorScheme
+                            )))
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .allowsHitTesting(false)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -100,16 +95,15 @@ struct WorkspaceReferenceCardView: View {
                 .accessibilityIdentifier("WorkspaceReferenceCard.close.\(card.id)")
             }
             .frame(minHeight: theme.layout.workspaceCardHeaderHeight)
-            Text(card.title)
-                .matteTypography(.cardTitle, theme: theme)
-                .foregroundStyle(color(.textPrimary))
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .allowsHitTesting(false)
-
-            if let projectTitle = card.projectTitle {
-                linkRow(icon: "folder", text: projectTitle, url: card.projectURL, control: .project)
+            if !card.titleIsTicket || card.ticketID == nil {
+                Text(card.title)
+                    .matteTypography(.cardTitle, theme: theme)
+                    .foregroundStyle(color(.textPrimary))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .allowsHitTesting(false)
             }
+
             if let pullRequestText = card.pullRequestText {
                 linkRow(icon: "arrow.triangle.pull", text: pullRequestText, url: card.pullRequestURL, control: .pullRequest)
             }
@@ -147,13 +141,34 @@ struct WorkspaceReferenceCardView: View {
     }
 
     @ViewBuilder
+    private func ticketHeading(_ ticketID: String) -> some View {
+        let text = card.titleIsTicket ? "\(ticketID)\n\(card.title)" : ticketID
+        let label = HStack(alignment: .firstTextBaseline, spacing: 5) {
+            Image(systemName: "ticket")
+                .font(.system(size: theme.layout.smallIconSize, weight: .medium))
+                .frame(width: theme.layout.smallIconSize)
+            Text(text)
+                .underline(card.ticketURL != nil)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .matteTypography(.cardTitle, theme: theme)
+        .frame(minHeight: theme.layout.minimumHitSize, alignment: .leading)
+        if let url = card.ticketURL {
+            MatteButton(hitExpansion: theme.layout.invisibleHitExpansion, action: { onOpenLink(url) },
+                        onFocusChange: { updateFocus(.ticket, isFocused: $0) }) { label }
+                .buttonStyle(MatteButtonStyle(.link, theme: theme, dimsWhenDisabled: isEnabled))
+        } else {
+            label.foregroundStyle(color(.textPrimary)).allowsHitTesting(false)
+        }
+    }
+
+    @ViewBuilder
     private func linkRow(icon: String, text: String, url: URL?, control: Control) -> some View {
         let label = HStack(alignment: .firstTextBaseline, spacing: 5) {
             Image(systemName: icon)
                 .font(.system(size: theme.layout.smallIconSize, weight: .medium))
                 .frame(width: theme.layout.smallIconSize)
             Text(text).underline(url != nil).lineLimit(2).truncationMode(.tail)
-            Spacer(minLength: 0)
         }
         .matteTypography(.body, theme: theme)
         .frame(minHeight: theme.layout.minimumHitSize, alignment: .leading)
@@ -168,11 +183,7 @@ struct WorkspaceReferenceCardView: View {
     @ViewBuilder
     private func ownerRow(_ name: String) -> some View {
         let label = HStack(spacing: 8) {
-            Text(card.ownerInitials ?? "")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(color(.textSecondary))
-                .frame(width: 24, height: 24)
-                .background(color(.chip), in: Circle())
+            ownerAvatar.accessibilityHidden(true)
             Text(name).matteTypography(.body, theme: theme).lineLimit(1)
         }
         .frame(minHeight: theme.layout.minimumHitSize)
@@ -182,6 +193,32 @@ struct WorkspaceReferenceCardView: View {
         } else {
             label.foregroundStyle(color(.textSecondary)).allowsHitTesting(false)
         }
+    }
+
+    @ViewBuilder
+    private var ownerAvatar: some View {
+        if let url = card.ownerAvatarURL {
+            AsyncImage(url: url) { phase in
+                if let image = phase.image {
+                    image.resizable()
+                        .scaledToFill()
+                        .frame(width: 29, height: 29)
+                        .clipShape(Circle())
+                } else {
+                    ownerInitialsCircle
+                }
+            }
+        } else {
+            ownerInitialsCircle
+        }
+    }
+
+    private var ownerInitialsCircle: some View {
+        Text(card.ownerInitials ?? "")
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(color(.textSecondary))
+            .frame(width: 29, height: 29)
+            .background(color(.chip), in: Circle())
     }
 
     private func updateFocus(_ control: Control, isFocused: Bool) {

@@ -20,7 +20,7 @@ struct WorkspaceArchiveTests {
 
         let reopened = try ProvenanceSQLiteRepository(url: url)
         #expect(try await reopened.archivedWorkspaces(.init()).records.isEmpty)
-        #expect(try await reopened.schemaVersion() == 27)
+        #expect(try await reopened.schemaVersion() == 28)
     }
 
     @Test
@@ -40,7 +40,7 @@ struct WorkspaceArchiveTests {
 
         let upgraded = try ProvenanceSQLiteRepository(url: url)
         #expect(try await upgraded.archivedWorkspaces(.init()).records == [record])
-        #expect(try await upgraded.schemaVersion() == 27)
+        #expect(try await upgraded.schemaVersion() == 28)
     }
 
     @Test
@@ -210,7 +210,7 @@ struct WorkspaceArchiveTests {
         let reopenedClient = try ProvenanceSQLiteRepository(url: url)
         let afterRestore = try await reopenedClient.archivedWorkspaces(.init())
         #expect(afterRestore.records == [newer, older])
-        #expect(try await reopenedClient.schemaVersion() == 27)
+        #expect(try await reopenedClient.schemaVersion() == 28)
     }
 
     @Test

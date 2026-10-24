@@ -182,6 +182,7 @@ extension Workspace {
         url: URL,
         ownerLogin: String? = nil,
         ownerURL: URL? = nil,
+        ownerAvatarURL: URL? = nil,
         status: SidebarPullRequestStatus,
         branch: String? = nil,
         isStale: Bool = false,
@@ -217,6 +218,7 @@ extension Workspace {
         let resolvedTitle = title ?? (isSameExistingPullRequest ? existing?.title : nil)
         let resolvedOwnerLogin = ownerLogin ?? (isSameExistingPullRequest ? existing?.ownerLogin : nil)
         let resolvedOwnerURL = ownerURL ?? (isSameExistingPullRequest ? existing?.ownerURL : nil)
+        let resolvedOwnerAvatarURL = ownerAvatarURL ?? (isSameExistingPullRequest ? existing?.ownerAvatarURL : nil)
         let resolvedBranch: String? = {
             if let normalizedBranch {
                 return normalizedBranch
@@ -240,6 +242,7 @@ extension Workspace {
             url: url,
             ownerLogin: resolvedOwnerLogin,
             ownerURL: resolvedOwnerURL,
+            ownerAvatarURL: resolvedOwnerAvatarURL,
             status: status,
             branch: resolvedBranch,
             isStale: isStale

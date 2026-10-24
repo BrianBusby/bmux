@@ -21,6 +21,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
                 pullRequestURL: "https://github.com/example/repo/pull/9182",
                 pullRequestOwnerLogin: "brian",
                 pullRequestOwnerURL: "https://github.com/brian",
+                pullRequestOwnerAvatarURL: "https://avatars.githubusercontent.com/u/42?v=4",
                 pullRequestStatus: "open",
                 pullRequestBranch: "feature/cc-1842-upload-retries",
                 ticketIDs: ["CC-1842"],
@@ -65,6 +66,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
         #expect(display.pullRequestURL == "https://github.com/example/repo/pull/9182")
         #expect(display.pullRequestOwnerLogin == "brian")
         #expect(display.pullRequestOwnerURL == "https://github.com/brian")
+        #expect(display.pullRequestOwnerAvatarURL == "https://avatars.githubusercontent.com/u/42?v=4")
         #expect(display.pullRequestStatus == "open")
         #expect(display.pullRequestBranch == "feature/cc-1842-upload-retries")
         #expect(display.ticketIDs == ["CC-1842"])
@@ -86,6 +88,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
             display: Self.workspaceDisplay(
                 pullRequestNumber: 42,
                 pullRequestURL: "https://github.com/example/repo/pull/42",
+                pullRequestOwnerAvatarURL: "https://avatars.githubusercontent.com/u/42?v=4",
                 pullRequestStatus: "open",
                 pullRequestBranch: "feature/pr-42",
                 observedAt: baseTime
@@ -110,6 +113,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
 
         #expect(display.pullRequestNumber == 42)
         #expect(display.pullRequestURL == "https://github.com/example/repo/pull/42")
+        #expect(display.pullRequestOwnerAvatarURL == "https://avatars.githubusercontent.com/u/42?v=4")
         #expect(display.pullRequestStatus == "open")
         #expect(display.pullRequestBranch == "feature/pr-42")
         #expect(display.pullRequestIsStale)
@@ -129,6 +133,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
             display: Self.workspaceDisplay(
                 pullRequestNumber: 42,
                 pullRequestURL: "https://github.com/example/repo/pull/42",
+                pullRequestOwnerAvatarURL: "https://avatars.githubusercontent.com/u/42?v=4",
                 pullRequestStatus: "open",
                 pullRequestBranch: "feature/pr-42",
                 observedAt: baseTime
@@ -150,6 +155,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
         ).display)
         #expect(display.pullRequestNumber == nil)
         #expect(display.pullRequestURL == nil)
+        #expect(display.pullRequestOwnerAvatarURL == nil)
         #expect(display.pullRequestStatus == nil)
         #expect(display.pullRequestBranch == nil)
         #expect(display.pullRequestIsStale == false)
@@ -458,9 +464,9 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
         #expect(display.lastSubmittedPrompt == "prompt before restart")
     }
 
-    private static let workspaceID = "00000000-0000-0000-0000-000000001842"
+    static let workspaceID = "00000000-0000-0000-0000-000000001842"
 
-    private static func appendWorkspaceDisplay(
+    static func appendWorkspaceDisplay(
         eventID: String,
         timestamp: Date,
         display: ProvenanceWorkspaceDisplayRecord,
@@ -482,12 +488,13 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
         )
     }
 
-    private static func workspaceDisplay(
+    static func workspaceDisplay(
         branch: String? = nil,
         pullRequestNumber: Int? = nil,
         pullRequestURL: String? = nil,
         pullRequestOwnerLogin: String? = nil,
         pullRequestOwnerURL: String? = nil,
+        pullRequestOwnerAvatarURL: String? = nil,
         pullRequestStatus: String? = nil,
         pullRequestBranch: String? = nil,
         pullRequestIsStale: Bool = false,
@@ -514,6 +521,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
             pullRequestURL: pullRequestURL,
             pullRequestOwnerLogin: pullRequestOwnerLogin,
             pullRequestOwnerURL: pullRequestOwnerURL,
+            pullRequestOwnerAvatarURL: pullRequestOwnerAvatarURL,
             pullRequestStatus: pullRequestStatus,
             pullRequestBranch: pullRequestBranch,
             pullRequestIsStale: pullRequestIsStale,
@@ -531,14 +539,14 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
         )
     }
 
-    private static func temporaryDatabaseURL() -> URL {
+    static func temporaryDatabaseURL() -> URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent("provenance-engine-workspace-display-tests", isDirectory: true)
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
             .appendingPathComponent("provenance.sqlite")
     }
 
-    private static func removeTemporaryDatabaseDirectory(for url: URL) {
+    static func removeTemporaryDatabaseDirectory(for url: URL) {
         try? FileManager.default.removeItem(at: url.deletingLastPathComponent())
     }
 
