@@ -6500,7 +6500,7 @@ caveats:
     owner: bmux
 
   - id: workspace_stress_delivery_verification
-    title: Workspace stress profiles preserve workload and timing categories while awaiting bounded FIFO delivery; native build 797 passes locally, fixed-head macOS 15 verification remains pending
+    title: Workspace stress profiles retain the one-second FIFO bound and full workload in a fresh-host macOS 15 gate after a broad shard failed near workspace 38; hosted verification remains pending
     status: open
     owner: bmux
 
@@ -6550,7 +6550,7 @@ caveats:
     owner: bmux
 
   - id: deferred_terminal_search_focus_fixture_verification
-    title: Deferred terminal search attachment uses native FIFO and actual responder observation with original one-second phase bounds; owned build 801 controls pass, original presented macOS 15 composition remains pending
+    title: Deferred terminal search attachment retains one-second native FIFO and responder bounds; focused macOS 15 CI gate tracks the broad-shard queue-delay caveat
     status: open
     owner: bmux
 

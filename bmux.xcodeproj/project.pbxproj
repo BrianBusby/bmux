@@ -1166,6 +1166,7 @@
 		3F1319520A494EC8A59394B4 /* NoGitWatchShellIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1C64DE0F984700BC47741A /* NoGitWatchShellIntegrationTests.swift */; };
 		734F49D37E543DD01C2F4FEF /* NotificationAndMenuBarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C075029771815DD5DA1332 /* NotificationAndMenuBarTests.swift */; };
 		C06552010000000000000003 /* NotificationBurstCoalescer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C06552010000000000000004 /* NotificationBurstCoalescer.swift */; };
+		E24B56C10000000000000001 /* NotificationBurstCoalescerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E24B56C10000000000000002 /* NotificationBurstCoalescerTests.swift */; };
 		ED490AF30000000000000002 /* NotificationBurstNativeCompletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED490AF30000000000000001 /* NotificationBurstNativeCompletionTests.swift */; };
 		7490C00D7490C00D7490C00D /* NotificationCacheMemoryPressureResponder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7490D00D7490D00D7490D00D /* NotificationCacheMemoryPressureResponder.swift */; };
 		D7AB00000000000000B021 /* NotificationDismissSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AB00000000000000B020 /* NotificationDismissSyncTests.swift */; };
@@ -3380,6 +3381,7 @@
 		2B1C64DE0F984700BC47741A /* NoGitWatchShellIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoGitWatchShellIntegrationTests.swift; sourceTree = "<group>"; };
 		D2C075029771815DD5DA1332 /* NotificationAndMenuBarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationAndMenuBarTests.swift; sourceTree = "<group>"; };
 		C06552010000000000000004 /* NotificationBurstCoalescer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBurstCoalescer.swift; sourceTree = "<group>"; };
+		E24B56C10000000000000002 /* NotificationBurstCoalescerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBurstCoalescerTests.swift; sourceTree = "<group>"; };
 		ED490AF30000000000000001 /* NotificationBurstNativeCompletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBurstNativeCompletionTests.swift; sourceTree = "<group>"; };
 		7490D00D7490D00D7490D00D /* NotificationCacheMemoryPressureResponder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/NotificationCacheMemoryPressureResponder.swift; sourceTree = "<group>"; };
 		D7AB00000000000000B020 /* NotificationDismissSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NotificationDismissSyncTests.swift"; sourceTree = "<group>"; };
@@ -5857,6 +5859,7 @@
 				A11EAE000000000000000001 /* WorkspaceAppearanceConfigResolutionTests.swift */,
 				A11EAF000000000000000001 /* GhosttyNotificationDispatcherTests.swift */,
 				ED490AF30000000000000001 /* NotificationBurstNativeCompletionTests.swift */,
+				E24B56C10000000000000002 /* NotificationBurstCoalescerTests.swift */,
 				A59170000000000000000002 /* WindowAppearanceSnapshotPaneBackgroundTests.swift */,
 				F4200001A1B2C3D4E5F60718 /* WindowAppearanceSnapshotTests.swift */,
 					F4100001A1B2C3D4E5F60718 /* PortScannerTests.swift */,
@@ -8934,6 +8937,7 @@
 				378D5422D1ED47EF9B3EBF78 /* NoGitWatchShellFixture.swift in Sources */,
 				3F1319520A494EC8A59394B4 /* NoGitWatchShellIntegrationTests.swift in Sources */,
 				734F49D37E543DD01C2F4FEF /* NotificationAndMenuBarTests.swift in Sources */,
+				E24B56C10000000000000001 /* NotificationBurstCoalescerTests.swift in Sources */,
 				ED490AF30000000000000002 /* NotificationBurstNativeCompletionTests.swift in Sources */,
 				D7AB00000000000000B021 /* NotificationDismissSyncTests.swift in Sources */,
 				194C32A7F2F806C861E716A9 /* NotificationFocusEventTests.swift in Sources */,
