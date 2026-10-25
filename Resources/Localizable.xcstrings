@@ -242743,6 +242743,27 @@
         }
       }
     },
+    "workspaceRail.explorerView": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Explorer" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "エクスプローラー" } }
+      }
+    },
+    "workspaceRail.workspaceView": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Workspace View" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ワークスペースビュー" } }
+      }
+    },
+    "workspaceRail.noExplorerMatches": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No open workspaces match the Explorer view" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "エクスプローラーの表示に一致する開いているワークスペースはありません" } }
+      }
+    },
     "workspaceRail.title": {
       "extractionState": "manual",
       "localizations": {

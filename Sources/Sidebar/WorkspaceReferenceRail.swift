@@ -9,6 +9,8 @@ struct WorkspaceReferenceRail: View {
     let projectCard: @MainActor (Workspace) -> WorkspaceReferenceCardSnapshot
     let selectedWorkspaceID: UUID?
     let selectedWorkspaceTitle: String?
+    let canCloseWorkspace: Bool
+    let onShowExplorer: () -> Void
     let onSelect: (UUID) -> Void
     let onClose: (UUID) -> Void
     let onOpenLink: (UUID, URL) -> Void
@@ -66,6 +68,14 @@ struct WorkspaceReferenceRail: View {
                         .foregroundStyle(Color(nsColor: theme.color(.textSecondary)))
                     Spacer()
                     MatteButton(hitExpansion: theme.layout.invisibleHitExpansion) {
+                        onShowExplorer()
+                    } label: {
+                        Text(String(localized: "workspaceRail.explorerView", defaultValue: "Explorer"))
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .buttonStyle(MatteButtonStyle(theme: theme))
+                    .accessibilityIdentifier("bmuxShell.explorerToggle")
+                    MatteButton(hitExpansion: theme.layout.invisibleHitExpansion) {
                         guard let repoLauncherAnchorView else {
                             NSSound.beep()
                             return
@@ -99,7 +109,7 @@ struct WorkspaceReferenceRail: View {
                             WorkspaceReferenceCardView(
                                 card: card, repositoryName: repositoryNames[card.id],
                                 isSelected: card.id == selectedWorkspaceID,
-                                canCloseWorkspace: workspaces.count > 1,
+                                canCloseWorkspace: canCloseWorkspace,
                                 onSelect: { onSelect(card.id) }, onClose: { onClose(card.id) },
                                 onOpenLink: { onOpenLink(card.id, $0) }
                             )
@@ -111,6 +121,11 @@ struct WorkspaceReferenceRail: View {
                                 hasCategoryFilters: filters.categoryCount > 0,
                                 onClear: { filters = WorkspaceFilters() }
                             )
+                        } else if visibleCards.isEmpty {
+                            Text(String(localized: "workspaceRail.noExplorerMatches", defaultValue: "No open workspaces match the Explorer view"))
+                                .font(.system(size: 12))
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
                     .padding(.horizontal, theme.layout.windowGutter)

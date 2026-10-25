@@ -142,6 +142,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Explorer Card Hit Target | under observation |
 | Workspace Explorer Close Journal | under observation |
 | Workspace Explorer Close Recovery | under observation |
+| Workspace Explorer Embedded Workbench | under observation |
 | Workspace Explorer Filter Transition | under observation |
 | Workspace Explorer Group Accessibility | under observation |
 | Workspace Explorer History Adapter | implemented |

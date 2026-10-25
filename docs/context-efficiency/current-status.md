@@ -35,7 +35,15 @@ write; termination before that restore snapshot reaches disk remains uncovered. 
 unique-count, and held-status rules. Merged PR #180 adds a separate native
 Project and Workspace Explorer window with read-only retained session detail,
 explicit reopen, per-view arrangements, and a Debug history fixture. Its native
-view is under observation. The `workspace-explorer-staged-loading` slice is
+view is under observation. The main workbench now presents Explorer in place of
+the workspace surface and moves the workspace rail away. Workspace View restores
+the surface and shows the live workspaces matching Explorer's current scope and
+filters in the rail. Explorer navigation and filters survive the switch; the UI
+transition remains under dogfood observation. The 15 focused Explorer tests,
+tagged build, Swift file-length and warning budgets, test wiring, and
+project-doc validation/generation/freshness checks pass. The broader read-only
+project-doc CI gate hit GitHub's evidence API rate limit; keyboard, reduced-motion,
+and live transition dogfood remain open. The `workspace-explorer-staged-loading` slice is
 under observation: it publishes live cards immediately, then resolves retained
 history and closed counts without resetting view state.
 Merged PR #182 adds a tab-list invalidation path for an already open Explorer window. New live workspaces appear

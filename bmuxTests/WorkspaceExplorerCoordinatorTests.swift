@@ -93,6 +93,7 @@ struct WorkspaceExplorerCoordinatorTests {
         release.continuation.yield()
         await refresh.value
         #expect(model.pendingWorkspaceItems.isEmpty)
+        #expect(Set(model.visibleLiveWorkspaceIDs ?? []) == [first.runtimeID, second.runtimeID])
         #expect(Set(model.catalog?.items.map(\.id) ?? []) ==
             [first.stableID.uuidString, second.stableID.uuidString])
     }

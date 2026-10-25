@@ -4,8 +4,16 @@ import BmuxAppKitSupportUI
 /// Presents the continuous matte base and sidebar/main gutter without owning their state.
 struct WorkspaceReferenceAppShell<Rail: View, Content: View>: View {
     @Environment(\.colorScheme) private var colorScheme
+    let showsRail: Bool
     @ViewBuilder let rail: () -> Rail
     @ViewBuilder let content: () -> Content
+
+    init(showsRail: Bool = true, @ViewBuilder rail: @escaping () -> Rail,
+         @ViewBuilder content: @escaping () -> Content) {
+        self.showsRail = showsRail
+        self.rail = rail
+        self.content = content
+    }
 
     var body: some View {
         let theme = MatteTheme(colorScheme: colorScheme)
@@ -27,10 +35,14 @@ struct WorkspaceReferenceAppShell<Rail: View, Content: View>: View {
 
                 GeometryReader { geometry in
                     HStack(spacing: theme.layout.windowGutter) {
-                        rail()
-                            .frame(width: min(theme.layout.sidebarMaximumWidth, max(theme.layout.sidebarMinimumWidth, geometry.size.width * theme.layout.sidebarPreferredFraction)))
+                        if showsRail {
+                            rail()
+                                .frame(width: min(theme.layout.sidebarMaximumWidth, max(theme.layout.sidebarMinimumWidth, geometry.size.width * theme.layout.sidebarPreferredFraction)))
+                                .transition(.move(edge: .leading).combined(with: .opacity))
+                        }
                         content()
                             .padding(.top, theme.layout.mainPanelTopInset)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }
             }
