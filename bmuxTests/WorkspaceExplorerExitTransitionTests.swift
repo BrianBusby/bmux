@@ -11,6 +11,27 @@ import Testing
 @Suite @MainActor
 struct WorkspaceExplorerExitTransitionTests {
     @Test
+    func projectFilterFadesUnassignedCardInOverview() async {
+        let workspace = WorkspaceExplorerLiveWorkspace(stableID: UUID(), runtimeID: UUID(),
+            title: "Maple Street Roof Inspection", createdAt: .now,
+            colorHex: nil, display: nil, lastActivityAt: .now, liveStatus: .idle)
+        let items = WorkspaceExplorerHistoryAdapter().join(live: [workspace],
+            archived: [], eligibilityByID: [:])
+        let model = WorkspaceExplorerCoordinator(loadHistory: {
+            WorkspaceExplorerHistoryLoadResult(items: items, archiveAvailability: .available,
+                partialLiveActivity: false)
+        }, reopenHistory: { _ in false }, activateWorkspace: { _ in },
+           loadSessions: { id in ProvenanceWorkspaceSessionPageResponse(
+               workspaceID: id.uuidString, sessions: [], nextCursor: nil) },
+           clearArchive: { }, feedbackDelay: { _ in try await Task.sleep(for: .seconds(60)) })
+        await model.load()
+
+        model.setFilter(.project, value: .project("maple-roof"), animated: true)
+
+        #expect(model.exitsUnassigned)
+    }
+
+    @Test
     func filterExitKeepsOldCountsUntilRapidReplacementCommitsLatestResult() async {
         let needingInput = WorkspaceExplorerLiveWorkspace(stableID: UUID(), runtimeID: UUID(),
             title: "Maple Street Roof Inspection", createdAt: .now,
