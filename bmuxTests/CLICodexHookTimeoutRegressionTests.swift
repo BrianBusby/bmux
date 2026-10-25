@@ -340,7 +340,7 @@ struct CLICodexHookTimeoutRegressionTests {
             listenerFD: listenerFD,
             commands: commands,
             surfaceId: surfaceId,
-            connectionLimit: 8
+            connectionLimit: 24
         )
 
         let result = runCodexHookProcess(
@@ -366,7 +366,21 @@ struct CLICodexHookTimeoutRegressionTests {
         let sentCommands = commands.snapshot()
         #expect(!sentCommands.contains { $0.hasPrefix("set_status codex Running ") })
         #expect(!sentCommands.contains { $0.hasPrefix("clear_notifications ") })
-        #expect(!sentCommands.contains { codexHookJSONObject($0)?["method"] as? String == "feed.push" })
+        let feedPush = try #require(
+            sentCommands
+                .compactMap(codexHookJSONObject)
+                .first { $0["method"] as? String == "feed.push" },
+            "Stale Codex prompt-submit must still publish Feed telemetry so prompt navigation records the user prompt"
+        )
+        let params = try #require(feedPush["params"] as? [String: Any])
+        let event = try #require(params["event"] as? [String: Any])
+        #expect(event["hook_event_name"] as? String == "UserPromptSubmit")
+        #expect(event["workspace_id"] as? String == workspaceId)
+        #expect(event["surface_id"] as? String == surfaceId)
+        let toolInput = try #require(event["tool_input"] as? [String: Any])
+        #expect(toolInput["prompt"] as? String == "late")
+        let context = try #require(event["context"] as? [String: Any])
+        #expect(context["lastUserMessage"] as? String == "late")
         #expect(!sentCommands.contains { codexHookJSONObject($0)?["method"] as? String == "surface.resume.set" })
 
         let saved = try #require(
@@ -509,7 +523,7 @@ struct CLICodexHookTimeoutRegressionTests {
             listenerFD: listenerFD,
             commands: commands,
             surfaceId: surfaceId,
-            connectionLimit: 8
+            connectionLimit: 24
         )
 
         let result = runCodexHookProcess(
@@ -564,7 +578,7 @@ struct CLICodexHookTimeoutRegressionTests {
                 "BMUX_CODEX_PID": "1",
             ],
             standardInput: #"{"session_id":"\#(sessionId)","turn_id":"turn-done","cwd":"\#(root.path)","hook_event_name":"UserPromptSubmit","prompt":"late"}"#,
-            timeout: 5
+            timeout: 10
         )
 
         #expect(!latePrompt.timedOut, Comment(rawValue: latePrompt.stderr))
@@ -573,7 +587,7 @@ struct CLICodexHookTimeoutRegressionTests {
         let commandsAfterLatePrompt = Array(commands.snapshot().dropFirst(commandCountAfterSessionStart))
         #expect(!commandsAfterLatePrompt.contains { $0.hasPrefix("set_status codex Running ") })
         #expect(!commandsAfterLatePrompt.contains { $0.hasPrefix("clear_notifications ") })
-        #expect(!commandsAfterLatePrompt.contains { codexHookJSONObject($0)?["method"] as? String == "feed.push" })
+        #expect(commandsAfterLatePrompt.contains { codexHookJSONObject($0)?["method"] as? String == "feed.push" })
         #expect(!commandsAfterLatePrompt.contains { codexHookJSONObject($0)?["method"] as? String == "surface.resume.set" })
     }
 
