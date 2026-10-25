@@ -385,6 +385,7 @@ import BMUXAgentLaunch
         let full = WorkspaceReferenceCardSnapshot(explorerItem: item, hiddenDimensions: [])
         #expect(full.projectTitle == "Maple Street roof")
         #expect(full.ticketID == "ROOF-42")
+        #expect(full.title == "Repair flashing")
         #expect(full.pullRequestText == "#42 · open")
         #expect(full.ownerName == "sam")
 
@@ -392,6 +393,7 @@ import BMUXAgentLaunch
             hiddenDimensions: [.project, .ticket, .pullRequestOwner, .pullRequestStatus])
         #expect(arranged.projectTitle == nil)
         #expect(arranged.ticketID == nil)
+        #expect(arranged.title == "Review roof inspection")
         #expect(arranged.pullRequestText == "#42")
         #expect(arranged.ownerName == nil)
         #expect(arranged.branch == "roof-inspection")
