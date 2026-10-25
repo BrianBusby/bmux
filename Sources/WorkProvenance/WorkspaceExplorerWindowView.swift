@@ -337,62 +337,19 @@ struct WorkspaceExplorerWindowView: View {
     }
 
     private var emptyCollection: some View {
-        Group {
-            if model.presentedCatalog?.liveMetadataPending == true && model.scope.period != .anyTime {
-                ContentUnavailableView(String(localized: "explorer.activityLoading", defaultValue:
-                    "Loading workspace activity…"), systemImage: "clock")
-            } else if model.presentedCatalog?.archiveAvailability == .pending &&
-                (model.scope.state != .open || model.scope.period != .anyTime) {
-                ContentUnavailableView(String(localized: "explorer.historyLoadingTitle", defaultValue:
-                    "Loading retained history…"), systemImage: "clock")
-            } else if model.presentedCatalog?.archiveAvailability == .unavailable && model.scope.state == .closed {
-                ContentUnavailableView(String(localized: "explorer.historyUnavailableTitle", defaultValue:
-                    "Retained history unavailable"), systemImage: "exclamationmark.triangle")
-            } else if !model.activeArrangement.filters.isEmpty {
-                ContentUnavailableView {
-                    Label(String(localized: "explorer.noFilterMatches", defaultValue:
-                        "No workspaces match these filters"), systemImage: "line.3.horizontal.decrease.circle")
-                } actions: {
-                    Button(String(localized: "explorer.clearFilters", defaultValue: "Clear filters")) {
-                        model.clearFilters(animated: !reduceMotion)
-                    }
-                }
-            } else if model.scope.period != .anyTime {
-                ContentUnavailableView {
-                    Label(String(localized: "explorer.noActivity", defaultValue: "No activity in this period"),
-                        systemImage: "clock")
-                } description: {
-                    Text(String(format: String(localized: "explorer.anyTimeTotal", defaultValue:
-                        "%d workspaces at any time. Capture may also be incomplete."), anyTimeWorkspaceCount))
-                } actions: {
-                    Button(String(localized: "explorer.anyTime", defaultValue: "Any time")) {
-                        model.setScopePeriod(.anyTime, animated: !reduceMotion)
-                    }
-                }
-            } else if model.scope.state == .open {
-                ContentUnavailableView {
-                    Label(String(localized: "explorer.noOpenWorkspaces", defaultValue:
-                        "No open workspaces"), systemImage: "square.grid.2x2")
-                } description: {
-                    if model.presentedCatalog?.archiveAvailable == true {
-                        Text(String(format: String(localized: "explorer.closedRetained", defaultValue:
-                            "%d closed workspaces retained."), closedWorkspaceCount))
-                    } else {
-                        Text(model.presentedCatalog?.archiveAvailability.closedCountLabel ?? "")
-                    }
-                } actions: {
-                    Button(String(localized: "explorer.showAll", defaultValue: "Show all")) {
-                        model.setScopeState(.all, animated: !reduceMotion)
-                    }
-                    Button(String(localized: "explorer.showClosed", defaultValue: "Show closed")) {
-                        model.setScopeState(.closed, animated: !reduceMotion)
-                    }
-                }
-            } else {
-                ContentUnavailableView(String(localized: "explorer.noWorkspaces", defaultValue:
-                    "No workspaces in this scope"), systemImage: "square.grid.2x2")
-            }
-        }
+        WorkspaceExplorerEmptyCollectionView(
+            liveMetadataPending: model.presentedCatalog?.liveMetadataPending == true,
+            scope: model.scope,
+            archiveAvailability: model.presentedCatalog?.archiveAvailability ?? .unavailable,
+            archiveAvailable: model.presentedCatalog?.archiveAvailable == true,
+            hasFilters: !model.activeArrangement.filters.isEmpty,
+            anyTimeWorkspaceCount: anyTimeWorkspaceCount,
+            closedWorkspaceCount: closedWorkspaceCount,
+            closedCountLabel: model.presentedCatalog?.archiveAvailability.closedCountLabel ?? "",
+            onClearFilters: { model.clearFilters(animated: !reduceMotion) },
+            onAnyTime: { model.setScopePeriod(.anyTime, animated: !reduceMotion) },
+            onShowAll: { model.setScopeState(.all, animated: !reduceMotion) },
+            onShowClosed: { model.setScopeState(.closed, animated: !reduceMotion) })
     }
 
     private var anyTimeWorkspaceCount: Int {
