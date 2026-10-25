@@ -11,6 +11,7 @@ struct WorkspaceExplorerGroupSection: View {
     let collapsedPaths: Set<String>
     let activeFilters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey]
     let projectsByID: [String: WorkspaceExplorerProject]
+    let repositoryNamesByID: [String: String]
     let itemsByID: [String: WorkspaceExplorerHistoryItem]
     let workspacesByID: [String: WorkspaceExplorerWorkspace]
     let projectCounts: [String: WorkspaceExplorerCounts]
@@ -90,6 +91,7 @@ struct WorkspaceExplorerGroupSection: View {
                             cardGeometry: cardGeometry,
                             overview: overview, collapsedPaths: collapsedPaths,
                             activeFilters: activeFilters, projectsByID: projectsByID,
+                            repositoryNamesByID: repositoryNamesByID,
                             itemsByID: itemsByID, workspacesByID: workspacesByID,
                             projectCounts: projectCounts,
                             projectOpenTotals: projectOpenTotals, scope: scope, now: now, calendar: calendar,
@@ -138,6 +140,7 @@ struct WorkspaceExplorerGroupSection: View {
                                 workspace.projectIDs.contains(id) && scope.includes(workspace,
                                     now: now, calendar: calendar)
                             },
+                            repositoryNamesByID: repositoryNamesByID,
                             scope: scope, archiveAvailability: archiveAvailability,
                             openTotal: projectOpenTotals[id] ?? 0,
                             matchingCount: matchingCounts[id],
@@ -158,6 +161,7 @@ struct WorkspaceExplorerGroupSection: View {
                     if let item = itemsByID[id] {
                         WorkspaceExplorerWorkspaceCard(item: item, isActive: activeWorkspaceID == id,
                             isReopened: reopenedWorkspaceID == id,
+                            repositoryName: item.display?.repositoryID.flatMap { repositoryNamesByID[$0] },
                             metadataPending: metadataPending,
                             onOpen: { onOpenWorkspace(item) },
                             onHistory: { onHistory(item) },
@@ -197,6 +201,7 @@ struct WorkspaceExplorerGroupSection: View {
     }
 
     private var label: String {
-        group.key?.displayName(projectsByID: projectsByID) ?? group.value ?? ""
+        group.key?.displayName(projectsByID: projectsByID,
+            repositoryNamesByID: group.dimension == .repository ? repositoryNamesByID : [:]) ?? group.value ?? ""
     }
 }

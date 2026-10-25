@@ -5,6 +5,7 @@ struct WorkspaceExplorerCatalog {
     let items: [WorkspaceExplorerHistoryItem]
     let projects: [WorkspaceExplorerProject]
     let workspaces: [WorkspaceExplorerWorkspace]
+    let repositoryNamesByID: [String: String]
     let archiveAvailability: WorkspaceExplorerArchiveAvailability
     let partialLiveActivity: Bool
     let liveMetadataPending: Bool
@@ -20,6 +21,7 @@ struct WorkspaceExplorerCatalog {
         archiveAvailability = result.archiveAvailability
         partialLiveActivity = result.partialLiveActivity
         liveMetadataPending = result.liveMetadataPending
+        repositoryNamesByID = result.repositoryNamesByID
 
         var namesByID: [String: String] = [:]
         for item in result.items {
@@ -54,13 +56,15 @@ struct WorkspaceExplorerCatalog {
     private init(items: [WorkspaceExplorerHistoryItem], projects: [WorkspaceExplorerProject],
                  workspaces: [WorkspaceExplorerWorkspace],
                  archiveAvailability: WorkspaceExplorerArchiveAvailability,
-                 partialLiveActivity: Bool, liveMetadataPending: Bool) {
+                 partialLiveActivity: Bool, liveMetadataPending: Bool,
+                 repositoryNamesByID: [String: String]) {
         self.items = items
         self.projects = projects
         self.workspaces = workspaces
         self.archiveAvailability = archiveAvailability
         self.partialLiveActivity = partialLiveActivity
         self.liveMetadataPending = liveMetadataPending
+        self.repositoryNamesByID = repositoryNamesByID
     }
 
     func withCurrentLiveStatuses(from current: Self?) -> Self {
@@ -72,7 +76,8 @@ struct WorkspaceExplorerCatalog {
         }, projects: projects, workspaces: workspaces.map { workspace in
             statusByID[workspace.id].map(workspace.withLiveStatus) ?? workspace
         }, archiveAvailability: archiveAvailability,
-            partialLiveActivity: partialLiveActivity, liveMetadataPending: liveMetadataPending)
+            partialLiveActivity: partialLiveActivity, liveMetadataPending: liveMetadataPending,
+            repositoryNamesByID: repositoryNamesByID)
     }
 
     func project(target: WorkspaceExplorerCollectionTarget?, scope: WorkspaceExplorerScope,
@@ -95,6 +100,6 @@ struct WorkspaceExplorerCatalog {
 
     var projection: WorkspaceExplorerProjection {
         WorkspaceExplorerProjection(projects: projects, workspaces: workspaces,
-            archiveAvailable: archiveAvailable)
+            archiveAvailable: archiveAvailable, repositoryNamesByID: repositoryNamesByID)
     }
 }

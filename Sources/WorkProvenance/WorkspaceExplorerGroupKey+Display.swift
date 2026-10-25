@@ -1,9 +1,10 @@
 import Foundation
 
 extension WorkspaceExplorerGroupKey {
-    func displayName(projectsByID: [String: WorkspaceExplorerProject]) -> String {
+    func displayName(projectsByID: [String: WorkspaceExplorerProject],
+                     repositoryNamesByID: [String: String] = [:]) -> String {
         switch self {
-        case .value(let value): return value
+        case .value(let value): return repositoryNamesByID[value] ?? value
         case .project(let id): return projectsByID[id]?.name ?? id
         case .unassigned: return String(localized: "explorer.unassigned", defaultValue: "Unassigned workspaces")
         case .workspaceState(let closed):
