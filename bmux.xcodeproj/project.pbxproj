@@ -2089,6 +2089,7 @@
 		B56D4D47E1324E58DEEEB00E /* WorkspaceExplorerDimension.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76ECA4E9A1DC1B02E27DFF7 /* WorkspaceExplorerDimension.swift */; };
 		E7A9EAA73EE74959BA212210 /* WorkspaceExplorerDogfoodFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21220F /* WorkspaceExplorerDogfoodFixture.swift */; };
 		E7A9EAA73EE74959BA212310 /* WorkspaceExplorerDogfoodWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21230F /* WorkspaceExplorerDogfoodWindow.swift */; };
+		A1B2C3D4E5F6012345678912 /* WorkspaceExplorerEmptyCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6012345678911 /* WorkspaceExplorerEmptyCollectionView.swift */; };
 		9A443F000000000000000001 /* WorkspaceExplorerExitPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A443F000000000000000002 /* WorkspaceExplorerExitPresentation.swift */; };
 		9A443F000000000000000003 /* WorkspaceExplorerExitTransition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A443F000000000000000004 /* WorkspaceExplorerExitTransition.swift */; };
 				E71A17900000000000000043 /* WorkspaceExplorerExitTransitionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerExitTransitionTests.swift; sourceTree = "<group>"; };
@@ -4250,6 +4251,7 @@
 		E76ECA4E9A1DC1B02E27DFF7 /* WorkspaceExplorerDimension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerDimension.swift; sourceTree = "<group>"; };
 		E7A9EAA73EE74959BA21220F /* WorkspaceExplorerDogfoodFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerDogfoodFixture.swift; sourceTree = "<group>"; };
 		E7A9EAA73EE74959BA21230F /* WorkspaceExplorerDogfoodWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerDogfoodWindow.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6012345678911 /* WorkspaceExplorerEmptyCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceExplorerEmptyCollectionView.swift"; sourceTree = "<group>"; };
 		9A443F000000000000000002 /* WorkspaceExplorerExitPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerExitPresentation.swift; sourceTree = "<group>"; };
 		9A443F000000000000000004 /* WorkspaceExplorerExitTransition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerExitTransition.swift; sourceTree = "<group>"; };
 		7B19842F052C74A908E3ED2B /* WorkspaceExplorerGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerGroup.swift; sourceTree = "<group>"; };
@@ -6636,6 +6638,7 @@
 				E7A9EAA73EE74959BA212007 /* AppDelegate+WorkspaceExplorerHistory.swift */,
 				A9E1C06F8D24453FB2C317AA /* WorkspaceExplorerHistoryService.swift */,
 				A9E1C06F8D24453FB2C317AC /* WorkspaceExplorerArchiveNotice.swift */,
+				A1B2C3D4E5F6012345678911 /* WorkspaceExplorerEmptyCollectionView.swift */,
 				A9E1C06F8D24453FB2C317AE /* WorkspaceExplorerScopeControls.swift */,
 				A9E1C06F8D24453FB2C317B1 /* WorkspaceExplorerCountPresentation.swift */,
 				ABC5AF6B03C2A9B1ADE669E4 /* WorkProvenanceProcessGitCommandRunner.swift */,
@@ -8294,6 +8297,7 @@
 				B56D4D47E1324E58DEEEB00E /* WorkspaceExplorerDimension.swift in Sources */,
 				E7A9EAA73EE74959BA212210 /* WorkspaceExplorerDogfoodFixture.swift in Sources */,
 				E7A9EAA73EE74959BA212310 /* WorkspaceExplorerDogfoodWindow.swift in Sources */,
+				A1B2C3D4E5F6012345678912 /* WorkspaceExplorerEmptyCollectionView.swift in Sources */,
 				9A443F000000000000000001 /* WorkspaceExplorerExitPresentation.swift in Sources */,
 				9A443F000000000000000003 /* WorkspaceExplorerExitTransition.swift in Sources */,
 				F154B954ACD7F29D752F9679 /* WorkspaceExplorerGroup.swift in Sources */,
