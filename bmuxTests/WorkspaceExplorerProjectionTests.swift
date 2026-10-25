@@ -275,6 +275,7 @@ struct WorkspaceExplorerProjectionTests {
     func filterOptionsFollowCurrentScopeAndSelectSharedProjectMembership() {
         let projection = WorkspaceExplorerProjection(projects: projects, workspaces: [
             workspace("shared", projects: ["p1", "p3"], ago: 5, prOwner: "Brian", status: .needsInput),
+            workspace("shared", projects: ["p5"], ago: 15, closed: true, prOwner: "Luis"),
             workspace("unassigned", projects: [], ago: 10, repository: nil),
             workspace("closed", projects: ["p5"], ago: 15, closed: true, prOwner: "Luis"),
         ], archiveAvailable: true)
@@ -295,6 +296,7 @@ struct WorkspaceExplorerProjectionTests {
     func overviewCanFilterByProjectAndPullRequestOwner() {
         let projection = WorkspaceExplorerProjection(projects: projects, workspaces: [
             workspace("shared", projects: ["p1", "p3"], ago: 5, prOwner: "Brian"),
+            workspace("same-project", projects: ["p3"], ago: 8, prOwner: "Luis"),
             workspace("other", projects: ["p5"], ago: 10, prOwner: "Luis"),
         ], archiveAvailable: true)
         let filtered = projection.overview(scope: .init(), groupBy: [],
@@ -302,6 +304,7 @@ struct WorkspaceExplorerProjectionTests {
             now: now, calendar: calendar)
         #expect(filtered.visibleProjectIDs == ["p3"])
         #expect(filtered.visibleWorkspaceIDs == ["shared"])
+        #expect(filtered.matchingWorkspacesByProjectID["p3"] == 1)
         let options = projection.filterOptions(dimensions: [.project, .pullRequestOwner],
             inScopeWorkspaceIDs: filtered.inScopeWorkspaceIDs, overview: true)
         #expect(Set(options[.project] ?? []) == [.project("p1"), .project("p3"), .project("p5")])

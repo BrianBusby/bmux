@@ -245,8 +245,11 @@ struct WorkspaceExplorerWindowView: View {
                         result.matchingWorkspacesByProjectID)
             }
             let overviewFilters = model.presentedFilters
-            let unassignedFilters = overviewFilters.filter { $0.key == .repository || $0.key == .bmuxStatus }
-            let hasProjectFilter = overviewFilters[.projectOwner] != nil || overviewFilters[.projectStatus] != nil
+            let unassignedFilters = overviewFilters.filter {
+                $0.key == .repository || $0.key == .bmuxStatus || $0.key == .pullRequestOwner
+            }
+            let hasProjectFilter = overviewFilters[.project] != nil || overviewFilters[.projectOwner] != nil ||
+                overviewFilters[.projectStatus] != nil
             let unassigned = model.projection?.collection(target: .unassigned, scope: model.presentedScope,
                 groupBy: [], filters: unassignedFilters, now: model.activityArrangement.now, calendar: model.activityArrangement.calendar)
             if !hasProjectFilter, let unassigned, unassigned.visibleCounts.workspaces > 0 {
@@ -340,7 +343,8 @@ struct WorkspaceExplorerWindowView: View {
         let filterDimensions: [WorkspaceExplorerDimension]
         if model.collectionTarget == nil {
             dimensions = [.repository, .projectOwner, .projectStatus]
-            filterDimensions = [.bmuxStatus, .repository, .projectOwner, .projectStatus]
+            filterDimensions = [.bmuxStatus, .repository, .project, .pullRequestOwner,
+                .projectOwner, .projectStatus]
         } else {
             dimensions = [.repository, .ticket, .pullRequestOwner, .pullRequestStatus,
                 .ticketStatus, .bmuxStatus] +
