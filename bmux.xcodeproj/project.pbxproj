@@ -1312,6 +1312,7 @@
 		A64610010000000000000001 /* QuitConfirmationAlertPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64610010000000000000002 /* QuitConfirmationAlertPresenter.swift */; };
 		A64610020000000000000001 /* QuitConfirmationAlertPresenterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A64610020000000000000002 /* QuitConfirmationAlertPresenterTests.swift */; };
 		A500RG01 /* ReactGrab.swift in Sources */ = {isa = PBXBuildFile; fileRef = A500RG00 /* ReactGrab.swift */; };
+			A18E9C00123456789ABC0001 /* RecordingProvenanceEngineClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A18E9C00123456789ABC0002 /* RecordingProvenanceEngineClient.swift */; };
 		A6D1F0000000000000000002 /* ReleasingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D1F0000000000000000001 /* ReleasingWindowController.swift */; };
 		A6D1F0400000000000000002 /* ReleasingWindowControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D1F0400000000000000001 /* ReleasingWindowControllerTests.swift */; };
 		EE30D5000000000000000002 /* RemoteDaemonStrings+App.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE30D5000000000000000001 /* RemoteDaemonStrings+App.swift */; };
@@ -1964,6 +1965,8 @@
 		D53200000000000000000006 /* WorkProvenanceRuntime+PromptResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = D53200000000000000000005 /* WorkProvenanceRuntime+PromptResources.swift */; };
 		C176A002C176A002C176A002 /* WorkProvenanceRuntime+WorkspaceArchive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkProvenanceRuntime+WorkspaceArchive.swift"; sourceTree = "<group>"; };
 		C176A001C176A001C176A001 /* WorkProvenanceRuntime+WorkspaceArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = C176A002C176A002C176A002 /* WorkProvenanceRuntime+WorkspaceArchive.swift */; };
+		A1B2C3D4E5F6012345678901 /* WorkProvenanceRuntime+WorkspaceResolution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkProvenanceRuntime+WorkspaceResolution.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E5F6012345678902 /* WorkProvenanceRuntime+WorkspaceResolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6012345678901 /* WorkProvenanceRuntime+WorkspaceResolution.swift */; };
 		756EB108F5337A59A8668D7C /* WorkProvenanceRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */; };
 		CE0E08060000000000000001 /* WorkProvenanceRuntimeLifecycleState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0E08060000000000000002 /* WorkProvenanceRuntimeLifecycleState.swift */; };
 			C12C9276586E4007A66D21AC /* WorkProvenanceRuntimeResolutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDF402EAB33D4BDF97115899 /* WorkProvenanceRuntimeResolutionTests.swift */; };
@@ -3519,6 +3522,7 @@
 		A64610010000000000000002 /* QuitConfirmationAlertPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuitConfirmationAlertPresenter.swift; sourceTree = "<group>"; };
 		A64610020000000000000002 /* QuitConfirmationAlertPresenterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuitConfirmationAlertPresenterTests.swift; sourceTree = "<group>"; };
 		A500RG00 /* ReactGrab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/ReactGrab.swift; sourceTree = "<group>"; };
+			A18E9C00123456789ABC0002 /* RecordingProvenanceEngineClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingProvenanceEngineClient.swift; sourceTree = "<group>"; };
 		A6D1F0000000000000000001 /* ReleasingWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/ReleasingWindowController.swift; sourceTree = "<group>"; };
 		A6D1F0400000000000000001 /* ReleasingWindowControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleasingWindowControllerTests.swift; sourceTree = "<group>"; };
 		EE30D5000000000000000001 /* RemoteDaemonStrings+App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RemoteDaemonStrings+App.swift"; sourceTree = "<group>"; };
@@ -6510,6 +6514,7 @@
 				FAD145AB2CC344EE8899A001 /* WorkspaceExplorerSessionPageTests.swift */,
 					E71A17900000000000000043 /* WorkspaceExplorerExitTransitionTests.swift */,
 					642C4DB40CE49FC447FC6C84 /* WorkProvenanceObserverTests.swift */,
+					A18E9C00123456789ABC0002 /* RecordingProvenanceEngineClient.swift */,
 					CE0E03140000000000000002 /* WorkProvenanceLinearTicketLinkResolverTests.swift */,
 					CE0E03190000000000000002 /* WorkProvenancePullRequestOwnerResolverDefaultTests.swift */,
 					CE0E03170000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTests.swift */,
@@ -6655,6 +6660,7 @@
 					D53200000000000000000001 /* WorkProvenancePromptWorkspaceActions.swift */,
 				D53200000000000000000003 /* WorkProvenancePromptEvidenceCoordinator.swift */,
 				C176A002C176A002C176A002 /* WorkProvenanceRuntime+WorkspaceArchive.swift */,
+				A1B2C3D4E5F6012345678901 /* WorkProvenanceRuntime+WorkspaceResolution.swift */,
 				D53200000000000000000005 /* WorkProvenanceRuntime+PromptResources.swift */,
 				B61637716D01C72E1BFFF9B0 /* WorkProvenanceRuntime.swift */,
 					CE0E08060000000000000002 /* WorkProvenanceRuntimeLifecycleState.swift */,
@@ -8210,6 +8216,7 @@
 					CE0E010B0000000000000001 /* WorkProvenanceRuntime+AgentSessionAssociation.swift in Sources */,
 				D53200000000000000000006 /* WorkProvenanceRuntime+PromptResources.swift in Sources */,
 				C176A001C176A001C176A001 /* WorkProvenanceRuntime+WorkspaceArchive.swift in Sources */,
+				A1B2C3D4E5F6012345678902 /* WorkProvenanceRuntime+WorkspaceResolution.swift in Sources */,
 				756EB108F5337A59A8668D7C /* WorkProvenanceRuntime.swift in Sources */,
 					CE0E08060000000000000001 /* WorkProvenanceRuntimeLifecycleState.swift in Sources */,
 				CE0B00040000000000000001 /* WorkProvenanceSessionLifecycleRecorder.swift in Sources */,
@@ -9020,6 +9027,7 @@
 				CE0E06200000000000000001 /* PromptSessionLinkProductionLifecycleTests.swift in Sources */,
 				CE0E06100000000000000001 /* PromptSessionLinkProjectionTests.swift in Sources */,
 				A64610020000000000000001 /* QuitConfirmationAlertPresenterTests.swift in Sources */,
+					A18E9C00123456789ABC0001 /* RecordingProvenanceEngineClient.swift in Sources */,
 				A6D1F0400000000000000002 /* ReleasingWindowControllerTests.swift in Sources */,
 				CE4411000000000000000021 /* RemotePTYErrorPolicyTests.swift in Sources */,
 				REE0CA0000000000000000B2 /* RemotesClientTests.swift in Sources */,

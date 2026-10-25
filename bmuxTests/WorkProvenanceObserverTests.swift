@@ -30,6 +30,79 @@ struct WorkProvenanceObserverTests {
     }
 
     @Test
+    func failedLinearEnrichmentRetriesAndPersistsProjectWithoutWorkspaceChange() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let repositoryRoot = "/tmp/bmux-linear-enrichment-retry"
+        let gitSnapshot = WorkProvenanceGitSnapshot(
+            repositoryRoot: repositoryRoot,
+            commonDirectory: "\(repositoryRoot)/.git",
+            remoteSlug: "CompanyCam/companycam-mobile",
+            branch: "inp-2409-mobile-sections",
+            headCommit: "1111111111111111111111111111111111111111",
+            isDirty: false,
+            statusEntries: []
+        )
+        let linearServer = FakeLinearGraphQLServer(failuresRemaining: 1)
+        let service = WorkProvenanceObservationService(
+            client: client,
+            gitInspector: FakeGitInspector(snapshotsByDirectory: [repositoryRoot: gitSnapshot]),
+            ticketLinkResolver: WorkProvenanceLinearTicketLinkResolver(
+                authorizationHeader: "linear-api-key",
+                usesEnvironmentAuthorization: false,
+                dataProvider: { request in try await linearServer.response(for: request) }
+            ),
+            retryDelay: { _ in }
+        )
+        let stableWorkspaceID = UUID()
+        let workspace = WorkProvenanceWorkspaceSnapshot(
+            workspaceID: UUID(),
+            stableWorkspaceID: stableWorkspaceID,
+            title: "Review mobile pull request",
+            currentDirectory: repositoryRoot,
+            pullRequest: .init(
+                number: 11565,
+                title: "[INP-2409] Add mobile section creation",
+                url: "https://github.com/CompanyCam/companycam-mobile/pull/11565",
+                ownerLogin: "brianbusby",
+                ownerURL: "https://github.com/brianbusby",
+                status: "open",
+                branch: "inp-2409-mobile-sections",
+                isStale: false
+            )
+        )
+
+        await service.observeWorkspaceSnapshot(workspace)
+
+        let display = try await client.workspaceDisplay(.init(workspaceID: stableWorkspaceID.uuidString))
+        #expect(display.display?.projectLinks == [Self.linearProjectLink()])
+        #expect(await linearServer.requests.count == 2)
+    }
+
+    @Test
+    func linearLookupKeepsFailureReasonUntilARecoverySucceeds() async {
+        let linearServer = FakeLinearGraphQLServer(failuresRemaining: 1)
+        let resolver = WorkProvenanceLinearTicketLinkResolver(
+            authorizationHeader: "linear-api-key",
+            usesEnvironmentAuthorization: false,
+            dataProvider: { request in try await linearServer.response(for: request) }
+        )
+
+        let first = await resolver.workspaceLinks(for: ["INP-2409"])
+        #expect(first.projectLinks.isEmpty)
+        #expect(first.lookupFailures == [
+            .init(ticketID: "INP-2409", lookupID: "INP-2409", reason: .httpStatus, httpStatus: 503)
+        ])
+        #expect(await resolver.lastLookupFailures(for: "INP-2409") == first.lookupFailures)
+
+        let second = await resolver.workspaceLinks(for: ["INP-2409"])
+        #expect(second.projectLinks == [Self.linearProjectLink()])
+        #expect(second.lookupFailures.isEmpty)
+        #expect(await resolver.lastLookupFailures(for: "INP-2409").isEmpty)
+    }
+
+    @Test
     func defaultRuntimeStoreObservationCanBeReadThroughPublicCurrentContext() async throws {
         let homeDirectory = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-work-provenance-default-home-\(UUID().uuidString)", isDirectory: true)
@@ -730,72 +803,6 @@ struct WorkProvenanceObserverTests {
         }
     }
 
-    private actor RecordingProvenanceEngineClient: ProvenanceEngineContracts.ProvenanceEngineClient {
-        private let backing: any ProvenanceEngineContracts.ProvenanceEngineClient
-        private var events: [ProvenanceEngineContracts.ProvenanceEvent] = []
-
-        init(backing: any ProvenanceEngineContracts.ProvenanceEngineClient) {
-            self.backing = backing
-        }
-
-        func appendedEvents() -> [ProvenanceEngineContracts.ProvenanceEvent] {
-            events
-        }
-
-        func health() async throws -> ProvenanceEngineContracts.ProvenanceEngineHealth {
-            try await backing.health()
-        }
-
-        func appendEvent(
-            _ request: ProvenanceEngineContracts.ProvenanceAppendEventRequest
-        ) async throws -> ProvenanceEngineContracts.ProvenanceAppendEventResponse {
-            events.append(request.event)
-            return try await backing.appendEvent(request)
-        }
-
-        func recordSessionLifecycle(
-            _ request: ProvenanceEngineContracts.ProvenanceSessionLifecycleRequest
-        ) async -> ProvenanceEngineContracts.ProvenanceSessionLifecycleResponse {
-            await backing.recordSessionLifecycle(request)
-        }
-
-        func sessionTree(
-            _ request: ProvenanceEngineContracts.ProvenanceSessionTreeRequest
-        ) async throws -> ProvenanceEngineContracts.ProvenanceSessionTreeResponse {
-            try await backing.sessionTree(request)
-        }
-
-        func fileExplanation(
-            _ request: ProvenanceEngineContracts.ProvenanceFileExplanationRequest
-        ) async throws -> ProvenanceEngineContracts.ProvenanceFileExplanationResponse {
-            try await backing.fileExplanation(request)
-        }
-
-        func worktrees(
-            _ request: ProvenanceEngineContracts.ProvenanceWorktreeListRequest
-        ) async throws -> ProvenanceEngineContracts.ProvenanceWorktreeListResponse {
-            try await backing.worktrees(request)
-        }
-
-        func currentContext(
-            _ request: ProvenanceEngineContracts.ProvenanceCurrentContextRequest
-        ) async throws -> ProvenanceEngineContracts.ProvenanceCurrentContextResponse {
-            try await backing.currentContext(request)
-        }
-
-        func workspaceDisplay(
-            _ request: ProvenanceEngineContracts.ProvenanceWorkspaceDisplayRequest
-        ) async throws -> ProvenanceEngineContracts.ProvenanceWorkspaceDisplayResponse {
-            try await backing.workspaceDisplay(request)
-        }
-
-        func factualSessionProjection(
-            _ request: ProvenanceEngineContracts.ProvenanceFactualSessionProjectionRequest
-        ) async throws -> ProvenanceEngineContracts.ProvenanceFactualSessionProjectionResponse {
-            try await backing.factualSessionProjection(request)
-        }
-    }
-
     private static func linearTicketLink(id: String = "STE-1964") -> ProvenanceWorkspaceDisplayTicketLinkRecord {
         ProvenanceWorkspaceDisplayTicketLinkRecord(
             id: id,
@@ -829,6 +836,11 @@ struct WorkProvenanceObserverTests {
         }
 
         private(set) var requests: [Request] = []
+        private var failuresRemaining: Int
+
+        init(failuresRemaining: Int = 0) {
+            self.failuresRemaining = failuresRemaining
+        }
 
         func response(for request: URLRequest) throws -> (Data, Int) {
             let issueRequest = try Self.issueRequest(from: request.httpBody)
@@ -837,6 +849,10 @@ struct WorkProvenanceObserverTests {
                 ticketID: issueRequest.ticketID,
                 requestedURL: issueRequest.requestedURL
             ))
+            if failuresRemaining > 0 {
+                failuresRemaining -= 1
+                return (Data(), 503)
+            }
             let fallbackTicketID = issueRequest.ticketID ?? "STE-1964"
             let payload = """
             {"data":{"issue":{"title":"Canonical domain mutation paths","url":"https://linear.app/companycam/issue/\(fallbackTicketID)","assignee":{"name":"Brian Busby"},"project":{"id":"linear-project-1","name":"Context Efficiency","url":"https://linear.app/companycam/project/context-efficiency-c1b9a","slugId":"context-efficiency-c1b9a"}}}}

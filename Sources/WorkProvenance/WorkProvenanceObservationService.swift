@@ -14,6 +14,7 @@ actor WorkProvenanceObservationService {
     private var latestFingerprintByWorkspaceID: [UUID: String] = [:]
     private var latestDisplayFingerprintByWorkspaceID: [UUID: String] = [:]
     private var resolvedPullRequestOwnersByURL: [String: WorkProvenancePullRequestOwner] = [:]
+    private var failedEnrichmentWorkspaceIDs: Set<UUID> = []
 
     /// Last persistence or Git-observation error, retained for diagnostics.
     private(set) var lastErrorDescription: String?
@@ -56,6 +57,10 @@ actor WorkProvenanceObservationService {
     /// Runs a retention pass for stale observed history.
     func pruneExpiredObservedHistory(now: Date = Date()) async {
         lastErrorDescription = nil
+    }
+
+    func workspaceIDsNeedingEnrichmentRetry() -> Set<UUID> {
+        failedEnrichmentWorkspaceIDs
     }
 
     /// Observes one workspace snapshot and appends an event when Git state changed.
@@ -102,12 +107,9 @@ actor WorkProvenanceObservationService {
         StartupBreadcrumbLog.append("workProvenance.observe.begin", fields: ["workspace": workspace.workspaceID.uuidString, "directory": directory])
         guard !directory.isEmpty else { return }
         guard let gitSnapshot = await gitInspector.snapshot(for: directory) else {
-            for includesEnrichment in [false, true] {
-                try await appendWorkspaceDisplayObservationIfChanged(
-                    for: workspace, gitSnapshot: nil, observationID: observationID,
-                    includesEnrichment: includesEnrichment
-                )
-            }
+            try await appendWorkspaceDisplayWithEnrichmentRetry(
+                for: workspace, gitSnapshot: nil, observationID: observationID
+            )
             let description = "no Git snapshot for workspace directory: \(directory)"
             lastErrorDescription = description
             NSLog("bmux provenance worktree observation skipped: %@", description)
@@ -115,12 +117,9 @@ actor WorkProvenanceObservationService {
             return
         }
 
-        for includesEnrichment in [false, true] {
-            try await appendWorkspaceDisplayObservationIfChanged(
-                for: workspace, gitSnapshot: gitSnapshot, observationID: observationID,
-                includesEnrichment: includesEnrichment
-            )
-        }
+        try await appendWorkspaceDisplayWithEnrichmentRetry(
+            for: workspace, gitSnapshot: gitSnapshot, observationID: observationID
+        )
 
         guard observationIsCurrent(workspace.workspaceID, observationID) else { return }
         let fingerprint = stableIDFactory.fingerprint(for: gitSnapshot)
@@ -204,18 +203,56 @@ actor WorkProvenanceObservationService {
         }
     }
 
+    private func appendWorkspaceDisplayWithEnrichmentRetry(
+        for workspace: WorkProvenanceWorkspaceSnapshot,
+        gitSnapshot: WorkProvenanceGitSnapshot?,
+        observationID: UUID
+    ) async throws {
+        _ = try await appendWorkspaceDisplayObservationIfChanged(
+            for: workspace, gitSnapshot: gitSnapshot, observationID: observationID,
+            includesEnrichment: false
+        )
+        var failures = try await appendWorkspaceDisplayObservationIfChanged(
+            for: workspace, gitSnapshot: gitSnapshot, observationID: observationID,
+            includesEnrichment: true
+        )
+        let retryDelays: [Duration] = [.seconds(1), .seconds(3), .seconds(9)]
+        for (index, delay) in retryDelays.enumerated() where !failures.isEmpty {
+            guard observationIsCurrent(workspace.workspaceID, observationID) else { return }
+            // Missing credentials need a configuration change, not rapid requests.
+            guard failures.contains(where: { $0.reason != .missingAuthorization }) else { break }
+            StartupBreadcrumbLog.append("linear.lookup.retryScheduled", fields: [
+                "workspace": workspace.workspaceID.uuidString,
+                "attempt": String(index + 2),
+                "delaySeconds": String([1, 3, 9][index])
+            ])
+            // Bounded backoff is the intended retry delay and is canceled with the observation.
+            try await retryDelay(delay)
+            failures = try await appendWorkspaceDisplayObservationIfChanged(
+                for: workspace, gitSnapshot: gitSnapshot, observationID: observationID,
+                includesEnrichment: true
+            )
+        }
+        guard observationIsCurrent(workspace.workspaceID, observationID) else { return }
+        if failures.isEmpty {
+            failedEnrichmentWorkspaceIDs.remove(workspace.workspaceID)
+        } else {
+            failedEnrichmentWorkspaceIDs.insert(workspace.workspaceID)
+        }
+    }
+
     private func appendWorkspaceDisplayObservationIfChanged(
         for workspace: WorkProvenanceWorkspaceSnapshot,
         gitSnapshot: WorkProvenanceGitSnapshot?, observationID: UUID,
         includesEnrichment: Bool
-    ) async throws {
-        guard observationIsCurrent(workspace.workspaceID, observationID) else { return }
+    ) async throws -> [WorkProvenanceWorkspaceLinkFacts.LookupFailure] {
+        guard observationIsCurrent(workspace.workspaceID, observationID) else { return [] }
         var pullRequest = await pullRequestWithResolvedOwner(workspace.pullRequest, allowsLookup: includesEnrichment)
-        guard observationIsCurrent(workspace.workspaceID, observationID) else { return }
+        guard observationIsCurrent(workspace.workspaceID, observationID) else { return [] }
         let existingDisplayResponse = try await client.workspaceDisplay(ProvenanceWorkspaceDisplayRequest(
             workspaceID: workspace.stableWorkspaceID.uuidString
         ))
-        guard observationIsCurrent(workspace.workspaceID, observationID) else { return }
+        guard observationIsCurrent(workspace.workspaceID, observationID) else { return [] }
         if !includesEnrichment, let current = pullRequest,
            let stored = existingDisplayResponse.display, stored.pullRequestURL == current.url {
             pullRequest = current.replacingResolvedMetadata(
@@ -231,7 +268,7 @@ actor WorkProvenanceObservationService {
             existingDisplay: existingDisplayResponse.display,
             includesEnrichment: includesEnrichment
         )
-        guard observationIsCurrent(workspace.workspaceID, observationID) else { return }
+        guard observationIsCurrent(workspace.workspaceID, observationID) else { return [] }
         let ticketIDs = linkFacts.ticketIDs
         let ticketLinks = linkFacts.ticketLinks
         let projectLinks = linkFacts.projectLinks
@@ -270,14 +307,14 @@ actor WorkProvenanceObservationService {
             explicitlyClearedFields: explicitlyClearedFields
         )
         guard latestDisplayFingerprintByWorkspaceID[workspace.workspaceID] != fingerprint else {
-            return
+            return linkFacts.lookupFailures
         }
         let eventID = stableIDFactory.workspaceDisplayEventID(
             stableWorkspaceID: workspace.stableWorkspaceID, fingerprint: fingerprint
         )
         latestDisplayFingerprintByWorkspaceID[workspace.workspaceID] = fingerprint
         // A new observer can encounter an identical baseline already committed by an earlier one.
-        guard existingDisplayResponse.display?.latestEventID != eventID else { return }
+        guard existingDisplayResponse.display?.latestEventID != eventID else { return linkFacts.lookupFailures }
 
         let now = dateProvider()
         let repositoryID = gitSnapshot.map { stableIDFactory.repositoryID(repositoryRoot: $0.repositoryRoot) }
@@ -355,6 +392,7 @@ actor WorkProvenanceObservationService {
         do {
             let response = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(event: event))
             StartupBreadcrumbLog.append("workProvenance.observe.workspaceDisplayAppended", fields: ["workspace": workspace.workspaceID.uuidString, "eventID": response.eventID, "eventType": response.eventType, "database": "canonical"])
+            return linkFacts.lookupFailures
         } catch {
             // Preserve a newer in-flight observation while making this failed snapshot retryable.
             if latestDisplayFingerprintByWorkspaceID[workspace.workspaceID] == fingerprint {

@@ -48,4 +48,21 @@ import Testing
             stableWorkspaceID: workspace.stableId, in: [manager]))
         #expect(refreshCount == 1)
     }
+
+    @MainActor
+    @Test
+    func failedEnrichmentRetryIncludesSecondaryWindowWorkspaceOnce() {
+        let firstManager = TabManager(), secondManager = TabManager()
+        let firstWorkspace = Workspace(title: "First Workspace")
+        let failedWorkspace = Workspace(title: "Failed Workspace")
+        firstManager.tabs = [firstWorkspace]
+        secondManager.tabs = [failedWorkspace]
+
+        let workspaces = WorkProvenanceRuntime.workspacesNeedingEnrichmentRetry(
+            in: [firstManager, secondManager, secondManager], failedIDs: [failedWorkspace.id]
+        )
+
+        #expect(workspaces.count == 1)
+        #expect(workspaces.first === failedWorkspace)
+    }
 }
