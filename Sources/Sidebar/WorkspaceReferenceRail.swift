@@ -9,6 +9,10 @@ struct WorkspaceReferenceRail: View {
     let projectCard: @MainActor (Workspace) -> WorkspaceReferenceCardSnapshot
     let selectedWorkspaceID: UUID?
     let selectedWorkspaceTitle: String?
+    let canCloseWorkspace: Bool
+    let explorerFilters: [WorkspaceExplorerRailFilter]
+    let onRemoveExplorerFilter: (WorkspaceExplorerRailFilter) -> Void
+    let onShowExplorer: () -> Void
     let onSelect: (UUID) -> Void
     let onClose: (UUID) -> Void
     let onOpenLink: (UUID, URL) -> Void
@@ -66,6 +70,14 @@ struct WorkspaceReferenceRail: View {
                         .foregroundStyle(Color(nsColor: theme.color(.textSecondary)))
                     Spacer()
                     MatteButton(hitExpansion: theme.layout.invisibleHitExpansion) {
+                        onShowExplorer()
+                    } label: {
+                        Text(String(localized: "workspaceRail.explorerView", defaultValue: "Explorer"))
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .buttonStyle(MatteButtonStyle(theme: theme))
+                    .accessibilityIdentifier("bmuxShell.explorerToggle")
+                    MatteButton(hitExpansion: theme.layout.invisibleHitExpansion) {
                         guard let repoLauncherAnchorView else {
                             NSSound.beep()
                             return
@@ -81,6 +93,10 @@ struct WorkspaceReferenceRail: View {
                     .accessibilityIdentifier("bmuxShell.repoAgentLauncher")
                     .accessibilityLabel(String(localized: "titlebar.repoAgentLauncher.accessibilityLabel", defaultValue: "AI Repo Launcher"))
                     .safeHelp(String(localized: "titlebar.repoAgentLauncher.tooltip", defaultValue: "Launch an AI session for a repo"))
+                }
+
+                if !explorerFilters.isEmpty {
+                    explorerFilterChips
                 }
 
                 WorkspaceTabFilterBar(
@@ -99,7 +115,7 @@ struct WorkspaceReferenceRail: View {
                             WorkspaceReferenceCardView(
                                 card: card, repositoryName: repositoryNames[card.id],
                                 isSelected: card.id == selectedWorkspaceID,
-                                canCloseWorkspace: workspaces.count > 1,
+                                canCloseWorkspace: canCloseWorkspace,
                                 onSelect: { onSelect(card.id) }, onClose: { onClose(card.id) },
                                 onOpenLink: { onOpenLink(card.id, $0) }
                             )
@@ -111,6 +127,11 @@ struct WorkspaceReferenceRail: View {
                                 hasCategoryFilters: filters.categoryCount > 0,
                                 onClear: { filters = WorkspaceFilters() }
                             )
+                        } else if visibleCards.isEmpty {
+                            Text(String(localized: "workspaceRail.noExplorerMatches", defaultValue: "No open workspaces match the Explorer view"))
+                                .font(.system(size: 12))
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
                     .padding(.horizontal, theme.layout.windowGutter)
@@ -121,6 +142,40 @@ struct WorkspaceReferenceRail: View {
             }
             .padding(.top, 16)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+    }
+
+    private var explorerFilterChips: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(String(localized: "workspaceRail.explorerFilters", defaultValue: "Explorer filters"))
+                .matteTypography(.sectionLabel, theme: theme)
+                .foregroundStyle(Color(nsColor: theme.color(.textSecondary)))
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 5)],
+                      alignment: .leading, spacing: 5) {
+                ForEach(explorerFilters) { filter in
+                    Button {
+                        onRemoveExplorerFilter(filter)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(filter.label).lineLimit(1)
+                            Image(systemName: "xmark")
+                                .font(.system(size: theme.layout.smallIconSize))
+                        }
+                        .matteTypography(.body, theme: theme)
+                        .foregroundStyle(Color(nsColor: theme.color(.link)))
+                        .padding(.horizontal, 7)
+                        .frame(minHeight: theme.layout.minimumHitSize)
+                        .background(Color(nsColor: theme.color(.chip)),
+                                    in: RoundedRectangle(cornerRadius: theme.layout.compactControlRadius))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(String(format: String(
+                        localized: "sidebar.workspaceFilter.removeFilter", defaultValue: "Remove filter %@"),
+                        filter.label))
+                    .accessibilityIdentifier("bmuxShell.explorerFilter.\(filter.id)")
+                    .safeHelp(filter.label)
+                }
+            }
         }
     }
 }

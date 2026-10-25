@@ -52,6 +52,7 @@ local_capabilities:
   workspace_explorer_history_adapter: implemented
   workspace_explorer_projection: implemented
   workspace_explorer_native_view: under_observation
+  workspace_explorer_embedded_workbench: under_observation
   workspace_explorer_staged_loading: under_observation
   workspace_explorer_close_recovery: under_observation
   # BmuxWorkspacePersistence owns the close journal; the app maps records to PE archive candidates.

@@ -889,8 +889,7 @@ struct ContentView: View {
     @State private var isFullScreen: Bool = false
     @State private var observedWindow: NSWindow?
     @State private var bmuxShellTerminalVisible = false
-    @State private var referenceWorkspaceFilters = WorkspaceFilters()
-    @State private var isReferenceWorkspaceFilterPanelPresented = false
+    @State private var isExplorerWorkbenchVisible = false
     @State private var sidebarRenderWorkerClient: RenderWorkerClient?
     @StateObject private var fullscreenControlsViewModel = TitlebarControlsViewModel()
     @StateObject private var fileExplorerStore = FileExplorerStore()
@@ -2443,49 +2442,13 @@ struct ContentView: View {
         )
     }
 
-    private var bmuxReferenceWorkspaceRail: some View {
-        WorkspaceReferenceRail(
-            workspaces: tabManager.tabs,
-            projectCard: { workspace in
-                let provenance = tabManager.workProvenanceRuntime?.workspaceDisplayCurrentStateSnapshot(for: workspace)
-                let title = tabManager.sidebarWorkspaceTitleResolution(for: workspace, provenanceDisplaySnapshot: provenance).title
-                return WorkspaceReferenceCardSnapshot(workspace: workspace, provenance: provenance, workspaceTitle: title)
-            },
-            selectedWorkspaceID: tabManager.selectedTabId,
-            selectedWorkspaceTitle: tabManager.selectedWorkspace?.title,
-            onSelect: { tabManager.selectWorkspaceIdForAction($0) },
-            onClose: { id in
-                if let workspace = tabManager.tabs.first(where: { $0.id == id }) {
-                    tabManager.closeWorkspaceWithConfirmation(workspace)
-                }
-            },
-            onOpenLink: { _, url in
-                BrowserExternalLinkOpener().openWebLink(url)
-            },
-            onLaunchRepository: { anchorView in
-                guard AppDelegate.shared?.showRepoAgentLauncherMenu(anchorView: anchorView) == true else {
-                    NSSound.beep()
-                    return
-                }
-            },
-            onFocusHostChange: { host, scope, isAttached in
-                guard let window = observedWindow,
-                      let owner = AppDelegate.shared?.keyboardFocusCoordinator(for: window)?.workspaceChromeFocusOwner else { return }
-                if isAttached {
-                    owner.register(host, scope: scope, in: window)
-                } else {
-                    owner.unregister(host, scope: scope)
-                }
-            },
-            filters: $referenceWorkspaceFilters,
-            isFilterPanelPresented: $isReferenceWorkspaceFilterPanelPresented
-        )
-    }
-
     private func bmuxReferenceAppShell(appearance: WindowAppearanceSnapshot) -> some View {
-        WorkspaceReferenceAppShell {
-            bmuxReferenceWorkspaceRail
-        } content: {
+        WorkspaceWorkbenchShell(tabManager: tabManager, appDelegate: AppDelegate.shared,
+            observedWindow: observedWindow,
+            onExplorerVisibilityChange: { visible in
+                isExplorerWorkbenchVisible = visible
+                reconcileMountedWorkspaceIds()
+            }) {
             AgentSessionFactualProjectionModeHost(
                 showsSwitcher: true,
                 showsModePicker: false,
@@ -2527,7 +2490,6 @@ struct ContentView: View {
             }
         }
     }
-
     var body: some View {
 #if DEBUG
         let _ = { minimalModeInvalidationProbe.contentViewBody?() }()
@@ -3331,7 +3293,7 @@ struct ContentView: View {
             previousStatesByWorkspaceId: lastReconciledPortalRenderingStatesByWorkspaceId,
             mountedWorkspaceIds: Set(mountedWorkspaceIds), orderedWorkspaceIds: orderedTabIds,
             selectedWorkspaceId: effectiveSelectedId, retiringWorkspaceId: retiringWorkspaceId,
-            contentVisible: bmuxShellTerminalVisible
+            contentVisible: bmuxShellTerminalVisible && !isExplorerWorkbenchVisible
         ).applying(to: &lastReconciledPortalRenderingStatesByWorkspaceId)
         let workspacesById = Dictionary(currentTabs.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         for change in portalRenderingChanges {

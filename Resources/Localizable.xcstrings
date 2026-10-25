@@ -242743,6 +242743,62 @@
         }
       }
     },
+    "workspaceRail.explorerView": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Explorer" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "エクスプローラー" } }
+      }
+    },
+    "workspaceRail.workspaceView": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Workspace View" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ワークスペースビュー" } }
+      }
+    },
+    "workspaceRail.noExplorerMatches": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No open workspaces match the Explorer view" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "エクスプローラーの表示に一致する開いているワークスペースはありません" } }
+      }
+    },
+    "workspaceRail.explorerFilters": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Explorer filters" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "エクスプローラーのフィルター" } }
+      }
+    },
+    "workspaceRail.collectionFilter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Collection: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "コレクション：%@" } }
+      }
+    },
+    "workspaceRail.stateFilter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "State: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "状態：%@" } }
+      }
+    },
+    "workspaceRail.activityFilter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Activity: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "アクティビティ：%@" } }
+      }
+    },
+    "workspaceRail.dimensionFilter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%1$@: %2$@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%1$@：%2$@" } }
+      }
+    },
     "workspaceRail.title": {
       "extractionState": "manual",
       "localizations": {

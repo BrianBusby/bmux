@@ -31,20 +31,22 @@ struct WorkspaceExplorerScope: Equatable {
         return activity >= start && activity <= now
     }
 
-    var summary: String {
-        let stateLabel: String
+    var stateLabel: String {
         switch state {
-        case .open: stateLabel = String(localized: "explorer.open", defaultValue: "Open")
-        case .all: stateLabel = String(localized: "explorer.all", defaultValue: "All")
-        case .closed: stateLabel = String(localized: "explorer.closed", defaultValue: "Closed")
+        case .open: String(localized: "explorer.open", defaultValue: "Open")
+        case .all: String(localized: "explorer.all", defaultValue: "All")
+        case .closed: String(localized: "explorer.closed", defaultValue: "Closed")
         }
-        let periodLabel: String
-        switch period {
-        case .anyTime: periodLabel = String(localized: "explorer.anyTime", defaultValue: "Any time")
-        case .last24Hours: periodLabel = String(localized: "explorer.activeLast24Hours", defaultValue: "Active in last 24 hours")
-        case .today: periodLabel = String(localized: "explorer.activeToday", defaultValue: "Active today")
-        case .last7Days: periodLabel = String(localized: "explorer.activeLast7Days", defaultValue: "Active in last 7 days")
-        }
-        return stateLabel + " · " + periodLabel
     }
+
+    var periodLabel: String {
+        switch period {
+        case .anyTime: String(localized: "explorer.anyTime", defaultValue: "Any time")
+        case .last24Hours: String(localized: "explorer.activeLast24Hours", defaultValue: "Active in last 24 hours")
+        case .today: String(localized: "explorer.activeToday", defaultValue: "Active today")
+        case .last7Days: String(localized: "explorer.activeLast7Days", defaultValue: "Active in last 7 days")
+        }
+    }
+
+    var summary: String { stateLabel + " · " + periodLabel }
 }
