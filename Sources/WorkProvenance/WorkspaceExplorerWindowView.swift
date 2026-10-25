@@ -435,6 +435,12 @@ struct WorkspaceExplorerWindowView: View {
     private func groupSection(_ group: WorkspaceExplorerGroup, path: String, overview: Bool,
                               matchingCounts: [String: Int]) -> some View {
         let arrangement = model.activeArrangement
+        let collectionDimensions: Set<WorkspaceExplorerDimension>
+        if case .project = model.collectionTarget {
+            collectionDimensions = [.project]
+        } else {
+            collectionDimensions = []
+        }
         let projects = model.presentedCatalog?.projects ?? []
         let items = model.presentedCatalog?.items ?? []
         let counts = Dictionary(projects.map { project in
@@ -453,6 +459,7 @@ struct WorkspaceExplorerWindowView: View {
             cardGeometry: cardGeometry,
             overview: overview, collapsedPaths: arrangement.collapsedPaths,
             activeFilters: model.presentedFilters,
+            groupedDimensions: Set(arrangement.groupBy).union(collectionDimensions),
             projectsByID: Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }),
             repositoryNamesByID: model.presentedCatalog?.repositoryNamesByID ?? [:],
             itemsByID: Dictionary(items.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }),

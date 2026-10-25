@@ -17,7 +17,8 @@ struct WorkspaceExplorerPendingWorkspaceSection: View {
                         WorkspaceExplorerWorkspaceCard(item: item,
                             isActive: activeWorkspaceID == item.id, isReopened: false,
                             repositoryName: nil,
-                            metadataPending: true, onOpen: { onOpen(item) },
+                            metadataPending: true, arrangedStatus: item.liveStatus,
+                            hiddenDimensions: [], onOpen: { onOpen(item) },
                             onHistory: {}, onReopen: {}, onFilter: { _, _ in },
                             onInteractionChanged: { _ in })
                     }

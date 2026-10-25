@@ -10,6 +10,7 @@ struct WorkspaceExplorerGroupSection: View {
     let overview: Bool
     let collapsedPaths: Set<String>
     let activeFilters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey]
+    let groupedDimensions: Set<WorkspaceExplorerDimension>
     let projectsByID: [String: WorkspaceExplorerProject]
     let repositoryNamesByID: [String: String]
     let itemsByID: [String: WorkspaceExplorerHistoryItem]
@@ -90,8 +91,8 @@ struct WorkspaceExplorerGroupSection: View {
                             path: path + "/" + child.identity,
                             cardGeometry: cardGeometry,
                             overview: overview, collapsedPaths: collapsedPaths,
-                            activeFilters: activeFilters, projectsByID: projectsByID,
-                            repositoryNamesByID: repositoryNamesByID,
+                            activeFilters: activeFilters, groupedDimensions: groupedDimensions,
+                            projectsByID: projectsByID, repositoryNamesByID: repositoryNamesByID,
                             itemsByID: itemsByID, workspacesByID: workspacesByID,
                             projectCounts: projectCounts,
                             projectOpenTotals: projectOpenTotals, scope: scope, now: now, calendar: calendar,
@@ -163,6 +164,8 @@ struct WorkspaceExplorerGroupSection: View {
                             isReopened: reopenedWorkspaceID == id,
                             repositoryName: item.display?.repositoryID.flatMap { repositoryNamesByID[$0] },
                             metadataPending: metadataPending,
+                            arrangedStatus: workspacesByID[id]?.arrangedStatus,
+                            hiddenDimensions: groupedDimensions.union(activeFilters.keys),
                             onOpen: { onOpenWorkspace(item) },
                             onHistory: { onHistory(item) },
                             onReopen: { onReopen(item) },
