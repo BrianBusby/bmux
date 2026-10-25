@@ -7,12 +7,16 @@ struct WorkspaceExplorerWorkspaceCard: View {
     let isActive: Bool
     let isReopened: Bool
     let metadataPending: Bool
+    let arrangedStatus: WorkspaceExplorerStatus?
     let hiddenDimensions: Set<WorkspaceExplorerDimension>
     let onOpen: () -> Void
     let onHistory: () -> Void
     let onReopen: () -> Void
     let onFilter: (WorkspaceExplorerDimension, WorkspaceExplorerGroupKey) -> Void
     let onInteractionChanged: (Bool) -> Void
+    @State private var referenceCardInteracting = false
+    private enum FooterControl: Hashable { case history, reopen }
+    @FocusState private var focusedFooterControl: FooterControl?
 
     private var card: WorkspaceReferenceCardSnapshot {
         WorkspaceReferenceCardSnapshot(explorerItem: item, hiddenDimensions: hiddenDimensions)
@@ -31,6 +35,11 @@ struct WorkspaceExplorerWorkspaceCard: View {
         return ""
     }
 
+    private var showsLiveStatus: Bool {
+        !hiddenDimensions.contains(.bmuxStatus) ||
+            (item.isOpen && item.liveStatus != arrangedStatus)
+    }
+
     var body: some View {
         WorkspaceReferenceCardView(
             card: card,
@@ -42,8 +51,15 @@ struct WorkspaceExplorerWorkspaceCard: View {
             onClose: {},
             onOpenLink: { NSWorkspace.shared.open($0) },
             footer: footer,
-            onInteractionChanged: onInteractionChanged
+            onInteractionChanged: { interacting in
+                referenceCardInteracting = interacting
+                onInteractionChanged(interacting || focusedFooterControl != nil)
+            }
         )
+        .onChange(of: focusedFooterControl) { _, control in
+            onInteractionChanged(referenceCardInteracting || control != nil)
+        }
+        .onDisappear { onInteractionChanged(false) }
         .contextMenu {
             if !hiddenDimensions.contains(.ticket),
                let ticket = item.display?.ticketIDs.first,
@@ -79,7 +95,7 @@ struct WorkspaceExplorerWorkspaceCard: View {
                     Text(String(localized: "explorer.closedTag", defaultValue: "CLOSED"))
                         .foregroundStyle(.secondary)
                 }
-                if !hiddenDimensions.contains(.bmuxStatus) &&
+                if showsLiveStatus &&
                     (item.isOpen || !hiddenDimensions.contains(.workspaceState)) {
                     Text(statusLabel).foregroundStyle(.secondary)
                 }
@@ -112,11 +128,13 @@ struct WorkspaceExplorerWorkspaceCard: View {
                 if item.archive != nil {
                     Button(String(localized: "explorer.historyShort", defaultValue: "History"), action: onHistory)
                         .buttonStyle(.bordered).controlSize(.small)
+                        .focused($focusedFooterControl, equals: .history)
                 }
             } else if !isReopened {
                 if case .eligible = item.reopenEligibility {
                     Button(String(localized: "explorer.reopenShort", defaultValue: "Reopen"), action: onReopen)
                         .buttonStyle(.bordered).controlSize(.small)
+                        .focused($focusedFooterControl, equals: .reopen)
                 } else {
                     Text(String(localized: "explorer.reopenUnavailable", defaultValue: "Reopen unavailable"))
                         .font(.system(size: 11)).foregroundStyle(.secondary)

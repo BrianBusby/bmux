@@ -161,6 +161,7 @@ struct WorkspaceExplorerGroupSection: View {
                         WorkspaceExplorerWorkspaceCard(item: item, isActive: activeWorkspaceID == id,
                             isReopened: reopenedWorkspaceID == id,
                             metadataPending: metadataPending,
+                            arrangedStatus: workspacesByID[id]?.arrangedStatus,
                             hiddenDimensions: groupedDimensions.union(activeFilters.keys),
                             onOpen: { onOpenWorkspace(item) },
                             onHistory: { onHistory(item) },

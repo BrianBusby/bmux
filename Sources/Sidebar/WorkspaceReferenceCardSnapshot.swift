@@ -91,7 +91,7 @@ struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
         let ticketID = ticket?.id ?? display?.ticketIDs.first
         let project = display?.projectLinks.first
         let titlePresentation = WorkspaceCardTitlePresentation(
-            workspaceTitle: item.title, ticketTitle: ticket?.title
+            workspaceTitle: item.title, ticketTitle: hiddenDimensions.contains(.ticket) ? nil : ticket?.title
         )
         id = UUID(uuidString: item.id) ?? item.liveWorkspaceID ?? UUID()
         hasActiveAIWork = item.isOpen && (item.liveStatus == .running || item.liveStatus == .needsInput)
