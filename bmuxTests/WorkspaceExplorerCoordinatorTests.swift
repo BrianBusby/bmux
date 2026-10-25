@@ -11,6 +11,38 @@ import Testing
 @Suite @MainActor
 struct WorkspaceExplorerCoordinatorTests {
     @Test
+    func openingExplorerResetsToAllWorkspacesWithoutFiltersOrGrouping() {
+        let model = WorkspaceExplorerCoordinator(
+            loadHistory: { WorkspaceExplorerHistoryLoadResult(items: [],
+                archiveAvailability: .available, partialLiveActivity: false) },
+            reopenHistory: { _ in false }, activateWorkspace: { _ in },
+            loadSessions: { id in ProvenanceWorkspaceSessionPageResponse(
+                workspaceID: id.uuidString, sessions: [], nextCursor: nil) },
+            clearArchive: { })
+        model.showCollection(.all)
+        model.setGroupBy([.repository])
+        model.setFilter(.bmuxStatus, value: .bmuxStatus(.needsInput))
+        model.scope = WorkspaceExplorerScope(state: .open, period: .today)
+        model.showCollection(.project("maple-roof"))
+        model.showHistory("history")
+
+        model.openAllWorkspacesUnfiltered()
+
+        #expect(model.collectionTarget == .all)
+        #expect(model.historyID == nil)
+        #expect(model.scope == WorkspaceExplorerScope(state: .all, period: .anyTime))
+        #expect(model.activeArrangement.groupBy.isEmpty)
+        #expect(model.activeArrangement.filters.isEmpty)
+        #expect(!model.activeArrangement.canUndo)
+
+        model.setGroupBy([.project])
+        model.setFilter(.repository, value: .value("bmux"))
+        model.openAllWorkspacesUnfiltered()
+        #expect(model.activeArrangement.groupBy.isEmpty)
+        #expect(model.activeArrangement.filters.isEmpty)
+    }
+
+    @Test
     func openingLiveWorkspaceKeepsProjectRouteAndArrangement() async {
         let workspace = WorkspaceExplorerLiveWorkspace(stableID: UUID(), runtimeID: UUID(),
             title: "Maple Street Roof Inspection", createdAt: .now,

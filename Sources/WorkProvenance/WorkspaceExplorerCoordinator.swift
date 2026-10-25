@@ -282,6 +282,18 @@ final class WorkspaceExplorerCoordinator {
         sessionPages.activate(nil)
     }
 
+    func openAllWorkspacesUnfiltered() {
+        showCollection(.all)
+        scope = WorkspaceExplorerScope(state: .all, period: .anyTime)
+        refreshActivityClock()
+        collectionArrangements[WorkspaceExplorerCollectionTarget.all.arrangementKey] = WorkspaceExplorerViewArrangement()
+        statusArrangement.reconcile(groupBy: [], filters: [:])
+        if let lastLoadResult {
+            catalog = WorkspaceExplorerCatalog(lastLoadResult, liveStatuses: liveStatusOverrides,
+                arrangedStatuses: arrangedStatuses())
+        }
+    }
+
     func showHistory(_ id: String) {
         applyPendingActivityArrangement()
         exitTransition.cancel()
