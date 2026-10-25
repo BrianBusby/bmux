@@ -48,7 +48,11 @@ final class WorkspaceExplorerHistoryService {
     func load() async throws -> WorkspaceExplorerHistoryLoadResult {
         async let archived = archiveSnapshot()
         let live = try await liveSnapshot()
-        return combine(live: live, archived: try await archived)
+        let archive = try await archived
+        let repositoryIDs = Set(live.workspaces.compactMap { $0.display?.repositoryID } +
+            archive.records.compactMap { $0.displayAtClose?.repositoryID })
+        let repositoryNames = try await repositoryNamesSnapshot(for: repositoryIDs)
+        return combine(live: live, archived: archive, repositoryNamesByID: repositoryNames)
     }
 
     /// Shows current tabs before any PE query can delay the first Explorer render.
@@ -83,6 +87,19 @@ final class WorkspaceExplorerHistoryService {
             sentryCaptureError("Workspace Explorer archive load failed", category: "provenance",
                 data: ["error_type": String(reflecting: type(of: error))])
             return ArchiveSnapshot(records: [], availability: .unavailable)
+        }
+    }
+
+    private func repositoryNamesSnapshot(for repositoryIDs: Set<String>) async throws -> [String: String] {
+        guard let archiveService, !repositoryIDs.isEmpty else { return [:] }
+        do {
+            return try await archiveService.repositoryNames(for: repositoryIDs)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            sentryCaptureError("Workspace Explorer repository names load failed", category: "provenance",
+                data: ["error_type": String(reflecting: type(of: error))])
+            return [:]
         }
     }
 
@@ -124,7 +141,8 @@ final class WorkspaceExplorerHistoryService {
     }
 
     func combine(live: LiveSnapshot, archived: ArchiveSnapshot,
-                 liveMetadataPending: Bool = false) -> WorkspaceExplorerHistoryLoadResult {
+                 liveMetadataPending: Bool = false,
+                 repositoryNamesByID: [String: String] = [:]) -> WorkspaceExplorerHistoryLoadResult {
         let liveIDs = Set(live.workspaces.map(\.stableID))
         let records = archived.records.isEmpty ? [:] : restoreRecords()
         let eligibilityByID = Dictionary(uniqueKeysWithValues: archived.records.compactMap { record in
@@ -141,7 +159,8 @@ final class WorkspaceExplorerHistoryService {
             archiveAvailability: archived.availability,
             partialLiveActivity: live.partialActivity,
             liveMetadataPending: liveMetadataPending,
-            activeWorkspaceID: live.activeWorkspaceID
+            activeWorkspaceID: live.activeWorkspaceID,
+            repositoryNamesByID: repositoryNamesByID
         )
     }
 

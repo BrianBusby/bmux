@@ -6,16 +6,25 @@ struct WorkspaceExplorerHistoryLoadResult {
     let partialLiveActivity: Bool
     let liveMetadataPending: Bool
     let activeWorkspaceID: String?
+    let repositoryNamesByID: [String: String]
 
     init(items: [WorkspaceExplorerHistoryItem],
          archiveAvailability: WorkspaceExplorerArchiveAvailability,
          partialLiveActivity: Bool,
          liveMetadataPending: Bool = false,
-         activeWorkspaceID: String? = nil) {
+         activeWorkspaceID: String? = nil,
+         repositoryNamesByID: [String: String] = [:]) {
         self.items = items
         self.archiveAvailability = archiveAvailability
         self.partialLiveActivity = partialLiveActivity
         self.liveMetadataPending = liveMetadataPending
         self.activeWorkspaceID = activeWorkspaceID
+        self.repositoryNamesByID = repositoryNamesByID
+    }
+
+    func withArchiveAvailability(_ availability: WorkspaceExplorerArchiveAvailability) -> Self {
+        Self(items: items, archiveAvailability: availability,
+            partialLiveActivity: partialLiveActivity, liveMetadataPending: liveMetadataPending,
+            activeWorkspaceID: activeWorkspaceID, repositoryNamesByID: repositoryNamesByID)
     }
 }

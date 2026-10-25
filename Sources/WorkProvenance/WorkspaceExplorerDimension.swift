@@ -51,7 +51,9 @@ enum WorkspaceExplorerDimension: Hashable {
         }
     }
 
-    func precedes(_ lhs: WorkspaceExplorerGroupKey, _ rhs: WorkspaceExplorerGroupKey, projectNames: [String: String] = [:]) -> Bool {
+    func precedes(_ lhs: WorkspaceExplorerGroupKey, _ rhs: WorkspaceExplorerGroupKey,
+                  projectNames: [String: String] = [:],
+                  repositoryNames: [String: String] = [:]) -> Bool {
         if self == .bmuxStatus {
             if case .bmuxStatus(let left) = lhs, case .bmuxStatus(let right) = rhs { return left < right }
         }
@@ -61,8 +63,9 @@ enum WorkspaceExplorerDimension: Hashable {
         let lhsFallback = lhs.isFallback
         let rhsFallback = rhs.isFallback
         if lhsFallback != rhsFallback { return !lhsFallback }
-        let left = lhs.label(projectNames: projectNames)
-        let right = rhs.label(projectNames: projectNames)
+        let names = self == .repository ? repositoryNames : [:]
+        let left = lhs.label(projectNames: projectNames, repositoryNames: names)
+        let right = rhs.label(projectNames: projectNames, repositoryNames: names)
         if left == right { return lhs.sortIdentity < rhs.sortIdentity }
         return left.localizedStandardCompare(right) == .orderedAscending
     }

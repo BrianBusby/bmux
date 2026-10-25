@@ -6,6 +6,7 @@ struct WorkspaceExplorerProjectCard: View {
     let project: WorkspaceExplorerProject?
     let counts: WorkspaceExplorerCounts
     let workspaces: [WorkspaceExplorerWorkspace]
+    let repositoryNamesByID: [String: String]
     let scope: WorkspaceExplorerScope
     let archiveAvailability: WorkspaceExplorerArchiveAvailability
     let openTotal: Int
@@ -41,7 +42,8 @@ struct WorkspaceExplorerProjectCard: View {
                 if !repositories.isEmpty {
                     HStack(spacing: 4) {
                         ForEach(repositories.prefix(3), id: \.self) { repository in
-                            Text(repository).font(.system(size: 10, design: .monospaced))
+                            Text(repositoryNamesByID[repository] ?? repository)
+                                .font(.system(size: 10, design: .monospaced))
                                 .lineLimit(1).padding(.horizontal, 6).padding(.vertical, 3)
                                 .background(Color(nsColor: .controlColor), in: Capsule())
                         }
@@ -82,7 +84,12 @@ struct WorkspaceExplorerProjectCard: View {
     }
 
     private var repositories: [String] {
-        Array(Set(workspaces.compactMap(\.repository))).sorted()
+        Array(Set(workspaces.compactMap(\.repository))).sorted {
+            let left = repositoryNamesByID[$0] ?? $0
+            let right = repositoryNamesByID[$1] ?? $1
+            let order = left.localizedStandardCompare(right)
+            return order == .orderedSame ? $0 < $1 : order == .orderedAscending
+        }
     }
 
     private var activitySummary: String {

@@ -2,14 +2,17 @@ import BmuxAppKitSupportUI
 import SwiftUI
 
 /// Renders one immutable workspace snapshot with independent native actions.
-struct WorkspaceReferenceCardView: View {
+struct WorkspaceReferenceCardView<Footer: View>: View {
     let card: WorkspaceReferenceCardSnapshot
     let repositoryName: String?
     let isSelected: Bool
     let canCloseWorkspace: Bool
+    let showsCloseControl: Bool
     let onSelect: () -> Void
     let onClose: () -> Void
     let onOpenLink: (URL) -> Void
+    let footer: Footer
+    let onInteractionChanged: (Bool) -> Void
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -19,7 +22,7 @@ struct WorkspaceReferenceCardView: View {
 
     private enum Control: Hashable { case selection, close, ticket, project, pullRequest, owner }
     private var theme: MatteTheme { MatteTheme(colorScheme: colorScheme) }
-    private var showsClose: Bool { isSelected || (isEnabled && (isHovered || focusedControl != nil)) }
+    private var showsClose: Bool { showsCloseControl && (isSelected || (isEnabled && (isHovered || focusedControl != nil))) }
 
     var body: some View {
         let motion = theme.motion(reduceMotion: reduceMotion)
@@ -40,7 +43,14 @@ struct WorkspaceReferenceCardView: View {
             }
             .offset(y: -theme.cardLift(isHovered: isHovered, isSelected: isSelected,
                                       isPressed: isPressed, isEnabled: isEnabled, reduceMotion: reduceMotion))
-            .onHover { isHovered = $0 }
+            .onHover {
+                isHovered = $0
+                onInteractionChanged($0 || focusedControl != nil)
+            }
+            .onChange(of: focusedControl) { _, control in
+                onInteractionChanged(isHovered || control != nil)
+            }
+            .onDisappear { onInteractionChanged(false) }
             .animation(reduceMotion ? nil : .timingCurve(motion.curve.x1, motion.curve.y1,
                 motion.curve.x2, motion.curve.y2, duration: motion.cardDuration), value: isHovered)
             .animation(reduceMotion ? nil : .timingCurve(motion.curve.x1, motion.curve.y1,
@@ -128,6 +138,7 @@ struct WorkspaceReferenceCardView: View {
                         .allowsHitTesting(false)
                 }
             }
+            footer
         }
     }
 
@@ -230,4 +241,15 @@ struct WorkspaceReferenceCardView: View {
     }
 
     private func color(_ role: MatteColorRole) -> Color { Color(nsColor: theme.color(role)) }
+}
+
+extension WorkspaceReferenceCardView where Footer == EmptyView {
+    init(card: WorkspaceReferenceCardSnapshot, repositoryName: String?, isSelected: Bool,
+         canCloseWorkspace: Bool, onSelect: @escaping () -> Void, onClose: @escaping () -> Void,
+         onOpenLink: @escaping (URL) -> Void) {
+        self.init(card: card, repositoryName: repositoryName, isSelected: isSelected,
+                  canCloseWorkspace: canCloseWorkspace, showsCloseControl: true,
+                  onSelect: onSelect, onClose: onClose,
+                  onOpenLink: onOpenLink, footer: EmptyView(), onInteractionChanged: { _ in })
+    }
 }
