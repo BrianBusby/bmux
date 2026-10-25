@@ -12,20 +12,17 @@ struct WorkspaceExplorerWindowView: View {
     let provenanceStartupFailed: @MainActor () -> Bool
     let restartApp: @MainActor () throws -> Void
     let isEmbedded: Bool
-    let onShowWorkspaceView: @MainActor () -> Void
 
     init(model: WorkspaceExplorerCoordinator,
          provenanceStartupFailed: @escaping @MainActor () -> Bool,
          restartApp: @escaping @MainActor () throws -> Void,
          liveNavigation: WorkspaceExplorerLiveNavigation? = nil,
-         isEmbedded: Bool = false,
-         onShowWorkspaceView: @escaping @MainActor () -> Void = {}) {
+         isEmbedded: Bool = false) {
         _model = State(initialValue: model)
         self.provenanceStartupFailed = provenanceStartupFailed
         self.restartApp = restartApp
         self.liveNavigation = liveNavigation
         self.isEmbedded = isEmbedded
-        self.onShowWorkspaceView = onShowWorkspaceView
     }
 
     init(loadPresence: WorkspaceExplorerCoordinator.PresenceLoader? = nil,
@@ -41,13 +38,11 @@ struct WorkspaceExplorerWindowView: View {
          provenanceStartupFailed: @escaping @MainActor () -> Bool = { false },
          restartApp: @escaping @MainActor () throws -> Void = {},
          liveNavigation: WorkspaceExplorerLiveNavigation? = nil,
-         isEmbedded: Bool = false,
-         onShowWorkspaceView: @escaping @MainActor () -> Void = {}) {
+         isEmbedded: Bool = false) {
         self.liveNavigation = liveNavigation
         self.provenanceStartupFailed = provenanceStartupFailed
         self.restartApp = restartApp
         self.isEmbedded = isEmbedded
-        self.onShowWorkspaceView = onShowWorkspaceView
         _model = State(initialValue: WorkspaceExplorerCoordinator(
             loadHistory: loadHistory, loadPresence: loadPresence, reopenHistory: reopenHistory,
             activateWorkspace: activateWorkspace,
@@ -189,7 +184,6 @@ struct WorkspaceExplorerWindowView: View {
 
     private var header: some View {
         WorkspaceExplorerHeaderView(model: model, cardGeometry: cardGeometry,
-            isEmbedded: isEmbedded, onShowWorkspaceView: onShowWorkspaceView,
             confirmsClearHistory: $confirmsClearHistory)
     }
 
@@ -343,17 +337,25 @@ struct WorkspaceExplorerWindowView: View {
 
     private var arrangementBar: some View {
         let dimensions: [WorkspaceExplorerDimension]
+        let filterDimensions: [WorkspaceExplorerDimension]
         if model.collectionTarget == nil {
             dimensions = [.repository, .projectOwner, .projectStatus]
+            filterDimensions = [.bmuxStatus, .repository, .projectOwner, .projectStatus]
         } else {
             dimensions = [.repository, .ticket, .pullRequestOwner, .pullRequestStatus,
                 .ticketStatus, .bmuxStatus] +
                 (model.scope.state == .all ? [.workspaceState] : []) +
                 (model.collectionTarget == .all ? [.project] : [])
+            filterDimensions = [.bmuxStatus, .repository] +
+                (model.collectionTarget == .all ? [.project] : []) + [.pullRequestOwner]
         }
         let arrangement = model.activeArrangement
         return WorkspaceExplorerArrangementBar(groupBy: arrangement.groupBy, filters: arrangement.filters,
             availableDimensions: dimensions,
+            filterDimensions: filterDimensions,
+            filterOptions: model.projection?.filterOptions(dimensions: filterDimensions,
+                inScopeWorkspaceIDs: model.result()?.inScopeWorkspaceIDs ?? [],
+                overview: model.collectionTarget == nil) ?? [:],
             projectsByID: Dictionary((model.presentedCatalog?.projects ?? []).map { ($0.id, $0) },
                 uniquingKeysWith: { first, _ in first }),
             repositoryNamesByID: model.presentedCatalog?.repositoryNamesByID ?? [:],

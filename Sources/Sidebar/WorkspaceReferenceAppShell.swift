@@ -2,17 +2,20 @@ import SwiftUI
 import BmuxAppKitSupportUI
 
 /// Presents the continuous matte base and sidebar/main gutter without owning their state.
-struct WorkspaceReferenceAppShell<Rail: View, Content: View>: View {
+struct WorkspaceReferenceAppShell<Rail: View, Content: View, HeaderAction: View>: View {
     @Environment(\.colorScheme) private var colorScheme
     let showsRail: Bool
     @ViewBuilder let rail: () -> Rail
     @ViewBuilder let content: () -> Content
+    @ViewBuilder let headerAction: () -> HeaderAction
 
     init(showsRail: Bool = true, @ViewBuilder rail: @escaping () -> Rail,
-         @ViewBuilder content: @escaping () -> Content) {
+         @ViewBuilder content: @escaping () -> Content,
+         @ViewBuilder headerAction: @escaping () -> HeaderAction) {
         self.showsRail = showsRail
         self.rail = rail
         self.content = content
+        self.headerAction = headerAction
     }
 
     var body: some View {
@@ -28,6 +31,7 @@ struct WorkspaceReferenceAppShell<Rail: View, Content: View>: View {
                         Text("CompanyCam").matteTypography(.body, theme: theme).foregroundStyle(Color(nsColor: theme.color(.textSecondary)))
                     }
                     Spacer()
+                    headerAction()
                 }
                 .padding(.horizontal, theme.layout.brandHeaderHorizontalInset)
                 .frame(height: theme.layout.brandHeaderHeight)

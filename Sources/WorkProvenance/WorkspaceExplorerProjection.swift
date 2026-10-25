@@ -15,6 +15,39 @@ struct WorkspaceExplorerProjection {
         self.repositoryNamesByID = repositoryNamesByID
     }
 
+    func filterOptions(
+        dimensions: [WorkspaceExplorerDimension],
+        inScopeWorkspaceIDs: [String],
+        overview: Bool
+    ) -> [WorkspaceExplorerDimension: [WorkspaceExplorerGroupKey]] {
+        let inScopeIDs = Set(inScopeWorkspaceIDs)
+        let members = workspaces.filter { inScopeIDs.contains($0.id) }
+        let projectIDs = Set(members.flatMap(\.projectIDs))
+        let projectNames = Dictionary(projects.map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
+        return Dictionary(uniqueKeysWithValues: dimensions.map { dimension in
+            let keys: [WorkspaceExplorerGroupKey]
+            switch dimension {
+            case .projectOwner, .projectStatus:
+                keys = projects.filter { projectIDs.contains($0.id) }.map { project in
+                    dimension.projectKey(project, workspaces: members.filter { $0.projectIDs.contains(project.id) })
+                }
+            case .project:
+                keys = members.flatMap { workspace in
+                    workspace.projectIDs.isEmpty ? [.unassigned] :
+                        workspace.projectIDs.map(WorkspaceExplorerGroupKey.project)
+                }
+            case .ticket:
+                keys = members.flatMap { $0.tickets.map(WorkspaceExplorerGroupKey.value) }
+            default:
+                keys = members.map { dimension.workspaceKey($0) }
+            }
+            let options = Set(keys).filter { $0.supportsFocus(in: dimension, overview: overview) }
+                .sorted { dimension.precedes($0, $1, projectNames: projectNames,
+                    repositoryNames: repositoryNamesByID) }
+            return (dimension, options)
+        })
+    }
+
     func overview(
         scope: WorkspaceExplorerScope,
         groupBy: [WorkspaceExplorerDimension],
@@ -114,6 +147,9 @@ struct WorkspaceExplorerProjection {
         filters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey]
     ) -> Bool {
         filters.allSatisfy { dimension, value in
+            if dimension == .project, case .project(let projectID) = value {
+                return workspace.projectIDs.contains(projectID)
+            }
             if dimension == .ticket, case .value(let ticket) = value {
                 return workspace.tickets.contains(ticket)
             }

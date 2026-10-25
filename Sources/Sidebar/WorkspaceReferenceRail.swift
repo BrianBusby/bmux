@@ -12,7 +12,6 @@ struct WorkspaceReferenceRail: View {
     let canCloseWorkspace: Bool
     let explorerFilters: [WorkspaceExplorerRailFilter]
     let onRemoveExplorerFilter: (WorkspaceExplorerRailFilter) -> Void
-    let onShowExplorer: () -> Void
     let onSelect: (UUID) -> Void
     let onClose: (UUID) -> Void
     let onOpenLink: (UUID, URL) -> Void
@@ -69,14 +68,6 @@ struct WorkspaceReferenceRail: View {
                         .matteTypography(.sectionLabel, theme: theme)
                         .foregroundStyle(Color(nsColor: theme.color(.textSecondary)))
                     Spacer()
-                    MatteButton(hitExpansion: theme.layout.invisibleHitExpansion) {
-                        onShowExplorer()
-                    } label: {
-                        Text(String(localized: "workspaceRail.explorerView", defaultValue: "Explorer"))
-                            .font(.system(size: 12, weight: .medium))
-                    }
-                    .buttonStyle(MatteButtonStyle(theme: theme))
-                    .accessibilityIdentifier("bmuxShell.explorerToggle")
                     MatteButton(hitExpansion: theme.layout.invisibleHitExpansion) {
                         guard let repoLauncherAnchorView else {
                             NSSound.beep()

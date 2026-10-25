@@ -1,22 +1,17 @@
 import SwiftUI
 
-/// Explorer navigation, scope, and view-switch controls.
+/// Explorer navigation and scope controls.
 @MainActor
 struct WorkspaceExplorerHeaderView: View {
     let model: WorkspaceExplorerCoordinator
     let cardGeometry: Namespace.ID
-    let isEmbedded: Bool
-    let onShowWorkspaceView: @MainActor () -> Void
     @Binding var confirmsClearHistory: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(model: WorkspaceExplorerCoordinator, cardGeometry: Namespace.ID,
-         isEmbedded: Bool, onShowWorkspaceView: @escaping @MainActor () -> Void,
          confirmsClearHistory: Binding<Bool>) {
         self.model = model
         self.cardGeometry = cardGeometry
-        self.isEmbedded = isEmbedded
-        self.onShowWorkspaceView = onShowWorkspaceView
         _confirmsClearHistory = confirmsClearHistory
     }
 
@@ -50,13 +45,6 @@ struct WorkspaceExplorerHeaderView: View {
                         .font(.system(size: 11)).foregroundStyle(.secondary)
                 }
                 Spacer()
-                if isEmbedded {
-                    Button(String(localized: "workspaceRail.workspaceView", defaultValue: "Workspace View")) {
-                        onShowWorkspaceView()
-                    }
-                    .font(.system(size: 12, weight: .medium))
-                    .accessibilityIdentifier("bmuxShell.workspaceView")
-                }
                 Button {
                     Task { await model.load() }
                 } label: {

@@ -5,6 +5,8 @@ struct WorkspaceExplorerArrangementBar: View {
     let groupBy: [WorkspaceExplorerDimension]
     let filters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey]
     let availableDimensions: [WorkspaceExplorerDimension]
+    let filterDimensions: [WorkspaceExplorerDimension]
+    let filterOptions: [WorkspaceExplorerDimension: [WorkspaceExplorerGroupKey]]
     let projectsByID: [String: WorkspaceExplorerProject]
     let repositoryNamesByID: [String: String]
     let canUndo: Bool
@@ -61,14 +63,34 @@ struct WorkspaceExplorerArrangementBar: View {
                 HStack(spacing: 7) {
                     Text(String(localized: "explorer.filter", defaultValue: "Filter:"))
                         .foregroundStyle(.secondary)
-                    Button(String(localized: "explorer.status.needsInput", defaultValue: "Needs input")) {
-                        let value: WorkspaceExplorerGroupKey = .bmuxStatus(.needsInput)
-                        onFilter(.bmuxStatus, filters[.bmuxStatus] == value ? nil : value)
+                    ForEach(filterDimensions, id: \.self) { dimension in
+                        Menu {
+                            Button(String(localized: "explorer.filter.any", defaultValue: "Any")) {
+                                onFilter(dimension, nil)
+                            }
+                            Divider()
+                            ForEach(filterOptions[dimension] ?? [], id: \.self) { key in
+                                Button {
+                                    onFilter(dimension, filters[dimension] == key ? nil : key)
+                                } label: {
+                                    if filters[dimension] == key { Image(systemName: "checkmark") }
+                                    Text(key.displayName(projectsByID: projectsByID,
+                                        repositoryNamesByID: dimension == .repository ? repositoryNamesByID : [:]))
+                                }
+                            }
+                        } label: {
+                            Text(filters[dimension].map { key in
+                                String(format: String(localized: "explorer.filter.selected",
+                                    defaultValue: "%1$@: %2$@"), dimension.displayName,
+                                    key.displayName(projectsByID: projectsByID,
+                                        repositoryNamesByID: dimension == .repository ? repositoryNamesByID : [:]))
+                            } ?? dimension.displayName)
+                        }
+                        .disabled((filterOptions[dimension] ?? []).isEmpty && filters[dimension] == nil)
+                        .controlSize(.small)
                     }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    ForEach(availableDimensions + (availableDimensions.contains(.bmuxStatus) ? [] : [.bmuxStatus]),
-                        id: \.self) { dimension in
+                    ForEach(filters.keys.filter { !filterDimensions.contains($0) }
+                        .sorted { $0.displayName < $1.displayName }, id: \.self) { dimension in
                         if let key = filters[dimension] {
                             Button(dimension.displayName + ": " + key.displayName(projectsByID: projectsByID,
                                 repositoryNamesByID: dimension == .repository ? repositoryNamesByID : [:]) + " ×") {

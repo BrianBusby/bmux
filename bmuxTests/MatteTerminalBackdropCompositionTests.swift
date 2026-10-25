@@ -63,6 +63,8 @@ import Testing
                         liveTerminalContent: AnyView(terminal), initialPrimaryTab: .terminal,
                         workspaceLabel: "Project", sessionTitle: "Terminal"
                     )
+                } headerAction: {
+                    EmptyView()
                 }
             }
             .environment(\.colorScheme, scheme))

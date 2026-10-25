@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import BmuxAppKitSupportUI
 
 /// Owns the main workbench's Explorer switch and the live workspace rail projection.
 @MainActor
@@ -10,6 +11,7 @@ struct WorkspaceWorkbenchShell<LiveSurface: View>: View {
     let onExplorerVisibilityChange: @MainActor (Bool) -> Void
     @ViewBuilder let liveSurface: () -> LiveSurface
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var colorScheme
     @State private var showsExplorer = false
     @State private var explorerCoordinator: WorkspaceExplorerCoordinator?
     @State private var visibleWorkspaceIDs: Set<UUID>?
@@ -32,12 +34,13 @@ struct WorkspaceWorkbenchShell<LiveSurface: View>: View {
         } content: {
             if showsExplorer, let appDelegate, let explorerCoordinator {
                 WorkspaceExplorerScenes.makeView(appDelegate: appDelegate,
-                    model: explorerCoordinator, isEmbedded: true,
-                    onShowWorkspaceView: showWorkspaceView)
+                    model: explorerCoordinator, isEmbedded: true)
                     .transition(.opacity)
             } else {
                 liveSurface().transition(.opacity)
             }
+        } headerAction: {
+            viewSwitchButton
         }
         .onChange(of: explorerCoordinator?.visibleLiveWorkspaceIDs) { _, ids in
             visibleWorkspaceIDs = ids.map(Set.init)
@@ -64,7 +67,6 @@ struct WorkspaceWorkbenchShell<LiveSurface: View>: View {
             canCloseWorkspace: tabManager.tabs.count > 1,
             explorerFilters: explorerCoordinator?.activeRailFilters ?? [],
             onRemoveExplorerFilter: removeExplorerFilter,
-            onShowExplorer: showExplorer,
             onSelect: { tabManager.selectWorkspaceIdForAction($0) },
             onClose: { id in
                 if let workspace = tabManager.tabs.first(where: { $0.id == id }) {
@@ -88,6 +90,21 @@ struct WorkspaceWorkbenchShell<LiveSurface: View>: View {
             filters: $railFilters,
             isFilterPanelPresented: $isRailFilterPanelPresented
         )
+    }
+
+    private var viewSwitchButton: some View {
+        let theme = MatteTheme(colorScheme: colorScheme)
+        return MatteButton(hitExpansion: theme.layout.invisibleHitExpansion) {
+            if showsExplorer { showWorkspaceView() }
+            else { showExplorer() }
+        } label: {
+            Text(showsExplorer
+                ? String(localized: "workspaceRail.workspaceView", defaultValue: "Workspace View")
+                : String(localized: "workspaceRail.explorerView", defaultValue: "Explorer"))
+                .font(.system(size: 12, weight: .medium))
+        }
+        .buttonStyle(MatteButtonStyle(theme: theme))
+        .accessibilityIdentifier("bmuxShell.explorerToggle")
     }
 
     private func removeExplorerFilter(_ filter: WorkspaceExplorerRailFilter) {

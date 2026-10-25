@@ -35,8 +35,7 @@ struct WorkspaceExplorerScenes: Scene {
     static func makeView(appDelegate: AppDelegate,
                          model: WorkspaceExplorerCoordinator? = nil,
                          isEmbedded: Bool = false,
-                         onActivateWorkspace: (@MainActor (UUID) -> Void)? = nil,
-                         onShowWorkspaceView: @escaping @MainActor () -> Void = {}) -> WorkspaceExplorerWindowView {
+                         onActivateWorkspace: (@MainActor (UUID) -> Void)? = nil) -> WorkspaceExplorerWindowView {
         WorkspaceExplorerWindowView(
             model: model ?? makeCoordinator(appDelegate: appDelegate,
                 liveNavigation: isEmbedded ? nil : appDelegate.workspaceExplorerLiveNavigation,
@@ -44,8 +43,7 @@ struct WorkspaceExplorerScenes: Scene {
             provenanceStartupFailed: { appDelegate.workProvenanceRuntime?.startupErrorDescription != nil },
             restartApp: { try HostSettingsActions.relaunchApp() },
             liveNavigation: isEmbedded ? nil : appDelegate.workspaceExplorerLiveNavigation,
-            isEmbedded: isEmbedded,
-            onShowWorkspaceView: onShowWorkspaceView
+            isEmbedded: isEmbedded
         )
     }
 
