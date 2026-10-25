@@ -84,4 +84,40 @@ struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
             : pullRequestOwner?.url
         ownerAvatarURL = ticketOwnerName == nil ? pullRequestOwner?.avatarURL : nil
     }
+
+    init(explorerItem item: WorkspaceExplorerHistoryItem, hiddenDimensions: Set<WorkspaceExplorerDimension>) {
+        let display = item.display
+        let ticket = display?.ticketLinks.first
+        let ticketID = ticket?.id ?? display?.ticketIDs.first
+        let project = display?.projectLinks.first
+        let titlePresentation = WorkspaceCardTitlePresentation(
+            workspaceTitle: item.title, ticketTitle: ticket?.title
+        )
+        id = UUID(uuidString: item.id) ?? item.liveWorkspaceID ?? UUID()
+        hasActiveAIWork = item.isOpen && (item.liveStatus == .running || item.liveStatus == .needsInput)
+        title = titlePresentation.title
+        titleIsTicket = titlePresentation.usesTicketTitle && !hiddenDimensions.contains(.ticket)
+        prompt = display?.lastSubmittedPrompt
+        branch = display?.branch
+        isDirty = display?.isDirty
+        self.ticketID = hiddenDimensions.contains(.ticket) ? nil : ticketID
+        ticketURL = hiddenDimensions.contains(.ticket) ? nil : ticket?.url.flatMap(URL.init(string:))
+        projectTitle = hiddenDimensions.contains(.project) ? nil : project.map { $0.title ?? $0.id }
+        projectURL = hiddenDimensions.contains(.project) ? nil : project?.url.flatMap(URL.init(string:))
+        projectFilterTitle = project?.title
+        if let number = display?.pullRequestNumber {
+            let status = hiddenDimensions.contains(.pullRequestStatus) ? nil : display?.pullRequestStatus
+            pullRequestText = (["#\(number)", status].compactMap { $0 }).joined(separator: " · ")
+        } else {
+            pullRequestText = nil
+        }
+        pullRequestURL = display?.pullRequestURL.flatMap(URL.init(string:))
+        pullRequestOwnerLogin = display?.pullRequestOwnerLogin
+        let ticketOwner = ticket?.ownerName
+        ownerName = ticketOwner ?? (hiddenDimensions.contains(.pullRequestOwner) ? nil : display?.pullRequestOwnerLogin)
+        ownerURL = ticketOwner != nil ? ticket?.ownerURL.flatMap(URL.init(string:)) :
+            display?.pullRequestOwnerURL.flatMap(URL.init(string:))
+        ownerAvatarURL = ticketOwner == nil && !hiddenDimensions.contains(.pullRequestOwner) ?
+            display?.pullRequestOwnerAvatarURL.flatMap(URL.init(string:)) : nil
+    }
 }

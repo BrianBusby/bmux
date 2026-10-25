@@ -364,6 +364,39 @@ import BMUXAgentLaunch
         return WorkspaceReferenceCardSnapshot(workspace: workspace, provenance: provenance, workspaceTitle: title)
     }
 
+    @Test
+    func explorerCardOmitsFactsAlreadyShownByArrangement() {
+        let workspaceID = UUID()
+        let now = Date(timeIntervalSince1970: 900)
+        let display = ProvenanceWorkspaceDisplayRecord(
+            id: "roof-work", workspaceID: workspaceID.uuidString,
+            repositoryID: "maple-roof", branch: "roof-inspection",
+            pullRequestNumber: 42, pullRequestOwnerLogin: "sam", pullRequestStatus: "open",
+            ticketLinks: [.init(id: "ROOF-42", title: "Repair flashing")],
+            projectLinks: [.init(id: "roof", title: "Maple Street roof")],
+            observedAt: now, updatedAt: now
+        )
+        let item = WorkspaceExplorerHistoryItem(
+            id: workspaceID.uuidString, title: "Review roof inspection", createdAt: now,
+            closedAt: nil, lastActivityAt: now, colorHex: nil, display: display,
+            liveWorkspaceID: workspaceID, liveStatus: .idle, archive: nil,
+            reopenEligibility: .unavailable(.alreadyOpen)
+        )
+        let full = WorkspaceReferenceCardSnapshot(explorerItem: item, hiddenDimensions: [])
+        #expect(full.projectTitle == "Maple Street roof")
+        #expect(full.ticketID == "ROOF-42")
+        #expect(full.pullRequestText == "#42 · open")
+        #expect(full.ownerName == "sam")
+
+        let arranged = WorkspaceReferenceCardSnapshot(explorerItem: item,
+            hiddenDimensions: [.project, .ticket, .pullRequestOwner, .pullRequestStatus])
+        #expect(arranged.projectTitle == nil)
+        #expect(arranged.ticketID == nil)
+        #expect(arranged.pullRequestText == "#42")
+        #expect(arranged.ownerName == nil)
+        #expect(arranged.branch == "roof-inspection")
+    }
+
     private static func referenceProvenance(
         workspaceID: UUID, ticketTitle: String?, currentDirectory: String? = nil,
         prompt: String = "Check the latest inspection photos", branch: String = "roof-inspection",

@@ -10,6 +10,7 @@ struct WorkspaceExplorerGroupSection: View {
     let overview: Bool
     let collapsedPaths: Set<String>
     let activeFilters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey]
+    let groupedDimensions: Set<WorkspaceExplorerDimension>
     let projectsByID: [String: WorkspaceExplorerProject]
     let itemsByID: [String: WorkspaceExplorerHistoryItem]
     let workspacesByID: [String: WorkspaceExplorerWorkspace]
@@ -89,7 +90,8 @@ struct WorkspaceExplorerGroupSection: View {
                             path: path + "/" + child.identity,
                             cardGeometry: cardGeometry,
                             overview: overview, collapsedPaths: collapsedPaths,
-                            activeFilters: activeFilters, projectsByID: projectsByID,
+                            activeFilters: activeFilters, groupedDimensions: groupedDimensions,
+                            projectsByID: projectsByID,
                             itemsByID: itemsByID, workspacesByID: workspacesByID,
                             projectCounts: projectCounts,
                             projectOpenTotals: projectOpenTotals, scope: scope, now: now, calendar: calendar,
@@ -159,6 +161,7 @@ struct WorkspaceExplorerGroupSection: View {
                         WorkspaceExplorerWorkspaceCard(item: item, isActive: activeWorkspaceID == id,
                             isReopened: reopenedWorkspaceID == id,
                             metadataPending: metadataPending,
+                            hiddenDimensions: groupedDimensions.union(activeFilters.keys),
                             onOpen: { onOpenWorkspace(item) },
                             onHistory: { onHistory(item) },
                             onReopen: { onReopen(item) },
