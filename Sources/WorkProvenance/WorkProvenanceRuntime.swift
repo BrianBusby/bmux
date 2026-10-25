@@ -356,11 +356,11 @@ final class WorkProvenanceRuntime {
             )
             for await _ in notifications {
                 self?.refreshAllWorkspaceDisplayCurrentState()
-                guard let self, self.acceptsObservationProducerWork,
-                      let observationService = self.observationService,
-                      let tabManager = self.tabManager else { continue }
+                guard let self, self.acceptsObservationProducerWork, let observationService = self.observationService else { continue }
                 let failedIDs = await observationService.workspaceIDsNeedingEnrichmentRetry()
-                self.observeWorkspaces(tabManager.tabs.filter { failedIDs.contains($0.id) })
+                self.observeWorkspaces(Self.workspacesNeedingEnrichmentRetry(
+                    in: self.workspaceResolutionTabManagers(for: nil), failedIDs: failedIDs
+                ))
             }
         }
     }
@@ -443,6 +443,10 @@ final class WorkProvenanceRuntime {
             }
         }
         return ids
+    }
+
+    static func workspacesNeedingEnrichmentRetry(in tabManagers: [TabManager], failedIDs: Set<UUID>) -> [Workspace] {
+        failedIDs.compactMap { workspace(matching: $0, in: tabManagers) }
     }
 
     @discardableResult
