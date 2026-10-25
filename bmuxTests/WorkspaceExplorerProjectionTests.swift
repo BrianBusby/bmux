@@ -292,6 +292,23 @@ struct WorkspaceExplorerProjectionTests {
     }
 
     @Test
+    func overviewCanFilterByProjectAndPullRequestOwner() {
+        let projection = WorkspaceExplorerProjection(projects: projects, workspaces: [
+            workspace("shared", projects: ["p1", "p3"], ago: 5, prOwner: "Brian"),
+            workspace("other", projects: ["p5"], ago: 10, prOwner: "Luis"),
+        ], archiveAvailable: true)
+        let filtered = projection.overview(scope: .init(), groupBy: [],
+            filters: [.project: .project("p3"), .pullRequestOwner: .value("Brian")],
+            now: now, calendar: calendar)
+        #expect(filtered.visibleProjectIDs == ["p3"])
+        #expect(filtered.visibleWorkspaceIDs == ["shared"])
+        let options = projection.filterOptions(dimensions: [.project, .pullRequestOwner],
+            inScopeWorkspaceIDs: filtered.inScopeWorkspaceIDs, overview: true)
+        #expect(Set(options[.project] ?? []) == [.project("p1"), .project("p3"), .project("p5")])
+        #expect(Set(options[.pullRequestOwner] ?? []) == [.value("Brian"), .value("Luis")])
+    }
+
+    @Test
     func missingRepositoryBucketDoesNotMergeWithNamedRepository() {
         let projection = WorkspaceExplorerProjection(projects: projects, workspaces: [
             workspace("missing", projects: ["p1"], ago: 1, repository: nil),
