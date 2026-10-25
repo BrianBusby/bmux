@@ -2443,7 +2443,8 @@ struct ContentView: View {
     }
 
     private func bmuxReferenceAppShell(appearance: WindowAppearanceSnapshot) -> some View {
-        WorkspaceWorkbenchShell(tabManager: tabManager, observedWindow: observedWindow,
+        WorkspaceWorkbenchShell(tabManager: tabManager, appDelegate: AppDelegate.shared,
+            observedWindow: observedWindow,
             onExplorerVisibilityChange: { visible in
                 isExplorerWorkbenchVisible = visible
                 reconcileMountedWorkspaceIds()

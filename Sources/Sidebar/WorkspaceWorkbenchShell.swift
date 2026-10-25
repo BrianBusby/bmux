@@ -5,6 +5,7 @@ import SwiftUI
 @MainActor
 struct WorkspaceWorkbenchShell<LiveSurface: View>: View {
     let tabManager: TabManager
+    let appDelegate: AppDelegate?
     let observedWindow: NSWindow?
     let onExplorerVisibilityChange: @MainActor (Bool) -> Void
     @ViewBuilder let liveSurface: () -> LiveSurface
@@ -15,10 +16,11 @@ struct WorkspaceWorkbenchShell<LiveSurface: View>: View {
     @State private var railFilters = WorkspaceFilters()
     @State private var isRailFilterPanelPresented = false
 
-    init(tabManager: TabManager, observedWindow: NSWindow?,
+    init(tabManager: TabManager, appDelegate: AppDelegate?, observedWindow: NSWindow?,
          onExplorerVisibilityChange: @escaping @MainActor (Bool) -> Void,
          @ViewBuilder liveSurface: @escaping () -> LiveSurface) {
         self.tabManager = tabManager
+        self.appDelegate = appDelegate
         self.observedWindow = observedWindow
         self.onExplorerVisibilityChange = onExplorerVisibilityChange
         self.liveSurface = liveSurface
@@ -28,7 +30,7 @@ struct WorkspaceWorkbenchShell<LiveSurface: View>: View {
         WorkspaceReferenceAppShell(showsRail: !showsExplorer) {
             rail
         } content: {
-            if showsExplorer, let appDelegate = AppDelegate.shared, let explorerCoordinator {
+            if showsExplorer, let appDelegate, let explorerCoordinator {
                 WorkspaceExplorerScenes.makeView(appDelegate: appDelegate,
                     model: explorerCoordinator, isEmbedded: true,
                     onShowWorkspaceView: showWorkspaceView)
@@ -60,6 +62,8 @@ struct WorkspaceWorkbenchShell<LiveSurface: View>: View {
             selectedWorkspaceID: tabManager.selectedTabId,
             selectedWorkspaceTitle: tabManager.selectedWorkspace?.title,
             canCloseWorkspace: tabManager.tabs.count > 1,
+            explorerFilters: explorerCoordinator?.activeRailFilters ?? [],
+            onRemoveExplorerFilter: removeExplorerFilter,
             onShowExplorer: showExplorer,
             onSelect: { tabManager.selectWorkspaceIdForAction($0) },
             onClose: { id in
@@ -69,14 +73,14 @@ struct WorkspaceWorkbenchShell<LiveSurface: View>: View {
             },
             onOpenLink: { _, url in BrowserExternalLinkOpener().openWebLink(url) },
             onLaunchRepository: { anchorView in
-                guard AppDelegate.shared?.showRepoAgentLauncherMenu(anchorView: anchorView) == true else {
+                guard appDelegate?.showRepoAgentLauncherMenu(anchorView: anchorView) == true else {
                     NSSound.beep()
                     return
                 }
             },
             onFocusHostChange: { host, scope, isAttached in
                 guard let window = observedWindow,
-                      let owner = AppDelegate.shared?.keyboardFocusCoordinator(for: window)?
+                      let owner = appDelegate?.keyboardFocusCoordinator(for: window)?
                         .workspaceChromeFocusOwner else { return }
                 if isAttached { owner.register(host, scope: scope, in: window) }
                 else { owner.unregister(host, scope: scope) }
@@ -86,8 +90,14 @@ struct WorkspaceWorkbenchShell<LiveSurface: View>: View {
         )
     }
 
+    private func removeExplorerFilter(_ filter: WorkspaceExplorerRailFilter) {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+            explorerCoordinator?.removeRailFilter(filter)
+        }
+    }
+
     private func showExplorer() {
-        guard let appDelegate = AppDelegate.shared else { return }
+        guard let appDelegate else { return }
         if explorerCoordinator == nil {
             explorerCoordinator = WorkspaceExplorerScenes.makeCoordinator(appDelegate: appDelegate,
                 onActivateWorkspace: { _ in showWorkspaceView() })
@@ -101,9 +111,13 @@ struct WorkspaceWorkbenchShell<LiveSurface: View>: View {
     }
 
     private func showWorkspaceView() {
-        onExplorerVisibilityChange(false)
-        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.24)) {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.24),
+                      completionCriteria: .logicallyComplete) {
             showsExplorer = false
+        } completion: {
+            guard !showsExplorer else { return }
+            // Portal-hosted terminals sit above SwiftUI and must wait for Explorer's exit.
+            onExplorerVisibilityChange(false)
         }
     }
 }

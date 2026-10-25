@@ -38,8 +38,11 @@ explicit reopen, per-view arrangements, and a Debug history fixture. Its native
 view is under observation. The main workbench now presents Explorer in place of
 the workspace surface and moves the workspace rail away. Workspace View restores
 the surface and shows the live workspaces matching Explorer's current scope and
-filters in the rail. Explorer navigation and filters survive the switch; the UI
-transition remains under dogfood observation. The 15 focused Explorer tests,
+filters in the rail. Workspace View shows removable chips for Explorer's
+active scope, collection, and grouping filters, including group-card Focus
+choices. Removing a chip updates the same Explorer filter and live rail.
+Explorer navigation and filters survive the switch; the UI transition remains
+under dogfood observation. The 15 focused Explorer tests,
 tagged build, Swift file-length and warning budgets, test wiring, and
 project-doc validation/generation/freshness checks pass. The broader read-only
 project-doc CI gate hit GitHub's evidence API rate limit; keyboard, reduced-motion,

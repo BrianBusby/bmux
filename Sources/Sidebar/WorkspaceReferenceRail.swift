@@ -10,6 +10,8 @@ struct WorkspaceReferenceRail: View {
     let selectedWorkspaceID: UUID?
     let selectedWorkspaceTitle: String?
     let canCloseWorkspace: Bool
+    let explorerFilters: [WorkspaceExplorerRailFilter]
+    let onRemoveExplorerFilter: (WorkspaceExplorerRailFilter) -> Void
     let onShowExplorer: () -> Void
     let onSelect: (UUID) -> Void
     let onClose: (UUID) -> Void
@@ -93,6 +95,10 @@ struct WorkspaceReferenceRail: View {
                     .safeHelp(String(localized: "titlebar.repoAgentLauncher.tooltip", defaultValue: "Launch an AI session for a repo"))
                 }
 
+                if !explorerFilters.isEmpty {
+                    explorerFilterChips
+                }
+
                 WorkspaceTabFilterBar(
                     items: filterItems,
                     selectedWorkspaceID: selectedWorkspaceID,
@@ -136,6 +142,40 @@ struct WorkspaceReferenceRail: View {
             }
             .padding(.top, 16)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+    }
+
+    private var explorerFilterChips: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(String(localized: "workspaceRail.explorerFilters", defaultValue: "Explorer filters"))
+                .matteTypography(.sectionLabel, theme: theme)
+                .foregroundStyle(Color(nsColor: theme.color(.textSecondary)))
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 5)],
+                      alignment: .leading, spacing: 5) {
+                ForEach(explorerFilters) { filter in
+                    Button {
+                        onRemoveExplorerFilter(filter)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(filter.label).lineLimit(1)
+                            Image(systemName: "xmark")
+                                .font(.system(size: theme.layout.smallIconSize))
+                        }
+                        .matteTypography(.body, theme: theme)
+                        .foregroundStyle(Color(nsColor: theme.color(.link)))
+                        .padding(.horizontal, 7)
+                        .frame(minHeight: theme.layout.minimumHitSize)
+                        .background(Color(nsColor: theme.color(.chip)),
+                                    in: RoundedRectangle(cornerRadius: theme.layout.compactControlRadius))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(String(format: String(
+                        localized: "sidebar.workspaceFilter.removeFilter", defaultValue: "Remove filter %@"),
+                        filter.label))
+                    .accessibilityIdentifier("bmuxShell.explorerFilter.\(filter.id)")
+                    .safeHelp(filter.label)
+                }
+            }
         }
     }
 }
