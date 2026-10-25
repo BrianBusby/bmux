@@ -9,7 +9,7 @@ extension WorkspaceExplorerCoordinator {
                 String(localized: "workspaceRail.collectionFilter", defaultValue: "Collection: %@"),
                 collectionTarget.title(projects: presentedCatalog?.projects ?? []))))
         }
-        if scope.state != .open {
+        if scope.state != .all {
             result.append(.init(kind: .state(scope.state), label: String(format:
                 String(localized: "workspaceRail.stateFilter", defaultValue: "State: %@"), scope.stateLabel)))
         }
@@ -35,9 +35,9 @@ extension WorkspaceExplorerCoordinator {
     func removeRailFilter(_ filter: WorkspaceExplorerRailFilter) {
         switch filter.kind {
         case .collection(let target) where collectionTarget == target:
-            showOverview()
+            showAllWorkspaces()
         case .state(let state) where scope.state == state:
-            setScopeState(.open)
+            setScopeState(.all)
         case .period(let period) where scope.period == period:
             setScopePeriod(.anyTime)
         case .dimension(let dimension, let key) where activeArrangement.filters[dimension] == key:

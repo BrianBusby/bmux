@@ -7,18 +7,18 @@ struct WorkspaceExplorerLiveBreadcrumb: View {
     let workspaceTitle: String
     let retainedSessionCount: Int?
     let leadingPadding: CGFloat
-    let onAllProjects: () -> Void
+    let onAllWorkspaces: () -> Void
     let onCollection: () -> Void
     let onHistory: () -> Void
 
     var body: some View {
         HStack(spacing: 7) {
-            Button(action: onAllProjects) {
-                Label(String(localized: "explorer.allProjects", defaultValue: "All projects"),
+            Button(action: onAllWorkspaces) {
+                Label(String(localized: "explorer.allWorkspaces", defaultValue: "All workspaces"),
                     systemImage: "arrow.left")
             }
             .buttonStyle(.borderless)
-            .accessibilityIdentifier("explorer.allProjects")
+            .accessibilityIdentifier("explorer.allWorkspaces")
             if hasCollection {
                 Text("›").foregroundStyle(.secondary).accessibilityHidden(true)
                 Button(collectionTitle, action: onCollection)

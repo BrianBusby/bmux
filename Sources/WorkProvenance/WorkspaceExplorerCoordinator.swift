@@ -19,8 +19,8 @@ final class WorkspaceExplorerCoordinator {
     typealias Clearer = @MainActor () async throws -> Void
     typealias FeedbackDelay = @MainActor (Duration) async throws -> Void
 
-    var scope = WorkspaceExplorerScope()
-    var overviewArrangement = WorkspaceExplorerViewArrangement()
+    var scope = WorkspaceExplorerScope(state: .all, period: .anyTime)
+    var rootArrangement = WorkspaceExplorerViewArrangement()
     private(set) var collectionTarget: WorkspaceExplorerCollectionTarget?
     private(set) var historyID: String?
     private(set) var catalog: WorkspaceExplorerCatalog?
@@ -60,7 +60,6 @@ final class WorkspaceExplorerCoordinator {
     private(set) var reopenedWorkspaceID: String?
     private(set) var reopenFailed = false
     private var feedbackTask: Task<Void, Never>?
-    private var focusTask: Task<Void, Never>?
     private let exitTransition: WorkspaceExplorerExitTransition
     private var collectionArrangements: [String: WorkspaceExplorerViewArrangement] = [:]
 
@@ -102,20 +101,18 @@ final class WorkspaceExplorerCoordinator {
         self.workspaceChangeMonitor = workspaceChangeMonitor
     }
     var activeArrangement: WorkspaceExplorerViewArrangement {
-        guard let collectionTarget else { return overviewArrangement }
+        guard let collectionTarget else { return rootArrangement }
         return collectionArrangements[collectionTarget.arrangementKey] ?? WorkspaceExplorerViewArrangement()
     }
     var presentedScope: WorkspaceExplorerScope { exitTransition.presentation?.scope ?? scope }
     var presentedFilters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey] {
         exitTransition.presentation?.filters ?? activeArrangement.filters
     }
-    var exitingProjectIDs: Set<String> { exitTransition.presentation?.exitingProjectIDs ?? [] }
     var exitingWorkspaceIDs: Set<String> { exitTransition.presentation?.exitingWorkspaceIDs ?? [] }
-    var exitsUnassigned: Bool { exitTransition.presentation?.exitsUnassigned ?? false }
     var projection: WorkspaceExplorerProjection? { presentedCatalog?.projection }
     func result(now: Date? = nil, calendar: Calendar? = nil) -> WorkspaceExplorerProjectionResult? {
         if let presentation = exitTransition.presentation { return presentation.result }
-        return presentedCatalog?.project(target: collectionTarget, scope: scope,
+        return presentedCatalog?.project(target: collectionTarget ?? .all, scope: scope,
             arrangement: activeArrangement, now: now ?? activityArrangement.now,
             calendar: calendar ?? activityArrangement.calendar)
     }
@@ -175,7 +172,7 @@ final class WorkspaceExplorerCoordinator {
         let nextCatalog = WorkspaceExplorerCatalog(result, liveStatuses: liveStatusOverrides,
             arrangedStatuses: arrangedStatuses())
         if activityPresentation.isHolding, self.result() != nextCatalog.project(
-            target: collectionTarget, scope: scope, arrangement: activeArrangement,
+            target: collectionTarget ?? .all, scope: scope, arrangement: activeArrangement,
             now: activityClock.now, calendar: activityClock.calendar) {
             activityPresentation.markDataChangePending()
         }
@@ -273,20 +270,19 @@ final class WorkspaceExplorerCoordinator {
 
     func applyPendingActivityArrangement() { activityPresentation.applyPending(current: catalog) }
     func showCollection(_ target: WorkspaceExplorerCollectionTarget) {
+        if target == .all { showAllWorkspaces(); return }
         applyPendingActivityArrangement()
         exitTransition.cancel()
-        focusTask?.cancel()
-        overviewArrangement.focusedProjectID = nil
         collectionTarget = target
         historyID = nil
         sessionPages.activate(nil)
     }
 
     func openAllWorkspacesUnfiltered() {
-        showCollection(.all)
+        showAllWorkspaces()
         scope = WorkspaceExplorerScope(state: .all, period: .anyTime)
         refreshActivityClock()
-        collectionArrangements[WorkspaceExplorerCollectionTarget.all.arrangementKey] = WorkspaceExplorerViewArrangement()
+        rootArrangement = WorkspaceExplorerViewArrangement()
         statusArrangement.reconcile(groupBy: [], filters: [:])
         if let lastLoadResult {
             catalog = WorkspaceExplorerCatalog(lastLoadResult, liveStatuses: liveStatusOverrides,
@@ -328,19 +324,9 @@ final class WorkspaceExplorerCoordinator {
         }
     }
 
-    func showOverview() {
+    func showAllWorkspaces() {
         applyPendingActivityArrangement()
         exitTransition.cancel()
-        focusTask?.cancel()
-        if case .project(let id) = collectionTarget {
-            overviewArrangement.focusedProjectID = id
-            // Bounded, cancellable orientation cue after returning from a project.
-            focusTask = Task { [feedbackDelay] in
-                do { try await feedbackDelay(.seconds(1.6)) } catch { return }
-                guard !Task.isCancelled else { return }
-                overviewArrangement.focusedProjectID = nil
-            }
-        }
         collectionTarget = nil
         historyID = nil
         sessionPages.activate(nil)
@@ -380,7 +366,7 @@ final class WorkspaceExplorerCoordinator {
     func setScrollAnchor(_ id: String?) {
         guard let id else { return }
         guard let collectionTarget else {
-            overviewArrangement.scrollAnchorID = id
+            rootArrangement.scrollAnchorID = id
             return
         }
         let key = collectionTarget.arrangementKey
@@ -392,7 +378,7 @@ final class WorkspaceExplorerCoordinator {
     func open(_ item: WorkspaceExplorerHistoryItem) {
         if let liveID = item.liveWorkspaceID {
             let title = collectionTarget?.title(projects: catalog?.projects ?? [])
-                ?? String(localized: "explorer.allProjects", defaultValue: "All projects")
+                ?? String(localized: "explorer.allWorkspaces", defaultValue: "All workspaces")
             onOpenLive(item, collectionTarget, title)
             activateWorkspace(liveID)
             activeWorkspaceID = item.id
@@ -449,11 +435,11 @@ final class WorkspaceExplorerCoordinator {
         exitTransition.cancel()
         applyPendingActivityArrangement()
         guard let collectionTarget else {
-            let previousGroupBy = overviewArrangement.groupBy
-            let previousFilters = overviewArrangement.filters
-            change(&overviewArrangement)
+            let previousGroupBy = rootArrangement.groupBy
+            let previousFilters = rootArrangement.filters
+            change(&rootArrangement)
             reconcileStatusArrangement(previousGroupBy: previousGroupBy, previousFilters: previousFilters)
-            if previousGroupBy == overviewArrangement.groupBy {
+            if previousGroupBy == rootArrangement.groupBy {
                 stageExit(from: previous, scope: previousScope, filters: presentedFiltersBeforeChange, animated: animated)
             }
             return
@@ -475,21 +461,8 @@ final class WorkspaceExplorerCoordinator {
                            filters previousFilters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey],
                            animated: Bool) {
         guard animated, catalog?.liveMetadataPending != true else { return }
-        let exitsUnassigned = collectionTarget == nil &&
-            unassignedVisible(scope: previousScope, filters: previousFilters) &&
-            !unassignedVisible(scope: scope, filters: activeArrangement.filters)
         exitTransition.stage(from: previous, to: result(), scope: previousScope,
-            filters: previousFilters, exitsUnassigned: exitsUnassigned, animated: animated)
-    }
-
-    private func unassignedVisible(scope: WorkspaceExplorerScope,
-                                   filters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey]) -> Bool {
-        guard filters[.projectOwner] == nil, filters[.projectStatus] == nil,
-              let projection else { return false }
-        let workspaceFilters = filters.filter { $0.key == .repository || $0.key == .bmuxStatus }
-        return projection.collection(target: .unassigned, scope: scope, groupBy: [],
-            filters: workspaceFilters, now: activityArrangement.now,
-            calendar: activityArrangement.calendar).visibleCounts.workspaces > 0
+            filters: previousFilters, animated: animated)
     }
 
     private func reconcileStatusArrangement(

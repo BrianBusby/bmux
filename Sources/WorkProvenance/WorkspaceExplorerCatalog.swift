@@ -80,22 +80,18 @@ struct WorkspaceExplorerCatalog {
             repositoryNamesByID: repositoryNamesByID)
     }
 
-    func project(target: WorkspaceExplorerCollectionTarget?, scope: WorkspaceExplorerScope,
+    func project(target: WorkspaceExplorerCollectionTarget, scope: WorkspaceExplorerScope,
                  arrangement: WorkspaceExplorerViewArrangement,
                  now: Date, calendar: Calendar) -> WorkspaceExplorerProjectionResult? {
         let projection = self.projection
-        if let target {
-            if liveMetadataPending {
-                guard target == .all else { return nil }
-                return projection.collection(target: .all, scope: scope,
-                    groupBy: [], filters: [:], now: now, calendar: calendar)
-            }
-            return projection.collection(target: target, scope: scope,
-                groupBy: arrangement.groupBy, filters: arrangement.filters,
-                now: now, calendar: calendar)
+        if liveMetadataPending {
+            guard target == .all else { return nil }
+            return projection.collection(target: .all, scope: scope,
+                groupBy: [], filters: [:], now: now, calendar: calendar)
         }
-        return projection.overview(scope: scope, groupBy: arrangement.groupBy,
-            filters: arrangement.filters, now: now, calendar: calendar)
+        return projection.collection(target: target, scope: scope,
+            groupBy: arrangement.groupBy, filters: arrangement.filters,
+            now: now, calendar: calendar)
     }
 
     var projection: WorkspaceExplorerProjection {

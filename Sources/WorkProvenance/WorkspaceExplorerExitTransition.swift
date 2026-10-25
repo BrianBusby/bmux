@@ -16,16 +16,13 @@ final class WorkspaceExplorerExitTransition {
                to next: WorkspaceExplorerProjectionResult?,
                scope: WorkspaceExplorerScope,
                filters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey],
-               exitsUnassigned: Bool,
                animated: Bool) {
         cancel()
         guard animated, let previous, let next else { return }
-        let projects = Set(previous.visibleProjectIDs).subtracting(next.visibleProjectIDs)
         let workspaces = Set(previous.visibleWorkspaceIDs).subtracting(next.visibleWorkspaceIDs)
-        guard !projects.isEmpty || !workspaces.isEmpty || exitsUnassigned else { return }
+        guard !workspaces.isEmpty else { return }
         presentation = WorkspaceExplorerExitPresentation(result: previous, scope: scope,
-            filters: filters, exitingProjectIDs: projects, exitsUnassigned: exitsUnassigned,
-            exitingWorkspaceIDs: workspaces)
+            filters: filters, exitingWorkspaceIDs: workspaces)
         // The fade duration is an intentional, bounded presentation delay with cancellation.
         task = Task { [delay] in
             do { try await delay(.milliseconds(170)) } catch { return }

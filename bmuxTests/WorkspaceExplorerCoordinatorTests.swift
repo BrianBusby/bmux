@@ -11,6 +11,36 @@ import Testing
 @Suite @MainActor
 struct WorkspaceExplorerCoordinatorTests {
     @Test
+    func rootShowsWorkspacesAndSupportsGroupingAndFiltering() async {
+        let first = WorkspaceExplorerLiveWorkspace(stableID: UUID(), runtimeID: UUID(),
+            title: "Maple Street Roof Inspection", createdAt: .now,
+            colorHex: nil, display: nil, lastActivityAt: .now, liveStatus: .needsInput)
+        let second = WorkspaceExplorerLiveWorkspace(stableID: UUID(), runtimeID: UUID(),
+            title: "Cedar Street Roof Inspection", createdAt: .now,
+            colorHex: nil, display: nil, lastActivityAt: .now, liveStatus: .idle)
+        let items = WorkspaceExplorerHistoryAdapter().join(live: [first, second], archived: [],
+            eligibilityByID: [:])
+        let model = WorkspaceExplorerCoordinator(
+            loadHistory: { WorkspaceExplorerHistoryLoadResult(items: items,
+                archiveAvailability: .available, partialLiveActivity: false) },
+            reopenHistory: { _ in false }, activateWorkspace: { _ in },
+            loadSessions: { id in ProvenanceWorkspaceSessionPageResponse(
+                workspaceID: id.uuidString, sessions: [], nextCursor: nil) },
+            clearArchive: { })
+        await model.load()
+
+        #expect(model.collectionTarget == nil)
+        #expect(Set(model.result()?.visibleWorkspaceIDs ?? []) ==
+            Set([first.stableID.uuidString, second.stableID.uuidString]))
+        #expect(model.result()?.groups.first?.projectIDs.isEmpty == true)
+
+        model.setGroupBy([.bmuxStatus])
+        #expect(model.result()?.groups.count == 2)
+        model.setFilter(.bmuxStatus, value: .bmuxStatus(.needsInput))
+        #expect(model.result()?.visibleWorkspaceIDs == [first.stableID.uuidString])
+    }
+
+    @Test
     func openingExplorerResetsToAllWorkspacesWithoutFiltersOrGrouping() {
         let model = WorkspaceExplorerCoordinator(
             loadHistory: { WorkspaceExplorerHistoryLoadResult(items: [],
@@ -28,7 +58,7 @@ struct WorkspaceExplorerCoordinatorTests {
 
         model.openAllWorkspacesUnfiltered()
 
-        #expect(model.collectionTarget == .all)
+        #expect(model.collectionTarget == nil)
         #expect(model.historyID == nil)
         #expect(model.scope == WorkspaceExplorerScope(state: .all, period: .anyTime))
         #expect(model.activeArrangement.groupBy.isEmpty)
@@ -161,7 +191,7 @@ struct WorkspaceExplorerCoordinatorTests {
     }
 
     @Test
-    func overviewAndProjectKeepIndependentArrangementsWhileScopeTravels() async {
+    func rootAndProjectKeepIndependentArrangementsWhileScopeTravels() async {
         let model = WorkspaceExplorerCoordinator(
             loadHistory: { WorkspaceExplorerHistoryLoadResult(items: [],
                 archiveAvailability: .available, partialLiveActivity: false) },
@@ -180,7 +210,7 @@ struct WorkspaceExplorerCoordinatorTests {
         model.showHistory("closed")
         model.backFromHistory()
         #expect(model.activeArrangement.groupBy == [.ticket, .pullRequestOwner])
-        model.showOverview()
+        model.showAllWorkspaces()
         #expect(model.scope.state == .all)
         #expect(model.activeArrangement.groupBy == [.repository])
         #expect(model.activeArrangement.filters.isEmpty)
@@ -225,7 +255,7 @@ struct WorkspaceExplorerCoordinatorTests {
         model.setScrollAnchor("project:p1")
         model.showCollection(.project("p1"))
         model.setScrollAnchor("workspace:w1")
-        model.showOverview()
+        model.showAllWorkspaces()
         #expect(model.activeArrangement.scrollAnchorID == "project:p1")
         model.showCollection(.project("p1"))
         #expect(model.activeArrangement.scrollAnchorID == "workspace:w1")

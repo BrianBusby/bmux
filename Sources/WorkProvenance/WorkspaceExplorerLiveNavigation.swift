@@ -92,9 +92,9 @@ final class WorkspaceExplorerLiveNavigation {
         return origin
     }
 
-    func returnToOverview() {
+    func returnToAllWorkspaces() {
         guard let coordinator else { return }
-        coordinator.showOverview()
+        coordinator.showAllWorkspaces()
         raiseExplorer()
     }
 
@@ -103,7 +103,7 @@ final class WorkspaceExplorerLiveNavigation {
         if let target = origin.collectionTarget {
             coordinator.showCollection(target)
         } else {
-            coordinator.showOverview()
+            coordinator.showAllWorkspaces()
         }
         raiseExplorer()
     }

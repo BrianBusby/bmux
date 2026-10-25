@@ -31,6 +31,7 @@ struct WorkspaceExplorerExitTransitionTests {
                try await Task.sleep(for: .seconds(60))
            })
         model.showCollection(.all)
+        model.setScopeState(.open)
         await model.load()
 
         model.setFilter(.bmuxStatus, value: .bmuxStatus(.needsInput), animated: true)

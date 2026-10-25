@@ -7,7 +7,6 @@ struct WorkspaceExplorerGroupSection: View {
     let depth: Int
     let path: String
     let cardGeometry: Namespace.ID
-    let overview: Bool
     let collapsedPaths: Set<String>
     let activeFilters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey]
     let groupedDimensions: Set<WorkspaceExplorerDimension>
@@ -15,20 +14,11 @@ struct WorkspaceExplorerGroupSection: View {
     let repositoryNamesByID: [String: String]
     let itemsByID: [String: WorkspaceExplorerHistoryItem]
     let workspacesByID: [String: WorkspaceExplorerWorkspace]
-    let projectCounts: [String: WorkspaceExplorerCounts]
-    let projectOpenTotals: [String: Int]
     let scope: WorkspaceExplorerScope
-    let now: Date
-    let calendar: Calendar
-    let archiveAvailability: WorkspaceExplorerArchiveAvailability
-    let matchingCounts: [String: Int]
-    let exitingProjectIDs: Set<String>
     let exitingWorkspaceIDs: Set<String>
-    let focusedProjectID: String?
     let activeWorkspaceID: String?
     let reopenedWorkspaceID: String?
     let metadataPending: Bool
-    let onOpenProject: (String) -> Void
     let onOpenWorkspace: (WorkspaceExplorerHistoryItem) -> Void
     let onHistory: (WorkspaceExplorerHistoryItem) -> Void
     let onReopen: (WorkspaceExplorerHistoryItem) -> Void
@@ -90,20 +80,15 @@ struct WorkspaceExplorerGroupSection: View {
                         WorkspaceExplorerGroupSection(group: child, depth: depth + 1,
                             path: path + "/" + child.identity,
                             cardGeometry: cardGeometry,
-                            overview: overview, collapsedPaths: collapsedPaths,
+                            collapsedPaths: collapsedPaths,
                             activeFilters: activeFilters, groupedDimensions: groupedDimensions,
                             projectsByID: projectsByID, repositoryNamesByID: repositoryNamesByID,
                             itemsByID: itemsByID, workspacesByID: workspacesByID,
-                            projectCounts: projectCounts,
-                            projectOpenTotals: projectOpenTotals, scope: scope, now: now, calendar: calendar,
-                            archiveAvailability: archiveAvailability,
-                            matchingCounts: matchingCounts,
-                            exitingProjectIDs: exitingProjectIDs, exitingWorkspaceIDs: exitingWorkspaceIDs,
-                            focusedProjectID: focusedProjectID,
+                            scope: scope, exitingWorkspaceIDs: exitingWorkspaceIDs,
                             activeWorkspaceID: activeWorkspaceID,
                             reopenedWorkspaceID: reopenedWorkspaceID,
                             metadataPending: metadataPending,
-                            onOpenProject: onOpenProject, onOpenWorkspace: onOpenWorkspace,
+                            onOpenWorkspace: onOpenWorkspace,
                             onHistory: onHistory, onReopen: onReopen,
                             onCardFilter: onCardFilter, onToggle: onToggle, onFocus: onFocus,
                             onCardInteractionChanged: onCardInteractionChanged)
@@ -130,55 +115,27 @@ struct WorkspaceExplorerGroupSection: View {
     }
 
     private var cardGrid: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: overview ? 250 : 236), spacing: overview ? 12 : 10)],
-                  spacing: overview ? 12 : 10) {
-            if overview {
-                ForEach(group.projectIDs, id: \.self) { id in
-                    if let project = projectsByID[id] {
-                        WorkspaceExplorerProjectCard(project: project,
-                            counts: projectCounts[id] ?? WorkspaceExplorerCounts([], closedKnown: false),
-                            workspaces: workspacesByID.values.filter { workspace in
-                                workspace.projectIDs.contains(id) && scope.includes(workspace,
-                                    now: now, calendar: calendar)
-                            },
-                            repositoryNamesByID: repositoryNamesByID,
-                            scope: scope, archiveAvailability: archiveAvailability,
-                            openTotal: projectOpenTotals[id] ?? 0,
-                            matchingCount: matchingCounts[id],
-                            isFocused: focusedProjectID == id, titleGeometry: cardGeometry,
-                            onOpen: { onOpenProject(id) },
-                            onInteractionChanged: { onCardInteractionChanged("project:\(id)", $0) })
-                            .id("project:\(id)")
-                            .matchedGeometryEffect(id: "project:\(id)", in: cardGeometry)
-                            .transition(.opacity.combined(with: .scale(scale: 0.98)))
-                            .opacity(exitingProjectIDs.contains(id) ? 0 : 1)
-                            .allowsHitTesting(!exitingProjectIDs.contains(id))
-                            .accessibilityHidden(exitingProjectIDs.contains(id))
-                            .animation(reduceMotion ? nil : .easeOut(duration: 0.17), value: exitingProjectIDs.contains(id))
-                    }
-                }
-            } else {
-                ForEach(group.workspaceIDs, id: \.self) { id in
-                    if let item = itemsByID[id] {
-                        WorkspaceExplorerWorkspaceCard(item: item, isActive: activeWorkspaceID == id,
-                            isReopened: reopenedWorkspaceID == id,
-                            repositoryName: item.display?.repositoryID.flatMap { repositoryNamesByID[$0] },
-                            metadataPending: metadataPending,
-                            arrangedStatus: workspacesByID[id]?.arrangedStatus,
-                            hiddenDimensions: groupedDimensions.union(activeFilters.keys),
-                            onOpen: { onOpenWorkspace(item) },
-                            onHistory: { onHistory(item) },
-                            onReopen: { onReopen(item) },
-                            onFilter: onCardFilter,
-                            onInteractionChanged: { onCardInteractionChanged("workspace:\(id)", $0) })
-                            .id("workspace:\(id)")
-                            .matchedGeometryEffect(id: "workspace:\(id)", in: cardGeometry)
-                            .transition(.opacity.combined(with: .scale(scale: 0.98)))
-                            .opacity(exitingWorkspaceIDs.contains(id) ? 0 : 1)
-                            .allowsHitTesting(!exitingWorkspaceIDs.contains(id))
-                            .accessibilityHidden(exitingWorkspaceIDs.contains(id))
-                            .animation(reduceMotion ? nil : .easeOut(duration: 0.17), value: exitingWorkspaceIDs.contains(id))
-                    }
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 236), spacing: 10)], spacing: 10) {
+            ForEach(group.workspaceIDs, id: \.self) { id in
+                if let item = itemsByID[id] {
+                    WorkspaceExplorerWorkspaceCard(item: item, isActive: activeWorkspaceID == id,
+                        isReopened: reopenedWorkspaceID == id,
+                        repositoryName: item.display?.repositoryID.flatMap { repositoryNamesByID[$0] },
+                        metadataPending: metadataPending,
+                        arrangedStatus: workspacesByID[id]?.arrangedStatus,
+                        hiddenDimensions: groupedDimensions.union(activeFilters.keys),
+                        onOpen: { onOpenWorkspace(item) },
+                        onHistory: { onHistory(item) },
+                        onReopen: { onReopen(item) },
+                        onFilter: onCardFilter,
+                        onInteractionChanged: { onCardInteractionChanged("workspace:\(id)", $0) })
+                        .id("workspace:\(id)")
+                        .matchedGeometryEffect(id: "workspace:\(id)", in: cardGeometry)
+                        .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                        .opacity(exitingWorkspaceIDs.contains(id) ? 0 : 1)
+                        .allowsHitTesting(!exitingWorkspaceIDs.contains(id))
+                        .accessibilityHidden(exitingWorkspaceIDs.contains(id))
+                        .animation(reduceMotion ? nil : .easeOut(duration: 0.17), value: exitingWorkspaceIDs.contains(id))
                 }
             }
         }
@@ -186,15 +143,6 @@ struct WorkspaceExplorerGroupSection: View {
     }
 
     private var groupCount: String {
-        if overview {
-            if scope.state == .all && group.counts.closedKnown {
-                return String(format: String(localized: "explorer.overviewGroupBreakdown", defaultValue:
-                    "%d projects · %d in scope (%d open · %d closed)"), group.projectIDs.count,
-                    group.counts.workspaces, group.counts.open, group.counts.closed)
-            }
-            return String(format: String(localized: "explorer.overviewGroupCount", defaultValue:
-                "%d projects · %d in scope"), group.projectIDs.count, group.counts.workspaces)
-        }
         if scope.state == .all && group.counts.closedKnown {
             return String(format: String(localized: "explorer.workspaceGroupBreakdown", defaultValue:
                 "%d · %d open · %d closed"), group.counts.workspaces,

@@ -46,11 +46,11 @@ struct WorkspaceExplorerLiveNavigationTests {
         #expect(await waitForCount(2, navigation: navigation))
         #expect(navigation.origin(for: workspace.liveWorkspaceID)?.stableID.uuidString == workspace.id)
 
-        model.showOverview()
+        model.showAllWorkspaces()
         navigation.openHistory()
         #expect(model.historyID == workspace.id)
         #expect(model.collectionTarget == .unassigned)
-        navigation.returnToOverview()
+        navigation.returnToAllWorkspaces()
         #expect(model.historyID == nil)
         #expect(model.collectionTarget == nil)
         navigation.returnToCollection()
@@ -68,7 +68,7 @@ struct WorkspaceExplorerLiveNavigationTests {
         let window = NSWindow(contentRect: .zero, styleMask: [], backing: .buffered, defer: false)
         navigation.register(window: window, coordinator: model)
         navigation.opened(item: workspace, target: nil,
-            from: "All projects", loadSessions: { id in
+            from: "All workspaces", loadSessions: { id in
                 ProvenanceWorkspaceSessionPageResponse(workspaceID: id.uuidString,
                     sessions: [], nextCursor: nil, totalCount: 0)
             })
