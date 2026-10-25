@@ -10,9 +10,11 @@ enum WorkspaceExplorerGroupKey: Hashable {
     case project(String)
     case unassigned
 
-    func label(projectNames: [String: String] = [:]) -> String {
+    func label(projectNames: [String: String] = [:],
+               repositoryNames: [String: String] = [:]) -> String {
         switch self {
-        case .value(let value), .missing(let value), .multiple(let value): return value
+        case .value(let value): return repositoryNames[value] ?? value
+        case .missing(let value), .multiple(let value): return value
         case .project(let id): return projectNames[id] ?? id
         case .unassigned: return "Unassigned"
         case .workspaceState(let isClosed): return isClosed ? "Closed" : "Open"

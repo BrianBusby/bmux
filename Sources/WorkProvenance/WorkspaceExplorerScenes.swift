@@ -19,6 +19,8 @@ struct WorkspaceExplorerScenes: Scene {
                 clearArchive: { try await appDelegate.clearWorkspaceExplorerHistory() },
                 liveStatusWorkspaces: { appDelegate.workspaceExplorerLiveWorkspaces() },
                 workspaceTabManagers: { appDelegate.workspaceExplorerTabManagers() },
+                provenanceStartupFailed: { appDelegate.workProvenanceRuntime?.startupErrorDescription != nil },
+                restartApp: { try HostSettingsActions.relaunchApp() },
                 liveNavigation: appDelegate.workspaceExplorerLiveNavigation
             )
             .bmuxAppearanceColorScheme(appearanceMode)

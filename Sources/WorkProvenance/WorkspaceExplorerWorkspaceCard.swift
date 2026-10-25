@@ -6,6 +6,7 @@ struct WorkspaceExplorerWorkspaceCard: View {
     let item: WorkspaceExplorerHistoryItem
     let isActive: Bool
     let isReopened: Bool
+    let repositoryName: String?
     let metadataPending: Bool
     let arrangedStatus: WorkspaceExplorerStatus?
     let hiddenDimensions: Set<WorkspaceExplorerDimension>
@@ -43,7 +44,8 @@ struct WorkspaceExplorerWorkspaceCard: View {
     var body: some View {
         WorkspaceReferenceCardView(
             card: card,
-            repositoryName: hiddenDimensions.contains(.repository) ? nil : item.display?.repositoryID,
+            repositoryName: hiddenDimensions.contains(.repository) ? nil :
+                (repositoryName ?? item.display?.repositoryID),
             isSelected: isActive && item.isOpen,
             canCloseWorkspace: false,
             showsCloseControl: false,
@@ -67,7 +69,7 @@ struct WorkspaceExplorerWorkspaceCard: View {
                 Button(ticket) { onFilter(.ticket, .value(ticket)) }
             }
             if !hiddenDimensions.contains(.repository), let repository = item.display?.repositoryID {
-                Button(repository) { onFilter(.repository, .value(repository)) }
+                Button(repositoryName ?? repository) { onFilter(.repository, .value(repository)) }
             }
             if !hiddenDimensions.contains(.pullRequestOwner),
                let owner = item.display?.pullRequestOwnerLogin {

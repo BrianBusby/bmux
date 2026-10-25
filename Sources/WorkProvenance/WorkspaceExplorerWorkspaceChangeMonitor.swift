@@ -1,13 +1,15 @@
+import Combine
 import Foundation
 import Observation
 
-/// Invalidates an open Explorer when live workspace identities change.
+/// Invalidates an open Explorer when live workspaces or their display facts change.
 @MainActor
 final class WorkspaceExplorerWorkspaceChangeMonitor {
     typealias TabManagers = @MainActor () -> [TabManager]
 
     private let tabManagers: TabManagers
     private var contextTask: Task<Void, Never>?
+    private var displayChanges: AnyCancellable?
     private var managerIDs: [ObjectIdentifier: Set<UUID>] = [:]
     private var onChange: (@MainActor () -> Void)?
     private var hasBoundManagers = false
@@ -19,6 +21,14 @@ final class WorkspaceExplorerWorkspaceChangeMonitor {
         stop()
         self.onChange = onChange
         bindManagers()
+        displayChanges = NotificationCenter.default.publisher(
+            for: WorkProvenanceRuntime.workspaceDisplayCurrentStateDidChangeNotification
+        ).sink { [weak self] notification in
+            guard let self,
+                  let id = notification.object as? UUID,
+                  self.managerIDs.values.contains(where: { $0.contains(id) }) else { return }
+            self.onChange?()
+        }
         contextTask = Task { [weak self] in
             for await _ in NotificationCenter.default.notifications(named: .mainWindowContextsDidChange) {
                 guard !Task.isCancelled else { break }
@@ -30,6 +40,8 @@ final class WorkspaceExplorerWorkspaceChangeMonitor {
     func stop() {
         contextTask?.cancel()
         contextTask = nil
+        displayChanges?.cancel()
+        displayChanges = nil
         managerIDs.removeAll()
         onChange = nil
         hasBoundManagers = false

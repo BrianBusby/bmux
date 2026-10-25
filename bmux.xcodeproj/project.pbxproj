@@ -2117,6 +2117,7 @@
 		103B23B35D0216BE90FD76F3 /* WorkspaceExplorerProjectionResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B2E1DC3876AD45216CB5D9 /* WorkspaceExplorerProjectionResult.swift */; };
 		4FE1124DEA99B38BEE81A68A /* WorkspaceExplorerProjectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerProjectionTests.swift; sourceTree = "<group>"; };
 		8069B759A1281E3496FB25EE /* WorkspaceExplorerProjectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE1124DEA99B38BEE81A68A /* WorkspaceExplorerProjectionTests.swift */; };
+		B52C20400000000000000002 /* WorkspaceExplorerProvenanceNotice.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52C20400000000000000001 /* WorkspaceExplorerProvenanceNotice.swift */; };
 		E7A9EAA73EE74959BA21200E /* WorkspaceExplorerReopenEligibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21200D /* WorkspaceExplorerReopenEligibility.swift */; };
 		E7A9EAA73EE74959BA21200C /* WorkspaceExplorerReopenReason.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21200B /* WorkspaceExplorerReopenReason.swift */; };
 		E7A9EAA73EE74959BA212410 /* WorkspaceExplorerScenes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21240F /* WorkspaceExplorerScenes.swift */; };
@@ -4269,6 +4270,7 @@
 		E71A17900000000000000023 /* WorkspaceExplorerProjectCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceExplorerProjectCard.swift"; sourceTree = "<group>"; };
 		FC673044FFD440013D852111 /* WorkspaceExplorerProjection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerProjection.swift; sourceTree = "<group>"; };
 		38B2E1DC3876AD45216CB5D9 /* WorkspaceExplorerProjectionResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerProjectionResult.swift; sourceTree = "<group>"; };
+		B52C20400000000000000001 /* WorkspaceExplorerProvenanceNotice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceExplorerProvenanceNotice.swift"; sourceTree = "<group>"; };
 		E7A9EAA73EE74959BA21200D /* WorkspaceExplorerReopenEligibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerReopenEligibility.swift; sourceTree = "<group>"; };
 		E7A9EAA73EE74959BA21200B /* WorkspaceExplorerReopenReason.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerReopenReason.swift; sourceTree = "<group>"; };
 		E7A9EAA73EE74959BA21240F /* WorkspaceExplorerScenes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerScenes.swift; sourceTree = "<group>"; };
@@ -6606,6 +6608,7 @@
 				E71A17900000000000000063 /* WorkspaceExplorerLiveNavigation.swift */,
 				E71A17900000000000000065 /* WorkspaceExplorerTitlebarContent.swift */,
 				E71A17900000000000000021 /* WorkspaceExplorerWindowView.swift */,
+				B52C20400000000000000001 /* WorkspaceExplorerProvenanceNotice.swift */,
 				D7B92A51F4E6475085169001 /* WorkspaceExplorerActiveWorkspaceVisibility.swift */,
 				D7B92A51F4E6475085169021 /* WorkspaceExplorerActivityPresentation.swift */,
 				D7B92A51F4E6475085169011 /* WorkspaceExplorerSessionEvidence.swift */,
@@ -8311,6 +8314,7 @@
 				E71A17900000000000000022 /* WorkspaceExplorerProjectCard.swift in Sources */,
 				0FF9E1F0E24FB706A8D2709F /* WorkspaceExplorerProjection.swift in Sources */,
 				103B23B35D0216BE90FD76F3 /* WorkspaceExplorerProjectionResult.swift in Sources */,
+				B52C20400000000000000002 /* WorkspaceExplorerProvenanceNotice.swift in Sources */,
 				E7A9EAA73EE74959BA21200E /* WorkspaceExplorerReopenEligibility.swift in Sources */,
 				E7A9EAA73EE74959BA21200C /* WorkspaceExplorerReopenReason.swift in Sources */,
 				E7A9EAA73EE74959BA212410 /* WorkspaceExplorerScenes.swift in Sources */,

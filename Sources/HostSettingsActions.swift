@@ -113,11 +113,16 @@ final class HostSettingsActions: SettingsHostActions {
     }
 
     func restartApp() {
+        try? Self.relaunchApp()
+    }
+
+    /// Relaunches this exact app bundle and then follows the normal quit flow.
+    static func relaunchApp() throws {
         let bundlePath = Bundle.main.bundlePath
         let task = Process()
         task.launchPath = "/usr/bin/open"
         task.arguments = ["-n", bundlePath]
-        try? task.run()
+        try task.run()
         NSApp.terminate(nil)
     }
 

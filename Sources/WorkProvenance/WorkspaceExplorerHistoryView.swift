@@ -5,6 +5,7 @@ import SwiftUI
 /// Read-only retained sessions for one logical workspace.
 struct WorkspaceExplorerHistoryView: View {
     let item: WorkspaceExplorerHistoryItem
+    let repositoryNamesByID: [String: String]
     let page: ProvenanceWorkspaceSessionPageResponse?
     let period: WorkspaceExplorerScope.Period
     let now: Date
@@ -63,8 +64,8 @@ struct WorkspaceExplorerHistoryView: View {
             }
             if let display = item.archive?.displayAtClose ?? item.display {
                 HStack(spacing: 8) {
-                    Text(display.repositoryID ?? String(localized: "explorer.unknownRepository", defaultValue:
-                        "Unknown repository"))
+                    Text(display.repositoryID.map { repositoryNamesByID[$0] ?? $0 } ??
+                        String(localized: "explorer.unknownRepository", defaultValue: "Unknown repository"))
                     if let branch = display.branch { Text(branch).help(branch) }
                     if let ticket = display.ticketIDs.first { Text(ticket) }
                     if let number = display.pullRequestNumber { Text("#\(number)") }

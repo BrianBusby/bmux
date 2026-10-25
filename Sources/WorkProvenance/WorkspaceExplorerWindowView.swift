@@ -9,6 +9,8 @@ struct WorkspaceExplorerWindowView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var cardGeometry
     let liveNavigation: WorkspaceExplorerLiveNavigation?
+    let provenanceStartupFailed: @MainActor () -> Bool
+    let restartApp: @MainActor () throws -> Void
 
     init(loadPresence: WorkspaceExplorerCoordinator.PresenceLoader? = nil,
          loadHistory: @escaping WorkspaceExplorerCoordinator.Loader,
@@ -20,8 +22,12 @@ struct WorkspaceExplorerWindowView: View {
          clearArchive: @escaping WorkspaceExplorerCoordinator.Clearer,
          liveStatusWorkspaces: @escaping WorkspaceExplorerLiveStatusMonitor.WorkspaceSource,
          workspaceTabManagers: WorkspaceExplorerWorkspaceChangeMonitor.TabManagers? = nil,
+         provenanceStartupFailed: @escaping @MainActor () -> Bool = { false },
+         restartApp: @escaping @MainActor () throws -> Void = {},
          liveNavigation: WorkspaceExplorerLiveNavigation? = nil) {
         self.liveNavigation = liveNavigation
+        self.provenanceStartupFailed = provenanceStartupFailed
+        self.restartApp = restartApp
         _model = State(initialValue: WorkspaceExplorerCoordinator(
             loadHistory: loadHistory, loadPresence: loadPresence, reopenHistory: reopenHistory,
             activateWorkspace: activateWorkspace,
@@ -55,6 +61,12 @@ struct WorkspaceExplorerWindowView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
+                        WorkspaceExplorerProvenanceNotice(
+                            startupFailed: provenanceStartupFailed(),
+                            partialLiveActivity: model.presentedCatalog?.archiveAvailability != .pending &&
+                                model.presentedCatalog?.partialLiveActivity == true,
+                            restartApp: restartApp,
+                            onRetry: { Task { await model.load() } })
                         if let title = WorkspaceExplorerActiveWorkspaceVisibility.outsideTitle(model: model) {
                             notice(String(format: String(localized: "explorer.activeOutsideView", defaultValue:
                                 "Active workspace “%@” is outside the current scope or filters. It stays active."),
@@ -98,11 +110,6 @@ struct WorkspaceExplorerWindowView: View {
                             WorkspaceExplorerArchiveNotice(availability: catalog.archiveAvailability) {
                                 Task { await model.load() }
                             }
-                        }
-                        if model.presentedCatalog?.archiveAvailability != .pending &&
-                            model.presentedCatalog?.partialLiveActivity == true {
-                            notice(String(localized: "explorer.partialActivity", defaultValue:
-                                "Some live activity could not be verified. Time filters may omit those workspaces."))
                         }
                         WorkspaceExplorerPendingWorkspaceSection(items: model.visiblePendingWorkspaceItems,
                             activeWorkspaceID: model.activeWorkspaceID,
@@ -282,6 +289,7 @@ struct WorkspaceExplorerWindowView: View {
                         workspace.projectIDs.isEmpty && model.presentedScope.includes(workspace,
                             now: model.activityArrangement.now, calendar: model.activityArrangement.calendar)
                     },
+                    repositoryNamesByID: model.presentedCatalog?.repositoryNamesByID ?? [:],
                     scope: model.presentedScope, archiveAvailability: model.presentedCatalog?.archiveAvailability ?? .unavailable,
                     openTotal: openTotal,
                     matchingCount: overviewFilters.isEmpty ? nil : unassigned.visibleCounts.workspaces,
@@ -416,6 +424,7 @@ struct WorkspaceExplorerWindowView: View {
             availableDimensions: dimensions,
             projectsByID: Dictionary((model.presentedCatalog?.projects ?? []).map { ($0.id, $0) },
                 uniquingKeysWith: { first, _ in first }),
+            repositoryNamesByID: model.presentedCatalog?.repositoryNamesByID ?? [:],
             canUndo: arrangement.canUndo,
             onGroupBy: { model.setGroupBy($0) },
             onFilter: { model.setFilter($0, value: $1, animated: !reduceMotion) },
@@ -452,6 +461,7 @@ struct WorkspaceExplorerWindowView: View {
             activeFilters: model.presentedFilters,
             groupedDimensions: Set(arrangement.groupBy).union(collectionDimensions),
             projectsByID: Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }),
+            repositoryNamesByID: model.presentedCatalog?.repositoryNamesByID ?? [:],
             itemsByID: Dictionary(items.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }),
             workspacesByID: Dictionary((model.presentedCatalog?.workspaces ?? []).map { ($0.id, $0) },
                 uniquingKeysWith: { first, _ in first }),
@@ -477,7 +487,9 @@ struct WorkspaceExplorerWindowView: View {
     private func history(id: String) -> some View {
         Group {
             if let item = model.presentedCatalog?.items.first(where: { $0.id == id }) {
-                WorkspaceExplorerHistoryView(item: item, page: model.sessionsByWorkspaceID[id],
+                WorkspaceExplorerHistoryView(item: item,
+                    repositoryNamesByID: model.presentedCatalog?.repositoryNamesByID ?? [:],
+                    page: model.sessionsByWorkspaceID[id],
                     period: model.scope.period, now: model.activityArrangement.now, loadFailed: model.sessionLoadFailed,
                     evidenceBySessionID: model.evidenceBySessionID,
                     evidenceLoadingIDs: model.evidenceLoadingIDs,
