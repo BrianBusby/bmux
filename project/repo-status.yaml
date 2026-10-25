@@ -241,6 +241,8 @@ local_caveats:
     status: open
   - id: managed_appearance_startup_fixture_verification
     status: open
+  - id: connected_codex_image_frame_compatibility
+    status: monitoring
   - id: configured_codex_placeholder_startup_dogfood
     status: monitoring
   - id: codex_update_workspace_exit_native_dogfood
