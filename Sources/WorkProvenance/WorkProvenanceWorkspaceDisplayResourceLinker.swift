@@ -22,7 +22,8 @@ struct WorkProvenanceWorkspaceDisplayResourceLinker: Sendable {
     ) async -> (
         ticketIDs: [String],
         ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord],
-        projectLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord]
+        projectLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord],
+        lookupFailures: [WorkProvenanceWorkspaceLinkFacts.LookupFailure]
     ) {
         let resourceEvidence = resourceEvidence(
             pullRequest: pullRequest,
@@ -66,12 +67,13 @@ struct WorkProvenanceWorkspaceDisplayResourceLinker: Sendable {
                 projectLinks: Self.mergedProjectLinks(
                     incomingLinks: resolvedLinks.projectLinks,
                     existingLinks: existingDisplay?.projectLinks ?? []
-                )
+                ),
+                lookupFailures: resolvedLinks.lookupFailures
             )
         }
 
         guard let existingDisplay else {
-            return (ticketIDs: [], ticketLinks: [], projectLinks: [])
+            return (ticketIDs: [], ticketLinks: [], projectLinks: [], lookupFailures: [])
         }
         let ticketFacts = Self.normalizedTicketFacts(
             ticketIDs: existingDisplay.ticketIDs,
@@ -80,7 +82,8 @@ struct WorkProvenanceWorkspaceDisplayResourceLinker: Sendable {
         return (
             ticketIDs: ticketFacts.ids,
             ticketLinks: ticketFacts.links,
-            projectLinks: Self.normalizedProjectLinks(existingDisplay.projectLinks)
+            projectLinks: Self.normalizedProjectLinks(existingDisplay.projectLinks),
+            lookupFailures: []
         )
     }
 

@@ -81,6 +81,28 @@ struct WorkProvenanceObserverTests {
     }
 
     @Test
+    func linearLookupKeepsFailureReasonUntilARecoverySucceeds() async {
+        let linearServer = FakeLinearGraphQLServer(failuresRemaining: 1)
+        let resolver = WorkProvenanceLinearTicketLinkResolver(
+            authorizationHeader: "linear-api-key",
+            usesEnvironmentAuthorization: false,
+            dataProvider: { request in try await linearServer.response(for: request) }
+        )
+
+        let first = await resolver.workspaceLinks(for: ["INP-2409"])
+        #expect(first.projectLinks.isEmpty)
+        #expect(first.lookupFailures == [
+            .init(ticketID: "INP-2409", lookupID: "INP-2409", reason: .httpStatus, httpStatus: 503)
+        ])
+        #expect(await resolver.lastLookupFailures(for: "INP-2409") == first.lookupFailures)
+
+        let second = await resolver.workspaceLinks(for: ["INP-2409"])
+        #expect(second.projectLinks == [Self.linearProjectLink()])
+        #expect(second.lookupFailures.isEmpty)
+        #expect(await resolver.lastLookupFailures(for: "INP-2409").isEmpty)
+    }
+
+    @Test
     func defaultRuntimeStoreObservationCanBeReadThroughPublicCurrentContext() async throws {
         let homeDirectory = FileManager.default.temporaryDirectory
             .appendingPathComponent("bmux-work-provenance-default-home-\(UUID().uuidString)", isDirectory: true)

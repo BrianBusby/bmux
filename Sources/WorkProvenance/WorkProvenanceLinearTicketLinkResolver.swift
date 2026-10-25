@@ -11,6 +11,7 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
     private let webLinkBuilder: LinearWebLinkBuilder
     private let ticketIdentifierAliasMap: LinearTicketIdentifierAliasMap
     private var cache: [String: WorkProvenanceWorkspaceLinkFacts] = [:]
+    private var lastFailuresByTicketID: [String: [WorkProvenanceWorkspaceLinkFacts.LookupFailure]] = [:]
 
     init(
         authorizationHeader: String? = nil,
@@ -43,6 +44,7 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
     func workspaceLinks(for ticketIDs: [String]) async -> WorkProvenanceWorkspaceLinkFacts {
         var ticketLinks: [ProvenanceWorkspaceDisplayTicketLinkRecord] = []
         var projectLinks: [ProvenanceWorkspaceDisplayProjectLinkRecord] = []
+        var lookupFailures: [WorkProvenanceWorkspaceLinkFacts.LookupFailure] = []
         var seenProjectIDs = Set<String>()
         for ticketID in Self.normalizedTicketIDs(ticketIDs) {
             if let cached = cache[ticketID],
@@ -54,7 +56,35 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
                 continue
             }
 
-            let issueFacts = await issueFacts(for: ticketID)
+            let resolution = await issueFacts(for: ticketID)
+            let issueFacts = resolution.facts
+            if resolution.failures.isEmpty {
+                if lastFailuresByTicketID.removeValue(forKey: ticketID) != nil {
+                    StartupBreadcrumbLog.append("linear.lookup.recovered", fields: ["ticketID": ticketID])
+                    NSLog("bmux linear lookup recovered ticket=%@", ticketID)
+                }
+            } else {
+                lastFailuresByTicketID[ticketID] = resolution.failures
+                lookupFailures.append(contentsOf: resolution.failures)
+                for failure in resolution.failures {
+                    let fields = [
+                        "ticketID": failure.ticketID,
+                        "lookupID": failure.lookupID,
+                        "reason": failure.reason.rawValue,
+                        "httpStatus": failure.httpStatus.map { String($0) } ?? "",
+                        "errorDomain": failure.errorDomain ?? "",
+                        "errorCode": failure.errorCode.map { String($0) } ?? "",
+                        "errorMessage": failure.errorMessage ?? ""
+                    ]
+                    StartupBreadcrumbLog.append("linear.lookup.failed", fields: fields)
+                    NSLog(
+                        "bmux linear lookup failed ticket=%@ lookup=%@ reason=%@ http=%@ domain=%@ code=%@ message=%@",
+                        failure.ticketID, failure.lookupID, failure.reason.rawValue,
+                        fields["httpStatus"] ?? "", fields["errorDomain"] ?? "",
+                        fields["errorCode"] ?? "", fields["errorMessage"] ?? ""
+                    )
+                }
+            }
             let ticketLink = ProvenanceWorkspaceDisplayTicketLinkRecord(
                 id: ticketID,
                 system: "linear",
@@ -77,25 +107,42 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
                 projectLinks.append(projectLink)
             }
         }
-        return WorkProvenanceWorkspaceLinkFacts(ticketLinks: ticketLinks, projectLinks: projectLinks)
+        return WorkProvenanceWorkspaceLinkFacts(
+            ticketLinks: ticketLinks, projectLinks: projectLinks, lookupFailures: lookupFailures
+        )
     }
 
-    private func issueFacts(for ticketID: String) async -> LinearIssueFacts {
+    func lastLookupFailures(for ticketID: String) -> [WorkProvenanceWorkspaceLinkFacts.LookupFailure] {
+        lastFailuresByTicketID[ticketID.uppercased()] ?? []
+    }
+
+    private func issueFacts(for ticketID: String) async -> (
+        facts: LinearIssueFacts, failures: [WorkProvenanceWorkspaceLinkFacts.LookupFailure]
+    ) {
         guard let authorizationHeader = await authorizationProvider.authorizationHeader() else {
-            return .empty
+            return (.empty, [.init(ticketID: ticketID, lookupID: ticketID, reason: .missingAuthorization)])
         }
+        var failures: [WorkProvenanceWorkspaceLinkFacts.LookupFailure] = []
         for lookupTicketID in ticketIdentifierAliasMap.lookupCandidates(for: ticketID) {
-            if let facts = await issueFacts(forLookupTicketID: lookupTicketID, authorizationHeader: authorizationHeader) {
-                return facts
+            switch await issueFacts(
+                forLookupTicketID: lookupTicketID,
+                observedTicketID: ticketID,
+                authorizationHeader: authorizationHeader
+            ) {
+            case .success(let facts):
+                return (facts, [])
+            case .failure(let failure):
+                failures.append(failure)
             }
         }
-        return .empty
+        return (.empty, failures)
     }
 
-    private func issueFacts(forLookupTicketID ticketID: String, authorizationHeader: String) async -> LinearIssueFacts? {
-        guard !ticketID.isEmpty else {
-            return nil
-        }
+    private func issueFacts(
+        forLookupTicketID ticketID: String,
+        observedTicketID: String,
+        authorizationHeader: String
+    ) async -> Result<LinearIssueFacts, WorkProvenanceWorkspaceLinkFacts.LookupFailure> {
         var request = URLRequest(url: endpointURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -120,24 +167,45 @@ actor WorkProvenanceLinearTicketLinkResolver: WorkProvenanceTicketLinkResolving 
             """,
             variables: ["id": ticketID]
         ))
-        guard request.httpBody != nil else { return nil }
+        guard request.httpBody != nil else {
+            return .failure(.init(ticketID: observedTicketID, lookupID: ticketID, reason: .invalidResponse))
+        }
 
         do {
             let (data, statusCode) = try await dataProvider(request)
-            guard (200..<300).contains(statusCode) else { return nil }
-            let response = try JSONDecoder().decode(LinearGraphQLResponse.self, from: data)
-            guard response.errors?.isEmpty ?? true,
-                  let issue = response.data?.issue else {
-                return nil
+            guard (200..<300).contains(statusCode) else {
+                return .failure(.init(
+                    ticketID: observedTicketID, lookupID: ticketID,
+                    reason: .httpStatus, httpStatus: statusCode
+                ))
             }
-            return LinearIssueFacts(
+            let response: LinearGraphQLResponse
+            do {
+                response = try JSONDecoder().decode(LinearGraphQLResponse.self, from: data)
+            } catch {
+                return .failure(.init(ticketID: observedTicketID, lookupID: ticketID, reason: .invalidResponse))
+            }
+            guard response.errors?.isEmpty ?? true else {
+                return .failure(.init(
+                    ticketID: observedTicketID, lookupID: ticketID, reason: .graphQLError,
+                    errorMessage: response.errors?.compactMap(\.message).first.map { String($0.prefix(240)) }
+                ))
+            }
+            guard let issue = response.data?.issue else {
+                return .failure(.init(ticketID: observedTicketID, lookupID: ticketID, reason: .missingIssue))
+            }
+            return .success(LinearIssueFacts(
                 title: Self.normalizedNonEmpty(issue.title),
                 url: Self.normalizedNonEmpty(issue.url),
                 assigneeName: Self.normalizedNonEmpty(issue.assignee?.name),
                 projectLink: projectLink(from: issue.project)
-            )
+            ))
         } catch {
-            return nil
+            let nsError = error as NSError
+            return .failure(.init(
+                ticketID: observedTicketID, lookupID: ticketID,
+                reason: .transport, errorDomain: nsError.domain, errorCode: nsError.code
+            ))
         }
     }
 

@@ -356,6 +356,11 @@ final class WorkProvenanceRuntime {
             )
             for await _ in notifications {
                 self?.refreshAllWorkspaceDisplayCurrentState()
+                guard let self, self.acceptsObservationProducerWork,
+                      let observationService = self.observationService,
+                      let tabManager = self.tabManager else { continue }
+                let failedIDs = await observationService.workspaceIDsNeedingEnrichmentRetry()
+                self.observeWorkspaces(tabManager.tabs.filter { failedIDs.contains($0.id) })
             }
         }
     }
