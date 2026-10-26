@@ -53,6 +53,29 @@ import Testing
         #expect(projection.externalNeedsAttention.map(\.id) == [unrelated.id])
     }
 
+    @Test func distinguishesTicketURLAndIDRelationships() {
+        let now = Date(timeIntervalSince1970: 100)
+        let localURL = URL(string: "https://linear.app/acme/issue/CC-42")!
+        let changedURL = URL(string: "https://linear.app/acme/issue/CC-42-new-slug")!
+        let workspace = WorkBriefLocalWorkspace(id: UUID(), runtimeID: UUID(), title: "Roof inspection",
+            repository: nil, branch: nil, tickets: [
+                WorkBriefLink(id: "CC-42", label: "CC-42", url: localURL, source: .linear)],
+            pullRequest: nil, status: .idle, surfaceID: nil, lastActivityAt: now,
+            checkedAt: now, evidence: [])
+        let urlOnly = WorkBriefExternalItem(id: "linear:url-only", source: .linear,
+            title: "Roof inspection", url: localURL, reference: "OTHER-1", repository: nil,
+            owner: nil, status: "Started", updatedAt: now, checkedAt: now,
+            disposition: .inProgress, evidence: [])
+        let idOnly = WorkBriefExternalItem(id: "linear:id-only", source: .linear,
+            title: "Roof inspection", url: changedURL, reference: "CC-42", repository: nil,
+            owner: nil, status: "Started", updatedAt: now, checkedAt: now,
+            disposition: .inProgress, evidence: [])
+        let projection = WorkBriefProjection(snapshot: snapshot([workspace], checkedAt: now,
+            external: [urlOnly, idOnly]))
+        #expect(projection.relationshipEvidenceByExternalID[urlOnly.id]?[workspace.id]?.field == "ticketURLMatch")
+        #expect(projection.relationshipEvidenceByExternalID[idOnly.id]?[workspace.id]?.field == "ticketIDMatch")
+    }
+
     @Test func exactPRLinkSurfacesConflictingStatus() {
         let now = Date(timeIntervalSince1970: 100)
         let url = URL(string: "https://github.com/CompanyCam/mobile/pull/12")!
