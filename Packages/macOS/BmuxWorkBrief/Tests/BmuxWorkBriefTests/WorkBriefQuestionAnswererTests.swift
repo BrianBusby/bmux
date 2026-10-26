@@ -81,6 +81,23 @@ import Testing
         #expect(WorkBriefQuestionAnswerer().answer("Why is CC-42 blocked?", snapshot: snapshot).kind == .noWaitEvidence)
     }
 
+    @Test func changeQuestionNeedsPriorBriefAndUsesCurrentFacts() {
+        let now = Date(timeIntervalSince1970: 100)
+        let old = external("github:12", disposition: .needsAttention, now: now)
+        let baseline = WorkBriefBaseline(snapshot: brief([], external: [old], now: now),
+                                         previous: nil, at: now)
+        let changed = external("github:13", disposition: .needsAttention, now: now)
+        let current = brief([], external: [old, changed], now: now)
+        let answerer = WorkBriefQuestionAnswerer()
+        #expect(answerer.answer("What changed?", snapshot: current).kind == .noPreviousBrief)
+        let answer = answerer.answer("What changed?", snapshot: current,
+                                    previousBrief: baseline)
+        #expect(answer.kind == .recentChanges)
+        #expect(answer.externalIDs == [changed.id])
+        #expect(answerer.answer("何が変わった？", snapshot: current,
+                                previousBrief: baseline).kind == .recentChanges)
+    }
+
     private func external(_ id: String, disposition: WorkBriefExternalItem.Disposition,
                           now: Date) -> WorkBriefExternalItem {
         let number = id.split(separator: ":").last.map(String.init) ?? "12"

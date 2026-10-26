@@ -10,6 +10,10 @@ public struct WorkBriefAnswer: Equatable, Sendable {
         case inProgress
         /// Explicit external review waits.
         case waitingOn
+        /// Verified changes since the previously viewed brief.
+        case recentChanges
+        /// No prior viewed brief is available for a change question.
+        case noPreviousBrief
         /// Ticket and pull-request links observed on the same workspace.
         case ticketPullRequest
         /// No source-backed relationship matched the question.

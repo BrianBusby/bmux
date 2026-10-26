@@ -22,6 +22,8 @@ The first tagged build cannot display changes before a second viewed brief.
 Current cards retain their source links and evidence disclosure. This slice
 uses the same immutable row snapshots and click-only navigation as the local
 Work Brief; background refresh does not select a workspace.
+The Ask section also answers “What changed?” from the same baseline and says
+when a previous brief is unavailable.
 
 Verification: pure baseline tests cover changed stable IDs, failed source
 retention, and expiry; the UI package builds; the app project wires the new

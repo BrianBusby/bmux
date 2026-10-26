@@ -70,7 +70,8 @@ public struct WorkBriefView: View {
                                     "No verified waiting relationships are available yet."))
                         WorkBriefRecentChangesView(snapshot: snapshot, previousBrief: previousBrief,
                             jump: jump, highlight: highlight, openURL: openURL)
-                        WorkBriefAskView(snapshot: snapshot, jump: jump, highlight: highlight,
+                        WorkBriefAskView(snapshot: snapshot, previousBrief: previousBrief,
+                                         jump: jump, highlight: highlight,
                                          openURL: openURL)
                     } else if model.isLoading {
                         ProgressView(String(localized: "workBrief.loading", defaultValue: "Checking work…"))
