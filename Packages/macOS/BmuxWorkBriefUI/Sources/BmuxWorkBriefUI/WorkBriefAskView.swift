@@ -17,6 +17,11 @@ public struct WorkBriefAskView: View {
     @State private var answer: WorkBriefAnswer?
 
     /// Creates an on-demand fact question view without retaining question history.
+    /// - Parameters:
+    ///   - snapshot: Bounded source facts visible in the brief.
+    ///   - jump: Host-validated local workspace selection on user request.
+    ///   - highlight: Host-validated surface flash on user request.
+    ///   - openURL: Source URL opening on user request.
     public init(snapshot: WorkBriefSnapshot, jump: @escaping @MainActor (UUID, UUID) -> Bool,
                 highlight: @escaping @MainActor (UUID, UUID, String) -> Bool,
                 openURL: @escaping @MainActor (URL) -> Void) {
@@ -26,6 +31,7 @@ public struct WorkBriefAskView: View {
         self.openURL = openURL
     }
 
+    /// Shows the question field and source-backed answer rows.
     public var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(String(localized: "workBrief.ask", defaultValue: "Ask"))
@@ -53,6 +59,8 @@ public struct WorkBriefAskView: View {
                     let related = Set(projection.relatedWorkspaceIDs[item.id] ?? [])
                     WorkBriefExternalRow(item: item,
                         relatedWorkspaces: snapshot.localWorkspaces.filter { related.contains($0.id) },
+                        relationshipEvidenceByWorkspaceID:
+                            projection.relationshipEvidenceByExternalID[item.id] ?? [:],
                         health: item.source == .linear ? snapshot.linearHealth : snapshot.githubHealth,
                         hasConflict: projection.conflictingExternalIDs.contains(item.id),
                         jump: jump, openURL: openURL)
@@ -91,10 +99,16 @@ public struct WorkBriefAskView: View {
                 "These items have an explicit review wait in the available sources.")
         case .ticketPullRequest:
             String(localized: "workBrief.askTicketPR", defaultValue:
-                "This pull request is linked to the ticket by accepted local provenance.")
+                "The same workspace has accepted links to this ticket and pull request; their relationship is inferred.")
         case .noEvidence:
             String(localized: "workBrief.askNoEvidence", defaultValue:
-                "No explicit ticket-to-PR link was found. Include the ticket ID and refresh the brief.")
+                "No accepted workspace contains both this ticket and a pull request. Include the ticket ID and refresh the brief.")
+        case .needsReference:
+            String(localized: "workBrief.askNeedsReference", defaultValue:
+                "Name a visible ticket or pull request, or paste its source URL, to ask why it is waiting.")
+        case .noWaitEvidence:
+            String(localized: "workBrief.askNoWaitEvidence", defaultValue:
+                "No observed waiting reason is available for that item. Open its source for more detail.")
         case .unsupported:
             String(localized: "workBrief.askUnsupported", defaultValue:
                 "Try asking about attention, work in progress, waiting, or a ticket's PR.")

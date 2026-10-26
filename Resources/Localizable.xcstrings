@@ -106851,13 +106851,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This pull request is linked to the ticket by accepted local provenance."
+            "value": "The same workspace has accepted links to this ticket and pull request; their relationship is inferred."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "このプルリクエストは、確認済みのローカルの来歴情報でチケットに関連付けられています。"
+            "value": "同じワークスペースに、このチケットとプルリクエストへの確認済みリンクがあります。両者の関係は推定です。"
           }
         }
       }
@@ -106867,13 +106867,45 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No explicit ticket-to-PR link was found. Include the ticket ID and refresh the brief."
+            "value": "No accepted workspace contains both this ticket and a pull request. Include the ticket ID and refresh the brief."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "チケットとプルリクエストの明示的な関連付けが見つかりません。チケットIDを含めて、概要を更新してください。"
+            "value": "このチケットとプルリクエストの両方に確認済みのリンクがあるワークスペースは見つかりません。チケットIDを含めて、概要を更新してください。"
+          }
+        }
+      }
+    },
+    "workBrief.askNeedsReference": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name a visible ticket or pull request, or paste its source URL, to ask why it is waiting."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "待機している理由を尋ねるには、表示中のチケットかプルリクエストを指定するか、情報源のURLを貼り付けてください。"
+          }
+        }
+      }
+    },
+    "workBrief.askNoWaitEvidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No observed waiting reason is available for that item. Open its source for more detail."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この項目について確認できる待機理由はありません。詳細は情報源を開いて確認してください。"
           }
         }
       }

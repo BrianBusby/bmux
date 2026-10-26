@@ -89,7 +89,7 @@ are stated explicitly. Recent changes remain unavailable. No question history
 or external content is persisted. The
 cross-service Work Brief projection is bmux-owned; PE remains the owner of
 durable engineering evidence. The merged local slice remains under observation;
-the external slice awaits tagged dogfood and merge. See [the local record](../planning/work-brief-implementation.md)
+the external and conversation slices await tagged dogfood and merge. See [the local record](../planning/work-brief-implementation.md)
 and [the external record](../planning/work-brief-external.md).
 
 ## Current Generated Truth

@@ -10,10 +10,14 @@ public struct WorkBriefAnswer: Equatable, Sendable {
         case inProgress
         /// Explicit external review waits.
         case waitingOn
-        /// Pull-request links found through an explicit ticket relationship.
+        /// Ticket and pull-request links observed on the same workspace.
         case ticketPullRequest
         /// No source-backed relationship matched the question.
         case noEvidence
+        /// A blocker question lacks a unique visible item reference.
+        case needsReference
+        /// A named item has no observed waiting reason in available facts.
+        case noWaitEvidence
         /// The question is outside the available fact model.
         case unsupported
     }
@@ -28,6 +32,11 @@ public struct WorkBriefAnswer: Equatable, Sendable {
     public let links: [WorkBriefLink]
 
     /// Creates an answer from source-backed IDs and links.
+    /// - Parameters:
+    ///   - kind: Deterministic question category.
+    ///   - localIDs: Matching stable workspace IDs, capped at 20.
+    ///   - externalIDs: Matching provider item IDs, capped at 20.
+    ///   - links: Explicit source URLs, capped at 12.
     public init(kind: Kind, localIDs: [UUID] = [], externalIDs: [String] = [],
                 links: [WorkBriefLink] = []) {
         self.kind = kind
