@@ -1,10 +1,25 @@
 import BmuxWorkBrief
+import BmuxWorkBriefSources
 import Foundation
 
 @MainActor
 extension AppDelegate {
+    /// Combines current local facts with bounded, read-only external summaries.
+    func loadWorkBrief(external: WorkBriefExternalLoader,
+                       forceExternal: Bool) async -> WorkBriefSnapshot {
+        let now = Date()
+        async let local = loadLocalWorkBrief()
+        async let sources = external.refresh(at: now, force: forceExternal)
+        let (localFacts, sourceFacts) = await (local, sources)
+        let (linearFacts, githubFacts) = sourceFacts
+        return WorkBriefSnapshot(localWorkspaces: localFacts.localWorkspaces,
+            externalItems: linearFacts.items + githubFacts.items,
+            localHealth: localFacts.localHealth, linearHealth: linearFacts.health,
+            githubHealth: githubFacts.health, slackHealth: localFacts.slackHealth)
+    }
+
     /// Reads current live facts through the existing Explorer and PE public SDK services.
-    func loadWorkBrief() async -> WorkBriefSnapshot {
+    private func loadLocalWorkBrief() async -> WorkBriefSnapshot {
         do {
             let result = try await loadWorkspaceExplorerLiveBrief()
             let ids = Array(result.items.prefix(32)).compactMap { UUID(uuidString: $0.id) }

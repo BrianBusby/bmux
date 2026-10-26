@@ -5,14 +5,17 @@ import Observation
 @MainActor @Observable
 public final class WorkBriefCoordinator {
     /// Produces a bounded snapshot from current sources.
-    public typealias Loader = @MainActor () async -> WorkBriefSnapshot
+    public typealias Loader = @MainActor (_ forceExternal: Bool) async -> WorkBriefSnapshot
 
     /// Latest source facts.
     public private(set) var snapshot: WorkBriefSnapshot?
     /// Whether a refresh is in progress.
     public private(set) var isLoading = false
+    /// Whether at least one complete loader call has returned in this view.
+    public private(set) var hasLoaded = false
     private let load: Loader
     private var refreshAgain = false
+    private var pendingForceExternal = false
     private var statusChangesDuringRefresh: [UUID: WorkBriefLocalStatus] = [:]
 
     /// Creates the coordinator with an injected source loader.
@@ -25,16 +28,21 @@ public final class WorkBriefCoordinator {
     }
 
     /// Coalesces source notifications while one refresh is in progress.
-    public func refresh() async {
+    public func refresh(forceExternal: Bool = true) async {
         if isLoading {
             refreshAgain = true
+            pendingForceExternal = pendingForceExternal || forceExternal
             return
         }
         isLoading = true
+        pendingForceExternal = forceExternal
         repeat {
             refreshAgain = false
-            let loaded = await load()
+            let force = pendingForceExternal
+            pendingForceExternal = false
+            let loaded = await load(force)
             snapshot = applying(statusChangesDuringRefresh, to: loaded)
+            hasLoaded = true
             statusChangesDuringRefresh.removeAll()
         } while refreshAgain
         isLoading = false
@@ -58,10 +66,12 @@ public final class WorkBriefCoordinator {
             return WorkBriefLocalWorkspace(id: item.id, runtimeID: item.runtimeID,
                 title: item.title, repository: item.repository, branch: item.branch,
                 tickets: item.tickets, pullRequest: item.pullRequest, status: status,
+                pullRequestStatus: item.pullRequestStatus,
                 surfaceID: item.surfaceID, lastActivityAt: item.lastActivityAt,
                 checkedAt: item.checkedAt, evidence: item.evidence)
         }
-        return WorkBriefSnapshot(localWorkspaces: items, localHealth: snapshot.localHealth,
+        return WorkBriefSnapshot(localWorkspaces: items, externalItems: snapshot.externalItems,
+            localHealth: snapshot.localHealth,
             linearHealth: snapshot.linearHealth, githubHealth: snapshot.githubHealth,
             slackHealth: snapshot.slackHealth)
     }

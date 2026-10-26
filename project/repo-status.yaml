@@ -24,8 +24,9 @@ execution_telemetry:
 
 local_capabilities:
   work_brief_local_view: under_observation
-  work_brief_external_correlation: planned
-  work_brief_conversation: planned
+  work_brief_external_correlation: under_observation
+  work_brief_conversation: under_observation
+  work_brief_recent_changes: under_observation
   work_brief_slack_pilot: planned
   matte_skin_theme_tokens: implemented
   matte_skin_surface_styles: implemented
@@ -176,7 +177,8 @@ component_releases:
 
 local_caveats:
   - id: work_brief_external_sources_unavailable
-    status: open
+    # Direct bounded Linear/GitHub reads are available; credentials, scope, and dogfood remain conditional.
+    status: monitoring
   - id: pe_live_storage_reclamation_capacity_and_concurrency
     status: open
   - id: app_host_cancellation_ownership_verification
