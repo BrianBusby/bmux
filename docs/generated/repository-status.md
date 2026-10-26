@@ -128,6 +128,7 @@ Repository: `BrianBusby/bmux`
 | Work Brief Conversation | under observation |
 | Work Brief External Correlation | under observation |
 | Work Brief Local View | under observation |
+| Work Brief Recent Changes | under observation |
 | Work Brief Slack Pilot | planned |
 | Work Provenance Runtime Lifecycle State | under observation |
 | Workspace Coding Agent Session Linkage Hardening | under observation |

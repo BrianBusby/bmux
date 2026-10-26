@@ -106964,6 +106964,38 @@
         "ja": { "stringUnit": { "state": "translated", "value": "確認日時" } }
       }
     },
+    "workBrief.changesSince": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Since your previous brief"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前回の概要以降"
+          }
+        }
+      }
+    },
+    "workBrief.noRecentChanges": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No verified changes in the available sources."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用可能な情報源で確認された変更はありません。"
+          }
+        }
+      }
+    },
     "workBrief.changesUnavailable": {
       "localizations": {
         "en": {

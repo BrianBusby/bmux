@@ -25,6 +25,7 @@ local_capabilities:
   work_brief_local_view: under_observation
   work_brief_external_correlation: under_observation
   work_brief_conversation: under_observation
+  work_brief_recent_changes: under_observation
   work_brief_slack_pilot: planned
   matte_skin_theme_tokens: implemented
   matte_skin_surface_styles: implemented
