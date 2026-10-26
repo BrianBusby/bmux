@@ -2145,6 +2145,8 @@
 		1F830D96A89EEA457CA79352 /* WorkspaceExplorerScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C13DB01A1A56779EB92DA1 /* WorkspaceExplorerScope.swift */; };
 		A9E1C06F8D24453FB2C317AF /* WorkspaceExplorerScopeControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E1C06F8D24453FB2C317AE /* WorkspaceExplorerScopeControls.swift */; };
 		D7B92A51F4E6475085169012 /* WorkspaceExplorerSessionEvidence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7B92A51F4E6475085169011 /* WorkspaceExplorerSessionEvidence.swift */; };
+		A9E1C06F8D24453FB2C317D2 /* WorkspaceExplorerSessionHistoryAdapterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerSessionHistoryAdapterTests.swift; sourceTree = "<group>"; };
+		A9E1C06F8D24453FB2C317D3 /* WorkspaceExplorerSessionHistoryAdapterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E1C06F8D24453FB2C317D2 /* WorkspaceExplorerSessionHistoryAdapterTests.swift */; };
 				FAD145AB2CC344EE8899A001 /* WorkspaceExplorerSessionPageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerSessionPageTests.swift; sourceTree = "<group>"; };
 				FAD145AB2CC344EE8899A002 /* WorkspaceExplorerSessionPageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD145AB2CC344EE8899A001 /* WorkspaceExplorerSessionPageTests.swift */; };
 		8234457C7D9D6A45E2C2F57B /* WorkspaceExplorerStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A75009717859B41DB480B6F /* WorkspaceExplorerStatus.swift */; };
@@ -6540,6 +6542,7 @@
 				BDF402EAB33D4BDF97115899 /* WorkProvenanceRuntimeResolutionTests.swift */,
 					C176A004C176A004C176A004 /* WorkspaceArchiveCaptureTests.swift */,
 				E7A9EAA73EE74959BA212005 /* WorkspaceExplorerHistoryAdapterTests.swift */,
+				A9E1C06F8D24453FB2C317D2 /* WorkspaceExplorerSessionHistoryAdapterTests.swift */,
 				F6B160000000000000000001 /* WorkBriefLocalAdapterTests.swift */,
 				4FE1124DEA99B38BEE81A68A /* WorkspaceExplorerProjectionTests.swift */,
 				E71A17900000000000000067 /* WorkspaceExplorerLiveNavigationTests.swift */,
@@ -9308,6 +9311,7 @@
 				8069B759A1281E3496FB25EE /* WorkspaceExplorerProjectionTests.swift in Sources */,
 				3A18F74DABCA49A6BF5E2FDD /* WorkspaceExplorerRailProjectionTests.swift in Sources */,
 				E71A17900000000000000093 /* WorkspaceExplorerRootNavigationTests.swift in Sources */,
+				A9E1C06F8D24453FB2C317D3 /* WorkspaceExplorerSessionHistoryAdapterTests.swift in Sources */,
 				FAD145AB2CC344EE8899A002 /* WorkspaceExplorerSessionPageTests.swift in Sources */,
 				FBA900000000000000000003 /* WorkspaceFallbackContractTests.swift in Sources */,
 				FBA900000000000000000001 /* WorkspaceFallbackFixture.swift in Sources */,
