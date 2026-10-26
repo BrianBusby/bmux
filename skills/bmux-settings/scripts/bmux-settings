@@ -226,7 +226,15 @@ def supported_paths_from_source(source: Path) -> list[str]:
         "shortcuts.",
     )
     candidates = re.findall(r'"([a-zA-Z]+\.[a-zA-Z0-9_.]+)"', text)
-    return sorted({p for p in candidates if p.startswith(known_sections)})
+    catalog = (source.parent.parent / "Packages" / "macOS" / "BmuxSettings"
+               / "Sources" / "BmuxSettings" / "Keys" / "IntegrationsCatalogSection.swift")
+    if catalog.exists():
+        # JSON/Defaults keys are configurable; KeychainSecretKey is intentionally excluded.
+        candidates.extend(re.findall(
+            r'(?:JSONKey|DefaultsKey)<[^>]+>\s*\(\s*id:\s*"(integrations\.[^"]+)"',
+            catalog.read_text(),
+        ))
+    return sorted({p for p in candidates if p.startswith(known_sections + ("integrations.",))})
 
 
 def supported_paths_from_reference(skill_root: Path | None) -> list[str]:

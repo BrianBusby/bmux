@@ -1281,6 +1281,23 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "workBrief": {
+          "title": "workBrief",
+          "description": "Read-only Work Brief source scopes.",
+          "descriptionKey": "schemaDescriptions.integrations.workBrief.description",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "githubScopes": {
+              "type": "array",
+              "items": { "type": "string" },
+              "maxItems": 4,
+              "default": [],
+              "description": "GitHub organizations or repositories to search for your open PRs and review requests. Use org:Name or repo:Owner/Name. Empty disables GitHub Work Brief search.",
+              "descriptionKey": "schemaDescriptions.integrations.workBrief.githubScopes"
+            }
+          }
+        },
         "linear": {
           "title": "linear",
           "description": "Linear integration settings.",

@@ -1762,6 +1762,10 @@
         },
         "integrations": {
           "description": "External provider credentials and integration settings from Settings > Integrations.",
+          "workBrief": {
+            "description": "Read-only Work Brief source scopes.",
+            "githubScopes": "GitHub organizations or repositories to search for your open PRs and review requests. Use org:Name or repo:Owner/Name. Empty disables GitHub Work Brief search."
+          },
           "linear": {
             "description": "Linear integration settings.",
             "authorizationHeader": "Optional Linear GraphQL Authorization header for headless or managed setups. Prefer the Settings UI Keychain field for interactive use."

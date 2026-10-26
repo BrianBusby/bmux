@@ -407,6 +407,8 @@
 		730600040000000000000001 /* BmuxWindowing in Frameworks */ = {isa = PBXBuildFile; productRef = 5E55200000000000000000B2 /* BmuxWindowing */; };
 		F6B150000000000000000001 /* BmuxWorkBrief in Frameworks */ = {isa = PBXBuildFile; productRef = F6B140000000000000000001 /* BmuxWorkBrief */; };
 		F6B180000000000000000001 /* BmuxWorkBrief in Frameworks */ = {isa = PBXBuildFile; productRef = F6B140000000000000000001 /* BmuxWorkBrief */; };
+		F6B250000000000000000001 /* BmuxWorkBriefSources in Frameworks */ = {isa = PBXBuildFile; productRef = F6B240000000000000000001 /* BmuxWorkBriefSources */; };
+		F6B280000000000000000001 /* BmuxWorkBriefSources in Frameworks */ = {isa = PBXBuildFile; productRef = F6B240000000000000000001 /* BmuxWorkBriefSources */; };
 		F6B150000000000000000002 /* BmuxWorkBriefUI in Frameworks */ = {isa = PBXBuildFile; productRef = F6B140000000000000000002 /* BmuxWorkBriefUI */; };
 		E30750000000000000000004 /* BmuxWorkspaceDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30750000000000000000003 /* BmuxWorkspaceDefinition.swift */; };
 		A19700000000000000000003 /* BmuxWorkspacePersistence in Frameworks */ = {isa = PBXBuildFile; productRef = A19700000000000000000002 /* BmuxWorkspacePersistence */; };
@@ -1931,6 +1933,7 @@
 		379FCC6CA832F1E6DBF82182 /* WKInspectorProbeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229C3735BF880EAE32F7A3E8 /* WKInspectorProbeView.swift */; };
 		B4487608B5DF0A4D043C4DBE /* WKInspectorProbeWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25142C2E16D47119B14A5EB7 /* WKInspectorProbeWebView.swift */; };
 		1D682986D61D5ACCBBAD717E /* WKTransferWrapperView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F54BDBA6CA1817F5E5DF613 /* WKTransferWrapperView.swift */; };
+		F6B120000000000000000005 /* WorkBriefBaselineStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B110000000000000000005 /* WorkBriefBaselineStore.swift */; };
 		F6B120000000000000000004 /* WorkBriefCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B110000000000000000004 /* WorkBriefCommands.swift */; };
 		F6B120000000000000000001 /* WorkBriefLocalAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B110000000000000000001 /* WorkBriefLocalAdapter.swift */; };
 		F6B170000000000000000001 /* WorkBriefLocalAdapterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B160000000000000000001 /* WorkBriefLocalAdapterTests.swift */; };
@@ -4152,6 +4155,7 @@
 		229C3735BF880EAE32F7A3E8 /* WKInspectorProbeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WKInspectorProbeView.swift; sourceTree = "<group>"; };
 		25142C2E16D47119B14A5EB7 /* WKInspectorProbeWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WKInspectorProbeWebView.swift; sourceTree = "<group>"; };
 		3F54BDBA6CA1817F5E5DF613 /* WKTransferWrapperView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WKTransferWrapperView.swift"; sourceTree = "<group>"; };
+		F6B110000000000000000005 /* WorkBriefBaselineStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkBriefBaselineStore.swift"; sourceTree = "<group>"; };
 		F6B110000000000000000004 /* WorkBriefCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkBriefCommands.swift"; sourceTree = "<group>"; };
 		F6B110000000000000000001 /* WorkBriefLocalAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkBriefLocalAdapter.swift"; sourceTree = "<group>"; };
 		F6B160000000000000000001 /* WorkBriefLocalAdapterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkBriefLocalAdapterTests.swift; sourceTree = "<group>"; };
@@ -4478,6 +4482,7 @@
 				CDFEED0600000000CDFEED06 /* BmuxUpdaterUI in Frameworks */,
 				5E55200000000000000000B3 /* BmuxWindowing in Frameworks */,
 				F6B150000000000000000001 /* BmuxWorkBrief in Frameworks */,
+				F6B250000000000000000001 /* BmuxWorkBriefSources in Frameworks */,
 				F6B150000000000000000002 /* BmuxWorkBriefUI in Frameworks */,
 				A19700000000000000000003 /* BmuxWorkspacePersistence in Frameworks */,
 				E3B7A3000000000000000103 /* BmuxWorkspaces in Frameworks */,
@@ -4540,6 +4545,7 @@
 				C0DE4A000000000000000005 /* BmuxSidebarProviderKit in Frameworks */,
 				730600040000000000000001 /* BmuxWindowing in Frameworks */,
 				F6B180000000000000000001 /* BmuxWorkBrief in Frameworks */,
+				F6B280000000000000000001 /* BmuxWorkBriefSources in Frameworks */,
 				B057B0017E57B0017E57B001 /* Bonsplit in Frameworks */,
 				CE1E00000000000000000025 /* ProvenanceEngineContracts in Frameworks */,
 				CE1E00000000000000000026 /* ProvenanceEngineSDK in Frameworks */,
@@ -6700,6 +6706,7 @@
 				F6B110000000000000000002 /* AppDelegate+WorkBrief.swift */,
 				F6B110000000000000000003 /* WorkBriefScenes.swift */,
 				F6B110000000000000000004 /* WorkBriefCommands.swift */,
+				F6B110000000000000000005 /* WorkBriefBaselineStore.swift */,
 				E7A9EAA73EE74959BA21240F /* WorkspaceExplorerScenes.swift */,
 				E7A9EAA73EE74959BA21230F /* WorkspaceExplorerDogfoodWindow.swift */,
 				E7A9EAA73EE74959BA21220F /* WorkspaceExplorerDogfoodFixture.swift */,
@@ -6842,6 +6849,7 @@
 				CD0CFE5500000000CD0CFE55 /* BmuxSettingsUI */,
 				F6B140000000000000000002 /* BmuxWorkBriefUI */,
 				F6B140000000000000000001 /* BmuxWorkBrief */,
+				F6B240000000000000000001 /* BmuxWorkBriefSources */,
 				CDFEED0200000000CDFEED02 /* BmuxUpdater */,
 				CDFEED0500000000CDFEED05 /* BmuxUpdaterUI */,
 				CF00F00000000000000000A2 /* BmuxFoundation */,
@@ -6945,6 +6953,7 @@
 				5E27010400000000000000A4 /* BmuxWorkspaces */,
 				A19700000000000000000004 /* BmuxWorkspacePersistence */,
 				F6B140000000000000000001 /* BmuxWorkBrief */,
+				F6B240000000000000000001 /* BmuxWorkBriefSources */,
 				C9A2B00000000000000000C2 /* BmuxAppKitSupportUI */,
 				D7032A060000000000000002 /* BmuxBrowser */,
 				5E55500000000000000000E2 /* BmuxCommandPalette */,
@@ -7037,6 +7046,7 @@
 				CD0CFE5400000000CD0CFE54 /* XCLocalSwiftPackageReference "BmuxSettingsUI" */,
 				F6B130000000000000000002 /* XCLocalSwiftPackageReference "BmuxWorkBriefUI" */,
 				F6B130000000000000000001 /* XCLocalSwiftPackageReference "BmuxWorkBrief" */,
+				F6B230000000000000000001 /* XCLocalSwiftPackageReference "BmuxWorkBriefSources" */,
 				CDFEED0100000000CDFEED01 /* XCLocalSwiftPackageReference "BmuxUpdater" */,
 				CDFEED0400000000CDFEED04 /* XCLocalSwiftPackageReference "BmuxUpdaterUI" */,
 				CF00F00000000000000000A1 /* XCLocalSwiftPackageReference "BmuxFoundation" */,
@@ -8258,6 +8268,7 @@
 				604500200000000000000001 /* WindowTitleTemplateContext.swift in Sources */,
 				E30760080000000000000002 /* WindowTmuxWorkspacePaneOverlayController.swift in Sources */,
 				A5001209 /* WindowToolbarController.swift in Sources */,
+				F6B120000000000000000005 /* WorkBriefBaselineStore.swift in Sources */,
 				F6B120000000000000000004 /* WorkBriefCommands.swift in Sources */,
 				F6B120000000000000000001 /* WorkBriefLocalAdapter.swift in Sources */,
 				F6B120000000000000000003 /* WorkBriefScenes.swift in Sources */,
@@ -9968,6 +9979,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/macOS/BmuxFoundation;
 		};
+		F6B230000000000000000001 /* XCLocalSwiftPackageReference "BmuxWorkBriefSources" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/macOS/BmuxWorkBriefSources;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -10309,6 +10324,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0C69E6A5FA9B0513E68DF443 /* XCLocalSwiftPackageReference "BMUXMobileCore" */;
 			productName = BMUXMobileCore;
+		};
+		F6B240000000000000000001 /* BmuxWorkBriefSources */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F6B230000000000000000001 /* XCLocalSwiftPackageReference "BmuxWorkBriefSources" */;
+			productName = BmuxWorkBriefSources;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
