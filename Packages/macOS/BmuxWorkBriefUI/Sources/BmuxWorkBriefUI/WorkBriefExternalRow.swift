@@ -36,7 +36,7 @@ public struct WorkBriefExternalRow: View {
             HStack(alignment: .firstTextBaseline) {
                 Text(item.title).font(.headline)
                 Spacer()
-                Text(sourceLabel).font(.caption).foregroundStyle(.secondary)
+                Text(item.source.displayName).font(.caption).foregroundStyle(.secondary)
             }
             HStack(spacing: 8) {
                 Text(item.reference)
@@ -104,16 +104,6 @@ public struct WorkBriefExternalRow: View {
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 12))
-    }
-
-    private var sourceLabel: String {
-        switch item.source {
-        case .github: "GitHub"
-        case .linear: "Linear"
-        case .bmux: "bmux"
-        case .provenanceEngine: "Provenance Engine"
-        case .slack: "Slack"
-        }
     }
 
     private var statusLabel: String {

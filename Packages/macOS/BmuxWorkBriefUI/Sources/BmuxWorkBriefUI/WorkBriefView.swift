@@ -95,8 +95,8 @@ public struct WorkBriefView: View {
             Text(String(localized: "workBrief.sourceHealth", defaultValue: "Source health"))
                 .font(.headline)
             Text(localHealthLabel(snapshot.localHealth))
-            healthRow("Linear", health: snapshot.linearHealth)
-            healthRow("GitHub", health: snapshot.githubHealth)
+            healthRow(WorkBriefSource.linear.displayName, health: snapshot.linearHealth)
+            healthRow(WorkBriefSource.github.displayName, health: snapshot.githubHealth)
             Text(String(localized: "workBrief.slackNotConfigured", defaultValue:
                 "Slack is not configured for this brief."))
         }
