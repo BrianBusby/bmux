@@ -29,7 +29,9 @@ import Testing
             repository: "companycam-mobile", branch: "CC-42-roof", tickets: [
                 WorkBriefLink(id: "CC-42", label: "CC-42", url: url, source: .linear)],
             pullRequest: nil, status: .running, surfaceID: nil, lastActivityAt: now,
-            checkedAt: now, evidence: [])
+            checkedAt: now, evidence: [WorkBriefEvidence(id: "ticket-event", source: .provenanceEngine,
+                field: "ticket", isObserved: true, checkedAt: now, url: url,
+                referenceID: "pe-event-42")])
         let branchOnly = workspace(status: .running, checkedAt: now)
         let external = WorkBriefExternalItem(id: "linear:uuid-42", source: .linear,
             title: "Roof inspection", url: url, reference: "CC-42", repository: nil,
@@ -42,7 +44,11 @@ import Testing
         let projection = WorkBriefProjection(snapshot: snapshot([linked, branchOnly],
             checkedAt: now, external: [external, unrelated]))
         #expect(projection.relatedWorkspaceIDs[external.id] == [linked.id])
+        #expect(projection.relationshipEvidenceByExternalID[external.id]?[linked.id]?.field == "ticketLinkMatch")
+        #expect(projection.relationshipEvidenceByExternalID[external.id]?[linked.id]?.isObserved == false)
+        #expect(projection.relationshipEvidenceByExternalID[external.id]?[linked.id]?.referenceID == "pe-event-42")
         #expect(projection.relatedWorkspaceIDs[unrelated.id] == [])
+        #expect(projection.relationshipEvidenceByExternalID[unrelated.id]?.isEmpty == true)
         #expect(projection.externalInProgress.isEmpty)
         #expect(projection.externalNeedsAttention.map(\.id) == [unrelated.id])
     }
@@ -62,6 +68,8 @@ import Testing
         let projection = WorkBriefProjection(snapshot: snapshot([local], checkedAt: now,
             external: [external]))
         #expect(projection.relatedWorkspaceIDs[external.id] == [local.id])
+        #expect(projection.relationshipEvidenceByExternalID[external.id]?[local.id]?.field == "pullRequestURLMatch")
+        #expect(projection.relationshipEvidenceByExternalID[external.id]?[local.id]?.isObserved == false)
         #expect(projection.conflictingExternalIDs == [external.id])
     }
 

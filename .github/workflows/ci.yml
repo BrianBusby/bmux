@@ -1219,6 +1219,8 @@ jobs:
             BmuxGit
             BmuxSettings
             BmuxSettingsUI
+            BmuxWorkBrief
+            BmuxWorkBriefSources
             # Includes the Explorer activity-clock regression suite.
             BmuxWorkspaces
             BmuxTerminal
