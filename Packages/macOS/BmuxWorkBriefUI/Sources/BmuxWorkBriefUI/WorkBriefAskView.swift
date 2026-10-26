@@ -13,6 +13,7 @@ public struct WorkBriefAskView: View {
     public let openURL: @MainActor (URL) -> Void
 
     @State private var question = ""
+    @State private var submittedQuestion: String?
     @State private var answer: WorkBriefAnswer?
 
     /// Creates an on-demand fact question view without retaining question history.
@@ -59,12 +60,17 @@ public struct WorkBriefAskView: View {
             }
         }
         .onChange(of: snapshot) { _, updated in
-            if answer != nil { answer = WorkBriefQuestionAnswerer().answer(question, snapshot: updated) }
+            if let submittedQuestion {
+                answer = WorkBriefQuestionAnswerer().answer(submittedQuestion, snapshot: updated)
+            }
         }
     }
 
     private func ask() {
-        answer = WorkBriefQuestionAnswerer().answer(question, snapshot: snapshot)
+        let submitted = question.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !submitted.isEmpty else { return }
+        submittedQuestion = submitted
+        answer = WorkBriefQuestionAnswerer().answer(submitted, snapshot: snapshot)
     }
 
     private func answerLabel(_ answer: WorkBriefAnswer) -> String {
