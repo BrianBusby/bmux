@@ -26,21 +26,15 @@ actor WorkProvenanceWorkspaceArchiveService {
         return records
     }
 
-    /// Reads every retained workspace identity with observed session evidence.
-    func workspacesWithSessions() async throws -> [ProvenanceWorkspaceHistorySummary] {
-        var workspaces: [ProvenanceWorkspaceHistorySummary] = []
-        var cursor: String?
-        var seenCursors: Set<String> = []
-        repeat {
-            try Task.checkCancellation()
-            let page = try await client.workspaceHistory(.init(limit: 500, cursor: cursor))
-            workspaces.append(contentsOf: page.workspaces)
-            cursor = page.nextCursor
-            if let cursor, !seenCursors.insert(cursor).inserted {
-                throw WorkspaceArchivePaginationError.repeatedCursor
-            }
-        } while cursor != nil
-        return workspaces
+    /// Reads one bounded page of retained workspace identities with session evidence.
+    func workspacesWithSessions(cursor: String? = nil) async throws -> ProvenanceWorkspaceHistoryPageResponse {
+        try Task.checkCancellation()
+        return try await client.workspaceHistory(.init(limit: 25, cursor: cursor))
+    }
+
+    /// Reads compact filter metadata independently of the cursor-paged history rows.
+    func workspaceHistoryFacets() async throws -> [ProvenanceWorkspaceHistoryFacet] {
+        try await client.workspaceHistoryFacets().facets
     }
 
     /// Resolves stable repository identities to names already recorded by Provenance Engine.
@@ -60,7 +54,7 @@ actor WorkProvenanceWorkspaceArchiveService {
 
     func workspaceSessions(
         stableWorkspaceID: UUID,
-        limit: Int = 50,
+        limit: Int = 25,
         cursor: String? = nil
     ) async throws -> ProvenanceWorkspaceSessionPageResponse {
         try await client.workspaceSessions(.init(

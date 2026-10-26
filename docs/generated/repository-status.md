@@ -144,6 +144,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Explorer Close Journal | under observation |
 | Workspace Explorer Close Recovery | under observation |
 | Workspace Explorer Cross Run Session History | under observation |
+| Workspace Explorer Cross Run Session Paging | under observation |
 | Workspace Explorer Embedded Workbench | under observation |
 | Workspace Explorer Filter Transition | under observation |
 | Workspace Explorer Group Accessibility | under observation |

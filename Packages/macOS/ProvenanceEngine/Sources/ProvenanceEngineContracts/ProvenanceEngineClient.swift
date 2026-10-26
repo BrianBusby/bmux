@@ -79,6 +79,12 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
     func workspaceHistory(_ request: ProvenanceWorkspaceHistoryPageRequest) async throws
         -> ProvenanceWorkspaceHistoryPageResponse
 
+    /// Returns retained workspace filter facts without fetching session-history pages.
+    ///
+    /// - Returns: Metadata for filter choices after the latest archive-history clear.
+    /// - Throws: A store or query error when filter facts cannot be read.
+    func workspaceHistoryFacets() async throws -> ProvenanceWorkspaceHistoryFacetsResponse
+
     /// Explicitly clears retained closed-workspace metadata snapshots.
     ///
     /// This does not erase the immutable provenance ledger or session evidence.
@@ -229,6 +235,13 @@ public extension ProvenanceEngineClient {
     /// - Throws: ``ProvenanceWorkspaceArchiveUnavailableError``.
     func workspaceHistory(_ request: ProvenanceWorkspaceHistoryPageRequest) async throws
         -> ProvenanceWorkspaceHistoryPageResponse {
+        throw ProvenanceWorkspaceArchiveUnavailableError()
+    }
+
+    /// Explicit unavailable result for clients without workspace history filter queries.
+    /// - Returns: This default implementation never returns filter facts.
+    /// - Throws: ``ProvenanceWorkspaceArchiveUnavailableError``.
+    func workspaceHistoryFacets() async throws -> ProvenanceWorkspaceHistoryFacetsResponse {
         throw ProvenanceWorkspaceArchiveUnavailableError()
     }
 

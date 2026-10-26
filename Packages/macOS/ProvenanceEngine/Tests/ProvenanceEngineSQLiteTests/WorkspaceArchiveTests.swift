@@ -136,6 +136,16 @@ struct WorkspaceArchiveTests {
                 timestamp: session.updatedAt, sessionID: id, source: .observed,
                 confidence: .high, payload: ProvenanceEventPayload(session: session)))
         }
+        let display = ProvenanceWorkspaceDisplayRecord(id: "display-other-run-b",
+            workspaceID: "other-run-b", repositoryID: repo.id,
+            pullRequestOwnerLogin: "brian",
+            projectLinks: [.init(id: "maple-roof", title: "Maple Roof")],
+            observedAt: base.addingTimeInterval(210),
+            updatedAt: base.addingTimeInterval(210))
+        try await repository.appendEvent(ProvenanceEvent(eventType: .workspaceDisplayObserved,
+            timestamp: display.observedAt, repositoryID: repo.id,
+            source: .observed, confidence: .high,
+            payload: ProvenanceEventPayload(workspaceDisplay: display)))
         let first = try await repository.workspaceHistory(.init(limit: 1))
         #expect(first.workspaces.map(\.id) == ["other-run-b"])
         #expect(first.workspaces.first?.lastKnownDirectory == "/work/other-run-b")
@@ -144,8 +154,14 @@ struct WorkspaceArchiveTests {
         #expect(second.workspaces.map(\.id) == ["other-run-a"])
         #expect(second.workspaces.first?.lastActivityAt == base.addingTimeInterval(100))
         #expect(second.nextCursor == nil)
+        let facets = try await repository.workspaceHistoryFacets().facets
+        #expect(facets.map(\.workspaceID) == ["other-run-b", "other-run-a"])
+        #expect(facets.first?.repositoryID == repo.id)
+        #expect(facets.first?.projectLinks.map(\.id) == ["maple-roof"])
+        #expect(facets.first?.pullRequestOwnerLogin == "brian")
         try await repository.clearArchivedWorkspaces(at: base.addingTimeInterval(150))
         #expect(try await repository.workspaceHistory(.init()).workspaces.map(\.id) == ["other-run-b"])
+        #expect(try await repository.workspaceHistoryFacets().facets.map(\.workspaceID) == ["other-run-b"])
     }
 
     @Test

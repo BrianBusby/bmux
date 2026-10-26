@@ -11,6 +11,7 @@ struct WorkspaceExplorerScenes: Scene {
                                 onActivateWorkspace: (@MainActor (UUID) -> Void)? = nil) -> WorkspaceExplorerCoordinator {
         WorkspaceExplorerCoordinator(
             loadHistory: { try await appDelegate.loadWorkspaceExplorerHistory() },
+            loadMoreHistory: { try await appDelegate.loadMoreWorkspaceExplorerHistory(cursor: $0) },
             loadPresence: { appDelegate.workspaceExplorerPresence() },
             reopenHistory: { appDelegate.reopenWorkspaceExplorerHistory(stableID: $0) },
             activateWorkspace: { id in

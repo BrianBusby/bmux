@@ -51,11 +51,15 @@ extension AppDelegate {
         return try await workspaceExplorerHistoryService().load()
     }
 
+    func loadMoreWorkspaceExplorerHistory(cursor: String) async throws -> WorkspaceExplorerHistoryLoadResult {
+        try await workspaceExplorerHistoryService().moreSessionWorkspaces(cursor: cursor)
+    }
+
     func workspaceExplorerPresence() -> WorkspaceExplorerHistoryLoadResult {
         workspaceExplorerHistoryService().presenceSnapshot()
     }
 
-    func workspaceExplorerSessions(stableID: UUID, limit: Int = 50, cursor: String? = nil) async throws
+    func workspaceExplorerSessions(stableID: UUID, limit: Int = 25, cursor: String? = nil) async throws
         -> ProvenanceWorkspaceSessionPageResponse {
         try await workspaceExplorerHistoryService().sessions(stableID: stableID, limit: limit, cursor: cursor)
     }

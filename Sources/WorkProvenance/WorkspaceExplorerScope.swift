@@ -19,8 +19,12 @@ struct WorkspaceExplorerScope: Equatable {
         default:
             break
         }
+        return includes(activityAt: workspace.lastActivityAt, now: now, calendar: calendar)
+    }
+
+    func includes(activityAt activity: Date?, now: Date, calendar: Calendar) -> Bool {
         guard period != .anyTime else { return true }
-        guard let activity = workspace.lastActivityAt else { return false }
+        guard let activity else { return false }
         let start: Date
         switch period {
         case .anyTime: return true

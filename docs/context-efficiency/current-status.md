@@ -69,8 +69,12 @@ their live or closed state cannot be verified by the current process. The
 Explorer's Past scope includes both archived closures and session-only history.
 The existing archive-history clear marker also hides session-derived workspace
 identities whose last observed activity predates the clear, without erasing
-session evidence. This slice remains under observation pending tagged-build
-dogfood of history counts, filtering, and detail pagination.
+session evidence. The next slice bounds both workspace-history and per-workspace
+session requests to 25 records per cursor page. Explorer keeps loaded pages,
+offers a continuation action, and follows further pages when a filter needs
+more matching historical rows. A compact PE facet read supplies filter choices
+before their cards are loaded. This remains under observation pending
+tagged-build dogfood of counts, filter options, and detail pagination.
 
 ## Current Generated Truth
 

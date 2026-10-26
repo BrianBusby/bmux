@@ -106206,6 +106206,57 @@
         }
       }
     },
+    "explorer.loadedHistoryPrefix": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loaded: "
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "読み込み済み: "
+          }
+        }
+      }
+    },
+    "explorer.loadMoreHistory": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load more history"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "履歴をさらに読み込む"
+          }
+        }
+      }
+    },
+    "explorer.retryMoreHistory": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry loading history"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "履歴の読み込みを再試行"
+          }
+        }
+      }
+    },
     "explorer.loadMoreSessions": {
       "localizations": {
         "en": {

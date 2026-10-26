@@ -68,10 +68,15 @@ Explorer reads paged `workspaceHistory(...)` summaries from PE to find stable
 workspace identities with retained coding-agent sessions across bmux runs. It
 joins those summaries to current-run presence and close archives by workspace
 ID. A session-only identity remains read-only history: bmux cannot verify from
-PE evidence whether another run still has that workspace open. Clearing
-Explorer history hides session-derived workspace identities whose last observed
-activity predates the clear, while the underlying session evidence remains
-available through session reads.
+PE evidence whether another run still has that workspace open. Explorer requests
+25 workspace summaries or workspace sessions at a time through PE cursors.
+A separate compact facet read supplies repository, project, and owner filter
+choices across the retained history. Filtering preserves the selected predicate
+while Explorer follows additional workspace-history pages to fill the visible
+result. Clearing Explorer history
+hides session-derived workspace identities whose last observed activity predates
+the clear, while the underlying session evidence remains available through
+session reads.
 
 ## Runtime Store
 

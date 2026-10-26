@@ -40,7 +40,7 @@ enum WorkspaceExplorerCountPresentation {
                            scope: WorkspaceExplorerScope,
                            archiveAvailability: WorkspaceExplorerArchiveAvailability,
                            liveMetadataPending: Bool,
-                           hasFilters: Bool) -> String {
+                           hasFilters: Bool, historyHasMore: Bool = false) -> String {
         if liveMetadataPending && scope.period != .anyTime {
             return loadingActivity + " · " + scope.summary
         }
@@ -63,8 +63,10 @@ enum WorkspaceExplorerCountPresentation {
                 "%d open · %d past"), result.counts.open, result.counts.closed)
         }
         total += " · " + scope.summary
-        guard hasFilters else { return total }
-        return String(format: String(localized: "explorer.visibleOfTotal", defaultValue: "%d of %@"),
+        let loadedPrefix = historyHasMore && scope.state != .open ?
+            String(localized: "explorer.loadedHistoryPrefix", defaultValue: "Loaded: ") : ""
+        guard hasFilters else { return loadedPrefix + total }
+        return loadedPrefix + String(format: String(localized: "explorer.visibleOfTotal", defaultValue: "%d of %@"),
             result.visibleCounts.workspaces, total)
     }
 

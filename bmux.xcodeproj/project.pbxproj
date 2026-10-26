@@ -2083,6 +2083,7 @@
 				E71A17900000000000000010 /* WorkspaceExplorerCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000011 /* WorkspaceExplorerCatalog.swift */; };
 		852988320891EF575F713B6E /* WorkspaceExplorerCollectionTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91677B4922B4D293ACAB5E79 /* WorkspaceExplorerCollectionTarget.swift */; };
 		E7A9EAA73EE74959BA212510 /* WorkspaceExplorerCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21250F /* WorkspaceExplorerCommands.swift */; };
+		A9E1C06F8D24453FB2C317C1 /* WorkspaceExplorerCoordinator+HistoryPaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E1C06F8D24453FB2C317C0 /* WorkspaceExplorerCoordinator+HistoryPaging.swift */; };
 		88CC988060164D58B37D9341 /* WorkspaceExplorerCoordinator+LiveRail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9E2AC65D3D34B379E5E2000 /* WorkspaceExplorerCoordinator+LiveRail.swift */; };
 				E71A17900000000000000012 /* WorkspaceExplorerCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000013 /* WorkspaceExplorerCoordinator.swift */; };
 				E71A17900000000000000041 /* WorkspaceExplorerCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCoordinatorTests.swift; sourceTree = "<group>"; };
@@ -2108,6 +2109,7 @@
 		E7A9EAA73EE74959BA212006 /* WorkspaceExplorerHistoryAdapterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA212005 /* WorkspaceExplorerHistoryAdapterTests.swift */; };
 		E7A9EAA73EE74959BA212012 /* WorkspaceExplorerHistoryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA212011 /* WorkspaceExplorerHistoryItem.swift */; };
 		E7A9EAA73EE74959BA212016 /* WorkspaceExplorerHistoryLoadResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA212015 /* WorkspaceExplorerHistoryLoadResult.swift */; };
+		A9E1C06F8D24453FB2C317C3 /* WorkspaceExplorerHistoryPageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E1C06F8D24453FB2C317C2 /* WorkspaceExplorerHistoryPageStore.swift */; };
 		A9E1C06F8D24453FB2C317AB /* WorkspaceExplorerHistoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E1C06F8D24453FB2C317AA /* WorkspaceExplorerHistoryService.swift */; };
 				E71A17900000000000000036 /* WorkspaceExplorerHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000037 /* WorkspaceExplorerHistoryView.swift */; };
 		E71A17900000000000000060 /* WorkspaceExplorerLiveBreadcrumb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000061 /* WorkspaceExplorerLiveBreadcrumb.swift */; };
@@ -4256,6 +4258,7 @@
 				E71A17900000000000000011 /* WorkspaceExplorerCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCatalog.swift; sourceTree = "<group>"; };
 		91677B4922B4D293ACAB5E79 /* WorkspaceExplorerCollectionTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCollectionTarget.swift; sourceTree = "<group>"; };
 		E7A9EAA73EE74959BA21250F /* WorkspaceExplorerCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCommands.swift; sourceTree = "<group>"; };
+		A9E1C06F8D24453FB2C317C0 /* WorkspaceExplorerCoordinator+HistoryPaging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceExplorerCoordinator+HistoryPaging.swift"; sourceTree = "<group>"; };
 		B9E2AC65D3D34B379E5E2000 /* WorkspaceExplorerCoordinator+LiveRail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceExplorerCoordinator+LiveRail.swift"; sourceTree = "<group>"; };
 				E71A17900000000000000013 /* WorkspaceExplorerCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerCoordinator.swift; sourceTree = "<group>"; };
 		A9E1C06F8D24453FB2C317B1 /* WorkspaceExplorerCountPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceExplorerCountPresentation.swift"; sourceTree = "<group>"; };
@@ -4275,6 +4278,7 @@
 		E7A9EAA73EE74959BA212003 /* WorkspaceExplorerHistoryAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerHistoryAdapter.swift; sourceTree = "<group>"; };
 		E7A9EAA73EE74959BA212011 /* WorkspaceExplorerHistoryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerHistoryItem.swift; sourceTree = "<group>"; };
 		E7A9EAA73EE74959BA212015 /* WorkspaceExplorerHistoryLoadResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerHistoryLoadResult.swift; sourceTree = "<group>"; };
+		A9E1C06F8D24453FB2C317C2 /* WorkspaceExplorerHistoryPageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceExplorerHistoryPageStore.swift"; sourceTree = "<group>"; };
 		A9E1C06F8D24453FB2C317AA /* WorkspaceExplorerHistoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceExplorerHistoryService.swift"; sourceTree = "<group>"; };
 				E71A17900000000000000037 /* WorkspaceExplorerHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkspaceExplorerHistoryView.swift"; sourceTree = "<group>"; };
 		E71A17900000000000000061 /* WorkspaceExplorerLiveBreadcrumb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerLiveBreadcrumb.swift; sourceTree = "<group>"; };
@@ -6659,6 +6663,8 @@
 				E7A9EAA73EE74959BA212015 /* WorkspaceExplorerHistoryLoadResult.swift */,
 				E7A9EAA73EE74959BA212009 /* AppDelegate+WorkspaceExplorerReopen.swift */,
 				E7A9EAA73EE74959BA212007 /* AppDelegate+WorkspaceExplorerHistory.swift */,
+				A9E1C06F8D24453FB2C317C0 /* WorkspaceExplorerCoordinator+HistoryPaging.swift */,
+				A9E1C06F8D24453FB2C317C2 /* WorkspaceExplorerHistoryPageStore.swift */,
 				A9E1C06F8D24453FB2C317AA /* WorkspaceExplorerHistoryService.swift */,
 				A9E1C06F8D24453FB2C317AC /* WorkspaceExplorerArchiveNotice.swift */,
 				A1B2C3D4E5F6012345678911 /* WorkspaceExplorerEmptyCollectionView.swift */,
@@ -8315,6 +8321,7 @@
 				E71A17900000000000000010 /* WorkspaceExplorerCatalog.swift in Sources */,
 				852988320891EF575F713B6E /* WorkspaceExplorerCollectionTarget.swift in Sources */,
 				E7A9EAA73EE74959BA212510 /* WorkspaceExplorerCommands.swift in Sources */,
+				A9E1C06F8D24453FB2C317C1 /* WorkspaceExplorerCoordinator+HistoryPaging.swift in Sources */,
 				88CC988060164D58B37D9341 /* WorkspaceExplorerCoordinator+LiveRail.swift in Sources */,
 				E71A17900000000000000012 /* WorkspaceExplorerCoordinator.swift in Sources */,
 				A9E1C06F8D24453FB2C317B0 /* WorkspaceExplorerCountPresentation.swift in Sources */,
@@ -8334,6 +8341,7 @@
 				E7A9EAA73EE74959BA212004 /* WorkspaceExplorerHistoryAdapter.swift in Sources */,
 				E7A9EAA73EE74959BA212012 /* WorkspaceExplorerHistoryItem.swift in Sources */,
 				E7A9EAA73EE74959BA212016 /* WorkspaceExplorerHistoryLoadResult.swift in Sources */,
+				A9E1C06F8D24453FB2C317C3 /* WorkspaceExplorerHistoryPageStore.swift in Sources */,
 				A9E1C06F8D24453FB2C317AB /* WorkspaceExplorerHistoryService.swift in Sources */,
 				E71A17900000000000000036 /* WorkspaceExplorerHistoryView.swift in Sources */,
 				E71A17900000000000000060 /* WorkspaceExplorerLiveBreadcrumb.swift in Sources */,

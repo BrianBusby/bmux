@@ -43,6 +43,10 @@ extension ProvenanceSQLiteRepository: ProvenanceEngineClient {
         try workspaceHistoryPage(request)
     }
 
+    func workspaceHistoryFacets() async throws -> ProvenanceWorkspaceHistoryFacetsResponse {
+        try workspaceHistoryFilterFacets()
+    }
+
     func appendEvent(_ request: ProvenanceAppendEventRequest) async throws -> ProvenanceAppendEventResponse {
         try appendEvent(request.event)
         return ProvenanceAppendEventResponse(

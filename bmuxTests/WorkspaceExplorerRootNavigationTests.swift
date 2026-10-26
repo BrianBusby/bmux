@@ -40,6 +40,91 @@ struct WorkspaceExplorerRootNavigationTests {
     }
 
     @Test
+    func rootReadsTwentyFiveHistoricalWorkspacesPerCursorPage() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-explorer-pages-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(
+            databaseURL: directory.appendingPathComponent("provenance.sqlite"))
+        let base = Date(timeIntervalSince1970: 1_800_000_000)
+        for index in 0..<27 {
+            let session = ProvenanceSessionRecord(id: "other-run-\(index)", agentKind: "codex",
+                workspaceID: UUID().uuidString, status: "completed",
+                startedAt: base.addingTimeInterval(Double(index)),
+                updatedAt: base.addingTimeInterval(Double(index)))
+            _ = try await client.appendEvent(.init(event: .init(eventType: .sessionObserved,
+                timestamp: session.updatedAt, sessionID: session.id, source: .observed,
+                confidence: .high, payload: .init(session: session))))
+        }
+        let service = WorkspaceExplorerHistoryService(
+            archiveService: WorkProvenanceWorkspaceArchiveService(client: client),
+            tabManagers: { [] }, activeWorkspaceID: { nil }, restoreRecords: { [:] },
+            reopenEligibility: { _, _, _ in .unavailable(.noRestoreSnapshot) })
+
+        let first = try await service.load()
+        #expect(first.items.count == 25)
+        let cursor = try #require(first.nextHistoryCursor)
+        let second = try await service.moreSessionWorkspaces(cursor: cursor)
+        #expect(second.items.count == 2)
+        #expect(second.nextHistoryCursor == nil)
+        #expect(Set(first.items.map(\.id)).isDisjoint(with: Set(second.items.map(\.id))))
+    }
+
+    @Test
+    func repositoryFilterContinuesThroughPagesUntilTwentyFiveMatches() async {
+        let first = Self.historyItems(count: 25, repository: "other")
+        let skipped = Self.historyItems(count: 25, repository: "other")
+        let matching = Self.historyItems(count: 25, repository: "maple")
+        let laterFacet = ProvenanceWorkspaceHistoryFacet(workspaceID: matching[0].id,
+            lastActivityAt: matching[0].lastActivityAt, repositoryID: "maple",
+            projectLinks: [.init(id: "maple-roof", title: "Maple Roof")],
+            pullRequestOwnerLogin: "brian")
+        var cursors: [String] = []
+        let model = WorkspaceExplorerCoordinator(
+            loadHistory: { WorkspaceExplorerHistoryLoadResult(items: first,
+                archiveAvailability: .available, partialLiveActivity: false,
+                nextHistoryCursor: "after-first", filterFacets: [laterFacet]) },
+            loadMoreHistory: { cursor in
+                cursors.append(cursor)
+                return WorkspaceExplorerHistoryLoadResult(
+                    items: cursor == "after-first" ? skipped : matching,
+                    archiveAvailability: .available, partialLiveActivity: false,
+                    nextHistoryCursor: cursor == "after-first" ? "after-second" : nil)
+            },
+            reopenHistory: { _ in false }, activateWorkspace: { _ in },
+            loadSessions: { id in ProvenanceWorkspaceSessionPageResponse(
+                workspaceID: id.uuidString, sessions: [], nextCursor: nil) },
+            clearArchive: { })
+        await model.load()
+        let options = model.catalog?.filterOptions(
+            dimensions: [.repository, .project, .pullRequestOwner], target: .all,
+            scope: model.scope,
+            inScopeWorkspaceIDs: model.result()?.inScopeWorkspaceIDs ?? [], now: .now,
+            calendar: .current)
+        #expect(options?[.repository]?.contains(.value("maple")) == true)
+        #expect(options?[.project]?.contains(.project("maple-roof")) == true)
+        #expect(options?[.pullRequestOwner]?.contains(.value("brian")) == true)
+        model.rootArrangement.setFilter(.repository, value: .value("maple"))
+
+        await model.loadMoreHistoryPage()
+
+        #expect(cursors == ["after-first", "after-second"])
+        #expect(model.result()?.visibleWorkspaceIDs.count == 25)
+        #expect(model.hasMoreHistory == false)
+    }
+
+    private static func historyItems(count: Int, repository: String) -> [WorkspaceExplorerHistoryItem] {
+        let summaries = (0..<count).map { index in
+            ProvenanceWorkspaceHistorySummary(id: UUID().uuidString, firstSessionAt: nil,
+                lastActivityAt: Date(timeIntervalSince1970: 1_800_000_000 - Double(index)),
+                sessionCount: 1, lastKnownDirectory: "/work/maple-roof",
+                lastKnownRepositoryID: repository)
+        }
+        return WorkspaceExplorerHistoryAdapter().join(live: [], archived: [],
+            sessionWorkspaces: summaries, eligibilityByID: [:])
+    }
+
+    @Test
     func rootShowsWorkspacesAndSupportsGroupingAndFiltering() async {
         let first = WorkspaceExplorerLiveWorkspace(stableID: UUID(), runtimeID: UUID(),
             title: "Maple Street Roof Inspection", createdAt: .now,

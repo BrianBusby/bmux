@@ -27,6 +27,7 @@ struct WorkspaceExplorerWindowView: View {
 
     init(loadPresence: WorkspaceExplorerCoordinator.PresenceLoader? = nil,
          loadHistory: @escaping WorkspaceExplorerCoordinator.Loader,
+         loadMoreHistory: WorkspaceExplorerCoordinator.MoreHistoryLoader? = nil,
          reopenHistory: @escaping WorkspaceExplorerCoordinator.Reopener,
          activateWorkspace: @escaping WorkspaceExplorerCoordinator.Activator,
          loadSessions: @escaping WorkspaceExplorerCoordinator.SessionLoader,
@@ -44,7 +45,8 @@ struct WorkspaceExplorerWindowView: View {
         self.restartApp = restartApp
         self.isEmbedded = isEmbedded
         _model = State(initialValue: WorkspaceExplorerCoordinator(
-            loadHistory: loadHistory, loadPresence: loadPresence, reopenHistory: reopenHistory,
+            loadHistory: loadHistory, loadMoreHistory: loadMoreHistory,
+            loadPresence: loadPresence, reopenHistory: reopenHistory,
             activateWorkspace: activateWorkspace,
             onOpenLive: { item, target, title in
                 liveNavigation?.opened(item: item, target: target, from: title, loadSessions: loadSessions) },
@@ -191,7 +193,8 @@ struct WorkspaceExplorerWindowView: View {
                     archiveAvailability: model.presentedCatalog?.archiveAvailability ?? .unavailable,
                     liveMetadataPending: model.presentedCatalog?.liveMetadataPending == true,
                     hasFilters: !model.presentedFilters.isEmpty &&
-                        model.presentedCatalog?.liveMetadataPending != true))
+                        model.presentedCatalog?.liveMetadataPending != true,
+                    historyHasMore: model.hasMoreHistory))
                     .font(.system(size: 13)).foregroundStyle(.secondary)
                 arrangementBar
                 if model.presentedCatalog?.liveMetadataPending == true {
@@ -201,7 +204,19 @@ struct WorkspaceExplorerWindowView: View {
                 ForEach(result.groups, id: \.identity) { group in
                     groupSection(group, path: "collection/\(group.identity)")
                 }
-                if result.visibleWorkspaceIDs.isEmpty && model.visiblePendingWorkspaceItems.isEmpty { emptyCollection }
+                if model.scope.state != .open && model.hasMoreHistory {
+                    HStack(spacing: 8) {
+                        Button(model.historyPageFailed ?
+                            String(localized: "explorer.retryMoreHistory", defaultValue: "Retry loading history") :
+                            String(localized: "explorer.loadMoreHistory", defaultValue: "Load more history")) {
+                            Task { await model.loadMoreHistoryPage() }
+                        }
+                        .disabled(model.historyPageLoading)
+                        if model.historyPageLoading { ProgressView().controlSize(.small) }
+                    }
+                }
+                if result.visibleWorkspaceIDs.isEmpty && model.visiblePendingWorkspaceItems.isEmpty &&
+                    !model.hasMoreHistory && !model.historyPageLoading { emptyCollection }
             } else if model.presentedCatalog?.liveMetadataPending == true {
                 ContentUnavailableView(WorkspaceExplorerCountPresentation.loadingProjects,
                     systemImage: "clock")
@@ -251,9 +266,9 @@ struct WorkspaceExplorerWindowView: View {
         return WorkspaceExplorerArrangementBar(groupBy: arrangement.groupBy, filters: arrangement.filters,
             availableDimensions: dimensions,
             filterDimensions: filterDimensions,
-            filterOptions: model.projection?.filterOptions(dimensions: filterDimensions,
-                inScopeWorkspaceIDs: model.result()?.inScopeWorkspaceIDs ?? [],
-                overview: false) ?? [:],
+            filterOptions: model.presentedCatalog?.filterOptions(dimensions: filterDimensions,
+                target: model.collectionTarget ?? .all, scope: model.scope, inScopeWorkspaceIDs: model.result()?.inScopeWorkspaceIDs ?? [],
+                now: model.activityArrangement.now, calendar: model.activityArrangement.calendar) ?? [:],
             projectsByID: Dictionary((model.presentedCatalog?.projects ?? []).map { ($0.id, $0) },
                 uniquingKeysWith: { first, _ in first }),
             repositoryNamesByID: model.presentedCatalog?.repositoryNamesByID ?? [:],
