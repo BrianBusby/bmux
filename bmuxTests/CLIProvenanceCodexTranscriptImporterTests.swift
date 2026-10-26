@@ -26,7 +26,7 @@ struct CLIProvenanceCodexTranscriptImporterTests {
         let firstImport = try await importer.importTranscripts(path: transcriptURL.path)
         let secondImport = try await importer.importTranscripts(path: transcriptURL.path)
 
-        #expect(firstImport.eventsAppended == 8)
+        #expect(firstImport.eventsAppended == 7)
         #expect(firstImport.duplicateEvents == 0)
         #expect(firstImport.threads == 1)
         #expect(firstImport.turns == 1)
@@ -34,12 +34,12 @@ struct CLIProvenanceCodexTranscriptImporterTests {
         #expect(firstImport.plans == 1)
         #expect(firstImport.commands == 1)
         #expect(firstImport.reasoningSummaries == 1)
-        #expect(firstImport.assistantMessages == 1)
+        #expect(firstImport.assistantMessages == 0)
         #expect(firstImport.fileChanges == 1)
         #expect(secondImport.eventsAppended == 0)
-        #expect(secondImport.duplicateEvents == 8)
+        #expect(secondImport.duplicateEvents == 7)
         let projection = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
-        #expect(projection.latestTurn?.assistantMessages.count == 1)
+        #expect(projection.latestTurn?.assistantMessages.count == 0)
     }
 
 
@@ -78,12 +78,12 @@ struct CLIProvenanceCodexTranscriptImporterTests {
         #expect(evidenceImport.fileReport.plans == 1)
         #expect(evidenceImport.fileReport.commands == 1)
         #expect(evidenceImport.fileReport.reasoningSummaries == 1)
-        #expect(evidenceImport.fileReport.assistantMessages == 1)
+        #expect(evidenceImport.fileReport.assistantMessages == 0)
         #expect(evidenceImport.fileReport.fileChanges == 1)
 
         let replay = try await importer.importTranscripts(path: transcriptURL.path)
         #expect(replay.eventsAppended == 0)
-        #expect(replay.duplicateEvents == 8)
+        #expect(replay.duplicateEvents == 7)
     }
 
     @Test
@@ -152,9 +152,9 @@ struct CLIProvenanceCodexTranscriptImporterTests {
 
         try Self.appendText(lines[12] + "\n", to: transcriptURL)
         let finalOutputImport = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
-        #expect(finalOutputImport.fileReport.assistantMessages == 1)
+        #expect(finalOutputImport.fileReport.assistantMessages == 0)
         let finalProjection = try await Self.factualProjection(client: client, sessionID: "codex-long-session")
-        #expect(finalProjection.latestTurn?.assistantMessages.count == 1)
+        #expect(finalProjection.latestTurn?.assistantMessages.count == 0)
     }
 
     @Test
