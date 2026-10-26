@@ -125,6 +125,40 @@ struct WorkspaceExplorerRootNavigationTests {
     }
 
     @Test
+    func laterSessionActivityMakesAnArchivedRowUnverified() async throws {
+        let id = UUID()
+        let closedAt = Date(timeIntervalSince1970: 1_800_000_000)
+        let archive = ProvenanceArchivedWorkspaceRecord(id: id.uuidString,
+            title: "Maple Street Roof Inspection", createdAt: nil, closedAt: closedAt,
+            lastActivityAt: closedAt, displayAtClose: nil, colorHex: nil, coverageCode: nil)
+        let first = try #require(WorkspaceExplorerHistoryAdapter().join(live: [],
+            archived: [archive], eligibilityByID: [id: .eligible(recordID: id)]).first)
+        let later = ProvenanceWorkspaceHistorySummary(id: id.uuidString, firstSessionAt: closedAt,
+            lastActivityAt: closedAt.addingTimeInterval(60), sessionCount: 1,
+            lastKnownRepositoryID: "maple")
+        let pageItem = try #require(WorkspaceExplorerHistoryAdapter().join(live: [], archived: [],
+            sessionWorkspaces: [later], eligibilityByID: [:]).first)
+        let combined = WorkspaceExplorerHistoryLoadResult(items: [first],
+            archiveAvailability: .available, partialLiveActivity: false,
+            nextHistoryCursor: "later").appendingHistoryPage(
+                WorkspaceExplorerHistoryLoadResult(items: [pageItem],
+                    archiveAvailability: .available, partialLiveActivity: false))
+        let item = try #require(combined.items.first)
+        #expect(combined.items.count == 1)
+        #expect(item.lastActivityAt == later.lastActivityAt)
+        #expect(item.repositoryID == "maple")
+        var attemptedReopen = false
+        let model = WorkspaceExplorerCoordinator(loadHistory: { combined },
+            reopenHistory: { _ in attemptedReopen = true; return true },
+            activateWorkspace: { _ in },
+            loadSessions: { stableID in ProvenanceWorkspaceSessionPageResponse(
+                workspaceID: stableID.uuidString, sessions: [], nextCursor: nil) },
+            clearArchive: { })
+        #expect(await model.reopen(item) == false)
+        #expect(!attemptedReopen)
+    }
+
+    @Test
     func rootShowsWorkspacesAndSupportsGroupingAndFiltering() async {
         let first = WorkspaceExplorerLiveWorkspace(stableID: UUID(), runtimeID: UUID(),
             title: "Maple Street Roof Inspection", createdAt: .now,
