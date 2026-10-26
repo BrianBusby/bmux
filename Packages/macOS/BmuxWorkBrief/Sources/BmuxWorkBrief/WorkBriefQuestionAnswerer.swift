@@ -9,13 +9,22 @@ public struct WorkBriefQuestionAnswerer: Sendable {
     /// - Parameters:
     ///   - question: The user's current question in English or Japanese.
     ///   - snapshot: The bounded source facts visible in the brief.
+    ///   - previousBrief: Metadata from the previous viewed brief, if available.
     /// - Returns: A deterministic answer with no generated canonical facts.
-    public func answer(_ question: String, snapshot: WorkBriefSnapshot) -> WorkBriefAnswer {
+    public func answer(_ question: String, snapshot: WorkBriefSnapshot,
+                       previousBrief: WorkBriefBaseline? = nil) -> WorkBriefAnswer {
         let normalized = question.lowercased()
         let tokens = Set(normalized.split {
             !$0.isASCII || (!$0.isLetter && !$0.isNumber && $0 != "-" && $0 != "#")
         }.map(String.init))
         let projection = WorkBriefProjection(snapshot: snapshot)
+        if normalized.contains("change") || normalized.contains("different") ||
+           normalized.contains("変更") || normalized.contains("変わ") {
+            guard let previousBrief else { return WorkBriefAnswer(kind: .noPreviousBrief) }
+            let changes = previousBrief.changes(in: snapshot)
+            return WorkBriefAnswer(kind: .recentChanges, localIDs: changes.localIDs,
+                                   externalIDs: changes.externalIDs)
+        }
         let waitingQuestion = normalized.contains("wait") || normalized.contains("block") ||
             normalized.contains("待") || normalized.contains("ブロック")
         if waitingQuestion && (tokens.contains("why") || normalized.contains("なぜ") ||
