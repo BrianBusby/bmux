@@ -72,11 +72,15 @@ import Testing
     private func external(_ id: String, disposition: WorkBriefExternalItem.Disposition,
                           now: Date) -> WorkBriefExternalItem {
         let number = id.split(separator: ":").last.map(String.init) ?? "12"
+        let url = URL(string: "https://github.com/CompanyCam/mobile/pull/\(number)")!
+        let evidence = disposition == .waitingOn
+            ? [WorkBriefEvidence(id: "\(id):reviewers", source: .github,
+                field: "awaitingReview", isObserved: true, checkedAt: now, url: url)] : []
         return WorkBriefExternalItem(id: id, source: .github, title: "Roof inspection",
-            url: URL(string: "https://github.com/CompanyCam/mobile/pull/\(number)")!,
+            url: url,
             reference: "#\(number)", repository: "CompanyCam/mobile", owner: "brian",
             status: "open", updatedAt: now, checkedAt: now,
-            disposition: disposition, evidence: [])
+            disposition: disposition, evidence: evidence)
     }
 
     private func brief(_ local: [WorkBriefLocalWorkspace], external: [WorkBriefExternalItem],
