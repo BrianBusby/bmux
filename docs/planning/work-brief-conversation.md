@@ -12,8 +12,9 @@ An exact visible pull-request reference or source URL can identify a GitHub
 review wait. The answer shows that item's observed reviewer-request evidence.
 An unqualified “Why is this blocked?” asks for a reference, and a named item
 without observed wait evidence receives an explicit no-evidence answer. Assigned
-Linear issue summaries do not contain blocker reasons, so the brief does not
-explain or invent them. English and Japanese supported questions use the same
+Linear issue summaries and local-only ticket links do not contain blocker
+reasons, so the brief does not explain or invent them. English and Japanese
+supported questions use the same
 source facts.
 
 This is a deliberately narrow first conversation surface. Unknown wording and

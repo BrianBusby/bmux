@@ -24,6 +24,18 @@ public struct WorkBriefQuestionAnswerer: Sendable {
                 tokens.contains(item.reference.lowercased()) ||
                     normalized.contains(item.url.absoluteString.lowercased())
             }
+            if matching.isEmpty {
+                let knownLocally = snapshot.localWorkspaces.contains { workspace in
+                    workspace.tickets.contains { ticket in
+                        tokens.contains(ticket.id.lowercased()) ||
+                            normalized.contains(ticket.url.absoluteString.lowercased())
+                    } || workspace.pullRequest.map { pullRequest in
+                        tokens.contains(pullRequest.label.lowercased()) ||
+                            normalized.contains(pullRequest.url.absoluteString.lowercased())
+                    } == true
+                }
+                return WorkBriefAnswer(kind: knownLocally ? .noWaitEvidence : .needsReference)
+            }
             guard matching.count == 1, let item = matching.first else {
                 return WorkBriefAnswer(kind: .needsReference)
             }
