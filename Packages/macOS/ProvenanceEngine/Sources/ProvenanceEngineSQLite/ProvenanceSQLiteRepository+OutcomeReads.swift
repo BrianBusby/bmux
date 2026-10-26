@@ -47,7 +47,10 @@ extension ProvenanceSQLiteRepository {
         guard let outcome = try turnOutcomeRevision(turnID: turnID, revisionID: revisionID) else {
             return ProvenanceTurnOutcomeResponse(
                 found: false,
-                reason: "no_revision",
+                reason: try revisionPayloadExpired(
+                    revisionID, in: "provenance_coding_agent_turn_outcome_revisions",
+                    ownerColumn: "turn_id", ownerID: turnID
+                ) ? "revision_payload_expired" : "no_revision",
                 turnID: turnID,
                 outcome: nil
             )
@@ -60,7 +63,7 @@ extension ProvenanceSQLiteRepository {
         )
     }
 
-    private func turnOutcomeRevision(turnID: String, revisionID: String) throws -> ProvenanceTurnOutcome? {
+    func turnOutcomeRevision(turnID: String, revisionID: String) throws -> ProvenanceTurnOutcome? {
         let query = try database.prepare(
             """
             SELECT outcome_json
@@ -74,6 +77,7 @@ extension ProvenanceSQLiteRepository {
         try query.bind(revisionID, at: 2)
         guard try query.step(),
               let json = query.string(at: 0),
+              !json.isEmpty,
               let data = json.data(using: .utf8) else {
             return nil
         }
@@ -175,7 +179,10 @@ extension ProvenanceSQLiteRepository {
         ) else {
             return ProvenanceSessionOutcomeResponse(
                 found: false,
-                reason: "no_revision",
+                reason: try revisionPayloadExpired(
+                    revisionID, in: "provenance_coding_agent_session_outcome_revisions",
+                    ownerColumn: "session_id", ownerID: sessionID
+                ) ? "revision_payload_expired" : "no_revision",
                 sessionID: sessionID,
                 outcome: nil
             )
@@ -205,10 +212,22 @@ extension ProvenanceSQLiteRepository {
         try query.bind(revisionID, at: 2)
         guard try query.step(),
               let json = query.string(at: 0),
+              !json.isEmpty,
               let data = json.data(using: .utf8) else {
             return nil
         }
-        return try payloadDecoder.decode(ProvenanceSessionOutcome.self, from: data)
+        let stored = try payloadDecoder.decode(ProvenanceSessionOutcome.self, from: data)
+        guard stored.turnOutcomes.isEmpty, !stored.constituentTurns.isEmpty else { return stored }
+        let turns = try stored.constituentTurns.map { reference in
+            guard let turn = try turnOutcomeRevision(
+                turnID: reference.turnID,
+                revisionID: reference.turnOutcomeRevisionID
+            ) else {
+                throw ProvenanceSQLiteError.sqlite(message: "session outcome has missing constituent turn revision")
+            }
+            return turn
+        }
+        return stored.replacingTurnOutcomes(turns)
     }
 
     private func latestSessionOutcomeRevisionID(sessionID: String) throws -> String? {
@@ -226,5 +245,17 @@ extension ProvenanceSQLiteRepository {
         try query.bind(Self.sessionOutcomeRuleVersion, at: 3)
         guard try query.step() else { return nil }
         return query.string(at: 0)
+    }
+
+    private func revisionPayloadExpired(
+        _ id: String, in table: String, ownerColumn: String, ownerID: String
+    ) throws -> Bool {
+        let query = try database.prepare(
+            "SELECT outcome_json = '' FROM \(table) WHERE id = ? AND \(ownerColumn) = ?"
+        )
+        defer { query.finalize() }
+        try query.bind(id, at: 1)
+        try query.bind(ownerID, at: 2)
+        return try query.step() && query.int(at: 0) != 0
     }
 }

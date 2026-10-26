@@ -9,6 +9,15 @@ The Codex updater/launch follow-up is recorded in
 [the shared-session control decision](../product/shared-session-control-decision.md#codex-01610-compatibility-and-launch-resolution-october-8-2026).
 It does not advance broader Session lifecycle or provider-parity milestones.
 
+The PE outcome storage retention slice introduces schema 29, compact session
+outcome storage, citation-aware payload retention, and bounded diagnostics.
+Live reclamation remains blocked: the schema-28 store has a 631.6 GiB file,
+372.5 GiB freelist, multiple active bmux users, and insufficient free capacity
+for a verified backup and offline compact replacement. The storage gate for
+additional live terminal ingestion remains closed until the writer is deployed
+and a safe maintenance capacity is available. See the
+[PE storage retention policy](../../Packages/macOS/ProvenanceEngine/docs/storage-retention.md).
+
 The workspace ticket-delay follow-up is recorded in
 [implementation notes](../implementation-notes/workspace-ticket-delay.md).
 It reduces outcome projection write contention and restores failed observation

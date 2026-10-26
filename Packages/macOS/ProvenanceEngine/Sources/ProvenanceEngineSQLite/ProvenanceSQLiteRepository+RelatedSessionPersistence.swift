@@ -64,6 +64,7 @@ extension ProvenanceSQLiteRepository {
         try insert.bind(projectionJSON, at: 11)
         try insert.bind(projection.projection.generatedAt?.timeIntervalSince1970, at: 12)
         _ = try insert.step()
+        try recordOutcomeCitations(sourceRevisionID: projection.projection.revisionID, json: projectionJSON)
     }
 
     func upsertLatestRelatedSession(
