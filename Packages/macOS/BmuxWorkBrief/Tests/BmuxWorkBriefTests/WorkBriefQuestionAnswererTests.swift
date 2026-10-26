@@ -37,6 +37,26 @@ import Testing
         #expect(answerer.answer("What am I waiting on?", snapshot: snapshot).externalIDs == [waiting.id])
     }
 
+    @Test func localizedQuestionsUseTheSameSourceFacts() {
+        let now = Date(timeIntervalSince1970: 100)
+        let ticket = WorkBriefLink(id: "CC-42", label: "CC-42",
+            url: URL(string: "https://linear.app/acme/issue/CC-42")!, source: .linear)
+        let pr = WorkBriefLink(id: "pr-12", label: "#12",
+            url: URL(string: "https://github.com/CompanyCam/mobile/pull/12")!, source: .github)
+        let local = WorkBriefLocalWorkspace(id: UUID(), runtimeID: UUID(), title: "Roof inspection",
+            repository: "CompanyCam/mobile", branch: "roof", tickets: [ticket],
+            pullRequest: pr, status: .running, surfaceID: nil, lastActivityAt: now,
+            checkedAt: now, evidence: [])
+        let review = external("github:12", disposition: .needsAttention, now: now)
+        let waiting = external("github:13", disposition: .waitingOn, now: now)
+        let snapshot = brief([local], external: [review, waiting], now: now)
+        let answerer = WorkBriefQuestionAnswerer()
+        #expect(answerer.answer("何に対応が必要ですか？", snapshot: snapshot).externalIDs == [review.id])
+        #expect(answerer.answer("何を待っていますか？", snapshot: snapshot).externalIDs == [waiting.id])
+        #expect(answerer.answer("何が進行中ですか？", snapshot: snapshot).localIDs == [local.id])
+        #expect(answerer.answer("CC-42に関連するPRは？", snapshot: snapshot).links == [pr])
+    }
+
     private func external(_ id: String, disposition: WorkBriefExternalItem.Disposition,
                           now: Date) -> WorkBriefExternalItem {
         WorkBriefExternalItem(id: id, source: .github, title: "Roof inspection",
