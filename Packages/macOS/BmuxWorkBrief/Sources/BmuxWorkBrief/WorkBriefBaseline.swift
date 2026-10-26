@@ -50,9 +50,9 @@ public struct WorkBriefBaseline: Codable, Equatable, Sendable {
         version = Self.schemaVersion
         capturedAt = now
         if snapshot.localHealth.state == .available {
-            local = Dictionary(uniqueKeysWithValues: snapshot.localWorkspaces.prefix(100).map {
+            local = Dictionary(snapshot.localWorkspaces.prefix(100).map {
                 ($0.id.uuidString, Self.localFingerprint($0))
-            })
+            }, uniquingKeysWith: { _, latest in latest })
         } else {
             local = (previous?.local ?? [:]).filter {
                 Self.isRetained($0.value.confirmedAt, at: now)
