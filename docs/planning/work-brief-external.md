@@ -4,9 +4,9 @@
 
 User handoff: scoped Linear and GitHub reads, stable external work identities,
 source health, explicit relationships, Needs attention and Waiting on, and an
-external item without a local workspace. Stacked on `work-brief-local` PR #213;
-that branch is under review and must be reconciled before merge. Storage PR #212
-has merged. This slice only reads existing PE facts and keeps external facts in
+external item without a local workspace. PR #213 merged the local Work Brief
+slice to main; this external slice is based on that merge. Storage PR #212 also
+merged. This slice only reads existing PE facts and keeps external facts in
 a bounded in-memory snapshot.
 
 Read `AGENTS.md`, context-efficiency status/roadmap/milestones,
