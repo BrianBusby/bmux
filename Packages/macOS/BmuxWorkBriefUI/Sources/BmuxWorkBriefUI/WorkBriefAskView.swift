@@ -5,6 +5,8 @@ import SwiftUI
 public struct WorkBriefAskView: View {
     /// Current bounded source snapshot.
     public let snapshot: WorkBriefSnapshot
+    /// Metadata from the previous viewed brief, when available.
+    public let previousBrief: WorkBriefBaseline?
     /// Validated user-clicked local navigation.
     public let jump: @MainActor (UUID, UUID) -> Bool
     /// Validated user-clicked surface highlight.

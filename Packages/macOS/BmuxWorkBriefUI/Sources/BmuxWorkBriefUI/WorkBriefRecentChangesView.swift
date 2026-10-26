@@ -57,6 +57,8 @@ public struct WorkBriefRecentChangesView: View {
                     let related = Set(projection.relatedWorkspaceIDs[item.id] ?? [])
                     WorkBriefExternalRow(item: item,
                         relatedWorkspaces: snapshot.localWorkspaces.filter { related.contains($0.id) },
+                        relationshipEvidenceByWorkspaceID:
+                            projection.relationshipEvidenceByExternalID[item.id] ?? [:],
                         health: item.source == .linear ? snapshot.linearHealth : snapshot.githubHealth,
                         hasConflict: projection.conflictingExternalIDs.contains(item.id),
                         jump: jump, openURL: openURL)
