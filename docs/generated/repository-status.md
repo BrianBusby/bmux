@@ -125,7 +125,7 @@ Repository: `BrianBusby/bmux`
 | Shell Mode Portal Visibility | under observation |
 | Test Determinism Allowlist Burndown | planned |
 | Three View Session Navigation | planned |
-| Work Brief Conversation | planned |
+| Work Brief Conversation | under observation |
 | Work Brief External Correlation | under observation |
 | Work Brief Local View | under observation |
 | Work Brief Slack Pilot | planned |

@@ -69,9 +69,8 @@ public struct WorkBriefView: View {
                         unavailableSection(String(localized: "workBrief.recentChanges", defaultValue: "Recent changes"),
                             detail: String(localized: "workBrief.changesUnavailable", defaultValue:
                                 "A previous brief is needed to show changes."))
-                        unavailableSection(String(localized: "workBrief.ask", defaultValue: "Ask"),
-                            detail: String(localized: "workBrief.askUnavailable", defaultValue:
-                                "Follow-up questions are not available yet."))
+                        WorkBriefAskView(snapshot: snapshot, jump: jump, highlight: highlight,
+                                         openURL: openURL)
                     } else if model.isLoading {
                         ProgressView(String(localized: "workBrief.loading", defaultValue: "Checking work…"))
                     } else {
