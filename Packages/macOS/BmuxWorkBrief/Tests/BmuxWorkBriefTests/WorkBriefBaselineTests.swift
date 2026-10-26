@@ -63,8 +63,19 @@ import Testing
         let current = snapshot(workspaces, issues, at: now)
         let baseline = WorkBriefBaseline(snapshot: current, previous: nil, at: now)
         #expect(try JSONEncoder().encode(baseline).count <= 64_000)
+        #expect(!baseline.completeLocalCoverage)
+        #expect(baseline.local.count < workspaces.count)
         #expect(baseline.changes(in: current).localIDs.isEmpty)
         #expect(baseline.changes(in: current).externalIDs.isEmpty)
+        let retainedID = try #require(workspaces.first { baseline.local[$0.id.uuidString] != nil }?.id)
+        let changed = snapshot(workspaces.map { item in
+            WorkBriefLocalWorkspace(id: item.id, runtimeID: item.runtimeID, title: item.title,
+                repository: item.repository, branch: item.branch, tickets: item.tickets,
+                pullRequest: item.pullRequest, status: item.id == retainedID ? .needsInput : .running,
+                surfaceID: item.surfaceID, lastActivityAt: item.lastActivityAt,
+                checkedAt: item.checkedAt, evidence: item.evidence)
+        }, issues, at: now)
+        #expect(baseline.changes(in: changed).localIDs == [retainedID])
     }
 
     private func local(id: UUID = UUID(), status: WorkBriefLocalStatus,

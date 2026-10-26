@@ -5,14 +5,19 @@ import Foundation
 @MainActor
 struct WorkBriefBaselineStore {
     private let defaults: UserDefaults
-    private let key = "workBrief.previousBrief.v1"
+    private let key = "workBrief.previousBrief.v2"
 
     init(defaults: UserDefaults = .standard) { self.defaults = defaults }
 
     func load(at now: Date) -> WorkBriefBaseline? {
-        guard let data = defaults.data(forKey: key), data.count <= 64_000,
+        defaults.removeObject(forKey: "workBrief.previousBrief.v1")
+        guard let data = defaults.data(forKey: key) else { return nil }
+        guard data.count <= WorkBriefBaseline.maxEncodedBytes,
               let baseline = try? JSONDecoder().decode(WorkBriefBaseline.self, from: data),
-              baseline.valid(at: now) else { return nil }
+              baseline.valid(at: now) else {
+            defaults.removeObject(forKey: key)
+            return nil
+        }
         return baseline
     }
 
@@ -22,7 +27,8 @@ struct WorkBriefBaselineStore {
               snapshot.githubHealth.state == .available ||
               snapshot.slackHealth.state == .available else { return }
         let baseline = WorkBriefBaseline(snapshot: snapshot, previous: previous, at: now)
-        guard let data = try? JSONEncoder().encode(baseline), data.count <= 64_000 else { return }
+        guard let data = try? JSONEncoder().encode(baseline),
+              data.count <= WorkBriefBaseline.maxEncodedBytes else { return }
         defaults.set(data, forKey: key)
     }
 }

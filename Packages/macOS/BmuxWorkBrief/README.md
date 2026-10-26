@@ -31,7 +31,11 @@ let baseline = WorkBriefBaseline(snapshot: earlierSnapshot, previous: nil, at: e
 let changes = baseline.changes(in: currentSnapshot)
 ```
 The app stores this metadata only after a viewed brief closes, subject to the
-30-day and 64 KiB limits. Titles, URLs, and message content are excluded.
+30-day and 64 KiB limits. If the encoded record exceeds the limit, the
+largest fingerprints are removed in a deterministic order. Coverage flags
+prevent omitted IDs from being reported as newly created. Titles, URLs, and
+message content are excluded.
+Expired preference data is deleted when the brief next opens.
 
 Run the package tests with:
 
