@@ -202,5 +202,36 @@ extension CLIProvenanceCodexTranscriptImporterTests {
         #expect(cursor.byteOffset == truncated.offset)
     }
 
+    @Test
+    func backlogAgeSurvivesCursorProgressWhileBytesRemainUnread() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let transcriptURL = fixture.directoryURL.appendingPathComponent("session.jsonl")
+        let metadata = try Self.codexTranscriptFixtureLines()[0]
+        let ignoredLine = "{\"type\":\"unsupported\",\"payload\":{}}\n"
+        try (metadata + "\n" + String(repeating: ignoredLine, count: 5_000))
+            .write(to: transcriptURL, atomically: true, encoding: .utf8)
+        let cursorStore = CLIProvenanceCodexTranscriptCursorStore(
+            directoryURL: fixture.directoryURL.appendingPathComponent("cursors")
+        )
+        let tailer = CLIProvenanceCodexTranscriptTailer(
+            providerSessionID: "codex-session-1", workspaceID: nil,
+            surfaceID: nil, client: client, cursorStore: cursorStore
+        )
+
+        let first = try await tailer.consume(at: transcriptURL)
+        let firstStatus = try #require(await cursorStore.loadStatus(providerSessionID: "codex-session-1"))
+        let firstBacklogAt = try #require(firstStatus.firstBacklogAt)
+        #expect(first.cursorPersisted)
+        #expect(first.unreadBytes > 0)
+
+        let second = try await tailer.consume(at: transcriptURL)
+        let secondStatus = try #require(await cursorStore.loadStatus(providerSessionID: "codex-session-1"))
+        #expect(second.cursorPersisted)
+        #expect(second.unreadBytes > 0)
+        #expect(secondStatus.firstBacklogAt == firstBacklogAt)
+    }
+
 
 }
