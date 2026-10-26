@@ -18,6 +18,7 @@ Regenerate with: ./scripts/project-docs generate
 | Browser Devtools Lifecycle | Bmux |
 | Capture policy | Bmux |
 | Codex Transcript Import Boundary | Bmux |
+| Cross Service Work Brief Projection | Bmux |
 | Cross Session Presentation | Bmux |
 | Cross Session Relationships | Provenance Engine |
 | Cross Session Retrieval | Provenance Engine |

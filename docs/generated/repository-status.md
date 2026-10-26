@@ -72,6 +72,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Human Readable Semantic Messaging | implemented |
 | Provenance Engine Immutable Ledger | implemented |
 | Provenance Engine Milestone Inference | implemented |
+| Provenance Engine Outcome Retention Policy | under observation |
 | Provenance Engine Producer Neutral Lifecycle Recording | implemented |
 | Provenance Engine Public In Process Sdk | implemented |
 | Provenance Engine Related Session Read Model | implemented |
@@ -125,6 +126,10 @@ Repository: `BrianBusby/bmux`
 | Shell Mode Portal Visibility | under observation |
 | Test Determinism Allowlist Burndown | planned |
 | Three View Session Navigation | planned |
+| Work Brief Conversation | planned |
+| Work Brief External Correlation | planned |
+| Work Brief Local View | under observation |
+| Work Brief Slack Pilot | planned |
 | Work Provenance Runtime Lifecycle State | under observation |
 | Workspace Coding Agent Session Linkage Hardening | under observation |
 | Workspace Display Current State Diagnostic | implemented |
@@ -186,6 +191,8 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `work_brief_external_sources_unavailable` | open |
+| `pe_live_storage_reclamation_capacity_and_concurrency` | open |
 | `app_host_cancellation_ownership_verification` | open |
 | `session_write_store_capture_verification` | open |
 | `bash_relay_refresh_fixture_verification` | open |

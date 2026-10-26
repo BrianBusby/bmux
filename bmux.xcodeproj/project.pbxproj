@@ -148,6 +148,7 @@
 		DCDC1000000000000000C030 /* AppDelegate+WindowDock.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDC1000000000000000C031 /* AppDelegate+WindowDock.swift */; };
 		4805E1513D104D02B52A9807 /* AppDelegate+WindowFramePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4085E612770476FA272C012 /* AppDelegate+WindowFramePolicy.swift */; };
 		604500100000000000000005 /* AppDelegate+WindowIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 604500100000000000000006 /* AppDelegate+WindowIdentity.swift */; };
+		F6B120000000000000000002 /* AppDelegate+WorkBrief.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B110000000000000000002 /* AppDelegate+WorkBrief.swift */; };
 		A5FB1207 /* AppDelegate+WorkspaceActionSave.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FB1208 /* AppDelegate+WorkspaceActionSave.swift */; };
 		E71A17900000000000000026 /* AppDelegate+WorkspaceExplorerActivation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000027 /* AppDelegate+WorkspaceExplorerActivation.swift */; };
 		E7A9EAA73EE74959BA212008 /* AppDelegate+WorkspaceExplorerHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA212007 /* AppDelegate+WorkspaceExplorerHistory.swift */; };
@@ -401,6 +402,9 @@
 		7D5DA4DC51454ECDBF9AC978 /* BmuxWebViewMouseNavigationButtonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43F90FAF3FD44F11BF547BE9 /* BmuxWebViewMouseNavigationButtonTests.swift */; };
 		5E55200000000000000000B3 /* BmuxWindowing in Frameworks */ = {isa = PBXBuildFile; productRef = 5E55200000000000000000B2 /* BmuxWindowing */; };
 		730600040000000000000001 /* BmuxWindowing in Frameworks */ = {isa = PBXBuildFile; productRef = 5E55200000000000000000B2 /* BmuxWindowing */; };
+		F6B150000000000000000001 /* BmuxWorkBrief in Frameworks */ = {isa = PBXBuildFile; productRef = F6B140000000000000000001 /* BmuxWorkBrief */; };
+		F6B180000000000000000001 /* BmuxWorkBrief in Frameworks */ = {isa = PBXBuildFile; productRef = F6B140000000000000000001 /* BmuxWorkBrief */; };
+		F6B150000000000000000002 /* BmuxWorkBriefUI in Frameworks */ = {isa = PBXBuildFile; productRef = F6B140000000000000000002 /* BmuxWorkBriefUI */; };
 		E30750000000000000000004 /* BmuxWorkspaceDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30750000000000000000003 /* BmuxWorkspaceDefinition.swift */; };
 		A19700000000000000000003 /* BmuxWorkspacePersistence in Frameworks */ = {isa = PBXBuildFile; productRef = A19700000000000000000002 /* BmuxWorkspacePersistence */; };
 		E3B7A3000000000000000103 /* BmuxWorkspaces in Frameworks */ = {isa = PBXBuildFile; productRef = E3B7A3000000000000000102 /* BmuxWorkspaces */; };
@@ -1913,6 +1917,10 @@
 		379FCC6CA832F1E6DBF82182 /* WKInspectorProbeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229C3735BF880EAE32F7A3E8 /* WKInspectorProbeView.swift */; };
 		B4487608B5DF0A4D043C4DBE /* WKInspectorProbeWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25142C2E16D47119B14A5EB7 /* WKInspectorProbeWebView.swift */; };
 		1D682986D61D5ACCBBAD717E /* WKTransferWrapperView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F54BDBA6CA1817F5E5DF613 /* WKTransferWrapperView.swift */; };
+		F6B120000000000000000004 /* WorkBriefCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B110000000000000000004 /* WorkBriefCommands.swift */; };
+		F6B120000000000000000001 /* WorkBriefLocalAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B110000000000000000001 /* WorkBriefLocalAdapter.swift */; };
+		F6B170000000000000000001 /* WorkBriefLocalAdapterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B160000000000000000001 /* WorkBriefLocalAdapterTests.swift */; };
+		F6B120000000000000000003 /* WorkBriefScenes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B110000000000000000003 /* WorkBriefScenes.swift */; };
 		70F48B3441FC810F8676C94F /* WorkProvenanceChangeSetRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11719C55CB4F87BDC85C744F /* WorkProvenanceChangeSetRecord.swift */; };
 		CE0D10080000000000000001 /* WorkProvenanceChangeSetRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11719C55CB4F87BDC85C744F /* WorkProvenanceChangeSetRecord.swift */; };
 		740D49C5400756EF2E733E31 /* WorkProvenanceCheckpointRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4C8A3BF9C59512BDEB29E7 /* WorkProvenanceCheckpointRecord.swift */; };
@@ -2455,6 +2463,7 @@
 		DCDC1000000000000000C031 /* AppDelegate+WindowDock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+WindowDock.swift"; sourceTree = "<group>"; };
 		B4085E612770476FA272C012 /* AppDelegate+WindowFramePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+WindowFramePolicy.swift"; sourceTree = "<group>"; };
 		604500100000000000000006 /* AppDelegate+WindowIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+WindowIdentity.swift"; sourceTree = "<group>"; };
+		F6B110000000000000000002 /* AppDelegate+WorkBrief.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+WorkBrief.swift"; sourceTree = "<group>"; };
 		A5FB1208 /* AppDelegate+WorkspaceActionSave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+WorkspaceActionSave.swift"; sourceTree = "<group>"; };
 		E71A17900000000000000027 /* AppDelegate+WorkspaceExplorerActivation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+WorkspaceExplorerActivation.swift"; sourceTree = "<group>"; };
 		E7A9EAA73EE74959BA212007 /* AppDelegate+WorkspaceExplorerHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+WorkspaceExplorerHistory.swift"; sourceTree = "<group>"; };
@@ -4122,6 +4131,10 @@
 		229C3735BF880EAE32F7A3E8 /* WKInspectorProbeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WKInspectorProbeView.swift; sourceTree = "<group>"; };
 		25142C2E16D47119B14A5EB7 /* WKInspectorProbeWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WKInspectorProbeWebView.swift; sourceTree = "<group>"; };
 		3F54BDBA6CA1817F5E5DF613 /* WKTransferWrapperView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WKTransferWrapperView.swift"; sourceTree = "<group>"; };
+		F6B110000000000000000004 /* WorkBriefCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkBriefCommands.swift"; sourceTree = "<group>"; };
+		F6B110000000000000000001 /* WorkBriefLocalAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkBriefLocalAdapter.swift"; sourceTree = "<group>"; };
+		F6B160000000000000000001 /* WorkBriefLocalAdapterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkBriefLocalAdapterTests.swift; sourceTree = "<group>"; };
+		F6B110000000000000000003 /* WorkBriefScenes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkBriefScenes.swift"; sourceTree = "<group>"; };
 		11719C55CB4F87BDC85C744F /* WorkProvenanceChangeSetRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceChangeSetRecord.swift; sourceTree = "<group>"; };
 		0E4C8A3BF9C59512BDEB29E7 /* WorkProvenanceCheckpointRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkProvenanceCheckpointRecord.swift; sourceTree = "<group>"; };
 		CE0E00030000000000000002 /* WorkProvenanceCodingAgentEvidenceRecorder+Recording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkProvenanceCodingAgentEvidenceRecorder+Recording.swift"; sourceTree = "<group>"; };
@@ -4445,6 +4458,8 @@
 				CDFEED0300000000CDFEED03 /* BmuxUpdater in Frameworks */,
 				CDFEED0600000000CDFEED06 /* BmuxUpdaterUI in Frameworks */,
 				5E55200000000000000000B3 /* BmuxWindowing in Frameworks */,
+				F6B150000000000000000001 /* BmuxWorkBrief in Frameworks */,
+				F6B150000000000000000002 /* BmuxWorkBriefUI in Frameworks */,
 				A19700000000000000000003 /* BmuxWorkspacePersistence in Frameworks */,
 				E3B7A3000000000000000103 /* BmuxWorkspaces in Frameworks */,
 				A5001006 /* GhosttyKit.xcframework in Frameworks */,
@@ -4505,6 +4520,7 @@
 				EFB18E3C0000000000000001 /* BMUXMobileCore in Frameworks */,
 				C0DE4A000000000000000005 /* BmuxSidebarProviderKit in Frameworks */,
 				730600040000000000000001 /* BmuxWindowing in Frameworks */,
+				F6B180000000000000000001 /* BmuxWorkBrief in Frameworks */,
 				B057B0017E57B0017E57B001 /* Bonsplit in Frameworks */,
 				CE1E00000000000000000025 /* ProvenanceEngineContracts in Frameworks */,
 				CE1E00000000000000000026 /* ProvenanceEngineSDK in Frameworks */,
@@ -6524,6 +6540,7 @@
 				BDF402EAB33D4BDF97115899 /* WorkProvenanceRuntimeResolutionTests.swift */,
 					C176A004C176A004C176A004 /* WorkspaceArchiveCaptureTests.swift */,
 				E7A9EAA73EE74959BA212005 /* WorkspaceExplorerHistoryAdapterTests.swift */,
+				F6B160000000000000000001 /* WorkBriefLocalAdapterTests.swift */,
 				4FE1124DEA99B38BEE81A68A /* WorkspaceExplorerProjectionTests.swift */,
 				E71A17900000000000000067 /* WorkspaceExplorerLiveNavigationTests.swift */,
 				E71A17900000000000000041 /* WorkspaceExplorerCoordinatorTests.swift */,
@@ -6651,6 +6668,10 @@
 				E7A9EAA73EE74959BA21200D /* WorkspaceExplorerReopenEligibility.swift */,
 				E7A9EAA73EE74959BA21200F /* WorkspaceExplorerLiveWorkspace.swift */,
 				E7A9EAA73EE74959BA21250F /* WorkspaceExplorerCommands.swift */,
+				F6B110000000000000000001 /* WorkBriefLocalAdapter.swift */,
+				F6B110000000000000000002 /* AppDelegate+WorkBrief.swift */,
+				F6B110000000000000000003 /* WorkBriefScenes.swift */,
+				F6B110000000000000000004 /* WorkBriefCommands.swift */,
 				E7A9EAA73EE74959BA21240F /* WorkspaceExplorerScenes.swift */,
 				E7A9EAA73EE74959BA21230F /* WorkspaceExplorerDogfoodWindow.swift */,
 				E7A9EAA73EE74959BA21220F /* WorkspaceExplorerDogfoodFixture.swift */,
@@ -6793,6 +6814,8 @@
 				CD0CFE5200000000CD0CFE52 /* BmuxSettings */,
 				CFF12E0000000000000000A2 /* BmuxTestSupport */,
 				CD0CFE5500000000CD0CFE55 /* BmuxSettingsUI */,
+				F6B140000000000000000002 /* BmuxWorkBriefUI */,
+				F6B140000000000000000001 /* BmuxWorkBrief */,
 				CDFEED0200000000CDFEED02 /* BmuxUpdater */,
 				CDFEED0500000000CDFEED05 /* BmuxUpdaterUI */,
 				CF00F00000000000000000A2 /* BmuxFoundation */,
@@ -6895,6 +6918,7 @@
 				5E27010400000000000000A3 /* BmuxSettings */,
 				5E27010400000000000000A4 /* BmuxWorkspaces */,
 				A19700000000000000000004 /* BmuxWorkspacePersistence */,
+				F6B140000000000000000001 /* BmuxWorkBrief */,
 				C9A2B00000000000000000C2 /* BmuxAppKitSupportUI */,
 				D7032A060000000000000002 /* BmuxBrowser */,
 				5E55500000000000000000E2 /* BmuxCommandPalette */,
@@ -6985,6 +7009,8 @@
 				CD0CFE5100000000CD0CFE51 /* XCLocalSwiftPackageReference "BmuxSettings" */,
 				CFF12E0000000000000000A1 /* XCLocalSwiftPackageReference "BmuxTestSupport" */,
 				CD0CFE5400000000CD0CFE54 /* XCLocalSwiftPackageReference "BmuxSettingsUI" */,
+				F6B130000000000000000002 /* XCLocalSwiftPackageReference "BmuxWorkBriefUI" */,
+				F6B130000000000000000001 /* XCLocalSwiftPackageReference "BmuxWorkBrief" */,
 				CDFEED0100000000CDFEED01 /* XCLocalSwiftPackageReference "BmuxUpdater" */,
 				CDFEED0400000000CDFEED04 /* XCLocalSwiftPackageReference "BmuxUpdaterUI" */,
 				CF00F00000000000000000A1 /* XCLocalSwiftPackageReference "BmuxFoundation" */,
@@ -7272,6 +7298,7 @@
 				DCDC1000000000000000C030 /* AppDelegate+WindowDock.swift in Sources */,
 				4805E1513D104D02B52A9807 /* AppDelegate+WindowFramePolicy.swift in Sources */,
 				604500100000000000000005 /* AppDelegate+WindowIdentity.swift in Sources */,
+				F6B120000000000000000002 /* AppDelegate+WorkBrief.swift in Sources */,
 				A5FB1207 /* AppDelegate+WorkspaceActionSave.swift in Sources */,
 				E71A17900000000000000026 /* AppDelegate+WorkspaceExplorerActivation.swift in Sources */,
 				E7A9EAA73EE74959BA212008 /* AppDelegate+WorkspaceExplorerHistory.swift in Sources */,
@@ -8205,6 +8232,9 @@
 				604500200000000000000001 /* WindowTitleTemplateContext.swift in Sources */,
 				E30760080000000000000002 /* WindowTmuxWorkspacePaneOverlayController.swift in Sources */,
 				A5001209 /* WindowToolbarController.swift in Sources */,
+				F6B120000000000000000004 /* WorkBriefCommands.swift in Sources */,
+				F6B120000000000000000001 /* WorkBriefLocalAdapter.swift in Sources */,
+				F6B120000000000000000003 /* WorkBriefScenes.swift in Sources */,
 				70F48B3441FC810F8676C94F /* WorkProvenanceChangeSetRecord.swift in Sources */,
 				740D49C5400756EF2E733E31 /* WorkProvenanceCheckpointRecord.swift in Sources */,
 				CE0E00030000000000000001 /* WorkProvenanceCodingAgentEvidenceRecorder+Recording.swift in Sources */,
@@ -9247,6 +9277,7 @@
 				379FCC6CA832F1E6DBF82182 /* WKInspectorProbeView.swift in Sources */,
 				B4487608B5DF0A4D043C4DBE /* WKInspectorProbeWebView.swift in Sources */,
 				1D682986D61D5ACCBBAD717E /* WKTransferWrapperView.swift in Sources */,
+				F6B170000000000000000001 /* WorkBriefLocalAdapterTests.swift in Sources */,
 					CE0E03140000000000000001 /* WorkProvenanceLinearTicketLinkResolverTests.swift in Sources */,
 					8DCF06522BB39B4A966FFC83 /* WorkProvenanceObserverTests.swift in Sources */,
 					CE0E03190000000000000001 /* WorkProvenancePullRequestOwnerResolverDefaultTests.swift in Sources */,
@@ -9715,6 +9746,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
+		F6B130000000000000000002 /* XCLocalSwiftPackageReference "BmuxWorkBriefUI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/macOS/BmuxWorkBriefUI;
+		};
+		F6B130000000000000000001 /* XCLocalSwiftPackageReference "BmuxWorkBrief" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/macOS/BmuxWorkBrief;
+		};
 		0C69E6A5FA9B0513E68DF443 /* XCLocalSwiftPackageReference "BMUXMobileCore" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/Shared/BMUXMobileCore;
@@ -9929,6 +9968,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		F6B140000000000000000002 /* BmuxWorkBriefUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F6B130000000000000000002 /* XCLocalSwiftPackageReference "BmuxWorkBriefUI" */;
+			productName = BmuxWorkBriefUI;
+		};
+		F6B140000000000000000001 /* BmuxWorkBrief */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F6B130000000000000000001 /* XCLocalSwiftPackageReference "BmuxWorkBrief" */;
+			productName = BmuxWorkBrief;
+		};
 		29813FE5A6CBC1019289A251 /* BMUXAuthCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 40B63BB4A170F0BD2D1DEFD1 /* XCLocalSwiftPackageReference "BMUXAuthCore" */;

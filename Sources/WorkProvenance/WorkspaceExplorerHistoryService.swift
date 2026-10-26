@@ -152,10 +152,11 @@ final class WorkspaceExplorerHistoryService {
         }
     }
 
-    func liveSnapshot() async throws -> LiveSnapshot {
-        let initialWorkspaces = liveWorkspaces()
+    func liveSnapshot(limit: Int? = nil) async throws -> LiveSnapshot {
+        let allInitialWorkspaces = liveWorkspaces()
+        let initialWorkspaces = Array(allInitialWorkspaces.prefix(max(0, limit ?? allInitialWorkspaces.count)))
         var factsByID: [UUID: (display: ProvenanceWorkspaceDisplayRecord?, lastActivityAt: Date?)] = [:]
-        var partialActivity = archiveService == nil
+        var partialActivity = archiveService == nil || allInitialWorkspaces.count > initialWorkspaces.count
         if let archiveService {
             for workspace in initialWorkspaces {
                 do {
@@ -168,7 +169,9 @@ final class WorkspaceExplorerHistoryService {
                 }
             }
         }
-        let currentWorkspaces = liveWorkspaces()
+        let allCurrentWorkspaces = liveWorkspaces()
+        let currentWorkspaces = Array(allCurrentWorkspaces.prefix(max(0, limit ?? allCurrentWorkspaces.count)))
+        if allCurrentWorkspaces.count > currentWorkspaces.count { partialActivity = true }
         if Set(currentWorkspaces.map(\.stableId)) != Set(initialWorkspaces.map(\.stableId)) {
             partialActivity = true
         }

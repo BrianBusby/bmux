@@ -315,6 +315,25 @@ struct WorkspaceExplorerHistoryAdapterTests {
 
     @MainActor
     @Test
+    func limitedLiveSnapshotBoundsWorkspaceReads() async throws {
+        let manager = TabManager()
+        let first = try #require(manager.selectedWorkspace)
+        let second = manager.addWorkspace()
+        let service = WorkspaceExplorerHistoryService(
+            archiveService: nil,
+            tabManagers: { [manager] }, activeWorkspaceID: { first.stableId.uuidString },
+            restoreRecords: { [:] },
+            reopenEligibility: { _, _, _ in .unavailable(.noRestoreSnapshot) })
+
+        let limited = try await service.liveSnapshot(limit: 1)
+
+        #expect(limited.workspaces.map(\.stableID) == [first.stableId])
+        #expect(!limited.workspaces.contains { $0.stableID == second.stableId })
+        #expect(limited.partialActivity)
+    }
+
+    @MainActor
+    @Test
     func explicitReopenUsesStableIdentityAndConsumesRestoreRecord() throws {
         let originalAppDelegate = AppDelegate.shared
         let appDelegate = AppDelegate()

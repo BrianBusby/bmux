@@ -10,7 +10,7 @@ extension ProvenanceSQLiteRepository {
         affectedBy event: ProvenanceEvent,
         invalidation: ProvenanceOutcomeInvalidation,
         latestEventSequence: Int?
-    ) throws {
+    ) throws -> Set<String> {
         let turnIDs = try affectedTurnOutcomeIDs(event: event, invalidation: invalidation)
         for turnID in turnIDs.sorted() {
             try projectTurnOutcomeIfNeeded(
@@ -18,6 +18,7 @@ extension ProvenanceSQLiteRepository {
                 latestEventSequence: latestEventSequence
             )
         }
+        return turnIDs
     }
 
     func projectTurnOutcomeIfNeeded(
@@ -52,6 +53,7 @@ extension ProvenanceSQLiteRepository {
                 source_watermark_sequence = excluded.source_watermark_sequence,
                 outcome_json = excluded.outcome_json,
                 created_at_seconds = excluded.created_at_seconds
+            WHERE outcome_json <> excluded.outcome_json
             """
         )
         defer { insertRevision.finalize() }
@@ -740,8 +742,8 @@ extension ProvenanceSQLiteRepository {
                     command.status,
                     command.exitCode.map(String.init) ?? "",
                     command.outputSummary ?? "",
-                    timestampFingerprint(command.startedAt),
-                    timestampFingerprint(command.completedAt),
+                    turnOutcomeTimestampFingerprint(command.startedAt),
+                    turnOutcomeTimestampFingerprint(command.completedAt),
                     command.classification.kind,
                     command.classification.ruleVersion,
                     String(command.classification.supported),
@@ -871,183 +873,6 @@ extension ProvenanceSQLiteRepository {
         try query.bind(sequence, at: 1)
         guard try query.step() else { return nil }
         return query.double(at: 0).map { Date(timeIntervalSince1970: $0) }
-    }
-
-    private func classifyTurnOutcomeCommand(_ command: String) -> ProvenanceTurnOutcomeCommandClassification {
-        let lower = command.lowercased()
-        let kind: String
-        let supported: Bool
-        if lower.contains("swift test")
-            || lower.contains("xcodebuild test")
-            || lower.contains("yarn test")
-            || lower.contains("npm test")
-            || lower.contains("npm run test")
-            || lower.contains("pytest")
-            || lower.contains("rspec")
-            || lower.contains("vitest")
-            || lower.contains("jest") {
-            kind = "test"
-            supported = true
-        } else if lower.contains("swift build")
-            || lower.contains("xcodebuild build")
-            || lower.contains("yarn build")
-            || lower.contains("npm run build")
-            || lower.contains("cargo build") {
-            kind = "build"
-            supported = true
-        } else if lower.contains("lint") || lower.contains("standard") {
-            kind = "lint"
-            supported = true
-        } else if lower.contains("tsc")
-            || lower.contains("typecheck")
-            || lower.contains("types:check")
-            || lower.contains("ts:check") {
-            kind = "typecheck"
-            supported = true
-        } else if lower.contains("format")
-            || lower.contains("prettier")
-            || lower.contains("swiftformat") {
-            kind = "formatter"
-            supported = true
-        } else if lower.contains("migrate") || lower.contains("db:migrate") {
-            kind = "migration"
-            supported = true
-        } else if lower.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("git ") {
-            kind = "git_inspection"
-            supported = true
-        } else {
-            kind = "unsupported"
-            supported = false
-        }
-        return ProvenanceTurnOutcomeCommandClassification(
-            kind: kind,
-            ruleVersion: Self.turnOutcomeCommandRuleVersion,
-            supported: supported
-        )
-    }
-
-    private func isValidationClassification(_ kind: String) -> Bool {
-        ["test", "build", "lint", "typecheck", "formatter", "migration"].contains(kind)
-    }
-
-    private func validationResultStatus(status: String, exitCode: Int?) -> String {
-        let normalized = status.lowercased()
-        if normalized.contains("cancel") {
-            return "cancelled"
-        }
-        if normalized.contains("interrupt") || normalized.contains("incomplete") {
-            return "incomplete"
-        }
-        if let exitCode {
-            return exitCode == 0 ? "passed" : "failed"
-        }
-        if normalized.contains("success") || normalized.contains("succeed") || normalized == "completed" {
-            return "passed"
-        }
-        if normalized.contains("fail") || normalized.contains("error") {
-            return "failed"
-        }
-        return "unknown"
-    }
-
-    private func normalizedTurnCompletionState(_ status: String) -> String {
-        let normalized = status.lowercased()
-        if normalized.contains("cancel") { return "cancelled" }
-        if normalized.contains("interrupt") { return "interrupted" }
-        if normalized.contains("fail") || normalized.contains("error") { return "failed" }
-        if normalized.contains("complete")
-            || normalized.contains("success")
-            || normalized == "done"
-            || normalized == "finished" {
-            return "completed"
-        }
-        if normalized.contains("active")
-            || normalized.contains("running")
-            || normalized.contains("started")
-            || normalized.contains("progress") {
-            return "incomplete"
-        }
-        return "unknown"
-    }
-
-    private func isCompletedPlanStatus(_ status: String) -> Bool {
-        let normalized = status.lowercased()
-        return normalized == "completed"
-            || normalized == "complete"
-            || normalized == "done"
-            || normalized == "succeeded"
-            || normalized == "success"
-    }
-
-    private func isBlockedPlanStatus(_ status: String) -> Bool {
-        let normalized = status.lowercased()
-        return normalized == "blocked" || normalized == "blocker"
-    }
-
-    private func isActivePlanStatus(_ status: String) -> Bool {
-        let normalized = status.lowercased()
-        return normalized == "in_progress"
-            || normalized == "in progress"
-            || normalized == "active"
-            || normalized == "running"
-    }
-
-    private func isPendingPlanStatus(_ status: String) -> Bool {
-        let normalized = status.lowercased()
-        return normalized == "pending" || normalized == "todo" || normalized == "deferred"
-    }
-
-    private func isExplicitCompletedActionReport(_ text: String) -> Bool {
-        let lower = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        return lower.hasPrefix("completed ")
-            || lower.hasPrefix("implemented ")
-            || lower.hasPrefix("added ")
-            || lower.hasPrefix("updated ")
-            || lower.hasPrefix("fixed ")
-            || lower.hasPrefix("created ")
-            || lower.hasPrefix("removed ")
-            || lower.hasPrefix("ran ")
-    }
-
-    private func timestampFingerprint(_ date: Date?) -> String {
-        guard let date else { return "" }
-        return String(Int64((date.timeIntervalSince1970 * 1_000_000).rounded()))
-    }
-}
-
-private struct TurnOutcomeEvidenceKey: Hashable {
-    let kind: String
-    let id: String
-}
-
-private struct TurnOutcomeEvidenceIndex {
-    private var referencesByKey: [TurnOutcomeEvidenceKey: [ProvenanceTurnOutcomeEvidenceReference]]
-
-    init(referencesByKey: [TurnOutcomeEvidenceKey: [ProvenanceTurnOutcomeEvidenceReference]]) {
-        var normalized: [TurnOutcomeEvidenceKey: [ProvenanceTurnOutcomeEvidenceReference]] = [:]
-        for (key, references) in referencesByKey {
-            let sourceState = references.count > 1 ? "duplicated" : "available"
-            normalized[key] = references.map {
-                ProvenanceTurnOutcomeEvidenceReference(
-                    eventID: $0.eventID,
-                    eventSequence: $0.eventSequence,
-                    eventType: $0.eventType,
-                    source: $0.source,
-                    evidenceOrigin: $0.evidenceOrigin,
-                    evidenceScope: $0.evidenceScope,
-                    recordKind: $0.recordKind,
-                    recordID: $0.recordID,
-                    interpretedByRuleVersion: $0.interpretedByRuleVersion,
-                    sourceState: sourceState
-                )
-            }
-        }
-        self.referencesByKey = normalized
-    }
-
-    func references(kind: String, id: String?) -> [ProvenanceTurnOutcomeEvidenceReference] {
-        guard let id else { return [] }
-        return referencesByKey[TurnOutcomeEvidenceKey(kind: kind, id: id)] ?? []
     }
 }
 
