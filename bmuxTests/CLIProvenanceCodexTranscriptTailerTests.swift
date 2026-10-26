@@ -103,7 +103,7 @@ extension CLIProvenanceCodexTranscriptImporterTests {
             surfaceID: "surface-1", client: client, cursorStore: cursorStore
         )
         let secondOutcome = try await restarted.consume(at: transcriptURL)
-        #expect(secondOutcome.importResult.fileReport.eventsAppended == 5)
+        #expect(secondOutcome.importResult.fileReport.eventsAppended == 4)
         #expect(secondOutcome.importResult.fileReport.duplicateEvents == 0)
         let secondCursor = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
         #expect(secondCursor.byteOffset > firstCursor.byteOffset)

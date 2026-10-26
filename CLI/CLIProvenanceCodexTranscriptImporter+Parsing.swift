@@ -91,17 +91,17 @@ extension CLIProvenanceCodexTranscriptImporter {
     }
 
     static func reasoningText(from payload: [String: Any]) -> String? {
-        if let text = trimmedNonEmpty(string(payload["text"])) {
-            return text
-        }
         if let text = trimmedNonEmpty(string(payload["summary_text"])) {
             return text
         }
-        let summaryText = textFragments(from: payload["summary_text"]).joined(separator: "\n")
+        let summaryText = (payload["summary_text"] as? [String] ?? []).joined(separator: "\n")
         if let text = trimmedNonEmpty(summaryText) {
             return text
         }
-        let summary = textFragments(from: payload["summary"]).joined(separator: "\n")
+        let summary = (arrayOfDictionaries(payload["summary"]) ?? [])
+            .filter { string($0["type"]) == "summary_text" }
+            .compactMap { trimmedNonEmpty(string($0["text"])) }
+            .joined(separator: "\n")
         return trimmedNonEmpty(summary)
     }
 
