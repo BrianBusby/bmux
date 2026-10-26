@@ -131,6 +131,15 @@ Embedded browser settings from Settings > Browser.
 | `browser.showImportHintOnBlankTabs` | boolean | `true` | Show the browser import hint on blank tabs. |
 | `browser.reactGrabVersion` | string | `"0.1.29"` | Pinned react-grab version for the browser toolbar helper. |
 
+## integrations
+
+External provider settings from Settings > Integrations.
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `integrations.workBrief.githubScopes` | array<string> | `[]` | Explicit GitHub `org:Name` or `repo:Owner/Name` scopes for read-only Work Brief searches. |
+| `integrations.linear.authorizationHeader` | string | `""` | Optional managed Linear GraphQL authorization header; interactive use stores the API key in Keychain. |
+
 ## shortcuts
 
 Keyboard shortcut settings from Settings > Keyboard Shortcuts.

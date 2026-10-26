@@ -16,6 +16,8 @@ public struct WorkBriefLocalWorkspace: Equatable, Sendable, Identifiable {
     public let tickets: [WorkBriefLink]
     /// Explicit pull request link.
     public let pullRequest: WorkBriefLink?
+    /// PE-observed pull-request status, when present.
+    public let pullRequestStatus: String?
     /// Verified local activity.
     public let status: WorkBriefLocalStatus
     /// PE-associated surface ID, when known.
@@ -36,6 +38,7 @@ public struct WorkBriefLocalWorkspace: Equatable, Sendable, Identifiable {
     ///   - branch: An observed branch name, when known.
     ///   - tickets: Explicit source links to tickets.
     ///   - pullRequest: An explicit source link to a pull request.
+    ///   - pullRequestStatus: PE-observed pull-request status, when present.
     ///   - status: Verified local activity state.
     ///   - surfaceID: An accepted PE surface association, when known.
     ///   - lastActivityAt: Latest accepted activity time, when known.
@@ -43,7 +46,7 @@ public struct WorkBriefLocalWorkspace: Equatable, Sendable, Identifiable {
     ///   - evidence: Bounded references supporting the displayed facts.
     public init(id: UUID, runtimeID: UUID, title: String, repository: String?, branch: String?,
                 tickets: [WorkBriefLink], pullRequest: WorkBriefLink?, status: WorkBriefLocalStatus,
-                surfaceID: String?, lastActivityAt: Date?, checkedAt: Date,
+                pullRequestStatus: String? = nil, surfaceID: String?, lastActivityAt: Date?, checkedAt: Date,
                 evidence: [WorkBriefEvidence]) {
         self.id = id
         self.runtimeID = runtimeID
@@ -52,6 +55,7 @@ public struct WorkBriefLocalWorkspace: Equatable, Sendable, Identifiable {
         self.branch = branch
         self.tickets = tickets
         self.pullRequest = pullRequest
+        self.pullRequestStatus = pullRequestStatus
         self.status = status
         self.surfaceID = surfaceID
         self.lastActivityAt = lastActivityAt

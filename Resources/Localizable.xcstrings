@@ -106771,13 +106771,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Follow-up questions are not available in this local brief yet."
+            "value": "Follow-up questions are not available yet."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "このローカル概要では追加の質問はまだ利用できません。"
+            "value": "追加の質問はまだ利用できません。"
           }
         }
       }
@@ -107258,6 +107258,86 @@
         }
       }
     },
+    "workBrief.sourceNameBmux": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmux"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bmux"
+          }
+        }
+      }
+    },
+    "workBrief.sourceNamePE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provenance Engine"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provenance Engine"
+          }
+        }
+      }
+    },
+    "workBrief.sourceNameLinear": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linear"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linear"
+          }
+        }
+      }
+    },
+    "workBrief.sourceNameGitHub": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub"
+          }
+        }
+      }
+    },
+    "workBrief.sourceNameSlack": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slack"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slack"
+          }
+        }
+      }
+    },
     "workBrief.sourceHealth": {
       "localizations": {
         "en": {
@@ -107320,6 +107400,302 @@
             "value": "そのワークスペースまたはサーフェスは利用できなくなりました。概要を更新してください。"
           }
         }
+      }
+    },
+    "workBrief.owner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Owner"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "担当者"
+          }
+        }
+      }
+    },
+    "workBrief.githubOpen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オープン"
+          }
+        }
+      }
+    },
+    "workBrief.assignedIssue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assigned to you in Linear"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linear であなたに割り当てられています"
+          }
+        }
+      }
+    },
+    "workBrief.inferred": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inferred"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推定"
+          }
+        }
+      }
+    },
+    "workBrief.ticketIDMatch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matching ticket ID"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チケット ID が一致"
+          }
+        }
+      }
+    },
+    "workBrief.ticketURLMatch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matching ticket URL"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チケット URL が一致"
+          }
+        }
+      }
+    },
+    "workBrief.pullRequestURLMatch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matching pull request URL"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プルリクエスト URL が一致"
+          }
+        }
+      }
+    },
+    "workBrief.reviewRequested": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your review was requested"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あなたにレビューが依頼されています"
+          }
+        }
+      }
+    },
+    "workBrief.authoredPR": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You authored this pull request"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あなたがこのプルリクエストを作成しました"
+          }
+        }
+      }
+    },
+    "workBrief.sourceStale": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source refresh was incomplete; this item may be stale."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ソースの更新が不完全です。この項目は古い可能性があります。"
+          }
+        }
+      }
+    },
+    "workBrief.noAttention": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No verified requests in the available source facts."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用可能なソース情報に、確認済みの依頼はありません。"
+          }
+        }
+      }
+    },
+    "workBrief.noInProgress": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No active work was found in the available source facts."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用可能なソース情報に進行中の作業は見つかりませんでした。"
+          }
+        }
+      }
+    },
+    "workBrief.slackNotConfigured": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slack is not configured for this brief."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この概要には Slack が設定されていません。"
+          }
+        }
+      }
+    },
+    "workBrief.sourceAvailable": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checked"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "確認済み"
+          }
+        }
+      }
+    },
+    "workBrief.sourcePartial": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partial; some facts may be missing"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一部のみ確認済みです。情報が欠けている可能性があります"
+          }
+        }
+      }
+    },
+    "workBrief.sourceFailed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh failed; showing prior facts"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新に失敗しました。以前の情報を表示しています"
+          }
+        }
+      }
+    },
+    "workBrief.sourceNotConfigured": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not configured"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未設定"
+          }
+        }
+      }
+    },
+    "workBrief.awaitingReview": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Awaiting review" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "レビュー待ち" } }
+      }
+    },
+    "workBrief.reviewersRequested": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Reviewers were requested" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "レビュアーにレビューが依頼されています" } }
+      }
+    },
+    "workBrief.sourceAuthenticationFailed": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Authentication failed; reconnect this source" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "認証に失敗しました。このソースを再接続してください" } }
+      }
+    },
+    "workBrief.sourceConflict": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Local provenance and GitHub disagree on this pull request's status." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ローカルの記録と GitHub で、このプルリクエストの状態が一致しません。" } }
       }
     },
     "workBrief.title": {

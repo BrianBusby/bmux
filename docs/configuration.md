@@ -2,6 +2,29 @@
 
 Global app preferences live in `~/.config/bmux/bmux.json`.
 
+## `integrations.workBrief.githubScopes`
+
+Work Brief searches GitHub pull requests only within the organization or
+repository scopes you list. The default is an empty list, which leaves the
+GitHub source visibly unconfigured. Use at most four entries, each in the form
+`org:Name` or `repo:Owner/Name`:
+
+```json
+{
+  "integrations": {
+    "workBrief": {
+      "githubScopes": ["org:CompanyCam"]
+    }
+  }
+}
+```
+
+The source reads open pull requests authored by you or requesting your review.
+It uses the existing GitHub credential mechanism and stores at most 100 short
+facts in memory. Work Brief does not save PR bodies or comments. Linear uses
+the existing Linear authorization and reads issues assigned to the viewer.
+Neither source writes external facts into Provenance Engine.
+
 ## `paneBorderColor` and `activePaneBorderColor`
 
 Customize split-workspace pane boundaries controlled by bmux.

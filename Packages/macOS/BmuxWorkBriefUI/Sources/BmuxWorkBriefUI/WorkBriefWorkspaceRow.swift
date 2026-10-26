@@ -72,7 +72,7 @@ public struct WorkBriefWorkspaceRow: View {
                 ForEach(item.evidence) { evidence in
                     HStack {
                         Text(evidenceLabel(evidence.field))
-                        Text(evidenceSourceLabel(evidence.source))
+                        Text(evidence.source.displayName)
                             .foregroundStyle(.secondary)
                         Text(evidence.isObserved
                              ? String(localized: "workBrief.observed", defaultValue: "Observed")
@@ -117,16 +117,6 @@ public struct WorkBriefWorkspaceRow: View {
         case .running: String(localized: "workBrief.running", defaultValue: "Working")
         case .idle: String(localized: "workBrief.idle", defaultValue: "Idle")
         case .disconnected: String(localized: "workBrief.unknownStatus", defaultValue: "Status unknown")
-        }
-    }
-
-    private func evidenceSourceLabel(_ source: WorkBriefSource) -> String {
-        switch source {
-        case .bmux: "bmux"
-        case .provenanceEngine: "Provenance Engine"
-        case .linear: "Linear"
-        case .github: "GitHub"
-        case .slack: "Slack"
         }
     }
 

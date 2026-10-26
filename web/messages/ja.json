@@ -1684,6 +1684,10 @@
         },
         "integrations": {
           "description": "設定 > 連携で管理する外部プロバイダーの認証情報と連携設定です。",
+          "workBrief": {
+            "description": "読み取り専用の Work Brief ソース範囲です。",
+            "githubScopes": "自分のオープンな PR とレビュー依頼を検索する GitHub 組織またはリポジトリです。org:Name または repo:Owner/Name を使用します。空の場合は GitHub の Work Brief 検索を無効にします。"
+          },
           "linear": {
             "description": "Linear 連携の設定です。",
             "authorizationHeader": "ヘッドレス環境または管理環境向けの任意の Linear GraphQL Authorization ヘッダーです。対話的に使う場合は、設定画面の Keychain フィールドを優先してください。"

@@ -87,5 +87,12 @@ public struct IntegrationsCatalogSection: SettingCatalogSection {
         defaultValue: ""
     )
 
+    /// Explicit GitHub organization or repository scopes for the read-only Work Brief.
+    /// Values use `org:Name` or `repo:Owner/Name`; empty disables GitHub search.
+    public let workBriefGitHubScopes = JSONKey<[String]>(
+        id: "integrations.workBrief.githubScopes",
+        defaultValue: []
+    )
+
     public init() {}
 }

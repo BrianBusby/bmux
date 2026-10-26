@@ -29,7 +29,8 @@ struct WorkBriefLocalAdapter {
                     ("repository", "repository_id", display.repositoryID != nil),
                     ("branch", "branch", display.branch != nil),
                     ("ticket", "ticket_links", !tickets.isEmpty),
-                    ("pullRequest", "pull_request_url", pullRequest != nil)
+                    ("pullRequest", "pull_request_url", pullRequest != nil),
+                    ("pullRequestStatus", "pull_request_status", display.pullRequestStatus != nil)
                 ] where present {
                     let metadata = display.fieldMetadata[metadataKey]
                     evidence.append(WorkBriefEvidence(id: "\(id):\(field)", source: .provenanceEngine,
@@ -46,7 +47,8 @@ struct WorkBriefLocalAdapter {
             return WorkBriefLocalWorkspace(id: id, runtimeID: runtimeID, title: item.title,
                 repository: display?.repositoryID.map { result.repositoryNamesByID[$0] ?? $0 },
                 branch: display?.branch, tickets: tickets, pullRequest: pullRequest,
-                status: Self.status(item.liveStatus), surfaceID: surfaceIDs[id],
+                status: Self.status(item.liveStatus),
+                pullRequestStatus: display?.pullRequestStatus, surfaceID: surfaceIDs[id],
                 lastActivityAt: item.lastActivityAt, checkedAt: checkedAt, evidence: evidence)
         }
         let partial = result.partialLiveActivity || result.liveMetadataPending || associationPartial ||

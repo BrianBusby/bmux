@@ -72,17 +72,22 @@ for 170 ms, then commits the latest filter or scope result. Merged PR #185 captu
 
 ## Work Brief local slice
 
-The `work-brief-local` branch adds a built-in, read-only Work Brief window over
+Merged PR #213 adds a built-in, read-only Work Brief window over
 current bmux workspace presence and accepted PE workspace display facts. It
 shows local work, verified input/error attention, source health, explicit ticket
 and PR links, and evidence behind displayed relationships. Navigation validates
 stable workspace, runtime, and surface IDs before using the existing workspace
-selection and focus-flash actions. Linear and GitHub have no direct refresh in
-this slice; Waiting on, Recent changes, and Ask remain explicitly unavailable.
-No external content is persisted. The cross-service Work Brief projection is
-bmux-owned; PE remains the owner of durable engineering evidence. This slice
-is under observation until tagged runtime dogfood and merge. See
-[the implementation record](../planning/work-brief-implementation.md).
+selection and focus-flash actions. The `work-brief-external` slice adds
+bounded, read-only Linear assigned issues and explicitly scoped GitHub pull
+requests. It shows source health, observed review waits, exact ticket/PR
+relationships marked as inferred joins between observed links, and external
+work without a local workspace. A partial or failed
+refresh keeps prior facts with their original check time. Recent changes and
+Ask remain explicitly unavailable. No external content is persisted. The
+cross-service Work Brief projection is bmux-owned; PE remains the owner of
+durable engineering evidence. The merged local slice remains under observation;
+the external slice awaits tagged dogfood and merge. See [the local record](../planning/work-brief-implementation.md)
+and [the external record](../planning/work-brief-external.md).
 
 ## Current Generated Truth
 
