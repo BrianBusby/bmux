@@ -915,10 +915,12 @@ struct bmuxApp: App {
                 .bmuxAppearanceColorScheme(appearanceMode)
         }
         WorkspaceExplorerScenes(appDelegate: appDelegate, appearanceMode: appearanceMode)
+        WorkBriefScenes(appDelegate: appDelegate, appearanceMode: appearanceMode)
     }
     @CommandsBuilder
     private var windowAndViewCommands: some Commands {
         WorkspaceExplorerCommands()
+        WorkBriefCommands()
         CommandGroup(after: .windowArrangement) {
             Button(String(localized: "menu.window.taskManager", defaultValue: "Task Manager...")) {
                 TaskManagerWindowController.shared.show()
@@ -932,7 +934,6 @@ struct bmuxApp: App {
                     sidebarState.toggle()
                 }
             }
-
             splitCommandButton(title: String(localized: "menu.view.toggleRightSidebar", defaultValue: "Toggle Right Sidebar"), shortcut: menuShortcut(for: .toggleRightSidebar)) {
                 if AppDelegate.shared?.toggleRightSidebarInActiveMainWindow(
                     preferredWindow: NSApp.keyWindow ?? NSApp.mainWindow
@@ -940,7 +941,6 @@ struct bmuxApp: App {
                     NSSound.beep()
                 }
             }
-
             splitCommandButton(title: String(localized: "menu.view.focusRightSidebar", defaultValue: "Toggle Right Sidebar Focus"), shortcut: menuShortcut(for: .focusRightSidebar)) {
                 if AppDelegate.shared?.toggleRightSidebarKeyboardFocusInActiveMainWindow() != true {
                     if AppDelegate.shared?.focusRightSidebarInActiveMainWindow(

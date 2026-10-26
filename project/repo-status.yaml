@@ -22,6 +22,10 @@ execution_telemetry:
   live_codex_evidence_convergence_correctness: implemented
 
 local_capabilities:
+  work_brief_local_view: under_observation
+  work_brief_external_correlation: planned
+  work_brief_conversation: planned
+  work_brief_slack_pilot: planned
   matte_skin_theme_tokens: implemented
   matte_skin_surface_styles: implemented
   matte_skin_sidebar: implemented
@@ -170,6 +174,8 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: work_brief_external_sources_unavailable
+    status: open
   - id: pe_live_storage_reclamation_capacity_and_concurrency
     status: open
   - id: app_host_cancellation_ownership_verification
