@@ -17,7 +17,7 @@ await coordinator.refresh()
 
 Live status observations use `observeLocalStatus(id:status:)` to update the
 snapshot in memory. This keeps status changes independent of PE reads.
-Provider ticket IDs and PR URLs can match accepted local PE links; the brief
+Provider ticket IDs or URLs and PR URLs can match accepted local PE links; the brief
 labels those joins as bmux inferences and carries the matching PE event ID when
 its link evidence is available. Branch names alone never establish a join. Source
 notifications can call `refresh()`; overlapping requests coalesce.

@@ -107642,7 +107642,7 @@
         }
       }
     },
-    "workBrief.ticketLinkMatch": {
+    "workBrief.ticketIDMatch": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -107654,6 +107654,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "チケット ID が一致"
+          }
+        }
+      }
+    },
+    "workBrief.ticketURLMatch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matching ticket URL"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チケット URL が一致"
           }
         }
       }
