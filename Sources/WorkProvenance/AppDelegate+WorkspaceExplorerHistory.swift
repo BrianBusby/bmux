@@ -58,7 +58,7 @@ extension AppDelegate {
     /// Current live work and PE display facts, without retained archive fallback.
     func loadWorkspaceExplorerLiveBrief() async throws -> WorkspaceExplorerHistoryLoadResult {
         let service = workspaceExplorerHistoryService()
-        let live = try await service.liveSnapshot()
+        let live = try await service.liveSnapshot(limit: 100)
         return service.combine(live: live, archived: .init(records: [], availability: .available))
     }
 

@@ -29,7 +29,7 @@ struct WorkBriefScenes: Scene {
         let workspaceMonitor = WorkspaceExplorerWorkspaceChangeMonitor(
             tabManagers: { appDelegate.workspaceExplorerTabManagers() })
         let statusMonitor = WorkspaceExplorerLiveStatusMonitor(
-            workspaces: { appDelegate.workspaceExplorerLiveWorkspaces() })
+            workspaces: { Array(appDelegate.workspaceExplorerLiveWorkspaces().prefix(100)) })
         return WorkBriefView(model: model,
             jump: { appDelegate.workBriefJump(stableID: $0, runtimeID: $1) },
             highlight: { appDelegate.workBriefHighlight(stableID: $0, runtimeID: $1, surfaceID: $2) },

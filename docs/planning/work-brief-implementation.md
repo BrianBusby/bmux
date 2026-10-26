@@ -53,8 +53,9 @@ slice against the complete affected architecture before expanding it.
 - `BmuxWorkBrief` owns source facts, classification, and the observable refresh
   coordinator. The app maps existing live Explorer/PE reads and owns
   validated navigation. The view has no shell, socket, or terminal-input action.
-- The producer caps open workspaces at 100, external links at 12 per workspace,
-  and PE association reads at 32 per refresh. Refreshes coalesce while one
+- The producer caps live PE workspace reads and status subscriptions at 100,
+  external links at 12 per workspace, and PE association reads at 32 per
+  refresh. Truncation marks local source health partial. Refreshes coalesce while one
   read is in flight; the initial presence snapshot appears before PE enrichment.
 - Live status changes update the local snapshot without re-reading PE. Topology
   changes rebind status monitoring for newly opened workspaces before refreshing.
