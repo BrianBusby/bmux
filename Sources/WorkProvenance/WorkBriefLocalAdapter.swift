@@ -63,7 +63,7 @@ struct WorkBriefLocalAdapter {
         return url
     }
 
-    private static func status(_ status: WorkspaceExplorerStatus) -> WorkBriefLocalStatus {
+    static func status(_ status: WorkspaceExplorerStatus) -> WorkBriefLocalStatus {
         switch status {
         case .needsInput: .needsInput
         case .error: .error

@@ -11,6 +11,13 @@ public struct WorkBriefView: View {
     private let onStop: @MainActor () -> Void
 
     /// Creates a brief with only the initial read and explicit navigation capabilities.
+    /// - Parameters:
+    ///   - model: The domain coordinator supplying bounded snapshots.
+    ///   - jump: A host-validated workspace selection action.
+    ///   - highlight: A host-validated surface highlight action.
+    ///   - openURL: A source URL action invoked only on a user click.
+    ///   - onStart: Begins source monitoring while the view is visible.
+    ///   - onStop: Ends source monitoring when the view disappears.
     public init(model: WorkBriefCoordinator,
                 jump: @escaping @MainActor (UUID, UUID) -> Bool,
                 highlight: @escaping @MainActor (UUID, UUID, String) -> Bool,
@@ -25,6 +32,7 @@ public struct WorkBriefView: View {
         self.onStop = onStop
     }
 
+    /// Renders source health, local work, and explicit unavailable sections.
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {

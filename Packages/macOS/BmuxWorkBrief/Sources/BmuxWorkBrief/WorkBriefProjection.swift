@@ -10,6 +10,7 @@ public struct WorkBriefProjection: Equatable, Sendable {
     public let waitingOn: [WorkBriefLocalWorkspace]
 
     /// Projects a source snapshot without inventing external status or links.
+    /// - Parameter snapshot: The bounded source facts to classify.
     public init(snapshot: WorkBriefSnapshot) {
         inProgress = snapshot.localWorkspaces.sorted {
             if $0.status.rawValue != $1.status.rawValue { return $0.status.rawValue < $1.status.rawValue }

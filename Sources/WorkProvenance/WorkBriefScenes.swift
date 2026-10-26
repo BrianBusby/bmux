@@ -35,8 +35,15 @@ struct WorkBriefScenes: Scene {
             highlight: { appDelegate.workBriefHighlight(stableID: $0, runtimeID: $1, surfaceID: $2) },
             openURL: { url in _ = BrowserExternalLinkOpener().openWebLink(url) },
             onStart: { refresh in
-                workspaceMonitor.start(onChange: refresh)
-                statusMonitor.start { _, _ in refresh() }
+                let observeStatus: @MainActor (String, WorkspaceExplorerStatus) -> Void = { id, status in
+                    guard let id = UUID(uuidString: id) else { return }
+                    model.observeLocalStatus(id: id, status: WorkBriefLocalAdapter.status(status))
+                }
+                workspaceMonitor.start {
+                    statusMonitor.start(onChange: observeStatus)
+                    refresh()
+                }
+                statusMonitor.start(onChange: observeStatus)
             },
             onStop: {
                 workspaceMonitor.stop()

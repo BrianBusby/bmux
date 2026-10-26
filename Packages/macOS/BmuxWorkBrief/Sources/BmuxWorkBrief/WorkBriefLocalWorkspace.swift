@@ -28,6 +28,19 @@ public struct WorkBriefLocalWorkspace: Equatable, Sendable, Identifiable {
     public let evidence: [WorkBriefEvidence]
 
     /// Creates one immutable local work item.
+    /// - Parameters:
+    ///   - id: The restart-stable workspace identity.
+    ///   - runtimeID: The current runtime identity used for validated navigation.
+    ///   - title: The current bmux workspace title.
+    ///   - repository: An observed repository label, when known.
+    ///   - branch: An observed branch name, when known.
+    ///   - tickets: Explicit source links to tickets.
+    ///   - pullRequest: An explicit source link to a pull request.
+    ///   - status: Verified local activity state.
+    ///   - surfaceID: An accepted PE surface association, when known.
+    ///   - lastActivityAt: Latest accepted activity time, when known.
+    ///   - checkedAt: The time these source facts were checked.
+    ///   - evidence: Bounded references supporting the displayed facts.
     public init(id: UUID, runtimeID: UUID, title: String, repository: String?, branch: String?,
                 tickets: [WorkBriefLink], pullRequest: WorkBriefLink?, status: WorkBriefLocalStatus,
                 surfaceID: String?, lastActivityAt: Date?, checkedAt: Date,

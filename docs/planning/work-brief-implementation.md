@@ -23,8 +23,8 @@ must not read PE SQLite directly or generate canonical coding-agent milestones.
 
 ## Ownership
 
-`BmuxWorkBrief` owns bounded source facts, evidence labels, source health, and
-pure classification. `BmuxWorkBriefUI` owns immutable card rendering and
+`BmuxWorkBrief` owns bounded source facts, evidence labels, source health,
+classification, and observable refresh state. `BmuxWorkBriefUI` owns immutable card rendering and
 explicit user actions. The app composition maps existing Explorer/PE results to
 facts and validates navigation targets through existing shared actions. PE
 remains the durable source for accepted local evidence. External provider
@@ -50,12 +50,14 @@ slice against the complete affected architecture before expanding it.
 
 ## Local slice verification and limits (2026-10-26)
 
-- `BmuxWorkBrief` remains pure source facts and classification. Refresh state lives in
-  `BmuxWorkBriefUI`. The app maps existing live Explorer/PE reads and owns
+- `BmuxWorkBrief` owns source facts, classification, and the observable refresh
+  coordinator. The app maps existing live Explorer/PE reads and owns
   validated navigation. The view has no shell, socket, or terminal-input action.
 - The producer caps open workspaces at 100, external links at 12 per workspace,
   and PE association reads at 32 per refresh. Refreshes coalesce while one
   read is in flight; the initial presence snapshot appears before PE enrichment.
+- Live status changes update the local snapshot without re-reading PE. Topology
+  changes rebind status monitoring for newly opened workspaces before refreshing.
 - Package tests: two domain cases passed. Focused app tests: two adapter cases
   passed, including rejection of non-HTTPS source links and partial-source
   honesty. Package UI build, tagged app build 899, test-wiring, package grouping,

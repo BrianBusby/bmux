@@ -14,6 +14,12 @@ public struct WorkBriefSnapshot: Equatable, Sendable {
     public let slackHealth: WorkBriefSourceHealth
 
     /// Creates an immutable bounded brief.
+    /// - Parameters:
+    ///   - localWorkspaces: Open local workspaces, capped at 100.
+    ///   - localHealth: Freshness and completeness of bmux and PE local facts.
+    ///   - linearHealth: Freshness of Linear facts.
+    ///   - githubHealth: Freshness of GitHub facts.
+    ///   - slackHealth: Freshness of opted-in Slack facts.
     public init(localWorkspaces: [WorkBriefLocalWorkspace], localHealth: WorkBriefSourceHealth,
                 linearHealth: WorkBriefSourceHealth, githubHealth: WorkBriefSourceHealth,
                 slackHealth: WorkBriefSourceHealth) {

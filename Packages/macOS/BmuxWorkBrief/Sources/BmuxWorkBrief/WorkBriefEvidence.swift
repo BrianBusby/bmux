@@ -18,6 +18,14 @@ public struct WorkBriefEvidence: Equatable, Sendable, Identifiable {
     public let referenceID: String?
 
     /// Creates a bounded evidence reference.
+    /// - Parameters:
+    ///   - id: A stable identity within this brief.
+    ///   - source: The owner of the supporting fact.
+    ///   - field: A short field key without private payload text.
+    ///   - isObserved: Whether the source directly observed the fact.
+    ///   - checkedAt: The source observation time.
+    ///   - url: An optional explicit source URL.
+    ///   - referenceID: An optional durable PE event identity.
     public init(id: String, source: WorkBriefSource, field: String,
                 isObserved: Bool, checkedAt: Date, url: URL? = nil, referenceID: String? = nil) {
         self.id = id

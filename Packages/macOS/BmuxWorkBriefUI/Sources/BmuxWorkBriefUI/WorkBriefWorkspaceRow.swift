@@ -15,6 +15,11 @@ public struct WorkBriefWorkspaceRow: View {
     @State private var targetMissing = false
 
     /// Creates a work card with typed actions.
+    /// - Parameters:
+    ///   - item: Immutable source-backed workspace facts.
+    ///   - jump: A host-validated workspace selection action.
+    ///   - highlight: A host-validated surface highlight action.
+    ///   - openURL: A source URL action invoked only on a user click.
     public init(item: WorkBriefLocalWorkspace,
                 jump: @escaping @MainActor (UUID, UUID) -> Bool,
                 highlight: @escaping @MainActor (UUID, UUID, String) -> Bool,
@@ -25,6 +30,7 @@ public struct WorkBriefWorkspaceRow: View {
         self.openURL = openURL
     }
 
+    /// Renders the work card, its explicit actions, and its evidence disclosure.
     public var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline) {

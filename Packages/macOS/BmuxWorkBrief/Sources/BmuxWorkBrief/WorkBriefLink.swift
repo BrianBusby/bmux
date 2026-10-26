@@ -12,6 +12,11 @@ public struct WorkBriefLink: Equatable, Sendable, Identifiable {
     public let source: WorkBriefSource
 
     /// Creates an explicit source link.
+    /// - Parameters:
+    ///   - id: The stable source identity.
+    ///   - label: A label supplied by the source.
+    ///   - url: The explicit source destination.
+    ///   - source: The owner of the link.
     public init(id: String, label: String, url: URL, source: WorkBriefSource) {
         self.id = id
         self.label = label
