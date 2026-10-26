@@ -11,6 +11,26 @@ import Testing
 #endif
 
 extension SidebarWorkspaceCardPresentationTests {
+    @MainActor @Test func referenceCardKeepsPullRequestAvatarWhenTicketHasAnOwner() throws {
+        let workspace = Workspace(title: "Review roof inspection")
+        let avatarURL = "https://avatars.githubusercontent.com/u/42?v=4"
+        let record = ProvenanceWorkspaceDisplayRecord(
+            id: "roof-work", workspaceID: workspace.stableId.uuidString,
+            pullRequestNumber: 42, pullRequestOwnerLogin: "sam",
+            pullRequestOwnerURL: "https://github.com/sam",
+            pullRequestOwnerAvatarURL: avatarURL,
+            ticketLinks: [.init(id: "ROOF-42", title: "Repair flashing", ownerName: "Alex")],
+            observedAt: Date(timeIntervalSince1970: 900), updatedAt: Date(timeIntervalSince1970: 900)
+        )
+        let provenance = try #require(WorkspaceDisplayCurrentStateSnapshot(record, agentWorktree: nil))
+
+        let card = Self.referenceCard(workspace: workspace, provenance: provenance)
+
+        #expect(card.ownerName == "sam")
+        #expect(card.ownerURL == URL(string: "https://github.com/sam"))
+        #expect(card.ownerAvatarURL == URL(string: avatarURL))
+    }
+
     @MainActor @Test func referenceRailUsesLivePullRequestOwnerAvatar() throws {
         let workspace = Workspace(title: "Review roof inspection")
         let panelID = try #require(workspace.focusedPanelId)
