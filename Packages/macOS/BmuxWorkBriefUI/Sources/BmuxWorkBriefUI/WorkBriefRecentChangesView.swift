@@ -3,12 +3,24 @@ import SwiftUI
 
 /// Current source-backed changes since the last viewed brief.
 public struct WorkBriefRecentChangesView: View {
+    /// Current immutable source facts.
     public let snapshot: WorkBriefSnapshot
+    /// Metadata from the prior viewed brief, if still valid.
     public let previousBrief: WorkBriefBaseline?
+    /// User-triggered workspace selection capability.
     public let jump: @MainActor (UUID, UUID) -> Bool
+    /// User-triggered surface highlight capability.
     public let highlight: @MainActor (UUID, UUID, String) -> Bool
+    /// User-triggered source-link opening capability.
     public let openURL: @MainActor (URL) -> Void
 
+    /// Creates the recent-changes section from current facts and a saved baseline.
+    /// - Parameters:
+    ///   - snapshot: Current immutable source facts.
+    ///   - previousBrief: Metadata from the previous viewed brief.
+    ///   - jump: Host-validated workspace selection action.
+    ///   - highlight: Host-validated surface highlight action.
+    ///   - openURL: Source URL action invoked only by a user click.
     public init(snapshot: WorkBriefSnapshot, previousBrief: WorkBriefBaseline?,
                 jump: @escaping @MainActor (UUID, UUID) -> Bool,
                 highlight: @escaping @MainActor (UUID, UUID, String) -> Bool,
@@ -20,6 +32,7 @@ public struct WorkBriefRecentChangesView: View {
         self.openURL = openURL
     }
 
+    /// The source-backed recent-changes section.
     public var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(String(localized: "workBrief.recentChanges", defaultValue: "Recent changes"))
