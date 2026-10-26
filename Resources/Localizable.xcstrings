@@ -106766,6 +106766,150 @@
         }
       }
     },
+    "workBrief.askPlaceholder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What needs my attention?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "何に対応が必要ですか？"
+          }
+        }
+      }
+    },
+    "workBrief.askButton": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "質問する"
+          }
+        }
+      }
+    },
+    "workBrief.askAttention": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These items have verified attention signals in the available sources."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用可能な情報源で、これらの項目に対応が必要であることを確認しました。"
+          }
+        }
+      }
+    },
+    "workBrief.askInProgress": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These items are active in the available sources."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これらの項目は利用可能な情報源で進行中です。"
+          }
+        }
+      }
+    },
+    "workBrief.askWaiting": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These items have an explicit review wait in the available sources."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これらの項目には、利用可能な情報源で確認されたレビュー待ちがあります。"
+          }
+        }
+      }
+    },
+    "workBrief.askTicketPR": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pull request is linked to the ticket by accepted local provenance."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このプルリクエストは、確認済みのローカルの来歴情報でチケットに関連付けられています。"
+          }
+        }
+      }
+    },
+    "workBrief.askNoEvidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No explicit ticket-to-PR link was found. Include the ticket ID and refresh the brief."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チケットとプルリクエストの明示的な関連付けが見つかりません。チケットIDを含めて、概要を更新してください。"
+          }
+        }
+      }
+    },
+    "workBrief.askUnsupported": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try asking about attention, work in progress, waiting, or a ticket's PR."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要対応の作業、進行中の作業、待機中の作業、またはチケットのプルリクエストについて質問してください。"
+          }
+        }
+      }
+    },
+    "workBrief.askNoItems": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No verified items were found in the available source facts. Check source health above."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用可能な情報源で確認済みの項目が見つかりません。上の情報源の状態を確認してください。"
+          }
+        }
+      }
+    },
     "workBrief.askUnavailable": {
       "localizations": {
         "en": {

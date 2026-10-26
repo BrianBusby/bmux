@@ -82,8 +82,11 @@ bounded, read-only Linear assigned issues and explicitly scoped GitHub pull
 requests. It shows source health, observed review waits, exact ticket/PR
 relationships marked as inferred joins between observed links, and external
 work without a local workspace. A partial or failed
-refresh keeps prior facts with their original check time. Recent changes and
-Ask remain explicitly unavailable. No external content is persisted. The
+refresh keeps prior facts with their original check time. The stacked
+`work-brief-conversation` slice answers supported questions over this same
+snapshot and shows the source-backed items and links; unsupported questions
+are stated explicitly. Recent changes remain unavailable. No question history
+or external content is persisted. The
 cross-service Work Brief projection is bmux-owned; PE remains the owner of
 durable engineering evidence. The merged local slice remains under observation;
 the external slice awaits tagged dogfood and merge. See [the local record](../planning/work-brief-implementation.md)
