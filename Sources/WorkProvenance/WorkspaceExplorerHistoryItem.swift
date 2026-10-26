@@ -18,6 +18,25 @@ struct WorkspaceExplorerHistoryItem: Identifiable {
 
     var isOpen: Bool { liveWorkspaceID != nil }
     var isSessionHistoryOnly: Bool { liveWorkspaceID == nil && archive == nil }
+    var hasUnverifiedPresence: Bool {
+        isSessionHistoryOnly || (!isOpen && archive != nil &&
+            lastActivityAt.map { $0 > (closedAt ?? .distantFuture) } == true)
+    }
+
+    func withSessionHistory(_ historical: Self?) -> Self {
+        guard let historical else { return self }
+        let laterThanClose = !isOpen && historical.lastActivityAt.map {
+            $0 > (closedAt ?? .distantFuture)
+        } == true
+        return Self(id: id, title: title, createdAt: createdAt, closedAt: closedAt,
+            lastActivityAt: [lastActivityAt, historical.lastActivityAt].compactMap { $0 }.max(),
+            colorHex: colorHex,
+            display: laterThanClose ? historical.display ?? display : display ?? historical.display,
+            repositoryID: laterThanClose ? historical.repositoryID ?? repositoryID :
+                repositoryID ?? historical.repositoryID,
+            liveWorkspaceID: liveWorkspaceID, liveStatus: liveStatus,
+            archive: archive, reopenEligibility: reopenEligibility)
+    }
 
     var lastRecordedStatus: WorkspaceExplorerStatus? {
         guard let code = archive?.lastRecordedStatusCode else { return nil }

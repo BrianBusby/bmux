@@ -73,8 +73,10 @@ session evidence. The next slice bounds both workspace-history and per-workspace
 session requests to 25 records per cursor page. Explorer keeps loaded pages,
 offers a continuation action, and follows further pages when a filter needs
 more matching historical rows. A compact PE facet read supplies filter choices
-before their cards are loaded. This remains under observation pending
-tagged-build dogfood of counts, filter options, and detail pagination.
+before their cards are loaded. Archived rows with newer PE session activity are
+treated as unverified history and do not offer Reopen. This remains under
+observation pending tagged-build dogfood of counts, filter options, and detail
+pagination.
 
 ## Current Generated Truth
 

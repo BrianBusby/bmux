@@ -36,14 +36,14 @@ struct WorkspaceExplorerHistoryView: View {
             }
             HStack {
                 Text(item.isOpen ? String(localized: "explorer.open", defaultValue: "Open") :
-                    (item.isSessionHistoryOnly ?
+                    (item.hasUnverifiedPresence ?
                         String(localized: "explorer.sessionHistory", defaultValue: "Session history") :
                         String(localized: "explorer.closed", defaultValue: "Closed")))
                 Spacer()
                 if item.isOpen {
                     Button(String(localized: "explorer.openLive", defaultValue: "Open live workspace"),
                         action: onOpenLive)
-                } else if item.isSessionHistoryOnly {
+                } else if item.hasUnverifiedPresence {
                     EmptyView()
                 } else if case .eligible = item.reopenEligibility {
                     Button(String(localized: "explorer.reopen", defaultValue: "Reopen workspace"),
@@ -60,7 +60,7 @@ struct WorkspaceExplorerHistoryView: View {
                     closed.formatted(date: .abbreviated, time: .shortened))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
-            if item.isSessionHistoryOnly {
+            if item.hasUnverifiedPresence {
                 Text(String(localized: "explorer.historicalPresenceNotice", defaultValue:
                     "Session history from Provenance Engine. This bmux run cannot verify whether the workspace is open elsewhere."))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
@@ -88,7 +88,7 @@ struct WorkspaceExplorerHistoryView: View {
             }
             if item.archive != nil {
                 Text(String(localized: "explorer.lastKnownMetadata", defaultValue:
-                    "Last-known values recorded at close, not re-fetched."))
+                    "Last-known values recorded by Provenance Engine."))
                     .font(.system(size: 11)).italic().foregroundStyle(.secondary)
             }
             if item.archive?.coverageCode == "close_snapshot_recovery" {

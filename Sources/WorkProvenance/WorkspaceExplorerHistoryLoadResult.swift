@@ -37,8 +37,11 @@ struct WorkspaceExplorerHistoryLoadResult {
     }
 
     func appendingHistoryPage(_ page: Self) -> Self {
+        let incomingByID = Dictionary(page.items.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let knownIDs = Set(items.map(\.id))
-        let appended = items + page.items.filter { !knownIDs.contains($0.id) }
+        let appended = items.map { item in
+            item.withSessionHistory(incomingByID[item.id])
+        } + page.items.filter { !knownIDs.contains($0.id) }
         let open = appended.filter(\.isOpen)
         let past = appended.filter { !$0.isOpen }.sorted { left, right in
             let leftDate = left.lastActivityAt ?? left.closedAt ?? left.createdAt ?? .distantPast

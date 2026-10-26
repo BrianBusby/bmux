@@ -35,7 +35,16 @@ struct WorkspaceExplorerHistoryAdapter {
             )
         }
         let closed = archived.filter { !liveIDs.contains($0.id) }.map { record in
-            WorkspaceExplorerHistoryItem(
+            let session = sessionsByWorkspaceID[record.id]
+            let laterThanClose = session?.lastActivityAt.map { $0 > record.closedAt } == true
+            let display = laterThanClose ? session?.display ?? record.displayAtClose :
+                record.displayAtClose ?? session?.display
+            let repositoryID = laterThanClose ?
+                session?.display?.repositoryID ?? session?.lastKnownRepositoryID ??
+                    record.displayAtClose?.repositoryID :
+                record.displayAtClose?.repositoryID ?? session?.display?.repositoryID ??
+                    session?.lastKnownRepositoryID
+            return WorkspaceExplorerHistoryItem(
                 id: record.id,
                 title: record.title,
                 createdAt: record.createdAt,
@@ -43,10 +52,8 @@ struct WorkspaceExplorerHistoryAdapter {
                 lastActivityAt: [record.lastActivityAt,
                     sessionsByWorkspaceID[record.id]?.lastActivityAt].compactMap { $0 }.max(),
                 colorHex: record.colorHex,
-                display: record.displayAtClose ?? sessionsByWorkspaceID[record.id]?.display,
-                repositoryID: record.displayAtClose?.repositoryID ??
-                    sessionsByWorkspaceID[record.id]?.display?.repositoryID ??
-                    sessionsByWorkspaceID[record.id]?.lastKnownRepositoryID,
+                display: display,
+                repositoryID: repositoryID,
                 liveWorkspaceID: nil,
                 liveStatus: .closedHistorical,
                 archive: record,

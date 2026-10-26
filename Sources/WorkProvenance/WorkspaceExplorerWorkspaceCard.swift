@@ -26,7 +26,7 @@ struct WorkspaceExplorerWorkspaceCard: View {
     private var statusLabel: String {
         item.isOpen ? WorkspaceExplorerGroupKey.bmuxStatus(item.liveStatus)
             .displayName(projectsByID: [:]) :
-            (item.isSessionHistoryOnly ?
+            (item.hasUnverifiedPresence ?
                 String(localized: "explorer.sessionHistory", defaultValue: "Session history") :
                 String(localized: "explorer.closed", defaultValue: "Closed"))
     }
@@ -96,7 +96,7 @@ struct WorkspaceExplorerWorkspaceCard: View {
                         .foregroundStyle(Color.accentColor)
                 } else if !item.isOpen && !hiddenDimensions.contains(.workspaceState) &&
                             !hiddenDimensions.contains(.bmuxStatus) {
-                    Text(item.isSessionHistoryOnly ?
+                    Text(item.hasUnverifiedPresence ?
                         String(localized: "explorer.historyTag", defaultValue: "HISTORY") :
                         String(localized: "explorer.closedTag", defaultValue: "CLOSED"))
                         .foregroundStyle(.secondary)
@@ -136,7 +136,7 @@ struct WorkspaceExplorerWorkspaceCard: View {
                         .buttonStyle(.bordered).controlSize(.small)
                         .focused($focusedFooterControl, equals: .history)
                 }
-            } else if item.isSessionHistoryOnly {
+            } else if item.hasUnverifiedPresence {
                 Text(String(localized: "explorer.viewSessions", defaultValue: "Open to view sessions"))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             } else if !isReopened {

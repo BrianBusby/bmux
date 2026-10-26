@@ -403,7 +403,7 @@ final class WorkspaceExplorerCoordinator {
     }
 
     func reopen(_ item: WorkspaceExplorerHistoryItem) async -> Bool {
-        guard case .eligible = item.reopenEligibility,
+        guard !item.hasUnverifiedPresence, case .eligible = item.reopenEligibility,
               let id = UUID(uuidString: item.id) else { return false }
         guard reopenHistory(id) else {
             reopenFailed = true

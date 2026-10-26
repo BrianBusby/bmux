@@ -145,6 +145,7 @@ struct WorkspaceExplorerRootNavigationTests {
                     archiveAvailability: .available, partialLiveActivity: false))
         let item = try #require(combined.items.first)
         #expect(combined.items.count == 1)
+        #expect(item.hasUnverifiedPresence)
         #expect(item.lastActivityAt == later.lastActivityAt)
         #expect(item.repositoryID == "maple")
         var attemptedReopen = false

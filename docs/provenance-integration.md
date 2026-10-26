@@ -73,7 +73,8 @@ PE evidence whether another run still has that workspace open. Explorer requests
 A separate compact facet read supplies repository, project, and owner filter
 choices across the retained history. Filtering preserves the selected predicate
 while Explorer follows additional workspace-history pages to fill the visible
-result. Clearing Explorer history
+result. An archive with newer PE session activity is treated as unverified
+history until the current bmux process can establish its live state. Clearing Explorer history
 hides session-derived workspace identities whose last observed activity predates
 the clear, while the underlying session evidence remains available through
 session reads.

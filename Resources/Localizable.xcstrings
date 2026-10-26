@@ -105911,13 +105911,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Last-known values recorded at close, not re-fetched."
+            "value": "Last-known values recorded by Provenance Engine."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最終確認値は終了時に記録されたもので、再取得されていません。"
+            "value": "Provenance Engine に記録された最終確認値です。"
           }
         }
       }
