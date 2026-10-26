@@ -104,7 +104,7 @@ import BMUXAgentLaunch
         #expect(card.ticketID == (ticketTitle == nil ? nil : "ROOF-42"))
         #expect(card.projectTitle == "Maple Street roof")
         #expect(card.pullRequestText?.hasPrefix("#42") == true)
-        #expect(card.ownerName == (ticketTitle == nil ? "sam" : "Sam"))
+        #expect(card.ownerName == "sam")
         #expect(card.branch == "roof-inspection")
         #expect(card.isDirty == false)
         #expect(workspace.customDescription == "Check the latest inspection photos")

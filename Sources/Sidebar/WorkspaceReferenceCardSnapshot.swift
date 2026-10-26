@@ -78,11 +78,11 @@ struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
         }
         pullRequestOwnerLogin = pullRequestOwner?.name
         let ticketOwnerName = context?.ticketLinks.first?.ownerName
-        ownerName = ticketOwnerName ?? pullRequestOwner?.name
-        ownerURL = ticketOwnerName != nil
-            ? context?.ticketLinks.first?.ownerURL
-            : pullRequestOwner?.url
-        ownerAvatarURL = ticketOwnerName == nil ? pullRequestOwner?.avatarURL : nil
+        ownerName = pullRequestOwner?.name ?? ticketOwnerName
+        ownerURL = pullRequestOwner?.name != nil
+            ? pullRequestOwner?.url
+            : context?.ticketLinks.first?.ownerURL
+        ownerAvatarURL = pullRequestOwner?.name != nil ? pullRequestOwner?.avatarURL : nil
     }
 
     init(explorerItem item: WorkspaceExplorerHistoryItem, hiddenDimensions: Set<WorkspaceExplorerDimension>) {
@@ -113,11 +113,12 @@ struct WorkspaceReferenceCardSnapshot: Identifiable, Equatable {
         }
         pullRequestURL = display?.pullRequestURL.flatMap(URL.init(string:))
         pullRequestOwnerLogin = display?.pullRequestOwnerLogin
-        let ticketOwner = ticket?.ownerName
-        ownerName = ticketOwner ?? (hiddenDimensions.contains(.pullRequestOwner) ? nil : display?.pullRequestOwnerLogin)
-        ownerURL = ticketOwner != nil ? ticket?.ownerURL.flatMap(URL.init(string:)) :
-            display?.pullRequestOwnerURL.flatMap(URL.init(string:))
-        ownerAvatarURL = ticketOwner == nil && !hiddenDimensions.contains(.pullRequestOwner) ?
-            display?.pullRequestOwnerAvatarURL.flatMap(URL.init(string:)) : nil
+        let pullRequestOwner = hiddenDimensions.contains(.pullRequestOwner)
+            ? nil : display?.pullRequestOwnerLogin
+        ownerName = pullRequestOwner ?? ticket?.ownerName
+        let pullRequestOwnerURL = display?.pullRequestOwnerURL.flatMap(URL.init(string:))
+        ownerURL = pullRequestOwner != nil ? pullRequestOwnerURL : ticket?.ownerURL.flatMap(URL.init(string:))
+        let pullRequestAvatarURL = display?.pullRequestOwnerAvatarURL.flatMap(URL.init(string:))
+        ownerAvatarURL = pullRequestOwner != nil ? pullRequestAvatarURL : nil
     }
 }
