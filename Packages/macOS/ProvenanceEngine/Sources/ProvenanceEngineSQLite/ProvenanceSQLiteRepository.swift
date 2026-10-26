@@ -2968,6 +2968,7 @@ actor ProvenanceSQLiteRepository {
     private func clearProjectionTables() throws {
         for tableName in Self.artifactCollisionProjectionTableNames + Self.relatedSessionProjectionTableNames + [
             "provenance_outcome_revision_citations",
+            "provenance_legacy_outcome_revision_ids",
             "provenance_coding_agent_session_outcomes",
             "provenance_coding_agent_session_outcome_revisions",
             "provenance_coding_agent_turn_outcomes",

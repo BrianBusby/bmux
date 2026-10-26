@@ -33,6 +33,16 @@ extension ProvenanceSQLiteRepository {
                 )
                 """,
                 """
+                CREATE TABLE provenance_legacy_outcome_revision_ids (
+                    revision_id TEXT PRIMARY KEY NOT NULL
+                )
+                """,
+                """
+                INSERT INTO provenance_legacy_outcome_revision_ids (revision_id)
+                SELECT id FROM provenance_coding_agent_session_outcome_revisions
+                UNION SELECT id FROM provenance_coding_agent_turn_outcome_revisions
+                """,
+                """
                 UPDATE provenance_metadata SET value = '29' WHERE key = 'schema_version'
                 """,
             ]

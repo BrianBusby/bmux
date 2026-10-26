@@ -31,6 +31,7 @@ struct ProvenanceSQLiteSchemaMigrationTests {
             "provenance_workspace_coding_agent_session_associations", "provenance_archived_workspaces",
             "provenance_outcome_retention_state", "provenance_outcome_revision_citations",
             "provenance_outcome_revision_pins",
+            "provenance_legacy_outcome_revision_ids",
         ], in: database)
         #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [29, 28, 27, 26, 25, 24, 23, 22, 21, 20])
     }

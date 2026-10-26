@@ -62,6 +62,8 @@ bytes after migration and citation indexing, before any deletion.
   eight uncited historical payloads per owner, all payloads cited by retained
   PE projections, and explicitly pinned revisions. Other historical payloads
   become empty strings; an exact read reports `revision_payload_expired`.
+  Migration records legacy revision IDs separately, so a refreshed legacy ID
+  cannot become eligible for automatic retirement before citation indexing.
 - Semantic inference and message records: this policy leaves their payloads
   and metadata intact. A separate, reviewed retention policy is required
   before expiring any semantic payload.

@@ -68,6 +68,7 @@ extension ProvenanceSQLiteRepository {
             WHERE r.\(ownerColumn) = ? AND r.outcome_json <> ''
               AND source_watermark_sequence >
                   (SELECT legacy_event_watermark FROM provenance_outcome_retention_state WHERE policy_version = 1)
+              AND NOT EXISTS (SELECT 1 FROM provenance_legacy_outcome_revision_ids legacy WHERE legacy.revision_id = r.id)
               AND NOT EXISTS (SELECT 1 FROM provenance_outcome_revision_pins p WHERE p.revision_id = r.id)
               AND NOT EXISTS (SELECT 1 FROM provenance_outcome_revision_citations c WHERE c.target_revision_id = r.id)
               AND NOT EXISTS (SELECT 1 FROM \(currentTable) latest WHERE latest.latest_revision_id = r.id)

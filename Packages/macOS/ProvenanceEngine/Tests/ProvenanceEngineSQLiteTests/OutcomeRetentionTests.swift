@@ -63,6 +63,22 @@ struct OutcomeRetentionTests {
         ).outcome)
 
         let migrated = try ProvenanceSQLiteRepository(url: url)
+        // A legacy ID can be refreshed after migration without becoming a new revision.
+        // Simulate the resulting watermark advance and prove the live writer still protects it.
+        let legacyDatabase = try ProvenanceSQLiteDatabase(url: url)
+        try legacyDatabase.execute(
+            """
+            UPDATE provenance_coding_agent_session_outcome_revisions
+            SET source_watermark_sequence = (SELECT legacy_event_watermark + 1 FROM provenance_outcome_retention_state)
+            WHERE id IN (
+                SELECT id FROM provenance_coding_agent_session_outcome_revisions
+                ORDER BY source_watermark_sequence DESC LIMIT 12
+            )
+            """
+        )
+        let legacyPayloads = try payloadCount(url, table: "provenance_coding_agent_session_outcome_revisions")
+        try await migrated.retireSupersededOutcomePayloads(sessionIDs: [fixture.session.id], turnIDs: [])
+        #expect(try payloadCount(url, table: "provenance_coding_agent_session_outcome_revisions") == legacyPayloads)
         try await appendCommand(18, fixture: fixture, to: migrated)
         let mixedCurrent = try #require(try await migrated.sessionOutcome(
             ProvenanceSessionOutcomeRequest(sessionID: fixture.session.id)
