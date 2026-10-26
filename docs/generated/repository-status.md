@@ -126,7 +126,7 @@ Repository: `BrianBusby/bmux`
 | Test Determinism Allowlist Burndown | planned |
 | Three View Session Navigation | planned |
 | Work Brief Conversation | planned |
-| Work Brief External Correlation | planned |
+| Work Brief External Correlation | under observation |
 | Work Brief Local View | under observation |
 | Work Brief Slack Pilot | planned |
 | Work Provenance Runtime Lifecycle State | under observation |
@@ -188,7 +188,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
-| `work_brief_external_sources_unavailable` | open |
+| `work_brief_external_sources_unavailable` | monitoring |
 | `pe_live_storage_reclamation_capacity_and_concurrency` | open |
 | `app_host_cancellation_ownership_verification` | open |
 | `session_write_store_capture_verification` | open |

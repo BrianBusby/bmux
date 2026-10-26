@@ -77,12 +77,16 @@ current bmux workspace presence and accepted PE workspace display facts. It
 shows local work, verified input/error attention, source health, explicit ticket
 and PR links, and evidence behind displayed relationships. Navigation validates
 stable workspace, runtime, and surface IDs before using the existing workspace
-selection and focus-flash actions. Linear and GitHub have no direct refresh in
-this slice; Waiting on, Recent changes, and Ask remain explicitly unavailable.
-No external content is persisted. The cross-service Work Brief projection is
-bmux-owned; PE remains the owner of durable engineering evidence. This slice
-is under observation until tagged runtime dogfood and merge. See
-[the implementation record](../planning/work-brief-implementation.md).
+selection and focus-flash actions. The stacked `work-brief-external` slice adds
+bounded, read-only Linear assigned issues and explicitly scoped GitHub pull
+requests. It shows source health, observed review waits, exact ticket/PR
+relationships, and external work without a local workspace. A partial or failed
+refresh keeps prior facts with their original check time. Recent changes and
+Ask remain explicitly unavailable. No external content is persisted. The
+cross-service Work Brief projection is bmux-owned; PE remains the owner of
+durable engineering evidence. Both slices remain under observation until
+tagged dogfood and merge. See [the local record](../planning/work-brief-implementation.md)
+and [the external record](../planning/work-brief-external.md).
 
 ## Current Generated Truth
 

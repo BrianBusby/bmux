@@ -58,10 +58,12 @@ public final class WorkBriefCoordinator {
             return WorkBriefLocalWorkspace(id: item.id, runtimeID: item.runtimeID,
                 title: item.title, repository: item.repository, branch: item.branch,
                 tickets: item.tickets, pullRequest: item.pullRequest, status: status,
+                pullRequestStatus: item.pullRequestStatus,
                 surfaceID: item.surfaceID, lastActivityAt: item.lastActivityAt,
                 checkedAt: item.checkedAt, evidence: item.evidence)
         }
-        return WorkBriefSnapshot(localWorkspaces: items, localHealth: snapshot.localHealth,
+        return WorkBriefSnapshot(localWorkspaces: items, externalItems: snapshot.externalItems,
+            localHealth: snapshot.localHealth,
             linearHealth: snapshot.linearHealth, githubHealth: snapshot.githubHealth,
             slackHealth: snapshot.slackHealth)
     }

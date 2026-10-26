@@ -47,6 +47,24 @@ import Testing
         #expect(projection.externalNeedsAttention.map(\.id) == [unrelated.id])
     }
 
+    @Test func exactPRLinkSurfacesConflictingStatus() {
+        let now = Date(timeIntervalSince1970: 100)
+        let url = URL(string: "https://github.com/CompanyCam/mobile/pull/12")!
+        let local = WorkBriefLocalWorkspace(id: UUID(), runtimeID: UUID(), title: "Roof inspection",
+            repository: "CompanyCam/mobile", branch: "roof", tickets: [],
+            pullRequest: WorkBriefLink(id: url.absoluteString, label: "#12", url: url,
+                source: .github), status: .idle, pullRequestStatus: "Merged",
+            surfaceID: nil, lastActivityAt: now, checkedAt: now, evidence: [])
+        let external = WorkBriefExternalItem(id: "github:12", source: .github,
+            title: "Roof inspection", url: url, reference: "#12", repository: "CompanyCam/mobile",
+            owner: "brian", status: "open", updatedAt: now, checkedAt: now,
+            disposition: .inProgress, evidence: [])
+        let projection = WorkBriefProjection(snapshot: snapshot([local], checkedAt: now,
+            external: [external]))
+        #expect(projection.relatedWorkspaceIDs[external.id] == [local.id])
+        #expect(projection.conflictingExternalIDs == [external.id])
+    }
+
     private func workspace(status: WorkBriefLocalStatus, checkedAt: Date) -> WorkBriefLocalWorkspace {
         WorkBriefLocalWorkspace(id: UUID(), runtimeID: UUID(), title: "Roof inspection",
             repository: "companycam-mobile", branch: "feature/roof-inspection", tickets: [],

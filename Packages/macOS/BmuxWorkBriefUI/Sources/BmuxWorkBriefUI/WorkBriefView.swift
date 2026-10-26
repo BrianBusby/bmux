@@ -52,22 +52,26 @@ public struct WorkBriefView: View {
                         sourceHealth(snapshot)
                         let projection = WorkBriefProjection(snapshot: snapshot)
                         section(String(localized: "workBrief.needsAttention", defaultValue: "Needs attention"),
-                                items: projection.needsAttention,
-                                empty: String(localized: "workBrief.noLocalAttention", defaultValue:
-                                    "No verified local requests. External sources are not included yet."))
+                                local: projection.needsAttention, external: projection.externalNeedsAttention,
+                                projection: projection, snapshot: snapshot,
+                                empty: String(localized: "workBrief.noAttention", defaultValue:
+                                    "No verified requests in the available source facts."))
                         section(String(localized: "workBrief.inProgress", defaultValue: "In progress"),
-                                items: projection.inProgress,
-                                empty: String(localized: "workBrief.noOpenWorkspaces", defaultValue:
-                                    "No open workspaces were found."))
-                        unavailableSection(String(localized: "workBrief.waitingOn", defaultValue: "Waiting on"),
-                            detail: String(localized: "workBrief.waitingUnavailable", defaultValue:
-                                "External blockers have not been checked yet."))
+                                local: projection.inProgress, external: projection.externalInProgress,
+                                projection: projection, snapshot: snapshot,
+                                empty: String(localized: "workBrief.noInProgress", defaultValue:
+                                    "No active work was found in the available source facts."))
+                        section(String(localized: "workBrief.waitingOn", defaultValue: "Waiting on"),
+                                local: projection.waitingOn, external: projection.externalWaitingOn,
+                                projection: projection, snapshot: snapshot,
+                                empty: String(localized: "workBrief.waitingUnavailable", defaultValue:
+                                    "No verified waiting relationships are available yet."))
                         unavailableSection(String(localized: "workBrief.recentChanges", defaultValue: "Recent changes"),
                             detail: String(localized: "workBrief.changesUnavailable", defaultValue:
                                 "A previous brief is needed to show changes."))
                         unavailableSection(String(localized: "workBrief.ask", defaultValue: "Ask"),
                             detail: String(localized: "workBrief.askUnavailable", defaultValue:
-                                "Follow-up questions are not available in this local brief yet."))
+                                "Follow-up questions are not available yet."))
                     } else if model.isLoading {
                         ProgressView(String(localized: "workBrief.loading", defaultValue: "Checking work…"))
                     } else {
@@ -91,15 +95,17 @@ public struct WorkBriefView: View {
             Text(String(localized: "workBrief.sourceHealth", defaultValue: "Source health"))
                 .font(.headline)
             Text(localHealthLabel(snapshot.localHealth))
-            Text(String(localized: "workBrief.externalPending", defaultValue:
-                "Linear, GitHub, and Slack have not been checked for this brief."))
+            healthRow("Linear", health: snapshot.linearHealth)
+            healthRow("GitHub", health: snapshot.githubHealth)
+            Text(String(localized: "workBrief.slackNotConfigured", defaultValue:
+                "Slack is not configured for this brief."))
         }
         .font(.caption)
         .foregroundStyle(.secondary)
     }
 
     private func localHealthLabel(_ health: WorkBriefSourceHealth) -> String {
-        switch health.state {
+        return switch health.state {
         case .available: String(localized: "workBrief.localCurrent", defaultValue: "Local work checked")
         case .partial: String(localized: "workBrief.localPartial", defaultValue: "Local work is partial; some provenance facts may be missing")
         case .failed: String(localized: "workBrief.localFailed", defaultValue: "Local source refresh failed; showing available workspace presence")
@@ -107,12 +113,44 @@ public struct WorkBriefView: View {
         }
     }
 
-    private func section(_ title: String, items: [WorkBriefLocalWorkspace], empty: String) -> some View {
+    private func healthRow(_ source: String, health: WorkBriefSourceHealth) -> some View {
+        HStack(spacing: 4) {
+            Text(source + " · " + healthLabel(health))
+            if let checkedAt = health.checkedAt {
+                Text(checkedAt, style: .relative)
+            }
+        }
+    }
+
+    private func healthLabel(_ health: WorkBriefSourceHealth) -> String {
+        if health.reasonCode == "unauthorized" {
+            return String(localized: "workBrief.sourceAuthenticationFailed", defaultValue:
+                "Authentication failed; reconnect this source")
+        }
+        return switch health.state {
+        case .available: String(localized: "workBrief.sourceAvailable", defaultValue: "Checked")
+        case .partial: String(localized: "workBrief.sourcePartial", defaultValue: "Partial; some facts may be missing")
+        case .failed: String(localized: "workBrief.sourceFailed", defaultValue: "Refresh failed; showing prior facts")
+        case .notConfigured: String(localized: "workBrief.sourceNotConfigured", defaultValue: "Not configured")
+        }
+    }
+
+    private func section(_ title: String, local: [WorkBriefLocalWorkspace],
+                         external: [WorkBriefExternalItem], projection: WorkBriefProjection,
+                         snapshot: WorkBriefSnapshot, empty: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title).font(.title2.bold())
-            if items.isEmpty { Text(empty).foregroundStyle(.secondary) }
-            ForEach(items) { item in
+            if local.isEmpty && external.isEmpty { Text(empty).foregroundStyle(.secondary) }
+            ForEach(local) { item in
                 WorkBriefWorkspaceRow(item: item, jump: jump, highlight: highlight, openURL: openURL)
+            }
+            ForEach(external) { item in
+                let ids = Set(projection.relatedWorkspaceIDs[item.id] ?? [])
+                WorkBriefExternalRow(item: item,
+                    relatedWorkspaces: snapshot.localWorkspaces.filter { ids.contains($0.id) },
+                    health: item.source == .linear ? snapshot.linearHealth : snapshot.githubHealth,
+                    hasConflict: projection.conflictingExternalIDs.contains(item.id),
+                    jump: jump, openURL: openURL)
             }
         }
     }

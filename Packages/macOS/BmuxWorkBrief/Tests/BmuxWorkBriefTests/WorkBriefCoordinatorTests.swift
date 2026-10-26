@@ -8,10 +8,15 @@ import Testing
         let id = UUID()
         let item = WorkBriefLocalWorkspace(id: id, runtimeID: UUID(), title: "Roof inspection",
             repository: "companycam-mobile", branch: "feature/roof-inspection", tickets: [],
-            pullRequest: nil, status: .idle, surfaceID: nil, lastActivityAt: now,
+            pullRequest: nil, status: .idle, pullRequestStatus: "Open", surfaceID: nil, lastActivityAt: now,
             checkedAt: now, evidence: [])
+        let external = WorkBriefExternalItem(id: "github:12", source: .github,
+            title: "Roof inspection", url: URL(string: "https://github.com/CompanyCam/mobile/pull/12")!,
+            reference: "#12", repository: "CompanyCam/mobile", owner: "brian",
+            status: "open", updatedAt: now, checkedAt: now, disposition: .needsAttention,
+            evidence: [])
         let unavailable = WorkBriefSourceHealth(state: .notConfigured, checkedAt: nil)
-        let snapshot = WorkBriefSnapshot(localWorkspaces: [item],
+        let snapshot = WorkBriefSnapshot(localWorkspaces: [item], externalItems: [external],
             localHealth: WorkBriefSourceHealth(state: .available, checkedAt: now),
             linearHealth: unavailable, githubHealth: unavailable, slackHealth: unavailable)
         let coordinator = WorkBriefCoordinator(initialSnapshot: snapshot) {
@@ -24,5 +29,7 @@ import Testing
         #expect(coordinator.snapshot?.localWorkspaces.first?.status == .needsInput)
         #expect(coordinator.snapshot?.localWorkspaces.first?.checkedAt == now)
         #expect(coordinator.snapshot?.localHealth == snapshot.localHealth)
+        #expect(coordinator.snapshot?.externalItems == [external])
+        #expect(coordinator.snapshot?.localWorkspaces.first?.pullRequestStatus == "Open")
     }
 }

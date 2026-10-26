@@ -50,6 +50,20 @@ import Testing
         #expect(result.health.state == .partial)
     }
 
+    @Test func partialRefreshKeepsFactsMissingFromIncompleteResponse() async {
+        let http = StubHTTP([
+            .success(page(nodes: [issue("A", url: "https://linear.app/acme/issue/A")], next: nil)),
+            .success(page(nodes: [issue("B", url: "https://linear.app/acme/issue/B")],
+                          next: nil, errors: true))
+        ])
+        let source = LinearWorkBriefSource(authorization: { "fixture-token" }, http: http)
+        _ = await source.refresh(at: Date(timeIntervalSince1970: 100))
+        let partial = await source.refresh(at: Date(timeIntervalSince1970: 200))
+        #expect(partial.health.state == .partial)
+        #expect(partial.items.map(\.reference) == ["B", "A"])
+        #expect(partial.items[1].checkedAt == Date(timeIntervalSince1970: 100))
+    }
+
     private func issue(_ id: String, url: String) -> [String: Any] {
         ["id": id, "identifier": id, "title": "Roof inspection", "url": url,
          "updatedAt": "2026-10-26T11:00:00.000Z",

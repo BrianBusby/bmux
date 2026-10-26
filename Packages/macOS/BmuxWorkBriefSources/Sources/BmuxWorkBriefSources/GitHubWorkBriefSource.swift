@@ -31,8 +31,9 @@ public actor GitHubWorkBriefSource {
         guard let header = await authorization(), !header.isEmpty else {
             return outcome(.notConfigured, now, "missing_credentials")
         }
-        guard let login = await viewerLogin(header: header) else {
-            return outcome(.failed, now, "viewer_unavailable")
+        let (login, viewerFailure) = await viewerLogin(header: header)
+        guard let login else {
+            return outcome(.failed, now, viewerFailure)
         }
         var facts: [String: WorkBriefExternalItem] = [:]
         var partial = false
@@ -52,6 +53,31 @@ public actor GitHubWorkBriefSource {
             }
         }
         guard !facts.isEmpty || !partial else { return outcome(.failed, now, "search_failure") }
+        let authored = facts.values.filter { $0.disposition == .inProgress }
+            .sorted { $0.updatedAt > $1.updatedAt }
+        if authored.count > 10 { partial = true }
+        let reviewResults = await withTaskGroup(of: (WorkBriefExternalItem, Bool?).self) { group in
+            for item in authored.prefix(10) {
+                group.addTask { (item, await self.hasRequestedReviewers(for: item, header: header)) }
+            }
+            var results: [(WorkBriefExternalItem, Bool?)] = []
+            for await result in group { results.append(result) }
+            return results
+        }
+        for (item, waiting) in reviewResults {
+            guard let waiting else { partial = true; continue }
+            if waiting {
+                facts[item.id] = WorkBriefExternalItem(id: item.id, source: .github,
+                    title: item.title, url: item.url, reference: item.reference,
+                    repository: item.repository, owner: item.owner,
+                    status: "review_requested", updatedAt: item.updatedAt,
+                    checkedAt: item.checkedAt, disposition: .waitingOn,
+                    evidence: item.evidence + [WorkBriefEvidence(
+                        id: "\(item.id):reviewers", source: .github,
+                        field: "awaitingReview", isObserved: true, checkedAt: now,
+                        url: item.url)])
+            }
+        }
         if partial {
             for old in lastGood where facts[old.id] == nil { facts[old.id] = old }
         }
@@ -71,15 +97,18 @@ public actor GitHubWorkBriefSource {
             health: WorkBriefSourceHealth(state: state, checkedAt: now, reasonCode: reason))
     }
 
-    private func viewerLogin(header: String) async -> String? {
+    private func viewerLogin(header: String) async -> (String?, String) {
         guard let url = URL(string: "user", relativeTo: endpoint)?.absoluteURL,
-              let response = await get(url: url, header: header), response.1 == 200,
-              response.0.count <= 100_000,
+              let response = await get(url: url, header: header) else {
+            return (nil, "transport_failure")
+        }
+        guard response.1 != 401 && response.1 != 403 else { return (nil, "unauthorized") }
+        guard response.1 == 200, response.0.count <= 100_000,
               let user = try? JSONDecoder().decode(GitHubWorkBriefViewer.self, from: response.0),
               !user.login.isEmpty, user.login.count <= 50,
               user.login.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-") })
-        else { return nil }
-        return user.login
+        else { return (nil, "viewer_invalid") }
+        return (user.login, "")
     }
 
     private func search(scope: GitHubWorkBriefScope, category: Category,
@@ -98,7 +127,22 @@ public actor GitHubWorkBriefSource {
               let result = try? JSONDecoder().decode(GitHubWorkBriefSearchResponse.self, from: response.0)
         else { return nil }
         let items = result.items.prefix(50).compactMap { item($0, category: category, checkedAt: now) }
-        return SearchResult(items: items, partial: result.incomplete_results || result.total_count > 50)
+        return SearchResult(items: items,
+            partial: result.incomplete_results || result.total_count > 50 ||
+                result.items.prefix(50).count != items.count)
+    }
+
+    private func hasRequestedReviewers(for item: WorkBriefExternalItem,
+                                       header: String) async -> Bool? {
+        guard let repository = item.repository,
+              let number = Int(item.reference.dropFirst()), number > 0,
+              let url = URL(string: "repos/\(repository)/pulls/\(number)/requested_reviewers",
+                            relativeTo: endpoint)?.absoluteURL,
+              let response = await get(url: url, header: header), response.1 == 200,
+              response.0.count <= 200_000,
+              let decoded = try? JSONDecoder().decode(GitHubReviewRequestsResponse.self,
+                                                      from: response.0) else { return nil }
+        return !decoded.users.isEmpty || !decoded.teams.isEmpty
     }
 
     private func get(url: URL, header: String) async -> (Data, Int)? {
@@ -124,7 +168,7 @@ public actor GitHubWorkBriefSource {
         return WorkBriefExternalItem(id: id, source: .github,
             title: String(pullRequest.title.prefix(200)), url: url,
             reference: "#\(pullRequest.number)", repository: repository,
-            owner: String(pullRequest.user.login.prefix(80)), status: "Open",
+            owner: String(pullRequest.user.login.prefix(80)), status: "open",
             updatedAt: updatedAt, checkedAt: checkedAt,
             disposition: category == .reviewRequested ? .needsAttention : .inProgress,
             evidence: [WorkBriefEvidence(id: "\(id):\(category.rawValue)", source: .github,

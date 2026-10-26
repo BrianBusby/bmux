@@ -16,6 +16,8 @@ public struct WorkBriefProjection: Equatable, Sendable {
     public let externalWaitingOn: [WorkBriefExternalItem]
     /// Exact local relationships established through accepted source links.
     public let relatedWorkspaceIDs: [String: [UUID]]
+    /// External open PRs whose exact local PE link has a terminal status.
+    public let conflictingExternalIDs: Set<String>
 
     /// Projects a source snapshot without inventing external status or links.
     /// - Parameter snapshot: The bounded source facts to classify.
@@ -50,6 +52,15 @@ public struct WorkBriefProjection: Equatable, Sendable {
             }.map(\.id)
         }
         relatedWorkspaceIDs = relationships
+        conflictingExternalIDs = Set(external.filter { item in
+            guard item.source == .github else { return false }
+            let ids = Set(relationships[item.id] ?? [])
+            return snapshot.localWorkspaces.contains { workspace in
+                guard ids.contains(workspace.id),
+                      let status = workspace.pullRequestStatus?.lowercased() else { return false }
+                return status.contains("merged") || status.contains("closed")
+            }
+        }.map(\.id))
         externalNeedsAttention = external.filter { $0.disposition == .needsAttention }
         externalInProgress = external.filter {
             $0.disposition == .inProgress && (relationships[$0.id]?.isEmpty ?? true)

@@ -50,8 +50,9 @@ public actor LinearWorkBriefSource {
             }
         }
         if cursor != nil { partial = true }
-        lastGood = Array(items.prefix(100))
-        return WorkBriefExternalRefresh(items: lastGood,
+        let visible = partial ? Self.merging(items, with: lastGood) : Array(items.prefix(100))
+        if !partial { lastGood = visible }
+        return WorkBriefExternalRefresh(items: visible,
             health: WorkBriefSourceHealth(state: partial ? .partial : .available, checkedAt: now,
                 reasonCode: partial ? "page_limit_or_partial_response" : nil))
     }

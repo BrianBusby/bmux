@@ -193,6 +193,9 @@
          location = "group:BmuxWorkBrief">
       </FileRef>
       <FileRef
+         location = "group:BmuxWorkBriefSources">
+      </FileRef>
+      <FileRef
          location = "group:BmuxWorkBriefUI">
       </FileRef>
       <FileRef

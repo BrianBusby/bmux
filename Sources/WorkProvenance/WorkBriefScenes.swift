@@ -1,5 +1,7 @@
 import BmuxWorkBrief
 import BmuxWorkBriefUI
+import BmuxWorkBriefSources
+import BmuxGit
 import SwiftUI
 
 /// Native Work Brief window assembled at the app boundary.
@@ -18,8 +20,27 @@ struct WorkBriefScenes: Scene {
 
     private static func makeView(appDelegate: AppDelegate) -> WorkBriefView {
         let initial = WorkBriefLocalAdapter().snapshot(appDelegate.workspaceExplorerPresence())
+        let settings = appDelegate.settingsRuntime
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.timeoutIntervalForRequest = 8
+        configuration.timeoutIntervalForResource = 8
+        let http = URLSessionWorkBriefHTTPClient(session: URLSession(configuration: configuration))
+        let linear = LinearWorkBriefSource(authorization: {
+            guard let settings else { return nil }
+            return await WorkProvenanceSettingsLinearAuthorizationProvider(
+                keychainStore: settings.keychainStore, jsonStore: settings.jsonStore,
+                catalog: settings.catalog).authorizationHeader()
+        }, http: http)
+        let github = GitHubWorkBriefSource(
+            authorization: { await PullRequestProbeService().authorizationHeaderForReadOnlyAPI() },
+            scopes: {
+                guard let settings else { return [] }
+                return settings.jsonStore.snapshotValue(
+                    for: settings.catalog.integrations.workBriefGitHubScopes)
+                    .compactMap(GitHubWorkBriefScope.init)
+            }, http: http)
         let model = WorkBriefCoordinator(initialSnapshot: initial) {
-            await appDelegate.loadWorkBrief()
+            await appDelegate.loadWorkBrief(linear: linear, github: github)
         }
         return makeBoundView(appDelegate: appDelegate, model: model)
     }

@@ -32,6 +32,30 @@ import Testing
         #expect(queries.contains { $0.contains("author:brian") })
     }
 
+    @Test func authoredPRWithRequestedReviewersIsWaitingOnReview() async {
+        let reviewers = Data("{\"users\":[{\"login\":\"reviewer\"}],\"teams\":[]}".utf8)
+        let http = GitHubStubHTTP(viewer: viewer(), review: search([]),
+            authored: search([pull(id: 13, number: 14, title: "Upload field notes")]),
+            requestedReviewers: reviewers)
+        let source = GitHubWorkBriefSource(authorization: { "Bearer fixture-token" },
+            scopes: { [GitHubWorkBriefScope("org:CompanyCam")!] }, http: http)
+        let result = await source.refresh(at: Date(timeIntervalSince1970: 100))
+        #expect(result.health.state == .available)
+        #expect(result.items.first?.disposition == .waitingOn)
+        #expect(result.items.first?.evidence.contains { $0.field == "awaitingReview" } == true)
+    }
+
+    @Test func expiredCredentialReportsAuthenticationFailure() async {
+        let http = GitHubStubHTTP(viewer: Data(), review: search([]), authored: search([]),
+                                  viewerStatus: 401)
+        let source = GitHubWorkBriefSource(authorization: { "Bearer expired-fixture" },
+            scopes: { [GitHubWorkBriefScope("org:CompanyCam")!] }, http: http)
+        let result = await source.refresh(at: Date())
+        #expect(result.health.state == .failed)
+        #expect(result.health.reasonCode == "unauthorized")
+        #expect(result.items.isEmpty)
+    }
+
     @Test func noScopeDoesNotContactGitHub() async {
         let source = GitHubWorkBriefSource(authorization: { "Bearer fixture-token" },
             scopes: { [] }, http: GitHubStubHTTP(viewer: viewer(), review: search([]), authored: search([])))
@@ -60,19 +84,26 @@ import Testing
 
 private actor GitHubStubHTTP: WorkBriefHTTPClient {
     let viewer: Data
+    let viewerStatus: Int
     let review: Data
     let authored: Data
+    let requestedReviewers: Data
     private(set) var queries: [String] = []
 
-    init(viewer: Data, review: Data, authored: Data) {
+    init(viewer: Data, review: Data, authored: Data,
+         requestedReviewers: Data = Data("{\"users\":[],\"teams\":[]}".utf8),
+         viewerStatus: Int = 200) {
         self.viewer = viewer
+        self.viewerStatus = viewerStatus
         self.review = review
         self.authored = authored
+        self.requestedReviewers = requestedReviewers
     }
 
     func response(for request: URLRequest) async throws -> (Data, Int) {
         guard let url = request.url else { throw URLError(.badURL) }
-        if url.path == "/user" { return (viewer, 200) }
+        if url.path == "/user" { return (viewer, viewerStatus) }
+        if url.path.hasSuffix("/requested_reviewers") { return (requestedReviewers, 200) }
         guard url.path == "/search/issues",
               let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?
                   .queryItems?.first(where: { $0.name == "q" })?.value else {
