@@ -45,7 +45,7 @@ URLs. Reuse existing credential mechanisms; never log tokens or response bodies.
 Provider clients own read-only acquisition and bounded retry/cache. The Work
 Brief domain owns source facts and deterministic classification/correlation.
 The UI renders immutable snapshots and only exposes user-clicked source open or
-validated local navigation. Exact ticket-ID and PR-URL joins are marked as
+validated local navigation. Exact ticket-ID, ticket-URL, and PR-URL joins are marked as
 bmux inferences, with the matched field and available PE event ID shown beside
 the Jump action; provider and PE link observations remain separate facts. The app composition owns lifecycle and config.
 PE remains the durable owner of engineering evidence; external facts are

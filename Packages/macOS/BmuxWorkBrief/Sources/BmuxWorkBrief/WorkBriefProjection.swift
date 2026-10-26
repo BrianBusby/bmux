@@ -47,11 +47,12 @@ public struct WorkBriefProjection: Equatable, Sendable {
                 let observedField: String
                 switch item.source {
                 case .linear:
-                    guard workspace.tickets.contains(where: {
+                    guard let ticket = workspace.tickets.first(where: {
                         $0.source == .linear &&
                         ($0.id.caseInsensitiveCompare(item.reference) == .orderedSame || $0.url == item.url)
                     }) else { continue }
-                    matchedField = "ticketLinkMatch"
+                    matchedField = ticket.id.caseInsensitiveCompare(item.reference) == .orderedSame
+                        ? "ticketIDMatch" : "ticketURLMatch"
                     observedField = "ticket"
                 case .github:
                     guard workspace.pullRequest?.source == .github,

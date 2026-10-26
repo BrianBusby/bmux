@@ -163,8 +163,10 @@ public struct WorkBriefExternalRow: View {
 
     private func relationshipLabel(_ field: String) -> String {
         switch field {
-        case "ticketLinkMatch":
-            String(localized: "workBrief.ticketLinkMatch", defaultValue: "Matching ticket ID")
+        case "ticketIDMatch":
+            String(localized: "workBrief.ticketIDMatch", defaultValue: "Matching ticket ID")
+        case "ticketURLMatch":
+            String(localized: "workBrief.ticketURLMatch", defaultValue: "Matching ticket URL")
         case "pullRequestURLMatch":
             String(localized: "workBrief.pullRequestURLMatch", defaultValue: "Matching pull request URL")
         default:

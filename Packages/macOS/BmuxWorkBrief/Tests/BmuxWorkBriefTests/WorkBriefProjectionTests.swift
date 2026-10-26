@@ -44,7 +44,7 @@ import Testing
         let projection = WorkBriefProjection(snapshot: snapshot([linked, branchOnly],
             checkedAt: now, external: [external, unrelated]))
         #expect(projection.relatedWorkspaceIDs[external.id] == [linked.id])
-        #expect(projection.relationshipEvidenceByExternalID[external.id]?[linked.id]?.field == "ticketLinkMatch")
+        #expect(projection.relationshipEvidenceByExternalID[external.id]?[linked.id]?.field == "ticketIDMatch")
         #expect(projection.relationshipEvidenceByExternalID[external.id]?[linked.id]?.isObserved == false)
         #expect(projection.relationshipEvidenceByExternalID[external.id]?[linked.id]?.referenceID == "pe-event-42")
         #expect(projection.relatedWorkspaceIDs[unrelated.id] == [])
