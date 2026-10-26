@@ -69,6 +69,18 @@ import Testing
         #expect(answerer.answer("Why is #15 blocked?", snapshot: snapshot).kind != .waitingOn)
     }
 
+    @Test func localOnlyTicketHasNoObservedBlockerReason() {
+        let now = Date(timeIntervalSince1970: 100)
+        let ticket = WorkBriefLink(id: "CC-42", label: "CC-42",
+            url: URL(string: "https://linear.app/acme/issue/CC-42")!, source: .linear)
+        let local = WorkBriefLocalWorkspace(id: UUID(), runtimeID: UUID(), title: "Roof inspection",
+            repository: "CompanyCam/mobile", branch: nil, tickets: [ticket],
+            pullRequest: nil, status: .running, surfaceID: nil, lastActivityAt: now,
+            checkedAt: now, evidence: [])
+        let snapshot = brief([local], external: [], now: now)
+        #expect(WorkBriefQuestionAnswerer().answer("Why is CC-42 blocked?", snapshot: snapshot).kind == .noWaitEvidence)
+    }
+
     private func external(_ id: String, disposition: WorkBriefExternalItem.Disposition,
                           now: Date) -> WorkBriefExternalItem {
         let number = id.split(separator: ":").last.map(String.init) ?? "12"
