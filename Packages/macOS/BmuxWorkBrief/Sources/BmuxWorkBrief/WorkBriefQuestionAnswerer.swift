@@ -10,8 +10,10 @@ public struct WorkBriefQuestionAnswerer: Sendable {
         let normalized = question.lowercased()
         let projection = WorkBriefProjection(snapshot: snapshot)
         if normalized.contains("pull request") || normalized.contains("pr ") || normalized.contains("pr?") {
+            let tokens = Set(normalized.split { !$0.isLetter && !$0.isNumber && $0 != "-" }
+                .map(String.init))
             let mentionedTicketIDs = snapshot.localWorkspaces.flatMap(\.tickets).map(\.id)
-                .filter { normalized.contains($0.lowercased()) }
+                .filter { tokens.contains($0.lowercased()) }
             let matches = snapshot.localWorkspaces.filter { workspace in
                 workspace.tickets.contains { mentionedTicketIDs.contains($0.id) }
             }

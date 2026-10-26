@@ -24,6 +24,7 @@ import Testing
         #expect(found.localIDs == [local.id])
         #expect(found.links == [pr])
         #expect(answerer.answer("Which PR goes with CC-43?", snapshot: snapshot).kind == .noEvidence)
+        #expect(answerer.answer("Which PR goes with CC-4?", snapshot: snapshot).kind == .noEvidence)
     }
 
     @Test func attentionAndWaitingUseOnlyClassifiedFacts() {
