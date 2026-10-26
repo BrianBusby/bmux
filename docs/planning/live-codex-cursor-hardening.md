@@ -41,9 +41,10 @@ has no cursor-backed ingestion lag.
   minutes as needing attention. Expire cursor and status files after 30 days
   of inactivity; no transcript payload enters operational diagnostics.
 - The shared live and historical transcript adapter accepts visible commentary
-  summaries but omits completed assistant-message bodies. Turn identity is
-  still observed. Existing assistant-message events remain in PE's ledger and
-  rebuild unchanged; this narrows future writes only.
+  and explicit provider `summary_text` or typed `summary` fields, but omits
+  completed assistant-message bodies and generic or raw reasoning text. Turn
+  identity is still observed. Existing events remain in PE's ledger and rebuild
+  unchanged; this narrows future writes only.
 
 ## Verification and open risk
 

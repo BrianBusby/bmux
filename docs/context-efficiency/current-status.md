@@ -30,8 +30,9 @@ storage gate while older app builds may still write legacy outcome revisions.
 See [the cursor implementation record](../planning/live-codex-cursor-hardening.md).
 The shared Codex transcript adapter also omits completed assistant-message
 bodies from both live tailing and historical import. It continues to append
-provider identity, prompts, plans, completed commands, visible commentary
-summaries, and file-change attribution through PE. Previously accepted
+provider identity, prompts, plans, completed commands, visible commentary or
+explicit provider summaries, and file-change attribution through PE. Generic
+reasoning text and raw content are excluded. Previously accepted
 assistant-message events remain in the event ledger and can be replayed; this
 policy change does not erase them.
 
