@@ -1919,6 +1919,7 @@
 		379FCC6CA832F1E6DBF82182 /* WKInspectorProbeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229C3735BF880EAE32F7A3E8 /* WKInspectorProbeView.swift */; };
 		B4487608B5DF0A4D043C4DBE /* WKInspectorProbeWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25142C2E16D47119B14A5EB7 /* WKInspectorProbeWebView.swift */; };
 		1D682986D61D5ACCBBAD717E /* WKTransferWrapperView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F54BDBA6CA1817F5E5DF613 /* WKTransferWrapperView.swift */; };
+		F6B120000000000000000005 /* WorkBriefBaselineStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B110000000000000000005 /* WorkBriefBaselineStore.swift */; };
 		F6B120000000000000000004 /* WorkBriefCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B110000000000000000004 /* WorkBriefCommands.swift */; };
 		F6B120000000000000000001 /* WorkBriefLocalAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B110000000000000000001 /* WorkBriefLocalAdapter.swift */; };
 		F6B170000000000000000001 /* WorkBriefLocalAdapterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B160000000000000000001 /* WorkBriefLocalAdapterTests.swift */; };
@@ -4131,6 +4132,7 @@
 		229C3735BF880EAE32F7A3E8 /* WKInspectorProbeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WKInspectorProbeView.swift; sourceTree = "<group>"; };
 		25142C2E16D47119B14A5EB7 /* WKInspectorProbeWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WKInspectorProbeWebView.swift; sourceTree = "<group>"; };
 		3F54BDBA6CA1817F5E5DF613 /* WKTransferWrapperView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WKTransferWrapperView.swift"; sourceTree = "<group>"; };
+		F6B110000000000000000005 /* WorkBriefBaselineStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkBriefBaselineStore.swift"; sourceTree = "<group>"; };
 		F6B110000000000000000004 /* WorkBriefCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkBriefCommands.swift"; sourceTree = "<group>"; };
 		F6B110000000000000000001 /* WorkBriefLocalAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkBriefLocalAdapter.swift"; sourceTree = "<group>"; };
 		F6B160000000000000000001 /* WorkBriefLocalAdapterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkBriefLocalAdapterTests.swift; sourceTree = "<group>"; };
@@ -6672,6 +6674,7 @@
 				F6B110000000000000000002 /* AppDelegate+WorkBrief.swift */,
 				F6B110000000000000000003 /* WorkBriefScenes.swift */,
 				F6B110000000000000000004 /* WorkBriefCommands.swift */,
+				F6B110000000000000000005 /* WorkBriefBaselineStore.swift */,
 				E7A9EAA73EE74959BA21240F /* WorkspaceExplorerScenes.swift */,
 				E7A9EAA73EE74959BA21230F /* WorkspaceExplorerDogfoodWindow.swift */,
 				E7A9EAA73EE74959BA21220F /* WorkspaceExplorerDogfoodFixture.swift */,
@@ -8233,6 +8236,7 @@
 				604500200000000000000001 /* WindowTitleTemplateContext.swift in Sources */,
 				E30760080000000000000002 /* WindowTmuxWorkspacePaneOverlayController.swift in Sources */,
 				A5001209 /* WindowToolbarController.swift in Sources */,
+				F6B120000000000000000005 /* WorkBriefBaselineStore.swift in Sources */,
 				F6B120000000000000000004 /* WorkBriefCommands.swift in Sources */,
 				F6B120000000000000000001 /* WorkBriefLocalAdapter.swift in Sources */,
 				F6B120000000000000000003 /* WorkBriefScenes.swift in Sources */,

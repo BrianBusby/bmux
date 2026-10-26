@@ -4,6 +4,7 @@ import SwiftUI
 /// Built-in briefing destination over bounded local and source-health snapshots.
 public struct WorkBriefView: View {
     @State private var model: WorkBriefCoordinator
+    private let previousBrief: WorkBriefBaseline?
     private let jump: @MainActor (UUID, UUID) -> Bool
     private let highlight: @MainActor (UUID, UUID, String) -> Bool
     private let openURL: @MainActor (URL) -> Void
@@ -18,13 +19,14 @@ public struct WorkBriefView: View {
     ///   - openURL: A source URL action invoked only on a user click.
     ///   - onStart: Begins source monitoring while the view is visible.
     ///   - onStop: Ends source monitoring when the view disappears.
-    public init(model: WorkBriefCoordinator,
+    public init(model: WorkBriefCoordinator, previousBrief: WorkBriefBaseline? = nil,
                 jump: @escaping @MainActor (UUID, UUID) -> Bool,
                 highlight: @escaping @MainActor (UUID, UUID, String) -> Bool,
                 openURL: @escaping @MainActor (URL) -> Void,
                 onStart: @escaping @MainActor (@escaping @MainActor () -> Void) -> Void,
                 onStop: @escaping @MainActor () -> Void) {
         _model = State(initialValue: model)
+        self.previousBrief = previousBrief
         self.jump = jump
         self.highlight = highlight
         self.openURL = openURL
@@ -66,9 +68,8 @@ public struct WorkBriefView: View {
                                 projection: projection, snapshot: snapshot,
                                 empty: String(localized: "workBrief.waitingUnavailable", defaultValue:
                                     "No verified waiting relationships are available yet."))
-                        unavailableSection(String(localized: "workBrief.recentChanges", defaultValue: "Recent changes"),
-                            detail: String(localized: "workBrief.changesUnavailable", defaultValue:
-                                "A previous brief is needed to show changes."))
+                        WorkBriefRecentChangesView(snapshot: snapshot, previousBrief: previousBrief,
+                            jump: jump, highlight: highlight, openURL: openURL)
                         WorkBriefAskView(snapshot: snapshot, jump: jump, highlight: highlight,
                                          openURL: openURL)
                     } else if model.isLoading {
@@ -156,10 +157,4 @@ public struct WorkBriefView: View {
         }
     }
 
-    private func unavailableSection(_ title: String, detail: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.title2.bold())
-            Text(detail).foregroundStyle(.secondary)
-        }
-    }
 }

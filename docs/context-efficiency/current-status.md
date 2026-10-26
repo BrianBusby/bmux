@@ -85,8 +85,11 @@ work without a local workspace. A partial or failed
 refresh keeps prior facts with their original check time. The stacked
 `work-brief-conversation` slice answers supported questions over this same
 snapshot and shows the source-backed items and links; unsupported questions
-are stated explicitly. Recent changes remain unavailable. No question history
-or external content is persisted. The
+are stated explicitly. The stacked `work-brief-changes` slice compares current
+facts with bounded metadata from the last viewed brief and shows only verified
+new or changed items. It keeps metadata for at most 30 days and never treats a
+failed source refresh as a disappearance. No question history or external
+content bodies are persisted. The
 cross-service Work Brief projection is bmux-owned; PE remains the owner of
 durable engineering evidence. The merged local slice remains under observation;
 the external and conversation slices await tagged dogfood and merge. See [the local record](../planning/work-brief-implementation.md)
