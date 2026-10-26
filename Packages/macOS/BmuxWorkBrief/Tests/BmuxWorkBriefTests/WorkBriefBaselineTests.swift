@@ -43,6 +43,30 @@ import Testing
         #expect(!baseline.valid(at: now.addingTimeInterval(31 * 24 * 3600)))
     }
 
+    @Test func maximalMetadataFitsPersistenceCapWithoutInventingChanges() throws {
+        let now = Date(timeIntervalSince1970: 1_000)
+        let workspaces = (0..<100).map { index in
+            let id = UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", index))!
+            let tickets = (0..<12).map { ticket in
+                WorkBriefLink(id: "CC-\(index)-\(ticket)-" + String(repeating: "X", count: 75),
+                    label: "Ticket", url: URL(string: "https://linear.app/acme/issue/CC-1")!, source: .linear)
+            }
+            return WorkBriefLocalWorkspace(id: id, runtimeID: UUID(), title: "Roof inspection",
+                repository: nil, branch: nil, tickets: tickets, pullRequest: nil,
+                status: .running, surfaceID: nil, lastActivityAt: now,
+                checkedAt: now, evidence: [])
+        }
+        let issues = (0..<100).map { index in
+            external("linear:" + String(repeating: "I", count: 100) + "\(index)",
+                     status: "In Progress", at: now)
+        }
+        let current = snapshot(workspaces, issues, at: now)
+        let baseline = WorkBriefBaseline(snapshot: current, previous: nil, at: now)
+        #expect(try JSONEncoder().encode(baseline).count <= 64_000)
+        #expect(baseline.changes(in: current).localIDs.isEmpty)
+        #expect(baseline.changes(in: current).externalIDs.isEmpty)
+    }
+
     private func local(id: UUID = UUID(), status: WorkBriefLocalStatus,
                        at now: Date) -> WorkBriefLocalWorkspace {
         WorkBriefLocalWorkspace(id: id, runtimeID: UUID(), title: "Roof inspection",
