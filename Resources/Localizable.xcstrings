@@ -107450,6 +107450,54 @@
         }
       }
     },
+    "workBrief.inferred": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inferred"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推定"
+          }
+        }
+      }
+    },
+    "workBrief.ticketLinkMatch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matching ticket ID"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チケット ID が一致"
+          }
+        }
+      }
+    },
+    "workBrief.pullRequestURLMatch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matching pull request URL"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プルリクエスト URL が一致"
+          }
+        }
+      }
+    },
     "workBrief.reviewRequested": {
       "localizations": {
         "en": {

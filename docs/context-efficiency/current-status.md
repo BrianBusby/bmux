@@ -80,7 +80,8 @@ stable workspace, runtime, and surface IDs before using the existing workspace
 selection and focus-flash actions. The `work-brief-external` slice adds
 bounded, read-only Linear assigned issues and explicitly scoped GitHub pull
 requests. It shows source health, observed review waits, exact ticket/PR
-relationships, and external work without a local workspace. A partial or failed
+relationships marked as inferred joins between observed links, and external
+work without a local workspace. A partial or failed
 refresh keeps prior facts with their original check time. Recent changes and
 Ask remain explicitly unavailable. No external content is persisted. The
 cross-service Work Brief projection is bmux-owned; PE remains the owner of

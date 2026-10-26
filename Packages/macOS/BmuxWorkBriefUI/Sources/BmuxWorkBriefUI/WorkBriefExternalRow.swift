@@ -7,6 +7,8 @@ public struct WorkBriefExternalRow: View {
     public let item: WorkBriefExternalItem
     /// Workspaces related through exact accepted source links.
     public let relatedWorkspaces: [WorkBriefLocalWorkspace]
+    /// Bmux-inferred exact-link relationships keyed by stable workspace ID.
+    public let relationshipEvidenceByWorkspaceID: [UUID: WorkBriefEvidence]
     /// Health of the latest provider refresh.
     public let health: WorkBriefSourceHealth
     /// Whether accepted PE status conflicts with the provider's open PR result.
@@ -22,16 +24,19 @@ public struct WorkBriefExternalRow: View {
     /// - Parameters:
     ///   - item: The provider-backed work item.
     ///   - relatedWorkspaces: Exactly related local workspace snapshots.
+    ///   - relationshipEvidenceByWorkspaceID: The inferred exact-link basis for each Jump target.
     ///   - health: Latest health of the item's provider.
     ///   - hasConflict: Whether local PE and provider PR status disagree.
     ///   - jump: Host-validated workspace selection on user click.
     ///   - openURL: Source URL opening on user click.
     public init(item: WorkBriefExternalItem, relatedWorkspaces: [WorkBriefLocalWorkspace],
+                relationshipEvidenceByWorkspaceID: [UUID: WorkBriefEvidence],
                 health: WorkBriefSourceHealth, hasConflict: Bool,
                 jump: @escaping @MainActor (UUID, UUID) -> Bool,
                 openURL: @escaping @MainActor (URL) -> Void) {
         self.item = item
         self.relatedWorkspaces = Array(relatedWorkspaces.prefix(3))
+        self.relationshipEvidenceByWorkspaceID = relationshipEvidenceByWorkspaceID
         self.health = health
         self.hasConflict = hasConflict
         self.jump = jump
@@ -56,17 +61,22 @@ public struct WorkBriefExternalRow: View {
                 Text(String(localized: "workBrief.owner", defaultValue: "Owner") + ": " + owner)
                     .font(.caption).foregroundStyle(.secondary)
             }
-            HStack {
-                Button(String(localized: "workBrief.openSource", defaultValue: "Open source")) {
-                    openURL(item.url)
-                }
-                .buttonStyle(.bordered)
-                ForEach(relatedWorkspaces) { workspace in
-                    Button(String(localized: "workBrief.jump", defaultValue: "Jump to workspace") +
-                           " · " + workspace.title) {
-                        targetMissing = !jump(workspace.id, workspace.runtimeID)
+            Button(String(localized: "workBrief.openSource", defaultValue: "Open source")) {
+                openURL(item.url)
+            }
+            .buttonStyle(.bordered)
+            ForEach(relatedWorkspaces) { workspace in
+                if let relationship = relationshipEvidenceByWorkspaceID[workspace.id] {
+                    HStack(spacing: 8) {
+                        Button(String(localized: "workBrief.jump", defaultValue: "Jump to workspace") +
+                               " · " + workspace.title) {
+                            targetMissing = !jump(workspace.id, workspace.runtimeID)
+                        }
+                        .buttonStyle(.bordered)
+                        Text(String(localized: "workBrief.inferred", defaultValue: "Inferred") +
+                             " · " + relationshipLabel(relationship.field))
+                            .font(.caption).foregroundStyle(.secondary)
                     }
-                    .buttonStyle(.bordered)
                 }
             }
             if targetMissing {
@@ -75,10 +85,35 @@ public struct WorkBriefExternalRow: View {
                     .font(.caption).foregroundStyle(.orange)
             }
             DisclosureGroup(String(localized: "workBrief.whyHere", defaultValue: "Why is this here?")) {
+                ForEach(relatedWorkspaces) { workspace in
+                    if let relationship = relationshipEvidenceByWorkspaceID[workspace.id] {
+                        HStack {
+                            Text(workspace.title + " · " + relationshipLabel(relationship.field))
+                            Text(String(localized: "workBrief.inferred", defaultValue: "Inferred"))
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text(relationship.checkedAt, style: .relative)
+                        }
+                        .font(.caption)
+                        if let referenceID = relationship.referenceID {
+                            Text(String(localized: "workBrief.eventID", defaultValue: "Evidence event") +
+                                 " " + referenceID)
+                                .font(.caption2).textSelection(.enabled)
+                        }
+                        if let url = relationship.url {
+                            Button(String(localized: "workBrief.openSource", defaultValue: "Open source")) {
+                                openURL(url)
+                            }
+                            .font(.caption)
+                        }
+                    }
+                }
                 ForEach(item.evidence) { evidence in
                     HStack {
                         Text(evidenceLabel(evidence.field))
-                        Text(String(localized: "workBrief.observed", defaultValue: "Observed"))
+                        Text(evidence.isObserved
+                             ? String(localized: "workBrief.observed", defaultValue: "Observed")
+                             : String(localized: "workBrief.inferred", defaultValue: "Inferred"))
                             .foregroundStyle(.secondary)
                         Spacer()
                         Text(evidence.checkedAt, style: .relative)
@@ -124,6 +159,17 @@ public struct WorkBriefExternalRow: View {
             }
         }
         return item.status
+    }
+
+    private func relationshipLabel(_ field: String) -> String {
+        switch field {
+        case "ticketLinkMatch":
+            String(localized: "workBrief.ticketLinkMatch", defaultValue: "Matching ticket ID")
+        case "pullRequestURLMatch":
+            String(localized: "workBrief.pullRequestURLMatch", defaultValue: "Matching pull request URL")
+        default:
+            String(localized: "workBrief.evidenceOther", defaultValue: "Source fact")
+        }
     }
 
     private func evidenceLabel(_ field: String) -> String {

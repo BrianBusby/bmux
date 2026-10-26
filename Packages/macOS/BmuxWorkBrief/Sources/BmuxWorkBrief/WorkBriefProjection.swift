@@ -14,8 +14,10 @@ public struct WorkBriefProjection: Equatable, Sendable {
     public let externalInProgress: [WorkBriefExternalItem]
     /// External source items explicitly awaiting another actor.
     public let externalWaitingOn: [WorkBriefExternalItem]
-    /// Exact local relationships established through accepted source links.
+    /// Exact-link matches inferred from provider facts and accepted local links.
     public let relatedWorkspaceIDs: [String: [UUID]]
+    /// Bmux-inferred joins between separate observed provider and PE links.
+    public let relationshipEvidenceByExternalID: [String: [UUID: WorkBriefEvidence]]
     /// External open PRs whose exact local PE link has a terminal status.
     public let conflictingExternalIDs: Set<String>
 
@@ -36,22 +38,44 @@ public struct WorkBriefProjection: Equatable, Sendable {
             return $0.id < $1.id
         }
         var relationships: [String: [UUID]] = [:]
+        var relationshipEvidence: [String: [UUID: WorkBriefEvidence]] = [:]
         for item in external {
-            relationships[item.id] = snapshot.localWorkspaces.filter { workspace in
+            var ids: [UUID] = []
+            var evidenceByWorkspace: [UUID: WorkBriefEvidence] = [:]
+            for workspace in snapshot.localWorkspaces {
+                let matchedField: String
+                let observedField: String
                 switch item.source {
                 case .linear:
-                    workspace.tickets.contains {
+                    guard workspace.tickets.contains(where: {
                         $0.source == .linear &&
                         ($0.id.caseInsensitiveCompare(item.reference) == .orderedSame || $0.url == item.url)
-                    }
+                    }) else { continue }
+                    matchedField = "ticketLinkMatch"
+                    observedField = "ticket"
                 case .github:
-                    workspace.pullRequest?.source == .github && workspace.pullRequest?.url == item.url
+                    guard workspace.pullRequest?.source == .github,
+                          workspace.pullRequest?.url == item.url else { continue }
+                    matchedField = "pullRequestURLMatch"
+                    observedField = "pullRequest"
                 default:
-                    false
+                    continue
                 }
-            }.map(\.id)
+                ids.append(workspace.id)
+                let localEvidence = workspace.evidence.first {
+                    $0.field == observedField && $0.source == .provenanceEngine && $0.url == item.url
+                }
+                evidenceByWorkspace[workspace.id] = WorkBriefEvidence(
+                    id: "\(item.id):\(workspace.id):relationship", source: .bmux,
+                    field: matchedField, isObserved: false,
+                    checkedAt: min(item.checkedAt, workspace.checkedAt), url: item.url,
+                    referenceID: localEvidence?.referenceID)
+            }
+            relationships[item.id] = ids
+            relationshipEvidence[item.id] = evidenceByWorkspace
         }
         relatedWorkspaceIDs = relationships
+        relationshipEvidenceByExternalID = relationshipEvidence
         conflictingExternalIDs = Set(external.filter { item in
             guard item.source == .github else { return false }
             let ids = Set(relationships[item.id] ?? [])
