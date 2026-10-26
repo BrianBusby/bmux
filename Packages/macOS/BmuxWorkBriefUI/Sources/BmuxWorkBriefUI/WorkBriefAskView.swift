@@ -128,7 +128,7 @@ public struct WorkBriefAskView: View {
                 "No observed waiting reason is available for that item. Open its source for more detail.")
         case .unsupported:
             String(localized: "workBrief.askUnsupported", defaultValue:
-                "Try asking about attention, work in progress, waiting, or a ticket's PR.")
+                "Try asking about attention, work in progress, waiting, changes, or a ticket's PR.")
         }
     }
 }
