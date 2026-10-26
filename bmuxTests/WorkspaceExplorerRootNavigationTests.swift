@@ -72,18 +72,21 @@ struct WorkspaceExplorerRootNavigationTests {
 
     @Test
     func repositoryFilterContinuesThroughPagesUntilTwentyFiveMatches() async {
-        let first = Self.historyItems(count: 25, repository: "other")
+        let first = Self.historyItems(count: 25, repository: "other", project: "cedar-roof")
         let skipped = Self.historyItems(count: 25, repository: "other")
         let matching = Self.historyItems(count: 25, repository: "maple")
         let laterFacet = ProvenanceWorkspaceHistoryFacet(workspaceID: matching[0].id,
             lastActivityAt: matching[0].lastActivityAt, repositoryID: "maple",
             projectLinks: [.init(id: "maple-roof", title: "Maple Roof")],
             pullRequestOwnerLogin: "brian")
+        let unassignedFacet = ProvenanceWorkspaceHistoryFacet(workspaceID: matching[1].id,
+            lastActivityAt: matching[1].lastActivityAt, repositoryID: "maple",
+            projectLinks: [], pullRequestOwnerLogin: nil)
         var cursors: [String] = []
         let model = WorkspaceExplorerCoordinator(
             loadHistory: { WorkspaceExplorerHistoryLoadResult(items: first,
                 archiveAvailability: .available, partialLiveActivity: false,
-                nextHistoryCursor: "after-first", filterFacets: [laterFacet]) },
+                nextHistoryCursor: "after-first", filterFacets: [laterFacet, unassignedFacet]) },
             loadMoreHistory: { cursor in
                 cursors.append(cursor)
                 return WorkspaceExplorerHistoryLoadResult(
@@ -103,6 +106,7 @@ struct WorkspaceExplorerRootNavigationTests {
             calendar: .current)
         #expect(options?[.repository]?.contains(.value("maple")) == true)
         #expect(options?[.project]?.contains(.project("maple-roof")) == true)
+        #expect(options?[.project]?.contains(.unassigned) == true)
         #expect(options?[.pullRequestOwner]?.contains(.value("brian")) == true)
         model.rootArrangement.setFilter(.repository, value: .value("maple"))
 
@@ -113,12 +117,20 @@ struct WorkspaceExplorerRootNavigationTests {
         #expect(model.hasMoreHistory == false)
     }
 
-    private static func historyItems(count: Int, repository: String) -> [WorkspaceExplorerHistoryItem] {
+    private static func historyItems(count: Int, repository: String,
+                                     project: String? = nil) -> [WorkspaceExplorerHistoryItem] {
         let summaries = (0..<count).map { index in
-            ProvenanceWorkspaceHistorySummary(id: UUID().uuidString, firstSessionAt: nil,
-                lastActivityAt: Date(timeIntervalSince1970: 1_800_000_000 - Double(index)),
+            let id = UUID().uuidString
+            let activity = Date(timeIntervalSince1970: 1_800_000_000 - Double(index))
+            let display = project.map { project in
+                ProvenanceWorkspaceDisplayRecord(id: "display-\(id)", workspaceID: id,
+                    projectLinks: [.init(id: project, title: "Cedar Roof")],
+                    observedAt: activity, updatedAt: activity)
+            }
+            return ProvenanceWorkspaceHistorySummary(id: id, firstSessionAt: nil,
+                lastActivityAt: activity,
                 sessionCount: 1, lastKnownDirectory: "/work/maple-roof",
-                lastKnownRepositoryID: repository)
+                lastKnownRepositoryID: repository, display: display)
         }
         return WorkspaceExplorerHistoryAdapter().join(live: [], archived: [],
             sessionWorkspaces: summaries, eligibilityByID: [:])
