@@ -39,8 +39,9 @@ struct WorkBriefScenes: Scene {
                     for: settings.catalog.integrations.workBriefGitHubScopes)
                     .compactMap(GitHubWorkBriefScope.init)
             }, http: http)
-        let model = WorkBriefCoordinator(initialSnapshot: initial) {
-            await appDelegate.loadWorkBrief(linear: linear, github: github)
+        let external = WorkBriefExternalLoader(linear: linear, github: github)
+        let model = WorkBriefCoordinator(initialSnapshot: initial) { forceExternal in
+            await appDelegate.loadWorkBrief(external: external, forceExternal: forceExternal)
         }
         return makeBoundView(appDelegate: appDelegate, model: model)
     }

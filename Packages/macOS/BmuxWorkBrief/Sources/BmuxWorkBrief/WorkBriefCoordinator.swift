@@ -5,7 +5,7 @@ import Observation
 @MainActor @Observable
 public final class WorkBriefCoordinator {
     /// Produces a bounded snapshot from current sources.
-    public typealias Loader = @MainActor () async -> WorkBriefSnapshot
+    public typealias Loader = @MainActor (_ forceExternal: Bool) async -> WorkBriefSnapshot
 
     /// Latest source facts.
     public private(set) var snapshot: WorkBriefSnapshot?
@@ -13,6 +13,7 @@ public final class WorkBriefCoordinator {
     public private(set) var isLoading = false
     private let load: Loader
     private var refreshAgain = false
+    private var pendingForceExternal = false
     private var statusChangesDuringRefresh: [UUID: WorkBriefLocalStatus] = [:]
 
     /// Creates the coordinator with an injected source loader.
@@ -25,15 +26,19 @@ public final class WorkBriefCoordinator {
     }
 
     /// Coalesces source notifications while one refresh is in progress.
-    public func refresh() async {
+    public func refresh(forceExternal: Bool = true) async {
         if isLoading {
             refreshAgain = true
+            pendingForceExternal = pendingForceExternal || forceExternal
             return
         }
         isLoading = true
+        pendingForceExternal = forceExternal
         repeat {
             refreshAgain = false
-            let loaded = await load()
+            let force = pendingForceExternal
+            pendingForceExternal = false
+            let loaded = await load(force)
             snapshot = applying(statusChangesDuringRefresh, to: loaded)
             statusChangesDuringRefresh.removeAll()
         } while refreshAgain

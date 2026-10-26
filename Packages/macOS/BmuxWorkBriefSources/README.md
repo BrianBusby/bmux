@@ -14,6 +14,11 @@ partial. Both actors keep at most 100 prior summaries in memory and preserve
 them with their original `checkedAt` on a failed refresh. They expose stable
 reason codes without logging provider content or tokens.
 
+`WorkBriefExternalLoader` reuses the previous provider result for automatic
+local-change refreshes within 60 seconds. An explicit user refresh always
+checks providers. This prevents PE display notifications from producing
+unbounded external API traffic while keeping the local workspace view current.
+
 Tests inject `WorkBriefHTTPClient` and credential/scope closures:
 
 ```swift

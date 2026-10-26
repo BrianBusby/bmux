@@ -19,7 +19,7 @@ import Testing
         let snapshot = WorkBriefSnapshot(localWorkspaces: [item], externalItems: [external],
             localHealth: WorkBriefSourceHealth(state: .available, checkedAt: now),
             linearHealth: unavailable, githubHealth: unavailable, slackHealth: unavailable)
-        let coordinator = WorkBriefCoordinator(initialSnapshot: snapshot) {
+        let coordinator = WorkBriefCoordinator(initialSnapshot: snapshot) { _ in
             Issue.record("A live status change must not requery Provenance Engine")
             return snapshot
         }

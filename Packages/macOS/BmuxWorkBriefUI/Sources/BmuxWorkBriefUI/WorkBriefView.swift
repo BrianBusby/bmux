@@ -84,7 +84,7 @@ public struct WorkBriefView: View {
         }
         .frame(minWidth: 600, minHeight: 460)
         .onAppear {
-            onStart { Task { await model.refresh() } }
+            onStart { Task { await model.refresh(forceExternal: false) } }
             Task { await model.refresh() }
         }
         .onDisappear { onStop() }

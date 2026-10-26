@@ -5,13 +5,13 @@ import Foundation
 @MainActor
 extension AppDelegate {
     /// Combines current local facts with bounded, read-only external summaries.
-    func loadWorkBrief(linear: LinearWorkBriefSource,
-                       github: GitHubWorkBriefSource) async -> WorkBriefSnapshot {
+    func loadWorkBrief(external: WorkBriefExternalLoader,
+                       forceExternal: Bool) async -> WorkBriefSnapshot {
         let now = Date()
         async let local = loadLocalWorkBrief()
-        async let linearResult = linear.refresh(at: now)
-        async let githubResult = github.refresh(at: now)
-        let (localFacts, linearFacts, githubFacts) = await (local, linearResult, githubResult)
+        async let sources = external.refresh(at: now, force: forceExternal)
+        let (localFacts, sourceFacts) = await (local, sources)
+        let (linearFacts, githubFacts) = sourceFacts
         return WorkBriefSnapshot(localWorkspaces: localFacts.localWorkspaces,
             externalItems: linearFacts.items + githubFacts.items,
             localHealth: localFacts.localHealth, linearHealth: linearFacts.health,

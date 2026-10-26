@@ -48,6 +48,9 @@ The UI renders immutable snapshots and only exposes user-clicked source open or
 validated local navigation. The app composition owns lifecycle and config.
 PE remains the durable owner of engineering evidence; external facts are
 short-lived in-memory data, not PE events or a second unrestricted archive.
+Automatic local-change refreshes reuse external facts for 60 seconds; an
+explicit Refresh bypasses that cache. The source health and original checked
+times remain visible when the cached response is reused.
 
 Focused fixtures must cover pagination caps, partial API responses, credentials
 missing/expired, offline refresh preserving known facts with stale state,

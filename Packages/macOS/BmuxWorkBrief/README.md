@@ -9,7 +9,7 @@ The coordinator can be tested without launching bmux by injecting a fixed
 snapshot loader:
 
 ```swift
-let coordinator = WorkBriefCoordinator(initialSnapshot: knownSnapshot) {
+let coordinator = WorkBriefCoordinator(initialSnapshot: knownSnapshot) { _ in
     refreshedSnapshot
 }
 await coordinator.refresh()
