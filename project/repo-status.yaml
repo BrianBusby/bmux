@@ -18,6 +18,7 @@ execution_telemetry:
   completed_assistant_output_provenance_projection: implemented
   codex_transcript_canonical_evidence_import: implemented
   normal_terminal_codex_evidence_ingestion: implemented
+  ordinary_codex_durable_cursor: under_observation
   coding_agent_evidence_source_reconciliation: implemented
   live_codex_evidence_convergence_correctness: implemented
 

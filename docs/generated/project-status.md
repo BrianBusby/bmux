@@ -128,6 +128,7 @@ Regenerate with: ./scripts/project-docs generate
 
 | Caveat | Owner | Status | Issue |
 | --- | --- | --- | --- |
+| Bounded Codex cursor hardening awaits tagged runtime dogfood; sustained ingestion remains gated by live PE storage maintenance (`ordinary_codex_cursor_storage_gate`) | Bmux | open |  |
 | Native deadline now owns the test wrapper inside the console session; output-pipeline and cancellation controls pass, real runner cleanup remains unverified (`app_host_cancellation_ownership_verification`) | Bmux | open |  |
 | Session persistence store capture builds as 794 and passes compiled policy/store checks; macOS 15 app-host teardown verification remains pending (`session_write_store_capture_verification`) | Bmux | open |  |
 | Bash refresh FIFO observation awaits app-host verification and retains detached stub cleanup risk (`bash_relay_refresh_fixture_verification`) | Bmux | open |  |

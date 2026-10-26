@@ -3,7 +3,8 @@ import ProvenanceEngineContracts
 
 extension CLIProvenanceCodexTranscriptImporter {
     func gitContext(for directory: String?, observedAt: Date) async -> GitContext? {
-        guard let directory = Self.trimmedNonEmpty(directory),
+        guard emitsEvents,
+              let directory = Self.trimmedNonEmpty(directory),
               let snapshot = Self.gitSnapshot(for: directory) else {
             return nil
         }

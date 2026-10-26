@@ -100,16 +100,22 @@ extension CLIProvenanceCodexTranscriptImporter {
     struct LiveImportResult: Equatable {
         let fileReport: FileReport
         let consumedLines: Int
+        let skippedLines: Int
         let retainedPartialLine: Bool
         let metadataAvailable: Bool
+        let hasMoreData: Bool
     }
 
     struct LiveImportState {
         var workspaceID: String?
         var surfaceID: String?
+        var expectedSessionID: String? = nil
         var offset: UInt64 = 0
+        var lastCompletedLineOffset: UInt64 = 0
         var pendingFragment = Data()
+        var discardingOversizedLine = false
         var nextLineNumber = 1
+        var fileIdentity: CLIProvenanceCodexTranscriptFileIdentity?
         var metadata: TranscriptMetadata?
         var context: TranscriptContext?
         var pendingLines: [TranscriptLine] = []

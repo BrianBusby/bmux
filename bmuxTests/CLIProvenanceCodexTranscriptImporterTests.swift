@@ -200,7 +200,7 @@ struct CLIProvenanceCodexTranscriptImporterTests {
     }
 
     @Test
-    func liveImportKeepsTailStateWhenBatchParsingFails() async throws {
+    func liveImportAdvancesPastMalformedLineWithoutLosingLaterAppends() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
@@ -212,21 +212,17 @@ struct CLIProvenanceCodexTranscriptImporterTests {
         let lines = try Self.codexTranscriptFixtureLines()
 
         try Self.appendText(lines[0] + "\nnot-json\n", to: transcriptURL)
-        do {
-            _ = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
-            Issue.record("Expected invalid JSON to fail the live import batch")
-        } catch {
-            #expect(state.offset == 0)
-            #expect(state.nextLineNumber == 1)
-            #expect(state.metadata == nil)
-            #expect(state.pendingLines.isEmpty)
-        }
+        let first = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        #expect(first.consumedLines == 1)
+        #expect(first.skippedLines == 1)
+        #expect(first.fileReport.threads == 1)
+        #expect(state.nextLineNumber == 3)
 
-        try (lines[0] + "\n").write(to: transcriptURL, atomically: true, encoding: .utf8)
-        let retry = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
-        #expect(retry.consumedLines == 1)
-        #expect(retry.fileReport.threads == 1)
-        #expect(state.metadata != nil)
+        try Self.appendText(lines[1] + "\n" + lines[2] + "\n", to: transcriptURL)
+        let later = try await importer.importLiveTranscriptAppend(at: transcriptURL, state: &state)
+        #expect(later.consumedLines == 2)
+        #expect(later.fileReport.turns == 1)
+        #expect(later.fileReport.prompts == 1)
     }
 
     @Test
@@ -317,14 +313,14 @@ struct CLIProvenanceCodexTranscriptImporterTests {
         try lines.joined(separator: "\n").write(to: url, atomically: true, encoding: .utf8)
     }
 
-    private static func appendText(_ text: String, to url: URL) throws {
+    static func appendText(_ text: String, to url: URL) throws {
         let handle = try FileHandle(forWritingTo: url)
         defer { try? handle.close() }
         handle.seekToEndOfFile()
         handle.write(Data(text.utf8))
     }
 
-    private static func factualProjection(
+    static func factualProjection(
         client: any ProvenanceEngineContracts.ProvenanceEngineClient,
         sessionID: String
     ) async throws -> ProvenanceFactualSessionProjectionSnapshot {
@@ -685,7 +681,7 @@ struct CLIProvenanceCodexTranscriptImporterTests {
         return String(decoding: data, as: UTF8.self)
     }
 
-    private struct StoreFixture {
+    struct StoreFixture {
         let directoryURL: URL
         let databaseURL: URL
 
@@ -710,7 +706,7 @@ struct CLIProvenanceCodexTranscriptImporterTests {
         }
     }
 
-    private actor FailingAppendClient: ProvenanceEngineContracts.ProvenanceEngineClient {
+    actor FailingAppendClient: ProvenanceEngineContracts.ProvenanceEngineClient {
         func health() async throws -> ProvenanceEngineContracts.ProvenanceEngineHealth {
             throw CancellationError()
         }

@@ -21,6 +21,17 @@ additional sustained ingestion remains closed until all writers use the bounded
 writer and safe maintenance capacity is available. See the
 [PE storage retention policy](../../Packages/macOS/ProvenanceEngine/docs/storage-retention.md).
 
+The ordinary Codex monitor cursor follow-up reads at most 64 KiB per cycle,
+keeps at most 4 MiB of an unfinished JSONL line, skips malformed lines with a
+count, and stores only versioned file identity and acknowledged complete-line
+offsets in private bmux state. Restart reconstructs parser context from the
+acknowledged prefix without reappending to PE. Cursor and status files expire
+after 30 days; status reports unread bytes, skipped lines, retry state, and a
+five-minute lag threshold without transcript payloads. This hardening is under
+observation pending tagged dogfood. It does not reopen the live ingestion
+storage gate while older app builds may still write legacy outcome revisions.
+See [the cursor implementation record](../planning/live-codex-cursor-hardening.md).
+
 The workspace ticket-delay follow-up is recorded in
 [implementation notes](../implementation-notes/workspace-ticket-delay.md).
 It reduces outcome projection write contention and restores failed observation

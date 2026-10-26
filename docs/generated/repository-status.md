@@ -183,6 +183,7 @@ Repository: `BrianBusby/bmux`
 | Live Projection | implemented |
 | Native Read Client | implemented |
 | Normal Terminal Codex Evidence Ingestion | implemented |
+| Ordinary Codex Durable Cursor | under observation |
 | Provider Neutral Contract | implemented |
 
 ## Local Caveats
