@@ -1,6 +1,6 @@
 import Foundation
 
-/// Session-scoped arrangement for one overview or collection view.
+/// Session-scoped arrangement for the root or a focused collection.
 struct WorkspaceExplorerViewArrangement {
     private(set) var groupBy: [WorkspaceExplorerDimension] = []
     private(set) var filters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey] = [:]
@@ -8,7 +8,6 @@ struct WorkspaceExplorerViewArrangement {
     var scrollOffset: CGFloat = 0
     var scrollAnchorID: String?
     var selectedWorkspaceID: String?
-    var focusedProjectID: String?
     private var undoStack: [Snapshot] = []
 
     var canUndo: Bool { !undoStack.isEmpty }

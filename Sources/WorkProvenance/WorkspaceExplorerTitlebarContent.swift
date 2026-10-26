@@ -16,7 +16,7 @@ struct WorkspaceExplorerTitlebarContent: View {
                 hasCollection: origin.collectionTarget != nil, workspaceTitle: title,
                 retainedSessionCount: navigation?.retainedSessionCount,
                 leadingPadding: reservedControlWidth,
-                onAllProjects: { navigation?.returnToOverview() },
+                onAllWorkspaces: { navigation?.returnToAllWorkspaces() },
                 onCollection: { navigation?.returnToCollection() },
                 onHistory: { navigation?.openHistory() })
         } else {

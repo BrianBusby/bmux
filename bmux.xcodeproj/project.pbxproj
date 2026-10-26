@@ -2129,6 +2129,8 @@
 		3A18F74DABCA49A6BF5E2FDD /* WorkspaceExplorerRailProjectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A7FA5DAE4FE4EE384F0B505 /* WorkspaceExplorerRailProjectionTests.swift */; };
 		E7A9EAA73EE74959BA21200E /* WorkspaceExplorerReopenEligibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21200D /* WorkspaceExplorerReopenEligibility.swift */; };
 		E7A9EAA73EE74959BA21200C /* WorkspaceExplorerReopenReason.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21200B /* WorkspaceExplorerReopenReason.swift */; };
+				E71A17900000000000000092 /* WorkspaceExplorerRootNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceExplorerRootNavigationTests.swift; sourceTree = "<group>"; };
+				E71A17900000000000000093 /* WorkspaceExplorerRootNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71A17900000000000000092 /* WorkspaceExplorerRootNavigationTests.swift */; };
 		E7A9EAA73EE74959BA212410 /* WorkspaceExplorerScenes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A9EAA73EE74959BA21240F /* WorkspaceExplorerScenes.swift */; };
 		1F830D96A89EEA457CA79352 /* WorkspaceExplorerScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C13DB01A1A56779EB92DA1 /* WorkspaceExplorerScope.swift */; };
 		A9E1C06F8D24453FB2C317AF /* WorkspaceExplorerScopeControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E1C06F8D24453FB2C317AE /* WorkspaceExplorerScopeControls.swift */; };
@@ -6521,6 +6523,7 @@
 				4FE1124DEA99B38BEE81A68A /* WorkspaceExplorerProjectionTests.swift */,
 				E71A17900000000000000067 /* WorkspaceExplorerLiveNavigationTests.swift */,
 				E71A17900000000000000041 /* WorkspaceExplorerCoordinatorTests.swift */,
+				E71A17900000000000000092 /* WorkspaceExplorerRootNavigationTests.swift */,
 				2A7FA5DAE4FE4EE384F0B505 /* WorkspaceExplorerRailProjectionTests.swift */,
 				E71A17900000000000000071 /* WorkspaceExplorerActivityWindowTests.swift */,
 				FAD145AB2CC344EE8899A001 /* WorkspaceExplorerSessionPageTests.swift */,
@@ -9265,6 +9268,7 @@
 				E71A17900000000000000066 /* WorkspaceExplorerLiveNavigationTests.swift in Sources */,
 				8069B759A1281E3496FB25EE /* WorkspaceExplorerProjectionTests.swift in Sources */,
 				3A18F74DABCA49A6BF5E2FDD /* WorkspaceExplorerRailProjectionTests.swift in Sources */,
+				E71A17900000000000000093 /* WorkspaceExplorerRootNavigationTests.swift in Sources */,
 				FAD145AB2CC344EE8899A002 /* WorkspaceExplorerSessionPageTests.swift in Sources */,
 				FBA900000000000000000003 /* WorkspaceFallbackContractTests.swift in Sources */,
 				FBA900000000000000000001 /* WorkspaceFallbackFixture.swift in Sources */,

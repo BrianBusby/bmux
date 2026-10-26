@@ -15,6 +15,44 @@ struct WorkspaceExplorerProjection {
         self.repositoryNamesByID = repositoryNamesByID
     }
 
+    func filterOptions(
+        dimensions: [WorkspaceExplorerDimension],
+        inScopeWorkspaceIDs: [String],
+        overview: Bool
+    ) -> [WorkspaceExplorerDimension: [WorkspaceExplorerGroupKey]] {
+        let byID = Dictionary(workspaces.map { ($0.id, $0) }, uniquingKeysWith: { current, candidate in
+            current.isClosed && !candidate.isClosed ? candidate : current
+        })
+        let members = inScopeWorkspaceIDs.compactMap { byID[$0] }
+        let projectIDs = Set(members.flatMap(\.projectIDs))
+        let projectNames = Dictionary(projects.map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
+        return Dictionary(uniqueKeysWithValues: dimensions.map { dimension in
+            let keys: [WorkspaceExplorerGroupKey]
+            switch dimension {
+            case .projectOwner, .projectStatus:
+                keys = projects.filter { projectIDs.contains($0.id) }.map { project in
+                    dimension.projectKey(project, workspaces: members.filter { $0.projectIDs.contains(project.id) })
+                }
+            case .project:
+                keys = members.flatMap { workspace in
+                    workspace.projectIDs.isEmpty ? [.unassigned] :
+                        workspace.projectIDs.map(WorkspaceExplorerGroupKey.project)
+                }
+            case .ticket:
+                keys = members.flatMap { $0.tickets.map(WorkspaceExplorerGroupKey.value) }
+            default:
+                keys = members.map { dimension.workspaceKey($0) }
+            }
+            let options = Set(keys).filter {
+                $0.supportsFocus(in: dimension, overview: overview) &&
+                    !(overview && dimension == .project && $0 == .unassigned)
+            }
+                .sorted { dimension.precedes($0, $1, projectNames: projectNames,
+                    repositoryNames: repositoryNamesByID) }
+            return (dimension, options)
+        })
+    }
+
     func overview(
         scope: WorkspaceExplorerScope,
         groupBy: [WorkspaceExplorerDimension],
@@ -27,10 +65,14 @@ struct WorkspaceExplorerProjection {
             let members = scoped.filter { $0.projectIDs.contains(project.id) }
             return members.isEmpty ? nil : (project, members)
         }
-        let workspaceFilters = filters.filter { $0.key == .repository || $0.key == .bmuxStatus }
+        let workspaceFilters = filters.filter {
+            $0.key == .repository || $0.key == .bmuxStatus || $0.key == .pullRequestOwner
+        }
         let visible = projectRows.filter { project, members in
             let projectMatches = filters.allSatisfy { dimension, value in
                 switch dimension {
+                case .project:
+                    return value == .project(project.id)
                 case .projectOwner, .projectStatus:
                     return dimension.projectKey(project, workspaces: members) == value
                 default:
@@ -43,6 +85,7 @@ struct WorkspaceExplorerProjection {
         let dimensions = Array(groupBy.filter(\.isOverviewDimension).uniqued().prefix(3))
         let groups = groupProjects(visible, dimensions: dimensions)
         let visibleWorkspaces = visible.flatMap(\.1)
+        let matchingWorkspaces = visibleWorkspaces.filter { workspaceMatches($0, filters: workspaceFilters) }
         let matching = Dictionary(uniqueKeysWithValues: visible.map { project, members in
             (project.id, members.filter { workspaceMatches($0, filters: workspaceFilters) }.count)
         })
@@ -51,9 +94,9 @@ struct WorkspaceExplorerProjection {
             inScopeProjectIDs: projectRows.map { $0.0.id },
             visibleProjectIDs: visible.map { $0.0.id },
             inScopeWorkspaceIDs: scoped.map(\.id),
-            visibleWorkspaceIDs: Array(Set(visibleWorkspaces.map(\.id))).sorted(),
+            visibleWorkspaceIDs: Array(Set(matchingWorkspaces.map(\.id))).sorted(),
             counts: WorkspaceExplorerCounts(scoped, closedKnown: archiveAvailable),
-            visibleCounts: WorkspaceExplorerCounts(visibleWorkspaces, closedKnown: archiveAvailable),
+            visibleCounts: WorkspaceExplorerCounts(matchingWorkspaces, closedKnown: archiveAvailable),
             matchingWorkspacesByProjectID: matching
         )
     }
@@ -114,6 +157,9 @@ struct WorkspaceExplorerProjection {
         filters: [WorkspaceExplorerDimension: WorkspaceExplorerGroupKey]
     ) -> Bool {
         filters.allSatisfy { dimension, value in
+            if dimension == .project, case .project(let projectID) = value {
+                return workspace.projectIDs.contains(projectID)
+            }
             if dimension == .ticket, case .value(let ticket) = value {
                 return workspace.tickets.contains(ticket)
             }

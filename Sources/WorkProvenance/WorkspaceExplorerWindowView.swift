@@ -12,20 +12,17 @@ struct WorkspaceExplorerWindowView: View {
     let provenanceStartupFailed: @MainActor () -> Bool
     let restartApp: @MainActor () throws -> Void
     let isEmbedded: Bool
-    let onShowWorkspaceView: @MainActor () -> Void
 
     init(model: WorkspaceExplorerCoordinator,
          provenanceStartupFailed: @escaping @MainActor () -> Bool,
          restartApp: @escaping @MainActor () throws -> Void,
          liveNavigation: WorkspaceExplorerLiveNavigation? = nil,
-         isEmbedded: Bool = false,
-         onShowWorkspaceView: @escaping @MainActor () -> Void = {}) {
+         isEmbedded: Bool = false) {
         _model = State(initialValue: model)
         self.provenanceStartupFailed = provenanceStartupFailed
         self.restartApp = restartApp
         self.liveNavigation = liveNavigation
         self.isEmbedded = isEmbedded
-        self.onShowWorkspaceView = onShowWorkspaceView
     }
 
     init(loadPresence: WorkspaceExplorerCoordinator.PresenceLoader? = nil,
@@ -41,13 +38,11 @@ struct WorkspaceExplorerWindowView: View {
          provenanceStartupFailed: @escaping @MainActor () -> Bool = { false },
          restartApp: @escaping @MainActor () throws -> Void = {},
          liveNavigation: WorkspaceExplorerLiveNavigation? = nil,
-         isEmbedded: Bool = false,
-         onShowWorkspaceView: @escaping @MainActor () -> Void = {}) {
+         isEmbedded: Bool = false) {
         self.liveNavigation = liveNavigation
         self.provenanceStartupFailed = provenanceStartupFailed
         self.restartApp = restartApp
         self.isEmbedded = isEmbedded
-        self.onShowWorkspaceView = onShowWorkspaceView
         _model = State(initialValue: WorkspaceExplorerCoordinator(
             loadHistory: loadHistory, loadPresence: loadPresence, reopenHistory: reopenHistory,
             activateWorkspace: activateWorkspace,
@@ -136,10 +131,8 @@ struct WorkspaceExplorerWindowView: View {
                             onOpen: { model.open($0) })
                         if let id = model.historyID {
                             history(id: id)
-                        } else if let target = model.collectionTarget {
-                            collection(target: target)
                         } else {
-                            overview
+                            collection
                         }
                     }
                     .padding(16)
@@ -188,104 +181,10 @@ struct WorkspaceExplorerWindowView: View {
     }
 
     private var header: some View {
-        WorkspaceExplorerHeaderView(model: model, cardGeometry: cardGeometry,
-            isEmbedded: isEmbedded, onShowWorkspaceView: onShowWorkspaceView,
-            confirmsClearHistory: $confirmsClearHistory)
+        WorkspaceExplorerHeaderView(model: model, confirmsClearHistory: $confirmsClearHistory)
     }
 
-    private var overview: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            if let result = model.result() {
-                HStack {
-                    VStack(alignment: .leading, spacing: 3) {
-                        ForEach(WorkspaceExplorerCountPresentation.overviewLines(result,
-                            scope: model.presentedScope,
-                            archiveAvailability: model.presentedCatalog?.archiveAvailability ?? .unavailable,
-                            liveMetadataPending: model.presentedCatalog?.liveMetadataPending == true,
-                            hasFilters: !model.presentedFilters.isEmpty), id: \.self) { line in
-                            Text(line)
-                        }
-                    }
-                    Spacer()
-                    Button(String(localized: "explorer.allWorkspaces", defaultValue: "All workspaces")) {
-                        model.showCollection(.all)
-                    }
-                }
-                .font(.system(size: 13)).foregroundStyle(.secondary)
-                arrangementBar
-                if model.presentedCatalog?.liveMetadataPending == true {
-                    pendingOverview
-                } else {
-                    populatedOverview(result)
-                }
-            }
-        }
-    }
-
-    private var pendingOverview: some View {
-        Group {
-            if model.scope.period != .anyTime {
-                ContentUnavailableView(WorkspaceExplorerCountPresentation.loadingActivity,
-                    systemImage: "clock")
-            } else if model.scope.state == .closed {
-                ContentUnavailableView(String(localized: "explorer.historyLoadingTitle", defaultValue:
-                    "Loading retained history…"), systemImage: "clock")
-            } else if !model.activeArrangement.filters.isEmpty {
-                ContentUnavailableView(WorkspaceExplorerCountPresentation.loadingProjects,
-                    systemImage: "clock")
-            } else if let pending = model.projection?.collection(target: .all, scope: model.scope,
-                      groupBy: [], filters: [:], now: model.activityArrangement.now, calendar: model.activityArrangement.calendar) {
-                ForEach(pending.groups, id: \.identity) { group in
-                    groupSection(group, path: "pending/\(group.identity)", overview: false,
-                        matchingCounts: [:])
-                }
-                if pending.visibleWorkspaceIDs.isEmpty && model.visiblePendingWorkspaceItems.isEmpty { emptyCollection }
-            }
-        }
-    }
-    private func populatedOverview(_ result: WorkspaceExplorerProjectionResult) -> some View {
-        Group {
-            ForEach(result.groups, id: \.identity) { group in
-                groupSection(group, path: "overview/\(group.identity)", overview: true,
-                    matchingCounts: model.presentedFilters.isEmpty ? [:] :
-                        result.matchingWorkspacesByProjectID)
-            }
-            let overviewFilters = model.presentedFilters
-            let unassignedFilters = overviewFilters.filter { $0.key == .repository || $0.key == .bmuxStatus }
-            let hasProjectFilter = overviewFilters[.projectOwner] != nil || overviewFilters[.projectStatus] != nil
-            let unassigned = model.projection?.collection(target: .unassigned, scope: model.presentedScope,
-                groupBy: [], filters: unassignedFilters, now: model.activityArrangement.now, calendar: model.activityArrangement.calendar)
-            if !hasProjectFilter, let unassigned, unassigned.visibleCounts.workspaces > 0 {
-                let openTotal = model.projection?.collection(target: .unassigned,
-                    scope: WorkspaceExplorerScope(), groupBy: [], filters: [:],
-                    now: model.activityArrangement.now, calendar: model.activityArrangement.calendar).counts.open ?? 0
-                WorkspaceExplorerProjectCard(project: nil, counts: unassigned.counts,
-                    workspaces: (model.presentedCatalog?.workspaces ?? []).filter { workspace in
-                        workspace.projectIDs.isEmpty && model.presentedScope.includes(workspace,
-                            now: model.activityArrangement.now, calendar: model.activityArrangement.calendar)
-                    },
-                    repositoryNamesByID: model.presentedCatalog?.repositoryNamesByID ?? [:],
-                    scope: model.presentedScope, archiveAvailability: model.presentedCatalog?.archiveAvailability ?? .unavailable,
-                    openTotal: openTotal,
-                    matchingCount: overviewFilters.isEmpty ? nil : unassigned.visibleCounts.workspaces,
-                    isFocused: false, titleGeometry: cardGeometry,
-                    onOpen: { model.showCollection(.unassigned) },
-                    onInteractionChanged: { model.cardInteractionChanged(id: "unassigned", active: $0) })
-                    .frame(maxWidth: 300)
-                    .opacity(model.exitsUnassigned ? 0 : 1)
-                    .allowsHitTesting(!model.exitsUnassigned)
-                    .accessibilityHidden(model.exitsUnassigned)
-                    .animation(reduceMotion ? nil : .easeOut(duration: 0.17),
-                        value: model.exitsUnassigned)
-            }
-            if model.visiblePendingWorkspaceItems.isEmpty && result.visibleProjectIDs.isEmpty &&
-                (hasProjectFilter || (unassigned?.visibleCounts.workspaces ?? 0) == 0) {
-                emptyCollection
-            }
-        }
-    }
-
-    private func collection(target: WorkspaceExplorerCollectionTarget) -> some View {
+    private var collection: some View {
         VStack(alignment: .leading, spacing: 14) {
             if let result = model.result() {
                 Text(WorkspaceExplorerCountPresentation.collection(result, scope: model.presentedScope,
@@ -300,8 +199,7 @@ struct WorkspaceExplorerWindowView: View {
                         .font(.system(size: 12)).foregroundStyle(.secondary)
                 }
                 ForEach(result.groups, id: \.identity) { group in
-                    groupSection(group, path: "collection/\(group.identity)", overview: false,
-                        matchingCounts: [:])
+                    groupSection(group, path: "collection/\(group.identity)")
                 }
                 if result.visibleWorkspaceIDs.isEmpty && model.visiblePendingWorkspaceItems.isEmpty { emptyCollection }
             } else if model.presentedCatalog?.liveMetadataPending == true {
@@ -342,18 +240,20 @@ struct WorkspaceExplorerWindowView: View {
     }
 
     private var arrangementBar: some View {
-        let dimensions: [WorkspaceExplorerDimension]
-        if model.collectionTarget == nil {
-            dimensions = [.repository, .projectOwner, .projectStatus]
-        } else {
-            dimensions = [.repository, .ticket, .pullRequestOwner, .pullRequestStatus,
-                .ticketStatus, .bmuxStatus] +
-                (model.scope.state == .all ? [.workspaceState] : []) +
-                (model.collectionTarget == .all ? [.project] : [])
-        }
+        let atRoot = model.collectionTarget == nil
+        let dimensions: [WorkspaceExplorerDimension] = [.repository, .ticket, .pullRequestOwner,
+            .pullRequestStatus, .ticketStatus, .bmuxStatus] +
+            (model.scope.state == .all ? [.workspaceState] : []) +
+            (atRoot ? [.project] : [])
+        let filterDimensions: [WorkspaceExplorerDimension] = [.bmuxStatus, .repository] +
+            (atRoot ? [.project] : []) + [.pullRequestOwner]
         let arrangement = model.activeArrangement
         return WorkspaceExplorerArrangementBar(groupBy: arrangement.groupBy, filters: arrangement.filters,
             availableDimensions: dimensions,
+            filterDimensions: filterDimensions,
+            filterOptions: model.projection?.filterOptions(dimensions: filterDimensions,
+                inScopeWorkspaceIDs: model.result()?.inScopeWorkspaceIDs ?? [],
+                overview: false) ?? [:],
             projectsByID: Dictionary((model.presentedCatalog?.projects ?? []).map { ($0.id, $0) },
                 uniquingKeysWith: { first, _ in first }),
             repositoryNamesByID: model.presentedCatalog?.repositoryNamesByID ?? [:],
@@ -364,8 +264,7 @@ struct WorkspaceExplorerWindowView: View {
             onUndo: { model.undo(animated: !reduceMotion) })
     }
 
-    private func groupSection(_ group: WorkspaceExplorerGroup, path: String, overview: Bool,
-                              matchingCounts: [String: Int]) -> some View {
+    private func groupSection(_ group: WorkspaceExplorerGroup, path: String) -> some View {
         let arrangement = model.activeArrangement
         let collectionDimensions: Set<WorkspaceExplorerDimension>
         if case .project = model.collectionTarget {
@@ -375,21 +274,9 @@ struct WorkspaceExplorerWindowView: View {
         }
         let projects = model.presentedCatalog?.projects ?? []
         let items = model.presentedCatalog?.items ?? []
-        let counts = Dictionary(projects.map { project in
-            let count = model.projection?.collection(target: .project(project.id), scope: model.presentedScope,
-                groupBy: [], filters: [:], now: model.activityArrangement.now, calendar: model.activityArrangement.calendar).counts ??
-                WorkspaceExplorerCounts([], closedKnown: false)
-            return (project.id, count)
-        }, uniquingKeysWith: { first, _ in first })
-        let openTotals = Dictionary(projects.map { project in
-            let total = model.projection?.collection(target: .project(project.id),
-                scope: WorkspaceExplorerScope(), groupBy: [], filters: [:],
-                now: model.activityArrangement.now, calendar: model.activityArrangement.calendar).counts.open ?? 0
-            return (project.id, total)
-        }, uniquingKeysWith: { first, _ in first })
         return WorkspaceExplorerGroupSection(group: group, depth: 0, path: path,
             cardGeometry: cardGeometry,
-            overview: overview, collapsedPaths: arrangement.collapsedPaths,
+            collapsedPaths: arrangement.collapsedPaths,
             activeFilters: model.presentedFilters,
             groupedDimensions: Set(arrangement.groupBy).union(collectionDimensions),
             projectsByID: Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }),
@@ -397,16 +284,10 @@ struct WorkspaceExplorerWindowView: View {
             itemsByID: Dictionary(items.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }),
             workspacesByID: Dictionary((model.presentedCatalog?.workspaces ?? []).map { ($0.id, $0) },
                 uniquingKeysWith: { first, _ in first }),
-            projectCounts: counts, projectOpenTotals: openTotals, scope: model.presentedScope,
-            now: model.activityArrangement.now, calendar: model.activityArrangement.calendar,
-            archiveAvailability: model.presentedCatalog?.archiveAvailability ?? .unavailable,
-            matchingCounts: matchingCounts,
-            exitingProjectIDs: model.exitingProjectIDs, exitingWorkspaceIDs: model.exitingWorkspaceIDs,
-            focusedProjectID: model.overviewArrangement.focusedProjectID,
+            scope: model.presentedScope, exitingWorkspaceIDs: model.exitingWorkspaceIDs,
             activeWorkspaceID: model.activeWorkspaceID,
             reopenedWorkspaceID: model.reopenedWorkspaceID,
             metadataPending: model.presentedCatalog?.liveMetadataPending == true,
-            onOpenProject: { model.showCollection(.project($0)) },
             onOpenWorkspace: { model.open($0) },
             onHistory: { model.showHistory($0.id) },
             onReopen: { item in Task { _ = await model.reopen(item) } },
