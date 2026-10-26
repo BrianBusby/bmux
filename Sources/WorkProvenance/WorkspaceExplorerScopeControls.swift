@@ -11,7 +11,7 @@ struct WorkspaceExplorerScopeControls: View {
             HStack(spacing: 2) {
                 scopeButton(String(localized: "explorer.open", defaultValue: "Open"),
                     state: .open)
-                scopeButton(String(localized: "explorer.closed", defaultValue: "Closed"),
+                scopeButton(String(localized: "explorer.past", defaultValue: "Past"),
                     state: .closed)
                 scopeButton(String(localized: "explorer.all", defaultValue: "All"),
                     state: .all)

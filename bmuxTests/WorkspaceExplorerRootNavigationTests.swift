@@ -1,5 +1,6 @@
 import Foundation
 import ProvenanceEngineContracts
+import ProvenanceEngineSDK
 import Testing
 
 #if canImport(bmux_DEV)
@@ -10,6 +11,34 @@ import Testing
 
 @Suite @MainActor
 struct WorkspaceExplorerRootNavigationTests {
+    @Test
+    func rootLoadsSessionsFromAnotherBmuxRunWithoutAnArchive() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-explorer-cross-run-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(
+            databaseURL: directory.appendingPathComponent("provenance.sqlite"))
+        let workspaceID = UUID()
+        let activity = Date(timeIntervalSince1970: 1_800_000_000)
+        let session = ProvenanceSessionRecord(id: "codex-other-run", agentKind: "codex",
+            workspaceID: workspaceID.uuidString, cwd: "/work/maple-roof", status: "completed",
+            startedAt: activity, updatedAt: activity)
+        _ = try await client.appendEvent(.init(event: .init(eventType: .sessionObserved,
+            timestamp: activity, sessionID: session.id, source: .observed,
+            confidence: .high, payload: .init(session: session))))
+        let service = WorkspaceExplorerHistoryService(
+            archiveService: WorkProvenanceWorkspaceArchiveService(client: client),
+            tabManagers: { [] }, activeWorkspaceID: { nil }, restoreRecords: { [:] },
+            reopenEligibility: { _, _, _ in .unavailable(.noRestoreSnapshot) })
+
+        let result = try await service.load()
+        #expect(result.items.count == 1)
+        #expect(result.items[0].id == workspaceID.uuidString)
+        #expect(result.items[0].title == "maple-roof")
+        #expect(result.items[0].isSessionHistoryOnly)
+        #expect(result.archiveAvailability == .available)
+    }
+
     @Test
     func rootShowsWorkspacesAndSupportsGroupingAndFiltering() async {
         let first = WorkspaceExplorerLiveWorkspace(stableID: UUID(), runtimeID: UUID(),

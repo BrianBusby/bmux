@@ -8,11 +8,11 @@ enum WorkspaceExplorerArchiveAvailability: Equatable {
     var closedCountLabel: String? {
         switch self {
         case .pending:
-            String(localized: "explorer.count.closedPending", defaultValue: "closed pending")
+            String(localized: "explorer.count.pastPending", defaultValue: "past history loading")
         case .available:
             nil
         case .unavailable:
-            String(localized: "explorer.count.closedUnknown", defaultValue: "closed unknown")
+            String(localized: "explorer.count.pastUnknown", defaultValue: "past history incomplete")
         }
     }
 }

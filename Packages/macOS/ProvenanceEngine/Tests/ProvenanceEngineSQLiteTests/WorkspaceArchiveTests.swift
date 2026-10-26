@@ -107,6 +107,48 @@ struct WorkspaceArchiveTests {
     }
 
     @Test
+    func workspaceHistoryFindsOtherRunsSessionsAndRespectsClearMarker() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("pe-workspace-history-tests")
+            .appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let repository = try ProvenanceSQLiteRepository(url: directory.appendingPathComponent("provenance.sqlite"))
+        let base = Date(timeIntervalSince1970: 1_800_000_000)
+        let repo = ProvenanceRepositoryRecord(id: "repository-b", path: "/work/other-run-b",
+            createdAt: base, updatedAt: base)
+        let worktree = ProvenanceWorktreeRecord(id: "worktree-b", repositoryID: repo.id,
+            path: repo.path, isDirty: false, status: "active", updatedAt: base)
+        try await repository.appendEvent(ProvenanceEvent(eventType: .repositoryObserved,
+            timestamp: base, source: .observed, confidence: .high,
+            payload: ProvenanceEventPayload(repository: repo)))
+        try await repository.appendEvent(ProvenanceEvent(eventType: .worktreeObserved,
+            timestamp: base, source: .observed, confidence: .high,
+            payload: ProvenanceEventPayload(worktree: worktree)))
+        for (id, workspaceID, start, update) in [
+            ("session-old", "other-run-a", 100.0, 900.0),
+            ("session-new", "other-run-b", 200.0, 200.0),
+        ] {
+            let session = ProvenanceSessionRecord(id: id, agentKind: "codex", workspaceID: workspaceID,
+                worktreeID: workspaceID == "other-run-b" ? worktree.id : nil,
+                cwd: "/work/" + workspaceID, status: "completed",
+                startedAt: base.addingTimeInterval(start), updatedAt: base.addingTimeInterval(update))
+            try await repository.appendEvent(ProvenanceEvent(eventType: .sessionObserved,
+                timestamp: session.updatedAt, sessionID: id, source: .observed,
+                confidence: .high, payload: ProvenanceEventPayload(session: session)))
+        }
+        let first = try await repository.workspaceHistory(.init(limit: 1))
+        #expect(first.workspaces.map(\.id) == ["other-run-b"])
+        #expect(first.workspaces.first?.lastKnownDirectory == "/work/other-run-b")
+        #expect(first.workspaces.first?.lastKnownRepositoryID == repo.id)
+        let second = try await repository.workspaceHistory(.init(limit: 1, cursor: first.nextCursor))
+        #expect(second.workspaces.map(\.id) == ["other-run-a"])
+        #expect(second.workspaces.first?.lastActivityAt == base.addingTimeInterval(100))
+        #expect(second.nextCursor == nil)
+        try await repository.clearArchivedWorkspaces(at: base.addingTimeInterval(150))
+        #expect(try await repository.workspaceHistory(.init()).workspaces.map(\.id) == ["other-run-b"])
+    }
+
+    @Test
     func completedCommandCountsAsWorkspaceActivity() async throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("pe-workspace-activity-tests")

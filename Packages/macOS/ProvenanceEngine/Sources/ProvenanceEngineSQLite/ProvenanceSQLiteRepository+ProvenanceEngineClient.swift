@@ -38,6 +38,11 @@ extension ProvenanceSQLiteRepository: ProvenanceEngineClient {
         try workspaceSessionPage(request)
     }
 
+    func workspaceHistory(_ request: ProvenanceWorkspaceHistoryPageRequest) async throws
+        -> ProvenanceWorkspaceHistoryPageResponse {
+        try workspaceHistoryPage(request)
+    }
+
     func appendEvent(_ request: ProvenanceAppendEventRequest) async throws -> ProvenanceAppendEventResponse {
         try appendEvent(request.event)
         return ProvenanceAppendEventResponse(

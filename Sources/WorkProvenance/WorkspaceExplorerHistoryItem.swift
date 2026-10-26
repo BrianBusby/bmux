@@ -10,12 +10,14 @@ struct WorkspaceExplorerHistoryItem: Identifiable {
     let lastActivityAt: Date?
     let colorHex: String?
     let display: ProvenanceWorkspaceDisplayRecord?
+    let repositoryID: String?
     let liveWorkspaceID: UUID?
     let liveStatus: WorkspaceExplorerStatus
     let archive: ProvenanceArchivedWorkspaceRecord?
     let reopenEligibility: WorkspaceExplorerReopenEligibility
 
     var isOpen: Bool { liveWorkspaceID != nil }
+    var isSessionHistoryOnly: Bool { liveWorkspaceID == nil && archive == nil }
 
     var lastRecordedStatus: WorkspaceExplorerStatus? {
         guard let code = archive?.lastRecordedStatusCode else { return nil }
@@ -25,6 +27,7 @@ struct WorkspaceExplorerHistoryItem: Identifiable {
     func withLiveStatus(_ status: WorkspaceExplorerStatus) -> Self {
         Self(id: id, title: title, createdAt: createdAt, closedAt: closedAt,
             lastActivityAt: lastActivityAt, colorHex: colorHex, display: display,
+            repositoryID: repositoryID,
             liveWorkspaceID: liveWorkspaceID, liveStatus: status,
             archive: archive, reopenEligibility: reopenEligibility)
     }

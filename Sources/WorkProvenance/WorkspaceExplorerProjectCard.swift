@@ -129,11 +129,11 @@ struct WorkspaceExplorerProjectCard: View {
                 return label + " · " + (archiveAvailability.closedCountLabel ?? "")
             }
             return label + " · " + String(format: String(localized: "explorer.count.breakdown", defaultValue:
-                "%d open · %d closed"), counts.open, counts.closed)
+                "%d open · %d past"), counts.open, counts.closed)
         case .closed:
             return scope.period == .anyTime ?
-                String(localized: "explorer.count.closed", defaultValue: "closed workspaces") :
-                String(localized: "explorer.count.closedPeriod", defaultValue: "matching closed workspaces")
+                String(localized: "explorer.count.past", defaultValue: "past workspaces") :
+                String(localized: "explorer.count.pastPeriod", defaultValue: "matching past workspaces")
         }
     }
 }

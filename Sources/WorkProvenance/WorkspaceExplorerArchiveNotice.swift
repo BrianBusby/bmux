@@ -25,10 +25,10 @@ struct WorkspaceExplorerArchiveNotice: View {
         switch availability {
         case .pending:
             String(localized: "explorer.historyLoading", defaultValue:
-                "Loading retained history… Closed workspaces are not counted until the query completes.")
+                "Loading retained history… Past workspaces are not counted until the query completes.")
         case .unavailable:
             String(localized: "explorer.historyUnavailable", defaultValue:
-                "History could not be loaded. Showing open workspaces only; closed counts are unknown.")
+                "Some history could not be loaded. Past workspace counts may be incomplete.")
         case .available:
             ""
         }

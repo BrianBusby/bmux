@@ -148,7 +148,7 @@ struct WorkspaceExplorerProjection {
             }
         }
         return order.compactMap { byID[$0] }.filter { workspace in
-            return (archiveAvailable || !workspace.isClosed) && scope.includes(workspace, now: now, calendar: calendar)
+            return scope.includes(workspace, now: now, calendar: calendar)
         }
     }
 

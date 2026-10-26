@@ -106435,13 +106435,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d closed workspaces retained."
+            "value": "%d past workspaces retained."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "終了したワークスペースを%d件保持しています。"
+            "value": "過去のワークスペースを%d件保持しています。"
           }
         }
       }
@@ -106467,13 +106467,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show closed"
+            "value": "Show past"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "終了済みを表示"
+            "value": "過去を表示"
           }
         }
       }
@@ -106506,6 +106506,176 @@
           "stringUnit": {
             "state": "translated",
             "value": "読み込み済みのセッションをすべて表示（%d件）"
+          }
+        }
+      }
+    },
+    "explorer.count.past": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "past workspaces"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "過去のワークスペース"
+          }
+        }
+      }
+    },
+    "explorer.count.pastPending": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "past history loading"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "過去の履歴を読み込み中"
+          }
+        }
+      }
+    },
+    "explorer.count.pastPeriod": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "matching past workspaces"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "条件に一致する過去のワークスペース"
+          }
+        }
+      }
+    },
+    "explorer.count.pastUnknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "past history incomplete"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "過去の履歴は不完全です"
+          }
+        }
+      }
+    },
+    "explorer.historicalPresenceNotice": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session history from Provenance Engine. This bmux run cannot verify whether the workspace is open elsewhere."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provenance Engine のセッション履歴です。この bmux の実行からは、ワークスペースが別の場所で開いているか確認できません。"
+          }
+        }
+      }
+    },
+    "explorer.historyTag": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HISTORY"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "履歴"
+          }
+        }
+      }
+    },
+    "explorer.past": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Past"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "過去"
+          }
+        }
+      }
+    },
+    "explorer.sessionHistory": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session history"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッション履歴"
+          }
+        }
+      }
+    },
+    "explorer.untitledWorkspace": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Untitled workspace"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無題のワークスペース"
+          }
+        }
+      }
+    },
+    "explorer.viewSessions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open to view sessions"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開いてセッションを表示"
           }
         }
       }
@@ -106909,13 +107079,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Loading retained history… Closed workspaces are not counted until the query completes."
+            "value": "Loading retained history… Past workspaces are not counted until the query completes."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "保持された履歴を読み込み中… クエリが完了するまで、閉じたワークスペースは数に含めません。"
+            "value": "保持された履歴を読み込み中… クエリが完了するまで、過去のワークスペースは数に含めません。"
           }
         }
       }
@@ -106943,13 +107113,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "History could not be loaded. Showing open workspaces only; closed counts are unknown."
+            "value": "Some history could not be loaded. Past workspace counts may be incomplete."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "履歴を読み込めませんでした。開いているワークスペースのみ表示します。閉じた数は不明です。"
+            "value": "一部の履歴を読み込めませんでした。過去のワークスペース数は不完全な可能性があります。"
           }
         }
       }
@@ -108014,13 +108184,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Closed (historical)"
+            "value": "Historical"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "閉じた（履歴）"
+            "value": "履歴"
           }
         }
       }
@@ -108480,13 +108650,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d open · %d closed"
+            "value": "%d open · %d past"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "開いている %d 件 · 閉じた %d 件"
+            "value": "開いている %d 件 · 過去の %d 件"
           }
         }
       }

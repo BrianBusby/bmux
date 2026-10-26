@@ -39,7 +39,7 @@ struct WorkspaceExplorerCatalog {
                 id: item.id,
                 title: item.title,
                 projectIDs: display?.projectLinks.map(\.id) ?? [],
-                repository: display?.repositoryID,
+                repository: display?.repositoryID ?? item.repositoryID,
                 tickets: display?.ticketIDs ?? [],
                 ticketStatus: nil,
                 pullRequestOwner: display?.pullRequestOwnerLogin,

@@ -35,7 +35,7 @@ struct WorkspaceExplorerScope: Equatable {
         switch state {
         case .open: String(localized: "explorer.open", defaultValue: "Open")
         case .all: String(localized: "explorer.all", defaultValue: "All")
-        case .closed: String(localized: "explorer.closed", defaultValue: "Closed")
+        case .closed: String(localized: "explorer.past", defaultValue: "Past")
         }
     }
 

@@ -26,6 +26,23 @@ actor WorkProvenanceWorkspaceArchiveService {
         return records
     }
 
+    /// Reads every retained workspace identity with observed session evidence.
+    func workspacesWithSessions() async throws -> [ProvenanceWorkspaceHistorySummary] {
+        var workspaces: [ProvenanceWorkspaceHistorySummary] = []
+        var cursor: String?
+        var seenCursors: Set<String> = []
+        repeat {
+            try Task.checkCancellation()
+            let page = try await client.workspaceHistory(.init(limit: 500, cursor: cursor))
+            workspaces.append(contentsOf: page.workspaces)
+            cursor = page.nextCursor
+            if let cursor, !seenCursors.insert(cursor).inserted {
+                throw WorkspaceArchivePaginationError.repeatedCursor
+            }
+        } while cursor != nil
+        return workspaces
+    }
+
     /// Resolves stable repository identities to names already recorded by Provenance Engine.
     func repositoryNames(for repositoryIDs: Set<String>) async throws -> [String: String] {
         var names: [String: String] = [:]

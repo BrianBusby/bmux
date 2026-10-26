@@ -49,7 +49,9 @@ local_capabilities:
   provenance_engine_workspace_display_durable_context: implemented
   provenance_engine_workspace_archive_storage: implemented
   provenance_engine_workspace_archive_contract: implemented
+  provenance_engine_workspace_session_history_index: under_observation
   workspace_explorer_history_adapter: implemented
+  workspace_explorer_cross_run_session_history: under_observation
   workspace_explorer_projection: implemented
   workspace_explorer_native_view: under_observation
   workspace_explorer_embedded_workbench: under_observation
