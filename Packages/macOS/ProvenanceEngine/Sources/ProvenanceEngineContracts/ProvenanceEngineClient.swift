@@ -73,6 +73,9 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
     ///
     /// Workspaces with no session activity after the latest archive-history clear
     /// are omitted. The underlying session evidence remains readable by ID.
+    /// - Parameter request: Page size and continuation token for the history read.
+    /// - Returns: Workspace summaries and the next continuation token, if any.
+    /// - Throws: A store or query error when the history cannot be read.
     func workspaceHistory(_ request: ProvenanceWorkspaceHistoryPageRequest) async throws
         -> ProvenanceWorkspaceHistoryPageResponse
 
@@ -221,6 +224,9 @@ public extension ProvenanceEngineClient {
     }
 
     /// Explicit unavailable result for clients without workspace history queries.
+    /// - Parameter request: Page size and continuation token for the history read.
+    /// - Returns: This default implementation never returns a page.
+    /// - Throws: ``ProvenanceWorkspaceArchiveUnavailableError``.
     func workspaceHistory(_ request: ProvenanceWorkspaceHistoryPageRequest) async throws
         -> ProvenanceWorkspaceHistoryPageResponse {
         throw ProvenanceWorkspaceArchiveUnavailableError()
