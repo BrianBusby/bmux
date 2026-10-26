@@ -12,7 +12,8 @@ Linear viewer. `GitHubWorkBriefSource` reads up to four explicit `org:Name` or
 for at most ten authored PRs per refresh. Additional results mark the source
 partial. Both actors keep at most 100 prior summaries in memory and preserve
 them with their original `checkedAt` on a failed refresh. They expose stable
-reason codes without logging provider content or tokens.
+reason codes without logging provider content or tokens. The URLSession
+transport stops reading after 2,000,000 response bytes, before JSON decoding.
 
 `WorkBriefExternalLoader` reuses the previous provider result for automatic
 local-change refreshes within 60 seconds. An explicit user refresh always

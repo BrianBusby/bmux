@@ -7,7 +7,7 @@ description: "View and edit bmux settings in ~/.config/bmux/bmux.json. Use when 
 
 bmux reads user settings from `~/.config/bmux/bmux.json` (JSONC). The app installs a file watcher; saving the file applies changes immediately, no restart needed. Legacy `~/.config/bmux/settings.json` is read only as a fallback for keys not present in `bmux.json`.
 
-Schema: `https://raw.githubusercontent.com/manaflow-ai/bmux/main/web/data/bmux.schema.json`. The authoritative path list lives in `Sources/BmuxSettingsJSONPathSupport.swift` in the bmux checkout, and the installed skill includes a generated copy in `references/all-keys.md`. Top-level sections are `app`, `terminal`, `notifications`, `sidebar`, `sidebarAppearance`, `workspaceColors`, `automation`, `browser`, and `shortcuts`. Non-settings sections (`actions`, `ui`, `commands`, `vault`, `rightSidebar`) coexist in the same file.
+Schema: `https://raw.githubusercontent.com/manaflow-ai/bmux/main/web/data/bmux.schema.json`. Supported paths come from `Sources/BmuxSettingsJSONPathSupport.swift` and the BmuxSettings integrations catalog in the bmux checkout; the installed skill includes a schema-derived copy in `references/all-keys.md`. Top-level sections are `app`, `terminal`, `notifications`, `sidebar`, `sidebarAppearance`, `workspaceColors`, `automation`, `browser`, `integrations`, and `shortcuts`. Non-settings sections (`actions`, `ui`, `commands`, `vault`, `rightSidebar`) coexist in the same file.
 
 ## Helper script
 

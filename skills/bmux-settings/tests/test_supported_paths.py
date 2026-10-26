@@ -18,10 +18,14 @@ class SupportedPathsTests(unittest.TestCase):
             source.write_text('let key = "app.appearance"')
             catalog = root / "Packages" / "macOS" / "BmuxSettings" / "Sources" / "BmuxSettings" / "Keys" / "IntegrationsCatalogSection.swift"
             catalog.parent.mkdir(parents=True)
-            catalog.write_text('id: "integrations.workBrief.githubScopes"')
+            catalog.write_text(
+                'let scopes = JSONKey<[String]>(id: "integrations.workBrief.githubScopes")\n'
+                'let secret = KeychainSecretKey(id: "integrations.linear.apiKey")'
+            )
             paths = helper["supported_paths_from_source"](source)
             self.assertIn("app.appearance", paths)
             self.assertIn("integrations.workBrief.githubScopes", paths)
+            self.assertNotIn("integrations.linear.apiKey", paths)
 
 
 if __name__ == "__main__":
