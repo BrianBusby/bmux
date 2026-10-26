@@ -6,6 +6,8 @@ public struct GitHubWorkBriefScope: Equatable, Hashable, Sendable {
     public let qualifier: String
 
     /// Validates a narrow organization or owner/repository qualifier.
+    /// - Parameter raw: An `org:Name` or `repo:Owner/Name` search scope.
+    /// - Returns: A validated scope, or `nil` when the qualifier is unsupported.
     public init?(_ raw: String) {
         let parts = raw.split(separator: ":", omittingEmptySubsequences: false)
         guard parts.count == 2 else { return nil }

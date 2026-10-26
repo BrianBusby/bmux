@@ -15,6 +15,11 @@ public actor GitHubWorkBriefSource {
     private var lastGood: [WorkBriefExternalItem] = []
 
     /// Creates a read-only source with injected credentials, scope, transport, and endpoint.
+    /// - Parameters:
+    ///   - authorization: Supplies the established GitHub authorization header.
+    ///   - scopes: Supplies explicit organization or repository search scopes.
+    ///   - http: The injected bounded response transport.
+    ///   - endpoint: The GitHub API endpoint, overridable for tests.
     public init(authorization: @escaping Authorization, scopes: @escaping Scopes,
                 http: any WorkBriefHTTPClient,
                 endpoint: URL = URL(string: "https://api.github.com")!) {
@@ -25,6 +30,8 @@ public actor GitHubWorkBriefSource {
     }
 
     /// Refreshes at most four explicit scopes and 100 item summaries.
+    /// - Parameter now: Time assigned to this refresh attempt.
+    /// - Returns: Bounded pull-request facts and explicit source health.
     public func refresh(at now: Date) async -> WorkBriefExternalRefresh {
         let configured = Array(Set(scopes()).sorted { $0.qualifier < $1.qualifier }.prefix(4))
         guard !configured.isEmpty else { return outcome(.notConfigured, now, "missing_scope") }

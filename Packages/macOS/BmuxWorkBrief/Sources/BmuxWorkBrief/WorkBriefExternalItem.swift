@@ -29,10 +29,28 @@ public struct WorkBriefExternalItem: Equatable, Sendable, Identifiable {
 
     /// What the provider facts say about this item in the brief.
     public enum Disposition: Equatable, Sendable {
-        case needsAttention, inProgress, waitingOn
+        /// Provider facts require a decision or review by the user.
+        case needsAttention
+        /// Provider facts describe active work without a verified wait.
+        case inProgress
+        /// Provider facts explicitly show a requested review from another actor.
+        case waitingOn
     }
 
     /// Creates an immutable external fact. The producer validates URLs and caps strings.
+    /// - Parameters:
+    ///   - id: Provider-qualified stable identity.
+    ///   - source: Provider that supplied the fact.
+    ///   - title: Short provider title.
+    ///   - url: Validated HTTPS source URL.
+    ///   - reference: Short ticket or PR reference.
+    ///   - repository: Explicit repository identity, if supplied.
+    ///   - owner: Provider-supplied owner, if available.
+    ///   - status: Provider-supplied status.
+    ///   - updatedAt: Provider update time.
+    ///   - checkedAt: Latest successful check time.
+    ///   - disposition: Deterministic classification.
+    ///   - evidence: Source references, capped at 12.
     public init(id: String, source: WorkBriefSource, title: String, url: URL,
                 reference: String, repository: String?, owner: String?, status: String,
                 updatedAt: Date, checkedAt: Date, disposition: Disposition,

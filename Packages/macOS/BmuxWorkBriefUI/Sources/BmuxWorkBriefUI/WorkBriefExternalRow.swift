@@ -19,6 +19,13 @@ public struct WorkBriefExternalRow: View {
     @State private var targetMissing = false
 
     /// Creates a source card from immutable snapshot values and typed actions.
+    /// - Parameters:
+    ///   - item: The provider-backed work item.
+    ///   - relatedWorkspaces: Exactly related local workspace snapshots.
+    ///   - health: Latest health of the item's provider.
+    ///   - hasConflict: Whether local PE and provider PR status disagree.
+    ///   - jump: Host-validated workspace selection on user click.
+    ///   - openURL: Source URL opening on user click.
     public init(item: WorkBriefExternalItem, relatedWorkspaces: [WorkBriefLocalWorkspace],
                 health: WorkBriefSourceHealth, hasConflict: Bool,
                 jump: @escaping @MainActor (UUID, UUID) -> Bool,
@@ -31,6 +38,7 @@ public struct WorkBriefExternalRow: View {
         self.openURL = openURL
     }
 
+    /// Renders provider facts, source links, and user-invoked navigation.
     public var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline) {

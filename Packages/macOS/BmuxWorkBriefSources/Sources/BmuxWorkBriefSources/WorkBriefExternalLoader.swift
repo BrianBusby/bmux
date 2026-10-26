@@ -9,12 +9,19 @@ public actor WorkBriefExternalLoader {
     private var cached: (WorkBriefExternalRefresh, WorkBriefExternalRefresh)?
 
     /// Creates a bounded reader over the two configured sources.
+    /// - Parameters:
+    ///   - linear: The read-only Linear source.
+    ///   - github: The read-only GitHub source.
     public init(linear: LinearWorkBriefSource, github: GitHubWorkBriefSource) {
         self.linear = linear
         self.github = github
     }
 
-    /// Returns recent facts for automatic local changes; explicit refresh always checks providers.
+    /// Returns recent facts for automatic local changes; explicit refresh checks providers.
+    /// - Parameters:
+    ///   - now: Time assigned to this refresh attempt.
+    ///   - force: Bypasses the 60-second automatic refresh cache when `true`.
+    /// - Returns: Linear and GitHub facts with independent source health.
     public func refresh(at now: Date, force: Bool) async ->
         (WorkBriefExternalRefresh, WorkBriefExternalRefresh) {
         if !force, let lastAttemptAt, (0..<60).contains(now.timeIntervalSince(lastAttemptAt)),

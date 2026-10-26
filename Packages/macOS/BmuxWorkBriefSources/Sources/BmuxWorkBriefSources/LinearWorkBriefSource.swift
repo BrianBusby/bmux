@@ -12,6 +12,10 @@ public actor LinearWorkBriefSource {
     private var lastGood: [WorkBriefExternalItem] = []
 
     /// Creates a source with injected credentials, transport, and endpoint.
+    /// - Parameters:
+    ///   - authorization: Supplies the established Linear authorization header.
+    ///   - http: The injected bounded response transport.
+    ///   - endpoint: The Linear GraphQL endpoint, overridable for tests.
     public init(authorization: @escaping Authorization, http: any WorkBriefHTTPClient,
                 endpoint: URL = URL(string: "https://api.linear.app/graphql")!) {
         self.authorization = authorization
@@ -20,6 +24,8 @@ public actor LinearWorkBriefSource {
     }
 
     /// Refreshes at most 100 issue summaries across two pages; descriptions are never requested.
+    /// - Parameter now: Time assigned to this refresh attempt.
+    /// - Returns: Bounded issue facts and explicit source health.
     public func refresh(at now: Date) async -> WorkBriefExternalRefresh {
         guard let token = await authorization(), !token.isEmpty else {
             return WorkBriefExternalRefresh(items: lastGood,
