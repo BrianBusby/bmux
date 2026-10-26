@@ -78,7 +78,7 @@ actor CLIProvenanceCodexTranscriptTailer {
         status.readOffset = workingState.offset
         status.unreadBytes = unreadBytes
         status.firstBacklogAt = unreadBytes > 0
-            ? (cursorPersisted ? Date() : (status.firstBacklogAt ?? Date())) : nil
+            ? (status.firstBacklogAt ?? Date()) : nil
         status.skippedLines = status.skippedLines.addingReportingOverflow(result.skippedLines).overflow
             ? Int.max : status.skippedLines + result.skippedLines
         status.retrying = cursorWriteFailed

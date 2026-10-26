@@ -18,7 +18,7 @@ extension BMUXCLI {
         guard let diagnosticName = remaining.first?.lowercased() else {
             throw CLIError(message: String(
                 localized: "cli.provenance.diagnostics.usage",
-                defaultValue: "Usage: bmux provenance diagnostics <workspace-display|execution-telemetry-live> [...]"
+                defaultValue: "Usage: bmux provenance diagnostics <workspace-display|execution-telemetry-live|codex-transcript> [...]"
             ))
         }
         remaining.removeFirst()
@@ -100,7 +100,7 @@ extension BMUXCLI {
         guard diagnosticName == "execution-telemetry-live" else {
             throw CLIError(message: String(
                 localized: "cli.provenance.diagnostics.usage",
-                defaultValue: "Usage: bmux provenance diagnostics <workspace-display|execution-telemetry-live> [...]"
+                defaultValue: "Usage: bmux provenance diagnostics <workspace-display|execution-telemetry-live|codex-transcript> [...]"
             ))
         }
         let (agentChatURLText, remainingAfterAgentChatURL) = parseOption(

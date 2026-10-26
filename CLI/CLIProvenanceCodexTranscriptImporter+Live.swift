@@ -142,11 +142,11 @@ extension CLIProvenanceCodexTranscriptImporter {
         var skippedPendingLines = 0
         if state.metadata == nil {
             state.pendingLines.append(contentsOf: lines)
-            if state.pendingLines.count > Self.livePendingLineLimit {
-                skippedPendingLines = state.pendingLines.count - Self.livePendingLineLimit
-                state.pendingLines.removeFirst(skippedPendingLines)
-            }
             guard let metadata = sessionMetadata(from: state.pendingLines) else {
+                if state.pendingLines.count > Self.livePendingLineLimit {
+                    skippedPendingLines = state.pendingLines.count - Self.livePendingLineLimit
+                    state.pendingLines.removeFirst(skippedPendingLines)
+                }
                 return skippedPendingLines
             }
             state.metadata = metadata
