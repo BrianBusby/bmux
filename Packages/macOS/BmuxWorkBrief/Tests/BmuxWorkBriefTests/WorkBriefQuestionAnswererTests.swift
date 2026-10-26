@@ -57,11 +57,24 @@ import Testing
         #expect(answerer.answer("CC-42に関連するPRは？", snapshot: snapshot).links == [pr])
     }
 
+    @Test func blockerQuestionNeedsAnExactObservedItem() {
+        let now = Date(timeIntervalSince1970: 100)
+        let first = external("github:13", disposition: .waitingOn, now: now)
+        let second = external("github:14", disposition: .waitingOn, now: now)
+        let active = external("github:15", disposition: .inProgress, now: now)
+        let snapshot = brief([], external: [first, second, active], now: now)
+        let answerer = WorkBriefQuestionAnswerer()
+        #expect(answerer.answer("Why is #13 blocked?", snapshot: snapshot).externalIDs == [first.id])
+        #expect(answerer.answer("Why is this blocked?", snapshot: snapshot).kind != .waitingOn)
+        #expect(answerer.answer("Why is #15 blocked?", snapshot: snapshot).kind != .waitingOn)
+    }
+
     private func external(_ id: String, disposition: WorkBriefExternalItem.Disposition,
                           now: Date) -> WorkBriefExternalItem {
-        WorkBriefExternalItem(id: id, source: .github, title: "Roof inspection",
-            url: URL(string: "https://github.com/CompanyCam/mobile/pull/12")!,
-            reference: "#12", repository: "CompanyCam/mobile", owner: "brian",
+        let number = id.split(separator: ":").last.map(String.init) ?? "12"
+        return WorkBriefExternalItem(id: id, source: .github, title: "Roof inspection",
+            url: URL(string: "https://github.com/CompanyCam/mobile/pull/\(number)")!,
+            reference: "#\(number)", repository: "CompanyCam/mobile", owner: "brian",
             status: "open", updatedAt: now, checkedAt: now,
             disposition: disposition, evidence: [])
     }
