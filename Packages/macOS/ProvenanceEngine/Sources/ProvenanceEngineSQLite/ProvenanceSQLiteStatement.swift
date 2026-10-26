@@ -96,6 +96,13 @@ final class ProvenanceSQLiteStatement {
         throw ProvenanceSQLiteError.sqlite(message: message)
     }
 
+    /// Reuses a completed statement with fresh bindings.
+    func reset() {
+        guard let statement else { return }
+        sqlite3_reset(statement)
+        sqlite3_clear_bindings(statement)
+    }
+
     /// Returns an optional string column.
     ///
     /// - Parameter index: Zero-based SQLite column index.

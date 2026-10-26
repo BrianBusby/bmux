@@ -6,6 +6,30 @@ import Testing
 @Suite
 struct SessionOutcomeProjectionTests {
     @Test
+    func storedSessionRevisionAvoidsEmbeddingItsTurnSnapshots() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let fixture = TurnOutcomeFixture(suffix: "session-compact-storage")
+        try await Self.seed(fixture.normalEvents, into: repository)
+
+        let outcome = try #require(try await repository.sessionOutcome(
+            ProvenanceSessionOutcomeRequest(sessionID: fixture.session.id)
+        ).outcome)
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        let query = try database.prepare(
+            "SELECT length(outcome_json) FROM provenance_coding_agent_session_outcome_revisions WHERE id = ?"
+        )
+        defer { query.finalize() }
+        try query.bind(outcome.projection.revisionID, at: 1)
+        #expect(try query.step())
+        let storedBytes = query.int(at: 0)
+        let fullBytes = try JSONEncoder().encode(outcome).count
+        #expect(storedBytes < fullBytes)
+        #expect(outcome.turnOutcomes.count == 1)
+    }
+
+    @Test
     func sessionOutcomeAggregatesOneTurnAndTracksExactRevision() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }

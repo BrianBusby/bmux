@@ -558,7 +558,8 @@ actor ProvenanceSQLiteRepository {
                 for entry in entries {
                     try applyProjectionUpdates(
                         from: entry.event,
-                        latestEventSequence: entry.sequence
+                        latestEventSequence: entry.sequence,
+                        pruneOutcomes: false
                     )
                     afterSequence = entry.sequence
                     replayedCount += 1
@@ -566,12 +567,22 @@ actor ProvenanceSQLiteRepository {
 
                 guard entries.count == rowLimit else { break }
             }
+            // All cross-projection citations are present only after the complete replay.
+            // Pruning during replay could retire a revision cited by a later event.
+            if try schemaVersion() >= 29 {
+                try database.execute(
+                    "UPDATE provenance_outcome_retention_state SET legacy_citations_indexed = 1 WHERE policy_version = 1"
+                )
+            }
             try database.execute("COMMIT")
         } catch {
             try? database.execute("ROLLBACK")
             throw error
         }
 
+        if try schemaVersion() >= 29 {
+            while try pruneOutcomePayloads(dryRun: false, batchSize: 1_000).prunedRows > 0 {}
+        }
         return replayedCount
     }
 
@@ -2868,7 +2879,8 @@ actor ProvenanceSQLiteRepository {
     }
 
     private func applyProjectionUpdates(
-        from event: ProvenanceEvent, latestEventSequence: Int? = nil) throws {
+        from event: ProvenanceEvent, latestEventSequence: Int? = nil, pruneOutcomes: Bool = true
+    ) throws {
         let payload = event.payload
         let invalidation = try outcomeInvalidation(before: event)
         if let repository = payload.repository {
@@ -2942,39 +2954,14 @@ actor ProvenanceSQLiteRepository {
         if let codingAgentFileChangeAttribution = payload.codingAgentFileChangeAttribution {
             try upsertCodingAgentFileChangeAttribution(codingAgentFileChangeAttribution)
         }
-        try refreshTurnOutcomes(affectedBy: event, invalidation: invalidation, latestEventSequence: latestEventSequence)
-        try refreshSessionOutcomes(affectedBy: event, invalidation: invalidation, latestEventSequence: latestEventSequence)
-    }
-
-    private func clearProjectionTables() throws {
-        for tableName in Self.artifactCollisionProjectionTableNames + Self.relatedSessionProjectionTableNames + [
-            "provenance_coding_agent_session_outcomes",
-            "provenance_coding_agent_session_outcome_revisions",
-            "provenance_coding_agent_turn_outcomes",
-            "provenance_coding_agent_turn_outcome_revisions",
-            "provenance_coding_agent_file_change_attributions",
-            "provenance_coding_agent_assistant_messages",
-            "provenance_coding_agent_reasoning_summaries",
-            "provenance_coding_agent_commands",
-            "provenance_coding_agent_plan_updates",
-            "provenance_coding_agent_prompts",
-            "provenance_coding_agent_turns",
-            "provenance_coding_agent_threads",
-            "provenance_workspace_coding_agent_session_associations",
-            "provenance_workspace_display",
-            "provenance_validation_runs",
-            "provenance_file_changes",
-            "provenance_change_sets",
-            "provenance_checkpoints",
-            "provenance_work_contributions",
-            "provenance_work_items",
-            "provenance_session_external_identities",
-            "provenance_session_relationships",
-            "provenance_sessions",
-            "provenance_worktrees",
-            "provenance_repositories",
-        ] {
-            try database.execute("DELETE FROM \(tableName)")
+        let affectedTurns = try refreshTurnOutcomes(
+            affectedBy: event, invalidation: invalidation, latestEventSequence: latestEventSequence
+        )
+        let affectedSessions = try refreshSessionOutcomes(
+            affectedBy: event, invalidation: invalidation, latestEventSequence: latestEventSequence
+        )
+        if pruneOutcomes {
+            try retireSupersededOutcomePayloads(sessionIDs: affectedSessions, turnIDs: affectedTurns)
         }
     }
 
@@ -5460,6 +5447,7 @@ actor ProvenanceSQLiteRepository {
         + workspaceCodingAgentSessionAssociationMigrations
         + workspaceArchiveMigrations
         + workspaceDisplayOwnerAvatarMigrations
+        + outcomeRetentionMigrations
 }
 
 extension ProvenanceSQLiteRepository: ProvenanceSessionLifecycleRecording {
