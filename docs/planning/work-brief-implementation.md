@@ -60,8 +60,10 @@ slice against the complete affected architecture before expanding it.
   passed, including rejection of non-HTTPS source links and partial-source
   honesty. Package UI build, tagged app build 899, test-wiring, package grouping,
   Swift file-length budget, localization key audit, and project-doc
-  validate/generate/check passed. The tagged app has not yet been launched for
-  visual/runtime dogfood after the final code change.
+  validate/generate/check passed. Tagged build 900 succeeded on the committed
+  code; its isolated socket answered a bounded window-count query (one window).
+  The app launched, but CUA could not attach to its window (`cgWindowNotFound`),
+  so card rendering and click navigation still need visual dogfood.
 - Some PE display records have no field-level event reference. Those cards show
   the accepted source and observation time, plus an explicit source link where
   one exists; they cannot open raw event payloads through the current PE SDK.
