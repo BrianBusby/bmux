@@ -639,6 +639,7 @@
 		C0DE70300000000000000001 /* CLIProvenanceCodexTranscriptImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70300000000000000002 /* CLIProvenanceCodexTranscriptImporter.swift */; };
 		C0DE70300000000000000003 /* CLIProvenanceCodexTranscriptImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70300000000000000002 /* CLIProvenanceCodexTranscriptImporter.swift */; };
 		C0DE70600000000000000001 /* CLIProvenanceCodexTranscriptImporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70600000000000000002 /* CLIProvenanceCodexTranscriptImporterTests.swift */; };
+		C0DE70600000000000000003 /* CLIProvenanceCodexTranscriptRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70600000000000000004 /* CLIProvenanceCodexTranscriptRegressionTests.swift */; };
 		C0DE70270000000000000001 /* CLIProvenanceContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70270000000000000002 /* CLIProvenanceContext.swift */; };
 		C0DE70210000000000000001 /* CLIProvenanceExplanation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70210000000000000002 /* CLIProvenanceExplanation.swift */; };
 		C0DE70230000000000000001 /* CLIProvenanceGitResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70230000000000000002 /* CLIProvenanceGitResolver.swift */; };
@@ -2885,6 +2886,7 @@
 		C0DE70440000000000000002 /* CLIProvenanceCodexTranscriptImporter+Parsing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptImporter+Parsing.swift"; sourceTree = "<group>"; };
 		C0DE70300000000000000002 /* CLIProvenanceCodexTranscriptImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceCodexTranscriptImporter.swift; sourceTree = "<group>"; };
 		C0DE70600000000000000002 /* CLIProvenanceCodexTranscriptImporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceCodexTranscriptImporterTests.swift; sourceTree = "<group>"; };
+		C0DE70600000000000000004 /* CLIProvenanceCodexTranscriptRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceCodexTranscriptRegressionTests.swift; sourceTree = "<group>"; };
 		C0DE70270000000000000002 /* CLIProvenanceContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceContext.swift; sourceTree = "<group>"; };
 		C0DE70210000000000000002 /* CLIProvenanceExplanation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceExplanation.swift; sourceTree = "<group>"; };
 		C0DE70230000000000000002 /* CLIProvenanceGitResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceGitResolver.swift; sourceTree = "<group>"; };
@@ -6552,6 +6554,7 @@
 					CE0E03170000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTests.swift */,
 					CE0E03180000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTestSupport.swift */,
 					C0DE70600000000000000002 /* CLIProvenanceCodexTranscriptImporterTests.swift */,
+					C0DE70600000000000000004 /* CLIProvenanceCodexTranscriptRegressionTests.swift */,
 					C0DE70C00000000000000002 /* CLIProvenanceRetrievalFixture.swift */,
 					C0DE70610000000000000002 /* CLIProvenanceSessionOutcomeCommandTests.swift */,
 					CE0E04010000000000000002 /* WorkspaceDisplayCurrentStateSnapshotTests.swift */,
@@ -8828,6 +8831,7 @@
 					C0DE70440000000000000003 /* CLIProvenanceCodexTranscriptImporter+Parsing.swift in Sources */,
 					C0DE70300000000000000003 /* CLIProvenanceCodexTranscriptImporter.swift in Sources */,
 					C0DE70600000000000000001 /* CLIProvenanceCodexTranscriptImporterTests.swift in Sources */,
+					C0DE70600000000000000003 /* CLIProvenanceCodexTranscriptRegressionTests.swift in Sources */,
 					C0DE70C00000000000000001 /* CLIProvenanceRetrievalFixture.swift in Sources */,
 					C0DE70610000000000000001 /* CLIProvenanceSessionOutcomeCommandTests.swift in Sources */,
 					C0F16B000000000000000001 /* CLIRemoteShellStartupPerformanceTests.swift in Sources */,
