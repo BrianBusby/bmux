@@ -41,7 +41,11 @@ public struct WorkBriefRecentChangesView: View {
                 let changes = previousBrief.changes(in: snapshot)
                 Text(String(localized: "workBrief.changesSince", defaultValue: "Since your previous brief"))
                     .font(.caption).foregroundStyle(.secondary)
-                if changes.localIDs.isEmpty && changes.externalIDs.isEmpty {
+                if changes.coverageLimited {
+                    Text(String(localized: "workBrief.changesLimited", defaultValue:
+                        "Only part of the previous brief can be compared. Other changes may be missing."))
+                        .foregroundStyle(.secondary)
+                } else if changes.localIDs.isEmpty && changes.externalIDs.isEmpty {
                     Text(String(localized: "workBrief.noRecentChanges", defaultValue:
                         "No verified changes in the available sources."))
                         .foregroundStyle(.secondary)

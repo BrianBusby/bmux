@@ -68,6 +68,9 @@ import Testing
         #expect(baseline.changes(in: current).coverageLimited)
         #expect(baseline.changes(in: current).localIDs.isEmpty)
         #expect(baseline.changes(in: current).externalIDs.isEmpty)
+        let answer = WorkBriefQuestionAnswerer().answer("What changed?", snapshot: current,
+                                                        previousBrief: baseline)
+        #expect(answer.coverageLimited)
         let retainedID = try #require(workspaces.first { baseline.local[$0.id.uuidString] != nil }?.id)
         let changed = snapshot(workspaces.map { item in
             WorkBriefLocalWorkspace(id: item.id, runtimeID: item.runtimeID, title: item.title,

@@ -23,7 +23,8 @@ public struct WorkBriefQuestionAnswerer: Sendable {
             guard let previousBrief else { return WorkBriefAnswer(kind: .noPreviousBrief) }
             let changes = previousBrief.changes(in: snapshot)
             return WorkBriefAnswer(kind: .recentChanges, localIDs: changes.localIDs,
-                                   externalIDs: changes.externalIDs)
+                                   externalIDs: changes.externalIDs,
+                                   coverageLimited: changes.coverageLimited)
         }
         let waitingQuestion = normalized.contains("wait") || normalized.contains("block") ||
             normalized.contains("待") || normalized.contains("ブロック")

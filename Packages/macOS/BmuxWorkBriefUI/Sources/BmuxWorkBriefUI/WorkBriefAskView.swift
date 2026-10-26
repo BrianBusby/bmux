@@ -89,6 +89,10 @@ public struct WorkBriefAskView: View {
     }
 
     private func answerLabel(_ answer: WorkBriefAnswer) -> String {
+        if answer.kind == .recentChanges, answer.coverageLimited {
+            return String(localized: "workBrief.changesLimited", defaultValue:
+                "Only part of the previous brief can be compared. Other changes may be missing.")
+        }
         if answer.kind == .recentChanges, answer.localIDs.isEmpty && answer.externalIDs.isEmpty {
             return String(localized: "workBrief.noRecentChanges", defaultValue:
                 "No verified changes in the available sources.")

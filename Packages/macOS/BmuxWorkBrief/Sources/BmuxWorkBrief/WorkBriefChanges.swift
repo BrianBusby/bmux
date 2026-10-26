@@ -8,4 +8,6 @@ public struct WorkBriefChanges: Equatable, Sendable {
     public let localIDs: [UUID]
     /// Provider-qualified IDs for changed external items.
     public let externalIDs: [String]
+    /// Whether prior metadata omits items from a currently available source.
+    public let coverageLimited: Bool
 }

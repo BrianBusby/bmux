@@ -34,6 +34,8 @@ public struct WorkBriefAnswer: Equatable, Sendable {
     public let externalIDs: [String]
     /// Explicit links supporting a ticket-to-PR answer.
     public let links: [WorkBriefLink]
+    /// Whether a change answer compares only part of prior source metadata.
+    public let coverageLimited: Bool
 
     /// Creates an answer from source-backed IDs and links.
     /// - Parameters:
@@ -41,11 +43,13 @@ public struct WorkBriefAnswer: Equatable, Sendable {
     ///   - localIDs: Matching stable workspace IDs, capped at 20.
     ///   - externalIDs: Matching provider item IDs, capped at 20.
     ///   - links: Explicit source URLs, capped at 12.
+    ///   - coverageLimited: Whether changed-item coverage is incomplete.
     public init(kind: Kind, localIDs: [UUID] = [], externalIDs: [String] = [],
-                links: [WorkBriefLink] = []) {
+                links: [WorkBriefLink] = [], coverageLimited: Bool = false) {
         self.kind = kind
         self.localIDs = Array(localIDs.prefix(20))
         self.externalIDs = Array(externalIDs.prefix(20))
         self.links = Array(links.prefix(12))
+        self.coverageLimited = coverageLimited
     }
 }

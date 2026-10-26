@@ -18,7 +18,9 @@ expiry. A successful source refresh replaces that source's fingerprints.
 If the encoded record would exceed 64 KiB, the largest fingerprints are
 trimmed deterministically. Coverage flags suppress new-item claims for any
 source whose fingerprints were trimmed; retained items can still show verified
-status changes. Schema 2 removes the prior schema-1 preference record.
+status changes. The Recent changes and Ask views state when that comparison is
+limited instead of claiming that nothing changed. Schema 2 removes the prior
+schema-1 preference record.
 Expired or invalid preferences are deleted the next time Work Brief opens;
 an app that is never reopened can retain this metadata beyond 30 days.
 The stored metadata is deleted by clearing the app's preferences; no PE evidence

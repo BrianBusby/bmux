@@ -106996,6 +106996,22 @@
         }
       }
     },
+    "workBrief.changesLimited": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only part of the previous brief can be compared. Other changes may be missing."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前回の概要の一部のみ比較できます。ほかの変更が表示されない場合があります。"
+          }
+        }
+      }
+    },
     "workBrief.noRecentChanges": {
       "localizations": {
         "en": {

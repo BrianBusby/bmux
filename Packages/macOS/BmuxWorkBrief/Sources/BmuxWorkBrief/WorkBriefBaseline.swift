@@ -143,8 +143,14 @@ public struct WorkBriefBaseline: Codable, Equatable, Sendable {
             }
             return !Self.sameMeaning(old, Self.externalFingerprint(item))
         }.map(\.id)
+        let coverageLimited = snapshot.localHealth.state == .available && !completeLocalCoverage ||
+            [WorkBriefSource.linear, .github, .slack].contains { source in
+                Self.health(for: source, snapshot: snapshot).state == .available &&
+                    !completeExternalSources.contains(source.rawValue)
+            }
         return WorkBriefChanges(since: capturedAt, localIDs: Array(localIDs.prefix(20)),
-                                externalIDs: Array(externalIDs.prefix(20)))
+                                externalIDs: Array(externalIDs.prefix(20)),
+                                coverageLimited: coverageLimited)
     }
 
     private static func localFingerprint(_ item: WorkBriefLocalWorkspace) -> Local {
@@ -209,4 +215,3 @@ public struct WorkBriefBaseline: Codable, Equatable, Sendable {
         }
     }
 }
-
