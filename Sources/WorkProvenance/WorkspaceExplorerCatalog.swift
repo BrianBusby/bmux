@@ -116,7 +116,11 @@ struct WorkspaceExplorerCatalog {
                     keys.insert(facet.repositoryID.map(WorkspaceExplorerGroupKey.value) ??
                         .missing("Unknown repository"))
                 case .project:
-                    for link in facet.projectLinks { keys.insert(.project(link.id)) }
+                    if facet.projectLinks.isEmpty {
+                        keys.insert(.unassigned)
+                    } else {
+                        for link in facet.projectLinks { keys.insert(.project(link.id)) }
+                    }
                 case .pullRequestOwner:
                     keys.insert(facet.pullRequestOwnerLogin.map(WorkspaceExplorerGroupKey.value) ??
                         .missing("No PR"))
