@@ -22,6 +22,17 @@ labels those joins as bmux inferences and carries the matching PE event ID when
 its link evidence is available. Branch names alone never establish a join. Source
 notifications can call `refresh()`; overlapping requests coalesce.
 
+Recent changes compare source metadata from two bounded snapshots. Tests pass
+fixed timestamps and snapshots directly; no preferences or provider clients
+are needed:
+
+```swift
+let baseline = WorkBriefBaseline(snapshot: earlierSnapshot, previous: nil, at: earlierTime)
+let changes = baseline.changes(in: currentSnapshot)
+```
+The app stores this metadata only after a viewed brief closes, subject to the
+30-day and 64 KiB limits. Titles, URLs, and message content are excluded.
+
 Run the package tests with:
 
 ```sh

@@ -15,23 +15,37 @@ public struct WorkBriefBaseline: Codable, Equatable, Sendable {
 
     /// Minimal local metadata used to detect meaningful changes.
     public struct Local: Codable, Equatable, Sendable {
+        /// Verified workspace status at capture time.
         public let status: Int
+        /// Exact source ticket identifiers associated with the workspace.
         public let ticketIDs: [String]
+        /// Exact source pull-request identifier, when available.
         public let pullRequestID: String?
+        /// Source-backed pull-request status, when available.
         public let pullRequestStatus: String?
+        /// Time these local facts were last confirmed.
         public let confirmedAt: Date
     }
 
     /// Minimal external metadata used to detect provider changes.
     public struct External: Codable, Equatable, Sendable {
+        /// Provider identifier used to apply source-specific freshness rules.
         public let source: String
+        /// Provider-reported status at capture time.
         public let status: String
+        /// Work Brief disposition derived from provider facts.
         public let disposition: String
+        /// Provider-reported update time.
         public let updatedAt: Date
+        /// Time these external facts were last confirmed.
         public let confirmedAt: Date
     }
 
     /// Captures available sources, retaining a previous fingerprint for an unavailable source.
+    /// - Parameters:
+    ///   - snapshot: The current bounded source facts.
+    ///   - previous: The last saved baseline used when a source is unavailable.
+    ///   - now: The capture time used for retention checks.
     public init(snapshot: WorkBriefSnapshot, previous: WorkBriefBaseline?, at now: Date) {
         version = Self.schemaVersion
         capturedAt = now
@@ -58,13 +72,17 @@ public struct WorkBriefBaseline: Codable, Equatable, Sendable {
             .prefix(200).map { ($0.key, $0.value) })
     }
 
-    /// Returns nil when the saved metadata is too old or from a different schema.
+    /// Reports whether the saved metadata is recent and uses the current schema.
+    /// - Parameter now: The time at which to check the baseline.
+    /// - Returns: Whether the baseline is valid for comparisons.
     public func valid(at now: Date) -> Bool {
         version == Self.schemaVersion && (0...30 * 24 * 3600).contains(now.timeIntervalSince(capturedAt)) &&
             local.count <= 100 && external.count <= 200
     }
 
     /// Finds current items newly present or changed since this saved brief.
+    /// - Parameter snapshot: The current source snapshot to compare.
+    /// - Returns: Bounded IDs of items with verified changes.
     public func changes(in snapshot: WorkBriefSnapshot) -> WorkBriefChanges {
         let localIDs: [UUID] = snapshot.localHealth.state == .available
             ? snapshot.localWorkspaces.filter { item in
@@ -124,9 +142,3 @@ public struct WorkBriefBaseline: Codable, Equatable, Sendable {
     }
 }
 
-/// Source-backed current items changed since a prior viewed brief.
-public struct WorkBriefChanges: Equatable, Sendable {
-    public let since: Date
-    public let localIDs: [UUID]
-    public let externalIDs: [String]
-}
