@@ -5837,6 +5837,11 @@ policies:
     selected_for_implementation: false
 
 caveats:
+  - id: ordinary_codex_cursor_storage_gate
+    title: Bounded Codex cursor hardening awaits tagged runtime dogfood; sustained ingestion remains gated by live PE storage maintenance
+    status: open
+    owner: bmux
+
   - id: app_host_cancellation_ownership_verification
     title: Native deadline now owns the test wrapper inside the console session; output-pipeline and cancellation controls pass, real runner cleanup remains unverified
     status: open

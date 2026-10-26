@@ -11,12 +11,23 @@ It does not advance broader Session lifecycle or provider-parity milestones.
 
 The PE outcome storage retention slice introduces schema 29, compact session
 outcome storage, citation-aware payload retention, and bounded diagnostics.
-Live reclamation remains blocked: the schema-28 store has a 631.6 GiB file,
-372.5 GiB freelist, multiple active bmux users, and insufficient free capacity
+Live reclamation remains blocked: the schema-29 store has a 631.6 GiB file,
+about 368.7 GiB of freelist pages, multiple active bmux users, and insufficient free capacity
 for a verified backup and offline compact replacement. The storage gate for
 additional live terminal ingestion remains closed until the writer is deployed
 and a safe maintenance capacity is available. See the
 [PE storage retention policy](../../Packages/macOS/ProvenanceEngine/docs/storage-retention.md).
+
+The ordinary Codex monitor cursor follow-up reads at most 64 KiB per cycle,
+keeps at most 4 MiB of an unfinished JSONL line, skips malformed lines with a
+count, and stores only versioned file identity and acknowledged complete-line
+offsets in private bmux state. Restart reconstructs parser context from the
+acknowledged prefix without reappending to PE. Cursor and status files expire
+after 30 days; status reports unread bytes, skipped lines, retry state, and a
+five-minute lag threshold without transcript payloads. This hardening is under
+observation pending tagged dogfood. It does not reopen the live ingestion
+storage gate while older app builds may still write legacy outcome revisions.
+See [the cursor implementation record](../planning/live-codex-cursor-hardening.md).
 
 The workspace ticket-delay follow-up is recorded in
 [implementation notes](../implementation-notes/workspace-ticket-delay.md).

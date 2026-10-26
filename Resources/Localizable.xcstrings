@@ -239725,19 +239725,87 @@
         }
       }
     },
+    "cli.provenance.diagnostics.codexTranscript.usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: bmux provenance diagnostics codex-transcript <provider-session-id> [--json]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用方法: bmux provenance diagnostics codex-transcript <provider-session-id> [--json]"
+          }
+        }
+      }
+    },
+    "cli.provenance.diagnostics.codexTranscript.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex transcript %@: cursor %llu, unread %llu bytes, skipped %d lines, failures %d"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex トランスクリプト %@: カーソル %llu、未読 %llu バイト、スキップ %d 行、失敗 %d 件"
+          }
+        }
+      }
+    },
+    "cli.provenance.diagnostics.codexTranscript.attention": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs attention: retrying, stale, or more than five minutes behind"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要確認: 再試行中、更新停止、または 5 分以上の遅延があります"
+          }
+        }
+      }
+    },
+    "cli.provenance.diagnostics.codexTranscript.healthy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Healthy: cursor is current"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正常: カーソルは最新です"
+          }
+        }
+      }
+    },
     "cli.provenance.diagnostics.usage": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usage: bmux provenance diagnostics <workspace-display|execution-telemetry-live> [...]"
+            "value": "Usage: bmux provenance diagnostics <workspace-display|execution-telemetry-live|codex-transcript> [...]"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用方法: bmux provenance diagnostics <workspace-display|execution-telemetry-live> [...]"
+            "value": "使用方法: bmux provenance diagnostics <workspace-display|execution-telemetry-live|codex-transcript> [...]"
           }
         }
       }
@@ -241601,13 +241669,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance sessions collisions <pe-session-id> [--limit <count>] [--related-session-limit <count>] [--exclusion-limit <count>] [--artifact-path <repo-relative-path>] [--updated-after <timestamp>] [--stale-before <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance session outcome <session-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance import codex-transcripts [--path <path>] [--limit <count>] [--database <path>] [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\nInspect bmux work provenance without requiring a live app socket.\nRelated-session retrieval uses explicit PE session ids. Artifact-collision retrieval starts from the target session's recorded changed artifacts; --artifact-path narrows those candidates only."
+            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance sessions collisions <pe-session-id> [--limit <count>] [--related-session-limit <count>] [--exclusion-limit <count>] [--artifact-path <repo-relative-path>] [--updated-after <timestamp>] [--stale-before <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance session outcome <session-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance import codex-transcripts [--path <path>] [--limit <count>] [--database <path>] [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]\n  bmux provenance diagnostics codex-transcript <provider-session-id> [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\nInspect bmux work provenance without requiring a live app socket.\nRelated-session retrieval uses explicit PE session ids. Artifact-collision retrieval starts from the target session's recorded changed artifacts; --artifact-path narrows those candidates only."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance sessions collisions <pe-session-id> [--limit <count>] [--related-session-limit <count>] [--exclusion-limit <count>] [--artifact-path <repo-relative-path>] [--updated-after <timestamp>] [--stale-before <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance session outcome <session-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance import codex-transcripts [--path <path>] [--limit <count>] [--database <path>] [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\n稼働中のアプリソケットを必要とせず、bmux の作業 provenance を調べます。\n関連セッション取得には明示的な PE セッション ID を使用します。アーティファクト衝突取得は対象セッションに記録済みの変更アーティファクトから始まり、--artifact-path はその候補だけを絞り込みます。"
+            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance sessions collisions <pe-session-id> [--limit <count>] [--related-session-limit <count>] [--exclusion-limit <count>] [--artifact-path <repo-relative-path>] [--updated-after <timestamp>] [--stale-before <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance session outcome <session-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance import codex-transcripts [--path <path>] [--limit <count>] [--database <path>] [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]\n  bmux provenance diagnostics codex-transcript <provider-session-id> [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\n稼働中のアプリソケットを必要とせず、bmux の作業 provenance を調べます。\n関連セッション取得には明示的な PE セッション ID を使用します。アーティファクト衝突取得は対象セッションに記録済みの変更アーティファクトから始まり、--artifact-path はその候補だけを絞り込みます。"
           }
         }
       }

@@ -1,11 +1,9 @@
 import Darwin
 import Foundation
+import BmuxSettings
 import ProvenanceEngineContracts
 
 extension BMUXCLI {
-    private static let codexHookAssociationRetryDeadlineSeconds: TimeInterval = 120
-    private static let codexHookAssociationRetryBaseDelaySeconds: TimeInterval = 0.75
-
     func runCodexTranscriptMonitor(commandArgs: [String], client: SocketClient) async throws {
         let env = ProcessInfo.processInfo.environment
         let workspaceId = optionValue(commandArgs, name: "--workspace") ?? env["BMUX_WORKSPACE_ID"] ?? ""
@@ -25,11 +23,17 @@ extension BMUXCLI {
         }
 
         defer { removeCodexMonitorLease(path: leasePath) }
-        let transcriptImporter = (try? provenanceEngineClient(databasePath: nil).client).map(CLIProvenanceCodexTranscriptImporter.init(client:))
-        var transcriptImportState = CLIProvenanceCodexTranscriptImporter.LiveImportState(
-            workspaceID: associationWorkspaceId,
-            surfaceID: surfaceId
-        )
+        let cursorDirectory = BmuxStateDirectory.url(
+            homeDirectory: FileManager.default.homeDirectoryForCurrentUser
+        ).appendingPathComponent("codex-transcript-cursors", isDirectory: true)
+        let cursorStore = CLIProvenanceCodexTranscriptCursorStore(directoryURL: cursorDirectory)
+        let transcriptTailer = (try? provenanceEngineClient(databasePath: nil).client).map {
+            CLIProvenanceCodexTranscriptTailer(
+                providerSessionID: sessionId, workspaceID: associationWorkspaceId,
+                surfaceID: surfaceId, client: $0, cursorStore: cursorStore
+            )
+        }
+        var lastReportedOffset: UInt64 = 0
         let deadline = Date().addingTimeInterval(4 * 60 * 60)
         var nextOwnerCheck = Date.distantPast
         var publishedUserInputCallIds = Set<String>()
@@ -38,7 +42,7 @@ extension BMUXCLI {
 #if DEBUG
         func logMonitor(_ reason: String, extra: String = "") {
             agentHookDebugLog(
-                "codexMonitor.\(reason) session=\(agentHookDebugShort(sessionId)) turn=\(agentHookDebugShort(turnId)) workspace=\(agentHookDebugShort(workspaceId)) associationWorkspace=\(agentHookDebugShort(associationWorkspaceId)) surface=\(agentHookDebugShort(surfaceId)) hasLease=\(hasLease ? 1 : 0) offset=\(transcriptImportState.offset)\(extra.isEmpty ? "" : " \(extra)")",
+                "codexMonitor.\(reason) session=\(agentHookDebugShort(sessionId)) turn=\(agentHookDebugShort(turnId)) workspace=\(agentHookDebugShort(workspaceId)) associationWorkspace=\(agentHookDebugShort(associationWorkspaceId)) surface=\(agentHookDebugShort(surfaceId)) hasLease=\(hasLease ? 1 : 0) offset=\(lastReportedOffset)\(extra.isEmpty ? "" : " \(extra)")",
                 socketPath: client.socketPath,
                 env: env
             )
@@ -47,37 +51,43 @@ extension BMUXCLI {
         logMonitor("start", extra: "hasTranscript=\(transcriptPath == nil ? 0 : 1)")
 #endif
 
-        func consumeCurrentTranscriptAppend() async {
-            guard let transcriptImporter, let currentTranscriptPath = transcriptPath else { return }
+        func consumeCurrentTranscriptAppend() async -> Bool {
+            guard let transcriptTailer, let currentTranscriptPath = transcriptPath else { return false }
             do {
-                let result = try await transcriptImporter.importLiveTranscriptAppend(
-                    at: URL(fileURLWithPath: currentTranscriptPath, isDirectory: false),
-                    state: &transcriptImportState
-                )
+                let url = URL(fileURLWithPath: currentTranscriptPath, isDirectory: false)
+                var hasBacklog = false
+                for _ in 0..<16 {
+                    let outcome = try await transcriptTailer.consume(at: url)
+                    let result = outcome.importResult
+                    lastReportedOffset = outcome.offset
 #if DEBUG
-                if result.consumedLines > 0 || result.fileReport.eventsAppended > 0 || result.fileReport.duplicateEvents > 0 {
-                    logMonitor(
-                        "import",
-                        extra: "lines=\(result.consumedLines) events=\(result.fileReport.eventsAppended) duplicates=\(result.fileReport.duplicateEvents) commands=\(result.fileReport.commands) reasoning=\(result.fileReport.reasoningSummaries) partial=\(result.retainedPartialLine ? 1 : 0) metadata=\(result.metadataAvailable ? 1 : 0)"
-                    )
+                    if result.consumedLines > 0 || result.skippedLines > 0 ||
+                       result.fileReport.eventsAppended > 0 || outcome.cursorWriteFailed {
+                        logMonitor(
+                            "import",
+                            extra: "lines=\(result.consumedLines) skipped=\(result.skippedLines) events=\(result.fileReport.eventsAppended) duplicates=\(result.fileReport.duplicateEvents) partial=\(result.retainedPartialLine ? 1 : 0) cursor=\(outcome.cursorPersisted ? 1 : 0) cursorWriteFailed=\(outcome.cursorWriteFailed ? 1 : 0) unreadBytes=\(outcome.unreadBytes)"
+                        )
+                    }
+#endif
+                    hasBacklog = result.hasMoreData
+                    guard hasBacklog else { break }
                 }
-#endif
+                return hasBacklog
             } catch {
+                await transcriptTailer.recordFailure(kind: String(describing: type(of: error)))
 #if DEBUG
-                logMonitor("importError", extra: "error=\(agentHookDebugShort(String(describing: error)))")
+                logMonitor("importError", extra: "errorType=\(type(of: error))")
 #endif
+                return false
             }
         }
 
         func finishCurrentTranscriptImport(flushPendingPrompts: Bool = true) async {
-            await consumeCurrentTranscriptAppend()
+            _ = await consumeCurrentTranscriptAppend()
             guard flushPendingPrompts else { return }
-            guard let transcriptImporter, let currentTranscriptPath = transcriptPath else { return }
+            guard let transcriptTailer, let currentTranscriptPath = transcriptPath else { return }
             do {
-                let report = try await transcriptImporter.finishLiveTranscriptImport(
-                    state: &transcriptImportState,
-                    path: currentTranscriptPath
-                )
+                let report = try await transcriptTailer.finish(path: currentTranscriptPath)
 #if DEBUG
                 logMonitor(
                     "finish",
@@ -86,7 +96,7 @@ extension BMUXCLI {
 #endif
             } catch {
 #if DEBUG
-                logMonitor("finishError", extra: "error=\(agentHookDebugShort(String(describing: error)))")
+                logMonitor("finishError", extra: "errorType=\(type(of: error))")
 #endif
             }
         }
@@ -120,8 +130,9 @@ extension BMUXCLI {
 #endif
             }
 
+            var hasTranscriptBacklog = false
             if let currentTranscriptPath = transcriptPath {
-                await consumeCurrentTranscriptAppend()
+                hasTranscriptBacklog = await consumeCurrentTranscriptAppend()
 
                 if let userInput = readCodexTranscriptUserInput(
                     path: currentTranscriptPath,
@@ -171,10 +182,8 @@ extension BMUXCLI {
                     if let resolvedTranscriptPath = findCodexTranscriptPath(sessionId: sessionId, env: env) {
                         transcriptPath = resolvedTranscriptPath
                         if resolvedTranscriptPath != unavailableTranscriptPath {
-                            transcriptImportState = CLIProvenanceCodexTranscriptImporter.LiveImportState(
-                                workspaceID: associationWorkspaceId,
-                                surfaceID: surfaceId
-                            )
+                            await transcriptTailer?.reset()
+                            lastReportedOffset = 0
                             continue
                         }
                     }
@@ -189,251 +198,13 @@ extension BMUXCLI {
                 await finishCurrentTranscriptImport()
                 return
             }
+            if hasTranscriptBacklog { continue }
             waitForCodexTranscriptChange(path: transcriptPath, leasePath: leasePath, timeout: min(30, remaining))
         }
 #if DEBUG
         logMonitor("exit.loop")
 #endif
         await finishCurrentTranscriptImport()
-    }
-
-    func recordCodexHookWorkspaceSessionAssociation(
-        workspaceId: String,
-        surfaceId: String?,
-        sessionId: String,
-        turnId: String?,
-        cwd: String?,
-        promptObserved: Bool,
-        socketPath: String?,
-        env: [String: String]
-    ) async {
-        let normalizedSessionId = sessionId.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !normalizedSessionId.isEmpty else { return }
-        guard let associationWorkspaceId = normalizedHookValue(env["BMUX_STABLE_WORKSPACE_ID"])
-            ?? normalizedHookValue(env["CMUX_STABLE_WORKSPACE_ID"])
-            ?? provenanceStableWorkspaceIDForRuntimeWorkspace(
-                workspaceId,
-                explicitSocketPath: socketPath,
-                processEnv: env,
-                cliBundleIdentifier: CLISocketPathResolver.currentAppBundleIdentifier()
-            ) else {
-#if DEBUG
-            agentHookDebugLog(
-                "codexHookAssociation.skipped session=\(agentHookDebugShort(normalizedSessionId)) workspace=\(agentHookDebugShort(workspaceId)) reason=stable_workspace_unresolved",
-                socketPath: socketPath,
-                env: env
-            )
-#endif
-            return
-        }
-
-        let observedAt = Date()
-        let stage = promptObserved
-            ? "workspace_session_association_persisted"
-            : "agent_detected_awaiting_first_prompt"
-        let reasonCode = promptObserved
-            ? "hook_prompt_observed"
-            : "hook_session_start_observed"
-
-        do {
-            let (provenanceClient, _) = try provenanceEngineClient(databasePath: nil)
-            let importer = CLIProvenanceCodexTranscriptImporter(client: provenanceClient)
-            let gitContext = await importer.gitContext(for: cwd, observedAt: observedAt)
-            let trimmedSurfaceId = CLIProvenanceCodexTranscriptImporter.trimmedNonEmpty(surfaceId)
-            let trimmedCwd = CLIProvenanceCodexTranscriptImporter.trimmedNonEmpty(cwd)
-            let association = ProvenanceWorkspaceCodingAgentSessionAssociationRecord(
-                id: importer.stableIDFactory.workspaceCodingAgentSessionAssociationID(
-                    workspaceID: associationWorkspaceId,
-                    agentKind: "codex",
-                    sessionID: normalizedSessionId
-                ),
-                workspaceID: associationWorkspaceId,
-                sessionID: normalizedSessionId,
-                agentKind: "codex",
-                rawSessionID: normalizedSessionId,
-                canonicalSessionID: normalizedSessionId,
-                surfaceID: trimmedSurfaceId,
-                repositoryID: gitContext?.repositoryID,
-                worktreeID: gitContext?.worktreeID,
-                currentDirectory: trimmedCwd,
-                sourcePath: "hook",
-                stage: stage,
-                reasonCode: reasonCode,
-                retryable: true,
-                firstObservedAt: observedAt,
-                promptObservedAt: promptObserved ? observedAt : nil,
-                lastObservedAt: observedAt,
-                lastTransitionAt: observedAt
-            )
-            let session = ProvenanceSessionRecord(
-                id: normalizedSessionId,
-                agentKind: "codex",
-                workspaceID: associationWorkspaceId,
-                surfaceID: trimmedSurfaceId,
-                worktreeID: gitContext?.worktreeID,
-                cwd: trimmedCwd,
-                status: "active",
-                startedAt: observedAt,
-                updatedAt: observedAt
-            )
-            let identity = ProvenanceExternalIdentityRecord(
-                id: importer.stableIDFactory.id(
-                    prefix: "identity",
-                    value: "\(normalizedSessionId)\ncodex\nhook_session\n\(normalizedSessionId)"
-                ),
-                sessionID: normalizedSessionId,
-                system: "codex",
-                kind: "hook_session",
-                externalID: normalizedSessionId,
-                source: .observed,
-                confidence: .high,
-                createdAt: observedAt,
-                updatedAt: observedAt
-            )
-            let eventDiscriminator = [
-                "codex-hook-workspace-session-association",
-                associationWorkspaceId.lowercased(),
-                normalizedSessionId,
-                normalizedHookValue(turnId) ?? "session",
-                stage,
-            ].joined(separator: "\n")
-            let event = ProvenanceEvent(
-                id: importer.stableIDFactory.id(prefix: "event", value: eventDiscriminator),
-                eventType: promptObserved ? .codingAgentPromptSubmitted : .codingAgentThreadObserved,
-                timestamp: observedAt,
-                repositoryID: gitContext?.repositoryID,
-                worktreeID: gitContext?.worktreeID,
-                sessionID: normalizedSessionId,
-                source: .observed,
-                evidenceOrigin: ProvenanceEvidenceOrigin(rawValue: "codex-hook"),
-                evidenceScope: CLIProvenanceCodexTranscriptImporter.localEvidenceScope,
-                confidence: .high,
-                payload: ProvenanceEventPayload(
-                    repository: gitContext?.repository,
-                    worktree: gitContext?.worktree,
-                    session: session,
-                    externalIdentities: [identity],
-                    workspaceCodingAgentSessionAssociation: association
-                )
-            )
-            try await appendCodexHookWorkspaceSessionAssociation(
-                event,
-                client: provenanceClient,
-                socketPath: socketPath,
-                env: env
-            )
-#if DEBUG
-            agentHookDebugLog(
-                "codexHookAssociation.persisted session=\(agentHookDebugShort(normalizedSessionId)) workspace=\(agentHookDebugShort(associationWorkspaceId)) surface=\(agentHookDebugShort(trimmedSurfaceId)) stage=\(stage) reason=\(reasonCode)",
-                socketPath: socketPath,
-                env: env
-            )
-#endif
-        } catch {
-#if DEBUG
-            agentHookDebugLog(
-                "codexHookAssociation.error session=\(agentHookDebugShort(normalizedSessionId)) workspace=\(agentHookDebugShort(associationWorkspaceId)) error=\(agentHookDebugShort(String(describing: error)))",
-                socketPath: socketPath,
-                env: env
-            )
-#endif
-        }
-    }
-
-    func recordCodexHookSessionStartAssociation(
-        workspaceId: String,
-        surfaceId: String?,
-        sessionId: String,
-        turnId: String?,
-        cwd: String?,
-        socketPath: String?,
-        env: [String: String]
-    ) async {
-        await recordCodexHookWorkspaceSessionAssociation(
-            workspaceId: workspaceId,
-            surfaceId: surfaceId,
-            sessionId: sessionId,
-            turnId: turnId,
-            cwd: cwd,
-            promptObserved: false,
-            socketPath: socketPath,
-            env: env
-        )
-    }
-
-    func recordCodexHookPromptSubmitAssociation(
-        workspaceId: String,
-        surfaceId: String?,
-        sessionId: String,
-        turnId: String?,
-        cwd: String?,
-        socketPath: String?,
-        env: [String: String]
-    ) async {
-        await recordCodexHookWorkspaceSessionAssociation(
-            workspaceId: workspaceId,
-            surfaceId: surfaceId,
-            sessionId: sessionId,
-            turnId: turnId,
-            cwd: cwd,
-            promptObserved: true,
-            socketPath: socketPath,
-            env: env
-        )
-    }
-
-    private func appendCodexHookWorkspaceSessionAssociation(
-        _ event: ProvenanceEvent,
-        client: any ProvenanceEngineContracts.ProvenanceEngineClient,
-        socketPath: String?,
-        env: [String: String]
-    ) async throws {
-        var attempts = 0
-        let deadline = Date().addingTimeInterval(Self.codexHookAssociationRetryDeadlineSeconds)
-        while true {
-            do {
-                _ = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(event: event))
-                return
-            } catch {
-                if CLIProvenanceCodexTranscriptImporter.isDuplicateAppendError(error) {
-                    return
-                }
-                attempts += 1
-                let remaining = deadline.timeIntervalSinceNow
-                guard remaining > 0, isRetryableCodexHookAssociationSQLiteError(error) else {
-                    throw error
-                }
-                let boundedError = boundedCodexHookAssociationErrorDescription(error)
-#if DEBUG
-                agentHookDebugLog(
-                    "codexHookAssociation.retry session=\(agentHookDebugShort(event.sessionID)) attempt=\(attempts) remaining=\(Int(remaining.rounded(.down))) error=\(boundedError)",
-                    socketPath: socketPath,
-                    env: env
-                )
-#endif
-                // Bounded retry covers transient SQLite writer contention in the detached hook worker.
-                let delay = min(
-                    remaining,
-                    Self.codexHookAssociationRetryBaseDelaySeconds * Double(min(attempts, 8))
-                )
-                try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-            }
-        }
-    }
-
-    private func boundedCodexHookAssociationErrorDescription(_ error: Error) -> String {
-        let description = String(describing: error)
-            .replacingOccurrences(of: "\n", with: " ")
-            .replacingOccurrences(of: "\r", with: " ")
-        return String(description.prefix(160))
-    }
-
-    private func isRetryableCodexHookAssociationSQLiteError(_ error: Error) -> Bool {
-        let description = String(describing: error).lowercased()
-        return description.contains("database is locked")
-            || description.contains("database is busy")
-            || description.contains("busy")
-            || description.contains("locked")
     }
 
     private func codexMonitorOwnerState(workspaceId: String, surfaceId: String?, client: SocketClient) -> CodexMonitorOwnerState {

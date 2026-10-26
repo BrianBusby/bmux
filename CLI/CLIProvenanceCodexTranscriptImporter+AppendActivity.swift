@@ -282,6 +282,7 @@ extension CLIProvenanceCodexTranscriptImporter {
         stat: WritableKeyPath<FileReport, Int>,
         fileReport: inout FileReport
     ) async throws {
+        guard emitsEvents else { return }
         do {
             _ = try await client.appendEvent(ProvenanceEngineContracts.ProvenanceAppendEventRequest(event: event))
             fileReport.eventsAppended += 1

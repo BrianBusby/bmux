@@ -234,6 +234,7 @@
 			C72280000000000000000002 /* BMUXCLI+ClaudeHookWorkspaceRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = C72280000000000000000001 /* BMUXCLI+ClaudeHookWorkspaceRouting.swift */; };
 			2DA8D48D99FB520EB179B015 /* BMUXCLI+ClaudePushNotificationHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF59318F1D5B2195AC77C28 /* BMUXCLI+ClaudePushNotificationHook.swift */; };
 			C0D3F1F00000000000000101 /* BMUXCLI+CodexFireAndForgetHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3F1F00000000000000102 /* BMUXCLI+CodexFireAndForgetHooks.swift */; };
+			D0C0A1B2B3B4B5B6B7B8B9C2 /* BMUXCLI+CodexHookAssociation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B2B3B4B5B6B7B8B9C3 /* BMUXCLI+CodexHookAssociation.swift */; };
 			C0DE71000000000000000001 /* BMUXCLI+CodexTokenAudit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE71000000000000000002 /* BMUXCLI+CodexTokenAudit.swift */; };
 			C0DE73000000000000000001 /* BMUXCLI+CodexTranscriptMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE73000000000000000002 /* BMUXCLI+CodexTranscriptMonitor.swift */; };
 		B90000D2A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B90000D1A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift */; };
@@ -256,6 +257,8 @@
 		C05555010000000000000007 /* BMUXCLI+PiExtensionSourcePart2.swift in Sources */ = {isa = PBXBuildFile; fileRef = C05555010000000000000008 /* BMUXCLI+PiExtensionSourcePart2.swift */; };
 		B9000054A1B2C3D4E5F60719 /* BMUXCLI+Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9000055A1B2C3D4E5F60719 /* BMUXCLI+Process.swift */; };
 		C0DE70200000000000000001 /* BMUXCLI+Provenance.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70200000000000000002 /* BMUXCLI+Provenance.swift */; };
+			D0C0A1B2B3B4B5B6B7B8B9C4 /* BMUXCLI+ProvenanceCodexTranscriptDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B2B3B4B5B6B7B8B9C5 /* BMUXCLI+ProvenanceCodexTranscriptDiagnostics.swift */; };
+		D0C0A1B2B3B4B5B6B7B8B9C6 /* BMUXCLI+ProvenanceDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B2B3B4B5B6B7B8B9C7 /* BMUXCLI+ProvenanceDiagnostics.swift */; };
 		C0DE70A00000000000000001 /* BMUXCLI+ProvenanceImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70A00000000000000002 /* BMUXCLI+ProvenanceImport.swift */; };
 		C0DE70A20000000000000001 /* BMUXCLI+ProvenanceSessionOutcome.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70A20000000000000002 /* BMUXCLI+ProvenanceSessionOutcome.swift */; };
 		C0DE70B00000000000000001 /* BMUXCLI+ProvenanceSessionsRetrieval.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70B00000000000000002 /* BMUXCLI+ProvenanceSessionsRetrieval.swift */; };
@@ -624,6 +627,12 @@
 		A5D41205A1B2C3D4E5F60718 /* CLINotifyProcessTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5D41206A1B2C3D4E5F60718 /* CLINotifyProcessTestSupport.swift */; };
 		157C175B1C30F51B5A0B2FA3 /* CLIOutputChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6427199662BD7433C6FE8723 /* CLIOutputChannel.swift */; };
 		17A45C0D89B84E71A3B274A0 /* CLIProcessTestTimeout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 919DCAF7D0DD44A796A899FF /* CLIProcessTestTimeout.swift */; };
+		D0C0A1B40000000000000001 /* CLIProvenanceCodexTranscriptCursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B40000000000000002 /* CLIProvenanceCodexTranscriptCursor.swift */; };
+		D0C0A1B40000000000000003 /* CLIProvenanceCodexTranscriptCursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B40000000000000002 /* CLIProvenanceCodexTranscriptCursor.swift */; };
+		D0C0A1B50000000000000001 /* CLIProvenanceCodexTranscriptCursorStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B50000000000000002 /* CLIProvenanceCodexTranscriptCursorStore.swift */; };
+		D0C0A1B50000000000000003 /* CLIProvenanceCodexTranscriptCursorStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B50000000000000002 /* CLIProvenanceCodexTranscriptCursorStore.swift */; };
+		D0C0A1B20000000000000001 /* CLIProvenanceCodexTranscriptFileIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B20000000000000002 /* CLIProvenanceCodexTranscriptFileIdentity.swift */; };
+		D0C0A1B20000000000000003 /* CLIProvenanceCodexTranscriptFileIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B20000000000000002 /* CLIProvenanceCodexTranscriptFileIdentity.swift */; };
 		C0DE70400000000000000001 /* CLIProvenanceCodexTranscriptImporter+AppendActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70400000000000000002 /* CLIProvenanceCodexTranscriptImporter+AppendActivity.swift */; };
 		C0DE70400000000000000003 /* CLIProvenanceCodexTranscriptImporter+AppendActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70400000000000000002 /* CLIProvenanceCodexTranscriptImporter+AppendActivity.swift */; };
 		C0DE70410000000000000001 /* CLIProvenanceCodexTranscriptImporter+AppendSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70410000000000000002 /* CLIProvenanceCodexTranscriptImporter+AppendSession.swift */; };
@@ -632,6 +641,8 @@
 		C0DE70420000000000000003 /* CLIProvenanceCodexTranscriptImporter+Git.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70420000000000000002 /* CLIProvenanceCodexTranscriptImporter+Git.swift */; };
 		C0DE70430000000000000001 /* CLIProvenanceCodexTranscriptImporter+IDs.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70430000000000000002 /* CLIProvenanceCodexTranscriptImporter+IDs.swift */; };
 		C0DE70430000000000000003 /* CLIProvenanceCodexTranscriptImporter+IDs.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70430000000000000002 /* CLIProvenanceCodexTranscriptImporter+IDs.swift */; };
+		D0C0A1B30000000000000001 /* CLIProvenanceCodexTranscriptImporter+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B30000000000000002 /* CLIProvenanceCodexTranscriptImporter+Live.swift */; };
+		D0C0A1B30000000000000003 /* CLIProvenanceCodexTranscriptImporter+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B30000000000000002 /* CLIProvenanceCodexTranscriptImporter+Live.swift */; };
 		C0DE70450000000000000001 /* CLIProvenanceCodexTranscriptImporter+Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70450000000000000002 /* CLIProvenanceCodexTranscriptImporter+Models.swift */; };
 		C0DE70450000000000000003 /* CLIProvenanceCodexTranscriptImporter+Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70450000000000000002 /* CLIProvenanceCodexTranscriptImporter+Models.swift */; };
 		C0DE70440000000000000001 /* CLIProvenanceCodexTranscriptImporter+Parsing.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70440000000000000002 /* CLIProvenanceCodexTranscriptImporter+Parsing.swift */; };
@@ -639,6 +650,9 @@
 		C0DE70300000000000000001 /* CLIProvenanceCodexTranscriptImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70300000000000000002 /* CLIProvenanceCodexTranscriptImporter.swift */; };
 		C0DE70300000000000000003 /* CLIProvenanceCodexTranscriptImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70300000000000000002 /* CLIProvenanceCodexTranscriptImporter.swift */; };
 		C0DE70600000000000000001 /* CLIProvenanceCodexTranscriptImporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70600000000000000002 /* CLIProvenanceCodexTranscriptImporterTests.swift */; };
+		D0C0A1B60000000000000001 /* CLIProvenanceCodexTranscriptTailer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B60000000000000002 /* CLIProvenanceCodexTranscriptTailer.swift */; };
+		D0C0A1B60000000000000003 /* CLIProvenanceCodexTranscriptTailer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B60000000000000002 /* CLIProvenanceCodexTranscriptTailer.swift */; };
+		D0C0A1B2B3B4B5B6B7B8B9C0 /* CLIProvenanceCodexTranscriptTailerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B2B3B4B5B6B7B8B9C1 /* CLIProvenanceCodexTranscriptTailerTests.swift */; };
 		C0DE70270000000000000001 /* CLIProvenanceContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70270000000000000002 /* CLIProvenanceContext.swift */; };
 		C0DE70210000000000000001 /* CLIProvenanceExplanation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70210000000000000002 /* CLIProvenanceExplanation.swift */; };
 		C0DE70230000000000000001 /* CLIProvenanceGitResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE70230000000000000002 /* CLIProvenanceGitResolver.swift */; };
@@ -2535,6 +2549,7 @@
 			C72280000000000000000001 /* BMUXCLI+ClaudeHookWorkspaceRouting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ClaudeHookWorkspaceRouting.swift"; sourceTree = "<group>"; };
 			4CF59318F1D5B2195AC77C28 /* BMUXCLI+ClaudePushNotificationHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ClaudePushNotificationHook.swift"; sourceTree = "<group>"; };
 			C0D3F1F00000000000000102 /* BMUXCLI+CodexFireAndForgetHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CodexFireAndForgetHooks.swift"; sourceTree = "<group>"; };
+			D0C0A1B2B3B4B5B6B7B8B9C3 /* BMUXCLI+CodexHookAssociation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CodexHookAssociation.swift"; sourceTree = "<group>"; };
 			C0DE71000000000000000002 /* BMUXCLI+CodexTokenAudit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CodexTokenAudit.swift"; sourceTree = "<group>"; };
 			C0DE73000000000000000002 /* BMUXCLI+CodexTranscriptMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CodexTranscriptMonitor.swift"; sourceTree = "<group>"; };
 		B90000D1A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CommandSuggestions.swift"; sourceTree = "<group>"; };
@@ -2557,6 +2572,8 @@
 		C05555010000000000000008 /* BMUXCLI+PiExtensionSourcePart2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+PiExtensionSourcePart2.swift"; sourceTree = "<group>"; };
 		B9000055A1B2C3D4E5F60719 /* BMUXCLI+Process.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Process.swift"; sourceTree = "<group>"; };
 		C0DE70200000000000000002 /* BMUXCLI+Provenance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+Provenance.swift"; sourceTree = "<group>"; };
+			D0C0A1B2B3B4B5B6B7B8B9C5 /* BMUXCLI+ProvenanceCodexTranscriptDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ProvenanceCodexTranscriptDiagnostics.swift"; sourceTree = "<group>"; };
+		D0C0A1B2B3B4B5B6B7B8B9C7 /* BMUXCLI+ProvenanceDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ProvenanceDiagnostics.swift"; sourceTree = "<group>"; };
 		C0DE70A00000000000000002 /* BMUXCLI+ProvenanceImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ProvenanceImport.swift"; sourceTree = "<group>"; };
 		C0DE70A20000000000000002 /* BMUXCLI+ProvenanceSessionOutcome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ProvenanceSessionOutcome.swift"; sourceTree = "<group>"; };
 		C0DE70B00000000000000002 /* BMUXCLI+ProvenanceSessionsRetrieval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ProvenanceSessionsRetrieval.swift"; sourceTree = "<group>"; };
@@ -2877,14 +2894,20 @@
 		A5D41206A1B2C3D4E5F60718 /* CLINotifyProcessTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLINotifyProcessTestSupport.swift; sourceTree = "<group>"; };
 		6427199662BD7433C6FE8723 /* CLIOutputChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIOutputChannel.swift; sourceTree = "<group>"; };
 		919DCAF7D0DD44A796A899FF /* CLIProcessTestTimeout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProcessTestTimeout.swift"; sourceTree = "<group>"; };
+		D0C0A1B40000000000000002 /* CLIProvenanceCodexTranscriptCursor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptCursor.swift"; sourceTree = "<group>"; };
+		D0C0A1B50000000000000002 /* CLIProvenanceCodexTranscriptCursorStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptCursorStore.swift"; sourceTree = "<group>"; };
+		D0C0A1B20000000000000002 /* CLIProvenanceCodexTranscriptFileIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptFileIdentity.swift"; sourceTree = "<group>"; };
 		C0DE70400000000000000002 /* CLIProvenanceCodexTranscriptImporter+AppendActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptImporter+AppendActivity.swift"; sourceTree = "<group>"; };
 		C0DE70410000000000000002 /* CLIProvenanceCodexTranscriptImporter+AppendSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptImporter+AppendSession.swift"; sourceTree = "<group>"; };
 		C0DE70420000000000000002 /* CLIProvenanceCodexTranscriptImporter+Git.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptImporter+Git.swift"; sourceTree = "<group>"; };
 		C0DE70430000000000000002 /* CLIProvenanceCodexTranscriptImporter+IDs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptImporter+IDs.swift"; sourceTree = "<group>"; };
+		D0C0A1B30000000000000002 /* CLIProvenanceCodexTranscriptImporter+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptImporter+Live.swift"; sourceTree = "<group>"; };
 		C0DE70450000000000000002 /* CLIProvenanceCodexTranscriptImporter+Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptImporter+Models.swift"; sourceTree = "<group>"; };
 		C0DE70440000000000000002 /* CLIProvenanceCodexTranscriptImporter+Parsing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptImporter+Parsing.swift"; sourceTree = "<group>"; };
 		C0DE70300000000000000002 /* CLIProvenanceCodexTranscriptImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceCodexTranscriptImporter.swift; sourceTree = "<group>"; };
 		C0DE70600000000000000002 /* CLIProvenanceCodexTranscriptImporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceCodexTranscriptImporterTests.swift; sourceTree = "<group>"; };
+		D0C0A1B60000000000000002 /* CLIProvenanceCodexTranscriptTailer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptTailer.swift"; sourceTree = "<group>"; };
+		D0C0A1B2B3B4B5B6B7B8B9C1 /* CLIProvenanceCodexTranscriptTailerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceCodexTranscriptTailerTests.swift; sourceTree = "<group>"; };
 		C0DE70270000000000000002 /* CLIProvenanceContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceContext.swift; sourceTree = "<group>"; };
 		C0DE70210000000000000002 /* CLIProvenanceExplanation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceExplanation.swift; sourceTree = "<group>"; };
 		C0DE70230000000000000002 /* CLIProvenanceGitResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceGitResolver.swift; sourceTree = "<group>"; };
@@ -5821,6 +5844,8 @@
 					B9000069A1B2C3D4E5F60719 /* BMUXCLI+AmpExtension.swift */,
 					C0D3F1F00000000000000102 /* BMUXCLI+CodexFireAndForgetHooks.swift */,
 					C0DE73000000000000000002 /* BMUXCLI+CodexTranscriptMonitor.swift */,
+					D0C0A1B2B3B4B5B6B7B8B9C3 /* BMUXCLI+CodexHookAssociation.swift */,
+					D0C0A1B2B3B4B5B6B7B8B9C5 /* BMUXCLI+ProvenanceCodexTranscriptDiagnostics.swift */,
 					C0DE71000000000000000002 /* BMUXCLI+CodexTokenAudit.swift */,
 				C0DE72000000000000000002 /* BMUXCLI+ContextEfficiency.swift */,
 				B9000073A1B2C3D4E5F60719 /* BMUXCLI+OmpExtension.swift */,
@@ -5838,6 +5863,7 @@
 					B9000065A1B2C3D4E5F60719 /* BMUXCLI+Events.swift */,
 					B9000055A1B2C3D4E5F60719 /* BMUXCLI+Process.swift */,
 					C0DE70200000000000000002 /* BMUXCLI+Provenance.swift */,
+					D0C0A1B2B3B4B5B6B7B8B9C7 /* BMUXCLI+ProvenanceDiagnostics.swift */,
 					C0DE70A00000000000000002 /* BMUXCLI+ProvenanceImport.swift */,
 					C0DE70A20000000000000002 /* BMUXCLI+ProvenanceSessionOutcome.swift */,
 					C0DE70B00000000000000002 /* BMUXCLI+ProvenanceSessionsRetrieval.swift */,
@@ -5856,6 +5882,11 @@
 					C0DE70420000000000000002 /* CLIProvenanceCodexTranscriptImporter+Git.swift */,
 					C0DE70430000000000000002 /* CLIProvenanceCodexTranscriptImporter+IDs.swift */,
 					C0DE70450000000000000002 /* CLIProvenanceCodexTranscriptImporter+Models.swift */,
+					D0C0A1B20000000000000002 /* CLIProvenanceCodexTranscriptFileIdentity.swift */,
+					D0C0A1B60000000000000002 /* CLIProvenanceCodexTranscriptTailer.swift */,
+					D0C0A1B50000000000000002 /* CLIProvenanceCodexTranscriptCursorStore.swift */,
+					D0C0A1B40000000000000002 /* CLIProvenanceCodexTranscriptCursor.swift */,
+					D0C0A1B30000000000000002 /* CLIProvenanceCodexTranscriptImporter+Live.swift */,
 					C0DE70440000000000000002 /* CLIProvenanceCodexTranscriptImporter+Parsing.swift */,
 					C0DE70270000000000000002 /* CLIProvenanceContext.swift */,
 					C0DE70210000000000000002 /* CLIProvenanceExplanation.swift */,
@@ -6552,6 +6583,7 @@
 					CE0E03170000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTests.swift */,
 					CE0E03180000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTestSupport.swift */,
 					C0DE70600000000000000002 /* CLIProvenanceCodexTranscriptImporterTests.swift */,
+					D0C0A1B2B3B4B5B6B7B8B9C1 /* CLIProvenanceCodexTranscriptTailerTests.swift */,
 					C0DE70C00000000000000002 /* CLIProvenanceRetrievalFixture.swift */,
 					C0DE70610000000000000002 /* CLIProvenanceSessionOutcomeCommandTests.swift */,
 					CE0E04010000000000000002 /* WorkspaceDisplayCurrentStateSnapshotTests.swift */,
@@ -8467,6 +8499,7 @@
 					C72280000000000000000002 /* BMUXCLI+ClaudeHookWorkspaceRouting.swift in Sources */,
 					2DA8D48D99FB520EB179B015 /* BMUXCLI+ClaudePushNotificationHook.swift in Sources */,
 					C0D3F1F00000000000000101 /* BMUXCLI+CodexFireAndForgetHooks.swift in Sources */,
+					D0C0A1B2B3B4B5B6B7B8B9C2 /* BMUXCLI+CodexHookAssociation.swift in Sources */,
 					C0DE71000000000000000001 /* BMUXCLI+CodexTokenAudit.swift in Sources */,
 					C0DE73000000000000000001 /* BMUXCLI+CodexTranscriptMonitor.swift in Sources */,
 				B90000D2A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift in Sources */,
@@ -8489,6 +8522,8 @@
 						C05555010000000000000007 /* BMUXCLI+PiExtensionSourcePart2.swift in Sources */,
 				B9000054A1B2C3D4E5F60719 /* BMUXCLI+Process.swift in Sources */,
 				C0DE70200000000000000001 /* BMUXCLI+Provenance.swift in Sources */,
+					D0C0A1B2B3B4B5B6B7B8B9C4 /* BMUXCLI+ProvenanceCodexTranscriptDiagnostics.swift in Sources */,
+				D0C0A1B2B3B4B5B6B7B8B9C6 /* BMUXCLI+ProvenanceDiagnostics.swift in Sources */,
 				C0DE70A00000000000000001 /* BMUXCLI+ProvenanceImport.swift in Sources */,
 				C0DE70A20000000000000001 /* BMUXCLI+ProvenanceSessionOutcome.swift in Sources */,
 				C0DE70B00000000000000001 /* BMUXCLI+ProvenanceSessionsRetrieval.swift in Sources */,
@@ -8512,13 +8547,18 @@
 				B9000044A1B2C3D4E5F60719 /* BMUXCLI+TmuxCompatSupport.swift in Sources */,
 				B9000033A1B2C3D4E5F60719 /* BMUXCLI+TopRendering.swift in Sources */,
 					CE0D10030000000000000001 /* BmuxLegacyProvenanceClient.swift in Sources */,
+					D0C0A1B40000000000000001 /* CLIProvenanceCodexTranscriptCursor.swift in Sources */,
+					D0C0A1B50000000000000001 /* CLIProvenanceCodexTranscriptCursorStore.swift in Sources */,
+					D0C0A1B20000000000000001 /* CLIProvenanceCodexTranscriptFileIdentity.swift in Sources */,
 					C0DE70400000000000000001 /* CLIProvenanceCodexTranscriptImporter+AppendActivity.swift in Sources */,
 					C0DE70410000000000000001 /* CLIProvenanceCodexTranscriptImporter+AppendSession.swift in Sources */,
 					C0DE70420000000000000001 /* CLIProvenanceCodexTranscriptImporter+Git.swift in Sources */,
 					C0DE70430000000000000001 /* CLIProvenanceCodexTranscriptImporter+IDs.swift in Sources */,
+					D0C0A1B30000000000000001 /* CLIProvenanceCodexTranscriptImporter+Live.swift in Sources */,
 					C0DE70450000000000000001 /* CLIProvenanceCodexTranscriptImporter+Models.swift in Sources */,
 					C0DE70440000000000000001 /* CLIProvenanceCodexTranscriptImporter+Parsing.swift in Sources */,
 					C0DE70300000000000000001 /* CLIProvenanceCodexTranscriptImporter.swift in Sources */,
+					D0C0A1B60000000000000001 /* CLIProvenanceCodexTranscriptTailer.swift in Sources */,
 					C0DE70270000000000000001 /* CLIProvenanceContext.swift in Sources */,
 					C0DE70210000000000000001 /* CLIProvenanceExplanation.swift in Sources */,
 				C0DE70230000000000000001 /* CLIProvenanceGitResolver.swift in Sources */,
@@ -8820,14 +8860,20 @@
 					A5D41205A1B2C3D4E5F60718 /* CLINotifyProcessTestSupport.swift in Sources */,
 				157C175B1C30F51B5A0B2FA3 /* CLIOutputChannel.swift in Sources */,
 				17A45C0D89B84E71A3B274A0 /* CLIProcessTestTimeout.swift in Sources */,
+					D0C0A1B40000000000000003 /* CLIProvenanceCodexTranscriptCursor.swift in Sources */,
+					D0C0A1B50000000000000003 /* CLIProvenanceCodexTranscriptCursorStore.swift in Sources */,
+					D0C0A1B20000000000000003 /* CLIProvenanceCodexTranscriptFileIdentity.swift in Sources */,
 					C0DE70400000000000000003 /* CLIProvenanceCodexTranscriptImporter+AppendActivity.swift in Sources */,
 					C0DE70410000000000000003 /* CLIProvenanceCodexTranscriptImporter+AppendSession.swift in Sources */,
 					C0DE70420000000000000003 /* CLIProvenanceCodexTranscriptImporter+Git.swift in Sources */,
 					C0DE70430000000000000003 /* CLIProvenanceCodexTranscriptImporter+IDs.swift in Sources */,
+					D0C0A1B30000000000000003 /* CLIProvenanceCodexTranscriptImporter+Live.swift in Sources */,
 					C0DE70450000000000000003 /* CLIProvenanceCodexTranscriptImporter+Models.swift in Sources */,
 					C0DE70440000000000000003 /* CLIProvenanceCodexTranscriptImporter+Parsing.swift in Sources */,
 					C0DE70300000000000000003 /* CLIProvenanceCodexTranscriptImporter.swift in Sources */,
 					C0DE70600000000000000001 /* CLIProvenanceCodexTranscriptImporterTests.swift in Sources */,
+					D0C0A1B60000000000000003 /* CLIProvenanceCodexTranscriptTailer.swift in Sources */,
+					D0C0A1B2B3B4B5B6B7B8B9C0 /* CLIProvenanceCodexTranscriptTailerTests.swift in Sources */,
 					C0DE70C00000000000000001 /* CLIProvenanceRetrievalFixture.swift in Sources */,
 					C0DE70610000000000000001 /* CLIProvenanceSessionOutcomeCommandTests.swift in Sources */,
 					C0F16B000000000000000001 /* CLIRemoteShellStartupPerformanceTests.swift in Sources */,
