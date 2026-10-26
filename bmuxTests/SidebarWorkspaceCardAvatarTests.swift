@@ -11,6 +11,39 @@ import Testing
 #endif
 
 extension SidebarWorkspaceCardPresentationTests {
+    @Test func explorerCardPrefersPullRequestOwnerAvatarOverTicketOwner() {
+        let workspaceID = UUID()
+        let now = Date(timeIntervalSince1970: 900)
+        let avatarURL = "https://avatars.githubusercontent.com/u/42?v=4"
+        let display = ProvenanceWorkspaceDisplayRecord(
+            id: "roof-work", workspaceID: workspaceID.uuidString,
+            pullRequestNumber: 42, pullRequestOwnerLogin: "sam",
+            pullRequestOwnerURL: "https://github.com/sam",
+            pullRequestOwnerAvatarURL: avatarURL,
+            ticketLinks: [
+                .init(id: "ROOF-42", title: "Repair flashing", ownerName: "Alex")
+            ],
+            observedAt: now, updatedAt: now
+        )
+        let item = WorkspaceExplorerHistoryItem(
+            id: workspaceID.uuidString, title: "Review roof inspection", createdAt: now,
+            closedAt: nil, lastActivityAt: now, colorHex: nil, display: display,
+            liveWorkspaceID: workspaceID, liveStatus: .idle, archive: nil,
+            reopenEligibility: .unavailable(.alreadyOpen)
+        )
+
+        let card = WorkspaceReferenceCardSnapshot(explorerItem: item, hiddenDimensions: [])
+        #expect(card.ownerName == "sam")
+        #expect(card.ownerURL == URL(string: "https://github.com/sam"))
+        #expect(card.ownerAvatarURL == URL(string: avatarURL))
+
+        let withoutPullRequestOwner = WorkspaceReferenceCardSnapshot(
+            explorerItem: item, hiddenDimensions: [.pullRequestOwner]
+        )
+        #expect(withoutPullRequestOwner.ownerName == "Alex")
+        #expect(withoutPullRequestOwner.ownerAvatarURL == nil)
+    }
+
     @MainActor @Test func referenceCardKeepsPullRequestAvatarWhenTicketHasAnOwner() throws {
         let workspace = Workspace(title: "Review roof inspection")
         let avatarURL = "https://avatars.githubusercontent.com/u/42?v=4"
@@ -73,8 +106,8 @@ extension SidebarWorkspaceCardPresentationTests {
         )
         let ticketOwnerProvenance = try #require(WorkspaceDisplayCurrentStateSnapshot(ticketOwnerRecord))
         let ticketOwnerCard = Self.referenceCard(workspace: workspace, provenance: ticketOwnerProvenance)
-        #expect(ticketOwnerCard.ownerName == "Sam")
-        #expect(ticketOwnerCard.ownerAvatarURL == nil)
+        #expect(ticketOwnerCard.ownerName == "octocat")
+        #expect(ticketOwnerCard.ownerAvatarURL == avatarURL)
 
         let otherPullRequestRecord = ProvenanceWorkspaceDisplayRecord(
             id: "roof-work", workspaceID: workspace.stableId.uuidString,
