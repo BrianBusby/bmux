@@ -65,6 +65,7 @@ import Testing
         #expect(try JSONEncoder().encode(baseline).count <= 64_000)
         #expect(!baseline.completeLocalCoverage)
         #expect(baseline.local.count < workspaces.count)
+        #expect(baseline.changes(in: current).coverageLimited)
         #expect(baseline.changes(in: current).localIDs.isEmpty)
         #expect(baseline.changes(in: current).externalIDs.isEmpty)
         let retainedID = try #require(workspaces.first { baseline.local[$0.id.uuidString] != nil }?.id)
