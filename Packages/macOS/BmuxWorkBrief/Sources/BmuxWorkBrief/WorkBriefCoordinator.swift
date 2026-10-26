@@ -11,6 +11,8 @@ public final class WorkBriefCoordinator {
     public private(set) var snapshot: WorkBriefSnapshot?
     /// Whether a refresh is in progress.
     public private(set) var isLoading = false
+    /// Whether at least one complete loader call has returned in this view.
+    public private(set) var hasLoaded = false
     private let load: Loader
     private var refreshAgain = false
     private var pendingForceExternal = false
@@ -40,6 +42,7 @@ public final class WorkBriefCoordinator {
             pendingForceExternal = false
             let loaded = await load(force)
             snapshot = applying(statusChangesDuringRefresh, to: loaded)
+            hasLoaded = true
             statusChangesDuringRefresh.removeAll()
         } while refreshAgain
         isLoading = false

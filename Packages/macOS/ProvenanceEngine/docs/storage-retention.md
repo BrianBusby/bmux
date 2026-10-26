@@ -38,8 +38,11 @@ print payloads.
 
 ## Read-only pre-maintenance estimate
 
-The live schema is still 28, so the version-1 citation index and prune dry run
-cannot safely run against it. A read-only upper bound from a later sample is
+At the original measurement the live schema was 28. An isolated tagged app
+advanced the shared store to schema 29 on 2026-10-26, but the
+`legacy_citations_indexed` gate remains 0. No prune dry run or deletion has run
+against the live file. Citation indexing and a prune dry run require the
+verified maintenance setup below. A read-only upper bound from a later sample is
 35,914 superseded session rows and 79,048 superseded turn rows (total rows
 minus current rows). The two revision tables occupied 277,911,379,968 physical bytes in the
 earlier `dbstat` snapshot, and their later logical JSON totaled
@@ -145,4 +148,10 @@ filesystem before an atomic replacement; leave additional room for WAL and
 operating-system writes. Actual requirements may be lower only after a measured
 prune and compact dry run. The current 188–193 GiB local space cannot support
 the conservative staging bound. The safe backup/rebuild/replacement procedure cannot run under
-these conditions. No live deletion, migration, or replacement was attempted.
+these conditions. The schema-29 migration occurred when the isolated app
+opened the shared store; no live citation indexing, pruning, compact
+replacement, or deletion was attempted. A later payload-free report showed
+about 369 GiB of free pages, about 169 GiB of local free space, and the legacy
+citation gate closed. A short read-only interval added 40 session and 40 turn
+revisions while older builds remained active, so their writer versions must be
+retired before sustained ingestion resumes.

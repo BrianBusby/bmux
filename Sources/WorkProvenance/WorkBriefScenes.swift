@@ -43,16 +43,21 @@ struct WorkBriefScenes: Scene {
         let model = WorkBriefCoordinator(initialSnapshot: initial) { forceExternal in
             await appDelegate.loadWorkBrief(external: external, forceExternal: forceExternal)
         }
-        return makeBoundView(appDelegate: appDelegate, model: model)
+        let baselineStore = WorkBriefBaselineStore()
+        let previous = baselineStore.load(at: Date())
+        return makeBoundView(appDelegate: appDelegate, model: model,
+                             baselineStore: baselineStore, previousBrief: previous)
     }
 
     private static func makeBoundView(appDelegate: AppDelegate,
-                                      model: WorkBriefCoordinator) -> WorkBriefView {
+                                      model: WorkBriefCoordinator,
+                                      baselineStore: WorkBriefBaselineStore,
+                                      previousBrief: WorkBriefBaseline?) -> WorkBriefView {
         let workspaceMonitor = WorkspaceExplorerWorkspaceChangeMonitor(
             tabManagers: { appDelegate.workspaceExplorerTabManagers() })
         let statusMonitor = WorkspaceExplorerLiveStatusMonitor(
             workspaces: { Array(appDelegate.workspaceExplorerLiveWorkspaces().prefix(100)) })
-        return WorkBriefView(model: model,
+        return WorkBriefView(model: model, previousBrief: previousBrief,
             jump: { appDelegate.workBriefJump(stableID: $0, runtimeID: $1) },
             highlight: { appDelegate.workBriefHighlight(stableID: $0, runtimeID: $1, surfaceID: $2) },
             openURL: { url in _ = BrowserExternalLinkOpener().openWebLink(url) },
@@ -70,6 +75,9 @@ struct WorkBriefScenes: Scene {
             onStop: {
                 workspaceMonitor.stop()
                 statusMonitor.stop()
+                if model.hasLoaded, let snapshot = model.snapshot {
+                    baselineStore.save(snapshot: snapshot, previous: previousBrief, at: Date())
+                }
             })
     }
 }

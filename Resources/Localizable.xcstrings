@@ -106798,6 +106798,22 @@
         }
       }
     },
+    "workBrief.askChanges": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These source-backed items changed since your previous brief."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これらの情報源で確認された項目は、前回の概要以降に変更されました。"
+          }
+        }
+      }
+    },
     "workBrief.askAttention": {
       "localizations": {
         "en": {
@@ -106915,13 +106931,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Try asking about attention, work in progress, waiting, or a ticket's PR."
+            "value": "Try asking about attention, work in progress, waiting, changes, or a ticket's PR."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "要対応の作業、進行中の作業、待機中の作業、またはチケットのプルリクエストについて質問してください。"
+            "value": "要対応の作業、進行中の作業、待機中の作業、変更、またはチケットのプルリクエストについて質問してください。"
           }
         }
       }
@@ -106962,6 +106978,54 @@
       "localizations": {
         "en": { "stringUnit": { "state": "translated", "value": "Checked" } },
         "ja": { "stringUnit": { "state": "translated", "value": "確認日時" } }
+      }
+    },
+    "workBrief.changesSince": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Since your previous brief"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前回の概要以降"
+          }
+        }
+      }
+    },
+    "workBrief.changesLimited": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only part of the previous brief can be compared. Other changes may be missing."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前回の概要の一部のみ比較できます。ほかの変更が表示されない場合があります。"
+          }
+        }
+      }
+    },
+    "workBrief.noRecentChanges": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No verified changes in the available sources."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用可能な情報源で確認された変更はありません。"
+          }
+        }
       }
     },
     "workBrief.changesUnavailable": {

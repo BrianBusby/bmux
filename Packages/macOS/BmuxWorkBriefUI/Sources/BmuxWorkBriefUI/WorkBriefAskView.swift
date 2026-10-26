@@ -5,6 +5,8 @@ import SwiftUI
 public struct WorkBriefAskView: View {
     /// Current bounded source snapshot.
     public let snapshot: WorkBriefSnapshot
+    /// Metadata from the previous viewed brief, when available.
+    public let previousBrief: WorkBriefBaseline?
     /// Validated user-clicked local navigation.
     public let jump: @MainActor (UUID, UUID) -> Bool
     /// Validated user-clicked surface highlight.
@@ -19,13 +21,16 @@ public struct WorkBriefAskView: View {
     /// Creates an on-demand fact question view without retaining question history.
     /// - Parameters:
     ///   - snapshot: Bounded source facts visible in the brief.
+    ///   - previousBrief: Metadata from the previous viewed brief, if available.
     ///   - jump: Host-validated local workspace selection on user request.
     ///   - highlight: Host-validated surface flash on user request.
     ///   - openURL: Source URL opening on user request.
-    public init(snapshot: WorkBriefSnapshot, jump: @escaping @MainActor (UUID, UUID) -> Bool,
+    public init(snapshot: WorkBriefSnapshot, previousBrief: WorkBriefBaseline? = nil,
+                jump: @escaping @MainActor (UUID, UUID) -> Bool,
                 highlight: @escaping @MainActor (UUID, UUID, String) -> Bool,
                 openURL: @escaping @MainActor (URL) -> Void) {
         self.snapshot = snapshot
+        self.previousBrief = previousBrief
         self.jump = jump
         self.highlight = highlight
         self.openURL = openURL
@@ -69,7 +74,8 @@ public struct WorkBriefAskView: View {
         }
         .onChange(of: snapshot) { _, updated in
             if let submittedQuestion {
-                answer = WorkBriefQuestionAnswerer().answer(submittedQuestion, snapshot: updated)
+                answer = WorkBriefQuestionAnswerer().answer(submittedQuestion, snapshot: updated,
+                                                           previousBrief: previousBrief)
             }
         }
     }
@@ -78,10 +84,19 @@ public struct WorkBriefAskView: View {
         let submitted = question.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !submitted.isEmpty else { return }
         submittedQuestion = submitted
-        answer = WorkBriefQuestionAnswerer().answer(submitted, snapshot: snapshot)
+        answer = WorkBriefQuestionAnswerer().answer(submitted, snapshot: snapshot,
+                                                   previousBrief: previousBrief)
     }
 
     private func answerLabel(_ answer: WorkBriefAnswer) -> String {
+        if answer.kind == .recentChanges, answer.coverageLimited {
+            return String(localized: "workBrief.changesLimited", defaultValue:
+                "Only part of the previous brief can be compared. Other changes may be missing.")
+        }
+        if answer.kind == .recentChanges, answer.localIDs.isEmpty && answer.externalIDs.isEmpty {
+            return String(localized: "workBrief.noRecentChanges", defaultValue:
+                "No verified changes in the available sources.")
+        }
         if answer.localIDs.isEmpty && answer.externalIDs.isEmpty && answer.links.isEmpty,
            answer.kind == .needsAttention || answer.kind == .inProgress || answer.kind == .waitingOn {
             return String(localized: "workBrief.askNoItems", defaultValue:
@@ -97,6 +112,12 @@ public struct WorkBriefAskView: View {
         case .waitingOn:
             String(localized: "workBrief.askWaiting", defaultValue:
                 "These items have an explicit review wait in the available sources.")
+        case .recentChanges:
+            String(localized: "workBrief.askChanges", defaultValue:
+                "These source-backed items changed since your previous brief.")
+        case .noPreviousBrief:
+            String(localized: "workBrief.changesUnavailable", defaultValue:
+                "A previous brief is needed to show changes.")
         case .ticketPullRequest:
             String(localized: "workBrief.askTicketPR", defaultValue:
                 "The same workspace has accepted links to this ticket and pull request; their relationship is inferred.")
@@ -111,7 +132,7 @@ public struct WorkBriefAskView: View {
                 "No observed waiting reason is available for that item. Open its source for more detail.")
         case .unsupported:
             String(localized: "workBrief.askUnsupported", defaultValue:
-                "Try asking about attention, work in progress, waiting, or a ticket's PR.")
+                "Try asking about attention, work in progress, waiting, changes, or a ticket's PR.")
         }
     }
 }

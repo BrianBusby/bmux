@@ -11,11 +11,14 @@ It does not advance broader Session lifecycle or provider-parity milestones.
 
 The PE outcome storage retention slice introduces schema 29, compact session
 outcome storage, citation-aware payload retention, and bounded diagnostics.
-Live reclamation remains blocked: the schema-28 store has a 631.6 GiB file,
-372.5 GiB freelist, multiple active bmux users, and insufficient free capacity
-for a verified backup and offline compact replacement. The storage gate for
-additional live terminal ingestion remains closed until the writer is deployed
-and a safe maintenance capacity is available. See the
+An isolated tagged app advanced the shared live store to schema 29 on
+2026-10-26 without pruning or compacting it. The file remains 631.6 GiB; a
+subsequent payload-free report showed about 369 GiB of free pages and the
+legacy-citation index gate still closed. Older active bmux builds continue to
+write outcome revisions. Live reclamation remains blocked by active writers and
+insufficient verified backup and staging capacity. The storage gate for
+additional sustained ingestion remains closed until all writers use the bounded
+writer and safe maintenance capacity is available. See the
 [PE storage retention policy](../../Packages/macOS/ProvenanceEngine/docs/storage-retention.md).
 
 The workspace ticket-delay follow-up is recorded in
@@ -85,8 +88,13 @@ work without a local workspace. A partial or failed
 refresh keeps prior facts with their original check time. The stacked
 `work-brief-conversation` slice answers supported questions over this same
 snapshot and shows the source-backed items and links; unsupported questions
-are stated explicitly. Recent changes remain unavailable. No question history
-or external content is persisted. The
+are stated explicitly. The stacked `work-brief-changes` slice compares current
+facts with bounded metadata from the last viewed brief and shows only verified
+new or changed items. It compares metadata captured within 30 days, deleting
+expired preferences when Work Brief next opens, and never treats a failed
+source refresh as a disappearance. A capped baseline explicitly marks
+comparisons with incomplete prior coverage. No question history or external
+content bodies are persisted. The
 cross-service Work Brief projection is bmux-owned; PE remains the owner of
 durable engineering evidence. The merged local slice remains under observation;
 the external and conversation slices await tagged dogfood and merge. See [the local record](../planning/work-brief-implementation.md)
