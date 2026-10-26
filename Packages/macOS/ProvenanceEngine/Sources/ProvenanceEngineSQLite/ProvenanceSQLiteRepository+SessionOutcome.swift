@@ -9,7 +9,7 @@ extension ProvenanceSQLiteRepository {
         affectedBy event: ProvenanceEvent,
         invalidation: ProvenanceOutcomeInvalidation,
         latestEventSequence: Int?
-    ) throws {
+    ) throws -> Set<String> {
         let sessionIDs = try affectedSessionOutcomeIDs(event: event, invalidation: invalidation)
         for sessionID in sessionIDs.sorted() {
             try projectSessionOutcomeIfNeeded(
@@ -17,6 +17,7 @@ extension ProvenanceSQLiteRepository {
                 latestEventSequence: latestEventSequence
             )
         }
+        return sessionIDs
     }
 
     func projectSessionOutcomeIfNeeded(
@@ -29,11 +30,12 @@ extension ProvenanceSQLiteRepository {
         ) else {
             return
         }
-        let outcomeData = try payloadEncoder.encode(projected)
+        let outcomeData = try payloadEncoder.encode(projected.storingTurnReferencesOnly())
         guard let outcomeJSON = String(data: outcomeData, encoding: .utf8) else {
             throw ProvenanceSQLiteError.sqlite(message: "failed to encode session outcome")
         }
         try insertSessionOutcomeRevision(projected, outcomeJSON: outcomeJSON)
+        try recordOutcomeCitations(sourceRevisionID: projected.projection.revisionID, json: outcomeJSON)
         try upsertLatestSessionOutcome(projected)
     }
 
@@ -57,6 +59,7 @@ extension ProvenanceSQLiteRepository {
                 source_watermark_sequence = excluded.source_watermark_sequence,
                 outcome_json = excluded.outcome_json,
                 created_at_seconds = excluded.created_at_seconds
+            WHERE outcome_json <> excluded.outcome_json
             """
         )
         defer { insert.finalize() }

@@ -10,7 +10,7 @@ extension ProvenanceSQLiteRepository {
         affectedBy event: ProvenanceEvent,
         invalidation: ProvenanceOutcomeInvalidation,
         latestEventSequence: Int?
-    ) throws {
+    ) throws -> Set<String> {
         let turnIDs = try affectedTurnOutcomeIDs(event: event, invalidation: invalidation)
         for turnID in turnIDs.sorted() {
             try projectTurnOutcomeIfNeeded(
@@ -18,6 +18,7 @@ extension ProvenanceSQLiteRepository {
                 latestEventSequence: latestEventSequence
             )
         }
+        return turnIDs
     }
 
     func projectTurnOutcomeIfNeeded(
@@ -52,6 +53,7 @@ extension ProvenanceSQLiteRepository {
                 source_watermark_sequence = excluded.source_watermark_sequence,
                 outcome_json = excluded.outcome_json,
                 created_at_seconds = excluded.created_at_seconds
+            WHERE outcome_json <> excluded.outcome_json
             """
         )
         defer { insertRevision.finalize() }

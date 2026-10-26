@@ -22,6 +22,7 @@ facts.
 - [architecture.md](architecture.md)
 - [session-work-model.md](session-work-model.md)
 - [turn-outcome.md](turn-outcome.md)
+- [storage-retention.md](storage-retention.md)
 - [related-sessions.md](related-sessions.md)
 - [artifact-collisions.md](artifact-collisions.md)
 - [integration-contract.md](integration-contract.md)
