@@ -1277,7 +1277,7 @@ import Testing
             exitSignal.signal()
         }
 
-        let timedOut = exitSignal.wait(timeout: .now() + timeout) == .timedOut
+        let timedOut = exitSignal.wait(timeout: .now() + timeout) == .timedOut && process.isRunning
         if timedOut {
             process.terminate()
             if exitSignal.wait(timeout: .now() + 1) == .timedOut,
