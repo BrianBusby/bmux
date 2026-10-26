@@ -40,6 +40,17 @@ struct CLIProvenanceCodexTranscriptImporterTests {
         #expect(secondImport.duplicateEvents == 7)
         let projection = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
         #expect(projection.latestTurn?.assistantMessages.count == 0)
+        #expect(projection.latestTurn?.visibleReasoningSummaries.map(\.text)
+            == ["Mapped transcript facts to canonical PE evidence."])
+    }
+
+    @Test
+    func acceptsOnlyExplicitVisibleReasoningSummaryFields() {
+        #expect(CLIProvenanceCodexTranscriptImporter.reasoningText(from: ["text": "private reasoning"]) == nil)
+        #expect(CLIProvenanceCodexTranscriptImporter.reasoningText(from: [
+            "summary": [["type": "summary_text", "text": "Visible summary."],
+                        ["type": "reasoning_text", "text": "private reasoning"]]
+        ]) == "Visible summary.")
     }
 
 
@@ -422,7 +433,9 @@ struct CLIProvenanceCodexTranscriptImporterTests {
                     "item": [
                         "type": "Reasoning",
                         "id": "reasoning-1",
-                        "summary_text": ["Mapped transcript facts to canonical PE evidence."]
+                        "summary_text": ["Mapped transcript facts to canonical PE evidence."],
+                        "text": "private reasoning",
+                        "raw_content": ["private reasoning"]
                     ]
                 ]
             ),
