@@ -190,6 +190,12 @@
          location = "group:BmuxWindowing">
       </FileRef>
       <FileRef
+         location = "group:BmuxWorkBrief">
+      </FileRef>
+      <FileRef
+         location = "group:BmuxWorkBriefUI">
+      </FileRef>
+      <FileRef
          location = "group:BmuxWorkspacePersistence">
       </FileRef>
       <FileRef

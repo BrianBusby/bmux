@@ -124,6 +124,10 @@ Repository: `BrianBusby/bmux`
 | Shell Mode Portal Visibility | under observation |
 | Test Determinism Allowlist Burndown | planned |
 | Three View Session Navigation | planned |
+| Work Brief Conversation | planned |
+| Work Brief External Correlation | planned |
+| Work Brief Local View | under observation |
+| Work Brief Slack Pilot | planned |
 | Work Provenance Runtime Lifecycle State | under observation |
 | Workspace Coding Agent Session Linkage Hardening | under observation |
 | Workspace Display Current State Diagnostic | implemented |
@@ -183,6 +187,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `work_brief_external_sources_unavailable` | open |
 | `app_host_cancellation_ownership_verification` | open |
 | `session_write_store_capture_verification` | open |
 | `bash_relay_refresh_fixture_verification` | open |

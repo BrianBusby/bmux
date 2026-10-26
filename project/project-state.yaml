@@ -5822,6 +5822,7 @@ ownership:
   test_determinism: bmux
   workspace_mutation_paths: bmux
   monorepo_migration_disposition: bmux
+  cross_service_work_brief_projection: bmux
   user_interface: bmux
   presentation: bmux
   cross_session_presentation: bmux

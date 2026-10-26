@@ -61,6 +61,20 @@ Merged PR #184 holds the previous result and counts while excluded cards fade
 for 170 ms, then commits the latest filter or scope result. Merged PR #185 captures verified status before a workspace closes, stores it in PE's optional archive snapshot field, and shows it only as historical context. Merged PR #186 adds an Explorer-origin return route to the existing live workspace titlebar while keeping the separate Explorer window and its saved collection arrangement. Merged PR #187 completes the All projects → collection → workspace chain and adds a retained-history action backed by PE’s exact linked-session count. Older records have no recorded status; a later close without one does not reuse the earlier value. Merged PR #188 adds completed command and assistant-output timestamps to PE workspace-session activity ordering; session metadata refreshes remain excluded. Merged PR #189 gives group disclosure and Focus controls distinct keyboard focus and VoiceOver meaning. Merged PR #190 adds plan updates and file-change attributions to meaningful activity. The active `workspace-explorer-history-pages` slice moves retained-session page requests into a child model so late or overlapping responses cannot replace newer history and PE’s unique session total remains available. Complete project metadata, close-snapshot force-quit durability, and reduced-motion dogfood remain open. See
 [the implementation record](../planning/workspace-explorer-implementation.md).
 
+## Work Brief local slice
+
+The `work-brief-local` branch adds a built-in, read-only Work Brief window over
+current bmux workspace presence and accepted PE workspace display facts. It
+shows local work, verified input/error attention, source health, explicit ticket
+and PR links, and evidence behind displayed relationships. Navigation validates
+stable workspace, runtime, and surface IDs before using the existing workspace
+selection and focus-flash actions. Linear and GitHub have no direct refresh in
+this slice; Waiting on, Recent changes, and Ask remain explicitly unavailable.
+No external content is persisted. The cross-service Work Brief projection is
+bmux-owned; PE remains the owner of durable engineering evidence. This slice
+is under observation until tagged runtime dogfood and merge. See
+[the implementation record](../planning/work-brief-implementation.md).
+
 ## Current Generated Truth
 
 - [Project status](../generated/project-status.md)
