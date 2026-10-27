@@ -185,7 +185,10 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
     ],
   });
 
-  assert(agentEvents.length === 0, `plan update should not project React AgentEvents: ${JSON.stringify(agentEvents)}`);
+  assert(agentEvents.length === 1, `plan update should project one AgentEvent: ${JSON.stringify(agentEvents)}`);
+  assert(agentEvents[0].kind === "plan" && agentEvents[0].source === "codex-plan", "plan AgentEvent source changed");
+  assert(agentEvents[0].kind === "plan" && agentEvents[0].explanation === "ordered work", "plan AgentEvent explanation changed");
+  assert(agentEvents[0].kind === "plan" && agentEvents[0].steps.map((step) => step.status).join("|") === "completed|in_progress", "plan AgentEvent steps changed");
   assert(telemetryEvents.length === 1, `expected one plan telemetry envelope: ${JSON.stringify(telemetryEvents)}`);
   assert(telemetryEvents[0].event.type === "plan.updated", "plan update should publish plan.updated telemetry");
   assert(telemetryEvents[0].providerSessionId === "thread-plan", "plan provider session id changed");
@@ -419,7 +422,9 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
     },
   });
 
-  assert(agentEvents.length === 0, `approved approval request should not project React events: ${JSON.stringify(agentEvents)}`);
+  assert(agentEvents.length === 2, `approved approval request should project its lifecycle: ${JSON.stringify(agentEvents)}`);
+  assert(agentEvents[0].kind === "approval" && agentEvents[0].state === "requested", "approved approval request projection changed");
+  assert(agentEvents[1].kind === "approval" && agentEvents[1].state === "resolved" && agentEvents[1].decision === "approved", "approved approval resolution projection changed");
   const approvalEvents = telemetryEvents.filter((event) => event.event.type === "approval.requested" || event.event.type === "approval.resolved");
   assert(approvalEvents.length === 2, `expected approved approval telemetry pair: ${JSON.stringify(telemetryEvents)}`);
   assert(approvalEvents[0].event.type === "approval.requested", "approved request should publish approval.requested telemetry");
@@ -452,7 +457,9 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
     },
   });
 
-  assert(agentEvents.length === 0, `approved patch approval should not project React events: ${JSON.stringify(agentEvents)}`);
+  assert(agentEvents.length === 2, `approved patch approval should project its lifecycle: ${JSON.stringify(agentEvents)}`);
+  assert(agentEvents[0].kind === "approval" && agentEvents[0].state === "requested", "patch approval request projection changed");
+  assert(agentEvents[1].kind === "approval" && agentEvents[1].state === "resolved" && agentEvents[1].decision === "approved", "patch approval resolution projection changed");
   const approvalEvents = telemetryEvents.filter((event) => event.event.type === "approval.requested" || event.event.type === "approval.resolved");
   assert(approvalEvents.length === 2, `expected patch approval telemetry pair: ${JSON.stringify(telemetryEvents)}`);
   assert(approvalEvents[0].event.type === "approval.requested", "patch request should publish approval.requested telemetry");
@@ -480,12 +487,14 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
     },
   });
 
-  assert(agentEvents.length === 1, `denied approval status projection changed: ${JSON.stringify(agentEvents)}`);
+  assert(agentEvents.length === 3, `denied approval lifecycle projection changed: ${JSON.stringify(agentEvents)}`);
   assert(
-    agentEvents[0].kind === "status"
-      && agentEvents[0].text === "denied: item/fileChange/requestApproval (auto-approve is off)",
+    agentEvents.some((event) => event.kind === "status"
+      && event.text === "denied: item/fileChange/requestApproval (auto-approve is off)"),
     "denied approval status text changed",
   );
+  assert(agentEvents.some((event) => event.kind === "approval" && event.state === "requested"), "denied approval request projection changed");
+  assert(agentEvents.some((event) => event.kind === "approval" && event.state === "resolved" && event.decision === "denied"), "denied approval resolution projection changed");
   const approvalEvents = telemetryEvents.filter((event) => event.event.type === "approval.requested" || event.event.type === "approval.resolved");
   assert(approvalEvents.length === 2, `expected denied approval telemetry pair: ${JSON.stringify(telemetryEvents)}`);
   assert(approvalEvents[0].event.type === "approval.requested", "denied request should publish approval.requested telemetry");
@@ -520,12 +529,14 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
     params: { threadId: "thread-unsupported-approval" },
   });
 
-  assert(agentEvents.length === 1, `unsupported approval status projection changed: ${JSON.stringify(agentEvents)}`);
+  assert(agentEvents.length === 3, `unsupported approval lifecycle projection changed: ${JSON.stringify(agentEvents)}`);
   assert(
-    agentEvents[0].kind === "status"
-      && agentEvents[0].text === "declined unsupported request: toolUserInput/request",
+    agentEvents.some((event) => event.kind === "status"
+      && event.text === "declined unsupported request: toolUserInput/request"),
     "unsupported approval status text changed",
   );
+  assert(agentEvents.some((event) => event.kind === "approval" && event.state === "requested"), "unsupported approval request projection changed");
+  assert(agentEvents.some((event) => event.kind === "approval" && event.state === "resolved" && event.decision === "unsupported"), "unsupported approval resolution projection changed");
   const approvalEvents = telemetryEvents.filter((event) => event.event.type === "approval.requested" || event.event.type === "approval.resolved");
   assert(approvalEvents.length === 2, `expected unsupported approval telemetry pair: ${JSON.stringify(telemetryEvents)}`);
   assert(approvalEvents[0].event.type === "approval.requested", "unsupported request should publish approval.requested telemetry");
