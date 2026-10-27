@@ -79,7 +79,9 @@ adapters/: normalize each provider into AgentEvent
   acp.ts      generic ACP (JSON-RPC/NDJSON over stdio) client → opencode, gemini, …
 ```
 
-The UI only knows `AgentEvent` (types.ts): `user`, `delta`, `assistant`, `thinking`, `tool-start/end`, `status`, `done`, `error`, `meta`. Sessions live in server memory with a full event log, so any client (reload, second browser, future native surface) can subscribe and replay.
+The UI only knows `AgentEvent` (types.ts): messages, tool lifecycle, provider-reported plans, approvals, status, errors, and turn completion. Sessions live in server memory with a full event log, so any client (reload, second browser, future native surface) can subscribe and replay.
+
+Turn progress uses Codex `plan.updated` telemetry, Claude `TodoWrite` tool inputs, and ACP plan updates when a provider emits them. The Claude mapping has not yet been validated against a live Claude session. Providers without plan events display “No plan reported”; command activity remains separate from plan steps. Unknown step statuses retain their reported values, and duplicate step text does not support a reliable reopened or moved history attribution.
 
 ## How this covers every agent provider
 
