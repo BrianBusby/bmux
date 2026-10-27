@@ -8,7 +8,8 @@ import { useActivityStartedAt, useTicker } from "../hooks/useTicker";
 import { useVirtualTurns } from "../hooks/useVirtualTurns";
 import { Check, Chevron, CopyIcon, EllipsisIcon, PinwheelSpinner } from "./icons";
 import { HintTooltip } from "./Tooltips";
-import { activityRowLabel, groupTurns, summarizeTurnActivity, type TurnGroup } from "../turns";
+import { activityRowLabel, groupConsecutiveReads, groupTurns, type TurnGroup } from "../turns";
+import { TurnProgress } from "./TurnProgress";
 
 export type ToolBlockVariant = "card" | "inline" | "rail" | "oneliner" | "terminal";
 export const TOOL_BLOCK_VARIANT: ToolBlockVariant = "inline";
@@ -621,6 +622,8 @@ function ActivityBlock({
       return <div className="turn-thinking-detail">{block.text}</div>;
     case "status":
       return <div className="status-line">{block.text}</div>;
+    case "approval":
+      return <div className="status-line">{navigator.language.startsWith("ja") ? (block.state === "requested" ? "承認が要求されました" : `承認の結果: ${block.decision ?? "不明"}`) : (block.state === "requested" ? "Approval requested" : `Approval resolved: ${block.decision ?? "unknown"}`)}</div>;
     case "error":
       return <div className="error-block-wrap"><div className="error-block">{block.text}</div></div>;
     case "files":
@@ -650,7 +653,11 @@ function TurnActivity({
   thinkingDefaultOpen: boolean;
 }) {
   if (!group.activity.length) return null;
-  const summary = summarizeTurnActivity(group.activity);
+  const tools = group.activity.filter((block) => block.kind === "tool");
+  const japanese = navigator.language.startsWith("ja");
+  const summary = japanese
+    ? `操作 · ${tools.length} 件 · 実行中 ${tools.filter((tool) => tool.status === "running").length} · 失敗 ${tools.filter((tool) => tool.status === "fail").length}`
+    : `Activity · ${tools.length} ${tools.length === 1 ? "command" : "commands"} · ${tools.filter((tool) => tool.status === "running").length} running · ${tools.filter((tool) => tool.status === "fail").length} failed`;
   return (
     <div className="msg assistant" style={activityMessageAlignStyle}>
       <div className="body selectable" style={activityBodyAlignStyle}>
@@ -665,11 +672,19 @@ function TurnActivity({
           <DisclosureMotion open={expanded}>
             {() => (
               <div className="turn-activity-list" style={activityFlatStackStyle}>
-                {group.activity.map((block, i) => {
-                  if (block.kind === "assistant") {
+                {groupConsecutiveReads(group.activity).map(({ start: i, blocks }) => {
+                  const block = blocks[0];
+                  if (blocks.length > 1) {
+                    return <details className="turn-activity-read-group" key={`${group.id}:${i}`}><summary>{blocks.length} {japanese ? "件の読み取り操作" : "read commands"}</summary>
+                      {blocks.map((tool, offset) => tool.kind === "tool" ? <ToolBlock key={`${i}:${offset}`} b={tool} /> : null)}
+                    </details>;
+                  }
+                  if (block.kind !== "tool") {
                     return (
                       <div className="turn-activity-item" key={`${group.id}:${i}`}>
-                        <ActivityBlock block={block} fileDiffs={fileDiffs} onFileDiff={onFileDiff} thinkingDefaultOpen={thinkingDefaultOpen} />
+                        <button type="button" className="turn-activity-marker" onClick={() => document.getElementById(block.kind === "plan" ? `${group.id}:progress` : `${group.id}:block:${i}`)?.scrollIntoView({ block: "center" })}>
+                          {activityRowLabel(block)} ↗
+                        </button>
                       </div>
                     );
                   }
@@ -706,7 +721,6 @@ function TurnActivity({
 
 function TurnGroupView({
   group,
-  status,
   actions,
   onFork,
   forkPending,
@@ -719,7 +733,6 @@ function TurnGroupView({
   setExpandedItems,
 }: {
   group: TurnGroup;
-  status?: string;
   actions: SessionActions;
   onFork: () => void;
   forkPending: boolean;
@@ -731,16 +744,16 @@ function TurnGroupView({
   expandedItems: Record<string, boolean>;
   setExpandedItems: (next: Record<string, boolean>) => void;
 }) {
-  const live = status === "running" && !group.done;
+  const firstToolIndex = group.activity.findIndex((item) => item.kind === "tool");
+  const visibleActivity = group.activity.map((block, i) => ({ block, i }));
   return (
     <div className="turn-group">
       {group.user ? <div className="msg user"><div className="body selectable">{group.user.text}</div></div> : null}
-      {live
-        ? group.activity.map((block, i) => (
-          <ActivityBlock key={i} block={block} fileDiffs={fileDiffs} onFileDiff={onFileDiff} thinkingDefaultOpen={thinkingDefaultOpen} />
-        ))
-        : (
-          <TurnActivity
+      <div id={`${group.id}:progress`}><TurnProgress group={group} /></div>
+      {visibleActivity.map(({ block, i }) => <div key={i}>
+        {group.assistantPosition === i && group.assistant ? <div className="msg assistant"><div className="body selectable"><ChatMarkdown text={group.assistant.text} streaming={group.assistant.open} /></div></div> : null}
+        {block.kind === "tool" ? (
+          firstToolIndex !== i ? <button type="button" className="turn-activity-marker" onClick={() => document.getElementById(`${group.id}:activity`)?.scrollIntoView({ block: "center" })}>{activityRowLabel(block)} · {block.status} ↗</button> : <div id={`${group.id}:activity`}><TurnActivity key="activity"
             group={group}
             expanded={Boolean(expandedTurns[group.id])}
             setExpanded={(open) => setExpandedTurns({ ...expandedTurns, [group.id]: open })}
@@ -749,9 +762,10 @@ function TurnGroupView({
             fileDiffs={fileDiffs}
             onFileDiff={onFileDiff}
             thinkingDefaultOpen={thinkingDefaultOpen}
-          />
-        )}
-      {group.assistant ? <div className="msg assistant"><div className="body selectable"><ChatMarkdown text={group.assistant.text} streaming={group.assistant.open} /></div></div> : null}
+          /></div>
+        ) : block.kind === "plan" ? null : <div id={`${group.id}:block:${i}`}><ActivityBlock block={block} fileDiffs={fileDiffs} onFileDiff={onFileDiff} thinkingDefaultOpen={thinkingDefaultOpen} /></div>}
+      </div>)}
+      {group.assistantPosition === group.activity.length && group.assistant ? <div className="msg assistant"><div className="body selectable"><ChatMarkdown text={group.assistant.text} streaming={group.assistant.open} /></div></div> : null}
       {group.footer ? <TurnActions stats={group.footer.text} text={group.assistant?.text ?? ""} actions={actions} onFork={onFork} forkPending={forkPending} /> : null}
     </div>
   );
@@ -800,7 +814,6 @@ export function Blocks({
           <div className="turn-virtual-row" key={group.id} ref={virtual.measure(index)}>
             <TurnGroupView
               group={group}
-              status={status}
               actions={actions}
               onFork={onFork}
               forkPending={forkPending}

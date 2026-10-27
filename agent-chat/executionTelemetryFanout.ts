@@ -96,14 +96,14 @@ export function projectTelemetryEnvelopeToAgentEvents(
         withDoneGeneration({ kind: "done", stats: projection?.doneStats }, projection),
       ];
     case "plan.updated":
-      return [];
+      return [{ kind: "plan", steps: event.steps, explanation: event.explanation, source: "codex-plan", at: envelope.capturedAtMs }];
     case "message.delta":
       return [{ kind: event.stream === "reasoning" ? "thinking" : "delta", text: event.text }];
     case "message.completed":
       if (!event.text) return [];
       return [{ kind: event.stream === "reasoning" ? "thinking" : "assistant", text: event.text }];
     case "tool.started":
-      return [{ kind: "tool-start", toolId: event.operationId, name: event.name, detail: event.inputSummary }];
+      return [{ kind: "tool-start", toolId: event.operationId, name: event.name, detail: event.inputSummary, at: envelope.capturedAtMs }];
     case "tool.completed":
       return [{
         kind: "tool-end",
@@ -111,9 +111,12 @@ export function projectTelemetryEnvelopeToAgentEvents(
         name: event.name,
         ok: toolStatusOk(event.status),
         detail: event.outputSummary ?? event.error?.message,
+        exitCode: event.exitCode,
       }];
     case "approval.requested":
+      return [{ kind: "approval", approvalId: event.approvalId, state: "requested" }];
     case "approval.resolved":
+      return [{ kind: "approval", approvalId: event.approvalId, state: "resolved", decision: event.decision }];
     case "usage.updated":
     case "context.compacted":
       return [];

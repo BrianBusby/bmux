@@ -691,6 +691,20 @@ function handleLine(sess: SessionCtx, line: string) {
     case "assistant": {
       for (const block of ev.message?.content ?? []) {
         if (block.type === "tool_use") {
+          if (block.name === "TodoWrite" && Array.isArray(block.input?.todos)) {
+            sess.emit({
+              kind: "plan",
+              source: "claude-todo",
+              at: Date.now(),
+              steps: block.input.todos.flatMap((todo: unknown) => {
+                if (!todo || typeof todo !== "object" || !("content" in todo) || typeof todo.content !== "string") return [];
+                return [{
+                  text: truncate(todo.content, 400),
+                  status: "status" in todo && typeof todo.status === "string" ? truncate(todo.status, 80) : "unknown",
+                }];
+              }),
+            });
+          }
           sess.emit({
             kind: "tool-start",
             toolId: block.id,

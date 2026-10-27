@@ -54,7 +54,7 @@ function useStickToBottom(scrollRef: RefObject<HTMLDivElement | null>, stickRef:
 }
 
 export function Chat() {
-  const { ready, connectionEpoch, providers, capabilities, providerOptions, session, blocks, options, actions, commands, filesByCwd, fileDiffs, ctrlJ, forkPending, reply, stop, setOption, fork, compose, requestProviderOptions, requestProviderCommands, requestFiles, requestFileDiff } = useCtx();
+  const { ready, connected, connectionEpoch, providers, capabilities, providerOptions, session, blocks, options, actions, commands, filesByCwd, fileDiffs, ctrlJ, forkPending, reply, stop, setOption, fork, compose, requestProviderOptions, requestProviderCommands, requestFiles, requestFileDiff } = useCtx();
   const [text, setText] = useState("");
   const [openOptionId, setOpenOptionId] = useState<string | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -98,8 +98,7 @@ export function Chat() {
     const t = text.trim();
     if (!t) return;
     stickRef.current = true;
-    reply(t);
-    setText("");
+    if (reply(t)) setText("");
   };
   const switchHarnessModel = (provider: string, model: string) => {
     if (!session) return;
@@ -167,12 +166,13 @@ export function Chat() {
             trailing={(
               <div className="chat-actions">
                 {running ? <button id="stop-btn" type="button" onClick={stop}>Stop</button> : null}
-                <button className="send" type="button" aria-label="Send" disabled={!text.trim()} onClick={submit}>
+                <button className="send" type="button" aria-label="Send" disabled={!text.trim() || !connected} onClick={submit}>
                   <ArrowUp />
                 </button>
               </div>
             )}
           />
+          {!connected ? <div className="chat-connection-reason" role="status">{navigator.language.startsWith("ja") ? "再接続中…入力内容は保持されます" : "Reconnecting… your draft is kept"}</div> : null}
         </div>
       </div>
       {helpOpen ? <ShortcutOverlay provider={session?.provider ?? "agent"} options={options} running={running} ctrlJ={ctrlJ} onClose={() => setHelpOpen(false)} /> : null}

@@ -155,6 +155,7 @@ export function emitCodexPlanUpdated(
       type: "plan.updated",
       explanation: params.explanation ? truncate(params.explanation, 400) : undefined,
       steps: params.steps.map((step) => ({
+        id: step.id,
         text: truncate(step.text, 400),
         status: truncate(step.status, 80),
       })),

@@ -15,9 +15,11 @@ export type AgentEvent =
   | { kind: "delta"; text: string } // streaming assistant text
   | { kind: "assistant"; text: string } // full assistant message (non-streaming providers)
   | { kind: "thinking"; text: string } // streaming reasoning text
-  | { kind: "tool-start"; toolId: string; name: string; detail?: string }
-  | { kind: "tool-end"; toolId: string; name?: string; detail?: string; ok?: boolean }
+  | { kind: "plan"; steps: { id?: string; text: string; status: string }[]; explanation?: string; source: "codex-plan" | "claude-todo" | "acp-plan"; at: number }
+  | { kind: "tool-start"; toolId: string; name: string; detail?: string; at?: number }
+  | { kind: "tool-end"; toolId: string; name?: string; detail?: string; ok?: boolean; exitCode?: number }
   | { kind: "done"; stats?: string }
+  | { kind: "approval"; approvalId: string; state: "requested" | "resolved"; decision?: string }
   | { kind: "files-changed"; files: ChangedFile[] }
   | { kind: "error"; message: string };
 

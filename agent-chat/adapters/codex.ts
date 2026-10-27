@@ -801,20 +801,21 @@ function codexLegacyOkStatus(ok: boolean): TelemetryToolStatus {
   return ok ? "succeeded" : "failed";
 }
 
-function normalizeCodexPlanSteps(value: unknown): { text: string; status: string }[] {
+function normalizeCodexPlanSteps(value: unknown): { id?: string; text: string; status: string }[] {
   const source = Array.isArray(value)
     ? value
     : value && typeof value === "object" && Array.isArray((value as Record<string, unknown>).steps)
       ? (value as Record<string, unknown>).steps as unknown[]
       : [];
-  const steps: { text: string; status: string }[] = [];
+  const steps: { id?: string; text: string; status: string }[] = [];
   for (const [index, step] of source.entries()) {
     if (!step || typeof step !== "object") continue;
     const raw = step as Record<string, unknown>;
     const text = stringValue(raw.text) ?? stringValue(raw.step) ?? stringValue(raw.description) ?? stringValue(raw.title);
     if (!text) continue;
     const status = stringValue(raw.status) ?? stringValue(raw.state) ?? "unknown";
-    steps.push({ text: truncate(text, 400), status: truncate(status || `step-${index}`, 80) });
+    const id = stringValue(raw.id) ?? stringValue(raw.stepId);
+    steps.push({ id, text: truncate(text, 400), status: truncate(status || `step-${index}`, 80) });
   }
   return steps;
 }
