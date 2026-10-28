@@ -3,6 +3,17 @@ import Foundation
 extension AgentSessionWebRendererCoordinator {
     static var connectedChatCopy: [String: String] {
         [
+            "chatTurnProgress": String(localized: "agentSession.chat.turnProgress", defaultValue: "Turn progress"),
+            "chatNoPlanReported": String(localized: "agentSession.chat.noPlanReported", defaultValue: "No plan reported"),
+            "chatPlanNotLoaded": String(localized: "agentSession.chat.planNotLoaded", defaultValue: "Plan data not loaded"),
+            "chatPlanDone": String(localized: "agentSession.chat.planDone", defaultValue: "done"),
+            "chatPlanActive": String(localized: "agentSession.chat.planActive", defaultValue: "In progress"),
+            "chatPlanUpcoming": String(localized: "agentSession.chat.planUpcoming", defaultValue: "Upcoming"),
+            "chatPlanBlocked": String(localized: "agentSession.chat.planBlocked", defaultValue: "Blocked"),
+            "chatPlanSkipped": String(localized: "agentSession.chat.planSkipped", defaultValue: "Skipped"),
+            "chatCurrentActivity": String(localized: "agentSession.chat.currentActivity", defaultValue: "Current activity"),
+            "chatNoCommandRunning": String(localized: "agentSession.chat.noCommandRunning", defaultValue: "No command running"),
+            "chatExitCode": String(localized: "agentSession.chat.exitCode", defaultValue: "exit"),
             "connectedPrompt": String(localized: "agentSession.chat.connectedPrompt", defaultValue: "Message Codex"),
             "connectedQueue": String(localized: "agentSession.chat.connectedQueue", defaultValue: "Send"),
             "connectedSteer": String(localized: "agentSession.chat.connectedSteer", defaultValue: "Steer current turn"),

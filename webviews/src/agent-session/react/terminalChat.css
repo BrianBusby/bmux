@@ -38,3 +38,13 @@
 .terminal-chat-composer p, .terminal-chat-composer output, .terminal-chat-launch output { margin: 0; font-size: 12px; opacity: .8; }
 .terminal-chat button:disabled { opacity: .45; cursor: default; }
 .terminal-chat-launch button { justify-self: start; }
+.terminal-turn-progress { border:1px solid color-mix(in srgb,currentColor 14%,transparent); border-radius:var(--chat-radius); padding:10px 14px; background:color-mix(in srgb,currentColor 3%,transparent); }
+.terminal-turn-progress-toggle { width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; border:0!important; background:none!important; padding:0!important; text-align:left; }
+.terminal-turn-progress-toggle span { font-size:11px; opacity:.7; }
+.terminal-turn-progress-content { margin-top:10px; font-size:12px; }
+.terminal-turn-progress-content p { margin:4px 0; }
+.terminal-turn-plan { margin:0; padding:0; list-style:none; display:grid; gap:5px; }
+.terminal-turn-plan li { display:grid; grid-template-columns:16px minmax(0,1fr) auto; gap:7px; align-items:start; }
+.terminal-turn-plan small { opacity:.65; }
+.terminal-turn-current { margin-top:10px; padding-top:8px; border-top:1px solid color-mix(in srgb,currentColor 12%,transparent); }
+.terminal-turn-failed { color:var(--agent-danger); }

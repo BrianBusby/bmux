@@ -86,6 +86,17 @@ export type AgentSessionCopy = {
   chatCompleted?: string;
   chatAwaitingResult?: string;
   chatUnknown?: string;
+  chatTurnProgress?: string;
+  chatNoPlanReported?: string;
+  chatPlanNotLoaded?: string;
+  chatPlanDone?: string;
+  chatPlanActive?: string;
+  chatPlanUpcoming?: string;
+  chatPlanBlocked?: string;
+  chatPlanSkipped?: string;
+  chatCurrentActivity?: string;
+  chatNoCommandRunning?: string;
+  chatExitCode?: string;
 
   start: string;
   stop: string;

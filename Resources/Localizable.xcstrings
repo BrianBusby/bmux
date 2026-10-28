@@ -1250,6 +1250,193 @@
         }
       }
     },
+  "agentSession.chat.turnProgress": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Turn progress"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "ターンの進行状況"
+        }
+      }
+    }
+  },
+  "agentSession.chat.noPlanReported": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "No plan reported"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "プランは報告されていません"
+        }
+      }
+    }
+  },
+  "agentSession.chat.planNotLoaded": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Plan data not loaded"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "プランのデータは読み込まれていません"
+        }
+      }
+    }
+  },
+  "agentSession.chat.planDone": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "done"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "完了"
+        }
+      }
+    }
+  },
+  "agentSession.chat.planActive": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "In progress"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "進行中"
+        }
+      }
+    }
+  },
+  "agentSession.chat.planUpcoming": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Upcoming"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "予定"
+        }
+      }
+    }
+  },
+  "agentSession.chat.planBlocked": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Blocked"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "ブロック中"
+        }
+      }
+    }
+  },
+  "agentSession.chat.planSkipped": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Skipped"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "スキップ"
+        }
+      }
+    }
+  },
+  "agentSession.chat.currentActivity": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Current activity"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "現在の作業"
+        }
+      }
+    }
+  },
+  "agentSession.chat.noCommandRunning": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "No command running"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "実行中のコマンドはありません"
+        }
+      }
+    }
+  },
+  "agentSession.chat.exitCode": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "exit"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "終了コード"
+        }
+      }
+    }
+  },
     "agentSession.viewMode.chat": {
       "extractionState": "manual",
       "localizations": {

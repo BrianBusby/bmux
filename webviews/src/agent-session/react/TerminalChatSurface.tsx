@@ -5,6 +5,8 @@ import { renderMarkdownHTML } from "../shared/markdown";
 import { initialTerminalChat, reconcileTerminalChat, terminalCapabilities, type ObservedMessage, type TerminalChatSnapshot } from "../shared/terminalChat";
 import { ConnectedChatComposer } from "./ConnectedChatComposer";
 import { canUseConnectedControl } from "../shared/connectedChat";
+import { currentTurnProgress, latestUserPromptIndex } from "../shared/terminalTurnProgress";
+import { TerminalTurnProgress } from "./TerminalTurnProgress";
 import type { AppContext } from "../shared/types";
 
 
@@ -53,6 +55,8 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
     if (following.current && scroll.current) scroll.current.scrollTop = scroll.current.scrollHeight;
   }, [state.messages]);
   const capabilities = terminalCapabilities(state.status === "observed" || state.status === "ended");
+  const progress = currentTurnProgress(state.messages, state.observedTurn, state.partial);
+  const latestPromptIndex = latestUserPromptIndex(state.messages);
   const historyNotice = state.reason === "ambiguous" ? copy.chatAmbiguous :
     state.status === "stale" ? copy.chatStale : undefined;
   return <section className="terminal-chat">
@@ -61,7 +65,10 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
       {historyNotice && <output className="terminal-chat-notice">{historyNotice}</output>}
       {state.partial && <p className="terminal-chat-notice">{copy.chatPartial}</p>}
       <div className="terminal-chat-messages" key={`${state.sessionId}:${state.sourceRevision}`}>
-        {state.messages.map(message => <ObservedRow key={message.id} message={message} context={context} sessionId={state.sessionId!} />)}
+        {state.messages.map((message, index) => <React.Fragment key={message.id}>
+          <ObservedRow message={message} context={context} sessionId={state.sessionId!} />
+          {index === latestPromptIndex && progress && <TerminalTurnProgress progress={progress} copy={copy} />}
+        </React.Fragment>)}
       </div>
     </section>
     {state.control ? <ConnectedChatComposer context={context} control={state.control}
