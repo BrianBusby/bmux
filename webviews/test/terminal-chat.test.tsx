@@ -152,7 +152,7 @@ test("connected control does not hide a failed history refresh", async () => {
   }
 });
 
-test("bundled Chat shows turn progress after the prompt without hiding messages or tools", async () => {
+test("bundled Chat puts a finished report after the turn without hiding messages or tools", async () => {
   const dom = new JSDOM("<!doctype html><div id='root'></div>", { url: "https://example.test" });
   const previousWindow = globalThis.window;
   const previousDocument = globalThis.document;
@@ -204,6 +204,8 @@ test("bundled Chat shows turn progress after the prompt without hiding messages 
     expect(dom.window.document.body.textContent).toContain("Turn finished. Its report is in Chat.");
     await act(async () => dom.window.dispatchEvent(new dom.window.CustomEvent("bmux-terminal-chat-mode", { detail: { mode: "chat" } })));
     expect(dom.window.document.body.textContent).toContain("Plan · 0 of 2 done");
+    const finishedHistory = dom.window.document.querySelector(".terminal-chat-messages")?.textContent ?? "";
+    expect(finishedHistory.indexOf("Plan · 0 of 2 done")).toBeGreaterThan(finishedHistory.lastIndexOf("rg checklist"));
     expect(dom.window.document.querySelectorAll(".terminal-chat-tool")).toHaveLength(2);
   } finally {
     await act(async () => root.unmount());
