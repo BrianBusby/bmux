@@ -49,7 +49,7 @@ struct OutcomeRetentionTests {
     func legacyPruningNeedsCitationIndexAndRerunsAfterInterruption() async throws {
         let url = temporaryURL()
         defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
-        let fixture = TurnOutcomeFixture(suffix: "retention-legacy")
+        let fixture = TurnOutcomeFixture(suffix: "retention-légacy")
         let old = try ProvenanceSQLiteRepository(
             url: url, migrations: ProvenanceSQLiteRepository.migrations.filter { $0.version <= 28 }
         )
@@ -90,7 +90,9 @@ struct OutcomeRetentionTests {
         try await migrated.indexLegacyOutcomeCitations()
         let estimate = try await migrated.pruneOutcomePayloads(dryRun: true, batchSize: 1)
         #expect(estimate.candidateRows == 1)
-        #expect(estimate.candidateBytes > 0)
+        let candidatePayload = try #require(try firstSessionPruneCandidatePayload(url))
+        #expect(candidatePayload.utf8.count > candidatePayload.count)
+        #expect(estimate.candidateBytes == Int64(candidatePayload.utf8.count))
         #expect(estimate.prunedRows == 0)
         let first = try await migrated.pruneOutcomePayloads(dryRun: false, batchSize: 1)
         #expect(first.prunedRows == 1)
@@ -133,6 +135,32 @@ struct OutcomeRetentionTests {
             timestamp: fixture.time(Double(index) + 10),
             payload: ProvenanceEventPayload(codingAgentCommand: command)
         ))
+    }
+
+    private func firstSessionPruneCandidatePayload(_ url: URL) throws -> String? {
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        let query = try database.prepare(
+            """
+            WITH eligible AS (
+                SELECT r.outcome_json,
+                       row_number() OVER (PARTITION BY r.session_id
+                                          ORDER BY r.source_watermark_sequence DESC, r.id DESC) AS ordinal
+                FROM provenance_coding_agent_session_outcome_revisions r
+                WHERE r.outcome_json <> ''
+                  AND NOT EXISTS (
+                      SELECT 1 FROM provenance_coding_agent_session_outcomes c WHERE c.latest_revision_id = r.id
+                  )
+                  AND NOT EXISTS (SELECT 1 FROM provenance_outcome_revision_pins p WHERE p.revision_id = r.id)
+                  AND NOT EXISTS (
+                      SELECT 1 FROM provenance_outcome_revision_citations c WHERE c.target_revision_id = r.id
+                  )
+            )
+            SELECT outcome_json FROM eligible WHERE ordinal > 8 LIMIT 1
+            """
+        )
+        defer { query.finalize() }
+        guard try query.step() else { return nil }
+        return query.string(at: 0)
     }
 
     private func payloadCount(_ url: URL, table: String) throws -> Int {
