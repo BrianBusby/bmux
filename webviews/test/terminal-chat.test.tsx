@@ -181,6 +181,11 @@ test("bundled Chat shows turn progress after the prompt without hiding messages 
     expect(text).toContain("Status unknown: new_provider_state");
     expect(text).toContain("rg checklist");
     expect(dom.window.document.querySelector(".terminal-chat-tool")).not.toBeNull();
+    const activity = dom.window.document.querySelector<HTMLButtonElement>(".terminal-turn-activity-toggle")!;
+    await act(async () => activity.click());
+    expect(activity.getAttribute("aria-expanded")).toBe("true");
+    expect(dom.window.document.querySelector(".terminal-turn-activity-list")?.textContent).toContain("rg checklist");
+    expect(dom.window.document.querySelectorAll(".terminal-chat-tool")).toHaveLength(2);
   } finally {
     await act(async () => root.unmount());
     dom.window.close();
