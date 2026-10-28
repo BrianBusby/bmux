@@ -157,34 +157,53 @@ test("bundled Chat shows turn progress after the prompt without hiding messages 
   const previousWindow = globalThis.window;
   const previousDocument = globalThis.document;
   Object.assign(globalThis, { window: dom.window, document: dom.window.document, IS_REACT_ACT_ENVIRONMENT: true });
-  Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: { postMessage: async () => ({ ok: true, value: {
-    status: "observed", sessionId: "thread", workspaceId: "workspace", surfaceId: "surface",
-    history: { has_more: false, observed_turn: { id: "turn", state: "working" }, messages: [
-      { id: "prompt", seq: 1, role: "user", kind: { type: "prose", text: "Review this PR" } },
-      { id: "assistant", seq: 2, role: "agent", kind: { type: "prose", text: "I will inspect it" } },
-      { id: "plan", seq: 3, role: "agent", kind: { type: "tool_use", tool_name: "update_plan", input_detail: JSON.stringify({ plan: [{ step: "Inspect code", status: "in_progress" }, { step: "Report findings", status: "new_provider_state" }] }), status: "succeeded" } },
-      { id: "tool", seq: 4, role: "agent", kind: { type: "terminal", command: "rg checklist", is_running: true } },
-    ] },
-  } }) } } } });
+  let turnState = "working";
+  const bridgeMethods: string[] = [];
+  Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: {
+    postMessage: async (request: { method: string }) => {
+      bridgeMethods.push(request.method);
+      return { ok: true, value: {
+        status: "observed", sessionId: "thread", workspaceId: "workspace", surfaceId: "surface",
+        history: { has_more: false, observed_turn: { id: "turn", state: turnState }, messages: [
+          { id: "prompt", seq: 1, role: "user", kind: { type: "prose", text: "Review this PR" } },
+          { id: "assistant", seq: 2, role: "agent", kind: { type: "prose", text: "I will inspect it" } },
+          { id: "plan", seq: 3, role: "agent", kind: { type: "tool_use", tool_name: "update_plan", input_detail: JSON.stringify({ plan: [{ step: "Inspect code", status: "in_progress" }, { step: "Report findings", status: "new_provider_state" }] }), status: "succeeded" } },
+          { id: "tool", seq: 4, role: "agent", kind: { type: "terminal", command: "rg checklist", is_running: true } },
+        ] },
+      } };
+    },
+  } } } });
   const copy = { chatConversation: "Conversation", chatUser: "You", chatAssistant: "Assistant", chatTurnProgress: "Turn progress",
     chatCurrentActivity: "Current activity", chatNoPlanReported: "No plan reported", chatUnknown: "Status unknown",
     chatPlanActive: "In progress", chatActivity: "Activity", chatAwaitingResult: "Awaiting result", runningStatus: "Running",
+    chatNoActiveTurn: "No active turn", chatReportInChat: "Turn finished. Its report is in Chat.", chatTurnEnded: "Turn ended",
+    chatPlan: "Plan", chatOf: "of", chatPlanDone: "done",
   } as AgentSessionCopy;
   const root = createRoot(dom.window.document.getElementById("root")!);
   try {
     await act(async () => root.render(<TerminalChatSurface context={{ workspaceId: "workspace", panelId: "surface", copy } as AppContext} />));
     const history = dom.window.document.querySelector(".terminal-chat-messages")!;
     const text = history.textContent ?? "";
-    expect(text.indexOf("Review this PR")).toBeLessThan(text.indexOf("Turn progress"));
-    expect(text.indexOf("Turn progress")).toBeLessThan(text.indexOf("I will inspect it"));
-    expect(text).toContain("Inspect code");
-    expect(text).toContain("Status unknown: new_provider_state");
+    expect(text).not.toContain("Turn progress");
+    expect(text).toContain("I will inspect it");
     expect(text).toContain("rg checklist");
     expect(dom.window.document.querySelector(".terminal-chat-tool")).not.toBeNull();
+    await act(async () => dom.window.dispatchEvent(new dom.window.CustomEvent("bmux-terminal-chat-mode", { detail: { mode: "turn" } })));
+    expect(dom.window.document.body.textContent).toContain("Turn progress");
+    expect(dom.window.document.body.textContent).toContain("Inspect code");
+    expect(dom.window.document.body.textContent).toContain("Status unknown: new_provider_state");
+    expect(dom.window.document.querySelector(".terminal-chat-tool")).toBeNull();
     const activity = dom.window.document.querySelector<HTMLButtonElement>(".terminal-turn-activity-toggle")!;
     await act(async () => activity.click());
     expect(activity.getAttribute("aria-expanded")).toBe("true");
     expect(dom.window.document.querySelector(".terminal-turn-activity-list")?.textContent).toContain("rg checklist");
+    await act(async () => dom.window.document.querySelector<HTMLButtonElement>(".terminal-turn-activity-list button")!.click());
+    expect(bridgeMethods).toContain("terminalChat.openChat");
+    turnState = "completed";
+    await act(async () => root.render(<TerminalChatSurface context={{ workspaceId: "workspace", panelId: "surface", copy } as AppContext} />));
+    expect(dom.window.document.body.textContent).toContain("Turn finished. Its report is in Chat.");
+    await act(async () => dom.window.dispatchEvent(new dom.window.CustomEvent("bmux-terminal-chat-mode", { detail: { mode: "chat" } })));
+    expect(dom.window.document.body.textContent).toContain("Plan · 0 of 2 done");
     expect(dom.window.document.querySelectorAll(".terminal-chat-tool")).toHaveLength(2);
   } finally {
     await act(async () => root.unmount());
