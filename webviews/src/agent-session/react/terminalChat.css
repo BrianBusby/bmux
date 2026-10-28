@@ -38,13 +38,35 @@
 .terminal-chat-composer p, .terminal-chat-composer output, .terminal-chat-launch output { margin: 0; font-size: 12px; opacity: .8; }
 .terminal-chat button:disabled { opacity: .45; cursor: default; }
 .terminal-chat-launch button { justify-self: start; }
-.terminal-turn-progress { border:1px solid color-mix(in srgb,currentColor 14%,transparent); border-radius:var(--chat-radius); padding:10px 14px; background:color-mix(in srgb,currentColor 3%,transparent); }
-.terminal-turn-progress-toggle { width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; border:0!important; background:none!important; padding:0!important; text-align:left; }
-.terminal-turn-progress-toggle span { font-size:11px; opacity:.7; }
-.terminal-turn-progress-content { margin-top:10px; font-size:12px; }
-.terminal-turn-progress-content p { margin:4px 0; }
+.terminal-chat-row-anchor { display:block; height:0; scroll-margin-top:24px; }
+.terminal-turn-progress { border:1px solid color-mix(in srgb,currentColor 16%,transparent); border-radius:var(--chat-radius); background:color-mix(in srgb,currentColor 2%,transparent); overflow:hidden; font-size:12px; }
+.terminal-turn-progress-toggle { width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; border:0!important; background:none!important; padding:12px 14px 0!important; text-align:left; }
+.terminal-turn-progress-toggle strong { font-size:13px; }
+.terminal-turn-progress-toggle span { font:11px ui-monospace,monospace; opacity:.7; }
+.terminal-turn-progress-content { padding:10px 14px 12px; }
+.terminal-turn-progress-content p { margin:3px 0; }
+.terminal-turn-no-plan { padding:3px 0 5px; }
 .terminal-turn-plan { margin:0; padding:0; list-style:none; display:grid; gap:5px; }
-.terminal-turn-plan li { display:grid; grid-template-columns:16px minmax(0,1fr) auto; gap:7px; align-items:start; }
-.terminal-turn-plan small { opacity:.65; }
-.terminal-turn-current { margin-top:10px; padding-top:8px; border-top:1px solid color-mix(in srgb,currentColor 12%,transparent); }
+.terminal-turn-step { display:grid; grid-template-columns:17px minmax(0,1fr); gap:7px; align-items:start; line-height:1.5; }
+.terminal-turn-step-mark { color:var(--agent-accent, #678cdc); }
+.terminal-turn-step-done,.terminal-turn-step-upcoming,.terminal-turn-step-skipped { opacity:.58; }
+.terminal-turn-step-active { font-weight:600; }
+.terminal-turn-step-blocked { color:var(--agent-danger); }
+.terminal-turn-unknown { display:block; font:10px ui-monospace,monospace; opacity:.65; }
+.terminal-turn-omitted { margin:0 0 6px 24px!important; color:var(--agent-accent, #678cdc); }
+.terminal-turn-show-all { margin:8px 0 2px 23px; padding:2px 8px!important; }
+.terminal-turn-current { margin-top:12px; padding:9px 10px; border-radius:7px; background:color-mix(in srgb,currentColor 4%,transparent); font:11px/1.5 ui-monospace,monospace; }
+.terminal-turn-current strong { display:block; text-transform:uppercase; opacity:.6; letter-spacing:.04em; }
+.terminal-turn-current p { overflow-wrap:anywhere; }
+.terminal-turn-footer { padding:8px 14px; border-top:1px solid color-mix(in srgb,currentColor 12%,transparent); display:flex; justify-content:space-between; align-items:center; gap:12px; font:11px ui-monospace,monospace; }
+.terminal-turn-activity-toggle { display:flex; gap:8px; align-items:center; padding:0!important; border:0!important; background:none!important; }
+.terminal-turn-activity-toggle span { color:var(--agent-accent, #678cdc); }
+.terminal-turn-footer-meta { opacity:.55; text-align:right; }
+.terminal-turn-activity-list { border-top:1px solid color-mix(in srgb,currentColor 12%,transparent); max-height:240px; overflow:auto; padding:5px 10px; }
+.terminal-turn-activity-list button { width:100%; display:grid; grid-template-columns:14px minmax(0,1fr) auto; gap:7px; text-align:left; border:0; background:none; padding:5px!important; overflow-wrap:anywhere; }
+.terminal-turn-activity-list button:hover { background:color-mix(in srgb,currentColor 5%,transparent); }
+.terminal-turn-activity-list small { opacity:.55; }
+.terminal-turn-plan-history { border-top:1px solid color-mix(in srgb,currentColor 12%,transparent); padding:8px 5px; }
+.terminal-turn-plan-history p { margin:4px 0; opacity:.7; }
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 .terminal-turn-failed { color:var(--agent-danger); }

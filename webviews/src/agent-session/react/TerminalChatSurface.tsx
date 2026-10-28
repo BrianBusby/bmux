@@ -66,6 +66,7 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
       {state.partial && <p className="terminal-chat-notice">{copy.chatPartial}</p>}
       <div className="terminal-chat-messages" key={`${state.sessionId}:${state.sourceRevision}`}>
         {state.messages.map((message, index) => <React.Fragment key={message.id}>
+          <span id={`terminal-chat-row-${message.id}`} className="terminal-chat-row-anchor" aria-hidden="true" />
           <ObservedRow message={message} context={context} sessionId={state.sessionId!} />
           {index === latestPromptIndex && progress && <TerminalTurnProgress progress={progress} copy={copy} />}
         </React.Fragment>)}
