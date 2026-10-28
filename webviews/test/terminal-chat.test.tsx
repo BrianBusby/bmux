@@ -151,3 +151,39 @@ test("connected control does not hide a failed history refresh", async () => {
     Object.assign(globalThis, { window: previousWindow, document: previousDocument, IS_REACT_ACT_ENVIRONMENT: false });
   }
 });
+
+test("bundled Chat shows turn progress after the prompt without hiding messages or tools", async () => {
+  const dom = new JSDOM("<!doctype html><div id='root'></div>", { url: "https://example.test" });
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  Object.assign(globalThis, { window: dom.window, document: dom.window.document, IS_REACT_ACT_ENVIRONMENT: true });
+  Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: { postMessage: async () => ({ ok: true, value: {
+    status: "observed", sessionId: "thread", workspaceId: "workspace", surfaceId: "surface",
+    history: { has_more: false, observed_turn: { id: "turn", state: "working" }, messages: [
+      { id: "prompt", seq: 1, role: "user", kind: { type: "prose", text: "Review this PR" } },
+      { id: "assistant", seq: 2, role: "agent", kind: { type: "prose", text: "I will inspect it" } },
+      { id: "plan", seq: 3, role: "agent", kind: { type: "tool_use", tool_name: "update_plan", input_detail: JSON.stringify({ plan: [{ step: "Inspect code", status: "in_progress" }, { step: "Report findings", status: "new_provider_state" }] }), status: "succeeded" } },
+      { id: "tool", seq: 4, role: "agent", kind: { type: "terminal", command: "rg checklist", is_running: true } },
+    ] },
+  } }) } } } });
+  const copy = { chatConversation: "Conversation", chatUser: "You", chatAssistant: "Assistant", chatTurnProgress: "Turn progress",
+    chatCurrentActivity: "Current activity", chatNoPlanReported: "No plan reported", chatUnknown: "Status unknown",
+    chatPlanActive: "In progress", chatActivity: "Activity", chatAwaitingResult: "Awaiting result", runningStatus: "Running",
+  } as AgentSessionCopy;
+  const root = createRoot(dom.window.document.getElementById("root")!);
+  try {
+    await act(async () => root.render(<TerminalChatSurface context={{ workspaceId: "workspace", panelId: "surface", copy } as AppContext} />));
+    const history = dom.window.document.querySelector(".terminal-chat-messages")!;
+    const text = history.textContent ?? "";
+    expect(text.indexOf("Review this PR")).toBeLessThan(text.indexOf("Turn progress"));
+    expect(text.indexOf("Turn progress")).toBeLessThan(text.indexOf("I will inspect it"));
+    expect(text).toContain("Inspect code");
+    expect(text).toContain("Status unknown: new_provider_state");
+    expect(text).toContain("rg checklist");
+    expect(dom.window.document.querySelector(".terminal-chat-tool")).not.toBeNull();
+  } finally {
+    await act(async () => root.unmount());
+    dom.window.close();
+    Object.assign(globalThis, { window: previousWindow, document: previousDocument, IS_REACT_ACT_ENVIRONMENT: false });
+  }
+});
