@@ -14,8 +14,10 @@ extension ProvenanceSQLiteRepository {
                 let rows = try database.prepare("SELECT id, \(column) FROM \(table) WHERE \(column) <> ''")
                 defer { rows.finalize() }
                 while try rows.step() {
-                    guard let id = rows.string(at: 0), let json = rows.string(at: 1) else { continue }
-                    try recordOutcomeCitations(sourceRevisionID: id, json: json)
+                    try autoreleasepool {
+                        guard let id = rows.string(at: 0), let json = rows.string(at: 1) else { return }
+                        try recordOutcomeCitations(sourceRevisionID: id, json: json)
+                    }
                 }
             }
             try database.execute(
@@ -66,7 +68,7 @@ extension ProvenanceSQLiteRepository {
             let query = try database.prepare(
                 """
                 WITH eligible AS (
-                    SELECT r.id, length(r.outcome_json) AS bytes,
+                    SELECT r.id, length(CAST(r.outcome_json AS BLOB)) AS bytes,
                            row_number() OVER (PARTITION BY r.\(owner)
                                               ORDER BY r.source_watermark_sequence DESC, r.id DESC) AS ordinal
                     FROM \(table) r
