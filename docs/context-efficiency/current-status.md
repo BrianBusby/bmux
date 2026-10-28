@@ -11,14 +11,15 @@ It does not advance broader Session lifecycle or provider-parity milestones.
 
 The PE outcome storage retention slice introduces schema 29, compact session
 outcome storage, citation-aware payload retention, and bounded diagnostics.
-An isolated tagged app advanced the shared live store to schema 29 on
-2026-10-26 without pruning or compacting it. The file remains 631.6 GiB; a
-subsequent payload-free report showed about 369 GiB of free pages and the
-legacy-citation index gate still closed. Older active bmux builds continue to
-write outcome revisions. Live reclamation remains blocked by active writers and
-insufficient verified backup and staging capacity. The storage gate for
-additional sustained ingestion remains closed until all writers use the bounded
-writer and safe maintenance capacity is available. See the
+Live maintenance completed on 2026-10-28: legacy citations were indexed,
+107,535 redundant historical payloads (244.2 GB logical JSON) were retired,
+and the 631.6 GiB file was rebuilt as a 20.3 GB SQLite database. The event
+ledger, current outcome payloads, and retained citations passed parity and
+integrity checks. A verified compressed original remains available for
+recovery. The older pr221 smoke-test app was closed after it successfully
+reopened and wrote to the replacement. Sustained ingestion still requires a
+tagged build with the bounded writer and runtime growth dogfood; older builds
+must remain closed. See the
 [PE storage retention policy](../../Packages/macOS/ProvenanceEngine/docs/storage-retention.md).
 
 The ordinary Codex monitor cursor follow-up reads at most 64 KiB per cycle,
@@ -28,8 +29,8 @@ offsets in private bmux state. Restart reconstructs parser context from the
 acknowledged prefix without reappending to PE. Cursor and status files expire
 after 30 days; status reports unread bytes, skipped lines, retry state, and a
 five-minute lag threshold without transcript payloads. This hardening is under
-observation pending tagged dogfood. It does not reopen the live ingestion
-storage gate while older app builds may still write legacy outcome revisions.
+observation pending tagged dogfood. It does not authorize sustained ingestion until the bounded-writer build
+and tagged runtime growth dogfood pass.
 See [the cursor implementation record](../planning/live-codex-cursor-hardening.md).
 The shared Codex transcript adapter also omits completed assistant-message
 bodies from both live tailing and historical import. It continues to append

@@ -1,4 +1,5 @@
 import Foundation
+import SQLite3
 
 extension ProvenanceSQLiteRepository {
     /// Indexes exact stored revision citations before legacy payloads can be retired.
@@ -14,8 +15,10 @@ extension ProvenanceSQLiteRepository {
                 let rows = try database.prepare("SELECT id, \(column) FROM \(table) WHERE \(column) <> ''")
                 defer { rows.finalize() }
                 while try rows.step() {
-                    guard let id = rows.string(at: 0), let json = rows.string(at: 1) else { continue }
-                    try recordOutcomeCitations(sourceRevisionID: id, json: json)
+                    try autoreleasepool {
+                        guard let id = rows.string(at: 0), let json = rows.string(at: 1) else { return }
+                        try recordOutcomeCitations(sourceRevisionID: id, json: json)
+                    }
                 }
             }
             try database.execute(
@@ -47,6 +50,16 @@ extension ProvenanceSQLiteRepository {
         }
     }
 
+    private func legacyPayloadByteCount(table: String, id: String) throws -> Int64 {
+        let query = try database.prepare("SELECT outcome_json FROM \(table) WHERE id = ?")
+        defer { query.finalize() }
+        try query.bind(id, at: 1)
+        guard try query.step(), let payload = query.string(at: 0) else {
+            throw ProvenanceSQLiteError.sqlite(message: "candidate outcome payload missing")
+        }
+        return Int64(payload.utf8.count)
+    }
+
     private func pruneOutcomePayloadsInTransaction(
         dryRun: Bool, batchSize: Int
     ) throws -> ProvenanceOutcomePruneReport {
@@ -58,31 +71,44 @@ extension ProvenanceSQLiteRepository {
             throw ProvenanceSQLiteError.sqlite(message: "legacy outcome citations must be indexed before pruning")
         }
 
+        // SQLite 3.43+ reads a column's UTF-8 byte length from record metadata.
+        let supportsOctetLength = sqlite3_libversion_number() >= 3_043_000
         var candidates: [(table: String, id: String, bytes: Int64)] = []
         for (table, owner, current) in [
             ("provenance_coding_agent_session_outcome_revisions", "session_id", "provenance_coding_agent_session_outcomes"),
             ("provenance_coding_agent_turn_outcome_revisions", "turn_id", "provenance_coding_agent_turn_outcomes"),
         ] {
+            let hasPayload = supportsOctetLength
+                ? "octet_length(r.outcome_json) > 0"
+                : "r.outcome_json <> ''"
+            let byteCount = supportsOctetLength ? "octet_length(r.outcome_json)" : "0"
             let query = try database.prepare(
                 """
                 WITH eligible AS (
-                    SELECT r.id, length(r.outcome_json) AS bytes,
+                    SELECT r.id,
                            row_number() OVER (PARTITION BY r.\(owner)
                                               ORDER BY r.source_watermark_sequence DESC, r.id DESC) AS ordinal
                     FROM \(table) r
-                    WHERE r.outcome_json <> ''
+                    WHERE \(hasPayload)
                       AND NOT EXISTS (SELECT 1 FROM \(current) c WHERE c.latest_revision_id = r.id)
                       AND NOT EXISTS (SELECT 1 FROM provenance_outcome_revision_pins p WHERE p.revision_id = r.id)
                       AND NOT EXISTS (SELECT 1 FROM provenance_outcome_revision_citations c WHERE c.target_revision_id = r.id)
                 )
-                SELECT id, bytes FROM eligible WHERE ordinal > 8 LIMIT ?
+                SELECT eligible.id, \(byteCount)
+                FROM eligible JOIN \(table) r ON r.id = eligible.id
+                WHERE eligible.ordinal > 8 LIMIT ?
                 """
             )
             defer { query.finalize() }
             try query.bind(max(1, batchSize) - candidates.count, at: 1)
             while try query.step() {
                 guard let id = query.string(at: 0) else { continue }
-                candidates.append((table, id, Int64(query.int(at: 1))))
+                let bytes = try autoreleasepool {
+                    supportsOctetLength
+                        ? Int64(query.int(at: 1))
+                        : try legacyPayloadByteCount(table: table, id: id)
+                }
+                candidates.append((table, id, bytes))
             }
             if candidates.count >= batchSize { break }
         }
