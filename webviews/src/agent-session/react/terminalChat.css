@@ -39,6 +39,8 @@
 .terminal-chat button:disabled { opacity: .45; cursor: default; }
 .terminal-chat-launch button { justify-self: start; }
 .terminal-chat-row-anchor { display:block; height:0; scroll-margin-top:24px; }
+.terminal-turn-tab-content { width:min(100%,850px); margin:0 auto; padding:20px; box-sizing:border-box; overflow:auto; }
+.terminal-turn-tab-empty { margin:12px 0; opacity:.7; }
 .terminal-turn-progress { border:1px solid color-mix(in srgb,currentColor 16%,transparent); border-radius:var(--chat-radius); background:color-mix(in srgb,currentColor 2%,transparent); overflow:hidden; font-size:12px; }
 .terminal-turn-progress-toggle { width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; border:0!important; background:none!important; padding:12px 14px 0!important; text-align:left; }
 .terminal-turn-progress-toggle strong { font-size:13px; }
@@ -70,3 +72,13 @@
 .terminal-turn-plan-history p { margin:4px 0; opacity:.7; }
 .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 .terminal-turn-failed { color:var(--agent-danger); }
+.terminal-turn-plan-update { border:0!important; background:none!important; color:var(--agent-accent, #678cdc)!important; padding:0 0 7px!important; font:11px ui-monospace,monospace; }
+.terminal-turn-plan-history { padding:7px 0 10px; margin-bottom:9px; border-bottom:1px solid color-mix(in srgb,currentColor 12%,transparent); }
+.terminal-turn-why { border:0!important; background:none!important; color:var(--agent-accent, #678cdc)!important; padding:0 3px!important; }
+.terminal-turn-current small { display:block; opacity:.6; }
+@media (max-width: 480px) { .terminal-turn-footer { flex-wrap:wrap; } .terminal-turn-footer-meta { text-align:left; } }
+@media (prefers-reduced-motion: reduce) { .terminal-turn-progress * { scroll-behavior:auto!important; transition:none!important; } }
+.terminal-turn-step-button { border:0!important; background:none!important; padding:0!important; text-align:left; line-height:1.5; font:inherit; }
+.terminal-turn-step-detail { margin:5px 0 7px; padding:7px 9px; border:1px solid color-mix(in srgb,currentColor 12%,transparent); border-radius:6px; font:11px/1.6 ui-monospace,monospace; opacity:.8; }
+.terminal-turn-stale { display:inline-block; margin:0 0 7px; padding:2px 6px; border:1px solid color-mix(in srgb,currentColor 22%,transparent); border-radius:5px; font:10px ui-monospace,monospace; opacity:.7; }
+.terminal-turn-step-stale { opacity:.45; }

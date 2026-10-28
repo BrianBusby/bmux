@@ -32,6 +32,7 @@ export type AgentSessionTheme = {
 
 export type AppContext = {
   readOnlyTerminalChat?: boolean;
+  terminalChatMode?: "chat" | "turn";
   canStartConnectedSession?: boolean;
   automaticallyStartConnectedSession?: boolean;
   panelId: string;
@@ -109,6 +110,27 @@ export type AgentSessionCopy = {
   chatReadCommands?: string;
   chatPlanUpdates?: string;
   chatSteps?: string;
+  chatTurnEnded?: string;
+  chatOf?: string;
+  chatNoActiveTurn?: string;
+  chatReportInChat?: string;
+  chatShowFewer?: string;
+  chatWhy?: string;
+  chatNoPlanExplanation?: string;
+  chatActivityUnlinked?: string;
+  chatNoReasonReported?: string;
+  chatPlanUpdated?: string;
+  chatAdded?: string;
+  chatRemoved?: string;
+  chatTextChanged?: string;
+  chatReportedBy?: string;
+  chatReportedAt?: string;
+  chatStepStatus?: string;
+  chatLinkedActivity?: string;
+  chatNoStepLink?: string;
+  chatVerified?: string;
+  chatNoCheckDefined?: string;
+  chatMayBeStale?: string;
 
   start: string;
   stop: string;

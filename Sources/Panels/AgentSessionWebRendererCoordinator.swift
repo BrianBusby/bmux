@@ -11,9 +11,11 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
     var onStartConnectedSession: (() async throws -> Void)?
     var canAutomaticallyStartConnectedSession: (() -> Bool)?
     private(set) var isTerminalChatVisible = false
+    var terminalChatMode: AgentSessionFactualProjectionMode = .chat
     private var isConnectedStartPending = false
     private var hasAttemptedAutomaticConnectedStart = false
     var onInteractInTerminal: (() -> Void)?
+    var onOpenChat: (() -> Void)?
     var webView: AgentSessionWebView?
     var panelId = UUID()
     var workspaceId = UUID()
@@ -173,6 +175,13 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         isTerminalChatVisible = visible
         guard let webView else { return }
         webView.evaluateJavaScript("window.dispatchEvent(new CustomEvent('bmux-terminal-chat-visibility', { detail: { visible: \(visible ? "true" : "false") } }));")
+    }
+
+    func setTerminalChatMode(_ mode: AgentSessionFactualProjectionMode) {
+        guard terminalChatMode != mode else { return }
+        terminalChatMode = mode
+        guard let webView else { return }
+        webView.evaluateJavaScript("window.dispatchEvent(new CustomEvent('bmux-terminal-chat-mode', { detail: { mode: '\(mode.rawValue)' } }));")
     }
 
     func unfocus() {
@@ -427,11 +436,15 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
     func handle(_ request: AgentSessionBridgeRequest) async throws -> Any {
         if terminalChatSnapshot != nil {
             switch request.method {
-            case "app.context", "terminalChat.snapshot", "terminalChat.openTerminal", "terminalChat.rawOutput", "terminalChat.action", "terminalChat.draft", "terminalChat.startConnected", "provider.list": break
+            case "app.context", "terminalChat.openChat", "terminalChat.snapshot", "terminalChat.openTerminal", "terminalChat.rawOutput", "terminalChat.action", "terminalChat.draft", "terminalChat.startConnected", "provider.list": break
             default: throw AgentSessionBridgeError.unsupportedMethod(request.method)
             }
         }
         switch request.method {
+        case "terminalChat.openChat":
+            guard let onOpenChat else { throw AgentSessionBridgeError.invalidRequest }
+            onOpenChat()
+            return ["opened": true]
         case "terminalChat.draft":
             guard let terminalChatDraft else { throw AgentSessionBridgeError.invalidRequest }
             try terminalChatDraft(request)

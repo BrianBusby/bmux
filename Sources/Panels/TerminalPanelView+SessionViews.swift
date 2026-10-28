@@ -24,10 +24,12 @@ extension TerminalPanelView {
             AgentSessionFactualProjectionModeHost(
                 showsSwitcher: !bmuxShellTerminalOnly && (showsFactualSessionSwitcher || terminalChatReader != nil),
                 chatContent: terminalChatReader.map { reader in
-                    { onTerminal in AnyView(TerminalChatWebRenderer(
+                    { mode, onTerminal, onChat in AnyView(TerminalChatWebRenderer(
                         panel: panel, reader: reader, appearance: appearance,
+                        presentationMode: mode,
                         onStartConnectedSession: onStartConnectedSession,
                         onRequestPanelFocus: onRequestTerminalChatFocus,
+                        onChat: onChat,
                         onTerminal: onTerminal
                     )) }
                 },

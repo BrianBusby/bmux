@@ -8,8 +8,10 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
     let reader: any TerminalChatReading
     let appearance: PanelAppearance
     var matteTheme: MatteTheme? = nil
+    var presentationMode: AgentSessionFactualProjectionMode = .chat
     var onStartConnectedSession: (() async throws -> Void)? = nil
     var onRequestPanelFocus: () -> Void = {}
+    var onChat: () -> Void = {}
     let onTerminal: () -> Void
 
     func makeCoordinator() -> AgentSessionWebRendererCoordinator { panel.presentation.chatRenderer }
@@ -20,6 +22,7 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
 
     func updateNSView(_ host: AgentSessionWebHostView, context: Context) {
         let coordinator = context.coordinator
+        coordinator.setTerminalChatMode(presentationMode)
         coordinator.setTerminalChatVisible(true)
         coordinator.terminalChatSnapshot = { [weak reader, weak panel] in
             guard let reader, let panel else { return ["status": "unavailable"] }
@@ -62,6 +65,7 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
                 text: request.params["text"] as? String ?? "", expectedTurnID: request.params["expectedTurnId"] as? String)
         }
         coordinator.onInteractInTerminal = onTerminal
+        coordinator.onOpenChat = onChat
         coordinator.bind(
             panelId: panel.id, workspaceId: panel.workspaceId, stableWorkspaceId: panel.workspaceId,
             workProvenanceRuntime: nil, rendererKind: .react, initialProviderID: .codex,

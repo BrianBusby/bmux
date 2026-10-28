@@ -6,6 +6,7 @@ import BmuxAppKitSupportUI
 struct AgentSessionPrimaryTabs: View {
     let selected: AgentSessionFactualProjectionMode
     let onSelect: (AgentSessionFactualProjectionMode) -> Void
+    var modes: [AgentSessionFactualProjectionMode] = AgentSessionFactualProjectionMode.allCases
     let onHostChange: (@MainActor (NSView, Bool) -> Void)?
     @Environment(\.colorScheme) private var colorScheme
 
@@ -15,7 +16,7 @@ struct AgentSessionPrimaryTabs: View {
             onHostChange?(host, attached)
         }) {
             HStack(spacing: theme.layout.primaryNavigationGap) {
-                ForEach(AgentSessionFactualProjectionMode.allCases) { mode in
+                ForEach(modes) { mode in
                     MatteButton { onSelect(mode) } label: {
                         Text(mode.title)
                             .matteTypography(.tab, theme: theme)

@@ -1624,6 +1624,380 @@
       }
     }
   },
+  "agentSession.viewMode.turn": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Turn"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "ターン"
+        }
+      }
+    }
+  },
+  "agentSession.chat.turnEnded": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Turn ended"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "ターン終了"
+        }
+      }
+    }
+  },
+  "agentSession.chat.of": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "of"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "/"
+        }
+      }
+    }
+  },
+  "agentSession.chat.noActiveTurn": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "No active turn"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "進行中のターンはありません"
+        }
+      }
+    }
+  },
+  "agentSession.chat.reportInChat": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Turn finished. Its report is in Chat."
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "ターンが終了しました。レポートはチャットにあります。"
+        }
+      }
+    }
+  },
+  "agentSession.chat.showFewer": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Show fewer"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "表示を減らす"
+        }
+      }
+    }
+  },
+  "agentSession.chat.why": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Why?"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "なぜ？"
+        }
+      }
+    }
+  },
+  "agentSession.chat.noPlanExplanation": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "No plan report was observed in this turn’s transcript. The provider may not have sent one through this connection."
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "このターンの会話履歴に計画の報告はありません。この接続経由ではプロバイダーが報告していない可能性があります。"
+        }
+      }
+    }
+  },
+  "agentSession.chat.activityUnlinked": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Activity is not linked to steps"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "アクティビティはステップに関連付けられていません"
+        }
+      }
+    }
+  },
+  "agentSession.chat.noReasonReported": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "no reason reported"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "理由の報告なし"
+        }
+      }
+    }
+  },
+  "agentSession.chat.planUpdated": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Plan updated"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "計画を更新"
+        }
+      }
+    }
+  },
+  "agentSession.chat.added": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "added"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "追加"
+        }
+      }
+    }
+  },
+  "agentSession.chat.removed": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "removed"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "削除"
+        }
+      }
+    }
+  },
+  "agentSession.chat.textChanged": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "text changed"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "テキスト変更"
+        }
+      }
+    }
+  },
+  "agentSession.chat.reportedBy": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Reported by"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "報告元"
+        }
+      }
+    }
+  },
+  "agentSession.chat.reportedAt": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Reported at"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "報告日時"
+        }
+      }
+    }
+  },
+  "agentSession.chat.stepStatus": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Status"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "状態"
+        }
+      }
+    }
+  },
+  "agentSession.chat.linkedActivity": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Linked activity"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "関連付けられたアクティビティ"
+        }
+      }
+    }
+  },
+  "agentSession.chat.noStepLink": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "none — provider sent no step reference"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "なし — プロバイダーからステップ参照が送られていません"
+        }
+      }
+    }
+  },
+  "agentSession.chat.verified": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Verified"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "検証"
+        }
+      }
+    }
+  },
+  "agentSession.chat.noCheckDefined": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "no check defined"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "検証項目は定義されていません"
+        }
+      }
+    }
+  },
+  "agentSession.chat.mayBeStale": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "May be stale"
+        }
+      },
+      "ja": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "古い可能性があります"
+        }
+      }
+    }
+  },
   "agentSession.chat.exitCode": {
     "extractionState": "manual",
     "localizations": {
