@@ -5839,7 +5839,7 @@ policies:
 
 caveats:
   - id: ordinary_codex_cursor_storage_gate
-    title: Bounded Codex cursor hardening awaits tagged runtime dogfood; sustained ingestion remains gated by live PE storage maintenance
+    title: Bounded Codex cursor hardening awaits tagged runtime dogfood; PE maintenance complete, bounded-writer rollout required
     status: open
     owner: bmux
 

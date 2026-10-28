@@ -36,22 +36,44 @@ payloads totaled 1,651,965,388 bytes and 1,940 current turn payloads totaled
 its row totals differ slightly from later bounded diagnostic samples. None of these diagnostics
 print payloads.
 
-## Read-only pre-maintenance estimate
+## Live maintenance result, 2026-10-28
 
-At the original measurement the live schema was 28. An isolated tagged app
-advanced the shared store to schema 29 on 2026-10-26, but the
-`legacy_citations_indexed` gate remains 0. No prune dry run or deletion has run
-against the live file. Citation indexing and a prune dry run require the
-verified maintenance setup below. A read-only upper bound from a later sample is
-35,914 superseded session rows and 79,048 superseded turn rows (total rows
-minus current rows). The two revision tables occupied 277,911,379,968 physical bytes in the
-earlier `dbstat` snapshot, and their later logical JSON totaled
-278,025,754,987 bytes. These are separate live snapshots and therefore
-approximate upper bounds on payload bytes that pruning might retire, not a
-savings forecast. The actual candidate set will be smaller after
-keeping eight historical revisions per owner and all indexed citations and
-pins. The version-1 dry run reports exact candidate rows and logical payload
-bytes after migration and citation indexing, before any deletion.
+The live schema-29 store was taken offline after all five bmux clients were
+closed. The original 631.6 GiB file passed full SQLite integrity checking. A
+verified 24,808,249,904-byte compressed archive of that exact file is retained
+at `~/.local/state/provenance-engine/provenance.sqlite.precompact-20261028.zst`;
+a full decompression hash matched the original. Temporary rebuildable bmux
+DerivedData caches were removed to provide staging capacity. The archive is on
+the same filesystem, so it protects against maintenance mistakes but not volume
+failure.
+
+Legacy citation indexing completed and opened the schema-29 safety gate. The
+first full, no-deletion prune dry run reported 35,962 eligible rows and
+235,466,870,125 logical payload bytes. That was a first-pass estimate:
+retiring source revisions removed their citation edges and exposed further
+redundant snapshots. Bounded, resumable prune passes retired 107,535 payloads
+and 244,154,276,037 logical bytes in total, retaining every revision metadata
+row. A final dry run reported zero eligible rows. One run stopped after 19,000
+committed rows because a concurrent monitoring read made its WAL checkpoint
+busy; the idempotent rerun completed the remaining 88,535 rows.
+
+Post-prune ledger and current session/turn payload fingerprints matched the
+pre-prune clone exactly (89,425 events, 664 current sessions, 2,057 current
+turns). All retained citation targets and current revisions had nonempty
+payloads; full `integrity_check` and foreign-key checks passed. The pruned
+file had 66,858,944 free pages out of 71,876,688. `VACUUM INTO` produced a
+20,285,796,352-byte candidate, whose metadata counts, protected fingerprints,
+full integrity check, and foreign keys matched the pruned source. It was
+atomically swapped into the live path with a rollback copy retained. An
+existing tagged bmux build opened the replacement and appended an event. The
+large temporary rollback copies were then removed; the verified compressed
+original remains. The live file measured 20,350,136,320 bytes after app writes,
+with 992,021,815,296 bytes free on the filesystem (about 924 GiB), versus
+678,207,881,216 bytes and roughly 202 GiB free at the original measurement.
+
+The older pr221 smoke-test app was closed after verification. Sustained live
+terminal ingestion remains gated on a deployed bounded-writer build and tagged
+runtime dogfood; reopening an older writer could recreate full snapshots.
 
 ## Record classes
 
@@ -111,18 +133,21 @@ closed legacy-citation gate.
    citation, and replay tests. Stop all PE-using bmux processes before any
    offline rebuild. Check the database and WAL are stable. Never run a live
    in-place `VACUUM` on the 632 GiB file.
-3. Make a SQLite-consistent backup on a separate volume, verify
-   `PRAGMA integrity_check`, and retain the original file until the rebuilt
-   replacement has been checked and used successfully. A raw file copy while
-   WAL writers run is not a backup. Verify free capacity for the full backup,
-   pruning WAL, compact output, and a staged replacement before proceeding.
+3. With writers closed and WAL checkpointed, make a SQLite-consistent recovery
+   copy and verify its full `PRAGMA integrity_check`. A separate volume protects
+   against volume failure; a verified same-volume compressed archive protects
+   only against maintenance mistakes. Retain the original or a verified recovery
+   copy until the replacement has been checked and used successfully. A raw
+   file copy while WAL writers run is not a backup. Verify free capacity for
+   the recovery copy, pruning WAL, compact output, and staged replacement.
 4. Index legacy citations transactionally. Run `pruneOutcomePayloads(dryRun:
    true)` over the full candidate set and inspect row/byte estimates. Then
    prune in bounded transactions, recording rows and logical bytes per pass.
    An interrupted pass commits or rolls back as a unit; rerunning is
    idempotent. Validate current-query and exact cited-revision parity against
    the backup, then replay on a copy and compare current projections.
-5. Build a compact replacement with `VACUUM INTO` on the separate volume.
+5. Build a compact replacement with `VACUUM INTO` on a filesystem with
+   verified staging capacity.
    Verify integrity, schema version, row counts, citations, and current queries.
    Stage the compact file on the destination filesystem only if space permits.
    With all writers stopped, atomically rename the original to a rollback
@@ -136,22 +161,12 @@ vacuum/prune triggers. Inspect the reason and citation coverage before running
 maintenance. The next ingestion slice must add a cursor-backed ingestion-lag
 threshold (five minutes while an associated session is active).
 
-## Current live blocker
+## Current rollout gate
 
-At measurement time five tagged bmux processes were open against the live store.
-Available local space varied from about 188 to 193 GiB as the WAL checkpointed.
-The live file is 631.6 GiB, and the page bytes in use are about 259 GiB before
-pruning. No separate data volume was mounted. A conservative plan requires at
-least 632 GiB for a verified SQLite backup plus up to 259 GiB for a compact
-candidate on separate storage, and up to 259 GiB of staging space on the local
-filesystem before an atomic replacement; leave additional room for WAL and
-operating-system writes. Actual requirements may be lower only after a measured
-prune and compact dry run. The current 188–193 GiB local space cannot support
-the conservative staging bound. The safe backup/rebuild/replacement procedure cannot run under
-these conditions. The schema-29 migration occurred when the isolated app
-opened the shared store; no live citation indexing, pruning, compact
-replacement, or deletion was attempted. A later payload-free report showed
-about 369 GiB of free pages, about 169 GiB of local free space, and the legacy
-citation gate closed. A short read-only interval added 40 session and 40 turn
-revisions while older builds remained active, so their writer versions must be
-retired before sustained ingestion resumes.
+The live reclamation and citation-index maintenance are complete. Keep older
+bmux builds that predate the bounded outcome writer closed. Before sustained
+Codex terminal ingestion, deploy the bounded-writer build and verify file-size,
+freelist, revision-count, and ingestion-lag diagnostics during tagged dogfood.
+The retained compressed original is a recovery archive on the same volume;
+maintain a separate-volume backup if protection against volume failure is
+required.
