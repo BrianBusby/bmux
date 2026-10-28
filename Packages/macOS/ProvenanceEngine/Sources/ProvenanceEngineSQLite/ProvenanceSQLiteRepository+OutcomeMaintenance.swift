@@ -15,8 +15,8 @@ extension ProvenanceSQLiteRepository {
                 let rows = try database.prepare("SELECT id, \(column) FROM \(table) WHERE \(column) <> ''")
                 defer { rows.finalize() }
                 while try rows.step() {
+                    guard let id = rows.string(at: 0), let json = rows.string(at: 1) else { continue }
                     try autoreleasepool {
-                        guard let id = rows.string(at: 0), let json = rows.string(at: 1) else { return }
                         try recordOutcomeCitations(sourceRevisionID: id, json: json)
                     }
                 }
@@ -103,10 +103,11 @@ extension ProvenanceSQLiteRepository {
             try query.bind(max(1, batchSize) - candidates.count, at: 1)
             while try query.step() {
                 guard let id = query.string(at: 0) else { continue }
-                let bytes = try autoreleasepool {
-                    supportsOctetLength
-                        ? Int64(query.int(at: 1))
-                        : try legacyPayloadByteCount(table: table, id: id)
+                let bytes: Int64
+                if supportsOctetLength {
+                    bytes = Int64(query.int(at: 1))
+                } else {
+                    bytes = try legacyPayloadByteCount(table: table, id: id)
                 }
                 candidates.append((table, id, bytes))
             }
