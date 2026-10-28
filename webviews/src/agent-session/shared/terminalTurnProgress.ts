@@ -50,7 +50,7 @@ export function currentTurnProgress(messages: ObservedMessage[], observedTurn: O
   return turnProgressReports(messages, observedTurn, partial).at(-1)?.progress;
 }
 
-export function turnProgressReports(messages: ObservedMessage[], observedTurn: ObservedTurn | undefined, _partial: boolean): { promptIndex: number; progress: TurnProgressSnapshot }[] {
+export function turnProgressReports(messages: ObservedMessage[], observedTurn: ObservedTurn | undefined, _partial: boolean): { promptIndex: number; endIndex: number; progress: TurnProgressSnapshot }[] {
   const prompts = messages.flatMap((message, index) => message.role === "user" && message.kind.type === "prose" ? [index] : []);
   return prompts.map((promptIndex, position) => {
     const nextPrompt = prompts[position + 1];
@@ -65,7 +65,7 @@ export function turnProgressReports(messages: ObservedMessage[], observedTurn: O
     const planIndex = latestPlan ? turn.findIndex(message => message.id === latestPlan.messageId) : -1;
     const stale = state === "working" && planIndex >= 0 && interruptionIndex > planIndex
       && turn.slice(interruptionIndex + 1).some(message => message.kind.type !== "status");
-    return { promptIndex, progress: { plan: latestPlan, plans, activity, timeline, startedAt: messages[promptIndex]?.timestamp, state, partial: false, stale } };
+    return { promptIndex, endIndex: (nextPrompt ?? messages.length) - 1, progress: { plan: latestPlan, plans, activity, timeline, startedAt: messages[promptIndex]?.timestamp, state, partial: false, stale } };
   });
 }
 

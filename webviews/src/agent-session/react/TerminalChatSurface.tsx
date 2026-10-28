@@ -65,7 +65,7 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
   const reports = turnProgressReports(state.messages, state.observedTurn, state.partial);
   const latest = reports.at(-1);
   const active = latest && (latest.progress.state === "working" || latest.progress.state === "unknown") ? latest : undefined;
-  const pastReports = new Map(reports.filter(report => report !== active).map(report => [report.promptIndex, report.progress]));
+  const pastReports = new Map(reports.filter(report => report !== active).map(report => [report.endIndex, report.progress]));
   const openActivity = (messageId: string) => {
     pendingActivityRow.current = messageId;
     if (viewMode === "turn") void callNative("terminalChat.openChat").catch(() => { pendingActivityRow.current = undefined; });
