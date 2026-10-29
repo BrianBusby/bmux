@@ -221,7 +221,7 @@ struct SidebarWorkspaceSnapshotBuilder {
         return [PullRequestDisplay(
             id: "\(label.lowercased())#\(pullRequest.number)|\(url?.absoluteString ?? "")",
             number: pullRequest.number,
-            title: nil,
+            title: pullRequest.title,
             label: label,
             url: url,
             status: pullRequest.status.flatMap(SidebarPullRequestStatus.init(rawValue:)) ?? .open,
@@ -249,7 +249,7 @@ struct SidebarWorkspaceSnapshotBuilder {
         return PullRequestDisplay(
             id: "\(pullRequest.label.lowercased())#\(pullRequest.number)|\(pullRequest.url.absoluteString)",
             number: pullRequest.number,
-            title: pullRequest.title,
+            title: pullRequest.title ?? provenancePullRequest?.title,
             label: pullRequest.label,
             url: pullRequest.url,
             status: pullRequest.status,

@@ -18,6 +18,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
             display: Self.workspaceDisplay(
                 branch: "feature/cc-1842-upload-retries",
                 pullRequestNumber: 9182,
+                pullRequestTitle: "Fix upload retry behavior",
                 pullRequestURL: "https://github.com/example/repo/pull/9182",
                 pullRequestOwnerLogin: "brian",
                 pullRequestOwnerURL: "https://github.com/brian",
@@ -63,6 +64,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
 
         #expect(display.branch == "feature/cc-1842-upload-retries")
         #expect(display.pullRequestNumber == 9182)
+        #expect(display.pullRequestTitle == "Fix upload retry behavior")
         #expect(display.pullRequestURL == "https://github.com/example/repo/pull/9182")
         #expect(display.pullRequestOwnerLogin == "brian")
         #expect(display.pullRequestOwnerURL == "https://github.com/brian")
@@ -87,6 +89,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
             timestamp: baseTime,
             display: Self.workspaceDisplay(
                 pullRequestNumber: 42,
+                pullRequestTitle: "Repair flashing",
                 pullRequestURL: "https://github.com/example/repo/pull/42",
                 pullRequestOwnerAvatarURL: "https://avatars.githubusercontent.com/u/42?v=4",
                 pullRequestStatus: "open",
@@ -112,6 +115,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
         let display = try #require(response.display)
 
         #expect(display.pullRequestNumber == 42)
+        #expect(display.pullRequestTitle == "Repair flashing")
         #expect(display.pullRequestURL == "https://github.com/example/repo/pull/42")
         #expect(display.pullRequestOwnerAvatarURL == "https://avatars.githubusercontent.com/u/42?v=4")
         #expect(display.pullRequestStatus == "open")
@@ -132,6 +136,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
             timestamp: baseTime,
             display: Self.workspaceDisplay(
                 pullRequestNumber: 42,
+                pullRequestTitle: "Repair flashing",
                 pullRequestURL: "https://github.com/example/repo/pull/42",
                 pullRequestOwnerAvatarURL: "https://avatars.githubusercontent.com/u/42?v=4",
                 pullRequestStatus: "open",
@@ -154,6 +159,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
             ProvenanceWorkspaceDisplayRequest(workspaceID: Self.workspaceID)
         ).display)
         #expect(display.pullRequestNumber == nil)
+        #expect(display.pullRequestTitle == nil)
         #expect(display.pullRequestURL == nil)
         #expect(display.pullRequestOwnerAvatarURL == nil)
         #expect(display.pullRequestStatus == nil)
@@ -175,6 +181,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
             timestamp: baseTime,
             display: Self.workspaceDisplay(
                 pullRequestNumber: 42,
+                pullRequestTitle: "Repair flashing",
                 pullRequestURL: "https://github.com/example/repo/pull/42",
                 pullRequestStatus: "open",
                 pullRequestBranch: "feature/pr-42",
@@ -196,6 +203,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
             ProvenanceWorkspaceDisplayRequest(workspaceID: Self.workspaceID)
         ).display)
         #expect(display.pullRequestNumber == 42)
+        #expect(display.pullRequestTitle == "Repair flashing")
         #expect(display.pullRequestURL == "https://github.com/example/repo/pull/42")
         #expect(display.pullRequestStatus == "merged")
         #expect(display.pullRequestBranch == "feature/pr-42")
@@ -491,6 +499,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
     static func workspaceDisplay(
         branch: String? = nil,
         pullRequestNumber: Int? = nil,
+        pullRequestTitle: String? = nil,
         pullRequestURL: String? = nil,
         pullRequestOwnerLogin: String? = nil,
         pullRequestOwnerURL: String? = nil,
@@ -518,6 +527,7 @@ struct WorkspaceDisplayCurrentStateProjectionTests {
             titleSource: "user",
             branch: branch,
             pullRequestNumber: pullRequestNumber,
+            pullRequestTitle: pullRequestTitle,
             pullRequestURL: pullRequestURL,
             pullRequestOwnerLogin: pullRequestOwnerLogin,
             pullRequestOwnerURL: pullRequestOwnerURL,

@@ -742,7 +742,7 @@ struct ProvenanceSQLiteDatabaseTests {
 
         let summary = try await repository.storageSummary()
         #expect(summary == ProvenanceSQLiteStorageSummary(
-            schemaVersion: 29,
+            schemaVersion: 30,
             eventCount: 0,
             latestEventSequence: nil,
             repositoryCount: 0,

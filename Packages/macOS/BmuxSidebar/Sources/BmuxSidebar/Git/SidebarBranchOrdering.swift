@@ -284,12 +284,29 @@ public struct SidebarBranchOrdering: Sendable {
                 continue
             }
             guard let existing = pullRequestsByKey[key] else { continue }
-            if freshnessPriority(state.isStale) > freshnessPriority(existing.isStale) {
-                pullRequestsByKey[key] = state
-            } else if freshnessPriority(state.isStale) == freshnessPriority(existing.isStale),
-                      statusPriority(state.status) > statusPriority(existing.status) {
-                pullRequestsByKey[key] = state
+            let preferred: SidebarPullRequestState
+            let other: SidebarPullRequestState
+            if freshnessPriority(state.isStale) > freshnessPriority(existing.isStale)
+                || freshnessPriority(state.isStale) == freshnessPriority(existing.isStale)
+                    && statusPriority(state.status) > statusPriority(existing.status) {
+                preferred = state
+                other = existing
+            } else {
+                preferred = existing
+                other = state
             }
+            pullRequestsByKey[key] = SidebarPullRequestState(
+                number: preferred.number,
+                title: preferred.title ?? other.title,
+                label: preferred.label,
+                url: preferred.url,
+                ownerLogin: preferred.ownerLogin,
+                ownerURL: preferred.ownerURL,
+                ownerAvatarURL: preferred.ownerAvatarURL,
+                status: preferred.status,
+                branch: preferred.branch,
+                isStale: preferred.isStale
+            )
         }
 
         if orderedKeys.isEmpty, let fallbackPullRequest {

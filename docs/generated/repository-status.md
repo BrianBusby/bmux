@@ -137,6 +137,7 @@ Repository: `BrianBusby/bmux`
 | Workspace Display Durable Context | implemented |
 | Workspace Display Failed Observation Retry | under observation |
 | Workspace Display File Watcher Churn Policy | planned |
+| Workspace Display Pr Title Persistence | under observation |
 | Workspace Display Projection | implemented |
 | Workspace Display Prompt Resource Discovery | implemented |
 | Workspace Display Tab Projection | implemented |

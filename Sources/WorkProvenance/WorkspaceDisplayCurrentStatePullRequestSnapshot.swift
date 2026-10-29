@@ -5,6 +5,7 @@ import ProvenanceEngineContracts
 /// PE-owned pull request facts for a workspace display snapshot.
 struct WorkspaceDisplayCurrentStatePullRequestSnapshot: Equatable, Sendable {
     let number: Int
+    let title: String?
     let url: URL?
     let ownerLogin: String?
     let ownerURL: URL?
@@ -16,6 +17,7 @@ struct WorkspaceDisplayCurrentStatePullRequestSnapshot: Equatable, Sendable {
     init?(_ display: ProvenanceWorkspaceDisplayRecord) {
         guard let number = display.pullRequestNumber else { return nil }
         self.number = number
+        self.title = display.pullRequestTitle?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         self.url = display.pullRequestURL.flatMap(URL.init(string:))
         self.ownerLogin = display.pullRequestOwnerLogin?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         let ownerURL = display.pullRequestOwnerURL?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
