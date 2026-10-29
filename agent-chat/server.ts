@@ -278,6 +278,7 @@ function createSession(
 }
 
 function emitSessionEvent(sess: Session, evt: AgentEvent) {
+  if (evt.kind === "tool-start" && evt.at === undefined) evt = { ...evt, at: Date.now() };
   const generation = currentAttributionGeneration(sess);
   const generations = eventGenerations(sess);
   recordSessionEventSideEffects(sess, evt);

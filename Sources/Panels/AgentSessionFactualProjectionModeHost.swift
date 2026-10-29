@@ -9,14 +9,14 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     var initialPrimaryTab: AgentSessionFactualProjectionMode?
     var showsAppShell = false
     var fixturePreviewEnabled = false
-    var liveChatContent: ((@escaping () -> Void) -> AnyView)?
+    var liveChatContent: ((AgentSessionFactualProjectionMode, @escaping () -> Void, @escaping () -> Void) -> AnyView)?
     var liveTerminalContent: AnyView?
     var onPrimaryTabChange: ((Bool) -> Void)?
     var onPrimaryTabsHostChange: (@MainActor (NSView, Bool) -> Void)?
     var workspaceLabel: String?
     var sessionTitle: String?
     var sessionDescription: String?
-    var chatContent: ((_ onTerminal: @escaping () -> Void) -> AnyView)? = nil
+    var chatContent: ((_ mode: AgentSessionFactualProjectionMode, _ onTerminal: @escaping () -> Void, _ onChat: @escaping () -> Void) -> AnyView)? = nil
     let stableWorkspaceID: UUID?
     let workProvenanceRuntime: WorkProvenanceRuntime?
     let backgroundColor: NSColor
@@ -74,8 +74,8 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
                 .allowsHitTesting(primaryContentIsVisible)
                 .accessibilityHidden(!primaryContentIsVisible)
 
-            if let chatContent, viewMode == .chat {
-                chatContent { viewMode = .terminal }
+            if let chatContent, viewMode == .chat || viewMode == .turn {
+                chatContent(viewMode, { viewMode = .terminal }, { viewMode = .chat })
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             if showsSessionContent {
@@ -111,19 +111,19 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
     }
 
     private var primaryContentIsVisible: Bool {
-        !showsSessionContent && viewMode != .chat
+        !showsSessionContent && viewMode != .chat && viewMode != .turn
     }
 
     private var modePicker: some View {
         HStack(spacing: 8) {
             Picker("", selection: $viewMode) {
-                ForEach(AgentSessionFactualProjectionMode.allCases.filter { $0 != .chat || chatContent != nil }) { mode in
+                ForEach(AgentSessionFactualProjectionMode.allCases.filter { ($0 != .chat && $0 != .turn) || chatContent != nil }) { mode in
                     Text(mode.title).tag(mode)
                 }
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: chatContent == nil ? 180 : 260)
+            .frame(width: chatContent == nil ? 180 : 340)
 
             Spacer(minLength: 0)
         }

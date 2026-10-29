@@ -521,6 +521,30 @@ details.thinking .t-body { white-space: pre-wrap; font-size: calc(var(--font-siz
 .turn-activity {
   max-width: 760px; margin: -4px auto 12px; padding: 0 24px; color: var(--text-dim);
 }
+.turn-progress { max-width: 760px; margin: 4px auto 14px; padding: 12px 24px; color: var(--text-dim); min-width: 0; }
+.turn-progress-heading { display: flex; justify-content: space-between; gap: 12px; color: var(--text); margin-bottom: 8px; }
+.turn-progress-heading > span { color: var(--text-faint); }
+.turn-plan-steps { list-style: none; margin: 0; padding: 0; }
+.turn-plan-step { margin: 3px 0; }
+.turn-plan-step summary { display: flex; gap: 10px; align-items: baseline; cursor: pointer; line-height: 1.5; color: var(--text); }
+.turn-plan-step summary::-webkit-details-marker { display: none; }
+.turn-plan-step summary > span:first-child { flex: none; width: 14px; text-align: center; }
+.turn-plan-step.state-done summary, .turn-plan-step.state-upcoming summary, .turn-plan-step.state-skipped summary { color: var(--text-dim); }
+.turn-plan-step.state-unknown summary { color: var(--text-faint); }
+.turn-plan-detail { margin: 4px 0 8px 24px; font-size: calc(var(--font-size-base) - 2px); color: var(--text-faint); }
+.turn-plan-more, .turn-progress-compact { border: 0; background: none; color: var(--text-dim); padding: 4px 0; cursor: pointer; font: inherit; text-align: left; }
+.turn-plan-more:hover, .turn-progress-compact:hover { color: var(--text); }
+.turn-plan-empty { margin: 0; color: var(--text-faint); }
+.turn-current { border-top: 1px solid color-mix(in srgb, var(--fg) 14%, transparent); margin-top: 10px; padding-top: 8px; overflow-wrap: anywhere; }
+.turn-current-heading { color: var(--text-faint); font-size: calc(var(--font-size-base) - 2px); text-transform: uppercase; margin-bottom: 3px; }
+.turn-current-failed { color: var(--ansi-red, #d66); }
+.turn-plan-history { margin-top: 8px; font-size: calc(var(--font-size-base) - 2px); }
+.turn-plan-history summary { cursor: pointer; }
+.turn-plan-history ul { margin: 3px 0 6px; }
+.turn-activity-marker { border: 0; background: none; color: var(--text-faint); padding: 4px 6px; text-align: left; cursor: pointer; }
+.turn-activity-marker:hover { color: var(--text); }
+.chat-connection-reason { color: var(--text-faint); font-size: calc(var(--font-size-base) - 2px); padding: 0 12px 8px; }
+@media (max-width: 480px) { .turn-progress { padding: 10px 16px; } }
 .turn-summary,
 .turn-activity-row {
   width: 100%; border: 0; background: transparent; color: inherit; display: flex; align-items: center;

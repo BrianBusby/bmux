@@ -5,6 +5,8 @@ import { renderMarkdownHTML } from "../shared/markdown";
 import { initialTerminalChat, reconcileTerminalChat, terminalCapabilities, type ObservedMessage, type TerminalChatSnapshot } from "../shared/terminalChat";
 import { ConnectedChatComposer } from "./ConnectedChatComposer";
 import { canUseConnectedControl } from "../shared/connectedChat";
+import { turnProgressReports } from "../shared/terminalTurnProgress";
+import { TerminalTurnProgress } from "./TerminalTurnProgress";
 import type { AppContext } from "../shared/types";
 
 
@@ -12,10 +14,17 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
   const [state, setState] = useState(initialTerminalChat);
   const [starting, setStarting] = useState(false);
   const [startFailed, setStartFailed] = useState(false);
+  const [viewMode, setViewMode] = useState<"chat" | "turn">(context.terminalChatMode ?? "chat");
   const scroll = useRef<HTMLDivElement>(null);
   const following = useRef(true);
   const automaticStartAttempted = useRef(false);
+  const pendingActivityRow = useRef<string | undefined>(undefined);
   const copy = context.copy;
+  useEffect(() => {
+    const onMode = (event: Event) => setViewMode((event as CustomEvent<{ mode: "chat" | "turn" }>).detail.mode);
+    window.addEventListener("bmux-terminal-chat-mode", onMode);
+    return () => window.removeEventListener("bmux-terminal-chat-mode", onMode);
+  }, []);
   useEffect(() => {
     let cancelled = false;
     let visible = true;
@@ -41,27 +50,52 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
     return () => { cancelled = true; clearTimeout(timer); window.removeEventListener("bmux-terminal-chat-visibility", onVisibility); };
   }, [context]);
   useEffect(() => {
-    if (!context.automaticallyStartConnectedSession || !context.canStartConnectedSession ||
+    if (viewMode !== "chat" || !context.automaticallyStartConnectedSession || !context.canStartConnectedSession ||
       state.status !== "unavailable" || state.control || state.sessionId || state.reason === "ambiguous" ||
       automaticStartAttempted.current) return;
     automaticStartAttempted.current = true;
     setStarting(true);
     void callNative("terminalChat.startConnected", { automatic: true })
       .catch(() => setStartFailed(true)).finally(() => setStarting(false));
-  }, [context, state.status, state.control, state.sessionId, state.reason]);
+  }, [context, viewMode, state.status, state.control, state.sessionId, state.reason]);
   useLayoutEffect(() => {
     if (following.current && scroll.current) scroll.current.scrollTop = scroll.current.scrollHeight;
   }, [state.messages]);
   const capabilities = terminalCapabilities(state.status === "observed" || state.status === "ended");
+  const reports = turnProgressReports(state.messages, state.observedTurn, state.partial);
+  const latest = reports.at(-1);
+  const active = latest && (latest.progress.state === "working" || latest.progress.state === "unknown") ? latest : undefined;
+  const pastReports = new Map(reports.filter(report => report !== active).map(report => [report.endIndex, report.progress]));
+  const openActivity = (messageId: string) => {
+    pendingActivityRow.current = messageId;
+    if (viewMode === "turn") void callNative("terminalChat.openChat").catch(() => { pendingActivityRow.current = undefined; });
+    else document.getElementById(`terminal-chat-row-${messageId}`)?.scrollIntoView?.({ block: "center", behavior: "smooth" });
+  };
+  useLayoutEffect(() => {
+    if (viewMode !== "chat" || !pendingActivityRow.current) return;
+    document.getElementById(`terminal-chat-row-${pendingActivityRow.current}`)?.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    pendingActivityRow.current = undefined;
+  }, [viewMode, state.messages]);
   const historyNotice = state.reason === "ambiguous" ? copy.chatAmbiguous :
     state.status === "stale" ? copy.chatStale : undefined;
+  if (viewMode === "turn") return <section className="terminal-chat terminal-turn-tab">
+    <div className="terminal-turn-tab-content">
+      {historyNotice && <output className="terminal-chat-notice">{historyNotice}</output>}
+      {latest ? <TerminalTurnProgress key={state.messages[latest.promptIndex]?.id} progress={latest.progress} copy={copy} onOpenActivity={openActivity} /> :
+        <p className="terminal-turn-tab-empty">{copy.chatNoActiveTurn}</p>}
+    </div>
+  </section>;
   return <section className="terminal-chat">
     <section className="terminal-chat-history" ref={scroll} tabIndex={0} aria-label={copy.chatConversation}
       onScroll={() => { const node = scroll.current; if (node) following.current = node.scrollHeight - node.scrollTop - node.clientHeight < 48; }}>
       {historyNotice && <output className="terminal-chat-notice">{historyNotice}</output>}
       {state.partial && <p className="terminal-chat-notice">{copy.chatPartial}</p>}
       <div className="terminal-chat-messages" key={`${state.sessionId}:${state.sourceRevision}`}>
-        {state.messages.map(message => <ObservedRow key={message.id} message={message} context={context} sessionId={state.sessionId!} />)}
+        {state.messages.map((message, index) => <React.Fragment key={message.id}>
+          <span id={`terminal-chat-row-${message.id}`} className="terminal-chat-row-anchor" aria-hidden="true" />
+          <ObservedRow message={message} context={context} sessionId={state.sessionId!} />
+          {pastReports.has(index) && <TerminalTurnProgress progress={pastReports.get(index)!} copy={copy} onOpenActivity={openActivity} />}
+        </React.Fragment>)}
       </div>
     </section>
     {state.control ? <ConnectedChatComposer context={context} control={state.control}

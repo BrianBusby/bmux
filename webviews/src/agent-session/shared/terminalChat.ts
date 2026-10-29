@@ -5,6 +5,7 @@ export type SessionCapability = { available: boolean; reason?: "noAttachedContro
 export type ObservedMessage = {
   id: string;
   seq: number;
+  timestamp?: string;
   role: string;
   kind: {
     [key: string]: unknown;
@@ -17,6 +18,7 @@ export type ObservedMessage = {
     input_detail?: string;
     tool_name?: string;
     status?: string;
+    event?: string;
     is_running?: boolean;
     exit_code?: number;
     file_path?: string;

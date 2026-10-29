@@ -5,6 +5,7 @@ export interface TurnGroup {
   user?: Extract<Block, { kind: "user" }>;
   activity: Block[];
   assistant?: Extract<Block, { kind: "assistant" }>;
+  assistantPosition?: number;
   footer?: Extract<Block, { kind: "footer" }>;
   done: boolean;
 }
@@ -18,6 +19,7 @@ export function groupTurns(blocks: Block[], status?: string): TurnGroup[] {
       const index = pendingAssistantIndex === null ? current.activity.length : Math.min(pendingAssistantIndex, current.activity.length);
       current.activity.splice(index, 0, current.assistant);
       current.assistant = undefined;
+      current.assistantPosition = undefined;
       pendingAssistantIndex = null;
     }
   };
@@ -39,6 +41,7 @@ export function groupTurns(blocks: Block[], status?: string): TurnGroup[] {
       demoteAssistantToActivity();
       current.assistant = block;
       pendingAssistantIndex = current.activity.length;
+      current.assistantPosition = pendingAssistantIndex;
     } else if (block.kind === "footer") {
       current.footer = block;
     } else {
@@ -105,6 +108,7 @@ export function summarizeTurnActivity(blocks: Block[]): string {
 }
 
 export function activityRowLabel(block: Block): string {
+  if (block.kind === "plan") return navigator.language.startsWith("ja") ? "プランを報告" : "Plan reported";
   if (block.kind === "tool") {
     const name = block.name || "tool";
     const detail = block.detail ? ` ${block.detail}` : "";
@@ -115,10 +119,28 @@ export function activityRowLabel(block: Block): string {
     if (/\b(edit|write|apply_patch|patch)\b/.test(lower)) return `Edited ${detail.trim() || name}`;
     return `Ran ${name}${detail}`;
   }
+  if (block.kind === "approval") return navigator.language.startsWith("ja") ? "承認イベント" : "Approval event";
   if (block.kind === "files") return `Edited ${plural(block.files.length, "file")}`;
   if (block.kind === "thinking") return "Reasoned";
   if (block.kind === "assistant") return "Assistant";
   if (block.kind === "status") return block.text;
   if (block.kind === "error") return "Error";
   return "Activity";
+}
+
+export type ActivityEntry = { start: number; blocks: Block[] };
+
+export function groupConsecutiveReads(blocks: Block[]): ActivityEntry[] {
+  const entries: ActivityEntry[] = [];
+  for (const [index, block] of blocks.entries()) {
+    const label = activityRowLabel(block);
+    const readOnly = block.kind === "tool" && /^(Read|Searched|Listed)\b/.test(label);
+    const previous = entries.at(-1);
+    if (readOnly && previous && previous.blocks.every((item) => item.kind === "tool" && /^(Read|Searched|Listed)\b/.test(activityRowLabel(item)))) {
+      previous.blocks.push(block);
+    } else {
+      entries.push({ start: index, blocks: [block] });
+    }
+  }
+  return entries;
 }

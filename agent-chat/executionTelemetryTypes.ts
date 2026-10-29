@@ -127,6 +127,7 @@ export interface TelemetryTurnFailed {
 }
 
 export interface TelemetryPlanStep {
+  id?: string;
   text: string;
   status: string;
 }

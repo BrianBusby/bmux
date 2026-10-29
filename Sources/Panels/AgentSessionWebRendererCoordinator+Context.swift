@@ -223,6 +223,7 @@ extension AgentSessionWebRendererCoordinator {
             context["automaticallyStartConnectedSession"] = onStartConnectedSession != nil
                 && canAutomaticallyStartConnectedSession?() == true
             context["readOnlyTerminalChat"] = terminalChatSnapshot != nil
+            context["terminalChatMode"] = terminalChatMode.rawValue
             if let workingDirectory {
                 context["workingDirectory"] = workingDirectory
             }

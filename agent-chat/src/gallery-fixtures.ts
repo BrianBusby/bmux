@@ -128,6 +128,18 @@ longConversationBlocks.push(
 );
 
 export const activityScenarios: { id: string; label: string; status: string; blocks: Block[] }[] = [
+  { id: "turn-progress", label: "Turn progress with plan updates", status: "running", blocks: [
+    { kind: "user", text: "Inspect the picker and verify the fix." },
+    { kind: "plan", source: "codex-plan", at: 1, steps: [
+      { text: "Inspect the picker", status: "completed" },
+      { text: "Fix the selection state", status: "inProgress" },
+      { text: "Run focused checks", status: "pending" },
+    ] },
+    { kind: "assistant", text: "I found the selection reset and am changing its state owner.", open: false },
+    { kind: "tool", toolId: "plan-rg", name: "rg", detail: "RepositoryPicker", status: "ok" },
+    { kind: "approval", approvalId: "approval-1", state: "requested" },
+    { kind: "tool", toolId: "plan-test", name: "bun test", detail: "picker.test.ts", status: "running" },
+  ] },
   { id: "pre-first-token", label: "Pre-first-token Thinking", status: "running", blocks: [{ kind: "user", text: "Start a slow Claude turn." }] },
   { id: "thinking-elapsed", label: "Thinking with elapsed counter", status: "running", blocks: [{ kind: "user", text: "Slow turn that has waited." }] },
   { id: "reasoning", label: "Reasoning under open thinking", status: "running", blocks: [{ kind: "user", text: "Reason out loud." }, { kind: "thinking", text: "I am tracing the plan and checking the constraints.", open: true }] },

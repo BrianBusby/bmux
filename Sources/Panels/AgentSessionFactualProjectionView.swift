@@ -34,7 +34,7 @@ struct AgentSessionFactualProjectionView: View {
     let onRefresh: () -> Void
     var showsAppShell = false
     var fixturePreviewEnabled = false
-    var liveChatContent: ((@escaping () -> Void) -> AnyView)?
+    var liveChatContent: ((AgentSessionFactualProjectionMode, @escaping () -> Void, @escaping () -> Void) -> AnyView)?
     var liveTerminalContent: AnyView?
     var onPrimaryTabChange: ((Bool) -> Void)?
     var onPrimaryTabsHostChange: (@MainActor (NSView, Bool) -> Void)?
@@ -148,12 +148,15 @@ struct AgentSessionFactualProjectionView: View {
                     .padding(.top, 4)
             }
             AgentSessionPrimaryTabs(selected: selectedPrimaryTab, onSelect: { selectedPrimaryTab = $0 },
+                                    modes: liveChatContent == nil ? AgentSessionFactualProjectionMode.allCases.filter { $0 != .turn } : AgentSessionFactualProjectionMode.allCases,
                                     onHostChange: onPrimaryTabsHostChange)
                 .padding(.top, theme.layout.primaryNavigationTopGap)
             switch selectedPrimaryTab {
             case .session:
                 sessionContent
             case .chat:
+                chatContentView
+            case .turn:
                 chatContentView
             case .terminal:
                 terminalContentView
@@ -191,9 +194,7 @@ struct AgentSessionFactualProjectionView: View {
     private var chatContentView: some View {
         Group {
             if let liveChatContent {
-                liveChatContent {
-                    selectedPrimaryTab = .terminal
-                }
+                liveChatContent(selectedPrimaryTab, { selectedPrimaryTab = .terminal }, { selectedPrimaryTab = .chat })
                 .id("bmux-shell-chat")
             } else {
                 emptyMessage(String(

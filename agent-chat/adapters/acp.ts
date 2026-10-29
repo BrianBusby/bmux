@@ -416,9 +416,17 @@ function handleAgentMessage(sess: SessionCtx, st: AcpState, def: ProviderDef, ms
         }
         break;
       case "plan":
-        sess.emit({
-          kind: "status",
-          text: "plan: " + (u.entries ?? []).map((e: any) => e.content).join(" → ").slice(0, 300),
+        if (Array.isArray(u.entries)) sess.emit({
+          kind: "plan",
+          source: "acp-plan",
+          at: Date.now(),
+          steps: u.entries.flatMap((entry: unknown) => {
+            if (!entry || typeof entry !== "object" || !("content" in entry) || typeof entry.content !== "string") return [];
+            return [{
+              text: entry.content.slice(0, 400),
+              status: "status" in entry && typeof entry.status === "string" ? entry.status.slice(0, 80) : "unknown",
+            }];
+          }),
         });
         break;
       case "available_commands_update":

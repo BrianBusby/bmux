@@ -10,9 +10,11 @@ export type AgentEvent =
   | { kind: "delta"; text: string }
   | { kind: "assistant"; text: string }
   | { kind: "thinking"; text: string }
-  | { kind: "tool-start"; toolId: string; name: string; detail?: string }
-  | { kind: "tool-end"; toolId: string; name?: string; detail?: string; ok?: boolean }
+  | { kind: "plan"; steps: { id?: string; text: string; status: string }[]; explanation?: string; source: "codex-plan" | "claude-todo" | "acp-plan"; at: number }
+  | { kind: "tool-start"; toolId: string; name: string; detail?: string; at?: number }
+  | { kind: "tool-end"; toolId: string; name?: string; detail?: string; ok?: boolean; exitCode?: number }
   | { kind: "done"; stats?: string }
+  | { kind: "approval"; approvalId: string; state: "requested" | "resolved"; decision?: string }
   | { kind: "files-changed"; files: ChangedFile[] }
   | { kind: "error"; message: string };
 
@@ -60,10 +62,12 @@ export type Block =
   | { kind: "user"; text: string }
   | { kind: "assistant"; text: string; open: boolean }
   | { kind: "thinking"; text: string; open: boolean }
-  | { kind: "tool"; toolId: string; name: string; detail?: string; status: "running" | "ok" | "fail"; out?: string }
+  | { kind: "plan"; steps: { id?: string; text: string; status: string }[]; explanation?: string; source: "codex-plan" | "claude-todo" | "acp-plan"; at: number }
+  | { kind: "tool"; toolId: string; name: string; detail?: string; status: "running" | "ok" | "fail"; out?: string; startedAt?: number; exitCode?: number }
   | { kind: "status"; text: string }
   | { kind: "error"; text: string }
   | { kind: "footer"; text: string }
+  | { kind: "approval"; approvalId: string; state: "requested" | "resolved"; decision?: string }
   | { kind: "files"; files: ChangedFile[]; revision?: string };
 
 export interface Provider { id: string; label: string; iconUrl?: string; iconDarkUrl?: string; installed?: boolean; installCommand?: string; }
@@ -98,18 +102,22 @@ export function foldEvent(blocks: Block[], evt: AgentEvent): Block[] {
         return [...blocks.slice(0, -1), { ...last, text: last.text + evt.text }];
       }
       return [...closeStreaming(blocks), { kind: "thinking", text: evt.text, open: true }];
+    case "plan":
+      return [...closeStreaming(blocks), evt];
     case "tool-start":
-      return [...closeStreaming(blocks), { kind: "tool", toolId: evt.toolId, name: evt.name || "tool", detail: evt.detail, status: "running" }];
+      return [...closeStreaming(blocks), { kind: "tool", toolId: evt.toolId, name: evt.name || "tool", detail: evt.detail, status: "running", startedAt: evt.at }];
     case "tool-end":
       return blocks.map((b) =>
         b.kind === "tool" && b.toolId === evt.toolId
-          ? { ...b, status: evt.ok === false ? "fail" : "ok", out: evt.detail || b.out }
+          ? { ...b, status: evt.ok === false ? "fail" : "ok", out: evt.detail || b.out, exitCode: evt.exitCode }
           : b,
       );
     case "done": {
       const closed = closeStreaming(blocks);
       return [...closed, { kind: "footer", text: evt.stats ?? "" }];
     }
+    case "approval":
+      return [...closeStreaming(blocks), evt];
     case "files-changed":
       return [...closeStreaming(blocks), { kind: "files", files: evt.files, revision: nextFilesRevision(blocks) }];
     case "error":
@@ -125,6 +133,7 @@ interface Hello { providers: Provider[]; defaultCwd: string; keys?: { ctrlJ?: Ct
 
 export interface SessionState {
   ready: boolean;
+  connected: boolean;
   connectionEpoch: number;
   providers: Provider[];
   capabilities: Record<string, ProviderCapabilities>;
@@ -145,7 +154,7 @@ export interface SessionState {
   forkPending: boolean;
   start(opts: { provider: string; cwd: string; prompt: string; options?: Record<string, OptionValue> }): boolean;
   compose(): void;
-  reply(text: string): void;
+  reply(text: string): boolean;
   stop(): void;
   setOption(id: string, value: OptionValue): void;
   fork(): void;
@@ -173,6 +182,7 @@ export function consumeOptimisticUserEcho(queue: string[], text: string): boolea
 
 export function useSession(): SessionState {
   const [ready, setReady] = useState(false);
+  const [connected, setConnected] = useState(false);
   const [connectionEpoch, setConnectionEpoch] = useState(0);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [capabilities, setCapabilities] = useState<Record<string, ProviderCapabilities>>({});
@@ -255,6 +265,7 @@ export function useSession(): SessionState {
       const ws = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws");
       wsRef.current = ws;
       ws.onopen = () => {
+        setConnected(true);
         const pending = pendingStartRef.current;
         if (sessionIdRef.current) sendRaw({ op: "subscribe", sessionId: sessionIdRef.current });
         else if (pending && !pending.failed) {
@@ -388,7 +399,7 @@ export function useSession(): SessionState {
             break;
         }
       };
-      ws.onclose = () => { if (!closed) setTimeout(connect, 800); };
+      ws.onclose = () => { setConnected(false); if (!closed) setTimeout(connect, 800); };
     };
     connect();
     return () => { closed = true; clearPendingStartTimeout(); wsRef.current?.close(); };
@@ -441,20 +452,21 @@ export function useSession(): SessionState {
   const reply = useCallback((text: string) => {
     const pending = pendingStartRef.current;
     if (!sessionIdRef.current && pending?.failed) {
-      start({ provider: pending.provider, cwd: pending.cwd, prompt: text, options: pending.options });
-      return;
+      return start({ provider: pending.provider, cwd: pending.cwd, prompt: text, options: pending.options });
     }
     if (!sessionIdRef.current && pending && !pending.failed) {
       pending.queuedReplies.push(text);
       optimisticUsersRef.current.push(text);
       setBlocks((bs) => [...closeStreaming(bs), { kind: "user", text }]);
-      return;
+      return true;
     }
     if (sessionIdRef.current) {
       if (sendRaw({ op: "send", sessionId: sessionIdRef.current, prompt: text })) {
         setSession((s) => (s ? { ...s, status: "running" } : s));
+        return true;
       }
     }
+    return false;
   }, [sendRaw, start]);
   const stop = useCallback(() => {
     if (sessionIdRef.current) sendRaw({ op: "stop", sessionId: sessionIdRef.current });
@@ -489,6 +501,7 @@ export function useSession(): SessionState {
 
   return {
     ready,
+    connected,
     connectionEpoch,
     providers,
     capabilities,
