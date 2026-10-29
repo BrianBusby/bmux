@@ -29,6 +29,9 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
     /// Current pull request number, when known.
     public let pullRequestNumber: Int?
 
+    /// Current pull request title, when known.
+    public let pullRequestTitle: String?
+
     /// Current pull request URL, when known.
     public let pullRequestURL: String?
 
@@ -102,6 +105,7 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         case titleSource
         case branch
         case pullRequestNumber
+        case pullRequestTitle
         case pullRequestURL
         case pullRequestOwnerLogin
         case pullRequestOwnerURL
@@ -136,6 +140,7 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         titleSource: String? = nil,
         branch: String? = nil,
         pullRequestNumber: Int? = nil,
+        pullRequestTitle: String? = nil,
         pullRequestURL: String? = nil,
         pullRequestOwnerLogin: String? = nil,
         pullRequestOwnerURL: String? = nil,
@@ -167,6 +172,7 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         self.titleSource = titleSource
         self.branch = branch
         self.pullRequestNumber = pullRequestNumber
+        self.pullRequestTitle = pullRequestTitle
         self.pullRequestURL = pullRequestURL
         self.pullRequestOwnerLogin = pullRequestOwnerLogin
         self.pullRequestOwnerURL = pullRequestOwnerURL
@@ -202,6 +208,7 @@ public struct ProvenanceWorkspaceDisplayRecord: Codable, Equatable, Sendable, Id
         self.titleSource = try container.decodeIfPresent(String.self, forKey: .titleSource)
         self.branch = try container.decodeIfPresent(String.self, forKey: .branch)
         self.pullRequestNumber = try container.decodeIfPresent(Int.self, forKey: .pullRequestNumber)
+        self.pullRequestTitle = try container.decodeIfPresent(String.self, forKey: .pullRequestTitle)
         self.pullRequestURL = try container.decodeIfPresent(String.self, forKey: .pullRequestURL)
         self.pullRequestOwnerLogin = try container.decodeIfPresent(String.self, forKey: .pullRequestOwnerLogin)
         self.pullRequestOwnerURL = try container.decodeIfPresent(String.self, forKey: .pullRequestOwnerURL)

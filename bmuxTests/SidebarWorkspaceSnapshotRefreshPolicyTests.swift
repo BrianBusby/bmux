@@ -224,6 +224,30 @@ import Testing
         #expect(row.titleLine == "Fix route parameter handling")
     }
 
+    @Test func restoredPullRequestKeepsPersistedTitle() throws {
+        let provenance = try Self.provenancePullRequest(
+            number: 29546,
+            title: "Seeing try search user dash copy text"
+        )
+        let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
+            livePullRequests: [],
+            provenancePullRequest: provenance,
+            latestSubmittedMessage: "Check PR #29546",
+            latestConversationMessage: nil,
+            label: "PR"
+        )
+        #expect(rows.first?.titleLine == "Seeing try search user dash copy text")
+
+        let liveRows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
+            livePullRequests: [try Self.livePullRequest(number: 29546)],
+            provenancePullRequest: provenance,
+            latestSubmittedMessage: nil,
+            latestConversationMessage: nil,
+            label: "PR"
+        )
+        #expect(liveRows.first?.titleLine == "Seeing try search user dash copy text")
+    }
+
     @Test func latestPromptPullRequestURLOverridesStaleProvenancePullRequestWhenLiveStateIsMissing() throws {
         let rows = SidebarWorkspaceSnapshotBuilder.pullRequestDisplays(
             livePullRequests: [],
@@ -428,6 +452,7 @@ import Testing
     private static func provenancePullRequest(
         number: Int,
         status: String = "open",
+        title: String? = nil,
         ownerLogin: String? = nil,
         ownerURL: String? = nil,
         branch: String? = nil
@@ -443,6 +468,7 @@ import Testing
             titleSource: nil,
             branch: nil,
             pullRequestNumber: number,
+            pullRequestTitle: title,
             pullRequestURL: "https://github.com/CompanyCam/Company-Cam-API/pull/\(number)",
             pullRequestOwnerLogin: ownerLogin,
             pullRequestOwnerURL: ownerURL,

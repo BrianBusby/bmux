@@ -16,6 +16,7 @@ extension WorkspaceDisplayCurrentStateProjectionTests {
             timestamp: baseTime,
             display: Self.workspaceDisplay(
                 pullRequestNumber: 41,
+                pullRequestTitle: "First review",
                 pullRequestURL: "https://github.com/example/repo/pull/41",
                 pullRequestOwnerAvatarURL: "https://avatars.githubusercontent.com/u/41?v=4",
                 observedAt: baseTime
@@ -37,6 +38,7 @@ extension WorkspaceDisplayCurrentStateProjectionTests {
             ProvenanceWorkspaceDisplayRequest(workspaceID: Self.workspaceID)
         ).display)
         #expect(display.pullRequestNumber == 42)
+        #expect(display.pullRequestTitle == nil)
         #expect(display.pullRequestOwnerAvatarURL == nil)
     }
 
