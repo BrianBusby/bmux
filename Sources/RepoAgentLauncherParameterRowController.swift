@@ -10,13 +10,14 @@ final class RepoAgentLauncherParameterRowController: NSObject {
     init(definition: RepoAgentLauncherParameterDefinition) {
         self.definition = definition
         checkbox = NSButton(checkboxWithTitle: definition.flag, target: nil, action: nil)
+        checkbox.state = definition.isSelectedByDefault ? .on : .off
 
         switch definition.valueKind {
         case .none:
             textField = nil
             popupButton = nil
         case .text(let placeholder), .optionalText(let placeholder):
-            let field = NSTextField(string: "")
+            let field = NSTextField(string: definition.defaultValue ?? "")
             field.placeholderString = placeholder
             field.frame = NSRect(x: 0, y: 0, width: 190, height: 24)
             textField = field
@@ -26,6 +27,10 @@ final class RepoAgentLauncherParameterRowController: NSObject {
             for option in options {
                 popup.addItem(withTitle: option.label)
                 popup.lastItem?.representedObject = option.value
+            }
+            if let defaultValue = definition.defaultValue,
+               let index = options.firstIndex(where: { $0.value == defaultValue }) {
+                popup.selectItem(at: index)
             }
             textField = nil
             popupButton = popup

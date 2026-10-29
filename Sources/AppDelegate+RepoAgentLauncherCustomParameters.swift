@@ -17,16 +17,21 @@ extension AppDelegate {
         )
         let format = String(
             localized: "dialog.repoAgentLauncher.launchParams.message",
-            defaultValue: "Launch %@ normally or choose command-line parameters for this run."
+            defaultValue: "Launch %@ or choose command-line parameters for this run."
         )
         alert.informativeText = String(format: format, actionTitle)
-        alert.addButton(withTitle: String(localized: "dialog.repoAgentLauncher.launchParams.normal", defaultValue: "Launch Normally"))
+        let launchTitle = agent == .codex
+            ? String(localized: "dialog.repoAgentLauncher.launchParams.defaults", defaultValue: "Launch with Defaults")
+            : String(localized: "dialog.repoAgentLauncher.launchParams.normal", defaultValue: "Launch Normally")
+        alert.addButton(withTitle: launchTitle)
         alert.addButton(withTitle: String(localized: "dialog.repoAgentLauncher.launchParams.customize", defaultValue: "Customize..."))
         alert.addButton(withTitle: String(localized: "dialog.repoAgentLauncher.launchParams.cancel", defaultValue: "Cancel"))
 
         switch runBmuxModalAlert(alert, presentingWindow: presentingWindow) {
         case .alertFirstButtonReturn:
-            return []
+            return definitions.filter(\.isSelectedByDefault).map {
+                RepoAgentLauncherParameterSelection(definition: $0, value: $0.defaultValue)
+            }
         case .alertSecondButtonReturn:
             return promptForRepoAgentLauncherParameters(
                 definitions: definitions,
