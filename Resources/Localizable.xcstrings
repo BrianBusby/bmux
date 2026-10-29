@@ -221115,13 +221115,30 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Launch %@ normally or choose command-line parameters for this run."
+            "value": "Launch %@ or choose command-line parameters for this run."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@を通常どおり起動するか、この実行で使うコマンドラインパラメータを選択します。"
+            "value": "%@を起動するか、この実行で使うコマンドラインパラメータを選択します。"
+          }
+        }
+      }
+    },
+    "dialog.repoAgentLauncher.launchParams.defaults": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Launch with Defaults"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デフォルト設定で起動"
           }
         }
       }

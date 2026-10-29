@@ -5,6 +5,8 @@ struct RepoAgentLauncherParameterDefinition: Identifiable, Sendable, Hashable {
     let flag: String
     let comment: String
     let valueKind: RepoAgentLauncherParameterValueKind
+    let isSelectedByDefault: Bool
+    let defaultValue: String?
 
     var id: String {
         "\(agent.commandName).\(flag)"

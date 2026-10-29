@@ -30,7 +30,9 @@ struct RepoAgentLauncherParameterCatalog {
                     option("on-request"),
                     option("untrusted"),
                     option("never"),
-                ])
+                ]),
+                isSelectedByDefault: true,
+                defaultValue: "never"
             ),
             definition(
                 .codex,
@@ -62,7 +64,9 @@ struct RepoAgentLauncherParameterCatalog {
                     option("workspace-write"),
                     option("read-only"),
                     option("danger-full-access"),
-                ])
+                ]),
+                isSelectedByDefault: true,
+                defaultValue: "danger-full-access"
             ),
         ].sorted { $0.flag.localizedStandardCompare($1.flag) == .orderedAscending }
     }
@@ -138,14 +142,18 @@ struct RepoAgentLauncherParameterCatalog {
         _ agent: BmuxConfigAgentKind,
         _ flag: String,
         _ key: String,
-        _ defaultValue: String,
-        _ valueKind: RepoAgentLauncherParameterValueKind
+        _ commentDefaultValue: String,
+        _ valueKind: RepoAgentLauncherParameterValueKind,
+        isSelectedByDefault: Bool = false,
+        defaultValue: String? = nil
     ) -> RepoAgentLauncherParameterDefinition {
         RepoAgentLauncherParameterDefinition(
             agent: agent,
             flag: flag,
-            comment: localizedComment(key, defaultValue: defaultValue),
-            valueKind: valueKind
+            comment: localizedComment(key, defaultValue: commentDefaultValue),
+            valueKind: valueKind,
+            isSelectedByDefault: isSelectedByDefault,
+            defaultValue: defaultValue
         )
     }
 
