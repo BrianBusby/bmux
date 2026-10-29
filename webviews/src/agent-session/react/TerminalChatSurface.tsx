@@ -81,8 +81,8 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
   if (viewMode === "turn") return <section className="terminal-chat terminal-turn-tab">
     <div className="terminal-turn-tab-content">
       {historyNotice && <output className="terminal-chat-notice">{historyNotice}</output>}
-      {active ? <TerminalTurnProgress key={state.messages[active.promptIndex]?.id} progress={active.progress} copy={copy} onOpenActivity={openActivity} /> :
-        <p className="terminal-turn-tab-empty">{latest ? copy.chatReportInChat : copy.chatNoActiveTurn}</p>}
+      {latest ? <TerminalTurnProgress key={state.messages[latest.promptIndex]?.id} progress={latest.progress} copy={copy} onOpenActivity={openActivity} /> :
+        <p className="terminal-turn-tab-empty">{copy.chatNoActiveTurn}</p>}
     </div>
   </section>;
   return <section className="terminal-chat">
