@@ -304,7 +304,7 @@ struct WorkspaceExplorerHistoryAdapterTests {
         let live = try await service.liveSnapshot()
         #expect(live.workspaces.map(\.stableID) == [workspace.stableId])
         #expect(live.partialActivity)
-        let archive = try await service.archiveSnapshot()
+        let archive = try await service.retainedSnapshot()
         let result = service.combine(live: live, archived: archive)
         #expect(!result.liveMetadataPending)
         #expect(result.items.count == 1)

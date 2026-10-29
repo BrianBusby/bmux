@@ -14,19 +14,11 @@ enum WorkspaceExplorerGroupKey: Hashable {
                repositoryNames: [String: String] = [:]) -> String {
         switch self {
         case .value(let value): return repositoryNames[value] ?? value
-        case .missing(let value), .multiple(let value): return value
+        case .missing, .multiple:
+            return displayName(projectsByID: [:], repositoryNamesByID: repositoryNames)
         case .project(let id): return projectNames[id] ?? id
-        case .unassigned: return "Unassigned"
-        case .workspaceState(let isClosed): return isClosed ? "Closed" : "Open"
-        case .bmuxStatus(let status):
-            switch status {
-            case .error: return "Error"
-            case .needsInput: return "Needs input"
-            case .running: return "Running"
-            case .idle: return "Idle"
-            case .disconnected: return "Disconnected"
-            case .closedHistorical: return "Closed (historical)"
-            }
+        case .unassigned, .workspaceState, .bmuxStatus:
+            return displayName(projectsByID: [:], repositoryNamesByID: repositoryNames)
         }
     }
 

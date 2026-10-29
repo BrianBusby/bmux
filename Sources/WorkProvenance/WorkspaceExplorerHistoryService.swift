@@ -18,8 +18,11 @@ final class WorkspaceExplorerHistoryService {
         let activeWorkspaceID: String?
     }
 
-    struct ArchiveSnapshot {
+    struct RetainedSnapshot {
         let records: [ProvenanceArchivedWorkspaceRecord]
+        let sessionWorkspaces: [ProvenanceWorkspaceHistorySummary]
+        let nextSessionCursor: String?
+        let filterFacets: [ProvenanceWorkspaceHistoryFacet]
         let availability: WorkspaceExplorerArchiveAvailability
     }
 
@@ -46,11 +49,13 @@ final class WorkspaceExplorerHistoryService {
 
     /// Enriched live facts and retained history complete after the immediate presence snapshot.
     func load() async throws -> WorkspaceExplorerHistoryLoadResult {
-        async let archived = archiveSnapshot()
+        async let archived = retainedSnapshot()
         let live = try await liveSnapshot()
         let archive = try await archived
         let repositoryIDs = Set(live.workspaces.compactMap { $0.display?.repositoryID } +
-            archive.records.compactMap { $0.displayAtClose?.repositoryID })
+            archive.records.compactMap { $0.displayAtClose?.repositoryID } +
+            archive.sessionWorkspaces.compactMap { $0.display?.repositoryID ?? $0.lastKnownRepositoryID } +
+            archive.filterFacets.compactMap(\.repositoryID))
         let repositoryNames = try await repositoryNamesSnapshot(for: repositoryIDs)
         return combine(live: live, archived: archive, repositoryNamesByID: repositoryNames)
     }
@@ -63,31 +68,75 @@ final class WorkspaceExplorerHistoryService {
                 colorHex: workspace.customColor, display: nil, lastActivityAt: nil,
                 liveStatus: WorkspaceExplorerStatus.verified(of: workspace))
         }, partialActivity: true, activeWorkspaceID: activeWorkspaceID())
-        return combine(live: live, archived: ArchiveSnapshot(records: [],
+        return combine(live: live, archived: RetainedSnapshot(records: [], sessionWorkspaces: [],
+            nextSessionCursor: nil, filterFacets: [],
             availability: archiveService == nil ? .unavailable : .pending),
             liveMetadataPending: true)
     }
 
-    func archiveSnapshot() async throws -> ArchiveSnapshot {
+    func retainedSnapshot() async throws -> RetainedSnapshot {
         guard let archiveService else {
-            return ArchiveSnapshot(records: [], availability: .unavailable)
+            return RetainedSnapshot(records: [], sessionWorkspaces: [], nextSessionCursor: nil,
+                filterFacets: [], availability: .unavailable)
         }
+        var available = true
+        let records: [ProvenanceArchivedWorkspaceRecord]
         do {
-            let records: [ProvenanceArchivedWorkspaceRecord]
             if let recoverArchive {
                 records = try await recoverArchive()
             } else {
                 records = try await archiveService.archivedWorkspaces()
             }
-            return ArchiveSnapshot(records: records, availability: .available)
         } catch is CancellationError {
             throw CancellationError()
         } catch {
-            // Recovery failures leave archive completeness unknown, even if older rows remain readable.
+            available = false
             sentryCaptureError("Workspace Explorer archive load failed", category: "provenance",
                 data: ["error_type": String(reflecting: type(of: error))])
-            return ArchiveSnapshot(records: [], availability: .unavailable)
+            records = []
         }
+        let sessionWorkspaces: [ProvenanceWorkspaceHistorySummary]
+        let nextSessionCursor: String?
+        do {
+            let page = try await archiveService.workspacesWithSessions()
+            sessionWorkspaces = page.workspaces
+            nextSessionCursor = page.nextCursor
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            available = false
+            sentryCaptureError("Workspace Explorer session history load failed", category: "provenance",
+                data: ["error_type": String(reflecting: type(of: error))])
+            sessionWorkspaces = []
+            nextSessionCursor = nil
+        }
+        let filterFacets: [ProvenanceWorkspaceHistoryFacet]
+        do {
+            filterFacets = try await archiveService.workspaceHistoryFacets()
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            available = false
+            sentryCaptureError("Workspace Explorer history filter facts load failed", category: "provenance",
+                data: ["error_type": String(reflecting: type(of: error))])
+            filterFacets = []
+        }
+        return RetainedSnapshot(records: records, sessionWorkspaces: sessionWorkspaces,
+            nextSessionCursor: nextSessionCursor, filterFacets: filterFacets,
+            availability: available ? .available : .unavailable)
+    }
+
+    /// Resolves one continuation page without re-reading the archive or current windows.
+    func moreSessionWorkspaces(cursor: String) async throws -> WorkspaceExplorerHistoryLoadResult {
+        guard let archiveService else { throw WorkspaceExplorerHistoryLoadError.archiveUnavailable }
+        let page = try await archiveService.workspacesWithSessions(cursor: cursor)
+        let items = WorkspaceExplorerHistoryAdapter().join(live: [], archived: [],
+            sessionWorkspaces: page.workspaces, eligibilityByID: [:])
+        let repositoryIDs = Set(items.compactMap(\.repositoryID))
+        let names = try await repositoryNamesSnapshot(for: repositoryIDs)
+        return WorkspaceExplorerHistoryLoadResult(items: items, archiveAvailability: .available,
+            partialLiveActivity: false, repositoryNamesByID: names,
+            nextHistoryCursor: page.nextCursor)
     }
 
     private func repositoryNamesSnapshot(for repositoryIDs: Set<String>) async throws -> [String: String] {
@@ -143,7 +192,7 @@ final class WorkspaceExplorerHistoryService {
             activeWorkspaceID: activeWorkspaceID())
     }
 
-    func combine(live: LiveSnapshot, archived: ArchiveSnapshot,
+    func combine(live: LiveSnapshot, archived: RetainedSnapshot,
                  liveMetadataPending: Bool = false,
                  repositoryNamesByID: [String: String] = [:]) -> WorkspaceExplorerHistoryLoadResult {
         let liveIDs = Set(live.workspaces.map(\.stableID))
@@ -157,13 +206,16 @@ final class WorkspaceExplorerHistoryService {
             items: WorkspaceExplorerHistoryAdapter().join(
                 live: live.workspaces,
                 archived: archived.records,
+                sessionWorkspaces: archived.sessionWorkspaces,
                 eligibilityByID: eligibilityByID
             ),
             archiveAvailability: archived.availability,
             partialLiveActivity: live.partialActivity,
             liveMetadataPending: liveMetadataPending,
             activeWorkspaceID: live.activeWorkspaceID,
-            repositoryNamesByID: repositoryNamesByID
+            repositoryNamesByID: repositoryNamesByID,
+            nextHistoryCursor: archived.nextSessionCursor,
+            filterFacets: archived.filterFacets
         )
     }
 
@@ -176,7 +228,7 @@ final class WorkspaceExplorerHistoryService {
             .filter { seenWorkspaces.insert($0.stableId).inserted }
     }
 
-    func sessions(stableID: UUID, limit: Int = 50, cursor: String? = nil) async throws
+    func sessions(stableID: UUID, limit: Int = 25, cursor: String? = nil) async throws
         -> ProvenanceWorkspaceSessionPageResponse {
         guard let archiveService else { throw WorkspaceExplorerHistoryLoadError.archiveUnavailable }
         return try await archiveService.workspaceSessions(stableWorkspaceID: stableID, limit: limit, cursor: cursor)

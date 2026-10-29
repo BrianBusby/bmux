@@ -26,6 +26,17 @@ actor WorkProvenanceWorkspaceArchiveService {
         return records
     }
 
+    /// Reads one bounded page of retained workspace identities with session evidence.
+    func workspacesWithSessions(cursor: String? = nil) async throws -> ProvenanceWorkspaceHistoryPageResponse {
+        try Task.checkCancellation()
+        return try await client.workspaceHistory(.init(limit: 25, cursor: cursor))
+    }
+
+    /// Reads compact filter metadata independently of the cursor-paged history rows.
+    func workspaceHistoryFacets() async throws -> [ProvenanceWorkspaceHistoryFacet] {
+        try await client.workspaceHistoryFacets().facets
+    }
+
     /// Resolves stable repository identities to names already recorded by Provenance Engine.
     func repositoryNames(for repositoryIDs: Set<String>) async throws -> [String: String] {
         var names: [String: String] = [:]
@@ -43,7 +54,7 @@ actor WorkProvenanceWorkspaceArchiveService {
 
     func workspaceSessions(
         stableWorkspaceID: UUID,
-        limit: Int = 50,
+        limit: Int = 25,
         cursor: String? = nil
     ) async throws -> ProvenanceWorkspaceSessionPageResponse {
         try await client.workspaceSessions(.init(

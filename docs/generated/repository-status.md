@@ -100,6 +100,7 @@ Repository: `BrianBusby/bmux`
 | Provenance Engine Workspace Display Projection Cursors | implemented |
 | Provenance Engine Workspace Display Ticket Link Facts | implemented |
 | Provenance Engine Workspace Display Ticket Title Facts | implemented |
+| Provenance Engine Workspace Session History Index | under observation |
 | React Smart Session Hybrid Focus Workbench | under observation |
 | React Smart Session Initial Work Model Consumer | implemented |
 | React Smart Session Surface | under observation |
@@ -148,6 +149,8 @@ Repository: `BrianBusby/bmux`
 | Workspace Explorer Card Hit Target | under observation |
 | Workspace Explorer Close Journal | under observation |
 | Workspace Explorer Close Recovery | under observation |
+| Workspace Explorer Cross Run Session History | under observation |
+| Workspace Explorer Cross Run Session Paging | under observation |
 | Workspace Explorer Embedded Workbench | under observation |
 | Workspace Explorer Filter Transition | under observation |
 | Workspace Explorer Group Accessibility | under observation |

@@ -36,11 +36,15 @@ struct WorkspaceExplorerHistoryView: View {
             }
             HStack {
                 Text(item.isOpen ? String(localized: "explorer.open", defaultValue: "Open") :
-                    String(localized: "explorer.closed", defaultValue: "Closed"))
+                    (item.hasUnverifiedPresence ?
+                        String(localized: "explorer.sessionHistory", defaultValue: "Session history") :
+                        String(localized: "explorer.closed", defaultValue: "Closed")))
                 Spacer()
                 if item.isOpen {
                     Button(String(localized: "explorer.openLive", defaultValue: "Open live workspace"),
                         action: onOpenLive)
+                } else if item.hasUnverifiedPresence {
+                    EmptyView()
                 } else if case .eligible = item.reopenEligibility {
                     Button(String(localized: "explorer.reopen", defaultValue: "Reopen workspace"),
                         action: onReopen)
@@ -56,6 +60,11 @@ struct WorkspaceExplorerHistoryView: View {
                     closed.formatted(date: .abbreviated, time: .shortened))
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
+            if item.hasUnverifiedPresence {
+                Text(String(localized: "explorer.historicalPresenceNotice", defaultValue:
+                    "Session history from Provenance Engine. This bmux run cannot verify whether the workspace is open elsewhere."))
+                    .font(.system(size: 11)).foregroundStyle(.secondary)
+            }
             if let recorded = item.lastRecordedStatus {
                 Text(String(format: String(localized: "explorer.lastRecordedStatus",
                     defaultValue: "Last recorded: %@"),
@@ -64,7 +73,7 @@ struct WorkspaceExplorerHistoryView: View {
             }
             if let display = item.archive?.displayAtClose ?? item.display {
                 HStack(spacing: 8) {
-                    Text(display.repositoryID.map { repositoryNamesByID[$0] ?? $0 } ??
+                    Text(item.repositoryID.map { repositoryNamesByID[$0] ?? $0 } ??
                         String(localized: "explorer.unknownRepository", defaultValue: "Unknown repository"))
                     if let branch = display.branch { Text(branch).help(branch) }
                     if let ticket = display.ticketIDs.first { Text(ticket) }
@@ -72,10 +81,14 @@ struct WorkspaceExplorerHistoryView: View {
                 }
                 .font(.system(size: 11, design: .monospaced))
                 .foregroundStyle(.secondary).lineLimit(1)
+            } else if let repositoryID = item.repositoryID {
+                Text(repositoryNamesByID[repositoryID] ?? repositoryID)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(.secondary).lineLimit(1)
             }
             if item.archive != nil {
                 Text(String(localized: "explorer.lastKnownMetadata", defaultValue:
-                    "Last-known values recorded at close, not re-fetched."))
+                    "Last-known values recorded by Provenance Engine."))
                     .font(.system(size: 11)).italic().foregroundStyle(.secondary)
             }
             if item.archive?.coverageCode == "close_snapshot_recovery" {

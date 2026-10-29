@@ -92,6 +92,23 @@ Merged PR #184 holds the previous result and counts while excluded cards fade
 for 170 ms, then commits the latest filter or scope result. Merged PR #185 captures verified status before a workspace closes, stores it in PE's optional archive snapshot field, and shows it only as historical context. Merged PR #186 adds an Explorer-origin return route to the existing live workspace titlebar while keeping the separate Explorer window and its saved collection arrangement. Merged PR #187 completes the All projects → collection → workspace chain and adds a retained-history action backed by PE’s exact linked-session count. Older records have no recorded status; a later close without one does not reuse the earlier value. Merged PR #188 adds completed command and assistant-output timestamps to PE workspace-session activity ordering; session metadata refreshes remain excluded. Merged PR #189 gives group disclosure and Focus controls distinct keyboard focus and VoiceOver meaning. Merged PR #190 adds plan updates and file-change attributions to meaningful activity. The active `workspace-explorer-history-pages` slice moves retained-session page requests into a child model so late or overlapping responses cannot replace newer history and PE’s unique session total remains available. Complete project metadata, close-snapshot force-quit durability, and reduced-motion dogfood remain open. See
 [the implementation record](../planning/workspace-explorer-implementation.md).
 
+The `explorer-pe-session-history` follow-up adds a paged PE workspace-history
+read over retained session evidence and joins it to the Explorer's live and
+archived workspace rows. This surfaces sessions from other bmux runs even when
+no close archive was written. Such rows are read-only historical presence;
+their live or closed state cannot be verified by the current process. The
+Explorer's Past scope includes both archived closures and session-only history.
+The existing archive-history clear marker also hides session-derived workspace
+identities whose last observed activity predates the clear, without erasing
+session evidence. The next slice bounds both workspace-history and per-workspace
+session requests to 25 records per cursor page. Explorer keeps loaded pages,
+offers a continuation action, and follows further pages when a filter needs
+more matching historical rows. A compact PE facet read supplies filter choices
+before their cards are loaded. Archived rows with newer PE session activity are
+treated as unverified history and do not offer Reopen. This remains under
+observation pending tagged-build dogfood of counts, filter options, and detail
+pagination.
+
 ## Work Brief local slice
 
 Merged PR #213 adds a built-in, read-only Work Brief window over

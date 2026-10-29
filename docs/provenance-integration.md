@@ -64,6 +64,21 @@ let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
 
 The SQLite-backed factory is an SDK construction detail. bmux code must not import engine implementation targets, instantiate engine SQLite types directly, or read engine projection tables from adopted read/write paths.
 
+Explorer reads paged `workspaceHistory(...)` summaries from PE to find stable
+workspace identities with retained coding-agent sessions across bmux runs. It
+joins those summaries to current-run presence and close archives by workspace
+ID. A session-only identity remains read-only history: bmux cannot verify from
+PE evidence whether another run still has that workspace open. Explorer requests
+25 workspace summaries or workspace sessions at a time through PE cursors.
+A separate compact facet read supplies repository, project, and owner filter
+choices across the retained history. Filtering preserves the selected predicate
+while Explorer follows additional workspace-history pages to fill the visible
+result. An archive with newer PE session activity is treated as unverified
+history until the current bmux process can establish its live state. Clearing Explorer history
+hides session-derived workspace identities whose last observed activity predates
+the clear, while the underlying session evidence remains available through
+session reads.
+
 ## Runtime Store
 
 The canonical default store is owned by Provenance Engine: `~/.local/state/provenance-engine/provenance.sqlite`.

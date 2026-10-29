@@ -40,7 +40,7 @@ enum WorkspaceExplorerCountPresentation {
                            scope: WorkspaceExplorerScope,
                            archiveAvailability: WorkspaceExplorerArchiveAvailability,
                            liveMetadataPending: Bool,
-                           hasFilters: Bool) -> String {
+                           hasFilters: Bool, historyHasMore: Bool = false) -> String {
         if liveMetadataPending && scope.period != .anyTime {
             return loadingActivity + " · " + scope.summary
         }
@@ -55,16 +55,18 @@ enum WorkspaceExplorerCountPresentation {
         switch scope.state {
         case .open: label = String(localized: "explorer.count.open", defaultValue: "open workspaces")
         case .all: label = String(localized: "explorer.count.all", defaultValue: "workspaces")
-        case .closed: label = String(localized: "explorer.count.closed", defaultValue: "closed workspaces")
+        case .closed: label = String(localized: "explorer.count.past", defaultValue: "past workspaces")
         }
         var total = "\(result.counts.workspaces) \(label)"
         if scope.state == .all {
             total += " · " + String(format: String(localized: "explorer.count.breakdown", defaultValue:
-                "%d open · %d closed"), result.counts.open, result.counts.closed)
+                "%d open · %d past"), result.counts.open, result.counts.closed)
         }
         total += " · " + scope.summary
-        guard hasFilters else { return total }
-        return String(format: String(localized: "explorer.visibleOfTotal", defaultValue: "%d of %@"),
+        let loadedPrefix = historyHasMore && scope.state != .open ?
+            String(localized: "explorer.loadedHistoryPrefix", defaultValue: "Loaded: ") : ""
+        guard hasFilters else { return loadedPrefix + total }
+        return loadedPrefix + String(format: String(localized: "explorer.visibleOfTotal", defaultValue: "%d of %@"),
             result.visibleCounts.workspaces, total)
     }
 
@@ -81,7 +83,7 @@ enum WorkspaceExplorerCountPresentation {
     }
 
     private static func closedUnknown(_ availability: WorkspaceExplorerArchiveAvailability) -> String {
-        availability.closedCountLabel ?? String(localized: "explorer.count.closedUnknown", defaultValue:
-            "closed unknown")
+        availability.closedCountLabel ?? String(localized: "explorer.count.pastUnknown", defaultValue:
+            "past history incomplete")
     }
 }

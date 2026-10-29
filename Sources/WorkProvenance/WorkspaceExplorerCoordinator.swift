@@ -7,6 +7,7 @@ import ProvenanceEngineContracts
 @MainActor @Observable
 final class WorkspaceExplorerCoordinator {
     typealias Loader = @MainActor () async throws -> WorkspaceExplorerHistoryLoadResult
+    typealias MoreHistoryLoader = @MainActor (String) async throws -> WorkspaceExplorerHistoryLoadResult
     typealias PresenceLoader = @MainActor () -> WorkspaceExplorerHistoryLoadResult
     typealias Reopener = @MainActor (UUID) -> Bool
     typealias Activator = @MainActor (UUID) -> Void
@@ -26,9 +27,9 @@ final class WorkspaceExplorerCoordinator {
     private(set) var catalog: WorkspaceExplorerCatalog?
     var presentedCatalog: WorkspaceExplorerCatalog? { activityPresentation.catalog(current: catalog) }
     private(set) var activeWorkspaceID: String?
-    private var lastLoadResult: WorkspaceExplorerHistoryLoadResult?
+    var lastLoadResult: WorkspaceExplorerHistoryLoadResult?
     private var loadGeneration = 0
-    private var isStopped = false
+    var isStopped = false
     private var observedStatusIDs: Set<String> = []
     private var statusArrangement = WorkspaceExplorerStatusArrangement()
     private var liveStatusOverrides: [String: WorkspaceExplorerStatus] = [:]
@@ -45,6 +46,8 @@ final class WorkspaceExplorerCoordinator {
     var pendingStatusChangeCount: Int { statusArrangement.pendingWorkspaceIDs.count }
     private(set) var isLoading = false
     private(set) var loadFailed = false
+    var historyPageLoading: Bool { historyPages.isLoading }
+    var historyPageFailed: Bool { historyPages.loadFailed }
     let activityClock: WorkspaceExplorerActivityClock
     let activityPresentation: WorkspaceExplorerActivityPresentation
     var activityArrangement: WorkspaceExplorerActivityArrangement { activityPresentation.arrangement }
@@ -64,6 +67,7 @@ final class WorkspaceExplorerCoordinator {
     private var collectionArrangements: [String: WorkspaceExplorerViewArrangement] = [:]
 
     private let loadHistory: Loader
+    let historyPages: WorkspaceExplorerHistoryPageStore
     private let loadPresence: PresenceLoader?
     private let reopenHistory: Reopener
     private let activateWorkspace: Activator
@@ -72,7 +76,8 @@ final class WorkspaceExplorerCoordinator {
     private let clearArchive: Clearer
     private let feedbackDelay: FeedbackDelay
 
-    init(loadHistory: @escaping Loader, loadPresence: PresenceLoader? = nil,
+    init(loadHistory: @escaping Loader, loadMoreHistory: MoreHistoryLoader? = nil,
+         loadPresence: PresenceLoader? = nil,
          reopenHistory: @escaping Reopener,
          activateWorkspace: @escaping Activator,
          onOpenLive: @escaping LiveOpenHandler = { _, _, _ in },
@@ -85,6 +90,7 @@ final class WorkspaceExplorerCoordinator {
          workspaceChangeMonitor: WorkspaceExplorerWorkspaceChangeMonitor? = nil,
          feedbackDelay: @escaping FeedbackDelay = { try await Task.sleep(for: $0) }) {
         self.loadHistory = loadHistory
+        self.historyPages = WorkspaceExplorerHistoryPageStore(loader: loadMoreHistory)
         self.loadPresence = loadPresence
         self.reopenHistory = reopenHistory
         self.activateWorkspace = activateWorkspace
@@ -118,6 +124,7 @@ final class WorkspaceExplorerCoordinator {
     }
     func load() async {
         guard !isStopped else { return }
+        historyPages.reset(cursor: nil)
         exitTransition.cancel()
         loadGeneration &+= 1
         let generation = loadGeneration
@@ -133,6 +140,8 @@ final class WorkspaceExplorerCoordinator {
             guard generation == loadGeneration, !isStopped else { return }
             present(result, preserveObservedStatuses: true)
             loadFailed = false
+            historyPages.reset(cursor: result.nextHistoryCursor)
+            scheduleHistoryFill()
         } catch is CancellationError {
             return
         } catch {
@@ -144,7 +153,7 @@ final class WorkspaceExplorerCoordinator {
             loadFailed = true
         }
     }
-    private func present(_ result: WorkspaceExplorerHistoryLoadResult,
+    func present(_ result: WorkspaceExplorerHistoryLoadResult,
                          preserveObservedStatuses: Bool = false) {
         activityPresentation.captureInteractionIfNeeded(current: catalog)
         let previousStatuses = liveStatusOverrides
@@ -240,6 +249,7 @@ final class WorkspaceExplorerCoordinator {
 
     func stopLiveStatusMonitoring() {
         isStopped = true
+        historyPages.reset(cursor: nil)
         loadGeneration &+= 1
         isLoading = false
         exitTransition.cancel()
@@ -276,6 +286,7 @@ final class WorkspaceExplorerCoordinator {
         collectionTarget = target
         historyID = nil
         sessionPages.activate(nil)
+        scheduleHistoryFill()
     }
 
     func openAllWorkspacesUnfiltered() {
@@ -284,6 +295,7 @@ final class WorkspaceExplorerCoordinator {
         refreshActivityClock()
         rootArrangement = WorkspaceExplorerViewArrangement()
         statusArrangement.reconcile(groupBy: [], filters: [:])
+        scheduleHistoryFill()
         if let lastLoadResult {
             catalog = WorkspaceExplorerCatalog(lastLoadResult, liveStatuses: liveStatusOverrides,
                 arrangedStatuses: arrangedStatuses())
@@ -330,6 +342,7 @@ final class WorkspaceExplorerCoordinator {
         collectionTarget = nil
         historyID = nil
         sessionPages.activate(nil)
+        scheduleHistoryFill()
     }
 
     func setGroupBy(_ dimensions: [WorkspaceExplorerDimension]) {
@@ -350,6 +363,7 @@ final class WorkspaceExplorerCoordinator {
         scope.state = state
         applyPendingActivityArrangement()
         stageExit(from: previous, scope: previousScope, filters: previousFilters, animated: animated)
+        scheduleHistoryFill()
     }
 
     func setScopePeriod(_ period: WorkspaceExplorerScope.Period, animated: Bool = false) {
@@ -361,6 +375,7 @@ final class WorkspaceExplorerCoordinator {
         refreshActivityClock()
         applyPendingActivityArrangement()
         stageExit(from: previous, scope: previousScope, filters: previousFilters, animated: animated)
+        scheduleHistoryFill()
     }
     func toggleCollapsed(_ path: String) { updateArrangement { $0.toggleCollapsed(path) } }
     func setScrollAnchor(_ id: String?) {
@@ -388,7 +403,7 @@ final class WorkspaceExplorerCoordinator {
     }
 
     func reopen(_ item: WorkspaceExplorerHistoryItem) async -> Bool {
-        guard case .eligible = item.reopenEligibility,
+        guard !item.hasUnverifiedPresence, case .eligible = item.reopenEligibility,
               let id = UUID(uuidString: item.id) else { return false }
         guard reopenHistory(id) else {
             reopenFailed = true
@@ -439,6 +454,7 @@ final class WorkspaceExplorerCoordinator {
             let previousFilters = rootArrangement.filters
             change(&rootArrangement)
             reconcileStatusArrangement(previousGroupBy: previousGroupBy, previousFilters: previousFilters)
+            scheduleHistoryFill()
             if previousGroupBy == rootArrangement.groupBy {
                 stageExit(from: previous, scope: previousScope, filters: presentedFiltersBeforeChange, animated: animated)
             }
@@ -451,6 +467,7 @@ final class WorkspaceExplorerCoordinator {
         change(&arrangement)
         collectionArrangements[key] = arrangement
         reconcileStatusArrangement(previousGroupBy: previousGroupBy, previousFilters: previousFilters)
+        scheduleHistoryFill()
         if previousGroupBy == arrangement.groupBy {
             stageExit(from: previous, scope: previousScope, filters: presentedFiltersBeforeChange, animated: animated)
         }

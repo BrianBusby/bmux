@@ -51,6 +51,10 @@ extension AppDelegate {
         return try await workspaceExplorerHistoryService().load()
     }
 
+    func loadMoreWorkspaceExplorerHistory(cursor: String) async throws -> WorkspaceExplorerHistoryLoadResult {
+        try await workspaceExplorerHistoryService().moreSessionWorkspaces(cursor: cursor)
+    }
+
     func workspaceExplorerPresence() -> WorkspaceExplorerHistoryLoadResult {
         workspaceExplorerHistoryService().presenceSnapshot()
     }
@@ -59,10 +63,11 @@ extension AppDelegate {
     func loadWorkspaceExplorerLiveBrief() async throws -> WorkspaceExplorerHistoryLoadResult {
         let service = workspaceExplorerHistoryService()
         let live = try await service.liveSnapshot(limit: 100)
-        return service.combine(live: live, archived: .init(records: [], availability: .available))
+        return service.combine(live: live, archived: .init(records: [], sessionWorkspaces: [],
+            nextSessionCursor: nil, filterFacets: [], availability: .available))
     }
 
-    func workspaceExplorerSessions(stableID: UUID, limit: Int = 50, cursor: String? = nil) async throws
+    func workspaceExplorerSessions(stableID: UUID, limit: Int = 25, cursor: String? = nil) async throws
         -> ProvenanceWorkspaceSessionPageResponse {
         try await workspaceExplorerHistoryService().sessions(stableID: stableID, limit: limit, cursor: cursor)
     }

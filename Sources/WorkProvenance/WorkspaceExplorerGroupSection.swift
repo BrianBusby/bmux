@@ -120,7 +120,7 @@ struct WorkspaceExplorerGroupSection: View {
                 if let item = itemsByID[id] {
                     WorkspaceExplorerWorkspaceCard(item: item, isActive: activeWorkspaceID == id,
                         isReopened: reopenedWorkspaceID == id,
-                        repositoryName: item.display?.repositoryID.flatMap { repositoryNamesByID[$0] },
+                        repositoryName: item.repositoryID.flatMap { repositoryNamesByID[$0] },
                         metadataPending: metadataPending,
                         arrangedStatus: workspacesByID[id]?.arrangedStatus,
                         hiddenDimensions: groupedDimensions.union(activeFilters.keys),

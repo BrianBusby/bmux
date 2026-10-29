@@ -55,7 +55,7 @@ struct WorkspaceExplorerEmptyCollectionView: View {
                 } description: {
                     if archiveAvailable {
                         Text(String(format: String(localized: "explorer.closedRetained", defaultValue:
-                            "%d closed workspaces retained."), closedWorkspaceCount))
+                            "%d past workspaces retained."), closedWorkspaceCount))
                     } else {
                         Text(closedCountLabel)
                     }
@@ -63,7 +63,7 @@ struct WorkspaceExplorerEmptyCollectionView: View {
                     Button(String(localized: "explorer.showAll", defaultValue: "Show all")) {
                         onShowAll()
                     }
-                    Button(String(localized: "explorer.showClosed", defaultValue: "Show closed")) {
+                    Button(String(localized: "explorer.showClosed", defaultValue: "Show past")) {
                         onShowClosed()
                     }
                 }

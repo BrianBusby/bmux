@@ -60,7 +60,7 @@ extension ProvenanceSQLiteRepository {
         _ = try statement.step()
     }
 
-    private func latestArchiveClearAt() throws -> Date? {
+    func latestArchiveClearAt() throws -> Date? {
         let statement = try database.prepare("SELECT value FROM provenance_metadata WHERE key = 'workspace_archive_cleared_at'")
         defer { statement.finalize() }
         guard try statement.step() else { return nil }

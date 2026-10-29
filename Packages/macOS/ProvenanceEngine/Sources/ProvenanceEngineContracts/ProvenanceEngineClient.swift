@@ -69,9 +69,26 @@ public protocol ProvenanceEngineClient: ProvenanceEngineHealthChecking {
     func workspaceSessions(_ request: ProvenanceWorkspaceSessionPageRequest) async throws
         -> ProvenanceWorkspaceSessionPageResponse
 
+    /// Returns bounded workspace identities established by retained session evidence.
+    ///
+    /// Workspaces with no session activity after the latest archive-history clear
+    /// are omitted. The underlying session evidence remains readable by ID.
+    /// - Parameter request: Page size and continuation token for the history read.
+    /// - Returns: Workspace summaries and the next continuation token, if any.
+    /// - Throws: A store or query error when the history cannot be read.
+    func workspaceHistory(_ request: ProvenanceWorkspaceHistoryPageRequest) async throws
+        -> ProvenanceWorkspaceHistoryPageResponse
+
+    /// Returns retained workspace filter facts without fetching session-history pages.
+    ///
+    /// - Returns: Metadata for filter choices after the latest archive-history clear.
+    /// - Throws: A store or query error when filter facts cannot be read.
+    func workspaceHistoryFacets() async throws -> ProvenanceWorkspaceHistoryFacetsResponse
+
     /// Explicitly clears retained closed-workspace metadata snapshots.
     ///
     /// This does not erase the immutable provenance ledger or session evidence.
+    /// It also hides older session-derived workspace identities from workspaceHistory.
     func clearArchivedWorkspaces(at timestamp: Date) async throws
 
     /// Returns the canonical PE-owned association between one workspace and coding-agent session.
@@ -209,6 +226,22 @@ public extension ProvenanceEngineClient {
     /// Explicit unavailable result for clients without workspace history queries.
     func workspaceSessions(_ request: ProvenanceWorkspaceSessionPageRequest) async throws
         -> ProvenanceWorkspaceSessionPageResponse {
+        throw ProvenanceWorkspaceArchiveUnavailableError()
+    }
+
+    /// Explicit unavailable result for clients without workspace history queries.
+    /// - Parameter request: Page size and continuation token for the history read.
+    /// - Returns: This default implementation never returns a page.
+    /// - Throws: ``ProvenanceWorkspaceArchiveUnavailableError``.
+    func workspaceHistory(_ request: ProvenanceWorkspaceHistoryPageRequest) async throws
+        -> ProvenanceWorkspaceHistoryPageResponse {
+        throw ProvenanceWorkspaceArchiveUnavailableError()
+    }
+
+    /// Explicit unavailable result for clients without workspace history filter queries.
+    /// - Returns: This default implementation never returns filter facts.
+    /// - Throws: ``ProvenanceWorkspaceArchiveUnavailableError``.
+    func workspaceHistoryFacets() async throws -> ProvenanceWorkspaceHistoryFacetsResponse {
         throw ProvenanceWorkspaceArchiveUnavailableError()
     }
 

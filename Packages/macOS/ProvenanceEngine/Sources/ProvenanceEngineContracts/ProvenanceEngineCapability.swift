@@ -33,6 +33,9 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
     /// Records, queries, and explicitly clears archived workspace snapshots.
     case workspaceArchive = "workspace_archive"
 
+    /// Queries paged workspace identities established by retained session history.
+    case queryWorkspaceHistory = "query_workspace_history"
+
     /// Queries the canonical workspace-to-coding-agent-session association.
     case queryWorkspaceCodingAgentSessionAssociation = "query_workspace_coding_agent_session_association"
 
@@ -85,6 +88,7 @@ public enum ProvenanceEngineCapability: String, Codable, Equatable, Sendable, Ca
         .queryCurrentContext,
         .queryWorkspaceDisplay,
         .workspaceArchive,
+        .queryWorkspaceHistory,
         .queryWorkspaceCodingAgentSessionAssociation,
         .queryFactualSessionProjection,
         .queryFactualSessionTurnDetail,

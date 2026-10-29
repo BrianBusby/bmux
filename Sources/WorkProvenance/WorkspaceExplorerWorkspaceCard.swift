@@ -26,7 +26,9 @@ struct WorkspaceExplorerWorkspaceCard: View {
     private var statusLabel: String {
         item.isOpen ? WorkspaceExplorerGroupKey.bmuxStatus(item.liveStatus)
             .displayName(projectsByID: [:]) :
-            String(localized: "explorer.closed", defaultValue: "Closed")
+            (item.hasUnverifiedPresence ?
+                String(localized: "explorer.sessionHistory", defaultValue: "Session history") :
+                String(localized: "explorer.closed", defaultValue: "Closed"))
     }
 
     private var reopenReason: String {
@@ -45,7 +47,7 @@ struct WorkspaceExplorerWorkspaceCard: View {
         WorkspaceReferenceCardView(
             card: card,
             repositoryName: hiddenDimensions.contains(.repository) ? nil :
-                (repositoryName ?? item.display?.repositoryID),
+                (repositoryName ?? item.repositoryID),
             isSelected: isActive && item.isOpen,
             canCloseWorkspace: false,
             showsCloseControl: false,
@@ -68,7 +70,7 @@ struct WorkspaceExplorerWorkspaceCard: View {
                item.display?.ticketIDs.count == 1 {
                 Button(ticket) { onFilter(.ticket, .value(ticket)) }
             }
-            if !hiddenDimensions.contains(.repository), let repository = item.display?.repositoryID {
+            if !hiddenDimensions.contains(.repository), let repository = item.repositoryID {
                 Button(repositoryName ?? repository) { onFilter(.repository, .value(repository)) }
             }
             if !hiddenDimensions.contains(.pullRequestOwner),
@@ -94,7 +96,9 @@ struct WorkspaceExplorerWorkspaceCard: View {
                         .foregroundStyle(Color.accentColor)
                 } else if !item.isOpen && !hiddenDimensions.contains(.workspaceState) &&
                             !hiddenDimensions.contains(.bmuxStatus) {
-                    Text(String(localized: "explorer.closedTag", defaultValue: "CLOSED"))
+                    Text(item.hasUnverifiedPresence ?
+                        String(localized: "explorer.historyTag", defaultValue: "HISTORY") :
+                        String(localized: "explorer.closedTag", defaultValue: "CLOSED"))
                         .foregroundStyle(.secondary)
                 }
                 if showsLiveStatus &&
@@ -132,6 +136,9 @@ struct WorkspaceExplorerWorkspaceCard: View {
                         .buttonStyle(.bordered).controlSize(.small)
                         .focused($focusedFooterControl, equals: .history)
                 }
+            } else if item.hasUnverifiedPresence {
+                Text(String(localized: "explorer.viewSessions", defaultValue: "Open to view sessions"))
+                    .font(.system(size: 11)).foregroundStyle(.secondary)
             } else if !isReopened {
                 if case .eligible = item.reopenEligibility {
                     Button(String(localized: "explorer.reopenShort", defaultValue: "Reopen"), action: onReopen)

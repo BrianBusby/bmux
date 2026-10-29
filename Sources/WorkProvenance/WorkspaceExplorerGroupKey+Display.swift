@@ -8,7 +8,7 @@ extension WorkspaceExplorerGroupKey {
         case .project(let id): return projectsByID[id]?.name ?? id
         case .unassigned: return String(localized: "explorer.unassigned", defaultValue: "Unassigned workspaces")
         case .workspaceState(let closed):
-            return closed ? String(localized: "explorer.closed", defaultValue: "Closed") :
+            return closed ? String(localized: "explorer.past", defaultValue: "Past") :
                 String(localized: "explorer.open", defaultValue: "Open")
         case .bmuxStatus(let status):
             switch status {
@@ -17,7 +17,7 @@ extension WorkspaceExplorerGroupKey {
             case .running: return String(localized: "explorer.status.running", defaultValue: "Running")
             case .idle: return String(localized: "explorer.status.idle", defaultValue: "Idle")
             case .disconnected: return String(localized: "explorer.status.disconnected", defaultValue: "Disconnected")
-            case .closedHistorical: return String(localized: "explorer.status.historical", defaultValue: "Closed (historical)")
+            case .closedHistorical: return String(localized: "explorer.status.historical", defaultValue: "Historical")
             }
         case .missing(let value), .multiple(let value):
             switch value {

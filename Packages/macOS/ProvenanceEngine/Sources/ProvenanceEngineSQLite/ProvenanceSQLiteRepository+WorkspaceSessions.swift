@@ -2,6 +2,24 @@ import Foundation
 import ProvenanceEngineContracts
 
 extension ProvenanceSQLiteRepository {
+    static let sessionActivitySQL = """
+        MAX(
+            COALESCE(s.started_at_seconds, 0),
+            COALESCE((SELECT MAX(p.submitted_at_seconds)
+                      FROM provenance_coding_agent_prompts p WHERE p.session_id = s.id), 0),
+            COALESCE((SELECT MAX(COALESCE(t.completed_at_seconds, t.started_at_seconds))
+                      FROM provenance_coding_agent_turns t WHERE t.session_id = s.id), 0),
+            COALESCE((SELECT MAX(c.completed_at_seconds)
+                      FROM provenance_coding_agent_commands c WHERE c.session_id = s.id), 0),
+            COALESCE((SELECT MAX(m.completed_at_seconds)
+                      FROM provenance_coding_agent_assistant_messages m WHERE m.session_id = s.id), 0),
+            COALESCE((SELECT MAX(p.observed_at_seconds)
+                      FROM provenance_coding_agent_plan_updates p WHERE p.session_id = s.id), 0),
+            COALESCE((SELECT MAX(f.observed_at_seconds)
+                      FROM provenance_coding_agent_file_change_attributions f WHERE f.session_id = s.id), 0)
+        )
+        """
+
     func workspaceSessionPage(_ request: ProvenanceWorkspaceSessionPageRequest) throws
         -> ProvenanceWorkspaceSessionPageResponse {
         let workspaceID = request.workspaceID.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -31,30 +49,10 @@ extension ProvenanceSQLiteRepository {
                 SELECT s.* FROM provenance_sessions s
                 JOIN linked_ids ON linked_ids.id = s.id
             ), ordered AS (
-                SELECT linked.*,
-                    MAX(
-                        COALESCE(linked.started_at_seconds, 0),
-                        COALESCE((SELECT MAX(p.submitted_at_seconds)
-                                  FROM provenance_coding_agent_prompts p
-                                  WHERE p.session_id = linked.id), 0),
-                        COALESCE((SELECT MAX(COALESCE(t.completed_at_seconds, t.started_at_seconds))
-                                  FROM provenance_coding_agent_turns t
-                                  WHERE t.session_id = linked.id), 0),
-                        COALESCE((SELECT MAX(c.completed_at_seconds)
-                                  FROM provenance_coding_agent_commands c
-                                  WHERE c.session_id = linked.id), 0),
-                        COALESCE((SELECT MAX(m.completed_at_seconds)
-                                  FROM provenance_coding_agent_assistant_messages m
-                                  WHERE m.session_id = linked.id), 0),
-                        COALESCE((SELECT MAX(p.observed_at_seconds)
-                                  FROM provenance_coding_agent_plan_updates p
-                                  WHERE p.session_id = linked.id), 0),
-                        COALESCE((SELECT MAX(f.observed_at_seconds)
-                                  FROM provenance_coding_agent_file_change_attributions f
-                                  WHERE f.session_id = linked.id), 0)
-                    ) AS activity_at_seconds,
+                SELECT s.*,
+                    \(Self.sessionActivitySQL) AS activity_at_seconds,
                     COUNT(*) OVER() AS total_count
-                FROM linked
+                FROM linked s
             )
             SELECT id, agent_kind, workspace_id, surface_id, worktree_id, cwd,
                    status, started_at_seconds, updated_at_seconds, activity_at_seconds, total_count
