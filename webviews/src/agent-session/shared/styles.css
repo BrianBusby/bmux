@@ -776,6 +776,44 @@ select {
   border-color: color-mix(in srgb, var(--agent-accent) 30%, transparent);
 }
 
+.codex-command-activity-group {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--color-token-border);
+  border-radius: 8px;
+}
+
+.codex-command-activity-group-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 6px 12px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--color-token-description-foreground);
+  font-size: var(--codex-chat-font-size);
+}
+
+.codex-command-activity-group-summary::-webkit-details-marker {
+  display: none;
+}
+
+.codex-command-activity-group-summary > span:first-child {
+  display: inline-flex;
+  transition: transform 150ms ease;
+}
+
+.codex-command-activity-group[open] .codex-command-activity-group-summary > span:first-child {
+  transform: rotate(90deg);
+}
+
+.codex-command-activity-group-entries {
+  display: grid;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
 .codex-tool-activity-turn {
   display: flex;
   width: 100%;

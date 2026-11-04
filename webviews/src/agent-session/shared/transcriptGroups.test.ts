@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
-import { groupTranscriptEntries, type TranscriptEntry } from "./sessionModel";
+import type { TranscriptEntry } from "./sessionModel";
+import { groupTranscriptEntries } from "./transcriptGroups";
 
 test("groups adjacent commands between assistant messages", () => {
   const entries: TranscriptEntry[] = [
