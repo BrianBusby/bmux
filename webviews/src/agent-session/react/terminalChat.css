@@ -41,7 +41,7 @@
 .terminal-chat-composer p, .terminal-chat-composer output, .terminal-chat-launch output { margin: 0; font-size: 12px; opacity: .8; }
 .terminal-chat button:disabled { opacity: .45; cursor: default; }
 .terminal-chat-launch button { justify-self: start; }
-.terminal-chat-row-anchor { display:block; height:0; scroll-margin-top:24px; }
+.terminal-chat [id^="terminal-chat-row-"] { scroll-margin-top:24px; }
 .terminal-turn-tab-content { width:min(100%,850px); margin:0 auto; padding:20px; box-sizing:border-box; overflow:auto; }
 .terminal-turn-tab-empty { margin:12px 0; opacity:.7; }
 .terminal-turn-progress { border:1px solid color-mix(in srgb,currentColor 16%,transparent); border-radius:var(--chat-radius); background:color-mix(in srgb,currentColor 2%,transparent); overflow:hidden; font-size:12px; }
