@@ -8,6 +8,9 @@
 .terminal-chat-role { display:block; font-size:11px; opacity:.65; margin-bottom:6px; }
 .terminal-chat-prose { white-space:pre-wrap; }
 .terminal-chat-prose p { margin:0 0 12px; }
+.terminal-chat-command-group { border:1px solid color-mix(in srgb,currentColor 12%,transparent); border-radius:var(--chat-radius); padding:8px 12px; }
+.terminal-chat-command-group > summary { cursor:pointer; overflow-wrap:anywhere; }
+.terminal-chat-command-items { display:flex; flex-direction:column; gap:var(--chat-gap); padding:12px 0 4px; }
 .terminal-chat-tool { border:1px solid color-mix(in srgb,currentColor 12%,transparent); border-radius:var(--chat-radius); padding:8px 12px; }
 .terminal-chat-tool summary { cursor:pointer; overflow-wrap:anywhere; }
 .terminal-chat-tool-status { font-size:11px; opacity:.65; margin-left:12px; }

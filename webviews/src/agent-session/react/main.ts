@@ -28,7 +28,6 @@ import { renderMarkdownHTML, renderPlainTextHTML } from "../shared/markdown";
 import { promptTextWithAttachments } from "../shared/promptAttachments";
 import { promptTextWithAutoContext } from "../shared/promptMentions";
 import { promptTextWithPlanMode } from "../shared/promptModes";
-import { groupTranscriptEntries } from "../shared/transcriptGroups";
 import { codexModelLabel, providerBadgeLabel } from "../shared/providerDisplay";
 import {
   formatRateLimitPercent,
@@ -1002,31 +1001,9 @@ const TranscriptThread = React.memo(function TranscriptThread({
       className: "agent-thread",
       "data-empty": entries.length === 0 ? "true" : undefined,
     },
-    groupTranscriptEntries(entries).map((group) =>
-      group.kind === "commands"
-        ? h(CommandActivityGroup, { copy, entries: group.entries, key: group.id })
-        : h(TranscriptTurn, { copy, entry: group.entry, key: group.id }),
-    ),
+    entries.map((entry) => h(TranscriptTurn, { copy, entry, key: entry.id })),
   );
 });
-
-function CommandActivityGroup({ copy, entries }: { copy?: AgentSessionCopy; entries: TranscriptEntry[] }) {
-  return h(
-    "details",
-    { className: "codex-command-activity-group" },
-    h(
-      "summary",
-      { className: "codex-command-activity-group-summary" },
-      h("span", { "aria-hidden": true }, chevronRightIcon("icon-2xs text-current")),
-      h("span", null, copy?.tools ?? "", ` (${entries.length})`),
-    ),
-    h(
-      "div",
-      { className: "codex-command-activity-group-entries" },
-      entries.map((entry) => h(ToolActivityTurn, { copy, entry, key: entry.id })),
-    ),
-  );
-}
 
 const TranscriptTurn = React.memo(function TranscriptTurn({
   copy,
