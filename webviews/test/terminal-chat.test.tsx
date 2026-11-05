@@ -260,6 +260,14 @@ test("connected Chat collapses exec commands between assistant messages into one
     expect(firstProse.nextElementSibling).toBe(groups[0]);
     await act(async () => groups[0]!.querySelector("summary")!.click());
     expect(groups[0]?.open).toBe(true);
+    await act(async () => groups[0]!.querySelector("summary")!.click());
+    await act(async () => dom.window.dispatchEvent(new dom.window.CustomEvent("bmux-terminal-chat-mode", { detail: { mode: "turn" } })));
+    await act(async () => dom.window.document.querySelector<HTMLButtonElement>(".terminal-turn-activity-toggle")!.click());
+    const execActivity = [...dom.window.document.querySelectorAll<HTMLButtonElement>(".terminal-turn-activity-list button")].find(button => button.textContent?.includes("exec"));
+    expect(execActivity).toBeDefined();
+    await act(async () => execActivity!.click());
+    await act(async () => dom.window.dispatchEvent(new dom.window.CustomEvent("bmux-terminal-chat-mode", { detail: { mode: "chat" } })));
+    expect(dom.window.document.querySelector<HTMLDetailsElement>(".terminal-chat-command-group")?.open).toBe(true);
   } finally {
     await act(async () => root.unmount()); dom.window.close();
     Object.assign(globalThis, { window: previousWindow, document: previousDocument, IS_REACT_ACT_ENVIRONMENT: false });
