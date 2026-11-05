@@ -4,10 +4,12 @@
 .terminal-chat-history { overflow:auto; flex:1; min-height:0; padding:20px; overflow-anchor:auto; }
 .terminal-chat-messages { max-width:850px; margin:auto; display:flex; flex-direction:column; gap:var(--chat-gap); }
 .terminal-chat-message { padding:12px 16px; overflow-wrap:anywhere; }
+.terminal-chat-assistant { padding-bottom:4px; }
 .terminal-chat-user { border-radius:var(--chat-radius); background:color-mix(in srgb,currentColor 6%,transparent); }
 .terminal-chat-role { display:block; font-size:11px; opacity:.65; margin-bottom:6px; }
-.terminal-chat-prose { white-space:pre-wrap; }
+.terminal-chat-user .terminal-chat-prose { white-space:pre-wrap; }
 .terminal-chat-prose p { margin:0 0 12px; }
+.terminal-chat-prose p:last-child { margin-bottom:0; }
 .terminal-chat-command-group { border:1px solid color-mix(in srgb,currentColor 12%,transparent); border-radius:var(--chat-radius); padding:8px 12px; }
 .terminal-chat-command-group > summary { cursor:pointer; overflow-wrap:anywhere; }
 .terminal-chat-command-items { display:flex; flex-direction:column; gap:var(--chat-gap); padding:12px 0 4px; }
