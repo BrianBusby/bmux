@@ -3,6 +3,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { callNative } from "../shared/bridge";
 import { renderMarkdownHTML } from "../shared/markdown";
 import { initialTerminalChat, reconcileTerminalChat, terminalCapabilities, type ObservedMessage, type TerminalChatSnapshot } from "../shared/terminalChat";
+import { terminalChatRows } from "../shared/terminalChatRows";
 import { ConnectedChatComposer } from "./ConnectedChatComposer";
 import { canUseConnectedControl } from "../shared/connectedChat";
 import { turnProgressReports } from "../shared/terminalTurnProgress";
@@ -66,14 +67,21 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
   const latest = reports.at(-1);
   const active = latest && (latest.progress.state === "working" || latest.progress.state === "unknown") ? latest : undefined;
   const pastReports = new Map(reports.filter(report => report !== active).map(report => [report.endIndex, report.progress]));
+  const rows = terminalChatRows(state.messages, new Set(pastReports.keys()));
+  const revealActivity = (messageId: string) => {
+    const row = document.getElementById(`terminal-chat-row-${messageId}`);
+    const group = row?.closest<HTMLDetailsElement>(".terminal-chat-command-group");
+    if (group) group.open = true;
+    row?.scrollIntoView?.({ block: "center", behavior: "smooth" });
+  };
   const openActivity = (messageId: string) => {
     pendingActivityRow.current = messageId;
     if (viewMode === "turn") void callNative("terminalChat.openChat").catch(() => { pendingActivityRow.current = undefined; });
-    else document.getElementById(`terminal-chat-row-${messageId}`)?.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    else revealActivity(messageId);
   };
   useLayoutEffect(() => {
     if (viewMode !== "chat" || !pendingActivityRow.current) return;
-    document.getElementById(`terminal-chat-row-${pendingActivityRow.current}`)?.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    revealActivity(pendingActivityRow.current);
     pendingActivityRow.current = undefined;
   }, [viewMode, state.messages]);
   const historyNotice = state.reason === "ambiguous" ? copy.chatAmbiguous :
@@ -91,11 +99,11 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
       {historyNotice && <output className="terminal-chat-notice">{historyNotice}</output>}
       {state.partial && <p className="terminal-chat-notice">{copy.chatPartial}</p>}
       <div className="terminal-chat-messages" key={`${state.sessionId}:${state.sourceRevision}`}>
-        {state.messages.map((message, index) => <React.Fragment key={message.id}>
-          <span id={`terminal-chat-row-${message.id}`} className="terminal-chat-row-anchor" aria-hidden="true" />
-          <ObservedRow message={message} context={context} sessionId={state.sessionId!} />
-          {pastReports.has(index) && <TerminalTurnProgress progress={pastReports.get(index)!} copy={copy} onOpenActivity={openActivity} />}
-        </React.Fragment>)}
+        {rows.map(row => row.kind === "report"
+          ? <TerminalTurnProgress key={row.id} progress={pastReports.get(row.index)!} copy={copy} onOpenActivity={openActivity} />
+          : row.kind === "commands"
+            ? <CommandActivityGroup key={row.id} messages={row.messages} context={context} sessionId={state.sessionId!} />
+            : <ObservedRow key={row.id} message={row.message} context={context} sessionId={state.sessionId!} />)}
       </div>
     </section>
     {state.control ? <ConnectedChatComposer context={context} control={state.control}
@@ -111,6 +119,18 @@ export function TerminalChatSurface({ context }: { context: AppContext }) {
   </section>;
 }
 
+
+function CommandActivityGroup({ messages, context, sessionId }: {
+  messages: ObservedMessage[]; context: AppContext; sessionId: string;
+}) {
+  return <details className="terminal-chat-command-group">
+    <summary>{messages.length} {context.copy.chatCommands}</summary>
+    <div className="terminal-chat-command-items">
+      {messages.map(message => <ObservedRow key={message.id} message={message} context={context} sessionId={sessionId} />)}
+    </div>
+  </details>;
+}
+
 function ObservedRow({ message, context, sessionId }: { message: ObservedMessage; context: AppContext; sessionId: string }) {
   const { kind } = message;
   const copy = context.copy;
@@ -118,7 +138,7 @@ function ObservedRow({ message, context, sessionId }: { message: ObservedMessage
   const [raw, setRaw] = useState<string>();
   const [rawFailed, setRawFailed] = useState(false);
   if (kind.type === "prose") {
-    return <article className={`terminal-chat-message terminal-chat-${message.role}`}>
+    return <article id={`terminal-chat-row-${message.id}`} className={`terminal-chat-message terminal-chat-${message.role}`}>
       <span className="terminal-chat-role">{message.role === "user" ? copy.chatUser : copy.chatAssistant}</span>
       {message.role === "user" ? <div className="terminal-chat-prose">{kind.text?.slice(0, limit)}</div> :
         <div className="terminal-chat-prose" dangerouslySetInnerHTML={{ __html: renderMarkdownHTML((kind.text ?? "").slice(0, limit)) }} />}
@@ -127,13 +147,13 @@ function ObservedRow({ message, context, sessionId }: { message: ObservedMessage
   }
   // Internal reasoning is not promoted into a conversation message.
   if (kind.type === "thought") return null;
-  if (kind.type === "status") return kind.event === "interrupted" ? <p className="terminal-chat-notice">{copy.chatInterrupted}</p> : null;
+  if (kind.type === "status") return kind.event === "interrupted" ? <p id={`terminal-chat-row-${message.id}`} className="terminal-chat-notice">{copy.chatInterrupted}</p> : null;
   const title = kind.command ?? kind.summary ?? kind.file_path ?? kind.tool_name ?? copy.chatActivity;
   const output = raw ?? kind.output ?? kind.unified_diff ?? kind.input_detail ?? kind.text ?? JSON.stringify(kind, null, 2);
   const status = kind.status === "failed" || (kind.exit_code !== undefined && kind.exit_code !== 0) ? copy.chatFailed :
     kind.status === "succeeded" || kind.exit_code === 0 ? copy.chatCompleted :
     kind.is_running || kind.status === "running" ? copy.chatAwaitingResult : copy.chatUnknown;
-  return <details className="terminal-chat-tool">
+  return <details id={`terminal-chat-row-${message.id}`} className="terminal-chat-tool">
     <summary><span>{title}</span><span className="terminal-chat-tool-status">{status}</span></summary>
     <pre>{output.slice(0, limit)}</pre>
     {kind.output_metadata?.raw_output_ref && raw === undefined && <button onClick={() => {
