@@ -224,3 +224,44 @@ test("bundled Chat puts a finished report after the turn without hiding messages
     Object.assign(globalThis, { window: previousWindow, document: previousDocument, IS_REACT_ACT_ENVIRONMENT: false });
   }
 });
+
+test("connected Chat collapses exec commands between assistant messages into one group", async () => {
+  const dom = new JSDOM("<!doctype html><div id='root'></div>", { url: "https://example.test" });
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  Object.assign(globalThis, { window: dom.window, document: dom.window.document, IS_REACT_ACT_ENVIRONMENT: true });
+  Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: { postMessage: async () => ({ ok: true, value: {
+    status: "observed", sessionId: "thread", workspaceId: "workspace", surfaceId: "surface",
+    history: { has_more: false, messages: [
+      { id: "prompt", seq: 1, role: "user", kind: { type: "prose", text: "Review this PR" } },
+      { id: "assistant-1", seq: 2, role: "agent", kind: { type: "prose", text: "I will inspect it" } },
+      { id: "exec-1", seq: 3, role: "agent", kind: { type: "tool_use", tool_name: "exec", status: "succeeded", output: "first" } },
+      { id: "thought", seq: 4, role: "agent", kind: { type: "thought", text: "internal" } },
+      { id: "exec-2", seq: 5, role: "agent", kind: { type: "tool_use", tool_name: "exec", status: "succeeded", output: "second" } },
+      { id: "assistant-2", seq: 6, role: "agent", kind: { type: "prose", text: "I found the cause" } },
+      { id: "exec-3", seq: 7, role: "agent", kind: { type: "tool_use", tool_name: "exec", status: "succeeded", output: "third" } },
+      { id: "exec-4", seq: 8, role: "agent", kind: { type: "tool_use", tool_name: "exec", status: "succeeded", output: "fourth" } },
+    ] },
+  } }) } } } });
+  const copy = { chatConversation: "Conversation", chatUser: "You", chatAssistant: "Assistant", chatCommands: "commands",
+    chatCompleted: "Completed", chatActivity: "Activity" } as AgentSessionCopy;
+  const context = { workspaceId: "workspace", panelId: "surface", copy } as AppContext;
+  const root = createRoot(dom.window.document.getElementById("root")!);
+  try {
+    await act(async () => root.render(<TerminalChatSurface context={context} />));
+    const groups = dom.window.document.querySelectorAll<HTMLDetailsElement>(".terminal-chat-command-group");
+    expect(groups).toHaveLength(2);
+    expect(groups[0]?.open).toBe(false);
+    expect(groups[1]?.open).toBe(false);
+    expect(groups[0]?.querySelector("summary")?.textContent).toContain("2 commands");
+    expect(groups[0]?.querySelectorAll(".terminal-chat-tool")).toHaveLength(2);
+    expect(groups[1]?.querySelectorAll(".terminal-chat-tool")).toHaveLength(2);
+    const firstProse = dom.window.document.querySelectorAll(".terminal-chat-message")[1]!;
+    expect(firstProse.nextElementSibling).toBe(groups[0]);
+    await act(async () => groups[0]!.querySelector("summary")!.click());
+    expect(groups[0]?.open).toBe(true);
+  } finally {
+    await act(async () => root.unmount()); dom.window.close();
+    Object.assign(globalThis, { window: previousWindow, document: previousDocument, IS_REACT_ACT_ENVIRONMENT: false });
+  }
+});
