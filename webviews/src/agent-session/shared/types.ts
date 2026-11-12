@@ -28,6 +28,8 @@ export type AgentSessionTheme = {
   accentSoft: string;
   danger: string;
   shadow: string;
+  terminalFontFamily?: string;
+  terminalFontSize?: number;
 };
 
 export type AppContext = {

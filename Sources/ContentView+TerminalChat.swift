@@ -6,10 +6,12 @@ extension ContentView {
         guard let workspace = tabManager.selectedWorkspace,
               let panel = workspace.focusedTerminalPanel,
               let reader = tabManager.terminalChatReader else { return nil }
+        let config = GhosttyConfig.load(globalFontMagnificationPercent: GlobalFontMagnification.storedPercent)
         return { mode, onTerminal, onChat in
             AnyView(
                 TerminalChatWebRenderer(
-                    panel: panel, reader: reader, appearance: .fromConfig(GhosttyConfig.load()),
+                    panel: panel, reader: reader, appearance: .fromConfig(config),
+                    fontFamily: config.fontFamily, fontSize: config.fontSize,
                     matteTheme: theme,
                     presentationMode: mode,
                     onStartConnectedSession: workspace.remoteConfiguration == nil && !workspace.isRemoteTmuxMirror ? { [weak workspace, panelID = panel.id] in
