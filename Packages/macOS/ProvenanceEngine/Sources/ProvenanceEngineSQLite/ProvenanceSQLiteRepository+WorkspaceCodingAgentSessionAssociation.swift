@@ -164,9 +164,19 @@ extension ProvenanceSQLiteRepository {
                 workspace_id = excluded.workspace_id,
                 session_id = excluded.session_id,
                 agent_kind = excluded.agent_kind,
-                raw_session_id = COALESCE(excluded.raw_session_id, raw_session_id),
+                raw_session_id = CASE
+                    WHEN excluded.raw_session_id IS NULL THEN raw_session_id
+                    WHEN raw_session_id IS NULL OR excluded.last_observed_at_seconds >= last_observed_at_seconds
+                    THEN excluded.raw_session_id
+                    ELSE raw_session_id
+                END,
                 canonical_session_id = excluded.canonical_session_id,
-                surface_id = COALESCE(excluded.surface_id, surface_id),
+                surface_id = CASE
+                    WHEN excluded.surface_id IS NULL THEN surface_id
+                    WHEN surface_id IS NULL OR excluded.last_observed_at_seconds >= last_observed_at_seconds
+                    THEN excluded.surface_id
+                    ELSE surface_id
+                END,
                 repository_id = COALESCE(excluded.repository_id, repository_id),
                 worktree_id = COALESCE(excluded.worktree_id, worktree_id),
                 current_directory = COALESCE(excluded.current_directory, current_directory),
