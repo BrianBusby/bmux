@@ -213,6 +213,18 @@ for brief in response.projection?.relatedSessions ?? [] {
 }
 ```
 
+## Caller Association Read
+
+`workspaceCodingAgentSessionAssociation(...)` retains its existing workspace-level
+latest-association behavior when caller identifiers are omitted. Supplying both
+`surfaceID` and `providerSessionID` constrains the read to evidence for that
+workspace, surface, and raw or canonical session identity. An incomplete pair
+returns `incomplete_caller_identity`; no matching association returns
+`no_canonical_association`; multiple matching associations return
+`ambiguous_caller_identity`. These results are not proof that the provider is
+still active: the caller must independently verify the live surface and its
+active provider session before and after the read.
+
 ## bmux CLI Consumer
 
 bmux exposes this read through:

@@ -154,6 +154,12 @@ sidecar lifecycle path has no workspace or surface ID. Do not assume these
 facts alone prove a unique caller-to-PE link. Establish and test the actual
 ordinary-terminal linkage, including restart and pane reuse, before using it.
 
+Slice 1 has a PE caller-association prerequisite in progress: the public read
+can constrain workspace, surface, and provider identity together and reports
+ambiguous matches. Five focused SQLite association tests pass. Live caller
+verification, CLI integration, compact output, and end-to-end acceptance remain
+unimplemented.
+
 Remaining work: implement and verify all three slices, record a bounded output
 contract and corpus thresholds, run Project Truth gates after each slice, build
 an isolated tagged app, and capture ordinary Codex end-to-end observations. The

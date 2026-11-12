@@ -81,25 +81,39 @@ extension ProvenanceSQLiteRepository {
             )
         }
 
-        guard let association = try workspaceCodingAgentSessionAssociation(
-            workspaceID: workspaceID,
-            agentKind: agentKind
-        ) else {
+        let surfaceID = Self.trimmedNonEmpty(request.surfaceID)
+        let providerSessionID = Self.trimmedNonEmpty(request.providerSessionID)
+        let callerRequested = request.surfaceID != nil || request.providerSessionID != nil
+        let reason: String?
+        let association: ProvenanceWorkspaceCodingAgentSessionAssociationRecord?
+        if callerRequested && (surfaceID == nil || providerSessionID == nil) {
+            association = nil
+            reason = "incomplete_caller_identity"
+        } else {
+            let matches = try workspaceCodingAgentSessionAssociations(
+                workspaceID: workspaceID, agentKind: agentKind,
+                surfaceID: surfaceID, providerSessionID: providerSessionID
+            )
+            if callerRequested && matches.count > 1 {
+                association = nil
+                reason = "ambiguous_caller_identity"
+            } else {
+                association = matches.first
+                reason = association == nil ? "no_canonical_association" : nil
+            }
+        }
+        guard let association else {
             let readiness = ProvenanceWorkspaceCodingAgentSessionReadiness(
                 status: .noSupportedCodingAgentDetected,
                 workspaceID: workspaceID,
                 agentKind: agentKind,
                 stage: "association_read",
-                reasonCode: "no_canonical_association",
+                reasonCode: reason,
                 retryable: true
             )
             return ProvenanceWorkspaceCodingAgentSessionAssociationResponse(
-                found: false,
-                reason: "no_canonical_association",
-                workspaceID: workspaceID,
-                agentKind: agentKind,
-                association: nil,
-                readiness: readiness
+                found: false, reason: reason, workspaceID: workspaceID,
+                agentKind: agentKind, association: nil, readiness: readiness
             )
         }
 
@@ -212,10 +226,12 @@ extension ProvenanceSQLiteRepository {
         _ = try upsert.step()
     }
 
-    private func workspaceCodingAgentSessionAssociation(
+    private func workspaceCodingAgentSessionAssociations(
         workspaceID: String,
-        agentKind: String
-    ) throws -> ProvenanceWorkspaceCodingAgentSessionAssociationRecord? {
+        agentKind: String,
+        surfaceID: String?,
+        providerSessionID: String?
+    ) throws -> [ProvenanceWorkspaceCodingAgentSessionAssociationRecord] {
         let query = try database.prepare(
             """
             SELECT
@@ -242,6 +258,8 @@ extension ProvenanceSQLiteRepository {
             FROM provenance_workspace_coding_agent_session_associations
             WHERE workspace_id = ?
               AND agent_kind = ?
+              AND (? IS NULL OR surface_id = ?)
+              AND (? IS NULL OR raw_session_id = ? OR canonical_session_id = ? OR session_id = ?)
             ORDER BY
                 CASE
                     WHEN source_path = 'display' THEN 1
@@ -260,15 +278,27 @@ extension ProvenanceSQLiteRepository {
                     ELSE 5
                 END ASC,
                 rowid DESC
-            LIMIT 1
+            LIMIT 2
             """
         )
         defer { query.finalize() }
 
         try query.bind(workspaceID, at: 1)
         try query.bind(agentKind, at: 2)
-        guard try query.step() else { return nil }
-        return workspaceCodingAgentSessionAssociation(from: query)
+        try query.bind(surfaceID, at: 3)
+        try query.bind(surfaceID, at: 4)
+        try query.bind(providerSessionID, at: 5)
+        try query.bind(providerSessionID, at: 6)
+        try query.bind(providerSessionID, at: 7)
+        try query.bind(providerSessionID, at: 8)
+        var matches: [ProvenanceWorkspaceCodingAgentSessionAssociationRecord] = []
+        while try query.step() {
+            guard let match = workspaceCodingAgentSessionAssociation(from: query) else {
+                throw ProvenanceSQLiteError.sqlite(message: "Invalid workspace session association row")
+            }
+            matches.append(match)
+        }
+        return matches
     }
 
     private func workspaceCodingAgentSessionAssociation(
