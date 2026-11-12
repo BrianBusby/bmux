@@ -4,7 +4,7 @@
 .terminal-chat-history { overflow:auto; flex:1; min-height:0; padding:20px; overflow-anchor:auto; }
 .terminal-chat-messages { max-width:850px; margin:auto; display:flex; flex-direction:column; gap:var(--chat-gap); }
 .terminal-chat-message { padding:12px 16px; overflow-wrap:anywhere; }
-.terminal-chat-assistant { padding-bottom:4px; }
+.terminal-chat-agent { padding-bottom:4px; }
 .terminal-chat-user { border-radius:var(--chat-radius); background:color-mix(in srgb,currentColor 6%,transparent); }
 .terminal-chat-role { display:block; font-size:11px; opacity:.65; margin-bottom:6px; }
 .terminal-chat-user .terminal-chat-prose { white-space:pre-wrap; }

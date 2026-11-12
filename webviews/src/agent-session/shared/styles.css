@@ -691,6 +691,11 @@ select {
   margin-bottom: 0;
 }
 
+.codex-assistant-message :where(h1, h2, h3, h4, h5, h6) {
+  margin: 0.85em 0 0.4em;
+  font-weight: 700;
+}
+
 .codex-assistant-message :where(ul, ol) {
   margin: 0.45em 0 0.85em;
   padding-left: 1.35rem;
