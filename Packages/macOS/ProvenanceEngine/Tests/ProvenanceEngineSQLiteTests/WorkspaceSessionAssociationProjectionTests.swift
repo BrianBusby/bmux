@@ -362,6 +362,39 @@ struct WorkspaceSessionAssociationProjectionTests {
         #expect(resumed.association?.latestEventID == "late-old-event")
     }
 
+    @Test
+    func newerObservationWithoutIdentityDoesNotHideEarlierResume() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let now = Date(timeIntervalSince1970: 1_812_000_400)
+        for (event, surface, provider, offset) in [
+            ("first", "old-surface", "provider-old", 0.0),
+            ("resume", "new-surface", "provider-new", 2.0),
+            ("late-old", "old-surface", "provider-old", 1.0),
+        ] {
+            let time = now.addingTimeInterval(offset)
+            if event == "resume" {
+                try await Self.appendAssociation(
+                    eventID: "newer-without-identity", timestamp: now.addingTimeInterval(3),
+                    association: Self.association(sessionID: "pe-session", surfaceID: nil,
+                        sourcePath: "sidecar", stage: "linked", reasonCode: "observed",
+                        observedAt: now.addingTimeInterval(3)), into: repository
+                )
+            }
+            try await Self.appendAssociation(
+                eventID: event, timestamp: time,
+                association: Self.association(sessionID: "pe-session", rawSessionID: provider,
+                    surfaceID: surface, sourcePath: "transcript", stage: "linked",
+                    reasonCode: "observed", observedAt: time), into: repository
+            )
+        }
+        let result = try await repository.workspaceCodingAgentSessionAssociation(
+            .init(workspaceID: Self.workspaceID, surfaceID: "new-surface", providerSessionID: "provider-new")
+        )
+        #expect(result.association?.sessionID == "pe-session")
+    }
+
     private static let workspaceID = "00000000-0000-0000-0000-000000001842"
 
     private static func expectCurrentAssociation(
@@ -413,7 +446,7 @@ struct WorkspaceSessionAssociationProjectionTests {
         workspaceID: String = Self.workspaceID,
         sessionID: String,
         rawSessionID: String? = nil,
-        surfaceID: String = "surface-session-association-tests",
+        surfaceID: String? = "surface-session-association-tests",
         sourcePath: String,
         stage: String,
         reasonCode: String,
