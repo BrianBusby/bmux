@@ -266,6 +266,21 @@ struct CLICodexHookPEAssociationTests {
         #expect(Set(results.compactMap { $0["session_id"] as? String }) == ["related-active", "related-closed"])
         #expect(payload["target_session_id"] as? String == sessionID)
         #expect(result.stdout.utf8.count <= 16 * 1024)
+        // A retained PID that is not an ancestor cannot establish ownership.
+        var unknownOwnerState = hookState
+        var unknownSessions = try #require(unknownOwnerState["sessions"] as? [String: Any])
+        var unknownRecord = try #require(unknownSessions[sessionID] as? [String: Any])
+        unknownRecord["pid"] = 999_999_999
+        unknownSessions[sessionID] = unknownRecord
+        unknownOwnerState["sessions"] = unknownSessions
+        try JSONSerialization.data(withJSONObject: unknownOwnerState).write(to: root.appendingPathComponent("codex-hook-sessions.json"), options: .atomic)
+        let unknownOwner = runCodexHookProcess(executablePath: cliPath,
+            arguments: ["--json", "provenance", "sessions", "related", "--current", "--database", database.path],
+            environment: environment, timeout: 15)
+        let unknownPayload = try #require(try JSONSerialization.jsonObject(with: Data(unknownOwner.stdout.utf8)) as? [String: Any])
+        #expect(unknownPayload["reason"] as? String == "caller_ownership_unavailable")
+        try JSONSerialization.data(withJSONObject: hookState).write(to: root.appendingPathComponent("codex-hook-sessions.json"), options: .atomic)
+
         // Model the shared daemon as an actual parent process, retaining one hook record.
         let daemon = runCodexHookProcess(executablePath: "/bin/bash",
             arguments: ["-c", "shift 2; \"$@\"; result=$?; exit $result", "codex", "app-server", "--managed-daemon",
