@@ -327,6 +327,34 @@ struct WorkspaceSessionAssociationProjectionTests {
         #expect(try await repository.workspaceCodingAgentSessionAssociation(request("surface-a", "provider-a")).reason == "ambiguous_caller_identity")
     }
 
+    @Test
+    func resumedAssociationMovesToNewSurfaceWithoutSelectingAnOldPane() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let now = Date(timeIntervalSince1970: 1_812_000_300)
+        for (event, surface, time) in [
+            ("first-launch", "old-surface", now),
+            ("resume", "new-surface", now.addingTimeInterval(1)),
+        ] {
+            try await Self.appendAssociation(
+                eventID: event, timestamp: time,
+                association: Self.association(sessionID: "pe-session", rawSessionID: "provider-thread",
+                    surfaceID: surface, sourcePath: "transcript", stage: "linked",
+                    reasonCode: "observed", observedAt: time), into: repository
+            )
+        }
+        let old = try await repository.workspaceCodingAgentSessionAssociation(
+            .init(workspaceID: Self.workspaceID, surfaceID: "old-surface", providerSessionID: "provider-thread")
+        )
+        let resumed = try await repository.workspaceCodingAgentSessionAssociation(
+            .init(workspaceID: Self.workspaceID, surfaceID: "new-surface", providerSessionID: "provider-thread")
+        )
+        #expect(old.reason == "no_canonical_association")
+        #expect(resumed.association?.sessionID == "pe-session")
+        #expect(resumed.association?.latestEventID == "resume")
+    }
+
     private static let workspaceID = "00000000-0000-0000-0000-000000001842"
 
     private static func expectCurrentAssociation(
