@@ -179,9 +179,12 @@ that Codex does not populate the active-surface hook map. A separate red regress
 CLI tests. A repeat invocation from that Codex session, with approved socket
 access and the corrected CLI, returned both seeded peers (active and completed)
 using `same_repository`: 9,840 bytes, no budget omissions, completed outcome
-revision `session-outcome-revision-bec735faa019da61440c2705`. The running app
-was build 942; a new isolated tagged build and a repeat with its CLI remain
-in progress. Sandbox access without escalation remains an open limitation.
+revision `session-outcome-revision-bec735faa019da61440c2705`. The running app was build 942. Isolated tagged build 943 (`cross-session-current-fix`)
+succeeded on the pushed implementation; its CLI repeated the same 9,840-byte
+result from the original live pane with approved socket access. The completed
+revision was also inspected with no app socket. Sandbox access without
+escalation remains an open limitation; a fresh session in build 943, actual
+resume/pane-reuse scenarios, and user dogfood remain unverified.
 
 Remaining work: implement and verify all three slices, record a bounded output
 contract and corpus thresholds, run Project Truth gates after each slice, build
