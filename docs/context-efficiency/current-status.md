@@ -175,8 +175,13 @@ and outcome drill-down, missing app linkage, and output-budget omissions. Build
 942 succeeded on commit `30f9de034`. An ordinary Codex invocation against
 isolated PE data captured the session association, but sandboxed socket access
 returned `app_linkage_unavailable`; with approved socket access the query found
-that Codex does not populate the active-surface hook map. The resolver correction
-and a new tagged build and repeat live acceptance are in progress.
+that Codex does not populate the active-surface hook map. A separate red regression and resolver correction now pass all three focused
+CLI tests. A repeat invocation from that Codex session, with approved socket
+access and the corrected CLI, returned both seeded peers (active and completed)
+using `same_repository`: 9,840 bytes, no budget omissions, completed outcome
+revision `session-outcome-revision-bec735faa019da61440c2705`. The running app
+was build 942; a new isolated tagged build and a repeat with its CLI remain
+in progress. Sandbox access without escalation remains an open limitation.
 
 Remaining work: implement and verify all three slices, record a bounded output
 contract and corpus thresholds, run Project Truth gates after each slice, build
