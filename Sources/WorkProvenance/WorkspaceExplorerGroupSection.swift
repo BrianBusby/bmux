@@ -115,7 +115,7 @@ struct WorkspaceExplorerGroupSection: View {
     }
 
     private var cardGrid: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 236), spacing: 10)], spacing: 10) {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 236), spacing: 10, alignment: .top)], spacing: 10) {
             ForEach(group.workspaceIDs, id: \.self) { id in
                 if let item = itemsByID[id] {
                     WorkspaceExplorerWorkspaceCard(item: item, isActive: activeWorkspaceID == id,
