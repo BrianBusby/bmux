@@ -217,7 +217,7 @@ Provenance subcommands:
 | `provenance worktrees list` | List PE-observed worktrees. Supports `--database <path>` and `--json`. |
 | `provenance sessions tree <session-id>` | Read the PE session tree for an explicit PE session id. Supports `--database <path>` and `--json`. |
 | `provenance sessions related <pe-session-id>` | Read the bounded related-session projection for an explicit target PE session id through `ProvenanceEngineClient.relatedSessions(...)`. Supports `--limit`, `--exclusion-limit`, `--updated-after`, `--revision`, `--database`, and `--json`. |
-| `provenance sessions related --current` | Verify the invoking Codex thread against the live workspace, surface, active hook session and PE association; then read related sessions. Supports `--limit 1...5`, `--database`, and `--json`. |
+| `provenance sessions related --current` | Verify the invoking Codex thread against the live workspace, surface, hook session record and PE association; then read related sessions. Supports `--limit 1...5`, `--database`, and `--json`. |
 | `provenance sessions collisions <pe-session-id>` | Read bounded artifact-collision candidates for an explicit target PE session id through `ProvenanceEngineClient.artifactCollisions(...)`. Supports `--limit`, `--related-session-limit`, `--exclusion-limit`, `--artifact-path`, `--updated-after`, `--stale-before`, `--revision`, `--database`, and `--json`. |
 | `provenance turn outcome <turn-id>` | Read an exact or latest Turn Outcome projection. Supports `--revision <revision-id>`, `--database <path>`, and `--json`. |
 | `provenance session outcome <session-id>` | Read an exact or latest Session Outcome projection. Supports `--revision <revision-id>`, `--database <path>`, and `--json`. |
@@ -225,7 +225,7 @@ Provenance subcommands:
 
 The explicit-ID retrieval commands work without a live app socket. `related
 --current` requires a live bmux socket and independently checks the caller's
-workspace, surface, Codex thread ID, active hook slot, and PE association. It
+workspace, surface, Codex thread ID, hook record, and PE association. It
 never substitutes the focused pane. Missing or conflicting linkage returns an
 explicit retryable unavailable state. After startup, wait for the prompt hook
 and transcript association to be recorded, then retry.

@@ -137,10 +137,12 @@ bmux provenance sessions collisions <pe-session-id> --artifact-path Sources/Foo.
 ```
 
 `--current` verifies the caller surface through the live app and matches its
-Codex thread against the active surface hook and a unique PE association. It
+Codex thread against its hook record and a unique PE association. It
 returns an unavailable reason when the link is absent or ambiguous and asks
 the caller to retry after linkage. Explicit PE IDs remain supported without a
 live socket; use them for exact revisions and the existing full JSON contract.
+Codex command sandboxes that deny Unix socket access require an approved
+unsandboxed invocation; otherwise the command reports `app_linkage_unavailable`.
 
 The `--current` text and JSON share a bounded compact contract, with explicit
 field and result omissions. The explicit-ID text output is compact for human

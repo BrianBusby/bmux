@@ -66,14 +66,9 @@ extension BMUXCLI {
         } catch {
             return .unavailable("hook_state_unavailable")
         }
-        let activeMatches = state.activeSessionsBySurface.filter {
-            $0.key.caseInsensitiveCompare(actualSurface) == .orderedSame
-        }
-        guard activeMatches.count <= 1 else { return .unavailable("ambiguous_caller") }
-        guard let active = activeMatches.first?.value,
-              active.sessionId.caseInsensitiveCompare(provider) == .orderedSame else {
-            return .unavailable("caller_unlinked")
-        }
+        // Codex hooks persist the provider record but do not maintain the Claude active-surface map.
+        // The provider ID comes from the invoking Codex process and must agree with both the live
+        // surface and the canonical PE association below.
         let records = state.sessions.values.filter { $0.sessionId.caseInsensitiveCompare(provider) == .orderedSame }
         guard records.count <= 1 else { return .unavailable("ambiguous_caller") }
         guard let record = records.first,

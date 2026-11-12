@@ -153,7 +153,7 @@ already describes same-repository relationship evidence and bounded briefs.
 `WorkProvenanceSessionLifecycleRecorder` records provider identities, but its
 sidecar lifecycle path has no workspace or surface ID. Do not assume these
 facts alone prove a unique caller-to-PE link. The current CLI verifies the live
-caller surface, active hook slot, provider thread and PE association; ordinary
+caller surface, provider hook record, provider thread and PE association; ordinary
 terminal capture still needs live validation, including restart and pane reuse.
 
 Slice 1 has a PE caller-association prerequisite in progress: the public read
@@ -172,8 +172,11 @@ need isolated runtime verification. The current CLI path and 12 KiB compact
 JSON response are implemented locally. The focused CLI fixture passes for two
 caller surfaces, active and closed peers, stale failed validation, explicit-ID
 and outcome drill-down, missing app linkage, and output-budget omissions. Build
-941 succeeded before subsequent small source changes; the final tagged build and
-a live ordinary Codex invocation against isolated PE data remain outstanding.
+942 succeeded on commit `30f9de034`. An ordinary Codex invocation against
+isolated PE data captured the session association, but sandboxed socket access
+returned `app_linkage_unavailable`; with approved socket access the query found
+that Codex does not populate the active-surface hook map. The resolver correction
+and a new tagged build and repeat live acceptance are in progress.
 
 Remaining work: implement and verify all three slices, record a bounded output
 contract and corpus thresholds, run Project Truth gates after each slice, build
