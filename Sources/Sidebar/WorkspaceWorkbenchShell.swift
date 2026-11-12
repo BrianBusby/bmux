@@ -102,6 +102,9 @@ struct WorkspaceWorkbenchShell<LiveSurface: View>: View {
                 ? String(localized: "workspaceRail.workspaceView", defaultValue: "Workspace View")
                 : String(localized: "workspaceRail.explorerView", defaultValue: "Explorer"))
                 .font(.system(size: 12, weight: .medium))
+                .padding(.horizontal, 12)
+                .frame(minHeight: theme.layout.minimumHitSize)
+                .fixedSize()
         }
         .buttonStyle(MatteButtonStyle(theme: theme))
         .accessibilityIdentifier("bmuxShell.explorerToggle")
