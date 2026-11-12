@@ -160,9 +160,13 @@ ambiguous matches. Five focused SQLite association tests pass. A separate PE
 fixture confirms a fresh session with no changed artifacts finds active and
 closed same-repository peers with evidence-backed reasons. A focused regression
 also covers an older delayed association after a resume; the projection retains
-the newer surface and provider identity. The timestamp guard is conservative
-when newer observations omit those fields; that case still needs evaluation.
-Live caller
+the newer surface and provider identity. Schema 31 adds independent observation
+times for the two identity fields, so a later observation that omits either
+field does not mask an earlier identity update. Upgraded rows initialize those
+times conservatively from the existing last observation, because the old
+projection did not retain per-field times; replay from the ledger reconstructs
+the precise times. The migration and use alongside an older running build still
+need isolated runtime verification. Live caller
 verification, CLI integration, compact output, and end-to-end acceptance remain
 unimplemented.
 

@@ -393,6 +393,11 @@ struct WorkspaceSessionAssociationProjectionTests {
             .init(workspaceID: Self.workspaceID, surfaceID: "new-surface", providerSessionID: "provider-new")
         )
         #expect(result.association?.sessionID == "pe-session")
+        _ = try await repository.rebuildProjectionsFromEventLedger(batchSize: 1)
+        let rebuilt = try await repository.workspaceCodingAgentSessionAssociation(
+            .init(workspaceID: Self.workspaceID, surfaceID: "new-surface", providerSessionID: "provider-new")
+        )
+        #expect(rebuilt.association?.sessionID == "pe-session")
     }
 
     private static let workspaceID = "00000000-0000-0000-0000-000000001842"

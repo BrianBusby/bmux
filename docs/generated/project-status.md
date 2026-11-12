@@ -133,6 +133,7 @@ Regenerate with: ./scripts/project-docs generate
 
 | Caveat | Owner | Status | Issue |
 | --- | --- | --- | --- |
+| Association identity clock upgrade conservatively initializes legacy rows and awaits isolated runtime verification (`cross_session_identity_clock_legacy_upgrade`) | Provenance Engine | open |  |
 | Bounded Codex cursor hardening awaits tagged runtime dogfood; PE maintenance complete, bounded-writer rollout required (`ordinary_codex_cursor_storage_gate`) | Bmux | open |  |
 | Native deadline now owns the test wrapper inside the console session; output-pipeline and cancellation controls pass, real runner cleanup remains unverified (`app_host_cancellation_ownership_verification`) | Bmux | open |  |
 | Session persistence store capture builds as 794 and passes compiled policy/store checks; macOS 15 app-host teardown verification remains pending (`session_write_store_capture_verification`) | Bmux | open |  |

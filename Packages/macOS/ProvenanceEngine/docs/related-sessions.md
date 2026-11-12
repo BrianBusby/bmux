@@ -223,7 +223,10 @@ returns `incomplete_caller_identity`; no matching association returns
 `no_canonical_association`; multiple matching associations return
 `ambiguous_caller_identity`. These results are not proof that the provider is
 still active: the caller must independently verify the live surface and its
-active provider session before and after the read.
+active provider session before and after the read. Schema 31 tracks surface and
+raw-provider observation times independently. Existing rows initialize each
+known field's time conservatively from the association's last observed time;
+rebuilding the projection from the event ledger reconstructs field times.
 
 ## bmux CLI Consumer
 
