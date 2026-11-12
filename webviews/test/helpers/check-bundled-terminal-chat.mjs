@@ -70,7 +70,6 @@ async function checkBundledChat(copy) {
     const prose = dom.window.document.querySelector(".terminal-chat-agent .terminal-chat-prose");
     assert.equal(dom.window.document.documentElement.style.getPropertyValue("--agent-terminal-font-family"), '"Menlo", monospace');
     assert.equal(dom.window.document.documentElement.style.getPropertyValue("--agent-terminal-font-size"), "16px");
-    assert.ok(prose.classList.contains("codex-assistant-message"), "assistant Markdown uses the shared message formatting");
     assert.equal(prose.querySelector("strong")?.textContent, "Findings");
     assert.equal(dom.window.getComputedStyle(prose.querySelector("ul")).listStyleType, "disc");
     assert.equal(prose.querySelector("a")?.href, "https://example.com/");

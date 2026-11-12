@@ -141,7 +141,7 @@ function ObservedRow({ message, context, sessionId }: { message: ObservedMessage
     return <article id={`terminal-chat-row-${message.id}`} className={`terminal-chat-message terminal-chat-${message.role}`}>
       <span className="terminal-chat-role">{message.role === "user" ? copy.chatUser : copy.chatAssistant}</span>
       {message.role === "user" ? <div className="terminal-chat-prose">{kind.text?.slice(0, limit)}</div> :
-        <div className="terminal-chat-prose codex-assistant-message" dangerouslySetInnerHTML={{ __html: renderMarkdownHTML((kind.text ?? "").slice(0, limit)) }} />}
+        <div className="terminal-chat-prose" dangerouslySetInnerHTML={{ __html: renderMarkdownHTML((kind.text ?? "").slice(0, limit)) }} />}
       {(kind.text?.length ?? 0) > limit && <button onClick={() => setLimit(value => value + 16384)}>{copy.showMore}</button>}
     </article>;
   }
