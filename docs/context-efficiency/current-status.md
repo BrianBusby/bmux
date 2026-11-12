@@ -191,6 +191,12 @@ fails closed with `ambiguous_caller` and recommends a fresh pane; successful
 reuse of that pane remains an unmet acceptance criterion. The store prunes
 records after seven days without an update when a subsequent store operation
 runs, but that delay is not an ownership guarantee.
+The ordinary shared Codex app-server was observed running hooks for two panes
+with the first pane's inherited workspace, surface, and PID. A diagnostic
+`codex --no-daemon` invocation linked its own pane, but does not establish
+support for default launches. Shared-daemon attribution remains unresolved.
+Socket-unavailable responses now describe app, path, and sandbox recovery in
+both text and machine-readable form; tagged runtime verification is pending.
 
 Remaining work: implement and verify all three slices, record a bounded output
 contract and corpus thresholds, run Project Truth gates after each slice, build

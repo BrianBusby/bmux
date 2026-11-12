@@ -344,6 +344,9 @@ struct CLICodexHookPEAssociationTests {
         let unavailablePayload = try #require(try JSONSerialization.jsonObject(with: Data(unavailable.stdout.utf8)) as? [String: Any])
         #expect(unavailablePayload["reason"] as? String == "app_linkage_unavailable")
         #expect(unavailablePayload["recovery"] as? String == "check_app_and_socket_access")
+        #expect(unavailablePayload["recovery_steps"] as? [String] == [
+            "verify_app_running", "verify_socket_path", "allow_sandbox_socket_access_or_retry_outside_sandbox"
+        ])
         let unavailableText = runCodexHookProcess(executablePath: cliPath,
             arguments: ["provenance", "sessions", "related", "--current", "--database", database.path],
             environment: noSocketEnvironment, timeout: 15)

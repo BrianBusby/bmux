@@ -243418,6 +243418,13 @@
         }
       }
     },
+    "cli.provenance.current.appLinkageUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Current session context is unavailable. Check that the bmux app is running and the socket path is correct. If a sandbox denies socket access, allow access or retry outside the sandbox."}},
+        "ja": {"stringUnit": {"state": "translated", "value": "現在のセッションのコンテキストを取得できません。bmux アプリが起動していて、ソケットのパスが正しいことを確認してください。サンドボックスがソケットへのアクセスを拒否する場合は、アクセスを許可するか、サンドボックスの外で再試行してください。"}}
+      }
+    },
     "cli.provenance.current.ambiguous": {
       "extractionState": "manual",
       "localizations": {
