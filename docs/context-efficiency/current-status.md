@@ -156,7 +156,9 @@ ordinary-terminal linkage, including restart and pane reuse, before using it.
 
 Slice 1 has a PE caller-association prerequisite in progress: the public read
 can constrain workspace, surface, and provider identity together and reports
-ambiguous matches. Five focused SQLite association tests pass. Live caller
+ambiguous matches. Five focused SQLite association tests pass. A separate PE
+fixture confirms a fresh session with no changed artifacts finds active and
+closed same-repository peers with evidence-backed reasons. Live caller
 verification, CLI integration, compact output, and end-to-end acceptance remain
 unimplemented.
 
