@@ -1,4 +1,5 @@
 import SwiftUI
+import BmuxFoundation
 import BmuxTerminal
 
 private struct BmuxShellTerminalOnlyKey: EnvironmentKey {

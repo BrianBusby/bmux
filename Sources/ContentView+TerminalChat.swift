@@ -1,4 +1,5 @@
 import SwiftUI
+import BmuxFoundation
 import BmuxAppKitSupportUI
 
 extension ContentView {
