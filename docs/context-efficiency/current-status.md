@@ -195,8 +195,9 @@ The ordinary shared Codex app-server was observed running hooks for two panes
 with the first pane's inherited workspace, surface, and PID. A diagnostic
 `codex --no-daemon` invocation linked its own pane, but does not establish
 support for default launches. A process-ancestry guard now rejects the observed
-`codex app-server --managed-daemon` shape and returns unavailable if ancestry
-cannot be inspected; unrecognized daemon shapes remain unverified. Default
+`codex app-server --managed-daemon` shape while walking to the hook-record PID,
+and returns unavailable if that PID is missing, unreachable, or cannot be
+inspected; unrecognized daemon shapes remain unverified. Default
 shared-daemon retrieval remains unsupported. Socket-unavailable responses now
 describe app, path, and sandbox recovery in both text and machine-readable form;
 tagged runtime verification of these fixes is pending.

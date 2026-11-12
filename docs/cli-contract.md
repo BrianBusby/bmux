@@ -238,8 +238,8 @@ JSON includes `recovery: "check_app_and_socket_access"` and the corresponding
 `recovery_steps`; the response does not infer which cause occurred.
 The observed `codex app-server --managed-daemon` process shape can inherit a
 different pane's identity. `--current` returns `caller_ownership_unavailable`
-when that shape appears in the caller's ancestry or that ancestry cannot be
-inspected. Use an independent Codex session (for example `codex --no-daemon`
+when that shape appears before the hook-record process in the caller's ancestry,
+or when that recorded process cannot be reached and inspected. Use an independent Codex session (for example `codex --no-daemon`
 when supported). Other unrecognized daemon shapes are not yet verified.
 
 The `--current` response defaults to five briefs and permits one through five.

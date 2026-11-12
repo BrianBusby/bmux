@@ -9,16 +9,17 @@ enum ProvenanceCallerResolution: Equatable {
 
 extension BMUXCLI {
     /// A shared Codex daemon can run tools with another pane's inherited environment.
-    /// Refuse that known shape and any ancestry whose arguments cannot be inspected.
-    func provenanceCallerProcessIsInspectableAndUnshared() -> Bool {
+    /// Inspect through the recorded owner; reject unknown, unreachable, or shared ownership.
+    func provenanceCallerProcessIsInspectableAndUnshared(ownerPID: Int?) -> Bool {
+        guard let ownerPID, let expectedPID = pid_t(exactly: ownerPID), expectedPID > 1 else { return false }
         var pid = getppid()
         for _ in 0..<64 {
-            if pid == 1 { return true }
             guard pid > 1, let arguments = processArguments(for: pid) else { return false }
             let isCodex = arguments.contains { URL(fileURLWithPath: $0).lastPathComponent == "codex" }
             if isCodex && arguments.contains("app-server") && arguments.contains("--managed-daemon") {
                 return false
             }
+            if pid == expectedPID { return true }
             let parent = parentPID(of: pid)
             guard parent > 0, parent != pid else { return false }
             pid = parent
@@ -44,9 +45,6 @@ extension BMUXCLI {
         }
         if let alternate = value("CODEX_SESSION_ID"), alternate.caseInsensitiveCompare(provider) != .orderedSame {
             return .unavailable("conflicting_provider_identity")
-        }
-        guard provenanceCallerProcessIsInspectableAndUnshared() else {
-            return .unavailable("caller_ownership_unavailable")
         }
         let identified: [String: Any]
         do {
@@ -97,6 +95,9 @@ extension BMUXCLI {
               record.workspaceId.caseInsensitiveCompare(actualWorkspace) == .orderedSame,
               record.surfaceId.caseInsensitiveCompare(actualSurface) == .orderedSame else {
             return .unavailable("caller_unlinked")
+        }
+        guard provenanceCallerProcessIsInspectableAndUnshared(ownerPID: record.pid) else {
+            return .unavailable("caller_ownership_unavailable")
         }
         // Codex does not maintain an authoritative current-session slot. Historical
         // records on a reused surface cannot establish which process owns the pane.

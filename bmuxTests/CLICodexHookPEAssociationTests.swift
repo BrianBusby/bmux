@@ -154,7 +154,7 @@ struct CLICodexHookPEAssociationTests {
         let environment = ["HOME": root.path, "CFFIXED_USER_HOME": root.path, "BMUX_PROVENANCE_HOME": root.path,
             "PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "PWD": root.path, "BMUX_SOCKET_PATH": socketPath,
             "BMUX_WORKSPACE_ID": workspace, "BMUX_STABLE_WORKSPACE_ID": stable, "BMUX_SURFACE_ID": surface,
-            "BMUX_AGENT_HOOK_STATE_DIR": root.path, "BMUX_CLI_SENTRY_DISABLED": "1", "BMUX_CODEX_PID": "4242"]
+            "BMUX_AGENT_HOOK_STATE_DIR": root.path, "BMUX_CLI_SENTRY_DISABLED": "1", "BMUX_CODEX_PID": String(getpid())]
         func submit(_ session: String) {
             let result = runCodexHookProcess(executablePath: cliPath, arguments: ["hooks", "codex", "prompt-submit"],
                 environment: environment,
@@ -247,7 +247,7 @@ struct CLICodexHookPEAssociationTests {
             "version": 1,
             "activeSessionsBySurface": [:],
             "sessions": [sessionID: ["sessionId": sessionID, "workspaceId": workspace, "surfaceId": surface,
-                                     "startedAt": now.timeIntervalSince1970, "updatedAt": now.timeIntervalSince1970]]
+                                     "pid": Int(getpid()), "startedAt": now.timeIntervalSince1970, "updatedAt": now.timeIntervalSince1970]]
         ]
         let hookData = try JSONSerialization.data(withJSONObject: hookState)
         try hookData.write(to: root.appendingPathComponent("codex-hook-sessions.json"))
@@ -337,7 +337,7 @@ struct CLICodexHookPEAssociationTests {
         hookState["activeSessionsBySurface"] = active
         var sessions = try #require(hookState["sessions"] as? [String: Any])
         sessions[secondSession] = ["sessionId": secondSession, "workspaceId": workspace, "surfaceId": secondSurface,
-                                   "startedAt": now.timeIntervalSince1970, "updatedAt": now.timeIntervalSince1970]
+                                   "pid": Int(getpid()), "startedAt": now.timeIntervalSince1970, "updatedAt": now.timeIntervalSince1970]
         hookState["sessions"] = sessions
         try JSONSerialization.data(withJSONObject: hookState).write(to: root.appendingPathComponent("codex-hook-sessions.json"), options: .atomic)
         var secondEnvironment = environment
