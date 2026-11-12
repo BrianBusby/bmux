@@ -236,6 +236,11 @@ An `app_linkage_unavailable` response asks the caller to check the running app
 and socket path, and to allow socket access or retry outside a denying sandbox.
 JSON includes `recovery: "check_app_and_socket_access"` and the corresponding
 `recovery_steps`; the response does not infer which cause occurred.
+The observed `codex app-server --managed-daemon` process shape can inherit a
+different pane's identity. `--current` returns `caller_ownership_unavailable`
+when that shape appears in the caller's ancestry or that ancestry cannot be
+inspected. Use an independent Codex session (for example `codex --no-daemon`
+when supported). Other unrecognized daemon shapes are not yet verified.
 
 The `--current` response defaults to five briefs and permits one through five.
 It returns at most 12 KiB of encoded JSON and at most 16 KiB of text, omitting

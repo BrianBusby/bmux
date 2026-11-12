@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 
 /// The caller's independently verified live identity or an explicit unavailable reason.
@@ -7,6 +8,24 @@ enum ProvenanceCallerResolution: Equatable {
 }
 
 extension BMUXCLI {
+    /// A shared Codex daemon can run tools with another pane's inherited environment.
+    /// Refuse that known shape and any ancestry whose arguments cannot be inspected.
+    func provenanceCallerProcessIsInspectableAndUnshared() -> Bool {
+        var pid = getppid()
+        for _ in 0..<64 {
+            if pid == 1 { return true }
+            guard pid > 1, let arguments = processArguments(for: pid) else { return false }
+            let isCodex = arguments.contains { URL(fileURLWithPath: $0).lastPathComponent == "codex" }
+            if isCodex && arguments.contains("app-server") && arguments.contains("--managed-daemon") {
+                return false
+            }
+            let parent = parentPID(of: pid)
+            guard parent > 0, parent != pid else { return false }
+            pid = parent
+        }
+        return false
+    }
+
     /// Resolves a caller only when the live surface, provider thread, and hook state agree.
     func provenanceCallerIdentity(
         client: SocketClient,
@@ -25,6 +44,9 @@ extension BMUXCLI {
         }
         if let alternate = value("CODEX_SESSION_ID"), alternate.caseInsensitiveCompare(provider) != .orderedSame {
             return .unavailable("conflicting_provider_identity")
+        }
+        guard provenanceCallerProcessIsInspectableAndUnshared() else {
+            return .unavailable("caller_ownership_unavailable")
         }
         let identified: [String: Any]
         do {

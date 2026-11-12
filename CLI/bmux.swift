@@ -27663,7 +27663,7 @@ struct BMUXCLI {
         )
     }
 
-    private func parentPID(of pid: pid_t) -> pid_t {
+    func parentPID(of pid: pid_t) -> pid_t {
         var info = kinfo_proc()
         var size = MemoryLayout<kinfo_proc>.size
         var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, pid]
@@ -27698,7 +27698,7 @@ struct BMUXCLI {
         return URL(fileURLWithPath: output).lastPathComponent.lowercased()
     }
 
-    private func processArguments(for pid: pid_t) -> [String]? {
+    func processArguments(for pid: pid_t) -> [String]? {
         var argMax: Int32 = 0
         var argMaxSize = MemoryLayout<Int32>.size
         var argMaxMib: [Int32] = [CTL_KERN, KERN_ARGMAX]

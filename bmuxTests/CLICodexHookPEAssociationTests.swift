@@ -275,6 +275,7 @@ struct CLICodexHookPEAssociationTests {
         let daemonPayload = try #require(try JSONSerialization.jsonObject(with: Data(daemon.stdout.utf8)) as? [String: Any])
         #expect(daemonPayload["found"] as? Bool == false)
         #expect(daemonPayload["reason"] as? String == "caller_ownership_unavailable")
+        #expect(daemonPayload["recovery"] as? String == "use_independent_codex_session")
         let textResult = runCodexHookProcess(executablePath: cliPath,
             arguments: ["provenance", "sessions", "related", "--current", "--database", database.path],
             environment: environment, timeout: 15)

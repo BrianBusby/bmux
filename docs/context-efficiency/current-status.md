@@ -194,9 +194,12 @@ runs, but that delay is not an ownership guarantee.
 The ordinary shared Codex app-server was observed running hooks for two panes
 with the first pane's inherited workspace, surface, and PID. A diagnostic
 `codex --no-daemon` invocation linked its own pane, but does not establish
-support for default launches. Shared-daemon attribution remains unresolved.
-Socket-unavailable responses now describe app, path, and sandbox recovery in
-both text and machine-readable form; tagged runtime verification is pending.
+support for default launches. A process-ancestry guard now rejects the observed
+`codex app-server --managed-daemon` shape and returns unavailable if ancestry
+cannot be inspected; unrecognized daemon shapes remain unverified. Default
+shared-daemon retrieval remains unsupported. Socket-unavailable responses now
+describe app, path, and sandbox recovery in both text and machine-readable form;
+tagged runtime verification of these fixes is pending.
 
 Remaining work: implement and verify all three slices, record a bounded output
 contract and corpus thresholds, run Project Truth gates after each slice, build

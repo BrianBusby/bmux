@@ -68,11 +68,14 @@ extension BMUXCLI {
         if jsonOutput {
             var response: [String: Any] = ["found": false, "reason": reason, "retryable": true]
             if reason == "ambiguous_caller" { response["recovery"] = "start_fresh_pane" }
+            if reason == "caller_ownership_unavailable" { response["recovery"] = "use_independent_codex_session" }
             if reason == "app_linkage_unavailable" {
                 response["recovery"] = "check_app_and_socket_access"
                 response["recovery_steps"] = ["verify_app_running", "verify_socket_path", "allow_sandbox_socket_access_or_retry_outside_sandbox"]
             }
             print(jsonString(response))
+        } else if reason == "caller_ownership_unavailable" {
+            print(String(localized: "cli.provenance.current.ownershipUnavailable", defaultValue: "Current session ownership cannot be verified. Start a new independent Codex session (for example, with --no-daemon if supported) and retry."))
         } else if reason == "app_linkage_unavailable" {
             print(String(localized: "cli.provenance.current.appLinkageUnavailable", defaultValue: "Current session context is unavailable. Check that the bmux app is running and the socket path is correct. If a sandbox denies socket access, allow access or retry outside the sandbox."))
         } else if reason == "ambiguous_caller" {

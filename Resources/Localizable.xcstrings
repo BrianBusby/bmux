@@ -243432,6 +243432,13 @@
         "ja": {"stringUnit": {"state": "translated", "value": "現在のセッションのコンテキストを特定できません。新しいペインで Codex を起動して再試行してください。"}}
       }
     },
+    "cli.provenance.current.ownershipUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Current session ownership cannot be verified. Start a new independent Codex session (for example, with --no-daemon if supported) and retry."}},
+        "ja": {"stringUnit": {"state": "translated", "value": "現在のセッションの所有元を確認できません。新しい独立した Codex セッションを起動して再試行してください（対応している場合は、例えば --no-daemon を指定してください）。"}}
+      }
+    },
     "cli.provenance.current.invalidLimit": {
       "extractionState": "manual",
       "localizations": {
