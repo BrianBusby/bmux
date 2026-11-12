@@ -4797,7 +4797,7 @@ roadmap:
       execution:
         assignment: current
         assigned_to: shared
-        notes: Resolve verified caller identity, preserve the explicit-ID contract, and return bounded evidence with actionable unavailable states. Multiple retained Codex records on one surface fail closed; shared Codex daemon hooks can inherit another pane's identity; the observed managed-daemon ancestry fails closed, while default multi-pane attribution, other daemon shapes, and successful reuse need ownership evidence and live verification.
+        notes: Resolve verified caller identity, preserve the explicit-ID contract, and return bounded evidence with actionable unavailable states. Multiple retained Codex records on one surface fail closed; shared Codex daemon hooks can inherit another pane's identity; the observed managed-daemon ancestry fails closed, while default multi-pane attribution, write-side daemon evidence integrity, other daemon shapes, and successful reuse need ownership evidence and live verification. Isolated build 944 normal-shim two-pane evidence and test-CLI guard observations are recorded in current-status.
       delivery_status: proposed
       acceptance_status: proposed
       acceptance:
