@@ -235,6 +235,7 @@
 			2DA8D48D99FB520EB179B015 /* BMUXCLI+ClaudePushNotificationHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF59318F1D5B2195AC77C28 /* BMUXCLI+ClaudePushNotificationHook.swift */; };
 			C0D3F1F00000000000000101 /* BMUXCLI+CodexFireAndForgetHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3F1F00000000000000102 /* BMUXCLI+CodexFireAndForgetHooks.swift */; };
 			D0C0A1B2B3B4B5B6B7B8B9C2 /* BMUXCLI+CodexHookAssociation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B2B3B4B5B6B7B8B9C3 /* BMUXCLI+CodexHookAssociation.swift */; };
+			A7265F47A2B14796AF3019D1 /* BMUXCLI+CodexHookIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7265F47A2B14796AF3019D2 /* BMUXCLI+CodexHookIdentity.swift */; };
 			C0DE71000000000000000001 /* BMUXCLI+CodexTokenAudit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE71000000000000000002 /* BMUXCLI+CodexTokenAudit.swift */; };
 			C0DE73000000000000000001 /* BMUXCLI+CodexTranscriptMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE73000000000000000002 /* BMUXCLI+CodexTranscriptMonitor.swift */; };
 		B90000D2A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B90000D1A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift */; };
@@ -2561,6 +2562,7 @@
 			4CF59318F1D5B2195AC77C28 /* BMUXCLI+ClaudePushNotificationHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+ClaudePushNotificationHook.swift"; sourceTree = "<group>"; };
 			C0D3F1F00000000000000102 /* BMUXCLI+CodexFireAndForgetHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CodexFireAndForgetHooks.swift"; sourceTree = "<group>"; };
 			D0C0A1B2B3B4B5B6B7B8B9C3 /* BMUXCLI+CodexHookAssociation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CodexHookAssociation.swift"; sourceTree = "<group>"; };
+			A7265F47A2B14796AF3019D2 /* BMUXCLI+CodexHookIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CodexHookIdentity.swift"; sourceTree = "<group>"; };
 			C0DE71000000000000000002 /* BMUXCLI+CodexTokenAudit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CodexTokenAudit.swift"; sourceTree = "<group>"; };
 			C0DE73000000000000000002 /* BMUXCLI+CodexTranscriptMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CodexTranscriptMonitor.swift"; sourceTree = "<group>"; };
 		B90000D1A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BMUXCLI+CommandSuggestions.swift"; sourceTree = "<group>"; };
@@ -5864,6 +5866,7 @@
 					B9000069A1B2C3D4E5F60719 /* BMUXCLI+AmpExtension.swift */,
 					C0D3F1F00000000000000102 /* BMUXCLI+CodexFireAndForgetHooks.swift */,
 					C0DE73000000000000000002 /* BMUXCLI+CodexTranscriptMonitor.swift */,
+					A7265F47A2B14796AF3019D2 /* BMUXCLI+CodexHookIdentity.swift */,
 					D0C0A1B2B3B4B5B6B7B8B9C3 /* BMUXCLI+CodexHookAssociation.swift */,
 					D0C0A1B2B3B4B5B6B7B8B9C5 /* BMUXCLI+ProvenanceCodexTranscriptDiagnostics.swift */,
 					C0DE71000000000000000002 /* BMUXCLI+CodexTokenAudit.swift */,
@@ -8534,6 +8537,7 @@
 					2DA8D48D99FB520EB179B015 /* BMUXCLI+ClaudePushNotificationHook.swift in Sources */,
 					C0D3F1F00000000000000101 /* BMUXCLI+CodexFireAndForgetHooks.swift in Sources */,
 					D0C0A1B2B3B4B5B6B7B8B9C2 /* BMUXCLI+CodexHookAssociation.swift in Sources */,
+					A7265F47A2B14796AF3019D1 /* BMUXCLI+CodexHookIdentity.swift in Sources */,
 					C0DE71000000000000000001 /* BMUXCLI+CodexTokenAudit.swift in Sources */,
 					C0DE73000000000000000001 /* BMUXCLI+CodexTranscriptMonitor.swift in Sources */,
 				B90000D2A1B2C3D4E5F60719 /* BMUXCLI+CommandSuggestions.swift in Sources */,

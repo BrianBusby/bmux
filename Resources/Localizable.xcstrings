@@ -243439,6 +243439,13 @@
         "ja": {"stringUnit": {"state": "translated", "value": "現在のセッションの所有元を確認できません。新しい独立した Codex セッションを起動して再試行してください（対応している場合は、例えば --no-daemon を指定してください）。"}}
       }
     },
+    "cli.provenance.current.associationUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Current session linkage is unavailable. Wait for the prompt hook and retry. If the issue persists, refresh installed hooks with bmux hooks setup codex."}},
+        "ja": {"stringUnit": {"state": "translated", "value": "現在のセッションの関連付けを取得できません。プロンプトフックを待って再試行してください。解決しない場合は、bmux hooks setup codex でインストール済みフックを更新してください。"}}
+      }
+    },
     "cli.provenance.current.invalidLimit": {
       "extractionState": "manual",
       "localizations": {

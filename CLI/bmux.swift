@@ -31171,7 +31171,8 @@ export default BMUXSessionRestore;
                     telemetry: telemetry
                 )
             }
-            if def.name == "codex", !sessionId.isEmpty, !suppressVisibleMutations {
+            if def.name == "codex", !sessionId.isEmpty, !suppressVisibleMutations,
+               env["BMUX_CODEX_HOOK_IDENTITY_VERIFIED"] == "1" {
                 if codexPromptTurnWentTerminal() {
                     stopStaleCodexPromptSubmit(restoreVisibleState: true)
                     return

@@ -15,6 +15,8 @@ extension BMUXCLI {
         socketPath: String?,
         env: [String: String]
     ) async {
+        // Old and shared-daemon hooks do not establish a trustworthy pane binding.
+        guard env["BMUX_CODEX_HOOK_IDENTITY_VERIFIED"] == "1" else { return }
         let normalizedSessionId = sessionId.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalizedSessionId.isEmpty else { return }
         guard let associationWorkspaceId = normalizedHookValue(env["BMUX_STABLE_WORKSPACE_ID"])

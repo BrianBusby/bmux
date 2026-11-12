@@ -209,8 +209,22 @@ other, with approved socket access. Their compact responses measured 11,755 and
 owner-boundary test CLI returned the first target with its peer (12,097 bytes)
 and rejected the direct shared-daemon caller as `caller_ownership_unavailable`.
 The tagged build predates the socket and ownership corrections. Existing
-shared-daemon hook ingestion can still persist misattributed workspace, surface,
-and boundary evidence; the read guard does not repair or prevent those writes.
+Earlier shared-daemon hook ingestion persisted misattributed workspace, surface,
+and boundary evidence; the read guard does not repair that existing history.
+Newly generated hooks mark untrusted or uninspectable parentage before detaching;
+the worker omits pane-bound PE association and transcript-monitor startup without
+an affirmative marker while retaining ordinary lifecycle handling. Older installed
+hooks lack the marker and likewise fail closed for these PE writes until refreshed
+with `bmux hooks setup codex`; normal wrapper launches regenerate their scripts.
+The probe checks the observed immediate-parent shape, so other daemon arrangements
+and PID reuse in the OS process snapshot remain unverified.
+With the refreshed test CLI and isolated build 944 app, normal-shim session
+`01a1d22d-d42b-7f53-a84f-71d0805a1c9b` retained its PE session and workspace
+association and retrieved the two seeded peers (9,840 bytes). After turn
+completion, direct shared-daemon sessions `01a1d22e-bf17-7ff0-9312-b021e3de186f`
+and `01a1d22f-5160-7b21-bfe6-8a26d721faf9` retained lifecycle records but had
+no PE session or workspace-association rows. This check used isolated data;
+the test-built CLI changes still need a tagged runtime build.
 Two further isolated normal-shim sessions with a custom Codex 0.162.1 binary
 also resolved their own target and returned the other (8,588 bytes and three
 budget omissions each). Their tty-attached hook processes recorded matching

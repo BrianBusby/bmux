@@ -241,6 +241,12 @@ different pane's identity. `--current` returns `caller_ownership_unavailable`
 when that shape appears before the hook-record process in the caller's ancestry,
 or when that recorded process cannot be reached and inspected. Use an independent Codex session (for example `codex --no-daemon`
 when supported). Other unrecognized daemon shapes are not yet verified.
+Freshly generated Codex hooks attest their immediate parent before recording a
+pane-bound PE association or starting the live transcript monitor. Unattested
+or observed managed-daemon hooks retain ordinary lifecycle handling but omit
+those PE writes. If linkage remains unavailable with an older installed hook,
+run `bmux hooks setup codex` to refresh it, then start a new session and retry.
+The check is bounded to one second and runs only for session-start and prompt-submit.
 
 The `--current` response defaults to five briefs and permits one through five.
 It returns at most 12 KiB of encoded JSON and at most 16 KiB of text, omitting

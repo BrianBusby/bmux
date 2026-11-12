@@ -45,6 +45,7 @@ struct CLICodexHookPEAssociationTests {
                 "BMUX_SURFACE_ID": surfaceId,
                 "BMUX_AGENT_HOOK_STATE_DIR": root.path,
                 "BMUX_CLI_SENTRY_DISABLED": "1",
+                "BMUX_CODEX_HOOK_IDENTITY_VERIFIED": "1",
                 "BMUX_CODEX_PID": "4242",
             ],
             standardInput: #"{"session_id":"\#(sessionId)","turn_id":"turn-hook-1","cwd":"\#(root.path)","hook_event_name":"UserPromptSubmit"}"#,
@@ -95,6 +96,24 @@ struct CLICodexHookPEAssociationTests {
         #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("codex-hook-sessions.json").path))
         let association = try await peAssociationResponse(root: root, stableWorkspaceId: stable)
         #expect(!association.found)
+        var caller = environment
+        caller["CODEX_THREAD_ID"] = "unattested-session"
+        let retrieval = runCodexHookProcess(executablePath: cliPath,
+            arguments: ["--json", "provenance", "sessions", "related", "--current"],
+            environment: caller, timeout: 15)
+        let response = try #require(try JSONSerialization.jsonObject(with: Data(retrieval.stdout.utf8)) as? [String: Any])
+        #expect(response["reason"] as? String == "no_canonical_association")
+        #expect(response["recovery_steps"] as? [String] == ["wait_for_hook_linkage", "refresh_codex_hooks_if_needed"])
+        var unverified = environment
+        unverified["BMUX_CODEX_HOOK_IDENTITY_VERIFIED"] = "0"
+        let daemonHook = runCodexHookProcess(executablePath: cliPath, arguments: ["hooks", "codex", "prompt-submit"],
+            environment: unverified,
+            standardInput: #"{"session_id":"unverified-session","turn_id":"turn-2","hook_event_name":"UserPromptSubmit"}"#,
+            timeout: 10)
+        #expect(!daemonHook.timedOut && daemonHook.status == 0)
+        let unverifiedAssociation = try await peAssociationResponse(root: root, stableWorkspaceId: stable)
+        #expect(!unverifiedAssociation.found)
+        #expect(!FileManager.default.fileExists(atPath: root.appendingPathComponent("codex-monitor-leases").path))
     }
 
     @Test func codexPromptSubmitResolvesStableWorkspaceFromRuntimeWorkspaceWhenEnvIsMissing() async throws {
@@ -137,6 +156,7 @@ struct CLICodexHookPEAssociationTests {
                 "BMUX_SURFACE_ID": surfaceId,
                 "BMUX_AGENT_HOOK_STATE_DIR": root.path,
                 "BMUX_CLI_SENTRY_DISABLED": "1",
+                "BMUX_CODEX_HOOK_IDENTITY_VERIFIED": "1",
                 "BMUX_CODEX_PID": "4242",
             ],
             standardInput: #"{"session_id":"\#(sessionId)","turn_id":"turn-hook-1","cwd":"\#(root.path)","hook_event_name":"UserPromptSubmit"}"#,
@@ -181,7 +201,7 @@ struct CLICodexHookPEAssociationTests {
         let environment = ["HOME": root.path, "CFFIXED_USER_HOME": root.path, "BMUX_PROVENANCE_HOME": root.path,
             "PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "PWD": root.path, "BMUX_SOCKET_PATH": socketPath,
             "BMUX_WORKSPACE_ID": workspace, "BMUX_STABLE_WORKSPACE_ID": stable, "BMUX_SURFACE_ID": surface,
-            "BMUX_AGENT_HOOK_STATE_DIR": root.path, "BMUX_CLI_SENTRY_DISABLED": "1", "BMUX_CODEX_PID": String(getpid())]
+            "BMUX_AGENT_HOOK_STATE_DIR": root.path, "BMUX_CLI_SENTRY_DISABLED": "1", "BMUX_CODEX_HOOK_IDENTITY_VERIFIED": "1", "BMUX_CODEX_PID": String(getpid())]
         func submit(_ session: String) {
             let result = runCodexHookProcess(executablePath: cliPath, arguments: ["hooks", "codex", "prompt-submit"],
                 environment: environment,
