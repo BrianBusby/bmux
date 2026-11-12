@@ -70,6 +70,33 @@ struct CLICodexHookPEAssociationTests {
         #expect(association.promptObservedAt != nil)
     }
 
+    @Test func unattestedCodexHookKeepsLifecycleButDoesNotBindProvenance() async throws {
+        let cliPath = try BundledCLITestSupport.bundledCLIPath(for: BundledCLILinkageTests.self)
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("bmux-unattested-hook-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let socketPath = makeCodexHookSocketPath("unattested-pe")
+        let listener = try bindCodexHookUnixSocket(at: socketPath)
+        defer { Darwin.close(listener); unlink(socketPath); try? FileManager.default.removeItem(at: root) }
+        let workspace = "11111111-1111-1111-1111-111111111111"
+        let stable = "33333333-3333-3333-3333-333333333333"
+        let surface = "22222222-2222-2222-2222-222222222222"
+        let commands = CodexHookCapturedSocketCommands()
+        startCodexHookMockSocketServerAccepting(listenerFD: listener, commands: commands, surfaceId: surface,
+            connectionLimit: 16, runtimeWorkspaceId: workspace, stableWorkspaceId: stable)
+        let environment = ["HOME": root.path, "CFFIXED_USER_HOME": root.path, "BMUX_PROVENANCE_HOME": root.path,
+            "PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "PWD": root.path, "BMUX_SOCKET_PATH": socketPath,
+            "BMUX_WORKSPACE_ID": workspace, "BMUX_STABLE_WORKSPACE_ID": stable, "BMUX_SURFACE_ID": surface,
+            "BMUX_AGENT_HOOK_STATE_DIR": root.path, "BMUX_CLI_SENTRY_DISABLED": "1", "BMUX_CODEX_PID": String(getpid())]
+        let hook = runCodexHookProcess(executablePath: cliPath, arguments: ["hooks", "codex", "prompt-submit"],
+            environment: environment,
+            standardInput: #"{"session_id":"unattested-session","turn_id":"turn-1","hook_event_name":"UserPromptSubmit"}"#,
+            timeout: 10)
+        #expect(!hook.timedOut && hook.status == 0)
+        #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("codex-hook-sessions.json").path))
+        let association = try await peAssociationResponse(root: root, stableWorkspaceId: stable)
+        #expect(!association.found)
+    }
+
     @Test func codexPromptSubmitResolvesStableWorkspaceFromRuntimeWorkspaceWhenEnvIsMissing() async throws {
         let cliPath = try BundledCLITestSupport.bundledCLIPath(for: BundledCLILinkageTests.self)
         let root = FileManager.default.temporaryDirectory
