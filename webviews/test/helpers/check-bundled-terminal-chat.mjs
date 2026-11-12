@@ -22,7 +22,7 @@ async function checkBundledChat(copy) {
     virtualConsole,
     beforeParse(window) {
       observer = new window.MutationObserver(() => {
-        if (window.document.querySelector(".terminal-chat-prose")?.textContent === "Review the roof inspection") {
+        if (window.document.querySelector(".terminal-chat-agent .terminal-chat-prose")) {
           didMount();
         }
       });
@@ -49,6 +49,7 @@ async function checkBundledChat(copy) {
                 workspaceId: "workspace", surfaceId: "surface",
                 history: { has_more: false, source_revision: "original", messages: [
                   { id: "prompt", seq: 1, role: "user", kind: { type: "prose", text: "Review the roof inspection" } },
+                  { id: "answer", seq: 2, role: "agent", kind: { type: "prose", text: "**Findings**\n\n- Check [flashing](https://example.com)" } },
                 ] },
               } };
             case "terminalChat.openTerminal":
@@ -65,6 +66,11 @@ async function checkBundledChat(copy) {
     assert.equal(dom.window.document.querySelector(".terminal-chat-history")?.getAttribute("aria-label"), copy.conversation);
     assert.equal(dom.window.document.querySelector(".terminal-chat-role")?.textContent, copy.user);
     assert.equal(dom.window.document.querySelector(".terminal-chat-footer")?.textContent, copy.readOnly);
+    const prose = dom.window.document.querySelector(".terminal-chat-agent .terminal-chat-prose");
+    assert.ok(prose.classList.contains("codex-assistant-message"), "assistant Markdown uses the shared message formatting");
+    assert.equal(prose.querySelector("strong")?.textContent, "Findings");
+    assert.equal(dom.window.getComputedStyle(prose.querySelector("ul")).listStyleType, "disc");
+    assert.equal(prose.querySelector("a")?.href, "https://example.com/");
     assert.equal(dom.window.document.querySelector("textarea,input,[contenteditable=true]"), null);
     assert.equal(dom.window.document.querySelector(".terminal-chat-header button"), null);
     assert.deepEqual(calls, ["app.context", "provider.list", "terminalChat.snapshot"]);
