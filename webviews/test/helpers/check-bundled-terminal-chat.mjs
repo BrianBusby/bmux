@@ -38,7 +38,8 @@ async function checkBundledChat(copy) {
                 theme: { isDark: true, pageBackground: "#111", surfaceBackground: "#222",
                   surfaceElevatedBackground: "#333", inputBackground: "#222", border: "#444",
                   borderStrong: "#555", text: "#eee", mutedText: "#ccc", softText: "#aaa",
-                  accent: "#0af", accentSoft: "#08b", danger: "#f44", shadow: "#000" },
+                  accent: "#0af", accentSoft: "#08b", danger: "#f44", shadow: "#000",
+                  terminalFontFamily: "Menlo", terminalFontSize: 16 },
                 copy: { chatConversation: copy.conversation, chatInteract: copy.interact,
                   chatReadOnly: copy.readOnly, chatUser: copy.user, chatObserved: "Transcript updates" },
               } };
@@ -67,6 +68,8 @@ async function checkBundledChat(copy) {
     assert.equal(dom.window.document.querySelector(".terminal-chat-role")?.textContent, copy.user);
     assert.equal(dom.window.document.querySelector(".terminal-chat-footer")?.textContent, copy.readOnly);
     const prose = dom.window.document.querySelector(".terminal-chat-agent .terminal-chat-prose");
+    assert.equal(dom.window.document.documentElement.style.getPropertyValue("--agent-terminal-font-family"), '"Menlo", monospace');
+    assert.equal(dom.window.document.documentElement.style.getPropertyValue("--agent-terminal-font-size"), "16px");
     assert.ok(prose.classList.contains("codex-assistant-message"), "assistant Markdown uses the shared message formatting");
     assert.equal(prose.querySelector("strong")?.textContent, "Findings");
     assert.equal(dom.window.getComputedStyle(prose.querySelector("ul")).listStyleType, "disc");
