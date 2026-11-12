@@ -134,6 +134,54 @@ struct CLICodexHookPEAssociationTests {
         #expect(association.reasonCode == "hook_prompt_observed")
     }
 
+    @Test func currentRelatedRejectsReusedSurfaceWithMultipleCodexHookSessions() async throws {
+        let cliPath = try BundledCLITestSupport.bundledCLIPath(for: BundledCLILinkageTests.self)
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("bmux-current-reuse-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let socketPath = makeCodexHookSocketPath("related-reuse")
+        let listener = try bindCodexHookUnixSocket(at: socketPath)
+        defer {
+            Darwin.close(listener)
+            unlink(socketPath)
+            try? FileManager.default.removeItem(at: root)
+        }
+        let workspace = "11111111-1111-1111-1111-111111111111"
+        let stable = "33333333-3333-3333-3333-333333333333"
+        let surface = "22222222-2222-2222-2222-222222222222"
+        let commands = CodexHookCapturedSocketCommands()
+        startCodexHookMockSocketServerAccepting(listenerFD: listener, commands: commands, surfaceId: surface,
+            connectionLimit: 40, runtimeWorkspaceId: workspace, stableWorkspaceId: stable)
+        let environment = ["HOME": root.path, "CFFIXED_USER_HOME": root.path, "BMUX_PROVENANCE_HOME": root.path,
+            "PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "PWD": root.path, "BMUX_SOCKET_PATH": socketPath,
+            "BMUX_WORKSPACE_ID": workspace, "BMUX_STABLE_WORKSPACE_ID": stable, "BMUX_SURFACE_ID": surface,
+            "BMUX_AGENT_HOOK_STATE_DIR": root.path, "BMUX_CLI_SENTRY_DISABLED": "1", "BMUX_CODEX_PID": "4242"]
+        func submit(_ session: String) {
+            let result = runCodexHookProcess(executablePath: cliPath, arguments: ["hooks", "codex", "prompt-submit"],
+                environment: environment,
+                standardInput: #"{"session_id":"\#(session)","turn_id":"turn-\#(session)","cwd":"\#(root.path)","hook_event_name":"UserPromptSubmit"}"#,
+                timeout: 10)
+            #expect(!result.timedOut && result.status == 0, Comment(rawValue: result.stderr))
+        }
+        func query(_ session: String) throws -> [String: Any] {
+            var caller = environment
+            caller["CODEX_THREAD_ID"] = session
+            let result = runCodexHookProcess(executablePath: cliPath,
+                arguments: ["--json", "provenance", "sessions", "related", "--current"],
+                environment: caller, timeout: 15)
+            #expect(!result.timedOut && result.status == 0, Comment(rawValue: result.stderr))
+            return try #require(try JSONSerialization.jsonObject(with: Data(result.stdout.utf8)) as? [String: Any])
+        }
+        submit("first-session")
+        let first = try query("first-session")
+        #expect(first["reason"] as? String != "ambiguous_caller")
+        submit("replacement-session")
+        for session in ["first-session", "replacement-session"] {
+            let result = try query(session)
+            #expect(result["found"] as? Bool == false)
+            #expect(result["reason"] as? String == "ambiguous_caller")
+        }
+    }
+
     @Test func currentRelatedUsesCallerSurfaceAndPublicEvidence() async throws {
         let cliPath = try BundledCLITestSupport.bundledCLIPath(for: BundledCLILinkageTests.self)
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("bmux-current-related-\(UUID().uuidString)")
