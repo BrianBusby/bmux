@@ -191,7 +191,7 @@ struct CLICodexHookPEAssociationTests {
             payload: .init(codingAgentCommand: failed))))
         var hookState: [String: Any] = [
             "version": 1,
-            "activeSessionsBySurface": [surface: ["sessionId": sessionID, "updatedAt": now.timeIntervalSince1970]],
+            "activeSessionsBySurface": [:],
             "sessions": [sessionID: ["sessionId": sessionID, "workspaceId": workspace, "surfaceId": surface,
                                      "startedAt": now.timeIntervalSince1970, "updatedAt": now.timeIntervalSince1970]]
         ]
