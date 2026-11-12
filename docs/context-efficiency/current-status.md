@@ -136,6 +136,29 @@ durable engineering evidence. The merged local slice remains under observation;
 the external and conversation slices await tagged dogfood and merge. See [the local record](../planning/work-brief-implementation.md)
 and [the external record](../planning/work-brief-external.md).
 
+## Cross-session context work package
+
+The cross-session context assembly experiment now tracks three sequential
+slices: current-caller retrieval, task relevance, and ordinary-agent evaluation.
+Only the first is selected; none has implementation or acceptance evidence yet.
+The existing explicit-ID retrieval and Smart Session awareness remain implemented.
+The Knowledge Compiler bridge is outside this work package.
+
+Current-main inspection: `CLI/BMUXCLI+ProvenanceSessionsRetrieval.swift` uses
+`relatedSessions(...)` with an explicit PE ID, and the existing collision read
+starts with the target's changed artifacts. PE's related-session documentation
+already describes same-repository relationship evidence and bounded briefs.
+`CLI/BMUXCLI+SessionsList.swift` tracks active provider sessions per surface;
+`WorkProvenanceSessionLifecycleRecorder` records provider identities, but its
+sidecar lifecycle path has no workspace or surface ID. Do not assume these
+facts alone prove a unique caller-to-PE link. Establish and test the actual
+ordinary-terminal linkage, including restart and pane reuse, before using it.
+
+Remaining work: implement and verify all three slices, record a bounded output
+contract and corpus thresholds, run Project Truth gates after each slice, build
+an isolated tagged app, and capture ordinary Codex end-to-end observations. The
+new worktree is based on `6cc13bfc8`; the original checkout has unrelated edits.
+
 ## Current Generated Truth
 
 - [Project status](../generated/project-status.md)

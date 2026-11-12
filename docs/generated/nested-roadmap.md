@@ -20,7 +20,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Active Implementation
 
-- None.
+- Retrieve related work from the current caller (`cross_session_current_caller_retrieval`) - maturity: active; status: active; selection: current; owner: Bmux
 
 ### Selected Next
 
@@ -29,7 +29,6 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 ### Ready Candidates
 
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - maturity: ready; status: planned; selection: planned; owner: Bmux
-- Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - maturity: ready; status: planned; selection: planned; owner: Bmux
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - maturity: ready; status: planned; selection: planned; owner: Provenance Engine
 
 ### Gated / Blocked Downstream Work
@@ -57,6 +56,12 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 - Three-view session navigation (`three_view_session_navigation`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - React Chat live interaction productization (`react_terminal_productization`) is not dependency-satisfying
   - React Chat live interaction productization (`react_terminal_productization`) has maturity captured; requires validated for gate `terminal_productized`: Three-view navigation should preserve identity across a productized Chat surface, not an unfinished live-interaction direction.
+- Retrieve work relevant to an explicit task (`cross_session_task_relevance_retrieval`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
+  - Retrieve related work from the current caller (`cross_session_current_caller_retrieval`) is not dependency-satisfying
+  - Retrieve related work from the current caller (`cross_session_current_caller_retrieval`) has maturity active; requires validated for gate `caller_retrieval_validated`: Task queries depend on verified caller scope and usable evidence navigation.
+- Evaluate retrieval in ordinary agent work (`cross_session_ordinary_agent_evaluation`) - maturity: gated; status: planned; selection: planned; owner: Bmux
+  - Retrieve work relevant to an explicit task (`cross_session_task_relevance_retrieval`) is not dependency-satisfying
+  - Retrieve work relevant to an explicit task (`cross_session_task_relevance_retrieval`) has maturity gated; requires validated for gate `task_relevance_validated`: Live scenarios require evaluated task relevance and actionable references.
 - Knowledge Compiler cross-session bridge (`knowledge_compiler_cross_session_bridge`) - maturity: gated; status: deferred; selection: deferred; owner: Provenance Engine
   - Local Knowledge Compiler (`knowledge_compiler_outcomes`) is not dependency-satisfying
   - Local Knowledge Compiler (`knowledge_compiler_outcomes`) has maturity gated; requires active for gate `compiler_implementation_available`: Cross-session outcomes cannot be promoted into durable knowledge until the Knowledge Compiler exists.
@@ -928,15 +933,33 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Rationale: Surface especially relevant cross-session changes through bounded Smart Session presentation without silently mutating coding-agent context.
           Acceptance reason: The existing Smart Session refresh path now reads at most five related sessions and five possible collision candidates through PE public contracts and presents their factual boundaries separately from the session's own semantic work model.
           Acceptance criteria: React Smart Session refresh performs bounded PE related-session and artifact-collision reads for the linked PE session.; Presentation preserves relationship reasons, lifecycle/freshness state, normalized artifact paths, collision state, and bounded omission counts.; Failed awareness reads degrade to an explicit unavailable state without hiding the existing Smart Session snapshot.; No prompt injection, external notification, locking, interruption, reassignment, transcript sharing, or coordination policy is added.
-        - **Cross-session context assembly experiment** (`cross_session_context_assembly_experiment`) - slice; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: retrieval; layer: consumer presentation; execution: planned / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: ready
+      - **Cross-session context assembly experiment** (`cross_session_context_assembly_experiment`) - milestone; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: retrieval; layer: consumer presentation; execution: current / Bmux; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: active
+        Depends on: `agent_accessible_cross_session_retrieval`
+        Expected contract domains: `context_assembly_policy`, `cross_session_effectiveness_metrics`, `bounded_context_pack`
+        Expected code areas: `bmux context assembly`, `bmux agent launch/session orchestration`, `evaluation fixtures`
+        Likely conflict domains: `prompt_context_assembly`, `retrieval_contracts`, `privacy_policy`
+        Contract dependencies: `cross_session_agent_query`, `context_effectiveness_metrics`
+        Worktree required: true
+        Gate `cross_session_retrieval_validated`: requires `agent_accessible_cross_session_retrieval` maturity validated; reason: Automatic context assembly should be an experiment after explicit cross-session retrieval proves useful.
+        Rationale: Measure whether bounded explainable cross-session context improves outcomes before making automatic context assembly a product behavior.
+        - **Retrieve related work from the current caller** (`cross_session_current_caller_retrieval`) - slice; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: retrieval; layer: consumer presentation; execution: current / Shared; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: active
           Depends on: `agent_accessible_cross_session_retrieval`
-          Expected contract domains: `context_assembly_policy`, `cross_session_effectiveness_metrics`, `bounded_context_pack`
-          Expected code areas: `bmux context assembly`, `bmux agent launch/session orchestration`, `evaluation fixtures`
-          Likely conflict domains: `prompt_context_assembly`, `retrieval_contracts`, `privacy_policy`
-          Contract dependencies: `cross_session_agent_query`, `context_effectiveness_metrics`
-          Worktree required: true
-          Gate `cross_session_retrieval_validated`: requires `agent_accessible_cross_session_retrieval` maturity validated; reason: Automatic context assembly should be an experiment after explicit cross-session retrieval proves useful.
-          Rationale: Measure whether bounded explainable cross-session context improves outcomes before making automatic context assembly a product behavior.
+          Execution notes: Resolve verified caller identity, preserve the explicit-ID contract, and return bounded evidence with actionable unavailable states. Verify fresh sessions and identity reuse in a tagged ordinary Codex session.
+          Gate `explicit_retrieval_validated`: requires `agent_accessible_cross_session_retrieval` maturity validated; reason: Caller retrieval builds on the validated explicit PE read.
+          Rationale: Make existing PE relationships usable before a caller edits files.
+          Acceptance criteria: Retrieve active and historical related work from a fresh caller without a PE ID, with bounded text and machine-readable evidence.; Verify caller isolation, resume, pane reuse, unavailable and ambiguous linkage, freshness, omissions, and the existing no-socket explicit-ID path.
+        - **Retrieve work relevant to an explicit task** (`cross_session_task_relevance_retrieval`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: retrieval; layer: retrieval engine; execution: planned / Shared; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: gated
+          Depends on: `cross_session_current_caller_retrieval`
+          Execution notes: PE owns deterministic repository-scoped path, ticket and objective relevance, evidence revisions, freshness, supersession, and omissions. Evaluate a predeclared corpus before advancing.
+          Gate `caller_retrieval_validated`: requires `cross_session_current_caller_retrieval` maturity validated; reason: Task queries depend on verified caller scope and usable evidence navigation.
+          Rationale: Rank task evidence above broad repository relationships without requiring prior caller edits.
+          Acceptance criteria: Find arbitrary path history, exact ticket evidence and labeled objective matches for a fresh caller while retaining worktree boundaries and references.; Measure corpus recall, irrelevant inclusions, reference coverage, determinism and output size against documented thresholds.
+        - **Evaluate retrieval in ordinary agent work** (`cross_session_ordinary_agent_evaluation`) - slice; status: planned; owner: Bmux; repositories: Bmux, Provenance Engine; concept: retrieval; layer: consumer presentation; execution: planned / Shared; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: gated
+          Depends on: `cross_session_task_relevance_retrieval`
+          Execution notes: Add bounded discovery and evidence drill-down; observe concurrent work, prior decisions and failed attempts through ordinary Codex ingestion in isolated worktrees and PE data.
+          Gate `task_relevance_validated`: requires `cross_session_task_relevance_retrieval` maturity validated; reason: Live scenarios require evaluated task relevance and actionable references.
+          Rationale: Test whether retrieved evidence supports a materially better development decision before automatic assembly.
+          Acceptance criteria: Record query, evidence IDs and revisions, returned context, and a materially supported next action for each live scenario.; Distinguish live evidence from seeded fixtures and report reproducible comparison and limitations.
     - **Cross-Session Awareness Knowledge Bridge** (`cross_session_awareness_knowledge_bridge`) - phase; status: deferred; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: durable knowledge; layer: knowledge compiler; execution: deferred / Provenance Engine; parallelism: serial; maturity: gated
       Depends on: `agent_accessible_cross_session_retrieval`, `knowledge_compiler_outcomes`
       Gate `cross_session_retrieval_validated`: requires `agent_accessible_cross_session_retrieval` maturity validated; reason: The bridge should consume validated working-memory retrieval behavior, not transient session statements.
@@ -962,20 +985,20 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 Active assignments are derived from roadmap slice nodes with `status: active` or `execution.assignment: current`.
 
-- Active implementation assignments: none selected.
+| Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Retrieve related work from the current caller (`cross_session_current_caller_retrieval`) | serial | None | None | None | None | None | single active assignment |
 
 ### Dependency-Ready Preflight
 
 | Slice | Selection | Dependency status | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) | planned | ready | serial | true | `session_work_model_projection`, `react_session_presentation`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `blocker_approach_change_semantics`, `semantic_explanation_provenance` | `React Smart Session surface`, `bmux SessionWorkModel client`, `Sources/WorkProvenance`, `Sources/ProvenanceEngineContracts` |
-| Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) | planned | ready | serial | true | `prompt_context_assembly`, `retrieval_contracts`, `privacy_policy` | `cross_session_agent_query`, `context_effectiveness_metrics` | `context_assembly_policy`, `cross_session_effectiveness_metrics`, `bounded_context_pack` | `bmux context assembly`, `bmux agent launch/session orchestration`, `evaluation fixtures` |
 | Milestone-to-code relationships (`milestone_to_code_relationships`) | planned | ready | serial | true | `milestone_relationships`, `file_change_attribution` | `milestone_semantics`, `richer_coding_agent_evidence` | `milestone_code_relationships`, `file_change_attribution` | `Sources/ProvenanceEngineCore`, `Sources/ProvenanceEngineContracts`, `Tests/ProvenanceEngineTests` |
 
 ## Dependency-Ready Work
 
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - selection: planned; depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`
-- Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - selection: planned; depends on: `agent_accessible_cross_session_retrieval`
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - selection: planned; depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`
 
 ## Selected Next Work
@@ -985,7 +1008,6 @@ None.
 ## Dependency-Ready But Not Selected
 
 - React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) - depends on: `react_smart_session_initial_work_model_consumer`, `react_smart_session_foundation`, `session_work_model_contract_foundation`, `milestone_inference`, `blocker_approach_change_semantics`
-- Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - depends on: `agent_accessible_cross_session_retrieval`
 - Milestone-to-code relationships (`milestone_to_code_relationships`) - depends on: `milestone_inference`, `richer_coding_agent_evidence_foundation`
 
 ## Deferred Or Blocked Work

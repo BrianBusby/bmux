@@ -4724,10 +4724,10 @@ roadmap:
       acceptance_reason: The existing Smart Session refresh path now reads at most five related sessions and five possible collision candidates through PE public contracts and presents their factual boundaries separately from the session's own semantic work model.
 
     - id: cross_session_context_assembly_experiment
-      kind: slice
+      kind: milestone
       title: Cross-session context assembly experiment
-      parent: cross_session_retrieval_and_presentation
-      status: planned
+      parent: cross_session_awareness_retrieval_and_context
+      status: active
       owner: bmux
       repositories:
         - bmux
@@ -4739,7 +4739,7 @@ roadmap:
           - cross_session_awareness
           - context_assembly
           - experiment
-      capability_maturity: ready
+      capability_maturity: active
       depends_on:
         - agent_accessible_cross_session_retrieval
       gates:
@@ -4767,11 +4767,110 @@ roadmap:
           - context_effectiveness_metrics
         worktree_required: true
       execution:
-        assignment: planned
+        assignment: current
         assigned_to: bmux
       delivery_status: proposed
       acceptance_status: proposed
       rationale: Measure whether bounded explainable cross-session context improves outcomes before making automatic context assembly a product behavior.
+
+    - id: cross_session_current_caller_retrieval
+      kind: slice
+      title: Retrieve related work from the current caller
+      parent: cross_session_context_assembly_experiment
+      status: active
+      owner: bmux
+      repositories: [bmux, provenance_engine]
+      concept_classification:
+        primary: retrieval
+        architecture_layer: consumer_presentation
+        tags: [cross_session_awareness, agent_retrieval]
+      capability_maturity: active
+      depends_on: [agent_accessible_cross_session_retrieval]
+      gates:
+        - id: explicit_retrieval_validated
+          requires:
+            node: agent_accessible_cross_session_retrieval
+            maturity: validated
+          reason: Caller retrieval builds on the validated explicit PE read.
+      parallelism:
+        classification: serial
+      execution:
+        assignment: current
+        assigned_to: shared
+        notes: Resolve verified caller identity, preserve the explicit-ID contract, and return bounded evidence with actionable unavailable states. Verify fresh sessions and identity reuse in a tagged ordinary Codex session.
+      delivery_status: proposed
+      acceptance_status: proposed
+      acceptance:
+        criteria:
+          - Retrieve active and historical related work from a fresh caller without a PE ID, with bounded text and machine-readable evidence.
+          - Verify caller isolation, resume, pane reuse, unavailable and ambiguous linkage, freshness, omissions, and the existing no-socket explicit-ID path.
+      rationale: Make existing PE relationships usable before a caller edits files.
+
+    - id: cross_session_task_relevance_retrieval
+      kind: slice
+      title: Retrieve work relevant to an explicit task
+      parent: cross_session_context_assembly_experiment
+      status: planned
+      owner: provenance_engine
+      repositories: [provenance_engine, bmux]
+      concept_classification:
+        primary: retrieval
+        architecture_layer: retrieval_engine
+        tags: [cross_session_awareness, agent_retrieval]
+      capability_maturity: gated
+      depends_on: [cross_session_current_caller_retrieval]
+      gates:
+        - id: caller_retrieval_validated
+          requires:
+            node: cross_session_current_caller_retrieval
+            maturity: validated
+          reason: Task queries depend on verified caller scope and usable evidence navigation.
+      parallelism:
+        classification: serial
+      execution:
+        assignment: planned
+        assigned_to: shared
+        notes: PE owns deterministic repository-scoped path, ticket and objective relevance, evidence revisions, freshness, supersession, and omissions. Evaluate a predeclared corpus before advancing.
+      delivery_status: proposed
+      acceptance_status: proposed
+      acceptance:
+        criteria:
+          - Find arbitrary path history, exact ticket evidence and labeled objective matches for a fresh caller while retaining worktree boundaries and references.
+          - Measure corpus recall, irrelevant inclusions, reference coverage, determinism and output size against documented thresholds.
+      rationale: Rank task evidence above broad repository relationships without requiring prior caller edits.
+
+    - id: cross_session_ordinary_agent_evaluation
+      kind: slice
+      title: Evaluate retrieval in ordinary agent work
+      parent: cross_session_context_assembly_experiment
+      status: planned
+      owner: bmux
+      repositories: [bmux, provenance_engine]
+      concept_classification:
+        primary: retrieval
+        architecture_layer: consumer_presentation
+        tags: [cross_session_awareness, experiment]
+      capability_maturity: gated
+      depends_on: [cross_session_task_relevance_retrieval]
+      gates:
+        - id: task_relevance_validated
+          requires:
+            node: cross_session_task_relevance_retrieval
+            maturity: validated
+          reason: Live scenarios require evaluated task relevance and actionable references.
+      parallelism:
+        classification: serial
+      execution:
+        assignment: planned
+        assigned_to: shared
+        notes: Add bounded discovery and evidence drill-down; observe concurrent work, prior decisions and failed attempts through ordinary Codex ingestion in isolated worktrees and PE data.
+      delivery_status: proposed
+      acceptance_status: proposed
+      acceptance:
+        criteria:
+          - Record query, evidence IDs and revisions, returned context, and a materially supported next action for each live scenario.
+          - Distinguish live evidence from seeded fixtures and report reproducible comparison and limitations.
+      rationale: Test whether retrieved evidence supports a materially better development decision before automatic assembly.
 
     - id: cross_session_awareness_knowledge_bridge
       kind: phase
