@@ -184,7 +184,13 @@ succeeded on the pushed implementation; its CLI repeated the same 9,840-byte
 result from the original live pane with approved socket access. The completed
 revision was also inspected with no app socket. Sandbox access without
 escalation remains an open limitation; a fresh session in build 943, actual
-resume/pane-reuse scenarios, and user dogfood remain unverified.
+resume/pane-reuse scenarios, and user dogfood remain unverified. The hook store
+retains earlier Codex sessions and does not identify the current surface owner.
+When multiple records name the same workspace and surface, caller retrieval now
+fails closed with `ambiguous_caller` and recommends a fresh pane; successful
+reuse of that pane remains an unmet acceptance criterion. The store prunes
+records after seven days without an update when a subsequent store operation
+runs, but that delay is not an ownership guarantee.
 
 Remaining work: implement and verify all three slices, record a bounded output
 contract and corpus thresholds, run Project Truth gates after each slice, build

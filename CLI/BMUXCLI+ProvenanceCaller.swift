@@ -76,6 +76,13 @@ extension BMUXCLI {
               record.surfaceId.caseInsensitiveCompare(actualSurface) == .orderedSame else {
             return .unavailable("caller_unlinked")
         }
+        // Codex does not maintain an authoritative current-session slot. Historical
+        // records on a reused surface cannot establish which process owns the pane.
+        let surfaceRecords = state.sessions.values.filter {
+            $0.workspaceId.caseInsensitiveCompare(actualWorkspace) == .orderedSame &&
+            $0.surfaceId.caseInsensitiveCompare(actualSurface) == .orderedSame
+        }
+        guard surfaceRecords.count == 1 else { return .unavailable("ambiguous_caller") }
         return .available(workspaceID: stable, surfaceID: actualSurface, providerSessionID: provider)
     }
 }

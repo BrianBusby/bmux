@@ -243418,6 +243418,13 @@
         }
       }
     },
+    "cli.provenance.current.ambiguous": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Current session context is ambiguous. Start Codex in a fresh pane and retry."}},
+        "ja": {"stringUnit": {"state": "translated", "value": "現在のセッションのコンテキストを特定できません。新しいペインで Codex を起動して再試行してください。"}}
+      }
+    },
     "cli.provenance.current.invalidLimit": {
       "extractionState": "manual",
       "localizations": {

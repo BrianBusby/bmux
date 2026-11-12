@@ -141,6 +141,9 @@ Codex thread against its hook record and a unique PE association. It
 returns an unavailable reason when the link is absent or ambiguous and asks
 the caller to retry after linkage. Explicit PE IDs remain supported without a
 live socket; use them for exact revisions and the existing full JSON contract.
+If multiple retained Codex records identify the same pane, ownership is
+ambiguous: start Codex in a fresh pane and retry. Successful retrieval after
+pane reuse remains unsupported until current ownership can be verified.
 Codex command sandboxes that deny Unix socket access require an approved
 unsandboxed invocation; otherwise the command reports `app_linkage_unavailable`.
 

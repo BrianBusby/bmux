@@ -4797,7 +4797,7 @@ roadmap:
       execution:
         assignment: current
         assigned_to: shared
-        notes: Resolve verified caller identity, preserve the explicit-ID contract, and return bounded evidence with actionable unavailable states. Verify fresh sessions and identity reuse in a tagged ordinary Codex session.
+        notes: Resolve verified caller identity, preserve the explicit-ID contract, and return bounded evidence with actionable unavailable states. Multiple retained Codex records on one surface fail closed; successful pane reuse needs authoritative ownership evidence and live verification.
       delivery_status: proposed
       acceptance_status: proposed
       acceptance:

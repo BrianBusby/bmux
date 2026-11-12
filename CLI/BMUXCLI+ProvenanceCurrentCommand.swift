@@ -66,7 +66,11 @@ extension BMUXCLI {
 
     func printProvenanceCurrentUnavailable(_ reason: String, jsonOutput: Bool) {
         if jsonOutput {
-            print(jsonString(["found": false, "reason": reason, "retryable": true]))
+            var response: [String: Any] = ["found": false, "reason": reason, "retryable": true]
+            if reason == "ambiguous_caller" { response["recovery"] = "start_fresh_pane" }
+            print(jsonString(response))
+        } else if reason == "ambiguous_caller" {
+            print(String(localized: "cli.provenance.current.ambiguous", defaultValue: "Current session context is ambiguous. Start Codex in a fresh pane and retry."))
         } else {
             print(String.localizedStringWithFormat(
                 String(localized: "cli.provenance.current.unavailable", defaultValue: "Current session context is unavailable (%@). Wait for session linkage and retry; verify this command runs inside the intended Codex pane."),

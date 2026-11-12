@@ -944,7 +944,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
         Rationale: Measure whether bounded explainable cross-session context improves outcomes before making automatic context assembly a product behavior.
         - **Retrieve related work from the current caller** (`cross_session_current_caller_retrieval`) - slice; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: retrieval; layer: consumer presentation; execution: current / Shared; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: active
           Depends on: `agent_accessible_cross_session_retrieval`
-          Execution notes: Resolve verified caller identity, preserve the explicit-ID contract, and return bounded evidence with actionable unavailable states. Verify fresh sessions and identity reuse in a tagged ordinary Codex session.
+          Execution notes: Resolve verified caller identity, preserve the explicit-ID contract, and return bounded evidence with actionable unavailable states. Multiple retained Codex records on one surface fail closed; successful pane reuse needs authoritative ownership evidence and live verification.
           Gate `explicit_retrieval_validated`: requires `agent_accessible_cross_session_retrieval` maturity validated; reason: Caller retrieval builds on the validated explicit PE read.
           Rationale: Make existing PE relationships usable before a caller edits files.
           Acceptance criteria: Retrieve active and historical related work from a fresh caller without a PE ID, with bounded text and machine-readable evidence.; Verify caller isolation, resume, pane reuse, unavailable and ambiguous linkage, freshness, omissions, and the existing no-socket explicit-ID path.

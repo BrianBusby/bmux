@@ -228,7 +228,10 @@ The explicit-ID retrieval commands work without a live app socket. `related
 workspace, surface, Codex thread ID, hook record, and PE association. It
 never substitutes the focused pane. Missing or conflicting linkage returns an
 explicit retryable unavailable state. After startup, wait for the prompt hook
-and transcript association to be recorded, then retry.
+and transcript association to be recorded, then retry. Multiple retained Codex
+sessions for one pane produce `ambiguous_caller`; start Codex in a fresh pane
+and retry. JSON provides `recovery: "start_fresh_pane"` in that state. Pane
+reuse remains unsupported when the retained records cannot establish ownership.
 
 The `--current` response defaults to five briefs and permits one through five.
 It returns at most 12 KiB of encoded JSON and at most 16 KiB of text, omitting

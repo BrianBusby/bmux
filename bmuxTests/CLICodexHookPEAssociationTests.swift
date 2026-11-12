@@ -173,13 +173,19 @@ struct CLICodexHookPEAssociationTests {
         }
         submit("first-session")
         let first = try query("first-session")
-        #expect(first["reason"] as? String != "ambiguous_caller")
+        #expect(first["found"] as? Bool == true)
         submit("replacement-session")
         for session in ["first-session", "replacement-session"] {
             let result = try query(session)
             #expect(result["found"] as? Bool == false)
             #expect(result["reason"] as? String == "ambiguous_caller")
+            #expect(result["recovery"] as? String == "start_fresh_pane")
         }
+        var caller = environment
+        caller["CODEX_THREAD_ID"] = "replacement-session"
+        let text = runCodexHookProcess(executablePath: cliPath,
+            arguments: ["provenance", "sessions", "related", "--current"], environment: caller, timeout: 15)
+        #expect(text.stdout.contains("fresh pane"))
     }
 
     @Test func currentRelatedUsesCallerSurfaceAndPublicEvidence() async throws {
