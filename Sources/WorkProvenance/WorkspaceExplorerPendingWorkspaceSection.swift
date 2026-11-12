@@ -12,7 +12,7 @@ struct WorkspaceExplorerPendingWorkspaceSection: View {
                 Text(String(localized: "explorer.newWorkspacesLoading", defaultValue:
                     "New workspaces — loading details"))
                     .font(.system(size: 13, weight: .semibold))
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 236), spacing: 10)], spacing: 10) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 236), spacing: 10, alignment: .top)], spacing: 10) {
                     ForEach(items) { item in
                         WorkspaceExplorerWorkspaceCard(item: item,
                             isActive: activeWorkspaceID == item.id, isReopened: false,
