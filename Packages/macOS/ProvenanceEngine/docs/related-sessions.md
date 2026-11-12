@@ -234,16 +234,19 @@ bmux exposes this read through:
 
 ```bash
 bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]
+bmux provenance sessions related --current [--limit <1-5>] [--database <path>] [--json]
 ```
 
-The CLI requires an explicit PE session id and uses the public
-`ProvenanceEngineClient.relatedSessions(...)` contract. bmux owns only argument
+The explicit-ID command and the caller-based command use the public
+`ProvenanceEngineClient.relatedSessions(...)` contract. `--current` requires a
+live, verified bmux surface, active Codex hook identity, and unique PE association;
+its versioned compact output has a 12 KiB JSON budget and explicit omissions. bmux owns only argument
 parsing, database selection, output formatting, and agent-facing docs; PE owns
 relationship reasons, ordering, revision semantics, work-state field authority,
 freshness, completeness, evidence references, and bounded omissions.
 
-The command works without a live bmux socket when the selected local PE database
-exists. A missing database, missing session, missing revision, valid empty
+The explicit-ID command works without a live bmux socket when the selected local
+PE database exists. A missing database, missing session, missing revision, valid empty
 projection, and partial result remain distinguishable in JSON and text output.
 
 A sanitized fixture for this contract includes a related session that reports
@@ -268,7 +271,6 @@ explanations now live in `artifact-collisions.md`, and they are still not
 rename tracking, diff-hunk identity, semantic component overlap, coordination,
 or conflict proof.
 
-There is no bmux UI, CLI command, prompt assembly, automatic retrieval,
-proactive notification, Knowledge Compiler bridge, organization-scale storage,
-remote sharing, raw transcript retention, or LLM-authored cross-session summary
-in this slice.
+This projection does not itself assemble prompts, coordinate agents, implement a
+Knowledge Compiler bridge, share data remotely, retain raw transcripts, or create
+LLM-authored cross-session summaries.

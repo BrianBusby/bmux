@@ -140,7 +140,8 @@ and [the external record](../planning/work-brief-external.md).
 
 The cross-session context assembly experiment now tracks three sequential
 slices: current-caller retrieval, task relevance, and ordinary-agent evaluation.
-Only the first is selected; none has implementation or acceptance evidence yet.
+Only the first is selected; its implementation is under local verification and
+its live acceptance remains open. The later slices are not implemented.
 The existing explicit-ID retrieval and Smart Session awareness remain implemented.
 The Knowledge Compiler bridge is outside this work package.
 
@@ -151,12 +152,13 @@ already describes same-repository relationship evidence and bounded briefs.
 `CLI/BMUXCLI+SessionsList.swift` tracks active provider sessions per surface;
 `WorkProvenanceSessionLifecycleRecorder` records provider identities, but its
 sidecar lifecycle path has no workspace or surface ID. Do not assume these
-facts alone prove a unique caller-to-PE link. Establish and test the actual
-ordinary-terminal linkage, including restart and pane reuse, before using it.
+facts alone prove a unique caller-to-PE link. The current CLI verifies the live
+caller surface, active hook slot, provider thread and PE association; ordinary
+terminal capture still needs live validation, including restart and pane reuse.
 
 Slice 1 has a PE caller-association prerequisite in progress: the public read
 can constrain workspace, surface, and provider identity together and reports
-ambiguous matches. Five focused SQLite association tests pass. A separate PE
+ambiguous matches. Seven focused SQLite association tests pass. A separate PE
 fixture confirms a fresh session with no changed artifacts finds active and
 closed same-repository peers with evidence-backed reasons. A focused regression
 also covers an older delayed association after a resume; the projection retains
@@ -166,9 +168,12 @@ field does not mask an earlier identity update. Upgraded rows initialize those
 times conservatively from the existing last observation, because the old
 projection did not retain per-field times; replay from the ledger reconstructs
 the precise times. The migration and use alongside an older running build still
-need isolated runtime verification. Live caller
-verification, CLI integration, compact output, and end-to-end acceptance remain
-unimplemented.
+need isolated runtime verification. The current CLI path and 12 KiB compact
+JSON response are implemented locally. The focused CLI fixture passes for two
+caller surfaces, active and closed peers, stale failed validation, explicit-ID
+and outcome drill-down, missing app linkage, and output-budget omissions. Build
+941 succeeded before subsequent small source changes; the final tagged build and
+a live ordinary Codex invocation against isolated PE data remain outstanding.
 
 Remaining work: implement and verify all three slices, record a bounded output
 contract and corpus thresholds, run Project Truth gates after each slice, build

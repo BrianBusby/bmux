@@ -4,6 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "ProvenanceEngine",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v10_15),
     ],
@@ -43,7 +44,8 @@ let package = Package(
                 "ProvenanceEngineContracts",
                 "ProvenanceEngineSDK",
             ],
-            path: "Examples/ProvenanceRetrievalDemoSeed"
+            path: "Examples/ProvenanceRetrievalDemoSeed",
+            resources: [.process("Resources")]
         ),
         .testTarget(
             name: "ProvenanceEngineContractsTests",

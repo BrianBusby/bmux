@@ -3285,6 +3285,7 @@ struct BMUXCLI {
                 commandArgs: commandArgs,
                 jsonOutput: jsonOutput,
                 explicitSocketPath: explicitSocketPath,
+                explicitSocketPassword: socketPasswordArg,
                 processEnv: processEnv,
                 cliBundleIdentifier: cliBundleIdentifier
             )
@@ -5972,14 +5973,6 @@ struct BMUXCLI {
             return parsed
         }
         return .refs
-    }
-
-    func sendV1Command(_ command: String, client: SocketClient) throws -> String {
-        let response = try client.send(command: command)
-        if response.hasPrefix("ERROR:") {
-            throw CLIError(message: response)
-        }
-        return response
     }
 
     func formatIDs(_ object: Any, mode: CLIIDFormat) -> Any {

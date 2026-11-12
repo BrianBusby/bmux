@@ -205,6 +205,12 @@ func codexHookMockSocketResponse(
           let id = payload["id"] as? String else {
         return "OK"
     }
+    if payload["method"] as? String == "system.identify", let runtimeWorkspaceId {
+        return codexHookV2Response(id: id, ok: true, result: [
+            "caller": ["workspace_id": runtimeWorkspaceId, "surface_id": surfaceId,
+                       "window_id": "44444444-4444-4444-4444-444444444444"]
+        ])
+    }
     if payload["method"] as? String == "workspace.list" {
         let workspaces: [[String: Any]]
         if let runtimeWorkspaceId, let stableWorkspaceId {

@@ -14,7 +14,7 @@ struct ProvenanceRetrievalDemoSeed {
             withIntermediateDirectories: true
         )
 
-        let summary = try await DemoSeeder(databaseURL: options.databaseURL).seed()
+        let summary = try await DemoSeeder(databaseURL: options.databaseURL).seed(closePeer: options.closePeer)
         if options.json {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
@@ -36,11 +36,13 @@ private struct DemoOptions {
     let databaseURL: URL
     let reset: Bool
     let json: Bool
+    let closePeer: Bool
 
     static func parse(_ arguments: [String]) throws -> DemoOptions {
         var databasePath: String?
         var reset = false
         var json = false
+        var closePeer = false
         var index = 0
         while index < arguments.count {
             switch arguments[index] {
@@ -54,6 +56,8 @@ private struct DemoOptions {
                 reset = true
             case "--json":
                 json = true
+            case "--closed-peer":
+                closePeer = true
             case "--help", "-h", "help":
                 throw DemoError.usage
             default:
@@ -68,16 +72,31 @@ private struct DemoOptions {
         return DemoOptions(
             databaseURL: URL(fileURLWithPath: NSString(string: databasePath).expandingTildeInPath),
             reset: reset,
-            json: json
+            json: json,
+            closePeer: closePeer
         )
     }
 }
 
 private enum DemoError: LocalizedError {
     case usage
+    case lifecycleFailed
 
     var errorDescription: String? {
-        "Usage: swift run --package-path Packages/macOS/ProvenanceEngine ProvenanceRetrievalDemoSeed --database <path> [--reset] [--json]"
+        if #available(macOS 12.0, *) {
+            switch self {
+            case .usage:
+                return String(localized: "provenance.demoSeed.usage", defaultValue: "Usage: swift run --package-path Packages/macOS/ProvenanceEngine ProvenanceRetrievalDemoSeed --database <path> [--reset] [--closed-peer] [--json]", bundle: .module)
+            case .lifecycleFailed:
+                return String(localized: "provenance.demoSeed.lifecycleFailed", defaultValue: "Could not close the seeded peer session.", bundle: .module)
+            }
+        }
+        switch self {
+        case .usage:
+            return NSLocalizedString("provenance.demoSeed.usage", bundle: .module, value: "Usage: swift run --package-path Packages/macOS/ProvenanceEngine ProvenanceRetrievalDemoSeed --database <path> [--reset] [--closed-peer] [--json]", comment: "Demo seeder usage")
+        case .lifecycleFailed:
+            return NSLocalizedString("provenance.demoSeed.lifecycleFailed", bundle: .module, value: "Could not close the seeded peer session.", comment: "Demo seeder failure")
+        }
     }
 }
 
@@ -92,7 +111,7 @@ private struct DemoSummary: Encodable {
 private struct DemoSeeder {
     let databaseURL: URL
 
-    func seed() async throws -> DemoSummary {
+    func seed(closePeer: Bool) async throws -> DemoSummary {
         let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
         let timestamp = Date(timeIntervalSince1970: 1_800_030_000)
         let repository = ProvenanceRepositoryRecord(
@@ -149,6 +168,13 @@ private struct DemoSeeder {
             client: client,
             timestamp: timestamp.addingTimeInterval(20)
         )
+        if closePeer {
+            let result = await client.recordSessionLifecycle(.init(
+                phase: .stopped, sessionID: sessionB.id, agentKind: "codex", worktreeID: worktreeB.id,
+                timestamp: timestamp.addingTimeInterval(50)
+            ))
+            guard result.accepted else { throw DemoError.lifecycleFailed }
+        }
         _ = try await client.publishCodingAgentSessionSemanticInferences(
             ProvenanceCodingAgentSessionSemanticInferenceRequest(
                 sessionID: sessionA.id,

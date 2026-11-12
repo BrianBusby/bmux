@@ -138,3 +138,28 @@ Observed local timings for this small fixture through the tagged app bundle CLI
 were `real 4.70s` for the text related-session read and `real 0.05s` for the
 text collision read. These are single-run observations, not performance
 guarantees.
+
+## Current-caller fixture mode
+
+The seeder also accepts `--closed-peer` to record session B as completed while
+leaving session A active. Both remain in the same seeded repository and retain
+their validation evidence. To relate a fresh caller without recording a file
+change, create a temporary Git repository whose `origin` normalizes to the
+fixture's `example/retrieval-demo` remote slug, then start an ordinary Codex
+session in that worktree. Use a separate `BMUX_PROVENANCE_HOME` and seed its
+`.local/state/provenance-engine/provenance.sqlite` with the option above.
+
+The fixture timestamps are fixed in January 2027. If the local clock precedes
+them, the compact response reports recency as unknown rather than claiming the
+observations are fresh. The seed is artificial evidence; it does not prove live
+capture or current validity. Once the caller is linked, run:
+
+```bash
+bmux provenance sessions related --current --limit 5
+bmux provenance sessions related --current --limit 5 --json
+bmux provenance session outcome <returned-session-id> --revision <returned-outcome-revision>
+```
+
+Use the same isolated provenance home or pass the corresponding `--database`
+path to each command. The explicit-ID commands continue to work without a live
+app socket.
