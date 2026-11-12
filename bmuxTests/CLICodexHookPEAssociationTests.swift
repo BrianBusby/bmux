@@ -266,6 +266,15 @@ struct CLICodexHookPEAssociationTests {
         #expect(Set(results.compactMap { $0["session_id"] as? String }) == ["related-active", "related-closed"])
         #expect(payload["target_session_id"] as? String == sessionID)
         #expect(result.stdout.utf8.count <= 16 * 1024)
+        // Model the shared daemon as an actual parent process, retaining one hook record.
+        let daemon = runCodexHookProcess(executablePath: "/bin/bash",
+            arguments: ["-c", "shift 2; \"$@\"; result=$?; exit $result", "codex", "app-server", "--managed-daemon",
+                        cliPath, "--json", "provenance", "sessions", "related", "--current", "--database", database.path],
+            environment: environment, timeout: 15)
+        #expect(!daemon.timedOut && daemon.status == 0, Comment(rawValue: daemon.stderr))
+        let daemonPayload = try #require(try JSONSerialization.jsonObject(with: Data(daemon.stdout.utf8)) as? [String: Any])
+        #expect(daemonPayload["found"] as? Bool == false)
+        #expect(daemonPayload["reason"] as? String == "caller_ownership_unavailable")
         let textResult = runCodexHookProcess(executablePath: cliPath,
             arguments: ["provenance", "sessions", "related", "--current", "--database", database.path],
             environment: environment, timeout: 15)
