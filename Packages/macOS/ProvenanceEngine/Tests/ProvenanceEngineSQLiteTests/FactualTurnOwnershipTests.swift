@@ -43,6 +43,13 @@ struct FactualTurnOwnershipTests {
         try await fixture.append(message, into: repository)
         try await fixture.append(change, into: repository)
         let foreign = "unrelated-session"
+        var foreignSessionJSON = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(fixture.session)) as? [String: Any])
+        foreignSessionJSON["id"] = foreign
+        let foreignSession = try JSONDecoder().decode(ProvenanceSessionRecord.self, from: JSONSerialization.data(withJSONObject: foreignSessionJSON))
+        try await repository.appendEvent(ProvenanceEvent(id: "foreign-session-event", eventType: .sessionObserved,
+            timestamp: fixture.timestamp, sessionID: foreign, source: .observed, evidenceOrigin: .codexSession,
+            evidenceScope: ProvenanceEvidenceScope(level: .personal, id: "foreign-session"), confidence: .high,
+            payload: ProvenanceEventPayload(session: foreignSession)))
         let foreignPrompt = try reassociate(fixture.prompt("Foreign prompt", turnID: turn.id, offset: 13), sessionID: foreign)
         let foreignPlan = try reassociate(fixture.plan("Foreign plan", turnID: turn.id, offset: 14), sessionID: foreign)
         let foreignCommand = try reassociate(fixture.command("foreign command", turnID: turn.id, offset: 15), sessionID: foreign)
@@ -92,6 +99,10 @@ struct FactualTurnOwnershipTests {
             let session = try #require(await repository.sessionOutcome(ProvenanceSessionOutcomeRequest(sessionID: fixture.session.id)).outcome)
             #expect(session.turnOutcomes.first?.objective?.text == prompt.text)
             #expect(session.commandsCompleted.map(\.command.id) == [command.id])
+            let foreignSnapshot = try #require(await repository.factualSessionProjection(
+                ProvenanceFactualSessionProjectionRequest(sessionID: foreign)).snapshot)
+            #expect(foreignSnapshot.latestTurn == nil)
+            #expect(foreignSnapshot.turns.isEmpty)
             #expect(try await repository.codingAgentPrompt(id: foreignPrompt.id) == foreignPrompt)
             #expect(try await repository.codingAgentPlanUpdate(id: foreignPlan.id) == foreignPlan)
             #expect(try await repository.codingAgentCommand(id: foreignCommand.id) == foreignCommand)
