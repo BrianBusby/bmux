@@ -684,6 +684,27 @@ The projection should support authoritative snapshot reads with a monotonic
 revision. Push notifications or deltas may exist later as hints, but consumers
 must be able to re-fetch the authoritative projection for reconciliation.
 
+SQLite factual session, factual turn detail, and SessionWorkModel reads use a
+single connection snapshot for each response, including the model's factual and
+semantic inputs. This prevents a concurrent connection's commits from being
+mixed within one response. The factual event sequence is not a general database
+revision: semantic writes and other projection changes may not advance it.
+The SQLite implementation of the canonical deterministic session producer reads
+facts and active predecessors and commits its complete inference pass under one
+immediate write transaction. It cannot publish a partial pass or derive from a
+snapshot that changed before that transaction. Repeated unchanged claims are
+retained. These guarantees apply to this SQLite producer path only; direct
+unconditional semantic writes, other implementations, and older binaries do not
+participate and can still publish stale claims. Derivation holds SQLite's write
+reservation while it reads and computes, so concurrent writers may wait or time
+out; lock duration and throughput under large sessions or concurrent load remain
+unmeasured. Package tests do not establish native app behavior or satisfy the
+session visibility delivery gate.
+Model-derived or externally prepared claims still need complete input and
+predecessor validation in the same transaction as publication, along with
+explicit retry, idempotence, and conflict semantics. All competing writers must
+participate before this can be treated as a global publication fence.
+
 The first planned vertical slice should validate richer coding-agent evidence
 ingestion, deterministic factual session projections, evidence-backed inference,
 nested milestones, scoped architecture synthesis, provenance/confidence, and

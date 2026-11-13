@@ -7,6 +7,9 @@ actor ProvenanceSQLiteRepository {
     let payloadEncoder: JSONEncoder
     let payloadDecoder: JSONDecoder
     let stableIDFactory: ProvenanceStableIDFactory
+#if DEBUG
+    var didReadFactualSessionForTesting: (@Sendable () -> Void)?
+#endif
 
     /// Opens the database and applies the supplied migrations before returning.
     ///
@@ -1357,6 +1360,10 @@ actor ProvenanceSQLiteRepository {
     /// - Returns: Found response with revisioned factual coding-agent evidence, or `no_session` when absent.
     /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
     func factualSessionProjection(_ request: ProvenanceFactualSessionProjectionRequest) throws -> ProvenanceFactualSessionProjectionResponse {
+        try database.withReadSnapshot { try readFactualSessionProjection(request) }
+    }
+
+    private func readFactualSessionProjection(_ request: ProvenanceFactualSessionProjectionRequest) throws -> ProvenanceFactualSessionProjectionResponse {
         guard let session = try session(id: request.sessionID) else {
             return ProvenanceFactualSessionProjectionResponse(
                 found: false,
@@ -1366,6 +1373,9 @@ actor ProvenanceSQLiteRepository {
             )
         }
 
+#if DEBUG
+        didReadFactualSessionForTesting?()
+#endif
         let providerThreads = try codingAgentThreadIDs(sessionID: request.sessionID).compactMap {
             try codingAgentThread(id: $0)
         }
@@ -1405,6 +1415,11 @@ actor ProvenanceSQLiteRepository {
     /// - Returns: Found response with revisioned factual turn evidence, or `no_turn` when absent.
     /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
     func factualSessionTurnDetail(_ request: ProvenanceFactualSessionTurnDetailRequest) async throws
+        -> ProvenanceFactualSessionTurnDetailResponse {
+        try database.withReadSnapshot { try readFactualSessionTurnDetail(request) }
+    }
+
+    private func readFactualSessionTurnDetail(_ request: ProvenanceFactualSessionTurnDetailRequest) throws
         -> ProvenanceFactualSessionTurnDetailResponse {
         guard let detail = try factualTurnSnapshot(turnID: request.turnID) else {
             return ProvenanceFactualSessionTurnDetailResponse(
@@ -3861,7 +3876,7 @@ actor ProvenanceSQLiteRepository {
         return try payloadDecoder.decode(type, from: data)
     }
 
-    private func insertSemanticInference(_ record: ProvenanceSemanticInferenceRecord) throws {
+    func insertSemanticInference(_ record: ProvenanceSemanticInferenceRecord) throws {
         let payloadJSON = try encodedSemanticJSON(
             record.payload,
             failureMessage: "failed to encode semantic inference payload"
@@ -3920,7 +3935,7 @@ actor ProvenanceSQLiteRepository {
         _ = try insert.step()
     }
 
-    private func supersedeSemanticInference(
+    func supersedeSemanticInference(
         id: String,
         replacement: ProvenanceSemanticInferenceRecord
     ) throws {
