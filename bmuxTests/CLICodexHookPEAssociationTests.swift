@@ -359,6 +359,8 @@ struct CLICodexHookPEAssociationTests {
             #expect(selectedResults.compactMap { $0["session_id"] as? String } == ["related-closed"])
             let matches = try #require(selectedResults.first?["match_evidence"] as? [[String: Any]])
             #expect(matches.contains { ($0["kind"] as? String) == reason && !($0["evidence"] as? [[String: Any]] ?? []).isEmpty })
+            let matched = try #require(matches.first { $0["kind"] as? String == reason })
+            #expect(matched["observed_at"] as? Double == now.timeIntervalSince1970)
             #expect(selected.stdout.utf8.count <= 12 * 1024 + 1)
             if option == "--objective" {
                 let fields = try #require(selectedResults.first?["semantic_fields"] as? [[String: Any]])
