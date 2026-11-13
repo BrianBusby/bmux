@@ -17,6 +17,29 @@ struct SessionProjectionSnapshotTests {
     }
 
     @Test
+    func nestedSnapshotFailurePreservesOuterTransaction() throws {
+        enum TestError: Error { case expected }
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-nested-snapshot-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let db = try ProvenanceSQLiteDatabase(url: directory.appendingPathComponent("provenance.sqlite"))
+        try db.execute("CREATE TABLE fixture (value INTEGER)")
+        try db.execute("BEGIN IMMEDIATE TRANSACTION")
+        try db.execute("INSERT INTO fixture VALUES (1)")
+        #expect(throws: TestError.self) {
+            try db.withReadSnapshot {
+                try db.withReadSnapshot { throw TestError.expected }
+            }
+        }
+        try db.execute("INSERT INTO fixture VALUES (2)")
+        try db.execute("COMMIT")
+        let query = try db.prepare("SELECT COUNT(*) FROM fixture")
+        defer { query.finalize() }
+        #expect(try query.step())
+        #expect(query.int(at: 0) == 2)
+        try db.withReadSnapshot { try db.execute("SELECT value FROM fixture") }
+    }
+
+    @Test
     func workModelDoesNotMixConcurrentSemanticPublication() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-semantic-snapshot-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: directory) }
