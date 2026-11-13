@@ -15,9 +15,12 @@ extension BMUXCLI {
         }
         let quotedJSON = json.replacingOccurrences(of: "'", with: "'\\''")
         let body = "if [ \"${BMUX_CODEX_HOOKS_DISABLED:-}\" = 1 ]; then printf '%s\\n' '{}'; else printf '%s\\n' '\(quotedJSON)'; fi"
-        return hooksDir.flatMap {
+        if let scriptPath = hooksDir.flatMap({
             writeCodexHookScript(subcommand: "context-guidance", body: body, in: $0)
-        } ?? body
+        }), !scriptPath.contains("'''") {
+            return scriptPath
+        }
+        return body
     }
 
     func runProvenanceSessions(

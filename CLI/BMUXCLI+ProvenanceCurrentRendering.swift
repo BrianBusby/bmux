@@ -110,12 +110,15 @@ extension BMUXCLI {
                     $0.kind == .requestedArtifact || $0.kind == .objectiveTextMatch || $0.kind == .currentWorkspaceTicket
                 }.map { reason in
                     let revisionReferences = reason.evidence.filter { $0.projectionRevisionID != nil }
-                    let otherReferences = reason.evidence.filter { $0.projectionRevisionID == nil }
+                    let inferredReferences = reason.evidence.filter { $0.projectionRevisionID == nil && $0.source == .inferred }
+                    let otherReferences = reason.evidence.filter { $0.projectionRevisionID == nil && $0.source != .inferred }
                     return ["kind": reason.kind.rawValue, "value": optional(reason.relatedValue),
                             "value_truncated": (reason.relatedValue?.count ?? 0) > 160,
                             "observed_at": value(reason.observedAt?.timeIntervalSince1970),
-                            "evidence": (revisionReferences + otherReferences).prefix(3).map(reference),
+                            "evidence": (revisionReferences + inferredReferences + otherReferences).prefix(3).map(reference),
                             "evidence_omitted": max(0, reason.evidence.count - 3)] as [String: Any]
+                }, "inferred_relationship_evidence": item.relationshipReasons.contains { reason in
+                    reason.evidence.contains { $0.source == .inferred }
                 }, "boundary": boundaryFields,
                 "freshness": freshness, "outcome_revision": value(item.sessionOutcomeRevisionID),
                 "objectives": (outcome?.objectives.prefix(2) ?? []).map(fact),
