@@ -80,21 +80,15 @@ extension ProvenanceSQLiteRepository {
     }
 
     func normalizedTurnCompletionState(_ status: String) -> String {
-        let normalized = status.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if normalized.contains("cancel") { return "cancelled" }
-        if normalized.contains("interrupt") { return "interrupted" }
-        if normalized.contains("fail") || normalized.contains("error") { return "failed" }
-        if normalized == "incomplete" || normalized == "uncompleted" { return "incomplete" }
-        if ["complete", "completed", "success", "successful", "done", "finished"].contains(normalized) {
-            return "completed"
-        }
-        if normalized.contains("active")
-            || normalized.contains("running")
-            || normalized.contains("started")
-            || normalized.contains("progress") {
+        switch status.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "cancel", "cancelled", "canceled": return "cancelled"
+        case "interrupt", "interrupted": return "interrupted"
+        case "fail", "failed", "error": return "failed"
+        case "incomplete", "uncompleted", "active", "running", "started", "progress", "in_progress", "in progress":
             return "incomplete"
+        case "complete", "completed", "success", "successful", "done", "finished": return "completed"
+        default: return "unknown"
         }
-        return "unknown"
     }
 
     func isCompletedPlanStatus(_ status: String) -> Bool {

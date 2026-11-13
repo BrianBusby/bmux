@@ -837,20 +837,8 @@ extension ProvenanceSQLiteRepository {
 
     private func normalizedSessionCompletionState(_ status: String) -> String {
         let normalized = status.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if normalized.contains("cancel") { return "cancelled" }
-        if normalized.contains("interrupt") { return "interrupted" }
-        if normalized.contains("fail") || normalized.contains("error") { return "failed" }
-        if normalized == "incomplete" || normalized == "uncompleted" { return "incomplete" }
-        if ["complete", "completed", "success", "successful", "done", "finished", "stopped", "closed"].contains(normalized) {
-            return "completed"
-        }
-        if normalized.contains("active")
-            || normalized.contains("running")
-            || normalized.contains("started")
-            || normalized.contains("progress") {
-            return "incomplete"
-        }
-        return "unknown"
+        if normalized == "stopped" || normalized == "closed" { return "completed" }
+        return normalizedTurnCompletionState(normalized)
     }
 
     private func normalizedPlanText(_ text: String) -> String? {
