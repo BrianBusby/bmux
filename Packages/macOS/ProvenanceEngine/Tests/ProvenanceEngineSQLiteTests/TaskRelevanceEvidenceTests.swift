@@ -150,4 +150,49 @@ struct TaskRelevanceEvidenceTests {
         #expect(!objective.sourceTurnOutcomeRevisionID.isEmpty)
         #expect(!objective.evidence.isEmpty)
     }
+    @Test
+    func selectorsRespectEvidenceRepositoryAndObservationTime() async throws {
+        let url = RelatedSessionProjectionTestSupport.temporaryDatabaseURL()
+        defer { RelatedSessionProjectionTestSupport.removeTemporaryDatabaseDirectory(for: url) }
+        let store = try ProvenanceSQLiteRepository(url: url)
+        let fixture = RelatedSessionFixture()
+        let repoA = fixture.repository(id: "repo-a", path: "/repos/a", remoteSlug: "owner/a")
+        let repoB = fixture.repository(id: "repo-b", path: "/repos/b", remoteSlug: "owner/b")
+        let treeA = fixture.worktree(id: "tree-a", repository: repoA, path: "/trees/a", branch: "a", head: "a", offset: 1)
+        let treeB = fixture.worktree(id: "tree-b", repository: repoB, path: "/trees/b", branch: "b", head: "b", offset: 2)
+        _ = try await RelatedSessionProjectionTestSupport.seedSession(
+            id: "caller", status: "active", worktree: treeA, repository: repoA, fixture: fixture, into: store)
+        let candidate = try await RelatedSessionProjectionTestSupport.seedSession(
+            id: "multi", status: "completed", worktree: treeB, repository: repoB,
+            promptText: "Old objective", paths: ["Sources/Example.swift"], fixture: fixture, into: store)
+        let extraThread = fixture.thread(id: "thread-multi-a", sessionID: candidate.session.id,
+            worktreeID: treeA.id, providerThreadID: "provider-multi-a", offset: 20)
+        try await fixture.appendThread(extraThread, into: store)
+        let display = ProvenanceWorkspaceDisplayRecord(
+            id: "display-multi", workspaceID: "workspace-multi", repositoryID: repoB.id,
+            ticketIDs: ["B-42"], observedAt: fixture.time(30), updatedAt: fixture.time(30))
+        try await fixture.append(eventID: "event-multi-display", eventType: .workspaceDisplayObserved,
+            timestamp: fixture.time(30), repositoryID: repoB.id, worktreeID: treeB.id, sessionID: nil,
+            payload: ProvenanceEventPayload(workspaceDisplay: display), into: store)
+        let path = try #require(try await store.relatedSessions(
+            .init(targetSessionID: "caller", artifactPath: "Sources/Example.swift")).projection)
+        #expect(path.relatedSessions.isEmpty)
+        let ticket = try #require(try await store.relatedSessions(
+            .init(targetSessionID: "caller", ticket: "B-42")).projection)
+        #expect(ticket.relatedSessions.isEmpty)
+
+        let callerB = try await RelatedSessionProjectionTestSupport.seedSession(
+            id: "caller-b", status: "active", worktree: treeB, repository: repoB, fixture: fixture, into: store)
+        let selected = try #require(try await store.relatedSessions(
+            .init(targetSessionID: callerB.session.id, artifactPath: "Sources/Example.swift")).projection)
+        let pathReason = try #require(selected.relatedSessions.first { $0.sessionID == "multi" }?
+            .relationshipReasons.first { $0.kind == .requestedArtifact })
+        #expect(pathReason.observedAt == fixture.time(17))
+        let objective = try #require(try await store.relatedSessions(
+            .init(targetSessionID: callerB.session.id, objective: "Old objective")).projection)
+        let objectiveReason = try #require(objective.relatedSessions.first { $0.sessionID == "multi" }?
+            .relationshipReasons.first { $0.kind == .objectiveTextMatch })
+        #expect(objectiveReason.observedAt == fixture.time(13))
+    }
+
 }
