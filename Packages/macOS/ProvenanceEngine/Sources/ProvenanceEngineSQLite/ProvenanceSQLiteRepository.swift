@@ -7,6 +7,9 @@ actor ProvenanceSQLiteRepository {
     let payloadEncoder: JSONEncoder
     let payloadDecoder: JSONDecoder
     let stableIDFactory: ProvenanceStableIDFactory
+#if DEBUG
+    var replayProgressForTesting: (@Sendable () throws -> Void)?
+#endif
 
     /// Opens the database and applies the supplied migrations before returning.
     ///
@@ -561,6 +564,9 @@ actor ProvenanceSQLiteRepository {
                         latestEventSequence: entry.sequence,
                         pruneOutcomes: false
                     )
+#if DEBUG
+                    try replayProgressForTesting?()
+#endif
                     afterSequence = entry.sequence
                     replayedCount += 1
                 }
