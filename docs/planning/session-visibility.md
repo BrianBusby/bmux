@@ -22,7 +22,7 @@ Each gate depends on its predecessor. Existing `live_terminal_codex_evidence_ing
 | Stage | Location | Current evidence and limitation |
 | --- | --- | --- |
 | Ordinary Codex observation | `CLI/BMUXCLI+CodexTranscriptMonitor.swift`, `CLI/CLIProvenanceCodexTranscriptTailer.swift`, `CLI/bmux.swift` | Verified hook identity starts a bounded live JSONL tailer; complete lines and cursor recovery share the transcript importer. Actual end-to-end delivery for a plan is not yet demonstrated. |
-| Transcript normalization | `CLI/CLIProvenanceCodexTranscriptImporter.swift`, `CLI/CLIProvenanceCodexTranscriptImporter+Parsing.swift`, `CLI/CLIProvenanceCodexTranscriptImporter+AppendSession.swift` | Recognizes `function_call` named `update_plan`, extracts steps and statuses, associates the provider turn when available, and appends a plan snapshot. The call is recorded before its result; whether rejected calls produce misleading state requires investigation. Snapshot-local IDs are not evidence of cross-revision identity. |
+| Transcript normalization | `CLI/CLIProvenanceCodexTranscriptImporter.swift`, `CLI/CLIProvenanceCodexTranscriptImporter+Parsing.swift`, `CLI/CLIProvenanceCodexTranscriptImporter+AppendSession.swift` | Recognizes `function_call` named `update_plan`, extracts steps and statuses, associates the provider turn when available, and appends a plan snapshot. The baseline records the call before its result; the synthetic rejection investigation below confirmed a misleading plan. Snapshot-local IDs are not evidence of cross-revision identity. |
 | Canonical state | `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite/ProvenanceSQLiteRepository+TurnOutcome.swift`, `+SessionOutcome.swift`, `+SessionWorkModel.swift` | Existing factual and semantic reads include plan evidence. Audit identity, revision and consumer behavior before extending them. |
 | Native Session | `Sources/Panels/AgentSessionFactualProjectionView.swift`, `Sources/Panels/AgentSessionCurrentTurnOverview.swift`, `Sources/Panels/AgentSessionFactualProjectionTurnDetailView.swift` | The factual Session view has a separate Plan & progress disclosure, and also includes the current plan in View evidence. The latter limits display to six steps. Revision history and live selection/linkage remain unverified. An earlier inspection missed the separate disclosure; this corrects that finding. |
 | Transcript Chat | `Packages/Shared/BmuxAgentChat/Sources/BmuxAgentChat/Parsing/CodexTranscriptParser.swift` | `update_plan` is handled as a generic tool call; structured plan steps/statuses are not extracted there. The effect on a real native surface remains to be verified. |
@@ -42,11 +42,55 @@ The baseline factual Session plan summary checked whether a status contained `co
 
 A synthetic two-revision plan fixture now exercises the real transcript tailer and PE SQLite projection across a partial line and tailer restart. The first reported snapshot remains visible until the second line is complete, the revised statuses and provider turn are retained, and a historical reimport appends no duplicates. The focused importer suite passed 17 tests. This fixture does not establish live plan emission or UI behavior. The focused presentation suite passed 12 tests after the fix. Xcode emitted pre-existing warnings in unrelated code.
 
+### Baseline capability and loss matrix
+
+Classifications apply only to the named probes and baseline, not every configuration or later draft. Unknown means the boundary or cause was not established. Proposed plan prose is distinct from an execution checklist.
+
+| Provider, version and transport | Signal | Observed classification and boundary |
+| --- | --- | --- |
+| Codex 0.168.0, GPT-6.1 Terra high, ordinary bmux TUI, hooks enabled | `update_plan` checklist | **Not emitted in this probe:** the agent's tool inventory was empty for that name. Revision, ingestion and display are unknown; other configurations are unclassified. |
+| Same ordinary path | Silent and concurrent commands | **Partially observed:** completed command items appeared; no command-start item was observed in the cited probes. PE and native visibility are unknown, including why the inspected store lacked command rows. |
+| Same ordinary path | Interruption and resume | **Partially observed:** an abort preceded a late command completion and resume used the same provider session with a new turn. PE association and native presentation are unknown. |
+| Same ordinary path | Input or approval request | **Unknown:** the controlled default-mode agent reported input tooling unavailable; emission, resolution and display were not measured. |
+| Codex 0.168.0, GPT-6.1 Terra high, Agent Chat app-server | Plan-mode prose | **Dropped on the probed adapter:** start, deltas and completed item were received, but prose was not delivered by that adapter. The separate draft correction is not ordinary TUI evidence. |
+| Codex 0.168.0, synthetic transcript call and rejection | Checklist acceptance | **Misinterpreted by baseline importer:** a rejected call produced a PE plan. The bounded acknowledgment branch remains unmerged and does not repair old records. |
+| Codex 0.168.0, isolated `codex exec` | File change | **Unsupported by the inspected importer for this item shape:** a successful completed FileChange item was observed, but ordinary TUI emission, PE capture and display remain unknown. |
+| Claude and other versions/transports | All signals | **Unknown:** no corresponding provider/version capture or parity evidence is recorded here. |
+
+### Source-to-screen navigation
+
+For the ordinary transcript route at this baseline, hook/monitor entry is `CLI/bmux.swift` and `CLI/BMUXCLI+CodexTranscriptMonitor.swift`; complete-line reading and cursor persistence are `CLI/CLIProvenanceCodexTranscriptTailer.swift` and `CLI/CLIProvenanceCodexTranscriptCursorStore.swift`. `CLI/CLIProvenanceCodexTranscriptImporter+Parsing.swift`, `CLI/CLIProvenanceCodexTranscriptImporter+AppendSession.swift`, and `CLI/CLIProvenanceCodexTranscriptImporter+AppendActivity.swift` normalize and append supported evidence. PE's ledger and factual read are `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite/ProvenanceSQLiteRepository+EventLedger.swift` and `Packages/macOS/ProvenanceEngine/Sources/ProvenanceEngineSQLite/ProvenanceSQLiteRepository.swift`; turn and session outcomes and work-model reads are in the corresponding `ProvenanceSQLiteRepository+TurnOutcome.swift`, `ProvenanceSQLiteRepository+SessionOutcome.swift`, and `ProvenanceSQLiteRepository+SessionWorkModel.swift` in that directory. Session association and refresh pass through `Sources/WorkProvenance/WorkProvenanceRuntime+AgentSessionAssociation.swift`, `Sources/WorkProvenance/AgentSessionFactualProjectionStore.swift`, and `Sources/Panels/AgentSessionFactualProjectionModeHost.swift`; rendering is in the native Session files in the table above. This is a code path map, not proof that each probe traversed it.
+
+The separate Agent Chat route begins in `agent-chat/adapters/codex.ts` and `agent-chat/adapters/codexTelemetry.ts`, then uses `agent-chat/executionTelemetryFanout.ts`, `agent-chat/executionTelemetryLiveProjection.ts`, `agent-chat/src/session.ts`, and `agent-chat/src/components/TurnProgress.tsx`. Transcript Chat's parser is a separate consumer in `Packages/Shared/BmuxAgentChat/Sources/BmuxAgentChat/Parsing/CodexTranscriptParser.swift`; it does not prove PE or native Session display.
+
+### Observable latency baseline
+
+| Scenario and sample | Boundaries and clock | Result and limitation |
+| --- | --- | --- |
+| Ordinary concurrent-command probe, two completion items | Provider transcript timestamps to complete-line polling, 50 ms polling interval | 21–40 ms observed; source emission, PE receipt and native visibility were not measured. Clock relationship and upstream batching are not established. |
+| Synthetic Plan transcript harness, one retained rerun | Same-host append start → fsync → first PE poll | 0.1 ms to fsync, 19.1 ms total to poll; synthetic input and polling, not provider emission or native visibility. |
+| Same synthetic rerun, one sample | Spawned Bun/jsdom render following PE poll | 417.8 ms including process startup; not an existing UI's receipt-to-visible latency. |
+| Ordinary bmux TUI plan and silent-command probes | Source transcript timestamps and coarse app logs | No comparable receipt-to-visible samples; installed CLI/store schema mismatch and unavailable cursor prevented tracing. |
+
+These are not p95 measurements. Source-to-receipt and receipt-to-native-visible latency, attention latency and same-scenario before/after measurements remain outstanding; the two-second target is not verified.
+
+### Fixture index and remaining gate
+
+| Fixture or evidence | Scope and limit |
+| --- | --- |
+| `bmuxTests/CLIProvenanceCodexTranscriptTailerTests.swift`, `planRevisionSurvivesPartialLineAndTailerRestart` | Synthetic two-revision checklist through the tailer and PE, partial line, restart and duplicate historical import; not a real provider emission or native display. |
+| `bmuxTests/CLIProvenanceCodexTranscriptImporterTests.swift` | Synthetic transcript import and plan parsing coverage; does not prove success acknowledgment or live provider capability. |
+| `bmuxTests/ExpandedTurnPresentationTests.swift` | Synthetic exact completion-status classification; Brian's fixture dogfood covered counts/icons, not live plan capture. |
+| `Packages/Shared/BmuxAgentChat/Tests/BmuxAgentChatTests/CodexTranscriptParserTests.swift` | Separate parser's local abort and call/output coverage; not PE or native Session integration. |
+| Controlled TUI, Agent Chat and isolated `codex exec` probes described below | Representative observed metadata and timestamps, not retained private transcripts or a complete replay suite. |
+
+The baseline gate remains open: a real ordinary explicit checklist and status updates have not reached the UI in verified evidence, and the precise boundary is established only for the tested configuration. Input resolution, full source-to-screen association, native timing and cross-surface replay remain incomplete. Later draft PRs and experiments described below are not landed capabilities.
+
 ## Other lifecycle and attention boundaries
 
-- `CLI/CLIProvenanceCodexTranscriptImporter.swift` processes turn start/completion and completed command items. Its event switch does not currently process `item_started` or `turn_aborted`; real 0.168.0 emission and the resulting PE gap remain to be reproduced before a correction. Live concurrent operations are not established by completed command evidence.
+- `CLI/CLIProvenanceCodexTranscriptImporter.swift` processes turn start/completion and completed command items. At the inspected baseline its event switch does not process `item_started` or `turn_aborted`; later ordinary-session probes observed an abort and command completions without establishing PE or native delivery. Live concurrent operations are not established by completed command evidence.
 - `Packages/Shared/BmuxAgentChat/Sources/BmuxAgentChat/Parsing/CodexTranscriptParser.swift` separately handles `turn_aborted` and pairs function calls and outputs by call ID. Its parser tests cover those local cases, not the PE or native Session path. The controlled 0.168.0 probe used a `custom_tool_call` named `exec`; nested operations have not been shown individually visible.
-- `CLI/BMUXCLI+CodexTranscriptMonitor.swift` scans a bounded transcript tail for input requests. `readCodexTranscriptUserInput` and hook handling in `CLI/bmux.swift` need focused tests for an already-answered request, interruption, concurrent requests, and a later unrelated tool start: current source does not establish request-ID-matched resolution. Do not interpret the hook feed's `PermissionRequest` tool-start classification as proof of pending approval.
+- `CLI/BMUXCLI+CodexTranscriptMonitor.swift` scans a bounded transcript tail for input requests. The baseline does not establish request-ID-matched resolution. Later local attention experiments and their unresolved ownership and delivery limits are recorded below; none establishes native attention acceptance. Do not interpret the hook feed's `PermissionRequest` tool-start classification as proof of pending approval.
 - `AgentSessionFactualProjectionModeHost.swift` refreshes the native Session view on a two-second interval while selected. This interval alone cannot guarantee the proposed p95 two-second receipt-to-visible target; measure actual stages before selecting a change.
 
 ## Next investigation
