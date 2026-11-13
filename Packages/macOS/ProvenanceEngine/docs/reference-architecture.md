@@ -684,6 +684,16 @@ The projection should support authoritative snapshot reads with a monotonic
 revision. Push notifications or deltas may exist later as hints, but consumers
 must be able to re-fetch the authoritative projection for reconciliation.
 
+SQLite factual session, factual turn detail, and SessionWorkModel reads use a
+single connection snapshot for each response, including the model's factual and
+semantic inputs. This prevents a concurrent connection's commits from being
+mixed within one response. The factual event sequence is not a general database
+revision: semantic writes and other projection changes may not advance it.
+Current semantic publication is unconditional, so a snapshot can become stale
+before publication. Safe conditional publication still requires validating all
+relevant input and competing semantic state in the same write transaction as
+the insert and supersession; these read snapshots do not provide that guarantee.
+
 The first planned vertical slice should validate richer coding-agent evidence
 ingestion, deterministic factual session projections, evidence-backed inference,
 nested milestones, scoped architecture synthesis, provenance/confidence, and

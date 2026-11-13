@@ -1360,6 +1360,10 @@ actor ProvenanceSQLiteRepository {
     /// - Returns: Found response with revisioned factual coding-agent evidence, or `no_session` when absent.
     /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
     func factualSessionProjection(_ request: ProvenanceFactualSessionProjectionRequest) throws -> ProvenanceFactualSessionProjectionResponse {
+        try database.withReadSnapshot { try readFactualSessionProjection(request) }
+    }
+
+    private func readFactualSessionProjection(_ request: ProvenanceFactualSessionProjectionRequest) throws -> ProvenanceFactualSessionProjectionResponse {
         guard let session = try session(id: request.sessionID) else {
             return ProvenanceFactualSessionProjectionResponse(
                 found: false,
@@ -1411,6 +1415,11 @@ actor ProvenanceSQLiteRepository {
     /// - Returns: Found response with revisioned factual turn evidence, or `no_turn` when absent.
     /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
     func factualSessionTurnDetail(_ request: ProvenanceFactualSessionTurnDetailRequest) async throws
+        -> ProvenanceFactualSessionTurnDetailResponse {
+        try database.withReadSnapshot { try readFactualSessionTurnDetail(request) }
+    }
+
+    private func readFactualSessionTurnDetail(_ request: ProvenanceFactualSessionTurnDetailRequest) throws
         -> ProvenanceFactualSessionTurnDetailResponse {
         guard let detail = try factualTurnSnapshot(turnID: request.turnID) else {
             return ProvenanceFactualSessionTurnDetailResponse(
