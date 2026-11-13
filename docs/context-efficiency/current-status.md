@@ -292,8 +292,18 @@ the live caller evidence; this is not an agent decision experiment.
 Slice 3 preliminary work adds bounded Codex startup guidance for querying task
 selectors and following session-outcome revisions. The Codex hook test suite
 passed nine tests; standalone Codex 0.162.1 startup and resume probes each
-received a fresh hook context marker. These probes are not ordinary bmux agent
-decision scenarios, which remain open.
+received a fresh hook context marker. In isolated tagged build 954, an ordinary
+Codex agent independently invoked the suggested path query and retried with
+socket access. An initial fixture run had inherited the invoking terminal's
+bmux environment; it was stopped and repeated with routing variables cleared.
+The clean managed-runtime writer edited `Sources/CachePolicy.swift`, but its
+patch appeared inside a Codex `exec` call. The importer currently recognizes
+only direct `apply_patch` calls, and this writer's transcript monitor did not
+start; no changed-artifact attribution appeared. A reader's earlier empty query
+therefore does not establish concurrent-work success. The direct outcome and
+failed-attempt decision scenarios remain open. A separate global Codex 0.162.1
+fixture run reported IPC decoding errors when reading files; it made no edits.
+These observations do not establish an improvement in development decisions.
 
 Remaining work: resolve the formal slice gates and remaining caller limitations,
 review and deliver slice 2, and capture the slice 3 ordinary-agent decision
