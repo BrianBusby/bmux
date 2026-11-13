@@ -319,7 +319,11 @@ rationale also came from a local file, so this does not prove retrieval improved
 the decision. Automatic capture, concurrent-work success and the failed-attempt
 scenario remain open. A separate global Codex 0.162.1
 fixture run reported IPC decoding errors when reading files; it made no edits.
-These observations do not establish an improvement in development decisions.
+In a later Launch Services run, a fresh reader found a live writer across linked
+worktrees, followed its outcome and inspected its uncommitted patch, then chose
+to coordinate before editing. The [ordinary-agent evaluation](cross-session-ordinary-agent-evaluation.md)
+records its query and references. This single observation does not establish a
+general improvement; prior-decision and failed-attempt cases remain open.
 
 Remaining work: resolve the formal slice gates and remaining caller limitations,
 review and deliver slice 2, and capture the slice 3 ordinary-agent decision
