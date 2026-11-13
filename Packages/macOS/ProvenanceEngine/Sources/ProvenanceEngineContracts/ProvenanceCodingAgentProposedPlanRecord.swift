@@ -1,3 +1,5 @@
+import Foundation
+
 /// Provider-emitted proposed plan prose, which is not an execution checklist.
 ///
 /// Provider identifiers are carried as received, not inferred from timing.
@@ -17,6 +19,15 @@ public struct ProvenanceCodingAgentProposedPlanRecord: Codable, Equatable, Senda
     public let text: String
     /// Whether the observation omitted part of the provider prose.
     public let truncated: Bool
+
+    /// True only when all provider identifiers are explicit, canonical and bounded.
+    /// This validates their shape; it does not infer a relationship to a turn.
+    public var hasValidProviderIdentity: Bool {
+        [providerSessionID, providerTurnID, providerItemID].allSatisfy { value in
+            guard let value, !value.isEmpty, value.utf8.count <= 256 else { return false }
+            return value == value.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+    }
 
     /// Creates a proposed-plan observation without inferring missing identity.
     public init(sessionID: String, provider: String, providerSessionID: String? = nil,

@@ -52,8 +52,7 @@ extension ProvenanceSQLiteRepository {
             catch is DecodingError { omitted = true; continue }
             guard let proposal = payload.codingAgentProposedPlan,
                   proposal.sessionID == sessionID, proposal.provider == "codex",
-                  proposal.providerSessionID != nil, proposal.providerTurnID != nil,
-                  proposal.providerItemID != nil else {
+                  proposal.hasValidProviderIdentity else {
                 omitted = true
                 continue
             }

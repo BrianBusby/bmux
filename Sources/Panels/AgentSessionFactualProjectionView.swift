@@ -323,6 +323,7 @@ struct AgentSessionFactualProjectionView: View {
                 let coverage = snapshot.proposedPlanCoverage
                 let trusted = snapshot.proposedPlanObservations.filter {
                     $0.source == .observed && $0.origin?.rawValue == "codex-transcript" && $0.eventSchemaVersion == 1
+                    && $0.proposal.provider == "codex" && $0.proposal.hasValidProviderIdentity
                 }
                 let isPartial = coverage.map {
                     $0.scanWindowTruncated || $0.omittedObservations || trusted.count != snapshot.proposedPlanObservations.count

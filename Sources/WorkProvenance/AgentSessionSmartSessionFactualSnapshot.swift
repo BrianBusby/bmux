@@ -15,6 +15,7 @@ extension AgentSessionSmartSessionSnapshot {
             self.turnCount = factualProjection.turns.count
             let trusted = factualProjection.proposedPlanObservations.filter {
                 $0.source == .observed && $0.origin?.rawValue == "codex-transcript" && $0.eventSchemaVersion == 1
+                    && $0.proposal.provider == "codex" && $0.proposal.hasValidProviderIdentity
             }
             self.proposedPlanObservations = factualProjection.proposedPlanCoverage == nil ? [] : trusted
             self.proposedPlanCoverage = factualProjection.proposedPlanCoverage.map {

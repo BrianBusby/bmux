@@ -84,10 +84,14 @@ function FocusView({ copy, state, onRefresh, expandedTurnID, onExpandTurn, onIns
   );
 }
 
+function validProviderID(value: string | undefined): boolean {
+  return value !== undefined && value.length > 0 && value.trim() === value && new TextEncoder().encode(value).length <= 256;
+}
+
 export function ProposalHistory({ copy, factual }: { copy?: AgentSessionCopy; factual: SmartSessionSnapshot["factual"] }) {
   const coverage = factual.proposedPlanCoverage;
   const all = factual.proposedPlanObservations ?? [];
-  const observations = coverage ? all.slice(0, 50).filter(item => item.source === "observed" && item.origin === "codex-transcript" && item.eventSchemaVersion === 1) : [];
+  const observations = coverage ? all.slice(0, 50).filter(item => item.source === "observed" && item.origin === "codex-transcript" && item.eventSchemaVersion === 1 && item.provider === "codex" && validProviderID(item.providerSessionId) && validProviderID(item.providerTurnId) && validProviderID(item.providerItemId)) : [];
   const partial = coverage && (coverage.scanWindowTruncated || coverage.omittedObservations || all.length > 50 || observations.length !== all.length);
   const message = !coverage ? text(copy, "smartSessionProposalUnavailable", "Proposal history unavailable") : partial ? text(copy, "smartSessionProposalPartial", "Proposal history is partial") : observations.length === 0 ? text(copy, "smartSessionProposalNone", "No proposal found in scanned records; source availability is unknown.") : "";
   return h("details", { className: "focus-history-section" },
