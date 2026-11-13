@@ -216,7 +216,7 @@ roadmap:
       acceptance:
         criteria:
           - Preserve ambiguously linked evidence without unsupported turn joins, and establish coherent per-session revisions across ownership changes and replay, consistent snapshot reads, and conditional publication that prevents older interpretations superseding newer evidence.
-      rationale: Independent review found that envelope-scoped event revisions do not cover all payload-owned projection changes and semantic publication is not atomic with its snapshot; see docs/planning/session-visibility.md.
+      rationale: Draft PR #235 implements coherent reads and atomic canonical SQLite producer passes; direct, non-SQLite and older writers can bypass this, and ownership revisions and load remain unresolved. The baseline dependency and acceptance gate remain open; see docs/planning/session-visibility.md.
 
     - id: session_visibility_summary
       kind: slice
