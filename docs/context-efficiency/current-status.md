@@ -277,6 +277,12 @@ and the ticket and objective peers in 6,228 and 6,186 bytes, all with zero
 result omissions and match references. The socket required approval; the
 fixture evidence was seeded, and the repository remained clean. Slice 1's reuse and
 shared-daemon limitations still apply; the task relevance gate is not validated.
+A follow-up review found cross-repository path, ticket, and objective matches
+and misleading match observation times when a session spans repositories. PE
+now scopes each match to its recorded source repository and uses its matching
+event timestamps. Red/green regression tests cover these cases; facts without
+repository attribution remain unavailable. The tagged runtime fixture above
+predates this fix and must be rerun on the corrected build.
 
 Remaining work: resolve the formal slice gates and remaining caller limitations,
 review and deliver slice 2, and capture the slice 3 ordinary-agent decision

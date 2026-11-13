@@ -286,7 +286,12 @@ against a candidate's recorded changed artifacts. Ticket matching compares an
 exact ID with current metadata on a linked workspace; this does not establish
 that the ticket was linked during a historical session. Objective matching is a
 case-insensitive literal substring of an observed Session Outcome objective, not
-a semantic relevance score.
+a semantic relevance score. Path and objective facts must be attributable to a
+shared repository through their source turn or file-change evidence. Ticket
+metadata must identify a shared repository. Facts with missing repository
+attribution are not matched; task evidence availability remains partial. Match
+observation times come from the matching source events and are unknown when
+those timestamps are unavailable, rather than from unrelated later events.
 
 Matches have typed reasons and source references. Direct matches sort before
 broad relationships; ties use candidate freshness and then session ID. Within

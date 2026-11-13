@@ -116,8 +116,17 @@ extension ProvenanceSQLiteRepository {
             }
             if let objective = request.objective {
                 guard !sharedRepositoryKeys.isEmpty, let outcome = candidateProfile.outcome else { continue }
-                let matches = outcome.objectives.filter {
-                    $0.text.range(of: objective, options: [.caseInsensitive, .literal]) != nil
+                var matches: [ProvenanceSessionOutcomeTextFact] = []
+                for fact in outcome.objectives where fact.text.range(
+                    of: objective, options: [.caseInsensitive, .literal]
+                ) != nil {
+                    guard let boundary = outcome.turnOutcomes.first(where: {
+                        $0.turnID == fact.sourceTurnID && $0.projection.revisionID == fact.sourceTurnOutcomeRevisionID
+                    })?.repositoryBoundary else { continue }
+                    let keys = try artifactCollisionRepositoryKeys(
+                        repositoryID: boundary.repositoryID, repositoryPath: boundary.repositoryPath
+                    )
+                    if !sharedRepositoryKeys.isDisjoint(with: keys) { matches.append(fact) }
                 }
                 guard !matches.isEmpty else { continue }
                 let evidence = uniqueRelatedSessionEvidence(
