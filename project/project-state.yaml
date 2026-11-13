@@ -4797,7 +4797,7 @@ roadmap:
       execution:
         assignment: current
         assigned_to: shared
-        notes: Resolve verified caller identity and return bounded evidence with actionable unavailable states while preserving the explicit-ID contract. Isolated tagged build 948 verified a fresh ordinary caller and resume in another pane. Multiple retained records on one surface and the observed shared Codex daemon fail closed; successful pane reuse, other daemon shapes, historical misattribution, and human dogfood remain open. Current-status records fixture evidence and CI limitations.
+        notes: Resolve verified caller identity and return bounded evidence with actionable unavailable states while preserving the explicit-ID contract. Isolated tagged build 948 verified a fresh ordinary caller and resume in another pane. Live sequential reuse with multiple retained records and the observed shared Codex daemon fail closed; successful reuse with retained records, other daemon shapes, historical misattribution, and human dogfood remain open. Current-status records fixture evidence and CI limitations.
       delivery_status: proposed
       acceptance_status: proposed
       acceptance:

@@ -238,8 +238,11 @@ seeded active and completed sessions before edits with approved socket access:
 in another pane, the same query returned the same target and peers, also 9,840
 bytes; the related-session revision was
 `related-session-revision-0026a76e491506f04fcd1848`. This verifies the observed
-resume path, not successful reuse when multiple retained records claim a pane.
-The default sandbox denied socket access without approval. Build 948 updates PE
+resume path. A new session in the vacated pane resolved itself and returned the
+resumed session, with one budget omission (8,376 bytes). After that session
+exited, another fresh session in the same pane returned `ambiguous_caller` and
+`start_fresh_pane`: retained records prevent successful reuse when multiple
+records claim the pane. The default sandbox denied socket access without approval. Build 948 updates PE
 to schema 31; use isolated data while an older app is running. The older app
 rejects newer schema, so do not point it at the upgraded database. CI Project
 Truth passed; workflow guards are blocked by expired unrelated feature flags,
