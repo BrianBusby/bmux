@@ -275,3 +275,47 @@ extension SessionProjectionSnapshotTests {
     }
 }
 #endif
+
+#if DEBUG
+extension ProvenanceSQLiteRepository {
+    func invalidateSemanticForBatchTest(id: String) throws {
+        let query = try database.prepare("UPDATE provenance_semantic_inferences SET status = 'invalidated' WHERE id = ?")
+        defer { query.finalize() }
+        try query.bind(id, at: 1)
+        _ = try query.step()
+    }
+}
+
+extension SessionProjectionSnapshotTests {
+    @Test
+    func canonicalProducerRollsBackEntireBatchOnLateCollision() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-batch-rollback-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let repository = try ProvenanceSQLiteRepository(url: directory.appendingPathComponent("provenance.sqlite"))
+        let fixture = WorkModelFixture()
+        let turn = fixture.turn(status: "started")
+        try await fixture.appendSessionThreadAndTurn(turn, into: repository)
+        try await fixture.append(fixture.prompt("Investigate a failure", turnID: turn.id), into: repository)
+        let snapshot = try #require(await repository.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id)).snapshot)
+        let timestamp = fixture.timestamp.addingTimeInterval(20)
+        let candidates = ProvenanceCodingAgentSessionSemanticInferenceProducer.records(for: snapshot, createdAt: timestamp)
+        #expect(candidates.count > 1)
+        let collision = try #require(candidates.last)
+        _ = try await repository.publishSemanticInference(ProvenanceSemanticInferencePublishRequest(record: collision))
+        try await repository.invalidateSemanticForBatchTest(id: collision.id)
+        do {
+            _ = try await repository.publishCodingAgentSessionSemanticInferences(
+                ProvenanceCodingAgentSessionSemanticInferenceRequest(sessionID: fixture.session.id, createdAt: timestamp))
+            Issue.record("Expected duplicate inference ID to reject the batch")
+        } catch {
+            // The colliding historical ID causes the write to fail.
+        }
+        for candidate in candidates {
+            let result = try await repository.semanticInferences(ProvenanceSemanticInferenceQueryRequest(
+                scope: candidate.scope, scopeID: candidate.scopeID, kind: candidate.kind))
+            #expect(result.records.isEmpty)
+        }
+    }
+}
+#endif
