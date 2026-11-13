@@ -8,8 +8,13 @@ struct TurnOutcomeStatusTruthTests {
     @Test(arguments: [
         ("incomplete", "incomplete"), ("uncompleted", "incomplete"),
         ("not_completed", "unknown"), ("unsuccessful", "unknown"),
+        ("not_failed", "unknown"), ("uncancelled", "unknown"),
+        ("not_running", "unknown"), ("not_interrupted", "unknown"),
+        ("errorless", "unknown"), ("inactive", "unknown"), ("not_in_progress", "unknown"),
         ("completed", "completed"), ("success", "completed"),
         ("interrupted", "interrupted"), ("cancelled", "cancelled"),
+        ("active", "incomplete"), ("running", "incomplete"),
+        ("started", "incomplete"), ("failed", "failed"),
     ])
     func completionRequiresSupportedStatus(status: String, expected: String) async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
