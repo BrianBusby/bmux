@@ -100,4 +100,41 @@ struct FactualTurnOwnershipTests {
             #expect(try await repository.codingAgentPrompt(id: unassociated.id) == unassociated)
         }
     }
+    @Test
+    func foreignThreadCannotSupplyTurnWorktreeBeforeOrAfterReplay() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-thread-ownership-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let repository = try ProvenanceSQLiteRepository(url: directory.appendingPathComponent("provenance.sqlite"))
+        let fixture = WorkModelFixture()
+        var sessionJSON = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(fixture.session)) as? [String: Any])
+        sessionJSON["worktreeID"] = NSNull()
+        sessionJSON["cwd"] = NSNull()
+        let session = try JSONDecoder().decode(ProvenanceSessionRecord.self, from: JSONSerialization.data(withJSONObject: sessionJSON))
+        let foreignThread = try reassociate(fixture.thread, sessionID: "unrelated-session")
+        let turn = fixture.turn(status: "started")
+        let worktree = ProvenanceWorktreeRecord(id: fixture.thread.worktreeID!, repositoryID: "foreign-repository",
+            path: "/foreign/worktree", branch: "foreign-branch", isDirty: false, status: "active", updatedAt: fixture.timestamp)
+        let events: [(String, ProvenanceEventType, ProvenanceEventPayload)] = [
+            ("foreign-worktree", .worktreeObserved, .init(worktree: worktree)),
+            ("own-session", .sessionObserved, .init(session: session)),
+            ("foreign-thread", .codingAgentThreadObserved, .init(codingAgentThread: foreignThread)),
+            ("own-turn", .codingAgentTurnObserved, .init(codingAgentTurn: turn)),
+        ]
+        for (id, type, payload) in events {
+            try await repository.appendEvent(ProvenanceEvent(id: id, eventType: type, timestamp: fixture.timestamp,
+                sessionID: session.id, source: .observed, evidenceOrigin: .codexSession,
+                evidenceScope: ProvenanceEvidenceScope(level: .personal, id: "thread-ownership"),
+                confidence: .high, payload: payload))
+        }
+        for replay in [false, true] {
+            if replay { _ = try await repository.rebuildProjectionsFromEventLedger(batchSize: 2) }
+            let outcome = try #require(await repository.turnOutcome(ProvenanceTurnOutcomeRequest(turnID: turn.id)).outcome)
+            #expect(outcome.repositoryBoundary?.worktreeID == nil)
+            #expect(outcome.repositoryBoundary?.worktreePath == nil)
+            #expect(outcome.repositoryBoundary?.branch == nil)
+            #expect(outcome.repositoryBoundary?.evidence.contains(where: { $0.recordKind == "coding_agent_thread" && $0.recordID == foreignThread.id }) != true)
+            #expect(try await repository.codingAgentThread(id: foreignThread.id) == foreignThread)
+        }
+    }
+
 }
