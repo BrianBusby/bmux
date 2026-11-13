@@ -24,7 +24,7 @@ Regenerate with: ./scripts/project-docs generate
 
 ### Active Implementation
 
-- Retrieve related work from the current caller (`cross_session_current_caller_retrieval`) - maturity: active; status: active; selection: current; owner: Bmux
+- Diagnose capture and establish baseline (`session_visibility_baseline`) - maturity: unspecified; status: active; selection: current; owner: Bmux
 
 ### Selected Next
 
@@ -37,6 +37,16 @@ Regenerate with: ./scripts/project-docs generate
 
 ### Gated / Blocked Downstream Work
 
+- Deliver useful session summary (`session_visibility_summary`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
+  - Diagnose capture and establish baseline (`session_visibility_baseline`) is not dependency-satisfying
+- Explain meaningful progress (`session_visibility_progress`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
+  - Deliver useful session summary (`session_visibility_summary`) is not dependency-satisfying
+- Integrate plans and reporting (`session_visibility_plans`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
+  - Explain meaningful progress (`session_visibility_progress`) is not dependency-satisfying
+- Make multiple sessions easy to scan (`session_visibility_scanning`) - maturity: unspecified; status: planned; selection: planned; owner: Bmux
+  - Integrate plans and reporting (`session_visibility_plans`) is not dependency-satisfying
+- Prove reliability and expose coordination contract (`session_visibility_reliability`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
+  - Make multiple sessions easy to scan (`session_visibility_scanning`) is not dependency-satisfying
 - Residual App-Host Background Service Audit (`app_runtime_residual_app_host_service_audit`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - Workspace Display File-Watcher Churn Policy (`workspace_display_file_watcher_churn_policy`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
@@ -61,8 +71,7 @@ Regenerate with: ./scripts/project-docs generate
   - React Chat live interaction productization (`react_terminal_productization`) is not dependency-satisfying
   - React Chat live interaction productization (`react_terminal_productization`) has maturity captured; requires validated for gate `terminal_productized`: Three-view navigation should preserve identity across a productized Chat surface, not an unfinished live-interaction direction.
 - Retrieve work relevant to an explicit task (`cross_session_task_relevance_retrieval`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
-  - Retrieve related work from the current caller (`cross_session_current_caller_retrieval`) is not dependency-satisfying
-  - Retrieve related work from the current caller (`cross_session_current_caller_retrieval`) has maturity active; requires validated for gate `caller_retrieval_validated`: Task queries depend on verified caller scope and usable evidence navigation.
+  - Retrieve related work from the current caller (`cross_session_current_caller_retrieval`) has maturity gated; requires validated for gate `caller_retrieval_validated`: Task queries depend on verified caller scope and usable evidence navigation.
 - Evaluate retrieval in ordinary agent work (`cross_session_ordinary_agent_evaluation`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Retrieve work relevant to an explicit task (`cross_session_task_relevance_retrieval`) is not dependency-satisfying
   - Retrieve work relevant to an explicit task (`cross_session_task_relevance_retrieval`) has maturity gated; requires validated for gate `task_relevance_validated`: Live scenarios require evaluated task relevance and actionable references.

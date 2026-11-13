@@ -13,8 +13,10 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: none selected
-- Repository state: observation
+- Active slice: Diagnose capture and establish baseline (`session_visibility_baseline`)
+- Slice state: draft
+- Owner: shared
+- Repository state: active
 
 ## Release
 

@@ -20,7 +20,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Active Implementation
 
-- Retrieve related work from the current caller (`cross_session_current_caller_retrieval`) - maturity: active; status: active; selection: current; owner: Bmux
+- Diagnose capture and establish baseline (`session_visibility_baseline`) - maturity: unspecified; status: active; selection: current; owner: Bmux
 
 ### Selected Next
 
@@ -33,6 +33,16 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Gated / Blocked Downstream Work
 
+- Deliver useful session summary (`session_visibility_summary`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
+  - Diagnose capture and establish baseline (`session_visibility_baseline`) is not dependency-satisfying
+- Explain meaningful progress (`session_visibility_progress`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
+  - Deliver useful session summary (`session_visibility_summary`) is not dependency-satisfying
+- Integrate plans and reporting (`session_visibility_plans`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
+  - Explain meaningful progress (`session_visibility_progress`) is not dependency-satisfying
+- Make multiple sessions easy to scan (`session_visibility_scanning`) - maturity: unspecified; status: planned; selection: planned; owner: Bmux
+  - Integrate plans and reporting (`session_visibility_plans`) is not dependency-satisfying
+- Prove reliability and expose coordination contract (`session_visibility_reliability`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
+  - Make multiple sessions easy to scan (`session_visibility_scanning`) is not dependency-satisfying
 - Residual App-Host Background Service Audit (`app_runtime_residual_app_host_service_audit`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - Workspace Display File-Watcher Churn Policy (`workspace_display_file_watcher_churn_policy`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
@@ -57,8 +67,7 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
   - React Chat live interaction productization (`react_terminal_productization`) is not dependency-satisfying
   - React Chat live interaction productization (`react_terminal_productization`) has maturity captured; requires validated for gate `terminal_productized`: Three-view navigation should preserve identity across a productized Chat surface, not an unfinished live-interaction direction.
 - Retrieve work relevant to an explicit task (`cross_session_task_relevance_retrieval`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
-  - Retrieve related work from the current caller (`cross_session_current_caller_retrieval`) is not dependency-satisfying
-  - Retrieve related work from the current caller (`cross_session_current_caller_retrieval`) has maturity active; requires validated for gate `caller_retrieval_validated`: Task queries depend on verified caller scope and usable evidence navigation.
+  - Retrieve related work from the current caller (`cross_session_current_caller_retrieval`) has maturity gated; requires validated for gate `caller_retrieval_validated`: Task queries depend on verified caller scope and usable evidence navigation.
 - Evaluate retrieval in ordinary agent work (`cross_session_ordinary_agent_evaluation`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Retrieve work relevant to an explicit task (`cross_session_task_relevance_retrieval`) is not dependency-satisfying
   - Retrieve work relevant to an explicit task (`cross_session_task_relevance_retrieval`) has maturity gated; requires validated for gate `task_relevance_validated`: Live scenarios require evaluated task relevance and actionable references.
@@ -460,6 +469,34 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
   - **Richer Session Understanding** (`richer_session_understanding`) - program; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: inference session work projections; execution: current / Shared; parallelism: safe; maturity: validated
     Depends on: `workspace_display_durable_context`
     Rationale: Richer coding-agent evidence and session projections are the active direction after V1 adoption and workspace-display observation. This program now explicitly supports bmux's three-view coding-session model: Native provider-native fidelity, React Terminal live interaction, and React Smart Session understanding backed by PE factual and semantic models.
+    - **Trustworthy Session and Turn Visibility** (`trustworthy_session_visibility`) - phase; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: inference session work projections; execution: current / Shared; parallelism: serial
+      Rationale: Evidence-backed ordinary-session understanding through the existing PE and bmux pipeline; see docs/planning/session-visibility.md.
+      - **Trustworthy Session Visibility Delivery** (`session_visibility_delivery`) - milestone; status: active; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: inference session work projections; execution: current / Shared; parallelism: serial
+        Rationale: Six gated end-to-end slices, beginning with observed capture and a useful ordinary unplanned session.
+        - **Diagnose capture and establish baseline** (`session_visibility_baseline`) - slice; status: active; owner: Bmux; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: inference session work projections; execution: current / Shared; parallelism: serial
+          Depends on: `live_terminal_codex_evidence_ingestion`, `coding_agent_evidence_source_reconciliation`
+          Rationale: See docs/planning/session-visibility.md for the gate, evidence requirements and open limitations.
+          Acceptance criteria: Trace ordinary Codex evidence to native display, capture representative replay fixtures, classify missing signals, measure observable latency, and correct confirmed defects.
+        - **Deliver useful session summary** (`session_visibility_summary`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: inference session work projections; execution: planned / Shared; parallelism: serial
+          Depends on: `session_visibility_baseline`, `deterministic_turn_outcome_projection`, `session_work_model_contract_foundation`
+          Rationale: See docs/planning/session-visibility.md for the gate, evidence requirements and open limitations.
+          Acceptance criteria: Extend existing canonical state and one primary surface with evidence-backed objective, work, activity, attention and observation health.
+        - **Explain meaningful progress** (`session_visibility_progress`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: inference session work projections; execution: planned / Shared; parallelism: serial
+          Depends on: `session_visibility_summary`, `milestone_inference`, `blocker_approach_change_semantics`
+          Rationale: See docs/planning/session-visibility.md for the gate, evidence requirements and open limitations.
+          Acceptance criteria: Distinguish evidence-backed discoveries, changes and validation; evaluate any bounded synthesis against a deterministic baseline.
+        - **Integrate plans and reporting** (`session_visibility_plans`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: inference session work projections; execution: planned / Shared; parallelism: serial
+          Depends on: `session_visibility_progress`
+          Rationale: See docs/planning/session-visibility.md for the gate, evidence requirements and open limitations.
+          Acceptance criteria: Preserve explicit plan revisions and source distinctions, and evaluate ordinary-session reporting guidance.
+        - **Make multiple sessions easy to scan** (`session_visibility_scanning`) - slice; status: planned; owner: Bmux; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: inference session work projections; execution: planned / Shared; parallelism: serial
+          Depends on: `session_visibility_plans`
+          Rationale: See docs/planning/session-visibility.md for the gate, evidence requirements and open limitations.
+          Acceptance criteria: Apply shared state to native surfaces and validate five-session comprehension and accessibility.
+        - **Prove reliability and expose coordination contract** (`session_visibility_reliability`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: inference session work projections; execution: planned / Shared; parallelism: serial
+          Depends on: `session_visibility_scanning`
+          Rationale: See docs/planning/session-visibility.md for the gate, evidence requirements and open limitations.
+          Acceptance criteria: Validate replay, live multi-session behavior and performance, and expose a minimal evidence-linked read contract.
     - **Evidence and Factual State** (`richer_session_evidence_and_factual_state`) - phase; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: deterministic current state; execution: complete / Provenance Engine; parallelism: serial
       - **Richer Coding-Agent Evidence Foundation** (`richer_session_observable_evidence`) - milestone; status: implemented; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: evidence store; execution: complete / Provenance Engine; parallelism: serial
         Enables: `factual_session_projection_read_contract`
@@ -942,10 +979,11 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
         Worktree required: true
         Gate `cross_session_retrieval_validated`: requires `agent_accessible_cross_session_retrieval` maturity validated; reason: Automatic context assembly should be an experiment after explicit cross-session retrieval proves useful.
         Rationale: Measure whether bounded explainable cross-session context improves outcomes before making automatic context assembly a product behavior.
-        - **Retrieve related work from the current caller** (`cross_session_current_caller_retrieval`) - slice; status: active; owner: Bmux; repositories: Bmux, Provenance Engine; concept: retrieval; layer: consumer presentation; execution: current / Shared; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: active
+        - **Retrieve related work from the current caller** (`cross_session_current_caller_retrieval`) - slice; status: implemented; owner: Bmux; repositories: Bmux, Provenance Engine; concept: retrieval; layer: consumer presentation; execution: complete / Shared; parallelism: serial; delivery: merged; acceptance: under observation; maturity: gated
           Depends on: `agent_accessible_cross_session_retrieval`
           Execution notes: Resolve verified caller identity and return bounded evidence with actionable unavailable states while preserving the explicit-ID contract. Isolated tagged build 948 verified a fresh ordinary caller and resume in another pane. Live sequential reuse with multiple retained records and the observed shared Codex daemon fail closed; successful reuse with retained records, other daemon shapes, historical misattribution, and human dogfood remain open. Current-status records fixture evidence and CI limitations.
           Gate `explicit_retrieval_validated`: requires `agent_accessible_cross_session_retrieval` maturity validated; reason: Caller retrieval builds on the validated explicit PE read.
+          Evidence: BrianBusby/bmux#227 by [BrianBusby](https://github.com/BrianBusby)
           Rationale: Make existing PE relationships usable before a caller edits files.
           Acceptance criteria: Retrieve active and historical related work from a fresh caller without a PE ID, with bounded text and machine-readable evidence.; Verify caller isolation, resume, pane reuse, unavailable and ambiguous linkage, freshness, omissions, and the existing no-socket explicit-ID path.
         - **Retrieve work relevant to an explicit task** (`cross_session_task_relevance_retrieval`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: retrieval; layer: retrieval engine; execution: planned / Shared; parallelism: serial; delivery: proposed; acceptance: proposed; maturity: gated
@@ -987,12 +1025,17 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 
 | Slice | Parallelism | Worktree | Branch | Agent/session | Conflict domains | Contract dependencies | Safety |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Retrieve related work from the current caller (`cross_session_current_caller_retrieval`) | serial | None | None | None | None | None | single active assignment |
+| Diagnose capture and establish baseline (`session_visibility_baseline`) | serial | None | None | None | None | None | single active assignment |
 
 ### Dependency-Ready Preflight
 
 | Slice | Selection | Dependency status | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Deliver useful session summary (`session_visibility_summary`) | planned | blocked by Diagnose capture and establish baseline (`session_visibility_baseline`) is not dependency-satisfying | serial | false | None | None | None | None |
+| Explain meaningful progress (`session_visibility_progress`) | planned | blocked by Deliver useful session summary (`session_visibility_summary`) is not dependency-satisfying | serial | false | None | None | None | None |
+| Integrate plans and reporting (`session_visibility_plans`) | planned | blocked by Explain meaningful progress (`session_visibility_progress`) is not dependency-satisfying | serial | false | None | None | None | None |
+| Make multiple sessions easy to scan (`session_visibility_scanning`) | planned | blocked by Integrate plans and reporting (`session_visibility_plans`) is not dependency-satisfying | serial | false | None | None | None | None |
+| Prove reliability and expose coordination contract (`session_visibility_reliability`) | planned | blocked by Make multiple sessions easy to scan (`session_visibility_scanning`) is not dependency-satisfying | serial | false | None | None | None | None |
 | React Smart SessionWorkModel consumer (`react_smart_session_work_model_consumer`) | planned | ready | serial | true | `session_work_model_projection`, `react_session_presentation`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `semantic_message_contract` | `session_work_model_contract`, `milestone_semantics`, `blocker_approach_change_semantics`, `semantic_explanation_provenance` | `React Smart Session surface`, `bmux SessionWorkModel client`, `Sources/WorkProvenance`, `Sources/ProvenanceEngineContracts` |
 | Milestone-to-code relationships (`milestone_to_code_relationships`) | planned | ready | serial | true | `milestone_relationships`, `file_change_attribution` | `milestone_semantics`, `richer_coding_agent_evidence` | `milestone_code_relationships`, `file_change_attribution` | `Sources/ProvenanceEngineCore`, `Sources/ProvenanceEngineContracts`, `Tests/ProvenanceEngineTests` |
 
