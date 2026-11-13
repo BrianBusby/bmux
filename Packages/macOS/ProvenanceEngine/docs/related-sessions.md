@@ -291,8 +291,8 @@ a semantic relevance score.
 Matches have typed reasons and source references. Direct matches sort before
 broad relationships; ties use candidate freshness and then session ID. Within
 a selector query nonmatching broad relationships are excluded. Requested limits
-apply after matching and sorting, with retained exclusions reporting omitted
-candidates. Selection can be incomplete when a source lacks data; projection
+apply after matching and sorting. `candidatesOmittedForLimit` reports the total
+number omitted even when the retained exclusion explanations are capped. Selection can be incomplete when a source lacks data; projection
 availability marks task evidence coverage partial instead of treating missing
 metadata as proof of no match. An unavailable target repository is also
 explicit. Source event and outcome revisions remain available in match evidence.

@@ -39,7 +39,23 @@ extension BMUXCLI {
                     ["kind": $0.kind, "id": $0.id, "sequence": value($0.ledgerSequence),
                      "factual_revision": value($0.factualRevision)]
                 }
+                let blockerPayload = field.kind == "coding_agent.blockers"
+                    ? field.record.flatMap { ProvenanceCodingAgentBlockerPayload(semanticPayloadValue: $0.payload) } : nil
+                let blockers: [[String: Any]] = (blockerPayload?.blockers.prefix(2) ?? []).map { blocker in
+                    let sourceRefs = blocker.sourceEvidenceRefs.count > 2
+                        ? Array(blocker.sourceEvidenceRefs.prefix(1)) + Array(blocker.sourceEvidenceRefs.suffix(1))
+                        : blocker.sourceEvidenceRefs
+                    let sourceEvidence: [[String: Any]] = sourceRefs.map {
+                        ["kind": $0.kind, "id": $0.id, "sequence": value($0.ledgerSequence),
+                         "factual_revision": value($0.factualRevision)]
+                    }
+                    return ["id": blocker.id, "state": blocker.state.rawValue,
+                            "condition": text(blocker.condition), "activity": text(blocker.affectedActivity),
+                            "source_evidence": sourceEvidence,
+                            "source_evidence_omitted": max(0, blocker.sourceEvidenceRefs.count - 2)]
+                }
                 return ["kind": field.kind, "state": field.state.rawValue,
+                        "blocker_items": blockers, "blocker_items_omitted": max(0, (blockerPayload?.blockers.count ?? 0) - 2),
                         "reason": value(field.reason), "record_id": value(field.record?.inferenceID),
                         "producer": value(field.record?.producerID), "confidence": value(field.record?.confidence.rawValue),
                         "status": value(field.record?.status.rawValue), "superseded_by": value(field.record?.supersededBy),
@@ -120,6 +136,7 @@ extension BMUXCLI {
                        "completeness_notes": projection.completeness.notes.map { text($0) },
                        "completeness_notes_truncated": projection.completeness.notes.contains { $0.count > 160 },
                        "exclusions_retained": projection.excludedCandidates.count,
+                       "candidates_omitted_for_limit": value(projection.candidatesOmittedForLimit),
                        "briefs_omitted_for_budget": dropped, "results": results]
             data = try JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys])
             if data.count <= 12 * 1024 || results.isEmpty { break }

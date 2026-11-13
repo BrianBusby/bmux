@@ -99,6 +99,11 @@ struct TaskRelevanceCorpusTests {
         let budget = try #require(try await store.relatedSessions(budgetRequest).projection)
         let repeated = try #require(try await store.relatedSessions(budgetRequest).projection)
         #expect(budget.relatedSessions.map(\.sessionID) == ["budget-1", "budget-2"])
+        #expect(budget.relatedSessions.allSatisfy { brief in
+            brief.relationshipReasons.contains { reason in
+                reason.kind == .requestedArtifact && reason.evidence.contains { $0.projectionRevisionID != nil }
+            }
+        })
         #expect(budget.excludedCandidates.map(\.sessionID) == ["budget-3", "budget-4"])
         #expect(budget.projection.revisionID == repeated.projection.revisionID)
         let cappedExclusions = try #require(try await store.relatedSessions(

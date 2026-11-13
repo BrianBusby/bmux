@@ -56,3 +56,24 @@ ticket IDs and links. A task query must preserve that explicit connection and
 its evidence and avoid treating all sessions in the repository as ticket matches.
 Workspace display is mutable projection state, so its historical ticket validity
 and any source revision available for it need explicit treatment.
+
+## Observed PE corpus results
+
+`swift test --package-path Packages/macOS/ProvenanceEngine --filter
+TaskRelevanceCorpusTests` passed using isolated SQLite and the event append
+contract. The four non-budget selector cases returned all six required session
+IDs (6/6 recall), zero irrelevant inclusions, and a source event sequence or
+projection revision for all six direct matches. The budget case returned the
+predeclared first two IDs and reported the other two as limit exclusions; a
+repeat produced the same revision. The no-match case returned an empty result
+with partial task-evidence coverage. The objective attempt retained a failed
+validation. The blocker-resolution fixture retained the original and resolution
+source IDs in chronological order and the reported-bypassed state in the PE
+semantic payload.
+
+The corpus also verifies that the total omitted-candidate count remains correct
+when the retained exclusion explanations are capped. These are PE fixture
+results. A separate CLI regression now confirms compact blocker state and
+ordered source references. Full output-size and live-agent checks remain open. Ticket evidence represents current workspace
+metadata; the fixture does not prove a historical assignment. Tagged live CLI
+measurements and an ordinary-agent evaluation remain separate checks.

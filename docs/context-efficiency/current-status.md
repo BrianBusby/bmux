@@ -266,9 +266,12 @@ within the target's observed repository. Direct matches retain reasons and
 source references; task evidence availability is partial when coverage is
 unknown. The CLI accepts the selectors and includes match evidence. Two focused
 PE fixture tests pass, including stable limit omissions and a recorded blocker
-resolution; the broader related session suites passed 22 tests. The focused
-macOS CLI suite passed five tests, including all three selectors. Tagged build, complete corpus,
-supersession case and live acceptance remain unverified. Slice 1's reuse and
+resolution; the broader related session suites passed 22 tests. The fixed PE
+corpus returned all six required IDs with evidence, excluded unrelated sessions,
+and verified stable limit omissions. The focused macOS CLI suite passed five
+tests, including all selectors and compact blocker chronology after an observed
+red/green regression. Tagged verification of the corrected renderer, live
+queries, and human acceptance remain open. Slice 1's reuse and
 shared-daemon limitations still apply; the task relevance gate is not validated.
 
 Remaining work: implement and verify all three slices, record a bounded output

@@ -172,12 +172,17 @@ extension ProvenanceSQLiteRepository {
                 to: &exclusions
             )
         }
-        let contentFingerprint = relatedSessionContentFingerprint(
+        let hasSelectors = request.artifactPath != nil || request.objective != nil || request.ticket != nil
+        let omittedCount = max(0, sortedCandidates.count - resultLimit)
+        let baseContentFingerprint = relatedSessionContentFingerprint(
             requestFingerprint: requestFingerprint,
             target: targetProfile,
             relatedSessions: Array(relatedSessions),
             excludedCandidates: exclusions
         )
+        let contentFingerprint = hasSelectors
+            ? stableIDFactory.id(prefix: "related-session-content", value: "\(baseContentFingerprint)\nomitted=\(omittedCount)")
+            : baseContentFingerprint
         let revisionID = stableIDFactory.id(
             prefix: "related-session-revision",
             value: [
@@ -206,7 +211,6 @@ extension ProvenanceSQLiteRepository {
             excludedCandidates: exclusions,
             evaluatedThroughSequence: latestSequence
         )
-        let hasSelectors = request.artifactPath != nil || request.objective != nil || request.ticket != nil
         let completeness: ProvenanceRelatedSessionCompleteness
         if hasSelectors {
             let reason = targetProfile.repositoryKeys.isEmpty
@@ -230,6 +234,7 @@ extension ProvenanceSQLiteRepository {
             projection: metadata,
             relatedSessions: Array(relatedSessions),
             excludedCandidates: exclusions,
+            candidatesOmittedForLimit: hasSelectors ? omittedCount : nil,
             completeness: completeness
         )
     }
