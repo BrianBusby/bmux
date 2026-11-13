@@ -112,6 +112,54 @@ extension CLIProvenanceCodexTranscriptImporterTests {
     }
 
     @Test
+    func planRevisionSurvivesPartialLineAndTailerRestart() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let transcriptURL = fixture.directoryURL.appendingPathComponent("session.jsonl")
+        let cursorStore = CLIProvenanceCodexTranscriptCursorStore(
+            directoryURL: fixture.directoryURL.appendingPathComponent("cursors")
+        )
+        let lines = try Self.codexTranscriptFixtureLines()
+        try (lines[0...3].joined(separator: "\n") + "\n")
+            .write(to: transcriptURL, atomically: true, encoding: .utf8)
+        let first = CLIProvenanceCodexTranscriptTailer(
+            providerSessionID: "codex-session-1", workspaceID: "workspace-1",
+            surfaceID: "surface-1", client: client, cursorStore: cursorStore
+        )
+        _ = try await first.consume(at: transcriptURL)
+        let original = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
+        #expect(original.latestTurn?.currentPlan?.steps.map(\.status) == ["completed", "in_progress"])
+
+        let revision = try Self.codexTranscriptLine(
+            ordinal: 7, type: "response_item", timestamp: "2026-08-21T10:00:07Z",
+            payload: [
+                "type": "function_call", "name": "update_plan", "call_id": "call-plan-2",
+                "internal_chat_message_metadata_passthrough": ["turn_id": "turn-1"],
+                "arguments": #"{"plan":[{"step":"Inspect transcripts","status":"completed"},{"step":"Append evidence","status":"completed"}]}"#
+            ]
+        )
+        let split = revision.index(revision.startIndex, offsetBy: revision.count / 2)
+        try Self.appendText(String(revision[..<split]), to: transcriptURL)
+        let restarted = CLIProvenanceCodexTranscriptTailer(
+            providerSessionID: "codex-session-1", workspaceID: "workspace-1",
+            surfaceID: "surface-1", client: client, cursorStore: cursorStore
+        )
+        let partial = try await restarted.consume(at: transcriptURL)
+        #expect(partial.importResult.retainedPartialLine)
+        let duringPartial = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
+        #expect(duringPartial.latestTurn?.currentPlan?.steps.map(\.status) == ["completed", "in_progress"])
+
+        try Self.appendText(String(revision[split...]) + "\n", to: transcriptURL)
+        _ = try await restarted.consume(at: transcriptURL)
+        let updated = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
+        #expect(updated.latestTurn?.turn.providerTurnID == "turn-1")
+        #expect(updated.latestTurn?.currentPlan?.steps.map(\.status) == ["completed", "completed"])
+        #expect(try await CLIProvenanceCodexTranscriptImporter(client: client)
+            .importTranscripts(path: transcriptURL.path).eventsAppended == 0)
+    }
+
+    @Test
     func partialLineAndFailedAppendDoNotAdvanceCursor() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }

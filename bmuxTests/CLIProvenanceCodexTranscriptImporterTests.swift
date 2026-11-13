@@ -678,7 +678,7 @@ struct CLIProvenanceCodexTranscriptImporterTests {
     }
 
 
-    private static func codexTranscriptLine(
+    static func codexTranscriptLine(
         ordinal: Int,
         type: String,
         timestamp: String,
