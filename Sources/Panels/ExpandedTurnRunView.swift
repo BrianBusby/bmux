@@ -12,7 +12,7 @@ struct ExpandedTurnRunView: View {
                 fact(String(localized: "agentSession.expanded.durationLabel", defaultValue: "Duration"), durationText)
                 fact(String(localized: "agentSession.factual.model", defaultValue: "Model"), presentation.detail?.turn.model ?? "—")
                 fact(String(localized: "agentSession.factual.commands", defaultValue: "Commands"), count(presentation.detail?.completedCommands.count))
-                fact(String(localized: "agentSession.expanded.reasoningSteps", defaultValue: "Reasoning steps"), count(presentation.detail?.visibleReasoningSummaries.count))
+                fact(AgentSessionUpdatePresentation.runTitle, count(presentation.detail?.visibleReasoningSummaries.count))
                 VStack(alignment: .leading, spacing: 4) {
                     Text(String(localized: "agentSession.expanded.outputsFiles", defaultValue: "Outputs · Files")).font(.caption).foregroundStyle(.secondary)
                     HStack {

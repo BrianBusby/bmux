@@ -106,10 +106,7 @@ extension AgentSessionSmartSessionSnapshot.SemanticField {
                 defaultValue: "Based on the current plan"
             )
         case "visible_reasoning_summary":
-            return String(
-                localized: "agentSession.web.smartSession.activityBasis.visibleReasoningSummary",
-                defaultValue: "Based on visible reasoning"
-            )
+            return AgentSessionUpdatePresentation.activityBasis
         case "submitted_prompt", "coding_agent_prompt":
             return String(
                 localized: "agentSession.web.smartSession.activityBasis.submittedPrompt",
