@@ -523,11 +523,17 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
   const { sess, agentEvents, telemetryEvents } = makeCodexSession();
   sess.internal.threadId = "thread-unsupported-approval";
 
-  codexHandleServerMessageForTest(sess, {
+  const writes = codexHandleServerMessageForTest(sess, {
     id: 202,
     method: "toolUserInput/request",
     params: { threadId: "thread-unsupported-approval" },
   });
+
+  assert(JSON.stringify(writes) === JSON.stringify([{
+    jsonrpc: "2.0",
+    id: 202,
+    error: { code: -32601, message: "toolUserInput/request is not supported by bmux-agent-ui" },
+  }]), `unsupported request response changed: ${JSON.stringify(writes)}`);
 
   assert(agentEvents.length === 1, `unsupported request should only publish a diagnostic: ${JSON.stringify(agentEvents)}`);
   assert(

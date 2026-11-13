@@ -1182,6 +1182,7 @@ function applyThreadSettings(sess: SessionCtx, settings: any) {
 }
 
 export function codexHandleServerMessageForTest(sess: SessionCtx, msg: any) {
+  const writes: unknown[] = [];
   const p = msg.params ?? {};
   const threadKey = p.threadId ?? p.conversationId ?? sess.internal.threadId ?? "codex-test-thread";
   sess.internal.threadId ??= threadKey;
@@ -1190,9 +1191,10 @@ export function codexHandleServerMessageForTest(sess: SessionCtx, msg: any) {
     request: async () => {
       throw new Error("unexpected Codex request in server-message test");
     },
-    write: () => {},
+    write: (message) => { writes.push(message); },
     sessionsByThread: new Map([[threadKey, sess]]),
   }, msg);
+  return writes;
 }
 
 export function codexHandleSendFailureForTest(sess: SessionCtx, err: unknown, method?: string) {
