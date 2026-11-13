@@ -102,6 +102,30 @@ struct CLIProvenanceCodexTranscriptImporterTests {
     }
 
     @Test
+    func conflictingAndTruncatedProposalsRemainDistinct() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let file = fixture.directoryURL.appendingPathComponent("proposal-conflict.jsonl")
+        let text = String(repeating: "x", count: 12_001)
+        let lines = try [
+            Self.codexTranscriptLine(ordinal: 0, type: "session_meta", timestamp: "2026-11-13T13:21:13Z", payload: ["id": "session-1", "cwd": "/tmp"]),
+            Self.codexTranscriptLine(ordinal: 1, type: "event_msg", timestamp: "2026-11-13T13:21:36Z", payload: ["type": "item_completed", "thread_id": "session-1", "turn_id": "turn-1", "item": ["type": "Plan", "id": "plan-1", "text": text]]),
+            Self.codexTranscriptLine(ordinal: 2, type: "event_msg", timestamp: "2026-11-13T13:21:37Z", payload: ["type": "item_completed", "thread_id": "session-1", "turn_id": "turn-1", "item": ["type": "Plan", "id": "plan-1", "text": text + "y"]]),
+        ]
+        try (lines.joined(separator: "\n") + "\n").write(to: file, atomically: true, encoding: .utf8)
+        let capture = CapturingProvenanceEngineClient()
+        _ = try await CLIProvenanceCodexTranscriptImporter(client: capture).importTranscripts(path: file.path)
+        let events = await capture.appendedEventRequests.map(\.event).filter { $0.eventType == .codingAgentProposedPlanObserved }
+        #expect(events.count == 2)
+        let first = try #require(events.first)
+        let last = try #require(events.last)
+        #expect(first.id != last.id)
+        #expect(first.payload.codingAgentProposedPlan?.truncated == true)
+        #expect(first.payload.codingAgentProposedPlan?.text.count == 12_000)
+        #expect(first.payload.codingAgentProposedPlan?.text == last.payload.codingAgentProposedPlan?.text)
+    }
+
+    @Test
     func acceptsOnlyExplicitVisibleReasoningSummaryFields() {
         #expect(CLIProvenanceCodexTranscriptImporter.reasoningText(from: ["text": "private reasoning"]) == nil)
         #expect(CLIProvenanceCodexTranscriptImporter.reasoningText(from: [
