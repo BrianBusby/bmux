@@ -281,8 +281,13 @@ A follow-up review found cross-repository path, ticket, and objective matches
 and misleading match observation times when a session spans repositories. PE
 now scopes each match to its recorded source repository and uses its matching
 event timestamps. Red/green regression tests cover these cases; facts without
-repository attribution remain unavailable. The tagged runtime fixture above
-predates this fix and must be rerun on the corrected build.
+repository attribution remain unavailable. Isolated build 953 reran the three selectors from fresh caller
+`01a1d37a-f2ca-7cf0-ab9f-6b03872bf16b` with explicit socket approval:
+path returned both seeded peers in 10,052 bytes, ticket returned the seeded
+historical peer in 6,228 bytes, and objective returned that peer plus the prior
+live caller (whose prompt contained the literal objective) in 10,886 bytes.
+All reported zero result omissions. The seed evidence remains distinct from
+the live caller evidence; this is not an agent decision experiment.
 
 Remaining work: resolve the formal slice gates and remaining caller limitations,
 review and deliver slice 2, and capture the slice 3 ordinary-agent decision
