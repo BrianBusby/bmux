@@ -229,3 +229,49 @@ extension SessionProjectionSnapshotTests {
     }
 }
 #endif
+
+#if DEBUG
+extension SessionProjectionSnapshotTests {
+    @Test
+    func concurrentProducerCannotReplaceNewerEvidenceWithOldClaims() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-producer-race-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("provenance.sqlite")
+        let older = try ProvenanceSQLiteRepository(url: url)
+        let newer = try ProvenanceSQLiteRepository(url: url)
+        let fixture = WorkModelFixture()
+        let turn = fixture.turn(status: "started")
+        try await fixture.appendSessionThreadAndTurn(turn, into: newer)
+        try await fixture.append(fixture.prompt("Investigate the issue", turnID: turn.id), into: newer)
+        let entered = DispatchSemaphore(value: 0)
+        let resume = DispatchSemaphore(value: 0)
+        let newerFinished = DispatchSemaphore(value: 0)
+        await older.setFactualReadObserver {
+            entered.signal()
+            _ = resume.wait(timeout: .now() + 10)
+        }
+        let oldTask = Task.detached {
+            try await older.publishCodingAgentSessionSemanticInferences(
+                ProvenanceCodingAgentSessionSemanticInferenceRequest(sessionID: fixture.session.id, createdAt: fixture.timestamp.addingTimeInterval(30)))
+        }
+        let reached = await Task.detached { Self.waitForSignal(entered) }.value
+        guard reached else { resume.signal(); Issue.record("Producer did not reach the interleaving point"); _ = try? await oldTask.value; return }
+        let newTask = Task.detached {
+            defer { newerFinished.signal() }
+            try await fixture.append(fixture.prompt("Fix the regression", turnID: turn.id, offset: 4), into: newer)
+            return try await newer.publishCodingAgentSessionSemanticInferences(
+                ProvenanceCodingAgentSessionSemanticInferenceRequest(sessionID: fixture.session.id, createdAt: fixture.timestamp.addingTimeInterval(40)))
+        }
+        _ = await Task.detached { Self.finishedQuickly(newerFinished) }.value
+        resume.signal()
+        _ = try await oldTask.value
+        _ = try await newTask.value
+        await older.setFactualReadObserver(nil)
+        let model = try #require(await older.sessionWorkModel(ProvenanceSessionWorkModelRequest(sessionID: fixture.session.id)).model)
+        let milestone = try #require(model.milestones.record)
+        let payload = try #require(ProvenanceCodingAgentMilestonePayload(semanticPayloadValue: milestone.payload))
+        #expect(payload.milestones.map(\.title) == ["Fix the regression"])
+        #expect(milestone.supportingFactualRevision == model.revision.factualRevision)
+    }
+}
+#endif
