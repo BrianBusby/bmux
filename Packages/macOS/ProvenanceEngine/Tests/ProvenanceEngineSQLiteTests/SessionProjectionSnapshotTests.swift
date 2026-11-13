@@ -103,12 +103,16 @@ struct SessionProjectionSnapshotTests {
             }
         }
         let valid = ProvenanceCodingAgentProposedPlanRecord(sessionID: fixture.session.id, provider: "codex",
-            providerSessionID: "thread", providerTurnID: "turn", providerItemID: String(repeating: "é", count: 128),
+            providerSessionID: "thread", providerTurnID: "turn", providerItemID: String(repeating: "x", count: 256),
             text: "Valid", truncated: false)
+        #expect(valid.hasValidProviderIdentity)
         try await writer.appendEvent(ProvenanceEvent(id: "valid", eventType: .codingAgentProposedPlanObserved,
             sessionID: fixture.session.id, source: .observed, evidenceOrigin: .init(rawValue: "codex-transcript"),
             confidence: .high, payload: .init(codingAgentProposedPlan: valid)))
         let reader = try ProvenanceSQLiteRepository(url: url)
+        let storedValid = try #require(await reader.event(id: "valid")?.payload.codingAgentProposedPlan)
+        #expect(storedValid.hasValidProviderIdentity)
+        #expect(storedValid.providerItemID?.utf8.count == 256)
         let snapshot = try #require(await reader.factualSessionProjection(
             ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id)).snapshot)
         #expect(snapshot.proposedPlanObservations.map(\.id) == ["valid"])
