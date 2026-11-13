@@ -138,18 +138,27 @@ extension ProvenanceSQLiteRepository {
             if fail { throw GuardTestError.expected }
         }
     }
+    func waitAndWriteIfMatching(_ request: ProvenanceSessionWorkModelRequest,
+                                expected: ProvenanceSessionWorkModelResponse,
+                                entered: DispatchSemaphore, resume: DispatchSemaphore) throws -> Bool {
+        try withMatchingWorkModel(request, expected: expected) {
+            entered.signal()
+            _ = resume.wait(timeout: .now() + 10)
+            try database.execute("INSERT INTO guard_test VALUES (1)")
+        }
+    }
     func guardTestCount() throws -> Int {
         let query = try database.prepare("SELECT COUNT(*) FROM guard_test")
         defer { query.finalize() }
         guard try query.step() else { return -1 }
-        return query.int(at: 0) ?? -1
+        return query.int(at: 0)
     }
 }
 
 extension SessionProjectionSnapshotTests {
     @Test
-    func matchingWorkModelGuardCommitsOrRollsBackWithoutStaleWrites() async throws {
-        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-guard-\(UUID().uuidString)")
+    func matchingGuardHoldsWriteBoundaryAcrossConnections() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-guard-race-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: directory) }
         let url = directory.appendingPathComponent("provenance.sqlite")
         let reader = try ProvenanceSQLiteRepository(url: url)
@@ -160,6 +169,49 @@ extension SessionProjectionSnapshotTests {
         try await reader.createGuardTestTable()
         let request = ProvenanceSessionWorkModelRequest(sessionID: fixture.session.id)
         let original = try await reader.sessionWorkModel(request)
+        let entered = DispatchSemaphore(value: 0)
+        let resume = DispatchSemaphore(value: 0)
+        let writerStarted = DispatchSemaphore(value: 0)
+        let writerFinished = DispatchSemaphore(value: 0)
+        let guarded = Task.detached {
+            try await reader.waitAndWriteIfMatching(request, expected: original, entered: entered, resume: resume)
+        }
+        let reached = await Task.detached { Self.waitForSignal(entered) }.value
+        guard reached else { resume.signal(); Issue.record("Guard did not enter operation"); _ = try? await guarded.value; return }
+        let append = Task.detached {
+            writerStarted.signal()
+            defer { writerFinished.signal() }
+            try await fixture.append(fixture.prompt("Concurrent evidence", turnID: turn.id), into: writer)
+        }
+        let writerRan = await Task.detached { Self.waitForSignal(writerStarted) }.value
+        let premature = await Task.detached { Self.finishedQuickly(writerFinished) }.value
+        resume.signal()
+        #expect(writerRan)
+        #expect(try await guarded.value)
+        try await append.value
+        #expect(!premature)
+        #expect(try await reader.guardTestCount() == 1)
+        #expect(try await !reader.writeIfMatching(request, expected: original))
+    }
+
+    private static func finishedQuickly(_ semaphore: DispatchSemaphore) -> Bool {
+        semaphore.wait(timeout: .now() + 0.2) == .success
+    }
+
+    @Test
+    func matchingWorkModelGuardCommitsOrRollsBackWithoutStaleWrites() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-guard-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("provenance.sqlite")
+        let reader = try ProvenanceSQLiteRepository(url: url)
+        let writer = try ProvenanceSQLiteRepository(url: url)
+        let fixture = WorkModelFixture()
+        let turn = fixture.turn(status: "started")
+        try await fixture.appendSessionThreadAndTurn(turn, into: writer)
+        try await fixture.append(fixture.prompt("Investigate the session", turnID: turn.id), into: writer)
+        try await reader.createGuardTestTable()
+        let request = ProvenanceSessionWorkModelRequest(sessionID: fixture.session.id)
+        let original = try await reader.sessionWorkModel(request)
         #expect(try await reader.writeIfMatching(request, expected: original))
         do {
             _ = try await reader.writeIfMatching(request, expected: original, fail: true)
@@ -167,8 +219,12 @@ extension SessionProjectionSnapshotTests {
         } catch GuardTestError.expected {
         }
         #expect(try await reader.guardTestCount() == 1)
-        try await fixture.append(fixture.prompt("New evidence", turnID: turn.id), into: writer)
+        _ = try await writer.publishCodingAgentSessionSemanticInferences(
+            ProvenanceCodingAgentSessionSemanticInferenceRequest(sessionID: fixture.session.id, createdAt: fixture.timestamp.addingTimeInterval(20)))
         #expect(try await !reader.writeIfMatching(request, expected: original))
+        let afterSemantic = try await reader.sessionWorkModel(request)
+        try await fixture.append(fixture.prompt("New evidence", turnID: turn.id, offset: 4), into: writer)
+        #expect(try await !reader.writeIfMatching(request, expected: afterSemantic))
         #expect(try await reader.guardTestCount() == 1)
     }
 }

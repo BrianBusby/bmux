@@ -693,6 +693,14 @@ Current semantic publication is unconditional, so a snapshot can become stale
 before publication. Safe conditional publication still requires validating all
 relevant input and competing semantic state in the same write transaction as
 the insert and supersession; these read snapshots do not provide that guarantee.
+An internal synchronous SQLite guard can compare an entire observed work model
+and execute an operation under one immediate write transaction. It is not a
+publication capability: model reads select only certain semantic records, the
+guard does not validate all predecessors or other producer inputs, and the
+existing publisher starts its own transaction and remains unconditional. A safe
+batch publisher must make those validations and its inserts and supersessions
+part of the same transaction, with every competing writer participating. A
+retry also needs explicit idempotence and conflict semantics.
 
 The first planned vertical slice should validate richer coding-agent evidence
 ingestion, deterministic factual session projections, evidence-backed inference,
