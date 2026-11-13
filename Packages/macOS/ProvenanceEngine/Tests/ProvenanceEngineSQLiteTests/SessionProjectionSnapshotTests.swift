@@ -124,3 +124,52 @@ struct SessionProjectionSnapshotTests {
     }
 }
 #endif
+
+#if DEBUG
+private enum GuardTestError: Error { case expected }
+
+extension ProvenanceSQLiteRepository {
+    func createGuardTestTable() throws { try database.execute("CREATE TABLE guard_test (value INTEGER)") }
+    func writeIfMatching(_ request: ProvenanceSessionWorkModelRequest,
+                         expected: ProvenanceSessionWorkModelResponse,
+                         fail: Bool = false) throws -> Bool {
+        try withMatchingWorkModel(request, expected: expected) {
+            try database.execute("INSERT INTO guard_test VALUES (1)")
+            if fail { throw GuardTestError.expected }
+        }
+    }
+    func guardTestCount() throws -> Int {
+        let query = try database.prepare("SELECT COUNT(*) FROM guard_test")
+        defer { query.finalize() }
+        guard try query.step() else { return -1 }
+        return query.int(at: 0) ?? -1
+    }
+}
+
+extension SessionProjectionSnapshotTests {
+    @Test
+    func matchingWorkModelGuardCommitsOrRollsBackWithoutStaleWrites() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-guard-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("provenance.sqlite")
+        let reader = try ProvenanceSQLiteRepository(url: url)
+        let writer = try ProvenanceSQLiteRepository(url: url)
+        let fixture = WorkModelFixture()
+        let turn = fixture.turn(status: "started")
+        try await fixture.appendSessionThreadAndTurn(turn, into: writer)
+        try await reader.createGuardTestTable()
+        let request = ProvenanceSessionWorkModelRequest(sessionID: fixture.session.id)
+        let original = try await reader.sessionWorkModel(request)
+        #expect(try await reader.writeIfMatching(request, expected: original))
+        do {
+            _ = try await reader.writeIfMatching(request, expected: original, fail: true)
+            Issue.record("Expected operation failure")
+        } catch GuardTestError.expected {
+        }
+        #expect(try await reader.guardTestCount() == 1)
+        try await fixture.append(fixture.prompt("New evidence", turnID: turn.id), into: writer)
+        #expect(try await !reader.writeIfMatching(request, expected: original))
+        #expect(try await reader.guardTestCount() == 1)
+    }
+}
+#endif
