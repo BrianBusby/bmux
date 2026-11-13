@@ -695,7 +695,11 @@ immediate write transaction. It cannot publish a partial pass or derive from a
 snapshot that changed before that transaction. Repeated unchanged claims are
 retained. These guarantees apply to this SQLite producer path only; direct
 unconditional semantic writes, other implementations, and older binaries do not
-participate and can still publish stale claims.
+participate and can still publish stale claims. Derivation holds SQLite's write
+reservation while it reads and computes, so concurrent writers may wait or time
+out; lock duration and throughput under large sessions or concurrent load remain
+unmeasured. Package tests do not establish native app behavior or satisfy the
+session visibility delivery gate.
 An internal synchronous SQLite guard can compare an entire observed work model
 and execute an operation under one immediate write transaction. It is not a
 publication capability: model reads select only certain semantic records, the
