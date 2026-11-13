@@ -213,7 +213,7 @@ roadmap:
         assigned_to: shared
       acceptance:
         criteria:
-          - Establish unambiguous session associations and coherent per-session factual revisions across ownership changes and replay, consistent snapshot reads, and conditional semantic publication that prevents older interpretations superseding newer evidence.
+          - Preserve ambiguously linked evidence without unsupported turn joins, and establish coherent per-session revisions across ownership changes and replay, consistent snapshot reads, and conditional publication that prevents older interpretations superseding newer evidence.
       rationale: Independent review found that envelope-scoped event revisions do not cover all payload-owned projection changes and semantic publication is not atomic with its snapshot; see docs/planning/session-visibility.md.
 
     - id: session_visibility_summary
