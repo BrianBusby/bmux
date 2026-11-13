@@ -700,15 +700,10 @@ reservation while it reads and computes, so concurrent writers may wait or time
 out; lock duration and throughput under large sessions or concurrent load remain
 unmeasured. Package tests do not establish native app behavior or satisfy the
 session visibility delivery gate.
-An internal synchronous SQLite guard can compare an entire observed work model
-and execute an operation under one immediate write transaction. It is not a
-publication capability: model reads select only certain semantic records, the
-guard does not validate all predecessors or other producer inputs. The
-canonical SQLite deterministic producer uses its own batch transaction; the
-guard is not used to publish. Model-derived or externally prepared claims still
-need complete input and predecessor validation and explicit retry, idempotence,
-and conflict semantics. All competing writers must participate before this can
-be treated as a global publication fence.
+Model-derived or externally prepared claims still need complete input and
+predecessor validation in the same transaction as publication, along with
+explicit retry, idempotence, and conflict semantics. All competing writers must
+participate before this can be treated as a global publication fence.
 
 The first planned vertical slice should validate richer coding-agent evidence
 ingestion, deterministic factual session projections, evidence-backed inference,
