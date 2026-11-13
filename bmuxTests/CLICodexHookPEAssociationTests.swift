@@ -308,6 +308,20 @@ struct CLICodexHookPEAssociationTests {
                 timestamp: now, repositoryID: repository.id, worktreeID: worktree.id, sessionID: "related-closed",
                 source: .observed, confidence: .high, payload: payload)))
         }
+        for (id, text, offset) in [
+            ("closed-blocker-open", "Blocker: activity=run package suite; condition=database offline", 1.0),
+            ("closed-blocker-resolved", "Blocker resolved: activity=run package suite; condition=database offline; outcome=bypassed", 2.0),
+        ] {
+            let message = ProvenanceCodingAgentAssistantMessageRecord(id: id, sessionID: "related-closed",
+                threadID: thread.id, turnID: turn.id, provider: "codex", itemID: "item-\(id)", text: text,
+                completedAt: now.addingTimeInterval(offset), source: .observed, confidence: .high)
+            _ = try await client.appendEvent(.init(event: ProvenanceEvent(id: "event-\(id)",
+                eventType: .codingAgentAssistantMessageCompleted, timestamp: message.completedAt,
+                repositoryID: repository.id, worktreeID: worktree.id, sessionID: "related-closed",
+                source: .observed, confidence: .high, payload: .init(codingAgentAssistantMessage: message))))
+        }
+        _ = try await client.publishCodingAgentSessionSemanticInferences(.init(
+            sessionID: "related-closed", createdAt: now.addingTimeInterval(3)))
         var hookState: [String: Any] = [
             "version": 1,
             "activeSessionsBySurface": [:],
@@ -346,6 +360,14 @@ struct CLICodexHookPEAssociationTests {
             let matches = try #require(selectedResults.first?["match_evidence"] as? [[String: Any]])
             #expect(matches.contains { ($0["kind"] as? String) == reason && !($0["evidence"] as? [[String: Any]] ?? []).isEmpty })
             #expect(selected.stdout.utf8.count <= 12 * 1024 + 1)
+            if option == "--objective" {
+                let fields = try #require(selectedResults.first?["semantic_fields"] as? [[String: Any]])
+                let blockers = try #require(fields.first { $0["kind"] as? String == "coding_agent.blockers" })
+                let items = try #require(blockers["blocker_items"] as? [[String: Any]])
+                #expect(items.first?["state"] as? String == "reported_bypassed")
+                let refs = try #require(items.first?["source_evidence"] as? [[String: Any]])
+                #expect(refs.compactMap { $0["id"] as? String } == ["closed-blocker-open", "closed-blocker-resolved"])
+            }
         }
         // A retained PID that is not an ancestor cannot establish ownership.
         var unknownOwnerState = hookState
