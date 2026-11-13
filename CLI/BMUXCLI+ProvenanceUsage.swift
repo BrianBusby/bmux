@@ -9,6 +9,7 @@ extension BMUXCLI {
               bmux provenance worktrees list [--json]
               bmux provenance sessions tree <session-id> [--json]
               bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]
+              bmux provenance sessions related --current [--limit <1-5>] [--database <path>] [--json]
               bmux provenance sessions collisions <pe-session-id> [--limit <count>] [--related-session-limit <count>] [--exclusion-limit <count>] [--artifact-path <repo-relative-path>] [--updated-after <timestamp>] [--stale-before <timestamp>] [--revision <revision-id>] [--database <path>] [--json]
               bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]
               bmux provenance session outcome <session-id> [--revision <revision-id>] [--database <path>] [--json]
@@ -18,8 +19,8 @@ extension BMUXCLI {
               bmux provenance diagnostics codex-transcript <provider-session-id> [--json]
               bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]
 
-            Inspect bmux work provenance without requiring a live app socket.
-            Related-session retrieval uses explicit PE session ids. Artifact-collision retrieval starts from the target session's recorded changed artifacts; --artifact-path narrows those candidates only.
+            Explicit-ID provenance reads work without a live app socket. Related-session --current requires a verified caller in the live app.
+            Artifact-collision retrieval starts from the target session's recorded changed artifacts; --artifact-path narrows those candidates only.
             """
         )
     }

@@ -760,7 +760,11 @@ extension BMUXCLI {
     static func codexFireAndForgetAgentHookShellCommand(_ command: String, for def: AgentHookDef) -> String {
         let routedArguments = command.hasPrefix("bmux ") ? String(command.dropFirst("bmux ".count)) : command
         let runner = "payload=\"$1\"; shift; \"$@\" <\"$payload\" >/dev/null 2>&1 & child=\"$!\"; ( sleep 30; kill \"$child\" 2>/dev/null || true ) & watchdog=\"$!\"; wait \"$child\" 2>/dev/null || true; kill \"$watchdog\" 2>/dev/null || true; rm -f \"$payload\""
+        // Only these events can write pane-bound PE evidence or start its monitor.
+        let identityAttestation = ["bmux hooks codex session-start", "bmux hooks codex prompt-submit"].contains(command)
+            ? Self.codexHookIdentityAttestationShell : "BMUX_CODEX_HOOK_IDENTITY_VERIFIED=0; export BMUX_CODEX_HOOK_IDENTITY_VERIFIED"
         return [
+            identityAttestation,
             "bmux_cli=\"${BMUX_BUNDLED_CLI_PATH:-}\"",
             "if [ -z \"$bmux_cli\" ] || [ ! -x \"$bmux_cli\" ]; then bmux_cli=\"$(command -v bmux 2>/dev/null || true)\"; fi",
             "agent_pid=\"${BMUX_CODEX_PID:-${PPID:-}}\"",

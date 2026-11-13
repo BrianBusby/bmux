@@ -2,17 +2,28 @@ import Foundation
 import ProvenanceEngineContracts
 
 extension BMUXCLI {
-    func runProvenanceSessions(commandArgs: [String], jsonOutput: Bool) async throws {
+    func runProvenanceSessions(
+        commandArgs: [String], jsonOutput: Bool,
+        explicitSocketPath: String? = nil, explicitSocketPassword: String? = nil,
+        processEnv: [String: String] = ProcessInfo.processInfo.environment,
+        cliBundleIdentifier: String? = CLISocketPathResolver.currentAppBundleIdentifier()
+    ) async throws {
         let (databasePath, routedArgs) = parseOption(commandArgs, name: "--database")
         let databaseArgs = databasePath.map { ["--database", $0] } ?? []
         switch routedArgs.first?.lowercased() {
         case "tree":
             try await runProvenanceSessionsTree(commandArgs: commandArgs, jsonOutput: jsonOutput)
         case "related":
-            try await runProvenanceSessionsRelated(
-                commandArgs: Array(routedArgs.dropFirst()) + databaseArgs,
-                jsonOutput: jsonOutput
-            )
+            let args = Array(routedArgs.dropFirst()) + databaseArgs
+            if args.contains("--current") {
+                try await runProvenanceRelatedCurrent(
+                    commandArgs: args, jsonOutput: jsonOutput,
+                    explicitSocketPath: explicitSocketPath, explicitSocketPassword: explicitSocketPassword,
+                    processEnv: processEnv, cliBundleIdentifier: cliBundleIdentifier
+                )
+            } else {
+                try await runProvenanceSessionsRelated(commandArgs: args, jsonOutput: jsonOutput)
+            }
         case "collisions":
             try await runProvenanceSessionsCollisions(
                 commandArgs: Array(routedArgs.dropFirst()) + databaseArgs,
@@ -178,7 +189,7 @@ extension BMUXCLI {
     func provenanceSessionsRelatedUsage() -> String {
         String(
             localized: "cli.provenance.sessions.related.usage",
-            defaultValue: "Usage: bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]"
+            defaultValue: "Usage: bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n       bmux provenance sessions related --current [--limit <1-5>] [--database <path>] [--json]"
         )
     }
 

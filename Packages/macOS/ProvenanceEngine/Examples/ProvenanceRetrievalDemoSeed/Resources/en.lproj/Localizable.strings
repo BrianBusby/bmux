@@ -1,0 +1,2 @@
+"provenance.demoSeed.usage" = "Usage: swift run --package-path Packages/macOS/ProvenanceEngine ProvenanceRetrievalDemoSeed --database <path> [--reset] [--closed-peer] [--json]";
+"provenance.demoSeed.lifecycleFailed" = "Could not close the seeded peer session.";

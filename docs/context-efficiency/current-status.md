@@ -136,6 +136,123 @@ durable engineering evidence. The merged local slice remains under observation;
 the external and conversation slices await tagged dogfood and merge. See [the local record](../planning/work-brief-implementation.md)
 and [the external record](../planning/work-brief-external.md).
 
+## Cross-session context work package
+
+The cross-session context assembly experiment now tracks three sequential
+slices: current-caller retrieval, task relevance, and ordinary-agent evaluation.
+Only the first is selected; its implementation is under local verification and
+its live acceptance remains open. The later slices are not implemented.
+The existing explicit-ID retrieval and Smart Session awareness remain implemented.
+The Knowledge Compiler bridge is outside this work package.
+
+Current-main inspection: `CLI/BMUXCLI+ProvenanceSessionsRetrieval.swift` uses
+`relatedSessions(...)` with an explicit PE ID, and the existing collision read
+starts with the target's changed artifacts. PE's related-session documentation
+already describes same-repository relationship evidence and bounded briefs.
+`CLI/BMUXCLI+SessionsList.swift` tracks active provider sessions per surface;
+`WorkProvenanceSessionLifecycleRecorder` records provider identities, but its
+sidecar lifecycle path has no workspace or surface ID. Do not assume these
+facts alone prove a unique caller-to-PE link. The current CLI verifies the live
+caller surface, provider hook record, provider thread and PE association; ordinary
+terminal capture still needs live validation, including restart and pane reuse.
+
+Slice 1 has a PE caller-association prerequisite in progress: the public read
+can constrain workspace, surface, and provider identity together and reports
+ambiguous matches. Seven focused SQLite association tests pass. A separate PE
+fixture confirms a fresh session with no changed artifacts finds active and
+closed same-repository peers with evidence-backed reasons. A focused regression
+also covers an older delayed association after a resume; the projection retains
+the newer surface and provider identity. Schema 31 adds independent observation
+times for the two identity fields, so a later observation that omits either
+field does not mask an earlier identity update. Upgraded rows initialize those
+times conservatively from the existing last observation, because the old
+projection did not retain per-field times; replay from the ledger reconstructs
+the precise times. The migration and use alongside an older running build still
+need isolated runtime verification. The current CLI path and 12 KiB compact
+JSON response are implemented locally. The focused CLI fixture passes for two
+caller surfaces, active and closed peers, stale failed validation, explicit-ID
+and outcome drill-down, missing app linkage, and output-budget omissions. Build
+942 succeeded on commit `30f9de034`. An ordinary Codex invocation against
+isolated PE data captured the session association, but sandboxed socket access
+returned `app_linkage_unavailable`; with approved socket access the query found
+that Codex does not populate the active-surface hook map. A separate red regression and resolver correction now pass all three focused
+CLI tests. A repeat invocation from that Codex session, with approved socket
+access and the corrected CLI, returned both seeded peers (active and completed)
+using `same_repository`: 9,840 bytes, no budget omissions, completed outcome
+revision `session-outcome-revision-bec735faa019da61440c2705`. The running app was build 942. Isolated tagged build 943 (`cross-session-current-fix`)
+succeeded on the pushed implementation; its CLI repeated the same 9,840-byte
+result from the original live pane with approved socket access. The completed
+revision was also inspected with no app socket. Sandbox access without
+escalation remains an open limitation; a fresh session in build 943, actual
+resume/pane-reuse scenarios, and user dogfood remained unverified at that point. The hook store
+retains earlier Codex sessions and does not identify the current surface owner.
+When multiple records name the same workspace and surface, caller retrieval now
+fails closed with `ambiguous_caller` and recommends a fresh pane; successful
+reuse of that pane remains an unmet acceptance criterion. The store prunes
+records after seven days without an update when a subsequent store operation
+runs, but that delay is not an ownership guarantee.
+The ordinary shared Codex app-server was observed running hooks for two panes
+with the first pane's inherited workspace, surface, and PID. A diagnostic
+`codex --no-daemon` invocation linked its own pane, but does not establish
+support for default launches. A process-ancestry guard now rejects the observed
+`codex app-server --managed-daemon` shape while walking to the hook-record PID,
+and returns unavailable if that PID is missing, unreachable, or cannot be
+inspected; unrecognized daemon shapes remain unverified. Default
+shared-daemon retrieval remains unsupported. Socket-unavailable responses now
+describe app, path, and sandbox recovery in both text and machine-readable form;
+later tagged runtime evidence is recorded below.
+In an isolated build 944 fixture using the normal PATH shim and managed Codex
+0.162.0, sessions `01a1d1ab-82ce-7132-ac45-b69d9b6bd2a3` and
+`01a1d1ac-2b5d-7de1-a9eb-8848bfca21e2` each resolved itself and returned the
+other, with approved socket access. Their compact responses measured 11,755 and
+11,746 bytes, respectively, with two budget omissions each. The subsequent
+owner-boundary test CLI returned the first target with its peer (12,097 bytes)
+and rejected the direct shared-daemon caller as `caller_ownership_unavailable`.
+Build 944 predates the socket and ownership corrections. Earlier shared-daemon hook ingestion persisted misattributed workspace, surface,
+and boundary evidence; the read guard does not repair that existing history.
+Newly generated hooks mark untrusted or uninspectable parentage before detaching;
+the worker omits pane-bound PE association and transcript-monitor startup without
+an affirmative marker while retaining ordinary lifecycle handling. Older installed
+hooks lack the marker and likewise fail closed for these PE writes until refreshed
+with `bmux hooks setup codex`; normal wrapper launches regenerate their scripts.
+The probe checks the observed immediate-parent shape, so other daemon arrangements
+and PID reuse in the OS process snapshot remain unverified.
+With the refreshed test CLI and isolated build 944 app, normal-shim session
+`01a1d22d-d42b-7f53-a84f-71d0805a1c9b` retained its PE session and workspace
+association and retrieved the two seeded peers (9,840 bytes). After turn
+completion, direct shared-daemon sessions `01a1d22e-bf17-7ff0-9312-b021e3de186f`
+and `01a1d22f-5160-7b21-bfe6-8a26d721faf9` retained lifecycle records but had
+no PE session or workspace-association rows. This check used isolated data;
+that check used a test-built CLI.
+Two further isolated normal-shim sessions with a custom Codex 0.162.1 binary
+also resolved their own target and returned the other (8,588 bytes and three
+budget omissions each). Their tty-attached hook processes recorded matching
+workspace and surface associations. Separate unwrapped persistent-hook sessions
+used the shared daemon and did not establish that binding.
+
+Tagged build 948 (`cross-session-attested`) succeeded on implementation commit
+`14c437c8c`, using an isolated home, hook store and PE database. An ordinary
+managed Codex session `01a1d235-ffbd-74b2-8305-3c94b1cd2add` retrieved the
+seeded active and completed sessions before edits with approved socket access:
+9,840 bytes and zero budget omissions. After exiting and resuming that session
+in another pane, the same query returned the same target and peers, also 9,840
+bytes; the related-session revision was
+`related-session-revision-0026a76e491506f04fcd1848`. This verifies the observed
+resume path. A new session in the vacated pane resolved itself and returned the
+resumed session, with one budget omission (8,376 bytes). After that session
+exited, another fresh session in the same pane returned `ambiguous_caller` and
+`start_fresh_pane`: retained records prevent successful reuse when multiple
+records claim the pane. The default sandbox denied socket access without approval. Build 948 updates PE
+to schema 31; use isolated data while an older app is running. The older app
+rejects newer schema, so do not point it at the upgraded database. CI Project
+Truth passed; workflow guards are blocked by expired unrelated feature flags,
+which also prevent downstream checks. Human dogfood remains open.
+
+Remaining work: implement and verify all three slices, record a bounded output
+contract and corpus thresholds, run Project Truth gates after each slice, build
+an isolated tagged app, and capture ordinary Codex end-to-end observations. The
+new worktree is based on `6cc13bfc8`; the original checkout has unrelated edits.
+
 ## Current Generated Truth
 
 - [Project status](../generated/project-status.md)

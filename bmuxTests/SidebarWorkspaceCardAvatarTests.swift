@@ -28,6 +28,7 @@ extension SidebarWorkspaceCardPresentationTests {
         let item = WorkspaceExplorerHistoryItem(
             id: workspaceID.uuidString, title: "Review roof inspection", createdAt: now,
             closedAt: nil, lastActivityAt: now, colorHex: nil, display: display,
+            repositoryID: display.repositoryID,
             liveWorkspaceID: workspaceID, liveStatus: .idle, archive: nil,
             reopenEligibility: .unavailable(.alreadyOpen)
         )

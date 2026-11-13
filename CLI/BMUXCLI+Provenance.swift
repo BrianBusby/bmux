@@ -7,6 +7,7 @@ extension BMUXCLI {
         commandArgs: [String],
         jsonOutput: Bool,
         explicitSocketPath: String? = nil,
+        explicitSocketPassword: String? = nil,
         processEnv: [String: String] = ProcessInfo.processInfo.environment,
         cliBundleIdentifier: String? = CLISocketPathResolver.currentAppBundleIdentifier()
     ) async throws {
@@ -30,7 +31,11 @@ extension BMUXCLI {
         case "sessions":
             try await runProvenanceSessions(
                 commandArgs: Array(commandArgs.dropFirst()),
-                jsonOutput: jsonOutput
+                jsonOutput: jsonOutput,
+                explicitSocketPath: explicitSocketPath,
+                explicitSocketPassword: explicitSocketPassword,
+                processEnv: processEnv,
+                cliBundleIdentifier: cliBundleIdentifier
             )
         case "turn":
             try await runProvenanceTurn(
@@ -1218,79 +1223,6 @@ extension BMUXCLI {
             "event_sequence": display.latestEventSequence
         ])
         return payload
-    }
-
-    func provenanceStableWorkspaceIDForRuntimeWorkspace(
-        _ workspaceID: String,
-        explicitSocketPath: String?,
-        processEnv: [String: String],
-        cliBundleIdentifier: String?
-    ) -> String? {
-        let requestedSocketPath: String
-        let socketPathSource: CLISocketPathSource
-        do {
-            if let explicitSocketPath {
-                requestedSocketPath = explicitSocketPath
-                socketPathSource = .explicitFlag
-            } else if let envSocketPath = try CLISocketEnvironment.socketPath(in: processEnv) {
-                requestedSocketPath = envSocketPath
-                socketPathSource = CLISocketPathResolver.isImplicitDefaultPath(
-                    envSocketPath,
-                    bundleIdentifier: cliBundleIdentifier,
-                    environment: processEnv
-                ) ? .implicitDefault : .environment
-            } else {
-                requestedSocketPath = CLISocketPathResolver.defaultSocketPath(
-                    bundleIdentifier: cliBundleIdentifier,
-                    environment: processEnv
-                )
-                socketPathSource = .implicitDefault
-            }
-        } catch {
-            return nil
-        }
-
-        let socketPath = CLISocketPathResolver.resolve(
-            requestedPath: requestedSocketPath,
-            source: socketPathSource,
-            environment: processEnv,
-            bundleIdentifier: cliBundleIdentifier
-        )
-        let client = SocketClient(path: socketPath)
-        defer { client.close() }
-        guard (try? client.connect()) != nil,
-              let payload = try? client.sendV2(method: "workspace.list") else {
-            return nil
-        }
-        return provenanceStableWorkspaceID(fromWorkspaceListPayload: payload, matching: workspaceID)
-    }
-
-    private func provenanceStableWorkspaceID(
-        fromWorkspaceListPayload payload: [String: Any],
-        matching workspaceID: String
-    ) -> String? {
-        let requested = workspaceID.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !requested.isEmpty,
-              let workspaces = payload["workspaces"] as? [[String: Any]] else {
-            return nil
-        }
-        for workspace in workspaces {
-            let candidates = [
-                workspace["id"] as? String,
-                workspace["ref"] as? String,
-                workspace["stable_workspace_id"] as? String,
-            ]
-            guard candidates.contains(where: { candidate in
-                guard let candidate else { return false }
-                return candidate.compare(requested, options: [.caseInsensitive]) == .orderedSame
-            }) else {
-                continue
-            }
-            let stableWorkspaceID = (workspace["stable_workspace_id"] as? String)?
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            return stableWorkspaceID?.isEmpty == false ? stableWorkspaceID : nil
-        }
-        return nil
     }
 
     private func provenanceWorkspaceDisplayCurrentStatePayload(
