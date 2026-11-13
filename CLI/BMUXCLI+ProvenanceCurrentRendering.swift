@@ -21,7 +21,7 @@ extension BMUXCLI {
         }
         func reference(_ input: ProvenanceRelatedSessionEvidenceReference) -> [String: Any] {
             ["kind": input.kind, "id": input.id, "revision": value(input.projectionRevisionID),
-             "sequence": value(input.eventSequence)]
+             "sequence": value(input.eventSequence), "field": value(input.field), "source_state": value(input.sourceState)]
         }
         func brief(_ item: ProvenanceRelatedSessionBrief) throws -> [String: Any] {
             let outcome = item.outcomeBrief
@@ -86,7 +86,16 @@ extension BMUXCLI {
             ]
             return [
                 "session_id": item.sessionID, "lifecycle": item.lifecycleState, "completion": item.completionState,
-                "reasons": item.relationshipReasons.map { $0.kind.rawValue }, "boundary": boundaryFields,
+                "reasons": item.relationshipReasons.map { $0.kind.rawValue },
+                "match_evidence": item.relationshipReasons.filter {
+                    $0.kind == .requestedArtifact || $0.kind == .objectiveTextMatch || $0.kind == .currentWorkspaceTicket
+                }.map { reason in
+                    let revisionReferences = reason.evidence.filter { $0.projectionRevisionID != nil }
+                    let otherReferences = reason.evidence.filter { $0.projectionRevisionID == nil }
+                    return ["kind": reason.kind.rawValue, "value": optional(reason.relatedValue),
+                            "evidence": (revisionReferences + otherReferences).prefix(3).map(reference),
+                            "evidence_omitted": max(0, reason.evidence.count - 3)] as [String: Any]
+                }, "boundary": boundaryFields,
                 "freshness": freshness, "outcome_revision": value(item.sessionOutcomeRevisionID),
                 "objectives": (outcome?.objectives.prefix(2) ?? []).map(fact),
                 "blockers": (outcome?.blockers.prefix(2) ?? []).map(fact),
@@ -105,6 +114,9 @@ extension BMUXCLI {
                        "revision": projection.projection.revisionID,
                        "watermark": value(projection.projection.sourceEvidenceWatermark),
                        "completeness": projection.completeness.status,
+                       "projection_availability": projection.completeness.fields.map {
+                           ["field": $0.field, "status": $0.status, "reason": value($0.reason)]
+                       },
                        "completeness_notes": projection.completeness.notes.map { text($0) },
                        "completeness_notes_truncated": projection.completeness.notes.contains { $0.count > 160 },
                        "exclusions_retained": projection.excludedCandidates.count,

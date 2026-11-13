@@ -4830,7 +4830,7 @@ roadmap:
       execution:
         assignment: planned
         assigned_to: shared
-        notes: PE owns deterministic repository-scoped path, ticket and objective relevance, evidence revisions, freshness, supersession, and omissions. Evaluate a predeclared corpus before advancing.
+        notes: Preliminary PE and CLI implementation supports repository-scoped exact paths, current workspace ticket IDs and literal objective matches, with partial evidence availability and bounded match references. Focused PE and CLI tests pass; caller validation, full predeclared corpus, tagged build, live verification, supersession chronology and acceptance remain open.
       delivery_status: proposed
       acceptance_status: proposed
       acceptance:

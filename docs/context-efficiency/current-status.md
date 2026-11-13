@@ -260,6 +260,17 @@ work. Ticket facts are workspace display data, with session-to-workspace links
 available through the existing workspace session projection; historical ticket
 validity and source revisions require further investigation.
 
+Slice 2 preliminary implementation adds PE-owned exact path, exact current
+workspace ticket and literal objective selectors, combined as an intersection
+within the target's observed repository. Direct matches retain reasons and
+source references; task evidence availability is partial when coverage is
+unknown. The CLI accepts the selectors and includes match evidence. Two focused
+PE fixture tests pass, including stable limit omissions and a recorded blocker
+resolution; the broader related session suites passed 22 tests. The focused
+macOS CLI suite passed five tests, including all three selectors. Tagged build, complete corpus,
+supersession case and live acceptance remain unverified. Slice 1's reuse and
+shared-daemon limitations still apply; the task relevance gate is not validated.
+
 Remaining work: implement and verify all three slices, record a bounded output
 contract and corpus thresholds, run Project Truth gates after each slice, build
 an isolated tagged app, and capture ordinary Codex end-to-end observations. The

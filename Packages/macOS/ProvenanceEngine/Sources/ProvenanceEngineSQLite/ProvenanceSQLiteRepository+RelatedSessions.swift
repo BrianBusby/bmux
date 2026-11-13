@@ -41,6 +41,19 @@ extension ProvenanceSQLiteRepository {
     func projectedRelatedSessions(
         _ request: ProvenanceRelatedSessionRequest
     ) throws -> ProvenanceRelatedSessionProjection {
+        if let path = request.artifactPath {
+            let components = path.split(separator: "/", omittingEmptySubsequences: false)
+            guard !path.isEmpty, !path.hasPrefix("/"),
+                  components.allSatisfy({ !$0.isEmpty && $0 != "." && $0 != ".." }) else {
+                throw ProvenanceSQLiteError.sqlite(message: "invalid repository-relative artifact path")
+            }
+        }
+        if let objective = request.objective, objective.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            throw ProvenanceSQLiteError.sqlite(message: "invalid objective text")
+        }
+        if let ticket = request.ticket, ticket.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            throw ProvenanceSQLiteError.sqlite(message: "invalid ticket ID")
+        }
         let resultLimit = max(0, request.limit)
         let exclusionLimit = max(0, request.exclusionLimit)
         let latestSequence = try relatedSessionLatestLedgerSequence()
@@ -48,7 +61,10 @@ extension ProvenanceSQLiteRepository {
         let requestFingerprint = relatedSessionRequestFingerprint(
             limit: resultLimit,
             updatedAfter: request.updatedAfter,
-            exclusionLimit: exclusionLimit
+            exclusionLimit: exclusionLimit,
+            artifactPath: request.artifactPath,
+            objective: request.objective,
+            ticket: request.ticket
         )
         let target = try relatedSessionProfile(sessionID: request.targetSessionID)
         let targetProfile = try requireRelatedSessionProfile(target, sessionID: request.targetSessionID)
@@ -70,11 +86,44 @@ extension ProvenanceSQLiteRepository {
                 continue
             }
 
-            let reasons = relatedSessionReasons(
+            var reasons = relatedSessionReasons(
                 target: targetProfile,
                 candidate: candidateProfile,
                 treeContext: treeContext
             )
+            if let path = request.artifactPath {
+                let key = relatedSessionArtifactKey(path)
+                guard !targetProfile.repositoryKeys.intersection(candidateProfile.repositoryKeys).isEmpty,
+                      candidateProfile.artifactKeys.contains(key) else { continue }
+                reasons.append(ProvenanceRelatedSessionRelationshipReason(
+                    kind: .requestedArtifact, targetValue: path, relatedValue: path,
+                    evidence: candidateProfile.artifactEvidence[key] ?? [],
+                    observedAt: candidateProfile.observedAt[key]
+                ))
+                reasons.sort(by: relatedSessionReasonSort)
+            }
+            if let objective = request.objective {
+                guard !targetProfile.repositoryKeys.intersection(candidateProfile.repositoryKeys).isEmpty,
+                      let outcome = candidateProfile.outcome else { continue }
+                let matches = outcome.objectives.filter {
+                    $0.text.range(of: objective, options: [.caseInsensitive, .literal]) != nil
+                }
+                guard !matches.isEmpty else { continue }
+                let evidence = uniqueRelatedSessionEvidence(
+                    matches.flatMap { relatedSessionEvidence($0.evidence) } + [relatedSessionEvidence(outcome)]
+                )
+                reasons.append(ProvenanceRelatedSessionRelationshipReason(
+                    kind: .objectiveTextMatch, targetValue: objective, relatedValue: objective,
+                    evidence: evidence, observedAt: outcome.projection.generatedAt
+                ))
+                reasons.sort(by: relatedSessionReasonSort)
+            }
+            if let ticket = request.ticket {
+                guard !targetProfile.repositoryKeys.intersection(candidateProfile.repositoryKeys).isEmpty,
+                      let reason = try relatedSessionCurrentTicketReason(ticket, candidate: candidateProfile) else { continue }
+                reasons.append(reason)
+                reasons.sort(by: relatedSessionReasonSort)
+            }
             guard !reasons.isEmpty else { continue }
 
             if let updatedAfter = request.updatedAfter,
@@ -151,12 +200,28 @@ extension ProvenanceSQLiteRepository {
             sourceEvidenceWatermark: latestSequence,
             generatedAt: generatedAt ?? targetProfile.session.updatedAt
         )
-        let completeness = relatedSessionProjectionCompleteness(
+        let baseCompleteness = relatedSessionProjectionCompleteness(
             target: targetProfile,
             relatedSessions: Array(relatedSessions),
             excludedCandidates: exclusions,
             evaluatedThroughSequence: latestSequence
         )
+        let hasSelectors = request.artifactPath != nil || request.objective != nil || request.ticket != nil
+        let completeness: ProvenanceRelatedSessionCompleteness
+        if hasSelectors {
+            let reason = targetProfile.repositoryKeys.isEmpty
+                ? "target_repository_unavailable" : "task_evidence_coverage_unknown"
+            completeness = ProvenanceRelatedSessionCompleteness(
+                status: relatedSessions.isEmpty ? "empty" : "partial", evaluatedThroughSequence: latestSequence,
+                fields: baseCompleteness.fields + [.init(field: "task_selector_evidence", status: "partial", reason: reason)],
+                notes: baseCompleteness.notes + [
+                    "task selectors require all supplied conditions within the caller's repository; missing source metadata may hide matches",
+                    "ticket matches describe current workspace metadata; its validity during a historical session is unknown",
+                ]
+            )
+        } else {
+            completeness = baseCompleteness
+        }
         return ProvenanceRelatedSessionProjection(
             targetSessionID: request.targetSessionID,
             targetSession: targetProfile.session,

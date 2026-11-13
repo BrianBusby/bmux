@@ -9,7 +9,7 @@ extension BMUXCLI {
               bmux provenance worktrees list [--json]
               bmux provenance sessions tree <session-id> [--json]
               bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]
-              bmux provenance sessions related --current [--limit <1-5>] [--database <path>] [--json]
+              bmux provenance sessions related --current [--artifact-path <repo-relative-path>] [--ticket <id>] [--objective <text>] [--limit <1-5>] [--database <path>] [--json]
               bmux provenance sessions collisions <pe-session-id> [--limit <count>] [--related-session-limit <count>] [--exclusion-limit <count>] [--artifact-path <repo-relative-path>] [--updated-after <timestamp>] [--stale-before <timestamp>] [--revision <revision-id>] [--database <path>] [--json]
               bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]
               bmux provenance session outcome <session-id> [--revision <revision-id>] [--database <path>] [--json]

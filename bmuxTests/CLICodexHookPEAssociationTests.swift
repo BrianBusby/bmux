@@ -83,7 +83,7 @@ struct CLICodexHookPEAssociationTests {
         let surface = "22222222-2222-2222-2222-222222222222"
         let commands = CodexHookCapturedSocketCommands()
         startCodexHookMockSocketServerAccepting(listenerFD: listener, commands: commands, surfaceId: surface,
-            connectionLimit: 16, runtimeWorkspaceId: workspace, stableWorkspaceId: stable)
+            connectionLimit: 32, runtimeWorkspaceId: workspace, stableWorkspaceId: stable)
         let environment = ["HOME": root.path, "CFFIXED_USER_HOME": root.path, "BMUX_PROVENANCE_HOME": root.path,
             "PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "PWD": root.path, "BMUX_SOCKET_PATH": socketPath,
             "BMUX_WORKSPACE_ID": workspace, "BMUX_STABLE_WORKSPACE_ID": stable, "BMUX_SURFACE_ID": surface,
@@ -263,7 +263,7 @@ struct CLICodexHookPEAssociationTests {
             timestamp: now, repositoryID: repository.id, worktreeID: worktree.id, source: .observed, confidence: .high,
             payload: .init(repository: repository, worktree: worktree))))
         for (id, status) in [(sessionID, "active"), ("related-active", "active"), ("related-closed", "completed")] {
-            let session = ProvenanceSessionRecord(id: id, agentKind: "codex", worktreeID: worktree.id,
+            let session = ProvenanceSessionRecord(id: id, agentKind: "codex", workspaceID: "workspace-\(id)", worktreeID: worktree.id,
                 status: status, startedAt: now, updatedAt: now)
             let association: ProvenanceWorkspaceCodingAgentSessionAssociationRecord? = id == sessionID
                 ? .init(id: "association", workspaceID: stable, sessionID: id, agentKind: "codex", rawSessionID: id,
@@ -290,6 +290,24 @@ struct CLICodexHookPEAssociationTests {
         _ = try await client.appendEvent(.init(event: ProvenanceEvent(id: "closed-command-event", eventType: .codingAgentCommandCompleted,
             timestamp: now, worktreeID: worktree.id, sessionID: "related-closed", source: .observed, confidence: .high,
             payload: .init(codingAgentCommand: failed))))
+        let prompt = ProvenanceCodingAgentPromptRecord(id: "closed-prompt", sessionID: "related-closed",
+            threadID: thread.id, turnID: turn.id, provider: "codex", text: "Repair roof flashing",
+            submittedAt: now, source: .observed, confidence: .high)
+        let files = ProvenanceCodingAgentFileChangeAttributionRecord(id: "closed-files", sessionID: "related-closed",
+            threadID: thread.id, turnID: turn.id, provider: "codex", operationID: "file-operation",
+            changeSetID: nil, fileChangeIDs: [], paths: ["Sources/Flashing.swift"], summary: nil,
+            observedAt: now, source: .observed, confidence: .high)
+        let display = ProvenanceWorkspaceDisplayRecord(id: "closed-display", workspaceID: "workspace-related-closed",
+            repositoryID: repository.id, ticketIDs: ["ROOF-42"], observedAt: now, updatedAt: now)
+        for (id, type, payload) in [
+            ("closed-prompt-event", ProvenanceEventType.codingAgentPromptSubmitted, ProvenanceEventPayload(codingAgentPrompt: prompt)),
+            ("closed-files-event", ProvenanceEventType.codingAgentFileChangeAttributed, ProvenanceEventPayload(codingAgentFileChangeAttribution: files)),
+            ("closed-display-event", ProvenanceEventType.workspaceDisplayObserved, ProvenanceEventPayload(workspaceDisplay: display)),
+        ] {
+            _ = try await client.appendEvent(.init(event: ProvenanceEvent(id: id, eventType: type,
+                timestamp: now, repositoryID: repository.id, worktreeID: worktree.id, sessionID: "related-closed",
+                source: .observed, confidence: .high, payload: payload)))
+        }
         var hookState: [String: Any] = [
             "version": 1,
             "activeSessionsBySurface": [:],
@@ -313,6 +331,22 @@ struct CLICodexHookPEAssociationTests {
         #expect(Set(results.compactMap { $0["session_id"] as? String }) == ["related-active", "related-closed"])
         #expect(payload["target_session_id"] as? String == sessionID)
         #expect(result.stdout.utf8.count <= 16 * 1024)
+        for (option, value, reason) in [
+            ("--artifact-path", "Sources/Flashing.swift", "requested_artifact"),
+            ("--ticket", "ROOF-42", "current_workspace_ticket"),
+            ("--objective", "repair roof", "objective_text_match"),
+        ] {
+            let selected = runCodexHookProcess(executablePath: cliPath,
+                arguments: ["--json", "provenance", "sessions", "related", "--current", option, value,
+                            "--database", database.path], environment: environment, timeout: 15)
+            #expect(selected.status == 0, Comment(rawValue: selected.stderr))
+            let selectedPayload = try #require(try JSONSerialization.jsonObject(with: Data(selected.stdout.utf8)) as? [String: Any])
+            let selectedResults = try #require(selectedPayload["results"] as? [[String: Any]])
+            #expect(selectedResults.compactMap { $0["session_id"] as? String } == ["related-closed"])
+            let matches = try #require(selectedResults.first?["match_evidence"] as? [[String: Any]])
+            #expect(matches.contains { ($0["kind"] as? String) == reason && !($0["evidence"] as? [[String: Any]] ?? []).isEmpty })
+            #expect(selected.stdout.utf8.count <= 12 * 1024 + 1)
+        }
         // A retained PID that is not an ancestor cannot establish ownership.
         var unknownOwnerState = hookState
         var unknownSessions = try #require(unknownOwnerState["sessions"] as? [String: Any])
