@@ -1404,7 +1404,8 @@ actor ProvenanceSQLiteRepository {
                 providerThreads: providerThreads,
                 latestTurn: latestTurn,
                 priorTurns: priorTurns,
-                turns: turns
+                turns: turns,
+                proposedPlanObservations: try recentProposedPlanObservations(sessionID: request.sessionID)
             )
         )
     }

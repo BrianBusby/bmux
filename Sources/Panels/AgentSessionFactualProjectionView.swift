@@ -319,6 +319,41 @@ struct AgentSessionFactualProjectionView: View {
                 mutedText(String(localized: "agentSession.factual.noTurns", defaultValue: "No turns observed."))
             }
 
+            if !snapshot.proposedPlanObservations.isEmpty {
+                overviewDisclosure(
+                    title: String(localized: "agentSession.factual.proposedPlans", defaultValue: "Proposed plans"),
+                    detail: String(localized: "agentSession.factual.recentObservations", defaultValue: "Recent observations"),
+                    isAvailable: true,
+                    icon: "doc.text"
+                ) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(snapshot.proposedPlanObservations) { observation in
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text(observation.timestamp, style: .date)
+                                    Text(observation.timestamp, style: .time)
+                                }
+                                .foregroundStyle(Color.bmuxTextTertiary)
+                                HStack {
+                                    Text(String(localized: "agentSession.factual.proposalSource", defaultValue: "Source:"))
+                                    Text(observation.proposal.provider)
+                                    Text(String(localized: "agentSession.factual.proposalEvidence", defaultValue: "Evidence:"))
+                                    Text(observation.id).textSelection(.enabled)
+                                }
+                                .foregroundStyle(Color.bmuxTextTertiary)
+                                Text(observation.proposal.text)
+                                    .textSelection(.enabled)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                if observation.proposal.truncated {
+                                    Text(String(localized: "agentSession.factual.proposalTruncated", defaultValue: "Proposal text was truncated."))
+                                        .foregroundStyle(Color.bmuxTextTertiary)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             section(String(localized: "agentSession.factual.priorTurns", defaultValue: "Previous turns")) {
                 ExpandedTurnHistoryView(items: AgentSessionFactualProjectionEvidenceRows.priorTurnItems(for: snapshot))
                     .id(snapshot.session.id)
@@ -344,7 +379,7 @@ struct AgentSessionFactualProjectionView: View {
         }
     }
 
-    private func overviewDisclosure<Content: View>(title: String, detail: String, isAvailable: Bool, @ViewBuilder content: () -> Content) -> some View {
+    private func overviewDisclosure<Content: View>(title: String, detail: String, isAvailable: Bool, icon: String? = nil, @ViewBuilder content: () -> Content) -> some View {
         let contentView = content()
         return DisclosureGroup {
             if isAvailable {
@@ -354,7 +389,7 @@ struct AgentSessionFactualProjectionView: View {
             }
         } label: {
             HStack(spacing: 10) {
-                Image(systemName: title == String(localized: "agentSession.factual.plan", defaultValue: "Plan & progress") ? "checklist" : "checkmark.circle")
+                Image(systemName: icon ?? (title == String(localized: "agentSession.factual.plan", defaultValue: "Plan & progress") ? "checklist" : "checkmark.circle"))
                     .foregroundStyle(Color.bmuxTextSecondary)
                 Text(title).foregroundStyle(Color.bmuxTextPrimary)
                 Spacer()

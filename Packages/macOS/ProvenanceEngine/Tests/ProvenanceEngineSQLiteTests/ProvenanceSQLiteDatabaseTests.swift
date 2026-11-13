@@ -531,6 +531,7 @@ struct ProvenanceSQLiteDatabaseTests {
         )
         let event = ProvenanceEvent(
             id: "proposal", eventType: .codingAgentProposedPlanObserved,
+            timestamp: Date(timeIntervalSince1970: 1_800_000_000),
             sessionID: "session", source: .observed, confidence: .high,
             payload: ProvenanceEventPayload(codingAgentProposedPlan: plan)
         )

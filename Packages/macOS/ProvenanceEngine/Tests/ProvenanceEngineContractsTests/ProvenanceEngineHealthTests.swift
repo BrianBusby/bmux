@@ -273,6 +273,7 @@ struct ProvenanceEngineHealthTests {
         let snapshot = try JSONDecoder().decode(ProvenanceFactualSessionProjectionSnapshot.self, from: data)
 
         #expect(snapshot.revision == 7)
+        #expect(snapshot.proposedPlanObservations.isEmpty)
         #expect(snapshot.providerThreadIdentities == [
             ProvenanceFactualSessionProjectionProviderThreadIdentity(thread: snapshot.providerThreads[0]),
         ])

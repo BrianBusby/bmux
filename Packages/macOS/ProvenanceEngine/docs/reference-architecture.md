@@ -705,6 +705,20 @@ predecessor validation in the same transaction as publication, along with
 explicit retry, idempotence, and conflict semantics. All competing writers must
 participate before this can be treated as a global publication fence.
 
+The factual session snapshot may also expose recent proposed-plan observations
+from the immutable event ledger. Each observation retains its event ID, ledger
+sequence, source timestamp, provider identities, and whether its prose was
+truncated. A bounded scan examines the latest 5,000 session events and returns
+at most 50 matching observations in append order, newest first; omitted history
+remains in the ledger. The list does not assert completeness, current validity,
+checklist progress, or an inferred turn association. Session and payload ownership
+must agree. It is read within the same SQLite snapshot as the factual revision.
+Codex CLI capture requires matching explicit transcript thread, turn, and item
+identities; identical provider items replay idempotently while differing payloads
+remain distinct evidence. Existing transcripts are subject to their ordinary
+retention policy. Old writers, upstream observation gaps, cross-surface display,
+and mixed-version rollout remain outside this bounded read guarantee.
+
 The first planned vertical slice should validate richer coding-agent evidence
 ingestion, deterministic factual session projections, evidence-backed inference,
 nested milestones, scoped architecture synthesis, provenance/confidence, and

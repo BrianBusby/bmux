@@ -20,6 +20,34 @@ struct SessionProjectionSnapshotTests {
     }
 
     @Test
+    func proposalsAreScopedHistoricalEvidenceAfterReopen() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-proposal-projection-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("provenance.sqlite")
+        let writer = try ProvenanceSQLiteRepository(url: url)
+        let fixture = WorkModelFixture()
+        try await fixture.appendSessionThreadAndTurn(fixture.turn(status: "started"), into: writer)
+        func proposal(_ id: String, eventSession: String, payloadSession: String) -> ProvenanceEvent {
+            ProvenanceEvent(id: id, eventType: .codingAgentProposedPlanObserved,
+                timestamp: fixture.timestamp, sessionID: eventSession, source: .observed, confidence: .high,
+                payload: ProvenanceEventPayload(codingAgentProposedPlan: .init(
+                    sessionID: payloadSession, provider: "codex", providerSessionID: "provider-session",
+                    providerTurnID: "unmatched-turn", providerItemID: id, text: id, truncated: false)))
+        }
+        try await writer.appendEvent(proposal("first", eventSession: fixture.session.id, payloadSession: fixture.session.id))
+        try await writer.appendEvent(proposal("foreign-payload", eventSession: fixture.session.id, payloadSession: "foreign"))
+        try await writer.appendEvent(proposal("foreign-event", eventSession: "foreign", payloadSession: "foreign"))
+        try await writer.appendEvent(proposal("second", eventSession: fixture.session.id, payloadSession: fixture.session.id))
+        let reader = try ProvenanceSQLiteRepository(url: url)
+        let snapshot = try #require(await reader.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id)).snapshot)
+        #expect(snapshot.proposedPlanObservations.map(\.id) == ["second", "first"])
+        #expect(snapshot.proposedPlanObservations.allSatisfy { $0.proposal.providerTurnID == "unmatched-turn" })
+        #expect(snapshot.proposedPlanObservations.allSatisfy { $0.sequence <= (snapshot.revision ?? 0) })
+        #expect(snapshot.latestTurn?.currentPlan == nil)
+    }
+
+    @Test
     func nestedSnapshotFailurePreservesOuterTransaction() throws {
         enum TestError: Error { case expected }
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-nested-snapshot-\(UUID().uuidString)")
@@ -110,6 +138,11 @@ struct SessionProjectionSnapshotTests {
         guard entered else { continueRead.signal(); Issue.record("Reader did not reach the interleaving point"); _ = try? await readTask.value; return }
         do {
             try await fixture.append(fixture.prompt("New evidence", turnID: turn.id), into: writer)
+            try await writer.appendEvent(ProvenanceEvent(
+                id: "concurrent-proposal", eventType: .codingAgentProposedPlanObserved,
+                sessionID: fixture.session.id, source: .observed, confidence: .high,
+                payload: ProvenanceEventPayload(codingAgentProposedPlan: .init(
+                    sessionID: fixture.session.id, provider: "codex", text: "Plan", truncated: false))))
         } catch {
             continueRead.signal()
             _ = try? await readTask.value
@@ -122,6 +155,8 @@ struct SessionProjectionSnapshotTests {
             ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id)).snapshot)
         #expect(observed.revision == original.revision)
         #expect(observed.latestTurn?.submittedPrompt == nil)
+        #expect(observed.proposedPlanObservations.isEmpty)
+        #expect(current.proposedPlanObservations.map(\.id) == ["concurrent-proposal"])
         #expect(current.revision != original.revision)
         #expect(current.latestTurn?.submittedPrompt?.text == "New evidence")
     }

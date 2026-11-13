@@ -5480,6 +5480,91 @@
         }
       }
     },
+    "agentSession.factual.proposalTruncated": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposal text was truncated."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提案のテキストは途中で省略されています。"
+          }
+        }
+      }
+    },
+    "agentSession.factual.proposedPlans": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposed plans"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提案されたプラン"
+          }
+        }
+      }
+    },
+    "agentSession.factual.recentObservations": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent observations"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近確認された内容"
+          }
+        }
+      }
+    },
+    "agentSession.factual.proposalSource": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出典:"
+          }
+        }
+      }
+    },
+    "agentSession.factual.proposalEvidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evidence:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "証拠:"
+          }
+        }
+      }
+    },
     "agentSession.factual.priorTurns": {
       "extractionState": "manual",
       "localizations": {

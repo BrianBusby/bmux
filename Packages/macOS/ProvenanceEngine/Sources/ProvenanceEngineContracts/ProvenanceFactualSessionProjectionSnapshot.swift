@@ -1,5 +1,21 @@
 import Foundation
 
+/// One observed proposal and its immutable ledger reference. It is not a checklist
+/// or a claim that the proposal is still current.
+public struct ProvenanceFactualProposedPlanObservation: Codable, Equatable, Sendable, Identifiable {
+    public let id: String
+    public let sequence: Int
+    public let timestamp: Date
+    public let proposal: ProvenanceCodingAgentProposedPlanRecord
+
+    public init(id: String, sequence: Int, timestamp: Date, proposal: ProvenanceCodingAgentProposedPlanRecord) {
+        self.id = id
+        self.sequence = sequence
+        self.timestamp = timestamp
+        self.proposal = proposal
+    }
+}
+
 /// Factual, deterministic projection snapshot for one coding-agent session.
 public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Sendable {
     /// Monotonically increasing ledger revision current at read time.
@@ -23,6 +39,10 @@ public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Se
     /// Observed turns with only evidence directly linked to each turn.
     public let turns: [ProvenanceFactualSessionProjectionTurnSnapshot]
 
+    /// Recent proposal observations within a bounded ledger window. Older
+    /// observations remain in the ledger; this is not exhaustive coverage.
+    public let proposedPlanObservations: [ProvenanceFactualProposedPlanObservation]
+
     private enum CodingKeys: String, CodingKey {
         case revision
         case session
@@ -31,6 +51,7 @@ public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Se
         case latestTurn
         case priorTurns
         case turns
+        case proposedPlanObservations
     }
 
     /// Creates a factual session projection snapshot.
@@ -41,7 +62,8 @@ public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Se
         providerThreads: [ProvenanceCodingAgentThreadRecord],
         latestTurn: ProvenanceFactualSessionProjectionTurnSnapshot? = nil,
         priorTurns: [ProvenanceFactualSessionProjectionTurnReference] = [],
-        turns: [ProvenanceFactualSessionProjectionTurnSnapshot]
+        turns: [ProvenanceFactualSessionProjectionTurnSnapshot],
+        proposedPlanObservations: [ProvenanceFactualProposedPlanObservation] = []
     ) {
         self.revision = revision
         self.session = session
@@ -50,6 +72,7 @@ public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Se
         self.latestTurn = latestTurn
         self.priorTurns = priorTurns
         self.turns = turns
+        self.proposedPlanObservations = proposedPlanObservations
     }
 
     /// Decodes both the current consumer-focused shape and the earlier v1
@@ -60,6 +83,9 @@ public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Se
         self.session = try container.decode(ProvenanceSessionRecord.self, forKey: .session)
         self.providerThreads = try container.decode([ProvenanceCodingAgentThreadRecord].self, forKey: .providerThreads)
         self.turns = try container.decode([ProvenanceFactualSessionProjectionTurnSnapshot].self, forKey: .turns)
+        self.proposedPlanObservations = try container.decodeIfPresent(
+            [ProvenanceFactualProposedPlanObservation].self, forKey: .proposedPlanObservations
+        ) ?? []
         self.providerThreadIdentities = try container.decodeIfPresent(
             [ProvenanceFactualSessionProjectionProviderThreadIdentity].self,
             forKey: .providerThreadIdentities
