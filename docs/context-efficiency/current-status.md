@@ -289,6 +289,49 @@ live caller (whose prompt contained the literal objective) in 10,886 bytes.
 All reported zero result omissions. The seed evidence remains distinct from
 the live caller evidence; this is not an agent decision experiment.
 
+Slice 3 preliminary work adds bounded Codex startup guidance for querying task
+selectors and following session-outcome revisions. The Codex hook test suite
+passed nine tests; standalone Codex 0.162.1 startup and resume probes each
+received a fresh hook context marker. In isolated tagged build 954, an ordinary
+Codex agent independently invoked the suggested path query and retried with
+socket access. An initial fixture run had inherited the invoking terminal's
+bmux environment; it was stopped and repeated with routing variables cleared.
+The clean managed-runtime writer edited `Sources/CachePolicy.swift`, but its
+patch appeared inside a Codex `exec` call, which the importer did not recognize,
+and that writer's transcript monitor did not start because the test app was
+launched as a child of the evaluating Codex process and was treated as nested.
+A manual public-CLI import of the live transcript added 18 events but zero file
+attributions. A focused red/green fix now recognizes an
+immediately awaited literal nested patch as low-confidence inference, retaining
+that classification in compact evidence; conditional code stays unsupported.
+A subsequent isolated build 955 launched through macOS Launch Services started
+its monitor and captured live writer `01a1d39c-f6c9-7531-938e-d942c6e0c479`'s
+edit as inferred file evidence. The reader's path query nevertheless returned
+empty: the two worktrees had distinct repository IDs but a shared recorded Git
+common directory. A red/green PE regression now includes that directory in
+repository identity; malformed empty or relative values are excluded. A second
+regression scopes broad shared-artifact reasons to the repositories of the
+artifacts themselves. Both fixes pass focused PE tests; tagged end-to-end
+retesting remains pending. The earlier
+reader independently queried by path and objective, followed a session outcome
+revision, and recommended confirming coordination, but the useful cache
+rationale also came from a local file, so this does not prove retrieval improved
+the decision. Automatic capture, concurrent-work success and the failed-attempt
+scenario remain open. A separate global Codex 0.162.1
+fixture run reported IPC decoding errors when reading files; it made no edits.
+In a later Launch Services run, a fresh reader found a live writer across linked
+worktrees, followed its outcome and inspected its uncommitted patch, then chose
+to coordinate before editing. The [ordinary-agent evaluation](cross-session-ordinary-agent-evaluation.md)
+records its query and references. This single observation does not establish a
+general improvement. A later decision reader followed the outcome but obtained
+the rationale from Git history, so that case is inconclusive. A failed-attempt
+reader's path and literal-objective queries returned empty, and it repeated the
+read-only failure before a broad query found the earlier session. The
+[evaluation](cross-session-ordinary-agent-evaluation.md) records both negative
+results, revisions and the encoded-command capture limitation. Tagged build 958
+compiled pushed runtime head `54efdaf2e`; a fresh ordinary agent on that build
+queried the cache path, found three sessions and followed a partial outcome.
+
 Remaining work: resolve the formal slice gates and remaining caller limitations,
 review and deliver slice 2, and capture the slice 3 ordinary-agent decision
 scenarios using live evidence. The original checkout has unrelated edits.

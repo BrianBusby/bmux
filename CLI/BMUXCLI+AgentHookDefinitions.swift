@@ -177,7 +177,7 @@ extension BMUXCLI {
         guard let dir = codexHookScriptsDirectory(),
               let path = writeCodexHookScript(
                   subcommand: "persistent-\(eventTag)", body: inlineCommand, in: dir
-              ) else {
+              ), !path.contains("'''") else {
             return inlineCommand
         }
         return path

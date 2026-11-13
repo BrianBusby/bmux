@@ -6,6 +6,43 @@ import Testing
 
 @Suite(.serialized)
 struct CLICurrentRelatedRetrievalTests {
+    @Test func codexWrapperProvidesBoundedCrossSessionGuidance() throws {
+        let cliPath = try BundledCLITestSupport.bundledCLIPath(for: BundledCLILinkageTests.self)
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-codex-guidance-\(UUID().uuidString)", isDirectory: true)
+        let codexHome = root.appendingPathComponent(".codex", isDirectory: true)
+        try FileManager.default.createDirectory(at: codexHome, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let environment = codexHookTestEnvironment(root: root, codexHome: codexHome)
+        let injection = runCodexHookProcess(executablePath: cliPath, arguments: ["hooks", "codex", "inject-args"],
+            environment: environment, timeout: 10)
+        #expect(injection.status == 0, Comment(rawValue: injection.stderr))
+        let args = injection.stdout.split(separator: "\0").map(String.init)
+        let sessionHooks = try #require(args.first { $0.hasPrefix("hooks.SessionStart=") })
+        #expect(sessionHooks.contains("bmux-codex-hook-context-guidance.sh"))
+        #expect(sessionHooks.contains("bmux-codex-hook-session-start.sh"))
+        let script = root.appendingPathComponent(".bmux/hooks/bmux-codex-hook-context-guidance.sh")
+        let result = runCodexHookProcess(executablePath: script.path, arguments: [], environment: environment, timeout: 5)
+        let output = try #require(codexHookJSONObject(result.stdout))
+        let hook = try #require(output["hookSpecificOutput"] as? [String: Any])
+        let context = try #require(hook["additionalContext"] as? String)
+        #expect(hook["hookEventName"] as? String == "SessionStart")
+        #expect(context.utf8.count < 1_024)
+        #expect(context.contains("provenance sessions related --current"))
+        #expect(context.contains("provenance session outcome"))
+        var disabled = environment
+        disabled["BMUX_CODEX_HOOKS_DISABLED"] = "1"
+        let disabledResult = runCodexHookProcess(executablePath: script.path, arguments: [], environment: disabled, timeout: 5)
+        #expect(codexHookJSONObject(disabledResult.stdout)?.isEmpty == true)
+        let quotedHome = root.appendingPathComponent("home-'''-quoted", isDirectory: true)
+        try FileManager.default.createDirectory(at: quotedHome, withIntermediateDirectories: true)
+        let quotedEnvironment = codexHookTestEnvironment(root: quotedHome, codexHome: codexHome)
+        let quotedInjection = runCodexHookProcess(executablePath: cliPath, arguments: ["hooks", "codex", "inject-args"],
+            environment: quotedEnvironment, timeout: 10)
+        #expect(quotedInjection.status == 0, Comment(rawValue: quotedInjection.stderr))
+        #expect(quotedInjection.stdout.contains("hooks.SessionStart="))
+    }
+
     @Test func currentRelatedUsesCallerSurfaceAndPublicEvidence() async throws {
         let cliPath = try BundledCLITestSupport.bundledCLIPath(for: BundledCLILinkageTests.self)
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("bmux-current-related-\(UUID().uuidString)")
@@ -23,7 +60,7 @@ struct CLICurrentRelatedRetrievalTests {
         let sessionID = "current-provider-session"
         let commands = CodexHookCapturedSocketCommands()
         startCodexHookMockSocketServerAccepting(listenerFD: listener, commands: commands, surfaceId: surface,
-            connectionLimit: 16, runtimeWorkspaceId: workspace, stableWorkspaceId: stable)
+            connectionLimit: 32, runtimeWorkspaceId: workspace, stableWorkspaceId: stable)
         let database = root.appendingPathComponent("provenance.sqlite")
         let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: database)
         let now = Date(timeIntervalSince1970: 1_700_000_000)
@@ -67,7 +104,7 @@ struct CLICurrentRelatedRetrievalTests {
         let files = ProvenanceCodingAgentFileChangeAttributionRecord(id: "closed-files", sessionID: "related-closed",
             threadID: thread.id, turnID: turn.id, provider: "codex", operationID: "file-operation",
             changeSetID: nil, fileChangeIDs: [], paths: ["Sources/Flashing.swift"], summary: nil,
-            observedAt: now, source: .observed, confidence: .high)
+            observedAt: now, source: .inferred, confidence: .low)
         let display = ProvenanceWorkspaceDisplayRecord(id: "closed-display", workspaceID: "workspace-related-closed",
             repositoryID: repository.id, ticketIDs: ["ROOF-42"], observedAt: now, updatedAt: now)
         for (id, type, payload) in [
@@ -77,7 +114,19 @@ struct CLICurrentRelatedRetrievalTests {
         ] {
             _ = try await client.appendEvent(.init(event: ProvenanceEvent(id: id, eventType: type,
                 timestamp: now, repositoryID: repository.id, worktreeID: worktree.id, sessionID: "related-closed",
-                source: .observed, confidence: .high, payload: payload)))
+                source: id == "closed-files-event" ? .inferred : .observed,
+                confidence: id == "closed-files-event" ? .low : .high, payload: payload)))
+        }
+        // More source events than the compact evidence cap must not hide inference.
+        for index in 0..<4 {
+            let attribution = ProvenanceCodingAgentFileChangeAttributionRecord(
+                id: "aaa-files-\(index)", sessionID: "related-closed", threadID: thread.id, turnID: turn.id,
+                provider: "codex", operationID: "aaa-operation-\(index)", changeSetID: nil, fileChangeIDs: [],
+                paths: ["Sources/Flashing.swift"], summary: nil, observedAt: now, source: .observed, confidence: .high)
+            _ = try await client.appendEvent(.init(event: ProvenanceEvent(
+                id: "aaa-files-event-\(index)", eventType: .codingAgentFileChangeAttributed, timestamp: now,
+                repositoryID: repository.id, worktreeID: worktree.id, sessionID: "related-closed", source: .observed,
+                confidence: .high, payload: .init(codingAgentFileChangeAttribution: attribution))))
         }
         for (id, text, offset) in [
             ("closed-blocker-open", "Blocker: activity=run package suite; condition=database offline", 1.0),
@@ -165,6 +214,13 @@ struct CLICurrentRelatedRetrievalTests {
             let observedAt = try #require(matched["observed_at"] as? Double)
             #expect((now.timeIntervalSince1970...now.addingTimeInterval(3).timeIntervalSince1970).contains(observedAt))
             #expect(selected.stdout.utf8.count <= 12 * 1024 + 1)
+            if option == "--artifact-path" {
+                let closed = try #require(selectedResults.first { $0["session_id"] as? String == "related-closed" })
+                let reasons = try #require(closed["match_evidence"] as? [[String: Any]])
+                let pathMatch = try #require(reasons.first { $0["kind"] as? String == "requested_artifact" })
+                let references = try #require(pathMatch["evidence"] as? [[String: Any]])
+                #expect(references.contains { $0["id"] as? String == "closed-files-event" && $0["source"] as? String == "inferred" })
+            }
             if option == "--objective" {
                 let fields = try #require(selectedResults.first?["semantic_fields"] as? [[String: Any]])
                 let blockers = try #require(fields.first { $0["kind"] as? String == "coding_agent.blockers" })
@@ -174,6 +230,30 @@ struct CLICurrentRelatedRetrievalTests {
                 #expect(refs.compactMap { $0["id"] as? String } == ["closed-blocker-open", "closed-blocker-resolved"])
             }
         }
+        // A broad query must retain inference on a shared-artifact relationship too.
+        let callerThread = ProvenanceCodingAgentThreadRecord(id: "caller-thread", sessionID: sessionID, provider: "codex",
+            providerThreadID: "caller-provider", worktreeID: worktree.id, source: .observed, confidence: .high,
+            firstObservedAt: now, updatedAt: now)
+        let callerTurn = ProvenanceCodingAgentTurnRecord(id: "caller-turn", sessionID: sessionID, threadID: callerThread.id,
+            provider: "codex", providerTurnID: "caller-turn-provider", status: "completed", model: nil, effort: nil,
+            startedAt: now, completedAt: now, updatedAt: now, source: .observed, confidence: .high)
+        let callerFile = ProvenanceCodingAgentFileChangeAttributionRecord(id: "caller-file", sessionID: sessionID,
+            threadID: callerThread.id, turnID: callerTurn.id, provider: "codex", operationID: "caller-file-operation",
+            paths: ["Sources/Flashing.swift"], observedAt: now, source: .observed, confidence: .high)
+        _ = try await client.appendEvent(.init(event: ProvenanceEvent(id: "caller-turn-event", eventType: .codingAgentTurnObserved,
+            timestamp: now, worktreeID: worktree.id, sessionID: sessionID, source: .observed, confidence: .high,
+            payload: .init(codingAgentThread: callerThread, codingAgentTurn: callerTurn))))
+        _ = try await client.appendEvent(.init(event: ProvenanceEvent(id: "caller-file-event", eventType: .codingAgentFileChangeAttributed,
+            timestamp: now, worktreeID: worktree.id, sessionID: sessionID, source: .observed, confidence: .high,
+            payload: .init(codingAgentFileChangeAttribution: callerFile))))
+        let broad = runCodexHookProcess(executablePath: cliPath,
+            arguments: ["--json", "provenance", "sessions", "related", "--current", "--database", database.path],
+            environment: environment, timeout: 15)
+        let broadPayload = try #require(try JSONSerialization.jsonObject(with: Data(broad.stdout.utf8)) as? [String: Any])
+        let broadResults = try #require(broadPayload["results"] as? [[String: Any]])
+        let broadClosed = try #require(broadResults.first { $0["session_id"] as? String == "related-closed" })
+        #expect(broadClosed["inferred_relationship_evidence"] as? Bool == true)
+
         // A retained PID that is not an ancestor cannot establish ownership.
         var unknownOwnerState = hookState
         var unknownSessions = try #require(unknownOwnerState["sessions"] as? [String: Any])

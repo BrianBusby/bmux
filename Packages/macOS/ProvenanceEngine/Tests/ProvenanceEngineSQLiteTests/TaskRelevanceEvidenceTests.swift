@@ -198,4 +198,85 @@ struct TaskRelevanceEvidenceTests {
         #expect(objectiveReason.observedAt == fixture.time(13))
     }
 
+    @Test
+    func linkedWorktreesShareRepositoryScopeViaGitCommonDirectory() async throws {
+        let url = RelatedSessionProjectionTestSupport.temporaryDatabaseURL()
+        defer { RelatedSessionProjectionTestSupport.removeTemporaryDatabaseDirectory(for: url) }
+        let store = try ProvenanceSQLiteRepository(url: url)
+        let fixture = RelatedSessionFixture()
+        func repository(_ id: String, _ common: String) -> ProvenanceRepositoryRecord {
+            .init(id: id, path: "/worktrees/\(id)", commonDirectory: common,
+                remoteSlug: nil, createdAt: fixture.time(0), updatedAt: fixture.time(0))
+        }
+        let cases = [("caller", "/repos/shared/.git"), ("peer", "/repos/shared/.git"), ("other", "/repos/other/.git")]
+        for (index, item) in cases.enumerated() {
+            let repo = repository(item.0, item.1)
+            let tree = fixture.worktree(id: "tree-\(item.0)", repository: repo, path: repo.path,
+                branch: "branch-\(item.0)", head: "head", offset: Double(index))
+            _ = try await RelatedSessionProjectionTestSupport.seedSession(id: item.0,
+                status: item.0 == "caller" ? "active" : "completed", worktree: tree, repository: repo,
+                promptText: "Cache invalidation", paths: item.0 == "caller" ? [] : ["Sources/CachePolicy.swift"],
+                fixture: fixture, into: store)
+        }
+        let result = try #require(try await store.relatedSessions(.init(targetSessionID: "caller",
+            artifactPath: "Sources/CachePolicy.swift")).projection)
+        #expect(result.relatedSessions.map(\.sessionID) == ["peer"])
+        #expect(result.relatedSessions.first?.worktreeBoundaries.contains { $0.branch == "branch-peer" } == true)
+        let objective = try #require(try await store.relatedSessions(.init(targetSessionID: "caller",
+            objective: "Cache invalidation")).projection)
+        #expect(objective.relatedSessions.map(\.sessionID) == ["peer"])
+    }
+
+    @Test
+    func broadSharedArtifactReasonsRespectEachArtifactsRepository() async throws {
+        let url = RelatedSessionProjectionTestSupport.temporaryDatabaseURL()
+        defer { RelatedSessionProjectionTestSupport.removeTemporaryDatabaseDirectory(for: url) }
+        let store = try ProvenanceSQLiteRepository(url: url)
+        let fixture = RelatedSessionFixture()
+        let sharedRepo = fixture.repository(id: "shared", path: "/repos/shared", remoteSlug: "owner/shared")
+        let sharedTree = fixture.worktree(id: "shared-tree", repository: sharedRepo,
+            path: "/worktrees/shared", branch: "shared", head: "shared", offset: 1)
+        try await fixture.appendRepositoryAndWorktree(repository: sharedRepo, worktree: sharedTree,
+            eventID: "event-shared-tree", into: store)
+        for id in ["target", "peer", "same-repository"] {
+            let repoID = id == "same-repository" ? "target" : id
+            let repo = fixture.repository(id: "repo-\(repoID)", path: "/repos/\(repoID)", remoteSlug: "owner/\(repoID)")
+            let tree = fixture.worktree(id: "tree-\(repoID)", repository: repo,
+                path: "/worktrees/\(repoID)", branch: repoID, head: repoID, offset: 2)
+            _ = try await RelatedSessionProjectionTestSupport.seedSession(id: id, status: "completed", worktree: tree,
+                repository: repo, paths: ["Sources/Example.swift"], fixture: fixture, into: store)
+            let thread = fixture.thread(id: "shared-thread-\(id)", sessionID: id, worktreeID: sharedTree.id,
+                providerThreadID: "shared-provider-\(id)", offset: 20)
+            try await fixture.appendThread(thread, into: store)
+        }
+        let result = try #require(try await store.relatedSessions(.init(targetSessionID: "target")).projection)
+        let peer = try #require(result.relatedSessions.first { $0.sessionID == "peer" })
+        #expect(peer.relationshipReasons.contains { $0.kind == .sameRepository })
+        #expect(!peer.relationshipReasons.contains { $0.kind == .sharedChangedArtifact })
+        let same = try #require(result.relatedSessions.first { $0.sessionID == "same-repository" })
+        #expect(same.relationshipReasons.contains { $0.kind == .sharedChangedArtifact })
+    }
+
+    @Test
+    func invalidCommonDirectoriesDoNotLinkRepositories() async throws {
+        for invalid in ["", "   ", "relative/.git"] {
+            let url = RelatedSessionProjectionTestSupport.temporaryDatabaseURL()
+            defer { RelatedSessionProjectionTestSupport.removeTemporaryDatabaseDirectory(for: url) }
+            let store = try ProvenanceSQLiteRepository(url: url)
+            let fixture = RelatedSessionFixture()
+            for (index, id) in ["caller", "unrelated"].enumerated() {
+                let repo = ProvenanceRepositoryRecord(id: "repo-\(id)", path: "/repos/\(id)",
+                    commonDirectory: invalid, createdAt: fixture.time(0), updatedAt: fixture.time(0))
+                let tree = fixture.worktree(id: "tree-\(id)", repository: repo, path: repo.path,
+                    branch: id, head: id, offset: Double(index))
+                _ = try await RelatedSessionProjectionTestSupport.seedSession(id: id, status: "completed",
+                    worktree: tree, repository: repo, paths: id == "caller" ? [] : ["Sources/Example.swift"],
+                    fixture: fixture, into: store)
+            }
+            let result = try #require(try await store.relatedSessions(.init(targetSessionID: "caller",
+                artifactPath: "Sources/Example.swift")).projection)
+            #expect(result.relatedSessions.isEmpty)
+        }
+    }
+
 }
