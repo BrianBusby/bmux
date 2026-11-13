@@ -83,6 +83,41 @@ struct SessionProjectionSnapshotTests {
     }
 
     @Test
+    func rejectsInvalidProviderIdentitiesAndRetainsRawEvents() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-proposal-identity-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("provenance.sqlite")
+        let writer = try ProvenanceSQLiteRepository(url: url)
+        let fixture = WorkModelFixture()
+        try await fixture.appendSessionThreadAndTurn(fixture.turn(status: "started"), into: writer)
+        let invalid = ["", " \n", " leading", "trailing ", String(repeating: "é", count: 129)]
+        for (index, value) in invalid.enumerated() {
+            for field in 0..<3 {
+                let proposal = ProvenanceCodingAgentProposedPlanRecord(sessionID: fixture.session.id, provider: "codex",
+                    providerSessionID: field == 0 ? value : "thread", providerTurnID: field == 1 ? value : "turn",
+                    providerItemID: field == 2 ? value : "item", text: "Plan", truncated: false)
+                try await writer.appendEvent(ProvenanceEvent(id: "invalid-\(index)-\(field)",
+                    eventType: .codingAgentProposedPlanObserved, sessionID: fixture.session.id, source: .observed,
+                    evidenceOrigin: .init(rawValue: "codex-transcript"), confidence: .high,
+                    payload: .init(codingAgentProposedPlan: proposal)))
+            }
+        }
+        let valid = ProvenanceCodingAgentProposedPlanRecord(sessionID: fixture.session.id, provider: "codex",
+            providerSessionID: "thread", providerTurnID: "turn", providerItemID: String(repeating: "é", count: 128),
+            text: "Valid", truncated: false)
+        try await writer.appendEvent(ProvenanceEvent(id: "valid", eventType: .codingAgentProposedPlanObserved,
+            sessionID: fixture.session.id, source: .observed, evidenceOrigin: .init(rawValue: "codex-transcript"),
+            confidence: .high, payload: .init(codingAgentProposedPlan: valid)))
+        let reader = try ProvenanceSQLiteRepository(url: url)
+        let snapshot = try #require(await reader.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id)).snapshot)
+        #expect(snapshot.proposedPlanObservations.map(\.id) == ["valid"])
+        #expect(snapshot.proposedPlanCoverage?.omittedObservations == true)
+        #expect(try await reader.event(id: "invalid-0-0")?.payload.codingAgentProposedPlan?.providerSessionID == "")
+        #expect(try await reader.event(id: "invalid-4-2")?.payload.codingAgentProposedPlan?.providerItemID == invalid[4])
+    }
+
+    @Test
     func reportsExcludedLedgerWindow() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-proposal-window-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: directory) }

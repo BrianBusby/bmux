@@ -7,7 +7,8 @@ import type { SmartSessionFactual } from "../shared/types";
 const base: SmartSessionFactual = { priorTurns: [], turnCount: 0 };
 const observed = {
   id: "evidence-1", sequence: 1, timestamp: "2026-11-13T13:21:36Z", provider: "codex",
-  source: "observed", origin: "codex-transcript", eventSchemaVersion: 1, text: "Inspect and validate", truncated: false,
+  source: "observed", origin: "codex-transcript", eventSchemaVersion: 1,
+  providerSessionId: "thread", providerTurnId: "turn", providerItemId: "item", text: "Inspect and validate", truncated: false,
 };
 
 test("proposal history does not interpret an older snapshot as an empty scan", () => {
@@ -37,4 +38,14 @@ test("proposal rendering bounds unexpectedly large text", () => {
   const html = renderToStaticMarkup(React.createElement(ProposalHistory, { factual }));
   expect(html).toContain("Proposal text was truncated.");
   expect(html).not.toContain("SENTINEL");
+});
+
+test("proposal history rejects malformed provider identity", () => {
+  const factual: SmartSessionFactual = { ...base,
+    proposedPlanCoverage: { scanWindowTruncated: false, omittedObservations: false },
+    proposedPlanObservations: [{ ...observed, providerTurnId: " ", text: "Bad identity" }],
+  };
+  const html = renderToStaticMarkup(React.createElement(ProposalHistory, { factual }));
+  expect(html).toContain("Proposal history is partial");
+  expect(html).not.toContain("Bad identity");
 });

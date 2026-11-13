@@ -38,6 +38,24 @@ struct AgentSessionSmartSessionStoreTests {
     }
 
     @Test
+    func proposalBridgeRejectsInvalidIdentityAndMarksCoveragePartial() throws {
+        let old = Self.model(sessionID: "session-1", revision: 1).basis.factualSessionProjection
+        let proposal = ProvenanceCodingAgentProposedPlanRecord(sessionID: "session-1", provider: "codex",
+            providerSessionID: "thread", providerTurnID: " ", providerItemID: "item", text: "Plan", truncated: false)
+        let observed = ProvenanceFactualProposedPlanObservation(id: "invalid", sequence: 2,
+            timestamp: Date(timeIntervalSince1970: 1_800_000_000), proposal: proposal,
+            source: .observed, origin: .init(rawValue: "codex-transcript"), eventSchemaVersion: 1)
+        let projection = ProvenanceFactualSessionProjectionSnapshot(revision: 2, session: old.session,
+            providerThreads: [], turns: [], proposedPlanObservations: [observed],
+            proposedPlanCoverage: .init(scanWindowTruncated: false, omittedObservations: false))
+        let payload = AgentSessionSmartSessionSnapshot.Factual(factualProjection: projection).bridgePayload
+        let coverage = try #require(payload["proposedPlanCoverage"] as? [String: Bool])
+        let observations = try #require(payload["proposedPlanObservations"] as? [[String: Any]])
+        #expect(observations.isEmpty)
+        #expect(coverage["omittedObservations"] == true)
+    }
+
+    @Test
     func concurrentRefreshesForSameSessionShareRefreshTask() async {
         let client = SmartSessionStoreTestClient(
             model: Self.model(sessionID: "session-1", revision: 42),
