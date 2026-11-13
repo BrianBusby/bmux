@@ -709,10 +709,14 @@ The factual session snapshot may also expose recent proposed-plan observations
 from the immutable event ledger. Each observation retains its event ID, ledger
 sequence, source timestamp, provider identities, and whether its prose was
 truncated. A bounded scan examines the latest 5,000 session events and returns
-at most 50 matching observations in append order, newest first; omitted history
-remains in the ledger. The list does not assert completeness, current validity,
-checklist progress, or an inferred turn association. Session and payload ownership
-must agree. It is read within the same SQLite snapshot as the factual revision.
+at most 50 matching observations in append order, newest first. Incremental
+SQLite blob access caps each decoded payload at 64 KiB and the response at 256 KiB;
+rejected or excess records and an exhausted scan window set explicit partial-coverage
+flags, while older snapshots without coverage remain unknown. Omitted history remains
+in the ledger. Only schema-1 observed Codex transcript evidence is displayed, with
+its actual source and origin. The list does not assert upstream coverage, current
+validity, checklist progress, or an inferred turn association. Session and payload
+ownership must agree. It is read within the same SQLite snapshot as the factual revision.
 Codex CLI capture requires matching explicit transcript thread, turn, and item
 identities; identical provider items replay idempotently while differing payloads
 remain distinct evidence. Existing transcripts are subject to their ordinary

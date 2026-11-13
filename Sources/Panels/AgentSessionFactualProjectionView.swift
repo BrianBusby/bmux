@@ -289,7 +289,7 @@ struct AgentSessionFactualProjectionView: View {
                 AgentSessionCurrentTurnOverview(turn: turn)
                 overviewDisclosure(
                     title: String(localized: "agentSession.factual.plan", defaultValue: "Plan & progress"),
-                    detail: turn.currentPlan.map { planSummary($0) } ?? String(localized: "agentSession.factual.noPlan", defaultValue: "No plan data observed."),
+                    detail: turn.currentPlan.map { planSummary($0) } ?? String(localized: "agentSession.factual.noChecklist", defaultValue: "No checklist data observed."),
                     isAvailable: turn.currentPlan != nil
                 ) {
                     if let plan = turn.currentPlan {
@@ -319,15 +319,34 @@ struct AgentSessionFactualProjectionView: View {
                 mutedText(String(localized: "agentSession.factual.noTurns", defaultValue: "No turns observed."))
             }
 
-            if !snapshot.proposedPlanObservations.isEmpty {
+            do {
+                let coverage = snapshot.proposedPlanCoverage
+                let trusted = snapshot.proposedPlanObservations.filter {
+                    $0.source == .observed && $0.origin?.rawValue == "codex-transcript" && $0.eventSchemaVersion == 1
+                }
+                let isPartial = coverage.map {
+                    $0.scanWindowTruncated || $0.omittedObservations || trusted.count != snapshot.proposedPlanObservations.count
+                } ?? false
+                let detail = coverage == nil
+                    ? String(localized: "agentSession.factual.proposalUnavailable", defaultValue: "Proposal history unavailable")
+                    : isPartial
+                        ? String(localized: "agentSession.factual.proposalPartial", defaultValue: "Proposal history is partial")
+                        : String(localized: "agentSession.factual.recentObservations", defaultValue: "Recent observations")
                 overviewDisclosure(
                     title: String(localized: "agentSession.factual.proposedPlans", defaultValue: "Proposed plans"),
-                    detail: String(localized: "agentSession.factual.recentObservations", defaultValue: "Recent observations"),
-                    isAvailable: true,
+                    detail: detail,
+                    isAvailable: coverage != nil,
                     icon: "doc.text"
                 ) {
                     VStack(alignment: .leading, spacing: 12) {
-                        ForEach(snapshot.proposedPlanObservations) { observation in
+                        if isPartial {
+                            Text(detail).foregroundStyle(Color.bmuxTextTertiary)
+                        }
+                        if trusted.isEmpty {
+                            Text(String(localized: "agentSession.factual.proposalNone", defaultValue: "No proposal found in scanned records; source availability is unknown."))
+                                .foregroundStyle(Color.bmuxTextTertiary)
+                        }
+                        ForEach(trusted) { observation in
                             VStack(alignment: .leading, spacing: 4) {
                                 HStack {
                                     Text(observation.timestamp, style: .date)
@@ -337,6 +356,8 @@ struct AgentSessionFactualProjectionView: View {
                                 HStack {
                                     Text(String(localized: "agentSession.factual.proposalSource", defaultValue: "Source:"))
                                     Text(observation.proposal.provider)
+                                    Text(observation.source?.rawValue ?? "")
+                                    Text(observation.origin?.rawValue ?? "")
                                     Text(String(localized: "agentSession.factual.proposalEvidence", defaultValue: "Evidence:"))
                                     Text(observation.id).textSelection(.enabled)
                                 }

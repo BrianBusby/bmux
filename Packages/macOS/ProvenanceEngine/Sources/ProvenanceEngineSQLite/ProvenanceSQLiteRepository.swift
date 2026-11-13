@@ -1392,6 +1392,7 @@ actor ProvenanceSQLiteRepository {
             try factualTurnSnapshot(turnID: turnID)
         }
 
+        let proposalRead = try recentProposedPlanObservations(sessionID: request.sessionID)
         return ProvenanceFactualSessionProjectionResponse(
             found: true,
             sessionID: request.sessionID,
@@ -1405,7 +1406,8 @@ actor ProvenanceSQLiteRepository {
                 latestTurn: latestTurn,
                 priorTurns: priorTurns,
                 turns: turns,
-                proposedPlanObservations: try recentProposedPlanObservations(sessionID: request.sessionID)
+                proposedPlanObservations: proposalRead.observations,
+                proposedPlanCoverage: proposalRead.coverage
             )
         )
     }

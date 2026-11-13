@@ -5565,6 +5565,74 @@
         }
       }
     },
+    "agentSession.factual.proposalUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposal history unavailable"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提案履歴を利用できません"
+          }
+        }
+      }
+    },
+    "agentSession.factual.proposalPartial": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposal history is partial"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提案履歴は一部のみです"
+          }
+        }
+      }
+    },
+    "agentSession.factual.proposalNone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No proposal found in scanned records; source availability is unknown."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "調査した記録に提案はありません。情報源を利用できるかは不明です。"
+          }
+        }
+      }
+    },
+    "agentSession.factual.noChecklist": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No checklist data observed."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チェックリストのデータは確認されていません。"
+          }
+        }
+      }
+    },
     "agentSession.factual.priorTurns": {
       "extractionState": "manual",
       "localizations": {

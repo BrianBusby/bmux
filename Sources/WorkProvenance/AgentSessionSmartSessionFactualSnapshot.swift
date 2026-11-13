@@ -6,18 +6,42 @@ extension AgentSessionSmartSessionSnapshot {
         let latestTurn: Turn?
         let priorTurns: [TurnReference]
         let turnCount: Int
+        let proposedPlanCoverage: ProvenanceProposedPlanReadCoverage?
+        let proposedPlanObservations: [ProvenanceFactualProposedPlanObservation]
 
         init(factualProjection: ProvenanceFactualSessionProjectionSnapshot) {
             self.latestTurn = factualProjection.latestTurn.map(Turn.init(turnSnapshot:))
             self.priorTurns = factualProjection.priorTurns.map(TurnReference.init(reference:))
             self.turnCount = factualProjection.turns.count
+            let trusted = factualProjection.proposedPlanObservations.filter {
+                $0.source == .observed && $0.origin?.rawValue == "codex-transcript" && $0.eventSchemaVersion == 1
+            }
+            self.proposedPlanObservations = factualProjection.proposedPlanCoverage == nil ? [] : trusted
+            self.proposedPlanCoverage = factualProjection.proposedPlanCoverage.map {
+                .init(scanWindowTruncated: $0.scanWindowTruncated,
+                      omittedObservations: $0.omittedObservations || trusted.count != factualProjection.proposedPlanObservations.count)
+            }
         }
 
         var bridgePayload: [String: Any] {
             AgentSessionSmartSessionBridgeDictionary.compact([
                 "latestTurn": AgentSessionSmartSessionBridgeDictionary.optional(latestTurn?.bridgePayload),
                 "priorTurns": priorTurns.map(\.bridgePayload),
-                "turnCount": turnCount
+                "turnCount": turnCount,
+                "proposedPlanCoverage": AgentSessionSmartSessionBridgeDictionary.optional(proposedPlanCoverage.map {
+                    ["scanWindowTruncated": $0.scanWindowTruncated, "omittedObservations": $0.omittedObservations]
+                }),
+                "proposedPlanObservations": proposedPlanObservations.map { observation in
+                    AgentSessionSmartSessionBridgeDictionary.compact(["id": observation.id, "sequence": observation.sequence,
+                     "timestamp": AgentSessionSmartSessionBridgeDictionary.requiredISOString(observation.timestamp),
+                     "provider": observation.proposal.provider, "source": observation.source?.rawValue ?? "",
+                     "origin": observation.origin?.rawValue ?? "", "eventSchemaVersion": observation.eventSchemaVersion ?? 0,
+                     "confidence": observation.confidence?.rawValue ?? "",
+                     "providerSessionId": AgentSessionSmartSessionBridgeDictionary.optional(observation.proposal.providerSessionID),
+                     "providerTurnId": AgentSessionSmartSessionBridgeDictionary.optional(observation.proposal.providerTurnID),
+                     "providerItemId": AgentSessionSmartSessionBridgeDictionary.optional(observation.proposal.providerItemID),
+                     "text": observation.proposal.text, "truncated": observation.proposal.truncated])
+                }
             ])
         }
     }
