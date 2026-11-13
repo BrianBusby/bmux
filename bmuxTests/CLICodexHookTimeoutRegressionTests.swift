@@ -3,6 +3,36 @@ import Testing
 
 @Suite(.serialized)
 struct CLICodexHookTimeoutRegressionTests {
+    @Test func codexWrapperProvidesBoundedCrossSessionGuidance() throws {
+        let cliPath = try bundledCLIPath()
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-codex-guidance-\(UUID().uuidString)", isDirectory: true)
+        let codexHome = root.appendingPathComponent(".codex", isDirectory: true)
+        try FileManager.default.createDirectory(at: codexHome, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let environment = codexHookTestEnvironment(root: root, codexHome: codexHome)
+        let injection = runCodexHookProcess(executablePath: cliPath, arguments: ["hooks", "codex", "inject-args"],
+            environment: environment, timeout: 10)
+        #expect(injection.status == 0, Comment(rawValue: injection.stderr))
+        let args = injection.stdout.split(separator: "\0").map(String.init)
+        let sessionHooks = try #require(args.first { $0.hasPrefix("hooks.SessionStart=") })
+        #expect(sessionHooks.contains("bmux-codex-hook-context-guidance.sh"))
+        #expect(sessionHooks.contains("bmux-codex-hook-session-start.sh"))
+        let script = root.appendingPathComponent(".bmux/hooks/bmux-codex-hook-context-guidance.sh")
+        let result = runCodexHookProcess(executablePath: script.path, arguments: [], environment: environment, timeout: 5)
+        let output = try #require(codexHookJSONObject(result.stdout))
+        let hook = try #require(output["hookSpecificOutput"] as? [String: Any])
+        let context = try #require(hook["additionalContext"] as? String)
+        #expect(hook["hookEventName"] as? String == "SessionStart")
+        #expect(context.utf8.count < 1_024)
+        #expect(context.contains("provenance sessions related --current"))
+        #expect(context.contains("provenance session outcome"))
+        var disabled = environment
+        disabled["BMUX_CODEX_HOOKS_DISABLED"] = "1"
+        let disabledResult = runCodexHookProcess(executablePath: script.path, arguments: [], environment: disabled, timeout: 5)
+        #expect(codexHookJSONObject(disabledResult.stdout)?.isEmpty == true)
+    }
+
     @Test func codexHookInstallReplacesSynchronousBundledHook() throws {
         let cliPath = try bundledCLIPath()
         let root = FileManager.default.temporaryDirectory

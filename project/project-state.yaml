@@ -4863,7 +4863,7 @@ roadmap:
       execution:
         assignment: planned
         assigned_to: shared
-        notes: Add bounded discovery and evidence drill-down; observe concurrent work, prior decisions and failed attempts through ordinary Codex ingestion in isolated worktrees and PE data.
+        notes: Preliminary Codex startup guidance identifies the current-caller task selectors and session-outcome revision drill-down. The focused hook suite passes and standalone startup/resume context probes succeeded; tagged ordinary-agent scenarios and their materially supported decisions remain unverified. Observe concurrent work, prior decisions and failed attempts through ordinary Codex ingestion in isolated worktrees and PE data.
       delivery_status: proposed
       acceptance_status: proposed
       acceptance:

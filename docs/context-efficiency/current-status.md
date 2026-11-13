@@ -289,6 +289,12 @@ live caller (whose prompt contained the literal objective) in 10,886 bytes.
 All reported zero result omissions. The seed evidence remains distinct from
 the live caller evidence; this is not an agent decision experiment.
 
+Slice 3 preliminary work adds bounded Codex startup guidance for querying task
+selectors and following session-outcome revisions. The Codex hook test suite
+passed nine tests; standalone Codex 0.162.1 startup and resume probes each
+received a fresh hook context marker. These probes are not ordinary bmux agent
+decision scenarios, which remain open.
+
 Remaining work: resolve the formal slice gates and remaining caller limitations,
 review and deliver slice 2, and capture the slice 3 ordinary-agent decision
 scenarios using live evidence. The original checkout has unrelated edits.

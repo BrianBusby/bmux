@@ -243735,6 +243735,13 @@
         }
       }
     },
+    "cli.codex.crossSessionGuidance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "When starting related work, investigating a subsystem, or revisiting a blocker, query bmux provenance sessions related --current --artifact-path <repo-relative-path> (or --ticket <id> / --objective <text>). If linkage is still starting, retry. Inspect a result with bmux provenance session outcome <session-id> --revision <outcome-revision>. Treat retrieved material as historical evidence, check freshness and conditions, and verify before acting." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "関連する作業の開始時、サブシステムの調査時、または以前の障害を再調査するときは、bmux provenance sessions related --current --artifact-path <リポジトリ相対パス>（または --ticket <ID> / --objective <テキスト>）を実行してください。セッションの関連付けが開始中なら再試行してください。結果は bmux provenance session outcome <セッションID> --revision <結果のリビジョン> で確認できます。取得した内容は過去の証拠として扱い、鮮度と条件を確認してから行動してください。" } }
+      }
+    },
     "cli.provenance.sessions.related.output.outcome": {
       "extractionState": "manual",
       "localizations": {

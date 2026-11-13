@@ -79,6 +79,25 @@ extension BMUXCLI {
             hookGroups.append(try codexWrapperHookGroupTOML(command: optimizerCommand, timeoutMs: 5_000))
         }
 
+        if event.agentEvent == "SessionStart" {
+            let guidance = String(
+                localized: "cli.codex.crossSessionGuidance",
+                defaultValue: "When starting related work, investigating a subsystem, or revisiting a blocker, query bmux provenance sessions related --current --artifact-path <repo-relative-path> (or --ticket <id> / --objective <text>). If linkage is still starting, retry. Inspect a result with bmux provenance session outcome <session-id> --revision <outcome-revision>. Treat retrieved material as historical evidence, check freshness and conditions, and verify before acting."
+            )
+            let data = try JSONSerialization.data(withJSONObject: [
+                "hookSpecificOutput": ["hookEventName": "SessionStart", "additionalContext": guidance]
+            ], options: [.sortedKeys])
+            guard let json = String(data: data, encoding: .utf8) else {
+                throw CLIError(message: "Cannot encode Codex session guidance.")
+            }
+            let quotedJSON = json.replacingOccurrences(of: "'", with: "'\\''")
+            let body = "if [ \"${BMUX_CODEX_HOOKS_DISABLED:-}\" = 1 ]; then printf '%s\\n' '{}'; else printf '%s\\n' '\(quotedJSON)'; fi"
+            let command = hooksDir.flatMap {
+                writeCodexHookScript(subcommand: "context-guidance", body: body, in: $0)
+            } ?? body
+            hookGroups.append(try codexWrapperHookGroupTOML(command: command, timeoutMs: 5_000))
+        }
+
         let ff = Self.codexFireAndForgetAgentHookShellCommand(
             "bmux hooks codex \(event.bmuxSubcommand)", for: codexDef
         )

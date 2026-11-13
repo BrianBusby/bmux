@@ -165,3 +165,12 @@ Run `bmux hooks <agent> install --yes` to reinstall one integration. Run `bmux h
 If Feed shows nothing, confirm the terminal has `BMUX_SURFACE_ID` and the hook file contains a `bmux hooks feed --source <agent>` command, generated extension bridge, or OpenCode feed plugin. Pi reports non-blocking tool execution telemetry through its generated extension. OMP and Rovo Dev currently provide lifecycle and restore hooks only, so they do not create Feed approval cards. Amp's bundled plugin reports live tab-status updates (idle / thinking / running / reading / done / error / interrupted) and lifecycle restore but does not create Feed approval cards.
 
 If relaunch does not resume an agent, check `~/.bmuxterm/<agent>-hook-sessions.json` for the saved session and verify the agent's resume command still works outside bmux.
+
+Codex sessions launched through bmux also receive a short startup reminder to
+query related work when beginning a related task, investigating a subsystem,
+or revisiting a blocker. The reminder gives the caller-based selector command
+and the session-outcome revision command for evidence drill-down. It is emitted
+on startup and resume, is disabled with `BMUX_CODEX_HOOKS_DISABLED=1`, and does
+not retrieve context or change files by itself. Retrieval may initially need a
+retry while caller linkage is established; returned evidence can be partial or
+historical and should be checked before use.
