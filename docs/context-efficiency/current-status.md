@@ -253,7 +253,12 @@ The [evaluation specification](cross-session-task-relevance-evaluation.md) fixes
 expected fixture IDs and thresholds before ranking work. Its corpus has not yet
 been seeded or run; the caller slice remains below validated maturity because
 sequential reuse with retained records still fails closed. Ticket-to-session
-association availability remains to be checked in PE.
+association availability remains to be checked in PE. A focused public-write
+fixture confirms path and objective source facts are available in the existing
+related-session projection; broad same-repository results still include unrelated
+work. Ticket facts are workspace display data, with session-to-workspace links
+available through the existing workspace session projection; historical ticket
+validity and source revisions require further investigation.
 
 Remaining work: implement and verify all three slices, record a bounded output
 contract and corpus thresholds, run Project Truth gates after each slice, build

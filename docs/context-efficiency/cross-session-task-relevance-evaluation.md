@@ -39,3 +39,20 @@ caller-change-based today, so arbitrary path selection requires a PE-owned read
 that can discover candidates independently of the caller's changes. Existing
 caller resolution fails closed for some reused panes and shared daemon sessions;
 evaluation must not treat those unavailable cases as successful retrieval.
+
+## Evidence reconnaissance
+
+The focused `TaskRelevanceEvidenceTests` fixture uses public event append paths
+and the existing related-session read. It passed with a fresh caller: both
+`path-active` and `path-history` retained the requested path and turn-outcome
+revision, the historical prompt remained an objective with source evidence,
+and the different repository was absent. The unrelated same-repository session
+was present, as expected for the existing broad relationship query. This is an
+evidence-availability check, not a selector, ranking, or corpus acceptance run.
+
+The existing workspace session read links sessions through either the session's
+workspace ID or the canonical session association. Workspace display contains
+ticket IDs and links. A task query must preserve that explicit connection and
+its evidence and avoid treating all sessions in the repository as ticket matches.
+Workspace display is mutable projection state, so its historical ticket validity
+and any source revision available for it need explicit treatment.
