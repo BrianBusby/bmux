@@ -1,4 +1,5 @@
 import SwiftUI
+import BmuxAppKitSupportUI
 import ProvenanceEngineContracts
 
 struct AgentSessionProposedPlanObservationsView: View {
