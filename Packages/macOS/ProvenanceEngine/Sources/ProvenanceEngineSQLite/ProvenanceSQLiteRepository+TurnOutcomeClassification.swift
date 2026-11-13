@@ -80,14 +80,12 @@ extension ProvenanceSQLiteRepository {
     }
 
     func normalizedTurnCompletionState(_ status: String) -> String {
-        let normalized = status.lowercased()
+        let normalized = status.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         if normalized.contains("cancel") { return "cancelled" }
         if normalized.contains("interrupt") { return "interrupted" }
         if normalized.contains("fail") || normalized.contains("error") { return "failed" }
-        if normalized.contains("complete")
-            || normalized.contains("success")
-            || normalized == "done"
-            || normalized == "finished" {
+        if normalized == "incomplete" || normalized == "uncompleted" { return "incomplete" }
+        if ["complete", "completed", "success", "successful", "done", "finished"].contains(normalized) {
             return "completed"
         }
         if normalized.contains("active")

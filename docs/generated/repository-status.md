@@ -194,6 +194,7 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `outcome_historical_rebuild_and_mixed_writer` | open |
 | `cross_session_identity_clock_legacy_upgrade` | open |
 | `work_brief_external_sources_unavailable` | monitoring |
 | `pe_live_storage_reclamation_capacity_and_concurrency` | resolved |
