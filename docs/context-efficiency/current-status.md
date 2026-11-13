@@ -323,7 +323,13 @@ In a later Launch Services run, a fresh reader found a live writer across linked
 worktrees, followed its outcome and inspected its uncommitted patch, then chose
 to coordinate before editing. The [ordinary-agent evaluation](cross-session-ordinary-agent-evaluation.md)
 records its query and references. This single observation does not establish a
-general improvement; prior-decision and failed-attempt cases remain open.
+general improvement. A later decision reader followed the outcome but obtained
+the rationale from Git history, so that case is inconclusive. A failed-attempt
+reader's path and literal-objective queries returned empty, and it repeated the
+read-only failure before a broad query found the earlier session. The
+[evaluation](cross-session-ordinary-agent-evaluation.md) records both negative
+results, revisions and the encoded-command capture limitation. Tagged build 958
+compiled pushed runtime head `54efdaf2e`; final-head live dogfood remains open.
 
 Remaining work: resolve the formal slice gates and remaining caller limitations,
 review and deliver slice 2, and capture the slice 3 ordinary-agent decision

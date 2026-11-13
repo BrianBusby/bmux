@@ -50,14 +50,37 @@ worktree inspection, and decision. This run used real terminal transcript
 capture; earlier seeded fixture checks are documented separately in
 [cross-session-task-relevance-evaluation.md](cross-session-task-relevance-evaluation.md).
 
-## Remaining scenarios
+## Prior useful decision: inconclusive
 
-- **Prior useful decision:** establish a case in which the decision is not
-  already visible from the reader's prompt or local files; capture the evidence
-  reference and the materially supported next action.
-- **Prior failed attempt:** capture the failure and conditions, then show a new
-  agent checking whether those conditions still apply before selecting its next
-  action.
+Reader `01a1d3af-903c-7143-9acd-4726fcdbc697` started in a worktree where
+`notes/maintainer-findings.md` had been removed. Its prompt requested a cache
+invalidation regression test and did not mention timestamp collisions. It
+queried `--artifact-path Sources/CachePolicy.swift`, followed writer
+`01a1d3a8-77af-7e63-93c8-5b7df37984f6` at outcome revision
+`session-outcome-revision-4d945f0b81a89de0e34f56ee`, and proposed a test with
+two generations at the same timestamp. However, its transcript shows it also
+ran `git show f6df3a8:notes/maintainer-findings.md` and read the rationale from
+Git history. The outcome did not demonstrably supply that decision, so this
+does not pass the scenario. A new fixture must keep the rationale out of the
+reader's accessible repository history as well as its checkout and prompt.
+
+## Prior failed attempt: not passed
+
+Ordinary writer `01a1d3b1-c07b-7191-bd92-998be1414463` ran
+`CACHE_MODE=readonly ./scripts/cache-benchmark.sh` and observed exit 2 with a
+read-only fixture failure. Fresh reader `01a1d3b6-0ad1-7411-8bb5-f244bcaa02fe`
+queried `--artifact-path scripts/cache-benchmark.sh`, receiving an empty
+1,738-byte response: the writer had run, but had not changed, the script. Its
+literal objective query `cache benchmark validation` was also empty. The reader
+then independently repeated the read-only failure before a broad `--current`
+query returned the writer in 10,848 bytes. It followed outcome revision
+`session-outcome-revision-d7036257da030de52a3b2cdc`, tested the default mode,
+and recommended verifying the actual mount and write permissions. This does
+not satisfy the requirement to avoid an unexamined repetition. The monitored
+command was recorded through an encoded `agent-token-proxy` wrapper; the
+importer currently stores that wrapper and intentionally does not retain command
+output summaries. These are capture and retrieval limitations to resolve before
+repeating the scenario. No retrieval-omitted comparison was run.
 
 A previous manual transcript import established that the importer could recover
 inferred nested patch evidence; it is not counted as the automatic live capture
