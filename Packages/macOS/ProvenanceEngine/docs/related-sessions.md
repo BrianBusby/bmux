@@ -279,9 +279,10 @@ LLM-authored cross-session summaries.
 
 The related-session request accepts optional `artifactPath`, `ticket`, and
 `objective` selectors. When any selector is present, candidates must share an
-observed repository identity with the target; a recorded Git common directory
-links worktrees of the same repository even when their repository IDs and paths
-differ. Tree and other explicit links to a session in another repository do not
+observed repository identity with the target; a valid absolute Git common
+directory links worktrees of the same repository even when their repository IDs
+and paths differ. Empty or relative common-directory values do not link work. Broad shared-artifact reasons likewise require the
+matching artifacts themselves to belong to a common repository. Tree and other explicit links to a session in another repository do not
 override this default scope. Every supplied
 selector must match. Path matching compares an exact repository-relative path
 against a candidate's recorded changed artifacts. Ticket matching compares an

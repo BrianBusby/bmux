@@ -309,7 +309,10 @@ its monitor and captured live writer `01a1d39c-f6c9-7531-938e-d942c6e0c479`'s
 edit as inferred file evidence. The reader's path query nevertheless returned
 empty: the two worktrees had distinct repository IDs but a shared recorded Git
 common directory. A red/green PE regression now includes that directory in
-repository identity; tagged end-to-end retesting remains pending. The earlier
+repository identity; malformed empty or relative values are excluded. A second
+regression scopes broad shared-artifact reasons to the repositories of the
+artifacts themselves. Both fixes pass focused PE tests; tagged end-to-end
+retesting remains pending. The earlier
 reader independently queried by path and objective, followed a session outcome
 revision, and recommended confirming coordination, but the useful cache
 rationale also came from a local file, so this does not prove retrieval improved
