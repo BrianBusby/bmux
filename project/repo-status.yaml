@@ -180,6 +180,8 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: cross_session_identity_clock_legacy_upgrade
+    status: open
   - id: work_brief_external_sources_unavailable
     # Direct bounded Linear/GitHub reads are available; credentials, scope, and dogfood remain conditional.
     status: monitoring

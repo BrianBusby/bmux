@@ -22,7 +22,7 @@ struct WorkspaceReferenceAppShell<Rail: View, Content: View, HeaderAction: View>
         let theme = MatteTheme(colorScheme: colorScheme)
         ZStack {
             VStack(spacing: 0) {
-                HStack {
+                HStack(spacing: 16) {
                     HStack(spacing: theme.layout.brandHeaderContentGap) {
                         Text("bmux")
                             .matteTypography(.wordmark, theme: theme)
@@ -30,8 +30,8 @@ struct WorkspaceReferenceAppShell<Rail: View, Content: View, HeaderAction: View>
                         Text("✳").font(.system(size: theme.layout.brandDecorationSize)).foregroundStyle(Color(nsColor: theme.color(.sage)))
                         Text("CompanyCam").matteTypography(.body, theme: theme).foregroundStyle(Color(nsColor: theme.color(.textSecondary)))
                     }
-                    Spacer()
                     headerAction()
+                    Spacer(minLength: 0)
                 }
                 .padding(.horizontal, theme.layout.brandHeaderHorizontalInset)
                 .frame(height: theme.layout.brandHeaderHeight)

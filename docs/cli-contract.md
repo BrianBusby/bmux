@@ -217,18 +217,47 @@ Provenance subcommands:
 | `provenance worktrees list` | List PE-observed worktrees. Supports `--database <path>` and `--json`. |
 | `provenance sessions tree <session-id>` | Read the PE session tree for an explicit PE session id. Supports `--database <path>` and `--json`. |
 | `provenance sessions related <pe-session-id>` | Read the bounded related-session projection for an explicit target PE session id through `ProvenanceEngineClient.relatedSessions(...)`. Supports `--limit`, `--exclusion-limit`, `--updated-after`, `--revision`, `--database`, and `--json`. |
+| `provenance sessions related --current` | Verify the invoking Codex thread against the live workspace, surface, hook session record and PE association; then read related sessions. Supports `--limit 1...5`, `--database`, and `--json`. |
 | `provenance sessions collisions <pe-session-id>` | Read bounded artifact-collision candidates for an explicit target PE session id through `ProvenanceEngineClient.artifactCollisions(...)`. Supports `--limit`, `--related-session-limit`, `--exclusion-limit`, `--artifact-path`, `--updated-after`, `--stale-before`, `--revision`, `--database`, and `--json`. |
 | `provenance turn outcome <turn-id>` | Read an exact or latest Turn Outcome projection. Supports `--revision <revision-id>`, `--database <path>`, and `--json`. |
 | `provenance session outcome <session-id>` | Read an exact or latest Session Outcome projection. Supports `--revision <revision-id>`, `--database <path>`, and `--json`. |
 | `provenance import codex-transcripts` | Replay historical Codex JSONL transcripts into PE using canonical evidence IDs. Supports `--path <path>`, `--limit <count>`, `--database <path>`, and `--json`. |
 
-Provenance retrieval commands use explicit PE session ids. A provider thread id,
-workspace id, surface id, or focused tab is not a substitute. Agents can find PE
-session ids through `provenance context current`, `provenance worktrees list`,
-`provenance sessions tree`, and existing session/outcome reads, then pass the
-chosen id explicitly.
+The explicit-ID retrieval commands work without a live app socket. `related
+--current` requires a live bmux socket and independently checks the caller's
+workspace, surface, Codex thread ID, hook record, and PE association. It
+never substitutes the focused pane. Missing or conflicting linkage returns an
+explicit retryable unavailable state. After startup, wait for the prompt hook
+and transcript association to be recorded, then retry. Multiple retained Codex
+sessions for one pane produce `ambiguous_caller`; start Codex in a fresh pane
+and retry. JSON provides `recovery: "start_fresh_pane"` in that state. Pane
+reuse remains unsupported when the retained records cannot establish ownership.
+An `app_linkage_unavailable` response asks the caller to check the running app
+and socket path, and to allow socket access or retry outside a denying sandbox.
+JSON includes `recovery: "check_app_and_socket_access"` and the corresponding
+`recovery_steps`; the response does not infer which cause occurred.
+The observed `codex app-server --managed-daemon` process shape can inherit a
+different pane's identity. `--current` returns `caller_ownership_unavailable`
+when that shape appears before the hook-record process in the caller's ancestry,
+or when that recorded process cannot be reached and inspected. Use an independent Codex session (for example `codex --no-daemon`
+when supported). Other unrecognized daemon shapes are not yet verified.
+Freshly generated Codex hooks attest their immediate parent before recording a
+pane-bound PE association or starting the live transcript monitor. Unattested
+or observed managed-daemon hooks retain ordinary lifecycle handling but omit
+those PE writes. If linkage remains unavailable with an older installed hook,
+run `bmux hooks setup codex` to refresh it, then start a new session and retry.
+The check is bounded to one second and runs only for session-start and prompt-submit.
 
-Retrieval defaults and bounds are finite. `related --limit` defaults to `10` and
+The `--current` response defaults to five briefs and permits one through five.
+It returns at most 12 KiB of encoded JSON and at most 16 KiB of text, omitting
+trailing briefs in PE order when necessary and reporting the count. Text contains
+the same fields as compact JSON lines. Per-field limits and omission counts are explicit; the outcome
+revision and evidence identifiers allow drill-down with `bmux provenance session
+outcome <session-id> --revision <outcome-revision>`. Relationship evidence older
+than 24 hours is labeled stale; missing or future timestamps are unknown. This
+recency label does not change the recorded lifecycle state.
+
+Explicit-ID retrieval defaults and bounds are finite. `related --limit` defaults to `10` and
 allows `0...25`; `related --exclusion-limit` defaults to `10` and allows
 `0...50`. `collisions --limit` defaults to `10` and allows `0...25`;
 `--related-session-limit` defaults to `50` and allows `0...100`;

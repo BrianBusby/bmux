@@ -1,0 +1,143 @@
+import Foundation
+import ProvenanceEngineContracts
+
+extension BMUXCLI {
+    /// The compact contract limits the encoded response to 12 KiB, omitting whole trailing briefs first.
+    func printProvenanceCurrentRelated(_ response: ProvenanceRelatedSessionResponse, jsonOutput: Bool) throws {
+        guard let projection = response.projection, response.found else {
+            printProvenanceCurrentUnavailable(response.reason ?? "no_session", jsonOutput: jsonOutput)
+            return
+        }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        func text(_ input: String, limit: Int = 160) -> String {
+            input.count > limit ? String(input.prefix(limit)) + "…" : input
+        }
+        func optional(_ input: String?) -> Any { input.map { text($0) as Any } ?? NSNull() }
+        func value<T>(_ input: T?) -> Any { input.map { $0 as Any } ?? NSNull() }
+        func fact(_ input: ProvenanceSessionOutcomeTextFact) -> [String: Any] {
+            ["id": input.id, "text": text(input.text), "source_turn_id": input.sourceTurnID,
+             "turn_revision": input.sourceTurnOutcomeRevisionID, "text_truncated": input.text.count > 160]
+        }
+        func reference(_ input: ProvenanceRelatedSessionEvidenceReference) -> [String: Any] {
+            ["kind": input.kind, "id": input.id, "revision": value(input.projectionRevisionID),
+             "sequence": value(input.eventSequence)]
+        }
+        func brief(_ item: ProvenanceRelatedSessionBrief) throws -> [String: Any] {
+            let outcome = item.outcomeBrief
+            let boundary = item.worktreeBoundaries.first
+            let prioritySemantics = item.semanticFields.filter { $0.kind == "coding_agent.blockers" || $0.kind == "coding_agent.approach_changes" }
+            let remainingSemantics = item.semanticFields.filter { $0.kind != "coding_agent.blockers" && $0.kind != "coding_agent.approach_changes" }
+            let semanticFields = try (prioritySemantics + remainingSemantics).prefix(4).map { field -> [String: Any] in
+                let payload: String?
+                if let record = field.record {
+                    payload = String(data: try encoder.encode(record.payload), encoding: .utf8)
+                } else {
+                    payload = nil
+                }
+                let refs: [[String: Any]] = (field.record?.supportingEvidenceRefs.prefix(2) ?? []).map {
+                    ["kind": $0.kind, "id": $0.id, "sequence": value($0.ledgerSequence),
+                     "factual_revision": value($0.factualRevision)]
+                }
+                return ["kind": field.kind, "state": field.state.rawValue,
+                        "reason": value(field.reason), "record_id": value(field.record?.inferenceID),
+                        "producer": value(field.record?.producerID), "confidence": value(field.record?.confidence.rawValue),
+                        "status": value(field.record?.status.rawValue), "superseded_by": value(field.record?.supersededBy),
+                        "evidence": refs, "evidence_omitted": max(0, (field.record?.supportingEvidenceRefs.count ?? 0) - 2),
+                        "payload_excerpt": optional(payload), "payload_truncated": (payload?.count ?? 0) > 160]
+            }
+            let validations: [[String: Any]] = (outcome?.validationsAttempted.prefix(2) ?? []).map {
+                ["id": $0.id, "command": text($0.validation.command), "result": $0.validation.resultStatus,
+                 "revision": $0.sourceTurnOutcomeRevisionID, "command_truncated": $0.validation.command.count > 160]
+            }
+            let boundaryFields: [String: Any] = [
+                "repository": optional(boundary?.repositoryPath), "worktree": optional(boundary?.worktreePath),
+                "branch": optional(boundary?.branch), "head": optional(boundary?.head)
+            ]
+            let freshnessAge = item.freshness.relationshipObservedAt.map { Date().timeIntervalSince($0) }
+            let recency: String
+            if let freshnessAge, freshnessAge >= 0 {
+                recency = freshnessAge > 24 * 60 * 60 ? "stale" : "recent"
+            } else {
+                recency = "unknown"
+            }
+            let freshness: [String: Any] = [
+                "state": item.freshness.state, "recency": recency, "stale_after_seconds": 24 * 60 * 60,
+                "observed_at": value(item.freshness.relationshipObservedAt?.timeIntervalSince1970),
+                "outcome_at": value(item.freshness.sessionOutcomeGeneratedAt?.timeIntervalSince1970)
+            ]
+            let availability: [[String: Any]] = item.completeness.fields.prefix(8).map {
+                ["field": $0.field, "status": $0.status, "reason": value($0.reason)]
+            }
+            let boundaryTexts = [boundary?.repositoryPath, boundary?.worktreePath, boundary?.branch, boundary?.head]
+            let omitted: [String: Any] = [
+                "objectives": max(0, (outcome?.objectives.count ?? 0) - 2),
+                "blockers": max(0, (outcome?.blockers.count ?? 0) - 2),
+                "actions": max(0, (outcome?.actionsCompleted.count ?? 0) - 2),
+                "plan_items": outcome?.planItems.count ?? 0, "commands": outcome?.commandsCompleted.count ?? 0,
+                "artifacts": outcome?.changedArtifacts.count ?? 0, "unresolved_items": outcome?.unresolvedItems.count ?? 0,
+                "resume_point": outcome?.latestResumePoint != nil,
+                "validations": max(0, (outcome?.validationsAttempted.count ?? 0) - 2),
+                "semantic_fields": max(0, item.semanticFields.count - 4), "evidence": max(0, item.evidence.count - 3),
+                "availability": max(0, item.completeness.fields.count - 8),
+                "boundaries": max(0, item.worktreeBoundaries.count - 1),
+                "boundary_text_truncated": boundaryTexts.contains { ($0?.count ?? 0) > 160 },
+                "outcome_fields": outcome?.truncatedFields ?? []
+            ]
+            return [
+                "session_id": item.sessionID, "lifecycle": item.lifecycleState, "completion": item.completionState,
+                "reasons": item.relationshipReasons.map { $0.kind.rawValue }, "boundary": boundaryFields,
+                "freshness": freshness, "outcome_revision": value(item.sessionOutcomeRevisionID),
+                "objectives": (outcome?.objectives.prefix(2) ?? []).map(fact),
+                "blockers": (outcome?.blockers.prefix(2) ?? []).map(fact),
+                "actions": (outcome?.actionsCompleted.prefix(2) ?? []).map(fact),
+                "validations": validations, "semantic_fields": semanticFields,
+                "evidence": item.evidence.prefix(3).map(reference), "completeness": item.completeness.status,
+                "outcome_available": outcome != nil, "availability": availability, "omitted": omitted
+            ]
+        }
+        var results = try projection.relatedSessions.map(brief)
+        var dropped = 0
+        var payload: [String: Any] = [:]
+        var data = Data()
+        repeat {
+            payload = ["schema_version": 1, "found": true, "target_session_id": projection.targetSessionID,
+                       "revision": projection.projection.revisionID,
+                       "watermark": value(projection.projection.sourceEvidenceWatermark),
+                       "completeness": projection.completeness.status,
+                       "completeness_notes": projection.completeness.notes.map { text($0) },
+                       "completeness_notes_truncated": projection.completeness.notes.contains { $0.count > 160 },
+                       "exclusions_retained": projection.excludedCandidates.count,
+                       "briefs_omitted_for_budget": dropped, "results": results]
+            data = try JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys])
+            if data.count <= 12 * 1024 || results.isEmpty { break }
+            results.removeLast()
+            dropped += 1
+        } while true
+        guard data.count <= 12 * 1024, let encoded = String(data: data, encoding: .utf8) else {
+            throw CLIError(message: String(localized: "cli.provenance.current.tooLarge", defaultValue: "Current session context exceeds the output budget."))
+        }
+        if jsonOutput {
+            print(encoded)
+        } else {
+            let metadata = payload.filter { $0.key != "results" }
+            let metadataData = try JSONSerialization.data(withJSONObject: metadata, options: [.sortedKeys])
+            guard let metadataText = String(data: metadataData, encoding: .utf8) else {
+                throw CLIError(message: String(localized: "cli.provenance.current.tooLarge", defaultValue: "Current session context exceeds the output budget."))
+            }
+            var lines = [String(localized: "cli.provenance.current.header", defaultValue: "Related session context:"), metadataText]
+            for result in results {
+                let resultData = try JSONSerialization.data(withJSONObject: result, options: [.sortedKeys])
+                guard let resultText = String(data: resultData, encoding: .utf8) else {
+                    throw CLIError(message: String(localized: "cli.provenance.current.tooLarge", defaultValue: "Current session context exceeds the output budget."))
+                }
+                lines.append("- " + resultText)
+            }
+            let output = lines.joined(separator: "\n")
+            guard output.utf8.count + 1 <= 16 * 1024 else {
+                throw CLIError(message: String(localized: "cli.provenance.current.tooLarge", defaultValue: "Current session context exceeds the output budget."))
+            }
+            print(output)
+        }
+    }
+}

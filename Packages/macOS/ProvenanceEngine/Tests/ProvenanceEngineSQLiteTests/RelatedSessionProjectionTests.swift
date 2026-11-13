@@ -42,6 +42,34 @@ struct RelatedSessionProjectionTests {
     }
 
     @Test
+    func freshSessionFindsActiveAndClosedRepositoryPeersWithoutChangedArtifacts() async throws {
+        let url = RelatedSessionProjectionTestSupport.temporaryDatabaseURL()
+        defer { RelatedSessionProjectionTestSupport.removeTemporaryDatabaseDirectory(for: url) }
+        let repository = try ProvenanceSQLiteRepository(url: url)
+        let fixture = RelatedSessionFixture()
+        let repo = fixture.repository()
+        let current = fixture.worktree(id: "fresh", repository: repo, path: "/repos/fresh", branch: "fresh", head: "head-fresh", offset: 1)
+        let peer = fixture.worktree(id: "peer", repository: repo, path: "/repos/peer", branch: "peer", head: "head-peer", offset: 2)
+        let target = try await RelatedSessionProjectionTestSupport.seedSession(
+            id: "session-fresh", status: "active", worktree: current, repository: repo,
+            paths: [], fixture: fixture, into: repository
+        )
+        for (id, status) in [("session-active", "active"), ("session-closed", "completed")] {
+            _ = try await RelatedSessionProjectionTestSupport.seedSession(
+                id: id, status: status, worktree: peer, repository: repo,
+                paths: ["Sources/Related.swift"], fixture: fixture, into: repository
+            )
+        }
+        let projection = try #require(try await repository.relatedSessions(
+            .init(targetSessionID: target.session.id, limit: 5)
+        ).projection)
+        #expect(Set(projection.relatedSessions.map(\.sessionID)) == ["session-active", "session-closed"])
+        #expect(projection.relatedSessions.allSatisfy { brief in
+            brief.relationshipReasons.contains { $0.kind == .sameRepository && !$0.evidence.isEmpty }
+        })
+    }
+
+    @Test
     func repositoryWorktreeBranchAndArtifactReasonsAreExplicitAndBounded() async throws {
         let url = RelatedSessionProjectionTestSupport.temporaryDatabaseURL()
         defer { RelatedSessionProjectionTestSupport.removeTemporaryDatabaseDirectory(for: url) }

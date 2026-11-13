@@ -1,0 +1,2 @@
+"provenance.demoSeed.usage" = "使用方法: swift run --package-path Packages/macOS/ProvenanceEngine ProvenanceRetrievalDemoSeed --database <path> [--reset] [--closed-peer] [--json]";
+"provenance.demoSeed.lifecycleFailed" = "作成した関連セッションを終了できませんでした。";

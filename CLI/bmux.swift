@@ -3285,6 +3285,7 @@ struct BMUXCLI {
                 commandArgs: commandArgs,
                 jsonOutput: jsonOutput,
                 explicitSocketPath: explicitSocketPath,
+                explicitSocketPassword: socketPasswordArg,
                 processEnv: processEnv,
                 cliBundleIdentifier: cliBundleIdentifier
             )
@@ -5972,14 +5973,6 @@ struct BMUXCLI {
             return parsed
         }
         return .refs
-    }
-
-    func sendV1Command(_ command: String, client: SocketClient) throws -> String {
-        let response = try client.send(command: command)
-        if response.hasPrefix("ERROR:") {
-            throw CLIError(message: response)
-        }
-        return response
     }
 
     func formatIDs(_ object: Any, mode: CLIIDFormat) -> Any {
@@ -27670,7 +27663,7 @@ struct BMUXCLI {
         )
     }
 
-    private func parentPID(of pid: pid_t) -> pid_t {
+    func parentPID(of pid: pid_t) -> pid_t {
         var info = kinfo_proc()
         var size = MemoryLayout<kinfo_proc>.size
         var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, pid]
@@ -27705,7 +27698,7 @@ struct BMUXCLI {
         return URL(fileURLWithPath: output).lastPathComponent.lowercased()
     }
 
-    private func processArguments(for pid: pid_t) -> [String]? {
+    func processArguments(for pid: pid_t) -> [String]? {
         var argMax: Int32 = 0
         var argMaxSize = MemoryLayout<Int32>.size
         var argMaxMib: [Int32] = [CTL_KERN, KERN_ARGMAX]
@@ -31178,7 +31171,8 @@ export default BMUXSessionRestore;
                     telemetry: telemetry
                 )
             }
-            if def.name == "codex", !sessionId.isEmpty, !suppressVisibleMutations {
+            if def.name == "codex", !sessionId.isEmpty, !suppressVisibleMutations,
+               env["BMUX_CODEX_HOOK_IDENTITY_VERIFIED"] == "1" {
                 if codexPromptTurnWentTerminal() {
                     stopStaleCodexPromptSubmit(restoreVisibleState: true)
                     return

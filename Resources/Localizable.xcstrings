@@ -243288,13 +243288,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance sessions collisions <pe-session-id> [--limit <count>] [--related-session-limit <count>] [--exclusion-limit <count>] [--artifact-path <repo-relative-path>] [--updated-after <timestamp>] [--stale-before <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance session outcome <session-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance import codex-transcripts [--path <path>] [--limit <count>] [--database <path>] [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]\n  bmux provenance diagnostics codex-transcript <provider-session-id> [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\nInspect bmux work provenance without requiring a live app socket.\nRelated-session retrieval uses explicit PE session ids. Artifact-collision retrieval starts from the target session's recorded changed artifacts; --artifact-path narrows those candidates only."
+            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance sessions related --current [--limit <1-5>] [--database <path>] [--json]\n  bmux provenance sessions collisions <pe-session-id> [--limit <count>] [--related-session-limit <count>] [--exclusion-limit <count>] [--artifact-path <repo-relative-path>] [--updated-after <timestamp>] [--stale-before <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance session outcome <session-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance import codex-transcripts [--path <path>] [--limit <count>] [--database <path>] [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]\n  bmux provenance diagnostics codex-transcript <provider-session-id> [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\nExplicit-ID provenance reads work without a live app socket. Related-session --current requires a verified caller in the live app. Artifact-collision retrieval starts from the target session's recorded changed artifacts; --artifact-path narrows those candidates only."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance sessions collisions <pe-session-id> [--limit <count>] [--related-session-limit <count>] [--exclusion-limit <count>] [--artifact-path <repo-relative-path>] [--updated-after <timestamp>] [--stale-before <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance session outcome <session-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance import codex-transcripts [--path <path>] [--limit <count>] [--database <path>] [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]\n  bmux provenance diagnostics codex-transcript <provider-session-id> [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\n稼働中のアプリソケットを必要とせず、bmux の作業 provenance を調べます。\n関連セッション取得には明示的な PE セッション ID を使用します。アーティファクト衝突取得は対象セッションに記録済みの変更アーティファクトから始まり、--artifact-path はその候補だけを絞り込みます。"
+            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance sessions related --current [--limit <1-5>] [--database <path>] [--json]\n  bmux provenance sessions collisions <pe-session-id> [--limit <count>] [--related-session-limit <count>] [--exclusion-limit <count>] [--artifact-path <repo-relative-path>] [--updated-after <timestamp>] [--stale-before <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance session outcome <session-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance import codex-transcripts [--path <path>] [--limit <count>] [--database <path>] [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]\n  bmux provenance diagnostics codex-transcript <provider-session-id> [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\n明示的な ID を指定した provenance の読み取りには、稼働中のアプリソケットは不要です。related-session の --current には稼働中のアプリで確認された呼び出し元が必要です。アーティファクト衝突取得は対象セッションに記録済みの変更アーティファクトから始まり、--artifact-path はその候補だけを絞り込みます。"
           }
         }
       }
@@ -243384,19 +243384,149 @@
         }
       }
     },
+    "provenance.demoSeed.usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage: swift run --package-path Packages/macOS/ProvenanceEngine ProvenanceRetrievalDemoSeed --database <path> [--reset] [--closed-peer] [--json]"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用方法: swift run --package-path Packages/macOS/ProvenanceEngine ProvenanceRetrievalDemoSeed --database <path> [--reset] [--closed-peer] [--json]"
+          }
+        }
+      }
+    },
+    "provenance.demoSeed.lifecycleFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not close the seeded peer session."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "作成した関連セッションを終了できませんでした。"
+          }
+        }
+      }
+    },
+    "cli.provenance.current.appLinkageUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Current session context is unavailable. Check that the bmux app is running and the socket path is correct. If a sandbox denies socket access, allow access or retry outside the sandbox."}},
+        "ja": {"stringUnit": {"state": "translated", "value": "現在のセッションのコンテキストを取得できません。bmux アプリが起動していて、ソケットのパスが正しいことを確認してください。サンドボックスがソケットへのアクセスを拒否する場合は、アクセスを許可するか、サンドボックスの外で再試行してください。"}}
+      }
+    },
+    "cli.provenance.current.ambiguous": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Current session context is ambiguous. Start Codex in a fresh pane and retry."}},
+        "ja": {"stringUnit": {"state": "translated", "value": "現在のセッションのコンテキストを特定できません。新しいペインで Codex を起動して再試行してください。"}}
+      }
+    },
+    "cli.provenance.current.ownershipUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Current session ownership cannot be verified. Start a new independent Codex session (for example, with --no-daemon if supported) and retry."}},
+        "ja": {"stringUnit": {"state": "translated", "value": "現在のセッションの所有元を確認できません。新しい独立した Codex セッションを起動して再試行してください（対応している場合は、例えば --no-daemon を指定してください）。"}}
+      }
+    },
+    "cli.provenance.current.associationUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {"stringUnit": {"state": "translated", "value": "Current session linkage is unavailable. Wait for the prompt hook and retry. If the issue persists, refresh installed hooks with bmux hooks setup codex."}},
+        "ja": {"stringUnit": {"state": "translated", "value": "現在のセッションの関連付けを取得できません。プロンプトフックを待って再試行してください。解決しない場合は、bmux hooks setup codex でインストール済みフックを更新してください。"}}
+      }
+    },
+    "cli.provenance.current.invalidLimit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "--limit must be an integer from 1 through 5"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "--limit には 1 から 5 までの整数を指定してください"
+          }
+        }
+      }
+    },
+    "cli.provenance.current.unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current session context is unavailable (%@). Wait for session linkage and retry; verify this command runs inside the intended Codex pane."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在のセッションのコンテキストを取得できません（%@）。セッションの関連付けを待って再試行し、目的の Codex ペインでコマンドを実行していることを確認してください。"
+          }
+        }
+      }
+    },
+    "cli.provenance.current.header": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Related session context:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "関連セッションのコンテキスト:"
+          }
+        }
+      }
+    },
+    "cli.provenance.current.tooLarge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current session context exceeds the output budget."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在のセッションのコンテキストが出力サイズの上限を超えています。"
+          }
+        }
+      }
+    },
     "cli.provenance.sessions.related.usage": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usage: bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]"
+            "value": "Usage: bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n       bmux provenance sessions related --current [--limit <1-5>] [--database <path>] [--json]"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用方法: bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]"
+            "value": "使用方法: bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n       bmux provenance sessions related --current [--limit <1-5>] [--database <path>] [--json]"
           }
         }
       }

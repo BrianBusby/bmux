@@ -126,25 +126,30 @@ bmux still owns command parsing, Git path normalization, output compatibility, f
 
 ## Agent-Facing Retrieval
 
-Ordinary bmux-hosted Codex CLI sessions can now inspect bounded
-cross-session work state without a live app socket when the selected PE SQLite
-database is available:
+An ordinary bmux-hosted Codex session can query its own related work after its
+surface, provider thread and PE association have been linked:
 
 ```bash
+bmux provenance sessions related --current --limit 5
 bmux provenance sessions related <pe-session-id> --limit 5 --database <path>
 bmux provenance sessions related <pe-session-id> --limit 5 --database <path> --json
 bmux provenance sessions collisions <pe-session-id> --artifact-path Sources/Foo.swift --database <path>
 ```
 
-The caller must supply the PE session id explicitly. bmux does not infer a PE
-session id from the focused tab, workspace UUID, provider thread id, or the
-first matching row when more than one session is present. Agents should resolve
-the intended id through `bmux provenance context current`,
-`bmux provenance worktrees list`, `bmux provenance sessions tree`, or existing
-session/outcome reads, then pass the selected id to the retrieval command.
+`--current` verifies the caller surface through the live app and matches its
+Codex thread against its hook record and a unique PE association. It
+returns an unavailable reason when the link is absent or ambiguous and asks
+the caller to retry after linkage. Explicit PE IDs remain supported without a
+live socket; use them for exact revisions and the existing full JSON contract.
+If multiple retained Codex records identify the same pane, ownership is
+ambiguous: start Codex in a fresh pane and retry. Successful retrieval after
+pane reuse remains unsupported until current ownership can be verified.
+Codex command sandboxes that deny Unix socket access require an approved
+unsandboxed invocation; otherwise the command reports `app_linkage_unavailable`.
 
-The text output is compact and stable for human scanning. JSON output preserves
-the public PE response shape using the existing provenance CLI date and key
+The `--current` text and JSON share a bounded compact contract, with explicit
+field and result omissions. The explicit-ID text output is compact for human
+scanning. Explicit-ID JSON output preserves the public PE response shape using the existing provenance CLI date and key
 naming conventions, so enum values, ids, reason codes, revision ids, and
 machine fields are locale-independent. Diagnostics and malformed-argument
 errors stay outside stdout JSON payloads.
