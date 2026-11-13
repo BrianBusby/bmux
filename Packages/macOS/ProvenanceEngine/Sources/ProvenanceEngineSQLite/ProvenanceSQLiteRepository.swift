@@ -7,6 +7,9 @@ actor ProvenanceSQLiteRepository {
     let payloadEncoder: JSONEncoder
     let payloadDecoder: JSONDecoder
     let stableIDFactory: ProvenanceStableIDFactory
+#if DEBUG
+    var didReadFactualSessionForTesting: (@Sendable () -> Void)?
+#endif
 
     /// Opens the database and applies the supplied migrations before returning.
     ///
@@ -1366,6 +1369,9 @@ actor ProvenanceSQLiteRepository {
             )
         }
 
+#if DEBUG
+        didReadFactualSessionForTesting?()
+#endif
         let providerThreads = try codingAgentThreadIDs(sessionID: request.sessionID).compactMap {
             try codingAgentThread(id: $0)
         }
