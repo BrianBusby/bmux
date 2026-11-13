@@ -180,6 +180,9 @@ struct TaskRelevanceEvidenceTests {
         let ticket = try #require(try await store.relatedSessions(
             .init(targetSessionID: "caller", ticket: "B-42")).projection)
         #expect(ticket.relatedSessions.isEmpty)
+        let otherObjective = try #require(try await store.relatedSessions(
+            .init(targetSessionID: "caller", objective: "Old objective")).projection)
+        #expect(otherObjective.relatedSessions.isEmpty)
 
         let callerB = try await RelatedSessionProjectionTestSupport.seedSession(
             id: "caller-b", status: "active", worktree: treeB, repository: repoB, fixture: fixture, into: store)
