@@ -567,7 +567,8 @@ extension ProvenanceSQLiteRepository {
         commandCwd: String?,
         evidenceIndex: TurnOutcomeEvidenceIndex
     ) throws -> ProvenanceTurnOutcomeRepositoryBoundary? {
-        let thread = try turn.threadID.flatMap { try codingAgentThread(id: $0) }
+        let observedThread = try turn.threadID.flatMap { try codingAgentThread(id: $0) }
+        let thread = observedThread.flatMap { $0.sessionID == turn.sessionID ? $0 : nil }
         let worktreeID = session?.worktreeID ?? thread?.worktreeID
         let observedWorktree: ProvenanceWorktreeRecord?
         if let worktreeID {
