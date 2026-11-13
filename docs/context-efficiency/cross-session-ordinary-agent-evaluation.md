@@ -50,6 +50,14 @@ worktree inspection, and decision. This run used real terminal transcript
 capture; earlier seeded fixture checks are documented separately in
 [cross-session-task-relevance-evaluation.md](cross-session-task-relevance-evaluation.md).
 
+The final runtime code was also built as isolated tag `cross-session-agent-v4`,
+build 958, from pushed head `54efdaf2e`. A fresh ordinary Codex 0.162.0 session
+queried the same path after socket approval, found three related sessions, and
+followed earlier writer `01a1d389-b61a-7e61-8639-5eaad9a951bc` on branch
+`concurrent` at revision `session-outcome-revision-763c6341972904b5fe917cb9`.
+The agent reported that the outcome was partial and made no edits. This is a
+final-runtime smoke check, not a repetition of the coordination experiment.
+
 ## Prior useful decision: inconclusive
 
 Reader `01a1d3af-903c-7143-9acd-4726fcdbc697` started in a worktree where

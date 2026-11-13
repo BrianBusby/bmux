@@ -329,7 +329,8 @@ reader's path and literal-objective queries returned empty, and it repeated the
 read-only failure before a broad query found the earlier session. The
 [evaluation](cross-session-ordinary-agent-evaluation.md) records both negative
 results, revisions and the encoded-command capture limitation. Tagged build 958
-compiled pushed runtime head `54efdaf2e`; final-head live dogfood remains open.
+compiled pushed runtime head `54efdaf2e`; a fresh ordinary agent on that build
+queried the cache path, found three sessions and followed a partial outcome.
 
 Remaining work: resolve the formal slice gates and remaining caller limitations,
 review and deliver slice 2, and capture the slice 3 ordinary-agent decision
