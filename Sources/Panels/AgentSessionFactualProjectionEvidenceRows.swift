@@ -3,7 +3,12 @@ import ProvenanceEngineContracts
 
 struct AgentSessionFactualProjectionEvidenceRows {
     static func isPlanStepCompleted(_ status: String) -> Bool {
-        status.lowercased().contains("complete")
+        switch status.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "completed", "complete", "done":
+            true
+        default:
+            false
+        }
     }
 
     static func turnProperties(for turnSnapshot: ProvenanceFactualSessionProjectionTurnSnapshot) -> [TurnProperty] {
