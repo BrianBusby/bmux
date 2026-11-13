@@ -49,6 +49,8 @@ Classifications apply only to the named probes and baseline, not every configura
 | Provider, version and transport | Signal | Observed classification and boundary |
 | --- | --- | --- |
 | Codex 0.168.0, GPT-6.1 Terra high, ordinary bmux TUI, hooks enabled | `update_plan` checklist | **Not emitted in this probe:** the agent's tool inventory was empty for that name. Revision, ingestion and display are unknown; other configurations are unclassified. |
+| Same ordinary path | Plan-mode proposed prose | **Dropped by baseline importer:** an explicit Plan item and matching prose appeared in the transcript; the inspected importer ignored the item. Draft #237 records proposed prose, not checklist status; native screen delivery and latency remain unverified. |
+| Same ordinary path | Observation health and reconnect | **Unknown:** the installed CLI could not read the inspected newer-schema store. A separate isolated schema incompatibility was confirmed, but it does not establish the cause of the observed hook timeout or all reconnect behavior. |
 | Same ordinary path | Silent and concurrent commands | **Partially observed:** completed command items appeared; no command-start item was observed in the cited probes. PE and native visibility are unknown, including why the inspected store lacked command rows. |
 | Same ordinary path | Interruption and resume | **Partially observed:** an abort preceded a late command completion and resume used the same provider session with a new turn. PE association and native presentation are unknown. |
 | Same ordinary path | Input or approval request | **Unknown:** the controlled default-mode agent reported input tooling unavailable; emission, resolution and display were not measured. |
