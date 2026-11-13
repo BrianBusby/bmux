@@ -3876,7 +3876,7 @@ actor ProvenanceSQLiteRepository {
         return try payloadDecoder.decode(type, from: data)
     }
 
-    private func insertSemanticInference(_ record: ProvenanceSemanticInferenceRecord) throws {
+    func insertSemanticInference(_ record: ProvenanceSemanticInferenceRecord) throws {
         let payloadJSON = try encodedSemanticJSON(
             record.payload,
             failureMessage: "failed to encode semantic inference payload"
@@ -3935,7 +3935,7 @@ actor ProvenanceSQLiteRepository {
         _ = try insert.step()
     }
 
-    private func supersedeSemanticInference(
+    func supersedeSemanticInference(
         id: String,
         replacement: ProvenanceSemanticInferenceRecord
     ) throws {

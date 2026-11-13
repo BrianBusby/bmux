@@ -495,6 +495,22 @@ public extension ProvenanceSemanticInferenceRecord {
     }
 }
 
+public extension ProvenanceCodingAgentSessionSemanticInferenceProducer {
+    /// Resolves a candidate against its observed active predecessor without writing it.
+    /// Storage must validate that the factual input and predecessor are still current.
+    func resolve(
+        candidate: ProvenanceSemanticInferenceRecord,
+        existing: ProvenanceSemanticInferenceRecord?
+    ) -> (record: ProvenanceSemanticInferenceRecord, unchanged: Bool) {
+        let predecessor = existing.flatMap {
+            $0.scope == candidate.scope && $0.scopeID == candidate.scopeID && $0.kind == candidate.kind ? $0 : nil
+        }
+        let effective = predecessor.flatMap { candidate.mergingPartialSourceHistory(with: $0) } ?? candidate
+        if let predecessor, predecessor.semanticClaimMatches(effective) { return (predecessor, true) }
+        return (effective.superseding(predecessor.map { [$0.id] } ?? []), false)
+    }
+}
+
 public extension ProvenanceEngineClient {
     /// Materializes first-pass coding-agent semantic session inferences from the factual projection.
     func publishCodingAgentSessionSemanticInferences(
@@ -532,15 +548,14 @@ public extension ProvenanceEngineClient {
                     limit: 1
                 )
             ).records.first
-            let effectiveCandidate = existing
-                .flatMap { candidate.mergingPartialSourceHistory(with: $0) } ?? candidate
-            if let existing, existing.semanticClaimMatches(effectiveCandidate) {
-                activeRecords.append(existing)
-                unchangedIDs.append(existing.id)
+            let resolution = producer.resolve(candidate: candidate, existing: existing)
+            if resolution.unchanged {
+                activeRecords.append(resolution.record)
+                unchangedIDs.append(resolution.record.id)
                 continue
             }
 
-            let record = effectiveCandidate.superseding(existing.map { [$0.id] } ?? [])
+            let record = resolution.record
             _ = try await publishSemanticInference(ProvenanceSemanticInferencePublishRequest(record: record))
             activeRecords.append(record)
             publishedIDs.append(record.id)

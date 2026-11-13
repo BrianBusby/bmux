@@ -689,18 +689,22 @@ single connection snapshot for each response, including the model's factual and
 semantic inputs. This prevents a concurrent connection's commits from being
 mixed within one response. The factual event sequence is not a general database
 revision: semantic writes and other projection changes may not advance it.
-Current semantic publication is unconditional, so a snapshot can become stale
-before publication. Safe conditional publication still requires validating all
-relevant input and competing semantic state in the same write transaction as
-the insert and supersession; these read snapshots do not provide that guarantee.
+The SQLite implementation of the canonical deterministic session producer reads
+facts and active predecessors and commits its complete inference pass under one
+immediate write transaction. It cannot publish a partial pass or derive from a
+snapshot that changed before that transaction. Repeated unchanged claims are
+retained. These guarantees apply to this SQLite producer path only; direct
+unconditional semantic writes, other implementations, and older binaries do not
+participate and can still publish stale claims.
 An internal synchronous SQLite guard can compare an entire observed work model
 and execute an operation under one immediate write transaction. It is not a
 publication capability: model reads select only certain semantic records, the
-guard does not validate all predecessors or other producer inputs, and the
-existing publisher starts its own transaction and remains unconditional. A safe
-batch publisher must make those validations and its inserts and supersessions
-part of the same transaction, with every competing writer participating. A
-retry also needs explicit idempotence and conflict semantics.
+guard does not validate all predecessors or other producer inputs. The
+canonical SQLite deterministic producer uses its own batch transaction; the
+guard is not used to publish. Model-derived or externally prepared claims still
+need complete input and predecessor validation and explicit retry, idempotence,
+and conflict semantics. All competing writers must participate before this can
+be treated as a global publication fence.
 
 The first planned vertical slice should validate richer coding-agent evidence
 ingestion, deterministic factual session projections, evidence-backed inference,
