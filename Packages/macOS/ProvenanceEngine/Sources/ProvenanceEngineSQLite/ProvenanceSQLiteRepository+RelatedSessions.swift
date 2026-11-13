@@ -91,20 +91,31 @@ extension ProvenanceSQLiteRepository {
                 candidate: candidateProfile,
                 treeContext: treeContext
             )
+            let sharedRepositoryKeys = targetProfile.repositoryKeys.intersection(candidateProfile.repositoryKeys)
             if let path = request.artifactPath {
-                let key = relatedSessionArtifactKey(path)
-                guard !targetProfile.repositoryKeys.intersection(candidateProfile.repositoryKeys).isEmpty,
-                      candidateProfile.artifactKeys.contains(key) else { continue }
+                guard !sharedRepositoryKeys.isEmpty, let outcome = candidateProfile.outcome else { continue }
+                var matches: [ProvenanceSessionOutcomeArtifact] = []
+                for artifact in outcome.changedArtifacts where relatedSessionArtifactKey(artifact.artifact.path) == relatedSessionArtifactKey(path) {
+                    let identity = try artifactCollisionRepositoryIdentity(
+                        artifact: artifact, outcome: outcome, sessionID: candidateID
+                    )
+                    if !sharedRepositoryKeys.isDisjoint(with: identity.keys) { matches.append(artifact) }
+                }
+                guard !matches.isEmpty else { continue }
+                let evidence = uniqueRelatedSessionEvidence(
+                    matches.flatMap { relatedSessionEvidence($0.artifact.evidence) } + [relatedSessionEvidence(outcome)]
+                )
+                let observedAt = try matches.compactMap {
+                    try artifactCollisionLatestEventTimestamp($0.artifact.evidence)
+                }.max()
                 reasons.append(ProvenanceRelatedSessionRelationshipReason(
                     kind: .requestedArtifact, targetValue: path, relatedValue: path,
-                    evidence: candidateProfile.artifactEvidence[key] ?? [],
-                    observedAt: candidateProfile.observedAt[key]
+                    evidence: evidence, observedAt: observedAt
                 ))
                 reasons.sort(by: relatedSessionReasonSort)
             }
             if let objective = request.objective {
-                guard !targetProfile.repositoryKeys.intersection(candidateProfile.repositoryKeys).isEmpty,
-                      let outcome = candidateProfile.outcome else { continue }
+                guard !sharedRepositoryKeys.isEmpty, let outcome = candidateProfile.outcome else { continue }
                 let matches = outcome.objectives.filter {
                     $0.text.range(of: objective, options: [.caseInsensitive, .literal]) != nil
                 }
@@ -112,15 +123,20 @@ extension ProvenanceSQLiteRepository {
                 let evidence = uniqueRelatedSessionEvidence(
                     matches.flatMap { relatedSessionEvidence($0.evidence) } + [relatedSessionEvidence(outcome)]
                 )
+                let observedAt = try matches.compactMap {
+                    try artifactCollisionLatestEventTimestamp($0.evidence)
+                }.max()
                 reasons.append(ProvenanceRelatedSessionRelationshipReason(
                     kind: .objectiveTextMatch, targetValue: objective, relatedValue: objective,
-                    evidence: evidence, observedAt: outcome.projection.generatedAt
+                    evidence: evidence, observedAt: observedAt
                 ))
                 reasons.sort(by: relatedSessionReasonSort)
             }
             if let ticket = request.ticket {
-                guard !targetProfile.repositoryKeys.intersection(candidateProfile.repositoryKeys).isEmpty,
-                      let reason = try relatedSessionCurrentTicketReason(ticket, candidate: candidateProfile) else { continue }
+                guard !sharedRepositoryKeys.isEmpty,
+                      let reason = try relatedSessionCurrentTicketReason(
+                        ticket, candidate: candidateProfile, repositoryScope: sharedRepositoryKeys
+                      ) else { continue }
                 reasons.append(reason)
                 reasons.sort(by: relatedSessionReasonSort)
             }

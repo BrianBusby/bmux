@@ -4,7 +4,7 @@ import ProvenanceEngineContracts
 extension ProvenanceSQLiteRepository {
     /// Workspace tickets describe current workspace metadata, not a historical session assignment.
     func relatedSessionCurrentTicketReason(
-        _ ticket: String, candidate: RelatedSessionProfile
+        _ ticket: String, candidate: RelatedSessionProfile, repositoryScope: Set<String>
     ) throws -> ProvenanceRelatedSessionRelationshipReason? {
         var workspaceIDs = Set([candidate.session.workspaceID].compactMap { $0 })
         let query = try database.prepare("""
@@ -18,8 +18,11 @@ extension ProvenanceSQLiteRepository {
         }
         for workspaceID in workspaceIDs.sorted() {
             guard let display = try workspaceDisplay(.init(workspaceID: workspaceID)).display else { continue }
-            if let repositoryID = display.repositoryID,
-               !candidate.repositoryKeys.contains("repository_id:\(repositoryID)") { continue }
+            guard let repositoryID = display.repositoryID else { continue }
+            let displayRepositoryKeys = try artifactCollisionRepositoryKeys(
+                repositoryID: repositoryID, repositoryPath: nil
+            )
+            guard !repositoryScope.isDisjoint(with: displayRepositoryKeys) else { continue }
             let idsMatch = display.ticketIDs.contains(ticket)
             let linksMatch = display.ticketLinks.contains { $0.id == ticket }
             guard idsMatch || linksMatch else { continue }
