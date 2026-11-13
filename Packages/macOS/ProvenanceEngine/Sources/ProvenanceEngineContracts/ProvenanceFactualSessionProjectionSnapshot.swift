@@ -7,12 +7,34 @@ public struct ProvenanceFactualProposedPlanObservation: Codable, Equatable, Send
     public let sequence: Int
     public let timestamp: Date
     public let proposal: ProvenanceCodingAgentProposedPlanRecord
+    /// Actual source metadata; absent in older snapshots.
+    public let source: ProvenanceSource?
+    public let origin: ProvenanceEvidenceOrigin?
+    public let eventSchemaVersion: Int?
+    public let confidence: ProvenanceConfidence?
 
-    public init(id: String, sequence: Int, timestamp: Date, proposal: ProvenanceCodingAgentProposedPlanRecord) {
+    public init(id: String, sequence: Int, timestamp: Date, proposal: ProvenanceCodingAgentProposedPlanRecord,
+                source: ProvenanceSource? = nil, origin: ProvenanceEvidenceOrigin? = nil, eventSchemaVersion: Int? = nil,
+                confidence: ProvenanceConfidence? = nil) {
         self.id = id
         self.sequence = sequence
         self.timestamp = timestamp
         self.proposal = proposal
+        self.source = source
+        self.origin = origin
+        self.eventSchemaVersion = eventSchemaVersion
+        self.confidence = confidence
+    }
+}
+
+/// Coverage of this bounded ledger read, not of upstream provider emission.
+public struct ProvenanceProposedPlanReadCoverage: Codable, Equatable, Sendable {
+    public let scanWindowTruncated: Bool
+    public let omittedObservations: Bool
+
+    public init(scanWindowTruncated: Bool, omittedObservations: Bool) {
+        self.scanWindowTruncated = scanWindowTruncated
+        self.omittedObservations = omittedObservations
     }
 }
 
@@ -43,6 +65,9 @@ public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Se
     /// observations remain in the ledger; this is not exhaustive coverage.
     public let proposedPlanObservations: [ProvenanceFactualProposedPlanObservation]
 
+    /// Nil means the producer did not report whether proposal evidence was read.
+    public let proposedPlanCoverage: ProvenanceProposedPlanReadCoverage?
+
     private enum CodingKeys: String, CodingKey {
         case revision
         case session
@@ -52,6 +77,7 @@ public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Se
         case priorTurns
         case turns
         case proposedPlanObservations
+        case proposedPlanCoverage
     }
 
     /// Creates a factual session projection snapshot.
@@ -63,7 +89,8 @@ public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Se
         latestTurn: ProvenanceFactualSessionProjectionTurnSnapshot? = nil,
         priorTurns: [ProvenanceFactualSessionProjectionTurnReference] = [],
         turns: [ProvenanceFactualSessionProjectionTurnSnapshot],
-        proposedPlanObservations: [ProvenanceFactualProposedPlanObservation] = []
+        proposedPlanObservations: [ProvenanceFactualProposedPlanObservation] = [],
+        proposedPlanCoverage: ProvenanceProposedPlanReadCoverage? = nil
     ) {
         self.revision = revision
         self.session = session
@@ -73,6 +100,7 @@ public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Se
         self.priorTurns = priorTurns
         self.turns = turns
         self.proposedPlanObservations = proposedPlanObservations
+        self.proposedPlanCoverage = proposedPlanCoverage
     }
 
     /// Decodes both the current consumer-focused shape and the earlier v1
@@ -86,6 +114,9 @@ public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Se
         self.proposedPlanObservations = try container.decodeIfPresent(
             [ProvenanceFactualProposedPlanObservation].self, forKey: .proposedPlanObservations
         ) ?? []
+        self.proposedPlanCoverage = try container.decodeIfPresent(
+            ProvenanceProposedPlanReadCoverage.self, forKey: .proposedPlanCoverage
+        )
         self.providerThreadIdentities = try container.decodeIfPresent(
             [ProvenanceFactualSessionProjectionProviderThreadIdentity].self,
             forKey: .providerThreadIdentities
