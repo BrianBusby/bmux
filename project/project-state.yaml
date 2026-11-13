@@ -192,6 +192,7 @@ roadmap:
       acceptance:
         criteria:
           - Trace ordinary Codex evidence to native display, capture representative replay fixtures, classify missing signals, measure observable latency, and correct confirmed defects.
+          - Preserve plan history while exposing uncertainty consistently when later plan evidence is ambiguous, contradicted, or previously misreported.
       rationale: See docs/planning/session-visibility.md for the gate, evidence requirements and open limitations.
 
     - id: session_visibility_revision_integrity
