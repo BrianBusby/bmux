@@ -248,6 +248,13 @@ rejects newer schema, so do not point it at the upgraded database. CI Project
 Truth passed; workflow guards are blocked by expired unrelated feature flags,
 which also prevent downstream checks. Human dogfood remains open.
 
+After PR #227 merged, slice 2 preparation began on `cross-session-task-relevance`.
+The [evaluation specification](cross-session-task-relevance-evaluation.md) fixes
+expected fixture IDs and thresholds before ranking work. Its corpus has not yet
+been seeded or run; the caller slice remains below validated maturity because
+sequential reuse with retained records still fails closed. Ticket-to-session
+association availability remains to be checked in PE.
+
 Remaining work: implement and verify all three slices, record a bounded output
 contract and corpus thresholds, run Project Truth gates after each slice, build
 an isolated tagged app, and capture ordinary Codex end-to-end observations. The
