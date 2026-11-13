@@ -2,7 +2,7 @@ import Foundation
 import ProvenanceEngineContracts
 
 extension BMUXCLI {
-    /// The compact contract limits the encoded response to 12 KiB, omitting whole trailing briefs first.
+    /// The compact contract trims secondary detail before omitting trailing briefs to fit 12 KiB.
     func printProvenanceCurrentRelated(_ response: ProvenanceRelatedSessionResponse, jsonOutput: Bool) throws {
         guard let projection = response.projection, response.found else {
             printProvenanceCurrentUnavailable(response.reason ?? "no_session", jsonOutput: jsonOutput)
@@ -127,6 +127,18 @@ extension BMUXCLI {
         }
         var results = try projection.relatedSessions.map(brief)
         var dropped = 0
+        var notes = projection.completeness.notes.map { text($0) }
+        var notesOmitted = 0
+        var reductionStage = 0
+        func reduceFields(_ key: String, retain: Int, omissionKey: String) {
+            for index in results.indices {
+                guard let fields = results[index][key] as? [[String: Any]], fields.count > retain,
+                      var omitted = results[index]["omitted"] as? [String: Any] else { continue }
+                omitted[omissionKey] = (omitted[omissionKey] as? Int ?? 0) + fields.count - retain
+                results[index][key] = Array(fields.prefix(retain))
+                results[index]["omitted"] = omitted
+            }
+        }
         var payload: [String: Any] = [:]
         var data = Data()
         repeat {
@@ -137,15 +149,32 @@ extension BMUXCLI {
                        "projection_availability": projection.completeness.fields.map {
                            ["field": $0.field, "status": $0.status, "reason": value($0.reason)]
                        },
-                       "completeness_notes": projection.completeness.notes.map { text($0) },
-                       "completeness_notes_truncated": projection.completeness.notes.contains { $0.count > 160 },
+                       "completeness_notes": notes,
+                       "completeness_notes_omitted": notesOmitted,
+                       "completeness_notes_truncated": notesOmitted > 0 || projection.completeness.notes.contains { $0.count > 160 },
                        "exclusions_retained": projection.excludedCandidates.count,
                        "candidates_omitted_for_limit": value(projection.candidatesOmittedForLimit),
                        "briefs_omitted_for_budget": dropped, "results": results]
             data = try JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys])
             if data.count <= 12 * 1024 || results.isEmpty { break }
-            results.removeLast()
-            dropped += 1
+            switch reductionStage {
+            case 0:
+                notesOmitted = max(0, notes.count - 2)
+                notes = Array(notes.prefix(2))
+                reductionStage += 1
+            case 1:
+                reduceFields("semantic_fields", retain: 2, omissionKey: "semantic_fields")
+                reductionStage += 1
+            case 2:
+                reduceFields("availability", retain: 4, omissionKey: "availability")
+                reductionStage += 1
+            case 3:
+                reduceFields("evidence", retain: 1, omissionKey: "evidence")
+                reductionStage += 1
+            default:
+                results.removeLast()
+                dropped += 1
+            }
         } while true
         guard data.count <= 12 * 1024, let encoded = String(data: data, encoding: .utf8) else {
             throw CLIError(message: String(localized: "cli.provenance.current.tooLarge", defaultValue: "Current session context exceeds the output budget."))

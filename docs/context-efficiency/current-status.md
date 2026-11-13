@@ -271,7 +271,10 @@ corpus returned all six required IDs with evidence, excluded unrelated sessions,
 and verified stable limit omissions. The focused macOS CLI suite passed five
 tests, including all selectors and compact blocker chronology after an observed
 red/green regression. Tagged verification of the corrected renderer, live
-queries, and human acceptance remain open. Slice 1's reuse and
+queries, and human acceptance remain open. Build 951 exposed a 12 KiB
+compaction issue: its path query dropped one of two matches. A red/green CLI
+regression now trims secondary detail before whole results; a new tagged live
+verification is still required. Slice 1's reuse and
 shared-daemon limitations still apply; the task relevance gate is not validated.
 
 Remaining work: implement and verify all three slices, record a bounded output

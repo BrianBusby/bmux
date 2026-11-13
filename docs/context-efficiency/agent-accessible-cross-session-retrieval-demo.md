@@ -177,3 +177,9 @@ Path and ticket identifiers are exact. Objective text is a case-insensitive
 literal match. The ticket reason refers to current workspace metadata, whose
 historical validity may be unknown. Check projection availability and match
 references before treating an empty result as complete.
+
+The compact JSON budget is 12 KiB. When needed, rendering trims completeness
+notes, lower-priority semantic fields, availability details, then general
+references before omitting whole trailing results. Match-specific references,
+identity, freshness, and boundary information are retained for each returned
+result. Omission counters report the reduced detail and any dropped results.
