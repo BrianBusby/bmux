@@ -322,6 +322,35 @@ struct CLICodexHookPEAssociationTests {
         }
         _ = try await client.publishCodingAgentSessionSemanticInferences(.init(
             sessionID: "related-closed", createdAt: now.addingTimeInterval(3)))
+        let activeThread = ProvenanceCodingAgentThreadRecord(id: "active-thread", sessionID: "related-active",
+            provider: "codex", providerThreadID: "active-provider", worktreeID: worktree.id,
+            source: .observed, confidence: .high, firstObservedAt: now, updatedAt: now)
+        let activeTurn = ProvenanceCodingAgentTurnRecord(id: "active-turn", sessionID: "related-active", threadID: activeThread.id,
+            provider: "codex", providerTurnID: "active-turn-provider", status: "completed", model: nil, effort: nil,
+            startedAt: now, completedAt: now, updatedAt: now, source: .observed, confidence: .high)
+        let activeFile = ProvenanceCodingAgentFileChangeAttributionRecord(id: "active-file", sessionID: "related-active",
+            threadID: activeThread.id, turnID: activeTurn.id, provider: "codex", operationID: "active-file-operation",
+            paths: ["Sources/Flashing.swift"], observedAt: now, source: .observed, confidence: .high)
+        let activePrompt = ProvenanceCodingAgentPromptRecord(id: "active-prompt", sessionID: "related-active",
+            threadID: activeThread.id, turnID: activeTurn.id, provider: "codex",
+            text: String(repeating: "Inspect flashing and source evidence. ", count: 10),
+            submittedAt: now, source: .observed, confidence: .high)
+        let activeMessage = ProvenanceCodingAgentAssistantMessageRecord(id: "active-message", sessionID: "related-active",
+            threadID: activeThread.id, turnID: activeTurn.id, provider: "codex", itemID: "active-message-item",
+            text: "Blocker: activity=run package suite; condition=database offline", completedAt: now,
+            source: .observed, confidence: .high)
+        for (id, type, payload) in [
+            ("active-turn-event", ProvenanceEventType.codingAgentTurnObserved, ProvenanceEventPayload(codingAgentThread: activeThread, codingAgentTurn: activeTurn)),
+            ("active-file-event", ProvenanceEventType.codingAgentFileChangeAttributed, ProvenanceEventPayload(codingAgentFileChangeAttribution: activeFile)),
+            ("active-prompt-event", ProvenanceEventType.codingAgentPromptSubmitted, ProvenanceEventPayload(codingAgentPrompt: activePrompt)),
+            ("active-message-event", ProvenanceEventType.codingAgentAssistantMessageCompleted, ProvenanceEventPayload(codingAgentAssistantMessage: activeMessage)),
+        ] {
+            _ = try await client.appendEvent(.init(event: ProvenanceEvent(id: id, eventType: type,
+                timestamp: now, repositoryID: repository.id, worktreeID: worktree.id, sessionID: "related-active",
+                source: .observed, confidence: .high, payload: payload)))
+        }
+        _ = try await client.publishCodingAgentSessionSemanticInferences(.init(
+            sessionID: "related-active", createdAt: now.addingTimeInterval(3)))
         var hookState: [String: Any] = [
             "version": 1,
             "activeSessionsBySurface": [:],
@@ -356,7 +385,9 @@ struct CLICodexHookPEAssociationTests {
             #expect(selected.status == 0, Comment(rawValue: selected.stderr))
             let selectedPayload = try #require(try JSONSerialization.jsonObject(with: Data(selected.stdout.utf8)) as? [String: Any])
             let selectedResults = try #require(selectedPayload["results"] as? [[String: Any]])
-            #expect(selectedResults.compactMap { $0["session_id"] as? String } == ["related-closed"])
+            let expected: Set<String> = option == "--artifact-path" ? ["related-active", "related-closed"] : ["related-closed"]
+            #expect(Set(selectedResults.compactMap { $0["session_id"] as? String }) == expected)
+            #expect(selectedPayload["briefs_omitted_for_budget"] as? Int == 0)
             let matches = try #require(selectedResults.first?["match_evidence"] as? [[String: Any]])
             #expect(matches.contains { ($0["kind"] as? String) == reason && !($0["evidence"] as? [[String: Any]] ?? []).isEmpty })
             let matched = try #require(matches.first { $0["kind"] as? String == reason })
