@@ -321,7 +321,7 @@ function handleServerMessage(srv: AppServer, msg: any) {
   if (msg.id != null && msg.method) {
     const approve = sess ? codexState(sess).approvals === "never" : false;
     const response = approvalResponse(msg.method, approve);
-    if (sess) emitCodexApprovalLifecycle(sess, msg, p, response, approve);
+    if (sess && "result" in response) emitCodexApprovalLifecycle(sess, msg, p, response, approve);
     srv.write({ jsonrpc: "2.0", id: msg.id, ...response });
     if (sess && "result" in response && !approve) {
       emitCodexDiagnostic(sess, {
