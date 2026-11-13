@@ -51,6 +51,8 @@ extension BMUXCLI {
                     }
                     return ["id": blocker.id, "state": blocker.state.rawValue,
                             "condition": text(blocker.condition), "activity": text(blocker.affectedActivity),
+                            "condition_truncated": blocker.condition.count > 160,
+                            "activity_truncated": blocker.affectedActivity.count > 160,
                             "source_evidence": sourceEvidence,
                             "source_evidence_omitted": max(0, blocker.sourceEvidenceRefs.count - 2)]
                 }
@@ -109,6 +111,8 @@ extension BMUXCLI {
                     let revisionReferences = reason.evidence.filter { $0.projectionRevisionID != nil }
                     let otherReferences = reason.evidence.filter { $0.projectionRevisionID == nil }
                     return ["kind": reason.kind.rawValue, "value": optional(reason.relatedValue),
+                            "value_truncated": (reason.relatedValue?.count ?? 0) > 160,
+                            "observed_at": value(reason.observedAt?.timeIntervalSince1970),
                             "evidence": (revisionReferences + otherReferences).prefix(3).map(reference),
                             "evidence_omitted": max(0, reason.evidence.count - 3)] as [String: Any]
                 }, "boundary": boundaryFields,
