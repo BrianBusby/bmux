@@ -184,7 +184,7 @@ succeeded on the pushed implementation; its CLI repeated the same 9,840-byte
 result from the original live pane with approved socket access. The completed
 revision was also inspected with no app socket. Sandbox access without
 escalation remains an open limitation; a fresh session in build 943, actual
-resume/pane-reuse scenarios, and user dogfood remain unverified. The hook store
+resume/pane-reuse scenarios, and user dogfood remained unverified at that point. The hook store
 retains earlier Codex sessions and does not identify the current surface owner.
 When multiple records name the same workspace and surface, caller retrieval now
 fails closed with `ambiguous_caller` and recommends a fresh pane; successful
@@ -200,7 +200,7 @@ and returns unavailable if that PID is missing, unreachable, or cannot be
 inspected; unrecognized daemon shapes remain unverified. Default
 shared-daemon retrieval remains unsupported. Socket-unavailable responses now
 describe app, path, and sandbox recovery in both text and machine-readable form;
-tagged runtime verification of these fixes is pending.
+later tagged runtime evidence is recorded below.
 In an isolated build 944 fixture using the normal PATH shim and managed Codex
 0.162.0, sessions `01a1d1ab-82ce-7132-ac45-b69d9b6bd2a3` and
 `01a1d1ac-2b5d-7de1-a9eb-8848bfca21e2` each resolved itself and returned the
@@ -208,8 +208,7 @@ other, with approved socket access. Their compact responses measured 11,755 and
 11,746 bytes, respectively, with two budget omissions each. The subsequent
 owner-boundary test CLI returned the first target with its peer (12,097 bytes)
 and rejected the direct shared-daemon caller as `caller_ownership_unavailable`.
-The tagged build predates the socket and ownership corrections. Existing
-Earlier shared-daemon hook ingestion persisted misattributed workspace, surface,
+Build 944 predates the socket and ownership corrections. Earlier shared-daemon hook ingestion persisted misattributed workspace, surface,
 and boundary evidence; the read guard does not repair that existing history.
 Newly generated hooks mark untrusted or uninspectable parentage before detaching;
 the worker omits pane-bound PE association and transcript-monitor startup without
@@ -224,12 +223,27 @@ association and retrieved the two seeded peers (9,840 bytes). After turn
 completion, direct shared-daemon sessions `01a1d22e-bf17-7ff0-9312-b021e3de186f`
 and `01a1d22f-5160-7b21-bfe6-8a26d721faf9` retained lifecycle records but had
 no PE session or workspace-association rows. This check used isolated data;
-the test-built CLI changes still need a tagged runtime build.
+that check used a test-built CLI.
 Two further isolated normal-shim sessions with a custom Codex 0.162.1 binary
 also resolved their own target and returned the other (8,588 bytes and three
 budget omissions each). Their tty-attached hook processes recorded matching
 workspace and surface associations. Separate unwrapped persistent-hook sessions
 used the shared daemon and did not establish that binding.
+
+Tagged build 948 (`cross-session-attested`) succeeded on implementation commit
+`14c437c8c`, using an isolated home, hook store and PE database. An ordinary
+managed Codex session `01a1d235-ffbd-74b2-8305-3c94b1cd2add` retrieved the
+seeded active and completed sessions before edits with approved socket access:
+9,840 bytes and zero budget omissions. After exiting and resuming that session
+in another pane, the same query returned the same target and peers, also 9,840
+bytes; the related-session revision was
+`related-session-revision-0026a76e491506f04fcd1848`. This verifies the observed
+resume path, not successful reuse when multiple retained records claim a pane.
+The default sandbox denied socket access without approval. Build 948 updates PE
+to schema 31; use isolated data while an older app is running. The older app
+rejects newer schema, so do not point it at the upgraded database. CI Project
+Truth passed; workflow guards are blocked by expired unrelated feature flags,
+which also prevent downstream checks. Human dogfood remains open.
 
 Remaining work: implement and verify all three slices, record a bounded output
 contract and corpus thresholds, run Project Truth gates after each slice, build
