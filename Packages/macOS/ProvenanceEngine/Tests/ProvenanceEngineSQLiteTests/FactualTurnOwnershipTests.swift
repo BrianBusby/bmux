@@ -3,6 +3,15 @@ import ProvenanceEngineContracts
 @testable import ProvenanceEngineSQLite
 import Testing
 
+extension ProvenanceSQLiteRepository {
+    func markTurnOutcomeAsLegacyForOwnershipTest(turnID: String) throws {
+        let query = try database.prepare("UPDATE provenance_coding_agent_turn_outcomes SET projection_rule_version = '1' WHERE turn_id = ?")
+        defer { query.finalize() }
+        try query.bind(turnID, at: 1)
+        _ = try query.step()
+    }
+}
+
 @Suite
 struct FactualTurnOwnershipTests {
     private func reassociate<T: Codable>(_ value: T, sessionID: String, removeTurn: Bool = false) throws -> T {
@@ -66,7 +75,14 @@ struct FactualTurnOwnershipTests {
             #expect(model.currentTurn?.prompt == prompt)
             #expect(model.currentTurn?.plan == plan)
             #expect(model.currentTurn?.completedCommands == [command])
+            if !replay {
+                try await repository.markTurnOutcomeAsLegacyForOwnershipTest(turnID: turn.id)
+                let refreshedSession = try #require(await repository.sessionOutcome(
+                    ProvenanceSessionOutcomeRequest(sessionID: fixture.session.id)).outcome)
+                #expect(refreshedSession.turnOutcomes.first?.projection.projectionRuleVersion == "2")
+            }
             let outcome = try #require(await repository.turnOutcome(ProvenanceTurnOutcomeRequest(turnID: turn.id)).outcome)
+            #expect(outcome.projection.projectionRuleVersion == "2")
             #expect(outcome.objective?.text == prompt.text)
             #expect(outcome.planItems.map(\.text) == ["Valid plan"])
             #expect(outcome.commandsCompleted.map(\.id) == [command.id])
