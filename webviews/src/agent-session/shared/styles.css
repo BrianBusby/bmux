@@ -2303,9 +2303,8 @@ img.ProseMirror-separator {
 .focus-workspace-card:hover { background: var(--agent-surface); }
 .focus-card-repository { color: var(--agent-muted); font: 11px var(--font-mono); }
 .focus-workspace-card strong { overflow: hidden; font-size: 14px; line-height: 19px; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-.focus-card-status, .focus-card-activity { display: flex; align-items: center; gap: 7px; color: var(--agent-soft); font-size: 12px; }
+.focus-card-status { display: flex; align-items: center; gap: 7px; color: var(--agent-soft); font-size: 12px; }
 .focus-card-status i { display: inline-block; width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: #d6a84f; }
-.focus-card-activity { color: var(--agent-muted); }
 .focus-rail-note { margin: 16px 8px; color: var(--agent-muted); font-size: 11px; line-height: 16px; }
 .focus-workbench-main { display: flex; min-width: 0; min-height: 0; flex-direction: column; overflow: hidden; background: var(--agent-page-bg); }
 .focus-workspace-header { display: flex; flex: 0 0 auto; align-items: flex-start; justify-content: space-between; gap: 24px; padding: 22px 28px 16px; border-bottom: 1px solid var(--agent-border); }

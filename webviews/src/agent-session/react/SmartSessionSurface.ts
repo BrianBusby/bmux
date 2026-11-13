@@ -47,7 +47,6 @@ function WorkspaceRail({ copy, workspaceName, title, status, onSelect }: { copy?
     h("div", { className: "focus-rail-heading" }, h("span", null, text(copy, "smartSessionCurrent", "Current")), h("span", { className: "focus-rail-count" }, "1")),
     h("button", { type: "button", className: "focus-workspace-card is-selected", "aria-pressed": true, onClick: onSelect },
       h("span", { className: "focus-card-repository" }, workspaceName), h("strong", null, title), h("span", { className: "focus-card-status" }, h("i", { "aria-hidden": true }), statusLabel(status, copy)),
-      h("span", { className: "focus-card-activity" }, text(copy, "smartSessionIdentity", "Verified workspace identity")),
     ),
     h("p", { className: "focus-rail-note" }, text(copy, "smartSessionUnavailable", "Workspace links are unavailable for this surface.")),
   );
