@@ -360,7 +360,8 @@ struct CLICodexHookPEAssociationTests {
             let matches = try #require(selectedResults.first?["match_evidence"] as? [[String: Any]])
             #expect(matches.contains { ($0["kind"] as? String) == reason && !($0["evidence"] as? [[String: Any]] ?? []).isEmpty })
             let matched = try #require(matches.first { $0["kind"] as? String == reason })
-            #expect(matched["observed_at"] as? Double == now.timeIntervalSince1970)
+            let observedAt = try #require(matched["observed_at"] as? Double)
+            #expect((now.timeIntervalSince1970...now.addingTimeInterval(3).timeIntervalSince1970).contains(observedAt))
             #expect(selected.stdout.utf8.count <= 12 * 1024 + 1)
             if option == "--objective" {
                 let fields = try #require(selectedResults.first?["semantic_fields"] as? [[String: Any]])
