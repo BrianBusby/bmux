@@ -74,6 +74,24 @@ semantic payload.
 The corpus also verifies that the total omitted-candidate count remains correct
 when the retained exclusion explanations are capped. These are PE fixture
 results. A separate CLI regression now confirms compact blocker state and
-ordered source references. Full output-size and live-agent checks remain open. Ticket evidence represents current workspace
-metadata; the fixture does not prove a historical assignment. Tagged live CLI
-measurements and an ordinary-agent evaluation remain separate checks.
+ordered source references. The seeded tagged-app query sizes and references are recorded below; ordinary-agent decision scenarios remain open. Ticket evidence represents current workspace
+metadata; the fixture does not prove a historical assignment. The tagged live
+CLI measurements below use a separate seeded fixture; ordinary-agent decision
+evaluation remains open.
+
+## Observed tagged CLI queries
+
+Build 952, tag `cross-session-task-v2`, used runtime commit `e3bee33eb`,
+an isolated home and PE database, and an ordinary managed Codex session
+`01a1d36e-5487-7653-ac81-4c2a99f3cce9`. The Codex sandbox required approval
+for app socket access. Before repository edits, the path query returned
+`session-retrieval-demo-b` (completed) and `session-retrieval-demo-a` (active)
+in 10,052 bytes, with zero result omissions and five completeness notes omitted.
+Their outcome revisions were `session-outcome-revision-f008f9d461058320fe6158fb`
+and `session-outcome-revision-3b56b733669fb0a236cec95f`; the path evidence
+included ledger sequences 15 and 9. The exact `EVAL-42` query returned the
+completed peer in 6,228 bytes with ticket event sequence 19. The literal
+`Repair cache invalidation` query returned that peer in 6,186 bytes with prompt
+event sequence 17 and the same outcome revision. Both had zero result omissions.
+The fixture repository remained clean. These cases use seeded public-API
+evidence, not evidence captured from the observed Codex session itself.

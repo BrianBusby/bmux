@@ -387,8 +387,8 @@ struct RelatedSessionFixture {
         payload: ProvenanceEventPayload,
         into store: ProvenanceSQLiteRepository
     ) async throws {
-        try await store.appendEvent(
-            ProvenanceEvent(
+        let client: any ProvenanceEngineClient = store
+        _ = try await client.appendEvent(.init(event: ProvenanceEvent(
                 id: eventID,
                 eventType: eventType,
                 timestamp: timestamp,
@@ -400,7 +400,6 @@ struct RelatedSessionFixture {
                 evidenceScope: ProvenanceEvidenceScope(level: .personal, id: "related-session-fixture"),
                 confidence: .high,
                 payload: payload
-            )
-        )
+            )))
     }
 }

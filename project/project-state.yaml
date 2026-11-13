@@ -4830,7 +4830,7 @@ roadmap:
       execution:
         assignment: planned
         assigned_to: shared
-        notes: Preliminary PE and CLI implementation supports repository-scoped exact paths, current workspace ticket IDs and literal objective matches, with partial evidence availability and bounded match references. The fixed PE corpus and focused CLI tests pass, including blocker source chronology and limit-omission counts. Caller validation, tagged verification of the corrected renderer, live selector queries, broader supersession and acceptance remain open.
+        notes: Preliminary PE and CLI implementation supports repository-scoped exact paths, current workspace ticket IDs and literal objective matches, with partial evidence availability and bounded match references. The fixed PE corpus and focused CLI tests pass, including blocker source chronology and limit-omission counts. Isolated tagged build 952 verified all three selectors from a fresh caller, with the two path results inside the output budget. Caller reuse limitations, broader supersession and human acceptance remain open.
       delivery_status: proposed
       acceptance_status: proposed
       acceptance:

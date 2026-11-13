@@ -10,6 +10,7 @@ struct TaskRelevanceCorpusTests {
         let url = RelatedSessionProjectionTestSupport.temporaryDatabaseURL()
         defer { RelatedSessionProjectionTestSupport.removeTemporaryDatabaseDirectory(for: url) }
         let store = try ProvenanceSQLiteRepository(url: url)
+        let client: any ProvenanceEngineClient = store
         let fixture = RelatedSessionFixture()
         let repo = fixture.repository(id: "eval-repo", path: "/repos/eval", remoteSlug: "owner/eval")
         let other = fixture.repository(id: "other-repo", path: "/repos/other", remoteSlug: "owner/other")
@@ -72,7 +73,7 @@ struct TaskRelevanceCorpusTests {
             (.init(targetSessionID: "caller", limit: 5, objective: "investigate package blocker"), ["blocker-old", "blocker-resolution"], .objectiveTextMatch),
         ]
         for (request, expected, kind) in cases {
-            let projection = try #require(try await store.relatedSessions(request).projection)
+            let projection = try #require(try await client.relatedSessions(request).projection)
             #expect(Set(projection.relatedSessions.map(\.sessionID)) == expected)
             for result in projection.relatedSessions {
                 let reason = try #require(result.relationshipReasons.first { $0.kind == kind })
@@ -96,8 +97,8 @@ struct TaskRelevanceCorpusTests {
             }
         }
         let budgetRequest = ProvenanceRelatedSessionRequest(targetSessionID: "caller", limit: 2, artifactPath: "Sources/Budget.swift")
-        let budget = try #require(try await store.relatedSessions(budgetRequest).projection)
-        let repeated = try #require(try await store.relatedSessions(budgetRequest).projection)
+        let budget = try #require(try await client.relatedSessions(budgetRequest).projection)
+        let repeated = try #require(try await client.relatedSessions(budgetRequest).projection)
         #expect(budget.relatedSessions.map(\.sessionID) == ["budget-1", "budget-2"])
         #expect(budget.relatedSessions.allSatisfy { brief in
             brief.relationshipReasons.contains { reason in
@@ -106,14 +107,14 @@ struct TaskRelevanceCorpusTests {
         })
         #expect(budget.excludedCandidates.map(\.sessionID) == ["budget-3", "budget-4"])
         #expect(budget.projection.revisionID == repeated.projection.revisionID)
-        let cappedExclusions = try #require(try await store.relatedSessions(
+        let cappedExclusions = try #require(try await client.relatedSessions(
             .init(targetSessionID: "caller", limit: 2, exclusionLimit: 1, artifactPath: "Sources/Budget.swift")
         ).projection)
         let encoded = try JSONEncoder().encode(cappedExclusions)
         let object = try #require(try JSONSerialization.jsonObject(with: encoded) as? [String: Any])
         #expect(object["candidatesOmittedForLimit"] as? Int == 2)
         #expect(cappedExclusions.excludedCandidates.count == 1)
-        let noMatch = try #require(try await store.relatedSessions(.init(targetSessionID: "caller", ticket: "EVAL-999")).projection)
+        let noMatch = try #require(try await client.relatedSessions(.init(targetSessionID: "caller", ticket: "EVAL-999")).projection)
         #expect(noMatch.relatedSessions.isEmpty)
         #expect(noMatch.completeness.fields.contains { $0.field == "task_selector_evidence" && $0.status == "partial" })
     }
