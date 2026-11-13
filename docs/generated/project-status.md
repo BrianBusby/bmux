@@ -37,8 +37,11 @@ Regenerate with: ./scripts/project-docs generate
 
 ### Gated / Blocked Downstream Work
 
+- Establish coherent session revisions and conditional interpretation (`session_visibility_revision_integrity`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
+  - Diagnose capture and establish baseline (`session_visibility_baseline`) is not dependency-satisfying
 - Deliver useful session summary (`session_visibility_summary`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
   - Diagnose capture and establish baseline (`session_visibility_baseline`) is not dependency-satisfying
+  - Establish coherent session revisions and conditional interpretation (`session_visibility_revision_integrity`) is not dependency-satisfying
 - Explain meaningful progress (`session_visibility_progress`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
   - Deliver useful session summary (`session_visibility_summary`) is not dependency-satisfying
 - Integrate plans and reporting (`session_visibility_plans`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine

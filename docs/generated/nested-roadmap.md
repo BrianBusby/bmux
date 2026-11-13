@@ -33,8 +33,11 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
 
 ### Gated / Blocked Downstream Work
 
+- Establish coherent session revisions and conditional interpretation (`session_visibility_revision_integrity`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
+  - Diagnose capture and establish baseline (`session_visibility_baseline`) is not dependency-satisfying
 - Deliver useful session summary (`session_visibility_summary`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
   - Diagnose capture and establish baseline (`session_visibility_baseline`) is not dependency-satisfying
+  - Establish coherent session revisions and conditional interpretation (`session_visibility_revision_integrity`) is not dependency-satisfying
 - Explain meaningful progress (`session_visibility_progress`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
   - Deliver useful session summary (`session_visibility_summary`) is not dependency-satisfying
 - Integrate plans and reporting (`session_visibility_plans`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
@@ -477,8 +480,12 @@ This view is generated from `project/project-state.yaml` and preserves the roadm
           Depends on: `live_terminal_codex_evidence_ingestion`, `coding_agent_evidence_source_reconciliation`
           Rationale: See docs/planning/session-visibility.md for the gate, evidence requirements and open limitations.
           Acceptance criteria: Trace ordinary Codex evidence to native display, capture representative replay fixtures, classify missing signals, measure observable latency, and correct confirmed defects.
+        - **Establish coherent session revisions and conditional interpretation** (`session_visibility_revision_integrity`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: inference session work projections; execution: planned / Shared; parallelism: serial
+          Depends on: `session_visibility_baseline`
+          Rationale: Independent review found that envelope-scoped event revisions do not cover all payload-owned projection changes and semantic publication is not atomic with its snapshot; see docs/planning/session-visibility.md.
+          Acceptance criteria: Establish coherent per-session factual revisions across ownership changes and replay, consistent snapshot reads, and conditional semantic publication that prevents older interpretations superseding newer evidence.
         - **Deliver useful session summary** (`session_visibility_summary`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: inference session work projections; execution: planned / Shared; parallelism: serial
-          Depends on: `session_visibility_baseline`, `deterministic_turn_outcome_projection`, `session_work_model_contract_foundation`
+          Depends on: `session_visibility_baseline`, `session_visibility_revision_integrity`, `deterministic_turn_outcome_projection`, `session_work_model_contract_foundation`
           Rationale: See docs/planning/session-visibility.md for the gate, evidence requirements and open limitations.
           Acceptance criteria: Extend existing canonical state and one primary surface with evidence-backed objective, work, activity, attention and observation health.
         - **Explain meaningful progress** (`session_visibility_progress`) - slice; status: planned; owner: Provenance Engine; repositories: Provenance Engine, Bmux; concept: evidence and factual state; layer: inference session work projections; execution: planned / Shared; parallelism: serial
@@ -1031,7 +1038,8 @@ Active assignments are derived from roadmap slice nodes with `status: active` or
 
 | Slice | Selection | Dependency status | Parallelism | Worktree required | Conflict domains | Contract dependencies | Expected contract domains | Expected code areas |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Deliver useful session summary (`session_visibility_summary`) | planned | blocked by Diagnose capture and establish baseline (`session_visibility_baseline`) is not dependency-satisfying | serial | false | None | None | None | None |
+| Establish coherent session revisions and conditional interpretation (`session_visibility_revision_integrity`) | planned | blocked by Diagnose capture and establish baseline (`session_visibility_baseline`) is not dependency-satisfying | serial | false | None | None | None | None |
+| Deliver useful session summary (`session_visibility_summary`) | planned | blocked by Diagnose capture and establish baseline (`session_visibility_baseline`) is not dependency-satisfying; Establish coherent session revisions and conditional interpretation (`session_visibility_revision_integrity`) is not dependency-satisfying | serial | false | None | None | None | None |
 | Explain meaningful progress (`session_visibility_progress`) | planned | blocked by Deliver useful session summary (`session_visibility_summary`) is not dependency-satisfying | serial | false | None | None | None | None |
 | Integrate plans and reporting (`session_visibility_plans`) | planned | blocked by Explain meaningful progress (`session_visibility_progress`) is not dependency-satisfying | serial | false | None | None | None | None |
 | Make multiple sessions easy to scan (`session_visibility_scanning`) | planned | blocked by Integrate plans and reporting (`session_visibility_plans`) is not dependency-satisfying | serial | false | None | None | None | None |
