@@ -339,10 +339,14 @@ struct CLIProvenanceCodexTranscriptImporter {
             return
         }
 
+        let toolName = Self.string(line.payload["name"])
+        let toolInput = Self.string(line.payload["input"])
+        let patch = toolName == "apply_patch" ? toolInput :
+            (toolName == "exec" && Self.string(line.payload["status"]) == "completed"
+                ? toolInput.flatMap(Self.directExecPatch(from:)) : nil)
         if itemType == "custom_tool_call",
-           Self.string(line.payload["name"]) == "apply_patch",
            Self.string(line.payload["status"]) != "failed",
-           let patch = Self.string(line.payload["input"]) {
+           let patch {
             let paths = Self.patchFileChanges(from: patch)
             guard !paths.isEmpty else { return }
             let providerTurnID = Self.firstNonEmpty(Self.turnID(from: line.payload), context.currentProviderTurnID)
@@ -361,6 +365,7 @@ struct CLIProvenanceCodexTranscriptImporter {
                 operationID: Self.firstNonEmpty(Self.string(line.payload["call_id"]), Self.string(line.payload["id"])),
                 changes: paths,
                 providerTurnID: providerTurnID,
+                source: toolName == "exec" ? .inferred : .observed,
                 fileReport: &fileReport
             )
         }

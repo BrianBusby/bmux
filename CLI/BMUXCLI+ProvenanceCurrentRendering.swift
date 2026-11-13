@@ -21,7 +21,8 @@ extension BMUXCLI {
         }
         func reference(_ input: ProvenanceRelatedSessionEvidenceReference) -> [String: Any] {
             ["kind": input.kind, "id": input.id, "revision": value(input.projectionRevisionID),
-             "sequence": value(input.eventSequence), "field": value(input.field), "source_state": value(input.sourceState)]
+             "sequence": value(input.eventSequence), "field": value(input.field), "source_state": value(input.sourceState),
+             "source": value(input.source?.rawValue)]
         }
         func brief(_ item: ProvenanceRelatedSessionBrief) throws -> [String: Any] {
             let outcome = item.outcomeBrief

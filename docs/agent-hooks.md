@@ -174,3 +174,9 @@ on startup and resume, is disabled with `BMUX_CODEX_HOOKS_DISABLED=1`, and does
 not retrieve context or change files by itself. Retrieval may initially need a
 retry while caller linkage is established; returned evidence can be partial or
 historical and should be checked before use.
+
+The Codex transcript importer also recognizes an immediately awaited literal
+`tools.apply_patch` call at the start of a completed `exec` script. It records
+that path attribution as low-confidence inference, because the outer call's
+completion alone does not prove the patch succeeded. Conditional or arbitrary
+JavaScript is not interpreted.

@@ -291,7 +291,9 @@ shared repository through their source turn or file-change evidence. Ticket
 metadata must identify a shared repository. Facts with missing repository
 attribution are not matched; task evidence availability remains partial. Match
 observation times come from the matching source events and are unknown when
-those timestamps are unavailable, rather than from unrelated later events.
+those timestamps are unavailable, rather than from unrelated later events. Inferred
+evidence references carry `source: inferred`; they are not proof that an
+attempted change succeeded.
 
 Matches have typed reasons and source references. Direct matches sort before
 broad relationships; ties use candidate freshness and then session ID. Within

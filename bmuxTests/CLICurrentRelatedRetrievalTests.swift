@@ -97,7 +97,7 @@ struct CLICurrentRelatedRetrievalTests {
         let files = ProvenanceCodingAgentFileChangeAttributionRecord(id: "closed-files", sessionID: "related-closed",
             threadID: thread.id, turnID: turn.id, provider: "codex", operationID: "file-operation",
             changeSetID: nil, fileChangeIDs: [], paths: ["Sources/Flashing.swift"], summary: nil,
-            observedAt: now, source: .observed, confidence: .high)
+            observedAt: now, source: .inferred, confidence: .low)
         let display = ProvenanceWorkspaceDisplayRecord(id: "closed-display", workspaceID: "workspace-related-closed",
             repositoryID: repository.id, ticketIDs: ["ROOF-42"], observedAt: now, updatedAt: now)
         for (id, type, payload) in [
@@ -107,7 +107,8 @@ struct CLICurrentRelatedRetrievalTests {
         ] {
             _ = try await client.appendEvent(.init(event: ProvenanceEvent(id: id, eventType: type,
                 timestamp: now, repositoryID: repository.id, worktreeID: worktree.id, sessionID: "related-closed",
-                source: .observed, confidence: .high, payload: payload)))
+                source: id == "closed-files-event" ? .inferred : .observed,
+                confidence: id == "closed-files-event" ? .low : .high, payload: payload)))
         }
         for (id, text, offset) in [
             ("closed-blocker-open", "Blocker: activity=run package suite; condition=database offline", 1.0),
@@ -195,6 +196,13 @@ struct CLICurrentRelatedRetrievalTests {
             let observedAt = try #require(matched["observed_at"] as? Double)
             #expect((now.timeIntervalSince1970...now.addingTimeInterval(3).timeIntervalSince1970).contains(observedAt))
             #expect(selected.stdout.utf8.count <= 12 * 1024 + 1)
+            if option == "--artifact-path" {
+                let closed = try #require(selectedResults.first { $0["session_id"] as? String == "related-closed" })
+                let reasons = try #require(closed["match_evidence"] as? [[String: Any]])
+                let pathMatch = try #require(reasons.first { $0["kind"] as? String == "requested_artifact" })
+                let references = try #require(pathMatch["evidence"] as? [[String: Any]])
+                #expect(references.contains { $0["id"] as? String == "closed-files-event" && $0["source"] as? String == "inferred" })
+            }
             if option == "--objective" {
                 let fields = try #require(selectedResults.first?["semantic_fields"] as? [[String: Any]])
                 let blockers = try #require(fields.first { $0["kind"] as? String == "coding_agent.blockers" })

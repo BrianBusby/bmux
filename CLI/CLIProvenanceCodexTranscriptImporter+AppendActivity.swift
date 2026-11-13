@@ -155,9 +155,11 @@ extension CLIProvenanceCodexTranscriptImporter {
         operationID: String?,
         changes: [PatchFileChange],
         providerTurnID: String?,
+        source: ProvenanceSource = .observed,
         fileReport: inout FileReport
     ) async throws {
         let observedAt = line.timestamp ?? metadata.timestamp
+        let confidence: ProvenanceConfidence = source == .inferred ? .low : .medium
         let gitContext = await gitContext(for: metadata.cwd, observedAt: observedAt)
         let relativeChanges = changes.map { change in
             PatchFileChange(path: Self.repositoryRelativePath(change.path, gitContext: gitContext), status: change.status)
@@ -179,8 +181,8 @@ extension CLIProvenanceCodexTranscriptImporter {
                     worktreeID: gitContext.worktreeID,
                     path: change.path,
                     status: change.status,
-                    attributionSource: .observed,
-                    attributionConfidence: .medium,
+                    attributionSource: source,
+                    attributionConfidence: confidence,
                     updatedAt: observedAt
                 )
             }
@@ -199,8 +201,8 @@ extension CLIProvenanceCodexTranscriptImporter {
             paths: relativeChanges.map(\.path),
             summary: nil,
             observedAt: observedAt,
-            source: .observed,
-            confidence: .medium
+            source: source,
+            confidence: confidence
         )
         let changeSet = gitContext.flatMap { context -> ProvenanceChangeSetRecord? in
             guard let changeSetID else { return nil }
@@ -218,7 +220,8 @@ extension CLIProvenanceCodexTranscriptImporter {
             timestamp: observedAt,
             sessionID: metadata.sessionID,
             gitContext: gitContext,
-            confidence: .medium,
+            confidence: confidence,
+            source: source,
             payload: ProvenanceEventPayload(
                 repository: gitContext?.repository,
                 worktree: gitContext?.worktree,
@@ -256,6 +259,7 @@ extension CLIProvenanceCodexTranscriptImporter {
         sessionID: String,
         gitContext: GitContext?,
         confidence: ProvenanceConfidence,
+        source: ProvenanceSource = .observed,
         payload: ProvenanceEventPayload
     ) -> ProvenanceEngineContracts.ProvenanceEvent {
         ProvenanceEngineContracts.ProvenanceEvent(
@@ -265,7 +269,7 @@ extension CLIProvenanceCodexTranscriptImporter {
             repositoryID: gitContext?.repositoryID,
             worktreeID: gitContext?.worktreeID,
             sessionID: sessionID,
-            source: .observed,
+            source: source,
             evidenceOrigin: Self.transcriptOrigin,
             evidenceScope: Self.localEvidenceScope,
             confidence: confidence,

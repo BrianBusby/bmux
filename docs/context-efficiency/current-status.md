@@ -297,11 +297,17 @@ Codex agent independently invoked the suggested path query and retried with
 socket access. An initial fixture run had inherited the invoking terminal's
 bmux environment; it was stopped and repeated with routing variables cleared.
 The clean managed-runtime writer edited `Sources/CachePolicy.swift`, but its
-patch appeared inside a Codex `exec` call. The importer currently recognizes
-only direct `apply_patch` calls, and this writer's transcript monitor did not
-start; no changed-artifact attribution appeared. A reader's earlier empty query
-therefore does not establish concurrent-work success. The direct outcome and
-failed-attempt decision scenarios remain open. A separate global Codex 0.162.1
+patch appeared inside a Codex `exec` call, which the importer did not recognize,
+and this writer's transcript monitor did not start; no changed-artifact
+attribution appeared. A manual public-CLI import of the live transcript added
+18 events but zero file attributions. A focused red/green fix now recognizes an
+immediately awaited literal nested patch as low-confidence inference, retaining
+that classification in compact evidence; conditional code stays unsupported.
+The reader independently queried by path and objective, followed a session
+outcome revision, and recommended confirming coordination, but the useful cache
+rationale also came from a local file, so this does not prove retrieval improved
+the decision. Automatic capture, concurrent-work success and the failed-attempt
+scenario remain open. A separate global Codex 0.162.1
 fixture run reported IPC decoding errors when reading files; it made no edits.
 These observations do not establish an improvement in development decisions.
 

@@ -31,6 +31,10 @@ extension CLIProvenanceCodexTranscriptImporterTests {
         let importer = CLIProvenanceCodexTranscriptImporter(client: client)
         let result = try await importer.importTranscripts(path: url.path)
         #expect(result.fileChanges == 1)
+        let projection = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
+        let attribution = try #require(projection.latestTurn?.fileChangeAttributions.first)
+        #expect(attribution.source == .inferred)
+        #expect(attribution.confidence == .low)
 
         let otherFixture = try StoreFixture()
         defer { otherFixture.remove() }
