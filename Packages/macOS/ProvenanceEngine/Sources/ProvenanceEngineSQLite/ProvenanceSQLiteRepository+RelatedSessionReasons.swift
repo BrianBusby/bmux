@@ -68,19 +68,21 @@ extension ProvenanceSQLiteRepository {
             for key in target.artifactKeys.intersection(candidate.artifactKeys).sorted() {
                 let targetArtifacts = targetOutcome.changedArtifacts.filter { relatedSessionArtifactKey($0.artifact.path) == key }
                 let candidateArtifacts = candidateOutcome.changedArtifacts.filter { relatedSessionArtifactKey($0.artifact.path) == key }
-                var matched: [ProvenanceSessionOutcomeArtifact] = []
-                for left in targetArtifacts {
-                    let leftIdentity = try artifactCollisionRepositoryIdentity(
-                        artifact: left, outcome: targetOutcome, sessionID: target.session.id
-                    )
-                    for right in candidateArtifacts {
-                        let rightIdentity = try artifactCollisionRepositoryIdentity(
-                            artifact: right, outcome: candidateOutcome, sessionID: candidate.session.id
-                        )
-                        guard !leftIdentity.keys.isDisjoint(with: rightIdentity.keys) else { continue }
-                        matched.append(contentsOf: [left, right])
-                    }
+                let targetScoped = try targetArtifacts.map { artifact in
+                    (artifact: artifact, keys: try artifactCollisionRepositoryIdentity(
+                        artifact: artifact, outcome: targetOutcome, sessionID: target.session.id
+                    ).keys)
                 }
+                let candidateScoped = try candidateArtifacts.map { artifact in
+                    (artifact: artifact, keys: try artifactCollisionRepositoryIdentity(
+                        artifact: artifact, outcome: candidateOutcome, sessionID: candidate.session.id
+                    ).keys)
+                }
+                let targetKeys = targetScoped.reduce(into: Set<String>()) { $0.formUnion($1.keys) }
+                let candidateKeys = candidateScoped.reduce(into: Set<String>()) { $0.formUnion($1.keys) }
+                let sharedKeys = targetKeys.intersection(candidateKeys)
+                let matched = targetScoped.filter { !$0.keys.isDisjoint(with: sharedKeys) }.map(\.artifact)
+                    + candidateScoped.filter { !$0.keys.isDisjoint(with: sharedKeys) }.map(\.artifact)
                 guard !matched.isEmpty else { continue }
                 let evidence = uniqueRelatedSessionEvidence(
                     matched.flatMap { relatedSessionEvidence($0.artifact.evidence) }
