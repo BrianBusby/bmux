@@ -8,3 +8,8 @@ test("an unavailable session does not imply a live connection", () => {
   expect(html).toContain("Unavailable");
   expect(html).not.toContain("focus-connected-dot");
 });
+
+test("an unavailable session does not claim verified workspace identity", () => {
+  const html = renderToStaticMarkup(React.createElement(SmartSessionSurface, { isActive: false }));
+  expect(html).not.toContain("Verified workspace identity");
+});
