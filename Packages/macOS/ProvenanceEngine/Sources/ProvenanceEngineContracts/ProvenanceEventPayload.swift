@@ -53,6 +53,9 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
     /// Coding-agent plan update projection update.
     public var codingAgentPlanUpdate: ProvenanceCodingAgentPlanUpdateRecord?
 
+    /// Provider-emitted proposed plan prose, distinct from a checklist.
+    public var codingAgentProposedPlan: ProvenanceCodingAgentProposedPlanRecord?
+
     /// Completed coding-agent command projection update.
     public var codingAgentCommand: ProvenanceCodingAgentCommandRecord?
 
@@ -83,6 +86,7 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         case codingAgentTurn
         case codingAgentPrompt
         case codingAgentPlanUpdate
+        case codingAgentProposedPlan
         case codingAgentCommand
         case codingAgentReasoningSummary
         case codingAgentAssistantMessage
@@ -108,6 +112,7 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         codingAgentTurn: ProvenanceCodingAgentTurnRecord? = nil,
         codingAgentPrompt: ProvenanceCodingAgentPromptRecord? = nil,
         codingAgentPlanUpdate: ProvenanceCodingAgentPlanUpdateRecord? = nil,
+        codingAgentProposedPlan: ProvenanceCodingAgentProposedPlanRecord? = nil,
         codingAgentCommand: ProvenanceCodingAgentCommandRecord? = nil,
         codingAgentReasoningSummary: ProvenanceCodingAgentReasoningSummaryRecord? = nil,
         codingAgentAssistantMessage: ProvenanceCodingAgentAssistantMessageRecord? = nil,
@@ -130,6 +135,7 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         self.codingAgentTurn = codingAgentTurn
         self.codingAgentPrompt = codingAgentPrompt
         self.codingAgentPlanUpdate = codingAgentPlanUpdate
+        self.codingAgentProposedPlan = codingAgentProposedPlan
         self.codingAgentCommand = codingAgentCommand
         self.codingAgentReasoningSummary = codingAgentReasoningSummary
         self.codingAgentAssistantMessage = codingAgentAssistantMessage
@@ -185,6 +191,10 @@ public struct ProvenanceEventPayload: Codable, Equatable, Sendable {
         self.codingAgentPlanUpdate = try container.decodeIfPresent(
             ProvenanceCodingAgentPlanUpdateRecord.self,
             forKey: .codingAgentPlanUpdate
+        )
+        self.codingAgentProposedPlan = try container.decodeIfPresent(
+            ProvenanceCodingAgentProposedPlanRecord.self,
+            forKey: .codingAgentProposedPlan
         )
         self.codingAgentCommand = try container.decodeIfPresent(
             ProvenanceCodingAgentCommandRecord.self,
