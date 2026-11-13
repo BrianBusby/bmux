@@ -298,13 +298,20 @@ socket access. An initial fixture run had inherited the invoking terminal's
 bmux environment; it was stopped and repeated with routing variables cleared.
 The clean managed-runtime writer edited `Sources/CachePolicy.swift`, but its
 patch appeared inside a Codex `exec` call, which the importer did not recognize,
-and this writer's transcript monitor did not start; no changed-artifact
-attribution appeared. A manual public-CLI import of the live transcript added
-18 events but zero file attributions. A focused red/green fix now recognizes an
+and that writer's transcript monitor did not start because the test app was
+launched as a child of the evaluating Codex process and was treated as nested.
+A manual public-CLI import of the live transcript added 18 events but zero file
+attributions. A focused red/green fix now recognizes an
 immediately awaited literal nested patch as low-confidence inference, retaining
 that classification in compact evidence; conditional code stays unsupported.
-The reader independently queried by path and objective, followed a session
-outcome revision, and recommended confirming coordination, but the useful cache
+A subsequent isolated build 955 launched through macOS Launch Services started
+its monitor and captured live writer `01a1d39c-f6c9-7531-938e-d942c6e0c479`'s
+edit as inferred file evidence. The reader's path query nevertheless returned
+empty: the two worktrees had distinct repository IDs but a shared recorded Git
+common directory. A red/green PE regression now includes that directory in
+repository identity; tagged end-to-end retesting remains pending. The earlier
+reader independently queried by path and objective, followed a session outcome
+revision, and recommended confirming coordination, but the useful cache
 rationale also came from a local file, so this does not prove retrieval improved
 the decision. Automatic capture, concurrent-work success and the failed-attempt
 scenario remain open. A separate global Codex 0.162.1
