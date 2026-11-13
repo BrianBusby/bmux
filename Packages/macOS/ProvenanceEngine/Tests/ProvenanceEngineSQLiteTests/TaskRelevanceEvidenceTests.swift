@@ -198,4 +198,33 @@ struct TaskRelevanceEvidenceTests {
         #expect(objectiveReason.observedAt == fixture.time(13))
     }
 
+    @Test
+    func linkedWorktreesShareRepositoryScopeViaGitCommonDirectory() async throws {
+        let url = RelatedSessionProjectionTestSupport.temporaryDatabaseURL()
+        defer { RelatedSessionProjectionTestSupport.removeTemporaryDatabaseDirectory(for: url) }
+        let store = try ProvenanceSQLiteRepository(url: url)
+        let fixture = RelatedSessionFixture()
+        func repository(_ id: String, _ common: String) -> ProvenanceRepositoryRecord {
+            .init(id: id, path: "/worktrees/\(id)", commonDirectory: common,
+                remoteSlug: nil, createdAt: fixture.time(0), updatedAt: fixture.time(0))
+        }
+        let cases = [("caller", "/repos/shared/.git"), ("peer", "/repos/shared/.git"), ("other", "/repos/other/.git")]
+        for (index, item) in cases.enumerated() {
+            let repo = repository(item.0, item.1)
+            let tree = fixture.worktree(id: "tree-\(item.0)", repository: repo, path: repo.path,
+                branch: "branch-\(item.0)", head: "head", offset: Double(index))
+            _ = try await RelatedSessionProjectionTestSupport.seedSession(id: item.0,
+                status: item.0 == "caller" ? "active" : "completed", worktree: tree, repository: repo,
+                promptText: "Cache invalidation", paths: item.0 == "caller" ? [] : ["Sources/CachePolicy.swift"],
+                fixture: fixture, into: store)
+        }
+        let result = try #require(try await store.relatedSessions(.init(targetSessionID: "caller",
+            artifactPath: "Sources/CachePolicy.swift")).projection)
+        #expect(result.relatedSessions.map(\.sessionID) == ["peer"])
+        #expect(result.relatedSessions.first?.worktreeBoundaries.contains { $0.branch == "branch-peer" } == true)
+        let objective = try #require(try await store.relatedSessions(.init(targetSessionID: "caller",
+            objective: "Cache invalidation")).projection)
+        #expect(objective.relatedSessions.map(\.sessionID) == ["peer"])
+    }
+
 }
