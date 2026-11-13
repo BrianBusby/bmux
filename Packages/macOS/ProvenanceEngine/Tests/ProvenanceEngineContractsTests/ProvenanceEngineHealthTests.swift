@@ -274,6 +274,7 @@ struct ProvenanceEngineHealthTests {
 
         #expect(snapshot.revision == 7)
         #expect(snapshot.proposedPlanObservations.isEmpty)
+        #expect(snapshot.proposedPlanCoverage == nil)
         #expect(snapshot.providerThreadIdentities == [
             ProvenanceFactualSessionProjectionProviderThreadIdentity(thread: snapshot.providerThreads[0]),
         ])

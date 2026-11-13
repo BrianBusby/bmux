@@ -29,7 +29,8 @@ struct SessionProjectionSnapshotTests {
         try await fixture.appendSessionThreadAndTurn(fixture.turn(status: "started"), into: writer)
         func proposal(_ id: String, eventSession: String, payloadSession: String) -> ProvenanceEvent {
             ProvenanceEvent(id: id, eventType: .codingAgentProposedPlanObserved,
-                timestamp: fixture.timestamp, sessionID: eventSession, source: .observed, confidence: .high,
+                timestamp: fixture.timestamp, sessionID: eventSession, source: .observed,
+                evidenceOrigin: .init(rawValue: "codex-transcript"), confidence: .high,
                 payload: ProvenanceEventPayload(codingAgentProposedPlan: .init(
                     sessionID: payloadSession, provider: "codex", providerSessionID: "provider-session",
                     providerTurnID: "unmatched-turn", providerItemID: id, text: id, truncated: false)))
@@ -45,6 +46,107 @@ struct SessionProjectionSnapshotTests {
         #expect(snapshot.proposedPlanObservations.allSatisfy { $0.proposal.providerTurnID == "unmatched-turn" })
         #expect(snapshot.proposedPlanObservations.allSatisfy { $0.sequence <= (snapshot.revision ?? 0) })
         #expect(snapshot.latestTurn?.currentPlan == nil)
+    }
+
+    @Test
+    func rejectsOversizedMalformedAndInferredEvidenceWithoutLosingLedger() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-proposal-bounds-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("provenance.sqlite")
+        let writer = try ProvenanceSQLiteRepository(url: url)
+        let fixture = WorkModelFixture()
+        try await fixture.appendSessionThreadAndTurn(fixture.turn(status: "started"), into: writer)
+        func event(_ id: String, source: ProvenanceSource, text: String) -> ProvenanceEvent {
+            ProvenanceEvent(id: id, eventType: .codingAgentProposedPlanObserved, sessionID: fixture.session.id,
+                source: source, evidenceOrigin: .init(rawValue: "codex-transcript"), confidence: .high,
+                payload: .init(codingAgentProposedPlan: .init(sessionID: fixture.session.id, provider: "codex",
+                    providerSessionID: "thread", providerTurnID: "turn", providerItemID: id, text: text, truncated: false)))
+        }
+        try await writer.appendEvent(event("valid", source: .observed, text: "Valid"))
+        try await writer.appendEvent(event("inferred", source: .inferred, text: "Inferred"))
+        try await writer.appendEvent(event("large", source: .observed, text: String(repeating: "x", count: 100_000)))
+        try await writer.appendEvent(event("malformed", source: .observed, text: "Before corruption"))
+        try await writer.appendEvent(event("numeric", source: .observed, text: "Before corruption"))
+        let db = try ProvenanceSQLiteDatabase(url: url)
+        try db.execute("UPDATE provenance_events SET payload_json = '{' WHERE id = 'malformed'")
+        try db.execute("UPDATE provenance_events SET payload_json = X'31323334' WHERE id = 'numeric'")
+        let reader = try ProvenanceSQLiteRepository(url: url)
+        let snapshot = try #require(await reader.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id)).snapshot)
+        #expect(snapshot.proposedPlanObservations.map(\.id) == ["valid"])
+        #expect(snapshot.proposedPlanObservations.first?.source == .observed)
+        #expect(snapshot.proposedPlanObservations.first?.origin?.rawValue == "codex-transcript")
+        #expect(snapshot.proposedPlanObservations.first?.eventSchemaVersion == 1)
+        #expect(snapshot.proposedPlanObservations.first?.confidence == .high)
+        #expect(snapshot.proposedPlanCoverage?.omittedObservations == true)
+        #expect(try await reader.event(id: "large")?.payload.codingAgentProposedPlan?.text.count == 100_000)
+    }
+
+    @Test
+    func reportsExcludedLedgerWindow() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-proposal-window-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("provenance.sqlite")
+        let writer = try ProvenanceSQLiteRepository(url: url)
+        let fixture = WorkModelFixture()
+        try await fixture.appendSessionThreadAndTurn(fixture.turn(status: "started"), into: writer)
+        let event = ProvenanceEvent(id: "seed", eventType: .codingAgentProposedPlanObserved,
+            sessionID: fixture.session.id, source: .observed,
+            evidenceOrigin: .init(rawValue: "codex-transcript"), confidence: .high,
+            payload: .init(codingAgentProposedPlan: .init(sessionID: fixture.session.id, provider: "codex",
+                providerSessionID: "thread", providerTurnID: "turn", providerItemID: "item", text: "Plan", truncated: false)))
+        try await writer.appendEvent(event)
+        let db = try ProvenanceSQLiteDatabase(url: url)
+        let inserts = try db.prepare("""
+            WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x < 5001)
+            INSERT INTO provenance_events (id, schema_version, event_type, timestamp_seconds, session_id, source, confidence, payload_json)
+            SELECT 'noise-' || x, 1, 'noise', 1, ?, 'observed', 'high', '{}' FROM n
+            """)
+        try inserts.bind(fixture.session.id, at: 1)
+        _ = try inserts.step()
+        inserts.finalize()
+        let reader = try ProvenanceSQLiteRepository(url: url)
+        let snapshot = try #require(await reader.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id)).snapshot)
+        #expect(snapshot.proposedPlanCoverage?.scanWindowTruncated == true)
+        #expect(snapshot.proposedPlanObservations.isEmpty)
+        #expect(try await reader.event(id: "seed")?.payload.codingAgentProposedPlan?.text == "Plan")
+    }
+
+    @Test
+    func boundsTotalProposalBytesAndReportsOmissions() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-proposal-total-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("provenance.sqlite")
+        let writer = try ProvenanceSQLiteRepository(url: url)
+        let fixture = WorkModelFixture()
+        try await fixture.appendSessionThreadAndTurn(fixture.turn(status: "started"), into: writer)
+        for index in 0..<20 {
+            try await writer.appendEvent(ProvenanceEvent(id: "proposal-\(index)", eventType: .codingAgentProposedPlanObserved,
+                sessionID: fixture.session.id, source: .observed,
+                evidenceOrigin: .init(rawValue: "codex-transcript"), confidence: .high,
+                payload: .init(codingAgentProposedPlan: .init(sessionID: fixture.session.id, provider: "codex",
+                    providerSessionID: "thread", providerTurnID: "turn", providerItemID: "item-\(index)",
+                    text: String(repeating: "x", count: 20_000), truncated: false))))
+        }
+        let snapshot = try #require(await writer.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id)).snapshot)
+        #expect(snapshot.proposedPlanCoverage?.omittedObservations == true)
+        #expect(snapshot.proposedPlanObservations.count < 20)
+        #expect(snapshot.proposedPlanObservations.reduce(0) { $0 + $1.proposal.text.utf8.count } <= 256 * 1024)
+        #expect(try await writer.event(id: "proposal-0")?.payload.codingAgentProposedPlan?.text.count == 20_000)
+        for index in 0..<51 {
+            try await writer.appendEvent(ProvenanceEvent(id: "small-\(index)", eventType: .codingAgentProposedPlanObserved,
+                sessionID: fixture.session.id, source: .observed,
+                evidenceOrigin: .init(rawValue: "codex-transcript"), confidence: .high,
+                payload: .init(codingAgentProposedPlan: .init(sessionID: fixture.session.id, provider: "codex",
+                    providerSessionID: "thread", providerTurnID: "turn", providerItemID: "small-\(index)",
+                    text: "Plan", truncated: false))))
+        }
+        let limited = try #require(await writer.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: fixture.session.id)).snapshot)
+        #expect(limited.proposedPlanObservations.count == 50)
+        #expect(limited.proposedPlanCoverage?.omittedObservations == true)
     }
 
     @Test
@@ -140,9 +242,11 @@ struct SessionProjectionSnapshotTests {
             try await fixture.append(fixture.prompt("New evidence", turnID: turn.id), into: writer)
             try await writer.appendEvent(ProvenanceEvent(
                 id: "concurrent-proposal", eventType: .codingAgentProposedPlanObserved,
-                sessionID: fixture.session.id, source: .observed, confidence: .high,
+                sessionID: fixture.session.id, source: .observed,
+                evidenceOrigin: .init(rawValue: "codex-transcript"), confidence: .high,
                 payload: ProvenanceEventPayload(codingAgentProposedPlan: .init(
-                    sessionID: fixture.session.id, provider: "codex", text: "Plan", truncated: false))))
+                    sessionID: fixture.session.id, provider: "codex", providerSessionID: "thread",
+                    providerTurnID: "turn", providerItemID: "item", text: "Plan", truncated: false))))
         } catch {
             continueRead.signal()
             _ = try? await readTask.value
