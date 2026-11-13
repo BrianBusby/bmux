@@ -16,6 +16,44 @@ struct SessionProjectionSnapshotTests {
         semaphore.wait(timeout: .now() + 10) == .success
     }
 
+    @Test
+    func workModelDoesNotMixConcurrentSemanticPublication() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-semantic-snapshot-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("provenance.sqlite")
+        let reader = try ProvenanceSQLiteRepository(url: url)
+        let writer = try ProvenanceSQLiteRepository(url: url)
+        let fixture = WorkModelFixture()
+        let turn = fixture.turn(status: "started")
+        try await fixture.appendSessionThreadAndTurn(turn, into: writer)
+        try await fixture.append(fixture.prompt("Investigate the session", turnID: turn.id), into: writer)
+        let readStarted = DispatchSemaphore(value: 0)
+        let continueRead = DispatchSemaphore(value: 0)
+        await reader.setFactualReadObserver {
+            readStarted.signal()
+            _ = continueRead.wait(timeout: .now() + 10)
+        }
+        let readTask = Task.detached {
+            try await reader.sessionWorkModel(ProvenanceSessionWorkModelRequest(sessionID: fixture.session.id))
+        }
+        let entered = await Task.detached { Self.waitForSignal(readStarted) }.value
+        guard entered else { continueRead.signal(); Issue.record("Reader did not reach the interleaving point"); _ = try? await readTask.value; return }
+        do {
+            _ = try await writer.publishCodingAgentSessionSemanticInferences(
+                ProvenanceCodingAgentSessionSemanticInferenceRequest(sessionID: fixture.session.id, createdAt: fixture.timestamp.addingTimeInterval(20)))
+        } catch {
+            continueRead.signal()
+            _ = try? await readTask.value
+            throw error
+        }
+        continueRead.signal()
+        let old = try #require(await readTask.value.model)
+        await reader.setFactualReadObserver(nil)
+        let current = try #require(await reader.sessionWorkModel(ProvenanceSessionWorkModelRequest(sessionID: fixture.session.id)).model)
+        #expect(old.basis.semanticInferenceRecords.isEmpty)
+        #expect(!current.basis.semanticInferenceRecords.isEmpty)
+    }
+
     @Test(arguments: [false, true])
     func readsOneRevisionWhileAnotherConnectionAppends(workModel: Bool) async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-snapshot-\(UUID().uuidString)")
