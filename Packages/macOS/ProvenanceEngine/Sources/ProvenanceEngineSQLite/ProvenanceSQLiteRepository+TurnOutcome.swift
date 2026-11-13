@@ -130,7 +130,13 @@ extension ProvenanceSQLiteRepository {
             timeColumn: "observed_at_seconds",
             turnID: turnID
         ).compactMap { try codingAgentFileChangeAttribution(id: $0) }
-        let evidenceIndex = try turnOutcomeEvidenceIndex(sessionID: turn.sessionID, throughSequence: latestEventSequence)
+        let evidenceKeys = try turnOutcomeEvidenceKeys(
+            turn: turn, session: session, prompt: prompt, plan: plan, commands: commands,
+            reasoningSummaries: reasoningSummaries, attributions: attributions
+        )
+        let evidenceIndex = try turnOutcomeEvidenceIndex(
+            sessionID: turn.sessionID, throughSequence: latestEventSequence, keys: evidenceKeys
+        )
         let repositoryBoundary = try turnOutcomeRepositoryBoundary(
             turn: turn,
             session: session,
@@ -812,14 +818,44 @@ extension ProvenanceSQLiteRepository {
         )
     }
 
-    private func turnOutcomeEvidenceIndex(sessionID: String, throughSequence: Int?) throws -> TurnOutcomeEvidenceIndex {
-        let entries = try eventLedgerEntries(sessionID: sessionID, throughSequence: throughSequence)
-        guard !entries.isEmpty else { return TurnOutcomeEvidenceIndex(referencesByKey: [:]) }
+    private func turnOutcomeEvidenceKeys(
+        turn: ProvenanceCodingAgentTurnRecord, session: ProvenanceSessionRecord?,
+        prompt: ProvenanceCodingAgentPromptRecord?, plan: ProvenanceCodingAgentPlanUpdateRecord?,
+        commands: [ProvenanceCodingAgentCommandRecord],
+        reasoningSummaries: [ProvenanceCodingAgentReasoningSummaryRecord],
+        attributions: [ProvenanceCodingAgentFileChangeAttributionRecord]
+    ) throws -> Set<TurnOutcomeEvidenceKey> {
+        var keys: Set<TurnOutcomeEvidenceKey> = []
+        func include(_ kind: String, _ id: String?) {
+            if let id { keys.insert(TurnOutcomeEvidenceKey(kind: kind, id: id)) }
+        }
+        include("coding_agent_turn", turn.id)
+        include("session", session?.id)
+        include("coding_agent_prompt", prompt?.id)
+        include("coding_agent_plan_update", plan?.id)
+        for command in commands { include("coding_agent_command", command.id) }
+        for summary in reasoningSummaries { include("coding_agent_reasoning_summary", summary.id) }
+        for attribution in attributions {
+            include("coding_agent_file_change_attribution", attribution.id)
+            for id in attribution.fileChangeIDs { include("file_change", id) }
+        }
+        let thread = try turn.threadID.flatMap { try codingAgentThread(id: $0) }
+        include("coding_agent_thread", thread?.id)
+        let worktree = try (session?.worktreeID ?? thread?.worktreeID).flatMap { try worktree(id: $0) }
+        include("worktree", worktree?.id)
+        include("repository", worktree?.repositoryID)
+        return keys
+    }
+
+    private func turnOutcomeEvidenceIndex(
+        sessionID: String, throughSequence: Int?, keys: Set<TurnOutcomeEvidenceKey>
+    ) throws -> TurnOutcomeEvidenceIndex {
         var referencesByKey: [TurnOutcomeEvidenceKey: [ProvenanceTurnOutcomeEvidenceReference]] = [:]
-        for entry in entries {
+        try forEachEventLedgerEntry(sessionID: sessionID, throughSequence: throughSequence) { entry in
             func append(kind: String, id: String?) {
                 guard let id else { return }
                 let key = TurnOutcomeEvidenceKey(kind: kind, id: id)
+                guard keys.contains(key) else { return }
                 referencesByKey[key, default: []].append(
                     ProvenanceTurnOutcomeEvidenceReference(
                         eventID: entry.event.id,

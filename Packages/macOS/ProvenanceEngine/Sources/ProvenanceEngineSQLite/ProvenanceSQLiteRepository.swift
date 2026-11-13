@@ -559,11 +559,13 @@ actor ProvenanceSQLiteRepository {
                 guard !entries.isEmpty else { break }
 
                 for entry in entries {
-                    try applyProjectionUpdates(
-                        from: entry.event,
-                        latestEventSequence: entry.sequence,
-                        pruneOutcomes: false
-                    )
+                    try autoreleasepool {
+                        try applyProjectionUpdates(
+                            from: entry.event,
+                            latestEventSequence: entry.sequence,
+                            pruneOutcomes: false
+                        )
+                    }
 #if DEBUG
                     try replayProgressForTesting?()
 #endif
