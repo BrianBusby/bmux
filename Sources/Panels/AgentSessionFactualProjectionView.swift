@@ -46,7 +46,6 @@ struct AgentSessionFactualProjectionView: View {
 
     @Environment(\.colorScheme) private var colorScheme
     private var theme: MatteTheme { MatteTheme(colorScheme: colorScheme) }
-
     @State private var selectedPrimaryTabs: [UUID?: AgentSessionFactualProjectionMode] = [:]
 
     private var selectedPrimaryTab: AgentSessionFactualProjectionMode {
@@ -339,43 +338,9 @@ struct AgentSessionFactualProjectionView: View {
                     isAvailable: coverage != nil,
                     icon: "doc.text"
                 ) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        if isPartial {
-                            Text(detail).foregroundStyle(Color.bmuxTextTertiary)
-                        }
-                        if trusted.isEmpty {
-                            Text(String(localized: "agentSession.factual.proposalNone", defaultValue: "No proposal found in scanned records; source availability is unknown."))
-                                .foregroundStyle(Color.bmuxTextTertiary)
-                        }
-                        ForEach(trusted) { observation in
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack {
-                                    Text(observation.timestamp, style: .date)
-                                    Text(observation.timestamp, style: .time)
-                                }
-                                .foregroundStyle(Color.bmuxTextTertiary)
-                                HStack {
-                                    Text(String(localized: "agentSession.factual.proposalSource", defaultValue: "Source:"))
-                                    Text(observation.proposal.provider)
-                                    Text(observation.source?.rawValue ?? "")
-                                    Text(observation.origin?.rawValue ?? "")
-                                    Text(String(localized: "agentSession.factual.proposalEvidence", defaultValue: "Evidence:"))
-                                    Text(observation.id).textSelection(.enabled)
-                                }
-                                .foregroundStyle(Color.bmuxTextTertiary)
-                                Text(observation.proposal.text)
-                                    .textSelection(.enabled)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                if observation.proposal.truncated {
-                                    Text(String(localized: "agentSession.factual.proposalTruncated", defaultValue: "Proposal text was truncated."))
-                                        .foregroundStyle(Color.bmuxTextTertiary)
-                                }
-                            }
-                        }
-                    }
+                    AgentSessionProposedPlanObservationsView(observations: trusted, isPartial: isPartial, detail: detail)
                 }
             }
-
             section(String(localized: "agentSession.factual.priorTurns", defaultValue: "Previous turns")) {
                 ExpandedTurnHistoryView(items: AgentSessionFactualProjectionEvidenceRows.priorTurnItems(for: snapshot))
                     .id(snapshot.session.id)
