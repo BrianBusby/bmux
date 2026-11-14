@@ -82,7 +82,7 @@ import Testing
         let url = directory.appendingPathComponent("test.sqlite")
         let repository = try ProvenanceSQLiteRepository(url: url)
         let time = Date(timeIntervalSince1970: 1_800_000_000)
-        for id in ["session-A", "session-B"] {
+        for id in ["session-A", "session-B", "session-C"] {
             let session = ProvenanceSessionRecord(id: id, agentKind: "codex", status: "active", updatedAt: time)
             try await repository.appendEvent(.init(
                 id: "event-\(id)", eventType: .sessionObserved, timestamp: time,
@@ -98,6 +98,25 @@ import Testing
             sessionID: "session-A", source: .observed,
             evidenceOrigin: .init(rawValue: "synthetic-turn-owner"), confidence: .high,
             payload: .init(codingAgentTurn: turn)
+        ))
+        let independentTurn = ProvenanceCodingAgentTurnRecord(
+            id: "independent-turn", sessionID: "session-C", provider: "codex", providerTurnID: "other-turn",
+            status: "started", startedAt: time, updatedAt: time, source: .observed, confidence: .high
+        )
+        let independentPrompt = ProvenanceCodingAgentPromptRecord(
+            id: "child-C", sessionID: "session-C", turnID: independentTurn.id, provider: "codex",
+            text: "Independent C prompt", submittedAt: time, source: .observed, confidence: .high
+        )
+        try await repository.appendEvent(.init(
+            id: "event-owner-C", eventType: .codingAgentTurnObserved, timestamp: time,
+            sessionID: "session-C", source: .observed, confidence: .high,
+            payload: .init(codingAgentTurn: independentTurn)
+        ))
+        try await repository.appendEvent(.init(
+            id: "event-child-C", eventType: .codingAgentPromptSubmitted, timestamp: time,
+            sessionID: "session-C", source: .observed,
+            evidenceOrigin: .init(rawValue: "synthetic-independent-child"), confidence: .high,
+            payload: .init(codingAgentPrompt: independentPrompt)
         ))
         // Populate both current session/outcome reads before a child-only conflicting claim.
         for sessionID in ["session-A", "session-B"] {
@@ -134,6 +153,19 @@ import Testing
             #expect(ownerEvidence?.evidenceOrigin?.rawValue == "synthetic-turn-owner")
             #expect(childEvidence == conflicting)
             #expect(childEvidence?.payload.codingAgentTurn == nil)
+            let independentEvidence = ledger.first { $0.event.id == "event-child-C" }?.event
+            #expect(independentEvidence?.payload.codingAgentPrompt == independentPrompt)
+            #expect(independentEvidence?.evidenceOrigin?.rawValue == "synthetic-independent-child")
+            let independent = try await reader.factualSessionProjection(.init(sessionID: "session-C"))
+            #expect(independent.found)
+            #expect(independent.snapshot?.latestTurn?.turn.id == independentTurn.id)
+            #expect(independent.snapshot?.latestTurn?.submittedPrompt == independentPrompt)
+            let independentDetail = try await reader.factualSessionTurnDetail(.init(turnID: independentTurn.id))
+            #expect(independentDetail.found)
+            #expect(independentDetail.turnDetail?.submittedPrompt == independentPrompt)
+            let independentOutcome = try await reader.sessionOutcome(.init(sessionID: "session-C"))
+            #expect(independentOutcome.found)
+            #expect(independentOutcome.outcome?.sessionID == "session-C")
             for sessionID in ["session-A", "session-B"] {
                 let factual = try await reader.factualSessionProjection(.init(sessionID: sessionID))
                 #expect(!factual.found)
