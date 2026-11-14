@@ -1625,3 +1625,14 @@ test("a late failed refresh cannot replace a newer successful refresh", () => {
   const late = reduceSmartSession(current, { type: "refreshFailed", requestId: 1 });
   expect(late).toEqual(current);
 });
+
+test("smart session retains the last read time when a later failure keeps the same snapshot", () => {
+  const snapshot = smartSessionSnapshot({ factualRevision: 4 });
+  const first = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "failed", snapshot, lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
+  const later = reduceSmartSession(first, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "projectionFailed", sessionId: snapshot.identity.sessionId } });
+  expect(later.snapshot).toEqual(snapshot);
+  expect(later.status).toBe("projectionFailed");
+  expect(later.lastSuccessfulReadAt).toBe("2026-08-17T07:05:00Z");
+});
