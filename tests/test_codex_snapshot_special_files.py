@@ -19,7 +19,12 @@ class SnapshotSpecialFiles(unittest.TestCase):
             peak_kib = 0
             start = time.monotonic()
             try:
-                while process.poll() is None:
+                while True:
+                    pid, status, usage = os.wait4(process.pid, os.WNOHANG)
+                    if pid:
+                        process.returncode = os.waitstatus_to_exitcode(status)
+                        peak_kib = max(peak_kib, usage.ru_maxrss // 1024)
+                        break
                     if time.monotonic() - start > 15:
                         self.fail("snapshot exceeded 15 seconds")
                     sample = subprocess.run(["ps", "-o", "rss=", "-p", str(process.pid)], capture_output=True, text=True)
@@ -29,7 +34,8 @@ class SnapshotSpecialFiles(unittest.TestCase):
                             self.fail(f"snapshot exceeded 192 MiB RSS: {peak_kib} KiB")
                     time.sleep(0.01)
                 self.assertEqual(process.returncode, 0, process.stderr.read().decode(errors="replace"))
-                print(f"newline-heavy peak sampled RSS: {peak_kib} KiB")
+                self.assertLessEqual(peak_kib, 192 * 1024, f"snapshot peak RSS: {peak_kib} KiB")
+                print(f"newline-heavy peak RSS (wait4 and samples): {peak_kib} KiB")
             finally:
                 if process.poll() is None:
                     process.kill()
