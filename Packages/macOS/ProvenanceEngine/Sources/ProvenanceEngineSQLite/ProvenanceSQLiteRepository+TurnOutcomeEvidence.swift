@@ -25,9 +25,15 @@ extension ProvenanceSQLiteRepository {
         }
         let thread = try turn.threadID.flatMap { try codingAgentThread(id: $0) }
         include("coding_agent_thread", thread?.id)
-        let worktree = try (session?.worktreeID ?? thread?.worktreeID).flatMap { try worktree(id: $0) }
-        include("worktree", worktree?.id)
-        include("repository", worktree?.repositoryID)
+        let worktreeID = session?.worktreeID ?? thread?.worktreeID
+        let observedWorktree: ProvenanceWorktreeRecord?
+        if let worktreeID {
+            observedWorktree = try worktree(id: worktreeID)
+        } else {
+            observedWorktree = nil
+        }
+        include("worktree", observedWorktree?.id)
+        include("repository", observedWorktree?.repositoryID)
         return keys
     }
 
