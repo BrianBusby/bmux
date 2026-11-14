@@ -3,10 +3,15 @@ import Foundation
 @main
 struct CodexTranscriptSnapshotExperimentTests {
     static func main() throws {
-        if CommandLine.arguments.count == 2 {
-            guard case .unknown = CodexTranscriptSnapshot.capture(
+        if CommandLine.arguments.count == 2 || CommandLine.arguments.count == 3 {
+            let result = CodexTranscriptSnapshot.capture(
                 path: URL(fileURLWithPath: CommandLine.arguments[1]), expectedSessionID: "session-a"
-            ) else { exit(1) }
+            )
+            if CommandLine.arguments.count == 3 && CommandLine.arguments[2] == "verified" {
+                guard case .verified = result else { exit(1) }
+            } else {
+                guard case .unknown = result else { exit(1) }
+            }
             return
         }
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("bmux-snapshot-\(UUID().uuidString)")
