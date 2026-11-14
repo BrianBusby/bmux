@@ -12,7 +12,7 @@ struct ExpandedTurnRequestView: View {
                 if !request.identical {
                     Text(String(localized: "agentSession.factual.objective", defaultValue: "Objective")).font(.caption).foregroundStyle(.secondary)
                 }
-                if let replies = request.replies {
+                if let replies = request.objectiveReplies {
                     parsedReplies(replies)
                 } else {
                     plain(objective, expanded: $showsFullObjective)
@@ -20,7 +20,11 @@ struct ExpandedTurnRequestView: View {
             }
             if let prompt = request.prompt, request.hasPrompt, !request.identical {
                 Text(String(localized: "agentSession.factual.prompt", defaultValue: "Prompt")).font(.caption).foregroundStyle(.secondary)
-                plain(prompt, expanded: $showsFullPrompt)
+                if let replies = request.promptReplies {
+                    parsedReplies(replies)
+                } else {
+                    plain(prompt, expanded: $showsFullPrompt)
+                }
             }
             if !request.hasObjective && !request.hasPrompt {
                 Text(String(localized: "agentSession.factual.prompt.missing", defaultValue: "No prompt captured"))
