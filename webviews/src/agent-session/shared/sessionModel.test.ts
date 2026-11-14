@@ -1645,3 +1645,15 @@ test("smart session clears read time when a failure names a different session", 
   expect(next.snapshot).toBeUndefined();
   expect(next.lastSuccessfulReadAt).toBeUndefined();
 });
+
+
+test("smart session keeps ambiguous equal-ranked semantic revisions as stale", () => {
+  const first = smartSessionSnapshot({ factualRevision: 4 });
+  const second = { ...first, revision: { ...first.revision, semanticInferenceIds: first.revision.semanticInferenceIds.map(id => `${id}-replacement`) } };
+  const state = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: first } });
+  const result = reduceSmartSession(state, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "available", snapshot: second } });
+  expect(result.status).toBe("failed");
+  expect(result.snapshot).toEqual(first);
+});

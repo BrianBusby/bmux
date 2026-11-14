@@ -35,6 +35,8 @@ source = source.replace('''        let index = workModelRequests.count
         workModelRequests.append(request)
         if failWorkModel { throw SmartSessionStoreTestError.unimplemented }
         if let responseOverride { return responseOverride }''')
+source = source.replace('private static func model(sessionID: String, revision: Int) -> ProvenanceSessionWorkModel {', 'private static func model(sessionID: String, revision: Int, semanticIDs: [String] = []) -> ProvenanceSessionWorkModel {')
+source = source.replace('semanticInferenceIDs: [],\n                latestSemanticInferenceCreatedAt: nil', 'semanticInferenceIDs: semanticIDs,\n                latestSemanticInferenceCreatedAt: nil', 1)
 source += '''
 extension AgentSessionSmartSessionStoreTests {
     @Test func failedReadMustNotReportAvailable() async {
@@ -94,6 +96,21 @@ extension AgentSessionSmartSessionStoreTests {
         await client.setResponse(.init(found: false, reason: "missing", sessionID: "session-1", model: nil))
         #expect(await store.refreshedSnapshot(sessionID: "session-1") == .notFound(sessionID: "session-1", reason: "missing"))
         #expect(store.snapshot(sessionID: "session-1") == .notFound(sessionID: "session-1", reason: nil))
+    }
+
+    @Test func equallyRankedDifferentSemanticIDsAreNotCurrent() async {
+        let first = Self.model(sessionID: "session-1", revision: 42, semanticIDs: ["a"])
+        let second = Self.model(sessionID: "session-1", revision: 42, semanticIDs: ["b"])
+        let client = SmartSessionStoreTestClient(models: [first, second], materializedFactualRevisions: [42, 42])
+        let store = AgentSessionSmartSessionStore(client: client)
+        guard case .available(let prior) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Initial read was not available")
+            return
+        }
+        let result = await store.refreshedSnapshot(sessionID: "session-1")
+        #expect(result.bridgePayload["status"] as? String == "failed")
+        if case .stale(let snapshot, _) = result { #expect(snapshot == prior) }
+        else { Issue.record("Expected last known snapshot as stale") }
     }
 
     @Test func olderModelCannotClaimCachedFactsAreCurrent() async {
