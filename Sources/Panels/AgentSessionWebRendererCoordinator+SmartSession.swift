@@ -133,6 +133,10 @@ extension AgentSessionWebRendererCoordinator {
                 localized: "agentSession.web.smartSession.lastReportedStatus",
                 defaultValue: "Last reported status"
             ),
+            "smartSessionEvidencePage": String(
+                localized: "agentSession.web.smartSession.evidencePage",
+                defaultValue: "Page {current} of {total}"
+            ),
             "smartSessionShowLoadedEvidence": String(
                 localized: "agentSession.web.smartSession.showLoadedEvidence",
                 defaultValue: "Show more recorded evidence"
