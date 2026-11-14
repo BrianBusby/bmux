@@ -180,6 +180,9 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: unidentified_session_lifecycle_evidence_not_retained
+    # Identity-free transitions return an error; existing fallback records are not repaired.
+    status: open
   - id: cross_session_identity_clock_legacy_upgrade
     status: open
   - id: work_brief_external_sources_unavailable
