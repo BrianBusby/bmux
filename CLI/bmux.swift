@@ -31183,11 +31183,8 @@ export default BMUXSessionRestore;
                 if let providerSessionId = normalizedHookValue(input.sessionId) {
                     await recordCodexHookPromptSubmitAssociation(workspaceId: workspaceId, surfaceId: surfaceId, sessionId: providerSessionId, turnId: input.turnId, cwd: hookCwd ?? mapped?.cwd, socketPath: client.socketPath, env: env)
                     let leasePath = createCodexMonitorLease(
-                        sessionId: providerSessionId,
-                        turnId: input.turnId,
-                        workspaceId: workspaceId,
-                        surfaceId: surfaceId,
-                        env: env
+                        sessionId: providerSessionId, turnId: input.turnId,
+                        workspaceId: workspaceId, surfaceId: surfaceId, env: env
                     )
                     if leasePath == nil {
                         telemetry.breadcrumb(
@@ -31203,15 +31200,10 @@ export default BMUXSessionRestore;
                         )
                     }
                     startCodexTranscriptMonitor(
-                        sessionId: providerSessionId,
-                        turnId: input.turnId,
-                        transcriptPath: normalizedHookValue(input.transcriptPath),
-                        cwd: hookCwd ?? mapped?.cwd,
-                        workspaceId: workspaceId,
-                        surfaceId: surfaceId,
-                        leasePath: leasePath,
-                        env: env,
-                        telemetry: telemetry
+                        sessionId: providerSessionId, turnId: input.turnId,
+                        transcriptPath: normalizedHookValue(input.transcriptPath), cwd: hookCwd ?? mapped?.cwd,
+                        workspaceId: workspaceId, surfaceId: surfaceId, leasePath: leasePath,
+                        env: env, telemetry: telemetry
                     )
                 }
             }
