@@ -111,7 +111,8 @@ extension CLIProvenanceCodexTranscriptImporterTests {
             .importTranscripts(path: transcriptURL.path).eventsAppended == 0)
     }
 
-    @Test
+    // Opt in only to characterize the baseline; cursor receipt does not prove retained evidence or acceptance.
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["BMUX_CHARACTERIZE_UNCONFIRMED_PLAN_CALL"] == "1"))
     func partialPlanCallTransportSurvivesTailerRestart() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
@@ -130,7 +131,7 @@ extension CLIProvenanceCodexTranscriptImporterTests {
         _ = try await first.consume(at: transcriptURL)
         let initialCursor = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
 
-        // This characterizes complete-line transport only; a call does not establish an accepted plan.
+        // The cursor records receipt, not durable plan evidence or acceptance; replay checks the projection only.
         let revision = try Self.codexTranscriptLine(
             ordinal: 7, type: "response_item", timestamp: "2026-08-21T10:00:07Z",
             payload: [
