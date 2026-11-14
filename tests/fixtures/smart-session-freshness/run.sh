@@ -170,6 +170,33 @@ extension AgentSessionSmartSessionStoreTests {
         #expect(recovered.bridgePayload["semanticMessagesReadStatus"] as? String == "available")
     }
 
+    @Test func semanticMessageRecoveryIncludesNewlyReadableMessage() async {
+        let client = SmartSessionStoreTestClient(model: Self.model(sessionID: "session-1", revision: 42))
+        let store = AgentSessionSmartSessionStore(client: client)
+        await client.setSemanticFailure(true)
+        guard case .available(let initial) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Initial factual model should remain available")
+            return
+        }
+        #expect(initial.semanticMessagesReadStatus == "unavailable")
+        let record = ProvenanceSemanticMessageRecord(
+            id: "message-1", semanticInferenceID: "inference-1", semanticInferenceKind: "test",
+            scope: .session, scopeID: "session-1", concisePhrase: "Observed", expandedMeaning: "Observed",
+            structuredSemanticPayload: .object([:]), supportingEvidenceRefs: [], supportingFactualRevision: 42,
+            confidence: .high, specificity: .granular, presentationProducerType: .rule,
+            presentationProducerID: "test", presentationProducerVersion: "1", presentationPolicyID: "test",
+            presentationPolicyVersion: "1", localeIdentifier: nil, createdAt: Date(timeIntervalSince1970: 100)
+        )
+        await client.setSemanticRecords([record])
+        await client.setSemanticFailure(false)
+        guard case .available(let recovered) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("A newly readable message should recover without an unrelated factual change")
+            return
+        }
+        #expect(recovered.semanticMessagesReadStatus == "available")
+        #expect(recovered.semanticMessages.count == 1)
+    }
+
     @Test func cancellationAfterJoiningDoesNotPoisonActiveRead() async {
         let client = SmartSessionStoreTestClient(model: Self.model(sessionID: "session-1", revision: 42))
         let (observations, observer) = AsyncStream<AgentSessionSmartSessionStore.RefreshObservation>.makeStream()

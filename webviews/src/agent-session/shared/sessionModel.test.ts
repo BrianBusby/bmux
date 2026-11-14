@@ -1702,6 +1702,19 @@ test("independent awareness updates do not freeze an unchanged primary snapshot"
   expect(result.snapshot?.crossSessionAwareness.status).toBe("available");
 });
 
+test("semantic reports recover after an unavailable read without a factual revision change", () => {
+  const first = smartSessionSnapshot({ factualRevision: 4 });
+  const message = semanticMessage({ kind: "test", scope: "session", scopeId: "session-1", concisePhrase: "Observed" });
+  const recovered: SmartSessionSnapshot = { ...first, semanticMessages: [message], semanticMessagesReadStatus: "available",
+    revision: { ...first.revision, semanticMessageCount: 1, latestSemanticMessageCreatedAt: message.createdAt } };
+  const initial = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: first } });
+  const result = reduceSmartSession(initial, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "available", snapshot: recovered } });
+  expect(result.status).toBe("available");
+  expect(result.snapshot?.semanticMessages).toEqual([message]);
+});
+
 test("ambiguous primary facts retain separately observed awareness", () => {
   const first = smartSessionSnapshot({ factualRevision: 4 });
   const second: SmartSessionSnapshot = { ...first,
