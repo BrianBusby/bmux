@@ -19,7 +19,9 @@ public actor CodexLoopbackWebSocket: CodexRPCTransport {
         var request = URLRequest(url: endpoint)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         task = session.webSocketTask(with: request)
-        task.maximumMessageSize = 8 * 1024 * 1024
+        // Image-bearing notifications can exceed 8 MiB; match the provider's
+        // bounded message budget so Terminal input cannot disconnect Chat.
+        task.maximumMessageSize = 64 * 1024 * 1024
         task.resume()
     }
 
