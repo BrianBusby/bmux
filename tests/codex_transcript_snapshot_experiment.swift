@@ -11,7 +11,7 @@ struct CodexTranscriptSnapshotExperimentTests {
         let event = #"{"type":"event_msg","payload":{"type":"task_started","turn_id":"turn-a"}}"# + "\n"
         func write(_ text: String) throws { try Data(text.utf8).write(to: path) }
         func unknown(_ value: CodexTranscriptSnapshotResult, _ label: String) {
-            guard case .unknown = value else { fatalError("expected unknown: \(label)") }
+            guard case .unknown = value else { print("expected unknown: \(label)"); exit(1) }
         }
         try write(meta + event)
         guard case let .verified(snapshot) = CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a") else {
@@ -27,6 +27,12 @@ struct CodexTranscriptSnapshotExperimentTests {
         unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"), "conflicting metadata")
         try write(#"{"type":"session_meta","payload":{"id":"session-a","session_id":"session-b"}}"# + "\n")
         unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"), "conflicting metadata fields")
+        try write(#"{"type":"session_meta","payload":{"id":"session-a","id":"session-b"}}"# + "\n")
+        unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"), "duplicate raw identity key")
+        try write(#"{"type":"session_meta","payload":{"id":"session-a","\u0069d":"session-b"}}"# + "\n")
+        unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"), "escaped duplicate identity key")
+        try write(meta + #"{"type":"event_msg","payload":{"x":1,"x":2}}"# + "\n")
+        unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"), "duplicate nested key")
         try write(meta + event.dropLast())
         unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"), "partial line")
         try write(meta + "not-json\n")
@@ -64,6 +70,6 @@ struct CodexTranscriptSnapshotExperimentTests {
         }), "replacement during capture")
         try Data(repeating: 0x20, count: CodexTranscriptSnapshot.maxBytes + 1).write(to: path)
         unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"), "oversize")
-        print("snapshot experiment: 13 cases passed")
+        print("snapshot experiment: 16 cases passed")
     }
 }
