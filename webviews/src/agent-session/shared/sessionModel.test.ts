@@ -140,7 +140,7 @@ const context: AppContext = {
     smartSessionUnknown: "Unknown",
     smartSessionIdentity: "Identity",
     smartSessionPurpose: "Purpose",
-    smartSessionCurrentTurn: "Current turn",
+    smartSessionCurrentTurn: "Latest turn",
     smartSessionCurrentActivity: "Current activity",
     smartSessionPhase: "Phase",
     smartSessionPrompt: "Prompt",
@@ -1565,7 +1565,7 @@ function semanticMessage({
 
 
 test("smart session labels tool-only and assistant evidence without claiming a final output", async () => {
-  const catalog: unknown = await Bun.file("Resources/Localizable.xcstrings").json();
+  const catalog: unknown = await Bun.file(new URL("../../../../Resources/Localizable.xcstrings", import.meta.url)).json();
   function field(value: unknown, key: string): unknown {
     if (typeof value !== "object" || value === null || !(key in value)) throw new Error(`Missing catalog field ${key}`);
     return Reflect.get(value, key);
@@ -1864,5 +1864,238 @@ test("stale smart session offers an actionable refresh", async () => {
     if (previousDocument) Object.defineProperty(globalThis, "document", previousDocument); else Reflect.deleteProperty(globalThis, "document");
     if (previousAct) Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", previousAct); else Reflect.deleteProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT");
     dom.window.close();
+  }
+});
+
+test.each(["in_progress", "completed", "missing"])("smart session describes latest turn: %s", async (status) => {
+  const catalog: unknown = await Bun.file(new URL("../../../../Resources/Localizable.xcstrings", import.meta.url)).json();
+  function field(value: unknown, key: string): unknown {
+    if (typeof value !== "object" || value === null || !(key in value)) throw new Error(`Missing catalog field ${key}`);
+    return Reflect.get(value, key);
+  }
+  function english(key: string): string {
+    const strings = field(catalog, "strings");
+    const localizations = field(field(strings, key), "localizations");
+    const value = field(field(field(localizations, "en"), "stringUnit"), "value");
+    if (typeof value !== "string") throw new Error(`Missing English copy for ${key}`);
+    return value;
+  }
+  const localizedContext: AppContext = { ...context, copy: { ...context.copy,
+    smartSessionCurrentTurn: english("agentSession.web.smartSession.currentTurn"),
+    smartSessionNoCurrentTurn: english("agentSession.web.smartSession.noCurrentTurn"),
+  } };
+    const dom = new JSDOM("<!doctype html><div id='root'></div>", { url: "https://example.test" });
+    const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+    const previousDocument = Object.getOwnPropertyDescriptor(globalThis, "document");
+    const previousAct = Object.getOwnPropertyDescriptor(globalThis, "IS_REACT_ACT_ENVIRONMENT");
+    Object.defineProperty(globalThis, "window", { configurable: true, value: dom.window });
+    Object.defineProperty(globalThis, "document", { configurable: true, value: dom.window.document });
+    Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", { configurable: true, value: true });
+    const original = smartSessionSnapshot({ factualRevision: 1 });
+    const turn = original.factual.latestTurn;
+    if (!turn) throw new Error("Expected current turn in fixture");
+    const snapshot: SmartSessionSnapshot = { ...original, factual: { ...original.factual,
+      latestTurn: status === "missing" ? undefined : { ...turn, status },
+    } };
+    Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: {
+      postMessage: async () => ({ ok: true, value: { schemaVersion: 1, status: "available", snapshot } }),
+    } } } });
+    const container = dom.window.document.getElementById("root");
+    if (!container) throw new Error("Missing root");
+    const root = createRoot(container);
+    try {
+      await act(async () => { root.render(createElement(SmartSessionSurface, { context: localizedContext })); });
+      if (status === "missing") {
+        expect(container.textContent).toContain("Latest turn unavailable.");
+        expect(container.textContent).not.toContain("latest supported outcome appears below");
+      } else {
+        expect(dom.window.document.querySelector(".focus-current-card .focus-card-kicker")?.textContent).toContain("Latest turn");
+        expect(dom.window.document.querySelector(".focus-turn-status")?.textContent).toBe(status);
+      }
+    } finally {
+      await act(async () => root.unmount());
+      if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow); else Reflect.deleteProperty(globalThis, "window");
+      if (previousDocument) Object.defineProperty(globalThis, "document", previousDocument); else Reflect.deleteProperty(globalThis, "document");
+      if (previousAct) Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", previousAct); else Reflect.deleteProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT");
+      dom.window.close();
+    }
+});
+
+// The producer assertion in FirstSemanticSessionInferenceTests.swift:96 yields
+// this synthetic text from a completed command. This is not producer execution.
+test.each(["active", "completed", "missing", "file-only", "provider-description", "no-prompt"]) ("recorded evidence excludes inferred current activity for %s", async (scenario) => {
+  const dom = new JSDOM("<!doctype html><div id='root'></div>", { url: "https://example.test" });
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  const previousDocument = Object.getOwnPropertyDescriptor(globalThis, "document");
+  const previousAct = Object.getOwnPropertyDescriptor(globalThis, "IS_REACT_ACT_ENVIRONMENT");
+  Object.defineProperty(globalThis, "window", { configurable: true, value: dom.window });
+  Object.defineProperty(globalThis, "document", { configurable: true, value: dom.window.document });
+  Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", { configurable: true, value: true });
+  const original = smartSessionSnapshot({ factualRevision: 1, currentActivity: "Validating with swift test", threadIntent: "Original assignment", prompt: "Change direction to the follow-up", knownSemantics: !["file-only", "provider-description"].includes(scenario) });
+  const turn = original.factual.latestTurn;
+  if (!turn) throw new Error("Expected turn fixture");
+  const snapshot: SmartSessionSnapshot = { ...original, factual: { ...original.factual, priorTurns: [{ turnId: "prior", provider: "codex", providerTurnId: "prior-turn", status: "completed", updatedAt: "2026-08-17T07:00:00Z" }], latestTurn: {
+    ...turn, prompt: scenario === "no-prompt" ? undefined : turn.prompt, status: scenario === "active" ? "running" : "completed",
+    completedCommands: ["active", "completed"].includes(scenario) ? [{ commandId: "cmd", command: "swift test", status: "completed", completedAt: "2026-08-17T07:01:00Z", source: "observed", confidence: "high" }] : [],
+    fileChangeAttributions: ["file-only", "provider-description"].includes(scenario) ? [{ attributionId: "file", paths: ["Sources/main.swift"], summary: scenario === "file-only" ? "Applied patch" : "Requested changes to configuration", observedAt: "2026-08-17T07:02:00Z", source: "observed", confidence: "high" }] : [],
+  } } };
+  Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: {
+    postMessage: async () => ({ ok: true, value: { schemaVersion: 1, status: "available", snapshot } }),
+  } } } });
+  const container = dom.window.document.getElementById("root");
+  if (!container) throw new Error("Missing root");
+  const root = createRoot(container);
+  try {
+    await act(async () => { root.render(createElement(SmartSessionSurface, { context })); });
+    const promptBlock = container.querySelectorAll(".focus-current-grid .focus-summary-block")[0];
+    expect(promptBlock?.querySelector("h3")?.textContent).toBe("Latest turn prompt");
+    expect(promptBlock?.querySelector("p")?.textContent).toBe(scenario === "no-prompt" ? "Unknown" : "Change direction to the follow-up");
+    expect(container.textContent).not.toContain("Original assignment");
+    const historyToggle = container.querySelector<HTMLButtonElement>(".focus-history-toggle");
+    expect(historyToggle).not.toBeNull();
+    await act(async () => historyToggle?.click());
+    expect(historyToggle?.getAttribute("aria-expanded")).toBe("true");
+    expect(container.querySelector(".focus-history-details button")).toBeNull();
+    const block = container.querySelectorAll(".focus-current-grid .focus-summary-block")[1];
+    expect(container.textContent).not.toContain("Validating with swift test");
+    const description = scenario === "file-only" ? "Applied patch" : "Requested changes to configuration";
+    if (["file-only", "provider-description"].includes(scenario)) {
+      const items = [...container.querySelectorAll(".focus-results li")].map(item => item.textContent);
+      expect(items).toContain("Sources/main.swift");
+      expect(items).toContain(`Recorded description (unverified): ${description}`);
+      expect(container.querySelector(".focus-current-actions button")).toBeNull();
+    }
+    expect(block?.querySelector("h3")?.textContent).toBe("Recorded evidence");
+    expect(block?.querySelector("p")?.textContent).toBe(["file-only", "provider-description"].includes(scenario) ? "Sources/main.swift" : ["missing", "no-prompt"].includes(scenario) ? "Unknown" : "swift test · completed");
+  } finally {
+    await act(async () => root.unmount());
+    if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow); else Reflect.deleteProperty(globalThis, "window");
+    if (previousDocument) Object.defineProperty(globalThis, "document", previousDocument); else Reflect.deleteProperty(globalThis, "document");
+    if (previousAct) Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", previousAct); else Reflect.deleteProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT");
+    dom.window.close();
+  }
+});
+
+test("loaded evidence is selectable and available through a disclosure", async () => {
+  const dom = new JSDOM("<!doctype html><div id='root'></div>", { url: "https://example.test" });
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  Object.assign(globalThis, { window: dom.window, document: dom.window.document, IS_REACT_ACT_ENVIRONMENT: true });
+  const original = smartSessionSnapshot({ factualRevision: 1 });
+  const turn = original.factual.latestTurn;
+  if (!turn) throw new Error("Expected turn");
+  const commands = Array.from({ length: 100 }, (_, i) => ({ commandId: `cmd-${i}`, command: `command-${i}`, status: "completed", completedAt: "2026-08-17T07:01:00Z", source: "observed", confidence: "high" }));
+  const files = Array.from({ length: 100 }, (_, i) => ({ attributionId: `file-${i}`, paths: [`file-${i}`], summary: `patch-${i}`, observedAt: "2026-08-17T07:02:00Z", source: "observed", confidence: "high" }));
+  const messages = Array.from({ length: 12 }, (_, i) => ({ messageId: `message-${i}`, text: `message-${i}`, completedAt: "2026-08-17T07:03:00Z", source: "observed", confidence: "high" }));
+  const snapshot: SmartSessionSnapshot = { ...original, factual: { ...original.factual, latestTurn: { ...turn, completedCommands: commands, fileChangeAttributions: files, assistantMessages: messages } }, crossSessionAwareness: { ...original.crossSessionAwareness, relatedSessions: [{ sessionId: "related", lifecycleState: "unknown", completionState: "unknown", freshnessState: "unknown", relationshipReasons: ["Shared file"] }] } };
+  const fixture = { snapshot };
+  Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: { postMessage: async () => ({ ok: true, value: { schemaVersion: 1, status: "available", snapshot: fixture.snapshot } }) } } } });
+  const container = dom.window.document.getElementById("root");
+  if (!container) throw new Error("Missing root");
+  const root = createRoot(container);
+  try {
+    await act(async () => root.render(createElement(SmartSessionSurface, { context })));
+    const disclosure = container.querySelector<HTMLButtonElement>(".focus-evidence-disclosure");
+    expect(disclosure?.textContent).toBe("Show more recorded evidence");
+    expect(disclosure?.getAttribute("aria-expanded")).toBe("false");
+    expect(Boolean(container.querySelector(".focus-connected-dot"))).toBe(false);
+    expect(container.querySelector(".focus-header-status")?.textContent).toContain("Last reported status:");
+    expect(container.querySelector(".focus-related-strip")?.tagName).not.toBe("BUTTON");
+    expect(container.querySelectorAll(".focus-evidence-page li").length).toBe(0);
+    await act(async () => disclosure?.click());
+    expect(disclosure?.getAttribute("aria-expanded")).toBe("true");
+    expect(container.querySelector(".focus-evidence-page [role=status]")?.textContent).toBe("Page 1 of 21");
+    expect(container.querySelectorAll(".focus-evidence-page li").length).toBeLessThanOrEqual(20);
+    expect(container.querySelector(".focus-evidence-page")?.textContent).toContain("command-3");
+    const item = container.querySelector(".focus-evidence-page li");
+    if (!item?.firstChild) throw new Error("Missing evidence text");
+    const range = dom.window.document.createRange();
+    range.selectNodeContents(item);
+    const selection = dom.window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    expect(selection?.toString()).toBe(item.textContent);
+    const visited: string[] = [];
+    for (const _unused of Array.from({ length: 21 })) {
+      expect(container.querySelectorAll(".focus-evidence-page li").length).toBeLessThanOrEqual(20);
+      visited.push(container.querySelector(".focus-evidence-page")?.textContent ?? "");
+      const next = container.querySelector<HTMLButtonElement>(".focus-evidence-next");
+      if (!next || next.getAttribute("aria-disabled") === "true") break;
+      await act(async () => next.click());
+    }
+    expect(visited.join(" ")).toContain("command-99");
+    expect(visited.join(" ")).toContain("file-99");
+    expect(visited.join(" ")).toContain("Recorded description (unverified): patch-99");
+    expect(visited.join(" ")).toContain("message-10");
+    const previous = container.querySelector<HTMLButtonElement>(".focus-evidence-previous");
+    expect(previous?.getAttribute("aria-disabled")).toBe("false");
+    const nextAtEnd = container.querySelector<HTMLButtonElement>(".focus-evidence-next");
+    nextAtEnd?.focus();
+    expect(nextAtEnd?.getAttribute("aria-disabled")).toBe("true");
+    expect(dom.window.document.activeElement).toBe(nextAtEnd);
+    await act(async () => previous?.click());
+    expect(container.querySelector(".focus-evidence-page")?.textContent).not.toContain("message-10");
+    expect(container.querySelector(".focus-evidence-page [role=status]")?.textContent).toBe("Page 20 of 21");
+    expect(container.querySelector(".focus-evidence-page")?.textContent).toContain("This evidence view may predate the latest refresh.");
+    const frozenPage = container.querySelector(".focus-evidence-page ul")?.textContent;
+    fixture.snapshot = structuredClone(snapshot);
+    await act(async () => root.render(createElement(SmartSessionSurface, { context, isActive: false })));
+    await act(async () => root.render(createElement(SmartSessionSurface, { context, isActive: true })));
+    expect(container.querySelector(".focus-evidence-page [role=status]")?.textContent).toBe("Page 20 of 21");
+    fixture.snapshot = { ...snapshot, revision: { ...snapshot.revision, factualRevision: 2, key: "new-factual-revision" }, factual: { ...snapshot.factual, latestTurn: { ...turn, completedCommands: [...commands].reverse(), fileChangeAttributions: files, assistantMessages: messages } } };
+    await act(async () => root.render(createElement(SmartSessionSurface, { context, isActive: false })));
+    await act(async () => root.render(createElement(SmartSessionSurface, { context, isActive: true })));
+    expect(container.querySelector(".focus-evidence-page [role=status]")?.textContent).toBe("Page 20 of 21");
+    expect(container.querySelector(".focus-evidence-page ul")?.textContent).toBe(frozenPage);
+    expect(container.querySelector(".focus-results > ul")?.textContent).toContain("command-0");
+    const update = container.querySelector<HTMLButtonElement>(".focus-evidence-update");
+    expect(update?.textContent).toBe("Update evidence view");
+    update?.focus();
+    await act(async () => update?.click());
+    expect(dom.window.document.activeElement).toBe(update);
+    expect(container.querySelector(".focus-evidence-page [role=status]")?.textContent).toBe("Page 1 of 21");
+    expect(container.querySelector(".focus-evidence-page")?.textContent).toContain("command-96");
+    expect(container.querySelector(".focus-results > ul")?.textContent).toContain("command-99");
+    fixture.snapshot = { ...snapshot, identity: { ...snapshot.identity, sessionId: "session-2" } };
+    await act(async () => root.render(createElement(SmartSessionSurface, { context, isActive: false })));
+    await act(async () => root.render(createElement(SmartSessionSurface, { context, isActive: true })));
+    const nextSessionDisclosure = container.querySelector<HTMLButtonElement>(".focus-evidence-disclosure");
+    expect(nextSessionDisclosure?.getAttribute("aria-expanded")).toBe("false");
+    expect(container.querySelectorAll(".focus-evidence-page li").length).toBe(0);
+    await act(async () => nextSessionDisclosure?.click());
+    await act(async () => nextSessionDisclosure?.click());
+    expect(nextSessionDisclosure?.getAttribute("aria-expanded")).toBe("false");
+    expect(container.querySelectorAll(".focus-evidence-page li").length).toBe(0);
+    const learnings = [...container.querySelectorAll<HTMLButtonElement>("[role=tab]")].find(button => button.textContent === "Learnings");
+    await act(async () => learnings?.click());
+    expect(container.querySelector(".focus-learnings button")).toBeNull();
+  } finally {
+    await act(async () => root.unmount());
+    dom.window.close();
+    Object.assign(globalThis, { window: previousWindow, document: previousDocument, IS_REACT_ACT_ENVIRONMENT: false });
+  }
+});
+
+
+test.each(["loading", "missingSession", "failed"])("unavailable read %s is not presented as reported session status", async (kind) => {
+  const dom = new JSDOM("<!doctype html><div id='root'></div>", { url: "https://example.test" });
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  Object.assign(globalThis, { window: dom.window, document: dom.window.document, IS_REACT_ACT_ENVIRONMENT: true });
+  const response = kind === "loading" ? new Promise(() => {}) : Promise.resolve({ ok: true, value: { schemaVersion: 1, status: kind } });
+  Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: { postMessage: () => response } } } });
+  const container = dom.window.document.getElementById("root");
+  if (!container) throw new Error("Missing root");
+  const root = createRoot(container);
+  try {
+    await act(async () => root.render(createElement(SmartSessionSurface, { context })));
+    expect(container.querySelector(".focus-header-status")?.textContent).not.toContain("Last reported status");
+    expect(container.querySelector(".focus-card-status")?.textContent).not.toContain("Last reported status");
+    expect(container.textContent).not.toContain("Verified workspace identity");
+    if (kind === "loading") expect(container.querySelector(".focus-empty-state")?.textContent).toContain("Loading");
+  } finally {
+    await act(async () => root.unmount());
+    dom.window.close();
+    Object.assign(globalThis, { window: previousWindow, document: previousDocument, IS_REACT_ACT_ENVIRONMENT: false });
   }
 });

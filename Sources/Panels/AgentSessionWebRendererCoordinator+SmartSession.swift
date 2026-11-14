@@ -107,11 +107,63 @@ extension AgentSessionWebRendererCoordinator {
             ),
             "smartSessionCurrentTurn": String(
                 localized: "agentSession.web.smartSession.currentTurn",
-                defaultValue: "Current turn"
+                defaultValue: "Latest turn"
             ),
             "smartSessionCurrentActivity": String(
                 localized: "agentSession.web.smartSession.currentActivity",
                 defaultValue: "Current activity"
+            ),
+            "smartSessionActivity": String(
+                localized: "agentSession.web.smartSession.activity",
+                defaultValue: "Activity"
+            ),
+            "smartSessionHideLoadedEvidence": String(
+                localized: "agentSession.web.smartSession.hideLoadedEvidence",
+                defaultValue: "Hide additional evidence"
+            ),
+            "smartSessionPreviousEvidence": String(
+                localized: "agentSession.web.smartSession.previousEvidence",
+                defaultValue: "Previous evidence"
+            ),
+            "smartSessionNextEvidence": String(
+                localized: "agentSession.web.smartSession.nextEvidence",
+                defaultValue: "Next evidence"
+            ),
+            "smartSessionLastReportedStatus": String(
+                localized: "agentSession.web.smartSession.lastReportedStatus",
+                defaultValue: "Last reported status"
+            ),
+            "smartSessionEvidenceMayPredate": String(
+                localized: "agentSession.web.smartSession.evidenceMayPredate",
+                defaultValue: "This evidence view may predate the latest refresh."
+            ),
+            "smartSessionUpdateEvidence": String(
+                localized: "agentSession.web.smartSession.updateEvidence",
+                defaultValue: "Update evidence view"
+            ),
+            "smartSessionEvidencePage": String(
+                localized: "agentSession.web.smartSession.evidencePage",
+                defaultValue: "Page {current} of {total}"
+            ),
+            "smartSessionShowLoadedEvidence": String(
+                localized: "agentSession.web.smartSession.showLoadedEvidence",
+                defaultValue: "Show more recorded evidence"
+            ),
+            "smartSessionLatestTurnPrompt": String(
+                localized: "agentSession.web.smartSession.latestTurnPrompt",
+                defaultValue: "Latest turn prompt"
+            ),
+            "smartSessionRecordedDescription": String(
+                localized: "agentSession.web.smartSession.recordedDescription",
+                defaultValue: "Recorded description (unverified)"
+            ),
+            "smartSessionRecordedEvidence": String(
+                localized: "agentSession.web.smartSession.recordedEvidence",
+                defaultValue: "Recorded evidence"
+            ),
+            "smartSessionObservedActivity": String(
+                localized: "agentSession.web.smartSession.observedActivity",
+                defaultValue: "Observed activity"
             ),
             "smartSessionPhase": String(
                 localized: "agentSession.web.smartSession.phase",
@@ -179,7 +231,7 @@ extension AgentSessionWebRendererCoordinator {
             "smartSessionWorkspace": String(localized: "agentSession.web.smartSession.workspace", defaultValue: "Workspace"),
             "smartSessionCurrent": String(localized: "agentSession.web.smartSession.current", defaultValue: "Current"),
             "smartSessionRelatedWork": String(localized: "agentSession.web.smartSession.relatedWork", defaultValue: "Related work"),
-            "smartSessionNoCurrentTurn": String(localized: "agentSession.web.smartSession.noCurrentTurn", defaultValue: "No current turn. The latest supported outcome appears below."),
+            "smartSessionNoCurrentTurn": String(localized: "agentSession.web.smartSession.noCurrentTurn", defaultValue: "Latest turn unavailable."),
             "smartSessionNoLearnings": String(localized: "agentSession.web.smartSession.noLearnings", defaultValue: "No saved learnings yet"),
             "smartSessionChanged": String(localized: "agentSession.web.smartSession.changed", defaultValue: "Changed"),
             "smartSessionChecked": String(localized: "agentSession.web.smartSession.checked", defaultValue: "Checked"),

@@ -11508,15 +11508,106 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Current turn"
+            "value": "Latest turn"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "現在のターン"
+            "value": "最新ターン"
           }
         }
+      }
+    },
+    "agentSession.web.smartSession.activity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Activity" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "活動" } }
+      }
+    },
+    "agentSession.web.smartSession.hideLoadedEvidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Hide additional evidence" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "追加の証拠を非表示" } }
+      }
+    },
+    "agentSession.web.smartSession.previousEvidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Previous evidence" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "前の証拠" } }
+      }
+    },
+    "agentSession.web.smartSession.nextEvidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Next evidence" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "次の証拠" } }
+      }
+    },
+    "agentSession.web.smartSession.lastReportedStatus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Last reported status" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "最後に報告された状態" } }
+      }
+    },
+    "agentSession.web.smartSession.evidenceMayPredate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "This evidence view may predate the latest refresh." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "この証拠の表示は、最新の更新より前のものかもしれません。" } }
+      }
+    },
+    "agentSession.web.smartSession.updateEvidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Update evidence view" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "証拠の表示を更新" } }
+      }
+    },
+    "agentSession.web.smartSession.evidencePage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Page {current} of {total}" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "{total}ページ中{current}ページ" } }
+      }
+    },
+    "agentSession.web.smartSession.showLoadedEvidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Show more recorded evidence" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "記録された証拠をさらに表示" } }
+      }
+    },
+    "agentSession.web.smartSession.latestTurnPrompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Latest turn prompt" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "最新ターンのプロンプト" } }
+      }
+    },
+    "agentSession.web.smartSession.recordedDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recorded description (unverified)" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "記録された説明（未検証）" } }
+      }
+    },
+    "agentSession.web.smartSession.recordedEvidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recorded evidence" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "記録された証拠" } }
+      }
+    },
+    "agentSession.web.smartSession.observedActivity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Observed activity" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "観測されたアクティビティ" } }
       }
     },
     "agentSession.web.smartSession.currentActivity": {
@@ -244553,13 +244644,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No current turn. The latest supported outcome appears below."
+            "value": "Latest turn unavailable."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "現在のターンはありません。最後に確認できた結果を以下に表示します。"
+            "value": "最新ターンは利用できません。"
           }
         }
       }
