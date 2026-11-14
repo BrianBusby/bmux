@@ -17,14 +17,19 @@ struct CodexTranscriptSnapshot {
     ) -> CodexTranscriptSnapshotResult {
         let expected = expectedSessionID.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !expected.isEmpty, expected.utf8.count <= 1_024 else { return .unknown(.invalidSession) }
-        guard let handle = try? FileHandle(forReadingFrom: path) else { return .unknown(.unavailable) }
+        let descriptor = path.path.withCString { Darwin.open($0, O_RDONLY | O_NONBLOCK | O_CLOEXEC) }
+        guard descriptor >= 0 else { return .unknown(.unavailable) }
+        var before = stat()
+        guard fstat(descriptor, &before) == 0,
+              (before.st_mode & mode_t(S_IFMT)) == mode_t(S_IFREG),
+              before.st_size >= 0 else {
+            Darwin.close(descriptor)
+            return .unknown(.unavailable)
+        }
+        let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
         defer { try? handle.close() }
 
         do {
-            var before = stat()
-            guard fstat(handle.fileDescriptor, &before) == 0, before.st_size >= 0 else {
-                return .unknown(.unavailable)
-            }
             guard before.st_size <= maxBytes else { return .unknown(.oversized) }
             let size = Int(before.st_size)
             try handle.seek(toOffset: 0)
