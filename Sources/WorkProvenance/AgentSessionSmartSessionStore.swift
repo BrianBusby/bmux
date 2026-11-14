@@ -368,3 +368,18 @@ final class AgentSessionSmartSessionStore {
         var dirtyWaiters: Set<UUID> = []
     }
 }
+
+// Comparison used by the store to reconcile independently read snapshots.
+extension AgentSessionSmartSessionSnapshot {
+    func hasSamePrimaryContent(as other: Self) -> Bool {
+        schemaVersion == other.schemaVersion && revision == other.revision && identity == other.identity &&
+            workModel == other.workModel && factual == other.factual && semanticMessages == other.semanticMessages
+    }
+
+    /// A previously unavailable, empty message read has no message revision to order.
+    func canRecoverMissingMessages(from other: Self) -> Bool {
+        semanticMessagesReadStatus == "unavailable" && semanticMessages.isEmpty &&
+            other.semanticMessagesReadStatus == "available" && schemaVersion == other.schemaVersion &&
+            identity == other.identity && workModel == other.workModel && factual == other.factual
+    }
+}
