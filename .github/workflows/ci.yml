@@ -1104,6 +1104,9 @@ jobs:
             BMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15 \
             ./scripts/select-ci-xcode.sh
 
+      - name: Test disabled transcript snapshot experiment
+        run: ./tests/test_codex_transcript_snapshot.sh
+
       - name: Install zig
         run: ./scripts/install-zig-ci.sh
 
