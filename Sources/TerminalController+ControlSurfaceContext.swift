@@ -225,16 +225,10 @@ extension TerminalController: ControlSurfaceContext {
         }
         if let dock = windowDockForRouting(routing, tabManager: tabManager) {
             let items: [ControlSurfaceHealthEntry] = orderedPanels(in: dock).map { panel in
-                var inWindow: Bool?
-                if let tp = panel as? TerminalPanel {
-                    inWindow = tp.surface.isViewInWindow
-                } else if let bp = panel as? BrowserPanel {
-                    inWindow = bp.webView.window != nil
-                }
                 return ControlSurfaceHealthEntry(
                     surfaceID: panel.id,
                     typeRawValue: panel.panelType.rawValue,
-                    inWindow: inWindow
+                    inWindow: controlSurfaceInWindow(panel)
                 )
             }
             return ControlSurfaceHealthSnapshot(
@@ -245,16 +239,10 @@ extension TerminalController: ControlSurfaceContext {
         }
         guard let ws = resolveSurfaceWorkspace(routing: routing, tabManager: tabManager) else { return nil }
         let items: [ControlSurfaceHealthEntry] = orderedPanels(in: ws).map { panel in
-            var inWindow: Bool?
-            if let tp = panel as? TerminalPanel {
-                inWindow = tp.surface.isViewInWindow
-            } else if let bp = panel as? BrowserPanel {
-                inWindow = bp.webView.window != nil
-            }
             return ControlSurfaceHealthEntry(
                 surfaceID: panel.id,
                 typeRawValue: panel.panelType.rawValue,
-                inWindow: inWindow
+                inWindow: controlSurfaceInWindow(panel)
             )
         }
         return ControlSurfaceHealthSnapshot(
@@ -262,6 +250,19 @@ extension TerminalController: ControlSurfaceContext {
             windowID: v2ResolveWindowId(tabManager: tabManager),
             surfaces: items
         )
+    }
+
+    private func controlSurfaceInWindow(_ panel: any Panel) -> Bool? {
+        if let terminalPanel = panel as? TerminalPanel {
+            return terminalPanel.surface.isViewInWindow
+        }
+        if let browserPanel = panel as? BrowserPanel {
+            return browserPanel.webView.window != nil
+        }
+        if let agentSessionPanel = panel as? AgentSessionPanel {
+            return agentSessionPanel.rendererSession.isViewInWindow
+        }
+        return nil
     }
 
     // MARK: - focus
