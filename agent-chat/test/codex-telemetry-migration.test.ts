@@ -523,28 +523,26 @@ function codexTokenUsage(inputTokens: number, outputTokens: number, totalTokens:
   const { sess, agentEvents, telemetryEvents } = makeCodexSession();
   sess.internal.threadId = "thread-unsupported-approval";
 
-  codexHandleServerMessageForTest(sess, {
+  const writes = codexHandleServerMessageForTest(sess, {
     id: 202,
     method: "toolUserInput/request",
     params: { threadId: "thread-unsupported-approval" },
   });
 
-  assert(agentEvents.length === 3, `unsupported approval lifecycle projection changed: ${JSON.stringify(agentEvents)}`);
+  assert(JSON.stringify(writes) === JSON.stringify([{
+    jsonrpc: "2.0",
+    id: 202,
+    error: { code: -32601, message: "toolUserInput/request is not supported by bmux-agent-ui" },
+  }]), `unsupported request response changed: ${JSON.stringify(writes)}`);
+
+  assert(agentEvents.length === 1, `unsupported request should only publish a diagnostic: ${JSON.stringify(agentEvents)}`);
   assert(
     agentEvents.some((event) => event.kind === "status"
       && event.text === "declined unsupported request: toolUserInput/request"),
-    "unsupported approval status text changed",
+    "unsupported request status text changed",
   );
-  assert(agentEvents.some((event) => event.kind === "approval" && event.state === "requested"), "unsupported approval request projection changed");
-  assert(agentEvents.some((event) => event.kind === "approval" && event.state === "resolved" && event.decision === "unsupported"), "unsupported approval resolution projection changed");
   const approvalEvents = telemetryEvents.filter((event) => event.event.type === "approval.requested" || event.event.type === "approval.resolved");
-  assert(approvalEvents.length === 2, `expected unsupported approval telemetry pair: ${JSON.stringify(telemetryEvents)}`);
-  assert(approvalEvents[0].event.type === "approval.requested", "unsupported request should publish approval.requested telemetry");
-  assert(approvalEvents[0].event.approvalKind === "other", "unsupported approval kind changed");
-  assert(approvalEvents[0].event.summary === "toolUserInput/request", "unsupported approval summary changed");
-  assert(approvalEvents[1].event.type === "approval.resolved", "unsupported request should publish approval.resolved telemetry");
-  assert(approvalEvents[1].event.decision === "unsupported", "unsupported decision changed");
-  assert(approvalEvents[1].event.reason === "unsupported request", "unsupported reason changed");
+  assert(approvalEvents.length === 0, `unsupported user input must not become approval telemetry: ${JSON.stringify(approvalEvents)}`);
 
   const diagnosticEvents = telemetryEvents.filter((event) => event.event.type === "diagnostic");
   assert(diagnosticEvents.length === 1, `expected unsupported status diagnostic telemetry: ${JSON.stringify(telemetryEvents)}`);
