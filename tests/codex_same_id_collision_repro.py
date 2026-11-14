@@ -50,13 +50,17 @@ def cursor(directory):
     return 0
 
 
-def append_failures(directory):
+def status_covering(directory, offset):
     for path in directory.glob("*.status.json"):
         try:
-            return int(json.loads(path.read_text()).get("appendFailures", 0))
-        except (OSError, ValueError, TypeError):
+            status = json.loads(path.read_text())
+            fields = [status["readOffset"], status["cursorOffset"], status["appendFailures"]]
+            if (all(type(value) is int and value >= 0 for value in fields)
+                    and fields[0] >= offset and fields[1] >= offset):
+                return status
+        except (OSError, ValueError, TypeError, KeyError):
             pass
-    return 0
+    return None
 
 
 def wait_until(predicate, process):
@@ -109,6 +113,7 @@ class SyntheticSourceCollision(unittest.TestCase):
                 process = subprocess.Popen(argv, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 try:
                     offset = wait_until(lambda: cursor(cursors) if cursor(cursors) == len(initial.encode()) else 0, process)
+                    initial_status = wait_until(lambda: status_covering(cursors, offset), process)
                     with sqlite3.connect(database) as db:
                         first = db.execute("SELECT id, command_text FROM provenance_coding_agent_commands WHERE session_id=?", (SESSION,)).fetchall()
                         self.assertEqual(len(first), 1)
@@ -126,12 +131,14 @@ class SyntheticSourceCollision(unittest.TestCase):
                         ordinal = 3 if mode == "distinct-ordinal" else 2
                         operation = "operation-two" if mode == "distinct-item" else "operation-one"
                         later = command(ordinal, operation, "fixture-second")
-                        failures = append_failures(cursors)
+                        failures = initial_status["appendFailures"]
                         with source.open("a", encoding="utf-8") as stream:
                             stream.write(later)
                             stream.flush()
                             os.fsync(stream.fileno())
-                        wait_until(lambda: cursor(cursors) > offset or append_failures(cursors) > failures, process)
+                        final_offset = offset + len(later.encode())
+                        final_status = wait_until(lambda: status_covering(cursors, final_offset), process)
+                        self.assertEqual(cursor(cursors), final_offset)
                     with sqlite3.connect(database) as db:
                         commands = db.execute("SELECT id, command_text FROM provenance_coding_agent_commands WHERE session_id=? ORDER BY id", (SESSION,)).fetchall()
                         events = db.execute("SELECT id, payload_json FROM provenance_events WHERE payload_json LIKE '%fixture-first%' OR payload_json LIKE '%fixture-second%'").fetchall()
@@ -150,13 +157,27 @@ class SyntheticSourceCollision(unittest.TestCase):
                     else:
                         self.assertEqual(commands, first)
                         self.assertEqual(events, event_rows)
-                        self.assertEqual(cursor(cursors), offset + len(later.encode()))
-                        self.assertEqual(append_failures(cursors), failures)
+                        self.assertEqual(cursor(cursors), final_offset)
+                        self.assertEqual(final_status["appendFailures"], failures)
                         self.assertFalse(any("fixture-second" in payload for _, payload in events))
                         print(f"baseline synthetic collision cursor={offset}->{cursor(cursors)} "
                               "first_event_and_projection_unchanged=1 second_event_absent=1 append_failures_unchanged=1")
                 finally:
                     stop(process)
+
+    def test_status_requires_valid_covered_offsets_and_explicit_counter(self):
+        with tempfile.TemporaryDirectory(prefix="bmux-status-check-", dir="/tmp") as temp:
+            directory = Path(temp)
+            path = directory / "synthetic.status.json"
+            self.assertIsNone(status_covering(directory, 10))
+            for value in ("{", json.dumps({"readOffset": 10, "cursorOffset": 10}),
+                          json.dumps({"readOffset": 9, "cursorOffset": 10, "appendFailures": 0}),
+                          json.dumps({"readOffset": 10, "cursorOffset": 9, "appendFailures": 0}),
+                          json.dumps({"readOffset": 10, "cursorOffset": 10, "appendFailures": True})):
+                path.write_text(value, encoding="utf-8")
+                self.assertIsNone(status_covering(directory, 10))
+            path.write_text(json.dumps({"readOffset": 10, "cursorOffset": 10, "appendFailures": 0}), encoding="utf-8")
+            self.assertEqual(status_covering(directory, 10)["appendFailures"], 0)
 
     def test_matching_source_restart_control(self):
         self.run_case("replay")
