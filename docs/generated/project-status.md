@@ -181,6 +181,7 @@ Regenerate with: ./scripts/project-docs generate
 | Persistent SSH child exit reproduces sibling tracking loss; last-surface guard awaits fixed native and app-host verification (`persistent_pty_child_exit_verification`) | Bmux | open |  |
 | SSH PTY initial resize acknowledgement CI timeouts remain unresolved (`ssh_pty_lifecycle_fixture_verification`) | Bmux | open |  |
 | CI Option/Alt step selects CodexMonitorLeaseTests sequential and nested controls; actual app-host verification pending (`codex_monitor_lease_fixture_verification`) | Bmux | open |  |
+| Unidentified Codex hooks cannot establish new associations or monitors; stale state and observation health remain unresolved (`codex_missing_provider_session_visibility`) | Bmux | open |  |
 | Respawn window protocol fixture focused gate awaits app-host CI (`respawn_window_protocol_fixture_focused_gate_verification`) | Bmux | open |  |
 | Workspace fallback regression test red and production fix verification pending (`workspace_fallback_regression_verification`) | Bmux | open |  |
 | Portal geometry and workspace creation/publication fixture corrections await fixed-head app-host verification (`native_portal_workspace_contract_fixture_verification`) | Bmux | open |  |

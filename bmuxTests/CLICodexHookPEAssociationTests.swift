@@ -56,7 +56,7 @@ struct CLICodexHookPEAssociationTests {
         #expect(result.status == 0, Comment(rawValue: result.stderr))
         #expect(result.stdout == "{}\n")
 
-        let response = try await peAssociationResponse(root: root, stableWorkspaceId: stableWorkspaceId)
+        let response = try await codexHookPEAssociationResponse(root: root, stableWorkspaceId: stableWorkspaceId)
         let association = try #require(response.association)
         #expect(response.found)
         #expect(response.readiness.status == .associationEstablishedProjectionPending)
@@ -94,7 +94,7 @@ struct CLICodexHookPEAssociationTests {
             timeout: 10)
         #expect(!hook.timedOut && hook.status == 0)
         #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("codex-hook-sessions.json").path))
-        let association = try await peAssociationResponse(root: root, stableWorkspaceId: stable)
+        let association = try await codexHookPEAssociationResponse(root: root, stableWorkspaceId: stable)
         #expect(!association.found)
         var caller = environment
         caller["CODEX_THREAD_ID"] = "unattested-session"
@@ -111,7 +111,7 @@ struct CLICodexHookPEAssociationTests {
             standardInput: #"{"session_id":"unverified-session","turn_id":"turn-2","hook_event_name":"UserPromptSubmit"}"#,
             timeout: 10)
         #expect(!daemonHook.timedOut && daemonHook.status == 0)
-        let unverifiedAssociation = try await peAssociationResponse(root: root, stableWorkspaceId: stable)
+        let unverifiedAssociation = try await codexHookPEAssociationResponse(root: root, stableWorkspaceId: stable)
         #expect(!unverifiedAssociation.found)
         #expect(!FileManager.default.fileExists(atPath: root.appendingPathComponent("codex-monitor-leases").path))
     }
@@ -170,7 +170,7 @@ struct CLICodexHookPEAssociationTests {
             codexHookJSONObject($0)?["method"] as? String == "workspace.list"
         })
 
-        let response = try await peAssociationResponse(root: root, stableWorkspaceId: stableWorkspaceId)
+        let response = try await codexHookPEAssociationResponse(root: root, stableWorkspaceId: stableWorkspaceId)
         let association = try #require(response.association)
         #expect(response.found)
         #expect(response.readiness.status == .associationEstablishedProjectionPending)
@@ -456,19 +456,20 @@ struct CLICodexHookPEAssociationTests {
         #expect((boundedPayload["briefs_omitted_for_budget"] as? Int ?? 0) > 0)
     }
 
-    private func peAssociationResponse(
-        root: URL,
-        stableWorkspaceId: String
-    ) async throws -> ProvenanceWorkspaceCodingAgentSessionAssociationResponse {
-        let databaseURL = root
-            .appendingPathComponent(".local", isDirectory: true)
-            .appendingPathComponent("state", isDirectory: true)
-            .appendingPathComponent("provenance-engine", isDirectory: true)
-            .appendingPathComponent("provenance.sqlite", isDirectory: false)
-        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
-            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
-        return try await client.workspaceCodingAgentSessionAssociation(
-            ProvenanceWorkspaceCodingAgentSessionAssociationRequest(workspaceID: stableWorkspaceId)
-        )
-    }
+}
+
+func codexHookPEAssociationResponse(
+    root: URL,
+    stableWorkspaceId: String
+) async throws -> ProvenanceWorkspaceCodingAgentSessionAssociationResponse {
+    let databaseURL = root
+        .appendingPathComponent(".local", isDirectory: true)
+        .appendingPathComponent("state", isDirectory: true)
+        .appendingPathComponent("provenance-engine", isDirectory: true)
+        .appendingPathComponent("provenance.sqlite", isDirectory: false)
+    let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+        try ProvenanceEngineClientFactory().sqliteClient(databaseURL: databaseURL)
+    return try await client.workspaceCodingAgentSessionAssociation(
+        ProvenanceWorkspaceCodingAgentSessionAssociationRequest(workspaceID: stableWorkspaceId)
+    )
 }
