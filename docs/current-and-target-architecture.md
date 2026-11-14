@@ -86,6 +86,15 @@ worktree assignments. The durable architecture keeps bmux runtime acquisition,
 PE factual projections, PE semantic inference, semantic messages, and bmux
 presentation as separate layers.
 
+Codex hook associations and automatic transcript monitor startup require a
+provider session identifier in the hook payload. When it is absent, legacy
+lifecycle routing can continue, but that hook does not establish an association
+or start a monitor. Existing associations and monitors can remain, and no
+unknown observation-health marker is set. Direct monitor invocation still has
+its separate environment fallback. The hook's process check and payload
+identifier do not by themselves establish a durable session-to-surface binding,
+and this rule does not repair historical records.
+
 ```text
 Provider events
   Codex / Claude / future coding agents
@@ -442,6 +451,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Persistent SSH child exit reproduces sibling tracking loss; last-surface guard awaits fixed native and app-host verification (`persistent_pty_child_exit_verification`) - owner: Bmux; status: open
 - SSH PTY initial resize acknowledgement CI timeouts remain unresolved (`ssh_pty_lifecycle_fixture_verification`) - owner: Bmux; status: open
 - CI Option/Alt step selects CodexMonitorLeaseTests sequential and nested controls; actual app-host verification pending (`codex_monitor_lease_fixture_verification`) - owner: Bmux; status: open
+- Unidentified Codex hooks cannot establish new associations or monitors; stale state and observation health remain unresolved (`codex_missing_provider_session_visibility`) - owner: Bmux; status: open
 - Respawn window protocol fixture focused gate awaits app-host CI (`respawn_window_protocol_fixture_focused_gate_verification`) - owner: Bmux; status: open
 - Workspace fallback regression test red and production fix verification pending (`workspace_fallback_regression_verification`) - owner: Bmux; status: open
 - Portal geometry and workspace creation/publication fixture corrections await fixed-head app-host verification (`native_portal_workspace_contract_fixture_verification`) - owner: Bmux; status: open

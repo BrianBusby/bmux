@@ -30873,7 +30873,10 @@ export default BMUXSessionRestore;
                 print("{}")
                 return
             }
-            if def.name == "codex", !sessionId.isEmpty, !suppressVisibleMutations { await recordCodexHookSessionStartAssociation(workspaceId: workspaceId, surfaceId: surfaceId, sessionId: sessionId, turnId: input.turnId, cwd: hookCwd ?? mapped?.cwd, socketPath: client.socketPath, env: env) }; if let pid, !suppressVisibleMutations {
+            if def.name == "codex", let providerSessionId = normalizedHookValue(input.sessionId), !suppressVisibleMutations {
+                await recordCodexHookSessionStartAssociation(workspaceId: workspaceId, surfaceId: surfaceId, sessionId: providerSessionId, turnId: input.turnId, cwd: hookCwd ?? mapped?.cwd, socketPath: client.socketPath, env: env)
+            }
+            if let pid, !suppressVisibleMutations {
                 _ = try? sendV1Command(
                     "set_agent_pid \(pidKey) \(pid) --tab=\(workspaceId)\(socketPanelOption(surfaceId))",
                     client: client
@@ -31171,14 +31174,15 @@ export default BMUXSessionRestore;
                     telemetry: telemetry
                 )
             }
-            if def.name == "codex", !sessionId.isEmpty, !suppressVisibleMutations,
+            if def.name == "codex", let providerSessionId = normalizedHookValue(input.sessionId), !suppressVisibleMutations,
                env["BMUX_CODEX_HOOK_IDENTITY_VERIFIED"] == "1" {
                 if codexPromptTurnWentTerminal() {
                     stopStaleCodexPromptSubmit(restoreVisibleState: true)
                     return
                 }
-                await recordCodexHookPromptSubmitAssociation(workspaceId: workspaceId, surfaceId: surfaceId, sessionId: sessionId, turnId: input.turnId, cwd: hookCwd ?? mapped?.cwd, socketPath: client.socketPath, env: env); let leasePath = createCodexMonitorLease(
-                    sessionId: sessionId,
+                await recordCodexHookPromptSubmitAssociation(workspaceId: workspaceId, surfaceId: surfaceId, sessionId: providerSessionId, turnId: input.turnId, cwd: hookCwd ?? mapped?.cwd, socketPath: client.socketPath, env: env)
+                let leasePath = createCodexMonitorLease(
+                    sessionId: providerSessionId,
                     turnId: input.turnId,
                     workspaceId: workspaceId,
                     surfaceId: surfaceId,
@@ -31191,14 +31195,14 @@ export default BMUXSessionRestore;
                     )
                 } else {
                     retireCodexMonitorLeases(
-                        sessionId: sessionId,
+                        sessionId: providerSessionId,
                         turnId: nil,
                         preservingLeasePath: leasePath,
                         env: env
                     )
                 }
                 startCodexTranscriptMonitor(
-                    sessionId: sessionId,
+                    sessionId: providerSessionId,
                     turnId: input.turnId,
                     transcriptPath: normalizedHookValue(input.transcriptPath),
                     cwd: hookCwd ?? mapped?.cwd,
