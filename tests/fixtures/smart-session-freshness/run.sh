@@ -37,11 +37,27 @@ source = source.replace('''        let index = workModelRequests.count
         if let responseOverride { return responseOverride }''')
 source = source.replace('private static func model(sessionID: String, revision: Int) -> ProvenanceSessionWorkModel {', 'private static func model(sessionID: String, revision: Int, semanticIDs: [String] = []) -> ProvenanceSessionWorkModel {')
 source = source.replace('semanticInferenceIDs: [],\n                latestSemanticInferenceCreatedAt: nil', 'semanticInferenceIDs: semanticIDs,\n                latestSemanticInferenceCreatedAt: nil', 1)
-source = source.replace('    func health() async throws -> ProvenanceEngineHealth {', '''    private var relatedAvailable = false
+source = source.replace('    func health() async throws -> ProvenanceEngineHealth {', '''    private var relatedBlocked = false
+    private var relatedHasStarted = false
+    private var relatedStarted: CheckedContinuation<Void, Never>?
+    private var relatedRelease: CheckedContinuation<Void, Never>?
+    func holdRelated() { relatedBlocked = true }
+    func waitForRelatedStart() async {
+        if relatedHasStarted { return }
+        await withCheckedContinuation { relatedStarted = $0 }
+    }
+    func releaseRelated() { relatedBlocked = false; relatedRelease?.resume(); relatedRelease = nil }
+    private var relatedAvailable = false
     private var relatedWrongTarget = false
     func setRelatedWrongTarget(_ value: Bool) { relatedWrongTarget = value }
     func setRelatedAvailable(_ value: Bool) { relatedAvailable = value }
     func relatedSessions(_ request: ProvenanceRelatedSessionRequest) async throws -> ProvenanceRelatedSessionResponse {
+        if relatedBlocked {
+            relatedHasStarted = true
+            relatedStarted?.resume()
+            relatedStarted = nil
+            await withCheckedContinuation { relatedRelease = $0 }
+        }
         guard relatedAvailable else { throw SmartSessionStoreTestError.unimplemented }
         let session = models[0].identity.session
         let metadata = ProvenanceRelatedSessionProjectionMetadata(revisionID: "r", projectionRuleID: "rule", projectionRuleVersion: "1", requestFingerprint: "q", contentFingerprint: "c", resultLimit: 5, exclusionLimit: 5, updatedAfter: nil, sourceEvidenceWatermark: nil, generatedAt: nil)
@@ -84,6 +100,26 @@ extension AgentSessionSmartSessionStoreTests {
         await client.restoreReads()
         #expect(await store.refreshedSnapshot(sessionID: "session-1") == .available(original))
         #expect(store.snapshot(sessionID: "session-1") == .available(original))
+    }
+
+    @Test func overlapAfterCapturedModelDoesNotClaimNewRead() async {
+        let initial = Self.model(sessionID: "session-1", revision: 42)
+        let latest = Self.model(sessionID: "session-1", revision: 43)
+        let client = SmartSessionStoreTestClient(models: [initial], materializedFactualRevisions: [42, 43])
+        let store = AgentSessionSmartSessionStore(client: client)
+        await client.holdRelated()
+        let first = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+        await client.waitForRelatedStart()
+        await client.setResponse(.init(found: true, sessionID: "session-1", model: latest))
+        #expect(await store.refreshedSnapshot(sessionID: "session-1") == .failed(sessionID: "session-1"))
+        await client.releaseRelated()
+        #expect(await first.value == .failed(sessionID: "session-1"))
+        guard case .available(let recovered) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Non-overlapping retry should recover")
+            return
+        }
+        #expect(recovered.revision.factualRevision == 43)
+        #expect(await client.sessionWorkModelRequestCount() == 2)
     }
 
     @Test func failedReadWithoutCacheStaysFailed() async {

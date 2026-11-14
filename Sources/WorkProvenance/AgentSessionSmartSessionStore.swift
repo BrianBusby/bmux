@@ -23,6 +23,9 @@ final class AgentSessionSmartSessionStore {
 
     func snapshot(sessionID rawSessionID: String?) -> AgentSessionSmartSessionReadResult {
         guard let sessionID = Self.trimmedNonEmpty(rawSessionID) else { return .missingSession }
+        if let entry = refreshTasksBySessionID[sessionID], entry.invalidated {
+            return Self.uncertainResult(sessionID: sessionID, cached: entry.priorSnapshot)
+        }
         guard let cached = snapshotsBySessionID[sessionID] else {
             return failedSessionIDs.contains(sessionID) ? .failed(sessionID: sessionID) : .notFound(sessionID: sessionID, reason: nil)
         }
@@ -31,16 +34,30 @@ final class AgentSessionSmartSessionStore {
 
     func refreshedSnapshot(sessionID rawSessionID: String?) async -> AgentSessionSmartSessionReadResult {
         guard let sessionID = Self.trimmedNonEmpty(rawSessionID) else { return .missingSession }
-        if let entry = refreshTasksBySessionID[sessionID] {
-            return await entry.task.value
+        if var entry = refreshTasksBySessionID[sessionID] {
+            entry.invalidated = true
+            refreshTasksBySessionID[sessionID] = entry
+            return Self.uncertainResult(sessionID: sessionID, cached: entry.priorSnapshot)
         }
+        let priorSnapshot = snapshotsBySessionID[sessionID]
         let requestID = UUID()
         let task = Task { @MainActor in
             await self.loadSnapshot(sessionID: sessionID)
         }
-        refreshTasksBySessionID[sessionID] = RefreshTaskEntry(id: requestID, task: task)
+        refreshTasksBySessionID[sessionID] = RefreshTaskEntry(id: requestID, task: task, priorSnapshot: priorSnapshot)
         let result = await task.value
-        if refreshTasksBySessionID[sessionID]?.id == requestID {
+        if let entry = refreshTasksBySessionID[sessionID], entry.id == requestID {
+            if entry.invalidated {
+                if var prior = entry.priorSnapshot {
+                    prior.stale = true
+                    snapshotsBySessionID[sessionID] = prior
+                } else {
+                    snapshotsBySessionID.removeValue(forKey: sessionID)
+                    failedSessionIDs.insert(sessionID)
+                }
+                refreshTasksBySessionID.removeValue(forKey: sessionID)
+                return Self.uncertainResult(sessionID: sessionID, cached: entry.priorSnapshot)
+            }
             refreshTasksBySessionID.removeValue(forKey: sessionID)
         }
         return result
@@ -258,6 +275,11 @@ final class AgentSessionSmartSessionStore {
         return trimmed
     }
 
+    private static func uncertainResult(sessionID: String, cached: CachedSnapshot?) -> AgentSessionSmartSessionReadResult {
+        guard let cached else { return .failed(sessionID: sessionID) }
+        return .stale(cached.snapshot, lastSuccessfulReadAt: cached.lastSuccessfulReadAt)
+    }
+
     private enum ReadError: Error { case inconsistentResponse }
 
     private struct SemanticMessageSubject: Hashable {
@@ -268,5 +290,7 @@ final class AgentSessionSmartSessionStore {
     private struct RefreshTaskEntry {
         let id: UUID
         let task: Task<AgentSessionSmartSessionReadResult, Never>
+        let priorSnapshot: CachedSnapshot?
+        var invalidated = false
     }
 }
