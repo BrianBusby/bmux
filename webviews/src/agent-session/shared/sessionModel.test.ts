@@ -2003,6 +2003,7 @@ test("loaded evidence is selectable and available through a disclosure", async (
     expect(container.querySelectorAll(".focus-evidence-page li").length).toBe(0);
     await act(async () => disclosure?.click());
     expect(disclosure?.getAttribute("aria-expanded")).toBe("true");
+    expect(container.querySelector(".focus-evidence-page [role=status]")?.textContent).toBe("Page 1 of 21");
     expect(container.querySelectorAll(".focus-evidence-page li").length).toBeLessThanOrEqual(20);
     expect(container.querySelector(".focus-evidence-page")?.textContent).toContain("command-3");
     const item = container.querySelector(".focus-evidence-page li");
@@ -2018,7 +2019,7 @@ test("loaded evidence is selectable and available through a disclosure", async (
       expect(container.querySelectorAll(".focus-evidence-page li").length).toBeLessThanOrEqual(20);
       visited.push(container.querySelector(".focus-evidence-page")?.textContent ?? "");
       const next = container.querySelector<HTMLButtonElement>(".focus-evidence-next");
-      if (!next || next.disabled) break;
+      if (!next || next.getAttribute("aria-disabled") === "true") break;
       await act(async () => next.click());
     }
     expect(visited.join(" ")).toContain("command-99");
@@ -2026,7 +2027,11 @@ test("loaded evidence is selectable and available through a disclosure", async (
     expect(visited.join(" ")).toContain("Recorded description (unverified): patch-99");
     expect(visited.join(" ")).toContain("message-10");
     const previous = container.querySelector<HTMLButtonElement>(".focus-evidence-previous");
-    expect(previous?.disabled).toBe(false);
+    expect(previous?.getAttribute("aria-disabled")).toBe("false");
+    const nextAtEnd = container.querySelector<HTMLButtonElement>(".focus-evidence-next");
+    nextAtEnd?.focus();
+    expect(nextAtEnd?.getAttribute("aria-disabled")).toBe("true");
+    expect(dom.window.document.activeElement).toBe(nextAtEnd);
     await act(async () => previous?.click());
     expect(container.querySelector(".focus-evidence-page")?.textContent).not.toContain("message-10");
     await act(async () => disclosure?.click());
@@ -2035,6 +2040,30 @@ test("loaded evidence is selectable and available through a disclosure", async (
     const learnings = [...container.querySelectorAll<HTMLButtonElement>("[role=tab]")].find(button => button.textContent === "Learnings");
     await act(async () => learnings?.click());
     expect(container.querySelector(".focus-learnings button")).toBeNull();
+  } finally {
+    await act(async () => root.unmount());
+    dom.window.close();
+    Object.assign(globalThis, { window: previousWindow, document: previousDocument, IS_REACT_ACT_ENVIRONMENT: false });
+  }
+});
+
+
+test.each(["loading", "missingSession", "failed"])("unavailable read %s is not presented as reported session status", async (kind) => {
+  const dom = new JSDOM("<!doctype html><div id='root'></div>", { url: "https://example.test" });
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  Object.assign(globalThis, { window: dom.window, document: dom.window.document, IS_REACT_ACT_ENVIRONMENT: true });
+  const response = kind === "loading" ? new Promise(() => {}) : Promise.resolve({ ok: true, value: { schemaVersion: 1, status: kind } });
+  Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: { postMessage: () => response } } } });
+  const container = dom.window.document.getElementById("root");
+  if (!container) throw new Error("Missing root");
+  const root = createRoot(container);
+  try {
+    await act(async () => root.render(createElement(SmartSessionSurface, { context })));
+    expect(container.querySelector(".focus-header-status")?.textContent).not.toContain("Last reported status");
+    expect(container.querySelector(".focus-card-status")?.textContent).not.toContain("Last reported status");
+    expect(container.textContent).not.toContain("Verified workspace identity");
+    if (kind === "loading") expect(container.querySelector(".focus-empty-state")?.textContent).toContain("Loading");
   } finally {
     await act(async () => root.unmount());
     dom.window.close();
