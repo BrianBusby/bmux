@@ -3,6 +3,12 @@ import Foundation
 @main
 struct CodexTranscriptSnapshotExperimentTests {
     static func main() throws {
+        if CommandLine.arguments.count == 2 {
+            guard case .unknown = CodexTranscriptSnapshot.capture(
+                path: URL(fileURLWithPath: CommandLine.arguments[1]), expectedSessionID: "session-a"
+            ) else { exit(1) }
+            return
+        }
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("bmux-snapshot-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
