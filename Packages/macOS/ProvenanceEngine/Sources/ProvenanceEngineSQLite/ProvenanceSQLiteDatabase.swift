@@ -96,6 +96,24 @@ final class ProvenanceSQLiteDatabase {
         return ProvenanceSQLiteStatement(database: handle, statement: statement)
     }
 
+    /// Reads the immutable ledger payload without materializing an oversized value.
+    /// `nil` means that the value exceeded the caller's byte budget.
+    func boundedEventPayload(rowID: Int, maxBytes: Int) throws -> Data? {
+        guard let handle else { throw ProvenanceSQLiteError.sqlite(message: "database is closed") }
+        var blob: OpaquePointer?
+        guard sqlite3_blob_open(handle, "main", "provenance_events", "payload_json", sqlite3_int64(rowID), 0, &blob) == SQLITE_OK,
+              let blob else { throw ProvenanceSQLiteError.sqlite(message: message) }
+        defer { sqlite3_blob_close(blob) }
+        let count = Int(sqlite3_blob_bytes(blob))
+        guard count <= maxBytes else { return nil }
+        var data = Data(count: count)
+        let result = data.withUnsafeMutableBytes { bytes in
+            sqlite3_blob_read(blob, bytes.baseAddress, Int32(count), 0)
+        }
+        guard result == SQLITE_OK else { throw ProvenanceSQLiteError.sqlite(message: message) }
+        return data
+    }
+
     /// SQLite `PRAGMA user_version` for the open database.
     var userVersion: Int32 {
         get throws {

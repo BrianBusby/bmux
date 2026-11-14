@@ -40,6 +40,7 @@ extension ProvenanceSQLiteRepository {
             try factualTurnSnapshot(turnID: turnID)
         }
 
+        let proposalRead = try recentProposedPlanObservations(sessionID: request.sessionID)
         return ProvenanceFactualSessionProjectionResponse(
             found: true,
             sessionID: request.sessionID,
@@ -52,7 +53,9 @@ extension ProvenanceSQLiteRepository {
                 providerThreads: providerThreads,
                 latestTurn: latestTurn,
                 priorTurns: priorTurns,
-                turns: turns
+                turns: turns,
+                proposedPlanObservations: proposalRead.observations,
+                proposedPlanCoverage: proposalRead.coverage
             )
         )
     }
@@ -86,4 +89,5 @@ extension ProvenanceSQLiteRepository {
             turnDetail: detail
         )
     }
+
 }

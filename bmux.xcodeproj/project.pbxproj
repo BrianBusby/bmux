@@ -79,6 +79,7 @@
 		A9F20000000000000000000F /* AgentSessionPermissionMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F10000000000000000000F /* AgentSessionPermissionMode.swift */; };
 		A44000000000000000000001 /* AgentSessionPrimaryTabs.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3894B43624A44389E973B21 /* AgentSessionPrimaryTabs.swift */; };
 		A9E020000000000000000009 /* AgentSessionProcessStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E010000000000000000009 /* AgentSessionProcessStore.swift */; };
+		CE2F01020000000000000001 /* AgentSessionProposedPlanObservationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F01020000000000000002 /* AgentSessionProposedPlanObservationsView.swift */; };
 		A9E020000000000000000001 /* AgentSessionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E010000000000000000001 /* AgentSessionProvider.swift */; };
 		A9E02000000000000000000F /* AgentSessionRendererKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E01000000000000000000F /* AgentSessionRendererKind.swift */; };
 		A9F200000000000000000010 /* AgentSessionRunningSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000010 /* AgentSessionRunningSession.swift */; };
@@ -634,6 +635,7 @@
 		A5D41205A1B2C3D4E5F60718 /* CLINotifyProcessTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5D41206A1B2C3D4E5F60718 /* CLINotifyProcessTestSupport.swift */; };
 		157C175B1C30F51B5A0B2FA3 /* CLIOutputChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6427199662BD7433C6FE8723 /* CLIOutputChannel.swift */; };
 		17A45C0D89B84E71A3B274A0 /* CLIProcessTestTimeout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 919DCAF7D0DD44A796A899FF /* CLIProcessTestTimeout.swift */; };
+		E1C83AF10000000000000001 /* CLIProvenanceCodexProposedPlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C83AF10000000000000002 /* CLIProvenanceCodexProposedPlanTests.swift */; };
 		D0C0A1B40000000000000001 /* CLIProvenanceCodexTranscriptCursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B40000000000000002 /* CLIProvenanceCodexTranscriptCursor.swift */; };
 		D0C0A1B40000000000000003 /* CLIProvenanceCodexTranscriptCursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B40000000000000002 /* CLIProvenanceCodexTranscriptCursor.swift */; };
 		D0C0A1B50000000000000001 /* CLIProvenanceCodexTranscriptCursorStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B50000000000000002 /* CLIProvenanceCodexTranscriptCursorStore.swift */; };
@@ -2419,6 +2421,7 @@
 		A9F10000000000000000000F /* AgentSessionPermissionMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionPermissionMode.swift; sourceTree = "<group>"; };
 		A3894B43624A44389E973B21 /* AgentSessionPrimaryTabs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionPrimaryTabs.swift; sourceTree = "<group>"; };
 		A9E010000000000000000009 /* AgentSessionProcessStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionProcessStore.swift; sourceTree = "<group>"; };
+		CE2F01020000000000000002 /* AgentSessionProposedPlanObservationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionProposedPlanObservationsView.swift; sourceTree = "<group>"; };
 		A9E010000000000000000001 /* AgentSessionProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionProvider.swift; sourceTree = "<group>"; };
 		A9E01000000000000000000F /* AgentSessionRendererKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionRendererKind.swift; sourceTree = "<group>"; };
 		A9F100000000000000000010 /* AgentSessionRunningSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionRunningSession.swift; sourceTree = "<group>"; };
@@ -2911,6 +2914,7 @@
 		A5D41206A1B2C3D4E5F60718 /* CLINotifyProcessTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLINotifyProcessTestSupport.swift; sourceTree = "<group>"; };
 		6427199662BD7433C6FE8723 /* CLIOutputChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIOutputChannel.swift; sourceTree = "<group>"; };
 		919DCAF7D0DD44A796A899FF /* CLIProcessTestTimeout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProcessTestTimeout.swift"; sourceTree = "<group>"; };
+		E1C83AF10000000000000002 /* CLIProvenanceCodexProposedPlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceCodexProposedPlanTests.swift; sourceTree = "<group>"; };
 		D0C0A1B40000000000000002 /* CLIProvenanceCodexTranscriptCursor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptCursor.swift"; sourceTree = "<group>"; };
 		D0C0A1B50000000000000002 /* CLIProvenanceCodexTranscriptCursorStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptCursorStore.swift"; sourceTree = "<group>"; };
 		D0C0A1B20000000000000002 /* CLIProvenanceCodexTranscriptFileIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptFileIdentity.swift"; sourceTree = "<group>"; };
@@ -5550,6 +5554,7 @@
 				D884128910C427B802738EEF /* AgentSessionFactualProjectionModeHost.swift */,
 				D938BFA54538DFF7283C66F3 /* AgentSessionCurrentTurnOverview.swift */,
 				CE2F01010000000000000002 /* AgentSessionFactualProjectionView.swift */,
+				CE2F01020000000000000002 /* AgentSessionProposedPlanObservationsView.swift */,
 
 				B0A501000000000000000002 /* BrowserOmnibarAppKitBridge.swift */,
 				B0A500000000000000000002 /* BrowserOmnibarPerformanceSupport.swift */,
@@ -6611,6 +6616,7 @@
 					CE0E03170000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTests.swift */,
 					CE0E03180000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTestSupport.swift */,
 					C0DE70600000000000000002 /* CLIProvenanceCodexTranscriptImporterTests.swift */,
+					E1C83AF10000000000000002 /* CLIProvenanceCodexProposedPlanTests.swift */,
 					D0C0A1B2B3B4B5B6B7B8B9C1 /* CLIProvenanceCodexTranscriptTailerTests.swift */,
 					C0DE70C00000000000000002 /* CLIProvenanceRetrievalFixture.swift */,
 					C0DE70610000000000000002 /* CLIProvenanceSessionOutcomeCommandTests.swift */,
@@ -7295,6 +7301,7 @@
 				A9F20000000000000000000F /* AgentSessionPermissionMode.swift in Sources */,
 				A44000000000000000000001 /* AgentSessionPrimaryTabs.swift in Sources */,
 				A9E020000000000000000009 /* AgentSessionProcessStore.swift in Sources */,
+				CE2F01020000000000000001 /* AgentSessionProposedPlanObservationsView.swift in Sources */,
 				A9E020000000000000000001 /* AgentSessionProvider.swift in Sources */,
 				A9E02000000000000000000F /* AgentSessionRendererKind.swift in Sources */,
 				A9F200000000000000000010 /* AgentSessionRunningSession.swift in Sources */,
@@ -8902,6 +8909,7 @@
 					A5D41205A1B2C3D4E5F60718 /* CLINotifyProcessTestSupport.swift in Sources */,
 				157C175B1C30F51B5A0B2FA3 /* CLIOutputChannel.swift in Sources */,
 				17A45C0D89B84E71A3B274A0 /* CLIProcessTestTimeout.swift in Sources */,
+					E1C83AF10000000000000001 /* CLIProvenanceCodexProposedPlanTests.swift in Sources */,
 					D0C0A1B40000000000000003 /* CLIProvenanceCodexTranscriptCursor.swift in Sources */,
 					D0C0A1B50000000000000003 /* CLIProvenanceCodexTranscriptCursorStore.swift in Sources */,
 					D0C0A1B20000000000000003 /* CLIProvenanceCodexTranscriptFileIdentity.swift in Sources */,
