@@ -34,12 +34,32 @@ struct AgentSessionSmartSessionStoreTests {
         }
         for await _ in started { break }
         await client.releasePublish()
-        let expected: AgentSessionSmartSessionReadResult = prior.map { .stale($0, lastSuccessfulReadAt: readTime) }
-            ?? .failed(sessionID: "session-1")
-        #expect(await first.value == expected)
-        #expect(await second.value == expected)
-        #expect(store.snapshot(sessionID: "session-1") == expected)
-        #expect(await client.sessionWorkModelRequestCount() == 1)
+        guard case .available(let firstSnapshot) = await first.value,
+              case .available(let secondSnapshot) = await second.value else {
+            Issue.record("Overlapping callers should converge on the follow-up")
+            return
+        }
+        #expect(firstSnapshot == secondSnapshot)
+        #expect(prior == nil || prior == firstSnapshot)
+        #expect(store.snapshot(sessionID: "session-1") == .available(firstSnapshot))
+        #expect(await client.sessionWorkModelRequestCount() == 2)
+    }
+
+    @Test
+    func cancelledDuplicateDoesNotInvalidateActiveRead() async {
+        let client = SmartSessionStoreTestClient(model: Self.model(sessionID: "session-1", revision: 42), waitForRelease: true)
+        let store = AgentSessionSmartSessionStore(client: client)
+        let first = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+        await client.waitForPublishStart()
+        let duplicate = Task { @MainActor in await store.refreshedSnapshot(sessionID: "session-1") }
+        duplicate.cancel()
+        _ = await duplicate.value
+        await client.releasePublish()
+        guard case .available(let snapshot) = await first.value else {
+            Issue.record("A cancelled duplicate invalidated the active read")
+            return
+        }
+        #expect(snapshot.revision.factualRevision == 42)
     }
 
     @Test

@@ -121,14 +121,20 @@ extension AgentSessionSmartSessionStoreTests {
         let first = Task { await store.refreshedSnapshot(sessionID: "session-1") }
         await client.waitForRelatedStart()
         await client.setResponse(.init(found: true, sessionID: "session-1", model: latest))
-        #expect(await store.refreshedSnapshot(sessionID: "session-1") == .failed(sessionID: "session-1"))
+        let (started, continuation) = AsyncStream<Void>.makeStream()
+        let second = Task { @MainActor in
+            continuation.yield(())
+            return await store.refreshedSnapshot(sessionID: "session-1")
+        }
+        for await _ in started { break }
         await client.releaseRelated()
-        #expect(await first.value == .failed(sessionID: "session-1"))
-        guard case .available(let recovered) = await store.refreshedSnapshot(sessionID: "session-1") else {
-            Issue.record("Non-overlapping retry should recover")
+        guard case .available(let recovered) = await first.value,
+              case .available(let joined) = await second.value else {
+            Issue.record("Overlapping callers should converge on the new source")
             return
         }
         #expect(recovered.revision.factualRevision == 43)
+        #expect(joined.revision.factualRevision == 43)
         #expect(await client.sessionWorkModelRequestCount() == 2)
     }
 
