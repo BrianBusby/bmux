@@ -4,7 +4,8 @@
 Run explicitly, outside automatic test discovery, with BMUX_OLD_CLI and
 BMUX_NEW_CLI pointing at existing isolated CLI executables. Expected schemas
 are 31 and 34 respectively; this fixture verifies the new claims table and
-must not be read as proof of the executables' source revisions. Synthetic
+must not be read as proof of the executables' source revisions. Matching
+before/after hashes do not exclude a transient binary replacement. Synthetic
 transcripts, logs, socket, cursors and database live in a temporary directory.
 """
 
@@ -70,10 +71,20 @@ def stop_process(process: subprocess.Popen) -> None:
         process.wait(timeout=3)
 
 
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 class OpenOldWriterMigrationProbe(unittest.TestCase):
     def test_old_open_writer_bypasses_schema_open_check(self) -> None:
         old_cli = Path(os.environ["BMUX_OLD_CLI"]).resolve(strict=True)
         new_cli = Path(os.environ["BMUX_NEW_CLI"]).resolve(strict=True)
+        old_sha256 = file_sha256(old_cli)
+        new_sha256 = file_sha256(new_cli)
         with tempfile.TemporaryDirectory(prefix="bmux-writer-", dir="/tmp") as temp:
             root = Path(temp)
             home = root / "home"
@@ -149,11 +160,12 @@ class OpenOldWriterMigrationProbe(unittest.TestCase):
                             (turn[0],),
                         ).fetchone()[0]
                     self.assertEqual(claims, 0, "fixture characterizes this experimental binary, not a safe rollout")
-                    print(f"schemas=31->34 cursor={initial_offset}->{final_offset} "
-                          f"old_sha256={hashlib.sha256(old_cli.read_bytes()).hexdigest()} "
-                          f"new_sha256={hashlib.sha256(new_cli.read_bytes()).hexdigest()}")
                 finally:
                     stop_process(monitor)
+            self.assertEqual(file_sha256(old_cli), old_sha256, "old CLI changed during probe")
+            self.assertEqual(file_sha256(new_cli), new_sha256, "new CLI changed during probe")
+            print(f"schemas=31->34 cursor={initial_offset}->{final_offset} "
+                  f"old_sha256={old_sha256} new_sha256={new_sha256}")
 
 
 if __name__ == "__main__":
