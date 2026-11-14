@@ -20,8 +20,22 @@ struct CodexTranscriptLineFramer {
         onLine: (Line, Int) throws -> Void
     ) rethrows {
         var buffer = [UInt8](fragment)
-        for (index, byte) in data.enumerated() {
-            if byte == 0x0a {
+        try data.withUnsafeBytes { raw in
+            guard let base = raw.baseAddress else { return }
+            var position = 0
+            while position < raw.count {
+                let newline = memchr(base.advanced(by: position), 0x0a, raw.count - position)
+                let end = newline.map { base.distance(to: $0) } ?? raw.count
+                let length = end - position
+                if !discardingOversizedLine && length > 0 {
+                    if maximumLineBytes >= buffer.count && length <= maximumLineBytes - buffer.count {
+                        buffer.append(contentsOf: raw[position..<end])
+                    } else {
+                        buffer.removeAll(keepingCapacity: false)
+                        discardingOversizedLine = true
+                    }
+                }
+                guard newline != nil else { break }
                 if discardingOversizedLine {
                     try onLine(.oversized, nextLineNumber)
                     discardingOversizedLine = false
@@ -29,15 +43,11 @@ struct CodexTranscriptLineFramer {
                     try onLine(.bytes(Data(buffer)), nextLineNumber)
                 }
                 buffer.removeAll(keepingCapacity: true)
-                nextLineNumber += 1
-                lastCompletedLineOffset = startOffset + UInt64(index + 1)
-            } else if !discardingOversizedLine {
-                if buffer.count < maximumLineBytes {
-                    buffer.append(byte)
-                } else {
-                    buffer.removeAll(keepingCapacity: false)
-                    discardingOversizedLine = true
-                }
+                position = end + 1
+                // Empty lines have no callback but still advance both cursor fields.
+                while position < raw.count && raw[position] == 0x0a { position += 1 }
+                nextLineNumber += position - end
+                lastCompletedLineOffset = startOffset + UInt64(position)
             }
         }
         fragment = Data(buffer)
