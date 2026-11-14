@@ -90,7 +90,7 @@ function CurrentTurnCard({ copy, turn, purpose, activity, onInspect }: { copy?: 
     h("div", { className: "focus-card-kicker" }, text(copy, "smartSessionCurrentTurn", "Current turn"), h("span", { className: `focus-turn-status focus-turn-${turn.status}` }, turn.status)),
     h("h2", null, turn.prompt?.text ?? text(copy, "smartSessionUnknown", "Objective unavailable")),
     h("div", { className: "focus-current-grid" }, h(SummaryBlock, { label: text(copy, "smartSessionPurpose", "Objective"), value: purpose?.summary ?? turn.prompt?.text ?? text(copy, "smartSessionUnknown", "Unknown") }), h(SummaryBlock, { label: text(copy, "smartSessionCurrentActivity", "Current activity"), value: activity?.summary ?? latestActivity(turn, copy) })),
-    h("section", { className: "focus-results" }, h("h3", null, text(copy, "smartSessionFinalOutput", "Results")), results.length ? h("ul", null, ...results.map((result, index) => h("li", { key: `${turn.turnId}-${index}` }, result))) : h("p", { className: "focus-muted" }, text(copy, "smartSessionNoEvidence", "No evidence yet."))),
+    h("section", { className: "focus-results" }, h("h3", null, text(copy, "smartSessionFinalOutput", "Evidence")), results.length ? h("ul", null, ...results.map((result, index) => h("li", { key: `${turn.turnId}-${index}` }, result))) : h("p", { className: "focus-muted" }, text(copy, "smartSessionNoEvidence", "No evidence yet."))),
     h("div", { className: "focus-current-actions" }, h("button", { type: "button", className: "focus-secondary-button", onClick: () => onInspect(`turn:${turn.turnId}`) }, text(copy, "smartSessionEvidence", "Inspect evidence")), h("span", { className: "focus-source-note" }, turn.provider)),
   );
 }

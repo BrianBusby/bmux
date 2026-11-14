@@ -136,7 +136,7 @@ extension AgentSessionWebRendererCoordinator {
             ),
             "smartSessionFinalOutput": String(
                 localized: "agentSession.web.smartSession.finalOutput",
-                defaultValue: "Final output"
+                defaultValue: "Evidence"
             ),
             "smartSessionPriorTurns": String(
                 localized: "agentSession.web.smartSession.priorTurns",

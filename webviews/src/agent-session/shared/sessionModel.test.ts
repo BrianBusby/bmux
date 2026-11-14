@@ -148,7 +148,7 @@ const context: AppContext = {
     smartSessionCommands: "Commands",
     smartSessionFiles: "Files",
     smartSessionReasoning: "Reasoning",
-    smartSessionFinalOutput: "Final output",
+    smartSessionFinalOutput: "Evidence",
     smartSessionPriorTurns: "Prior turns",
     smartSessionNoPlan: "No plan evidence",
     smartSessionNoEvidence: "No evidence yet",
