@@ -123,6 +123,43 @@ private final class ShortcutNoopFileSearchController: FileSearchControlling {
         }
     }
 
+    @Test func nonKeyEventsDoNotTriggerFileExplorerOpenSelection() throws {
+        let event = try #require(NSEvent.otherEvent(
+            with: .systemDefined,
+            location: .zero,
+            modifierFlags: [],
+            timestamp: 0,
+            windowNumber: 0,
+            context: nil,
+            subtype: 7,
+            data1: 1,
+            data2: 1
+        ))
+        let context = ShortcutFocusState(browser: false, markdown: false, sidebar: true).context
+        #expect(!event.isFileExplorerOpenSelectionShortcut(in: context))
+        for placement in [FileExplorerPanelPlacement.rightSidebar, .pane] {
+            #expect(!event.isFileExplorerOpenSelectionShortcut(in: placement))
+        }
+        #expect(!FileExplorerNSOutlineView().handleOpenSelectionShortcut(event))
+        #expect(!FileExplorerSearchResultsTableView().handleOpenSelectionShortcut(event))
+        #expect(!FileExplorerSearchField().handleOpenSelectionShortcut(event))
+    }
+
+    @Test func keyDescriptionAcceptsNonKeyEvents() throws {
+        let event = try #require(NSEvent.otherEvent(
+            with: .systemDefined,
+            location: .zero,
+            modifierFlags: [],
+            timestamp: 0,
+            windowNumber: 0,
+            context: nil,
+            subtype: 7,
+            data1: 1,
+            data2: 1
+        ))
+        #expect(!NSWindow.keyDescription(event).isEmpty)
+    }
+
     @Test func openSelectionMatcherUsesPanelPlacementContext() throws {
         try withIsolatedShortcutSettings {
             let event = try #require(
