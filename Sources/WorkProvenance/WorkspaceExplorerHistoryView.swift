@@ -173,13 +173,32 @@ struct WorkspaceExplorerHistoryView: View {
             .includes(sample, now: now, calendar: .current)
     }
 
+    private func sessionStatusLabel(_ status: String) -> String {
+        switch status {
+        case "active": String(localized: "explorer.sessionStatus.active", defaultValue: "Active")
+        case "completed": String(localized: "explorer.sessionStatus.completed", defaultValue: "Ended")
+        case "started": String(localized: "explorer.sessionStatus.started", defaultValue: "Started")
+        case "running": String(localized: "explorer.sessionStatus.running", defaultValue: "Running")
+        case "stopped": String(localized: "explorer.sessionStatus.stopped", defaultValue: "Stopped")
+        case "closed": String(localized: "explorer.sessionStatus.closed", defaultValue: "Closed")
+        case "failed": String(localized: "explorer.sessionStatus.failed", defaultValue: "Failed")
+        case "cancelled": String(localized: "explorer.sessionStatus.cancelled", defaultValue: "Cancelled")
+        case "interrupted": String(localized: "explorer.sessionStatus.interrupted", defaultValue: "Interrupted")
+        case "incomplete": String(localized: "explorer.sessionStatus.incomplete", defaultValue: "Incomplete")
+        case "unknown": String(localized: "explorer.sessionStatus.unknown", defaultValue: "Unknown")
+        default: status
+        }
+    }
+
     private func sessionCard(_ summary: ProvenanceWorkspaceSessionSummary) -> some View {
         let evidence = evidenceBySessionID[summary.id]
         return VStack(alignment: .leading, spacing: 7) {
             HStack {
                 Text(summary.id).font(.system(size: 12, design: .monospaced)).lineLimit(1)
                 Spacer()
-                Text(summary.session.status).font(.system(size: 11)).foregroundStyle(.secondary)
+                Text(String(format: String(localized: "explorer.sessionStatus", defaultValue: "Session status: %@"),
+                    sessionStatusLabel(summary.session.status)))
+                    .font(.system(size: 11)).foregroundStyle(.secondary)
             }
             Text(summary.session.agentKind).font(.system(size: 11)).foregroundStyle(.secondary)
             if !isInPeriod(summary) {
@@ -203,7 +222,6 @@ struct WorkspaceExplorerHistoryView: View {
             }.font(.system(size: 11)).foregroundStyle(.secondary)
             if let evidence {
                 if let outcome = evidence.outcome.outcome {
-                    Text(outcome.completionState).font(.system(size: 12, weight: .semibold))
                     ForEach(outcome.objectives.prefix(3), id: \.id) { objective in
                         Text(objective.text).font(.system(size: 12))
                     }
