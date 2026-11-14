@@ -7,4 +7,4 @@ swiftc -swift-version 6 -warnings-as-errors \
   CLI/CodexTranscriptSnapshot.swift tests/codex_transcript_snapshot_experiment.swift \
   -o "$test_dir/snapshot-tests"
 "$test_dir/snapshot-tests"
-BMUX_SNAPSHOT_TEST_BINARY="$test_dir/snapshot-tests" python3 tests/test_codex_snapshot_special_files.py -v
+BMUX_SNAPSHOT_TEST_BINARY="$test_dir/snapshot-tests" python3 tests/codex_snapshot_special_files.py -v
