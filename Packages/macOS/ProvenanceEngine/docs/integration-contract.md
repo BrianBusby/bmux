@@ -176,13 +176,19 @@ When no turn matches `turnID`, the response returns `found == false`,
 be requested with `revisionID`; missing revisions return `found == false` with
 `reason == "no_revision"`.
 
-Turn outcomes are rebuilt from the immutable ledger using the projection rule
-id/version recorded in the outcome metadata. Duplicate replay or overlapping
+Turn outcomes are projected from the immutable ledger using the current rule;
+the rule id/version is recorded in outcome metadata. Duplicate replay or overlapping
 transcript and hook evidence that changes only supporting references does not
 create a new factual revision. Late or corrected evidence that changes factual
 outcome content does create a new revision while preserving prior revisions.
 The source evidence watermark is the accepted ledger sequence boundary used for
-the projection.
+the projection. Completion state describes the turn lifecycle, not completion of
+an assignment. A rule-version change is recomputed on a current read; prior
+revision IDs remain queryable until retention or a full projection rebuild.
+The current full rebuild deletes historical outcome revisions and recomputes
+using the installed rules, so it cannot replay prior recorded interpretations.
+Older writers can overwrite the latest pointer until a current reader refreshes;
+this is not a mixed-version writer fence.
 
 This read remains below `SessionWorkModel`, Session Outcome aggregation, and
 cross-session handoff assembly. It does not infer decisions from ordinary prose,
@@ -229,7 +235,10 @@ deterministic `TurnOutcome` revisions selected at projection time. Duplicate
 replay or overlapping evidence that changes only supporting references does
 not create a new factual revision. Late or corrected evidence that changes a
 constituent turn outcome or session-level factual output does create a new
-revision while preserving prior revisions.
+revision while preserving prior revisions during ordinary incremental updates.
+Session completion describes session lifecycle, not proof that its assignment is
+complete. As with turn outcomes, a full rebuild deletes prior outcome revisions,
+and older writers are not fenced by rule-version selection.
 
 This read remains below semantic `SessionWorkModel`, Smart Session UI,
 cross-session retrieval, context injection, and Knowledge Compiler output. It

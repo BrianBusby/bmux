@@ -86,10 +86,10 @@ struct FactualTurnOwnershipTests {
                 try await repository.markTurnOutcomeAsLegacyForOwnershipTest(turnID: turn.id)
                 let refreshedSession = try #require(await repository.sessionOutcome(
                     ProvenanceSessionOutcomeRequest(sessionID: fixture.session.id)).outcome)
-                #expect(refreshedSession.turnOutcomes.first?.projection.projectionRuleVersion == "2")
+                #expect(refreshedSession.turnOutcomes.first?.projection.projectionRuleVersion == "3")
             }
             let outcome = try #require(await repository.turnOutcome(ProvenanceTurnOutcomeRequest(turnID: turn.id)).outcome)
-            #expect(outcome.projection.projectionRuleVersion == "2")
+            #expect(outcome.projection.projectionRuleVersion == "3")
             #expect(outcome.objective?.text == prompt.text)
             #expect(outcome.planItems.map(\.text) == ["Valid plan"])
             #expect(outcome.commandsCompleted.map(\.id) == [command.id])

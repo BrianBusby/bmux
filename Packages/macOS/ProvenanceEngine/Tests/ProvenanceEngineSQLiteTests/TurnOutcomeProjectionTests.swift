@@ -26,7 +26,7 @@ struct TurnOutcomeProjectionTests {
         #expect(outcome.provider == "codex")
         #expect(outcome.providerTurnID == "provider-turn-main")
         #expect(outcome.projection.projectionRuleID == "deterministic_turn_outcome")
-        #expect(outcome.projection.projectionRuleVersion == "2")
+        #expect(outcome.projection.projectionRuleVersion == "3")
         #expect(outcome.projection.sourceEvidenceWatermark == fixture.normalEvents.count)
         #expect(outcome.objective?.text == fixture.prompt.text)
         #expect(outcome.objective?.evidence.isEmpty == false)

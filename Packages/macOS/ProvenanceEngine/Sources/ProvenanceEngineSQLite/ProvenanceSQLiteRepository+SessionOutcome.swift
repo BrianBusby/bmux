@@ -3,7 +3,7 @@ import ProvenanceEngineContracts
 
 extension ProvenanceSQLiteRepository {
     static let sessionOutcomeRuleID = "deterministic_session_outcome"
-    static let sessionOutcomeRuleVersion = "1"
+    static let sessionOutcomeRuleVersion = "2"
 
     func refreshSessionOutcomes(
         affectedBy event: ProvenanceEvent,
@@ -836,26 +836,9 @@ extension ProvenanceSQLiteRepository {
     }
 
     private func normalizedSessionCompletionState(_ status: String) -> String {
-        let normalized = status.lowercased()
-        if normalized.contains("cancel") { return "cancelled" }
-        if normalized.contains("interrupt") { return "interrupted" }
-        if normalized.contains("fail") || normalized.contains("error") { return "failed" }
-        if normalized.contains("incomplete") { return "incomplete" }
-        if normalized.contains("complete")
-            || normalized.contains("success")
-            || normalized == "done"
-            || normalized == "finished"
-            || normalized == "stopped"
-            || normalized == "closed" {
-            return "completed"
-        }
-        if normalized.contains("active")
-            || normalized.contains("running")
-            || normalized.contains("started")
-            || normalized.contains("progress") {
-            return "incomplete"
-        }
-        return "unknown"
+        let normalized = status.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if normalized == "stopped" || normalized == "closed" { return "completed" }
+        return normalizedTurnCompletionState(normalized)
     }
 
     private func normalizedPlanText(_ text: String) -> String? {
