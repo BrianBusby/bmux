@@ -172,24 +172,24 @@ extension AgentSessionSmartSessionStoreTests {
 
     @Test func cancellationAfterJoiningDoesNotPoisonActiveRead() async {
         let client = SmartSessionStoreTestClient(model: Self.model(sessionID: "session-1", revision: 42))
-        let store = AgentSessionSmartSessionStore(client: client)
+        let (observations, observer) = AsyncStream<AgentSessionSmartSessionStore.RefreshObservation>.makeStream()
+        var events = observations.makeAsyncIterator()
+        let store = AgentSessionSmartSessionStore(client: client, refreshObserver: { _ = observer.yield($0) })
         await client.holdRelated()
         let first = Task { await store.refreshedSnapshot(sessionID: "session-1") }
         await client.waitForRelatedStart()
-        let (started, continuation) = AsyncStream<Void>.makeStream()
-        let second = Task { @MainActor in
-            continuation.yield(())
-            return await store.refreshedSnapshot(sessionID: "session-1")
-        }
-        for await _ in started { break }
-        #expect(store.snapshot(sessionID: "session-1") == .failed(sessionID: "session-1"))
+        let second = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+        #expect(await events.next() == .admitted(sessionID: "session-1", followingUp: false))
         second.cancel()
+        #expect(await events.next() == .cancelled(sessionID: "session-1", followingUp: false))
         await client.releaseRelated()
         guard case .available = await first.value else {
             Issue.record("Cancelled joiner must not prevent a healthy result")
             return
         }
         #expect(await second.value == .failed(sessionID: "session-1"))
+        #expect(await client.sessionWorkModelRequestCount() == 1)
+        observer.finish()
     }
 
     @Test func overlapDuringFollowUpStopsAtTwoReadsAndRecoversOnRetry() async {
@@ -277,6 +277,69 @@ extension AgentSessionSmartSessionStoreTests {
         }
         for task in joined { guard case .available = await task.value else { Issue.record("Admitted waiter did not converge"); continue } }
         #expect(await client.sessionWorkModelRequestCount() == 3)
+    }
+
+    @Test func cancelledFollowUpJoinerIsRemovedBeforeReadCompletes() async {
+        let client = SmartSessionStoreTestClient(model: Self.model(sessionID: "session-1", revision: 42))
+        let (observations, observer) = AsyncStream<AgentSessionSmartSessionStore.RefreshObservation>.makeStream()
+        var events = observations.makeAsyncIterator()
+        let store = AgentSessionSmartSessionStore(client: client, refreshObserver: { _ = observer.yield($0) })
+        await client.holdRelatedTwice()
+        let first = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+        await client.waitForRelatedCount(1)
+        let second = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+        #expect(await events.next() == .admitted(sessionID: "session-1", followingUp: false))
+        await client.releaseRelated()
+        await client.waitForRelatedCount(2)
+        let third = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+        #expect(await events.next() == .admitted(sessionID: "session-1", followingUp: true))
+        third.cancel()
+        #expect(await events.next() == .cancelled(sessionID: "session-1", followingUp: true))
+        await client.releaseRelated()
+        guard case .available = await first.value, case .available = await second.value else {
+            Issue.record("A cancelled follow-up joiner must not poison healthy waiters")
+            return
+        }
+        #expect(await third.value == .failed(sessionID: "session-1"))
+        #expect(await client.sessionWorkModelRequestCount() == 2)
+        observer.finish()
+    }
+
+    @Test func followUpAdmissionOverflowAndCancellationAreBounded() async {
+        let client = SmartSessionStoreTestClient(model: Self.model(sessionID: "session-1", revision: 42))
+        let (observations, observer) = AsyncStream<AgentSessionSmartSessionStore.RefreshObservation>.makeStream()
+        var events = observations.makeAsyncIterator()
+        let store = AgentSessionSmartSessionStore(client: client, refreshObserver: { _ = observer.yield($0) })
+        await client.holdRelatedTwice()
+        let first = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+        await client.waitForRelatedCount(1)
+        let second = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+        #expect(await events.next() == .admitted(sessionID: "session-1", followingUp: false))
+        await client.releaseRelated()
+        await client.waitForRelatedCount(2)
+        var joined: [Task<AgentSessionSmartSessionReadResult, Never>] = []
+        for _ in 0..<15 {
+            joined.append(Task { await store.refreshedSnapshot(sessionID: "session-1") })
+            #expect(await events.next() == .admitted(sessionID: "session-1", followingUp: true))
+        }
+        let excess = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+        #expect(await events.next() == .rejected(sessionID: "session-1", followingUp: true))
+        #expect(await excess.value == .failed(sessionID: "session-1"))
+        joined[0].cancel()
+        #expect(await events.next() == .cancelled(sessionID: "session-1", followingUp: true))
+        let replacement = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+        #expect(await events.next() == .admitted(sessionID: "session-1", followingUp: true))
+        await client.releaseRelated()
+        #expect(await first.value == .failed(sessionID: "session-1"))
+        #expect(await second.value == .failed(sessionID: "session-1"))
+        #expect(await replacement.value == .failed(sessionID: "session-1"))
+        for waiter in joined { #expect(await waiter.value == .failed(sessionID: "session-1")) }
+        #expect(await client.sessionWorkModelRequestCount() == 2)
+        guard case .available = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Quiet retry must recover after bounded overflow")
+            return
+        }
+        observer.finish()
     }
 
     @Test func failedReadWithoutCacheStaysFailed() async {
