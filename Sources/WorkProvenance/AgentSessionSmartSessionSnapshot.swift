@@ -319,7 +319,7 @@ extension AgentSessionSmartSessionSnapshot {
                 break
             }
             if semanticInferenceIDs != other.semanticInferenceIDs {
-                return semanticInferenceIDs.count > other.semanticInferenceIDs.count
+                return false
             }
             switch (latestSemanticMessageCreatedAt, other.latestSemanticMessageCreatedAt) {
             case let (left?, right?):
@@ -333,7 +333,7 @@ extension AgentSessionSmartSessionSnapshot {
             case (.none, .none):
                 break
             }
-            return semanticMessageCount > other.semanticMessageCount
+            return false
         }
 
         var bridgePayload: [String: Any] {

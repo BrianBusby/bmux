@@ -219,11 +219,6 @@ export function compareSmartSessionRevisions(left: SmartSessionRevision, right: 
   const leftInferenceIds = left.semanticInferenceIds?.join("\u0000") ?? "";
   const rightInferenceIds = right.semanticInferenceIds?.join("\u0000") ?? "";
   if (leftInferenceIds !== rightInferenceIds) {
-    const leftCount = left.semanticInferenceIds?.length ?? 0;
-    const rightCount = right.semanticInferenceIds?.length ?? 0;
-    if (leftCount !== rightCount) {
-      return leftCount > rightCount ? 1 : -1;
-    }
     return 0;
   }
   const leftSemantic = Date.parse(left.latestSemanticMessageCreatedAt ?? "");
@@ -235,9 +230,6 @@ export function compareSmartSessionRevisions(left: SmartSessionRevision, right: 
   }
   if (leftHasSemantic !== rightHasSemantic) {
     return leftHasSemantic ? 1 : -1;
-  }
-  if (left.semanticMessageCount !== right.semanticMessageCount) {
-    return left.semanticMessageCount > right.semanticMessageCount ? 1 : -1;
   }
   return 0;
 }
