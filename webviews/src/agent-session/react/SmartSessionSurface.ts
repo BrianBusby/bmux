@@ -119,7 +119,7 @@ export function RelatedAwarenessNotice({ copy, awareness }: { copy?: AgentSessio
   const message = awareness.status === "unavailable"
     ? text(copy, "smartSessionRelatedUnavailable", "Related work is unavailable.")
     : partial
-      ? text(copy, "smartSessionRelatedPartial", "Some related-work sources are unavailable or unknown. Current state is unknown.")
+      ? text(copy, "smartSessionRelatedPartial", "Some related-work information is incomplete or unavailable. Current state is unknown.")
       : text(copy, "smartSessionRelatedUncertain", "Related work was observed separately and may be incomplete; its current state is unknown.");
   return h("p", { className: "focus-coverage-note" }, message);
 }

@@ -298,8 +298,10 @@ export type SmartSessionSnapshot = {
   semanticMessages: SmartSessionSemanticMessage[];
   crossSessionAwareness: {
     status: "available" | "unavailable";
-    relatedReadStatus?: "available" | "unavailable";
-    collisionReadStatus?: "available" | "unavailable";
+    relatedReadStatus?: "available" | "partial" | "unavailable";
+    collisionReadStatus?: "available" | "partial" | "unavailable";
+    relatedAvailability?: Array<{ field: string; status: string; reason?: string }>;
+    collisionAvailability?: Array<{ field: string; status: string; reason?: string }>;
     relatedSessions: Array<{
       sessionId: string;
       lifecycleState: string;

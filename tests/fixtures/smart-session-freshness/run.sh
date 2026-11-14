@@ -181,6 +181,13 @@ extension AgentSessionSmartSessionStoreTests {
         let withTime = AgentSessionSmartSessionSnapshot.Revision(workModelRevision: later, semanticMessageCount: 1, latestSemanticMessageCreatedAt: nil)
         #expect(!withTime.isNewerThan(known))
         #expect(!known.isNewerThan(withTime))
+        let olderWork = ProvenanceSessionWorkModelRevision(schemaVersion: 3, factualRevision: 42, semanticInferenceIDs: ["a"], latestSemanticInferenceCreatedAt: Date(timeIntervalSince1970: 50))
+        let older = AgentSessionSmartSessionSnapshot.Revision(workModelRevision: olderWork, semanticMessageCount: 1, latestSemanticMessageCreatedAt: nil)
+        #expect(withTime.isNewerThan(older))
+        let foreignSchemaWork = ProvenanceSessionWorkModelRevision(schemaVersion: 2, factualRevision: 42, semanticInferenceIDs: ["a"], latestSemanticInferenceCreatedAt: Date(timeIntervalSince1970: 200))
+        let foreignSchema = AgentSessionSmartSessionSnapshot.Revision(workModelRevision: foreignSchemaWork, semanticMessageCount: 1, latestSemanticMessageCreatedAt: nil)
+        #expect(!foreignSchema.isNewerThan(withTime))
+        #expect(!withTime.isNewerThan(foreignSchema))
     }
 
     @Test func semanticCountsDoNotEstablishRevisionOrder() {

@@ -216,15 +216,9 @@ function turnTime(turn: SmartSessionTurnReference): number {
 }
 
 export function compareSmartSessionRevisions(left: SmartSessionRevision, right: SmartSessionRevision): number {
-  if (left.factualRevision !== right.factualRevision) {
-    if (left.factualRevision == null) {
-      return -1;
-    }
-    if (right.factualRevision == null) {
-      return 1;
-    }
-    return left.factualRevision > right.factualRevision ? 1 : -1;
-  }
+  if (left.factualRevision == null || right.factualRevision == null) return 0;
+  if (left.factualRevision !== right.factualRevision) return left.factualRevision > right.factualRevision ? 1 : -1;
+  if (left.schemaVersion !== 3 || right.schemaVersion !== 3) return 0;
   const leftInference = Date.parse(left.latestSemanticInferenceCreatedAt ?? "");
   const rightInference = Date.parse(right.latestSemanticInferenceCreatedAt ?? "");
   const leftHasInference = Number.isFinite(leftInference);
@@ -233,7 +227,7 @@ export function compareSmartSessionRevisions(left: SmartSessionRevision, right: 
     return leftInference > rightInference ? 1 : -1;
   }
   if (leftHasInference !== rightHasInference) {
-    return leftHasInference ? 1 : -1;
+    return 0;
   }
   const leftInferenceIds = left.semanticInferenceIds?.join("\u0000") ?? "";
   const rightInferenceIds = right.semanticInferenceIds?.join("\u0000") ?? "";
@@ -248,7 +242,7 @@ export function compareSmartSessionRevisions(left: SmartSessionRevision, right: 
     return leftSemantic > rightSemantic ? 1 : -1;
   }
   if (leftHasSemantic !== rightHasSemantic) {
-    return leftHasSemantic ? 1 : -1;
+    return 0;
   }
   return 0;
 }

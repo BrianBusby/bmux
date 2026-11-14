@@ -1384,7 +1384,7 @@ function smartSessionSnapshot({
   return {
     schemaVersion: 1,
     revision: {
-      schemaVersion: 1,
+      schemaVersion: 3,
       factualRevision,
       key: modelRevisionKey,
       latestSemanticInferenceCreatedAt: knownSemantics ? latestSemanticInferenceCreatedAt : undefined,
@@ -1719,10 +1719,11 @@ test("related work reports each source's read availability", () => {
   const awareness = smartSessionSnapshot({ factualRevision: 4 }).crossSessionAwareness;
   const variants: Array<[SmartSessionSnapshot["crossSessionAwareness"], string]> = [
     [{ ...awareness, status: "unavailable", relatedReadStatus: "unavailable", collisionReadStatus: "unavailable" }, "Related work is unavailable."],
-    [{ ...awareness, relatedReadStatus: "available", collisionReadStatus: "unavailable" }, "Some related-work sources are unavailable or unknown."],
-    [{ ...awareness, relatedReadStatus: "unavailable", collisionReadStatus: "available" }, "Some related-work sources are unavailable or unknown."],
+    [{ ...awareness, relatedReadStatus: "available", collisionReadStatus: "unavailable" }, "Some related-work information is incomplete or unavailable."],
+    [{ ...awareness, relatedReadStatus: "partial", collisionReadStatus: "available" }, "Some related-work information is incomplete or unavailable."],
+    [{ ...awareness, relatedReadStatus: "unavailable", collisionReadStatus: "available" }, "Some related-work information is incomplete or unavailable."],
     [{ ...awareness, relatedReadStatus: "available", collisionReadStatus: "available" }, "may be incomplete"],
-    [awareness, "Some related-work sources are unavailable or unknown."],
+    [awareness, "Some related-work information is incomplete or unavailable."],
   ];
   for (const [value, expected] of variants) {
     const markup = renderToStaticMarkup(createElement(RelatedAwarenessNotice, { awareness: value }));

@@ -315,24 +315,15 @@ extension AgentSessionSmartSessionSnapshot {
         }
 
         func isNewerThan(_ other: Revision) -> Bool {
-            switch (factualRevision, other.factualRevision) {
-            case let (left?, right?) where left != right:
-                return left > right
-            case (.some, .none):
-                return true
-            case (.none, .some):
-                return false
-            default:
-                break
-            }
+            guard let leftFactual = factualRevision, let rightFactual = other.factualRevision else { return false }
+            if leftFactual != rightFactual { return leftFactual > rightFactual }
+            guard schemaVersion == 3, other.schemaVersion == 3 else { return false }
             switch (latestSemanticInferenceCreatedAt, other.latestSemanticInferenceCreatedAt) {
             case let (left?, right?):
                 if left != right {
                     return left > right
                 }
-            case (.some, .none):
-                return true
-            case (.none, .some):
+            case (.some, .none), (.none, .some):
                 return false
             case (.none, .none):
                 break
@@ -345,9 +336,7 @@ extension AgentSessionSmartSessionSnapshot {
                 if left != right {
                     return left > right
                 }
-            case (.some, .none):
-                return true
-            case (.none, .some):
+            case (.some, .none), (.none, .some):
                 return false
             case (.none, .none):
                 break
