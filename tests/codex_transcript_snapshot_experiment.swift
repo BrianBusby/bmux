@@ -69,14 +69,33 @@ struct CodexTranscriptSnapshotExperimentTests {
         try write(meta + event)
         unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a", read: { handle, count in
             let data = try handle.read(upToCount: count) ?? Data()
+            let writer = try FileHandle(forWritingTo: path)
+            defer { try? writer.close() }
+            try writer.seek(toOffset: 0)
+            try writer.write(contentsOf: Data((meta.replacingOccurrences(of: "session-a", with: "session-b") + event).utf8))
+            return data
+        }), "same-inode rewrite during capture")
+        try write(meta + event)
+        unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a", read: { handle, count in
+            let data = try handle.read(upToCount: count) ?? Data()
             let replacement = root.appendingPathComponent("replacement.jsonl")
             try Data((meta + event).utf8).write(to: replacement)
             try FileManager.default.removeItem(at: path)
             try FileManager.default.moveItem(at: replacement, to: path)
             return data
         }), "replacement during capture")
+        unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: " "), "empty expected session")
+        unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: String(repeating: "x", count: 1_025)), "oversize expected session")
+        let prefix = meta + #"{"type":"event_msg","payload":{"text":""#
+        let suffix = #""}}"# + "\n"
+        let padding = CodexTranscriptSnapshot.maxBytes - prefix.utf8.count - suffix.utf8.count
+        try write(prefix + String(repeating: "x", count: padding) + suffix)
+        guard case let .verified(atLimit) = CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"),
+              atLimit.capturedBytes == CodexTranscriptSnapshot.maxBytes else {
+            fatalError("valid source at byte limit should be verified")
+        }
         try Data(repeating: 0x20, count: CodexTranscriptSnapshot.maxBytes + 1).write(to: path)
         unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"), "oversize")
-        print("snapshot experiment: 18 cases passed")
+        print("snapshot experiment: 22 cases passed")
     }
 }
