@@ -31,7 +31,9 @@ import Testing
         /// has not proven upstream identity, retained-history completeness, or
         /// that an older writer cannot bypass the sample.
         func examine(_ events: [ProvenanceEvent], maxEvents: Int = 64, maxIdentifierBytes: Int = 256) -> Result {
-            guard maxEvents > 0, maxIdentifierBytes > 0, events.count <= maxEvents else {
+            let eventLimit = min(maxEvents, 64)
+            let identifierLimit = min(maxIdentifierBytes, 256)
+            guard eventLimit > 0, identifierLimit > 0, events.count <= eventLimit else {
                 return Result(outcome: .incomplete, claims: [], sourceEventIDs: [], evidenceTruncated: true, conflictingTurnIDs: [], conflictingEnvelopeEventIDs: [])
             }
             var claims: [Claim] = []
@@ -39,13 +41,25 @@ import Testing
             var sourceEventIDs: [String] = []
             var incomplete = false
             for event in events {
-                guard !event.id.isEmpty, event.id.utf8.count <= maxIdentifierBytes else {
+                guard !event.id.isEmpty, event.id.utf8.count <= identifierLimit else {
                     return Result(outcome: .incomplete, claims: [], sourceEventIDs: [], evidenceTruncated: true, conflictingTurnIDs: [], conflictingEnvelopeEventIDs: [])
                 }
                 sourceEventIDs.append(event.id)
                 if !seen.insert(event.id).inserted { incomplete = true }
                 guard event.schemaVersion == 1 else { incomplete = true; continue }
                 let payload = event.payload
+                // Detect every populated field not examined below, including
+                // additions to the typed payload. Unknown JSON keys discarded
+                // before decoding are outside this test-only experiment.
+                var unexamined = payload
+                unexamined.codingAgentTurn = nil
+                unexamined.codingAgentPrompt = nil
+                unexamined.codingAgentPlanUpdate = nil
+                unexamined.codingAgentCommand = nil
+                unexamined.codingAgentReasoningSummary = nil
+                unexamined.codingAgentAssistantMessage = nil
+                unexamined.codingAgentFileChangeAttribution = nil
+                if unexamined != ProvenanceEventPayload() { incomplete = true }
                 var eventClaims: [Claim] = []
                 func add(_ kind: String, _ type: ProvenanceEventType, _ id: String, _ session: String, _ thread: String?, _ turn: String?, _ provider: String) {
                     if event.eventType != type { incomplete = true }
@@ -64,7 +78,7 @@ import Testing
                 guard eventClaims.allSatisfy({ claim in
                     [claim.eventID, claim.kind, claim.recordID, claim.envelopeSessionID, claim.sessionID,
                      claim.threadID, claim.turnID, claim.provider].compactMap { $0 }
-                        .allSatisfy { $0.utf8.count <= maxIdentifierBytes }
+                        .allSatisfy { $0.utf8.count <= identifierLimit }
                 }) else { return Result(outcome: .incomplete, claims: [], sourceEventIDs: [], evidenceTruncated: true, conflictingTurnIDs: [], conflictingEnvelopeEventIDs: []) }
                 claims.append(contentsOf: eventClaims)
             }
@@ -84,8 +98,13 @@ import Testing
                     }
                 }
             }
+            func sortKey(_ claim: Claim) -> [String] {
+                func optional(_ value: String?) -> String { value.map { "1" + $0 } ?? "0" }
+                return [claim.eventID, claim.kind, claim.recordID, optional(claim.envelopeSessionID),
+                        claim.sessionID, optional(claim.threadID), optional(claim.turnID), claim.provider]
+            }
             return Result(outcome: incomplete ? .incomplete : !mismatch.isEmpty || !conflictingTurns.isEmpty ? .conflicting : .unresolved,
-                          claims: claims.sorted { ($0.eventID, $0.kind, $0.recordID) < ($1.eventID, $1.kind, $1.recordID) },
+                          claims: claims.sorted { sortKey($0).lexicographicallyPrecedes(sortKey($1)) },
                           sourceEventIDs: sourceEventIDs.sorted(), evidenceTruncated: false,
                           conflictingTurnIDs: conflictingTurns.sorted(), conflictingEnvelopeEventIDs: Array(Set(mismatch)).sorted())
         }
