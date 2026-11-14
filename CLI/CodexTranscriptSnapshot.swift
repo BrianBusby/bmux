@@ -4,6 +4,8 @@ import Foundation
 /// A bounded in-memory capture, not a source-generation or ownership proof.
 struct CodexTranscriptSnapshot {
     static let maxBytes = 4 * 1_024 * 1_024
+    static let maxRetainedLines = 8_192
+    static let maxRetainedBytes = maxBytes
 
     let device: UInt64
     let inode: UInt64
@@ -46,14 +48,19 @@ struct CodexTranscriptSnapshot {
                 return .unknown(.sourceChanged)
             }
             guard !data.isEmpty, data.last == 0x0a else { return .unknown(.partial) }
-            guard let text = String(data: data, encoding: .utf8) else { return .unknown(.malformed) }
-
             var foundMetadata = false
             var lines: [String] = []
-            for line in text.split(separator: "\n", omittingEmptySubsequences: false) {
-                let text = String(line)
+            var retainedBytes = 0
+            var start = data.startIndex
+            for index in data.indices where data[index] == 0x0a {
+                defer { start = data.index(after: index) }
+                guard start != index else { continue }
+                let encoded = data.subdata(in: start..<index)
+                guard let text = String(data: encoded, encoding: .utf8) else { return .unknown(.malformed) }
                 guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { continue }
-                let encoded = Data(text.utf8)
+                guard lines.count < maxRetainedLines,
+                      encoded.count <= maxRetainedBytes - retainedBytes else { return .unknown(.resourceLimit) }
+                retainedBytes += encoded.count
                 var uniqueness = CodexJSONUniqueKeys(bytes: Array(encoded))
                 guard uniqueness.validate() else { return .unknown(.malformed) }
                 guard let object = try? JSONSerialization.jsonObject(with: encoded) as? [String: Any],
@@ -93,7 +100,7 @@ struct CodexTranscriptSnapshot {
 }
 
 enum CodexTranscriptSnapshotUnknown {
-    case invalidSession, unavailable, oversized, shortRead, sourceChanged, partial, malformed, unverifiedSession
+    case invalidSession, unavailable, oversized, shortRead, sourceChanged, partial, malformed, unverifiedSession, resourceLimit
 }
 
 enum CodexTranscriptSnapshotResult {

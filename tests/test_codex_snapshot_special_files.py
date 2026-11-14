@@ -42,7 +42,10 @@ class SnapshotSpecialFiles(unittest.TestCase):
         event = b'{"type":"event_msg","payload":{}}\n'
         with tempfile.TemporaryDirectory(prefix="bmux-snapshot-count-", dir="/tmp") as temp:
             path = Path(temp) / "source.jsonl"
-            path.write_bytes(meta + event * 8193)
+            path.write_bytes(meta + event * 8191)
+            at_limit = subprocess.run([executable, str(path), "verified"], capture_output=True, timeout=15, check=False)
+            self.assertEqual(at_limit.returncode, 0, at_limit.stderr.decode(errors="replace"))
+            path.write_bytes(meta + event * 8192)
             result = subprocess.run([executable, str(path)], capture_output=True, timeout=15, check=False)
             self.assertEqual(result.returncode, 0, result.stderr.decode(errors="replace"))
 
