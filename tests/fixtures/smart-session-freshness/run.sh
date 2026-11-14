@@ -87,12 +87,14 @@ source = source.replace('''    func semanticMessages(
         _ request: ProvenanceSemanticMessageQueryRequest
     ) async throws -> ProvenanceSemanticMessageQueryResponse {
         ProvenanceSemanticMessageQueryResponse(records: [])''', '''    private var semanticFailure = false
+    private var semanticRecords: [ProvenanceSemanticMessageRecord] = []
+    func setSemanticRecords(_ value: [ProvenanceSemanticMessageRecord]) { semanticRecords = value }
     func setSemanticFailure(_ value: Bool) { semanticFailure = value }
     func semanticMessages(
         _ request: ProvenanceSemanticMessageQueryRequest
     ) async throws -> ProvenanceSemanticMessageQueryResponse {
         if semanticFailure { throw SmartSessionStoreTestError.unimplemented }
-        return ProvenanceSemanticMessageQueryResponse(records: [])''')
+        return ProvenanceSemanticMessageQueryResponse(records: semanticRecords)''')
 source += '''
 extension AgentSessionSmartSessionStoreTests {
     @Test func failedReadMustNotReportAvailable() async {
@@ -207,6 +209,36 @@ extension AgentSessionSmartSessionStoreTests {
             Issue.record("A later non-overlapping retry must recover")
             return
         }
+    }
+
+    @Test func foreignSemanticMessagesAreUnavailableAndLimitDoesNotImplyComplete() async {
+        func message(_ id: String, scope: ProvenanceSemanticInferenceScope, scopeID: String) -> ProvenanceSemanticMessageRecord {
+            .init(id: id, semanticInferenceID: id, semanticInferenceKind: "test", scope: scope, scopeID: scopeID,
+                  concisePhrase: "Observed", expandedMeaning: "Observed", structuredSemanticPayload: .object([:]),
+                  supportingEvidenceRefs: [], supportingFactualRevision: 42, confidence: .high, specificity: .granular,
+                  presentationProducerType: .rule, presentationProducerID: "test", presentationProducerVersion: "1",
+                  presentationPolicyID: "test", presentationPolicyVersion: "1", localeIdentifier: nil, createdAt: Date(timeIntervalSince1970: 100))
+        }
+        for foreign in [message("wrong-id", scope: .session, scopeID: "session-2"), message("wrong-scope", scope: .thread, scopeID: "session-1")] {
+            let client = SmartSessionStoreTestClient(model: Self.model(sessionID: "session-1", revision: 42))
+            let store = AgentSessionSmartSessionStore(client: client)
+            await client.setSemanticRecords([foreign])
+            guard case .available(let snapshot) = await store.refreshedSnapshot(sessionID: "session-1") else {
+                Issue.record("Factual model should remain available")
+                continue
+            }
+            #expect(snapshot.semanticMessages.isEmpty)
+            #expect(snapshot.semanticMessagesReadStatus == "unavailable")
+        }
+        let client = SmartSessionStoreTestClient(model: Self.model(sessionID: "session-1", revision: 42))
+        let store = AgentSessionSmartSessionStore(client: client)
+        await client.setSemanticRecords((0..<20).map { message("m-\($0)", scope: .session, scopeID: "session-1") })
+        guard case .available(let snapshot) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Factual model should remain available")
+            return
+        }
+        #expect(snapshot.semanticMessages.count == 20)
+        #expect(snapshot.bridgePayload["semanticMessagesCoverage"] as? String == "unknown")
     }
 
     @Test func failedReadWithoutCacheStaysFailed() async {
