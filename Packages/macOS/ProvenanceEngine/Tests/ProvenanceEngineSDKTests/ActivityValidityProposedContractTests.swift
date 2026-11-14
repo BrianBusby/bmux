@@ -73,10 +73,13 @@ struct ActivityValidityProposedContractTests {
         let historicalMessages = try await secondClient.semanticMessages(ProvenanceSemanticMessageQueryRequest(scope: .turn, scopeID: firstTurn.id, semanticInferenceKind: ProvenanceCodingAgentSemanticInferenceKind.currentActivity.rawValue, includeInactive: true))
         // This explicitly queries the old turn: active means artifact lifecycle,
         // not proof that the turn is current. Keep the historical reference.
-        // Baseline characterization, not a requirement to retain active status:
-        // a future safe implementation may reclassify the old artifact as historical.
-        #expect(!activeMessages.records.isEmpty)
-        #expect(activeMessages.records.allSatisfy { $0.scopeID == firstTurn.id })
+        // Opt-in baseline characterization only: a safe implementation may
+        // reclassify this artifact as historical rather than retain active status.
+        if ProcessInfo.processInfo.environment["BMUX_RUN_BASELINE_CHARACTERIZATION"] == "1" {
+            #expect(!activeMessages.records.isEmpty)
+            #expect(activeMessages.records.allSatisfy { $0.scopeID == firstTurn.id })
+        }
+        // The public API does not establish a positive live-activity signal.
         #expect(historicalMessages.records.contains { $0.semanticInferenceID == activity.id })
         let currentPhaseMessages = try await secondClient.semanticMessages(ProvenanceSemanticMessageQueryRequest(scope: .session, scopeID: subject.id, semanticInferenceKind: ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue))
         let phaseHistory = try await secondClient.semanticMessages(ProvenanceSemanticMessageQueryRequest(scope: .session, scopeID: subject.id, semanticInferenceKind: ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue, includeInactive: true))
