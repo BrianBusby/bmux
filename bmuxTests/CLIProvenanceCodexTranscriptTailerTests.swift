@@ -131,7 +131,7 @@ extension CLIProvenanceCodexTranscriptImporterTests {
         _ = try await first.consume(at: transcriptURL)
         let initialCursor = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
 
-        // The cursor records receipt, not durable plan evidence or acceptance; replay checks the projection only.
+        // Cursor position alone does not prove durable plan evidence or acceptance; replay checks the projection only.
         let revision = try Self.codexTranscriptLine(
             ordinal: 7, type: "response_item", timestamp: "2026-08-21T10:00:07Z",
             payload: [
