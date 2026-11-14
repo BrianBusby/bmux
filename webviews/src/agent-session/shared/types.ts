@@ -205,6 +205,8 @@ export type AgentSessionCopy = {
   terminalView: string;
   sessionView: string;
   smartSessionRefresh: string;
+  smartSessionStale?: string;
+  smartSessionLastRead?: string;
   smartSessionLoading: string;
   smartSessionNoSession: string;
   smartSessionUnavailable: string;
@@ -280,6 +282,8 @@ export type SmartSessionReadResult =
       sessionId?: string;
       reason?: string;
       diagnostics?: Record<string, unknown>;
+      snapshot?: SmartSessionSnapshot;
+      lastSuccessfulReadAt?: string;
     };
 
 export type SmartSessionSnapshot = {

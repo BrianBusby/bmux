@@ -1,3 +1,6 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { SmartSessionFreshnessBanner } from "../react/SmartSessionSurface";
 import { expect, test } from "bun:test";
 import { makeClientId } from "./ids";
 import {
@@ -1566,4 +1569,59 @@ test("smart session does not label a cached snapshot available after bridge fail
   const failed = reduceSmartSession(current, { type: "refreshFailed", requestId: 2 });
   expect(failed.status).toBe("failed");
   expect(failed.snapshot?.revision.factualRevision).toBe(4);
+});
+
+
+test("smart session keeps failed bridge snapshots marked stale and clears not-found", () => {
+  const snapshot = smartSessionSnapshot({ factualRevision: 4 });
+  const stale = reduceSmartSession(initialSmartSessionState(), {
+    type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "failed", snapshot, lastSuccessfulReadAt: "2026-08-17T07:05:00Z" },
+  });
+  expect(stale.status).toBe("failed");
+  expect(stale.snapshot).toEqual(snapshot);
+  expect(stale.lastSuccessfulReadAt).toBe("2026-08-17T07:05:00Z");
+  const missing = reduceSmartSession(stale, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "notFound" } });
+  expect(missing.snapshot).toBeUndefined();
+});
+
+test("smart session never attaches failed response to a different session", () => {
+  const current = reduceSmartSession(initialSmartSessionState(), {
+    type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: smartSessionSnapshot({ factualRevision: 4 }) },
+  });
+  const failed = reduceSmartSession(current, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "projectionFailed", sessionId: "different-session" } });
+  expect(failed.snapshot).toBeUndefined();
+});
+
+
+test("smart session visibly labels retained facts after failure", () => {
+  const state = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "failed", snapshot: smartSessionSnapshot({ factualRevision: 4 }), lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
+  const markup = renderToStaticMarkup(createElement(SmartSessionFreshnessBanner, { state, onRefresh: () => {} }));
+  expect(markup).toContain('role="status"');
+  expect(markup).toContain("Could not refresh. Showing last known session data.");
+  expect(markup).toContain("Last successful read");
+  expect(markup).toContain("Refresh");
+});
+
+test("smart session replaces an older revision from a different session", () => {
+  const first = smartSessionSnapshot({ factualRevision: 10 });
+  const second = smartSessionSnapshot({ factualRevision: 1 });
+  const replacement = { ...second, identity: { ...second.identity, sessionId: "another-session" } };
+  const current = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: first } });
+  const next = reduceSmartSession(current, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "available", snapshot: replacement } });
+  expect(next.snapshot?.identity.sessionId).toBe("another-session");
+  expect(next.snapshot?.revision.factualRevision).toBe(1);
+});
+
+test("a late failed refresh cannot replace a newer successful refresh", () => {
+  const current = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "available", snapshot: smartSessionSnapshot({ factualRevision: 4 }) } });
+  const late = reduceSmartSession(current, { type: "refreshFailed", requestId: 1 });
+  expect(late).toEqual(current);
 });

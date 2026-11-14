@@ -39,6 +39,7 @@ export type SmartSessionState = {
   reason?: string;
   sessionId?: string;
   diagnostics?: Record<string, unknown>;
+  lastSuccessfulReadAt?: string;
 };
 
 export type SmartSessionAction =
@@ -67,34 +68,43 @@ export function reduceSmartSession(state: SmartSessionState, action: SmartSessio
       return {
         ...state,
         requestId: action.requestId,
-        status: state.snapshot ? state.status : "loading",
+        status: "loading",
       };
     case "refreshFailed":
       return {
         ...state,
         requestId: action.requestId,
-        status: state.snapshot ? "available" : "failed",
+        status: "failed",
       };
     case "refreshSucceeded": {
       if (action.result.status !== "available") {
+        const failed = action.result.status === "failed" || action.result.status === "projectionFailed";
+        const priorMatches = !action.result.sessionId || action.result.sessionId === state.snapshot?.identity.sessionId;
+        const suppliedMatches = action.result.snapshot &&
+          (!action.result.sessionId || action.result.sessionId === action.result.snapshot.identity.sessionId);
+        const keepPrior = priorMatches && state.snapshot && (!suppliedMatches || !action.result.snapshot ||
+          (state.snapshot.identity.sessionId === action.result.snapshot.identity.sessionId &&
+            compareSmartSessionRevisions(state.snapshot.revision, action.result.snapshot.revision) > 0));
         return {
           requestId: action.requestId,
           status: action.result.status,
           reason: action.result.reason,
           sessionId: action.result.sessionId,
           diagnostics: action.result.diagnostics,
-          snapshot: state.snapshot,
+          snapshot: failed ? (keepPrior ? state.snapshot : suppliedMatches ? action.result.snapshot : undefined) : undefined,
+          lastSuccessfulReadAt: failed && !keepPrior ? action.result.lastSuccessfulReadAt : undefined,
         };
       }
 
       if (
         state.snapshot &&
+        state.snapshot.identity.sessionId === action.result.snapshot.identity.sessionId &&
         compareSmartSessionRevisions(action.result.snapshot.revision, state.snapshot.revision) < 0
       ) {
         return {
           ...state,
           requestId: action.requestId,
-          status: "available",
+          status: "failed",
         };
       }
 
