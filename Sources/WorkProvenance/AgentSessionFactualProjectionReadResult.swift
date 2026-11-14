@@ -16,4 +16,5 @@ enum AgentSessionFactualProjectionReadResult: Equatable, Sendable {
     case notFound(sessionID: String, reason: String?)
     case failed(sessionID: String?)
     case available(ProvenanceFactualSessionProjectionSnapshot)
+    case stale(ProvenanceFactualSessionProjectionSnapshot, lastSuccessfulReadAt: Date)
 }

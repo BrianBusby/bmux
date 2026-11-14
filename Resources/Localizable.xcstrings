@@ -5395,6 +5395,23 @@
         }
       }
     },
+    "agentSession.factual.lastSuccessfulRead": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not refresh. Last successful read: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新できませんでした。最後に読み込めた日時：%@"
+          }
+        }
+      }
+    },
     "agentSession.factual.noSession": {
       "extractionState": "manual",
       "localizations": {

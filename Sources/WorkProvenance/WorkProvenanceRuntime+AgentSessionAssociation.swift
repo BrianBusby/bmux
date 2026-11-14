@@ -79,6 +79,8 @@ extension WorkProvenanceRuntime {
                 "revision": association.latestEventSequence.map(String.init) ?? "unknown"
             ])
             return projectionResult
+        case .stale:
+            return projectionResult
         case .notFound(_, let reason):
             let pending = Self.readiness(
                 association: association,
