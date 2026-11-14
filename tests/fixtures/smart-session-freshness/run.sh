@@ -117,12 +117,16 @@ extension AgentSessionSmartSessionStoreTests {
             return
         }
         #expect(initial.crossSessionAwareness.status == "unavailable")
+        #expect(initial.crossSessionAwareness.bridgePayload["relatedReadStatus"] as? String == "unavailable")
+        #expect(initial.crossSessionAwareness.bridgePayload["collisionReadStatus"] as? String == "unavailable")
         await client.setRelatedAvailable(true)
         guard case .available(let refreshed) = await store.refreshedSnapshot(sessionID: "session-1") else {
             Issue.record("Independent awareness changed without a primary revision")
             return
         }
         #expect(refreshed.crossSessionAwareness.status == "available")
+        #expect(refreshed.crossSessionAwareness.bridgePayload["relatedReadStatus"] as? String == "available")
+        #expect(refreshed.crossSessionAwareness.bridgePayload["collisionReadStatus"] as? String == "unavailable")
         await client.setRelatedAvailable(false)
         guard case .available(let unavailable) = await store.refreshedSnapshot(sessionID: "session-1") else {
             Issue.record("Independent awareness failure froze primary snapshot")
