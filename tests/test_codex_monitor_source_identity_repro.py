@@ -15,6 +15,14 @@ from pathlib import Path
 from test_codex_feed_hooks import FAKE_SURFACE_ID, FAKE_WORKSPACE_ID, FakeBmuxSocket
 
 
+class PrivateFakeSocket(FakeBmuxSocket):
+    def _handle_conn(self, conn: object) -> None:
+        try:
+            super()._handle_conn(conn)
+        except BrokenPipeError:
+            pass  # The CLI intentionally closes its one-way telemetry connection.
+
+
 class CodexMonitorSourceIdentityRepro(unittest.TestCase):
     def run_monitor(self, metadata: str, signal: str) -> tuple[list[str], list[dict], list[str]]:
         cli = os.environ["BMUX_TEST_CLI"]
@@ -41,7 +49,7 @@ class CodexMonitorSourceIdentityRepro(unittest.TestCase):
                    "PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "BMUX_SOCKET_PATH": str(socket_path),
                    "BMUX_WORKSPACE_ID": FAKE_WORKSPACE_ID, "BMUX_SURFACE_ID": FAKE_SURFACE_ID,
                    "BMUX_CLI_SENTRY_DISABLED": "1"}
-            with FakeBmuxSocket(socket_path, None) as fake:
+            with PrivateFakeSocket(socket_path, None) as fake:
                 try:
                     subprocess.run([cli, "--socket", str(socket_path), "hooks", "codex", "monitor",
                                     "--workspace", FAKE_WORKSPACE_ID, "--surface", FAKE_SURFACE_ID,
@@ -59,6 +67,34 @@ class CodexMonitorSourceIdentityRepro(unittest.TestCase):
                         if "provenance_sessions" in tables:
                             sessions = [row[0] for row in db.execute("SELECT id FROM provenance_sessions")]
                 return commands, statuses, sessions
+
+    def run_stop(self, metadata: str, explicit_session: bool) -> list[str]:
+        cli = os.environ["BMUX_TEST_CLI"]
+        with tempfile.TemporaryDirectory(prefix="bmux-stop-source-", dir="/tmp") as temp:
+            root = Path(temp)
+            socket_path = root / "socket"
+            transcript = root / "transcript.jsonl"
+            provider_id = "session-a" if metadata == "matching" else "session-b"
+            lines = [
+                {"type": "session_meta", "payload": {"id": provider_id}},
+                {"type": "event_msg", "payload": {"type": "task_started", "turn_id": "turn-a"}},
+                {"type": "event_msg", "payload": {"type": "error", "turn_id": "turn-a",
+                 "message": "Synthetic stream failure", "codex_error_info": "response_stream_disconnected"}},
+            ]
+            transcript.write_text("\n".join(json.dumps(line) for line in lines) + "\n", encoding="utf-8")
+            env = {"HOME": temp, "CFFIXED_USER_HOME": temp, "BMUX_PROVENANCE_HOME": temp,
+                   "PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "BMUX_SOCKET_PATH": str(socket_path),
+                   "BMUX_WORKSPACE_ID": FAKE_WORKSPACE_ID, "BMUX_SURFACE_ID": FAKE_SURFACE_ID,
+                   "BMUX_AGENT_HOOK_STATE_DIR": temp, "BMUX_CLI_SENTRY_DISABLED": "1"}
+            payload = {"turn_id": "turn-a", "transcript_path": str(transcript)}
+            if explicit_session:
+                payload["session_id"] = "session-a"
+            with PrivateFakeSocket(socket_path, None) as fake:
+                result = subprocess.run([cli, "--socket", str(socket_path), "hooks", "codex", "stop"],
+                                        input=json.dumps(payload), text=True, capture_output=True,
+                                        env=env, timeout=8, check=False)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                return [frame.get("raw", "") for frame in fake.frames]
 
     def test_matching_metadata_positive_controls(self) -> None:
         for signal in ("input", "failure"):
@@ -80,6 +116,16 @@ class CodexMonitorSourceIdentityRepro(unittest.TestCase):
                         self.assertNotIn("session-b", sessions)
                     forbidden = ("set_status codex ", "set_agent_lifecycle codex needsInput ", "notify_target ")
                     self.assertFalse(any(command.startswith(forbidden) for command in commands), commands)
+
+
+    def test_stop_transcript_failure_requires_matching_session(self) -> None:
+        control = self.run_stop("matching", explicit_session=True)
+        self.assertTrue(any(command.startswith("set_status codex Codex network error") for command in control), control)
+        for explicit_session in (True, False):
+            with self.subTest(explicit_session=explicit_session):
+                commands = self.run_stop("foreign", explicit_session=explicit_session)
+                self.assertFalse(any(command.startswith("set_status codex Codex network error")
+                                     for command in commands), commands)
 
 
 if __name__ == "__main__":
