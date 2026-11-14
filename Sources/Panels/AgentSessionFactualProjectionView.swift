@@ -286,6 +286,11 @@ struct AgentSessionFactualProjectionView: View {
                 localized: "agentSession.factual.notFound",
                 defaultValue: "No factual session projection was found for the linked PE session."
             ))
+        case .refreshing:
+            emptyMessage(String(
+                localized: "agentSession.factual.refreshing",
+                defaultValue: "Refreshing factual session data…"
+            ))
         case .failed:
             emptyMessage(String(
                 localized: "agentSession.factual.failed",

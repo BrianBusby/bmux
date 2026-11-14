@@ -83,7 +83,7 @@ struct FactualCacheFailureTests {
 
     @Test(arguments: [false, true])
     func supersededResponseWhileNewerPendingIsNotHealthy(hasCache: Bool) async throws {
-        for oldFails in [false, true] {
+        for (oldFails, newFails) in [(false, false), (false, true), (true, false), (true, true)] {
             let prior = Self.snapshot(sessionID: "session-1", revision: 7)
             let oldSnapshot = Self.snapshot(sessionID: "session-1", revision: 8)
             let client = FakeProvenanceEngineClient(deferResponses: true)
@@ -107,17 +107,23 @@ struct FactualCacheFailureTests {
             }
             let oldResult = await old.value
             let synchronous = store.snapshot(sessionID: "session-1")
-            if hasCache {
-                #expect(oldResult != .available(prior))
-                #expect(synchronous != .available(prior))
+            #expect(oldResult == .refreshing)
+            #expect(synchronous == .refreshing)
+            if newFails {
+                await client.complete(index + 1, with: .failure(TestError.unavailable))
+                let newResult = await new.value
+                if hasCache {
+                    if case .stale(let value, _) = newResult { #expect(value == prior) }
+                    else { Issue.record("Expected stale cached facts") }
+                } else {
+                    #expect(newResult == .failed(sessionID: "session-1"))
+                    #expect(store.snapshot(sessionID: "session-1") == .failed(sessionID: "session-1"))
+                }
             } else {
-                #expect(oldResult != .notFound(sessionID: "session-1", reason: nil))
-                #expect(synchronous != .notFound(sessionID: "session-1", reason: nil))
-            }
-            await client.complete(index + 1, with: .failure(TestError.unavailable))
-            _ = await new.value
-            if !hasCache {
-                #expect(store.snapshot(sessionID: "session-1") == .failed(sessionID: "session-1"))
+                let latest = Self.snapshot(sessionID: "session-1", revision: 9)
+                await client.complete(index + 1, with: .success(.init(found: true, sessionID: "session-1", snapshot: latest)))
+                #expect(await new.value == .available(latest))
+                #expect(store.snapshot(sessionID: "session-1") == .available(latest))
             }
         }
     }
@@ -134,7 +140,7 @@ struct FactualCacheFailureTests {
         #expect(await new.value == .failed(sessionID: "session-1"))
         await client.complete(0, with: .success(.init(found: true, sessionID: "session-1", snapshot: oldSnapshot)))
         #expect(await old.value == .failed(sessionID: "session-1"))
-        #expect(store.snapshot(sessionID: "session-1") == .notFound(sessionID: "session-1", reason: nil))
+        #expect(store.snapshot(sessionID: "session-1") == .failed(sessionID: "session-1"))
     }
 
     @Test func olderOverlappingSuccessCannotResurrectNotFound() async throws {

@@ -5395,6 +5395,12 @@
         }
       }
     },
+    "agentSession.factual.refreshing": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Refreshing factual session data…" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "セッションの事実データを更新しています…" } }
+      }
+    },
     "agentSession.factual.lastSuccessfulRead": {
       "extractionState": "manual",
       "localizations": {

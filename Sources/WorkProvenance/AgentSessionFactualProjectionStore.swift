@@ -23,7 +23,9 @@ final class AgentSessionFactualProjectionStore {
 
     func snapshot(sessionID rawSessionID: String?) -> AgentSessionFactualProjectionReadResult {
         guard let sessionID = Self.trimmedNonEmpty(rawSessionID) else { return .missingSession }
+        if latestRequestBySessionID[sessionID] != nil { return .refreshing }
         guard let cached = snapshotsBySessionID[sessionID] else {
+            if case .failed = latestResultBySessionID[sessionID] { return .failed(sessionID: sessionID) }
             return .notFound(sessionID: sessionID, reason: nil)
         }
         return cached.isStale ? .stale(cached.snapshot, lastSuccessfulReadAt: cached.lastSuccessfulReadAt) :
@@ -39,7 +41,8 @@ final class AgentSessionFactualProjectionStore {
                 ProvenanceFactualSessionProjectionRequest(sessionID: sessionID, turnLimit: 12)
             )
             guard latestRequestBySessionID[sessionID] == requestID else {
-                return latestResultBySessionID[sessionID] ?? snapshot(sessionID: sessionID)
+                return latestRequestBySessionID[sessionID] == nil
+                    ? (latestResultBySessionID[sessionID] ?? snapshot(sessionID: sessionID)) : .refreshing
             }
             guard response.sessionID == sessionID,
                   response.snapshot.map({ $0.session.id == sessionID }) ?? true else {
@@ -56,10 +59,12 @@ final class AgentSessionFactualProjectionStore {
                 result = .notFound(sessionID: sessionID, reason: response.reason)
             }
             latestResultBySessionID[sessionID] = result
+            latestRequestBySessionID.removeValue(forKey: sessionID)
             return result
         } catch {
             guard latestRequestBySessionID[sessionID] == requestID else {
-                return latestResultBySessionID[sessionID] ?? snapshot(sessionID: sessionID)
+                return latestRequestBySessionID[sessionID] == nil
+                    ? (latestResultBySessionID[sessionID] ?? snapshot(sessionID: sessionID)) : .refreshing
             }
             StartupBreadcrumbLog.append("workProvenance.agentSessionFactualProjection.refreshFailed", fields: [
                 "session": sessionID,
@@ -74,6 +79,7 @@ final class AgentSessionFactualProjectionStore {
                 result = .failed(sessionID: sessionID)
             }
             latestResultBySessionID[sessionID] = result
+            latestRequestBySessionID.removeValue(forKey: sessionID)
             return result
         }
     }
