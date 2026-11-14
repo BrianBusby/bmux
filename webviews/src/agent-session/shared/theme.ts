@@ -15,6 +15,8 @@ const cssVariables: Record<keyof AgentSessionTheme, string | null> = {
   accentSoft: "--agent-accent-soft",
   danger: "--agent-danger",
   shadow: "--agent-shadow",
+  terminalFontFamily: null,
+  terminalFontSize: null,
 };
 
 export function applyAgentTheme(theme: AgentSessionTheme): void {
@@ -28,6 +30,13 @@ export function applyAgentTheme(theme: AgentSessionTheme): void {
   root.classList.toggle("electron-dark", theme.isDark);
   root.classList.toggle("light", !theme.isDark);
   root.style.colorScheme = theme.isDark ? "dark" : "light";
+  if (theme.terminalFontFamily && theme.terminalFontSize) {
+    root.style.setProperty("--agent-terminal-font-family", `${JSON.stringify(theme.terminalFontFamily)}, monospace`);
+    root.style.setProperty("--agent-terminal-font-size", `${theme.terminalFontSize}px`);
+  } else {
+    root.style.removeProperty("--agent-terminal-font-family");
+    root.style.removeProperty("--agent-terminal-font-size");
+  }
   for (const [key, variable] of Object.entries(cssVariables) as Array<
     [keyof AgentSessionTheme, string | null]
   >) {

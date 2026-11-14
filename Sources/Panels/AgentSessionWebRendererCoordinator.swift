@@ -662,26 +662,7 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             return
         }
 
-        guard scheme == "http" || scheme == "https" else {
-            BrowserExternalLinkOpener().openWebLink(url)
-            return
-        }
-
-        guard let app = AppDelegate.shared,
-              let location = app.workspaceContainingPanel(
-                  panelId: panelId,
-                  preferredWorkspaceId: workspaceId
-              ),
-              let paneId = location.workspace.paneId(forPanelId: panelId) else {
-            BrowserExternalLinkOpener().openWebLink(url)
-            return
-        }
-
-        _ = location.workspace.createBrowserSurfaceForAction(
-            inPane: paneId,
-            url: url,
-            focus: true
-        )
+        BrowserExternalLinkOpener().openWebLink(url)
     }
 
     private func isInPageFragment(_ url: URL, currentURL: URL?) -> Bool {

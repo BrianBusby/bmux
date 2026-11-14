@@ -1,4 +1,6 @@
 import SwiftUI
+import BmuxFoundation
+import BmuxTerminal
 
 private struct BmuxShellTerminalOnlyKey: EnvironmentKey {
     static let defaultValue = false
@@ -26,6 +28,7 @@ extension TerminalPanelView {
                 chatContent: terminalChatReader.map { reader in
                     { mode, onTerminal, onChat in AnyView(TerminalChatWebRenderer(
                         panel: panel, reader: reader, appearance: appearance,
+                        fontFamily: chatFontConfig.fontFamily, fontSize: chatFontConfig.fontSize,
                         presentationMode: mode,
                         onStartConnectedSession: onStartConnectedSession,
                         onRequestPanelFocus: onRequestTerminalChatFocus,
@@ -43,6 +46,9 @@ extension TerminalPanelView {
                 } else {
                     terminalSurfaceBody(isVisibleForMode: isVisibleForMode)
                 }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .ghosttyConfigDidReload)) { _ in
+                chatFontConfig = GhosttyConfig.load(globalFontMagnificationPercent: GlobalFontMagnification.storedPercent)
             }
         }
     }
