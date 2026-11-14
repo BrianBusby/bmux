@@ -1998,7 +1998,7 @@ test("loaded evidence is selectable and available through a disclosure", async (
     expect(Boolean(container.querySelector(".focus-connected-dot"))).toBe(false);
     expect(details?.open).toBe(false);
     const summary = details?.querySelector<HTMLElement>("summary");
-    expect(summary?.textContent).toBe("Show all loaded evidence");
+    expect(summary?.textContent).toBe("Show more recorded evidence");
     expect(container.querySelector(".focus-related-strip")?.tagName).not.toBe("BUTTON");
     await act(async () => summary?.click());
     expect(details?.open).toBe(true);

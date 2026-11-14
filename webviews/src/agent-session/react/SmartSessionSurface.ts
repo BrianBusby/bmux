@@ -35,10 +35,10 @@ export function SmartSessionSurface({ context, initialView = "focus", isActive =
       snapshot ? h(SemanticReportsNotice, { copy, status: snapshot.semanticMessagesReadStatus }) : null,
       h(ViewTabs, { copy, view, onChange: setView }),
       h("div", { className: "focus-workbench-body" },
-        view === "focus" ? h(FocusView, { copy, state, onRefresh: refresh, expandedTurnID, onExpandTurn: setExpandedTurnID, onInspect: setInspector }) :
+        view === "focus" ? h(FocusView, { copy, state, onRefresh: refresh, expandedTurnID, onExpandTurn: setExpandedTurnID }) :
           view === "chat" ? h(ViewFrame, { className: "focus-chat-frame", children: renderChat ? renderChat() : h(UnsupportedView, { copy, kind: "chat" }) }) :
             view === "terminal" ? h(ViewFrame, { className: "focus-terminal-frame", children: renderTerminal ? renderTerminal() : h(UnsupportedView, { copy, kind: "terminal" }) }) :
-              h(LearningsView, { copy, onInspect: setInspector }),
+              h(LearningsView, { copy }),
       ),
     ),
   );
@@ -57,7 +57,7 @@ function WorkspaceRail({ copy, workspaceName, title, status, onSelect }: { copy?
   return h("aside", { className: "focus-workspace-rail", "aria-label": text(copy, "smartSessionWorkspace", "Workspace") },
     h("div", { className: "focus-rail-heading" }, h("span", null, text(copy, "smartSessionCurrent", "Current")), h("span", { className: "focus-rail-count" }, "1")),
     h("button", { type: "button", className: "focus-workspace-card is-selected", "aria-pressed": true, onClick: onSelect },
-      h("span", { className: "focus-card-repository" }, workspaceName), h("strong", null, title), h("span", { className: "focus-card-status" }, h("i", { "aria-hidden": true }), statusLabel(status, copy)),
+      h("span", { className: "focus-card-repository" }, workspaceName), h("strong", null, title), h("span", { className: "focus-card-status" }, statusLabel(status, copy)),
       h("span", { className: "focus-card-activity" }, text(copy, "smartSessionIdentity", "Verified workspace identity")),
     ),
     h("p", { className: "focus-rail-note" }, text(copy, "smartSessionUnavailable", "Workspace links are unavailable for this surface.")),
@@ -68,7 +68,7 @@ function WorkspaceHeader({ copy, workspaceName, title, snapshot, inspector, onIn
   const provider = snapshot?.identity.agentKind ?? "provider";
   return h("header", { className: "focus-workspace-header" },
     h("div", { className: "focus-header-copy" }, h("div", { className: "focus-breadcrumb" }, `${workspaceName} / ${provider}`), h("h1", null, title), snapshot?.identity.sessionId ? h("p", { className: "focus-header-identity" }, `${text(copy, "smartSessionSessionID", "Session ID")}: ${snapshot.identity.sessionId}`) : null),
-    h("div", { className: "focus-header-status" }, h("span", { className: "focus-connected-dot", "aria-hidden": true }), h("span", null, statusLabel(snapshot?.identity.status ?? "unavailable", copy)), h("button", { type: "button", className: "focus-inspector-link", onClick: () => onInspect("workspace") }, text(copy, "smartSessionIdentity", "Workspace details")), inspector === "workspace" ? h(Inspector, { title: text(copy, "smartSessionIdentity", "Workspace details"), onClose: () => onInspect(null), children: h(WorkspaceDetails, { copy, snapshot }) }) : null),
+    h("div", { className: "focus-header-status" }, h("span", null, statusLabel(snapshot?.identity.status ?? "unavailable", copy)), h("button", { type: "button", className: "focus-inspector-link", onClick: () => onInspect("workspace") }, text(copy, "smartSessionIdentity", "Workspace details")), inspector === "workspace" ? h(Inspector, { title: text(copy, "smartSessionIdentity", "Workspace details"), onClose: () => onInspect(null), children: h(WorkspaceDetails, { copy, snapshot }) }) : null),
   );
 }
 
@@ -77,7 +77,7 @@ function ViewTabs({ copy, view, onChange }: { copy?: AgentSessionCopy; view: Age
   return h("nav", { className: "focus-view-tabs", role: "tablist", "aria-label": text(copy, "smartSessionWorkspace", "Workspace views") }, ...tabs.map(([id, label]) => h("button", { key: id, type: "button", role: "tab", "aria-selected": view === id, className: `focus-view-tab${view === id ? " is-active" : ""}`, onClick: () => onChange(id) }, label)));
 }
 
-function FocusView({ copy, state, onRefresh, expandedTurnID, onExpandTurn, onInspect }: { copy?: AgentSessionCopy; state: SmartSessionState; onRefresh: () => void; expandedTurnID: string | null; onExpandTurn: (turnID: string | null) => void; onInspect: (value: string | null) => void }) {
+function FocusView({ copy, state, onRefresh, expandedTurnID, onExpandTurn }: { copy?: AgentSessionCopy; state: SmartSessionState; onRefresh: () => void; expandedTurnID: string | null; onExpandTurn: (turnID: string | null) => void }) {
   if (state.status === "loading" && !state.snapshot) return h(EmptyState, { message: text(copy, "smartSessionLoading", "Loading session") });
   if (!state.snapshot) return h(EmptyState, { message: statusMessage(state, copy), action: h("button", { type: "button", onClick: onRefresh }, text(copy, "smartSessionRefresh", "Refresh")) });
   const snapshot = state.snapshot;
@@ -86,7 +86,7 @@ function FocusView({ copy, state, onRefresh, expandedTurnID, onExpandTurn, onIns
   const related = snapshot.crossSessionAwareness.status === "available" && (snapshot.crossSessionAwareness.relatedSessions.length > 0 || snapshot.crossSessionAwareness.collisions.length > 0);
   return h("div", { className: "focus-reading-column" },
     current ? h(CurrentTurnCard, { copy, turn: current }) : h(EmptyState, { message: text(copy, "smartSessionNoCurrentTurn", "Latest turn unavailable.") }),
-    related ? h(RelatedWorkStrip, { copy, snapshot, onInspect }) : null,
+    related ? h(RelatedWorkStrip, { copy, snapshot }) : null,
     h(RelatedAwarenessNotice, { copy, awareness: snapshot.crossSessionAwareness }),
     h("section", { className: "focus-history-section" }, h("div", { className: "focus-section-heading" }, h("h2", null, text(copy, "smartSessionPriorTurns", "History")), h("span", { className: "focus-section-meta" }, `${history.length}`)), history.length ? h("div", { className: "focus-history-list" }, ...history.map(turn => h(PriorTurnCard, { key: turn.turnId, copy, turn, expanded: expandedTurnID === turn.turnId, onToggle: () => onExpandTurn(expandedTurnID === turn.turnId ? null : turn.turnId) }))) : h("p", { className: "focus-muted" }, text(copy, "smartSessionNoEvidence", "No completed turns yet."))),
     snapshot.factual.turnCount > history.length + (current ? 1 : 0) ? h("p", { className: "focus-coverage-note" }, text(copy, "smartSessionUnavailable", "History is partial; only same-identity records are shown.")) : null,
@@ -94,14 +94,16 @@ function FocusView({ copy, state, onRefresh, expandedTurnID, onExpandTurn, onIns
 }
 
 function CurrentTurnCard({ copy, turn }: { copy?: AgentSessionCopy; turn: SmartSessionTurn }) {
-  const output = turn.assistantMessages.at(-1);
   const recordedEvidence = recordedEvidenceForTurn(turn);
-  const results = [...turn.completedCommands.slice(0, 3).map(command => `${command.command} · ${command.status}`), ...turn.fileChangeAttributions.slice(0, 2).flatMap(change => [change.paths.join(", "), change.summary?.trim() ? `${text(copy, "smartSessionRecordedDescription", "Recorded description (unverified)")}: ${change.summary}` : ""]), ...(output ? [output.text] : [])].filter(Boolean);
+  const fileEntries = (changes: SmartSessionTurn["fileChangeAttributions"]) => changes.flatMap(change => [change.paths.join(", "), change.summary?.trim() ? `${text(copy, "smartSessionRecordedDescription", "Recorded description (unverified)")}: ${change.summary}` : ""]);
+  const commandEntries = (commands: SmartSessionTurn["completedCommands"]) => commands.map(command => `${command.command} · ${command.status}`);
+  const results = [...commandEntries(turn.completedCommands.slice(0, 3)), ...fileEntries(turn.fileChangeAttributions.slice(0, 2)), ...turn.assistantMessages.slice(-1).map(message => message.text)].filter(Boolean);
+  const remaining = [...commandEntries(turn.completedCommands.slice(3)), ...fileEntries(turn.fileChangeAttributions.slice(2)), ...turn.assistantMessages.slice(0, -1).map(message => message.text)].filter(Boolean);
   return h("article", { className: "focus-current-card" },
     h("div", { className: "focus-card-kicker" }, text(copy, "smartSessionCurrentTurn", "Latest turn"), h("span", { className: `focus-turn-status focus-turn-${turn.status}` }, turn.status)),
-    h("h2", null, turn.prompt?.text ?? text(copy, "smartSessionUnknown", "Objective unavailable")),
+    h("h2", null, turn.prompt?.text ?? text(copy, "smartSessionUnknown", "Unknown")),
     h("div", { className: "focus-current-grid" }, h(SummaryBlock, { label: text(copy, "smartSessionLatestTurnPrompt", "Latest turn prompt"), value: turn.prompt?.text ?? text(copy, "smartSessionUnknown", "Unknown") }), h(SummaryBlock, { label: text(copy, "smartSessionRecordedEvidence", "Recorded evidence"), value: recordedEvidence ?? text(copy, "smartSessionUnknown", "Unknown") })),
-    h("section", { className: "focus-results" }, h("h3", null, text(copy, "smartSessionFinalOutput", "Evidence")), results.length ? h("ul", null, ...results.map((result, index) => h("li", { key: `${turn.turnId}-${index}` }, result))) : h("p", { className: "focus-muted" }, text(copy, "smartSessionNoEvidence", "No evidence yet."))),
+    h("section", { className: "focus-results" }, h("h3", null, text(copy, "smartSessionFinalOutput", "Evidence")), results.length ? h("ul", null, ...results.map((result, index) => h("li", { key: `${turn.turnId}-${index}` }, result))) : h("p", { className: "focus-muted" }, text(copy, "smartSessionNoEvidence", "No evidence yet.")), remaining.length ? h("details", null, h("summary", null, text(copy, "smartSessionShowLoadedEvidence", "Show more recorded evidence")), h("ul", null, ...remaining.map((result, index) => h("li", { key: `${turn.turnId}-remaining-${index}` }, result)))) : null),
     h("div", { className: "focus-current-actions" }, h("span", { className: "focus-source-note" }, turn.provider)),
   );
 }
@@ -130,15 +132,15 @@ export function RelatedAwarenessNotice({ copy, awareness }: { copy?: AgentSessio
   return h("p", { className: "focus-coverage-note" }, message);
 }
 
-function RelatedWorkStrip({ copy, snapshot, onInspect }: { copy?: AgentSessionCopy; snapshot: SmartSessionSnapshot; onInspect: (value: string | null) => void }) {
+function RelatedWorkStrip({ copy, snapshot }: { copy?: AgentSessionCopy; snapshot: SmartSessionSnapshot }) {
   const related = snapshot.crossSessionAwareness.relatedSessions[0];
   const collision = snapshot.crossSessionAwareness.collisions[0];
   const reason = related?.relationshipReasons[0] ?? text(copy, "smartSessionRelatedWork", "Shared-file activity");
-  return h("button", { type: "button", className: "focus-related-strip", onClick: () => onInspect("related") }, h("span", { className: "focus-related-icon", "aria-hidden": true }, "↗"), h("span", null, h("strong", null, text(copy, "smartSessionRelatedWork", "Related work")), h("small", null, `${reason}${collision ? ` · ${collision.path}` : ""}`)), h("span", { className: "focus-related-chevron", "aria-hidden": true }, "›"));
+  return h("div", { className: "focus-related-strip" }, h("span", { className: "focus-related-icon", "aria-hidden": true }, "↗"), h("span", null, h("strong", null, text(copy, "smartSessionRelatedWork", "Related work")), h("small", null, `${reason}${collision ? ` · ${collision.path}` : ""}`)));
 }
 
-function LearningsView({ copy, onInspect }: { copy?: AgentSessionCopy; onInspect: (value: string | null) => void }) {
-  return h("div", { className: "focus-reading-column focus-learnings" }, h("div", { className: "focus-learnings-heading" }, h("div", null, h("span", { className: "focus-card-kicker" }, text(copy, "smartSessionLearnings", "Learnings")), h("h2", null, text(copy, "smartSessionNoLearnings", "Useful next time. Grounded in this time."))), h("span", { className: "focus-proposed-badge" }, text(copy, "smartSessionUnavailable", "Unavailable"))), h("div", { className: "focus-empty-panel" }, h("div", { className: "focus-empty-icon", "aria-hidden": true }, "◇"), h("h3", null, text(copy, "smartSessionNoLearnings", "No saved learnings yet")), h("p", null, text(copy, "smartSessionUnavailable", "A knowledge producer and review lifecycle are not connected to this surface. Related-session history remains evidence, not curated knowledge.")), h("button", { type: "button", className: "focus-secondary-button", onClick: () => onInspect("learnings") }, text(copy, "smartSessionEvidence", "View availability"))));
+function LearningsView({ copy }: { copy?: AgentSessionCopy }) {
+  return h("div", { className: "focus-reading-column focus-learnings" }, h("div", { className: "focus-learnings-heading" }, h("div", null, h("span", { className: "focus-card-kicker" }, text(copy, "smartSessionLearnings", "Learnings")), h("h2", null, text(copy, "smartSessionNoLearnings", "Useful next time. Grounded in this time."))), h("span", { className: "focus-proposed-badge" }, text(copy, "smartSessionUnavailable", "Unavailable"))), h("div", { className: "focus-empty-panel" }, h("div", { className: "focus-empty-icon", "aria-hidden": true }, "◇"), h("h3", null, text(copy, "smartSessionNoLearnings", "No saved learnings yet")), h("p", null, text(copy, "smartSessionUnavailable", "A knowledge producer and review lifecycle are not connected to this surface. Related-session history remains evidence, not curated knowledge."))));
 }
 
 function WorkspaceDetails({ copy, snapshot }: { copy?: AgentSessionCopy; snapshot?: SmartSessionSnapshot }) { return h("dl", { className: "focus-inspector-list" }, h("dt", null, text(copy, "smartSessionIdentity", "Identity")), h("dd", null, snapshot?.identity.sessionId ?? text(copy, "smartSessionUnknown", "Unknown")), h("dt", null, text(copy, "smartSessionThread", "Thread")), h("dd", null, snapshot?.identity.providerThreads[0]?.providerThreadId ?? text(copy, "smartSessionUnknown", "Unknown")), h("dt", null, text(copy, "smartSessionRevision", "Revision")), h("dd", null, snapshot?.revision.key ?? text(copy, "smartSessionUnknown", "Unknown"))); }

@@ -117,6 +117,10 @@ extension AgentSessionWebRendererCoordinator {
                 localized: "agentSession.web.smartSession.activity",
                 defaultValue: "Activity"
             ),
+            "smartSessionShowLoadedEvidence": String(
+                localized: "agentSession.web.smartSession.showLoadedEvidence",
+                defaultValue: "Show more recorded evidence"
+            ),
             "smartSessionLatestTurnPrompt": String(
                 localized: "agentSession.web.smartSession.latestTurnPrompt",
                 defaultValue: "Latest turn prompt"
