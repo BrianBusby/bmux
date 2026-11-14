@@ -59,11 +59,13 @@ import SwiftUI
         #expect(AgentSessionPlanStepStatus("incomplete") == .providerValue("incomplete"))
         #expect(AgentSessionPlanStepStatus("provider-specific") == .providerValue("provider-specific"))
         #expect(AgentSessionPlanStepStatus(" ") == .unknown)
+        #expect(AgentSessionPlanStepStatus(" unknown ") == .unknown)
+        #expect(AgentSessionPlanStepStatus(" UNKNOWN ") == .unknown)
     }
 
     @Test func planStatusLabelsAreLocalized() throws {
-        let expectations = ["en": ["Pending", "In progress", "Completed"], "ja": ["未着手", "進行中", "完了"]]
-        let statuses: [AgentSessionPlanStepStatus] = [.pending, .inProgress, .completed]
+        let expectations = ["en": ["Pending", "In progress", "Completed", "Unknown"], "ja": ["未着手", "進行中", "完了", "不明"]]
+        let statuses: [AgentSessionPlanStepStatus] = [.pending, .inProgress, .completed, AgentSessionPlanStepStatus("unknown")]
         for (language, values) in expectations {
             for (status, value) in zip(statuses, values) {
                 #expect(status.label(locale: Locale(identifier: language)) == value)

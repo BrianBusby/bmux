@@ -194,7 +194,7 @@ roadmap:
           - Trace ordinary Codex evidence to native display, capture representative replay fixtures, classify missing signals, measure observable latency, and correct confirmed defects.
           - Preserve plan history while exposing uncertainty consistently when later plan evidence is ambiguous, contradicted, or previously misreported.
           - Reconcile transcript cursor and observation health across concurrent monitors, crashes, source replacement, and replay without falsely reporting a healthy connection.
-      rationale: Draft PR #237 records ordinary Codex proposed-plan prose and exposes bounded evidence, stacked on #235. PR #230 merged the review-date guard correction; initiative branches still require updated hosted checks. Native dogfood, checklist validity, monitor recovery and the remaining baseline gate are open; see docs/planning/session-visibility.md.
+      rationale: Draft PR #237 records ordinary Codex proposed-plan prose and exposes bounded evidence, stacked on #235. PR #230 merged the review-date guard correction; initiative branches still require updated hosted checks. Native dogfood, checklist validity, monitor recovery and the remaining baseline gate are open; see docs/planning/session-visibility.md. A scoped #249 follow-up localizes unknown plan status and labels the completion count as agent-reported; native validation and plan validity remain open.
 
     - id: session_visibility_revision_integrity
       kind: slice
