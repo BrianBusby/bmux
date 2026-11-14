@@ -186,6 +186,16 @@ import Testing
         // The original connection remains alive; this is not process restart.
     }
 
+    @Test func mixedUnexaminedPayloadRemainsIncompleteWithReferences() {
+        let thread = ProvenanceCodingAgentThreadRecord(id: "thread", sessionID: "foreign", provider: "codex", providerThreadID: "provider-thread", source: .observed, confidence: .high, firstObservedAt: now, updatedAt: now)
+        let mixed = event("mixed", session: "A", payload: .init(codingAgentThread: thread, codingAgentPrompt: prompt("p", session: "A", turn: "T")))
+        let result = Experiment().examine([mixed])
+        #expect(result.outcome == .incomplete)
+        #expect(result.sourceEventIDs == ["mixed"])
+        #expect(result.claims.map(\.recordID) == ["p"])
+        #expect(!result.evidenceTruncated)
+    }
+
     @Test func incompleteCoverageNeverProducesCleanClaims() {
         let a = event("same", session: "A", payload: .init(codingAgentPrompt: prompt("p", session: "A", turn: "T")))
         let b = event("same", session: "B", payload: .init(codingAgentPrompt: prompt("p", session: "B", turn: "T")))
@@ -193,14 +203,17 @@ import Testing
         #expect(duplicate.outcome == .incomplete)
         #expect(duplicate.claims.map(\.sessionID) == ["A", "B"])
         #expect(duplicate.sourceEventIDs == ["same", "same"])
+        #expect(Experiment().examine([b, a]).claims == duplicate.claims)
         #expect(!duplicate.evidenceTruncated)
         #expect(Experiment().examine([a, a]).outcome == .incomplete)
         let truncated = Experiment().examine([a], maxEvents: 0)
         #expect(truncated.outcome == .incomplete)
         #expect(truncated.evidenceTruncated)
         #expect(Experiment().examine(Array(repeating: a, count: 65)).evidenceTruncated)
+        #expect(Experiment().examine(Array(repeating: a, count: 65), maxEvents: 1_000).evidenceTruncated)
         let oversized = event(String(repeating: "é", count: 129), session: "A", payload: .init(codingAgentPrompt: prompt("p", session: "A", turn: "T")))
         #expect(Experiment().examine([oversized]).evidenceTruncated)
+        #expect(Experiment().examine([oversized], maxIdentifierBytes: 1_000).evidenceTruncated)
         #expect(Experiment().examine([a], maxIdentifierBytes: 2).outcome == .incomplete)
         let future = Experiment().examine([event("future", session: "A", schema: 99, type: .codingAgentTurnObserved, payload: .init(codingAgentTurn: turn("T", session: "A")))])
         #expect(future.outcome == .incomplete)
