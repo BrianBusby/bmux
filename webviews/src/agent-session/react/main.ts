@@ -282,6 +282,7 @@ export function AgentSessionApp() {
   return h(
     SmartSessionSurface,
     {
+      key: state.context.stableWorkspaceId ?? state.context.workspaceId ?? "",
       context: state.context,
       initialView: "terminal",
       isActive: true,

@@ -147,7 +147,7 @@ extension WorkProvenanceRuntime {
         readiness: ProvenanceWorkspaceCodingAgentSessionReadiness
     ) -> AgentSessionSmartSessionReadResult {
         switch smartSessionResult {
-        case .available:
+        case .available, .stale:
             return smartSessionResult
         case .notFound(_, let reason):
             let pending = Self.readiness(
