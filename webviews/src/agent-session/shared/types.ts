@@ -233,6 +233,8 @@ export type AgentSessionCopy = {
   smartSessionNextEvidence?: string;
   smartSessionLastReportedStatus?: string;
   smartSessionEvidencePage?: string;
+  smartSessionEvidenceMayPredate?: string;
+  smartSessionUpdateEvidence?: string;
   smartSessionLatestTurnPrompt?: string;
   smartSessionRecordedEvidence?: string;
   smartSessionRecordedDescription?: string;

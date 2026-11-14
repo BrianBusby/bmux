@@ -85,7 +85,7 @@ function FocusView({ copy, state, onRefresh, expandedTurnID, onExpandTurn }: { c
   const history = sortSmartSessionTurnReferencesNewestFirst(snapshot.factual.priorTurns);
   const related = snapshot.crossSessionAwareness.status === "available" && (snapshot.crossSessionAwareness.relatedSessions.length > 0 || snapshot.crossSessionAwareness.collisions.length > 0);
   return h("div", { className: "focus-reading-column" },
-    current ? h(CurrentTurnCard, { key: current.turnId, copy, turn: current, snapshot }) : h(EmptyState, { message: text(copy, "smartSessionNoCurrentTurn", "Latest turn unavailable.") }),
+    current ? h(CurrentTurnCard, { key: JSON.stringify([snapshot.identity.sessionId, current.turnId]), copy, turn: current }) : h(EmptyState, { message: text(copy, "smartSessionNoCurrentTurn", "Latest turn unavailable.") }),
     related ? h(RelatedWorkStrip, { copy, snapshot }) : null,
     h(RelatedAwarenessNotice, { copy, awareness: snapshot.crossSessionAwareness }),
     h("section", { className: "focus-history-section" }, h("div", { className: "focus-section-heading" }, h("h2", null, text(copy, "smartSessionPriorTurns", "History")), h("span", { className: "focus-section-meta" }, `${history.length}`)), history.length ? h("div", { className: "focus-history-list" }, ...history.map(turn => h(PriorTurnCard, { key: turn.turnId, copy, turn, expanded: expandedTurnID === turn.turnId, onToggle: () => onExpandTurn(expandedTurnID === turn.turnId ? null : turn.turnId) }))) : h("p", { className: "focus-muted" }, text(copy, "smartSessionNoEvidence", "No completed turns yet."))),
@@ -93,31 +93,33 @@ function FocusView({ copy, state, onRefresh, expandedTurnID, onExpandTurn }: { c
   );
 }
 
-function CurrentTurnCard({ copy, turn, snapshot }: { copy?: AgentSessionCopy; turn: SmartSessionTurn; snapshot: SmartSessionSnapshot }) {
+function CurrentTurnCard({ copy, turn }: { copy?: AgentSessionCopy; turn: SmartSessionTurn }) {
   const [expanded, setExpanded] = useState(false);
-  const [pageState, setPageState] = useState({ snapshot, page: 0 });
+  const [pageState, setPageState] = useState<{ turn?: SmartSessionTurn; page: number }>({ page: 0 });
+  const evidenceTurn = pageState.turn ?? turn;
   const recordedEvidence = recordedEvidenceForTurn(turn);
   const fileEntries = (changes: SmartSessionTurn["fileChangeAttributions"]) => changes.flatMap(change => [change.paths.join(", "), change.summary?.trim() ? `${text(copy, "smartSessionRecordedDescription", "Recorded description (unverified)")}: ${change.summary}` : ""]);
   const commandEntries = (commands: SmartSessionTurn["completedCommands"]) => commands.map(command => `${command.command} · ${command.status}`);
-  const results = [...commandEntries(turn.completedCommands.slice(0, 3)), ...fileEntries(turn.fileChangeAttributions.slice(0, 2)), ...turn.assistantMessages.slice(-1).map(message => message.text)].filter(Boolean);
-  const commandCount = Math.max(0, turn.completedCommands.length - 3);
-  const fileCount = Math.max(0, turn.fileChangeAttributions.length - 2);
-  const messageCount = Math.max(0, turn.assistantMessages.length - 1);
+  const resultTurn = expanded ? evidenceTurn : turn;
+  const results = [...commandEntries(resultTurn.completedCommands.slice(0, 3)), ...fileEntries(resultTurn.fileChangeAttributions.slice(0, 2)), ...resultTurn.assistantMessages.slice(-1).map(message => message.text)].filter(Boolean);
+  const commandCount = Math.max(0, evidenceTurn.completedCommands.length - 3);
+  const fileCount = Math.max(0, evidenceTurn.fileChangeAttributions.length - 2);
+  const messageCount = Math.max(0, evidenceTurn.assistantMessages.length - 1);
   const remainingCount = commandCount + fileCount + messageCount;
   const pageSize = 10;
-  const activePage = Math.min(pageState.snapshot === snapshot ? pageState.page : 0, Math.max(0, Math.ceil(remainingCount / pageSize) - 1));
-  const pageCount = Math.ceil(remainingCount / pageSize);
+  const activePage = Math.min(pageState.page, Math.max(0, Math.ceil(remainingCount / pageSize) - 1));
+  const pageCount = Math.max(1, Math.ceil(remainingCount / pageSize));
   const pageRecords = expanded ? Array.from({ length: Math.min(pageSize, remainingCount - activePage * pageSize) }, (_, offset) => {
     const index = activePage * pageSize + offset;
-    if (index < commandCount) return commandEntries(turn.completedCommands.slice(index + 3, index + 4));
-    if (index < commandCount + fileCount) return fileEntries(turn.fileChangeAttributions.slice(index - commandCount + 2, index - commandCount + 3));
-    return [turn.assistantMessages[index - commandCount - fileCount]?.text ?? ""];
+    if (index < commandCount) return commandEntries(evidenceTurn.completedCommands.slice(index + 3, index + 4));
+    if (index < commandCount + fileCount) return fileEntries(evidenceTurn.fileChangeAttributions.slice(index - commandCount + 2, index - commandCount + 3));
+    return [evidenceTurn.assistantMessages[index - commandCount - fileCount]?.text ?? ""];
   }).flat().filter(Boolean) : [];
   return h("article", { className: "focus-current-card" },
     h("div", { className: "focus-card-kicker" }, text(copy, "smartSessionCurrentTurn", "Latest turn"), h("span", { className: `focus-turn-status focus-turn-${turn.status}` }, turn.status)),
     h("h2", null, turn.prompt?.text ?? text(copy, "smartSessionUnknown", "Unknown")),
     h("div", { className: "focus-current-grid" }, h(SummaryBlock, { label: text(copy, "smartSessionLatestTurnPrompt", "Latest turn prompt"), value: turn.prompt?.text ?? text(copy, "smartSessionUnknown", "Unknown") }), h(SummaryBlock, { label: text(copy, "smartSessionRecordedEvidence", "Recorded evidence"), value: recordedEvidence ?? text(copy, "smartSessionUnknown", "Unknown") })),
-    h("section", { className: "focus-results" }, h("h3", null, text(copy, "smartSessionFinalOutput", "Evidence")), results.length ? h("ul", null, ...results.map((result, index) => h("li", { key: `${turn.turnId}-${index}` }, result))) : h("p", { className: "focus-muted" }, text(copy, "smartSessionNoEvidence", "No evidence yet.")), remainingCount > 0 ? h("div", null, h("button", { type: "button", className: "focus-secondary-button focus-evidence-disclosure", "aria-expanded": expanded, onClick: () => setExpanded(!expanded) }, expanded ? text(copy, "smartSessionHideLoadedEvidence", "Hide additional evidence") : text(copy, "smartSessionShowLoadedEvidence", "Show more recorded evidence")), expanded ? h("div", { className: "focus-evidence-page" }, h("ul", null, ...pageRecords.map((result, index) => h("li", { key: `${turn.turnId}-page-${activePage}-${index}` }, result))), h("p", { role: "status", "aria-live": "polite" }, text(copy, "smartSessionEvidencePage", "Page {current} of {total}").replace("{current}", String(activePage + 1)).replace("{total}", String(pageCount))), h("button", { type: "button", className: "focus-secondary-button focus-evidence-previous", "aria-disabled": activePage === 0, onClick: () => { if (activePage > 0) setPageState({ snapshot, page: activePage - 1 }); } }, text(copy, "smartSessionPreviousEvidence", "Previous evidence")), h("button", { type: "button", className: "focus-secondary-button focus-evidence-next", "aria-disabled": activePage + 1 >= pageCount, onClick: () => { if (activePage + 1 < pageCount) setPageState({ snapshot, page: activePage + 1 }); } }, text(copy, "smartSessionNextEvidence", "Next evidence"))) : null) : null),
+    h("section", { className: "focus-results" }, h("h3", null, text(copy, "smartSessionFinalOutput", "Evidence")), results.length ? h("ul", null, ...results.map((result, index) => h("li", { key: `${turn.turnId}-${index}` }, result))) : h("p", { className: "focus-muted" }, text(copy, "smartSessionNoEvidence", "No evidence yet.")), (remainingCount > 0 || expanded) ? h("div", null, h("button", { type: "button", className: "focus-secondary-button focus-evidence-disclosure", "aria-expanded": expanded, onClick: () => { setPageState(expanded ? { page: 0 } : { turn, page: 0 }); setExpanded(!expanded); } }, expanded ? text(copy, "smartSessionHideLoadedEvidence", "Hide additional evidence") : text(copy, "smartSessionShowLoadedEvidence", "Show more recorded evidence")), expanded ? h("div", { className: "focus-evidence-page" }, h("p", null, text(copy, "smartSessionEvidenceMayPredate", "This evidence view may predate the latest refresh.")), h("button", { type: "button", className: "focus-secondary-button focus-evidence-update", onClick: () => setPageState({ turn, page: 0 }) }, text(copy, "smartSessionUpdateEvidence", "Update evidence view")), h("ul", null, ...pageRecords.map((result, index) => h("li", { key: `${turn.turnId}-page-${activePage}-${index}` }, result))), h("p", { role: "status", "aria-live": "polite" }, text(copy, "smartSessionEvidencePage", "Page {current} of {total}").replace("{current}", String(activePage + 1)).replace("{total}", String(pageCount))), h("button", { type: "button", className: "focus-secondary-button focus-evidence-previous", "aria-disabled": activePage === 0, onClick: () => { if (activePage > 0) setPageState({ turn: evidenceTurn, page: activePage - 1 }); } }, text(copy, "smartSessionPreviousEvidence", "Previous evidence")), h("button", { type: "button", className: "focus-secondary-button focus-evidence-next", "aria-disabled": activePage + 1 >= pageCount, onClick: () => { if (activePage + 1 < pageCount) setPageState({ turn: evidenceTurn, page: activePage + 1 }); } }, text(copy, "smartSessionNextEvidence", "Next evidence"))) : null) : null),
     h("div", { className: "focus-current-actions" }, h("span", { className: "focus-source-note" }, turn.provider)),
   );
 }

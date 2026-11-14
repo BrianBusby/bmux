@@ -11554,6 +11554,20 @@
         "ja": { "stringUnit": { "state": "translated", "value": "最後に報告された状態" } }
       }
     },
+    "agentSession.web.smartSession.evidenceMayPredate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "This evidence view may predate the latest refresh." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "この証拠の表示は、最新の更新より前のものかもしれません。" } }
+      }
+    },
+    "agentSession.web.smartSession.updateEvidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Update evidence view" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "証拠の表示を更新" } }
+      }
+    },
     "agentSession.web.smartSession.evidencePage": {
       "extractionState": "manual",
       "localizations": {

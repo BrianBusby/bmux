@@ -2037,6 +2037,7 @@ test("loaded evidence is selectable and available through a disclosure", async (
     expect(container.querySelector(".focus-evidence-page")?.textContent).not.toContain("message-10");
     expect(container.querySelector(".focus-evidence-page [role=status]")?.textContent).toBe("Page 20 of 21");
     expect(container.querySelector(".focus-evidence-page")?.textContent).toContain("This evidence view may predate the latest refresh.");
+    const frozenPage = container.querySelector(".focus-evidence-page ul")?.textContent;
     fixture.snapshot = structuredClone(snapshot);
     await act(async () => root.render(createElement(SmartSessionSurface, { context, isActive: false })));
     await act(async () => root.render(createElement(SmartSessionSurface, { context, isActive: true })));
@@ -2045,6 +2046,8 @@ test("loaded evidence is selectable and available through a disclosure", async (
     await act(async () => root.render(createElement(SmartSessionSurface, { context, isActive: false })));
     await act(async () => root.render(createElement(SmartSessionSurface, { context, isActive: true })));
     expect(container.querySelector(".focus-evidence-page [role=status]")?.textContent).toBe("Page 20 of 21");
+    expect(container.querySelector(".focus-evidence-page ul")?.textContent).toBe(frozenPage);
+    expect(container.querySelector(".focus-results > ul")?.textContent).toContain("command-0");
     const update = container.querySelector<HTMLButtonElement>(".focus-evidence-update");
     expect(update?.textContent).toBe("Update evidence view");
     update?.focus();
@@ -2052,8 +2055,16 @@ test("loaded evidence is selectable and available through a disclosure", async (
     expect(dom.window.document.activeElement).toBe(update);
     expect(container.querySelector(".focus-evidence-page [role=status]")?.textContent).toBe("Page 1 of 21");
     expect(container.querySelector(".focus-evidence-page")?.textContent).toContain("command-96");
-    await act(async () => disclosure?.click());
-    expect(disclosure?.getAttribute("aria-expanded")).toBe("false");
+    expect(container.querySelector(".focus-results > ul")?.textContent).toContain("command-99");
+    fixture.snapshot = { ...snapshot, identity: { ...snapshot.identity, sessionId: "session-2" } };
+    await act(async () => root.render(createElement(SmartSessionSurface, { context, isActive: false })));
+    await act(async () => root.render(createElement(SmartSessionSurface, { context, isActive: true })));
+    const nextSessionDisclosure = container.querySelector<HTMLButtonElement>(".focus-evidence-disclosure");
+    expect(nextSessionDisclosure?.getAttribute("aria-expanded")).toBe("false");
+    expect(container.querySelectorAll(".focus-evidence-page li").length).toBe(0);
+    await act(async () => nextSessionDisclosure?.click());
+    await act(async () => nextSessionDisclosure?.click());
+    expect(nextSessionDisclosure?.getAttribute("aria-expanded")).toBe("false");
     expect(container.querySelectorAll(".focus-evidence-page li").length).toBe(0);
     const learnings = [...container.querySelectorAll<HTMLButtonElement>("[role=tab]")].find(button => button.textContent === "Learnings");
     await act(async () => learnings?.click());
