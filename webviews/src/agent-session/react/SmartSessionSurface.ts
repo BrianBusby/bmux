@@ -88,9 +88,7 @@ function FocusView({ copy, state, onRefresh, expandedTurnID, onExpandTurn, onIns
   return h("div", { className: "focus-reading-column" },
     current ? h(CurrentTurnCard, { copy, turn: current, purpose, activity, onInspect }) : h(EmptyState, { message: text(copy, "smartSessionNoCurrentTurn", "No current turn. The latest supported outcome appears below.") }),
     related ? h(RelatedWorkStrip, { copy, snapshot, onInspect }) : null,
-    h("p", { className: "focus-coverage-note" }, snapshot.crossSessionAwareness.status === "available"
-      ? text(copy, "smartSessionRelatedUncertain", "Related work was last observed separately; its current state is unknown.")
-      : text(copy, "smartSessionRelatedUnavailable", "Related work is unavailable.")),
+    h(RelatedAwarenessNotice, { copy, awareness: snapshot.crossSessionAwareness }),
     h("section", { className: "focus-history-section" }, h("div", { className: "focus-section-heading" }, h("h2", null, text(copy, "smartSessionPriorTurns", "History")), h("span", { className: "focus-section-meta" }, `${history.length}`)), history.length ? h("div", { className: "focus-history-list" }, ...history.map(turn => h(PriorTurnCard, { key: turn.turnId, copy, turn, expanded: expandedTurnID === turn.turnId, onToggle: () => onExpandTurn(expandedTurnID === turn.turnId ? null : turn.turnId), onInspect }))) : h("p", { className: "focus-muted" }, text(copy, "smartSessionNoEvidence", "No completed turns yet."))),
     snapshot.factual.turnCount > history.length + (current ? 1 : 0) ? h("p", { className: "focus-coverage-note" }, text(copy, "smartSessionUnavailable", "History is partial; only same-identity records are shown.")) : null,
   );
@@ -114,6 +112,16 @@ function PriorTurnCard({ copy, turn, expanded, onToggle, onInspect }: { copy?: A
 
 function DetailList({ copy, turnID, onInspect }: { copy?: AgentSessionCopy; turnID: string; onInspect: (value: string | null) => void }) {
   return h("div", { className: "focus-detail-grid" }, h("div", null, h("h3", null, text(copy, "smartSessionChanged", "Changed")), h("p", null, text(copy, "smartSessionFiles", "Source-linked files are available when captured."))), h("div", null, h("h3", null, text(copy, "smartSessionChecked", "Checked")), h("p", null, text(copy, "smartSessionValidations", "Validation records remain scoped to this turn."))), h("div", null, h("h3", null, text(copy, "smartSessionRemains", "Remains")), h("p", null, text(copy, "smartSessionResume", "Resume point is unavailable unless captured by the producer."))), h("button", { type: "button", className: "focus-inspector-link", onClick: () => onInspect(`turn:${turnID}`) }, text(copy, "smartSessionEvidence", "Inspect evidence")));
+}
+
+export function RelatedAwarenessNotice({ copy, awareness }: { copy?: AgentSessionCopy; awareness: SmartSessionSnapshot["crossSessionAwareness"] }) {
+  const partial = awareness.relatedReadStatus !== "available" || awareness.collisionReadStatus !== "available";
+  const message = awareness.status === "unavailable"
+    ? text(copy, "smartSessionRelatedUnavailable", "Related work is unavailable.")
+    : partial
+      ? text(copy, "smartSessionRelatedPartial", "Some related-work sources are unavailable or unknown. Current state is unknown.")
+      : text(copy, "smartSessionRelatedUncertain", "Related work was observed separately and may be incomplete; its current state is unknown.");
+  return h("p", { className: "focus-coverage-note" }, message);
 }
 
 function RelatedWorkStrip({ copy, snapshot, onInspect }: { copy?: AgentSessionCopy; snapshot: SmartSessionSnapshot; onInspect: (value: string | null) => void }) {

@@ -38,6 +38,8 @@ source = source.replace('''        let index = workModelRequests.count
 source = source.replace('private static func model(sessionID: String, revision: Int) -> ProvenanceSessionWorkModel {', 'private static func model(sessionID: String, revision: Int, semanticIDs: [String] = []) -> ProvenanceSessionWorkModel {')
 source = source.replace('semanticInferenceIDs: [],\n                latestSemanticInferenceCreatedAt: nil', 'semanticInferenceIDs: semanticIDs,\n                latestSemanticInferenceCreatedAt: nil', 1)
 source = source.replace('    func health() async throws -> ProvenanceEngineHealth {', '''    private var relatedAvailable = false
+    private var relatedWrongTarget = false
+    func setRelatedWrongTarget(_ value: Bool) { relatedWrongTarget = value }
     func setRelatedAvailable(_ value: Bool) { relatedAvailable = value }
     func relatedSessions(_ request: ProvenanceRelatedSessionRequest) async throws -> ProvenanceRelatedSessionResponse {
         guard relatedAvailable else { throw SmartSessionStoreTestError.unimplemented }
@@ -45,6 +47,16 @@ source = source.replace('    func health() async throws -> ProvenanceEngineHealt
         let metadata = ProvenanceRelatedSessionProjectionMetadata(revisionID: "r", projectionRuleID: "rule", projectionRuleVersion: "1", requestFingerprint: "q", contentFingerprint: "c", resultLimit: 5, exclusionLimit: 5, updatedAfter: nil, sourceEvidenceWatermark: nil, generatedAt: nil)
         let completeness = ProvenanceRelatedSessionCompleteness(status: "partial", evaluatedThroughSequence: nil, fields: [], notes: [])
         let projection = ProvenanceRelatedSessionProjection(targetSessionID: session.id, targetSession: session, targetSessionOutcomeProjection: nil, targetSessionWorkModelRevision: nil, projection: metadata, relatedSessions: [], excludedCandidates: [], completeness: completeness)
+        return .init(found: true, targetSessionID: relatedWrongTarget ? "foreign" : session.id, projection: projection)
+    }
+    private var collisionAvailable = false
+    func setCollisionAvailable(_ value: Bool) { collisionAvailable = value }
+    func artifactCollisions(_ request: ProvenanceArtifactCollisionRequest) async throws -> ProvenanceArtifactCollisionResponse {
+        guard collisionAvailable else { throw SmartSessionStoreTestError.unimplemented }
+        let session = models[0].identity.session
+        let metadata = ProvenanceArtifactCollisionProjectionMetadata(revisionID: "r", projectionRuleID: "rule", projectionRuleVersion: "1", requestFingerprint: "q", contentFingerprint: "c", resultLimit: 5, relatedSessionLimit: 20, exclusionLimit: 5, artifactPath: nil, normalizedArtifactPath: nil, updatedAfter: nil, staleBefore: nil, sourceEvidenceWatermark: nil, generatedAt: nil)
+        let completeness = ProvenanceArtifactCollisionCompleteness(status: "partial", evaluatedThroughSequence: nil, fields: [], notes: [])
+        let projection = ProvenanceArtifactCollisionProjection(targetSessionID: session.id, targetSession: session, targetSessionOutcomeProjection: nil, relatedSessionProjection: nil, projection: metadata, candidates: [], excludedCandidates: [], completeness: completeness)
         return .init(found: true, targetSessionID: session.id, projection: projection)
     }
     func health() async throws -> ProvenanceEngineHealth {''')
@@ -127,7 +139,28 @@ extension AgentSessionSmartSessionStoreTests {
         #expect(refreshed.crossSessionAwareness.status == "available")
         #expect(refreshed.crossSessionAwareness.bridgePayload["relatedReadStatus"] as? String == "available")
         #expect(refreshed.crossSessionAwareness.bridgePayload["collisionReadStatus"] as? String == "unavailable")
+        await client.setCollisionAvailable(true)
+        guard case .available(let both) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Both sources should be available")
+            return
+        }
+        #expect(both.crossSessionAwareness.bridgePayload["relatedReadStatus"] as? String == "available")
+        #expect(both.crossSessionAwareness.bridgePayload["collisionReadStatus"] as? String == "available")
+        await client.setRelatedWrongTarget(true)
+        guard case .available(let wrongTarget) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Wrong-target related response must not affect primary facts")
+            return
+        }
+        #expect(wrongTarget.crossSessionAwareness.bridgePayload["relatedReadStatus"] as? String == "unavailable")
+        #expect(wrongTarget.crossSessionAwareness.bridgePayload["collisionReadStatus"] as? String == "available")
         await client.setRelatedAvailable(false)
+        guard case .available(let collisionOnly) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Collision source should be available")
+            return
+        }
+        #expect(collisionOnly.crossSessionAwareness.bridgePayload["relatedReadStatus"] as? String == "unavailable")
+        #expect(collisionOnly.crossSessionAwareness.bridgePayload["collisionReadStatus"] as? String == "available")
+        await client.setCollisionAvailable(false)
         guard case .available(let unavailable) = await store.refreshedSnapshot(sessionID: "session-1") else {
             Issue.record("Independent awareness failure froze primary snapshot")
             return

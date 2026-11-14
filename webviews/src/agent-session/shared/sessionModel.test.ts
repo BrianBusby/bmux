@@ -1,6 +1,6 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { SmartSessionFreshnessBanner } from "../react/SmartSessionSurface";
+import { RelatedAwarenessNotice, SmartSessionFreshnessBanner } from "../react/SmartSessionSurface";
 import { expect, test } from "bun:test";
 import { makeClientId } from "./ids";
 import {
@@ -1712,4 +1712,20 @@ test("ambiguous primary facts retain separately observed awareness", () => {
   expect(result.status).toBe("failed");
   expect(result.snapshot?.revision).toEqual(first.revision);
   expect(result.snapshot?.crossSessionAwareness.status).toBe("unavailable");
+});
+
+
+test("related work reports each source's read availability", () => {
+  const awareness = smartSessionSnapshot({ factualRevision: 4 }).crossSessionAwareness;
+  const variants: Array<[SmartSessionSnapshot["crossSessionAwareness"], string]> = [
+    [{ ...awareness, status: "unavailable", relatedReadStatus: "unavailable", collisionReadStatus: "unavailable" }, "Related work is unavailable."],
+    [{ ...awareness, relatedReadStatus: "available", collisionReadStatus: "unavailable" }, "Some related-work sources are unavailable or unknown."],
+    [{ ...awareness, relatedReadStatus: "unavailable", collisionReadStatus: "available" }, "Some related-work sources are unavailable or unknown."],
+    [{ ...awareness, relatedReadStatus: "available", collisionReadStatus: "available" }, "may be incomplete"],
+    [awareness, "Some related-work sources are unavailable or unknown."],
+  ];
+  for (const [value, expected] of variants) {
+    const markup = renderToStaticMarkup(createElement(RelatedAwarenessNotice, { awareness: value }));
+    expect(markup).toContain(expected);
+  }
 });

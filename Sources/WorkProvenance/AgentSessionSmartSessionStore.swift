@@ -127,9 +127,13 @@ final class AgentSessionSmartSessionStore {
 
     private func relatedSessions(sessionID: String) async -> ProvenanceRelatedSessionResponse? {
         do {
-            return try await client.relatedSessions(ProvenanceRelatedSessionRequest(
+            let response = try await client.relatedSessions(ProvenanceRelatedSessionRequest(
                 targetSessionID: sessionID, limit: 5, exclusionLimit: 5
             ))
+            guard response.found, response.targetSessionID == sessionID,
+                  let projection = response.projection, projection.targetSessionID == sessionID,
+                  projection.targetSession.id == sessionID else { throw ReadError.inconsistentResponse }
+            return response
         } catch {
             StartupBreadcrumbLog.append("workProvenance.agentSessionSmartSession.relatedSessionsSkipped", fields: [
                 "session": sessionID, "error": String(describing: error)
@@ -140,9 +144,13 @@ final class AgentSessionSmartSessionStore {
 
     private func artifactCollisions(sessionID: String) async -> ProvenanceArtifactCollisionResponse? {
         do {
-            return try await client.artifactCollisions(ProvenanceArtifactCollisionRequest(
+            let response = try await client.artifactCollisions(ProvenanceArtifactCollisionRequest(
                 targetSessionID: sessionID, limit: 5, relatedSessionLimit: 20, exclusionLimit: 5
             ))
+            guard response.found, response.targetSessionID == sessionID,
+                  let projection = response.projection, projection.targetSessionID == sessionID,
+                  projection.targetSession.id == sessionID else { throw ReadError.inconsistentResponse }
+            return response
         } catch {
             StartupBreadcrumbLog.append("workProvenance.agentSessionSmartSession.artifactCollisionsSkipped", fields: [
                 "session": sessionID, "error": String(describing: error)
