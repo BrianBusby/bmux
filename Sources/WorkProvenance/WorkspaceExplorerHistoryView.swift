@@ -267,6 +267,7 @@ enum WorkspaceExplorerSessionStatus {
         switch status {
         case "active": String(localized: "explorer.sessionStatus.active", defaultValue: "Active")
         case "completed": String(localized: "explorer.sessionStatus.completed", defaultValue: "Ended")
+        case "ended": String(localized: "explorer.sessionStatus.ended", defaultValue: "Ended")
         case "started": String(localized: "explorer.sessionStatus.started", defaultValue: "Started")
         case "running": String(localized: "explorer.sessionStatus.running", defaultValue: "Running")
         case "stopped": String(localized: "explorer.sessionStatus.stopped", defaultValue: "Stopped")
@@ -276,7 +277,13 @@ enum WorkspaceExplorerSessionStatus {
         case "interrupted": String(localized: "explorer.sessionStatus.interrupted", defaultValue: "Interrupted")
         case "incomplete": String(localized: "explorer.sessionStatus.incomplete", defaultValue: "Incomplete")
         case "unknown": String(localized: "explorer.sessionStatus.unknown", defaultValue: "Unknown")
-        default: status
+        default:
+            if status.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                String(localized: "explorer.sessionStatus.unknown", defaultValue: "Unknown")
+            } else {
+                String(format: String(localized: "explorer.sessionStatus.unrecognized", defaultValue: "Unknown (%@)"),
+                    status)
+            }
         }
     }
 
