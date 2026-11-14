@@ -55,7 +55,9 @@ struct AgentSessionFactualProjectionStoreTests {
         let store = AgentSessionFactualProjectionStore(client: client)
 
         #expect(await store.refreshedSnapshot(sessionID: "session-1") == .available(snapshot))
-        #expect(await store.refreshedSnapshot(sessionID: "session-1") == .available(snapshot))
+        let afterFailure = await store.refreshedSnapshot(sessionID: "session-1")
+        #expect(afterFailure != .available(snapshot))
+        #expect(store.snapshot(sessionID: "session-1") == afterFailure)
         #expect(await client.factualProjectionRequests().count == 2)
     }
 
