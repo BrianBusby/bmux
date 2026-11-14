@@ -1685,3 +1685,16 @@ test("smart session treats differing semantic counts as unordered", () => {
     expect(result.snapshot).toEqual(first);
   }
 });
+
+
+test("independent awareness updates do not freeze an unchanged primary snapshot", () => {
+  const sample = smartSessionSnapshot({ factualRevision: 4 });
+  const first: SmartSessionSnapshot = { ...sample, crossSessionAwareness: { ...sample.crossSessionAwareness, status: "unavailable" } };
+  const next: SmartSessionSnapshot = { ...first, crossSessionAwareness: { ...first.crossSessionAwareness, status: "available" } };
+  const initial = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: first } });
+  const result = reduceSmartSession(initial, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "available", snapshot: next } });
+  expect(result.status).toBe("available");
+  expect(result.snapshot?.crossSessionAwareness.status).toBe("available");
+});

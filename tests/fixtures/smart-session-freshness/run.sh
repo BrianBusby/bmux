@@ -37,6 +37,17 @@ source = source.replace('''        let index = workModelRequests.count
         if let responseOverride { return responseOverride }''')
 source = source.replace('private static func model(sessionID: String, revision: Int) -> ProvenanceSessionWorkModel {', 'private static func model(sessionID: String, revision: Int, semanticIDs: [String] = []) -> ProvenanceSessionWorkModel {')
 source = source.replace('semanticInferenceIDs: [],\n                latestSemanticInferenceCreatedAt: nil', 'semanticInferenceIDs: semanticIDs,\n                latestSemanticInferenceCreatedAt: nil', 1)
+source = source.replace('    func health() async throws -> ProvenanceEngineHealth {', '''    private var relatedAvailable = false
+    func setRelatedAvailable(_ value: Bool) { relatedAvailable = value }
+    func relatedSessions(_ request: ProvenanceRelatedSessionRequest) async throws -> ProvenanceRelatedSessionResponse {
+        guard relatedAvailable else { throw SmartSessionStoreTestError.unimplemented }
+        let session = models[0].identity.session
+        let metadata = ProvenanceRelatedSessionProjectionMetadata(revisionID: "r", projectionRuleID: "rule", projectionRuleVersion: "1", requestFingerprint: "q", contentFingerprint: "c", resultLimit: 5, exclusionLimit: 5, updatedAfter: nil, sourceEvidenceWatermark: nil, generatedAt: nil)
+        let completeness = ProvenanceRelatedSessionCompleteness(status: "partial", evaluatedThroughSequence: nil, fields: [], notes: [])
+        let projection = ProvenanceRelatedSessionProjection(targetSessionID: session.id, targetSession: session, targetSessionOutcomeProjection: nil, targetSessionWorkModelRevision: nil, projection: metadata, relatedSessions: [], excludedCandidates: [], completeness: completeness)
+        return .init(found: true, targetSessionID: session.id, projection: projection)
+    }
+    func health() async throws -> ProvenanceEngineHealth {''')
 source += '''
 extension AgentSessionSmartSessionStoreTests {
     @Test func failedReadMustNotReportAvailable() async {
@@ -96,6 +107,28 @@ extension AgentSessionSmartSessionStoreTests {
         await client.setResponse(.init(found: false, reason: "missing", sessionID: "session-1", model: nil))
         #expect(await store.refreshedSnapshot(sessionID: "session-1") == .notFound(sessionID: "session-1", reason: "missing"))
         #expect(store.snapshot(sessionID: "session-1") == .notFound(sessionID: "session-1", reason: nil))
+    }
+
+    @Test func awarenessRefreshDoesNotFreezeAnUnchangedPrimarySnapshot() async {
+        let client = SmartSessionStoreTestClient(model: Self.model(sessionID: "session-1", revision: 42))
+        let store = AgentSessionSmartSessionStore(client: client)
+        guard case .available(let initial) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Initial read unavailable")
+            return
+        }
+        #expect(initial.crossSessionAwareness.status == "unavailable")
+        await client.setRelatedAvailable(true)
+        guard case .available(let refreshed) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Independent awareness changed without a primary revision")
+            return
+        }
+        #expect(refreshed.crossSessionAwareness.status == "available")
+        await client.setRelatedAvailable(false)
+        guard case .available(let unavailable) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Independent awareness failure froze primary snapshot")
+            return
+        }
+        #expect(unavailable.crossSessionAwareness.status == "unavailable")
     }
 
     @Test func semanticCountsDoNotEstablishRevisionOrder() {
