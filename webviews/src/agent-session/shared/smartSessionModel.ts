@@ -92,7 +92,7 @@ export function reduceSmartSession(state: SmartSessionState, action: SmartSessio
           sessionId: action.result.sessionId,
           diagnostics: action.result.diagnostics,
           snapshot: failed ? (keepPrior ? state.snapshot : suppliedMatches ? action.result.snapshot : undefined) : undefined,
-          lastSuccessfulReadAt: failed && !keepPrior ? action.result.lastSuccessfulReadAt : undefined,
+          lastSuccessfulReadAt: failed ? (keepPrior ? state.lastSuccessfulReadAt : action.result.lastSuccessfulReadAt) : undefined,
         };
       }
 

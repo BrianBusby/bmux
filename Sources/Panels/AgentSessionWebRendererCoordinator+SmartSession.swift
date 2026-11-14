@@ -31,7 +31,7 @@ extension AgentSessionWebRendererCoordinator {
                 defaultValue: "Session"
             ),
             "smartSessionStale": String(localized: "agentSession.web.smartSession.stale", defaultValue: "Could not refresh. Showing last known session data."),
-            "smartSessionLastRead": String(localized: "agentSession.web.smartSession.lastRead", defaultValue: "Last successful read"),
+            "smartSessionLastRead": String(localized: "agentSession.web.smartSession.lastRead", defaultValue: "Session data last read"),
             "smartSessionRefresh": String(
                 localized: "agentSession.web.smartSession.refresh",
                 defaultValue: "Refresh"

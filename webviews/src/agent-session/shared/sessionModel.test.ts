@@ -1603,7 +1603,7 @@ test("smart session visibly labels retained facts after failure", () => {
   const markup = renderToStaticMarkup(createElement(SmartSessionFreshnessBanner, { state, onRefresh: () => {} }));
   expect(markup).toContain('role="status"');
   expect(markup).toContain("Could not refresh. Showing last known session data.");
-  expect(markup).toContain("Last successful read");
+  expect(markup).toContain("Session data last read");
   expect(markup).toContain("Refresh");
 });
 
@@ -1635,4 +1635,13 @@ test("smart session retains the last read time when a later failure keeps the sa
   expect(later.snapshot).toEqual(snapshot);
   expect(later.status).toBe("projectionFailed");
   expect(later.lastSuccessfulReadAt).toBe("2026-08-17T07:05:00Z");
+});
+
+test("smart session clears read time when a failure names a different session", () => {
+  const first = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "failed", snapshot: smartSessionSnapshot({ factualRevision: 4 }), lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
+  const next = reduceSmartSession(first, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "projectionFailed", sessionId: "different-session" } });
+  expect(next.snapshot).toBeUndefined();
+  expect(next.lastSuccessfulReadAt).toBeUndefined();
 });

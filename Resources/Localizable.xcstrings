@@ -11224,7 +11224,7 @@
       }
     },
     "agentSession.web.smartSession.stale": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Could not refresh. Showing last known session data."}}, "ja": {"stringUnit": {"state": "translated", "value": "更新できませんでした。最後に確認できたセッションデータを表示しています。"}}}},
-    "agentSession.web.smartSession.lastRead": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Last successful read"}}, "ja": {"stringUnit": {"state": "translated", "value": "最後に読み込めた日時"}}}},
+    "agentSession.web.smartSession.lastRead": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Session data last read"}}, "ja": {"stringUnit": {"state": "translated", "value": "セッションデータの最終読み込み日時"}}}},
     "agentSession.web.smartSession.loading": {
       "extractionState": "manual",
       "localizations": {

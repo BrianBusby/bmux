@@ -47,7 +47,7 @@ export function SmartSessionFreshnessBanner({ copy, state, onRefresh }: { copy?:
   if (!state.snapshot || state.status === "available") return null;
   return h("div", { role: "status", className: "focus-coverage-note" },
     state.status === "loading" ? text(copy, "smartSessionLoading", "Loading session") : text(copy, "smartSessionStale", "Could not refresh. Showing last known session data."),
-    state.lastSuccessfulReadAt && Number.isFinite(Date.parse(state.lastSuccessfulReadAt)) ? ` ${text(copy, "smartSessionLastRead", "Last successful read")}: ${new Date(state.lastSuccessfulReadAt).toLocaleString()}` : null,
+    state.lastSuccessfulReadAt && Number.isFinite(Date.parse(state.lastSuccessfulReadAt)) ? ` ${text(copy, "smartSessionLastRead", "Session data last read")}: ${new Date(state.lastSuccessfulReadAt).toLocaleString()}` : null,
     state.status !== "loading" ? h("button", { type: "button", onClick: onRefresh }, text(copy, "smartSessionRefresh", "Refresh")) : null,
   );
 }
