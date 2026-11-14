@@ -1,0 +1,9 @@
+# Disabled Codex transcript snapshot experiment
+
+This internal experiment is not wired into a monitor, Stop hook, projection, or UI. It does not repair cross-session publication or change project acceptance status. It avoids retaining transcript content beyond the caller's in-memory snapshot; it creates no persistent evidence.
+
+Before choosing a bound, five local warm Python reads plus JSON parsing of synthetic approximately 250-byte JSONL records measured medians of 4.38 ms at 0.5 MiB, 40.81 ms at 4 MiB, 163.22 ms at 16 MiB, and 931.06 ms at 64 MiB. Corresponding ranges were 3.91–4.89, 35.58–62.57, 138.17–205.22, and 662.45–1145.35 ms. These single-process cached results are not Swift, live-session, UI, p95, or concurrent performance measurements.
+
+The experiment caps an entire source at 4 MiB. A longer session is unknown, not an empty or healthy result. This excludes potentially common long sessions; actual provider-session size distribution and incremental continuity design are not established. Do not enable this as a replacement monitor without addressing that coverage and measuring its runtime costs.
+
+The capture uses one open descriptor for metadata and event bytes and checks identity and change information before and after reading, with a path identity recheck. Unknown includes absent or contradictory session metadata, malformed or partial records, bounded-read failure, source mutation, replacement, and oversized input. These checks cannot guarantee an atomic filesystem snapshot, detect every same-inode ABA rewrite, or prevent mutation after the final check. Provider-session metadata does not establish workspace or panel ownership; generations, restart continuity, ordered applied-result acknowledgments, attention reconciliation, old writers, and observation health remain open.
