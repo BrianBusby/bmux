@@ -1484,6 +1484,7 @@ private let bmuxAuxiliaryWindowIdentifiers: Set<String> = [
     "bmux.browserProfilePopoverDebug",
     "bmux.configEditor",
     "bmux.defaultTerminalRegistrationError",
+    "bmux.factualStalePreview",
     "bmux.feedButtonStyleDebug",
     "bmux.feedPreview",
     "bmux.feedTextEditorDebug",
