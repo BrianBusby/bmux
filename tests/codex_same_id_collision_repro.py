@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Private, opt-in synthetic characterization; not a provider-behavior claim.
 
-Expected-red collision requires fail-closed behavior because today's public
-contract cannot express a durably retained, explicitly unresolved conflict.
-A future equivalent contract may safely permit cursor advancement. The tests
-require an explicitly selected hash-checked CLI; binary/source is not attested.
+This baseline characterization asserts observed behavior, not desired behavior
+or a future safe-conflict contract. The monitor does not expose its attempted
+event ID or a conflict disposition; source attribution remains indirect. The
+tests require a selected hash-checked CLI; binary/source is not attested.
 """
 import hashlib
 import json
@@ -112,9 +112,10 @@ class SyntheticSourceCollision(unittest.TestCase):
                     with sqlite3.connect(database) as db:
                         first = db.execute("SELECT id, command_text FROM provenance_coding_agent_commands WHERE session_id=?", (SESSION,)).fetchall()
                         self.assertEqual(len(first), 1)
-                        self.assertIn("fixture-first", first[0][1])
+                        self.assertEqual(first[0][1], "echo fixture-first")
                         event_rows = db.execute("SELECT id, payload_json FROM provenance_events WHERE payload_json LIKE '%fixture-first%'").fetchall()
                         self.assertEqual(len(event_rows), 1)
+                        self.assertEqual(json.loads(event_rows[0][1])["codingAgentCommand"]["command"], "echo fixture-first")
                     if mode == "replay":
                         stop(process)
                         for path in cursors.glob("*.json"):
@@ -134,6 +135,8 @@ class SyntheticSourceCollision(unittest.TestCase):
                     with sqlite3.connect(database) as db:
                         commands = db.execute("SELECT id, command_text FROM provenance_coding_agent_commands WHERE session_id=? ORDER BY id", (SESSION,)).fetchall()
                         events = db.execute("SELECT id, payload_json FROM provenance_events WHERE payload_json LIKE '%fixture-first%' OR payload_json LIKE '%fixture-second%'").fetchall()
+                    self.assertIn(event_rows[0], events)
+                    self.assertIn(first[0], commands)
                     self.assertEqual(sum("fixture-first" in payload for _, payload in events), 1)
                     if mode == "replay":
                         self.assertEqual(len(commands), 1)
@@ -142,16 +145,16 @@ class SyntheticSourceCollision(unittest.TestCase):
                         self.assertEqual(len(commands), 2)
                         self.assertEqual(len(events), 2)
                         self.assertEqual(len({event_id for event_id, _ in events}), 2)
-                        self.assertTrue(any("fixture-second" in value for _, value in commands))
+                        self.assertEqual({value for _, value in commands}, {"echo fixture-first", "echo fixture-second"})
+                        self.assertEqual({json.loads(payload)["codingAgentCommand"]["command"] for _, payload in events}, {"echo fixture-first", "echo fixture-second"})
                     else:
-                        second_present = any("fixture-second" in payload for _, payload in events)
-                        print(f"synthetic collision cursor={offset}->{cursor(cursors)} "
-                              f"second_event_present={int(second_present)} append_failures={append_failures(cursors)}")
-                        # Proposed fail-closed fallback, not a demand that an
-                        # explicit durable unresolved-conflict result stall.
-                        self.assertEqual(cursor(cursors), offset,
-                            "different source observation advanced without a visible conflict")
-                        self.assertGreater(append_failures(cursors), failures)
+                        self.assertEqual(commands, first)
+                        self.assertEqual(events, event_rows)
+                        self.assertEqual(cursor(cursors), offset + len(later.encode()))
+                        self.assertEqual(append_failures(cursors), failures)
+                        self.assertFalse(any("fixture-second" in payload for _, payload in events))
+                        print(f"baseline synthetic collision cursor={offset}->{cursor(cursors)} "
+                              "first_event_and_projection_unchanged=1 second_event_absent=1 append_failures_unchanged=1")
                 finally:
                     stop(process)
 
@@ -164,7 +167,7 @@ class SyntheticSourceCollision(unittest.TestCase):
     def test_distinct_item_control(self):
         self.run_case("distinct-item")
 
-    def test_proposed_collision_must_not_be_clean_duplicate(self):
+    def test_baseline_collision_characterization(self):
         self.run_case("collision")
 
 
