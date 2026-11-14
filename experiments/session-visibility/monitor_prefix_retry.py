@@ -162,6 +162,8 @@ def main():
             stopped.set()
             server.close()
             thread.join(timeout=2)
+            if hashlib.sha256(cli.read_bytes()).hexdigest() != digest:
+                raise RuntimeError("CLI SHA-256 changed during probe")
 
 
 if __name__ == "__main__":
