@@ -1975,3 +1975,51 @@ test.each(["active", "completed", "missing", "file-only", "provider-description"
     dom.window.close();
   }
 });
+
+test("loaded evidence is selectable and available through a disclosure", async () => {
+  const dom = new JSDOM("<!doctype html><div id='root'></div>", { url: "https://example.test" });
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  Object.assign(globalThis, { window: dom.window, document: dom.window.document, IS_REACT_ACT_ENVIRONMENT: true });
+  const original = smartSessionSnapshot({ factualRevision: 1 });
+  const turn = original.factual.latestTurn;
+  if (!turn) throw new Error("Expected turn");
+  const commands = Array.from({ length: 4 }, (_, i) => ({ commandId: `cmd-${i}`, command: `command-${i}`, status: "completed", completedAt: "2026-08-17T07:01:00Z", source: "observed", confidence: "high" }));
+  const files = Array.from({ length: 3 }, (_, i) => ({ attributionId: `file-${i}`, paths: [`file-${i}`], summary: `patch-${i}`, observedAt: "2026-08-17T07:02:00Z", source: "observed", confidence: "high" }));
+  const snapshot: SmartSessionSnapshot = { ...original, factual: { ...original.factual, latestTurn: { ...turn, completedCommands: commands, fileChangeAttributions: files } }, crossSessionAwareness: { ...original.crossSessionAwareness, relatedSessions: [{ sessionId: "related", lifecycleState: "unknown", completionState: "unknown", freshnessState: "unknown", relationshipReasons: ["Shared file"] }] } };
+  Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: { postMessage: async () => ({ ok: true, value: { schemaVersion: 1, status: "available", snapshot } }) } } } });
+  const container = dom.window.document.getElementById("root");
+  if (!container) throw new Error("Missing root");
+  const root = createRoot(container);
+  try {
+    await act(async () => root.render(createElement(SmartSessionSurface, { context })));
+    const details = container.querySelector<HTMLDetailsElement>(".focus-results details");
+    expect(details).not.toBeNull();
+    expect(details?.open).toBe(false);
+    const summary = details?.querySelector<HTMLElement>("summary");
+    expect(summary?.textContent).toBe("Show all loaded evidence");
+    expect(container.querySelector(".focus-related-strip")?.tagName).not.toBe("BUTTON");
+    await act(async () => summary?.click());
+    expect(details?.open).toBe(true);
+    expect(details?.textContent).toContain("command-3");
+    expect(details?.textContent).toContain("file-2");
+    expect(details?.textContent).toContain("Recorded description (unverified): patch-2");
+    const item = details?.querySelector("li");
+    if (!item?.firstChild) throw new Error("Missing evidence text");
+    const range = dom.window.document.createRange();
+    range.selectNodeContents(item);
+    const selection = dom.window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    expect(selection?.toString()).toBe(item.textContent);
+    await act(async () => summary?.click());
+    expect(details?.open).toBe(false);
+    const learnings = [...container.querySelectorAll<HTMLButtonElement>("[role=tab]")].find(button => button.textContent === "Learnings");
+    await act(async () => learnings?.click());
+    expect(container.querySelector(".focus-learnings button")).toBeNull();
+  } finally {
+    await act(async () => root.unmount());
+    dom.window.close();
+    Object.assign(globalThis, { window: previousWindow, document: previousDocument, IS_REACT_ACT_ENVIRONMENT: false });
+  }
+});
