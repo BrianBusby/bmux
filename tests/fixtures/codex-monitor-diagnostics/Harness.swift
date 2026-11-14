@@ -16,9 +16,9 @@ struct BMUXCLI {
             var status = CLIProvenanceCodexTranscriptMonitorStatus(providerSessionID: "synthetic-session")
             status.cursorOffset = 10
             status.readOffset = 15
-            status.unreadBytes = mode == "backlog" ? 5 : 0
+            status.unreadBytes = ["backlog", "long-backlog"].contains(mode) ? 5 : 0
             status.skippedLines = mode == "skipped" ? 1 : 0
-            status.firstBacklogAt = mode == "backlog" ? Date() : nil
+            status.firstBacklogAt = mode == "backlog" ? Date() : (mode == "long-backlog" ? Date().addingTimeInterval(-600) : nil)
             status.retrying = mode == "retrying"
             status.lastErrorKind = mode == "error" ? "synthetic" : nil
             if mode == "stale" { status.updatedAt = Date().addingTimeInterval(-600) }
