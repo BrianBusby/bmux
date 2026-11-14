@@ -6,6 +6,42 @@ import Testing
 
 @Suite(.serialized)
 struct CLICodexHookPEAssociationTests {
+    @Test(arguments: ["session-start", "prompt-submit"], ["{}", #"{"session_id":"   "}"#])
+    func codexHookWithoutSessionDoesNotInventProvenanceIdentity(action: String, payload: String) async throws {
+        let cliPath = try BundledCLITestSupport.bundledCLIPath(for: BundledCLILinkageTests.self)
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("bmux-codex-missing-session-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let socketPath = makeCodexHookSocketPath("missing-session")
+        let listener = try bindCodexHookUnixSocket(at: socketPath)
+        defer { Darwin.close(listener); unlink(socketPath); try? FileManager.default.removeItem(at: root) }
+        let workspace = "11111111-1111-1111-1111-111111111111"
+        let stable = "33333333-3333-3333-3333-333333333333"
+        let surface = "22222222-2222-2222-2222-222222222222"
+        let commands = CodexHookCapturedSocketCommands()
+        startCodexHookMockSocketServerAccepting(listenerFD: listener, commands: commands, surfaceId: surface,
+            connectionLimit: 32, runtimeWorkspaceId: workspace, stableWorkspaceId: stable)
+        let environment = ["HOME": root.path, "CFFIXED_USER_HOME": root.path, "BMUX_PROVENANCE_HOME": root.path,
+            "PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "PWD": root.path, "BMUX_SOCKET_PATH": socketPath,
+            "BMUX_WORKSPACE_ID": workspace, "BMUX_STABLE_WORKSPACE_ID": stable, "BMUX_SURFACE_ID": surface,
+            "BMUX_AGENT_HOOK_STATE_DIR": root.path, "BMUX_CLI_SENTRY_DISABLED": "1",
+            "BMUX_CODEX_HOOK_IDENTITY_VERIFIED": "1", "BMUX_CODEX_PID": String(getpid())]
+        let hook = runCodexHookProcess(executablePath: cliPath, arguments: ["hooks", "codex", action],
+            environment: environment, standardInput: payload, timeout: 10)
+        #expect(!hook.timedOut && hook.status == 0, Comment(rawValue: hook.stderr))
+        #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("codex-hook-sessions.json").path))
+        let association = try await peAssociationResponse(root: root, stableWorkspaceId: stable)
+        #expect(!association.found)
+        let leases = root.appendingPathComponent("codex-monitor-leases", isDirectory: true)
+        #expect((try? FileManager.default.contentsOfDirectory(atPath: leases.path).isEmpty) ?? true)
+
+        let recovery = runCodexHookProcess(executablePath: cliPath, arguments: ["hooks", "codex", "prompt-submit"],
+            environment: environment, standardInput: #"{"session_id":"explicit-provider-session"}"#, timeout: 10)
+        #expect(!recovery.timedOut && recovery.status == 0, Comment(rawValue: recovery.stderr))
+        let recovered = try await peAssociationResponse(root: root, stableWorkspaceId: stable)
+        #expect(recovered.association?.sessionID == "explicit-provider-session")
+        #expect(recovered.association?.surfaceID == surface)
+    }
+
     @Test func codexPromptSubmitPersistsStableWorkspaceAssociationBeforeTranscriptImport() async throws {
         let cliPath = try BundledCLITestSupport.bundledCLIPath(for: BundledCLILinkageTests.self)
         let root = FileManager.default.temporaryDirectory
