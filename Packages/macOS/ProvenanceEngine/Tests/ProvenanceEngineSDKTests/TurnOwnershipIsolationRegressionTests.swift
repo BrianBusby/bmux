@@ -50,12 +50,25 @@ import Testing
         #expect(original.outcome?.objective?.evidence.contains(where: { $0.eventID == "prompt-event-A" }) == true)
         try await appendTurn(sessionID: "session-B", eventID: "turn-event-B", offset: 3)
         let bProjection = try await client.factualSessionProjection(.init(sessionID: "session-B"))
-        #expect(!(bProjection.snapshot?.turns.contains(where: { $0.submittedPrompt?.sessionID == "session-A" }) ?? false))
+        // Proposed contract: ownership_unresolved distinguishes a conflict from absence.
+        if let snapshot = bProjection.snapshot {
+            #expect(bProjection.found)
+            #expect(snapshot.session.id == "session-B")
+            #expect(!snapshot.turns.contains(where: { $0.submittedPrompt?.sessionID == "session-A" }))
+            #expect(!snapshot.turns.contains(where: { $0.turn.id == turnID }))
+        } else {
+            #expect(!bProjection.found)
+            #expect(bProjection.reason == "ownership_unresolved")
+        }
         let detail = try await client.factualSessionTurnDetail(.init(turnID: turnID))
+        #expect(!detail.found)
         #expect(detail.turnDetail == nil)
+        #expect(detail.reason == "ownership_unresolved")
         let outcome = try await client.turnOutcome(.init(turnID: turnID))
+        #expect(!outcome.found)
         #expect(outcome.outcome == nil)
-        // The public SDK exposes no raw ledger event lookup; append acknowledgment
-        // alone does not prove later inspectability or quarantine.
+        #expect(outcome.reason == "ownership_unresolved")
+        // The public SDK exposes no raw ledger event lookup or projection-disposition
+        // field. Append acknowledgment does not prove later inspectability or quarantine.
     }
 }
