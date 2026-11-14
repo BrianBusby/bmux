@@ -100,6 +100,7 @@ class CodexMonitorChildMetadataRepro(unittest.TestCase):
                 "BMUX_WORKSPACE_ID": FAKE_WORKSPACE_ID,
                 "BMUX_SURFACE_ID": FAKE_SURFACE_ID,
                 "BMUX_CLI_SENTRY_DISABLED": "1",
+                "BMUX_DEBUG_LOG": str(home / "debug.log"),
             }
             with PrivateFakeSocket(socket_path, None):
                 statuses = run_monitor(home, socket_path, transcript, expected_id, env)
@@ -137,6 +138,7 @@ class CodexMonitorChildMetadataRepro(unittest.TestCase):
                 "PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "BMUX_SOCKET_PATH": str(socket_path),
                 "BMUX_WORKSPACE_ID": FAKE_WORKSPACE_ID, "BMUX_SURFACE_ID": FAKE_SURFACE_ID,
                 "BMUX_CLI_SENTRY_DISABLED": "1",
+                "BMUX_DEBUG_LOG": str(home / "debug.log"),
             }
             root_meta = {"type": "session_meta", "payload": {"id": ROOT_ID, "session_id": ROOT_ID}}
             child_meta = {"type": "session_meta", "payload": {
