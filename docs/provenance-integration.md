@@ -529,3 +529,12 @@ Future producers should follow bmux's adopted pattern:
 5. Read present-tense provenance through Current State APIs.
 6. Keep presentation and workflow policy in the consumer.
 7. Keep evidence interpretation and deterministic state in the engine.
+
+The Codex transcript diagnostic reports a retained monitor status, not proof of a
+currently connected observer or a current cursor. Its JSON `available` field refers
+to that status record; `report_freshness` describes its age, while
+`observation_health` and `cursor_currentness` are `unknown`. If no status record
+is available, numeric status fields and `retrying` are `null` rather than zero or
+false. This corrects the prior unversioned JSON behavior, so consumers expecting
+numbers must handle `null`. Skipped-line counts are retained observations, and a
+nonzero count causes the diagnostic to request attention; no recovery is implied.
