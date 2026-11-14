@@ -21,6 +21,8 @@ struct CodexTranscriptSnapshotExperimentTests {
         unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-b"), "mismatch")
         try write(event)
         unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"), "missing metadata")
+        try write(event + meta)
+        unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"), "late metadata")
         try write(meta + #"{"type":"session_meta","payload":{"id":"session-b"}}"# + "\n" + event)
         unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"), "conflicting metadata")
         try write(#"{"type":"session_meta","payload":{"id":"session-a","session_id":"session-b"}}"# + "\n")
@@ -62,6 +64,6 @@ struct CodexTranscriptSnapshotExperimentTests {
         }), "replacement during capture")
         try Data(repeating: 0x20, count: CodexTranscriptSnapshot.maxBytes + 1).write(to: path)
         unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"), "oversize")
-        print("snapshot experiment: 11 cases passed")
+        print("snapshot experiment: 13 cases passed")
     }
 }
