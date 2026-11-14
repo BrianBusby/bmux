@@ -10,6 +10,9 @@ Source retention here is temporary, not durable PE request retention. The
 session-outcome-only availability check covers plan_items; its current contract
 has no separate field availability for actions_completed. Matching CLI hashes
 and schema version do not attest source revision or rule out replacement ABA.
+`unverified_plan_evidence` is a proposed reason code, not a shipped contract.
+Set BMUX_RUN_BASELINE_CHARACTERIZATION=1 only to reproduce the old accepted-plan
+projection; a safe reported-but-unknown-current contract need not satisfy it.
 """
 
 import hashlib
@@ -125,7 +128,9 @@ class CodexPlanRejectedOutcomeRepro(unittest.TestCase):
         self.assertTrue(outcome["found"])
         return report, factual["snapshot"], outcome["outcome"]
 
-    def test_explicitly_acknowledged_transcript_plan_control(self) -> None:
+    @unittest.skipUnless(os.environ.get("BMUX_RUN_BASELINE_CHARACTERIZATION") == "1",
+                         "Baseline characterization only; not a safety requirement")
+    def test_baseline_characterization_acknowledged_plan_is_current(self) -> None:
         report, factual, _ = self.observe("accepted")
         self.assertEqual(report["evidence"]["plans"], 1)
         self.assertEqual(factual["latest_turn"]["current_plan"]["steps"][0]["text"], STEP)
@@ -155,7 +160,7 @@ class CodexPlanRejectedOutcomeRepro(unittest.TestCase):
                 _, _, outcome = self.observe(kind)
                 field = next(item for item in outcome["completeness"]["fields"] if item["field"] == "plan_items")
                 self.assertIn(field["status"], ("partial", "unavailable"), field)
-                self.assertTrue(field.get("reason"), field)
+                self.assertEqual(field.get("reason"), "unverified_plan_evidence", field)
 
     @unittest.skip("No public PE plan-request/acknowledgment evidence contract exists yet; transcript is source-only")
     def test_future_request_evidence_and_uncertainty_are_inspectable(self) -> None:
