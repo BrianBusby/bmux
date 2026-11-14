@@ -312,8 +312,18 @@ extension CLIProvenanceCodexTranscriptImporterTests {
             surfaceID: nil, client: client, cursorStore: cursorStore
         )
         var last: CLIProvenanceCodexTranscriptTailer.Outcome?
+        var previousReadOffset: UInt64 = 0
+        var previousCursorOffset: UInt64 = 0
         for _ in 0..<100 {
             let outcome = try await tailer.consume(at: transcriptURL)
+            let persisted = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
+            #expect(outcome.offset >= previousReadOffset)
+            #expect(outcome.offset <= previousReadOffset + UInt64(chunkSize))
+            #expect(persisted.byteOffset >= previousCursorOffset)
+            #expect(persisted.byteOffset <= outcome.offset)
+            #expect(persisted.byteOffset <= previousReadOffset + UInt64(chunkSize))
+            previousReadOffset = outcome.offset
+            previousCursorOffset = persisted.byteOffset
             last = outcome
             if !outcome.importResult.hasMoreData { break }
         }
@@ -350,6 +360,11 @@ extension CLIProvenanceCodexTranscriptImporterTests {
         #expect(cursorAfterReplacement.byteOffset == savedCursor.byteOffset)
         let after = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
         #expect(after.latestTurn?.submittedPrompt?.text == projection.latestTurn?.submittedPrompt?.text)
+        let foreignProjection = try await client.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: "codex-session-2")
+        )
+        #expect(!foreignProjection.found)
+        #expect(foreignProjection.snapshot == nil)
     }
 
 }
