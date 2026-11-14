@@ -1,4 +1,6 @@
-import { createElement } from "react";
+import { act, createElement } from "react";
+import { createRoot } from "react-dom/client";
+import { JSDOM } from "jsdom";
 import { renderToStaticMarkup } from "react-dom/server";
 import { RelatedAwarenessNotice, SemanticReportsNotice, SmartSessionFreshnessBanner } from "../react/SmartSessionSurface";
 import { expect, test } from "bun:test";
@@ -1761,4 +1763,35 @@ test("semantic report availability is visible without hiding factual data", () =
   expect(renderToStaticMarkup(createElement(SemanticReportsNotice, { status: "unavailable" }))).toContain("Additional session reports are unavailable or unknown.");
   expect(renderToStaticMarkup(createElement(SemanticReportsNotice, {}))).toContain("Additional session reports are unavailable or unknown.");
   expect(renderToStaticMarkup(createElement(SemanticReportsNotice, { status: "available" }))).toContain("Additional session reports may be incomplete.");
+});
+
+
+test("stale smart session offers an actionable refresh", async () => {
+  const dom = new JSDOM("<!doctype html><html><body><div id='root'></div></body></html>");
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  const previousDocument = Object.getOwnPropertyDescriptor(globalThis, "document");
+  const previousAct = Object.getOwnPropertyDescriptor(globalThis, "IS_REACT_ACT_ENVIRONMENT");
+  Object.defineProperty(globalThis, "window", { configurable: true, value: dom.window });
+  Object.defineProperty(globalThis, "document", { configurable: true, value: dom.window.document });
+  Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", { configurable: true, value: true });
+  const element = dom.window.document.getElementById("root");
+  if (!element) throw new Error("Missing test root");
+  const root = createRoot(element);
+  const state = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "failed", snapshot: smartSessionSnapshot({ factualRevision: 4 }) } });
+  const calls: string[] = [];
+  try {
+    await act(async () => root.render(createElement(SmartSessionFreshnessBanner, { state, onRefresh: () => calls.push("refresh") })));
+    expect(element.textContent).toContain("Could not refresh. Showing last known session data.");
+    const button = element.querySelector("button");
+    expect(button?.textContent).toBe("Refresh");
+    await act(async () => button?.click());
+    expect(calls).toEqual(["refresh"]);
+  } finally {
+    await act(async () => root.unmount());
+    if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow); else Reflect.deleteProperty(globalThis, "window");
+    if (previousDocument) Object.defineProperty(globalThis, "document", previousDocument); else Reflect.deleteProperty(globalThis, "document");
+    if (previousAct) Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", previousAct); else Reflect.deleteProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT");
+    dom.window.close();
+  }
 });
