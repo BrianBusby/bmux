@@ -9,7 +9,7 @@ enum AgentSessionPlanStepStatus: Equatable {
         case "pending": self = .pending
         case "in_progress": self = .inProgress
         case "completed", "complete", "done": self = .completed
-        case "": self = .unknown
+        case "", "unknown": self = .unknown
         default: self = .providerValue(status)
         }
     }
