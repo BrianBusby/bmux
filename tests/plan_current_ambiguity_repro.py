@@ -86,6 +86,8 @@ class PlanCurrentAmbiguityRepro(unittest.TestCase):
         call = row("2026-01-01T00:00:02Z", "response_item", {"type": "function_call", "name": "update_plan", "call_id": "plan-1", "turn_id": "turn-1", "arguments": json.dumps({"plan": [{"step": NEW, "status": "in_progress"}]})})
         if result == "overlap":
             call += row("2026-01-01T00:00:03Z", "response_item", {"type": "function_call", "name": "update_plan", "call_id": "plan-2", "turn_id": "turn-1", "arguments": json.dumps({"plan": [{"step": "Another unverified step", "status": "pending"}]})})
+        elif result == "accepted":
+            call += row("2026-01-01T00:00:03Z", "response_item", {"type": "function_call_output", "call_id": "plan-1", "turn_id": "turn-1", "output": "Plan updated"})
         source.write_text(initial + call, encoding="utf-8")
         run(command)
         current = run([self.probe, db, SESSION, "read"])
@@ -116,6 +118,18 @@ class PlanCurrentAmbiguityRepro(unittest.TestCase):
         self.assertEqual(item["text"], NEW)
         self.assertEqual(item["evidence"][0]["evidence_origin"], "codex-transcript")
         self.assertNotEqual(item["evidence"][0]["event_id"], "structured-plan-event")
+
+    @unittest.skipUnless(os.environ.get("BMUX_RUN_BASELINE_CHARACTERIZATION") == "1",
+                         "Baseline characterization, not acknowledgment or current-validity proof")
+    def test_baseline_matched_success_output_plan_projection(self):
+        _, current, _ = self.run_case("accepted")
+        plan = current["factual"]["snapshot"]["latest_turn"]["current_plan"]
+        self.assertEqual(plan["steps"][0]["text"], NEW)
+        item = current["outcome"]["outcome"]["plan_items"][0]
+        self.assertEqual(item["text"], NEW)
+        self.assertEqual(item["evidence"][0]["evidence_origin"], "codex-transcript")
+        # PE does not expose a request/result link, so this only describes the
+        # present projection for this input; it does not establish acceptance.
 
     @unittest.skip("No public plan-request/ack evidence contract or current-validity field exists")
     def test_future_both_sources_remain_inspectable_with_correct_validity(self):
