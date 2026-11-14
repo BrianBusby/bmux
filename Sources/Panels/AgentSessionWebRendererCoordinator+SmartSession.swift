@@ -113,6 +113,14 @@ extension AgentSessionWebRendererCoordinator {
                 localized: "agentSession.web.smartSession.currentActivity",
                 defaultValue: "Current activity"
             ),
+            "smartSessionActivity": String(
+                localized: "agentSession.web.smartSession.activity",
+                defaultValue: "Activity"
+            ),
+            "smartSessionObservedActivity": String(
+                localized: "agentSession.web.smartSession.observedActivity",
+                defaultValue: "Observed activity"
+            ),
             "smartSessionPhase": String(
                 localized: "agentSession.web.smartSession.phase",
                 defaultValue: "Phase"

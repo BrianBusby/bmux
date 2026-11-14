@@ -11519,6 +11519,20 @@
         }
       }
     },
+    "agentSession.web.smartSession.activity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Activity" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "活動" } }
+      }
+    },
+    "agentSession.web.smartSession.observedActivity": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Observed activity" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "観測されたアクティビティ" } }
+      }
+    },
     "agentSession.web.smartSession.currentActivity": {
       "extractionState": "manual",
       "localizations": {
