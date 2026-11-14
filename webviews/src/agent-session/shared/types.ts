@@ -228,6 +228,7 @@ export type AgentSessionCopy = {
   smartSessionActivity?: string;
   smartSessionObservedActivity?: string;
   smartSessionRecordedEvidence?: string;
+  smartSessionRecordedDescription?: string;
   smartSessionPhase: string;
   smartSessionPrompt: string;
   smartSessionPlan: string;

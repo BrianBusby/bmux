@@ -97,7 +97,7 @@ function FocusView({ copy, state, onRefresh, expandedTurnID, onExpandTurn, onIns
 function CurrentTurnCard({ copy, turn, purpose, onInspect }: { copy?: AgentSessionCopy; turn: SmartSessionTurn; purpose?: SmartSessionSemanticField; onInspect: (value: string | null) => void }) {
   const output = turn.assistantMessages.at(-1);
   const recordedEvidence = recordedEvidenceForTurn(turn);
-  const results = [...turn.completedCommands.slice(0, 3).map(command => `${command.command} · ${command.status}`), ...turn.fileChangeAttributions.slice(0, 2).map(change => change.paths.join(", ")), ...(output ? [output.text] : [])].filter(Boolean);
+  const results = [...turn.completedCommands.slice(0, 3).map(command => `${command.command} · ${command.status}`), ...turn.fileChangeAttributions.slice(0, 2).flatMap(change => [change.paths.join(", "), change.summary?.trim() ? `${text(copy, "smartSessionRecordedDescription", "Recorded description (unverified)")}: ${change.summary}` : ""]), ...(output ? [output.text] : [])].filter(Boolean);
   return h("article", { className: "focus-current-card" },
     h("div", { className: "focus-card-kicker" }, text(copy, "smartSessionCurrentTurn", "Latest turn"), h("span", { className: `focus-turn-status focus-turn-${turn.status}` }, turn.status)),
     h("h2", null, turn.prompt?.text ?? text(copy, "smartSessionUnknown", "Objective unavailable")),

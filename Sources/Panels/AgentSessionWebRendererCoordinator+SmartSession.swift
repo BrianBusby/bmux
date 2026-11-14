@@ -117,6 +117,10 @@ extension AgentSessionWebRendererCoordinator {
                 localized: "agentSession.web.smartSession.activity",
                 defaultValue: "Activity"
             ),
+            "smartSessionRecordedDescription": String(
+                localized: "agentSession.web.smartSession.recordedDescription",
+                defaultValue: "Recorded description (unverified)"
+            ),
             "smartSessionRecordedEvidence": String(
                 localized: "agentSession.web.smartSession.recordedEvidence",
                 defaultValue: "Recorded evidence"

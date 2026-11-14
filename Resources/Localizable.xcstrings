@@ -11526,6 +11526,13 @@
         "ja": { "stringUnit": { "state": "translated", "value": "活動" } }
       }
     },
+    "agentSession.web.smartSession.recordedDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recorded description (unverified)" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "記録された説明（未検証）" } }
+      }
+    },
     "agentSession.web.smartSession.recordedEvidence": {
       "extractionState": "manual",
       "localizations": {
