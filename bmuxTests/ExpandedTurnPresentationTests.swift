@@ -104,6 +104,24 @@ import SwiftUI
         #expect(ExpandedTurnCommandPresentation(raw: huge).raw == huge)
     }
     #if canImport(bmux_DEV) || canImport(bmux) || canImport(TurnPresentationHarness)
+    @Test @MainActor func turnEvidenceShowsMoreThanSixPlanSteps() {
+        let date = Date(timeIntervalSince1970: 1_800_000_000)
+        let turn = ProvenanceCodingAgentTurnRecord(id: "turn", sessionID: "session", provider: "codex",
+            providerTurnID: "provider-turn", status: "started", updatedAt: date, source: .observed, confidence: .high)
+        func height(stepCount: Int) -> CGFloat {
+            let steps = (0..<stepCount).map {
+                ProvenanceCodingAgentPlanStepRecord(id: "step-\($0)", order: $0, text: "Step \($0)", status: "pending")
+            }
+            let plan = ProvenanceCodingAgentPlanUpdateRecord(id: "plan", sessionID: "session", provider: "codex",
+                steps: steps, observedAt: date, source: .observed, confidence: .high)
+            let detail = ProvenanceFactualSessionProjectionTurnSnapshot(turn: turn, submittedPrompt: nil,
+                currentPlan: plan, completedCommands: [], visibleReasoningSummaries: [], fileChangeAttributions: [], assistantMessages: [])
+            let host = NSHostingView(rootView: AgentSessionFactualProjectionTurnDetailView(turnSnapshot: detail, showsIdentity: false).frame(width: 600))
+            return host.fittingSize.height
+        }
+        #expect(height(stepCount: 8) > height(stepCount: 6))
+    }
+
     @Test @MainActor func expandedEvidenceContrastsWithDarkWorkspaceUnderEitherSystemAppearance() throws {
         let turn = ProvenanceCodingAgentTurnRecord(id: "roof-turn", sessionID: "roof-session", provider: "codex",
             providerTurnID: "provider-turn", status: "started", updatedAt: Date(), source: .observed, confidence: .high)
