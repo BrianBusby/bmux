@@ -1934,7 +1934,7 @@ test.each(["active", "completed", "missing", "file-only", "provider-description"
   const original = smartSessionSnapshot({ factualRevision: 1, currentActivity: "Validating with swift test", threadIntent: "Original assignment", prompt: "Change direction to the follow-up", knownSemantics: !["file-only", "provider-description"].includes(scenario) });
   const turn = original.factual.latestTurn;
   if (!turn) throw new Error("Expected turn fixture");
-  const snapshot: SmartSessionSnapshot = { ...original, factual: { ...original.factual, latestTurn: {
+  const snapshot: SmartSessionSnapshot = { ...original, factual: { ...original.factual, priorTurns: [{ turnId: "prior", provider: "codex", providerTurnId: "prior-turn", status: "completed", updatedAt: "2026-08-17T07:00:00Z" }], latestTurn: {
     ...turn, prompt: scenario === "no-prompt" ? undefined : turn.prompt, status: scenario === "active" ? "running" : "completed",
     completedCommands: ["active", "completed"].includes(scenario) ? [{ commandId: "cmd", command: "swift test", status: "completed", completedAt: "2026-08-17T07:01:00Z", source: "observed", confidence: "high" }] : [],
     fileChangeAttributions: ["file-only", "provider-description"].includes(scenario) ? [{ attributionId: "file", paths: ["Sources/main.swift"], summary: scenario === "file-only" ? "Applied patch" : "Requested changes to configuration", observedAt: "2026-08-17T07:02:00Z", source: "observed", confidence: "high" }] : [],
@@ -1951,6 +1951,11 @@ test.each(["active", "completed", "missing", "file-only", "provider-description"
     expect(promptBlock?.querySelector("h3")?.textContent).toBe("Latest turn prompt");
     expect(promptBlock?.querySelector("p")?.textContent).toBe(scenario === "no-prompt" ? "Unknown" : "Change direction to the follow-up");
     expect(container.textContent).not.toContain("Original assignment");
+    const historyToggle = container.querySelector<HTMLButtonElement>(".focus-history-toggle");
+    expect(historyToggle).not.toBeNull();
+    await act(async () => historyToggle?.click());
+    expect(historyToggle?.getAttribute("aria-expanded")).toBe("true");
+    expect(container.querySelector(".focus-history-details button")).toBeNull();
     const block = container.querySelectorAll(".focus-current-grid .focus-summary-block")[1];
     expect(container.textContent).not.toContain("Validating with swift test");
     const description = scenario === "file-only" ? "Applied patch" : "Requested changes to configuration";

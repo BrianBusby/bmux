@@ -11526,6 +11526,13 @@
         "ja": { "stringUnit": { "state": "translated", "value": "活動" } }
       }
     },
+    "agentSession.web.smartSession.latestTurnPrompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Latest turn prompt" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "最新ターンのプロンプト" } }
+      }
+    },
     "agentSession.web.smartSession.recordedDescription": {
       "extractionState": "manual",
       "localizations": {

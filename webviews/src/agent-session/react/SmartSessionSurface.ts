@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useReducer, useState } from "react";
-import { initialSmartSessionState, loadSmartSessionSnapshot, reduceSmartSession, semanticFieldForKind, sortSmartSessionTurnReferencesNewestFirst, SMART_SESSION_SEMANTIC_KINDS, type SmartSessionState } from "../shared/smartSessionModel";
-import type { AgentSessionCopy, AppContext, SmartSessionSemanticField, SmartSessionSnapshot, SmartSessionTurn, SmartSessionTurnReference } from "../shared/types";
+import { initialSmartSessionState, loadSmartSessionSnapshot, reduceSmartSession, sortSmartSessionTurnReferencesNewestFirst, type SmartSessionState } from "../shared/smartSessionModel";
+import type { AgentSessionCopy, AppContext, SmartSessionSnapshot, SmartSessionTurn, SmartSessionTurnReference } from "../shared/types";
 
 const h = React.createElement;
 
@@ -82,37 +82,36 @@ function FocusView({ copy, state, onRefresh, expandedTurnID, onExpandTurn, onIns
   if (!state.snapshot) return h(EmptyState, { message: statusMessage(state, copy), action: h("button", { type: "button", onClick: onRefresh }, text(copy, "smartSessionRefresh", "Refresh")) });
   const snapshot = state.snapshot;
   const current = snapshot.factual.latestTurn;
-  const purpose = semanticFieldForKind(snapshot, { kind: SMART_SESSION_SEMANTIC_KINDS.threadIntent, scope: "thread" });
   const history = sortSmartSessionTurnReferencesNewestFirst(snapshot.factual.priorTurns);
   const related = snapshot.crossSessionAwareness.status === "available" && (snapshot.crossSessionAwareness.relatedSessions.length > 0 || snapshot.crossSessionAwareness.collisions.length > 0);
   return h("div", { className: "focus-reading-column" },
-    current ? h(CurrentTurnCard, { copy, turn: current, purpose, onInspect }) : h(EmptyState, { message: text(copy, "smartSessionNoCurrentTurn", "Latest turn unavailable.") }),
+    current ? h(CurrentTurnCard, { copy, turn: current }) : h(EmptyState, { message: text(copy, "smartSessionNoCurrentTurn", "Latest turn unavailable.") }),
     related ? h(RelatedWorkStrip, { copy, snapshot, onInspect }) : null,
     h(RelatedAwarenessNotice, { copy, awareness: snapshot.crossSessionAwareness }),
-    h("section", { className: "focus-history-section" }, h("div", { className: "focus-section-heading" }, h("h2", null, text(copy, "smartSessionPriorTurns", "History")), h("span", { className: "focus-section-meta" }, `${history.length}`)), history.length ? h("div", { className: "focus-history-list" }, ...history.map(turn => h(PriorTurnCard, { key: turn.turnId, copy, turn, expanded: expandedTurnID === turn.turnId, onToggle: () => onExpandTurn(expandedTurnID === turn.turnId ? null : turn.turnId), onInspect }))) : h("p", { className: "focus-muted" }, text(copy, "smartSessionNoEvidence", "No completed turns yet."))),
+    h("section", { className: "focus-history-section" }, h("div", { className: "focus-section-heading" }, h("h2", null, text(copy, "smartSessionPriorTurns", "History")), h("span", { className: "focus-section-meta" }, `${history.length}`)), history.length ? h("div", { className: "focus-history-list" }, ...history.map(turn => h(PriorTurnCard, { key: turn.turnId, copy, turn, expanded: expandedTurnID === turn.turnId, onToggle: () => onExpandTurn(expandedTurnID === turn.turnId ? null : turn.turnId) }))) : h("p", { className: "focus-muted" }, text(copy, "smartSessionNoEvidence", "No completed turns yet."))),
     snapshot.factual.turnCount > history.length + (current ? 1 : 0) ? h("p", { className: "focus-coverage-note" }, text(copy, "smartSessionUnavailable", "History is partial; only same-identity records are shown.")) : null,
   );
 }
 
-function CurrentTurnCard({ copy, turn, purpose, onInspect }: { copy?: AgentSessionCopy; turn: SmartSessionTurn; purpose?: SmartSessionSemanticField; onInspect: (value: string | null) => void }) {
+function CurrentTurnCard({ copy, turn }: { copy?: AgentSessionCopy; turn: SmartSessionTurn }) {
   const output = turn.assistantMessages.at(-1);
   const recordedEvidence = recordedEvidenceForTurn(turn);
   const results = [...turn.completedCommands.slice(0, 3).map(command => `${command.command} · ${command.status}`), ...turn.fileChangeAttributions.slice(0, 2).flatMap(change => [change.paths.join(", "), change.summary?.trim() ? `${text(copy, "smartSessionRecordedDescription", "Recorded description (unverified)")}: ${change.summary}` : ""]), ...(output ? [output.text] : [])].filter(Boolean);
   return h("article", { className: "focus-current-card" },
     h("div", { className: "focus-card-kicker" }, text(copy, "smartSessionCurrentTurn", "Latest turn"), h("span", { className: `focus-turn-status focus-turn-${turn.status}` }, turn.status)),
     h("h2", null, turn.prompt?.text ?? text(copy, "smartSessionUnknown", "Objective unavailable")),
-    h("div", { className: "focus-current-grid" }, h(SummaryBlock, { label: text(copy, "smartSessionPurpose", "Objective"), value: purpose?.summary ?? turn.prompt?.text ?? text(copy, "smartSessionUnknown", "Unknown") }), h(SummaryBlock, { label: text(copy, "smartSessionRecordedEvidence", "Recorded evidence"), value: recordedEvidence ?? text(copy, "smartSessionUnknown", "Unknown") })),
+    h("div", { className: "focus-current-grid" }, h(SummaryBlock, { label: text(copy, "smartSessionLatestTurnPrompt", "Latest turn prompt"), value: turn.prompt?.text ?? text(copy, "smartSessionUnknown", "Unknown") }), h(SummaryBlock, { label: text(copy, "smartSessionRecordedEvidence", "Recorded evidence"), value: recordedEvidence ?? text(copy, "smartSessionUnknown", "Unknown") })),
     h("section", { className: "focus-results" }, h("h3", null, text(copy, "smartSessionFinalOutput", "Evidence")), results.length ? h("ul", null, ...results.map((result, index) => h("li", { key: `${turn.turnId}-${index}` }, result))) : h("p", { className: "focus-muted" }, text(copy, "smartSessionNoEvidence", "No evidence yet."))),
-    h("div", { className: "focus-current-actions" }, h("button", { type: "button", className: "focus-secondary-button", onClick: () => onInspect(`turn:${turn.turnId}`) }, text(copy, "smartSessionEvidence", "Inspect evidence")), h("span", { className: "focus-source-note" }, turn.provider)),
+    h("div", { className: "focus-current-actions" }, h("span", { className: "focus-source-note" }, turn.provider)),
   );
 }
 
-function PriorTurnCard({ copy, turn, expanded, onToggle, onInspect }: { copy?: AgentSessionCopy; turn: SmartSessionTurnReference; expanded: boolean; onToggle: () => void; onInspect: (value: string | null) => void }) {
-  return h("article", { className: `focus-history-card${expanded ? " is-expanded" : ""}` }, h("button", { type: "button", className: "focus-history-toggle", "aria-expanded": expanded, onClick: onToggle }, h("span", { className: "focus-history-date" }, formatTurnDate(turn.completedAt ?? turn.startedAt ?? turn.updatedAt)), h("strong", null, turn.providerTurnId), h("span", { className: "focus-history-status" }, turn.status), h("span", { className: "focus-disclosure", "aria-hidden": true }, expanded ? "−" : "+")), expanded ? h("div", { className: "focus-history-details" }, h(DetailList, { copy, turnID: turn.turnId, onInspect })) : null);
+function PriorTurnCard({ copy, turn, expanded, onToggle }: { copy?: AgentSessionCopy; turn: SmartSessionTurnReference; expanded: boolean; onToggle: () => void }) {
+  return h("article", { className: `focus-history-card${expanded ? " is-expanded" : ""}` }, h("button", { type: "button", className: "focus-history-toggle", "aria-expanded": expanded, onClick: onToggle }, h("span", { className: "focus-history-date" }, formatTurnDate(turn.completedAt ?? turn.startedAt ?? turn.updatedAt)), h("strong", null, turn.providerTurnId), h("span", { className: "focus-history-status" }, turn.status), h("span", { className: "focus-disclosure", "aria-hidden": true }, expanded ? "−" : "+")), expanded ? h("div", { className: "focus-history-details" }, h(DetailList, { copy })) : null);
 }
 
-function DetailList({ copy, turnID, onInspect }: { copy?: AgentSessionCopy; turnID: string; onInspect: (value: string | null) => void }) {
-  return h("div", { className: "focus-detail-grid" }, h("div", null, h("h3", null, text(copy, "smartSessionChanged", "Changed")), h("p", null, text(copy, "smartSessionFiles", "Source-linked files are available when captured."))), h("div", null, h("h3", null, text(copy, "smartSessionChecked", "Checked")), h("p", null, text(copy, "smartSessionValidations", "Validation records remain scoped to this turn."))), h("div", null, h("h3", null, text(copy, "smartSessionRemains", "Remains")), h("p", null, text(copy, "smartSessionResume", "Resume point is unavailable unless captured by the producer."))), h("button", { type: "button", className: "focus-inspector-link", onClick: () => onInspect(`turn:${turnID}`) }, text(copy, "smartSessionEvidence", "Inspect evidence")));
+function DetailList({ copy }: { copy?: AgentSessionCopy }) {
+  return h("div", { className: "focus-detail-grid" }, h("div", null, h("h3", null, text(copy, "smartSessionChanged", "Changed")), h("p", null, text(copy, "smartSessionFiles", "Source-linked files are available when captured."))), h("div", null, h("h3", null, text(copy, "smartSessionChecked", "Checked")), h("p", null, text(copy, "smartSessionValidations", "Validation records remain scoped to this turn."))), h("div", null, h("h3", null, text(copy, "smartSessionRemains", "Remains")), h("p", null, text(copy, "smartSessionResume", "Resume point is unavailable unless captured by the producer."))));
 }
 
 export function SemanticReportsNotice({ copy, status }: { copy?: AgentSessionCopy; status?: "available" | "unavailable" }) {
