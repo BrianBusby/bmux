@@ -26,6 +26,8 @@ source = source.replace('''#if canImport(bmux_DEV)
 #endif''', '@testable import Store')
 source = source.replace('''    private let models: [ProvenanceSessionWorkModel]''', '''    private var failWorkModel = false
     private var responseOverride: ProvenanceSessionWorkModelResponse?
+    private var secondSessionModel: ProvenanceSessionWorkModel?
+    func setSecondSessionModel(_ value: ProvenanceSessionWorkModel) { secondSessionModel = value }
     func setResponse(_ response: ProvenanceSessionWorkModelResponse) { responseOverride = response }
     func failNextReads() { failWorkModel = true }
     func restoreReads() { failWorkModel = false }
@@ -34,6 +36,9 @@ source = source.replace('''        let index = workModelRequests.count
         workModelRequests.append(request)''', '''        let index = workModelRequests.count
         workModelRequests.append(request)
         if failWorkModel { throw SmartSessionStoreTestError.unimplemented }
+        if request.sessionID == "session-2", let secondSessionModel {
+            return .init(found: true, sessionID: request.sessionID, model: secondSessionModel)
+        }
         if let responseOverride { return responseOverride }''')
 source = source.replace('private static func model(sessionID: String, revision: Int) -> ProvenanceSessionWorkModel {', 'private static func model(sessionID: String, revision: Int, semanticIDs: [String] = []) -> ProvenanceSessionWorkModel {')
 source = source.replace('semanticInferenceIDs: [],\n                latestSemanticInferenceCreatedAt: nil', 'semanticInferenceIDs: semanticIDs,\n                latestSemanticInferenceCreatedAt: nil', 1)
@@ -61,7 +66,7 @@ source = source.replace('    func health() async throws -> ProvenanceEngineHealt
             relatedStarted?.resume()
             relatedStarted = nil
         }
-        if relatedBlocksRemaining > 0 {
+        if relatedBlocksRemaining > 0 && request.targetSessionID == "session-1" {
             relatedBlocksRemaining -= 1
             await withCheckedContinuation { relatedRelease = $0 }
         }
@@ -177,6 +182,7 @@ extension AgentSessionSmartSessionStoreTests {
             return await store.refreshedSnapshot(sessionID: "session-1")
         }
         for await _ in started { break }
+        #expect(store.snapshot(sessionID: "session-1") == .failed(sessionID: "session-1"))
         second.cancel()
         await client.releaseRelated()
         guard case .available = await first.value else {
@@ -239,6 +245,38 @@ extension AgentSessionSmartSessionStoreTests {
         }
         #expect(snapshot.semanticMessages.count == 20)
         #expect(snapshot.bridgePayload["semanticMessagesCoverage"] as? String == "unknown")
+    }
+
+    @Test func burstIsBoundedAndSeparateSessionCanProgress() async {
+        let client = SmartSessionStoreTestClient(model: Self.model(sessionID: "session-1", revision: 42))
+        await client.setSecondSessionModel(Self.model(sessionID: "session-2", revision: 42))
+        let store = AgentSessionSmartSessionStore(client: client)
+        await client.holdRelated()
+        let first = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+        await client.waitForRelatedStart()
+        var joined: [Task<AgentSessionSmartSessionReadResult, Never>] = []
+        for _ in 0..<16 {
+            let (started, signal) = AsyncStream<Void>.makeStream()
+            joined.append(Task { @MainActor in signal.yield(()); return await store.refreshedSnapshot(sessionID: "session-1") })
+            for await _ in started { break }
+        }
+        #expect(store.snapshot(sessionID: "session-1") == .failed(sessionID: "session-1"))
+        let (started, signal) = AsyncStream<Void>.makeStream()
+        let excess = Task { @MainActor in signal.yield(()); return await store.refreshedSnapshot(sessionID: "session-1") }
+        for await _ in started { break }
+        guard case .available = await store.refreshedSnapshot(sessionID: "session-2") else {
+            Issue.record("An unrelated session must not wait for the held read")
+            await client.releaseRelated()
+            return
+        }
+        await client.releaseRelated()
+        #expect(await excess.value == .failed(sessionID: "session-1"))
+        guard case .available = await first.value else {
+            Issue.record("Admitted callers should converge after a bounded follow-up")
+            return
+        }
+        for task in joined { guard case .available = await task.value else { Issue.record("Admitted waiter did not converge"); continue } }
+        #expect(await client.sessionWorkModelRequestCount() == 3)
     }
 
     @Test func failedReadWithoutCacheStaysFailed() async {
