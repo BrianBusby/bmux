@@ -586,12 +586,7 @@ struct bmuxApp: App {
                     Button("Debug Window Controls…") {
                         DebugWindowControlsWindowController.shared.show()
                     }
-                    Button(
-                        String(
-                            localized: "debug.menu.devWindowDisplay",
-                            defaultValue: "Dev Window Display…"
-                        )
-                    ) {
+                    Button(String(localized: "debug.menu.devWindowDisplay", defaultValue: "Dev Window Display…")) {
                         DevWindowDisplayDebugWindowController.shared.show()
                     }
                     Button(String(localized: "debug.smartStale.menu", defaultValue: "Smart Session Stale Preview…")) {
