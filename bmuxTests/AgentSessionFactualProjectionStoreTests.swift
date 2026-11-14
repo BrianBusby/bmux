@@ -55,8 +55,25 @@ struct AgentSessionFactualProjectionStoreTests {
         let store = AgentSessionFactualProjectionStore(client: client)
 
         #expect(await store.refreshedSnapshot(sessionID: "session-1") == .available(snapshot))
-        #expect(await store.refreshedSnapshot(sessionID: "session-1") == .available(snapshot))
+        let afterFailure = await store.refreshedSnapshot(sessionID: "session-1")
+        #expect(afterFailure != .available(snapshot))
+        #expect(store.snapshot(sessionID: "session-1") == afterFailure)
         #expect(await client.factualProjectionRequests().count == 2)
+    }
+
+    @Test
+    func staleSnapshotKeepsLastSuccessfulReadTimeAcrossFailures() async {
+        let snapshot = Self.snapshot(sessionID: "session-1", revision: 7)
+        let client = FakeProvenanceEngineClient(factualProjectionResults: [
+            .success(.init(found: true, sessionID: "session-1", snapshot: snapshot)),
+            .failure(TestError.unavailable), .failure(TestError.unavailable),
+        ])
+        let readTime = Date(timeIntervalSince1970: 100)
+        let store = AgentSessionFactualProjectionStore(client: client, now: { readTime })
+        #expect(await store.refreshedSnapshot(sessionID: "session-1") == .available(snapshot))
+        #expect(await store.refreshedSnapshot(sessionID: "session-1") == .stale(snapshot, lastSuccessfulReadAt: readTime))
+        #expect(await store.refreshedSnapshot(sessionID: "session-1") == .stale(snapshot, lastSuccessfulReadAt: readTime))
+        #expect(store.snapshot(sessionID: "session-1") == .stale(snapshot, lastSuccessfulReadAt: readTime))
     }
 
     @Test
@@ -88,6 +105,7 @@ struct AgentSessionFactualProjectionStoreTests {
         let store = AgentSessionFactualProjectionStore(client: client)
 
         #expect(await store.refreshedSnapshot(sessionID: "session-1") == .failed(sessionID: "session-1"))
+        #expect(store.snapshot(sessionID: "session-1") == .failed(sessionID: "session-1"))
     }
 
     @Test

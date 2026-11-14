@@ -5,6 +5,7 @@ import ProvenanceEngineContracts
 enum AgentSessionFactualProjectionReadResult: Equatable, Sendable {
     case missingSession
     case unavailable
+    case refreshing
     case noSupportedCodingAgentDetected(ProvenanceWorkspaceCodingAgentSessionReadiness)
     case agentDetectedAwaitingFirstPrompt(ProvenanceWorkspaceCodingAgentSessionReadiness)
     case promptObservedAssociationPending(ProvenanceWorkspaceCodingAgentSessionReadiness)
@@ -16,4 +17,5 @@ enum AgentSessionFactualProjectionReadResult: Equatable, Sendable {
     case notFound(sessionID: String, reason: String?)
     case failed(sessionID: String?)
     case available(ProvenanceFactualSessionProjectionSnapshot)
+    case stale(ProvenanceFactualSessionProjectionSnapshot, lastSuccessfulReadAt: Date)
 }

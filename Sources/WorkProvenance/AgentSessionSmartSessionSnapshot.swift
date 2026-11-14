@@ -9,11 +9,13 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
     let workModel: WorkModel
     let factual: Factual
     let semanticMessages: [SemanticMessage]
+    let semanticMessagesReadStatus: String
     let crossSessionAwareness: CrossSessionAwareness
 
     init(
         workModel: ProvenanceSessionWorkModel,
         semanticMessages semanticMessageRecords: [ProvenanceSemanticMessageRecord],
+        semanticMessagesReadStatus: String = "available",
         crossSessionAwareness: CrossSessionAwareness = .unavailable
     ) {
         let factualProjection = workModel.basis.factualSessionProjection
@@ -41,7 +43,23 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
         self.workModel = WorkModel(model: workModel)
         self.factual = Factual(factualProjection: factualProjection)
         self.semanticMessages = messages
+        self.semanticMessagesReadStatus = semanticMessagesReadStatus
         self.crossSessionAwareness = crossSessionAwareness
+    }
+
+    private init(copying snapshot: Self, awareness: CrossSessionAwareness, semanticMessagesReadStatus: String) {
+        schemaVersion = snapshot.schemaVersion
+        revision = snapshot.revision
+        identity = snapshot.identity
+        workModel = snapshot.workModel
+        factual = snapshot.factual
+        semanticMessages = snapshot.semanticMessages
+        self.semanticMessagesReadStatus = semanticMessagesReadStatus
+        crossSessionAwareness = awareness
+    }
+
+    func withAwareness(_ awareness: CrossSessionAwareness) -> Self {
+        Self(copying: self, awareness: awareness, semanticMessagesReadStatus: "unavailable")
     }
 
     var bridgePayload: [String: Any] {
@@ -52,6 +70,8 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
             "workModel": workModel.bridgePayload,
             "factual": factual.bridgePayload,
             "semanticMessages": semanticMessages.map(\.bridgePayload),
+            "semanticMessagesReadStatus": semanticMessagesReadStatus,
+            "semanticMessagesCoverage": "unknown",
             "crossSessionAwareness": crossSessionAwareness.bridgePayload
         ]
     }
@@ -296,44 +316,33 @@ extension AgentSessionSmartSessionSnapshot {
         }
 
         func isNewerThan(_ other: Revision) -> Bool {
-            switch (factualRevision, other.factualRevision) {
-            case let (left?, right?) where left != right:
-                return left > right
-            case (.some, .none):
-                return true
-            case (.none, .some):
-                return false
-            default:
-                break
-            }
+            guard let leftFactual = factualRevision, let rightFactual = other.factualRevision else { return false }
+            if leftFactual != rightFactual { return leftFactual > rightFactual }
+            guard schemaVersion == 3, other.schemaVersion == 3 else { return false }
             switch (latestSemanticInferenceCreatedAt, other.latestSemanticInferenceCreatedAt) {
             case let (left?, right?):
                 if left != right {
                     return left > right
                 }
-            case (.some, .none):
-                return true
-            case (.none, .some):
+            case (.some, .none), (.none, .some):
                 return false
             case (.none, .none):
                 break
             }
             if semanticInferenceIDs != other.semanticInferenceIDs {
-                return semanticInferenceIDs.count > other.semanticInferenceIDs.count
+                return false
             }
             switch (latestSemanticMessageCreatedAt, other.latestSemanticMessageCreatedAt) {
             case let (left?, right?):
                 if left != right {
                     return left > right
                 }
-            case (.some, .none):
-                return true
-            case (.none, .some):
+            case (.some, .none), (.none, .some):
                 return false
             case (.none, .none):
                 break
             }
-            return semanticMessageCount > other.semanticMessageCount
+            return false
         }
 
         var bridgePayload: [String: Any] {

@@ -1,7 +1,8 @@
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
-import { SmartSessionSurface } from "../react/SmartSessionSurface";
+import { renderToStaticMarkup } from "react-dom/server";
+import { RelatedAwarenessNotice, SemanticReportsNotice, SmartSessionFreshnessBanner, SmartSessionSurface } from "../react/SmartSessionSurface";
 import { expect, test } from "bun:test";
 import { makeClientId } from "./ids";
 import {
@@ -1385,7 +1386,7 @@ function smartSessionSnapshot({
   return {
     schemaVersion: 1,
     revision: {
-      schemaVersion: 1,
+      schemaVersion: 3,
       factualRevision,
       key: modelRevisionKey,
       latestSemanticInferenceCreatedAt: knownSemantics ? latestSemanticInferenceCreatedAt : undefined,
@@ -1473,6 +1474,7 @@ function smartSessionSnapshot({
       turnCount: 1,
     },
     semanticMessages,
+    semanticMessagesReadStatus: "unavailable",
     crossSessionAwareness: {
       status: "available",
       relatedSessions: [],
@@ -1603,5 +1605,264 @@ test("smart session labels tool-only and assistant evidence without claiming a f
       dom.window.close();
       Object.assign(globalThis, { window: previousWindow, document: previousDocument, IS_REACT_ACT_ENVIRONMENT: false });
     }
+  }
+});
+
+test("smart session does not label a cached snapshot available after bridge failure", () => {
+  const current = reduceSmartSession(initialSmartSessionState(), {
+    type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: smartSessionSnapshot({ factualRevision: 4 }) },
+  });
+  const failed = reduceSmartSession(current, { type: "refreshFailed", requestId: 2 });
+  expect(failed.status).toBe("failed");
+  expect(failed.snapshot?.revision.factualRevision).toBe(4);
+});
+
+
+test("smart session keeps failed bridge snapshots marked stale and clears not-found", () => {
+  const snapshot = smartSessionSnapshot({ factualRevision: 4 });
+  const stale = reduceSmartSession(initialSmartSessionState(), {
+    type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "failed", snapshot, lastSuccessfulReadAt: "2026-08-17T07:05:00Z" },
+  });
+  expect(stale.status).toBe("failed");
+  expect(stale.snapshot).toEqual(snapshot);
+  expect(stale.lastSuccessfulReadAt).toBe("2026-08-17T07:05:00Z");
+  const missing = reduceSmartSession(stale, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "notFound" } });
+  expect(missing.snapshot).toBeUndefined();
+});
+
+test("smart session never attaches failed response to a different session", () => {
+  const current = reduceSmartSession(initialSmartSessionState(), {
+    type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: smartSessionSnapshot({ factualRevision: 4 }) },
+  });
+  const failed = reduceSmartSession(current, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "projectionFailed", sessionId: "different-session" } });
+  expect(failed.snapshot).toBeUndefined();
+});
+
+
+test("smart session visibly labels retained facts after failure", () => {
+  const state = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "failed", snapshot: smartSessionSnapshot({ factualRevision: 4 }), lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
+  const markup = renderToStaticMarkup(createElement(SmartSessionFreshnessBanner, { state, onRefresh: () => {} }));
+  expect(markup).toContain('role="status"');
+  expect(markup).toContain("Could not refresh. Showing last known session data.");
+  expect(markup).toContain("Session data last read");
+  expect(markup).toContain("Refresh");
+});
+
+test("smart session replaces an older revision from a different session", () => {
+  const first = smartSessionSnapshot({ factualRevision: 10 });
+  const second = smartSessionSnapshot({ factualRevision: 1 });
+  const replacement = { ...second, identity: { ...second.identity, sessionId: "another-session" } };
+  const current = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: first } });
+  const next = reduceSmartSession(current, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "available", snapshot: replacement } });
+  expect(next.snapshot?.identity.sessionId).toBe("another-session");
+  expect(next.snapshot?.revision.factualRevision).toBe(1);
+});
+
+test("a late failed refresh cannot replace a newer successful refresh", () => {
+  const current = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "available", snapshot: smartSessionSnapshot({ factualRevision: 4 }) } });
+  const late = reduceSmartSession(current, { type: "refreshFailed", requestId: 1 });
+  expect(late).toEqual(current);
+});
+
+test("smart session retains the last read time when a later failure keeps the same snapshot", () => {
+  const snapshot = smartSessionSnapshot({ factualRevision: 4 });
+  const first = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "failed", snapshot, lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
+  const later = reduceSmartSession(first, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "projectionFailed", sessionId: snapshot.identity.sessionId } });
+  expect(later.snapshot).toEqual(snapshot);
+  expect(later.status).toBe("projectionFailed");
+  expect(later.lastSuccessfulReadAt).toBe("2026-08-17T07:05:00Z");
+});
+
+test("smart session clears read time when a failure names a different session", () => {
+  const first = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "failed", snapshot: smartSessionSnapshot({ factualRevision: 4 }), lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
+  const next = reduceSmartSession(first, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "projectionFailed", sessionId: "different-session" } });
+  expect(next.snapshot).toBeUndefined();
+  expect(next.lastSuccessfulReadAt).toBeUndefined();
+});
+
+
+test("smart session keeps ambiguous equal-ranked semantic revisions as stale", () => {
+  const first = smartSessionSnapshot({ factualRevision: 4 });
+  const second = { ...first, revision: { ...first.revision, semanticInferenceIds: first.revision.semanticInferenceIds?.map(id => `${id}-replacement`) } };
+  const state = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: first } });
+  const result = reduceSmartSession(state, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "available", snapshot: second } });
+  expect(result.status).toBe("failed");
+  expect(result.snapshot).toEqual(first);
+});
+
+
+test("smart session accepts a truly identical equal-ranked snapshot", () => {
+  const snapshot = smartSessionSnapshot({ factualRevision: 4 });
+  const current = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot } });
+  const next = reduceSmartSession(current, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "available", snapshot } });
+  expect(next.status).toBe("available");
+  expect(next.snapshot).toEqual(snapshot);
+});
+
+
+test("smart session treats differing semantic counts as unordered", () => {
+  const first = smartSessionSnapshot({ factualRevision: 4 });
+  const alternatives = [
+    { ...first, revision: { ...first.revision, semanticInferenceIds: [...(first.revision.semanticInferenceIds ?? []), "new-id"] } },
+    { ...first, revision: { ...first.revision, semanticMessageCount: first.revision.semanticMessageCount + 1 } },
+  ];
+  const initial = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: first } });
+  for (const candidate of alternatives) {
+    const result = reduceSmartSession(initial, { type: "refreshSucceeded", requestId: 2,
+      result: { schemaVersion: 1, status: "available", snapshot: candidate } });
+    expect(result.status).toBe("failed");
+    expect(result.snapshot).toEqual(first);
+  }
+});
+
+
+test("independent awareness updates do not freeze an unchanged primary snapshot", () => {
+  const sample = smartSessionSnapshot({ factualRevision: 4 });
+  const first: SmartSessionSnapshot = { ...sample, crossSessionAwareness: { ...sample.crossSessionAwareness, status: "unavailable" } };
+  const next: SmartSessionSnapshot = { ...first, crossSessionAwareness: { ...first.crossSessionAwareness, status: "available" } };
+  const initial = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: first } });
+  const result = reduceSmartSession(initial, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "available", snapshot: next } });
+  expect(result.status).toBe("available");
+  expect(result.snapshot?.crossSessionAwareness.status).toBe("available");
+});
+
+test("semantic reports recover after an unavailable read without a factual revision change", () => {
+  const first = smartSessionSnapshot({ factualRevision: 4 });
+  const message = semanticMessage({ kind: "test", scope: "session", scopeId: "session-1", concisePhrase: "Observed" });
+  const recovered: SmartSessionSnapshot = { ...first, semanticMessages: [message], semanticMessagesReadStatus: "available",
+    revision: { ...first.revision, semanticMessageCount: 1, latestSemanticMessageCreatedAt: message.createdAt } };
+  const initial = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: first } });
+  const result = reduceSmartSession(initial, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "available", snapshot: recovered } });
+  expect(result.status).toBe("available");
+  expect(result.snapshot?.semanticMessages).toEqual([message]);
+});
+
+test("semantic recovery does not bypass an ambiguous changed primary model", () => {
+  const first = smartSessionSnapshot({ factualRevision: 4 });
+  const message = semanticMessage({ kind: "test", scope: "session", scopeId: "session-1", concisePhrase: "Observed" });
+  const candidate: SmartSessionSnapshot = { ...first, semanticMessages: [message], semanticMessagesReadStatus: "available",
+    revision: { ...first.revision, semanticMessageCount: 1, latestSemanticMessageCreatedAt: message.createdAt },
+    identity: { ...first.identity, status: "completed" } };
+  const initial = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: first } });
+  const result = reduceSmartSession(initial, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "available", snapshot: candidate } });
+  expect(result.status).toBe("failed");
+  expect(result.snapshot?.identity.status).toBe(first.identity.status);
+});
+
+test("ambiguous primary facts retain separately observed awareness", () => {
+  const first = smartSessionSnapshot({ factualRevision: 4 });
+  const second: SmartSessionSnapshot = { ...first,
+    revision: { ...first.revision, semanticInferenceIds: ["replacement"] },
+    crossSessionAwareness: { ...first.crossSessionAwareness, status: "unavailable" },
+  };
+  const initial = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: first } });
+  const result = reduceSmartSession(initial, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "available", snapshot: second } });
+  expect(result.status).toBe("failed");
+  expect(result.snapshot?.revision).toEqual(first.revision);
+  expect(result.snapshot?.crossSessionAwareness.status).toBe("unavailable");
+});
+
+
+test("related work reports each source's read availability", () => {
+  const awareness = smartSessionSnapshot({ factualRevision: 4 }).crossSessionAwareness;
+  const variants: Array<[SmartSessionSnapshot["crossSessionAwareness"], string]> = [
+    [{ ...awareness, status: "unavailable", relatedReadStatus: "unavailable", collisionReadStatus: "unavailable" }, "Related work is unavailable."],
+    [{ ...awareness, relatedReadStatus: "available", collisionReadStatus: "unavailable" }, "Some related-work information is incomplete or unavailable."],
+    [{ ...awareness, relatedReadStatus: "partial", collisionReadStatus: "available" }, "Some related-work information is incomplete or unavailable."],
+    [{ ...awareness, relatedReadStatus: "unavailable", collisionReadStatus: "available" }, "Some related-work information is incomplete or unavailable."],
+    [{ ...awareness, relatedReadStatus: "available", collisionReadStatus: "available" }, "may be incomplete"],
+    [awareness, "Some related-work information is incomplete or unavailable."],
+  ];
+  for (const [value, expected] of variants) {
+    const markup = renderToStaticMarkup(createElement(RelatedAwarenessNotice, { awareness: value }));
+    expect(markup).toContain(expected);
+  }
+});
+
+
+test("smart session does not order absent factual revisions or timestamps", () => {
+  const first = smartSessionSnapshot({ factualRevision: 4 });
+  const candidates: SmartSessionSnapshot[] = [
+    { ...first, revision: { ...first.revision, factualRevision: undefined } },
+    { ...first, revision: { ...first.revision, latestSemanticInferenceCreatedAt: undefined } },
+    { ...first, revision: { ...first.revision, schemaVersion: 2 } },
+  ];
+  const initial = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: first } });
+  for (const candidate of candidates) {
+    const result = reduceSmartSession(initial, { type: "refreshSucceeded", requestId: 2,
+      result: { schemaVersion: 1, status: "available", snapshot: candidate } });
+    expect(result.status).toBe("failed");
+    expect(result.snapshot).toEqual(first);
+    const reverseInitial = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+      result: { schemaVersion: 1, status: "available", snapshot: candidate } });
+    const reverse = reduceSmartSession(reverseInitial, { type: "refreshSucceeded", requestId: 2,
+      result: { schemaVersion: 1, status: "available", snapshot: first } });
+    expect(reverse.status).toBe("failed");
+    expect(reverse.snapshot).toEqual(candidate);
+  }
+});
+
+
+test("semantic report availability is visible without hiding factual data", () => {
+  expect(renderToStaticMarkup(createElement(SemanticReportsNotice, { status: "unavailable" }))).toContain("Additional session reports are unavailable or unknown.");
+  expect(renderToStaticMarkup(createElement(SemanticReportsNotice, {}))).toContain("Additional session reports are unavailable or unknown.");
+  expect(renderToStaticMarkup(createElement(SemanticReportsNotice, { status: "available" }))).toContain("Additional session reports may be incomplete.");
+});
+
+
+test("stale smart session offers an actionable refresh", async () => {
+  const dom = new JSDOM("<!doctype html><html><body><div id='root'></div></body></html>");
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  const previousDocument = Object.getOwnPropertyDescriptor(globalThis, "document");
+  const previousAct = Object.getOwnPropertyDescriptor(globalThis, "IS_REACT_ACT_ENVIRONMENT");
+  Object.defineProperty(globalThis, "window", { configurable: true, value: dom.window });
+  Object.defineProperty(globalThis, "document", { configurable: true, value: dom.window.document });
+  Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", { configurable: true, value: true });
+  const element = dom.window.document.getElementById("root");
+  if (!element) throw new Error("Missing test root");
+  const root = createRoot(element);
+  const state = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "failed", snapshot: smartSessionSnapshot({ factualRevision: 4 }) } });
+  const calls: string[] = [];
+  try {
+    await act(async () => root.render(createElement(SmartSessionFreshnessBanner, { state, onRefresh: () => calls.push("refresh") })));
+    expect(element.textContent).toContain("Could not refresh. Showing last known session data.");
+    const button = element.querySelector("button");
+    expect(button?.textContent).toBe("Refresh");
+    await act(async () => button?.click());
+    expect(calls).toEqual(["refresh"]);
+  } finally {
+    await act(async () => root.unmount());
+    if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow); else Reflect.deleteProperty(globalThis, "window");
+    if (previousDocument) Object.defineProperty(globalThis, "document", previousDocument); else Reflect.deleteProperty(globalThis, "document");
+    if (previousAct) Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", previousAct); else Reflect.deleteProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT");
+    dom.window.close();
   }
 });

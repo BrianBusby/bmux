@@ -5395,6 +5395,29 @@
         }
       }
     },
+    "agentSession.factual.refreshing": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Refreshing factual session data…" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "セッションの事実データを更新しています…" } }
+      }
+    },
+    "agentSession.factual.lastSuccessfulRead": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not refresh. Last successful read: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新できませんでした。最後に読み込めた日時：%@"
+          }
+        }
+      }
+    },
     "agentSession.factual.noSession": {
       "extractionState": "manual",
       "localizations": {
@@ -11200,6 +11223,13 @@
         }
       }
     },
+    "agentSession.web.smartSession.reportsIncomplete": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Additional session reports may be incomplete."}}, "ja": {"stringUnit": {"state": "translated", "value": "追加のセッション報告は不完全な場合があります。"}}}},
+    "agentSession.web.smartSession.reportsUnavailable": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Additional session reports are unavailable or unknown."}}, "ja": {"stringUnit": {"state": "translated", "value": "追加のセッション報告は利用できないか不明です。"}}}},
+    "agentSession.web.smartSession.relatedUncertain": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Related work was observed separately and may be incomplete; its current state is unknown."}}, "ja": {"stringUnit": {"state": "translated", "value": "関連作業は別途確認されたもので、不完全な場合があります。現在の状態は不明です。"}}}},
+    "agentSession.web.smartSession.relatedPartial": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Some related-work information is incomplete or unavailable. Current state is unknown."}}, "ja": {"stringUnit": {"state": "translated", "value": "関連作業の情報の一部は不完全か利用できません。現在の状態は不明です。"}}}},
+    "agentSession.web.smartSession.relatedUnavailable": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Related work is unavailable."}}, "ja": {"stringUnit": {"state": "translated", "value": "関連作業は利用できません。"}}}},
+    "agentSession.web.smartSession.stale": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Could not refresh. Showing last known session data."}}, "ja": {"stringUnit": {"state": "translated", "value": "更新できませんでした。最後に確認できたセッションデータを表示しています。"}}}},
+    "agentSession.web.smartSession.lastRead": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Session data last read"}}, "ja": {"stringUnit": {"state": "translated", "value": "セッションデータの最終読み込み日時"}}}},
     "agentSession.web.smartSession.loading": {
       "extractionState": "manual",
       "localizations": {
