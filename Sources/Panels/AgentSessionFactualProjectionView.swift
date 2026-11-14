@@ -305,11 +305,8 @@ struct AgentSessionFactualProjectionView: View {
                 }
                 if !turn.visibleReasoningSummaries.isEmpty {
                     overviewDisclosure(
-                        title: String(localized: "agentSession.factual.blockersAndApproach", defaultValue: "Blockers & approach changes"),
-                        detail: String.localizedStringWithFormat(
-                            String(localized: "agentSession.factual.reasoningCount", defaultValue: "%d change(s)"),
-                            turn.visibleReasoningSummaries.count
-                        ),
+                        title: AgentSessionUpdatePresentation.overviewTitle,
+                        detail: AgentSessionUpdatePresentation.overviewCount(turn.visibleReasoningSummaries.count),
                         isAvailable: true
                     ) {
                         reasoningRows(turn.visibleReasoningSummaries)

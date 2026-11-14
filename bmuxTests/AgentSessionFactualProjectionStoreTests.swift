@@ -179,6 +179,21 @@ struct AgentSessionFactualProjectionStoreTests {
     }
 
     @Test
+    func providerVisibleCommentaryIsPresentedAsUpdatesRatherThanBlockers() throws {
+        // Both generic commentary and provider reasoning summaries use this collection.
+        let snapshot = Self.snapshot(sessionID: "session-1", revision: 42,
+                                     reportTexts: ["Checking the catalog.", "The file contains two entries."])
+        let reports = try #require(snapshot.latestTurn).visibleReasoningSummaries
+        let japanese = AgentSessionUpdatePresentation.overviewTitle == "エージェントの報告"
+        #expect(AgentSessionUpdatePresentation.overviewTitle == (japanese ? "エージェントの報告" : "Agent updates"))
+        #expect(AgentSessionUpdatePresentation.overviewCount(reports.count) == (japanese ? "合計 2 件" : "2 total"))
+        #expect(AgentSessionUpdatePresentation.countTitle == (japanese ? "エージェントの報告" : "Agent updates"))
+        #expect(AgentSessionUpdatePresentation.detailTitle == (japanese ? "エージェントの報告" : "Agent update"))
+        #expect(AgentSessionUpdatePresentation.runTitle == (japanese ? "エージェントの報告" : "Agent updates"))
+        #expect(AgentSessionUpdatePresentation.activityBasis == (japanese ? "エージェントの報告に基づく" : "Based on an agent update"))
+    }
+
+    @Test
     func factualProjectionEvidenceRowsUseLatestCompactSlice() {
         #expect(AgentSessionFactualProjectionEvidenceRows.latestRows(["a", "b", "c", "d"], limit: 2) == ["c", "d"])
     }
@@ -215,7 +230,8 @@ struct AgentSessionFactualProjectionStoreTests {
     private static func snapshot(
         sessionID: String,
         revision: Int,
-        priorPrompt: String? = nil
+        priorPrompt: String? = nil,
+        reportTexts: [String] = []
     ) -> ProvenanceFactualSessionProjectionSnapshot {
         let updatedAt = Date(timeIntervalSince1970: 1_800_000_000)
         let thread = ProvenanceCodingAgentThreadRecord(
@@ -308,7 +324,12 @@ struct AgentSessionFactualProjectionStoreTests {
             ),
             currentPlan: nil,
             completedCommands: [],
-            visibleReasoningSummaries: [],
+            visibleReasoningSummaries: reportTexts.enumerated().map { index, text in
+                ProvenanceCodingAgentReasoningSummaryRecord(
+                    id: "report-\(index)", sessionID: sessionID, threadID: thread.id, turnID: turn.id,
+                    provider: "codex", text: text, completedAt: updatedAt, source: .observed, confidence: .high
+                )
+            },
             fileChangeAttributions: []
         )
         return ProvenanceFactualSessionProjectionSnapshot(
