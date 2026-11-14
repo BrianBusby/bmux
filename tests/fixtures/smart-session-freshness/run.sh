@@ -45,7 +45,7 @@ source = source.replace('    func health() async throws -> ProvenanceEngineHealt
         guard relatedAvailable else { throw SmartSessionStoreTestError.unimplemented }
         let session = models[0].identity.session
         let metadata = ProvenanceRelatedSessionProjectionMetadata(revisionID: "r", projectionRuleID: "rule", projectionRuleVersion: "1", requestFingerprint: "q", contentFingerprint: "c", resultLimit: 5, exclusionLimit: 5, updatedAfter: nil, sourceEvidenceWatermark: nil, generatedAt: nil)
-        let completeness = ProvenanceRelatedSessionCompleteness(status: "partial", evaluatedThroughSequence: nil, fields: [], notes: [])
+        let completeness = ProvenanceRelatedSessionCompleteness(status: "partial", evaluatedThroughSequence: nil, fields: [.init(field: "candidates", status: "partial", reason: "bounded")], notes: [])
         let projection = ProvenanceRelatedSessionProjection(targetSessionID: session.id, targetSession: session, targetSessionOutcomeProjection: nil, targetSessionWorkModelRevision: nil, projection: metadata, relatedSessions: [], excludedCandidates: [], completeness: completeness)
         return .init(found: true, targetSessionID: relatedWrongTarget ? "foreign" : session.id, projection: projection)
     }
@@ -55,7 +55,7 @@ source = source.replace('    func health() async throws -> ProvenanceEngineHealt
         guard collisionAvailable else { throw SmartSessionStoreTestError.unimplemented }
         let session = models[0].identity.session
         let metadata = ProvenanceArtifactCollisionProjectionMetadata(revisionID: "r", projectionRuleID: "rule", projectionRuleVersion: "1", requestFingerprint: "q", contentFingerprint: "c", resultLimit: 5, relatedSessionLimit: 20, exclusionLimit: 5, artifactPath: nil, normalizedArtifactPath: nil, updatedAfter: nil, staleBefore: nil, sourceEvidenceWatermark: nil, generatedAt: nil)
-        let completeness = ProvenanceArtifactCollisionCompleteness(status: "partial", evaluatedThroughSequence: nil, fields: [], notes: [])
+        let completeness = ProvenanceArtifactCollisionCompleteness(status: "partial", evaluatedThroughSequence: nil, fields: [.init(field: "candidates", status: "partial", reason: "bounded")], notes: [])
         let projection = ProvenanceArtifactCollisionProjection(targetSessionID: session.id, targetSession: session, targetSessionOutcomeProjection: nil, relatedSessionProjection: nil, projection: metadata, candidates: [], excludedCandidates: [], completeness: completeness)
         return .init(found: true, targetSessionID: session.id, projection: projection)
     }
@@ -137,35 +137,50 @@ extension AgentSessionSmartSessionStoreTests {
             return
         }
         #expect(refreshed.crossSessionAwareness.status == "available")
-        #expect(refreshed.crossSessionAwareness.bridgePayload["relatedReadStatus"] as? String == "available")
+        #expect(refreshed.crossSessionAwareness.bridgePayload["relatedReadStatus"] as? String == "partial")
+        let fields = refreshed.crossSessionAwareness.bridgePayload["relatedAvailability"] as? [[String: String]]
+        #expect(fields?.first?["reason"] == "bounded")
         #expect(refreshed.crossSessionAwareness.bridgePayload["collisionReadStatus"] as? String == "unavailable")
         await client.setCollisionAvailable(true)
         guard case .available(let both) = await store.refreshedSnapshot(sessionID: "session-1") else {
             Issue.record("Both sources should be available")
             return
         }
-        #expect(both.crossSessionAwareness.bridgePayload["relatedReadStatus"] as? String == "available")
-        #expect(both.crossSessionAwareness.bridgePayload["collisionReadStatus"] as? String == "available")
+        #expect(both.crossSessionAwareness.bridgePayload["relatedReadStatus"] as? String == "partial")
+        #expect(both.crossSessionAwareness.bridgePayload["collisionReadStatus"] as? String == "partial")
         await client.setRelatedWrongTarget(true)
         guard case .available(let wrongTarget) = await store.refreshedSnapshot(sessionID: "session-1") else {
             Issue.record("Wrong-target related response must not affect primary facts")
             return
         }
         #expect(wrongTarget.crossSessionAwareness.bridgePayload["relatedReadStatus"] as? String == "unavailable")
-        #expect(wrongTarget.crossSessionAwareness.bridgePayload["collisionReadStatus"] as? String == "available")
+        #expect(wrongTarget.crossSessionAwareness.bridgePayload["collisionReadStatus"] as? String == "partial")
         await client.setRelatedAvailable(false)
         guard case .available(let collisionOnly) = await store.refreshedSnapshot(sessionID: "session-1") else {
             Issue.record("Collision source should be available")
             return
         }
         #expect(collisionOnly.crossSessionAwareness.bridgePayload["relatedReadStatus"] as? String == "unavailable")
-        #expect(collisionOnly.crossSessionAwareness.bridgePayload["collisionReadStatus"] as? String == "available")
+        #expect(collisionOnly.crossSessionAwareness.bridgePayload["collisionReadStatus"] as? String == "partial")
         await client.setCollisionAvailable(false)
         guard case .available(let unavailable) = await store.refreshedSnapshot(sessionID: "session-1") else {
             Issue.record("Independent awareness failure froze primary snapshot")
             return
         }
         #expect(unavailable.crossSessionAwareness.status == "unavailable")
+    }
+
+    @Test func unknownFactualRevisionAndMissingTimestampsDoNotOrder() {
+        let workKnown = ProvenanceSessionWorkModelRevision(factualRevision: 42, semanticInferenceIDs: ["a"], latestSemanticInferenceCreatedAt: nil)
+        let workUnknown = ProvenanceSessionWorkModelRevision(factualRevision: nil, semanticInferenceIDs: ["a"], latestSemanticInferenceCreatedAt: Date(timeIntervalSince1970: 100))
+        let known = AgentSessionSmartSessionSnapshot.Revision(workModelRevision: workKnown, semanticMessageCount: 1, latestSemanticMessageCreatedAt: nil)
+        let unknown = AgentSessionSmartSessionSnapshot.Revision(workModelRevision: workUnknown, semanticMessageCount: 1, latestSemanticMessageCreatedAt: nil)
+        #expect(!known.isNewerThan(unknown))
+        #expect(!unknown.isNewerThan(known))
+        let later = ProvenanceSessionWorkModelRevision(factualRevision: 42, semanticInferenceIDs: ["a"], latestSemanticInferenceCreatedAt: Date(timeIntervalSince1970: 100))
+        let withTime = AgentSessionSmartSessionSnapshot.Revision(workModelRevision: later, semanticMessageCount: 1, latestSemanticMessageCreatedAt: nil)
+        #expect(!withTime.isNewerThan(known))
+        #expect(!known.isNewerThan(withTime))
     }
 
     @Test func semanticCountsDoNotEstablishRevisionOrder() {

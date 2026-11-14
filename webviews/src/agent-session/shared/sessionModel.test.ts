@@ -1729,3 +1729,27 @@ test("related work reports each source's read availability", () => {
     expect(markup).toContain(expected);
   }
 });
+
+
+test("smart session does not order absent factual revisions or timestamps", () => {
+  const first = smartSessionSnapshot({ factualRevision: 4 });
+  const candidates: SmartSessionSnapshot[] = [
+    { ...first, revision: { ...first.revision, factualRevision: undefined } },
+    { ...first, revision: { ...first.revision, latestSemanticInferenceCreatedAt: undefined } },
+    { ...first, revision: { ...first.revision, schemaVersion: 2 } },
+  ];
+  const initial = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: first } });
+  for (const candidate of candidates) {
+    const result = reduceSmartSession(initial, { type: "refreshSucceeded", requestId: 2,
+      result: { schemaVersion: 1, status: "available", snapshot: candidate } });
+    expect(result.status).toBe("failed");
+    expect(result.snapshot).toEqual(first);
+    const reverseInitial = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+      result: { schemaVersion: 1, status: "available", snapshot: candidate } });
+    const reverse = reduceSmartSession(reverseInitial, { type: "refreshSucceeded", requestId: 2,
+      result: { schemaVersion: 1, status: "available", snapshot: first } });
+    expect(reverse.status).toBe("failed");
+    expect(reverse.snapshot).toEqual(candidate);
+  }
+});
