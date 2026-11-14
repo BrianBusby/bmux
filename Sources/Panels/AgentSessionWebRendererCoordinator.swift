@@ -4,6 +4,9 @@ import WebKit
 
 @MainActor
 final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandlerWithReply {
+#if DEBUG
+    var debugSmartStaleFixture: AgentSessionSmartSessionReadResult?
+#endif
     var terminalChatSnapshot: (() async -> [String: Any])?
     var terminalChatRawOutput: ((_ sessionID: String, _ messageID: String) async throws -> String?)?
     var terminalChatDraft: ((AgentSessionBridgeRequest) throws -> Void)?
@@ -105,6 +108,11 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
         }
 
         let configuration = WKWebViewConfiguration()
+#if DEBUG
+        if debugSmartStaleFixture != nil {
+            configuration.websiteDataStore = .nonPersistent()
+        }
+#endif
         configuration.suppressesIncrementalRendering = false
         configuration.userContentController.addScriptMessageHandler(
             self,
@@ -434,6 +442,16 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
     }
 
     func handle(_ request: AgentSessionBridgeRequest) async throws -> Any {
+#if DEBUG
+        if let fixture = debugSmartStaleFixture {
+            switch request.method {
+            case "app.context": return makeAppContext()
+            case "provider.list": return [] as [Any]
+            case "smartSession.snapshot": return fixture.bridgePayload
+            default: throw AgentSessionBridgeError.unsupportedMethod(request.method)
+            }
+        }
+#endif
         if terminalChatSnapshot != nil {
             switch request.method {
             case "app.context", "terminalChat.openChat", "terminalChat.snapshot", "terminalChat.openTerminal", "terminalChat.rawOutput", "terminalChat.action", "terminalChat.draft", "terminalChat.startConnected", "provider.list": break
