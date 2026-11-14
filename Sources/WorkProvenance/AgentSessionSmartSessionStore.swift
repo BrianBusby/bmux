@@ -17,10 +17,26 @@ final class AgentSessionSmartSessionStore {
     private static let semanticReconciliationAttemptLimit = 3
     private static let admittedWaiterLimit = 16
 
+    #if DEBUG
+    enum RefreshObservation: Equatable, Sendable {
+        case admitted(sessionID: String, followingUp: Bool)
+        case cancelled(sessionID: String, followingUp: Bool)
+        case rejected(sessionID: String, followingUp: Bool)
+    }
+    private let refreshObserver: (@MainActor (RefreshObservation) -> Void)?
+
+    init(client: any ProvenanceEngineClient, now: @escaping @MainActor () -> Date = Date.init,
+         refreshObserver: (@MainActor (RefreshObservation) -> Void)? = nil) {
+        self.client = client
+        self.now = now
+        self.refreshObserver = refreshObserver
+    }
+    #else
     init(client: any ProvenanceEngineClient, now: @escaping @MainActor () -> Date = Date.init) {
         self.client = client
         self.now = now
     }
+    #endif
 
     func snapshot(sessionID rawSessionID: String?) -> AgentSessionSmartSessionReadResult {
         guard let sessionID = Self.trimmedNonEmpty(rawSessionID) else { return .missingSession }
@@ -43,11 +59,17 @@ final class AgentSessionSmartSessionStore {
                 guard entry.admittedWaiters.count < Self.admittedWaiterLimit else {
                     entry.overflowDirty = true
                     refreshTasksBySessionID[sessionID] = entry
+                    #if DEBUG
+                    refreshObserver?(.rejected(sessionID: sessionID, followingUp: entry.followingUp))
+                    #endif
                     return Self.uncertainResult(sessionID: sessionID, cached: entry.priorSnapshot)
                 }
                 entry.admittedWaiters.insert(waiterID)
                 entry.dirtyWaiters.insert(waiterID)
                 refreshTasksBySessionID[sessionID] = entry
+                #if DEBUG
+                refreshObserver?(.admitted(sessionID: sessionID, followingUp: entry.followingUp))
+                #endif
                 task = entry.task
             } else {
                 let requestID = UUID()
@@ -69,8 +91,13 @@ final class AgentSessionSmartSessionStore {
     private func cancelWaiter(_ waiterID: UUID, sessionID: String) {
         guard var entry = refreshTasksBySessionID[sessionID] else { return }
         entry.dirtyWaiters.remove(waiterID)
-        entry.admittedWaiters.remove(waiterID)
+        let wasAdmitted = entry.admittedWaiters.remove(waiterID) != nil
         refreshTasksBySessionID[sessionID] = entry
+        #if DEBUG
+        if wasAdmitted { refreshObserver?(.cancelled(sessionID: sessionID, followingUp: entry.followingUp)) }
+        #else
+        _ = wasAdmitted
+        #endif
     }
 
     private func performRefresh(sessionID: String, requestID: UUID) async -> AgentSessionSmartSessionReadResult {
