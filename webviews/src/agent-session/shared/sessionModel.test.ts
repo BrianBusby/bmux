@@ -1995,6 +1995,7 @@ test("loaded evidence is selectable and available through a disclosure", async (
     await act(async () => root.render(createElement(SmartSessionSurface, { context })));
     const details = container.querySelector<HTMLDetailsElement>(".focus-results details");
     expect(details).not.toBeNull();
+    expect(Boolean(container.querySelector(".focus-connected-dot"))).toBe(false);
     expect(details?.open).toBe(false);
     const summary = details?.querySelector<HTMLElement>("summary");
     expect(summary?.textContent).toBe("Show all loaded evidence");
