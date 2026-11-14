@@ -12,7 +12,7 @@ struct ExpandedTurnPresentation {
     init(reference: ProvenanceFactualSessionProjectionTurnReference, detail: ProvenanceFactualSessionProjectionTurnSnapshot?) {
         self.reference = reference
         self.detail = detail
-        request = ExpandedTurnRequest(objective: detail?.submittedPrompt?.text, prompt: detail?.submittedPrompt?.text)
+        request = ExpandedTurnRequest(objective: nil, prompt: detail?.submittedPrompt?.text)
         finalOutput = detail?.assistantMessages.last(where: { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty })?.text
         let fileSummary = detail?.fileChangeAttributions.compactMap(\.summary).last
         let reasoningSummary = detail?.visibleReasoningSummaries.last?.text

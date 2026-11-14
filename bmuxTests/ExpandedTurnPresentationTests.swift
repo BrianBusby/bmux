@@ -22,24 +22,59 @@ import SwiftUI
         #expect(AgentSessionFactualProjectionEvidenceRows.isPlanStepCompleted(status) == expected)
     }
 
+    @Test func followUpPromptDoesNotBecomeAnObjective() {
+        let date = Date(timeIntervalSince1970: 1_800_000_000)
+        let turn = ProvenanceCodingAgentTurnRecord(id: "turn", sessionID: "session", provider: "codex",
+            providerTurnID: "provider-turn", status: "completed", updatedAt: date, source: .observed, confidence: .high)
+        let prompt = ProvenanceCodingAgentPromptRecord(id: "prompt", sessionID: "session", turnID: turn.id,
+            provider: "codex", text: "Looks good", submittedAt: date, source: .observed, confidence: .high)
+        let detail = ProvenanceFactualSessionProjectionTurnSnapshot(turn: turn, submittedPrompt: prompt,
+            currentPlan: nil, completedCommands: [], visibleReasoningSummaries: [], fileChangeAttributions: [], assistantMessages: [])
+        let presentation = ExpandedTurnPresentation(reference: .init(turn: turn), detail: detail)
+        #expect(presentation.request.objective == nil)
+        #expect(presentation.request.prompt == "Looks good")
+        #expect(!presentation.request.identical)
+    }
+
+    @Test func structuredPromptRemainsInspectableWithoutAnObjective() {
+        let date = Date(timeIntervalSince1970: 1_800_000_000)
+        let turn = ProvenanceCodingAgentTurnRecord(id: "turn", sessionID: "session", provider: "codex",
+            providerTurnID: "provider-turn", status: "completed", updatedAt: date, source: .observed, confidence: .high)
+        let raw = "<send_user_message_question_reply>[{\"question\":\"Continue?\",\"answer\":\"Yes\"}]</send_user_message_question_reply>"
+        let prompt = ProvenanceCodingAgentPromptRecord(id: "prompt", sessionID: "session", turnID: turn.id,
+            provider: "codex", text: raw, submittedAt: date, source: .observed, confidence: .high)
+        let detail = ProvenanceFactualSessionProjectionTurnSnapshot(turn: turn, submittedPrompt: prompt,
+            currentPlan: nil, completedCommands: [], visibleReasoningSummaries: [], fileChangeAttributions: [], assistantMessages: [])
+        let request = ExpandedTurnPresentation(reference: .init(turn: turn), detail: detail).request
+        #expect(request.objective == nil)
+        #expect(request.prompt == raw)
+        #expect(request.promptReplies?.map(\.question) == ["Continue?"])
+        #expect(request.promptReplies?.map(\.answer) == ["Yes"])
+    }
+
     @Test func repliesAndRawSources() {
         let raw = " \n<send_user_message_question_reply>\n[{\"question\":\"Which base?\",\"answer\":\"708\",\"questionItemId\":1},{\"question\":\"Build?\",\"answer\":\"Yes\"}]\n</send_user_message_question_reply> \n"
         let value = ExpandedTurnRequest(objective: raw, prompt: raw.trimmingCharacters(in: .whitespacesAndNewlines))
         #expect(value.identical)
         #expect(value.objective == raw)
-        #expect(value.replies?.map(\.answer) == ["708", "Yes"])
+        #expect(value.objectiveReplies?.map(\.answer) == ["708", "Yes"])
         #expect(ExpandedTurnRequest(objective: raw, prompt: "different").identical == false)
-        #expect(ExpandedTurnRequest(objective: nil, prompt: raw).replies == nil)
+        #expect(ExpandedTurnRequest(objective: nil, prompt: raw).promptReplies?.map(\.answer) == ["708", "Yes"])
+        let distinct = ExpandedTurnRequest(objective: "Restore the workspace", prompt: raw)
+        #expect(!distinct.identical)
+        #expect(distinct.objectiveReplies == nil)
+        #expect(distinct.promptReplies?.map(\.answer) == ["708", "Yes"])
+        #expect(distinct.prompt == raw)
     }
     @Test(arguments: ["[]", "{}", "[{}]", "[{\"question\":\"Q\"}]", "[{\"question\":1,\"answer\":\"A\"}]", "[{\"question\":\" \",\"answer\":\"A\"}]", "broken"])
     func invalidReplies(payload: String) {
         let raw = "<send_user_message_question_reply>\(payload)</send_user_message_question_reply>"
         let request = ExpandedTurnRequest(objective: raw, prompt: nil)
-        #expect(request.replies == nil)
+        #expect(request.objectiveReplies == nil)
         #expect(request.objective == raw)
     }
     @Test(arguments: ["plain text", "<unsupported>[]</unsupported>", "<send_user_message_question_reply>[]"])
-    func plainFallback(raw: String) { #expect(ExpandedTurnRequest(objective: raw, prompt: nil).replies == nil) }
+    func plainFallback(raw: String) { #expect(ExpandedTurnRequest(objective: raw, prompt: nil).objectiveReplies == nil) }
     @Test func literalDeduplication() {
         #expect(ExpandedTurnRequest.visibleSummary(" \n", finalOutput: "answer") == nil)
         #expect(ExpandedTurnRequest.visibleSummary(" answer ", finalOutput: "\nanswer\n") == nil)
