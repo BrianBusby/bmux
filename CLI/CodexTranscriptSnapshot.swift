@@ -51,21 +51,19 @@ struct CodexTranscriptSnapshot {
             var foundMetadata = false
             var lines: [String] = []
             var retainedBytes = 0
-            var start = data.startIndex
-            for index in data.indices where data[index] == 0x0a {
-                defer { start = data.index(after: index) }
-                guard start != index else { continue }
-                let encoded = data.subdata(in: start..<index)
-                guard let text = String(data: encoded, encoding: .utf8) else { return .unknown(.malformed) }
-                guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { continue }
+            var framer = CodexTranscriptLineFramer(maximumLineBytes: maxBytes)
+            try framer.append(data, startOffset: 0) { framed, _ in
+                guard case let .bytes(encoded) = framed else { throw CodexTranscriptSnapshotUnknown.oversized }
+                guard let text = String(data: encoded, encoding: .utf8) else { throw CodexTranscriptSnapshotUnknown.malformed }
+                guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
                 guard lines.count < maxRetainedLines,
-                      encoded.count <= maxRetainedBytes - retainedBytes else { return .unknown(.resourceLimit) }
+                      encoded.count <= maxRetainedBytes - retainedBytes else { throw CodexTranscriptSnapshotUnknown.resourceLimit }
                 retainedBytes += encoded.count
                 var uniqueness = CodexJSONUniqueKeys(bytes: Array(encoded))
-                guard uniqueness.validate() else { return .unknown(.malformed) }
+                guard uniqueness.validate() else { throw CodexTranscriptSnapshotUnknown.malformed }
                 guard let object = try? JSONSerialization.jsonObject(with: encoded) as? [String: Any],
                       let kind = object["type"] as? String, let payload = object["payload"] as? [String: Any] else {
-                    return .unknown(.malformed)
+                    throw CodexTranscriptSnapshotUnknown.malformed
                 }
                 if kind == "session_meta" {
                     let values = ["session_id", "id"].compactMap { key -> String? in
@@ -74,17 +72,19 @@ struct CodexTranscriptSnapshot {
                     }
                     guard !values.isEmpty, values.allSatisfy({ !$0.isEmpty && $0 == expected }),
                           ["session_id", "id"].allSatisfy({ payload[$0] == nil || payload[$0] is String }) else {
-                        return .unknown(.unverifiedSession)
+                        throw CodexTranscriptSnapshotUnknown.unverifiedSession
                     }
                     foundMetadata = true
                 } else if !foundMetadata {
-                    return .unknown(.unverifiedSession)
+                    throw CodexTranscriptSnapshotUnknown.unverifiedSession
                 }
                 lines.append(text)
             }
             guard foundMetadata else { return .unknown(.unverifiedSession) }
             return .verified(CodexTranscriptSnapshot(device: UInt64(before.st_dev), inode: UInt64(before.st_ino),
                                                      capturedBytes: size, lines: lines))
+        } catch let reason as CodexTranscriptSnapshotUnknown {
+            return .unknown(reason)
         } catch {
             return .unknown(.unavailable)
         }
@@ -99,7 +99,7 @@ struct CodexTranscriptSnapshot {
     }
 }
 
-enum CodexTranscriptSnapshotUnknown {
+enum CodexTranscriptSnapshotUnknown: Error {
     case invalidSession, unavailable, oversized, shortRead, sourceChanged, partial, malformed, unverifiedSession, resourceLimit
 }
 
