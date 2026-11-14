@@ -22,6 +22,20 @@ import SwiftUI
         #expect(AgentSessionFactualProjectionEvidenceRows.isPlanStepCompleted(status) == expected)
     }
 
+    @Test func followUpPromptDoesNotBecomeAnObjective() {
+        let date = Date(timeIntervalSince1970: 1_800_000_000)
+        let turn = ProvenanceCodingAgentTurnRecord(id: "turn", sessionID: "session", provider: "codex",
+            providerTurnID: "provider-turn", status: "completed", updatedAt: date, source: .observed, confidence: .high)
+        let prompt = ProvenanceCodingAgentPromptRecord(id: "prompt", sessionID: "session", turnID: turn.id,
+            provider: "codex", text: "Looks good", submittedAt: date, source: .observed, confidence: .high)
+        let detail = ProvenanceFactualSessionProjectionTurnSnapshot(turn: turn, submittedPrompt: prompt,
+            currentPlan: nil, completedCommands: [], visibleReasoningSummaries: [], fileChangeAttributions: [], assistantMessages: [])
+        let presentation = ExpandedTurnPresentation(reference: .init(turn: turn), detail: detail)
+        #expect(presentation.request.objective == nil)
+        #expect(presentation.request.prompt == "Looks good")
+        #expect(!presentation.request.identical)
+    }
+
     @Test func repliesAndRawSources() {
         let raw = " \n<send_user_message_question_reply>\n[{\"question\":\"Which base?\",\"answer\":\"708\",\"questionItemId\":1},{\"question\":\"Build?\",\"answer\":\"Yes\"}]\n</send_user_message_question_reply> \n"
         let value = ExpandedTurnRequest(objective: raw, prompt: raw.trimmingCharacters(in: .whitespacesAndNewlines))
