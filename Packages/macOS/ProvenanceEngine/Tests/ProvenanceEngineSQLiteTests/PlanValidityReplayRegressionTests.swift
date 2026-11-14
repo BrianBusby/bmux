@@ -5,7 +5,7 @@ import Testing
 
 /// Proposed safety contract; synthetic origins are labels, not provider attestations.
 @Suite struct PlanValidityReplayRegressionTests {
-    @Test func ambiguousLaterPlanStaysUnknownAfterReopenAndReplay() async throws {
+    @Test func ambiguousLaterPlanStaysUnknownOnSecondConnectionAndReplay() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-plan-validity-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -27,6 +27,7 @@ import Testing
         }
         // Existing payload cannot represent requests, results, causal links, or coverage.
         // These labels model indistinguishable legacy rows; proposed reason is not implemented.
+        // This is a second connection while the original is alive, not a process restart.
         let reopened = try ProvenanceSQLiteRepository(url: url)
         for phase in 0..<2 {
             if phase == 1 { _ = try await reopened.rebuildProjectionsFromEventLedger(batchSize: 2) }
@@ -38,6 +39,7 @@ import Testing
             let availability = outcome.completeness.fields.first { $0.field == "plan_items" }
             #expect(availability?.reason == "unverified_plan_evidence")
             #expect(availability?.status == "unavailable" || availability?.status == "partial")
+            // Until a validity-bearing history exists, these unqualified items cannot be current.
             #expect(outcome.planItems.isEmpty)
             #expect(outcome.actionsCompleted.isEmpty)
         }
@@ -56,11 +58,17 @@ import Testing
             let turn = ProvenanceCodingAgentTurnRecord(id: "shared-turn", sessionID: id, provider: "codex", providerTurnID: "shared", status: "started", startedAt: time, updatedAt: time, source: .observed, confidence: .high)
             try await repository.appendEvent(.init(id: "turn-\(index)", eventType: .codingAgentTurnObserved, timestamp: time, sessionID: id, source: .observed, confidence: .high, payload: .init(codingAgentTurn: turn)))
         }
+        let independent = ProvenanceCodingAgentTurnRecord(id: "independent-turn", sessionID: "session-A", provider: "codex", providerTurnID: "independent", status: "started", startedAt: time, updatedAt: time, source: .observed, confidence: .high)
+        try await repository.appendEvent(.init(id: "turn-independent", eventType: .codingAgentTurnObserved, timestamp: time, sessionID: "session-A", source: .observed, confidence: .high, payload: .init(codingAgentTurn: independent)))
+        // This is a second connection while the original is alive, not a process restart.
         let reopened = try ProvenanceSQLiteRepository(url: url)
         for phase in 0..<2 {
             if phase == 1 { _ = try await reopened.rebuildProjectionsFromEventLedger(batchSize: 2) }
             let ledger = try await reopened.eventLedgerEntries(limit: 20)
-            #expect(ledger.map(\.event.id) == ["session-0", "turn-0", "session-1", "turn-1"])
+            #expect(ledger.map(\.event.id) == ["session-0", "turn-0", "session-1", "turn-1", "turn-independent"])
+            let control = try await reopened.turnOutcome(.init(turnID: "independent-turn"))
+            #expect(control.found)
+            #expect(control.outcome?.sessionID == "session-A")
             let result = try await reopened.turnOutcome(.init(turnID: "shared-turn"))
             #expect(!result.found)
             #expect(result.outcome == nil)
