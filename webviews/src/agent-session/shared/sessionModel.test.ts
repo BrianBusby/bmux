@@ -1565,7 +1565,7 @@ function semanticMessage({
 
 
 test("smart session labels tool-only and assistant evidence without claiming a final output", async () => {
-  const catalog: unknown = await Bun.file("Resources/Localizable.xcstrings").json();
+  const catalog: unknown = await Bun.file(new URL("../../../../Resources/Localizable.xcstrings", import.meta.url)).json();
   function field(value: unknown, key: string): unknown {
     if (typeof value !== "object" || value === null || !(key in value)) throw new Error(`Missing catalog field ${key}`);
     return Reflect.get(value, key);
@@ -1868,7 +1868,7 @@ test("stale smart session offers an actionable refresh", async () => {
 });
 
 test.each(["in_progress", "completed", "missing"])("smart session describes latest turn: %s", async (status) => {
-  const catalog: unknown = await Bun.file("Resources/Localizable.xcstrings").json();
+  const catalog: unknown = await Bun.file(new URL("../../../../Resources/Localizable.xcstrings", import.meta.url)).json();
   function field(value: unknown, key: string): unknown {
     if (typeof value !== "object" || value === null || !(key in value)) throw new Error(`Missing catalog field ${key}`);
     return Reflect.get(value, key);
