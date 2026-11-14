@@ -87,7 +87,7 @@ function FocusView({ copy, state, onRefresh, expandedTurnID, onExpandTurn, onIns
   const history = sortSmartSessionTurnReferencesNewestFirst(snapshot.factual.priorTurns);
   const related = snapshot.crossSessionAwareness.status === "available" && (snapshot.crossSessionAwareness.relatedSessions.length > 0 || snapshot.crossSessionAwareness.collisions.length > 0);
   return h("div", { className: "focus-reading-column" },
-    current ? h(CurrentTurnCard, { copy, turn: current, purpose, activity, onInspect }) : h(EmptyState, { message: text(copy, "smartSessionNoCurrentTurn", "No current turn. The latest supported outcome appears below.") }),
+    current ? h(CurrentTurnCard, { copy, turn: current, purpose, activity, onInspect }) : h(EmptyState, { message: text(copy, "smartSessionNoCurrentTurn", "Latest turn unavailable.") }),
     related ? h(RelatedWorkStrip, { copy, snapshot, onInspect }) : null,
     h(RelatedAwarenessNotice, { copy, awareness: snapshot.crossSessionAwareness }),
     h("section", { className: "focus-history-section" }, h("div", { className: "focus-section-heading" }, h("h2", null, text(copy, "smartSessionPriorTurns", "History")), h("span", { className: "focus-section-meta" }, `${history.length}`)), history.length ? h("div", { className: "focus-history-list" }, ...history.map(turn => h(PriorTurnCard, { key: turn.turnId, copy, turn, expanded: expandedTurnID === turn.turnId, onToggle: () => onExpandTurn(expandedTurnID === turn.turnId ? null : turn.turnId), onInspect }))) : h("p", { className: "focus-muted" }, text(copy, "smartSessionNoEvidence", "No completed turns yet."))),
@@ -99,7 +99,7 @@ function CurrentTurnCard({ copy, turn, purpose, activity, onInspect }: { copy?: 
   const output = turn.assistantMessages.at(-1);
   const results = [...turn.completedCommands.slice(0, 3).map(command => `${command.command} · ${command.status}`), ...turn.fileChangeAttributions.slice(0, 2).map(change => change.summary ?? change.paths.join(", ")), ...(output ? [output.text] : [])].filter(Boolean);
   return h("article", { className: "focus-current-card" },
-    h("div", { className: "focus-card-kicker" }, text(copy, "smartSessionCurrentTurn", "Current turn"), h("span", { className: `focus-turn-status focus-turn-${turn.status}` }, turn.status)),
+    h("div", { className: "focus-card-kicker" }, text(copy, "smartSessionCurrentTurn", "Latest turn"), h("span", { className: `focus-turn-status focus-turn-${turn.status}` }, turn.status)),
     h("h2", null, turn.prompt?.text ?? text(copy, "smartSessionUnknown", "Objective unavailable")),
     h("div", { className: "focus-current-grid" }, h(SummaryBlock, { label: text(copy, "smartSessionPurpose", "Objective"), value: purpose?.summary ?? turn.prompt?.text ?? text(copy, "smartSessionUnknown", "Unknown") }), h(SummaryBlock, { label: text(copy, "smartSessionCurrentActivity", "Current activity"), value: activity?.summary ?? latestActivity(turn, copy) })),
     h("section", { className: "focus-results" }, h("h3", null, text(copy, "smartSessionFinalOutput", "Evidence")), results.length ? h("ul", null, ...results.map((result, index) => h("li", { key: `${turn.turnId}-${index}` }, result))) : h("p", { className: "focus-muted" }, text(copy, "smartSessionNoEvidence", "No evidence yet."))),

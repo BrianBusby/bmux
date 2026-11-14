@@ -140,7 +140,7 @@ const context: AppContext = {
     smartSessionUnknown: "Unknown",
     smartSessionIdentity: "Identity",
     smartSessionPurpose: "Purpose",
-    smartSessionCurrentTurn: "Current turn",
+    smartSessionCurrentTurn: "Latest turn",
     smartSessionCurrentActivity: "Current activity",
     smartSessionPhase: "Phase",
     smartSessionPrompt: "Prompt",

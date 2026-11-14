@@ -11508,13 +11508,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Current turn"
+            "value": "Latest turn"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "現在のターン"
+            "value": "最新ターン"
           }
         }
       }
@@ -244553,13 +244553,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No current turn. The latest supported outcome appears below."
+            "value": "Latest turn unavailable."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "現在のターンはありません。最後に確認できた結果を以下に表示します。"
+            "value": "最新ターンは利用できません。"
           }
         }
       }
