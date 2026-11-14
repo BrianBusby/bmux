@@ -76,6 +76,16 @@ source = source.replace('    func health() async throws -> ProvenanceEngineHealt
         return .init(found: true, targetSessionID: session.id, projection: projection)
     }
     func health() async throws -> ProvenanceEngineHealth {''')
+source = source.replace('''    func semanticMessages(
+        _ request: ProvenanceSemanticMessageQueryRequest
+    ) async throws -> ProvenanceSemanticMessageQueryResponse {
+        ProvenanceSemanticMessageQueryResponse(records: [])''', '''    private var semanticFailure = false
+    func setSemanticFailure(_ value: Bool) { semanticFailure = value }
+    func semanticMessages(
+        _ request: ProvenanceSemanticMessageQueryRequest
+    ) async throws -> ProvenanceSemanticMessageQueryResponse {
+        if semanticFailure { throw SmartSessionStoreTestError.unimplemented }
+        return ProvenanceSemanticMessageQueryResponse(records: [])''')
 source += '''
 extension AgentSessionSmartSessionStoreTests {
     @Test func failedReadMustNotReportAvailable() async {
@@ -120,6 +130,24 @@ extension AgentSessionSmartSessionStoreTests {
         }
         #expect(recovered.revision.factualRevision == 43)
         #expect(await client.sessionWorkModelRequestCount() == 2)
+    }
+
+    @Test func semanticMessageFailureIsExplicitWithoutDiscardingFacts() async {
+        let client = SmartSessionStoreTestClient(model: Self.model(sessionID: "session-1", revision: 42))
+        let store = AgentSessionSmartSessionStore(client: client)
+        await client.setSemanticFailure(true)
+        guard case .available(let snapshot) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Factual model should remain available")
+            return
+        }
+        #expect(snapshot.revision.factualRevision == 42)
+        #expect(snapshot.bridgePayload["semanticMessagesReadStatus"] as? String == "unavailable")
+        await client.setSemanticFailure(false)
+        guard case .available(let recovered) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Semantic messages should recover")
+            return
+        }
+        #expect(recovered.bridgePayload["semanticMessagesReadStatus"] as? String == "available")
     }
 
     @Test func failedReadWithoutCacheStaysFailed() async {
