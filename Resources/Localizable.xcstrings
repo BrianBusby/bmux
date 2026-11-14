@@ -241367,13 +241367,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Codex transcript %@: cursor %llu, unread %llu bytes, skipped %d lines, failures %d"
+            "value": "Codex transcript %@: cursor %llu, unread %llu bytes, skipped-line observations %d (replay may be included), failures %d"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Codex トランスクリプト %@: カーソル %llu、未読 %llu バイト、スキップ %d 行、失敗 %d 件"
+            "value": "Codex トランスクリプト %@: カーソル %llu、未読 %llu バイト、スキップされた行の観測 %d 件（再読み込みを含む場合があります）、失敗 %d 件"
           }
         }
       }
@@ -241390,7 +241390,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "要確認: 最後の報告が利用できないか古い、エラーや行のスキップ、または 5 分を超える未処理データがあります"
+            "value": "要確認: 最後の報告が利用できないか古い、再試行中、エラーや行のスキップ、または 5 分を超える未処理データがあります"
           }
         }
       }

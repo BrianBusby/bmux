@@ -35,6 +35,7 @@ extension BMUXCLI {
             "read_offset": status?.readOffset as Any? ?? NSNull(),
             "unread_bytes": status?.unreadBytes as Any? ?? NSNull(),
             "skipped_lines": status?.skippedLines as Any? ?? NSNull(),
+            "skipped_lines_semantics": "cumulative_observations_may_include_replay",
             "append_or_read_failures": status?.appendFailures as Any? ?? NSNull(),
             "retrying": status?.retrying as Any? ?? NSNull(),
             "last_error_kind": status?.lastErrorKind as Any? ?? NSNull(),
@@ -52,7 +53,7 @@ extension BMUXCLI {
             summary = String.localizedStringWithFormat(
                 String(
                     localized: "cli.provenance.diagnostics.codexTranscript.summary",
-                    defaultValue: "Codex transcript %@: cursor %llu, unread %llu bytes, skipped %d lines, failures %d"
+                    defaultValue: "Codex transcript %@: cursor %llu, unread %llu bytes, skipped-line observations %d (replay may be included), failures %d"
                 ),
                 sessionID, status.cursorOffset, status.unreadBytes, status.skippedLines, status.appendFailures
             )

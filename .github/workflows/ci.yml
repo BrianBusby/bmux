@@ -1151,6 +1151,9 @@ jobs:
           set -euo pipefail
           ./scripts/select-ci-xcode.sh
 
+      - name: Run Codex monitor diagnostic fixture
+        run: ./tests/fixtures/codex-monitor-diagnostics/run.sh
+
       - name: Capture Ghostty revision
         id: ghostty-revision
         run: |

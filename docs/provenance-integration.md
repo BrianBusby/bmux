@@ -536,5 +536,6 @@ to that status record; `report_freshness` describes its age, while
 `observation_health` and `cursor_currentness` are `unknown`. If no status record
 is available, numeric status fields and `retrying` are `null` rather than zero or
 false. This corrects the prior unversioned JSON behavior, so consumers expecting
-numbers must handle `null`. Skipped-line counts are retained observations, and a
-nonzero count causes the diagnostic to request attention; no recovery is implied.
+numbers must handle `null`. The skipped-line count is cumulative in the retained status and may count replayed
+observations again; it is not a unique line count. A nonzero count causes the
+diagnostic to request attention; no recovery is implied.
