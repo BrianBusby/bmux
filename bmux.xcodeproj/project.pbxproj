@@ -77,6 +77,9 @@
 		A9E020000000000000000002 /* AgentSessionPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E010000000000000000002 /* AgentSessionPanel.swift */; };
 		A9E020000000000000000004 /* AgentSessionPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E010000000000000000004 /* AgentSessionPanelView.swift */; };
 		A9F20000000000000000000F /* AgentSessionPermissionMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F10000000000000000000F /* AgentSessionPermissionMode.swift */; };
+		3D30FCA630A7490AAAF5C330 /* AgentSessionPlanPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C4768ECFF6446CE9E0A2482 /* AgentSessionPlanPage.swift */; };
+		AB5CE6BD5FE942648D3598F1 /* AgentSessionPlanStepStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97DF62EEECED43548FC25AC1 /* AgentSessionPlanStepStatus.swift */; };
+		281CFCBEC6664A138AA18D31 /* AgentSessionPlanStepsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6378EBEF261740208E9515DB /* AgentSessionPlanStepsView.swift */; };
 		A44000000000000000000001 /* AgentSessionPrimaryTabs.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3894B43624A44389E973B21 /* AgentSessionPrimaryTabs.swift */; };
 		A9E020000000000000000009 /* AgentSessionProcessStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E010000000000000000009 /* AgentSessionProcessStore.swift */; };
 		A9E020000000000000000001 /* AgentSessionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E010000000000000000001 /* AgentSessionProvider.swift */; };
@@ -2417,6 +2420,9 @@
 		A9E010000000000000000002 /* AgentSessionPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionPanel.swift; sourceTree = "<group>"; };
 		A9E010000000000000000004 /* AgentSessionPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionPanelView.swift; sourceTree = "<group>"; };
 		A9F10000000000000000000F /* AgentSessionPermissionMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionPermissionMode.swift; sourceTree = "<group>"; };
+		0C4768ECFF6446CE9E0A2482 /* AgentSessionPlanPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionPlanPage.swift; sourceTree = "<group>"; };
+		97DF62EEECED43548FC25AC1 /* AgentSessionPlanStepStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionPlanStepStatus.swift; sourceTree = "<group>"; };
+		6378EBEF261740208E9515DB /* AgentSessionPlanStepsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionPlanStepsView.swift; sourceTree = "<group>"; };
 		A3894B43624A44389E973B21 /* AgentSessionPrimaryTabs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionPrimaryTabs.swift; sourceTree = "<group>"; };
 		A9E010000000000000000009 /* AgentSessionProcessStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionProcessStore.swift; sourceTree = "<group>"; };
 		A9E010000000000000000001 /* AgentSessionProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionProvider.swift; sourceTree = "<group>"; };
@@ -5546,6 +5552,9 @@
 				2024C63D9D32F0383CC75C3C /* AgentSessionWorkspaceChrome.swift */,
 				D3390649B1A5E169899A47D4 /* AgentSessionFactualProjectionEvidenceRows+TurnProperty.swift */,
 				64EE876416DB6F90C2D83DF3 /* AgentSessionFactualProjectionEvidenceRows+PriorTurnItem.swift */,
+				0C4768ECFF6446CE9E0A2482 /* AgentSessionPlanPage.swift */,
+				97DF62EEECED43548FC25AC1 /* AgentSessionPlanStepStatus.swift */,
+				6378EBEF261740208E9515DB /* AgentSessionPlanStepsView.swift */,
 				EE42559509BCEB492E09FF50 /* AgentSessionFactualProjectionEvidenceRows.swift */,
 				D884128910C427B802738EEF /* AgentSessionFactualProjectionModeHost.swift */,
 				D938BFA54538DFF7283C66F3 /* AgentSessionCurrentTurnOverview.swift */,
@@ -7293,6 +7302,9 @@
 				A9E020000000000000000002 /* AgentSessionPanel.swift in Sources */,
 				A9E020000000000000000004 /* AgentSessionPanelView.swift in Sources */,
 				A9F20000000000000000000F /* AgentSessionPermissionMode.swift in Sources */,
+				3D30FCA630A7490AAAF5C330 /* AgentSessionPlanPage.swift in Sources */,
+				AB5CE6BD5FE942648D3598F1 /* AgentSessionPlanStepStatus.swift in Sources */,
+				281CFCBEC6664A138AA18D31 /* AgentSessionPlanStepsView.swift in Sources */,
 				A44000000000000000000001 /* AgentSessionPrimaryTabs.swift in Sources */,
 				A9E020000000000000000009 /* AgentSessionProcessStore.swift in Sources */,
 				A9E020000000000000000001 /* AgentSessionProvider.swift in Sources */,
