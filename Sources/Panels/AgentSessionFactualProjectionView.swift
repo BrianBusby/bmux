@@ -220,6 +220,17 @@ struct AgentSessionFactualProjectionView: View {
         switch result {
         case .available(let snapshot):
             availableContent(snapshot)
+        case let .stale(snapshot, lastSuccessfulReadAt):
+            VStack(alignment: .leading, spacing: 12) {
+                Text(String.localizedStringWithFormat(
+                    String(localized: "agentSession.factual.lastSuccessfulRead", defaultValue:
+                        "Could not refresh. Last successful read: %@"),
+                    lastSuccessfulReadAt.formatted(date: .abbreviated, time: .standard)
+                ))
+                .font(.system(size: 12))
+                .foregroundStyle(Color.bmuxTextSecondary)
+                availableContent(snapshot)
+            }
         case .missingSession:
             emptyMessage(String(
                 localized: "agentSession.factual.noSession",
@@ -274,6 +285,11 @@ struct AgentSessionFactualProjectionView: View {
             emptyMessage(String(
                 localized: "agentSession.factual.notFound",
                 defaultValue: "No factual session projection was found for the linked PE session."
+            ))
+        case .refreshing:
+            emptyMessage(String(
+                localized: "agentSession.factual.refreshing",
+                defaultValue: "Refreshing factual session data…"
             ))
         case .failed:
             emptyMessage(String(
