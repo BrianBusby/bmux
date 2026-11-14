@@ -1715,6 +1715,20 @@ test("semantic reports recover after an unavailable read without a factual revis
   expect(result.snapshot?.semanticMessages).toEqual([message]);
 });
 
+test("semantic recovery does not bypass an ambiguous changed primary model", () => {
+  const first = smartSessionSnapshot({ factualRevision: 4 });
+  const message = semanticMessage({ kind: "test", scope: "session", scopeId: "session-1", concisePhrase: "Observed" });
+  const candidate: SmartSessionSnapshot = { ...first, semanticMessages: [message], semanticMessagesReadStatus: "available",
+    revision: { ...first.revision, semanticMessageCount: 1, latestSemanticMessageCreatedAt: message.createdAt },
+    identity: { ...first.identity, status: "completed" } };
+  const initial = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: first } });
+  const result = reduceSmartSession(initial, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "available", snapshot: candidate } });
+  expect(result.status).toBe("failed");
+  expect(result.snapshot?.identity.status).toBe(first.identity.status);
+});
+
 test("ambiguous primary facts retain separately observed awareness", () => {
   const first = smartSessionSnapshot({ factualRevision: 4 });
   const second: SmartSessionSnapshot = { ...first,

@@ -76,6 +76,12 @@ function samePrimary(left: SmartSessionSnapshot, right: SmartSessionSnapshot): b
     equalData(left.semanticMessages, right.semanticMessages) && left.schemaVersion === right.schemaVersion;
 }
 
+function canRecoverMissingMessages(prior: SmartSessionSnapshot, next: SmartSessionSnapshot): boolean {
+  return prior.semanticMessagesReadStatus === "unavailable" && prior.semanticMessages.length === 0 &&
+    next.semanticMessagesReadStatus === "available" && prior.schemaVersion === next.schemaVersion &&
+    equalData(prior.identity, next.identity) && equalData(prior.workModel, next.workModel) && equalData(prior.factual, next.factual);
+}
+
 export function reduceSmartSession(state: SmartSessionState, action: SmartSessionAction): SmartSessionState {
   if (action.requestId < state.requestId) {
     return state;
@@ -121,7 +127,7 @@ export function reduceSmartSession(state: SmartSessionState, action: SmartSessio
         state.snapshot.identity.sessionId === action.result.snapshot.identity.sessionId &&
         (compareSmartSessionRevisions(action.result.snapshot.revision, state.snapshot.revision) < 0 ||
           (compareSmartSessionRevisions(action.result.snapshot.revision, state.snapshot.revision) === 0 &&
-            !samePrimary(action.result.snapshot, state.snapshot)))
+            !samePrimary(action.result.snapshot, state.snapshot) && !canRecoverMissingMessages(state.snapshot, action.result.snapshot)))
       ) {
         return {
           ...state,

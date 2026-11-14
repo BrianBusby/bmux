@@ -67,6 +67,13 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
             workModel == other.workModel && factual == other.factual && semanticMessages == other.semanticMessages
     }
 
+    /// A previously unavailable, empty message read has no message revision to order.
+    func canRecoverMissingMessages(from other: Self) -> Bool {
+        semanticMessagesReadStatus == "unavailable" && semanticMessages.isEmpty &&
+            other.semanticMessagesReadStatus == "available" && schemaVersion == other.schemaVersion &&
+            identity == other.identity && workModel == other.workModel && factual == other.factual
+    }
+
     var bridgePayload: [String: Any] {
         [
             "schemaVersion": schemaVersion,
