@@ -1866,3 +1866,57 @@ test("stale smart session offers an actionable refresh", async () => {
     dom.window.close();
   }
 });
+
+test.each(["in_progress", "completed", "missing"])("smart session describes latest turn: %s", async (status) => {
+  const catalog: unknown = await Bun.file("Resources/Localizable.xcstrings").json();
+  function field(value: unknown, key: string): unknown {
+    if (typeof value !== "object" || value === null || !(key in value)) throw new Error(`Missing catalog field ${key}`);
+    return Reflect.get(value, key);
+  }
+  function english(key: string): string {
+    const strings = field(catalog, "strings");
+    const localizations = field(field(strings, key), "localizations");
+    const value = field(field(field(localizations, "en"), "stringUnit"), "value");
+    if (typeof value !== "string") throw new Error(`Missing English copy for ${key}`);
+    return value;
+  }
+  const localizedContext: AppContext = { ...context, copy: { ...context.copy,
+    smartSessionCurrentTurn: english("agentSession.web.smartSession.currentTurn"),
+    smartSessionNoCurrentTurn: english("agentSession.web.smartSession.noCurrentTurn"),
+  } };
+    const dom = new JSDOM("<!doctype html><div id='root'></div>", { url: "https://example.test" });
+    const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+    const previousDocument = Object.getOwnPropertyDescriptor(globalThis, "document");
+    const previousAct = Object.getOwnPropertyDescriptor(globalThis, "IS_REACT_ACT_ENVIRONMENT");
+    Object.defineProperty(globalThis, "window", { configurable: true, value: dom.window });
+    Object.defineProperty(globalThis, "document", { configurable: true, value: dom.window.document });
+    Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", { configurable: true, value: true });
+    const original = smartSessionSnapshot({ factualRevision: 1 });
+    const turn = original.factual.latestTurn;
+    if (!turn) throw new Error("Expected current turn in fixture");
+    const snapshot: SmartSessionSnapshot = { ...original, factual: { ...original.factual,
+      latestTurn: status === "missing" ? undefined : { ...turn, status },
+    } };
+    Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: {
+      postMessage: async () => ({ ok: true, value: { schemaVersion: 1, status: "available", snapshot } }),
+    } } } });
+    const container = dom.window.document.getElementById("root");
+    if (!container) throw new Error("Missing root");
+    const root = createRoot(container);
+    try {
+      await act(async () => { root.render(createElement(SmartSessionSurface, { context: localizedContext })); });
+      if (status === "missing") {
+        expect(container.textContent).toContain("Latest turn unavailable.");
+        expect(container.textContent).not.toContain("latest supported outcome appears below");
+      } else {
+        expect(dom.window.document.querySelector(".focus-current-card .focus-card-kicker")?.textContent).toContain("Latest turn");
+        expect(dom.window.document.querySelector(".focus-turn-status")?.textContent).toBe(status);
+      }
+    } finally {
+      await act(async () => root.unmount());
+      if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow); else Reflect.deleteProperty(globalThis, "window");
+      if (previousDocument) Object.defineProperty(globalThis, "document", previousDocument); else Reflect.deleteProperty(globalThis, "document");
+      if (previousAct) Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", previousAct); else Reflect.deleteProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT");
+      dom.window.close();
+    }
+});
