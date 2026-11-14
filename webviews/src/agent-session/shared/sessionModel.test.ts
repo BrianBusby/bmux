@@ -1984,8 +1984,8 @@ test("loaded evidence is selectable and available through a disclosure", async (
   const original = smartSessionSnapshot({ factualRevision: 1 });
   const turn = original.factual.latestTurn;
   if (!turn) throw new Error("Expected turn");
-  const commands = Array.from({ length: 4 }, (_, i) => ({ commandId: `cmd-${i}`, command: `command-${i}`, status: "completed", completedAt: "2026-08-17T07:01:00Z", source: "observed", confidence: "high" }));
-  const files = Array.from({ length: 3 }, (_, i) => ({ attributionId: `file-${i}`, paths: [`file-${i}`], summary: `patch-${i}`, observedAt: "2026-08-17T07:02:00Z", source: "observed", confidence: "high" }));
+  const commands = Array.from({ length: 24 }, (_, i) => ({ commandId: `cmd-${i}`, command: `command-${i}`, status: "completed", completedAt: "2026-08-17T07:01:00Z", source: "observed", confidence: "high" }));
+  const files = Array.from({ length: 24 }, (_, i) => ({ attributionId: `file-${i}`, paths: [`file-${i}`], summary: `patch-${i}`, observedAt: "2026-08-17T07:02:00Z", source: "observed", confidence: "high" }));
   const snapshot: SmartSessionSnapshot = { ...original, factual: { ...original.factual, latestTurn: { ...turn, completedCommands: commands, fileChangeAttributions: files } }, crossSessionAwareness: { ...original.crossSessionAwareness, relatedSessions: [{ sessionId: "related", lifecycleState: "unknown", completionState: "unknown", freshnessState: "unknown", relationshipReasons: ["Shared file"] }] } };
   Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: { postMessage: async () => ({ ok: true, value: { schemaVersion: 1, status: "available", snapshot } }) } } } });
   const container = dom.window.document.getElementById("root");
@@ -1993,19 +1993,18 @@ test("loaded evidence is selectable and available through a disclosure", async (
   const root = createRoot(container);
   try {
     await act(async () => root.render(createElement(SmartSessionSurface, { context })));
-    const details = container.querySelector<HTMLDetailsElement>(".focus-results details");
-    expect(details).not.toBeNull();
+    const disclosure = container.querySelector<HTMLButtonElement>(".focus-evidence-disclosure");
+    expect(disclosure?.textContent).toBe("Show more recorded evidence");
+    expect(disclosure?.getAttribute("aria-expanded")).toBe("false");
     expect(Boolean(container.querySelector(".focus-connected-dot"))).toBe(false);
-    expect(details?.open).toBe(false);
-    const summary = details?.querySelector<HTMLElement>("summary");
-    expect(summary?.textContent).toBe("Show more recorded evidence");
+    expect(container.querySelector(".focus-header-status")?.textContent).toContain("Last reported status:");
     expect(container.querySelector(".focus-related-strip")?.tagName).not.toBe("BUTTON");
-    await act(async () => summary?.click());
-    expect(details?.open).toBe(true);
-    expect(details?.textContent).toContain("command-3");
-    expect(details?.textContent).toContain("file-2");
-    expect(details?.textContent).toContain("Recorded description (unverified): patch-2");
-    const item = details?.querySelector("li");
+    expect(container.querySelectorAll(".focus-evidence-page li").length).toBe(0);
+    await act(async () => disclosure?.click());
+    expect(disclosure?.getAttribute("aria-expanded")).toBe("true");
+    expect(container.querySelectorAll(".focus-evidence-page li").length).toBeLessThanOrEqual(20);
+    expect(container.querySelector(".focus-evidence-page")?.textContent).toContain("command-3");
+    const item = container.querySelector(".focus-evidence-page li");
     if (!item?.firstChild) throw new Error("Missing evidence text");
     const range = dom.window.document.createRange();
     range.selectNodeContents(item);
@@ -2013,8 +2012,23 @@ test("loaded evidence is selectable and available through a disclosure", async (
     selection?.removeAllRanges();
     selection?.addRange(range);
     expect(selection?.toString()).toBe(item.textContent);
-    await act(async () => summary?.click());
-    expect(details?.open).toBe(false);
+    const visited: string[] = [];
+    for (const unused of Array.from({ length: 5 })) {
+      visited.push(container.querySelector(".focus-evidence-page")?.textContent ?? "");
+      const next = container.querySelector<HTMLButtonElement>(".focus-evidence-next");
+      if (!next || next.disabled) break;
+      await act(async () => next.click());
+    }
+    expect(visited.join(" ")).toContain("command-23");
+    expect(visited.join(" ")).toContain("file-23");
+    expect(visited.join(" ")).toContain("Recorded description (unverified): patch-23");
+    const previous = container.querySelector<HTMLButtonElement>(".focus-evidence-previous");
+    expect(previous?.disabled).toBe(false);
+    await act(async () => previous?.click());
+    expect(container.querySelector(".focus-evidence-page")?.textContent).not.toContain("file-23");
+    await act(async () => disclosure?.click());
+    expect(disclosure?.getAttribute("aria-expanded")).toBe("false");
+    expect(container.querySelectorAll(".focus-evidence-page li").length).toBe(0);
     const learnings = [...container.querySelectorAll<HTMLButtonElement>("[role=tab]")].find(button => button.textContent === "Learnings");
     await act(async () => learnings?.click());
     expect(container.querySelector(".focus-learnings button")).toBeNull();
