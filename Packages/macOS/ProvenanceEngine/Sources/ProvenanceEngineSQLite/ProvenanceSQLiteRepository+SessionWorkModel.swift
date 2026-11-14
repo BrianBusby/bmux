@@ -345,92 +345,94 @@ extension ProvenanceSQLiteRepository {
         guard let turn = try codingAgentTurn(id: turnID) else { return nil }
         return ProvenanceFactualSessionProjectionTurnSnapshot(
             turn: turn,
-            submittedPrompt: try latestCodingAgentPrompt(turnID: turnID),
-            currentPlan: try latestCodingAgentPlanUpdate(turnID: turnID),
-            completedCommands: try codingAgentCommandIDs(turnID: turnID).compactMap { try codingAgentCommand(id: $0) },
-            visibleReasoningSummaries: try codingAgentReasoningSummaryIDs(turnID: turnID).compactMap {
+            submittedPrompt: try latestCodingAgentPrompt(sessionID: turn.sessionID, turnID: turnID),
+            currentPlan: try latestCodingAgentPlanUpdate(sessionID: turn.sessionID, turnID: turnID),
+            completedCommands: try codingAgentCommandIDs(sessionID: turn.sessionID, turnID: turnID).compactMap { try codingAgentCommand(id: $0) },
+            visibleReasoningSummaries: try codingAgentReasoningSummaryIDs(sessionID: turn.sessionID, turnID: turnID).compactMap {
                 try codingAgentReasoningSummary(id: $0)
             },
-            fileChangeAttributions: try codingAgentFileChangeAttributionIDs(turnID: turnID).compactMap {
+            fileChangeAttributions: try codingAgentFileChangeAttributionIDs(sessionID: turn.sessionID, turnID: turnID).compactMap {
                 try codingAgentFileChangeAttribution(id: $0)
             },
-            assistantMessages: try codingAgentAssistantMessageIDs(turnID: turnID).compactMap {
+            assistantMessages: try codingAgentAssistantMessageIDs(sessionID: turn.sessionID, turnID: turnID).compactMap {
                 try codingAgentAssistantMessage(id: $0)
             }
         )
     }
 
-    private func latestCodingAgentPrompt(turnID: String) throws -> ProvenanceCodingAgentPromptRecord? {
+    private func latestCodingAgentPrompt(sessionID: String, turnID: String) throws -> ProvenanceCodingAgentPromptRecord? {
         guard let id = try latestCodingAgentRecordID(
             tableName: "provenance_coding_agent_prompts",
             timeColumn: "submitted_at_seconds",
-            turnID: turnID
+            sessionID: sessionID, turnID: turnID
         ) else {
             return nil
         }
         return try codingAgentPrompt(id: id)
     }
 
-    private func latestCodingAgentPlanUpdate(turnID: String) throws -> ProvenanceCodingAgentPlanUpdateRecord? {
+    private func latestCodingAgentPlanUpdate(sessionID: String, turnID: String) throws -> ProvenanceCodingAgentPlanUpdateRecord? {
         guard let id = try latestCodingAgentRecordID(
             tableName: "provenance_coding_agent_plan_updates",
             timeColumn: "observed_at_seconds",
-            turnID: turnID
+            sessionID: sessionID, turnID: turnID
         ) else {
             return nil
         }
         return try codingAgentPlanUpdate(id: id)
     }
 
-    private func codingAgentCommandIDs(turnID: String) throws -> [String] {
+    private func codingAgentCommandIDs(sessionID: String, turnID: String) throws -> [String] {
         try codingAgentRecordIDs(
             tableName: "provenance_coding_agent_commands",
             timeColumn: "completed_at_seconds",
-            turnID: turnID
+            sessionID: sessionID, turnID: turnID
         )
     }
 
-    private func codingAgentReasoningSummaryIDs(turnID: String) throws -> [String] {
+    private func codingAgentReasoningSummaryIDs(sessionID: String, turnID: String) throws -> [String] {
         try codingAgentRecordIDs(
             tableName: "provenance_coding_agent_reasoning_summaries",
             timeColumn: "completed_at_seconds",
-            turnID: turnID
+            sessionID: sessionID, turnID: turnID
         )
     }
 
-    private func codingAgentAssistantMessageIDs(turnID: String) throws -> [String] {
+    private func codingAgentAssistantMessageIDs(sessionID: String, turnID: String) throws -> [String] {
         try codingAgentRecordIDs(
             tableName: "provenance_coding_agent_assistant_messages",
             timeColumn: "completed_at_seconds",
-            turnID: turnID
+            sessionID: sessionID, turnID: turnID
         )
     }
 
-    private func codingAgentFileChangeAttributionIDs(turnID: String) throws -> [String] {
+    private func codingAgentFileChangeAttributionIDs(sessionID: String, turnID: String) throws -> [String] {
         try codingAgentRecordIDs(
             tableName: "provenance_coding_agent_file_change_attributions",
             timeColumn: "observed_at_seconds",
-            turnID: turnID
+            sessionID: sessionID, turnID: turnID
         )
     }
 
     private func latestCodingAgentRecordID(
         tableName: String,
         timeColumn: String,
+        sessionID: String,
         turnID: String
     ) throws -> String? {
         let query = try database.prepare(
             """
             SELECT id
             FROM \(tableName)
-            WHERE turn_id = ?
+            WHERE session_id = ? AND turn_id = ?
             ORDER BY \(timeColumn) DESC, rowid DESC
             LIMIT 1
             """
         )
         defer { query.finalize() }
 
-        try query.bind(turnID, at: 1)
+        try query.bind(sessionID, at: 1)
+        try query.bind(turnID, at: 2)
         guard try query.step() else { return nil }
         return query.string(at: 0)
     }
@@ -438,19 +440,21 @@ extension ProvenanceSQLiteRepository {
     private func codingAgentRecordIDs(
         tableName: String,
         timeColumn: String,
+        sessionID: String,
         turnID: String
     ) throws -> [String] {
         let query = try database.prepare(
             """
             SELECT id
             FROM \(tableName)
-            WHERE turn_id = ?
+            WHERE session_id = ? AND turn_id = ?
             ORDER BY \(timeColumn) ASC, rowid ASC
             """
         )
         defer { query.finalize() }
 
-        try query.bind(turnID, at: 1)
+        try query.bind(sessionID, at: 1)
+        try query.bind(turnID, at: 2)
         return try stringIDs(from: query)
     }
 

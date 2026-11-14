@@ -684,6 +684,16 @@ The projection should support authoritative snapshot reads with a monotonic
 revision. Push notifications or deltas may exist later as hints, but consumers
 must be able to re-fetch the authoritative projection for reconciliation.
 
+Factual turn detail selects child records only when both their turn and session
+IDs agree with the owning turn. A missing or mismatched turn association remains
+in the ledger and underlying projection; it is not assigned to another session.
+TurnOutcome rule version 2 applies the same ownership check, including before a
+thread can supply a worktree boundary. Current cached outcomes are reconciled
+on read when their turn rule is obsolete. Exact historical revisions remain
+available under their original rule and may contain the earlier ambiguous joins;
+they must not be treated as corrected current results. This does not establish
+coherent cross-connection snapshots or complete per-session revision tracking.
+
 The first planned vertical slice should validate richer coding-agent evidence
 ingestion, deterministic factual session projections, evidence-backed inference,
 nested milestones, scoped architecture synthesis, provenance/confidence, and
