@@ -98,6 +98,18 @@ extension AgentSessionSmartSessionStoreTests {
         #expect(store.snapshot(sessionID: "session-1") == .notFound(sessionID: "session-1", reason: nil))
     }
 
+    @Test func semanticCountsDoNotEstablishRevisionOrder() {
+        let workOne = ProvenanceSessionWorkModelRevision(factualRevision: 42, semanticInferenceIDs: ["a"], latestSemanticInferenceCreatedAt: nil)
+        let workTwo = ProvenanceSessionWorkModelRevision(factualRevision: 42, semanticInferenceIDs: ["a", "b"], latestSemanticInferenceCreatedAt: nil)
+        let one = AgentSessionSmartSessionSnapshot.Revision(workModelRevision: workOne, semanticMessageCount: 1, latestSemanticMessageCreatedAt: nil)
+        let twoIDs = AgentSessionSmartSessionSnapshot.Revision(workModelRevision: workTwo, semanticMessageCount: 1, latestSemanticMessageCreatedAt: nil)
+        let twoMessages = AgentSessionSmartSessionSnapshot.Revision(workModelRevision: workOne, semanticMessageCount: 2, latestSemanticMessageCreatedAt: nil)
+        #expect(!twoIDs.isNewerThan(one))
+        #expect(!one.isNewerThan(twoIDs))
+        #expect(!twoMessages.isNewerThan(one))
+        #expect(!one.isNewerThan(twoMessages))
+    }
+
     @Test func equallyRankedDifferentSemanticIDsAreNotCurrent() async {
         let first = Self.model(sessionID: "session-1", revision: 42, semanticIDs: ["a"])
         let second = Self.model(sessionID: "session-1", revision: 42, semanticIDs: ["b"])

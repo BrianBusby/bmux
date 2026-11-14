@@ -1668,3 +1668,20 @@ test("smart session accepts a truly identical equal-ranked snapshot", () => {
   expect(next.status).toBe("available");
   expect(next.snapshot).toEqual(snapshot);
 });
+
+
+test("smart session treats differing semantic counts as unordered", () => {
+  const first = smartSessionSnapshot({ factualRevision: 4 });
+  const alternatives = [
+    { ...first, revision: { ...first.revision, semanticInferenceIds: [...(first.revision.semanticInferenceIds ?? []), "new-id"] } },
+    { ...first, revision: { ...first.revision, semanticMessageCount: first.revision.semanticMessageCount + 1 } },
+  ];
+  const initial = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: first } });
+  for (const candidate of alternatives) {
+    const result = reduceSmartSession(initial, { type: "refreshSucceeded", requestId: 2,
+      result: { schemaVersion: 1, status: "available", snapshot: candidate } });
+    expect(result.status).toBe("failed");
+    expect(result.snapshot).toEqual(first);
+  }
+});
