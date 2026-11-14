@@ -245913,6 +245913,27 @@
         }
       }
     },
+    "agentSession.factual.plan.previous": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Previous steps" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "前の手順" } }
+      }
+    },
+    "agentSession.factual.plan.next": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Next steps" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "次の手順" } }
+      }
+    },
+    "agentSession.factual.plan.page": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d–%d of %d steps" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%3$d 手順中 %1$d–%2$d" } }
+      }
+    },
     "agentSession.expanded.showMore": {
       "extractionState": "manual",
       "localizations": {

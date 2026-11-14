@@ -54,14 +54,7 @@ struct AgentSessionFactualProjectionTurnDetailView: View {
             Text(String(localized: "agentSession.factual.plan", defaultValue: "Current plan"))
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(Color.bmuxTextTertiary)
-            ForEach(plan.steps.prefix(6), id: \.id) { step in
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    badge(step.status)
-                    Text(step.text)
-                        .font(.system(size: 12))
-                        .lineLimit(2)
-                }
-            }
+            AgentSessionPlanStepsView(plan: plan).id(plan.id)
         }
     }
 
@@ -170,5 +163,59 @@ struct AgentSessionFactualProjectionTurnDetailView: View {
         let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if !trimmed.isEmpty { return trimmed }
         return String(localized: "agentSession.factual.unknown", defaultValue: "Unknown")
+    }
+}
+
+/// Displays a bounded page of the steps actually present in one reported plan.
+struct AgentSessionPlanStepsView: View {
+    let plan: ProvenanceCodingAgentPlanUpdateRecord
+    @State private var page = 0
+
+    var body: some View {
+        let visible = AgentSessionPlanPage(steps: plan.steps, requestedPage: page)
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(visible.start..<visible.end, id: \.self) { index in
+                let step = visible.steps[index]
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: AgentSessionFactualProjectionEvidenceRows.isPlanStepCompleted(step.status) ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(AgentSessionFactualProjectionEvidenceRows.isPlanStepCompleted(step.status)
+                                         ? Color(nsColor: MatteTheme.dynamicColor(.success)) : Color.bmuxTextTertiary)
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(step.text)
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color(nsColor: MatteTheme.dynamicColor(.textSecondary)))
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(step.status.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                             ? String(localized: "agentSession.factual.unknown", defaultValue: "Unknown")
+                             : step.status)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color.bmuxTextTertiary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .textSelection(.enabled)
+                }
+            }
+            if visible.previousPage != nil || visible.nextPage != nil {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(String.localizedStringWithFormat(
+                        String(localized: "agentSession.factual.plan.page", defaultValue: "%d–%d of %d steps"),
+                        visible.start + 1, visible.end, visible.total
+                    ))
+                    HStack {
+                        Button(String(localized: "agentSession.factual.plan.previous", defaultValue: "Previous steps")) {
+                            if let previous = visible.previousPage { page = previous }
+                        }
+                        .disabled(visible.previousPage == nil)
+                        Button(String(localized: "agentSession.factual.plan.next", defaultValue: "Next steps")) {
+                            if let next = visible.nextPage { page = next }
+                        }
+                        .disabled(visible.nextPage == nil)
+                    }
+                }
+                .font(.system(size: 11))
+                .buttonStyle(.link)
+            }
+        }
     }
 }

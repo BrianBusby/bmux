@@ -293,7 +293,7 @@ struct AgentSessionFactualProjectionView: View {
                     isAvailable: turn.currentPlan != nil
                 ) {
                     if let plan = turn.currentPlan {
-                        planRows(plan)
+                        AgentSessionPlanStepsView(plan: plan).id(plan.id)
                     }
                 }
                 overviewDisclosure(
@@ -381,21 +381,6 @@ struct AgentSessionFactualProjectionView: View {
             turn.completedCommands.count,
             turn.fileChangeAttributions.count
         )
-    }
-
-    private func planRows(_ plan: ProvenanceCodingAgentPlanUpdateRecord) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            ForEach(plan.steps.prefix(8), id: \.id) { step in
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Image(systemName: AgentSessionFactualProjectionEvidenceRows.isPlanStepCompleted(step.status) ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(AgentSessionFactualProjectionEvidenceRows.isPlanStepCompleted(step.status) ? Color.bmuxAccentGreen : Color.bmuxTextTertiary)
-                    Text(step.text)
-                        .font(.system(size: 12))
-                        .foregroundStyle(Color.bmuxTextSecondary)
-                        .lineLimit(2)
-                }
-            }
-        }
     }
 
     private func reasoningRows(_ summaries: [ProvenanceCodingAgentReasoningSummaryRecord]) -> some View {
