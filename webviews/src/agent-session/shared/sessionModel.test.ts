@@ -1760,5 +1760,5 @@ test("smart session does not order absent factual revisions or timestamps", () =
 test("semantic report availability is visible without hiding factual data", () => {
   expect(renderToStaticMarkup(createElement(SemanticReportsNotice, { status: "unavailable" }))).toContain("Additional session reports are unavailable or unknown.");
   expect(renderToStaticMarkup(createElement(SemanticReportsNotice, {}))).toContain("Additional session reports are unavailable or unknown.");
-  expect(renderToStaticMarkup(createElement(SemanticReportsNotice, { status: "available" }))).toBe("");
+  expect(renderToStaticMarkup(createElement(SemanticReportsNotice, { status: "available" }))).toContain("Additional session reports may be incomplete.");
 });

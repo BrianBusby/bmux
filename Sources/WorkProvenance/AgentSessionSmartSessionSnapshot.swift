@@ -76,6 +76,7 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
             "factual": factual.bridgePayload,
             "semanticMessages": semanticMessages.map(\.bridgePayload),
             "semanticMessagesReadStatus": semanticMessagesReadStatus,
+            "semanticMessagesCoverage": "unknown",
             "crossSessionAwareness": crossSessionAwareness.bridgePayload
         ]
     }

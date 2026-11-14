@@ -264,6 +264,9 @@ final class AgentSessionSmartSessionStore {
                     limit: 20
                 )
             )
+            guard response.records.allSatisfy({ $0.scope == subject.scope && $0.scopeID == subject.scopeID }) else {
+                throw ReadError.inconsistentResponse
+            }
             for record in response.records where record.status == .active {
                 recordsByID[record.id] = record
             }

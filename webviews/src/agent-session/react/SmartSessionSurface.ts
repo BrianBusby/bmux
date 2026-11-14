@@ -116,7 +116,9 @@ function DetailList({ copy, turnID, onInspect }: { copy?: AgentSessionCopy; turn
 }
 
 export function SemanticReportsNotice({ copy, status }: { copy?: AgentSessionCopy; status?: "available" | "unavailable" }) {
-  return status === "available" ? null : h("p", { role: "status", className: "focus-coverage-note" }, text(copy, "smartSessionReportsUnavailable", "Additional session reports are unavailable or unknown."));
+  return h("p", { role: "status", className: "focus-coverage-note" }, status === "available"
+    ? text(copy, "smartSessionReportsIncomplete", "Additional session reports may be incomplete.")
+    : text(copy, "smartSessionReportsUnavailable", "Additional session reports are unavailable or unknown."));
 }
 
 export function RelatedAwarenessNotice({ copy, awareness }: { copy?: AgentSessionCopy; awareness: SmartSessionSnapshot["crossSessionAwareness"] }) {
