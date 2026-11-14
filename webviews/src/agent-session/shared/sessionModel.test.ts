@@ -1556,3 +1556,14 @@ function semanticMessage({
     supportingFactualRevision: 1,
   };
 }
+
+
+test("smart session does not label a cached snapshot available after bridge failure", () => {
+  const current = reduceSmartSession(initialSmartSessionState(), {
+    type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: smartSessionSnapshot({ factualRevision: 4 }) },
+  });
+  const failed = reduceSmartSession(current, { type: "refreshFailed", requestId: 2 });
+  expect(failed.status).toBe("failed");
+  expect(failed.snapshot?.revision.factualRevision).toBe(4);
+});
