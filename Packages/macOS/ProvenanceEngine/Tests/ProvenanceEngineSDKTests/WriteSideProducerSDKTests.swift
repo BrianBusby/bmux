@@ -167,7 +167,7 @@ struct WriteSideProducerSDKTests {
         #expect(response.turnID == fixture.projectedTurn.id)
         #expect(outcome.objective?.text == fixture.prompt.text)
         #expect(outcome.planItems.map(\.text) == fixture.currentPlan.steps.map(\.text))
-        #expect(outcome.actionsCompleted.map(\.text) == fixture.currentPlan.steps.map(\.text))
+        #expect(outcome.actionsCompleted.isEmpty)
         #expect(outcome.commandsCompleted.first?.id == fixture.command.id)
 
         let encodedResponse = try JSONEncoder().encode(response)
