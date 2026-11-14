@@ -66,6 +66,32 @@ struct FactualCacheFailureTests {
         #expect(store.snapshot(sessionID: "session-2") == .notFound(sessionID: "session-2", reason: nil))
     }
 
+    @Test(arguments: [false, true])
+    func inconsistentResponseDoesNotEraseFacts(hasCache: Bool) async {
+        let prior = Self.snapshot(sessionID: "session-1", revision: 7)
+        let foreign = Self.snapshot(sessionID: "session-2", revision: 8)
+        let responses: [ProvenanceFactualSessionProjectionResponse] = [
+            .init(found: true, sessionID: "session-1", snapshot: nil),
+            .init(found: false, sessionID: "session-1", snapshot: prior),
+            .init(found: true, sessionID: "session-2", snapshot: prior),
+            .init(found: true, sessionID: "session-1", snapshot: foreign),
+        ]
+        for invalid in responses {
+            var results: [Result<ProvenanceFactualSessionProjectionResponse, Error>] = []
+            if hasCache { results.append(.success(.init(found: true, sessionID: "session-1", snapshot: prior))) }
+            results.append(.success(invalid))
+            let client = FakeProvenanceEngineClient(factualProjectionResults: results)
+            let instant = Date(timeIntervalSince1970: 100)
+            let store = AgentSessionFactualProjectionStore(client: client, now: { instant })
+            if hasCache { #expect(await store.refreshedSnapshot(sessionID: "session-1") == .available(prior)) }
+            let expected: AgentSessionFactualProjectionReadResult = hasCache
+                ? .stale(prior, lastSuccessfulReadAt: instant) : .failed(sessionID: "session-1")
+            #expect(await store.refreshedSnapshot(sessionID: "session-1") == expected)
+            #expect(store.snapshot(sessionID: "session-1") == expected)
+            #expect(store.snapshot(sessionID: "session-2") == .notFound(sessionID: "session-2", reason: nil))
+        }
+    }
+
     @Test func olderOverlappingFailureCannotOverrideNewerSuccess() async throws {
         let newer = Self.snapshot(sessionID: "session-1", revision: 8)
         let client = FakeProvenanceEngineClient(deferResponses: true)
