@@ -46,6 +46,7 @@ class CodexMonitorSourceIdentityRepro(unittest.TestCase):
             partial = '{"type":"session_meta","payload":{"id":"session-a"' if metadata == "partial" else ""
             transcript.write_text(partial + "\n".join(json.dumps(line) for line in lines) + "\n", encoding="utf-8")
             env = {"HOME": temp, "CFFIXED_USER_HOME": temp, "BMUX_PROVENANCE_HOME": temp,
+                   "BMUX_DEBUG_LOG": str(root / "hook-debug.log"),
                    "PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "BMUX_SOCKET_PATH": str(socket_path),
                    "BMUX_WORKSPACE_ID": FAKE_WORKSPACE_ID, "BMUX_SURFACE_ID": FAKE_SURFACE_ID,
                    "BMUX_CLI_SENTRY_DISABLED": "1"}
@@ -83,6 +84,7 @@ class CodexMonitorSourceIdentityRepro(unittest.TestCase):
             ]
             transcript.write_text("\n".join(json.dumps(line) for line in lines) + "\n", encoding="utf-8")
             env = {"HOME": temp, "CFFIXED_USER_HOME": temp, "BMUX_PROVENANCE_HOME": temp,
+                   "BMUX_DEBUG_LOG": str(root / "hook-debug.log"),
                    "PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "BMUX_SOCKET_PATH": str(socket_path),
                    "BMUX_WORKSPACE_ID": FAKE_WORKSPACE_ID, "BMUX_SURFACE_ID": FAKE_SURFACE_ID,
                    "BMUX_AGENT_HOOK_STATE_DIR": temp, "BMUX_CLI_SENTRY_DISABLED": "1"}
