@@ -48,6 +48,9 @@ final class AgentSessionFactualProjectionStore {
                   response.snapshot.map({ $0.session.id == sessionID }) ?? true else {
                 throw ReadError.sessionMismatch
             }
+            guard response.found == (response.snapshot != nil) else {
+                throw ReadError.inconsistentResponse
+            }
             let result: AgentSessionFactualProjectionReadResult
             if response.found, let snapshot = response.snapshot {
                 snapshotsBySessionID[sessionID] = CachedSnapshot(
@@ -86,6 +89,7 @@ final class AgentSessionFactualProjectionStore {
 
     private enum ReadError: Error {
         case sessionMismatch
+        case inconsistentResponse
     }
 
     private static func trimmedNonEmpty(_ value: String?) -> String? {
