@@ -277,7 +277,10 @@ extension AgentSessionSmartSessionStoreTests {
         }
         let result = await store.refreshedSnapshot(sessionID: "session-1")
         #expect(result.bridgePayload["status"] as? String == "failed")
-        if case .stale(let snapshot, _) = result { #expect(snapshot == prior) }
+        if case .stale(let snapshot, _) = result {
+            #expect(snapshot.hasSamePrimaryContent(as: prior))
+            #expect(snapshot.semanticMessagesReadStatus == "unavailable")
+        }
         else { Issue.record("Expected last known snapshot as stale") }
     }
 

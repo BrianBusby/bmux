@@ -112,7 +112,8 @@ final class AgentSessionSmartSessionStore {
             )
             let nextSnapshot = AgentSessionSmartSessionSnapshot(
                 workModel: workModel,
-                semanticMessages: semanticMessages,
+                semanticMessages: semanticMessages ?? [],
+                semanticMessagesReadStatus: semanticMessages == nil ? "unavailable" : "available",
                 crossSessionAwareness: awareness
             )
             if let existing = snapshotsBySessionID[sessionID],
@@ -209,7 +210,7 @@ final class AgentSessionSmartSessionStore {
 
     private func presentationMessages(
         for workModel: ProvenanceSessionWorkModel
-    ) async -> [ProvenanceSemanticMessageRecord] {
+    ) async -> [ProvenanceSemanticMessageRecord]? {
         do {
             return try await semanticMessages(for: workModel.basis.factualSessionProjection)
         } catch {
@@ -217,7 +218,7 @@ final class AgentSessionSmartSessionStore {
                 "session": workModel.identity.session.id,
                 "error": String(describing: error)
             ])
-            return []
+            return nil
         }
     }
 

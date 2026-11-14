@@ -1,6 +1,6 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { RelatedAwarenessNotice, SmartSessionFreshnessBanner } from "../react/SmartSessionSurface";
+import { RelatedAwarenessNotice, SemanticReportsNotice, SmartSessionFreshnessBanner } from "../react/SmartSessionSurface";
 import { expect, test } from "bun:test";
 import { makeClientId } from "./ids";
 import {
@@ -1472,6 +1472,7 @@ function smartSessionSnapshot({
       turnCount: 1,
     },
     semanticMessages,
+    semanticMessagesReadStatus: "unavailable",
     crossSessionAwareness: {
       status: "available",
       relatedSessions: [],
@@ -1753,4 +1754,11 @@ test("smart session does not order absent factual revisions or timestamps", () =
     expect(reverse.status).toBe("failed");
     expect(reverse.snapshot).toEqual(candidate);
   }
+});
+
+
+test("semantic report availability is visible without hiding factual data", () => {
+  expect(renderToStaticMarkup(createElement(SemanticReportsNotice, { status: "unavailable" }))).toContain("Additional session reports are unavailable or unknown.");
+  expect(renderToStaticMarkup(createElement(SemanticReportsNotice, {}))).toContain("Additional session reports are unavailable or unknown.");
+  expect(renderToStaticMarkup(createElement(SemanticReportsNotice, { status: "available" }))).toBe("");
 });

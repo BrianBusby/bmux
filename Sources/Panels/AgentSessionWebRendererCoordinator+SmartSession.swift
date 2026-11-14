@@ -30,6 +30,7 @@ extension AgentSessionWebRendererCoordinator {
                 localized: "agentSession.web.view.session",
                 defaultValue: "Session"
             ),
+            "smartSessionReportsUnavailable": String(localized: "agentSession.web.smartSession.reportsUnavailable", defaultValue: "Additional session reports are unavailable or unknown."),
             "smartSessionRelatedUncertain": String(localized: "agentSession.web.smartSession.relatedUncertain", defaultValue: "Related work was observed separately and may be incomplete; its current state is unknown."),
             "smartSessionRelatedPartial": String(localized: "agentSession.web.smartSession.relatedPartial", defaultValue: "Some related-work information is incomplete or unavailable. Current state is unknown."),
             "smartSessionRelatedUnavailable": String(localized: "agentSession.web.smartSession.relatedUnavailable", defaultValue: "Related work is unavailable."),

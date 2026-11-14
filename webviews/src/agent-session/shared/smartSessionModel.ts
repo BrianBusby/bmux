@@ -111,7 +111,7 @@ export function reduceSmartSession(state: SmartSessionState, action: SmartSessio
           reason: action.result.reason,
           sessionId: action.result.sessionId,
           diagnostics: action.result.diagnostics,
-          snapshot: failed ? (keepPrior && state.snapshot ? { ...state.snapshot, crossSessionAwareness: suppliedMatches && action.result.snapshot ? action.result.snapshot.crossSessionAwareness : state.snapshot.crossSessionAwareness } : suppliedMatches ? action.result.snapshot : undefined) : undefined,
+          snapshot: failed ? (keepPrior && state.snapshot ? { ...state.snapshot, semanticMessagesReadStatus: "unavailable", crossSessionAwareness: suppliedMatches && action.result.snapshot ? action.result.snapshot.crossSessionAwareness : state.snapshot.crossSessionAwareness } : suppliedMatches ? action.result.snapshot : undefined) : undefined,
           lastSuccessfulReadAt: failed ? (keepPrior ? state.lastSuccessfulReadAt : action.result.lastSuccessfulReadAt) : undefined,
         };
       }
@@ -125,7 +125,7 @@ export function reduceSmartSession(state: SmartSessionState, action: SmartSessio
       ) {
         return {
           ...state,
-          snapshot: { ...state.snapshot, crossSessionAwareness: action.result.snapshot.crossSessionAwareness },
+          snapshot: { ...state.snapshot, semanticMessagesReadStatus: "unavailable", crossSessionAwareness: action.result.snapshot.crossSessionAwareness },
           requestId: action.requestId,
           status: "failed",
         };

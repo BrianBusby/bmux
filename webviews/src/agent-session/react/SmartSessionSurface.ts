@@ -32,6 +32,7 @@ export function SmartSessionSurface({ context, initialView = "focus", isActive =
     h("main", { className: "focus-workbench-main" },
       h(WorkspaceHeader, { copy, workspaceName, title: currentTitle, snapshot, onInspect: setInspector, inspector }),
       h(SmartSessionFreshnessBanner, { copy, state, onRefresh: refresh }),
+      snapshot ? h(SemanticReportsNotice, { copy, status: snapshot.semanticMessagesReadStatus }) : null,
       h(ViewTabs, { copy, view, onChange: setView }),
       h("div", { className: "focus-workbench-body" },
         view === "focus" ? h(FocusView, { copy, state, onRefresh: refresh, expandedTurnID, onExpandTurn: setExpandedTurnID, onInspect: setInspector }) :
@@ -112,6 +113,10 @@ function PriorTurnCard({ copy, turn, expanded, onToggle, onInspect }: { copy?: A
 
 function DetailList({ copy, turnID, onInspect }: { copy?: AgentSessionCopy; turnID: string; onInspect: (value: string | null) => void }) {
   return h("div", { className: "focus-detail-grid" }, h("div", null, h("h3", null, text(copy, "smartSessionChanged", "Changed")), h("p", null, text(copy, "smartSessionFiles", "Source-linked files are available when captured."))), h("div", null, h("h3", null, text(copy, "smartSessionChecked", "Checked")), h("p", null, text(copy, "smartSessionValidations", "Validation records remain scoped to this turn."))), h("div", null, h("h3", null, text(copy, "smartSessionRemains", "Remains")), h("p", null, text(copy, "smartSessionResume", "Resume point is unavailable unless captured by the producer."))), h("button", { type: "button", className: "focus-inspector-link", onClick: () => onInspect(`turn:${turnID}`) }, text(copy, "smartSessionEvidence", "Inspect evidence")));
+}
+
+export function SemanticReportsNotice({ copy, status }: { copy?: AgentSessionCopy; status?: "available" | "unavailable" }) {
+  return status === "available" ? null : h("p", { role: "status", className: "focus-coverage-note" }, text(copy, "smartSessionReportsUnavailable", "Additional session reports are unavailable or unknown."));
 }
 
 export function RelatedAwarenessNotice({ copy, awareness }: { copy?: AgentSessionCopy; awareness: SmartSessionSnapshot["crossSessionAwareness"] }) {

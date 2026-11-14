@@ -249,6 +249,7 @@ export type AgentSessionCopy = {
   smartSessionRelatedUncertain?: string;
   smartSessionRelatedUnavailable?: string;
   smartSessionRelatedPartial?: string;
+  smartSessionReportsUnavailable?: string;
   smartSessionNoCurrentTurn?: string;
   smartSessionNoLearnings?: string;
   smartSessionChanged?: string;
@@ -296,6 +297,7 @@ export type SmartSessionSnapshot = {
   workModel?: SmartSessionWorkModel;
   factual: SmartSessionFactual;
   semanticMessages: SmartSessionSemanticMessage[];
+  semanticMessagesReadStatus?: "available" | "unavailable";
   crossSessionAwareness: {
     status: "available" | "unavailable";
     relatedReadStatus?: "available" | "partial" | "unavailable";

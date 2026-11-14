@@ -9,11 +9,13 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
     let workModel: WorkModel
     let factual: Factual
     let semanticMessages: [SemanticMessage]
+    let semanticMessagesReadStatus: String
     let crossSessionAwareness: CrossSessionAwareness
 
     init(
         workModel: ProvenanceSessionWorkModel,
         semanticMessages semanticMessageRecords: [ProvenanceSemanticMessageRecord],
+        semanticMessagesReadStatus: String = "available",
         crossSessionAwareness: CrossSessionAwareness = .unavailable
     ) {
         let factualProjection = workModel.basis.factualSessionProjection
@@ -41,21 +43,23 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
         self.workModel = WorkModel(model: workModel)
         self.factual = Factual(factualProjection: factualProjection)
         self.semanticMessages = messages
+        self.semanticMessagesReadStatus = semanticMessagesReadStatus
         self.crossSessionAwareness = crossSessionAwareness
     }
 
-    private init(copying snapshot: Self, awareness: CrossSessionAwareness) {
+    private init(copying snapshot: Self, awareness: CrossSessionAwareness, semanticMessagesReadStatus: String) {
         schemaVersion = snapshot.schemaVersion
         revision = snapshot.revision
         identity = snapshot.identity
         workModel = snapshot.workModel
         factual = snapshot.factual
         semanticMessages = snapshot.semanticMessages
+        self.semanticMessagesReadStatus = semanticMessagesReadStatus
         crossSessionAwareness = awareness
     }
 
     func withAwareness(_ awareness: CrossSessionAwareness) -> Self {
-        Self(copying: self, awareness: awareness)
+        Self(copying: self, awareness: awareness, semanticMessagesReadStatus: "unavailable")
     }
 
     func hasSamePrimaryContent(as other: Self) -> Bool {
@@ -71,6 +75,7 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
             "workModel": workModel.bridgePayload,
             "factual": factual.bridgePayload,
             "semanticMessages": semanticMessages.map(\.bridgePayload),
+            "semanticMessagesReadStatus": semanticMessagesReadStatus,
             "crossSessionAwareness": crossSessionAwareness.bridgePayload
         ]
     }
