@@ -26,12 +26,12 @@ struct TurnOutcomeProjectionTests {
         #expect(outcome.provider == "codex")
         #expect(outcome.providerTurnID == "provider-turn-main")
         #expect(outcome.projection.projectionRuleID == "deterministic_turn_outcome")
-        #expect(outcome.projection.projectionRuleVersion == "1")
+        #expect(outcome.projection.projectionRuleVersion == "2")
         #expect(outcome.projection.sourceEvidenceWatermark == fixture.normalEvents.count)
         #expect(outcome.objective?.text == fixture.prompt.text)
         #expect(outcome.objective?.evidence.isEmpty == false)
         #expect(outcome.planItems.map(\.status) == ["completed", "in_progress"])
-        #expect(outcome.actionsCompleted.map(\.text).contains("Inspect current transcript projection"))
+        #expect(!outcome.actionsCompleted.map(\.text).contains("Inspect current transcript projection"))
         #expect(outcome.actionsCompleted.map(\.text).contains(fixture.reasoningSummary.text))
         #expect(outcome.commandsCompleted.map(\.classification.kind) == ["test", "git_inspection"])
         #expect(outcome.validationsAttempted.map(\.validationKind) == ["test"])
@@ -180,6 +180,10 @@ struct TurnOutcomeProjectionTests {
         )).outcome)
         #expect(historical.projection.projectionRuleVersion == "1")
         #expect(historical.actionsCompleted == [oldAction])
+        let historicalSession = try #require(try await repository.sessionOutcome(ProvenanceSessionOutcomeRequest(
+            sessionID: fixture.session.id, revisionID: legacySessionID
+        )).outcome)
+        #expect(historicalSession.turnOutcomes.first?.actionsCompleted == [oldAction])
     }
 
     @Test
