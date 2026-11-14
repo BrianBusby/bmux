@@ -74004,6 +74004,7 @@
         }
       }
     },
+    "debug.factualStale.terminalUnavailable": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Terminal unavailable in this synthetic preview."}}, "ja": {"stringUnit": {"state": "translated", "value": "このサンプルプレビューではターミナルを使用できません。"}}}},
     "debug.factualStale.title": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Factual Session Preview — Synthetic Data"}}, "ja": {"stringUnit": {"state": "translated", "value": "セッションの事実プレビュー — サンプルデータ"}}}},
     "debug.factualStale.menu": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Factual Session Preview…"}}, "ja": {"stringUnit": {"state": "translated", "value": "セッションの事実プレビュー…"}}}},
     "debug.factualStale.prompt": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Investigate session restoration after reconnecting."}}, "ja": {"stringUnit": {"state": "translated", "value": "再接続後のセッション復元を調査する。"}}}},

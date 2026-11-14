@@ -45,6 +45,10 @@ final class FactualStaleDebugWindowController: ReleasingWindowController {
         window.contentView = NSHostingView(rootView: AgentSessionFactualProjectionView(
             result: .stale(snapshot, lastSuccessfulReadAt: observedAt),
             isLoading: false, backgroundColor: Color(nsColor: .windowBackgroundColor), onRefresh: {},
+            liveTerminalContent: AnyView(
+                Text(String(localized: "debug.factualStale.terminalUnavailable", defaultValue: "Terminal unavailable in this synthetic preview."))
+                    .padding(.top, 20)
+            ),
             workspaceLabel: String(localized: "debug.factualStale.workspace", defaultValue: "Riverbank workspace"),
             sessionTitle: String(localized: "debug.factualStale.session", defaultValue: "Session restoration"),
             sessionDescription: String(localized: "debug.factualStale.description", defaultValue: "Synthetic preview; no session data is read.")
