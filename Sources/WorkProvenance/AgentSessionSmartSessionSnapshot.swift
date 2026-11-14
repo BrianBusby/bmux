@@ -44,6 +44,25 @@ struct AgentSessionSmartSessionSnapshot: Equatable, Sendable {
         self.crossSessionAwareness = crossSessionAwareness
     }
 
+    private init(copying snapshot: Self, awareness: CrossSessionAwareness) {
+        schemaVersion = snapshot.schemaVersion
+        revision = snapshot.revision
+        identity = snapshot.identity
+        workModel = snapshot.workModel
+        factual = snapshot.factual
+        semanticMessages = snapshot.semanticMessages
+        crossSessionAwareness = awareness
+    }
+
+    func withAwareness(_ awareness: CrossSessionAwareness) -> Self {
+        Self(copying: self, awareness: awareness)
+    }
+
+    func hasSamePrimaryContent(as other: Self) -> Bool {
+        schemaVersion == other.schemaVersion && revision == other.revision && identity == other.identity &&
+            workModel == other.workModel && factual == other.factual && semanticMessages == other.semanticMessages
+    }
+
     var bridgePayload: [String: Any] {
         [
             "schemaVersion": schemaVersion,

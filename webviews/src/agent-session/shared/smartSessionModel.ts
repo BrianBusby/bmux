@@ -58,6 +58,24 @@ export function shouldRefreshSmartSession(hasContext: boolean, isActive: boolean
   return hasContext && isActive;
 }
 
+// Bridge values are JSON data. Compare object keys without assuming serialization order.
+function equalData(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+  if (Array.isArray(left) && Array.isArray(right)) {
+    return left.length === right.length && left.every((value, index) => equalData(value, right[index]));
+  }
+  if (!left || !right || typeof left !== "object" || typeof right !== "object" || Array.isArray(left) || Array.isArray(right)) return false;
+  const leftEntries = Object.entries(left);
+  const rightEntries = new Map(Object.entries(right));
+  return leftEntries.length === rightEntries.size && leftEntries.every(([key, value]) => rightEntries.has(key) && equalData(value, rightEntries.get(key)));
+}
+
+function samePrimary(left: SmartSessionSnapshot, right: SmartSessionSnapshot): boolean {
+  return equalData(left.revision, right.revision) && equalData(left.identity, right.identity) &&
+    equalData(left.workModel, right.workModel) && equalData(left.factual, right.factual) &&
+    equalData(left.semanticMessages, right.semanticMessages) && left.schemaVersion === right.schemaVersion;
+}
+
 export function reduceSmartSession(state: SmartSessionState, action: SmartSessionAction): SmartSessionState {
   if (action.requestId < state.requestId) {
     return state;
@@ -86,14 +104,14 @@ export function reduceSmartSession(state: SmartSessionState, action: SmartSessio
           (state.snapshot.identity.sessionId === action.result.snapshot.identity.sessionId &&
             (compareSmartSessionRevisions(state.snapshot.revision, action.result.snapshot.revision) > 0 ||
               (compareSmartSessionRevisions(state.snapshot.revision, action.result.snapshot.revision) === 0 &&
-                JSON.stringify(state.snapshot) !== JSON.stringify(action.result.snapshot)))));
+                !samePrimary(state.snapshot, action.result.snapshot)))));
         return {
           requestId: action.requestId,
           status: action.result.status,
           reason: action.result.reason,
           sessionId: action.result.sessionId,
           diagnostics: action.result.diagnostics,
-          snapshot: failed ? (keepPrior ? state.snapshot : suppliedMatches ? action.result.snapshot : undefined) : undefined,
+          snapshot: failed ? (keepPrior && state.snapshot ? { ...state.snapshot, crossSessionAwareness: suppliedMatches && action.result.snapshot ? action.result.snapshot.crossSessionAwareness : state.snapshot.crossSessionAwareness } : suppliedMatches ? action.result.snapshot : undefined) : undefined,
           lastSuccessfulReadAt: failed ? (keepPrior ? state.lastSuccessfulReadAt : action.result.lastSuccessfulReadAt) : undefined,
         };
       }
@@ -103,10 +121,11 @@ export function reduceSmartSession(state: SmartSessionState, action: SmartSessio
         state.snapshot.identity.sessionId === action.result.snapshot.identity.sessionId &&
         (compareSmartSessionRevisions(action.result.snapshot.revision, state.snapshot.revision) < 0 ||
           (compareSmartSessionRevisions(action.result.snapshot.revision, state.snapshot.revision) === 0 &&
-            JSON.stringify(action.result.snapshot) !== JSON.stringify(state.snapshot)))
+            !samePrimary(action.result.snapshot, state.snapshot)))
       ) {
         return {
           ...state,
+          snapshot: { ...state.snapshot, crossSessionAwareness: action.result.snapshot.crossSessionAwareness },
           requestId: action.requestId,
           status: "failed",
         };

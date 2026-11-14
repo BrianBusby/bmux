@@ -11223,6 +11223,8 @@
         }
       }
     },
+    "agentSession.web.smartSession.relatedUncertain": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Related work was last observed separately; its current state is unknown."}}, "ja": {"stringUnit": {"state": "translated", "value": "関連作業は別途確認されたものです。現在の状態は不明です。"}}}},
+    "agentSession.web.smartSession.relatedUnavailable": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Related work is unavailable."}}, "ja": {"stringUnit": {"state": "translated", "value": "関連作業は利用できません。"}}}},
     "agentSession.web.smartSession.stale": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Could not refresh. Showing last known session data."}}, "ja": {"stringUnit": {"state": "translated", "value": "更新できませんでした。最後に確認できたセッションデータを表示しています。"}}}},
     "agentSession.web.smartSession.lastRead": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Session data last read"}}, "ja": {"stringUnit": {"state": "translated", "value": "セッションデータの最終読み込み日時"}}}},
     "agentSession.web.smartSession.loading": {

@@ -246,6 +246,8 @@ export type AgentSessionCopy = {
   smartSessionWorkspace?: string;
   smartSessionCurrent?: string;
   smartSessionRelatedWork?: string;
+  smartSessionRelatedUncertain?: string;
+  smartSessionRelatedUnavailable?: string;
   smartSessionNoCurrentTurn?: string;
   smartSessionNoLearnings?: string;
   smartSessionChanged?: string;

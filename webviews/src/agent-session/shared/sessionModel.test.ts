@@ -1698,3 +1698,18 @@ test("independent awareness updates do not freeze an unchanged primary snapshot"
   expect(result.status).toBe("available");
   expect(result.snapshot?.crossSessionAwareness.status).toBe("available");
 });
+
+test("ambiguous primary facts retain separately observed awareness", () => {
+  const first = smartSessionSnapshot({ factualRevision: 4 });
+  const second: SmartSessionSnapshot = { ...first,
+    revision: { ...first.revision, semanticInferenceIds: ["replacement"] },
+    crossSessionAwareness: { ...first.crossSessionAwareness, status: "unavailable" },
+  };
+  const initial = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot: first } });
+  const result = reduceSmartSession(initial, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "available", snapshot: second } });
+  expect(result.status).toBe("failed");
+  expect(result.snapshot?.revision).toEqual(first.revision);
+  expect(result.snapshot?.crossSessionAwareness.status).toBe("unavailable");
+});

@@ -100,9 +100,10 @@ final class AgentSessionSmartSessionStore {
             )
             if let existing = snapshotsBySessionID[sessionID],
                existing.snapshot.revision.isNewerThan(nextSnapshot.revision) ||
-                (!nextSnapshot.revision.isNewerThan(existing.snapshot.revision) && existing.snapshot != nextSnapshot) {
+                (!nextSnapshot.revision.isNewerThan(existing.snapshot.revision) && !existing.snapshot.hasSamePrimaryContent(as: nextSnapshot)) {
                 var stale = existing
-                stale.stale = true
+                stale = CachedSnapshot(snapshot: existing.snapshot.withAwareness(nextSnapshot.crossSessionAwareness),
+                                       lastSuccessfulReadAt: existing.lastSuccessfulReadAt, stale: true)
                 snapshotsBySessionID[sessionID] = stale
                 return .stale(stale.snapshot, lastSuccessfulReadAt: stale.lastSuccessfulReadAt)
             }
