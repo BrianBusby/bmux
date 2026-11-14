@@ -438,3 +438,6 @@ A standalone synthetic factual-cache test on `session-factual-cache-fixture` hea
 On #237 head `37458b928`, hosted run `43550778882` shard 5 job `132313344184` had a test-host SIGSEGV. The last started case was `FileExplorerStoreTests.testExpandedRemoteNodesHydrateWhenProviderBecomesAvailable`; no pass was recorded before restart. Artifact `14103668266` has no call graph, so the cause is unknown. The same case passed in a different #230 run and its source is unchanged; this establishes no causal conclusion. The workflow remained active when recorded.
 
 The factual stale-cache build tagged `factual-stale-f99d` was stopped during `xcodebuild` after review found a pending-newer ordering race. There was no successful build or app launch for that attempt.
+
+
+An unmerged narrow association-read correction removes the last-known binding fallback after PE read failure. A normal not-found remains not-found and a later failed read does not restore an old binding. This affects both the factual and Smart Session routes, which use the same association store. It does not address overlapping read ordering, workspace/provider response ownership validation, Smart Session snapshot retention, upstream observation health, or native validation; those remain open. The standalone fixture uses a fake client and no app or database.
