@@ -1,3 +1,7 @@
+import { act, createElement } from "react";
+import { createRoot } from "react-dom/client";
+import { JSDOM } from "jsdom";
+import { SmartSessionSurface } from "../react/SmartSessionSurface";
 import { expect, test } from "bun:test";
 import { makeClientId } from "./ids";
 import {
@@ -1556,3 +1560,48 @@ function semanticMessage({
     supportingFactualRevision: 1,
   };
 }
+
+
+test("smart session labels tool-only and assistant evidence without claiming a final output", async () => {
+  const catalog: unknown = await Bun.file("Resources/Localizable.xcstrings").json();
+  function field(value: unknown, key: string): unknown {
+    if (typeof value !== "object" || value === null || !(key in value)) throw new Error(`Missing catalog field ${key}`);
+    return Reflect.get(value, key);
+  }
+  const strings = field(catalog, "strings");
+  const localizations = field(field(strings, "agentSession.web.smartSession.finalOutput"), "localizations");
+  const englishCopy = field(field(field(localizations, "en"), "stringUnit"), "value");
+  if (typeof englishCopy !== "string") throw new Error("Missing localized Smart Session label");
+  const localizedContext: AppContext = { ...context, copy: { ...context.copy, smartSessionFinalOutput: englishCopy } };
+  for (const kind of ["tool", "assistant"]) {
+    const dom = new JSDOM("<!doctype html><div id='root'></div>", { url: "https://example.test" });
+    const previousWindow = globalThis.window;
+    const previousDocument = globalThis.document;
+    Object.assign(globalThis, { window: dom.window, document: dom.window.document, IS_REACT_ACT_ENVIRONMENT: true });
+    const original = smartSessionSnapshot({ factualRevision: 1 });
+    const turn = original.factual.latestTurn;
+    if (!turn) throw new Error("Expected current turn in fixture");
+    const snapshot: SmartSessionSnapshot = { ...original, factual: { ...original.factual, latestTurn: {
+      ...turn,
+      completedCommands: kind === "tool" ? [{ commandId: "cmd", command: "swift test", status: "failed", completedAt: "2026-08-17T07:01:00Z", source: "observed", confidence: "high" }] : [],
+      assistantMessages: kind === "assistant" ? [{ messageId: "message", text: "Still investigating", completedAt: "2026-08-17T07:01:00Z", source: "observed", confidence: "high" }] : [],
+    } } };
+    Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: {
+      postMessage: async () => ({ ok: true, value: { schemaVersion: 1, status: "available", snapshot } }),
+    } } } });
+    const container = dom.window.document.getElementById("root");
+    if (!container) throw new Error("Missing root");
+    const root = createRoot(container);
+    try {
+      await act(async () => { root.render(createElement(SmartSessionSurface, { context: localizedContext })); });
+      const section = dom.window.document.querySelector(".focus-results");
+      expect(section?.querySelector("h3")?.textContent).toBe("Evidence");
+      expect(section?.textContent).toContain(kind === "tool" ? "swift test" : "Still investigating");
+      expect(section?.textContent).not.toContain("Final output");
+    } finally {
+      await act(async () => root.unmount());
+      dom.window.close();
+      Object.assign(globalThis, { window: previousWindow, document: previousDocument, IS_REACT_ACT_ENVIRONMENT: false });
+    }
+  }
+});
