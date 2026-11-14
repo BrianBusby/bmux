@@ -136,6 +136,198 @@ milestones:
 roadmap:
   primary_capability_frontier: process_integrity
   nodes:
+    - id: trustworthy_session_visibility
+      kind: phase
+      title: Trustworthy Session and Turn Visibility
+      parent: richer_session_understanding
+      status: active
+      owner: provenance_engine
+      repositories: [provenance_engine, bmux]
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: inference_session_work_projections
+        tags: [session_work_model, session_visibility]
+      parallelism:
+        classification: serial
+      execution:
+        assignment: current
+        assigned_to: shared
+      rationale: Evidence-backed ordinary-session understanding through the existing PE and bmux pipeline; see docs/planning/session-visibility.md.
+
+    - id: session_visibility_delivery
+      kind: milestone
+      title: Trustworthy Session Visibility Delivery
+      parent: trustworthy_session_visibility
+      status: active
+      owner: provenance_engine
+      repositories: [provenance_engine, bmux]
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: inference_session_work_projections
+        tags: [session_work_model, session_visibility]
+      parallelism:
+        classification: serial
+      execution:
+        assignment: current
+        assigned_to: shared
+      rationale: Six gated end-to-end slices, beginning with observed capture and a useful ordinary unplanned session.
+
+    - id: session_visibility_baseline
+      kind: slice
+      title: Diagnose capture and establish baseline
+      parent: session_visibility_delivery
+      status: active
+      owner: bmux
+      repositories: [provenance_engine, bmux]
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: inference_session_work_projections
+        tags: [session_visibility]
+      depends_on: [live_terminal_codex_evidence_ingestion, coding_agent_evidence_source_reconciliation]
+      parallelism:
+        classification: serial
+      execution:
+        assignment: current
+        assigned_to: shared
+      acceptance:
+        criteria:
+          - Trace ordinary Codex evidence to native display, capture representative replay fixtures, classify missing signals, measure observable latency, and correct confirmed defects.
+          - Preserve plan history while exposing uncertainty consistently when later plan evidence is ambiguous, contradicted, or previously misreported.
+          - Reconcile transcript cursor and observation health across concurrent monitors, crashes, source replacement, and replay without falsely reporting a healthy connection.
+      rationale: Draft PR #237 records ordinary Codex proposed-plan prose and exposes bounded evidence, stacked on #235. PR #230 merged the review-date guard correction; initiative branches still require updated hosted checks. Draft PR #252 provides a disabled snapshot experiment with no production caller, not a cross-session alert fix. Draft PRs #263–#266 cover scoped Smart Session read freshness, a synthetic preview, plan-outcome correction and a plan-current characterization; #267 and #268 add expected-red replay and child-ownership fixtures, #269 characterizes rejected-event acknowledgment, #270 proposes source proof, #271 adds an unused presence-only PE candidate, #272 makes the retained-status CLI diagnostic more explicit about uncertainty, and #273 corrects unsupported final-output labels. Draft PR #274, dependent on #273 and #250, limits unsupported Smart Session card activity and objective claims; its 128 web tests passed; a stale normal React bundle invalidated the earlier `6c96109c3` build, while the corrected `121f329f5` real-helper build passed with its bundled chunk matching the committed asset. At test-only `0efd5c393`, #274 hosted React checks passed; native dogfood and remaining hosted CI remain unverified. Draft #275 at `fef000db0` is a test-only expected-red characterization of stale activity and phase; a read-only unknown-state mitigation requires revision-key and consumer reconciliation before implementation. Shared PE, identity, individual-record byte bounds, related-work, phase, evidence-inspection, hosted CI and native-accessibility gaps remain. None completes the baseline gate. A matched old-CLI trigger prototype is non-shipping and does not cover independent writes or prove recovery. Native dogfood, checklist validity, cross-session transcript alert isolation, attention delivery and ownership, monitor recovery and the remaining baseline gate are open; see docs/planning/session-visibility.md.
+
+    - id: session_visibility_revision_integrity
+      kind: slice
+      title: Establish coherent session revisions and conditional interpretation
+      parent: session_visibility_delivery
+      status: planned
+      owner: provenance_engine
+      repositories: [provenance_engine, bmux]
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: inference_session_work_projections
+        tags: [session_visibility]
+      depends_on: [session_visibility_baseline]
+      parallelism:
+        classification: serial
+      execution:
+        assignment: planned
+        assigned_to: shared
+      acceptance:
+        criteria:
+          - Preserve ambiguously linked evidence without unsupported turn joins, and establish coherent per-session revisions across ownership changes and replay, consistent snapshot reads, and conditional publication that prevents older interpretations superseding newer evidence.
+      rationale: Draft PR #235 implements coherent reads and atomic canonical SQLite producer passes; draft PR #236 filters foreign-session factual and outcome evidence. Direct and older writers, semantic recomputation, identity revisions, integration and load remain unresolved. The baseline dependency and acceptance gate remain open; see docs/planning/session-visibility.md.
+
+    - id: session_visibility_summary
+      kind: slice
+      title: Deliver useful session summary
+      parent: session_visibility_delivery
+      status: planned
+      owner: provenance_engine
+      repositories: [provenance_engine, bmux]
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: inference_session_work_projections
+        tags: [session_visibility]
+      depends_on: [session_visibility_baseline, session_visibility_revision_integrity, deterministic_turn_outcome_projection, session_work_model_contract_foundation]
+      parallelism:
+        classification: serial
+      execution:
+        assignment: planned
+        assigned_to: shared
+      acceptance:
+        criteria:
+          - Extend existing canonical state and one primary surface with evidence-backed objective, work, activity, attention and observation health.
+      rationale: See docs/planning/session-visibility.md for the gate, evidence requirements and open limitations.
+
+    - id: session_visibility_progress
+      kind: slice
+      title: Explain meaningful progress
+      parent: session_visibility_delivery
+      status: planned
+      owner: provenance_engine
+      repositories: [provenance_engine, bmux]
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: inference_session_work_projections
+        tags: [session_visibility]
+      depends_on: [session_visibility_summary, milestone_inference, blocker_approach_change_semantics]
+      parallelism:
+        classification: serial
+      execution:
+        assignment: planned
+        assigned_to: shared
+      acceptance:
+        criteria:
+          - Distinguish evidence-backed discoveries, changes and validation; evaluate any bounded synthesis against a deterministic baseline.
+      rationale: See docs/planning/session-visibility.md for the gate, evidence requirements and open limitations.
+
+    - id: session_visibility_plans
+      kind: slice
+      title: Integrate plans and reporting
+      parent: session_visibility_delivery
+      status: planned
+      owner: provenance_engine
+      repositories: [provenance_engine, bmux]
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: inference_session_work_projections
+        tags: [session_visibility]
+      depends_on: [session_visibility_progress]
+      parallelism:
+        classification: serial
+      execution:
+        assignment: planned
+        assigned_to: shared
+      acceptance:
+        criteria:
+          - Preserve explicit plan revisions and source distinctions, and evaluate ordinary-session reporting guidance.
+      rationale: See docs/planning/session-visibility.md for the gate, evidence requirements and open limitations.
+
+    - id: session_visibility_scanning
+      kind: slice
+      title: Make multiple sessions easy to scan
+      parent: session_visibility_delivery
+      status: planned
+      owner: bmux
+      repositories: [provenance_engine, bmux]
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: inference_session_work_projections
+        tags: [session_visibility]
+      depends_on: [session_visibility_plans]
+      parallelism:
+        classification: serial
+      execution:
+        assignment: planned
+        assigned_to: shared
+      acceptance:
+        criteria:
+          - Apply shared state to native surfaces and validate five-session comprehension and accessibility.
+      rationale: See docs/planning/session-visibility.md for the gate, evidence requirements and open limitations.
+
+    - id: session_visibility_reliability
+      kind: slice
+      title: Prove reliability and expose coordination contract
+      parent: session_visibility_delivery
+      status: planned
+      owner: provenance_engine
+      repositories: [provenance_engine, bmux]
+      concept_classification:
+        primary: evidence_and_factual_state
+        architecture_layer: inference_session_work_projections
+        tags: [session_visibility]
+      depends_on: [session_visibility_scanning]
+      parallelism:
+        classification: serial
+      execution:
+        assignment: planned
+        assigned_to: shared
+      acceptance:
+        criteria:
+          - Validate replay, live multi-session behavior and performance, and expose a minimal evidence-linked read contract.
+      rationale: See docs/planning/session-visibility.md for the gate, evidence requirements and open limitations.
+
     - id: bmux_provenance_platform
       kind: project
       title: Bmux and Provenance Engine
@@ -4777,14 +4969,14 @@ roadmap:
       kind: slice
       title: Retrieve related work from the current caller
       parent: cross_session_context_assembly_experiment
-      status: active
+      status: implemented
       owner: bmux
       repositories: [bmux, provenance_engine]
       concept_classification:
         primary: retrieval
         architecture_layer: consumer_presentation
         tags: [cross_session_awareness, agent_retrieval]
-      capability_maturity: active
+      capability_maturity: gated
       depends_on: [agent_accessible_cross_session_retrieval]
       gates:
         - id: explicit_retrieval_validated
@@ -4795,11 +4987,23 @@ roadmap:
       parallelism:
         classification: serial
       execution:
-        assignment: current
+        assignment: complete
         assigned_to: shared
         notes: Resolve verified caller identity and return bounded evidence with actionable unavailable states while preserving the explicit-ID contract. Isolated tagged build 948 verified a fresh ordinary caller and resume in another pane. Live sequential reuse with multiple retained records and the observed shared Codex daemon fail closed; successful reuse with retained records, other daemon shapes, historical misattribution, and human dogfood remain open. Current-status records fixture evidence and CI limitations.
-      delivery_status: proposed
-      acceptance_status: proposed
+      delivery_status: merged
+      acceptance_status: under_observation
+      evidence:
+        commits:
+          - repository: BrianBusby/bmux
+            sha: 73994ec15de85088147ec14e6b496df6485b2c9b
+        pull_requests:
+          - repository: BrianBusby/bmux
+            number: 227
+            owner:
+              login: BrianBusby
+              profile_url: https://github.com/BrianBusby
+            merged_at: '2026-11-13T00:45:22Z'
+            merge_commit_sha: 73994ec15de85088147ec14e6b496df6485b2c9b
       acceptance:
         criteria:
           - Retrieve active and historical related work from a fresh caller without a PE ID, with bounded text and machine-readable evidence.

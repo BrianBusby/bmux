@@ -14,6 +14,14 @@ import SwiftUI
 #endif
 
 @Suite struct ExpandedTurnPresentationTests {
+    @Test(arguments: [
+        ("completed", true), (" COMPLETE ", true), ("done", true), ("incomplete", false),
+        ("not completed", false), ("in_progress", false), ("pending", false), ("unknown", false)
+    ])
+    func planCompletionUsesReportedStatus(status: String, expected: Bool) {
+        #expect(AgentSessionFactualProjectionEvidenceRows.isPlanStepCompleted(status) == expected)
+    }
+
     @Test func repliesAndRawSources() {
         let raw = " \n<send_user_message_question_reply>\n[{\"question\":\"Which base?\",\"answer\":\"708\",\"questionItemId\":1},{\"question\":\"Build?\",\"answer\":\"Yes\"}]\n</send_user_message_question_reply> \n"
         let value = ExpandedTurnRequest(objective: raw, prompt: raw.trimmingCharacters(in: .whitespacesAndNewlines))

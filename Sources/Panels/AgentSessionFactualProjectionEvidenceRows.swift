@@ -2,6 +2,15 @@ import Foundation
 import ProvenanceEngineContracts
 
 struct AgentSessionFactualProjectionEvidenceRows {
+    static func isPlanStepCompleted(_ status: String) -> Bool {
+        switch status.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "completed", "complete", "done":
+            true
+        default:
+            false
+        }
+    }
+
     static func turnProperties(for turnSnapshot: ProvenanceFactualSessionProjectionTurnSnapshot) -> [TurnProperty] {
         var rows: [TurnProperty] = []
         if let prompt = turnSnapshot.submittedPrompt?.text {
