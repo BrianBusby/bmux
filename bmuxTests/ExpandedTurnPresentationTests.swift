@@ -32,14 +32,45 @@ import SwiftUI
         #expect(first.steps.map(\.id) == steps[0..<8].map(\.id))
         #expect(first.previousPage == nil)
         let second = AgentSessionPlanPage(steps: steps, requestedPage: try #require(first.nextPage))
+        #expect(second.currentPage == 1)
         #expect(second.steps.first?.text == longText)
         #expect(second.steps.first?.status == "in_progress")
         #expect(second.previousPage == 0)
         let last = AgentSessionPlanPage(steps: steps, requestedPage: try #require(second.nextPage))
         #expect(last.steps.map(\.id) == ["step-16"])
         #expect(last.nextPage == nil)
-        #expect(AgentSessionPlanPage(steps: Array(steps.prefix(3)), requestedPage: 2).steps.count == 3)
+        let revision = steps.enumerated().map { index, step in
+            ProvenanceCodingAgentPlanStepRecord(id: "revision-\(index)", order: step.order, text: step.text,
+                status: index == 8 ? "completed" : step.status)
+        }
+        let revised = AgentSessionPlanPage(steps: revision, requestedPage: second.currentPage)
+        #expect(revised.currentPage == 1)
+        #expect(revised.steps.first?.status == "completed")
+        let shortened = AgentSessionPlanPage(steps: Array(steps.prefix(3)), requestedPage: 2)
+        #expect(shortened.currentPage == 0)
+        #expect(shortened.steps.count == 3)
         #expect(AgentSessionPlanPage(steps: [], requestedPage: 0).steps.isEmpty)
+    }
+
+    @Test func planStatusClassificationPreservesUnknownValues() {
+        #expect(AgentSessionPlanStepStatus("pending") == .pending)
+        #expect(AgentSessionPlanStepStatus("in_progress") == .inProgress)
+        #expect(AgentSessionPlanStepStatus("completed") == .completed)
+        #expect(AgentSessionPlanStepStatus("incomplete") == .providerValue("incomplete"))
+        #expect(AgentSessionPlanStepStatus("provider-specific") == .providerValue("provider-specific"))
+        #expect(AgentSessionPlanStepStatus(" ") == .unknown)
+    }
+
+    @Test func planStatusLabelsAreLocalized() throws {
+        let expectations = ["en": ["Pending", "In progress", "Completed"], "ja": ["未着手", "進行中", "完了"]]
+        let keys = ["agentSession.factual.plan.status.pending", "agentSession.factual.plan.status.inProgress", "agentSession.factual.plan.status.completed"]
+        for (language, values) in expectations {
+            let url = try #require(Bundle.main.url(forResource: language, withExtension: "lproj"))
+            let bundle = try #require(Bundle(url: url))
+            for (key, value) in zip(keys, values) {
+                #expect(bundle.localizedString(forKey: key, value: nil, table: nil) == value)
+            }
+        }
     }
 
     @Test func repliesAndRawSources() {
