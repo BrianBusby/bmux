@@ -7,6 +7,9 @@ actor ProvenanceSQLiteRepository {
     let payloadEncoder: JSONEncoder
     let payloadDecoder: JSONDecoder
     let stableIDFactory: ProvenanceStableIDFactory
+#if DEBUG
+    var replayProgressForTesting: (@Sendable () throws -> Void)?
+#endif
 
     /// Opens the database and applies the supplied migrations before returning.
     ///
@@ -536,54 +539,6 @@ actor ProvenanceSQLiteRepository {
             )
         }
         return records
-    }
-
-    /// Rebuilds current-state projections by replaying the immutable event ledger in append order.
-    ///
-    /// - Parameter batchSize: Maximum number of ledger entries decoded per cursor read.
-    /// - Returns: Number of ledger events replayed into projection tables.
-    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the rebuild or stored enum data is invalid.
-    func rebuildProjectionsFromEventLedger(batchSize: Int = 1_000) throws -> Int {
-        let rowLimit = max(1, batchSize)
-        var afterSequence: Int?
-        var replayedCount = 0
-
-        try database.execute("BEGIN IMMEDIATE TRANSACTION")
-        do {
-            try clearProjectionTables()
-            while true {
-                let entries = try eventLedgerEntries(afterSequence: afterSequence, limit: rowLimit)
-                guard !entries.isEmpty else { break }
-
-                for entry in entries {
-                    try applyProjectionUpdates(
-                        from: entry.event,
-                        latestEventSequence: entry.sequence,
-                        pruneOutcomes: false
-                    )
-                    afterSequence = entry.sequence
-                    replayedCount += 1
-                }
-
-                guard entries.count == rowLimit else { break }
-            }
-            // All cross-projection citations are present only after the complete replay.
-            // Pruning during replay could retire a revision cited by a later event.
-            if try schemaVersion() >= 29 {
-                try database.execute(
-                    "UPDATE provenance_outcome_retention_state SET legacy_citations_indexed = 1 WHERE policy_version = 1"
-                )
-            }
-            try database.execute("COMMIT")
-        } catch {
-            try? database.execute("ROLLBACK")
-            throw error
-        }
-
-        if try schemaVersion() >= 29 {
-            while try pruneOutcomePayloads(dryRun: false, batchSize: 1_000).prunedRows > 0 {}
-        }
-        return replayedCount
     }
 
     /// Reads one current-state repository projection by stable ID.
@@ -2880,7 +2835,7 @@ actor ProvenanceSQLiteRepository {
         _ = try insert.step()
     }
 
-    private func applyProjectionUpdates(
+    func applyProjectionUpdates(
         from event: ProvenanceEvent, latestEventSequence: Int? = nil, pruneOutcomes: Bool = true
     ) throws {
         let payload = event.payload

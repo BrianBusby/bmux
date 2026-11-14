@@ -130,7 +130,13 @@ extension ProvenanceSQLiteRepository {
             timeColumn: "observed_at_seconds",
             turnID: turnID
         ).compactMap { try codingAgentFileChangeAttribution(id: $0) }
-        let evidenceIndex = try turnOutcomeEvidenceIndex(sessionID: turn.sessionID, throughSequence: latestEventSequence)
+        let evidenceKeys = try turnOutcomeEvidenceKeys(
+            turn: turn, session: session, prompt: prompt, plan: plan, commands: commands,
+            reasoningSummaries: reasoningSummaries, attributions: attributions
+        )
+        let evidenceIndex = try turnOutcomeEvidenceIndex(
+            sessionID: turn.sessionID, throughSequence: latestEventSequence, keys: evidenceKeys
+        )
         let repositoryBoundary = try turnOutcomeRepositoryBoundary(
             turn: turn,
             session: session,
@@ -810,53 +816,6 @@ extension ProvenanceSQLiteRepository {
             prefix: "turn-outcome-fingerprint",
             value: parts.joined(separator: "\n")
         )
-    }
-
-    private func turnOutcomeEvidenceIndex(sessionID: String, throughSequence: Int?) throws -> TurnOutcomeEvidenceIndex {
-        let entries = try eventLedgerEntries(sessionID: sessionID, throughSequence: throughSequence)
-        guard !entries.isEmpty else { return TurnOutcomeEvidenceIndex(referencesByKey: [:]) }
-        var referencesByKey: [TurnOutcomeEvidenceKey: [ProvenanceTurnOutcomeEvidenceReference]] = [:]
-        for entry in entries {
-            func append(kind: String, id: String?) {
-                guard let id else { return }
-                let key = TurnOutcomeEvidenceKey(kind: kind, id: id)
-                referencesByKey[key, default: []].append(
-                    ProvenanceTurnOutcomeEvidenceReference(
-                        eventID: entry.event.id,
-                        eventSequence: entry.sequence,
-                        eventType: entry.event.eventType.rawValue,
-                        source: entry.event.source,
-                        evidenceOrigin: entry.event.evidenceOrigin,
-                        evidenceScope: entry.event.evidenceScope,
-                        recordKind: kind,
-                        recordID: id,
-                        interpretedByRuleVersion: Self.turnOutcomeRuleVersion,
-                        sourceState: "available"
-                    )
-                )
-            }
-            let payload = entry.event.payload
-            append(kind: "repository", id: payload.repository?.id)
-            append(kind: "worktree", id: payload.worktree?.id)
-            append(kind: "session", id: payload.session?.id)
-            append(kind: "session_relationship", id: payload.sessionRelationship?.sessionID)
-            append(kind: "work_item", id: payload.workItem?.id)
-            append(kind: "contribution", id: payload.contribution?.id)
-            append(kind: "checkpoint", id: payload.checkpoint?.id)
-            append(kind: "change_set", id: payload.changeSet?.id)
-            for fileChange in payload.fileChanges {
-                append(kind: "file_change", id: fileChange.id)
-            }
-            append(kind: "validation_run", id: payload.validationRun?.id)
-            append(kind: "coding_agent_thread", id: payload.codingAgentThread?.id)
-            append(kind: "coding_agent_turn", id: payload.codingAgentTurn?.id)
-            append(kind: "coding_agent_prompt", id: payload.codingAgentPrompt?.id)
-            append(kind: "coding_agent_plan_update", id: payload.codingAgentPlanUpdate?.id)
-            append(kind: "coding_agent_command", id: payload.codingAgentCommand?.id)
-            append(kind: "coding_agent_reasoning_summary", id: payload.codingAgentReasoningSummary?.id)
-            append(kind: "coding_agent_file_change_attribution", id: payload.codingAgentFileChangeAttribution?.id)
-        }
-        return TurnOutcomeEvidenceIndex(referencesByKey: referencesByKey)
     }
 
     func turnOutcomeLatestLedgerSequence() throws -> Int? {

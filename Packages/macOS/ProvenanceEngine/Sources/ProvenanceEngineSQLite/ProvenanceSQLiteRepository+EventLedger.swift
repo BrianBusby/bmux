@@ -1,11 +1,10 @@
 import ProvenanceEngineContracts
 
 extension ProvenanceSQLiteRepository {
-    /// Reads event-ledger entries scoped to one coding-agent session.
-    ///
-    /// Turn-outcome projection uses this path so appending evidence for one active
-    /// session does not decode the full local PE ledger.
-    func eventLedgerEntries(sessionID: String, throughSequence: Int?) throws -> [ProvenanceEventLedgerEntry] {
+    /// Visits one session's ledger in order without materializing its full contents.
+    func forEachEventLedgerEntry(
+        sessionID: String, throughSequence: Int?, _ visit: (ProvenanceEventLedgerEntry) throws -> Void
+    ) throws {
         let query = try database.prepare(
             """
             SELECT
@@ -32,18 +31,16 @@ extension ProvenanceSQLiteRepository {
 
         try query.bind(sessionID, at: 1)
         try query.bind(throughSequence ?? Int.max, at: 2)
-        var entries: [ProvenanceEventLedgerEntry] = []
         while try query.step() {
             guard let id = query.string(at: 1) else {
                 throw ProvenanceSQLiteError.sqlite(message: "stored event has invalid id")
             }
-            entries.append(
+            try visit(
                 ProvenanceEventLedgerEntry(
                     sequence: query.int(at: 0),
                     event: try event(from: query, id: id, offset: 2)
                 )
             )
         }
-        return entries
     }
 }
