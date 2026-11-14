@@ -117,6 +117,22 @@ extension AgentSessionWebRendererCoordinator {
                 localized: "agentSession.web.smartSession.activity",
                 defaultValue: "Activity"
             ),
+            "smartSessionHideLoadedEvidence": String(
+                localized: "agentSession.web.smartSession.hideLoadedEvidence",
+                defaultValue: "Hide additional evidence"
+            ),
+            "smartSessionPreviousEvidence": String(
+                localized: "agentSession.web.smartSession.previousEvidence",
+                defaultValue: "Previous evidence"
+            ),
+            "smartSessionNextEvidence": String(
+                localized: "agentSession.web.smartSession.nextEvidence",
+                defaultValue: "Next evidence"
+            ),
+            "smartSessionLastReportedStatus": String(
+                localized: "agentSession.web.smartSession.lastReportedStatus",
+                defaultValue: "Last reported status"
+            ),
             "smartSessionShowLoadedEvidence": String(
                 localized: "agentSession.web.smartSession.showLoadedEvidence",
                 defaultValue: "Show more recorded evidence"

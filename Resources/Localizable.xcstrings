@@ -11526,6 +11526,34 @@
         "ja": { "stringUnit": { "state": "translated", "value": "活動" } }
       }
     },
+    "agentSession.web.smartSession.hideLoadedEvidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Hide additional evidence" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "追加の証拠を非表示" } }
+      }
+    },
+    "agentSession.web.smartSession.previousEvidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Previous evidence" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "前の証拠" } }
+      }
+    },
+    "agentSession.web.smartSession.nextEvidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Next evidence" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "次の証拠" } }
+      }
+    },
+    "agentSession.web.smartSession.lastReportedStatus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Last reported status" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "最後に報告された状態" } }
+      }
+    },
     "agentSession.web.smartSession.showLoadedEvidence": {
       "extractionState": "manual",
       "localizations": {

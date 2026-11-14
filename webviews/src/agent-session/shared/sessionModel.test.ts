@@ -1984,9 +1984,10 @@ test("loaded evidence is selectable and available through a disclosure", async (
   const original = smartSessionSnapshot({ factualRevision: 1 });
   const turn = original.factual.latestTurn;
   if (!turn) throw new Error("Expected turn");
-  const commands = Array.from({ length: 24 }, (_, i) => ({ commandId: `cmd-${i}`, command: `command-${i}`, status: "completed", completedAt: "2026-08-17T07:01:00Z", source: "observed", confidence: "high" }));
-  const files = Array.from({ length: 24 }, (_, i) => ({ attributionId: `file-${i}`, paths: [`file-${i}`], summary: `patch-${i}`, observedAt: "2026-08-17T07:02:00Z", source: "observed", confidence: "high" }));
-  const snapshot: SmartSessionSnapshot = { ...original, factual: { ...original.factual, latestTurn: { ...turn, completedCommands: commands, fileChangeAttributions: files } }, crossSessionAwareness: { ...original.crossSessionAwareness, relatedSessions: [{ sessionId: "related", lifecycleState: "unknown", completionState: "unknown", freshnessState: "unknown", relationshipReasons: ["Shared file"] }] } };
+  const commands = Array.from({ length: 100 }, (_, i) => ({ commandId: `cmd-${i}`, command: `command-${i}`, status: "completed", completedAt: "2026-08-17T07:01:00Z", source: "observed", confidence: "high" }));
+  const files = Array.from({ length: 100 }, (_, i) => ({ attributionId: `file-${i}`, paths: [`file-${i}`], summary: `patch-${i}`, observedAt: "2026-08-17T07:02:00Z", source: "observed", confidence: "high" }));
+  const messages = Array.from({ length: 12 }, (_, i) => ({ messageId: `message-${i}`, text: `message-${i}`, completedAt: "2026-08-17T07:03:00Z", source: "observed", confidence: "high" }));
+  const snapshot: SmartSessionSnapshot = { ...original, factual: { ...original.factual, latestTurn: { ...turn, completedCommands: commands, fileChangeAttributions: files, assistantMessages: messages } }, crossSessionAwareness: { ...original.crossSessionAwareness, relatedSessions: [{ sessionId: "related", lifecycleState: "unknown", completionState: "unknown", freshnessState: "unknown", relationshipReasons: ["Shared file"] }] } };
   Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: { postMessage: async () => ({ ok: true, value: { schemaVersion: 1, status: "available", snapshot } }) } } } });
   const container = dom.window.document.getElementById("root");
   if (!container) throw new Error("Missing root");
@@ -2013,19 +2014,21 @@ test("loaded evidence is selectable and available through a disclosure", async (
     selection?.addRange(range);
     expect(selection?.toString()).toBe(item.textContent);
     const visited: string[] = [];
-    for (const unused of Array.from({ length: 5 })) {
+    for (const _unused of Array.from({ length: 21 })) {
+      expect(container.querySelectorAll(".focus-evidence-page li").length).toBeLessThanOrEqual(20);
       visited.push(container.querySelector(".focus-evidence-page")?.textContent ?? "");
       const next = container.querySelector<HTMLButtonElement>(".focus-evidence-next");
       if (!next || next.disabled) break;
       await act(async () => next.click());
     }
-    expect(visited.join(" ")).toContain("command-23");
-    expect(visited.join(" ")).toContain("file-23");
-    expect(visited.join(" ")).toContain("Recorded description (unverified): patch-23");
+    expect(visited.join(" ")).toContain("command-99");
+    expect(visited.join(" ")).toContain("file-99");
+    expect(visited.join(" ")).toContain("Recorded description (unverified): patch-99");
+    expect(visited.join(" ")).toContain("message-10");
     const previous = container.querySelector<HTMLButtonElement>(".focus-evidence-previous");
     expect(previous?.disabled).toBe(false);
     await act(async () => previous?.click());
-    expect(container.querySelector(".focus-evidence-page")?.textContent).not.toContain("file-23");
+    expect(container.querySelector(".focus-evidence-page")?.textContent).not.toContain("message-10");
     await act(async () => disclosure?.click());
     expect(disclosure?.getAttribute("aria-expanded")).toBe("false");
     expect(container.querySelectorAll(".focus-evidence-page li").length).toBe(0);
