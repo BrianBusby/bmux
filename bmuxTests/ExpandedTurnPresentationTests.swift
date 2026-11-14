@@ -63,14 +63,13 @@ import SwiftUI
 
     @Test func planStatusLabelsAreLocalized() throws {
         let expectations = ["en": ["Pending", "In progress", "Completed"], "ja": ["未着手", "進行中", "完了"]]
-        let keys = ["agentSession.factual.plan.status.pending", "agentSession.factual.plan.status.inProgress", "agentSession.factual.plan.status.completed"]
+        let statuses: [AgentSessionPlanStepStatus] = [.pending, .inProgress, .completed]
         for (language, values) in expectations {
-            let url = try #require(Bundle.main.url(forResource: language, withExtension: "lproj"))
-            let bundle = try #require(Bundle(url: url))
-            for (key, value) in zip(keys, values) {
-                #expect(bundle.localizedString(forKey: key, value: nil, table: nil) == value)
+            for (status, value) in zip(statuses, values) {
+                #expect(status.label(locale: Locale(identifier: language)) == value)
             }
         }
+        #expect(AgentSessionPlanStepStatus("provider-specific").label(locale: Locale(identifier: "ja")) == "provider-specific")
     }
 
     @Test func repliesAndRawSources() {

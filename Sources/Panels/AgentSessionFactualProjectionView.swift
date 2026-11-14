@@ -293,7 +293,7 @@ struct AgentSessionFactualProjectionView: View {
                     isAvailable: turn.currentPlan != nil
                 ) {
                     if let plan = turn.currentPlan {
-                        AgentSessionPlanStepsView(plan: plan).id(plan.id)
+                        AgentSessionPlanStepsView(plan: plan).id(turn.turn.id)
                     }
                 }
                 overviewDisclosure(

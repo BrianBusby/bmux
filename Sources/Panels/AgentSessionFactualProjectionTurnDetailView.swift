@@ -54,7 +54,7 @@ struct AgentSessionFactualProjectionTurnDetailView: View {
             Text(String(localized: "agentSession.factual.plan", defaultValue: "Current plan"))
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(Color.bmuxTextTertiary)
-            AgentSessionPlanStepsView(plan: plan).id(plan.id)
+            AgentSessionPlanStepsView(plan: plan).id(turnSnapshot.turn.id)
         }
     }
 
@@ -170,6 +170,7 @@ struct AgentSessionFactualProjectionTurnDetailView: View {
 struct AgentSessionPlanStepsView: View {
     let plan: ProvenanceCodingAgentPlanUpdateRecord
     @State private var page = 0
+    @Environment(\.locale) private var locale
 
     var body: some View {
         let visible = AgentSessionPlanPage(steps: plan.steps, requestedPage: page)
@@ -186,9 +187,7 @@ struct AgentSessionPlanStepsView: View {
                             .font(.system(size: 12))
                             .foregroundStyle(Color(nsColor: MatteTheme.dynamicColor(.textSecondary)))
                             .fixedSize(horizontal: false, vertical: true)
-                        Text(step.status.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                             ? String(localized: "agentSession.factual.unknown", defaultValue: "Unknown")
-                             : step.status)
+                        Text(AgentSessionPlanStepStatus(step.status).label(locale: locale))
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color.bmuxTextTertiary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -216,6 +215,9 @@ struct AgentSessionPlanStepsView: View {
                 .font(.system(size: 11))
                 .buttonStyle(.link)
             }
+        }
+        .onChange(of: plan.steps.count) { _, _ in
+            page = AgentSessionPlanPage(steps: plan.steps, requestedPage: page).currentPage
         }
     }
 }
