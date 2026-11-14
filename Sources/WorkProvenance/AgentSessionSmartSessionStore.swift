@@ -23,7 +23,7 @@ final class AgentSessionSmartSessionStore {
 
     func snapshot(sessionID rawSessionID: String?) -> AgentSessionSmartSessionReadResult {
         guard let sessionID = Self.trimmedNonEmpty(rawSessionID) else { return .missingSession }
-        if let entry = refreshTasksBySessionID[sessionID], entry.invalidated {
+        if let entry = refreshTasksBySessionID[sessionID], entry.followingUp || !entry.dirtyWaiters.isEmpty {
             return Self.uncertainResult(sessionID: sessionID, cached: entry.priorSnapshot)
         }
         guard let cached = snapshotsBySessionID[sessionID] else {
@@ -34,33 +34,62 @@ final class AgentSessionSmartSessionStore {
 
     func refreshedSnapshot(sessionID rawSessionID: String?) async -> AgentSessionSmartSessionReadResult {
         guard let sessionID = Self.trimmedNonEmpty(rawSessionID) else { return .missingSession }
-        if var entry = refreshTasksBySessionID[sessionID] {
-            entry.invalidated = true
-            refreshTasksBySessionID[sessionID] = entry
-            return Self.uncertainResult(sessionID: sessionID, cached: entry.priorSnapshot)
-        }
-        let priorSnapshot = snapshotsBySessionID[sessionID]
-        let requestID = UUID()
-        let task = Task { @MainActor in
-            await self.loadSnapshot(sessionID: sessionID)
-        }
-        refreshTasksBySessionID[sessionID] = RefreshTaskEntry(id: requestID, task: task, priorSnapshot: priorSnapshot)
-        let result = await task.value
-        if let entry = refreshTasksBySessionID[sessionID], entry.id == requestID {
-            if entry.invalidated {
-                if var prior = entry.priorSnapshot {
-                    prior.stale = true
-                    snapshotsBySessionID[sessionID] = prior
-                } else {
-                    snapshotsBySessionID.removeValue(forKey: sessionID)
-                    failedSessionIDs.insert(sessionID)
+        let waiterID = UUID()
+        return await withTaskCancellationHandler {
+            guard !Task.isCancelled else { return .failed(sessionID: sessionID) }
+            let task: Task<AgentSessionSmartSessionReadResult, Never>
+            if var entry = refreshTasksBySessionID[sessionID] {
+                entry.dirtyWaiters.insert(waiterID)
+                refreshTasksBySessionID[sessionID] = entry
+                task = entry.task
+            } else {
+                let requestID = UUID()
+                let priorSnapshot = snapshotsBySessionID[sessionID]
+                task = Task { @MainActor in
+                    await self.performRefresh(sessionID: sessionID, requestID: requestID)
                 }
-                refreshTasksBySessionID.removeValue(forKey: sessionID)
-                return Self.uncertainResult(sessionID: sessionID, cached: entry.priorSnapshot)
+                refreshTasksBySessionID[sessionID] = RefreshTaskEntry(
+                    id: requestID, task: task, priorSnapshot: priorSnapshot
+                )
+            }
+            let result = await task.value
+            return Task.isCancelled ? .failed(sessionID: sessionID) : result
+        } onCancel: {
+            Task { @MainActor in self.cancelWaiter(waiterID, sessionID: sessionID) }
+        }
+    }
+
+    private func cancelWaiter(_ waiterID: UUID, sessionID: String) {
+        guard var entry = refreshTasksBySessionID[sessionID] else { return }
+        entry.dirtyWaiters.remove(waiterID)
+        refreshTasksBySessionID[sessionID] = entry
+    }
+
+    private func performRefresh(sessionID: String, requestID: UUID) async -> AgentSessionSmartSessionReadResult {
+        let firstResult = await loadSnapshot(sessionID: sessionID)
+        guard var entry = refreshTasksBySessionID[sessionID], entry.id == requestID else { return firstResult }
+        guard !entry.dirtyWaiters.isEmpty else {
+            refreshTasksBySessionID.removeValue(forKey: sessionID)
+            return firstResult
+        }
+        entry.followingUp = true
+        entry.dirtyWaiters.removeAll()
+        refreshTasksBySessionID[sessionID] = entry
+        let secondResult = await loadSnapshot(sessionID: sessionID)
+        guard let finalEntry = refreshTasksBySessionID[sessionID], finalEntry.id == requestID else { return secondResult }
+        if !finalEntry.dirtyWaiters.isEmpty {
+            if var prior = finalEntry.priorSnapshot {
+                prior.stale = true
+                snapshotsBySessionID[sessionID] = prior
+            } else {
+                snapshotsBySessionID.removeValue(forKey: sessionID)
+                failedSessionIDs.insert(sessionID)
             }
             refreshTasksBySessionID.removeValue(forKey: sessionID)
+            return Self.uncertainResult(sessionID: sessionID, cached: finalEntry.priorSnapshot)
         }
-        return result
+        refreshTasksBySessionID.removeValue(forKey: sessionID)
+        return secondResult
     }
 
     private func loadSnapshot(sessionID: String) async -> AgentSessionSmartSessionReadResult {
@@ -292,6 +321,7 @@ final class AgentSessionSmartSessionStore {
         let id: UUID
         let task: Task<AgentSessionSmartSessionReadResult, Never>
         let priorSnapshot: CachedSnapshot?
-        var invalidated = false
+        var followingUp = false
+        var dirtyWaiters: Set<UUID> = []
     }
 }

@@ -37,25 +37,32 @@ source = source.replace('''        let index = workModelRequests.count
         if let responseOverride { return responseOverride }''')
 source = source.replace('private static func model(sessionID: String, revision: Int) -> ProvenanceSessionWorkModel {', 'private static func model(sessionID: String, revision: Int, semanticIDs: [String] = []) -> ProvenanceSessionWorkModel {')
 source = source.replace('semanticInferenceIDs: [],\n                latestSemanticInferenceCreatedAt: nil', 'semanticInferenceIDs: semanticIDs,\n                latestSemanticInferenceCreatedAt: nil', 1)
-source = source.replace('    func health() async throws -> ProvenanceEngineHealth {', '''    private var relatedBlocked = false
-    private var relatedHasStarted = false
+source = source.replace('    func health() async throws -> ProvenanceEngineHealth {', '''    private var relatedBlocksRemaining = 0
+    private var relatedStarts = 0
+    private var relatedExpected = 0
     private var relatedStarted: CheckedContinuation<Void, Never>?
     private var relatedRelease: CheckedContinuation<Void, Never>?
-    func holdRelated() { relatedBlocked = true }
-    func waitForRelatedStart() async {
-        if relatedHasStarted { return }
+    func holdRelated() { relatedBlocksRemaining = 1 }
+    func holdRelatedTwice() { relatedBlocksRemaining = 2 }
+    func waitForRelatedStart() async { await waitForRelatedCount(1) }
+    func waitForRelatedCount(_ count: Int) async {
+        if relatedStarts >= count { return }
+        relatedExpected = count
         await withCheckedContinuation { relatedStarted = $0 }
     }
-    func releaseRelated() { relatedBlocked = false; relatedRelease?.resume(); relatedRelease = nil }
+    func releaseRelated() { relatedRelease?.resume(); relatedRelease = nil }
     private var relatedAvailable = false
     private var relatedWrongTarget = false
     func setRelatedWrongTarget(_ value: Bool) { relatedWrongTarget = value }
     func setRelatedAvailable(_ value: Bool) { relatedAvailable = value }
     func relatedSessions(_ request: ProvenanceRelatedSessionRequest) async throws -> ProvenanceRelatedSessionResponse {
-        if relatedBlocked {
-            relatedHasStarted = true
+        relatedStarts += 1
+        if relatedStarts >= relatedExpected {
             relatedStarted?.resume()
             relatedStarted = nil
+        }
+        if relatedBlocksRemaining > 0 {
+            relatedBlocksRemaining -= 1
             await withCheckedContinuation { relatedRelease = $0 }
         }
         guard relatedAvailable else { throw SmartSessionStoreTestError.unimplemented }
@@ -154,6 +161,52 @@ extension AgentSessionSmartSessionStoreTests {
             return
         }
         #expect(recovered.bridgePayload["semanticMessagesReadStatus"] as? String == "available")
+    }
+
+    @Test func cancellationAfterJoiningDoesNotPoisonActiveRead() async {
+        let client = SmartSessionStoreTestClient(model: Self.model(sessionID: "session-1", revision: 42))
+        let store = AgentSessionSmartSessionStore(client: client)
+        await client.holdRelated()
+        let first = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+        await client.waitForRelatedStart()
+        let (started, continuation) = AsyncStream<Void>.makeStream()
+        let second = Task { @MainActor in
+            continuation.yield(())
+            return await store.refreshedSnapshot(sessionID: "session-1")
+        }
+        for await _ in started { break }
+        second.cancel()
+        await client.releaseRelated()
+        guard case .available = await first.value else {
+            Issue.record("Cancelled joiner must not prevent a healthy result")
+            return
+        }
+        #expect(await second.value == .failed(sessionID: "session-1"))
+    }
+
+    @Test func overlapDuringFollowUpStopsAtTwoReadsAndRecoversOnRetry() async {
+        let client = SmartSessionStoreTestClient(model: Self.model(sessionID: "session-1", revision: 42))
+        let store = AgentSessionSmartSessionStore(client: client)
+        await client.holdRelatedTwice()
+        let first = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+        await client.waitForRelatedCount(1)
+        let (startedSecond, secondSignal) = AsyncStream<Void>.makeStream()
+        let second = Task { @MainActor in secondSignal.yield(()); return await store.refreshedSnapshot(sessionID: "session-1") }
+        for await _ in startedSecond { break }
+        await client.releaseRelated()
+        await client.waitForRelatedCount(2)
+        let (startedThird, thirdSignal) = AsyncStream<Void>.makeStream()
+        let third = Task { @MainActor in thirdSignal.yield(()); return await store.refreshedSnapshot(sessionID: "session-1") }
+        for await _ in startedThird { break }
+        await client.releaseRelated()
+        #expect(await first.value == .failed(sessionID: "session-1"))
+        #expect(await second.value == .failed(sessionID: "session-1"))
+        #expect(await third.value == .failed(sessionID: "session-1"))
+        #expect(await client.sessionWorkModelRequestCount() == 2)
+        guard case .available = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("A later non-overlapping retry must recover")
+            return
+        }
     }
 
     @Test func failedReadWithoutCacheStaysFailed() async {
