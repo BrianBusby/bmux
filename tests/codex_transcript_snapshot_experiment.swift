@@ -18,6 +18,13 @@ struct CodexTranscriptSnapshotExperimentTests {
             fatalError("matching session should be verified")
         }
         precondition(snapshot.lines.count == 2 && snapshot.lines[1] == event.trimmingCharacters(in: .newlines))
+        try write(meta + #"{"type":"event_msg","payload":{"text":"x,}\"[\\done","nested":[{"key":"value"}]}}"# + "\n")
+        guard case .verified = CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a") else {
+            fatalError("valid escaped JSON should be verified")
+        }
+        try write(meta + "{\"type\":\"event_msg\",\"payload\":{\"nested\":" + String(repeating: "[", count: 70) + "0" + String(repeating: "]", count: 70) + "}}\n")
+        unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"), "excessive nesting")
+        try write(meta + event)
         unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-b"), "mismatch")
         try write(event)
         unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"), "missing metadata")
@@ -70,6 +77,6 @@ struct CodexTranscriptSnapshotExperimentTests {
         }), "replacement during capture")
         try Data(repeating: 0x20, count: CodexTranscriptSnapshot.maxBytes + 1).write(to: path)
         unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"), "oversize")
-        print("snapshot experiment: 16 cases passed")
+        print("snapshot experiment: 18 cases passed")
     }
 }
