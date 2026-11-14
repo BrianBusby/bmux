@@ -728,6 +728,8 @@
 		0E4B570EA4564121AE262C4C /* CodexStopTurnScopeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1183571B13194D39A4E2DEE6 /* CodexStopTurnScopeTests.swift */; };
 		C0DECAFE0000000000000001 /* CodexTeamsApprovalBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DECAFE0000000000000002 /* CodexTeamsApprovalBridge.swift */; };
 		C0DECAFE0000000000000003 /* CodexTeamsApprovalBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DECAFE0000000000000002 /* CodexTeamsApprovalBridge.swift */; };
+		A5F7C0D80000000000000004 /* CodexTranscriptLineFramer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F7C0D80000000000000006 /* CodexTranscriptLineFramer.swift */; };
+		A5F7C0D80000000000000005 /* CodexTranscriptLineFramer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F7C0D80000000000000006 /* CodexTranscriptLineFramer.swift */; };
 		A5F7C0D80000000000000001 /* CodexTranscriptSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F7C0D80000000000000002 /* CodexTranscriptSnapshot.swift */; };
 		A5F7C0D80000000000000003 /* CodexTranscriptSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F7C0D80000000000000002 /* CodexTranscriptSnapshot.swift */; };
 		53FC7079DACB4E62B9836B97 /* Color+WorkspaceReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CBA0E5F00AA40C29BA5700D /* Color+WorkspaceReference.swift */; };
@@ -2994,6 +2996,7 @@
 		F432108B1FD14EB0AB540516 /* CodexStopTranscriptFailureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopTranscriptFailureTests.swift; sourceTree = "<group>"; };
 		1183571B13194D39A4E2DEE6 /* CodexStopTurnScopeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopTurnScopeTests.swift; sourceTree = "<group>"; };
 		C0DECAFE0000000000000002 /* CodexTeamsApprovalBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexTeamsApprovalBridge.swift; sourceTree = "<group>"; };
+		A5F7C0D80000000000000006 /* CodexTranscriptLineFramer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexTranscriptLineFramer.swift; sourceTree = "<group>"; };
 		A5F7C0D80000000000000002 /* CodexTranscriptSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexTranscriptSnapshot.swift; sourceTree = "<group>"; };
 		7CBA0E5F00AA40C29BA5700D /* Color+WorkspaceReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sidebar/Color+WorkspaceReference.swift"; sourceTree = "<group>"; };
 		C4041001000000000000001A /* CommandClickFileOpenRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandClickFileOpenRouter.swift; sourceTree = "<group>"; };
@@ -5914,6 +5917,7 @@
 					C0DE70450000000000000002 /* CLIProvenanceCodexTranscriptImporter+Models.swift */,
 					D0C0A1B20000000000000002 /* CLIProvenanceCodexTranscriptFileIdentity.swift */,
 					A5F7C0D80000000000000002 /* CodexTranscriptSnapshot.swift */,
+					A5F7C0D80000000000000006 /* CodexTranscriptLineFramer.swift */,
 					D0C0A1B60000000000000002 /* CLIProvenanceCodexTranscriptTailer.swift */,
 					D0C0A1B50000000000000002 /* CLIProvenanceCodexTranscriptCursorStore.swift */,
 					D0C0A1B40000000000000002 /* CLIProvenanceCodexTranscriptCursor.swift */,
@@ -8619,6 +8623,7 @@
 				BC04C4B6740943C18496E710 /* CLISocketReceiver.swift in Sources */,
 				C12985000000000000000002 /* CLISocketSentryTelemetry.swift in Sources */,
 				C0DECAFE0000000000000001 /* CodexTeamsApprovalBridge.swift in Sources */,
+					A5F7C0D80000000000000004 /* CodexTranscriptLineFramer.swift in Sources */,
 					A5F7C0D80000000000000001 /* CodexTranscriptSnapshot.swift in Sources */,
 				FEEDC1A50000000000000001 /* FeedEventClassifier.swift in Sources */,
 				A5FB1308 /* JSONCObjectEditor+Remove.swift in Sources */,
@@ -8963,6 +8968,7 @@
 				5351A89A303843779A715253 /* CodexStopTranscriptFailureTests.swift in Sources */,
 				0E4B570EA4564121AE262C4C /* CodexStopTurnScopeTests.swift in Sources */,
 				C0DECAFE0000000000000003 /* CodexTeamsApprovalBridge.swift in Sources */,
+					A5F7C0D80000000000000005 /* CodexTranscriptLineFramer.swift in Sources */,
 					A5F7C0D80000000000000003 /* CodexTranscriptSnapshot.swift in Sources */,
 				C0DEC0DE000000000000F302 /* CommandPaletteEmojiTitleSearchTests.swift in Sources */,
 				FC02A59739484E64B8100002 /* CommandPaletteEscapeExpiryFixture.swift in Sources */,

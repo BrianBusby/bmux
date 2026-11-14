@@ -14,6 +14,7 @@ struct CodexTranscriptSnapshotExperimentTests {
             }
             return
         }
+        testIncrementalFraming()
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("bmux-snapshot-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -108,5 +109,34 @@ struct CodexTranscriptSnapshotExperimentTests {
         try Data(repeating: 0x20, count: CodexTranscriptSnapshot.maxBytes + 1).write(to: path)
         unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"), "oversize")
         print("snapshot experiment: 22 cases passed")
+    }
+
+    private static func testIncrementalFraming() {
+        var framer = CodexTranscriptLineFramer(maximumLineBytes: 4)
+        var lines: [(String, Int)] = []
+        func record(_ line: CodexTranscriptLineFramer.Line, _ number: Int) {
+            switch line {
+            case .bytes(let bytes): lines.append((String(decoding: bytes, as: UTF8.self), number))
+            case .oversized: lines.append(("oversized", number))
+            }
+        }
+        framer.append(Data([0x61, 0x0d, 0x0a, 0xc3]), startOffset: 0, onLine: record)
+        precondition(framer.fragment == Data([0xc3]) && framer.lastCompletedLineOffset == 3)
+        framer.append(Data([0xa9, 0x0a, 0x78, 0x78, 0x78, 0x78, 0x78]), startOffset: 4, onLine: record)
+        precondition(framer.discardingOversizedLine && framer.lastCompletedLineOffset == 6)
+        framer.append(Data([0x0a, 0x0a, 0x7a, 0x0a]), startOffset: 11, onLine: record)
+        precondition(lines.map(\.0) == ["a\r", "é", "oversized", "z"])
+        precondition(lines.map(\.1) == [1, 2, 3, 5])
+        precondition(framer.fragment.isEmpty && framer.nextLineNumber == 6 && framer.lastCompletedLineOffset == 15)
+
+        var atLimit = CodexTranscriptLineFramer(maximumLineBytes: 4)
+        var result: [String] = []
+        atLimit.append(Data("xxxx\nyyyyy\n".utf8), startOffset: 0) { line, _ in
+            switch line {
+            case .bytes(let bytes): result.append(String(decoding: bytes, as: UTF8.self))
+            case .oversized: result.append("oversized")
+            }
+        }
+        precondition(result == ["xxxx", "oversized"])
     }
 }
