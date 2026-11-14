@@ -64,6 +64,22 @@ final class ProvenanceSQLiteDatabase {
         }
     }
 
+    /// Keeps related reads on one SQLite snapshot. Savepoints also allow callers
+    /// already in a transaction to retain their existing transaction boundary.
+    func withReadSnapshot<T>(_ body: () throws -> T) throws -> T {
+        try execute("SAVEPOINT pe_read_snapshot")
+        do {
+            let result = try body()
+            try execute("RELEASE SAVEPOINT pe_read_snapshot")
+            return result
+        } catch {
+            let original = error
+            try execute("ROLLBACK TO SAVEPOINT pe_read_snapshot")
+            try execute("RELEASE SAVEPOINT pe_read_snapshot")
+            throw original
+        }
+    }
+
     /// Prepares one SQL statement for binding and stepping.
     ///
     /// - Parameter sql: SQL statement to prepare.
