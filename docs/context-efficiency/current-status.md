@@ -140,8 +140,9 @@ and [the external record](../planning/work-brief-external.md).
 
 The cross-session context assembly experiment now tracks three sequential
 slices: current-caller retrieval, task relevance, and ordinary-agent evaluation.
-Only the first is selected; its implementation is under local verification and
-its live acceptance remains open. The later slices are not implemented.
+The first remains the formally selected slice in Project Truth; it was merged
+with documented caller limitations. Slice 2 implementation and evaluation are
+in progress on a separate branch. Slice 3 is not implemented.
 The existing explicit-ID retrieval and Smart Session awareness remain implemented.
 The Knowledge Compiler bridge is outside this work package.
 
@@ -246,12 +247,51 @@ records claim the pane. The default sandbox denied socket access without approva
 to schema 31; use isolated data while an older app is running. The older app
 rejects newer schema, so do not point it at the upgraded database. CI Project
 Truth passed; workflow guards are blocked by expired unrelated feature flags,
-which also prevent downstream checks. Human dogfood remains open.
+which also prevent downstream checks. The user approved merging PR #227;
+broader independent dogfood remains open.
 
-Remaining work: implement and verify all three slices, record a bounded output
-contract and corpus thresholds, run Project Truth gates after each slice, build
-an isolated tagged app, and capture ordinary Codex end-to-end observations. The
-new worktree is based on `6cc13bfc8`; the original checkout has unrelated edits.
+After PR #227 merged, slice 2 preparation began on `cross-session-task-relevance`.
+The [evaluation specification](cross-session-task-relevance-evaluation.md) fixes
+expected fixture IDs and thresholds before ranking work. The caller slice remains
+below validated maturity because sequential reuse with retained records still
+fails closed. Ticket facts come from current workspace display metadata linked
+to sessions; their historical validity remains unknown.
+
+Slice 2 preliminary implementation adds PE-owned exact path, exact current
+workspace ticket and literal objective selectors, combined as an intersection
+within the target's observed repository. Direct matches retain reasons and
+source references; task evidence availability is partial when coverage is
+unknown. The CLI accepts the selectors and includes match evidence. Two focused
+PE fixture tests pass, including stable limit omissions and a recorded blocker
+resolution; the broader related session suites passed 22 tests. The fixed PE
+corpus returned all six required IDs with evidence, excluded unrelated sessions,
+and verified stable limit omissions. The focused macOS CLI suite passed five
+tests, including all selectors and compact blocker chronology after an observed
+red/green regression. The fixed corpus and tagged live selector queries are recorded in the
+evaluation specification. Human acceptance and ordinary-agent decision
+scenarios remain open. Build 951 exposed a 12 KiB
+compaction issue: its path query dropped one of two matches. A red/green CLI
+regression now trims secondary detail before whole results. In isolated build
+952, a fresh ordinary Codex caller retrieved both path peers in 10,052 bytes,
+and the ticket and objective peers in 6,228 and 6,186 bytes, all with zero
+result omissions and match references. The socket required approval; the
+fixture evidence was seeded, and the repository remained clean. Slice 1's reuse and
+shared-daemon limitations still apply; the task relevance gate is not validated.
+A follow-up review found cross-repository path, ticket, and objective matches
+and misleading match observation times when a session spans repositories. PE
+now scopes each match to its recorded source repository and uses its matching
+event timestamps. Red/green regression tests cover these cases; facts without
+repository attribution remain unavailable. Isolated build 953 reran the three selectors from fresh caller
+`01a1d37a-f2ca-7cf0-ab9f-6b03872bf16b` with explicit socket approval:
+path returned both seeded peers in 10,052 bytes, ticket returned the seeded
+historical peer in 6,228 bytes, and objective returned that peer plus the prior
+live caller (whose prompt contained the literal objective) in 10,886 bytes.
+All reported zero result omissions. The seed evidence remains distinct from
+the live caller evidence; this is not an agent decision experiment.
+
+Remaining work: resolve the formal slice gates and remaining caller limitations,
+review and deliver slice 2, and capture the slice 3 ordinary-agent decision
+scenarios using live evidence. The original checkout has unrelated edits.
 
 ## Current Generated Truth
 

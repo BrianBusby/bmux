@@ -274,3 +274,30 @@ or conflict proof.
 This projection does not itself assemble prompts, coordinate agents, implement a
 Knowledge Compiler bridge, share data remotely, retain raw transcripts, or create
 LLM-authored cross-session summaries.
+
+## Explicit task selectors
+
+The related-session request accepts optional `artifactPath`, `ticket`, and
+`objective` selectors. When any selector is present, candidates must share an
+observed repository identity with the target; tree and other explicit links to a
+session in another repository do not override this default scope. Every supplied
+selector must match. Path matching compares an exact repository-relative path
+against a candidate's recorded changed artifacts. Ticket matching compares an
+exact ID with current metadata on a linked workspace; this does not establish
+that the ticket was linked during a historical session. Objective matching is a
+case-insensitive literal substring of an observed Session Outcome objective, not
+a semantic relevance score. Path and objective facts must be attributable to a
+shared repository through their source turn or file-change evidence. Ticket
+metadata must identify a shared repository. Facts with missing repository
+attribution are not matched; task evidence availability remains partial. Match
+observation times come from the matching source events and are unknown when
+those timestamps are unavailable, rather than from unrelated later events.
+
+Matches have typed reasons and source references. Direct matches sort before
+broad relationships; ties use candidate freshness and then session ID. Within
+a selector query nonmatching broad relationships are excluded. Requested limits
+apply after matching and sorting. `candidatesOmittedForLimit` reports the total
+number omitted even when the retained exclusion explanations are capped. Selection can be incomplete when a source lacks data; projection
+availability marks task evidence coverage partial instead of treating missing
+metadata as proof of no match. An unavailable target repository is also
+explicit. Source event and outcome revisions remain available in match evidence.
