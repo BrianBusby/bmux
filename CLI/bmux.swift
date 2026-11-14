@@ -31174,44 +31174,46 @@ export default BMUXSessionRestore;
                     telemetry: telemetry
                 )
             }
-            if def.name == "codex", let providerSessionId = normalizedHookValue(input.sessionId), !suppressVisibleMutations,
+            if def.name == "codex", !sessionId.isEmpty, !suppressVisibleMutations,
                env["BMUX_CODEX_HOOK_IDENTITY_VERIFIED"] == "1" {
                 if codexPromptTurnWentTerminal() {
                     stopStaleCodexPromptSubmit(restoreVisibleState: true)
                     return
                 }
-                await recordCodexHookPromptSubmitAssociation(workspaceId: workspaceId, surfaceId: surfaceId, sessionId: providerSessionId, turnId: input.turnId, cwd: hookCwd ?? mapped?.cwd, socketPath: client.socketPath, env: env)
-                let leasePath = createCodexMonitorLease(
-                    sessionId: providerSessionId,
-                    turnId: input.turnId,
-                    workspaceId: workspaceId,
-                    surfaceId: surfaceId,
-                    env: env
-                )
-                if leasePath == nil {
-                    telemetry.breadcrumb(
-                        "codex-hook.monitor.lease-unavailable",
-                        data: ["has_turn_id": normalizedHookValue(input.turnId) != nil]
-                    )
-                } else {
-                    retireCodexMonitorLeases(
+                if let providerSessionId = normalizedHookValue(input.sessionId) {
+                    await recordCodexHookPromptSubmitAssociation(workspaceId: workspaceId, surfaceId: surfaceId, sessionId: providerSessionId, turnId: input.turnId, cwd: hookCwd ?? mapped?.cwd, socketPath: client.socketPath, env: env)
+                    let leasePath = createCodexMonitorLease(
                         sessionId: providerSessionId,
-                        turnId: nil,
-                        preservingLeasePath: leasePath,
+                        turnId: input.turnId,
+                        workspaceId: workspaceId,
+                        surfaceId: surfaceId,
                         env: env
                     )
+                    if leasePath == nil {
+                        telemetry.breadcrumb(
+                            "codex-hook.monitor.lease-unavailable",
+                            data: ["has_turn_id": normalizedHookValue(input.turnId) != nil]
+                        )
+                    } else {
+                        retireCodexMonitorLeases(
+                            sessionId: providerSessionId,
+                            turnId: nil,
+                            preservingLeasePath: leasePath,
+                            env: env
+                        )
+                    }
+                    startCodexTranscriptMonitor(
+                        sessionId: providerSessionId,
+                        turnId: input.turnId,
+                        transcriptPath: normalizedHookValue(input.transcriptPath),
+                        cwd: hookCwd ?? mapped?.cwd,
+                        workspaceId: workspaceId,
+                        surfaceId: surfaceId,
+                        leasePath: leasePath,
+                        env: env,
+                        telemetry: telemetry
+                    )
                 }
-                startCodexTranscriptMonitor(
-                    sessionId: providerSessionId,
-                    turnId: input.turnId,
-                    transcriptPath: normalizedHookValue(input.transcriptPath),
-                    cwd: hookCwd ?? mapped?.cwd,
-                    workspaceId: workspaceId,
-                    surfaceId: surfaceId,
-                    leasePath: leasePath,
-                    env: env,
-                    telemetry: telemetry
-                )
             }
             spawnDetachedAgentAutoNameIfEligible(
                 def: def,
