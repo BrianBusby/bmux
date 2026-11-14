@@ -81,6 +81,47 @@ struct FactualCacheFailureTests {
         #expect(store.snapshot(sessionID: "session-1") == .available(newer))
     }
 
+    @Test(arguments: [false, true])
+    func supersededResponseWhileNewerPendingIsNotHealthy(hasCache: Bool) async throws {
+        for oldFails in [false, true] {
+            let prior = Self.snapshot(sessionID: "session-1", revision: 7)
+            let oldSnapshot = Self.snapshot(sessionID: "session-1", revision: 8)
+            let client = FakeProvenanceEngineClient(deferResponses: true)
+            let store = AgentSessionFactualProjectionStore(client: client)
+            var index = 0
+            if hasCache {
+                let seed = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+                try await client.waitForRequestCount(1)
+                await client.complete(0, with: .success(.init(found: true, sessionID: "session-1", snapshot: prior)))
+                #expect(await seed.value == .available(prior))
+                index = 1
+            }
+            let old = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+            try await client.waitForRequestCount(index + 1)
+            let new = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+            try await client.waitForRequestCount(index + 2)
+            if oldFails {
+                await client.complete(index, with: .failure(TestError.unavailable))
+            } else {
+                await client.complete(index, with: .success(.init(found: true, sessionID: "session-1", snapshot: oldSnapshot)))
+            }
+            let oldResult = await old.value
+            let synchronous = store.snapshot(sessionID: "session-1")
+            if hasCache {
+                #expect(oldResult != .available(prior))
+                #expect(synchronous != .available(prior))
+            } else {
+                #expect(oldResult != .notFound(sessionID: "session-1", reason: nil))
+                #expect(synchronous != .notFound(sessionID: "session-1", reason: nil))
+            }
+            await client.complete(index + 1, with: .failure(TestError.unavailable))
+            _ = await new.value
+            if !hasCache {
+                #expect(store.snapshot(sessionID: "session-1") == .failed(sessionID: "session-1"))
+            }
+        }
+    }
+
     @Test func olderSuccessCannotReplaceNewerFailure() async throws {
         let oldSnapshot = Self.snapshot(sessionID: "session-1", revision: 7)
         let client = FakeProvenanceEngineClient(deferResponses: true)

@@ -105,6 +105,7 @@ struct AgentSessionFactualProjectionStoreTests {
         let store = AgentSessionFactualProjectionStore(client: client)
 
         #expect(await store.refreshedSnapshot(sessionID: "session-1") == .failed(sessionID: "session-1"))
+        #expect(store.snapshot(sessionID: "session-1") == .failed(sessionID: "session-1"))
     }
 
     @Test
