@@ -1921,7 +1921,9 @@ test.each(["in_progress", "completed", "missing"])("smart session describes late
     }
 });
 
-test.each(["active", "completed", "missing", "declared", "mixed"]) ("activity label reflects evidence for %s turn", async (scenario) => {
+// The producer assertion in FirstSemanticSessionInferenceTests.swift:96 yields
+// this synthetic text from a completed command. This is not producer execution.
+test.each(["active", "completed", "missing", "file-only"]) ("recorded evidence excludes inferred current activity for %s", async (scenario) => {
   const dom = new JSDOM("<!doctype html><div id='root'></div>", { url: "https://example.test" });
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
   const previousDocument = Object.getOwnPropertyDescriptor(globalThis, "document");
@@ -1929,13 +1931,13 @@ test.each(["active", "completed", "missing", "declared", "mixed"]) ("activity la
   Object.defineProperty(globalThis, "window", { configurable: true, value: dom.window });
   Object.defineProperty(globalThis, "document", { configurable: true, value: dom.window.document });
   Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", { configurable: true, value: true });
-  const original = smartSessionSnapshot({ factualRevision: 1, knownSemantics: scenario === "active" });
+  const original = smartSessionSnapshot({ factualRevision: 1, currentActivity: "Validating with swift test", knownSemantics: scenario !== "file-only" });
   const turn = original.factual.latestTurn;
   if (!turn) throw new Error("Expected turn fixture");
   const snapshot: SmartSessionSnapshot = { ...original, factual: { ...original.factual, latestTurn: {
     ...turn, status: scenario === "active" ? "running" : "completed",
-    completedCommands: ["completed", "declared", "mixed"].includes(scenario) ? [{ commandId: "cmd", command: "swift test", status: "completed", completedAt: "2026-08-17T07:01:00Z", source: scenario === "declared" ? "declared" : "observed", confidence: "high" }] : [],
-    fileChangeAttributions: scenario === "mixed" ? [{ attributionId: "file", paths: ["Sources/main.swift"], observedAt: "2026-08-17T07:02:00Z", source: "observed", confidence: "high" }] : [],
+    completedCommands: ["active", "completed"].includes(scenario) ? [{ commandId: "cmd", command: "swift test", status: "completed", completedAt: "2026-08-17T07:01:00Z", source: "observed", confidence: "high" }] : [],
+    fileChangeAttributions: scenario === "file-only" ? [{ attributionId: "file", paths: ["Sources/main.swift"], summary: "Applied patch", observedAt: "2026-08-17T07:02:00Z", source: "observed", confidence: "high" }] : [],
   } } };
   Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: {
     postMessage: async () => ({ ok: true, value: { schemaVersion: 1, status: "available", snapshot } }),
@@ -1943,12 +1945,13 @@ test.each(["active", "completed", "missing", "declared", "mixed"]) ("activity la
   const container = dom.window.document.getElementById("root");
   if (!container) throw new Error("Missing root");
   const root = createRoot(container);
-  const localizedContext: AppContext = { ...context, copy: { ...context.copy, smartSessionCurrentActivity: "Activity" } };
   try {
-    await act(async () => { root.render(createElement(SmartSessionSurface, { context: localizedContext })); });
+    await act(async () => { root.render(createElement(SmartSessionSurface, { context })); });
     const block = container.querySelectorAll(".focus-current-grid .focus-summary-block")[1];
-    expect(block?.querySelector("h3")?.textContent).toBe(["completed", "mixed"].includes(scenario) ? "Observed activity" : "Activity");
-    expect(block?.querySelector("p")?.textContent).toBe(["completed", "declared", "mixed"].includes(scenario) ? "swift test · completed" : scenario === "active" ? "Rendering supported session meaning" : "Unknown");
+    expect(container.textContent).not.toContain("Validating with swift test");
+    expect(container.textContent).not.toContain("Applied patch");
+    expect(block?.querySelector("h3")?.textContent).toBe("Recorded evidence");
+    expect(block?.querySelector("p")?.textContent).toBe(scenario === "file-only" ? "Sources/main.swift" : scenario === "missing" ? "Unknown" : "swift test · completed");
   } finally {
     await act(async () => root.unmount());
     if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow); else Reflect.deleteProperty(globalThis, "window");
