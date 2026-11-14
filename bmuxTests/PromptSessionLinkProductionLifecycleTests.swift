@@ -257,8 +257,10 @@ final class PromptSessionLinkProductionLifecycleTests: XCTestCase {
     }
 
     private static func appendTranscriptText(_ text: String, to url: URL) throws {
-        let existing = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
-        try existing.appending(text).write(to: url, atomically: true, encoding: .utf8)
+        let handle = try FileHandle(forWritingTo: url)
+        defer { try? handle.close() }
+        try handle.seekToEnd()
+        try handle.write(contentsOf: Data(text.utf8))
     }
 
     private static func codexPromptTranscriptLines(
