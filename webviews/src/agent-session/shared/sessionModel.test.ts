@@ -1920,3 +1920,40 @@ test.each(["in_progress", "completed", "missing"])("smart session describes late
       dom.window.close();
     }
 });
+
+test.each(["active", "completed", "missing", "declared", "mixed"]) ("activity label reflects evidence for %s turn", async (scenario) => {
+  const dom = new JSDOM("<!doctype html><div id='root'></div>", { url: "https://example.test" });
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
+  const previousDocument = Object.getOwnPropertyDescriptor(globalThis, "document");
+  const previousAct = Object.getOwnPropertyDescriptor(globalThis, "IS_REACT_ACT_ENVIRONMENT");
+  Object.defineProperty(globalThis, "window", { configurable: true, value: dom.window });
+  Object.defineProperty(globalThis, "document", { configurable: true, value: dom.window.document });
+  Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", { configurable: true, value: true });
+  const original = smartSessionSnapshot({ factualRevision: 1, knownSemantics: scenario === "active" });
+  const turn = original.factual.latestTurn;
+  if (!turn) throw new Error("Expected turn fixture");
+  const snapshot: SmartSessionSnapshot = { ...original, factual: { ...original.factual, latestTurn: {
+    ...turn, status: scenario === "active" ? "running" : "completed",
+    completedCommands: ["completed", "declared", "mixed"].includes(scenario) ? [{ commandId: "cmd", command: "swift test", status: "completed", completedAt: "2026-08-17T07:01:00Z", source: scenario === "declared" ? "declared" : "observed", confidence: "high" }] : [],
+    fileChangeAttributions: scenario === "mixed" ? [{ attributionId: "file", paths: ["Sources/main.swift"], observedAt: "2026-08-17T07:02:00Z", source: "observed", confidence: "high" }] : [],
+  } } };
+  Object.assign(dom.window, { webkit: { messageHandlers: { agentSession: {
+    postMessage: async () => ({ ok: true, value: { schemaVersion: 1, status: "available", snapshot } }),
+  } } } });
+  const container = dom.window.document.getElementById("root");
+  if (!container) throw new Error("Missing root");
+  const root = createRoot(container);
+  const localizedContext: AppContext = { ...context, copy: { ...context.copy, smartSessionCurrentActivity: "Activity" } };
+  try {
+    await act(async () => { root.render(createElement(SmartSessionSurface, { context: localizedContext })); });
+    const block = container.querySelectorAll(".focus-current-grid .focus-summary-block")[1];
+    expect(block?.querySelector("h3")?.textContent).toBe(["completed", "mixed"].includes(scenario) ? "Observed activity" : "Activity");
+    expect(block?.querySelector("p")?.textContent).toBe(["completed", "declared", "mixed"].includes(scenario) ? "swift test · completed" : scenario === "active" ? "Rendering supported session meaning" : "Unknown");
+  } finally {
+    await act(async () => root.unmount());
+    if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow); else Reflect.deleteProperty(globalThis, "window");
+    if (previousDocument) Object.defineProperty(globalThis, "document", previousDocument); else Reflect.deleteProperty(globalThis, "document");
+    if (previousAct) Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", previousAct); else Reflect.deleteProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT");
+    dom.window.close();
+  }
+});
