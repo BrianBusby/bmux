@@ -99,7 +99,8 @@ final class AgentSessionSmartSessionStore {
                 crossSessionAwareness: awareness
             )
             if let existing = snapshotsBySessionID[sessionID],
-               existing.snapshot.revision.isNewerThan(nextSnapshot.revision) {
+               existing.snapshot.revision.isNewerThan(nextSnapshot.revision) ||
+                (!nextSnapshot.revision.isNewerThan(existing.snapshot.revision) && existing.snapshot != nextSnapshot) {
                 var stale = existing
                 stale.stale = true
                 snapshotsBySessionID[sessionID] = stale

@@ -1649,11 +1649,22 @@ test("smart session clears read time when a failure names a different session", 
 
 test("smart session keeps ambiguous equal-ranked semantic revisions as stale", () => {
   const first = smartSessionSnapshot({ factualRevision: 4 });
-  const second = { ...first, revision: { ...first.revision, semanticInferenceIds: first.revision.semanticInferenceIds.map(id => `${id}-replacement`) } };
+  const second = { ...first, revision: { ...first.revision, semanticInferenceIds: first.revision.semanticInferenceIds?.map(id => `${id}-replacement`) } };
   const state = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
     result: { schemaVersion: 1, status: "available", snapshot: first } });
   const result = reduceSmartSession(state, { type: "refreshSucceeded", requestId: 2,
     result: { schemaVersion: 1, status: "available", snapshot: second } });
   expect(result.status).toBe("failed");
   expect(result.snapshot).toEqual(first);
+});
+
+
+test("smart session accepts a truly identical equal-ranked snapshot", () => {
+  const snapshot = smartSessionSnapshot({ factualRevision: 4 });
+  const current = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot } });
+  const next = reduceSmartSession(current, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "available", snapshot } });
+  expect(next.status).toBe("available");
+  expect(next.snapshot).toEqual(snapshot);
 });

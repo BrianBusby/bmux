@@ -84,7 +84,9 @@ export function reduceSmartSession(state: SmartSessionState, action: SmartSessio
           (!action.result.sessionId || action.result.sessionId === action.result.snapshot.identity.sessionId);
         const keepPrior = priorMatches && state.snapshot && (!suppliedMatches || !action.result.snapshot ||
           (state.snapshot.identity.sessionId === action.result.snapshot.identity.sessionId &&
-            compareSmartSessionRevisions(state.snapshot.revision, action.result.snapshot.revision) > 0));
+            (compareSmartSessionRevisions(state.snapshot.revision, action.result.snapshot.revision) > 0 ||
+              (compareSmartSessionRevisions(state.snapshot.revision, action.result.snapshot.revision) === 0 &&
+                JSON.stringify(state.snapshot) !== JSON.stringify(action.result.snapshot)))));
         return {
           requestId: action.requestId,
           status: action.result.status,
@@ -99,7 +101,9 @@ export function reduceSmartSession(state: SmartSessionState, action: SmartSessio
       if (
         state.snapshot &&
         state.snapshot.identity.sessionId === action.result.snapshot.identity.sessionId &&
-        compareSmartSessionRevisions(action.result.snapshot.revision, state.snapshot.revision) < 0
+        (compareSmartSessionRevisions(action.result.snapshot.revision, state.snapshot.revision) < 0 ||
+          (compareSmartSessionRevisions(action.result.snapshot.revision, state.snapshot.revision) === 0 &&
+            JSON.stringify(action.result.snapshot) !== JSON.stringify(state.snapshot)))
       ) {
         return {
           ...state,
