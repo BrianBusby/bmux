@@ -112,7 +112,7 @@ extension CLIProvenanceCodexTranscriptImporterTests {
     }
 
     @Test
-    func planRevisionSurvivesPartialLineAndTailerRestart() async throws {
+    func partialPlanCallTransportSurvivesTailerRestart() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
@@ -128,9 +128,9 @@ extension CLIProvenanceCodexTranscriptImporterTests {
             surfaceID: "surface-1", client: client, cursorStore: cursorStore
         )
         _ = try await first.consume(at: transcriptURL)
-        let original = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
-        #expect(original.latestTurn?.currentPlan?.steps.map(\.status) == ["completed", "in_progress"])
+        let initialCursor = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
 
+        // This characterizes complete-line transport only; a call does not establish an accepted plan.
         let revision = try Self.codexTranscriptLine(
             ordinal: 7, type: "response_item", timestamp: "2026-08-21T10:00:07Z",
             payload: [
@@ -147,16 +147,21 @@ extension CLIProvenanceCodexTranscriptImporterTests {
         )
         let partial = try await restarted.consume(at: transcriptURL)
         #expect(partial.importResult.retainedPartialLine)
-        let duringPartial = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
-        #expect(duringPartial.latestTurn?.currentPlan?.steps.map(\.status) == ["completed", "in_progress"])
+        let partialCursor = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
+        #expect(partialCursor.byteOffset == initialCursor.byteOffset)
 
         try Self.appendText(String(revision[split...]) + "\n", to: transcriptURL)
-        _ = try await restarted.consume(at: transcriptURL)
-        let updated = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
-        #expect(updated.latestTurn?.turn.providerTurnID == "turn-1")
-        #expect(updated.latestTurn?.currentPlan?.steps.map(\.status) == ["completed", "completed"])
-        #expect(try await CLIProvenanceCodexTranscriptImporter(client: client)
-            .importTranscripts(path: transcriptURL.path).eventsAppended == 0)
+        let completed = try await restarted.consume(at: transcriptURL)
+        #expect(!completed.importResult.retainedPartialLine)
+        let completedCursor = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
+        #expect(completedCursor.byteOffset == UInt64(try Data(contentsOf: transcriptURL).count))
+        #expect(completedCursor.byteOffset > initialCursor.byteOffset)
+        let beforeReplay = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
+        #expect(beforeReplay.latestTurn?.turn.providerTurnID == "turn-1")
+        _ = try await CLIProvenanceCodexTranscriptImporter(client: client)
+            .importTranscripts(path: transcriptURL.path)
+        let afterReplay = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
+        #expect(afterReplay == beforeReplay)
     }
 
     @Test

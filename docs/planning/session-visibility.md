@@ -40,7 +40,7 @@ Installed `codex app-server generate-json-schema` for 0.168.0 includes `turn/pla
 
 The baseline factual Session plan summary checked whether a status contained `complete`, so `incomplete` was incorrectly counted and marked completed. A test-first fix now recognizes only exact `completed`, `complete`, or `done` statuses, matching PE milestone normalization. The eight-case regression failed before the fix and passed afterward; both the count and icon consume that shared classifier. Rendered native UI remains unverified. The plan disclosure limits rows to eight and omits textual status; the separate evidence view limits rows to six. A recorded function call is appended before its result, so a rejected call must not be described as a confirmed successful update without additional evidence.
 
-A synthetic two-revision plan fixture now exercises the real transcript tailer and PE SQLite projection across a partial line and tailer restart. The first reported snapshot remains visible until the second line is complete, the revised statuses and provider turn are retained, and a historical reimport appends no duplicates. The focused importer suite passed 17 tests. This fixture does not establish live plan emission or UI behavior. The focused presentation suite passed 12 tests after the fix. Xcode emitted pre-existing warnings in unrelated code.
+A synthetic plan-call fixture exercises partial-line transport through the transcript tailer and PE SQLite across a restart, including cursor advancement and unchanged projection on historical reimport. An earlier version asserted that unconfirmed calls became current plan revisions; that assertion was removed because a call alone does not prove acceptance. This fixture does not establish plan acceptance, payload preservation, live emission, or UI behavior. Before this correction, the focused importer suite passed 17 tests and the focused presentation suite passed 12 tests; Xcode emitted pre-existing warnings in unrelated code. The revised test still needs hosted execution.
 
 ### Baseline capability and loss matrix
 
@@ -80,7 +80,7 @@ These are not p95 measurements. Source-to-receipt and receipt-to-native-visible 
 
 | Fixture or evidence | Scope and limit |
 | --- | --- |
-| `bmuxTests/CLIProvenanceCodexTranscriptTailerTests.swift`, `planRevisionSurvivesPartialLineAndTailerRestart` | Synthetic two-revision checklist through the tailer and PE, partial line, restart and duplicate historical import; not a real provider emission or native display. |
+| `bmuxTests/CLIProvenanceCodexTranscriptTailerTests.swift`, `partialPlanCallTransportSurvivesTailerRestart` | Synthetic plan-call line through the tailer and PE, partial line, restart, cursor and unchanged projection after historical reimport; does not establish plan acceptance, payload preservation, real provider emission or native display. |
 | `bmuxTests/CLIProvenanceCodexTranscriptImporterTests.swift` | Synthetic transcript import and plan parsing coverage; does not prove success acknowledgment or live provider capability. |
 | `bmuxTests/ExpandedTurnPresentationTests.swift` | Synthetic exact completion-status classification; Brian's fixture dogfood covered counts/icons, not live plan capture. |
 | `Packages/Shared/BmuxAgentChat/Tests/BmuxAgentChatTests/CodexTranscriptParserTests.swift` | Separate parser's local abort and call/output coverage; not PE or native Session integration. |
