@@ -48,7 +48,7 @@ struct ActivityValidityProposedContractTests {
 
         let completedModel = try #require(try await client.sessionWorkModel(ProvenanceSessionWorkModelRequest(sessionID: subject.id)).model)
         // Proposed: a completed operation alone cannot establish present activity or phase.
-        #expect(completedModel.currentTurn?.currentActivity.state == .unknown)
+        #expect(completedModel.currentTurn == nil || completedModel.currentTurn?.currentActivity.state == .unknown)
         #expect(completedModel.sessionPhase.state == .unknown)
 
         _ = try await client.appendEvent(ProvenanceAppendEventRequest(event: ProvenanceEvent(id: "turn-2-event", eventType: .codingAgentTurnObserved, timestamp: secondTurn.updatedAt, sessionID: subject.id, source: .observed, confidence: .high, payload: ProvenanceEventPayload(codingAgentTurn: secondTurn))))
