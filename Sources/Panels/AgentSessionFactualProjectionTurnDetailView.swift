@@ -90,7 +90,7 @@ struct AgentSessionFactualProjectionTurnDetailView: View {
     private func assistantOutputRows(_ messages: [ProvenanceCodingAgentAssistantMessageRecord]) -> some View {
         if let finalOutput = messages.last?.text {
             labeledText(
-                String(localized: "agentSession.factual.finalOutput", defaultValue: "Final output"),
+                String(localized: "agentSession.factual.finalOutput", defaultValue: "Agent output"),
                 finalOutput,
                 lineLimit: nil
             )

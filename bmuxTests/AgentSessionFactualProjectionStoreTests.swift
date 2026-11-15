@@ -154,21 +154,33 @@ struct AgentSessionFactualProjectionStoreTests {
                 found: true,
                 sessionID: "session-1",
                 model: olderModel
+            )),
+            .success(ProvenanceSessionWorkModelResponse(
+                found: true,
+                sessionID: "session-1",
+                model: newerModel
             ))
         ])
-        let store = AgentSessionSmartSessionStore(client: client)
+        let readTime = Date(timeIntervalSince1970: 1_800_000_300)
+        let store = AgentSessionSmartSessionStore(client: client, now: { readTime })
 
         guard case let .available(firstSnapshot) = await store.refreshedSnapshot(sessionID: "session-1"),
-              case let .available(secondSnapshot) = await store.refreshedSnapshot(sessionID: "session-1") else {
-            Issue.record("Expected available Smart Session snapshots")
+              case let .stale(secondSnapshot, lastSuccessfulReadAt) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Expected an available snapshot followed by the retained stale snapshot")
             return
         }
 
         #expect(firstSnapshot.revision.key == secondSnapshot.revision.key)
+        #expect(lastSuccessfulReadAt == readTime)
         #expect(
             secondSnapshot.workModel.revision.latestSemanticInferenceCreatedAt ==
             newerModel.revision.latestSemanticInferenceCreatedAt
         )
+        guard case let .available(recoveredSnapshot) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Expected an equal current read to restore availability")
+            return
+        }
+        #expect(recoveredSnapshot.revision.key == firstSnapshot.revision.key)
     }
 
     @Test

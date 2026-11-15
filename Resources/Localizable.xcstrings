@@ -5146,13 +5146,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Final output"
+            "value": "Agent output"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最終出力"
+            "value": "エージェントの出力"
           }
         }
       }
@@ -12001,13 +12001,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Final output"
+            "value": "Evidence"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最終出力"
+            "value": "証拠"
           }
         }
       }
@@ -245643,13 +245643,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No final output recorded."
+            "value": "No agent output recorded."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最終出力は記録されていません。"
+            "value": "エージェントの出力は記録されていません。"
           }
         }
       }
