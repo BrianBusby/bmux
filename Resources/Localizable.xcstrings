@@ -244880,13 +244880,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d of %d steps complete"
+            "value": "Agent-reported complete: %d of %d steps"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d/%d ステップ完了"
+            "value": "エージェントの報告で完了: %d/%d ステップ"
           }
         }
       }
