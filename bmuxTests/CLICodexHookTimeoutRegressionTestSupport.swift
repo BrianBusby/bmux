@@ -120,7 +120,8 @@ func startCodexHookMockSocketServerAccepting(
     surfaceId: String,
     connectionLimit: Int,
     runtimeWorkspaceId: String? = nil,
-    stableWorkspaceId: String? = nil
+    stableWorkspaceId: String? = nil,
+    responseOverride: @escaping @Sendable (String) -> String? = { _ in nil }
 ) {
     DispatchQueue.global(qos: .userInitiated).async {
         var accepted = 0
@@ -143,7 +144,8 @@ func startCodexHookMockSocketServerAccepting(
                     commands: commands,
                     surfaceId: surfaceId,
                     runtimeWorkspaceId: runtimeWorkspaceId,
-                    stableWorkspaceId: stableWorkspaceId
+                    stableWorkspaceId: stableWorkspaceId,
+                    responseOverride: responseOverride
                 )
             }
         }
@@ -155,7 +157,8 @@ func handleCodexHookMockSocketClient(
     commands: CodexHookCapturedSocketCommands,
     surfaceId: String,
     runtimeWorkspaceId: String?,
-    stableWorkspaceId: String?
+    stableWorkspaceId: String?,
+    responseOverride: @escaping @Sendable (String) -> String?
 ) {
     defer { Darwin.close(clientFD) }
     var pending = Data()
@@ -173,12 +176,12 @@ func handleCodexHookMockSocketClient(
             pending.removeSubrange(0...newlineRange.lowerBound)
             guard let line = String(data: lineData, encoding: .utf8) else { continue }
             commands.append(line)
-            let response = codexHookMockSocketResponse(
+            let response = (responseOverride(line) ?? codexHookMockSocketResponse(
                 for: line,
                 surfaceId: surfaceId,
                 runtimeWorkspaceId: runtimeWorkspaceId,
                 stableWorkspaceId: stableWorkspaceId
-            ) + "\n"
+            )) + "\n"
             _ = response.withCString { ptr in
                 Darwin.write(clientFD, ptr, strlen(ptr))
             }
