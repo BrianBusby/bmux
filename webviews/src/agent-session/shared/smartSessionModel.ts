@@ -39,6 +39,7 @@ export type SmartSessionState = {
   reason?: string;
   sessionId?: string;
   diagnostics?: Record<string, unknown>;
+  lastSuccessfulReadAt?: string;
 };
 
 export type SmartSessionAction =
@@ -57,6 +58,30 @@ export function shouldRefreshSmartSession(hasContext: boolean, isActive: boolean
   return hasContext && isActive;
 }
 
+// Bridge values are JSON data. Compare object keys without assuming serialization order.
+function equalData(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+  if (Array.isArray(left) && Array.isArray(right)) {
+    return left.length === right.length && left.every((value, index) => equalData(value, right[index]));
+  }
+  if (!left || !right || typeof left !== "object" || typeof right !== "object" || Array.isArray(left) || Array.isArray(right)) return false;
+  const leftEntries = Object.entries(left);
+  const rightEntries = new Map(Object.entries(right));
+  return leftEntries.length === rightEntries.size && leftEntries.every(([key, value]) => rightEntries.has(key) && equalData(value, rightEntries.get(key)));
+}
+
+function samePrimary(left: SmartSessionSnapshot, right: SmartSessionSnapshot): boolean {
+  return equalData(left.revision, right.revision) && equalData(left.identity, right.identity) &&
+    equalData(left.workModel, right.workModel) && equalData(left.factual, right.factual) &&
+    equalData(left.semanticMessages, right.semanticMessages) && left.schemaVersion === right.schemaVersion;
+}
+
+function canRecoverMissingMessages(prior: SmartSessionSnapshot, next: SmartSessionSnapshot): boolean {
+  return prior.semanticMessagesReadStatus === "unavailable" && prior.semanticMessages.length === 0 &&
+    next.semanticMessagesReadStatus === "available" && prior.schemaVersion === next.schemaVersion &&
+    equalData(prior.identity, next.identity) && equalData(prior.workModel, next.workModel) && equalData(prior.factual, next.factual);
+}
+
 export function reduceSmartSession(state: SmartSessionState, action: SmartSessionAction): SmartSessionState {
   if (action.requestId < state.requestId) {
     return state;
@@ -67,34 +92,48 @@ export function reduceSmartSession(state: SmartSessionState, action: SmartSessio
       return {
         ...state,
         requestId: action.requestId,
-        status: state.snapshot ? state.status : "loading",
+        status: "loading",
       };
     case "refreshFailed":
       return {
         ...state,
         requestId: action.requestId,
-        status: state.snapshot ? "available" : "failed",
+        status: "failed",
       };
     case "refreshSucceeded": {
       if (action.result.status !== "available") {
+        const failed = action.result.status === "failed" || action.result.status === "projectionFailed";
+        const priorMatches = !action.result.sessionId || action.result.sessionId === state.snapshot?.identity.sessionId;
+        const suppliedMatches = action.result.snapshot &&
+          (!action.result.sessionId || action.result.sessionId === action.result.snapshot.identity.sessionId);
+        const keepPrior = priorMatches && state.snapshot && (!suppliedMatches || !action.result.snapshot ||
+          (state.snapshot.identity.sessionId === action.result.snapshot.identity.sessionId &&
+            (compareSmartSessionRevisions(state.snapshot.revision, action.result.snapshot.revision) > 0 ||
+              (compareSmartSessionRevisions(state.snapshot.revision, action.result.snapshot.revision) === 0 &&
+                !samePrimary(state.snapshot, action.result.snapshot)))));
         return {
           requestId: action.requestId,
           status: action.result.status,
           reason: action.result.reason,
           sessionId: action.result.sessionId,
           diagnostics: action.result.diagnostics,
-          snapshot: state.snapshot,
+          snapshot: failed ? (keepPrior && state.snapshot ? { ...state.snapshot, semanticMessagesReadStatus: "unavailable", crossSessionAwareness: suppliedMatches && action.result.snapshot ? action.result.snapshot.crossSessionAwareness : state.snapshot.crossSessionAwareness } : suppliedMatches ? action.result.snapshot : undefined) : undefined,
+          lastSuccessfulReadAt: failed ? (keepPrior ? state.lastSuccessfulReadAt : action.result.lastSuccessfulReadAt) : undefined,
         };
       }
 
       if (
         state.snapshot &&
-        compareSmartSessionRevisions(action.result.snapshot.revision, state.snapshot.revision) < 0
+        state.snapshot.identity.sessionId === action.result.snapshot.identity.sessionId &&
+        (compareSmartSessionRevisions(action.result.snapshot.revision, state.snapshot.revision) < 0 ||
+          (compareSmartSessionRevisions(action.result.snapshot.revision, state.snapshot.revision) === 0 &&
+            !samePrimary(action.result.snapshot, state.snapshot) && !canRecoverMissingMessages(state.snapshot, action.result.snapshot)))
       ) {
         return {
           ...state,
+          snapshot: { ...state.snapshot, semanticMessagesReadStatus: "unavailable", crossSessionAwareness: action.result.snapshot.crossSessionAwareness },
           requestId: action.requestId,
-          status: "available",
+          status: "failed",
         };
       }
 
@@ -183,15 +222,9 @@ function turnTime(turn: SmartSessionTurnReference): number {
 }
 
 export function compareSmartSessionRevisions(left: SmartSessionRevision, right: SmartSessionRevision): number {
-  if (left.factualRevision !== right.factualRevision) {
-    if (left.factualRevision == null) {
-      return -1;
-    }
-    if (right.factualRevision == null) {
-      return 1;
-    }
-    return left.factualRevision > right.factualRevision ? 1 : -1;
-  }
+  if (left.factualRevision == null || right.factualRevision == null) return 0;
+  if (left.factualRevision !== right.factualRevision) return left.factualRevision > right.factualRevision ? 1 : -1;
+  if (left.schemaVersion !== 3 || right.schemaVersion !== 3) return 0;
   const leftInference = Date.parse(left.latestSemanticInferenceCreatedAt ?? "");
   const rightInference = Date.parse(right.latestSemanticInferenceCreatedAt ?? "");
   const leftHasInference = Number.isFinite(leftInference);
@@ -200,16 +233,11 @@ export function compareSmartSessionRevisions(left: SmartSessionRevision, right: 
     return leftInference > rightInference ? 1 : -1;
   }
   if (leftHasInference !== rightHasInference) {
-    return leftHasInference ? 1 : -1;
+    return 0;
   }
   const leftInferenceIds = left.semanticInferenceIds?.join("\u0000") ?? "";
   const rightInferenceIds = right.semanticInferenceIds?.join("\u0000") ?? "";
   if (leftInferenceIds !== rightInferenceIds) {
-    const leftCount = left.semanticInferenceIds?.length ?? 0;
-    const rightCount = right.semanticInferenceIds?.length ?? 0;
-    if (leftCount !== rightCount) {
-      return leftCount > rightCount ? 1 : -1;
-    }
     return 0;
   }
   const leftSemantic = Date.parse(left.latestSemanticMessageCreatedAt ?? "");
@@ -220,10 +248,7 @@ export function compareSmartSessionRevisions(left: SmartSessionRevision, right: 
     return leftSemantic > rightSemantic ? 1 : -1;
   }
   if (leftHasSemantic !== rightHasSemantic) {
-    return leftHasSemantic ? 1 : -1;
-  }
-  if (left.semanticMessageCount !== right.semanticMessageCount) {
-    return left.semanticMessageCount > right.semanticMessageCount ? 1 : -1;
+    return 0;
   }
   return 0;
 }
