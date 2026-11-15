@@ -586,13 +586,11 @@ struct bmuxApp: App {
                     Button("Debug Window Controls…") {
                         DebugWindowControlsWindowController.shared.show()
                     }
-                    Button(
-                        String(
-                            localized: "debug.menu.devWindowDisplay",
-                            defaultValue: "Dev Window Display…"
-                        )
-                    ) {
+                    Button(String(localized: "debug.menu.devWindowDisplay", defaultValue: "Dev Window Display…")) {
                         DevWindowDisplayDebugWindowController.shared.show()
+                    }
+                    Button(String(localized: "debug.smartStale.menu", defaultValue: "Smart Session Stale Preview…")) {
+                        SmartStaleDebugWindowController.shared.show()
                     }
                     Button("Feed Preview…") {
                         FeedPreviewWindowController.shared.show()
@@ -1487,6 +1485,7 @@ private let bmuxAuxiliaryWindowIdentifiers: Set<String> = [
     "bmux.defaultTerminalRegistrationError",
     "bmux.feedButtonStyleDebug",
     "bmux.feedPreview",
+    "bmux.smartStalePreview",
     "bmux.feedTextEditorDebug",
     "bmux.fileExplorerStyleDebug",
     "bmux.folderDragIcon",

@@ -74011,6 +74011,10 @@
         }
       }
     },
+    "debug.smartStale.menu": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Smart Session Stale Preview…"}}, "ja": {"stringUnit": {"state": "translated", "value": "Smart Session の古いデータをプレビュー…"}}}},
+    "debug.smartStale.description": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Synthetic preview. Select Focus; Refresh returns the same stale sample."}}, "ja": {"stringUnit": {"state": "translated", "value": "サンプルプレビューです。「フォーカス」を選択してください。更新しても同じ古いサンプルが表示されます。"}}}},
+    "debug.smartStale.title": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Smart Session Preview — Synthetic Data"}}, "ja": {"stringUnit": {"state": "translated", "value": "Smart Session プレビュー — サンプルデータ"}}}},
+    "debug.smartStale.prompt": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Investigate session restoration after reconnecting."}}, "ja": {"stringUnit": {"state": "translated", "value": "再接続後のセッション復元を調査する。"}}}},
     "debug.menu.bonsplitTabBarDebug": {
       "localizations": {
         "en": {
