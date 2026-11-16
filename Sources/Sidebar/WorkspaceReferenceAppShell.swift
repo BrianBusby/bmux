@@ -41,6 +41,7 @@ struct WorkspaceReferenceAppShell<Rail: View, Content: View, HeaderAction: View>
                     HStack(spacing: theme.layout.windowGutter) {
                         if showsRail {
                             rail()
+                                .padding(.top, 8)
                                 .frame(width: min(theme.layout.sidebarMaximumWidth, max(theme.layout.sidebarMinimumWidth, geometry.size.width * theme.layout.sidebarPreferredFraction)))
                                 .transition(.move(edge: .leading).combined(with: .opacity))
                         }
