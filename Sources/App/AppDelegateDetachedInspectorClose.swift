@@ -259,13 +259,12 @@ extension NSWindow {
         if flags.contains(.shift) { parts.append("Shift") }
         if flags.contains(.option) { parts.append("Opt") }
         if flags.contains(.control) { parts.append("Ctrl") }
-        let chars: String
         if event.type == .keyDown || event.type == .keyUp {
-            chars = event.charactersIgnoringModifiers ?? "?"
+            let chars = event.charactersIgnoringModifiers ?? "?"
+            parts.append("'\(chars)'(\(event.keyCode))")
         } else {
-            chars = String(describing: event.type)
+            parts.append(String(describing: event.type))
         }
-        parts.append("'\(chars)'(\(event.keyCode))")
         return parts.joined(separator: "+")
     }
 }
