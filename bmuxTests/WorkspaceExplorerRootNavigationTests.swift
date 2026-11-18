@@ -98,6 +98,7 @@ struct WorkspaceExplorerRootNavigationTests {
             loadSessions: { id in ProvenanceWorkspaceSessionPageResponse(
                 workspaceID: id.uuidString, sessions: [], nextCursor: nil) },
             clearArchive: { })
+        model.setScopeState(.all)
         await model.load()
         let options = model.catalog?.filterOptions(
             dimensions: [.repository, .project, .pullRequestOwner], target: .all,
