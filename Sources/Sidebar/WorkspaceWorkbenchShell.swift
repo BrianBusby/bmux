@@ -122,7 +122,7 @@ struct WorkspaceWorkbenchShell<LiveSurface: View>: View {
             explorerCoordinator = WorkspaceExplorerScenes.makeCoordinator(appDelegate: appDelegate,
                 onActivateWorkspace: { _ in showWorkspaceView() })
         }
-        explorerCoordinator?.openAllWorkspacesUnfiltered()
+        explorerCoordinator?.openExplorerWithDefaultScope()
         railFilters = WorkspaceFilters()
         isRailFilterPanelPresented = false
         onExplorerVisibilityChange(true)

@@ -289,9 +289,9 @@ final class WorkspaceExplorerCoordinator {
         scheduleHistoryFill()
     }
 
-    func openAllWorkspacesUnfiltered() {
+    func openExplorerWithDefaultScope() {
         showAllWorkspaces()
-        scope = WorkspaceExplorerScope(state: .all, period: .anyTime)
+        scope = WorkspaceExplorerScope()
         refreshActivityClock()
         rootArrangement = WorkspaceExplorerViewArrangement()
         statusArrangement.reconcile(groupBy: [], filters: [:])
