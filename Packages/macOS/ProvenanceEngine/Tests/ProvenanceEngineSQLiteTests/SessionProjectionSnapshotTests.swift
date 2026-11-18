@@ -161,7 +161,8 @@ extension SessionProjectionSnapshotTests {
             return try await newer.publishCodingAgentSessionSemanticInferences(
                 ProvenanceCodingAgentSessionSemanticInferenceRequest(sessionID: fixture.session.id, createdAt: fixture.timestamp.addingTimeInterval(40)))
         }
-        _ = await Task.detached { Self.finishedQuickly(newerFinished) }.value
+        let finishedWhileOlderTransactionHeld = await Task.detached { Self.finishedQuickly(newerFinished) }.value
+        #expect(!finishedWhileOlderTransactionHeld)
         resume.signal()
         _ = try await oldTask.value
         _ = try await newTask.value
