@@ -20,7 +20,7 @@ final class WorkspaceExplorerCoordinator {
     typealias Clearer = @MainActor () async throws -> Void
     typealias FeedbackDelay = @MainActor (Duration) async throws -> Void
 
-    var scope = WorkspaceExplorerScope(state: .all, period: .anyTime)
+    var scope = WorkspaceExplorerScope()
     var rootArrangement = WorkspaceExplorerViewArrangement()
     private(set) var collectionTarget: WorkspaceExplorerCollectionTarget?
     private(set) var historyID: String?
