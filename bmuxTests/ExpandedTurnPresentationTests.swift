@@ -22,6 +22,56 @@ import SwiftUI
         #expect(AgentSessionFactualProjectionEvidenceRows.isPlanStepCompleted(status) == expected)
     }
 
+    @Test func planPagesPreserveAllReceivedStepsAndStatuses() throws {
+        let longText = String(repeating: "Inspect the reconnect sequence. ", count: 30)
+        let steps = (0..<17).map { index in
+            ProvenanceCodingAgentPlanStepRecord(id: "step-\(index)", order: index,
+                text: index == 8 ? longText : "Step \(index)", status: index == 8 ? "in_progress" : "pending")
+        }
+        let first = AgentSessionPlanPage(steps: steps, requestedPage: 0)
+        #expect(first.steps.map(\.id) == steps[0..<8].map(\.id))
+        #expect(first.previousPage == nil)
+        let second = AgentSessionPlanPage(steps: steps, requestedPage: try #require(first.nextPage))
+        #expect(second.currentPage == 1)
+        #expect(second.steps.first?.text == longText)
+        #expect(second.steps.first?.status == "in_progress")
+        #expect(second.previousPage == 0)
+        let last = AgentSessionPlanPage(steps: steps, requestedPage: try #require(second.nextPage))
+        #expect(last.steps.map(\.id) == ["step-16"])
+        #expect(last.nextPage == nil)
+        let revision = steps.enumerated().map { index, step in
+            ProvenanceCodingAgentPlanStepRecord(id: "revision-\(index)", order: step.order, text: step.text,
+                status: index == 8 ? "completed" : step.status)
+        }
+        let revised = AgentSessionPlanPage(steps: revision, requestedPage: second.currentPage)
+        #expect(revised.currentPage == 1)
+        #expect(revised.steps.first?.status == "completed")
+        let shortened = AgentSessionPlanPage(steps: Array(steps.prefix(3)), requestedPage: 2)
+        #expect(shortened.currentPage == 0)
+        #expect(shortened.steps.count == 3)
+        #expect(AgentSessionPlanPage(steps: [], requestedPage: 0).steps.isEmpty)
+    }
+
+    @Test func planStatusClassificationPreservesUnknownValues() {
+        #expect(AgentSessionPlanStepStatus("pending") == .pending)
+        #expect(AgentSessionPlanStepStatus("in_progress") == .inProgress)
+        #expect(AgentSessionPlanStepStatus("completed") == .completed)
+        #expect(AgentSessionPlanStepStatus("incomplete") == .providerValue("incomplete"))
+        #expect(AgentSessionPlanStepStatus("provider-specific") == .providerValue("provider-specific"))
+        #expect(AgentSessionPlanStepStatus(" ") == .unknown)
+    }
+
+    @Test func planStatusLabelsAreLocalized() throws {
+        let expectations = ["en": ["Pending", "In progress", "Completed"], "ja": ["未着手", "進行中", "完了"]]
+        let statuses: [AgentSessionPlanStepStatus] = [.pending, .inProgress, .completed]
+        for (language, values) in expectations {
+            for (status, value) in zip(statuses, values) {
+                #expect(status.label(locale: Locale(identifier: language)) == value)
+            }
+        }
+        #expect(AgentSessionPlanStepStatus("provider-specific").label(locale: Locale(identifier: "ja")) == "provider-specific")
+    }
+
     @Test func repliesAndRawSources() {
         let raw = " \n<send_user_message_question_reply>\n[{\"question\":\"Which base?\",\"answer\":\"708\",\"questionItemId\":1},{\"question\":\"Build?\",\"answer\":\"Yes\"}]\n</send_user_message_question_reply> \n"
         let value = ExpandedTurnRequest(objective: raw, prompt: raw.trimmingCharacters(in: .whitespacesAndNewlines))
@@ -104,6 +154,24 @@ import SwiftUI
         #expect(ExpandedTurnCommandPresentation(raw: huge).raw == huge)
     }
     #if canImport(bmux_DEV) || canImport(bmux) || canImport(TurnPresentationHarness)
+    @Test @MainActor func turnEvidenceShowsMoreThanSixPlanSteps() {
+        let date = Date(timeIntervalSince1970: 1_800_000_000)
+        let turn = ProvenanceCodingAgentTurnRecord(id: "turn", sessionID: "session", provider: "codex",
+            providerTurnID: "provider-turn", status: "started", updatedAt: date, source: .observed, confidence: .high)
+        func height(stepCount: Int) -> CGFloat {
+            let steps = (0..<stepCount).map {
+                ProvenanceCodingAgentPlanStepRecord(id: "step-\($0)", order: $0, text: "Step \($0)", status: "pending")
+            }
+            let plan = ProvenanceCodingAgentPlanUpdateRecord(id: "plan", sessionID: "session", provider: "codex",
+                steps: steps, observedAt: date, source: .observed, confidence: .high)
+            let detail = ProvenanceFactualSessionProjectionTurnSnapshot(turn: turn, submittedPrompt: nil,
+                currentPlan: plan, completedCommands: [], visibleReasoningSummaries: [], fileChangeAttributions: [], assistantMessages: [])
+            let host = NSHostingView(rootView: AgentSessionFactualProjectionTurnDetailView(turnSnapshot: detail, showsIdentity: false).frame(width: 600))
+            return host.fittingSize.height
+        }
+        #expect(height(stepCount: 8) > height(stepCount: 6))
+    }
+
     @Test @MainActor func expandedEvidenceContrastsWithDarkWorkspaceUnderEitherSystemAppearance() throws {
         let turn = ProvenanceCodingAgentTurnRecord(id: "roof-turn", sessionID: "roof-session", provider: "codex",
             providerTurnID: "provider-turn", status: "started", updatedAt: Date(), source: .observed, confidence: .high)

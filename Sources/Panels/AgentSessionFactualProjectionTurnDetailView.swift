@@ -54,14 +54,7 @@ struct AgentSessionFactualProjectionTurnDetailView: View {
             Text(String(localized: "agentSession.factual.plan", defaultValue: "Current plan"))
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(Color.bmuxTextTertiary)
-            ForEach(plan.steps.prefix(6), id: \.id) { step in
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    badge(step.status)
-                    Text(step.text)
-                        .font(.system(size: 12))
-                        .lineLimit(2)
-                }
-            }
+            AgentSessionPlanStepsView(plan: plan).id(turnSnapshot.turn.id)
         }
     }
 
