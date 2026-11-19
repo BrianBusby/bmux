@@ -30,7 +30,7 @@ struct AgentChatSessionRegistryLifecycleReviewRegressionTests {
                 home: root.appendingPathComponent("temporary")
             )
             weak let releasedTemporary = temporary
-            let temporarySeed = try #require(temporary).start()
+            let temporarySeed = try #require(temporary).seedExistingSessions()
             temporarySeed.cancel()
             temporary = nil
             try #require(releasedTemporary == nil)
@@ -252,7 +252,7 @@ struct AgentChatSessionRegistryLifecycleReviewRegressionTests {
         )
         service.recordSessionLifecycleChanges(with: WorkProvenanceRuntime.disabledByComposition())
 
-        await service.start().value
+        await service.seedExistingSessions().value
         service.noteHookEvent(WorkstreamEvent(
             sessionId: sessionID,
             hookEventName: .userPromptSubmit,

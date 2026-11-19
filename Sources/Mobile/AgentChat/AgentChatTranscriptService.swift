@@ -234,6 +234,12 @@ final class AgentChatTranscriptService {
                 workingDirectory: intent.workingDirectory
             )
         }
+        return seedExistingSessions()
+    }
+
+    /// Seeds the registry without changing the service receiving resume intents.
+    @discardableResult
+    func seedExistingSessions() -> Task<Void, Never> {
         // Seeding reads+parses the hook-store JSON off the main actor; kick it
         // off and return. Live hook events also populate the registry, and the
         // seed converges within milliseconds.
