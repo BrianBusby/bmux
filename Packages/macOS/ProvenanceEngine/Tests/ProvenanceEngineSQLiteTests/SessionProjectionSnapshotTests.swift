@@ -8,6 +8,10 @@ extension ProvenanceSQLiteRepository {
     func setFactualReadObserver(_ observer: (@Sendable () -> Void)?) {
         didReadFactualSessionForTesting = observer
     }
+
+    func setBusyObserver(_ observer: (@Sendable () -> Void)?) {
+        database.setBusyObserverForTesting(observer)
+    }
 }
 
 @Suite
@@ -141,8 +145,13 @@ extension SessionProjectionSnapshotTests {
         try await fixture.append(fixture.prompt("Investigate the issue", turnID: turn.id), into: newer)
         let entered = DispatchSemaphore(value: 0)
         let resume = DispatchSemaphore(value: 0)
-        let lockProbe = try ProvenanceSQLiteDatabase(url: url, busyTimeoutMilliseconds: 0)
-        defer { resume.signal() }
+        let writerBlocked = DispatchSemaphore(value: 0)
+        let resumeWriter = DispatchSemaphore(value: 0)
+        defer { resume.signal(); resumeWriter.signal() }
+        await newer.setBusyObserver {
+            writerBlocked.signal()
+            resumeWriter.wait()
+        }
         await older.setFactualReadObserver {
             entered.signal()
             resume.wait()
@@ -153,21 +162,29 @@ extension SessionProjectionSnapshotTests {
         }
         let reached = await Task.detached { Self.waitForSignal(entered) }.value
         guard reached else { resume.signal(); Issue.record("Producer did not reach the interleaving point"); _ = try? await oldTask.value; return }
-        do {
-            try lockProbe.execute("BEGIN IMMEDIATE TRANSACTION")
-            try lockProbe.execute("ROLLBACK")
-            Issue.record("Expected the producer to hold the write reservation")
-        } catch let error as ProvenanceSQLiteError {
-            #expect(error == .sqlite(message: "database is locked"))
-        }
         let newTask = Task.detached {
             try await fixture.append(fixture.prompt("Fix the regression", turnID: turn.id, offset: 4), into: newer)
             return try await newer.publishCodingAgentSessionSemanticInferences(
                 ProvenanceCodingAgentSessionSemanticInferenceRequest(sessionID: fixture.session.id, createdAt: fixture.timestamp.addingTimeInterval(40)))
         }
+        let writerReachedLock = await Task.detached { Self.waitForSignal(writerBlocked) }.value
+        guard writerReachedLock else {
+            resume.signal(); resumeWriter.signal()
+            Issue.record("Newer writer did not encounter the older producer's write reservation")
+            _ = try? await oldTask.value; _ = try? await newTask.value
+            return
+        }
         resume.signal()
-        _ = try await oldTask.value
+        do {
+            _ = try await oldTask.value
+        } catch {
+            resumeWriter.signal()
+            _ = try? await newTask.value
+            throw error
+        }
+        resumeWriter.signal()
         _ = try await newTask.value
+        await newer.setBusyObserver(nil)
         await older.setFactualReadObserver(nil)
         let model = try #require(await older.sessionWorkModel(ProvenanceSessionWorkModelRequest(sessionID: fixture.session.id)).model)
         let milestone = try #require(model.milestones.record)
