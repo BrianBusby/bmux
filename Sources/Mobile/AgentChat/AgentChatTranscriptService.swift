@@ -165,6 +165,22 @@ final class AgentChatTranscriptService {
     /// The started service, used to apply resume re-binds immediately once live.
     private static weak var liveInstance: AgentChatTranscriptService?
 
+#if DEBUG
+    /// Isolates synchronous resume-routing tests from the app's live receiver and pending intents.
+    /// The closure must not reenter app routing or suspend while this scope owns the receiver.
+    static func withIsolatedResumeRoutingForTesting<T>(_ body: () throws -> T) rethrows -> T {
+        let previousLiveInstance = liveInstance
+        let previousPendingIntents = pendingResumeIntents
+        liveInstance = nil
+        pendingResumeIntents = []
+        defer {
+            liveInstance = previousLiveInstance
+            pendingResumeIntents = previousPendingIntents
+        }
+        return try body()
+    }
+#endif
+
     /// Records, from bmux's own authority, that it is resuming `sessionID` onto
     /// `surfaceID` (see
     /// ``AgentChatSessionRegistry/noteResumeInitiated(sessionID:source:surfaceID:workspaceID:workingDirectory:)``).

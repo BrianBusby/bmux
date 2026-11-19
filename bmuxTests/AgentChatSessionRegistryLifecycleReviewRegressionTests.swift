@@ -10,6 +10,76 @@ import Testing
 #endif
 
 struct AgentChatSessionRegistryLifecycleReviewRegressionTests {
+#if DEBUG
+    @MainActor
+    @Test func temporarySeedingServiceDoesNotReplaceResumeReceiver() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-resume-routing-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer {
+            do { try FileManager.default.removeItem(at: root) }
+            catch { Issue.record(error, "Could not remove resume-routing fixture files") }
+        }
+
+        try AgentChatTranscriptService.withIsolatedResumeRoutingForTesting {
+            let primary = resumeRoutingService(home: root.appendingPathComponent("primary"))
+            let primarySeed = primary.start()
+            defer { primarySeed.cancel() }
+
+            var temporary: AgentChatTranscriptService? = resumeRoutingService(
+                home: root.appendingPathComponent("temporary")
+            )
+            weak let releasedTemporary = temporary
+            let temporarySeed = try #require(temporary).start()
+            temporarySeed.cancel()
+            temporary = nil
+            try #require(releasedTemporary == nil)
+
+            AgentChatTranscriptService.recordResumeIntent(
+                sessionID: "claude-isolated-resume", source: "claude", surfaceID: nil,
+                workspaceID: nil, workingDirectory: root.path
+            )
+            let record = try #require(primary.registry.record(sessionID: "isolated-resume"))
+            #expect(record.workingDirectory == root.path)
+        }
+    }
+
+    @MainActor
+    @Test func pendingResumeIntentFlushesWhenReceiverStarts() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("bmux-pending-resume-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer {
+            do { try FileManager.default.removeItem(at: root) }
+            catch { Issue.record(error, "Could not remove resume-routing fixture files") }
+        }
+
+        try AgentChatTranscriptService.withIsolatedResumeRoutingForTesting {
+            AgentChatTranscriptService.recordResumeIntent(
+                sessionID: "claude-buffered-resume", source: "claude", surfaceID: nil,
+                workspaceID: nil, workingDirectory: root.path
+            )
+            let primary = resumeRoutingService(home: root)
+            let seed = primary.start()
+            defer { seed.cancel() }
+            let record = try #require(primary.registry.record(sessionID: "buffered-resume"))
+            #expect(record.workingDirectory == root.path)
+        }
+    }
+
+    @MainActor
+    private func resumeRoutingService(home: URL) -> AgentChatTranscriptService {
+        AgentChatTranscriptService(
+            registry: AgentChatSessionRegistry(hookStore: AgentChatHookSessionStore(homeDirectory: home)),
+            resolver: AgentChatTranscriptResolver(homeDirectory: home, environment: [:]),
+            rawOutputStore: ChatRawTerminalOutputFileStore(rootDirectory: home.appendingPathComponent("raw")),
+            hasEventSubscribers: { false },
+            emitEventPayload: { _ in },
+            recordTaskWorkspaceDirectory: { _, _ in }
+        )
+    }
+#endif
+
     @MainActor
     @Test func transcriptServicePlacesAndRemovesSubsessionWorkspaceThroughWorkspaceActions() throws {
         let previousShared = AppDelegate.shared
