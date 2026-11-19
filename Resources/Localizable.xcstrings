@@ -241367,13 +241367,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Codex transcript %@: cursor %llu, unread %llu bytes, skipped %d lines, failures %d"
+            "value": "Codex transcript %@: cursor %llu, unread %llu bytes, skipped-line observations %d (replay may be included), failures %d"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Codex トランスクリプト %@: カーソル %llu、未読 %llu バイト、スキップ %d 行、失敗 %d 件"
+            "value": "Codex トランスクリプト %@: カーソル %llu、未読 %llu バイト、スキップされた行の観測 %d 件（再読み込みを含む場合があります）、失敗 %d 件"
           }
         }
       }
@@ -241384,15 +241384,36 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Needs attention: retrying, stale, or more than five minutes behind"
+            "value": "Needs attention: the last report is unavailable, stale, retrying, has an error or skipped lines, or has a backlog over five minutes old"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "要確認: 再試行中、更新停止、または 5 分以上の遅延があります"
+            "value": "要確認: 最後の報告が利用できないか古い、再試行中、エラーや行のスキップ、または 5 分を超える未処理データがあります"
           }
         }
+      }
+    },
+    "cli.provenance.diagnostics.codexTranscript.noReport": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No retained monitor report for Codex transcript %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Codex トランスクリプト %@ の保存された監視報告はありません" } }
+      }
+    },
+    "cli.provenance.diagnostics.codexTranscript.reportRecent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Last monitor report: no current error or retry, skipped lines, or prolonged backlog reported" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "最後の監視報告: 現在のエラーや再試行、行のスキップ、長時間の未処理データは報告されていません" } }
+      }
+    },
+    "cli.provenance.diagnostics.codexTranscript.observationUnknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Current cursor position and observation connection are unknown" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "現在のカーソル位置と監視接続の状態は不明です" } }
       }
     },
     "cli.provenance.diagnostics.codexTranscript.healthy": {
