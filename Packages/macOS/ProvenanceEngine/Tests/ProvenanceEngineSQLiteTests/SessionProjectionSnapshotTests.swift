@@ -15,9 +15,6 @@ struct SessionProjectionSnapshotTests {
     private static func waitForSignal(_ semaphore: DispatchSemaphore) -> Bool {
         semaphore.wait(timeout: .now() + 10) == .success
     }
-    private static func finishedQuickly(_ semaphore: DispatchSemaphore) -> Bool {
-        semaphore.wait(timeout: .now() + 0.2) == .success
-    }
 
     @Test
     func nestedSnapshotFailurePreservesOuterTransaction() throws {
@@ -144,10 +141,11 @@ extension SessionProjectionSnapshotTests {
         try await fixture.append(fixture.prompt("Investigate the issue", turnID: turn.id), into: newer)
         let entered = DispatchSemaphore(value: 0)
         let resume = DispatchSemaphore(value: 0)
-        let newerFinished = DispatchSemaphore(value: 0)
+        let lockProbe = try ProvenanceSQLiteDatabase(url: url, busyTimeoutMilliseconds: 0)
+        defer { resume.signal() }
         await older.setFactualReadObserver {
             entered.signal()
-            _ = resume.wait(timeout: .now() + 10)
+            resume.wait()
         }
         let oldTask = Task.detached {
             try await older.publishCodingAgentSessionSemanticInferences(
@@ -155,14 +153,18 @@ extension SessionProjectionSnapshotTests {
         }
         let reached = await Task.detached { Self.waitForSignal(entered) }.value
         guard reached else { resume.signal(); Issue.record("Producer did not reach the interleaving point"); _ = try? await oldTask.value; return }
+        do {
+            try lockProbe.execute("BEGIN IMMEDIATE TRANSACTION")
+            try lockProbe.execute("ROLLBACK")
+            Issue.record("Expected the producer to hold the write reservation")
+        } catch let error as ProvenanceSQLiteError {
+            #expect(error == .sqlite(message: "database is locked"))
+        }
         let newTask = Task.detached {
-            defer { newerFinished.signal() }
             try await fixture.append(fixture.prompt("Fix the regression", turnID: turn.id, offset: 4), into: newer)
             return try await newer.publishCodingAgentSessionSemanticInferences(
                 ProvenanceCodingAgentSessionSemanticInferenceRequest(sessionID: fixture.session.id, createdAt: fixture.timestamp.addingTimeInterval(40)))
         }
-        let finishedWhileOlderTransactionHeld = await Task.detached { Self.finishedQuickly(newerFinished) }.value
-        #expect(!finishedWhileOlderTransactionHeld)
         resume.signal()
         _ = try await oldTask.value
         _ = try await newTask.value
