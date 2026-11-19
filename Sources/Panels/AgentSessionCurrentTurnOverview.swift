@@ -10,7 +10,7 @@ struct AgentSessionCurrentTurnOverview: View {
     let turn: ProvenanceFactualSessionProjectionTurnSnapshot
 
     var body: some View {
-        let objective = turnObjective(turn)
+        let prompt = turnPrompt(turn)
         let summary = turnAgentSummary(turn)
         return VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
@@ -23,16 +23,16 @@ struct AgentSessionCurrentTurnOverview: View {
                     .font(.system(size: 12))
                     .foregroundStyle(Color.workspaceReferenceTextTertiary)
             }
-            Text(summary ?? objective ?? String(localized: "agentSession.factual.noTurns", defaultValue: "No turns observed."))
+            Text(summary ?? prompt ?? String(localized: "agentSession.factual.noTurns", defaultValue: "No turns observed."))
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(Color.workspaceReferenceTextPrimary)
                 .fixedSize(horizontal: false, vertical: true)
-            if let objective {
+            if let prompt {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(String(localized: "agentSession.factual.objective", defaultValue: "Objective"))
+                    Text(String(localized: "agentSession.factual.prompt", defaultValue: "Prompt"))
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Color.workspaceReferenceTextTertiary)
-                    Text(objective)
+                    Text(prompt)
                         .font(.system(size: 13.5))
                         .foregroundStyle(Color.workspaceReferenceTextSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -63,7 +63,7 @@ struct AgentSessionCurrentTurnOverview: View {
         }
     }
 
-    private func turnObjective(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String? {
+    private func turnPrompt(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String? {
         let prompt = turn.submittedPrompt?.text.trimmingCharacters(in: .whitespacesAndNewlines)
         return prompt?.isEmpty == false ? prompt : nil
     }
@@ -71,7 +71,7 @@ struct AgentSessionCurrentTurnOverview: View {
     private func turnAgentSummary(_ turn: ProvenanceFactualSessionProjectionTurnSnapshot) -> String? {
         guard let output = AgentSessionFactualProjectionEvidenceRows.finalAssistantMessageText(for: turn)?
             .trimmingCharacters(in: .whitespacesAndNewlines), !output.isEmpty else { return nil }
-        guard normalizeTurnText(output) != normalizeTurnText(turnObjective(turn) ?? "") else { return nil }
+        guard normalizeTurnText(output) != normalizeTurnText(turnPrompt(turn) ?? "") else { return nil }
         return output
     }
 
