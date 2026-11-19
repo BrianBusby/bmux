@@ -1656,7 +1656,7 @@ actor ProvenanceSQLiteRepository {
         return (query.int(at: 0), latestSequence)
     }
 
-    private func eventSequence(id: String) throws -> Int? {
+    func eventSequence(id: String) throws -> Int? {
         let query = try database.prepare("SELECT sequence FROM provenance_events WHERE id = ?")
         defer { query.finalize() }
         try query.bind(id, at: 1)
@@ -2826,7 +2826,7 @@ actor ProvenanceSQLiteRepository {
         )
     }
 
-    private func insertEvent(_ event: ProvenanceEvent) throws {
+    @discardableResult func insertEvent(_ event: ProvenanceEvent, ignoreIDConflict: Bool = false) throws -> Bool {
         let payloadData = try payloadEncoder.encode(event.payload)
         guard let payloadJSON = String(data: payloadData, encoding: .utf8) else {
             throw ProvenanceSQLiteError.sqlite(message: "failed to encode event payload")
@@ -2858,7 +2858,7 @@ actor ProvenanceSQLiteRepository {
                 payload_json,
                 evidence_origin,
                 evidence_scope_json
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) \(ignoreIDConflict ? "ON CONFLICT(id) DO NOTHING" : "")
             """
         )
         defer { insert.finalize() }
@@ -2876,11 +2876,11 @@ actor ProvenanceSQLiteRepository {
         try insert.bind(payloadJSON, at: 11)
         try insert.bind(event.evidenceOrigin?.rawValue, at: 12)
         try insert.bind(evidenceScopeJSON, at: 13)
-
         _ = try insert.step()
+        return database.changes == 1
     }
 
-    private func applyProjectionUpdates(
+    func applyProjectionUpdates(
         from event: ProvenanceEvent, latestEventSequence: Int? = nil, pruneOutcomes: Bool = true
     ) throws {
         let payload = event.payload

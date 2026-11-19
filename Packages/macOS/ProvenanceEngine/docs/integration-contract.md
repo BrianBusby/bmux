@@ -653,3 +653,14 @@ Producers own observing activity, assigning stable source/domain identities, emi
 Provenance Engine owns evidence validation, durable evidence storage, deterministic ordering and relationships, Current State derivation, projection rebuild, bounded provenance queries, and evidence attribution.
 
 Consumers own presentation, UI, CLI formatting, local fallback policy, live Git probing when explicitly outside persisted provenance, and product-specific interaction behavior.
+
+### Experimental ledger ID candidate operation
+
+The in-process SQLite client can optionally conform to `ProvenanceLedgerIDCandidateClient`.
+Its operation atomically reports an inserted event or that the ledger already has the
+requested event ID. The latter is only a candidate collision: it does not compare
+source evidence, establish matching payloads, or authorize a producer to advance a
+cursor. Other write and projection failures throw. Existing `appendEvent` behavior is
+unchanged, and clients must check for the opt-in protocol rather than assume support.
+This experimental contract has no transcript importer caller. It supplies no
+mixed-version writer fence, source identity, or replay/observation-health guarantee.
