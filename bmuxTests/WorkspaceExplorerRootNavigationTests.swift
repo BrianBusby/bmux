@@ -98,6 +98,7 @@ struct WorkspaceExplorerRootNavigationTests {
             loadSessions: { id in ProvenanceWorkspaceSessionPageResponse(
                 workspaceID: id.uuidString, sessions: [], nextCursor: nil) },
             clearArchive: { })
+        model.setScopeState(.all)
         await model.load()
         let options = model.catalog?.filterOptions(
             dimensions: [.repository, .project, .pullRequestOwner], target: .all,
@@ -202,7 +203,7 @@ struct WorkspaceExplorerRootNavigationTests {
     }
 
     @Test
-    func openingExplorerResetsToAllWorkspacesWithoutFiltersOrGrouping() {
+    func openingExplorerResetsToOpenWorkspacesWithoutFiltersOrGrouping() {
         let model = WorkspaceExplorerCoordinator(
             loadHistory: { WorkspaceExplorerHistoryLoadResult(items: [],
                 archiveAvailability: .available, partialLiveActivity: false) },
@@ -213,22 +214,22 @@ struct WorkspaceExplorerRootNavigationTests {
         model.showCollection(.all)
         model.setGroupBy([.repository])
         model.setFilter(.bmuxStatus, value: .bmuxStatus(.needsInput))
-        model.scope = WorkspaceExplorerScope(state: .open, period: .today)
+        model.scope = WorkspaceExplorerScope(state: .all, period: .today)
         model.showCollection(.project("maple-roof"))
         model.showHistory("history")
 
-        model.openAllWorkspacesUnfiltered()
+        model.openExplorerWithDefaultScope()
 
         #expect(model.collectionTarget == nil)
         #expect(model.historyID == nil)
-        #expect(model.scope == WorkspaceExplorerScope(state: .all, period: .anyTime))
+        #expect(model.scope == WorkspaceExplorerScope(state: .open, period: .anyTime))
         #expect(model.activeArrangement.groupBy.isEmpty)
         #expect(model.activeArrangement.filters.isEmpty)
         #expect(!model.activeArrangement.canUndo)
 
         model.setGroupBy([.project])
         model.setFilter(.repository, value: .value("bmux"))
-        model.openAllWorkspacesUnfiltered()
+        model.openExplorerWithDefaultScope()
         #expect(model.activeArrangement.groupBy.isEmpty)
         #expect(model.activeArrangement.filters.isEmpty)
     }

@@ -278,6 +278,7 @@ Repository: `BrianBusby/bmux`
 | `ssh_agent_environment_fixture_focused_gate_verification` | open |
 | `ssh_pty_lifecycle_fixture_verification` | open |
 | `codex_monitor_lease_fixture_verification` | open |
+| `codex_missing_provider_session_visibility` | open |
 | `respawn_window_protocol_fixture_focused_gate_verification` | open |
 | `browser_deferred_initial_lifecycle_verification` | open |
 | `workspace_fallback_regression_verification` | open |
