@@ -6169,6 +6169,10 @@ caveats:
     title: CI Option/Alt step selects CodexMonitorLeaseTests sequential and nested controls; actual app-host verification pending
     status: open
     owner: bmux
+  - id: codex_missing_provider_session_visibility
+    title: Unidentified Codex hooks cannot establish new associations or monitors; stale state and observation health remain unresolved
+    status: open
+    owner: bmux
   - id: respawn_window_protocol_fixture_focused_gate_verification
     title: Respawn window protocol fixture focused gate awaits app-host CI
     status: open

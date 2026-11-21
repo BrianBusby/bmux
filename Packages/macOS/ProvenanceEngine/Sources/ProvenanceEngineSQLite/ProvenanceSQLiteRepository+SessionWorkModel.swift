@@ -4,6 +4,11 @@ import ProvenanceEngineContracts
 extension ProvenanceSQLiteRepository {
     func sessionWorkModelSnapshot(_ request: ProvenanceSessionWorkModelRequest) throws
         -> ProvenanceSessionWorkModelResponse {
+        try database.withReadSnapshot { try readSessionWorkModelSnapshot(request) }
+    }
+
+    private func readSessionWorkModelSnapshot(_ request: ProvenanceSessionWorkModelRequest) throws
+        -> ProvenanceSessionWorkModelResponse {
         let factualResponse = try factualSessionProjection(
             ProvenanceFactualSessionProjectionRequest(
                 sessionID: request.sessionID,
