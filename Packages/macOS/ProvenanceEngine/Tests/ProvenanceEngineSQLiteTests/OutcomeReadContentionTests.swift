@@ -156,7 +156,7 @@ struct OutcomeReadContentionTests {
             let result = try await repository.turnOutcome(
                 ProvenanceTurnOutcomeRequest(turnID: fixture.turnCompleted.id)
             )
-            #expect(result.outcome?.projection.projectionRuleVersion == "1")
+            #expect(result.outcome?.projection.projectionRuleVersion == "2")
         }
     }
 }
