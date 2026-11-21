@@ -180,6 +180,9 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: outcome_historical_rebuild_and_mixed_writer
+    # Full rebuild drops prior outcome revisions; older writers are not fenced.
+    status: open
   - id: cross_session_identity_clock_legacy_upgrade
     status: open
   - id: work_brief_external_sources_unavailable
