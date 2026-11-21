@@ -5554,13 +5554,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reasoning"
+            "value": "Agent updates"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "推論"
+            "value": "エージェントの報告"
           }
         }
       }
@@ -5571,13 +5571,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reasoning summary"
+            "value": "Agent update"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "推論サマリー"
+            "value": "エージェントの報告"
           }
         }
       }
@@ -11648,13 +11648,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Based on visible reasoning"
+            "value": "Based on an agent update"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "表示された推論に基づく"
+            "value": "エージェントの報告に基づく"
           }
         }
       }
@@ -244846,13 +244846,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Blockers & approach changes"
+            "value": "Agent updates"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ブロッカーと方針変更"
+            "value": "エージェントの報告"
           }
         }
       }
@@ -244863,13 +244863,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d change(s)"
+            "value": "%d total"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d 件の変更"
+            "value": "合計 %d 件"
           }
         }
       }
@@ -245375,13 +245375,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reasoning steps"
+            "value": "Agent updates"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "記録された推論ステップ"
+            "value": "エージェントの報告"
           }
         }
       }
