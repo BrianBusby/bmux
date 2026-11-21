@@ -28,7 +28,7 @@ struct WorkspaceExplorerRailProjectionTests {
             clearArchive: { }
         )
         await model.load()
-        #expect(model.activeRailFilters.isEmpty)
+        #expect(model.activeRailFilters.map(\.id) == ["state"])
         #expect(Set(model.visibleLiveWorkspaceIDs ?? []) == [running.runtimeID, idle.runtimeID])
         // Group-card Focus uses the same setFilter path as the Explorer filter bar.
         model.setFilter(.bmuxStatus, value: .bmuxStatus(.running))
