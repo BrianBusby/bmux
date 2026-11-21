@@ -31,8 +31,8 @@ struct TurnOutcomePlanEvidenceTests {
         #expect(session.actionsCompleted.isEmpty)
     }
 
-    @Test
-    func currentSessionRefreshesOldRuleWhileHistoricalTurnRemainsReadable() async throws {
+    @Test(arguments: ["1", "2", "3"])
+    func currentSessionRefreshesOldRuleWhileHistoricalTurnRemainsReadable(legacyVersion: String) async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
         let repository = try ProvenanceSQLiteRepository(url: url)
@@ -59,7 +59,7 @@ struct TurnOutcomePlanEvidenceTests {
         let legacyTurnID = "legacy-turn-revision"
         let legacySessionID = "legacy-session-revision"
         projection["revisionID"] = legacyTurnID
-        projection["projectionRuleVersion"] = "1"
+        projection["projectionRuleVersion"] = legacyVersion
         json["projection"] = projection
         json["actionsCompleted"] = [try JSONSerialization.jsonObject(with: JSONEncoder().encode(oldAction))]
         let oldJSON = try #require(String(data: JSONSerialization.data(withJSONObject: json), encoding: .utf8))
@@ -68,22 +68,24 @@ struct TurnOutcomePlanEvidenceTests {
             INSERT INTO provenance_coding_agent_turn_outcome_revisions
                 (id, turn_id, session_id, projection_rule_id, projection_rule_version,
                  source_watermark_sequence, content_fingerprint, outcome_json, created_at_seconds)
-            SELECT ?, turn_id, session_id, projection_rule_id, '1', source_watermark_sequence,
+            SELECT ?, turn_id, session_id, projection_rule_id, ?, source_watermark_sequence,
                    content_fingerprint, ?, created_at_seconds
             FROM provenance_coding_agent_turn_outcome_revisions WHERE id = ?
             """)
         defer { insertTurn.finalize() }
         try insertTurn.bind(legacyTurnID, at: 1)
-        try insertTurn.bind(oldJSON, at: 2)
-        try insertTurn.bind(original.projection.revisionID, at: 3)
+        try insertTurn.bind(legacyVersion, at: 2)
+        try insertTurn.bind(oldJSON, at: 3)
+        try insertTurn.bind(original.projection.revisionID, at: 4)
         _ = try insertTurn.step()
         let latest = try database.prepare("""
             UPDATE provenance_coding_agent_turn_outcomes
-            SET projection_rule_version = '1', latest_revision_id = ? WHERE turn_id = ?
+            SET projection_rule_version = ?, latest_revision_id = ? WHERE turn_id = ?
             """)
         defer { latest.finalize() }
-        try latest.bind(legacyTurnID, at: 1)
-        try latest.bind(fixture.turnCompleted.id, at: 2)
+        try latest.bind(legacyVersion, at: 1)
+        try latest.bind(legacyTurnID, at: 2)
+        try latest.bind(fixture.turnCompleted.id, at: 3)
         _ = try latest.step()
         let insertSession = try database.prepare("""
             INSERT INTO provenance_coding_agent_session_outcome_revisions
@@ -114,12 +116,12 @@ struct TurnOutcomePlanEvidenceTests {
             ProvenanceSessionOutcomeRequest(sessionID: fixture.session.id)
         ).outcome)
         #expect(currentSession.actionsCompleted.isEmpty)
-        #expect(currentSession.turnOutcomes.first?.projection.projectionRuleVersion == "2")
+        #expect(currentSession.turnOutcomes.first?.projection.projectionRuleVersion == "4")
         #expect(currentSession.projection.revisionID != legacySessionID)
         let historical = try #require(try await repository.turnOutcome(ProvenanceTurnOutcomeRequest(
             turnID: fixture.turnCompleted.id, revisionID: legacyTurnID
         )).outcome)
-        #expect(historical.projection.projectionRuleVersion == "1")
+        #expect(historical.projection.projectionRuleVersion == legacyVersion)
         #expect(historical.actionsCompleted == [oldAction])
         let historicalSession = try #require(try await repository.sessionOutcome(ProvenanceSessionOutcomeRequest(
             sessionID: fixture.session.id, revisionID: legacySessionID
