@@ -3,7 +3,7 @@ import ProvenanceEngineContracts
 
 extension ProvenanceSQLiteRepository {
     static let turnOutcomeRuleID = "deterministic_turn_outcome"
-    static let turnOutcomeRuleVersion = "1"
+    static let turnOutcomeRuleVersion = "2"
     static let turnOutcomeCommandRuleVersion = "1"
 
     func refreshTurnOutcomes(
@@ -113,22 +113,22 @@ extension ProvenanceSQLiteRepository {
     ) throws -> ProvenanceTurnOutcome? {
         guard let turn = try codingAgentTurn(id: turnID) else { return nil }
         let session = try session(id: turn.sessionID)
-        let prompt = try turnOutcomeLatestPrompt(turnID: turnID)
-        let plan = try turnOutcomeLatestPlan(turnID: turnID)
+        let prompt = try turnOutcomeLatestPrompt(sessionID: turn.sessionID, turnID: turnID)
+        let plan = try turnOutcomeLatestPlan(sessionID: turn.sessionID, turnID: turnID)
         let commands = try turnOutcomeRecordIDs(
             tableName: "provenance_coding_agent_commands",
             timeColumn: "completed_at_seconds",
-            turnID: turnID
+            sessionID: turn.sessionID, turnID: turnID
         ).compactMap { try codingAgentCommand(id: $0) }
         let reasoningSummaries = try turnOutcomeRecordIDs(
             tableName: "provenance_coding_agent_reasoning_summaries",
             timeColumn: "completed_at_seconds",
-            turnID: turnID
+            sessionID: turn.sessionID, turnID: turnID
         ).compactMap { try codingAgentReasoningSummary(id: $0) }
         let attributions = try turnOutcomeRecordIDs(
             tableName: "provenance_coding_agent_file_change_attributions",
             timeColumn: "observed_at_seconds",
-            turnID: turnID
+            sessionID: turn.sessionID, turnID: turnID
         ).compactMap { try codingAgentFileChangeAttribution(id: $0) }
         let evidenceIndex = try turnOutcomeEvidenceIndex(sessionID: turn.sessionID, throughSequence: latestEventSequence)
         let repositoryBoundary = try turnOutcomeRepositoryBoundary(
@@ -329,20 +329,20 @@ extension ProvenanceSQLiteRepository {
         )
     }
 
-    private func turnOutcomeLatestPrompt(turnID: String) throws -> ProvenanceCodingAgentPromptRecord? {
+    private func turnOutcomeLatestPrompt(sessionID: String, turnID: String) throws -> ProvenanceCodingAgentPromptRecord? {
         guard let id = try turnOutcomeLatestRecordID(
             tableName: "provenance_coding_agent_prompts",
             timeColumn: "submitted_at_seconds",
-            turnID: turnID
+            sessionID: sessionID, turnID: turnID
         ) else { return nil }
         return try codingAgentPrompt(id: id)
     }
 
-    private func turnOutcomeLatestPlan(turnID: String) throws -> ProvenanceCodingAgentPlanUpdateRecord? {
+    private func turnOutcomeLatestPlan(sessionID: String, turnID: String) throws -> ProvenanceCodingAgentPlanUpdateRecord? {
         guard let id = try turnOutcomeLatestRecordID(
             tableName: "provenance_coding_agent_plan_updates",
             timeColumn: "observed_at_seconds",
-            turnID: turnID
+            sessionID: sessionID, turnID: turnID
         ) else { return nil }
         return try codingAgentPlanUpdate(id: id)
     }
@@ -350,19 +350,21 @@ extension ProvenanceSQLiteRepository {
     private func turnOutcomeLatestRecordID(
         tableName: String,
         timeColumn: String,
+        sessionID: String,
         turnID: String
     ) throws -> String? {
         let query = try database.prepare(
             """
             SELECT id
             FROM \(tableName)
-            WHERE turn_id = ?
+            WHERE session_id = ? AND turn_id = ?
             ORDER BY \(timeColumn) DESC, rowid DESC
             LIMIT 1
             """
         )
         defer { query.finalize() }
-        try query.bind(turnID, at: 1)
+        try query.bind(sessionID, at: 1)
+        try query.bind(turnID, at: 2)
         guard try query.step() else { return nil }
         return query.string(at: 0)
     }
@@ -370,18 +372,20 @@ extension ProvenanceSQLiteRepository {
     private func turnOutcomeRecordIDs(
         tableName: String,
         timeColumn: String,
+        sessionID: String,
         turnID: String
     ) throws -> [String] {
         let query = try database.prepare(
             """
             SELECT id
             FROM \(tableName)
-            WHERE turn_id = ?
+            WHERE session_id = ? AND turn_id = ?
             ORDER BY \(timeColumn) ASC, rowid ASC
             """
         )
         defer { query.finalize() }
-        try query.bind(turnID, at: 1)
+        try query.bind(sessionID, at: 1)
+        try query.bind(turnID, at: 2)
         return try turnOutcomeStringIDs(from: query)
     }
 
@@ -563,7 +567,8 @@ extension ProvenanceSQLiteRepository {
         commandCwd: String?,
         evidenceIndex: TurnOutcomeEvidenceIndex
     ) throws -> ProvenanceTurnOutcomeRepositoryBoundary? {
-        let thread = try turn.threadID.flatMap { try codingAgentThread(id: $0) }
+        let observedThread = try turn.threadID.flatMap { try codingAgentThread(id: $0) }
+        let thread = observedThread.flatMap { $0.sessionID == turn.sessionID ? $0 : nil }
         let worktreeID = session?.worktreeID ?? thread?.worktreeID
         let observedWorktree: ProvenanceWorktreeRecord?
         if let worktreeID {
