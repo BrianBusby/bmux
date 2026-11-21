@@ -334,7 +334,7 @@ bmux producer responsibilities are limited to observing engineering activity, as
 Captured workflows today:
 
 - Worktree observation records Git repository/worktree/change-set/file-change evidence for bmux workspaces whose current directory is inside a Git repository.
-- Agent lifecycle recording records hook-derived Codex/Claude-style subagent lifecycle through `ProvenanceSessionLifecycleRequest`.
+- Agent lifecycle recording records hook-derived Codex/Claude-style subagent lifecycle through `ProvenanceSessionLifecycleRequest`. The engine rejects transitions without a session or external identity; bmux retains the bounded error for diagnostics, but does not persist the rejected event. Historical fallback records are not repaired.
 - Supported live sidecar execution telemetry sessions record broad
   session/provider/lifecycle presence through the public lifecycle recorder,
   with cwd used only to derive a worktree id when possible.

@@ -632,6 +632,8 @@ The canonical public lifecycle helper is now:
 
 This API is producer-neutral. A producer may provide an explicit `sessionID` for a root session, a `parentSessionID` when the session belongs to another session, or both when it already knows the source-domain identity and relationship. The engine records session lifecycle evidence and derives session relationship Current State when a parent is supplied.
 
+A lifecycle transition must include a nonblank `sessionID` or `externalIdentityValue`; a parent ID, workspace, surface, or timestamp alone does not identify a child or root session. Missing identity returns `accepted: false` with a bounded, content-free error and no event or projection IDs. The helper does not retain the rejected evidence; producers should retain their own source and surface the failure. Previously stored records are unchanged, and older engine versions may still merge unidentified requests under a fallback identity.
+
 Compatibility: `recordSubsessionLifecycle(...)`, `ProvenanceSubsessionLifecycleRequest`, `ProvenanceSubsessionLifecycleResponse`, `ProvenanceSubsessionLifecyclePhase`, and `ProvenanceEngineCapability.recordSubsessionLifecycle` remain temporarily available as deprecated compatibility wrappers for early adopters. New producers must use the session lifecycle names.
 
 ## V1 Local Durability Contract
