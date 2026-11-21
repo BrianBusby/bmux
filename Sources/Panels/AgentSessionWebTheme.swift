@@ -16,9 +16,11 @@ struct AgentSessionWebTheme: Equatable {
     let accentSoft: String
     let danger: String
     let shadow: String
+    var terminalFontFamily: String? = nil
+    var terminalFontSize: CGFloat? = nil
 
     var dictionary: [String: Any] {
-        [
+        var result: [String: Any] = [
             "isDark": isDark,
             "pageBackground": pageBackground,
             "surfaceBackground": surfaceBackground,
@@ -34,6 +36,11 @@ struct AgentSessionWebTheme: Equatable {
             "danger": danger,
             "shadow": shadow
         ]
+        if let terminalFontFamily, let terminalFontSize {
+            result["terminalFontFamily"] = terminalFontFamily
+            result["terminalFontSize"] = terminalFontSize
+        }
+        return result
     }
 
     static func resolve(appearance: PanelAppearance) -> AgentSessionWebTheme {
@@ -110,7 +117,9 @@ struct AgentSessionWebTheme: Equatable {
             accent: accent,
             accentSoft: "rgba(138, 180, 248, 0.2)",
             danger: "#ff8d7e",
-            shadow: "rgba(0, 0, 0, 0.2)"
+            shadow: "rgba(0, 0, 0, 0.2)",
+            terminalFontFamily: terminalFontFamily,
+            terminalFontSize: terminalFontSize
         )
     }
 #endif
