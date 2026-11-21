@@ -226,6 +226,11 @@ export type AgentSessionCopy = {
   smartSessionPhase: string;
   smartSessionPrompt: string;
   smartSessionPlan: string;
+  smartSessionProposedPlans?: string;
+  smartSessionProposalUnavailable?: string;
+  smartSessionProposalPartial?: string;
+  smartSessionProposalNone?: string;
+  smartSessionProposalTruncated?: string;
   smartSessionEvidence: string;
   smartSessionCommands: string;
   smartSessionFiles: string;
@@ -411,6 +416,22 @@ export type SmartSessionFactual = {
   latestTurn?: SmartSessionTurn;
   priorTurns: SmartSessionTurnReference[];
   turnCount: number;
+  proposedPlanCoverage?: { scanWindowTruncated: boolean; omittedObservations: boolean };
+  proposedPlanObservations?: Array<{
+    id: string;
+    sequence: number;
+    timestamp: string;
+    provider: string;
+    source: string;
+    origin: string;
+    eventSchemaVersion: number;
+    confidence?: string;
+    providerSessionId?: string;
+    providerTurnId?: string;
+    providerItemId?: string;
+    text: string;
+    truncated: boolean;
+  }>;
 };
 
 export type SmartSessionTurn = {
