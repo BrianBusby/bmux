@@ -497,7 +497,13 @@ public extension ProvenanceSemanticInferenceRecord {
 
 public extension ProvenanceCodingAgentSessionSemanticInferenceProducer {
     /// Resolves a candidate against its observed active predecessor without writing it.
+    ///
     /// Storage must validate that the factual input and predecessor are still current.
+    ///
+    /// - Parameters:
+    ///   - candidate: The inference produced from the factual input.
+    ///   - existing: The observed active inference, if one exists.
+    /// - Returns: The effective record and whether its claim was unchanged.
     func resolve(
         candidate: ProvenanceSemanticInferenceRecord,
         existing: ProvenanceSemanticInferenceRecord?

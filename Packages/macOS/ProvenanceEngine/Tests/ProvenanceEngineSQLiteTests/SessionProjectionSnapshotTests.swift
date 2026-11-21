@@ -8,6 +8,10 @@ extension ProvenanceSQLiteRepository {
     func setFactualReadObserver(_ observer: (@Sendable () -> Void)?) {
         didReadFactualSessionForTesting = observer
     }
+
+    func setBusyObserver(_ observer: (@Sendable () -> Void)?) {
+        database.setBusyObserverForTesting(observer)
+    }
 }
 
 @Suite
@@ -15,10 +19,6 @@ struct SessionProjectionSnapshotTests {
     private static func waitForSignal(_ semaphore: DispatchSemaphore) -> Bool {
         semaphore.wait(timeout: .now() + 10) == .success
     }
-    private static func finishedQuickly(_ semaphore: DispatchSemaphore) -> Bool {
-        semaphore.wait(timeout: .now() + 0.2) == .success
-    }
-
     @Test
     func proposalsAreScopedHistoricalEvidenceAfterReopen() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-proposal-projection-\(UUID().uuidString)")
@@ -322,10 +322,16 @@ extension SessionProjectionSnapshotTests {
         try await fixture.append(fixture.prompt("Investigate the issue", turnID: turn.id), into: newer)
         let entered = DispatchSemaphore(value: 0)
         let resume = DispatchSemaphore(value: 0)
-        let newerFinished = DispatchSemaphore(value: 0)
+        let writerBlocked = DispatchSemaphore(value: 0)
+        let resumeWriter = DispatchSemaphore(value: 0)
+        defer { resume.signal(); resumeWriter.signal() }
+        await newer.setBusyObserver {
+            writerBlocked.signal()
+            resumeWriter.wait()
+        }
         await older.setFactualReadObserver {
             entered.signal()
-            _ = resume.wait(timeout: .now() + 10)
+            resume.wait()
         }
         let oldTask = Task.detached {
             try await older.publishCodingAgentSessionSemanticInferences(
@@ -334,15 +340,28 @@ extension SessionProjectionSnapshotTests {
         let reached = await Task.detached { Self.waitForSignal(entered) }.value
         guard reached else { resume.signal(); Issue.record("Producer did not reach the interleaving point"); _ = try? await oldTask.value; return }
         let newTask = Task.detached {
-            defer { newerFinished.signal() }
             try await fixture.append(fixture.prompt("Fix the regression", turnID: turn.id, offset: 4), into: newer)
             return try await newer.publishCodingAgentSessionSemanticInferences(
                 ProvenanceCodingAgentSessionSemanticInferenceRequest(sessionID: fixture.session.id, createdAt: fixture.timestamp.addingTimeInterval(40)))
         }
-        _ = await Task.detached { Self.finishedQuickly(newerFinished) }.value
+        let writerReachedLock = await Task.detached { Self.waitForSignal(writerBlocked) }.value
+        guard writerReachedLock else {
+            resume.signal(); resumeWriter.signal()
+            Issue.record("Newer writer did not encounter the older producer's write reservation")
+            _ = try? await oldTask.value; _ = try? await newTask.value
+            return
+        }
         resume.signal()
-        _ = try await oldTask.value
+        do {
+            _ = try await oldTask.value
+        } catch {
+            resumeWriter.signal()
+            _ = try? await newTask.value
+            throw error
+        }
+        resumeWriter.signal()
         _ = try await newTask.value
+        await newer.setBusyObserver(nil)
         await older.setFactualReadObserver(nil)
         let model = try #require(await older.sessionWorkModel(ProvenanceSessionWorkModelRequest(sessionID: fixture.session.id)).model)
         let milestone = try #require(model.milestones.record)

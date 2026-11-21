@@ -6,6 +6,29 @@ final class ProvenanceSQLiteDatabase {
     private static let defaultBusyTimeoutMilliseconds: Int32 = 5_000
 
     private var handle: OpaquePointer?
+#if DEBUG
+    private final class BusyObserver {
+        let callback: @Sendable () -> Void
+        init(_ callback: @escaping @Sendable () -> Void) { self.callback = callback }
+    }
+    private var busyObserver: BusyObserver?
+
+    func setBusyObserverForTesting(_ observer: (@Sendable () -> Void)?) {
+        guard let handle else { return }
+        guard let observer else {
+            sqlite3_busy_timeout(handle, Self.defaultBusyTimeoutMilliseconds)
+            busyObserver = nil
+            return
+        }
+        let box = BusyObserver(observer)
+        busyObserver = box
+        sqlite3_busy_handler(handle, { context, _ in
+            guard let context else { return 0 }
+            Unmanaged<BusyObserver>.fromOpaque(context).takeUnretainedValue().callback()
+            return 1
+        }, Unmanaged.passUnretained(box).toOpaque())
+    }
+#endif
     let url: URL
 
     /// Opens or creates a SQLite database file.
