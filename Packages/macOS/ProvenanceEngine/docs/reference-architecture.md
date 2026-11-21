@@ -704,6 +704,15 @@ Model-derived or externally prepared claims still need complete input and
 predecessor validation in the same transaction as publication, along with
 explicit retry, idempotence, and conflict semantics. All competing writers must
 participate before this can be treated as a global publication fence.
+Factual turn detail selects child records only when both their turn and session
+IDs agree with the owning turn. A missing or mismatched turn association remains
+in the ledger and underlying projection; it is not assigned to another session.
+TurnOutcome rule version 2 applies the same ownership check, including before a
+thread can supply a worktree boundary. Current cached outcomes are reconciled
+on read when their turn rule is obsolete. Exact historical revisions remain
+available under their original rule and may contain the earlier ambiguous joins;
+they must not be treated as corrected current results. Ownership checks alone do not establish
+coherent cross-connection snapshots or complete per-session revision tracking.
 
 The factual session snapshot may also expose recent proposed-plan observations
 from the immutable event ledger. Each observation retains its event ID, ledger
