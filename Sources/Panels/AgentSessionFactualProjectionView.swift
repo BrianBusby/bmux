@@ -367,7 +367,7 @@ struct AgentSessionFactualProjectionView: View {
     }
 
     private func planSummary(_ plan: ProvenanceCodingAgentPlanUpdateRecord) -> String {
-        let completed = plan.steps.filter { $0.status.lowercased().contains("complete") }.count
+        let completed = plan.steps.filter { AgentSessionFactualProjectionEvidenceRows.isPlanStepCompleted($0.status) }.count
         return String.localizedStringWithFormat(
             String(localized: "agentSession.factual.planProgress", defaultValue: "%d of %d steps complete"),
             completed,
@@ -387,8 +387,8 @@ struct AgentSessionFactualProjectionView: View {
         VStack(alignment: .leading, spacing: 6) {
             ForEach(plan.steps.prefix(8), id: \.id) { step in
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Image(systemName: step.status.lowercased().contains("complete") ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(step.status.lowercased().contains("complete") ? Color.bmuxAccentGreen : Color.bmuxTextTertiary)
+                    Image(systemName: AgentSessionFactualProjectionEvidenceRows.isPlanStepCompleted(step.status) ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(AgentSessionFactualProjectionEvidenceRows.isPlanStepCompleted(step.status) ? Color.bmuxAccentGreen : Color.bmuxTextTertiary)
                     Text(step.text)
                         .font(.system(size: 12))
                         .foregroundStyle(Color.bmuxTextSecondary)
