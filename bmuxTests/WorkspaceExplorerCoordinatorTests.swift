@@ -120,6 +120,7 @@ struct WorkspaceExplorerCoordinatorTests {
                 workspaceID: id.uuidString, sessions: [], nextCursor: nil) },
             clearArchive: { }
         )
+        #expect(model.scope.state == .open)
         await model.load()
         model.setGroupBy([.repository])
         model.scope.state = .all
