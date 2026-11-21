@@ -30,6 +30,14 @@ public struct ProvenanceCodingAgentProposedPlanRecord: Codable, Equatable, Senda
     }
 
     /// Creates a proposed-plan observation without inferring missing identity.
+    /// - Parameters:
+    ///   - sessionID: Session that owns the observation.
+    ///   - provider: Originating provider.
+    ///   - providerSessionID: Explicit provider session identity, if available.
+    ///   - providerTurnID: Explicit provider turn identity, if available.
+    ///   - providerItemID: Explicit provider item identity, if available.
+    ///   - text: Observed proposed prose.
+    ///   - truncated: Whether part of the provider prose was omitted.
     public init(sessionID: String, provider: String, providerSessionID: String? = nil,
                 providerTurnID: String? = nil, providerItemID: String? = nil,
                 text: String, truncated: Bool) {

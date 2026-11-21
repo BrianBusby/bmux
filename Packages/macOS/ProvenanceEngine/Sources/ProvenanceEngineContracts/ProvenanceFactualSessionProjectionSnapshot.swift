@@ -1,43 +1,5 @@
 import Foundation
 
-/// One observed proposal and its immutable ledger reference. It is not a checklist
-/// or a claim that the proposal is still current.
-public struct ProvenanceFactualProposedPlanObservation: Codable, Equatable, Sendable, Identifiable {
-    public let id: String
-    public let sequence: Int
-    public let timestamp: Date
-    public let proposal: ProvenanceCodingAgentProposedPlanRecord
-    /// Actual source metadata; absent in older snapshots.
-    public let source: ProvenanceSource?
-    public let origin: ProvenanceEvidenceOrigin?
-    public let eventSchemaVersion: Int?
-    public let confidence: ProvenanceConfidence?
-
-    public init(id: String, sequence: Int, timestamp: Date, proposal: ProvenanceCodingAgentProposedPlanRecord,
-                source: ProvenanceSource? = nil, origin: ProvenanceEvidenceOrigin? = nil, eventSchemaVersion: Int? = nil,
-                confidence: ProvenanceConfidence? = nil) {
-        self.id = id
-        self.sequence = sequence
-        self.timestamp = timestamp
-        self.proposal = proposal
-        self.source = source
-        self.origin = origin
-        self.eventSchemaVersion = eventSchemaVersion
-        self.confidence = confidence
-    }
-}
-
-/// Coverage of this bounded ledger read, not of upstream provider emission.
-public struct ProvenanceProposedPlanReadCoverage: Codable, Equatable, Sendable {
-    public let scanWindowTruncated: Bool
-    public let omittedObservations: Bool
-
-    public init(scanWindowTruncated: Bool, omittedObservations: Bool) {
-        self.scanWindowTruncated = scanWindowTruncated
-        self.omittedObservations = omittedObservations
-    }
-}
-
 /// Factual, deterministic projection snapshot for one coding-agent session.
 public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Sendable {
     /// Monotonically increasing ledger revision current at read time.
