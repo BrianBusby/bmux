@@ -234,4 +234,52 @@ extension CLIProvenanceCodexTranscriptImporterTests {
     }
 
 
+    @Test
+    func largeLiveTranscriptSkipsOversizedAndMalformedLinesAndResumes() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let transcriptURL = fixture.directoryURL.appendingPathComponent("large-session.jsonl")
+        let cursorStore = CLIProvenanceCodexTranscriptCursorStore(
+            directoryURL: fixture.directoryURL.appendingPathComponent("cursors")
+        )
+        let lines = try Self.codexTranscriptFixtureLines()
+        let oversized = String(repeating: "x", count: CLIProvenanceCodexTranscriptImporter.liveLineLimit + 1)
+        let firstText = lines[0] + "\n" + oversized + "\nnot-json\n" + lines[1] + "\n" + lines[2]
+        try firstText.write(to: transcriptURL, atomically: true, encoding: .utf8)
+        let tailer = CLIProvenanceCodexTranscriptTailer(
+            providerSessionID: "codex-session-1", workspaceID: nil,
+            surfaceID: nil, client: client, cursorStore: cursorStore
+        )
+        var skipped = 0
+        var last: CLIProvenanceCodexTranscriptTailer.Outcome?
+        for _ in 0..<100 {
+            let outcome = try await tailer.consume(at: transcriptURL)
+            skipped += outcome.importResult.skippedLines
+            last = outcome
+            if !outcome.importResult.hasMoreData { break }
+        }
+        let first = try #require(last)
+        #expect(!first.importResult.hasMoreData)
+        #expect(first.importResult.retainedPartialLine)
+        #expect(skipped == 2)
+        let cursor = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
+        #expect(cursor.lineNumber == 4)
+        #expect(cursor.byteOffset == UInt64((lines[0] + "\n" + oversized + "\nnot-json\n" + lines[1] + "\n").utf8.count))
+        #expect(cursor.byteOffset < first.offset)
+
+        try Self.appendText("\n", to: transcriptURL)
+        let restarted = CLIProvenanceCodexTranscriptTailer(
+            providerSessionID: "codex-session-1", workspaceID: nil,
+            surfaceID: nil, client: client, cursorStore: cursorStore
+        )
+        let recovered = try await restarted.consume(at: transcriptURL)
+        #expect(recovered.importResult.fileReport.prompts == 1)
+        let finalCursor = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
+        #expect(finalCursor.lineNumber == 5)
+        #expect(finalCursor.byteOffset == UInt64(firstText.utf8.count + 1))
+        #expect(try await CLIProvenanceCodexTranscriptImporter(client: client)
+            .importTranscripts(path: transcriptURL.path).eventsAppended == 0)
+    }
+
 }
