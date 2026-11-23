@@ -114,6 +114,11 @@ extension AgentSessionWebRendererCoordinator {
                 localized: "agentSession.web.smartSession.prompt",
                 defaultValue: "Prompt"
             ),
+            "smartSessionProposedPlans": String(localized: "agentSession.factual.proposedPlans", defaultValue: "Proposed plans"),
+            "smartSessionProposalUnavailable": String(localized: "agentSession.factual.proposalUnavailable", defaultValue: "Proposal history unavailable"),
+            "smartSessionProposalPartial": String(localized: "agentSession.factual.proposalPartial", defaultValue: "Proposal history is partial"),
+            "smartSessionProposalNone": String(localized: "agentSession.factual.proposalNone", defaultValue: "No proposal found in scanned records; source availability is unknown."),
+            "smartSessionProposalTruncated": String(localized: "agentSession.factual.proposalTruncated", defaultValue: "Proposal text was truncated."),
             "smartSessionPlan": String(
                 localized: "agentSession.web.smartSession.plan",
                 defaultValue: "Plan"
