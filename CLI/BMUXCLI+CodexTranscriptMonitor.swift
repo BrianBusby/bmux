@@ -27,11 +27,18 @@ extension BMUXCLI {
             homeDirectory: FileManager.default.homeDirectoryForCurrentUser
         ).appendingPathComponent("codex-transcript-cursors", isDirectory: true)
         let cursorStore = CLIProvenanceCodexTranscriptCursorStore(directoryURL: cursorDirectory)
-        let transcriptTailer = (try? provenanceEngineClient(databasePath: nil).client).map {
-            CLIProvenanceCodexTranscriptTailer(
+        let transcriptTailer: CLIProvenanceCodexTranscriptTailer?
+        do {
+            let provenanceClient = try provenanceEngineClient(databasePath: nil).client
+            transcriptTailer = CLIProvenanceCodexTranscriptTailer(
                 providerSessionID: sessionId, workspaceID: associationWorkspaceId,
-                surfaceID: surfaceId, client: $0, cursorStore: cursorStore
+                surfaceID: surfaceId, client: provenanceClient, cursorStore: cursorStore
             )
+        } catch {
+#if DEBUG
+            agentHookDebugLog("codexMonitor.provenanceInitFailed", socketPath: client.socketPath, env: env)
+#endif
+            transcriptTailer = nil
         }
         var lastReportedOffset: UInt64 = 0
         let deadline = Date().addingTimeInterval(4 * 60 * 60)
