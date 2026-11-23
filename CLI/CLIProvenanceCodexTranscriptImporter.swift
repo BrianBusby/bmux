@@ -214,6 +214,22 @@ struct CLIProvenanceCodexTranscriptImporter {
                   let itemType = Self.string(item["type"]) else {
                 return
             }
+            if itemType == "Plan" {
+                guard let threadID = Self.string(line.payload["thread_id"]),
+                      threadID == metadata.providerThreadID,
+                      let turnID = Self.string(line.payload["turn_id"]),
+                      Self.trimmedNonEmpty(turnID) == turnID, turnID.utf8.count <= 256,
+                      let itemID = Self.string(item["id"]),
+                      Self.trimmedNonEmpty(itemID) == itemID, itemID.utf8.count <= 256,
+                      let text = Self.string(item["text"]), Self.trimmedNonEmpty(text) != nil else {
+                    return
+                }
+                try await appendProposedPlan(
+                    metadata: metadata, line: line, providerTurnID: turnID,
+                    providerItemID: itemID, text: text, fileReport: &fileReport
+                )
+                return
+            }
             let providerTurnID = Self.firstNonEmpty(
                 Self.string(line.payload["turn_id"]),
                 context.currentProviderTurnID
