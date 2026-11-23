@@ -65,7 +65,7 @@ struct AgentSessionFactualProjectionTurnDetailView: View {
                 turnSnapshot.completedCommands.count
             )
             countBadge(
-                String(localized: "agentSession.factual.reasoning", defaultValue: "Reasoning"),
+                AgentSessionUpdatePresentation.countTitle,
                 turnSnapshot.visibleReasoningSummaries.count
             )
             countBadge(
@@ -102,7 +102,7 @@ struct AgentSessionFactualProjectionTurnDetailView: View {
         VStack(alignment: .leading, spacing: 5) {
             ForEach(summaries, id: \.id) { summary in
                 labeledText(
-                    String(localized: "agentSession.factual.reasoningSummary", defaultValue: "Reasoning summary"),
+                    AgentSessionUpdatePresentation.detailTitle,
                     summary.text,
                     lineLimit: nil
                 )
