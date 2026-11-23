@@ -46,7 +46,6 @@ struct AgentSessionFactualProjectionView: View {
 
     @Environment(\.colorScheme) private var colorScheme
     private var theme: MatteTheme { MatteTheme(colorScheme: colorScheme) }
-
     @State private var selectedPrimaryTabs: [UUID?: AgentSessionFactualProjectionMode] = [:]
 
     private var selectedPrimaryTab: AgentSessionFactualProjectionMode {
@@ -289,7 +288,7 @@ struct AgentSessionFactualProjectionView: View {
                 AgentSessionCurrentTurnOverview(turn: turn)
                 overviewDisclosure(
                     title: String(localized: "agentSession.factual.plan", defaultValue: "Plan & progress"),
-                    detail: turn.currentPlan.map { planSummary($0) } ?? String(localized: "agentSession.factual.noPlan", defaultValue: "No plan data observed."),
+                    detail: turn.currentPlan.map { planSummary($0) } ?? String(localized: "agentSession.factual.noChecklist", defaultValue: "No checklist data observed."),
                     isAvailable: turn.currentPlan != nil
                 ) {
                     if let plan = turn.currentPlan {
@@ -305,11 +304,8 @@ struct AgentSessionFactualProjectionView: View {
                 }
                 if !turn.visibleReasoningSummaries.isEmpty {
                     overviewDisclosure(
-                        title: String(localized: "agentSession.factual.blockersAndApproach", defaultValue: "Blockers & approach changes"),
-                        detail: String.localizedStringWithFormat(
-                            String(localized: "agentSession.factual.reasoningCount", defaultValue: "%d change(s)"),
-                            turn.visibleReasoningSummaries.count
-                        ),
+                        title: AgentSessionUpdatePresentation.overviewTitle,
+                        detail: AgentSessionUpdatePresentation.overviewCount(turn.visibleReasoningSummaries.count),
                         isAvailable: true
                     ) {
                         reasoningRows(turn.visibleReasoningSummaries)
@@ -319,6 +315,29 @@ struct AgentSessionFactualProjectionView: View {
                 mutedText(String(localized: "agentSession.factual.noTurns", defaultValue: "No turns observed."))
             }
 
+            do {
+                let coverage = snapshot.proposedPlanCoverage
+                let trusted = snapshot.proposedPlanObservations.filter {
+                    $0.source == .observed && $0.origin?.rawValue == "codex-transcript" && $0.eventSchemaVersion == 1
+                    && $0.proposal.provider == "codex" && $0.proposal.hasValidProviderIdentity
+                }
+                let isPartial = coverage.map {
+                    $0.scanWindowTruncated || $0.omittedObservations || trusted.count != snapshot.proposedPlanObservations.count
+                } ?? false
+                let detail = coverage == nil
+                    ? String(localized: "agentSession.factual.proposalUnavailable", defaultValue: "Proposal history unavailable")
+                    : isPartial
+                        ? String(localized: "agentSession.factual.proposalPartial", defaultValue: "Proposal history is partial")
+                        : String(localized: "agentSession.factual.recentObservations", defaultValue: "Recent observations")
+                overviewDisclosure(
+                    title: String(localized: "agentSession.factual.proposedPlans", defaultValue: "Proposed plans"),
+                    detail: detail,
+                    isAvailable: coverage != nil,
+                    icon: "doc.text"
+                ) {
+                    AgentSessionProposedPlanObservationsView(observations: trusted, isPartial: isPartial, detail: detail)
+                }
+            }
             section(String(localized: "agentSession.factual.priorTurns", defaultValue: "Previous turns")) {
                 ExpandedTurnHistoryView(items: AgentSessionFactualProjectionEvidenceRows.priorTurnItems(for: snapshot))
                     .id(snapshot.session.id)
@@ -344,7 +363,7 @@ struct AgentSessionFactualProjectionView: View {
         }
     }
 
-    private func overviewDisclosure<Content: View>(title: String, detail: String, isAvailable: Bool, @ViewBuilder content: () -> Content) -> some View {
+    private func overviewDisclosure<Content: View>(title: String, detail: String, isAvailable: Bool, icon: String? = nil, @ViewBuilder content: () -> Content) -> some View {
         let contentView = content()
         return DisclosureGroup {
             if isAvailable {
@@ -354,7 +373,7 @@ struct AgentSessionFactualProjectionView: View {
             }
         } label: {
             HStack(spacing: 10) {
-                Image(systemName: title == String(localized: "agentSession.factual.plan", defaultValue: "Plan & progress") ? "checklist" : "checkmark.circle")
+                Image(systemName: icon ?? (title == String(localized: "agentSession.factual.plan", defaultValue: "Plan & progress") ? "checklist" : "checkmark.circle"))
                     .foregroundStyle(Color.bmuxTextSecondary)
                 Text(title).foregroundStyle(Color.bmuxTextPrimary)
                 Spacer()
@@ -367,7 +386,7 @@ struct AgentSessionFactualProjectionView: View {
     }
 
     private func planSummary(_ plan: ProvenanceCodingAgentPlanUpdateRecord) -> String {
-        let completed = plan.steps.filter { $0.status.lowercased().contains("complete") }.count
+        let completed = plan.steps.filter { AgentSessionFactualProjectionEvidenceRows.isPlanStepCompleted($0.status) }.count
         return String.localizedStringWithFormat(
             String(localized: "agentSession.factual.planProgress", defaultValue: "%d of %d steps complete"),
             completed,
@@ -387,8 +406,8 @@ struct AgentSessionFactualProjectionView: View {
         VStack(alignment: .leading, spacing: 6) {
             ForEach(plan.steps.prefix(8), id: \.id) { step in
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Image(systemName: step.status.lowercased().contains("complete") ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(step.status.lowercased().contains("complete") ? Color.bmuxAccentGreen : Color.bmuxTextTertiary)
+                    Image(systemName: AgentSessionFactualProjectionEvidenceRows.isPlanStepCompleted(step.status) ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(AgentSessionFactualProjectionEvidenceRows.isPlanStepCompleted(step.status) ? Color.bmuxAccentGreen : Color.bmuxTextTertiary)
                     Text(step.text)
                         .font(.system(size: 12))
                         .foregroundStyle(Color.bmuxTextSecondary)
