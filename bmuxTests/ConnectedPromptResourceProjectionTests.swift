@@ -69,7 +69,7 @@ struct ConnectedPromptResourceProjectionTests {
         defer { fixture.remove() }
         await fixture.recorderGit.holdNextSnapshot()
         fixture.pendingText = "Review https://github.com/CompanyCam/companycam-mobile/pull/11713"
-        await fixture.service.start().value
+        await fixture.service.seedExistingSessions().value
         await fixture.service.waitForPromptEvidenceTasks()
         await fixture.recorderGit.waitUntilHeld()
         fixture.registry.noteResumeInitiated(
@@ -103,12 +103,12 @@ struct ConnectedPromptResourceProjectionTests {
         defer { fixture.remove() }
         await fixture.recorderGit.holdNextSnapshot()
         fixture.pendingText = "Review https://github.com/CompanyCam/companycam-mobile/pull/11713"
-        await fixture.service.start().value
+        await fixture.service.seedExistingSessions().value
         await fixture.service.waitForPromptEvidenceTasks()
         await fixture.recorderGit.waitUntilHeld()
         fixture.pendingText = "Review https://github.com/CompanyCam/companycam-mobile/pull/11714"
         fixture.offset = 2
-        await fixture.service.start().value
+        await fixture.service.seedExistingSessions().value
         await fixture.service.waitForPromptEvidenceTasks()
         await fixture.runner.waitForInvocation()
         await fixture.prRuntime.waitForSubmittedPullRequestMentionRefreshesForTesting()
@@ -132,7 +132,7 @@ struct ConnectedPromptResourceProjectionTests {
         defer { fixture.remove() }
         await fixture.recorderGit.holdNextSnapshot()
         fixture.pendingText = "Review https://github.com/CompanyCam/companycam-mobile/pull/11713"
-        await fixture.service.start().value
+        await fixture.service.seedExistingSessions().value
         await fixture.service.waitForPromptEvidenceTasks()
         await fixture.recorderGit.waitUntilHeld()
         // Enter the draining operation before stop removes the runtime's task handles.
@@ -246,7 +246,7 @@ struct ConnectedPromptResourceProjectionTests {
         )
         defer { fixture.registry.update(sessionID: fixture.record.sessionID) { $0.state = .ended } }
         service.recordSessionLifecycleChanges(with: fixture.runtime)
-        await service.start().value
+        await service.seedExistingSessions().value
         await service.waitForPromptEvidenceTasks()
         if !throughHook {
             #expect(await service.history(sessionID: fixture.record.sessionID, beforeSeq: nil, limit: 100) == nil)
@@ -376,7 +376,7 @@ struct ConnectedPromptResourceProjectionTests {
         func ingest(_ text: String, offset: TimeInterval = 1) async {
             pendingText = text
             self.offset = offset
-            await service.start().value
+            await service.seedExistingSessions().value
             await service.waitForPromptEvidenceTasks()
             await runtime.waitForBackgroundTasks()
         }

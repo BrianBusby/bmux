@@ -79,6 +79,7 @@
 		A9F20000000000000000000F /* AgentSessionPermissionMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F10000000000000000000F /* AgentSessionPermissionMode.swift */; };
 		A44000000000000000000001 /* AgentSessionPrimaryTabs.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3894B43624A44389E973B21 /* AgentSessionPrimaryTabs.swift */; };
 		A9E020000000000000000009 /* AgentSessionProcessStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E010000000000000000009 /* AgentSessionProcessStore.swift */; };
+		CE2F01020000000000000001 /* AgentSessionProposedPlanObservationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2F01020000000000000002 /* AgentSessionProposedPlanObservationsView.swift */; };
 		A9E020000000000000000001 /* AgentSessionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E010000000000000000001 /* AgentSessionProvider.swift */; };
 		A9E02000000000000000000F /* AgentSessionRendererKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E01000000000000000000F /* AgentSessionRendererKind.swift */; };
 		A9F200000000000000000010 /* AgentSessionRunningSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000010 /* AgentSessionRunningSession.swift */; };
@@ -95,6 +96,7 @@
 		A9E030000000000000000002 /* AgentSessionSocketSurfaceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E030000000000000000001 /* AgentSessionSocketSurfaceTests.swift */; };
 		A9F200000000000000000011 /* AgentSessionStartedSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000011 /* AgentSessionStartedSession.swift */; };
 		A9E02000000000000000000A /* AgentSessionStreamAccumulators.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E01000000000000000000A /* AgentSessionStreamAccumulators.swift */; };
+		A0B30104CBB44938A3CBB121 /* AgentSessionUpdatePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B30104CBB44938A3CBB122 /* AgentSessionUpdatePresentation.swift */; };
 		A9F200000000000000000012 /* AgentSessionWebHostGeometryState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F100000000000000000012 /* AgentSessionWebHostGeometryState.swift */; };
 		A9E02000000000000000000B /* AgentSessionWebHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E01000000000000000000B /* AgentSessionWebHostView.swift */; };
 		A9E020000000000000000003 /* AgentSessionWebRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E010000000000000000003 /* AgentSessionWebRenderer.swift */; };
@@ -635,6 +637,7 @@
 		A5D41205A1B2C3D4E5F60718 /* CLINotifyProcessTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5D41206A1B2C3D4E5F60718 /* CLINotifyProcessTestSupport.swift */; };
 		157C175B1C30F51B5A0B2FA3 /* CLIOutputChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6427199662BD7433C6FE8723 /* CLIOutputChannel.swift */; };
 		17A45C0D89B84E71A3B274A0 /* CLIProcessTestTimeout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 919DCAF7D0DD44A796A899FF /* CLIProcessTestTimeout.swift */; };
+		E1C83AF10000000000000001 /* CLIProvenanceCodexProposedPlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C83AF10000000000000002 /* CLIProvenanceCodexProposedPlanTests.swift */; };
 		D0C0A1B40000000000000001 /* CLIProvenanceCodexTranscriptCursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B40000000000000002 /* CLIProvenanceCodexTranscriptCursor.swift */; };
 		D0C0A1B40000000000000003 /* CLIProvenanceCodexTranscriptCursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B40000000000000002 /* CLIProvenanceCodexTranscriptCursor.swift */; };
 		D0C0A1B50000000000000001 /* CLIProvenanceCodexTranscriptCursorStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C0A1B50000000000000002 /* CLIProvenanceCodexTranscriptCursorStore.swift */; };
@@ -729,6 +732,8 @@
 		0E4B570EA4564121AE262C4C /* CodexStopTurnScopeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1183571B13194D39A4E2DEE6 /* CodexStopTurnScopeTests.swift */; };
 		C0DECAFE0000000000000001 /* CodexTeamsApprovalBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DECAFE0000000000000002 /* CodexTeamsApprovalBridge.swift */; };
 		C0DECAFE0000000000000003 /* CodexTeamsApprovalBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DECAFE0000000000000002 /* CodexTeamsApprovalBridge.swift */; };
+		A5F7C0D80000000000000004 /* CodexTranscriptLineFramer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F7C0D80000000000000006 /* CodexTranscriptLineFramer.swift */; };
+		A5F7C0D80000000000000005 /* CodexTranscriptLineFramer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F7C0D80000000000000006 /* CodexTranscriptLineFramer.swift */; };
 		A5F7C0D80000000000000001 /* CodexTranscriptSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F7C0D80000000000000002 /* CodexTranscriptSnapshot.swift */; };
 		A5F7C0D80000000000000003 /* CodexTranscriptSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F7C0D80000000000000002 /* CodexTranscriptSnapshot.swift */; };
 		53FC7079DACB4E62B9836B97 /* Color+WorkspaceReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CBA0E5F00AA40C29BA5700D /* Color+WorkspaceReference.swift */; };
@@ -2422,6 +2427,7 @@
 		A9F10000000000000000000F /* AgentSessionPermissionMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionPermissionMode.swift; sourceTree = "<group>"; };
 		A3894B43624A44389E973B21 /* AgentSessionPrimaryTabs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionPrimaryTabs.swift; sourceTree = "<group>"; };
 		A9E010000000000000000009 /* AgentSessionProcessStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionProcessStore.swift; sourceTree = "<group>"; };
+		CE2F01020000000000000002 /* AgentSessionProposedPlanObservationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionProposedPlanObservationsView.swift; sourceTree = "<group>"; };
 		A9E010000000000000000001 /* AgentSessionProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionProvider.swift; sourceTree = "<group>"; };
 		A9E01000000000000000000F /* AgentSessionRendererKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionRendererKind.swift; sourceTree = "<group>"; };
 		A9F100000000000000000010 /* AgentSessionRunningSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionRunningSession.swift; sourceTree = "<group>"; };
@@ -2438,6 +2444,7 @@
 		A9E030000000000000000001 /* AgentSessionSocketSurfaceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionSocketSurfaceTests.swift; sourceTree = "<group>"; };
 		A9F100000000000000000011 /* AgentSessionStartedSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionStartedSession.swift; sourceTree = "<group>"; };
 		A9E01000000000000000000A /* AgentSessionStreamAccumulators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionStreamAccumulators.swift; sourceTree = "<group>"; };
+		A0B30104CBB44938A3CBB122 /* AgentSessionUpdatePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSessionUpdatePresentation.swift; sourceTree = "<group>"; };
 		A9F100000000000000000012 /* AgentSessionWebHostGeometryState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionWebHostGeometryState.swift; sourceTree = "<group>"; };
 		A9E01000000000000000000B /* AgentSessionWebHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionWebHostView.swift; sourceTree = "<group>"; };
 		A9E010000000000000000003 /* AgentSessionWebRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panels/AgentSessionWebRenderer.swift; sourceTree = "<group>"; };
@@ -2915,6 +2922,7 @@
 		A5D41206A1B2C3D4E5F60718 /* CLINotifyProcessTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLINotifyProcessTestSupport.swift; sourceTree = "<group>"; };
 		6427199662BD7433C6FE8723 /* CLIOutputChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIOutputChannel.swift; sourceTree = "<group>"; };
 		919DCAF7D0DD44A796A899FF /* CLIProcessTestTimeout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProcessTestTimeout.swift"; sourceTree = "<group>"; };
+		E1C83AF10000000000000002 /* CLIProvenanceCodexProposedPlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIProvenanceCodexProposedPlanTests.swift; sourceTree = "<group>"; };
 		D0C0A1B40000000000000002 /* CLIProvenanceCodexTranscriptCursor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptCursor.swift"; sourceTree = "<group>"; };
 		D0C0A1B50000000000000002 /* CLIProvenanceCodexTranscriptCursorStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptCursorStore.swift"; sourceTree = "<group>"; };
 		D0C0A1B20000000000000002 /* CLIProvenanceCodexTranscriptFileIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLIProvenanceCodexTranscriptFileIdentity.swift"; sourceTree = "<group>"; };
@@ -2996,6 +3004,7 @@
 		F432108B1FD14EB0AB540516 /* CodexStopTranscriptFailureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopTranscriptFailureTests.swift; sourceTree = "<group>"; };
 		1183571B13194D39A4E2DEE6 /* CodexStopTurnScopeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexStopTurnScopeTests.swift; sourceTree = "<group>"; };
 		C0DECAFE0000000000000002 /* CodexTeamsApprovalBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexTeamsApprovalBridge.swift; sourceTree = "<group>"; };
+		A5F7C0D80000000000000006 /* CodexTranscriptLineFramer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexTranscriptLineFramer.swift; sourceTree = "<group>"; };
 		A5F7C0D80000000000000002 /* CodexTranscriptSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexTranscriptSnapshot.swift; sourceTree = "<group>"; };
 		7CBA0E5F00AA40C29BA5700D /* Color+WorkspaceReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sidebar/Color+WorkspaceReference.swift"; sourceTree = "<group>"; };
 		C4041001000000000000001A /* CommandClickFileOpenRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandClickFileOpenRouter.swift; sourceTree = "<group>"; };
@@ -5555,6 +5564,7 @@
 				D884128910C427B802738EEF /* AgentSessionFactualProjectionModeHost.swift */,
 				D938BFA54538DFF7283C66F3 /* AgentSessionCurrentTurnOverview.swift */,
 				CE2F01010000000000000002 /* AgentSessionFactualProjectionView.swift */,
+				CE2F01020000000000000002 /* AgentSessionProposedPlanObservationsView.swift */,
 
 				B0A501000000000000000002 /* BrowserOmnibarAppKitBridge.swift */,
 				B0A500000000000000000002 /* BrowserOmnibarPerformanceSupport.swift */,
@@ -5916,6 +5926,7 @@
 					C0DE70450000000000000002 /* CLIProvenanceCodexTranscriptImporter+Models.swift */,
 					D0C0A1B20000000000000002 /* CLIProvenanceCodexTranscriptFileIdentity.swift */,
 					A5F7C0D80000000000000002 /* CodexTranscriptSnapshot.swift */,
+					A5F7C0D80000000000000006 /* CodexTranscriptLineFramer.swift */,
 					D0C0A1B60000000000000002 /* CLIProvenanceCodexTranscriptTailer.swift */,
 					D0C0A1B50000000000000002 /* CLIProvenanceCodexTranscriptCursorStore.swift */,
 					D0C0A1B40000000000000002 /* CLIProvenanceCodexTranscriptCursor.swift */,
@@ -6618,6 +6629,7 @@
 					CE0E03170000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTests.swift */,
 					CE0E03180000000000000002 /* WorkProvenanceWorkspaceResourceDiscoveryTestSupport.swift */,
 					C0DE70600000000000000002 /* CLIProvenanceCodexTranscriptImporterTests.swift */,
+					E1C83AF10000000000000002 /* CLIProvenanceCodexProposedPlanTests.swift */,
 					D0C0A1B2B3B4B5B6B7B8B9C1 /* CLIProvenanceCodexTranscriptTailerTests.swift */,
 					C0DE70C00000000000000002 /* CLIProvenanceRetrievalFixture.swift */,
 					C0DE70610000000000000002 /* CLIProvenanceSessionOutcomeCommandTests.swift */,
@@ -6784,6 +6796,7 @@
 				CE2F02070000000000000002 /* AgentSessionSmartSessionSnapshot+CrossSessionAwareness.swift */,
 				CE2F02080000000000000002 /* AgentSessionSmartSessionSnapshot+RelatedSession.swift */,
 				CE2F02060000000000000002 /* AgentSessionSmartSessionSnapshot+SemanticPresentation.swift */,
+				A0B30104CBB44938A3CBB122 /* AgentSessionUpdatePresentation.swift */,
 				CE2F02020000000000000002 /* AgentSessionSmartSessionSnapshot.swift */,
 				CE2F02030000000000000002 /* AgentSessionSmartSessionStore.swift */,
 				CE0E01050000000000000002 /* WorkspaceDisplayCurrentStateFileWatcher.swift */,
@@ -7302,6 +7315,7 @@
 				A9F20000000000000000000F /* AgentSessionPermissionMode.swift in Sources */,
 				A44000000000000000000001 /* AgentSessionPrimaryTabs.swift in Sources */,
 				A9E020000000000000000009 /* AgentSessionProcessStore.swift in Sources */,
+				CE2F01020000000000000001 /* AgentSessionProposedPlanObservationsView.swift in Sources */,
 				A9E020000000000000000001 /* AgentSessionProvider.swift in Sources */,
 				A9E02000000000000000000F /* AgentSessionRendererKind.swift in Sources */,
 				A9F200000000000000000010 /* AgentSessionRunningSession.swift in Sources */,
@@ -7316,6 +7330,7 @@
 				CE2F02030000000000000001 /* AgentSessionSmartSessionStore.swift in Sources */,
 				A9F200000000000000000011 /* AgentSessionStartedSession.swift in Sources */,
 				A9E02000000000000000000A /* AgentSessionStreamAccumulators.swift in Sources */,
+				A0B30104CBB44938A3CBB121 /* AgentSessionUpdatePresentation.swift in Sources */,
 				A9F200000000000000000012 /* AgentSessionWebHostGeometryState.swift in Sources */,
 				A9E02000000000000000000B /* AgentSessionWebHostView.swift in Sources */,
 				A9E020000000000000000003 /* AgentSessionWebRenderer.swift in Sources */,
@@ -8622,6 +8637,7 @@
 				BC04C4B6740943C18496E710 /* CLISocketReceiver.swift in Sources */,
 				C12985000000000000000002 /* CLISocketSentryTelemetry.swift in Sources */,
 				C0DECAFE0000000000000001 /* CodexTeamsApprovalBridge.swift in Sources */,
+					A5F7C0D80000000000000004 /* CodexTranscriptLineFramer.swift in Sources */,
 					A5F7C0D80000000000000001 /* CodexTranscriptSnapshot.swift in Sources */,
 				FEEDC1A50000000000000001 /* FeedEventClassifier.swift in Sources */,
 				A5FB1308 /* JSONCObjectEditor+Remove.swift in Sources */,
@@ -8911,6 +8927,7 @@
 					A5D41205A1B2C3D4E5F60718 /* CLINotifyProcessTestSupport.swift in Sources */,
 				157C175B1C30F51B5A0B2FA3 /* CLIOutputChannel.swift in Sources */,
 				17A45C0D89B84E71A3B274A0 /* CLIProcessTestTimeout.swift in Sources */,
+					E1C83AF10000000000000001 /* CLIProvenanceCodexProposedPlanTests.swift in Sources */,
 					D0C0A1B40000000000000003 /* CLIProvenanceCodexTranscriptCursor.swift in Sources */,
 					D0C0A1B50000000000000003 /* CLIProvenanceCodexTranscriptCursorStore.swift in Sources */,
 					D0C0A1B20000000000000003 /* CLIProvenanceCodexTranscriptFileIdentity.swift in Sources */,
@@ -8967,6 +8984,7 @@
 				5351A89A303843779A715253 /* CodexStopTranscriptFailureTests.swift in Sources */,
 				0E4B570EA4564121AE262C4C /* CodexStopTurnScopeTests.swift in Sources */,
 				C0DECAFE0000000000000003 /* CodexTeamsApprovalBridge.swift in Sources */,
+					A5F7C0D80000000000000005 /* CodexTranscriptLineFramer.swift in Sources */,
 					A5F7C0D80000000000000003 /* CodexTranscriptSnapshot.swift in Sources */,
 				C0DEC0DE000000000000F302 /* CommandPaletteEmojiTitleSearchTests.swift in Sources */,
 				FC02A59739484E64B8100002 /* CommandPaletteEscapeExpiryFixture.swift in Sources */,
