@@ -641,6 +641,8 @@ The canonical public lifecycle helper is now:
 
 This API is producer-neutral. A producer may provide an explicit `sessionID` for a root session, a `parentSessionID` when the session belongs to another session, or both when it already knows the source-domain identity and relationship. The engine records session lifecycle evidence and derives session relationship Current State when a parent is supplied.
 
+A lifecycle transition must include a nonblank `sessionID` or `externalIdentityValue`; a parent ID, workspace, surface, or timestamp alone does not identify a child or root session. Missing identity returns `accepted: false` with a bounded, content-free error and no event or projection IDs. The helper does not retain the rejected evidence; producers should retain their own source and surface the failure. Previously stored records are unchanged, and older engine versions may still merge unidentified requests under a fallback identity.
+
 Compatibility: `recordSubsessionLifecycle(...)`, `ProvenanceSubsessionLifecycleRequest`, `ProvenanceSubsessionLifecycleResponse`, `ProvenanceSubsessionLifecyclePhase`, and `ProvenanceEngineCapability.recordSubsessionLifecycle` remain temporarily available as deprecated compatibility wrappers for early adopters. New producers must use the session lifecycle names.
 
 ## V1 Local Durability Contract
@@ -662,3 +664,14 @@ Producers own observing activity, assigning stable source/domain identities, emi
 Provenance Engine owns evidence validation, durable evidence storage, deterministic ordering and relationships, Current State derivation, projection rebuild, bounded provenance queries, and evidence attribution.
 
 Consumers own presentation, UI, CLI formatting, local fallback policy, live Git probing when explicitly outside persisted provenance, and product-specific interaction behavior.
+
+### Experimental ledger ID candidate operation
+
+The in-process SQLite client can optionally conform to `ProvenanceLedgerIDCandidateClient`.
+Its operation atomically reports an inserted event or that the ledger already has the
+requested event ID. The latter is only a candidate collision: it does not compare
+source evidence, establish matching payloads, or authorize a producer to advance a
+cursor. Other write and projection failures throw. Existing `appendEvent` behavior is
+unchanged, and clients must check for the opt-in protocol rather than assume support.
+This experimental contract has no transcript importer caller. It supplies no
+mixed-version writer fence, source identity, or replay/observation-health guarantee.

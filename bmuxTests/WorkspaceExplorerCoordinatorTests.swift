@@ -11,6 +11,18 @@ import Testing
 @Suite @MainActor
 struct WorkspaceExplorerCoordinatorTests {
     @Test
+    func sessionStatusReportsUnrecognizedValuesWithoutGuessing() {
+        let unknown = String(localized: "explorer.sessionStatus.unknown", defaultValue: "Unknown")
+        let withRaw = String(localized: "explorer.sessionStatus.unrecognized", defaultValue: "Unknown (%@)")
+        #expect(WorkspaceExplorerSessionStatus.label("ended") ==
+            String(localized: "explorer.sessionStatus.ended", defaultValue: "Ended"))
+        #expect(WorkspaceExplorerSessionStatus.label("") == unknown)
+        #expect(WorkspaceExplorerSessionStatus.label("  ") == unknown)
+        #expect(WorkspaceExplorerSessionStatus.label("Active") == String(format: withRaw, "Active"))
+        #expect(WorkspaceExplorerSessionStatus.label("future-state") == String(format: withRaw, "future-state"))
+    }
+
+    @Test
     func newWorkspaceAppearsWhileExplorerRefreshes() async {
         let first = WorkspaceExplorerLiveWorkspace(stableID: UUID(), runtimeID: UUID(),
             title: "Maple Street Roof Inspection", createdAt: .now,
