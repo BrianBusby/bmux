@@ -186,6 +186,9 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: unidentified_session_lifecycle_evidence_not_retained
+    # Identity-free transitions return an error; existing fallback records are not repaired.
+    status: open
   - id: outcome_historical_rebuild_and_mixed_writer
     # Full rebuild drops prior outcome revisions; older writers are not fenced.
     status: open

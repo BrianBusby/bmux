@@ -334,7 +334,7 @@ bmux producer responsibilities are limited to observing engineering activity, as
 Captured workflows today:
 
 - Worktree observation records Git repository/worktree/change-set/file-change evidence for bmux workspaces whose current directory is inside a Git repository.
-- Agent lifecycle recording records hook-derived Codex/Claude-style subagent lifecycle through `ProvenanceSessionLifecycleRequest`.
+- Agent lifecycle recording records hook-derived Codex/Claude-style subagent lifecycle through `ProvenanceSessionLifecycleRequest`. The engine rejects transitions without a session or external identity; bmux retains the bounded error for diagnostics, but does not persist the rejected event. Historical fallback records are not repaired.
 - Supported live sidecar execution telemetry sessions record broad
   session/provider/lifecycle presence through the public lifecycle recorder,
   with cwd used only to derive a worktree id when possible.
@@ -529,3 +529,13 @@ Future producers should follow bmux's adopted pattern:
 5. Read present-tense provenance through Current State APIs.
 6. Keep presentation and workflow policy in the consumer.
 7. Keep evidence interpretation and deterministic state in the engine.
+
+The Codex transcript diagnostic reports a retained monitor status, not proof of a
+currently connected observer or a current cursor. Its JSON `available` field refers
+to that status record; `report_freshness` describes its age, while
+`observation_health` and `cursor_currentness` are `unknown`. If no status record
+is available, numeric status fields and `retrying` are `null` rather than zero or
+false. This corrects the prior unversioned JSON behavior, so consumers expecting
+numbers must handle `null`. The skipped-line count is cumulative in the retained status and may count replayed
+observations again; it is not a unique line count. A nonzero count causes the
+diagnostic to request attention; no recovery is implied.
