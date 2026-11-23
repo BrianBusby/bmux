@@ -3,7 +3,13 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-  state: observation
+    id: session_visibility_baseline
+    title: Diagnose capture and establish baseline
+    state: draft
+    owner: shared
+    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/session-visibility-baseline
+    active_branch: session-visibility-baseline
+  state: active
 
 execution_telemetry:
   provider_neutral_contract: implemented
