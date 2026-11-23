@@ -612,7 +612,7 @@ struct AgentChatSessionRegistryLifecycleTests {
         try #"{"sessions":{"\#(sessionID)":{"workspaceId":"\#(workspaceID)","surfaceId":"\#(surfaceID)","cwd":"/Users/example/project","transcriptPath":"\#(transcriptURL.path)","pid":\#(livePID),"updatedAt":140}}}"#.write(to: hookDir.appendingPathComponent("codex-hook-sessions.json"), atomically: true, encoding: .utf8)
         var recorded = [(record: AgentChatSessionRecord, messages: [ChatMessage])]()
         let service = AgentChatTranscriptService(registry: AgentChatSessionRegistry(hookStore: AgentChatHookSessionStore(homeDirectory: home)), resolver: AgentChatTranscriptResolver(homeDirectory: home, environment: [:]), recordTranscriptUserPrompts: { recorded.append(($0, $1)) })
-        let startupTask = service.start()
+        let startupTask = service.seedExistingSessions()
         await startupTask.value
         await service.waitForPromptEvidenceTasks()
         let captured = try #require(recorded.first)

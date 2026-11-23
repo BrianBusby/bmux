@@ -170,3 +170,33 @@ freelist, revision-count, and ingestion-lag diagnostics during tagged dogfood.
 The retained compressed original is a recovery archive on the same volume;
 maintain a separate-volume backup if protection against volume failure is
 required.
+
+## Replay resource behavior
+
+Replay retains the existing event order, per-event outcome revisions, and
+transaction boundary. It visits session ledger evidence one row at a time,
+retains references only for records used by the outcome being projected, and
+releases transient Foundation allocations after each replayed event. This
+reduces transient memory; it does not impose a fixed bound on an outcome's
+supporting evidence, on SQLite transaction resources, or on replay duration.
+Large sessions and a single record with many evidence events can still be costly.
+
+A 2026-11-13 local synthetic stress run used 1,001 metadata-only events in one
+session, ten observations per distinct turn, on macOS 26.7.2 arm64. The prior
+implementation exceeded a 256 MiB process RSS guard after 4.68 seconds. The
+changed implementation completed the same fixture in 32.66 seconds at 114.1 MB
+peak process RSS. This is one warm-cache test, not a production bound or a
+latency percentile. Before-and-after canonical comparison of the same synthetic
+fixture containing prompts, plans, commands, file changes, and unrelated
+same-session evidence retained identical current and historical outcome rows.
+No production database was used.
+
+`ReplayMemoryProbeTests` is opt-in. For example, create a disposable seed under
+`/tmp/bmux-collision-...` with `BMUX_COLLISION_BENCH_STAGE=seed`,
+`BMUX_COLLISION_BENCH_COUNT=1000`, and `BMUX_COLLISION_BENCH_PATH`, then replay
+a copy with `BMUX_COLLISION_BENCH_STAGE=replay` and
+`BMUX_COLLISION_MAX_RSS_BYTES=268435456`. Run each stage in a separate
+`swift test --filter ReplayMemoryProbeTests` process. The DEBUG-only guard stops
+that test if its process exceeds the specified RSS; it is not a production
+limit. Avoid larger runs on shared hosts until CPU, memory, and disk limits are
+established.
