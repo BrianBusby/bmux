@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import ProvenanceEngineContracts
 
@@ -255,6 +256,37 @@ extension CLIProvenanceCodexTranscriptImporter {
             lastObservedAt: observedAt,
             lastTransitionAt: observedAt
         )
+    }
+
+    func appendProposedPlan(
+        metadata: TranscriptMetadata,
+        line: TranscriptLine,
+        providerTurnID: String,
+        providerItemID: String,
+        text: String,
+        fileReport: inout FileReport
+    ) async throws {
+        // Include the full content digest so conflicting observations stay in the ledger,
+        // while duplicate provider items and transcript replay share an event identity.
+        let digest = SHA256.hash(data: Data(text.utf8)).map { String(format: "%02x", $0) }.joined()
+        let identity = try JSONEncoder().encode([
+            metadata.sessionID, metadata.providerThreadID, providerTurnID, providerItemID, digest
+        ])
+        let observedAt = Self.dateFromMilliseconds(line.payload["completed_at_ms"])
+            ?? line.timestamp ?? metadata.timestamp
+        let proposal = ProvenanceCodingAgentProposedPlanRecord(
+            sessionID: metadata.sessionID, provider: "codex",
+            providerSessionID: metadata.providerThreadID, providerTurnID: providerTurnID,
+            providerItemID: providerItemID, text: Self.bounded(text, limit: Self.textLimit),
+            truncated: text.count > Self.textLimit
+        )
+        let event = provenanceEvent(
+            id: stableIDFactory.id(prefix: "event", value: "codex-proposed-plan-v1\n" + String(decoding: identity, as: UTF8.self)),
+            eventType: .codingAgentProposedPlanObserved, timestamp: observedAt,
+            sessionID: metadata.sessionID, gitContext: nil, confidence: .high,
+            payload: ProvenanceEventPayload(codingAgentProposedPlan: proposal)
+        )
+        try await append(event, stat: \.proposedPlans, fileReport: &fileReport)
     }
 
     func appendPlan(
