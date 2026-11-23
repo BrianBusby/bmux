@@ -54,7 +54,7 @@ struct SessionOutcomeProjectionTests {
         #expect(outcome.sessionID == fixture.session.id)
         #expect(outcome.session == fixture.session)
         #expect(outcome.projection.projectionRuleID == "deterministic_session_outcome")
-        #expect(outcome.projection.projectionRuleVersion == "1")
+        #expect(outcome.projection.projectionRuleVersion == "2")
         #expect(outcome.projection.sourceEvidenceWatermark == fixture.normalEvents.count)
         #expect(outcome.constituentTurns.map(\.turnID) == [fixture.turnCompleted.id])
         #expect(outcome.constituentTurns.first?.turnOutcomeRevisionID == turnOutcome.projection.revisionID)

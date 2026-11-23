@@ -15,6 +15,7 @@ extension CLIProvenanceCodexTranscriptImporter {
         var turns: Int = 0
         var prompts: Int = 0
         var plans: Int = 0
+        var proposedPlans: Int = 0
         var commands: Int = 0
         var reasoningSummaries: Int = 0
         var assistantMessages: Int = 0
@@ -38,6 +39,7 @@ extension CLIProvenanceCodexTranscriptImporter {
                     "turns": turns,
                     "prompts": prompts,
                     "plans": plans,
+                    "proposed_plans": proposedPlans,
                     "commands": commands,
                     "reasoning_summaries": reasoningSummaries,
                     "assistant_messages": assistantMessages,
@@ -58,6 +60,7 @@ extension CLIProvenanceCodexTranscriptImporter {
             turns += fileReport.turns
             prompts += fileReport.prompts
             plans += fileReport.plans
+            proposedPlans += fileReport.proposedPlans
             commands += fileReport.commands
             reasoningSummaries += fileReport.reasoningSummaries
             assistantMessages += fileReport.assistantMessages
@@ -91,6 +94,7 @@ extension CLIProvenanceCodexTranscriptImporter {
         var turns: Int = 0
         var prompts: Int = 0
         var plans: Int = 0
+        var proposedPlans: Int = 0
         var commands: Int = 0
         var reasoningSummaries: Int = 0
         var assistantMessages: Int = 0
