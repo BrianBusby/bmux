@@ -3,7 +3,7 @@ import ProvenanceEngineContracts
 
 extension ProvenanceSQLiteRepository {
     static let turnOutcomeRuleID = "deterministic_turn_outcome"
-    static let turnOutcomeRuleVersion = "2"
+    static let turnOutcomeRuleVersion = "3"
     static let turnOutcomeCommandRuleVersion = "1"
 
     func refreshTurnOutcomes(
