@@ -79,28 +79,25 @@ final class BrowserOmnibarPerformanceSupportTests: XCTestCase {
             clock: clock
         )
         let staleRefresh = expectation(description: "queued refresh emitted")
-        var shouldProcessQueuedRefresh: Bool?
-
-        scheduler.scheduleRefresh()
-        await waitForPendingSleep(on: clock)
-        await clock.advance()
-        await Task.yield()
-        await Task.yield()
-
-        scheduler.cancelPendingRefresh()
+        var queuedGeneration: UInt64?
 
         let listener = Task { @MainActor in
             var iterator = scheduler.refreshStream.makeAsyncIterator()
             guard let generation = await iterator.next() else { return }
-            shouldProcessQueuedRefresh = scheduler.shouldProcessRefresh(generation)
+            queuedGeneration = generation
             staleRefresh.fulfill()
         }
 
+        scheduler.scheduleRefresh()
+        await waitForPendingSleep(on: clock)
+        await clock.advance()
         await fulfillment(of: [staleRefresh], timeout: 1)
+        scheduler.cancelPendingRefresh()
         listener.cancel()
+        await listener.value
 
         XCTAssertEqual(
-            shouldProcessQueuedRefresh,
+            queuedGeneration.map { scheduler.shouldProcessRefresh($0) },
             false,
             "A refresh already queued before cancellation should not run after Escape, hide, or focus loss."
         )

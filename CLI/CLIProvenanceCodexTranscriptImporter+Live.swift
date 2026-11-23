@@ -94,42 +94,37 @@ extension CLIProvenanceCodexTranscriptImporter {
         state: inout LiveImportState
     ) -> (lines: [TranscriptLine], skippedLines: Int) {
         guard !appendedData.isEmpty else { return ([], 0) }
-        var buffer = [UInt8](state.pendingFragment)
+        var framer = CodexTranscriptLineFramer(
+            maximumLineBytes: Self.liveLineLimit,
+            fragment: state.pendingFragment,
+            discardingOversizedLine: state.discardingOversizedLine,
+            nextLineNumber: state.nextLineNumber,
+            lastCompletedLineOffset: state.lastCompletedLineOffset
+        )
         var lines: [TranscriptLine] = []
         var skippedLines = 0
-        for (index, byte) in appendedData.enumerated() {
-            if byte == 0x0a {
-                if state.discardingOversizedLine {
-                    skippedLines += 1
-                    state.discardingOversizedLine = false
-                } else if !buffer.isEmpty {
-                    if let text = String(bytes: buffer, encoding: .utf8) {
-                        if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            if let line = try? transcriptLine(
-                                from: text, lineNumber: state.nextLineNumber, path: path
-                            ) {
-                                lines.append(line)
-                            } else {
-                                skippedLines += 1
-                            }
+        framer.append(appendedData, startOffset: state.offset) { framed, lineNumber in
+            switch framed {
+            case .oversized:
+                skippedLines += 1
+            case .bytes(let bytes):
+                if let text = String(data: bytes, encoding: .utf8) {
+                    if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        if let line = try? transcriptLine(from: text, lineNumber: lineNumber, path: path) {
+                            lines.append(line)
+                        } else {
+                            skippedLines += 1
                         }
-                    } else {
-                        skippedLines += 1
                     }
-                }
-                buffer.removeAll(keepingCapacity: true)
-                state.nextLineNumber += 1
-                state.lastCompletedLineOffset = state.offset + UInt64(index + 1)
-            } else if !state.discardingOversizedLine {
-                if buffer.count < Self.liveLineLimit {
-                    buffer.append(byte)
                 } else {
-                    buffer.removeAll(keepingCapacity: false)
-                    state.discardingOversizedLine = true
+                    skippedLines += 1
                 }
             }
         }
-        state.pendingFragment = Data(buffer)
+        state.pendingFragment = framer.fragment
+        state.discardingOversizedLine = framer.discardingOversizedLine
+        state.nextLineNumber = framer.nextLineNumber
+        state.lastCompletedLineOffset = framer.lastCompletedLineOffset
         return (lines, skippedLines)
     }
 

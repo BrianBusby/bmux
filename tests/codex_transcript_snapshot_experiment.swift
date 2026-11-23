@@ -14,6 +14,8 @@ struct CodexTranscriptSnapshotExperimentTests {
             }
             return
         }
+        testIncrementalFraming()
+        testFramingEmptyRunsAndThrows()
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("bmux-snapshot-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -108,5 +110,72 @@ struct CodexTranscriptSnapshotExperimentTests {
         try Data(repeating: 0x20, count: CodexTranscriptSnapshot.maxBytes + 1).write(to: path)
         unknown(CodexTranscriptSnapshot.capture(path: path, expectedSessionID: "session-a"), "oversize")
         print("snapshot experiment: 22 cases passed")
+    }
+
+    private static func testFramingEmptyRunsAndThrows() {
+        enum Stop: Error { case requested }
+        var framer = CodexTranscriptLineFramer(maximumLineBytes: 3)
+        var lines: [String] = []
+        framer.append(Data("a\n\n\nxy".utf8), startOffset: 10) { line, number in
+            if case let .bytes(bytes) = line {
+                lines.append("\(number):\(String(decoding: bytes, as: UTF8.self))")
+            }
+        }
+        precondition(lines == ["1:a"])
+        precondition(framer.fragment == Data("xy".utf8) && framer.nextLineNumber == 4)
+        precondition(framer.lastCompletedLineOffset == 14)
+        do {
+            try framer.append(Data("z\n".utf8), startOffset: 16) { _, number in
+                precondition(number == 4)
+                throw Stop.requested
+            }
+            fatalError("callback must throw")
+        } catch Stop.requested {
+            precondition(framer.fragment == Data("xy".utf8))
+            precondition(framer.nextLineNumber == 4 && framer.lastCompletedLineOffset == 14)
+        } catch {
+            fatalError("unexpected callback error")
+        }
+        // A throwing callback leaves partial state; callers must discard the framer.
+        var oversized = CodexTranscriptLineFramer(maximumLineBytes: 3)
+        var results: [Int] = []
+        oversized.append(Data("ab".utf8), startOffset: 0) { _, _ in fatalError("partial line") }
+        oversized.append(Data("cd\n\nq\n".utf8), startOffset: 2) { line, number in
+            switch line {
+            case .oversized: results.append(-number)
+            case .bytes: results.append(number)
+            }
+        }
+        precondition(results == [-1, 3])
+        precondition(oversized.nextLineNumber == 4 && oversized.lastCompletedLineOffset == 8)
+    }
+
+    private static func testIncrementalFraming() {
+        var framer = CodexTranscriptLineFramer(maximumLineBytes: 4)
+        var lines: [(String, Int)] = []
+        func record(_ line: CodexTranscriptLineFramer.Line, _ number: Int) {
+            switch line {
+            case .bytes(let bytes): lines.append((String(decoding: bytes, as: UTF8.self), number))
+            case .oversized: lines.append(("oversized", number))
+            }
+        }
+        framer.append(Data([0x61, 0x0d, 0x0a, 0xc3]), startOffset: 0, onLine: record)
+        precondition(framer.fragment == Data([0xc3]) && framer.lastCompletedLineOffset == 3)
+        framer.append(Data([0xa9, 0x0a, 0x78, 0x78, 0x78, 0x78, 0x78]), startOffset: 4, onLine: record)
+        precondition(framer.discardingOversizedLine && framer.lastCompletedLineOffset == 6)
+        framer.append(Data([0x0a, 0x0a, 0x7a, 0x0a]), startOffset: 11, onLine: record)
+        precondition(lines.map(\.0) == ["a\r", "é", "oversized", "z"])
+        precondition(lines.map(\.1) == [1, 2, 3, 5])
+        precondition(framer.fragment.isEmpty && framer.nextLineNumber == 6 && framer.lastCompletedLineOffset == 15)
+
+        var atLimit = CodexTranscriptLineFramer(maximumLineBytes: 4)
+        var result: [String] = []
+        atLimit.append(Data("xxxx\nyyyyy\n".utf8), startOffset: 0) { line, _ in
+            switch line {
+            case .bytes(let bytes): result.append(String(decoding: bytes, as: UTF8.self))
+            case .oversized: result.append("oversized")
+            }
+        }
+        precondition(result == ["xxxx", "oversized"])
     }
 }
