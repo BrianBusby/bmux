@@ -219,6 +219,17 @@ struct AgentSessionFactualProjectionView: View {
         switch result {
         case .available(let snapshot):
             availableContent(snapshot)
+        case let .stale(snapshot, lastSuccessfulReadAt):
+            VStack(alignment: .leading, spacing: 12) {
+                Text(String.localizedStringWithFormat(
+                    String(localized: "agentSession.factual.lastSuccessfulRead", defaultValue:
+                        "Could not refresh. Last successful read: %@"),
+                    lastSuccessfulReadAt.formatted(date: .abbreviated, time: .standard)
+                ))
+                .font(.system(size: 12))
+                .foregroundStyle(Color.bmuxTextSecondary)
+                availableContent(snapshot)
+            }
         case .missingSession:
             emptyMessage(String(
                 localized: "agentSession.factual.noSession",
@@ -274,6 +285,11 @@ struct AgentSessionFactualProjectionView: View {
                 localized: "agentSession.factual.notFound",
                 defaultValue: "No factual session projection was found for the linked PE session."
             ))
+        case .refreshing:
+            emptyMessage(String(
+                localized: "agentSession.factual.refreshing",
+                defaultValue: "Refreshing factual session data…"
+            ))
         case .failed:
             emptyMessage(String(
                 localized: "agentSession.factual.failed",
@@ -292,7 +308,7 @@ struct AgentSessionFactualProjectionView: View {
                     isAvailable: turn.currentPlan != nil
                 ) {
                     if let plan = turn.currentPlan {
-                        planRows(plan)
+                        AgentSessionPlanStepsView(plan: plan).id(turn.turn.id)
                     }
                 }
                 overviewDisclosure(
@@ -344,19 +360,8 @@ struct AgentSessionFactualProjectionView: View {
             }
 
             DisclosureGroup(String(localized: "agentSession.factual.identity", defaultValue: "Session details")) {
-                VStack(alignment: .leading, spacing: 8) {
-                    factRow(String(localized: "agentSession.factual.sessionID", defaultValue: "Session ID"), snapshot.session.id)
-                    factRow(String(localized: "agentSession.factual.provider", defaultValue: "Provider"), snapshot.session.agentKind)
-                    factRow(String(localized: "agentSession.factual.status", defaultValue: "Status"), snapshot.session.status)
-                    factRow(String(localized: "agentSession.factual.cwd", defaultValue: "Directory"), snapshot.session.cwd)
-                    factRow(String(localized: "agentSession.factual.revision", defaultValue: "Revision"), snapshot.revision.map(String.init))
-                    if !snapshot.providerThreadIdentities.isEmpty {
-                        ForEach(snapshot.providerThreadIdentities, id: \.threadID) { thread in
-                            threadRow(thread)
-                        }
-                    }
-                }
-                .padding(.top, 8)
+                AgentSessionIdentityDetailsView(snapshot: snapshot)
+                    .padding(.top, 8)
             }
             .font(.system(size: 12, weight: .medium))
             .foregroundStyle(Color.bmuxTextSecondary)
@@ -402,21 +407,6 @@ struct AgentSessionFactualProjectionView: View {
         )
     }
 
-    private func planRows(_ plan: ProvenanceCodingAgentPlanUpdateRecord) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            ForEach(plan.steps.prefix(8), id: \.id) { step in
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Image(systemName: AgentSessionFactualProjectionEvidenceRows.isPlanStepCompleted(step.status) ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(AgentSessionFactualProjectionEvidenceRows.isPlanStepCompleted(step.status) ? Color.bmuxAccentGreen : Color.bmuxTextTertiary)
-                    Text(step.text)
-                        .font(.system(size: 12))
-                        .foregroundStyle(Color.bmuxTextSecondary)
-                        .lineLimit(2)
-                }
-            }
-        }
-    }
-
     private func reasoningRows(_ summaries: [ProvenanceCodingAgentReasoningSummaryRecord]) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             ForEach(summaries, id: \.id) { summary in
@@ -439,41 +429,6 @@ struct AgentSessionFactualProjectionView: View {
         }
     }
 
-    private func threadRow(_ thread: ProvenanceFactualSessionProjectionProviderThreadIdentity) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            factRow(String(localized: "agentSession.factual.providerThreadID", defaultValue: "Provider thread ID"), thread.providerThreadID)
-            factRow(String(localized: "agentSession.factual.peThreadID", defaultValue: "PE thread ID"), thread.threadID)
-            HStack(spacing: 8) {
-                badge(thread.provider)
-                badge(thread.confidence.rawValue)
-                if let worktreeID = thread.worktreeID {
-                    badge(worktreeID)
-                }
-            }
-        }
-    }
-
-    private func factRow(_ label: String, _ value: String?) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Text(label)
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-                .frame(width: 84, alignment: .leading)
-            Text(nonEmpty(value))
-                .font(.system(size: 12))
-                .lineLimit(2)
-                .truncationMode(.middle)
-        }
-    }
-
-    private func badge(_ text: String) -> some View {
-        Text(nonEmpty(text))
-            .font(.system(size: 10, weight: .medium))
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(.secondary.opacity(0.12), in: Capsule())
-    }
-
     private func mutedText(_ text: String) -> some View {
         Text(text)
             .font(.system(size: 12))
@@ -486,11 +441,5 @@ struct AgentSessionFactualProjectionView: View {
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             .padding(.top, 48)
-    }
-
-    private func nonEmpty(_ value: String?) -> String {
-        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if !trimmed.isEmpty { return trimmed }
-        return String(localized: "agentSession.factual.unknown", defaultValue: "Unknown")
     }
 }
