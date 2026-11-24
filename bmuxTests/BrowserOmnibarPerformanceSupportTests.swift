@@ -40,21 +40,29 @@ struct OmnibarSuggestionRefreshSchedulerTests {
     @Test func cancelsPendingRefresh() async throws {
         let clock = ManualOmnibarSuggestionRefreshClock()
         let scheduler = OmnibarSuggestionRefreshScheduler(debounceDelay: .milliseconds(40), clock: clock)
-        var refreshCount = 0
-        let listener = Task { @MainActor in
-            for await _ in scheduler.refreshStream { refreshCount += 1 }
-        }
-        defer { listener.cancel() }
+        let stream = scheduler.refreshStream
 
         scheduler.scheduleRefresh()
         try await waitForPendingSleep(on: clock)
         scheduler.cancelPendingRefresh()
+        try await withDeadline {
+            while await clock.cancelledSleepCount == 0 {
+                try Task.checkCancellation()
+                await Task.yield()
+            }
+        }
+
+        // A fresh refresh confirms the scheduler still works and exposes any older
+        // refresh already buffered before the newly scheduled generation.
+        scheduler.scheduleRefresh()
+        try await waitForPendingSleep(on: clock)
         await clock.advance()
-        await Task.yield()
-        await Task.yield()
-        listener.cancel()
-        await listener.value
-        #expect(refreshCount == 0)
+        let generation = try #require(try await withDeadline {
+            var iterator = stream.makeAsyncIterator()
+            return await iterator.next()
+        })
+        #expect(generation == 3)
+        #expect(scheduler.shouldProcessRefresh(generation))
     }
 
     @Test func invalidatesQueuedRefreshOnCancel() async throws {
@@ -260,6 +268,7 @@ final class BrowserOmnibarPerformanceSupportTests: XCTestCase {
 
 private actor ManualOmnibarSuggestionRefreshClock: OmnibarSuggestionRefreshClock {
     private var continuations: [UUID: CheckedContinuation<Void, Error>] = [:]
+    private(set) var cancelledSleepCount = 0
     private var pendingSleepWaiters: [UUID: CheckedContinuation<Void, Error>] = [:]
     var pendingWaiterCount: Int { pendingSleepWaiters.count }
 
@@ -303,7 +312,9 @@ private actor ManualOmnibarSuggestionRefreshClock: OmnibarSuggestionRefreshClock
     }
 
     private func cancel(_ id: UUID) {
-        continuations.removeValue(forKey: id)?.resume(throwing: CancellationError())
+        guard let continuation = continuations.removeValue(forKey: id) else { return }
+        cancelledSleepCount += 1
+        continuation.resume(throwing: CancellationError())
     }
 
     private func resumePendingSleepWaiters() {
