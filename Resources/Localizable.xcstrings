@@ -5395,6 +5395,29 @@
         }
       }
     },
+    "agentSession.factual.refreshing": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Refreshing factual session data…" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "セッションの事実データを更新しています…" } }
+      }
+    },
+    "agentSession.factual.lastSuccessfulRead": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not refresh. Last successful read: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新できませんでした。最後に読み込めた日時：%@"
+          }
+        }
+      }
+    },
     "agentSession.factual.noSession": {
       "extractionState": "manual",
       "localizations": {
@@ -107611,6 +107634,244 @@
           "stringUnit": {
             "state": "translated",
             "value": "セッション履歴"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session status: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッションの状態：%@"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.active": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "進行中"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.cancelled": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャンセル済み"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.closed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "終了"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.completed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ended"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "終了"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.ended": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ended"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "終了"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "失敗"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.incomplete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incomplete"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未完了"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.interrupted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interrupted"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "中断"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.running": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "実行中"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.started": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Started"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開始済み"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.stopped": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stopped"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停止"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.unrecognized": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown (%@)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不明（%@）"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不明"
           }
         }
       }
@@ -241520,13 +241781,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Codex transcript %@: cursor %llu, unread %llu bytes, skipped %d lines, failures %d"
+            "value": "Codex transcript %@: cursor %llu, unread %llu bytes, skipped-line observations %d (replay may be included), failures %d"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Codex トランスクリプト %@: カーソル %llu、未読 %llu バイト、スキップ %d 行、失敗 %d 件"
+            "value": "Codex トランスクリプト %@: カーソル %llu、未読 %llu バイト、スキップされた行の観測 %d 件（再読み込みを含む場合があります）、失敗 %d 件"
           }
         }
       }
@@ -241537,15 +241798,36 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Needs attention: retrying, stale, or more than five minutes behind"
+            "value": "Needs attention: the last report is unavailable, stale, retrying, has an error or skipped lines, or has a backlog over five minutes old"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "要確認: 再試行中、更新停止、または 5 分以上の遅延があります"
+            "value": "要確認: 最後の報告が利用できないか古い、再試行中、エラーや行のスキップ、または 5 分を超える未処理データがあります"
           }
         }
+      }
+    },
+    "cli.provenance.diagnostics.codexTranscript.noReport": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No retained monitor report for Codex transcript %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Codex トランスクリプト %@ の保存された監視報告はありません" } }
+      }
+    },
+    "cli.provenance.diagnostics.codexTranscript.reportRecent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Last monitor report: no current error or retry, skipped lines, or prolonged backlog reported" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "最後の監視報告: 現在のエラーや再試行、行のスキップ、長時間の未処理データは報告されていません" } }
+      }
+    },
+    "cli.provenance.diagnostics.codexTranscript.observationUnknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Current cursor position and observation connection are unknown" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "現在のカーソル位置と監視接続の状態は不明です" } }
       }
     },
     "cli.provenance.diagnostics.codexTranscript.healthy": {
@@ -246064,6 +246346,48 @@
             "value": "表示を減らす"
           }
         }
+      }
+    },
+    "agentSession.factual.plan.status.pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Pending" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "未着手" } }
+      }
+    },
+    "agentSession.factual.plan.status.inProgress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "In progress" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "進行中" } }
+      }
+    },
+    "agentSession.factual.plan.status.completed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Completed" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "完了" } }
+      }
+    },
+    "agentSession.factual.plan.previous": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Previous steps" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "前の手順" } }
+      }
+    },
+    "agentSession.factual.plan.next": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Next steps" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "次の手順" } }
+      }
+    },
+    "agentSession.factual.plan.page": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d–%d of %d steps" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%3$d 手順中 %1$d–%2$d" } }
       }
     },
     "agentSession.expanded.showMore": {

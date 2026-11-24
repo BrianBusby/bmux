@@ -22,17 +22,22 @@ extension BMUXCLI {
         let now = Date()
         let lagSeconds = status?.firstBacklogAt.map { max(0, Int(now.timeIntervalSince($0))) }
         let stale = status.map { now.timeIntervalSince($0.updatedAt) > 300 } ?? true
-        let needsAttention = stale || status?.retrying == true || (lagSeconds ?? 0) > 300
+        let needsAttention = stale || status?.retrying == true || status?.lastErrorKind != nil || (status?.skippedLines ?? 0) > 0 || (lagSeconds ?? 0) > 300
+        let reportFreshness = status == nil ? "unavailable" : (stale ? "stale" : "recent")
         let formatter = ISO8601DateFormatter()
         let payload: [String: Any] = [
             "provider_session_id": sessionID,
             "available": status != nil,
-            "cursor_offset": status?.cursorOffset ?? 0,
-            "read_offset": status?.readOffset ?? 0,
-            "unread_bytes": status?.unreadBytes ?? 0,
-            "skipped_lines": status?.skippedLines ?? 0,
-            "append_or_read_failures": status?.appendFailures ?? 0,
-            "retrying": status?.retrying ?? false,
+            "report_freshness": reportFreshness,
+            "cursor_currentness": "unknown",
+            "observation_health": "unknown",
+            "cursor_offset": status?.cursorOffset as Any? ?? NSNull(),
+            "read_offset": status?.readOffset as Any? ?? NSNull(),
+            "unread_bytes": status?.unreadBytes as Any? ?? NSNull(),
+            "skipped_lines": status?.skippedLines as Any? ?? NSNull(),
+            "skipped_lines_semantics": "cumulative_observations_may_include_replay",
+            "append_or_read_failures": status?.appendFailures as Any? ?? NSNull(),
+            "retrying": status?.retrying as Any? ?? NSNull(),
             "last_error_kind": status?.lastErrorKind as Any? ?? NSNull(),
             "last_progress_at": status?.lastProgressAt.map { formatter.string(from: $0) } as Any? ?? NSNull(),
             "last_checked_at": status.map { formatter.string(from: $0.updatedAt) } as Any? ?? NSNull(),
@@ -43,19 +48,33 @@ extension BMUXCLI {
             print(jsonString(payload))
             return
         }
-        let summary = String.localizedStringWithFormat(
-            String(
-                localized: "cli.provenance.diagnostics.codexTranscript.summary",
-                defaultValue: "Codex transcript %@: cursor %llu, unread %llu bytes, skipped %d lines, failures %d"
-            ),
-            sessionID, status?.cursorOffset ?? 0, status?.unreadBytes ?? 0,
-            status?.skippedLines ?? 0, status?.appendFailures ?? 0
-        )
+        let summary: String
+        if let status {
+            summary = String.localizedStringWithFormat(
+                String(
+                    localized: "cli.provenance.diagnostics.codexTranscript.summary",
+                    defaultValue: "Codex transcript %@: cursor %llu, unread %llu bytes, skipped-line observations %d (replay may be included), failures %d"
+                ),
+                sessionID, status.cursorOffset, status.unreadBytes, status.skippedLines, status.appendFailures
+            )
+        } else {
+            summary = String.localizedStringWithFormat(
+                String(
+                    localized: "cli.provenance.diagnostics.codexTranscript.noReport",
+                    defaultValue: "No retained monitor report for Codex transcript %@"
+                ),
+                sessionID
+            )
+        }
         let health = needsAttention
             ? String(localized: "cli.provenance.diagnostics.codexTranscript.attention",
-                     defaultValue: "Needs attention: retrying, stale, or more than five minutes behind")
-            : String(localized: "cli.provenance.diagnostics.codexTranscript.healthy",
-                     defaultValue: "Healthy: cursor is current")
-        print(summary + "\n" + health)
+                     defaultValue: "Needs attention: the last report is unavailable, stale, retrying, has an error or skipped lines, or has a backlog over five minutes old")
+            : String(localized: "cli.provenance.diagnostics.codexTranscript.reportRecent",
+                     defaultValue: "Last monitor report: no current error or retry, skipped lines, or prolonged backlog reported")
+        let uncertainty = String(
+            localized: "cli.provenance.diagnostics.codexTranscript.observationUnknown",
+            defaultValue: "Current cursor position and observation connection are unknown"
+        )
+        print(summary + "\n" + health + "\n" + uncertainty)
     }
 }
