@@ -11,6 +11,7 @@ session-outcome-only availability check covers plan_items; its current contract
 has no separate field availability for actions_completed. Matching CLI hashes
 and schema version do not attest source revision or rule out replacement ABA.
 `unverified_plan_evidence` is a proposed reason code, not a shipped contract.
+Expected failures describe a proposed contract and may change as PE evolves.
 Set BMUX_RUN_BASELINE_CHARACTERIZATION=1 only to reproduce the old accepted-plan
 projection; a safe reported-but-unknown-current contract need not satisfy it.
 """
