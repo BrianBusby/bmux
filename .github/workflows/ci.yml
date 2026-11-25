@@ -1071,7 +1071,9 @@ jobs:
     # linux-preflight itself succeeds. Require the direct needs explicitly.
     if: ${{ !cancelled() && needs.changes.result == 'success' && needs.linux-preflight.result == 'success' && needs.changes.outputs.macos == 'true' }}
     runs-on: ${{ vars.MACOS_RUNNER_15 || 'warp-macos-15-arm64-6x' }}
-    timeout-minutes: 40
+    # Setup includes a Zig download and a universal helper build before all
+    # package tests; slow downloads must not consume the entire test budget.
+    timeout-minutes: 75
     env:
       BMUX_CI_XCODE_APP: ${{ vars.BMUX_CI_XCODE_APP_MACOS_15 }}
       BMUX_CI_HELPER_XCODE_APP: ${{ vars.BMUX_CI_HELPER_XCODE_APP_MACOS_15 }}
