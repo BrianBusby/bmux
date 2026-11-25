@@ -163,3 +163,23 @@ bmux provenance session outcome <returned-session-id> --revision <returned-outco
 Use the same isolated provenance home or pass the corresponding `--database`
 path to each command. The explicit-ID commands continue to work without a live
 app socket.
+
+For a linked current caller, task selectors may be combined; every supplied
+selector must match within the caller's observed repository:
+
+```sh
+bmux provenance sessions related --current --artifact-path Sources/Example.swift --limit 5
+bmux provenance sessions related --current --ticket EVAL-42 --json
+bmux provenance sessions related --current --objective 'repair cache invalidation' --json
+```
+
+Path and ticket identifiers are exact. Objective text is a case-insensitive
+literal match. The ticket reason refers to current workspace metadata, whose
+historical validity may be unknown. Check projection availability and match
+references before treating an empty result as complete.
+
+The compact JSON budget is 12 KiB. When needed, rendering trims completeness
+notes, lower-priority semantic fields, availability details, then general
+references before omitting whole trailing results. Match-specific references,
+identity, freshness, and boundary information are retained for each returned
+result. Omission counters report the reduced detail and any dropped results.

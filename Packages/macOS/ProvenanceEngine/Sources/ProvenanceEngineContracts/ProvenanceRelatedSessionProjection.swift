@@ -26,6 +26,9 @@ public struct ProvenanceRelatedSessionProjection: Codable, Equatable, Sendable {
     /// Bounded explanations for candidates excluded by request or missing evidence.
     public let excludedCandidates: [ProvenanceRelatedSessionCandidateExclusion]
 
+    /// Number of matching candidates omitted by the result limit for a task selector query.
+    public let candidatesOmittedForLimit: Int?
+
     /// Completeness state for this projection.
     public let completeness: ProvenanceRelatedSessionCompleteness
 
@@ -39,6 +42,7 @@ public struct ProvenanceRelatedSessionProjection: Codable, Equatable, Sendable {
         projection: ProvenanceRelatedSessionProjectionMetadata,
         relatedSessions: [ProvenanceRelatedSessionBrief],
         excludedCandidates: [ProvenanceRelatedSessionCandidateExclusion],
+        candidatesOmittedForLimit: Int? = nil,
         completeness: ProvenanceRelatedSessionCompleteness
     ) {
         self.schemaVersion = schemaVersion
@@ -49,6 +53,7 @@ public struct ProvenanceRelatedSessionProjection: Codable, Equatable, Sendable {
         self.projection = projection
         self.relatedSessions = relatedSessions
         self.excludedCandidates = excludedCandidates
+        self.candidatesOmittedForLimit = candidatesOmittedForLimit
         self.completeness = completeness
     }
 }
