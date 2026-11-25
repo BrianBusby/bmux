@@ -583,9 +583,7 @@ struct bmuxApp: App {
                     ) {
                         BrowserProfilePopoverDebugWindowController.shared.show()
                     }
-                    Button("Debug Window Controls…") {
-                        DebugWindowControlsWindowController.shared.show()
-                    }
+                    Button("Debug Window Controls…") { DebugWindowControlsWindowController.shared.show() }
                     Button(String(localized: "debug.menu.devWindowDisplay", defaultValue: "Dev Window Display…")) {
                         DevWindowDisplayDebugWindowController.shared.show()
                     }
