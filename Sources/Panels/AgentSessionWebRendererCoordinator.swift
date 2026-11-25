@@ -662,7 +662,22 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             return
         }
 
-        BrowserExternalLinkOpener().openWebLink(url)
+        guard terminalChatSnapshot == nil, scheme == "http" || scheme == "https",
+              let app = AppDelegate.shared,
+              let location = app.workspaceContainingPanel(
+                  panelId: panelId,
+                  preferredWorkspaceId: workspaceId
+              ),
+              let paneId = location.workspace.paneId(forPanelId: panelId) else {
+            BrowserExternalLinkOpener().openWebLink(url)
+            return
+        }
+
+        _ = location.workspace.createBrowserSurfaceForAction(
+            inPane: paneId,
+            url: url,
+            focus: true
+        )
     }
 
     private func isInPageFragment(_ url: URL, currentURL: URL?) -> Bool {
