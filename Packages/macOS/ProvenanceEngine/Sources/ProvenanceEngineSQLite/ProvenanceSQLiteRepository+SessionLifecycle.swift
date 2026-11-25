@@ -32,7 +32,7 @@ extension ProvenanceSQLiteRepository: ProvenanceSessionLifecycleRecording {
     func sessionLifecycleEvent(
         for request: ProvenanceSessionLifecycleRequest
     ) async throws -> ProvenanceEvent {
-        let identity = lifecycleIdentity(for: request)
+        let identity = try lifecycleIdentity(for: request)
         let sessionID = try lifecycleSessionID(for: request, identity: identity)
         let trimmedParentSessionID = request.parentSessionID?
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -137,7 +137,7 @@ extension ProvenanceSQLiteRepository: ProvenanceSessionLifecycleRecording {
 
     private func lifecycleIdentity(
         for request: ProvenanceSessionLifecycleRequest
-    ) -> (
+    ) throws -> (
         kind: String,
         value: String,
         confidence: ProvenanceConfidence
@@ -160,18 +160,8 @@ extension ProvenanceSQLiteRepository: ProvenanceSessionLifecycleRecording {
                 confidence: .high
             )
         }
-        if let parentSessionID = request.parentSessionID?.trimmingCharacters(in: .whitespacesAndNewlines),
-           !parentSessionID.isEmpty {
-            return (
-                kind: "unresolved_session",
-                value: "\(request.agentKind):\(parentSessionID):default",
-                confidence: .low
-            )
-        }
-        return (
-            kind: "unresolved_session",
-            value: "\(request.agentKind):default",
-            confidence: .low
+        throw ProvenanceSQLiteError.sqlite(
+            message: "session lifecycle requires a session or external identity"
         )
     }
 }

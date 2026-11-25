@@ -14,6 +14,8 @@ final class NotificationInteractionFixture {
 
     private let manager = TabManager()
     private let window: NSWindow
+    private var deliveryScheduledAt: ContinuousClock.Instant?
+    private var deliveryCompletedAt: ContinuousClock.Instant?
 
     init() {
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 480, height: 320),
@@ -112,7 +114,10 @@ final class NotificationInteractionFixture {
         let delivery = AsyncStream<Int>.makeStream(bufferingPolicy: .bufferingNewest(1))
         // triggerFlash queues exactly one renderer callback. As in WelcomeShortcutWindowFixture,
         // this FIFO boundary observes that event; it is not a wall-clock settling delay.
+        deliveryScheduledAt = .now
+        deliveryCompletedAt = nil
         DispatchQueue.main.async {
+            self.deliveryCompletedAt = .now
             delivery.continuation.yield(GhosttySurfaceScrollView.flashCount(for: panelID) - before)
             delivery.continuation.finish()
         }
@@ -121,22 +126,42 @@ final class NotificationInteractionFixture {
 
     func awaitFlash(_ events: AsyncStream<Int>, timeout: Duration = .seconds(1)) async throws -> Int {
         let deadline = ContinuousClock.now.advanced(by: timeout)
-        let count = try await withThrowingTaskGroup(of: Int.self) { group in
-            defer { group.cancelAll() }
-            group.addTask {
-                for await count in events { return count }
-                throw CancellationError()
+        let waitStartedAt = ContinuousClock.now
+        let count: Int
+        do {
+            count = try await withThrowingTaskGroup(of: Int.self) { group in
+                defer { group.cancelAll() }
+                group.addTask {
+                    for await count in events { return count }
+                    throw CancellationError()
+                }
+                group.addTask {
+                    // The original one-second queue-drain failure bound, not a settling delay.
+                    try await ContinuousClock().sleep(until: deadline)
+                    throw Failure.rendererDeliveryTimedOut
+                }
+                return try await group.next() ?? 0
             }
-            group.addTask {
-                // The original one-second queue-drain failure bound, not a settling delay.
-                try await ContinuousClock().sleep(until: deadline)
-                throw Failure.rendererDeliveryTimedOut
-            }
-            return try await group.next() ?? 0
+        } catch Failure.rendererDeliveryTimedOut {
+            let scheduled = deliveryScheduledAt.map { $0.duration(to: waitStartedAt).description } ?? "unknown"
+            let delivered = deliveryCompletedAt.map { waitStartedAt.duration(to: $0).description } ?? "not-observed"
+            throw Failure.rendererDeliveryDiagnostic(scheduledBeforeWait: scheduled, deliveredAfterWait: delivered,
+                                                     timeoutObservedAfterWait: waitStartedAt.duration(to: .now).description)
         }
         try Task.checkCancellation()
         return count
     }
 
-    private enum Failure: Error { case rendererDeliveryTimedOut }
+    private enum Failure: Error, CustomStringConvertible {
+        case rendererDeliveryTimedOut
+        case rendererDeliveryDiagnostic(scheduledBeforeWait: String, deliveredAfterWait: String, timeoutObservedAfterWait: String)
+
+        var description: String {
+            switch self {
+            case .rendererDeliveryTimedOut: "rendererDeliveryTimedOut"
+            case let .rendererDeliveryDiagnostic(scheduled, delivered, timeout):
+                "rendererDeliveryTimedOut scheduled_before_wait=\(scheduled) delivered_after_wait=\(delivered) timeout_observed_after_wait=\(timeout)"
+            }
+        }
+    }
 }

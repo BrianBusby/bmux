@@ -176,13 +176,19 @@ When no turn matches `turnID`, the response returns `found == false`,
 be requested with `revisionID`; missing revisions return `found == false` with
 `reason == "no_revision"`.
 
-Turn outcomes are rebuilt from the immutable ledger using the projection rule
-id/version recorded in the outcome metadata. Duplicate replay or overlapping
+Turn outcomes are projected from the immutable ledger using the current rule;
+the rule id/version is recorded in outcome metadata. Duplicate replay or overlapping
 transcript and hook evidence that changes only supporting references does not
 create a new factual revision. Late or corrected evidence that changes factual
 outcome content does create a new revision while preserving prior revisions.
 The source evidence watermark is the accepted ledger sequence boundary used for
-the projection.
+the projection. Completion state describes the turn lifecycle, not completion of
+an assignment. A rule-version change is recomputed on a current read; prior
+revision IDs remain queryable until retention or a full projection rebuild.
+The current full rebuild deletes historical outcome revisions and recomputes
+using the installed rules, so it cannot replay prior recorded interpretations.
+Older writers can overwrite the latest pointer until a current reader refreshes;
+this is not a mixed-version writer fence.
 
 This read remains below `SessionWorkModel`, Session Outcome aggregation, and
 cross-session handoff assembly. It does not infer decisions from ordinary prose,
@@ -229,7 +235,10 @@ deterministic `TurnOutcome` revisions selected at projection time. Duplicate
 replay or overlapping evidence that changes only supporting references does
 not create a new factual revision. Late or corrected evidence that changes a
 constituent turn outcome or session-level factual output does create a new
-revision while preserving prior revisions.
+revision while preserving prior revisions during ordinary incremental updates.
+Session completion describes session lifecycle, not proof that its assignment is
+complete. As with turn outcomes, a full rebuild deletes prior outcome revisions,
+and older writers are not fenced by rule-version selection.
 
 This read remains below semantic `SessionWorkModel`, Smart Session UI,
 cross-session retrieval, context injection, and Knowledge Compiler output. It
@@ -632,6 +641,8 @@ The canonical public lifecycle helper is now:
 
 This API is producer-neutral. A producer may provide an explicit `sessionID` for a root session, a `parentSessionID` when the session belongs to another session, or both when it already knows the source-domain identity and relationship. The engine records session lifecycle evidence and derives session relationship Current State when a parent is supplied.
 
+A lifecycle transition must include a nonblank `sessionID` or `externalIdentityValue`; a parent ID, workspace, surface, or timestamp alone does not identify a child or root session. Missing identity returns `accepted: false` with a bounded, content-free error and no event or projection IDs. The helper does not retain the rejected evidence; producers should retain their own source and surface the failure. Previously stored records are unchanged, and older engine versions may still merge unidentified requests under a fallback identity.
+
 Compatibility: `recordSubsessionLifecycle(...)`, `ProvenanceSubsessionLifecycleRequest`, `ProvenanceSubsessionLifecycleResponse`, `ProvenanceSubsessionLifecyclePhase`, and `ProvenanceEngineCapability.recordSubsessionLifecycle` remain temporarily available as deprecated compatibility wrappers for early adopters. New producers must use the session lifecycle names.
 
 ## V1 Local Durability Contract
@@ -653,3 +664,14 @@ Producers own observing activity, assigning stable source/domain identities, emi
 Provenance Engine owns evidence validation, durable evidence storage, deterministic ordering and relationships, Current State derivation, projection rebuild, bounded provenance queries, and evidence attribution.
 
 Consumers own presentation, UI, CLI formatting, local fallback policy, live Git probing when explicitly outside persisted provenance, and product-specific interaction behavior.
+
+### Experimental ledger ID candidate operation
+
+The in-process SQLite client can optionally conform to `ProvenanceLedgerIDCandidateClient`.
+Its operation atomically reports an inserted event or that the ledger already has the
+requested event ID. The latter is only a candidate collision: it does not compare
+source evidence, establish matching payloads, or authorize a producer to advance a
+cursor. Other write and projection failures throw. Existing `appendEvent` behavior is
+unchanged, and clients must check for the opt-in protocol rather than assume support.
+This experimental contract has no transcript importer caller. It supplies no
+mixed-version writer fence, source identity, or replay/observation-health guarantee.
