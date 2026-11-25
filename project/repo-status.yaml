@@ -3,7 +3,13 @@ repository: BrianBusby/bmux
 
 current_work:
   active_slice:
-  state: observation
+    id: session_visibility_baseline
+    title: Diagnose capture and establish baseline
+    state: draft
+    owner: shared
+    active_worktree: /Users/brianbusby/repos/.bmux-worktrees/session-visibility-baseline
+    active_branch: session-visibility-baseline
+  state: active
 
 execution_telemetry:
   provider_neutral_contract: implemented
@@ -180,6 +186,12 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: unidentified_session_lifecycle_evidence_not_retained
+    # Identity-free transitions return an error; existing fallback records are not repaired.
+    status: open
+  - id: outcome_historical_rebuild_and_mixed_writer
+    # Full rebuild drops prior outcome revisions; older writers are not fenced.
+    status: open
   - id: cross_session_identity_clock_legacy_upgrade
     status: open
   - id: work_brief_external_sources_unavailable
