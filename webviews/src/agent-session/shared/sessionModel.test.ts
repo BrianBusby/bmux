@@ -1564,6 +1564,32 @@ function semanticMessage({
 }
 
 
+test("smart session hides earlier facts while a new association is unresolved", () => {
+  const snapshot = smartSessionSnapshot({ factualRevision: 4 });
+  const current = reduceSmartSession(initialSmartSessionState(), {
+    type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot },
+  });
+  const loading = reduceSmartSession(current, { type: "refreshStarted", requestId: 2 });
+  expect(loading.snapshot).toBeUndefined();
+  const failed = reduceSmartSession(loading, {
+    type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "projectionFailed" },
+  });
+  expect(failed.snapshot).toBeUndefined();
+  expect(failed.lastSuccessfulReadAt).toBeUndefined();
+});
+
+test("smart session does not trust a snapshot without a verified session association", () => {
+  const snapshot = smartSessionSnapshot({ factualRevision: 4 });
+  const failed = reduceSmartSession(initialSmartSessionState(), {
+    type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "failed", snapshot, lastSuccessfulReadAt: "2026-08-17T07:05:00Z" },
+  });
+  expect(failed.snapshot).toBeUndefined();
+  expect(failed.lastSuccessfulReadAt).toBeUndefined();
+});
+
 test("smart session does not label a cached snapshot available after bridge failure", () => {
   const current = reduceSmartSession(initialSmartSessionState(), {
     type: "refreshSucceeded", requestId: 1,
