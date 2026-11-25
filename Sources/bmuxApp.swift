@@ -589,9 +589,10 @@ struct bmuxApp: App {
                     Button(String(localized: "debug.menu.devWindowDisplay", defaultValue: "Dev Window Display…")) {
                         DevWindowDisplayDebugWindowController.shared.show()
                     }
-                    Button("Feed Preview…") {
-                        FeedPreviewWindowController.shared.show()
+                    Button(String(localized: "debug.factualStale.menu", defaultValue: "Factual Session Preview…")) {
+                        FactualStaleDebugWindowController.shared.show()
                     }
+                    Button("Feed Preview…") { FeedPreviewWindowController.shared.show() }
                     Button(
                         String(
                             localized: "debug.menu.feedTextEditorDebug",
@@ -1483,6 +1484,7 @@ private let bmuxAuxiliaryWindowIdentifiers: Set<String> = [
     "bmux.browserProfilePopoverDebug",
     "bmux.configEditor",
     "bmux.defaultTerminalRegistrationError",
+    "bmux.factualStalePreview",
     "bmux.feedButtonStyleDebug",
     "bmux.feedPreview",
     "bmux.smartStalePreview",

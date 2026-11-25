@@ -26,6 +26,15 @@ public enum ProvenanceRelatedSessionRelationshipKind: String, Codable, Equatable
     /// The sessions share an explicitly observed provider/runtime identity.
     case sharedExternalIdentity = "shared_external_identity"
 
+    /// Current linked workspace metadata contains the requested exact ticket ID.
+    case currentWorkspaceTicket = "current_workspace_ticket"
+
+    /// An observed objective contains the requested text.
+    case objectiveTextMatch = "objective_text_match"
+
+    /// The related session has accepted evidence for the requested artifact path.
+    case requestedArtifact = "requested_artifact"
+
     /// The sessions have accepted outcome facts for the same changed artifact.
     case sharedChangedArtifact = "shared_changed_artifact"
 }
