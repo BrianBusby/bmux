@@ -67,6 +67,9 @@ public struct ProvenanceEventType: Codable, Equatable, Hashable, Sendable, RawRe
     /// A client observed a provider-emitted coding-agent plan update.
     public static let codingAgentPlanUpdated = Self(rawValue: "coding_agent_plan_updated")
 
+    /// A provider emitted proposed plan prose.
+    public static let codingAgentProposedPlanObserved = Self(rawValue: "coding_agent_proposed_plan_observed")
+
     /// A client observed completion of a coding-agent command execution.
     public static let codingAgentCommandCompleted = Self(rawValue: "coding_agent_command_completed")
 
