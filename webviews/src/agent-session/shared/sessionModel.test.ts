@@ -1564,14 +1564,40 @@ function semanticMessage({
 }
 
 
-test("smart session does not label a cached snapshot available after bridge failure", () => {
+test("smart session hides earlier facts while a new association is unresolved", () => {
+  const snapshot = smartSessionSnapshot({ factualRevision: 4 });
+  const current = reduceSmartSession(initialSmartSessionState(), {
+    type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot },
+  });
+  const loading = reduceSmartSession(current, { type: "refreshStarted", requestId: 2 });
+  expect(loading.snapshot).toBeUndefined();
+  const failed = reduceSmartSession(loading, {
+    type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "projectionFailed" },
+  });
+  expect(failed.snapshot).toBeUndefined();
+  expect(failed.lastSuccessfulReadAt).toBeUndefined();
+});
+
+test("smart session does not trust a snapshot without a verified session association", () => {
+  const snapshot = smartSessionSnapshot({ factualRevision: 4 });
+  const failed = reduceSmartSession(initialSmartSessionState(), {
+    type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "failed", snapshot, lastSuccessfulReadAt: "2026-08-17T07:05:00Z" },
+  });
+  expect(failed.snapshot).toBeUndefined();
+  expect(failed.lastSuccessfulReadAt).toBeUndefined();
+});
+
+test("smart session clears a cached snapshot after an unverified bridge failure", () => {
   const current = reduceSmartSession(initialSmartSessionState(), {
     type: "refreshSucceeded", requestId: 1,
     result: { schemaVersion: 1, status: "available", snapshot: smartSessionSnapshot({ factualRevision: 4 }) },
   });
   const failed = reduceSmartSession(current, { type: "refreshFailed", requestId: 2 });
   expect(failed.status).toBe("failed");
-  expect(failed.snapshot?.revision.factualRevision).toBe(4);
+  expect(failed.snapshot).toBeUndefined();
 });
 
 
@@ -1579,7 +1605,7 @@ test("smart session keeps failed bridge snapshots marked stale and clears not-fo
   const snapshot = smartSessionSnapshot({ factualRevision: 4 });
   const stale = reduceSmartSession(initialSmartSessionState(), {
     type: "refreshSucceeded", requestId: 1,
-    result: { schemaVersion: 1, status: "failed", snapshot, lastSuccessfulReadAt: "2026-08-17T07:05:00Z" },
+    result: { schemaVersion: 1, status: "failed", sessionId: snapshot.identity.sessionId, snapshot, lastSuccessfulReadAt: "2026-08-17T07:05:00Z" },
   });
   expect(stale.status).toBe("failed");
   expect(stale.snapshot).toEqual(snapshot);
@@ -1602,7 +1628,7 @@ test("smart session never attaches failed response to a different session", () =
 
 test("smart session visibly labels retained facts after failure", () => {
   const state = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
-    result: { schemaVersion: 1, status: "failed", snapshot: smartSessionSnapshot({ factualRevision: 4 }), lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
+    result: { schemaVersion: 1, status: "failed", sessionId: "session-1", snapshot: smartSessionSnapshot({ factualRevision: 4 }), lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
   const markup = renderToStaticMarkup(createElement(SmartSessionFreshnessBanner, { state, onRefresh: () => {} }));
   expect(markup).toContain('role="status"');
   expect(markup).toContain("Could not refresh. Showing last known session data.");
@@ -1632,8 +1658,10 @@ test("a late failed refresh cannot replace a newer successful refresh", () => {
 test("smart session retains the last read time when a later failure keeps the same snapshot", () => {
   const snapshot = smartSessionSnapshot({ factualRevision: 4 });
   const first = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
-    result: { schemaVersion: 1, status: "failed", snapshot, lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
-  const later = reduceSmartSession(first, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "failed", sessionId: snapshot.identity.sessionId, snapshot, lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
+  const loading = reduceSmartSession(first, { type: "refreshStarted", requestId: 2 });
+  expect(loading.snapshot).toBeUndefined();
+  const later = reduceSmartSession(loading, { type: "refreshSucceeded", requestId: 2,
     result: { schemaVersion: 1, status: "projectionFailed", sessionId: snapshot.identity.sessionId } });
   expect(later.snapshot).toEqual(snapshot);
   expect(later.status).toBe("projectionFailed");
@@ -1642,7 +1670,7 @@ test("smart session retains the last read time when a later failure keeps the sa
 
 test("smart session clears read time when a failure names a different session", () => {
   const first = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
-    result: { schemaVersion: 1, status: "failed", snapshot: smartSessionSnapshot({ factualRevision: 4 }), lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
+    result: { schemaVersion: 1, status: "failed", sessionId: "session-1", snapshot: smartSessionSnapshot({ factualRevision: 4 }), lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
   const next = reduceSmartSession(first, { type: "refreshSucceeded", requestId: 2,
     result: { schemaVersion: 1, status: "projectionFailed", sessionId: "different-session" } });
   expect(next.snapshot).toBeUndefined();
@@ -1805,7 +1833,7 @@ test("stale smart session offers an actionable refresh", async () => {
   if (!element) throw new Error("Missing test root");
   const root = createRoot(element);
   const state = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
-    result: { schemaVersion: 1, status: "failed", snapshot: smartSessionSnapshot({ factualRevision: 4 }) } });
+    result: { schemaVersion: 1, status: "failed", sessionId: "session-1", snapshot: smartSessionSnapshot({ factualRevision: 4 }) } });
   const calls: string[] = [];
   try {
     await act(async () => root.render(createElement(SmartSessionFreshnessBanner, { state, onRefresh: () => calls.push("refresh") })));
