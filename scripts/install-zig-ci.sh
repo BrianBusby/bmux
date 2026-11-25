@@ -127,6 +127,27 @@ download_file() {
     --output "$output"
 }
 
+# Preserve progress when a slow archive transfer exceeds curl's time limit.
+# A source that rejects range requests falls through to the next source.
+download_archive() {
+  local url="$1"
+  local output="$2"
+  local attempt
+  rm -f "$output"
+  if download_file "$url" "$output"; then
+    return 0
+  fi
+  for attempt in 1 2 3; do
+    [ -s "$output" ] || return 1
+    echo "Resuming partial Zig archive (attempt ${attempt}/3)" >&2
+    if curl --fail --location --show-error --connect-timeout 20 --max-time 300 \
+      --continue-at - "$url" --output "$output"; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 resolve_zig_sha256() {
   if [ -n "$ZIG_EXPECTED_SHA256" ]; then
     printf '%s\n' "$ZIG_EXPECTED_SHA256"
@@ -225,9 +246,9 @@ install_zig_with_sudo() {
 
 echo "Installing verified zig ${ZIG_REQUIRED}"
 rm -f "$ZIG_TAR" "$ZIG_SIG"
-if ! download_file "$ZIG_MIRROR_URL" "$ZIG_TAR"; then
+if ! download_archive "$ZIG_MIRROR_URL" "$ZIG_TAR"; then
   echo "Mirror download failed; retrying from ${ZIG_OFFICIAL_URL}" >&2
-  download_file "$ZIG_OFFICIAL_URL" "$ZIG_TAR"
+  download_archive "$ZIG_OFFICIAL_URL" "$ZIG_TAR"
 fi
 ZIG_RESOLVED_SHA256="$(resolve_zig_sha256)"
 verify_zig_sha256 "$ZIG_RESOLVED_SHA256"

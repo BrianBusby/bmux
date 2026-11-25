@@ -77,6 +77,7 @@ final class CodexMonitorLeaseFixture {
             "BMUX_SOCKET_PATH": root.appendingPathComponent("socket").path,
             "BMUX_WORKSPACE_ID": workspace, "BMUX_SURFACE_ID": surface,
             "BMUX_CODEX_PID": String(getpid()), "BMUX_AGENT_HOOK_STATE_DIR": root.path,
+            "BMUX_CODEX_HOOK_IDENTITY_VERIFIED": "1",
             "BMUX_DEBUG_LOG": root.appendingPathComponent("debug.log").path,
             "BMUX_CLI_SENTRY_DISABLED": "1", "BMUX_SUPPRESS_SUBAGENT_NOTIFICATIONS": "1",
         ]

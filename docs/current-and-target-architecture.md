@@ -86,6 +86,15 @@ worktree assignments. The durable architecture keeps bmux runtime acquisition,
 PE factual projections, PE semantic inference, semantic messages, and bmux
 presentation as separate layers.
 
+Codex hook associations and automatic transcript monitor startup require a
+provider session identifier in the hook payload. When it is absent, legacy
+lifecycle routing can continue, but that hook does not establish an association
+or start a monitor. Existing associations and monitors can remain, and no
+unknown observation-health marker is set. Direct monitor invocation still has
+its separate environment fallback. The hook's process check and payload
+identifier do not by themselves establish a durable session-to-surface binding,
+and this rule does not repair historical records.
+
 ```text
 Provider events
   Codex / Claude / future coding agents
@@ -187,11 +196,14 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 - Active gate: Engineering Observation Period (`engineering_observation_period`) - active
 - Primary capability frontier: Process Integrity (`process_integrity`)
-- Active implementation slice: none selected
-- Bmux repository state: observation
+- Active implementation slice: Diagnose capture and establish baseline (`session_visibility_baseline`) - draft
+- Bmux repository state: active
 
 ### Current Roadmap Lanes
 
+- Trustworthy Session and Turn Visibility (`trustworthy_session_visibility`) - phase; status: active; owner: Provenance Engine
+- Trustworthy Session Visibility Delivery (`session_visibility_delivery`) - milestone; status: active; owner: Provenance Engine
+- Diagnose capture and establish baseline (`session_visibility_baseline`) - slice; status: active; owner: Bmux
 - Bmux and Provenance Engine (`bmux_provenance_platform`) - project; status: active; owner: Provenance Engine
 - Process Integrity (`process_integrity`) - program; status: active; owner: Bmux
 - Project Truth Delivery Lifecycle (`project_truth_delivery_lifecycle`) - phase; status: active; owner: Bmux
@@ -210,7 +222,6 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Cross-Session Retrieval and Context (`cross_session_awareness_retrieval_and_context`) - phase; status: active; owner: Provenance Engine
 - Cross-Session Retrieval and Presentation (`cross_session_retrieval_and_presentation`) - milestone; status: active; owner: Provenance Engine
 - Cross-session context assembly experiment (`cross_session_context_assembly_experiment`) - milestone; status: active; owner: Bmux
-- Retrieve related work from the current caller (`cross_session_current_caller_retrieval`) - slice; status: active; owner: Bmux
 
 ### Major Node Summaries
 
@@ -311,6 +322,19 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 
 ### Gated / Blocked Downstream Work
 
+- Establish coherent session revisions and conditional interpretation (`session_visibility_revision_integrity`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
+  - Diagnose capture and establish baseline (`session_visibility_baseline`) is not dependency-satisfying
+- Deliver useful session summary (`session_visibility_summary`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
+  - Diagnose capture and establish baseline (`session_visibility_baseline`) is not dependency-satisfying
+  - Establish coherent session revisions and conditional interpretation (`session_visibility_revision_integrity`) is not dependency-satisfying
+- Explain meaningful progress (`session_visibility_progress`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
+  - Deliver useful session summary (`session_visibility_summary`) is not dependency-satisfying
+- Integrate plans and reporting (`session_visibility_plans`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
+  - Explain meaningful progress (`session_visibility_progress`) is not dependency-satisfying
+- Make multiple sessions easy to scan (`session_visibility_scanning`) - maturity: unspecified; status: planned; selection: planned; owner: Bmux
+  - Integrate plans and reporting (`session_visibility_plans`) is not dependency-satisfying
+- Prove reliability and expose coordination contract (`session_visibility_reliability`) - maturity: unspecified; status: planned; selection: planned; owner: Provenance Engine
+  - Make multiple sessions easy to scan (`session_visibility_scanning`) is not dependency-satisfying
 - Residual App-Host Background Service Audit (`app_runtime_residual_app_host_service_audit`) - maturity: captured; status: deferred; selection: deferred; owner: Bmux
   - Architecture or product direction is captured, but the slice is not implementation-ready.
 - Workspace Display File-Watcher Churn Policy (`workspace_display_file_watcher_churn_policy`) - maturity: ready; status: deferred; selection: deferred; owner: Bmux
@@ -335,8 +359,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
   - React Chat live interaction productization (`react_terminal_productization`) is not dependency-satisfying
   - React Chat live interaction productization (`react_terminal_productization`) has maturity captured; requires validated for gate `terminal_productized`: Three-view navigation should preserve identity across a productized Chat surface, not an unfinished live-interaction direction.
 - Retrieve work relevant to an explicit task (`cross_session_task_relevance_retrieval`) - maturity: gated; status: planned; selection: planned; owner: Provenance Engine
-  - Retrieve related work from the current caller (`cross_session_current_caller_retrieval`) is not dependency-satisfying
-  - Retrieve related work from the current caller (`cross_session_current_caller_retrieval`) has maturity active; requires validated for gate `caller_retrieval_validated`: Task queries depend on verified caller scope and usable evidence navigation.
+  - Retrieve related work from the current caller (`cross_session_current_caller_retrieval`) has maturity gated; requires validated for gate `caller_retrieval_validated`: Task queries depend on verified caller scope and usable evidence navigation.
 - Evaluate retrieval in ordinary agent work (`cross_session_ordinary_agent_evaluation`) - maturity: gated; status: planned; selection: planned; owner: Bmux
   - Retrieve work relevant to an explicit task (`cross_session_task_relevance_retrieval`) is not dependency-satisfying
   - Retrieve work relevant to an explicit task (`cross_session_task_relevance_retrieval`) has maturity gated; requires validated for gate `task_relevance_validated`: Live scenarios require evaluated task relevance and actionable references.
@@ -442,6 +465,7 @@ Generated from `project/project-state.yaml` and `project/repo-status.yaml`. For 
 - Persistent SSH child exit reproduces sibling tracking loss; last-surface guard awaits fixed native and app-host verification (`persistent_pty_child_exit_verification`) - owner: Bmux; status: open
 - SSH PTY initial resize acknowledgement CI timeouts remain unresolved (`ssh_pty_lifecycle_fixture_verification`) - owner: Bmux; status: open
 - CI Option/Alt step selects CodexMonitorLeaseTests sequential and nested controls; actual app-host verification pending (`codex_monitor_lease_fixture_verification`) - owner: Bmux; status: open
+- Unidentified Codex hooks cannot establish new associations or monitors; stale state and observation health remain unresolved (`codex_missing_provider_session_visibility`) - owner: Bmux; status: open
 - Respawn window protocol fixture focused gate awaits app-host CI (`respawn_window_protocol_fixture_focused_gate_verification`) - owner: Bmux; status: open
 - Workspace fallback regression test red and production fix verification pending (`workspace_fallback_regression_verification`) - owner: Bmux; status: open
 - Portal geometry and workspace creation/publication fixture corrections await fixed-head app-host verification (`native_portal_workspace_contract_fixture_verification`) - owner: Bmux; status: open
