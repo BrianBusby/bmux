@@ -684,6 +684,54 @@ The projection should support authoritative snapshot reads with a monotonic
 revision. Push notifications or deltas may exist later as hints, but consumers
 must be able to re-fetch the authoritative projection for reconciliation.
 
+SQLite factual session, factual turn detail, and SessionWorkModel reads use a
+single connection snapshot for each response, including the model's factual and
+semantic inputs. This prevents a concurrent connection's commits from being
+mixed within one response. The factual event sequence is not a general database
+revision: semantic writes and other projection changes may not advance it.
+The SQLite implementation of the canonical deterministic session producer reads
+facts and active predecessors and commits its complete inference pass under one
+immediate write transaction. It cannot publish a partial pass or derive from a
+snapshot that changed before that transaction. Repeated unchanged claims are
+retained. These guarantees apply to this SQLite producer path only; direct
+unconditional semantic writes, other implementations, and older binaries do not
+participate and can still publish stale claims. Derivation holds SQLite's write
+reservation while it reads and computes, so concurrent writers may wait or time
+out; lock duration and throughput under large sessions or concurrent load remain
+unmeasured. Package tests do not establish native app behavior or satisfy the
+session visibility delivery gate.
+Model-derived or externally prepared claims still need complete input and
+predecessor validation in the same transaction as publication, along with
+explicit retry, idempotence, and conflict semantics. All competing writers must
+participate before this can be treated as a global publication fence.
+Factual turn detail selects child records only when both their turn and session
+IDs agree with the owning turn. A missing or mismatched turn association remains
+in the ledger and underlying projection; it is not assigned to another session.
+TurnOutcome rule version 2 applies the same ownership check, including before a
+thread can supply a worktree boundary. Current cached outcomes are reconciled
+on read when their turn rule is obsolete. Exact historical revisions remain
+available under their original rule and may contain the earlier ambiguous joins;
+they must not be treated as corrected current results. Ownership checks alone do not establish
+coherent cross-connection snapshots or complete per-session revision tracking.
+
+The factual session snapshot may also expose recent proposed-plan observations
+from the immutable event ledger. Each observation retains its event ID, ledger
+sequence, source timestamp, provider identities, and whether its prose was
+truncated. A bounded scan examines the latest 5,000 session events and returns
+at most 50 matching observations in append order, newest first. Incremental
+SQLite blob access caps each decoded payload at 64 KiB and the response at 256 KiB;
+rejected or excess records and an exhausted scan window set explicit partial-coverage
+flags, while older snapshots without coverage remain unknown. Omitted history remains
+in the ledger. Only schema-1 observed Codex transcript evidence is displayed, with
+its actual source and origin. The list does not assert upstream coverage, current
+validity, checklist progress, or an inferred turn association. Session and payload
+ownership must agree. It is read within the same SQLite snapshot as the factual revision.
+Codex CLI capture requires matching explicit transcript thread, turn, and item
+identities; identical provider items replay idempotently while differing payloads
+remain distinct evidence. Existing transcripts are subject to their ordinary
+retention policy. Old writers, upstream observation gaps, cross-surface display,
+and mixed-version rollout remain outside this bounded read guarantee.
+
 The first planned vertical slice should validate richer coding-agent evidence
 ingestion, deterministic factual session projections, evidence-backed inference,
 nested milestones, scoped architecture synthesis, provenance/confidence, and

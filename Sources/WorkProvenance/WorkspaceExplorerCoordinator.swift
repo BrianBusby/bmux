@@ -20,7 +20,7 @@ final class WorkspaceExplorerCoordinator {
     typealias Clearer = @MainActor () async throws -> Void
     typealias FeedbackDelay = @MainActor (Duration) async throws -> Void
 
-    var scope = WorkspaceExplorerScope(state: .all, period: .anyTime)
+    var scope = WorkspaceExplorerScope()
     var rootArrangement = WorkspaceExplorerViewArrangement()
     private(set) var collectionTarget: WorkspaceExplorerCollectionTarget?
     private(set) var historyID: String?
@@ -289,9 +289,9 @@ final class WorkspaceExplorerCoordinator {
         scheduleHistoryFill()
     }
 
-    func openAllWorkspacesUnfiltered() {
+    func openExplorerWithDefaultScope() {
         showAllWorkspaces()
-        scope = WorkspaceExplorerScope(state: .all, period: .anyTime)
+        scope = WorkspaceExplorerScope()
         refreshActivityClock()
         rootArrangement = WorkspaceExplorerViewArrangement()
         statusArrangement.reconcile(groupBy: [], filters: [:])
