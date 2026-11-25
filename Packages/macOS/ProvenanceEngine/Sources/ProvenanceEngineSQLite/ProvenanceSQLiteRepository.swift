@@ -8,6 +8,7 @@ actor ProvenanceSQLiteRepository {
     let payloadDecoder: JSONDecoder
     let stableIDFactory: ProvenanceStableIDFactory
 #if DEBUG
+    var replayProgressForTesting: (@Sendable () throws -> Void)?
     var didReadFactualSessionForTesting: (@Sendable () -> Void)?
 #endif
 
@@ -539,54 +540,6 @@ actor ProvenanceSQLiteRepository {
             )
         }
         return records
-    }
-
-    /// Rebuilds current-state projections by replaying the immutable event ledger in append order.
-    ///
-    /// - Parameter batchSize: Maximum number of ledger entries decoded per cursor read.
-    /// - Returns: Number of ledger events replayed into projection tables.
-    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the rebuild or stored enum data is invalid.
-    func rebuildProjectionsFromEventLedger(batchSize: Int = 1_000) throws -> Int {
-        let rowLimit = max(1, batchSize)
-        var afterSequence: Int?
-        var replayedCount = 0
-
-        try database.execute("BEGIN IMMEDIATE TRANSACTION")
-        do {
-            try clearProjectionTables()
-            while true {
-                let entries = try eventLedgerEntries(afterSequence: afterSequence, limit: rowLimit)
-                guard !entries.isEmpty else { break }
-
-                for entry in entries {
-                    try applyProjectionUpdates(
-                        from: entry.event,
-                        latestEventSequence: entry.sequence,
-                        pruneOutcomes: false
-                    )
-                    afterSequence = entry.sequence
-                    replayedCount += 1
-                }
-
-                guard entries.count == rowLimit else { break }
-            }
-            // All cross-projection citations are present only after the complete replay.
-            // Pruning during replay could retire a revision cited by a later event.
-            if try schemaVersion() >= 29 {
-                try database.execute(
-                    "UPDATE provenance_outcome_retention_state SET legacy_citations_indexed = 1 WHERE policy_version = 1"
-                )
-            }
-            try database.execute("COMMIT")
-        } catch {
-            try? database.execute("ROLLBACK")
-            throw error
-        }
-
-        if try schemaVersion() >= 29 {
-            while try pruneOutcomePayloads(dryRun: false, batchSize: 1_000).prunedRows > 0 {}
-        }
-        return replayedCount
     }
 
     /// Reads one current-state repository projection by stable ID.
@@ -1586,7 +1539,7 @@ actor ProvenanceSQLiteRepository {
         return (query.int(at: 0), latestSequence)
     }
 
-    private func eventSequence(id: String) throws -> Int? {
+    func eventSequence(id: String) throws -> Int? {
         let query = try database.prepare("SELECT sequence FROM provenance_events WHERE id = ?")
         defer { query.finalize() }
         try query.bind(id, at: 1)
@@ -2756,7 +2709,7 @@ actor ProvenanceSQLiteRepository {
         )
     }
 
-    private func insertEvent(_ event: ProvenanceEvent) throws {
+    @discardableResult func insertEvent(_ event: ProvenanceEvent, ignoreIDConflict: Bool = false) throws -> Bool {
         let payloadData = try payloadEncoder.encode(event.payload)
         guard let payloadJSON = String(data: payloadData, encoding: .utf8) else {
             throw ProvenanceSQLiteError.sqlite(message: "failed to encode event payload")
@@ -2788,7 +2741,7 @@ actor ProvenanceSQLiteRepository {
                 payload_json,
                 evidence_origin,
                 evidence_scope_json
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) \(ignoreIDConflict ? "ON CONFLICT(id) DO NOTHING" : "")
             """
         )
         defer { insert.finalize() }
@@ -2806,11 +2759,11 @@ actor ProvenanceSQLiteRepository {
         try insert.bind(payloadJSON, at: 11)
         try insert.bind(event.evidenceOrigin?.rawValue, at: 12)
         try insert.bind(evidenceScopeJSON, at: 13)
-
         _ = try insert.step()
+        return database.changes == 1
     }
 
-    private func applyProjectionUpdates(
+    func applyProjectionUpdates(
         from event: ProvenanceEvent, latestEventSequence: Int? = nil, pruneOutcomes: Bool = true
     ) throws {
         let payload = event.payload

@@ -58,7 +58,6 @@ function WorkspaceRail({ copy, workspaceName, title, status, onSelect }: { copy?
     h("div", { className: "focus-rail-heading" }, h("span", null, text(copy, "smartSessionCurrent", "Current")), h("span", { className: "focus-rail-count" }, "1")),
     h("button", { type: "button", className: "focus-workspace-card is-selected", "aria-pressed": true, onClick: onSelect },
       h("span", { className: "focus-card-repository" }, workspaceName), h("strong", null, title), h("span", { className: "focus-card-status" }, h("i", { "aria-hidden": true }), statusLabel(status, copy)),
-      h("span", { className: "focus-card-activity" }, text(copy, "smartSessionIdentity", "Verified workspace identity")),
     ),
     h("p", { className: "focus-rail-note" }, text(copy, "smartSessionUnavailable", "Workspace links are unavailable for this surface.")),
   );
@@ -68,7 +67,7 @@ function WorkspaceHeader({ copy, workspaceName, title, snapshot, inspector, onIn
   const provider = snapshot?.identity.agentKind ?? "provider";
   return h("header", { className: "focus-workspace-header" },
     h("div", { className: "focus-header-copy" }, h("div", { className: "focus-breadcrumb" }, `${workspaceName} / ${provider}`), h("h1", null, title), snapshot?.identity.sessionId ? h("p", { className: "focus-header-identity" }, `${text(copy, "smartSessionSessionID", "Session ID")}: ${snapshot.identity.sessionId}`) : null),
-    h("div", { className: "focus-header-status" }, h("span", { className: "focus-connected-dot", "aria-hidden": true }), h("span", null, statusLabel(snapshot?.identity.status ?? "unavailable", copy)), h("button", { type: "button", className: "focus-inspector-link", onClick: () => onInspect("workspace") }, text(copy, "smartSessionIdentity", "Workspace details")), inspector === "workspace" ? h(Inspector, { title: text(copy, "smartSessionIdentity", "Workspace details"), onClose: () => onInspect(null), children: h(WorkspaceDetails, { copy, snapshot }) }) : null),
+    h("div", { className: "focus-header-status" }, h("span", null, statusLabel(snapshot?.identity.status ?? "unavailable", copy)), h("button", { type: "button", className: "focus-inspector-link", onClick: () => onInspect("workspace") }, text(copy, "smartSessionIdentity", "Workspace details")), inspector === "workspace" ? h(Inspector, { title: text(copy, "smartSessionIdentity", "Workspace details"), onClose: () => onInspect(null), children: h(WorkspaceDetails, { copy, snapshot }) }) : null),
   );
 }
 
@@ -90,8 +89,30 @@ function FocusView({ copy, state, onRefresh, expandedTurnID, onExpandTurn, onIns
     current ? h(CurrentTurnCard, { copy, turn: current, purpose, activity, onInspect }) : h(EmptyState, { message: text(copy, "smartSessionNoCurrentTurn", "No current turn. The latest supported outcome appears below.") }),
     related ? h(RelatedWorkStrip, { copy, snapshot, onInspect }) : null,
     h(RelatedAwarenessNotice, { copy, awareness: snapshot.crossSessionAwareness }),
+    h(ProposalHistory, { copy, factual: snapshot.factual }),
     h("section", { className: "focus-history-section" }, h("div", { className: "focus-section-heading" }, h("h2", null, text(copy, "smartSessionPriorTurns", "History")), h("span", { className: "focus-section-meta" }, `${history.length}`)), history.length ? h("div", { className: "focus-history-list" }, ...history.map(turn => h(PriorTurnCard, { key: turn.turnId, copy, turn, expanded: expandedTurnID === turn.turnId, onToggle: () => onExpandTurn(expandedTurnID === turn.turnId ? null : turn.turnId), onInspect }))) : h("p", { className: "focus-muted" }, text(copy, "smartSessionNoEvidence", "No completed turns yet."))),
     snapshot.factual.turnCount > history.length + (current ? 1 : 0) ? h("p", { className: "focus-coverage-note" }, text(copy, "smartSessionUnavailable", "History is partial; only same-identity records are shown.")) : null,
+  );
+}
+
+function validProviderID(value: string | undefined): boolean {
+  return value !== undefined && value.length > 0 && value.trim() === value && new TextEncoder().encode(value).length <= 256;
+}
+
+export function ProposalHistory({ copy, factual }: { copy?: AgentSessionCopy; factual: SmartSessionSnapshot["factual"] }) {
+  const coverage = factual.proposedPlanCoverage;
+  const all = factual.proposedPlanObservations ?? [];
+  const observations = coverage ? all.slice(0, 50).filter(item => item.source === "observed" && item.origin === "codex-transcript" && item.eventSchemaVersion === 1 && item.provider === "codex" && validProviderID(item.providerSessionId) && validProviderID(item.providerTurnId) && validProviderID(item.providerItemId)) : [];
+  const partial = coverage && (coverage.scanWindowTruncated || coverage.omittedObservations || all.length > 50 || observations.length !== all.length);
+  const message = !coverage ? text(copy, "smartSessionProposalUnavailable", "Proposal history unavailable") : partial ? text(copy, "smartSessionProposalPartial", "Proposal history is partial") : observations.length === 0 ? text(copy, "smartSessionProposalNone", "No proposal found in scanned records; source availability is unknown.") : "";
+  return h("details", { className: "focus-history-section" },
+    h("summary", null, text(copy, "smartSessionProposedPlans", "Proposed plans")),
+    message ? h("p", { className: "focus-coverage-note" }, message) : null,
+    ...observations.map(item => h("article", { key: item.id },
+      h("p", { className: "focus-source-note" }, `${item.timestamp} · ${item.provider} · ${item.source} · ${item.origin} · ${text(copy, "smartSessionEvidence", "Evidence")}: ${item.id.slice(0, 256)}`),
+      h("p", { style: { whiteSpace: "pre-wrap" } }, item.text.slice(0, 12000)),
+      item.truncated || item.text.length > 12000 ? h("p", { className: "focus-coverage-note" }, text(copy, "smartSessionProposalTruncated", "Proposal text was truncated.")) : null,
+    )),
   );
 }
 
