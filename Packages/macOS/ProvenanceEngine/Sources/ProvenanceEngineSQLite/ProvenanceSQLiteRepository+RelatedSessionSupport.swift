@@ -281,6 +281,16 @@ extension ProvenanceSQLiteRepository {
                     reason.relatedValue ?? "",
                     reason.relationshipDepth.map(String.init) ?? "",
                 ].joined(separator: "|"))
+                if [.currentWorkspaceTicket, .objectiveTextMatch, .requestedArtifact].contains(reason.kind) {
+                    parts.append("selector_observed_at|\(relatedSessionTimestampFingerprint(reason.observedAt))")
+                    for reference in reason.evidence {
+                        let fields = [reference.kind, reference.id, reference.eventSequence.map(String.init) ?? "",
+                                      reference.eventType ?? "", reference.projectionRevisionID ?? "",
+                                      reference.projectionWatermark.map(String.init) ?? "", reference.field ?? "",
+                                      reference.sourceState ?? ""]
+                        parts.append("selector_evidence|" + fields.map { Data($0.utf8).base64EncodedString() }.joined(separator: "|"))
+                    }
+                }
             }
             for field in brief.semanticFields {
                 parts.append(relatedSessionSemanticFieldFingerprint(field))
