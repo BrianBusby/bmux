@@ -10,7 +10,8 @@ struct ExpandedTurnRequest: Equatable {
     let objective: String?
     let prompt: String?
     let identical: Bool
-    let replies: [Reply]?
+    let objectiveReplies: [Reply]?
+    let promptReplies: [Reply]?
     var hasObjective: Bool { objective?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false }
     var hasPrompt: Bool { prompt?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false }
 
@@ -21,7 +22,8 @@ struct ExpandedTurnRequest: Equatable {
             && objective?.trimmingCharacters(in: .whitespacesAndNewlines).utf8.elementsEqual(
                 (prompt ?? "").trimmingCharacters(in: .whitespacesAndNewlines).utf8
             ) == true
-        replies = Self.parse(objective)
+        objectiveReplies = Self.parse(objective)
+        promptReplies = Self.parse(prompt)
     }
 
     static func visibleSummary(_ summary: String?, finalOutput: String?) -> String? {
