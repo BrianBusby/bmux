@@ -662,12 +662,8 @@ final class AgentSessionWebRendererCoordinator: NSObject, WKNavigationDelegate, 
             return
         }
 
-        guard scheme == "http" || scheme == "https" else {
-            BrowserExternalLinkOpener().openWebLink(url)
-            return
-        }
-
-        guard let app = AppDelegate.shared,
+        guard terminalChatSnapshot == nil, scheme == "http" || scheme == "https",
+              let app = AppDelegate.shared,
               let location = app.workspaceContainingPanel(
                   panelId: panelId,
                   preferredWorkspaceId: workspaceId

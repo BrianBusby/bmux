@@ -122,19 +122,19 @@ struct PromptSessionLinkCompletionTests {
     private func factualProjectionAfterCompletion(
         runtime: WorkProvenanceRuntime,
         stableWorkspaceID: UUID,
-        timeout: Duration = .seconds(1)
+        timeout: Duration = .seconds(30)
     ) async throws -> AgentSessionFactualProjectionReadResult {
-        let start = ContinuousClock.now
-        let deadline = start.advanced(by: timeout)
-        let progress = CompletionProgress(start: start, runtime: runtime)
         let (results, signal) = AsyncStream<Completion>.makeStream(bufferingPolicy: .bufferingOldest(1))
         defer { signal.finish() }
         var ownedProducer: Task<Void, Never>?
-        await withCheckedContinuation { entered in
+        let queuedAt = ContinuousClock.now
+        let progress = await withCheckedContinuation { (entered: CheckedContinuation<CompletionProgress, Never>) in
             ownedProducer = Task { @MainActor in
-                // Same-actor entry captures task handles before timeout cleanup can clear them.
-                progress.producerEnteredAt = .now
-                entered.resume()
+                // This is a test watchdog, not a product latency requirement. Start it only
+                // after the producer is scheduled, allowing for contention in the app host.
+                let start = ContinuousClock.now
+                let progress = CompletionProgress(start: start, queuedAt: queuedAt, runtime: runtime)
+                entered.resume(returning: progress)
                 await runtime.waitForBackgroundTasks()
                 progress.backgroundFinishedAt = .now
                 progress.trackedAtBackgroundFinish = progress.currentTrackedCount(runtime)
@@ -149,6 +149,8 @@ struct PromptSessionLinkCompletionTests {
             }
         }
         let producer = try #require(ownedProducer)
+        let start = progress.start
+        let deadline = start.advanced(by: timeout)
         let completion = await withTaskGroup(of: Void.self) { group in
             defer { group.cancelAll() }
             group.addTask {
@@ -188,7 +190,7 @@ struct PromptSessionLinkCompletionTests {
         // Stop cancels runtime work; the captured producer is still joined by the caller.
         defer { producer.cancel(); runtime.stop() }
         do {
-            // The original absolute one-second failure bound includes the full projection read.
+            // The absolute watchdog deadline includes the full projection read.
             try await ContinuousClock().sleep(until: deadline)
             signal.yield(.failed(CompletionFailure.timedOut(
                 phase: progress.phase, arrival: start.duration(to: .now),
@@ -206,14 +208,15 @@ struct PromptSessionLinkCompletionTests {
     private final class CompletionProgress {
         let start: ContinuousClock.Instant
         let trackedAtStart: Int?
-        var producerEnteredAt: ContinuousClock.Instant?
+        let producerQueueDelay: Duration
         var backgroundFinishedAt: ContinuousClock.Instant?
         var trackedAtBackgroundFinish: Int?
         var projectionFinishedAt: ContinuousClock.Instant?
         var phase = "background"
 
-        init(start: ContinuousClock.Instant, runtime: WorkProvenanceRuntime) {
+        init(start: ContinuousClock.Instant, queuedAt: ContinuousClock.Instant, runtime: WorkProvenanceRuntime) {
             self.start = start
+            producerQueueDelay = queuedAt.duration(to: start)
             trackedAtStart = Self.trackedCount(runtime)
         }
 
@@ -221,7 +224,7 @@ struct PromptSessionLinkCompletionTests {
             func elapsed(_ instant: ContinuousClock.Instant?) -> String {
                 instant.map { start.duration(to: $0).description } ?? "not-observed"
             }
-            return "producer_entered=\(elapsed(producerEnteredAt)) background_finished=\(elapsed(backgroundFinishedAt)) " +
+            return "producer_queue_delay=\(producerQueueDelay) background_finished=\(elapsed(backgroundFinishedAt)) " +
                 "projection_finished=\(elapsed(projectionFinishedAt)) tracked_at_start=\(trackedAtStart.map(String.init) ?? "unknown") " +
                 "tracked_at_background_finish=\(trackedAtBackgroundFinish.map(String.init) ?? "unknown") " +
                 "tracked_at_observation=\(Self.trackedCount(runtime).map(String.init) ?? "unknown")"

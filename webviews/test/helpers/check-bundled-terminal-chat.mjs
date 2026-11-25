@@ -22,7 +22,7 @@ async function checkBundledChat(copy) {
     virtualConsole,
     beforeParse(window) {
       observer = new window.MutationObserver(() => {
-        if (window.document.querySelector(".terminal-chat-prose")?.textContent === "Review the roof inspection") {
+        if (window.document.querySelector(".terminal-chat-agent .terminal-chat-prose")) {
           didMount();
         }
       });
@@ -38,7 +38,8 @@ async function checkBundledChat(copy) {
                 theme: { isDark: true, pageBackground: "#111", surfaceBackground: "#222",
                   surfaceElevatedBackground: "#333", inputBackground: "#222", border: "#444",
                   borderStrong: "#555", text: "#eee", mutedText: "#ccc", softText: "#aaa",
-                  accent: "#0af", accentSoft: "#08b", danger: "#f44", shadow: "#000" },
+                  accent: "#0af", accentSoft: "#08b", danger: "#f44", shadow: "#000",
+                  terminalFontFamily: "Menlo", terminalFontSize: 16 },
                 copy: { chatConversation: copy.conversation, chatInteract: copy.interact,
                   chatReadOnly: copy.readOnly, chatUser: copy.user, chatObserved: "Transcript updates" },
               } };
@@ -49,6 +50,7 @@ async function checkBundledChat(copy) {
                 workspaceId: "workspace", surfaceId: "surface",
                 history: { has_more: false, source_revision: "original", messages: [
                   { id: "prompt", seq: 1, role: "user", kind: { type: "prose", text: "Review the roof inspection" } },
+                  { id: "answer", seq: 2, role: "agent", kind: { type: "prose", text: "**Findings**\n\n- Check [flashing](https://example.com)" } },
                 ] },
               } };
             case "terminalChat.openTerminal":
@@ -65,6 +67,12 @@ async function checkBundledChat(copy) {
     assert.equal(dom.window.document.querySelector(".terminal-chat-history")?.getAttribute("aria-label"), copy.conversation);
     assert.equal(dom.window.document.querySelector(".terminal-chat-role")?.textContent, copy.user);
     assert.equal(dom.window.document.querySelector(".terminal-chat-footer")?.textContent, copy.readOnly);
+    const prose = dom.window.document.querySelector(".terminal-chat-agent .terminal-chat-prose");
+    assert.equal(dom.window.document.documentElement.style.getPropertyValue("--agent-terminal-font-family"), '"Menlo", monospace');
+    assert.equal(dom.window.document.documentElement.style.getPropertyValue("--agent-terminal-font-size"), "16px");
+    assert.equal(prose.querySelector("strong")?.textContent, "Findings");
+    assert.equal(dom.window.getComputedStyle(prose.querySelector("ul")).listStyleType, "disc");
+    assert.equal(prose.querySelector("a")?.href, "https://example.com/");
     assert.equal(dom.window.document.querySelector("textarea,input,[contenteditable=true]"), null);
     assert.equal(dom.window.document.querySelector(".terminal-chat-header button"), null);
     assert.deepEqual(calls, ["app.context", "provider.list", "terminalChat.snapshot"]);
