@@ -13,8 +13,10 @@ Repository: `BrianBusby/bmux`
 
 ## Current Work
 
-- Active slice: none selected
-- Repository state: observation
+- Active slice: Diagnose capture and establish baseline (`session_visibility_baseline`)
+- Slice state: draft
+- Owner: shared
+- Repository state: active
 
 ## Release
 
@@ -194,6 +196,8 @@ Repository: `BrianBusby/bmux`
 
 | Caveat | Status |
 | --- | --- |
+| `unidentified_session_lifecycle_evidence_not_retained` | open |
+| `outcome_historical_rebuild_and_mixed_writer` | open |
 | `cross_session_identity_clock_legacy_upgrade` | open |
 | `work_brief_external_sources_unavailable` | monitoring |
 | `pe_live_storage_reclamation_capacity_and_concurrency` | resolved |
@@ -278,6 +282,7 @@ Repository: `BrianBusby/bmux`
 | `ssh_agent_environment_fixture_focused_gate_verification` | open |
 | `ssh_pty_lifecycle_fixture_verification` | open |
 | `codex_monitor_lease_fixture_verification` | open |
+| `codex_missing_provider_session_visibility` | open |
 | `respawn_window_protocol_fixture_focused_gate_verification` | open |
 | `browser_deferred_initial_lifecycle_verification` | open |
 | `workspace_fallback_regression_verification` | open |

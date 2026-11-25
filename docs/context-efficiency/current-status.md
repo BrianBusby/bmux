@@ -4,6 +4,12 @@ This file is the live handoff index for context-efficiency, provenance, and
 handoff work. Volatile project-state facts are generated from manifests and must
 not be maintained here.
 
+The session and turn visibility initiative is registered in Project Truth. Its
+[baseline record](../planning/session-visibility.md) tracks the initial source map,
+controlled probe, six dependent gates, and unverified native behavior. The
+baseline is active in an isolated worktree. PR #227 is merged but its
+caller-retrieval acceptance and dogfood caveats remain under observation.
+
 The Codex updater/launch follow-up is recorded in
 [implementation notes](../implementation-notes/codex-update-workspace-exit.md) and
 [the shared-session control decision](../product/shared-session-control-decision.md#codex-01610-compatibility-and-launch-resolution-october-8-2026).
