@@ -85,23 +85,34 @@ struct SessionOutcomeBoundaryAccumulator {
     private var turnIDs: [String]
     private var revisionIDs: [String]
     private var evidence: [ProvenanceTurnOutcomeEvidenceReference]
+    private var seenEvidenceKeys: Set<String>
+    private var seenTurnIDs: Set<String>
+    private var seenRevisionIDs: Set<String>
 
     init(boundary: ProvenanceTurnOutcomeRepositoryBoundary) {
         self.key = SessionOutcomeBoundaryKey(boundary: boundary)
         self.turnIDs = []
         self.revisionIDs = []
         self.evidence = []
+        self.seenEvidenceKeys = []
+        self.seenTurnIDs = []
+        self.seenRevisionIDs = []
     }
 
     mutating func append(_ boundary: ProvenanceTurnOutcomeRepositoryBoundary, from outcome: ProvenanceTurnOutcome) {
-        if !turnIDs.contains(outcome.turnID) {
+        if seenTurnIDs.insert(outcome.turnID).inserted {
             turnIDs.append(outcome.turnID)
         }
         let revisionID = outcome.projection.revisionID
-        if !revisionIDs.contains(revisionID) {
+        if seenRevisionIDs.insert(revisionID).inserted {
             revisionIDs.append(revisionID)
         }
-        evidence = Self.deduplicated(evidence + boundary.evidence)
+        for reference in boundary.evidence {
+            let key = Self.evidenceKey(reference)
+            if seenEvidenceKeys.insert(key).inserted {
+                evidence.append(reference)
+            }
+        }
     }
 
     func boundaryFact(id: String) -> ProvenanceSessionOutcomeRepositoryBoundary {
@@ -120,23 +131,13 @@ struct SessionOutcomeBoundaryAccumulator {
         )
     }
 
-    private static func deduplicated(
-        _ references: [ProvenanceTurnOutcomeEvidenceReference]
-    ) -> [ProvenanceTurnOutcomeEvidenceReference] {
-        var seen = Set<String>()
-        var result: [ProvenanceTurnOutcomeEvidenceReference] = []
-        for reference in references {
-            let key = [
-                reference.eventID,
-                String(reference.eventSequence),
-                reference.recordKind,
-                reference.recordID,
-                reference.interpretedByRuleVersion,
-            ].joined(separator: "\u{0}")
-            guard !seen.contains(key) else { continue }
-            seen.insert(key)
-            result.append(reference)
-        }
-        return result
+    private static func evidenceKey(_ reference: ProvenanceTurnOutcomeEvidenceReference) -> String {
+        [
+            reference.eventID,
+            String(reference.eventSequence),
+            reference.recordKind,
+            reference.recordID,
+            reference.interpretedByRuleVersion,
+        ].joined(separator: "\u{0}")
     }
 }
