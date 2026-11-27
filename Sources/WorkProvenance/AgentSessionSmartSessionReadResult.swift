@@ -16,6 +16,7 @@ enum AgentSessionSmartSessionReadResult: Equatable, Sendable {
     case notFound(sessionID: String, reason: String?)
     case failed(sessionID: String?)
     case available(AgentSessionSmartSessionSnapshot)
+    case stale(AgentSessionSmartSessionSnapshot, lastSuccessfulReadAt: Date)
 
     var bridgePayload: [String: Any] {
         switch self {
@@ -65,6 +66,15 @@ enum AgentSessionSmartSessionReadResult: Equatable, Sendable {
                 "status": "failed",
                 "sessionId": sessionID
             ])
+        case let .stale(snapshot, lastSuccessfulReadAt):
+            return [
+                "schemaVersion": 1,
+                "status": "failed",
+                "sessionId": snapshot.identity.sessionID,
+                "reason": "last_known_snapshot",
+                "snapshot": snapshot.bridgePayload,
+                "lastSuccessfulReadAt": AgentSessionSmartSessionBridgeDictionary.requiredISOString(lastSuccessfulReadAt)
+            ]
         case let .available(snapshot):
             return [
                 "schemaVersion": 1,

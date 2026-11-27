@@ -191,6 +191,16 @@ fixture containing prompts, plans, commands, file changes, and unrelated
 same-session evidence retained identical current and historical outcome rows.
 No production database was used.
 
+A subsequent same-host run of that 1,001-event seed sampled session-outcome
+boundary accumulation repeatedly deduplicating prior evidence. Incremental
+ordered deduplication reduced one replay from 38.24 to 27.28 seconds (user CPU
+36.85 to 26.22 seconds); peak process RSS was 117.9 MB in both runs. Current
+and historical turn and session outcome rows matched after JSON key
+normalization (100, 100, 1, and 101 rows respectively). This is a single
+warm-cache comparison with a 256 MiB RSS guard, not a scalability bound.
+Per-event historical revisions and evidence remain required; session-wide
+projection and ledger scans still grow with session history.
+
 `ReplayMemoryProbeTests` is opt-in. For example, create a disposable seed under
 `/tmp/bmux-collision-...` with `BMUX_COLLISION_BENCH_STAGE=seed`,
 `BMUX_COLLISION_BENCH_COUNT=1000`, and `BMUX_COLLISION_BENCH_PATH`, then replay
