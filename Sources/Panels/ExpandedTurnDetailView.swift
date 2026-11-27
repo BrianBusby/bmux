@@ -7,14 +7,14 @@ struct ExpandedTurnDetailView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
-            ExpandedTurnSection(title: String(localized: "agentSession.factual.finalOutput", defaultValue: "Final output")) {
+            ExpandedTurnSection(title: String(localized: "agentSession.factual.finalOutput", defaultValue: "Agent output")) {
                 if let finalOutput = presentation.finalOutput {
                     ExpandedTurnEvidenceText(text: finalOutput)
                         .padding(14).background(.secondary.opacity(0.09), in: RoundedRectangle(cornerRadius: 6))
                 } else {
                     Text(presentation.detail == nil
                          ? String(localized: "agentSession.expanded.detailUnavailable", defaultValue: "Detailed evidence is unavailable for this turn.")
-                         : String(localized: "agentSession.expanded.noFinal", defaultValue: "No final output recorded."))
+                         : String(localized: "agentSession.expanded.noFinal", defaultValue: "No agent output recorded."))
                         .foregroundStyle(.secondary)
                 }
                 if let summary = presentation.summary {
