@@ -3,7 +3,7 @@ import ProvenanceEngineContracts
 
 extension ProvenanceSQLiteRepository {
     static let turnOutcomeRuleID = "deterministic_turn_outcome"
-    static let turnOutcomeRuleVersion = "3"
+    static let turnOutcomeRuleVersion = "4"
     static let turnOutcomeCommandRuleVersion = "1"
 
     func refreshTurnOutcomes(
@@ -165,17 +165,7 @@ extension ProvenanceSQLiteRepository {
                     } ?? []
                 )
             } ?? []
-        var actionsCompleted = planItems
-            .filter { isCompletedPlanStatus($0.status) }
-            .map {
-                ProvenanceTurnOutcomeTextFact(
-                    id: "completed_action:\($0.id)",
-                    kind: "completed_plan_item",
-                    text: $0.text,
-                    evidence: $0.evidence
-                )
-            }
-        actionsCompleted += reasoningSummaries
+        let actionsCompleted = reasoningSummaries
             .filter { isExplicitCompletedActionReport($0.text) }
             .map {
                 ProvenanceTurnOutcomeTextFact(
