@@ -11376,6 +11376,13 @@
         }
       }
     },
+    "agentSession.web.smartSession.reportsIncomplete": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Additional session reports may be incomplete."}}, "ja": {"stringUnit": {"state": "translated", "value": "追加のセッション報告は不完全な場合があります。"}}}},
+    "agentSession.web.smartSession.reportsUnavailable": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Additional session reports are unavailable or unknown."}}, "ja": {"stringUnit": {"state": "translated", "value": "追加のセッション報告は利用できないか不明です。"}}}},
+    "agentSession.web.smartSession.relatedUncertain": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Related work was observed separately and may be incomplete; its current state is unknown."}}, "ja": {"stringUnit": {"state": "translated", "value": "関連作業は別途確認されたもので、不完全な場合があります。現在の状態は不明です。"}}}},
+    "agentSession.web.smartSession.relatedPartial": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Some related-work information is incomplete or unavailable. Current state is unknown."}}, "ja": {"stringUnit": {"state": "translated", "value": "関連作業の情報の一部は不完全か利用できません。現在の状態は不明です。"}}}},
+    "agentSession.web.smartSession.relatedUnavailable": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Related work is unavailable."}}, "ja": {"stringUnit": {"state": "translated", "value": "関連作業は利用できません。"}}}},
+    "agentSession.web.smartSession.stale": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Could not refresh. Showing last known session data."}}, "ja": {"stringUnit": {"state": "translated", "value": "更新できませんでした。最後に確認できたセッションデータを表示しています。"}}}},
+    "agentSession.web.smartSession.lastRead": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Session data last read"}}, "ja": {"stringUnit": {"state": "translated", "value": "セッションデータの最終読み込み日時"}}}},
     "agentSession.web.smartSession.loading": {
       "extractionState": "manual",
       "localizations": {
@@ -74157,6 +74164,13 @@
         }
       }
     },
+    "debug.factualStale.terminalUnavailable": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Terminal unavailable in this synthetic preview."}}, "ja": {"stringUnit": {"state": "translated", "value": "このサンプルプレビューではターミナルを使用できません。"}}}},
+    "debug.factualStale.title": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Factual Session Preview — Synthetic Data"}}, "ja": {"stringUnit": {"state": "translated", "value": "セッションの事実プレビュー — サンプルデータ"}}}},
+    "debug.factualStale.menu": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Factual Session Preview…"}}, "ja": {"stringUnit": {"state": "translated", "value": "セッションの事実プレビュー…"}}}},
+    "debug.factualStale.prompt": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Investigate session restoration after reconnecting."}}, "ja": {"stringUnit": {"state": "translated", "value": "再接続後のセッション復元を調査する。"}}}},
+    "debug.factualStale.workspace": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Riverbank workspace"}}, "ja": {"stringUnit": {"state": "translated", "value": "Riverbank ワークスペース"}}}},
+    "debug.factualStale.session": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Session restoration"}}, "ja": {"stringUnit": {"state": "translated", "value": "セッションの復元"}}}},
+    "debug.factualStale.description": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Synthetic preview; no session data is read."}}, "ja": {"stringUnit": {"state": "translated", "value": "サンプルのプレビューです。セッションデータは読み込みません。"}}}},
     "debug.menu.bonsplitTabBarDebug": {
       "localizations": {
         "en": {
@@ -245315,13 +245329,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d of %d steps complete"
+            "value": "Agent-reported complete: %d of %d steps"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d/%d ステップ完了"
+            "value": "エージェントの報告で完了: %d/%d ステップ"
           }
         }
       }
