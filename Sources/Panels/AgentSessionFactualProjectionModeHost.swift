@@ -24,6 +24,7 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
 
     @State private var viewMode: AgentSessionFactualProjectionMode = .terminal
     @State private var factualProjectionResult: AgentSessionFactualProjectionReadResult = .missingSession
+    @State private var factualRefreshToken = UUID()
     @State private var isLoadingFactualProjection = false
 
     var body: some View {
@@ -46,6 +47,9 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
             scheduleFactualProjectionRefreshIfNeeded()
         }
         .onChange(of: stableWorkspaceID) { _, _ in
+            factualRefreshToken = UUID()
+            factualProjectionResult = .missingSession
+            isLoadingFactualProjection = false
             scheduleFactualProjectionRefreshIfNeeded()
         }
         .onAppear {
@@ -150,11 +154,13 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
 
     private func refreshFactualProjection(showLoading: Bool = true) async {
         guard !isLoadingFactualProjection else { return }
+        let requestToken = UUID()
+        factualRefreshToken = requestToken
         if showLoading {
             isLoadingFactualProjection = true
         }
         defer {
-            if showLoading {
+            if showLoading && factualRefreshToken == requestToken {
                 isLoadingFactualProjection = false
             }
         }
@@ -166,6 +172,9 @@ struct AgentSessionFactualProjectionModeHost<PrimaryContent: View>: View {
         let nextResult = await workProvenanceRuntime.agentSessionFactualProjection(
             stableWorkspaceID: stableWorkspaceID
         )
+        guard factualRefreshToken == requestToken,
+              self.stableWorkspaceID == stableWorkspaceID,
+              !Task.isCancelled else { return }
         if nextResult != factualProjectionResult {
             factualProjectionResult = nextResult
         }
