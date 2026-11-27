@@ -189,7 +189,7 @@ extension BMUXCLI {
     func provenanceSessionsRelatedUsage() -> String {
         String(
             localized: "cli.provenance.sessions.related.usage",
-            defaultValue: "Usage: bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n       bmux provenance sessions related --current [--limit <1-5>] [--database <path>] [--json]"
+            defaultValue: "Usage: bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n       bmux provenance sessions related --current [--artifact-path <repo-relative-path>] [--ticket <id>] [--objective <text>] [--limit <1-5>] [--database <path>] [--json]"
         )
     }
 

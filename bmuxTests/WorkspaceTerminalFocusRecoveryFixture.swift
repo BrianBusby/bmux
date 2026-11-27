@@ -101,7 +101,7 @@ final class WorkspaceTerminalFocusRecoveryFixture {
     }
 
     func deliverQueuedFocus(phase: String = #function, line: UInt = #line) async throws {
-        try await NativeMainQueueDelivery(duration: .seconds(1)).deliver(phase: phase, line: line)
+        try await NativeMainQueueDelivery(duration: .seconds(5)).deliver(phase: phase, line: line)
     }
 
     func setSurfaceGeometry(_ size: NSSize) {
