@@ -1908,4 +1908,5 @@ test("newer work model schema replaces an equal factual revision", () => {
   const newRevision = { ...oldRevision, schemaVersion: 4 };
   expect(compareSmartSessionRevisions(newRevision, oldRevision)).toBeGreaterThan(0);
   expect(compareSmartSessionRevisions(oldRevision, newRevision)).toBeLessThan(0);
+  expect(compareSmartSessionRevisions({ ...newRevision, semanticInferenceIds: ["new"] }, oldRevision)).toBeGreaterThan(0);
 });

@@ -73,6 +73,10 @@ import Testing
             let model = try #require(try await client.sessionWorkModel(.init(sessionID: sessionID)).model)
             let modelObject = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(model)) as? [String: Any])
             #expect((modelObject["unresolvedTurnIDs"] as? [String]) == [turnID])
+            let safeOutcome = try #require(try await client.sessionOutcome(.init(sessionID: sessionID)).outcome)
+            #expect(safeOutcome.turnOutcomes.contains { $0.turnID == uniqueTurn.id })
+            #expect(!safeOutcome.turnOutcomes.contains { $0.turnID == turnID })
+            #expect(safeOutcome.completeness.fields.contains { $0.reason == "ownership_unresolved" })
         }
         let bProjection = try await client.factualSessionProjection(.init(sessionID: "session-B"))
         // Proposed contract: ownership_unresolved distinguishes a conflict from absence.

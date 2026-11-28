@@ -80,7 +80,7 @@ struct FactualTurnOwnershipTests {
             let outcome = try await repository.turnOutcome(ProvenanceTurnOutcomeRequest(turnID: turn.id))
             #expect(outcome.reason == "ownership_unresolved")
             let session = try await repository.sessionOutcome(ProvenanceSessionOutcomeRequest(sessionID: fixture.session.id))
-            #expect(session.reason == "ownership_unresolved")
+            #expect(session.outcome?.completeness.fields.contains { $0.reason == "ownership_unresolved" } == true)
             let foreignSnapshot = try #require(await repository.factualSessionProjection(
                 ProvenanceFactualSessionProjectionRequest(sessionID: foreign)).snapshot)
             #expect(foreignSnapshot.latestTurn == nil)
