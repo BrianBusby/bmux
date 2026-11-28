@@ -28,6 +28,8 @@ export type AgentSessionTheme = {
   accentSoft: string;
   danger: string;
   shadow: string;
+  terminalFontFamily?: string;
+  terminalFontSize?: number;
 };
 
 export type AppContext = {
@@ -205,6 +207,8 @@ export type AgentSessionCopy = {
   terminalView: string;
   sessionView: string;
   smartSessionRefresh: string;
+  smartSessionStale?: string;
+  smartSessionLastRead?: string;
   smartSessionLoading: string;
   smartSessionNoSession: string;
   smartSessionUnavailable: string;
@@ -249,6 +253,11 @@ export type AgentSessionCopy = {
   smartSessionWorkspace?: string;
   smartSessionCurrent?: string;
   smartSessionRelatedWork?: string;
+  smartSessionRelatedUncertain?: string;
+  smartSessionRelatedUnavailable?: string;
+  smartSessionRelatedPartial?: string;
+  smartSessionReportsUnavailable?: string;
+  smartSessionReportsIncomplete?: string;
   smartSessionNoCurrentTurn?: string;
   smartSessionNoLearnings?: string;
   smartSessionChanged?: string;
@@ -285,6 +294,8 @@ export type SmartSessionReadResult =
       sessionId?: string;
       reason?: string;
       diagnostics?: Record<string, unknown>;
+      snapshot?: SmartSessionSnapshot;
+      lastSuccessfulReadAt?: string;
     };
 
 export type SmartSessionSnapshot = {
@@ -294,8 +305,14 @@ export type SmartSessionSnapshot = {
   workModel?: SmartSessionWorkModel;
   factual: SmartSessionFactual;
   semanticMessages: SmartSessionSemanticMessage[];
+  semanticMessagesReadStatus?: "available" | "unavailable";
+  semanticMessagesCoverage?: "unknown";
   crossSessionAwareness: {
     status: "available" | "unavailable";
+    relatedReadStatus?: "available" | "partial" | "unavailable";
+    collisionReadStatus?: "available" | "partial" | "unavailable";
+    relatedAvailability?: Array<{ field: string; status: string; reason?: string }>;
+    collisionAvailability?: Array<{ field: string; status: string; reason?: string }>;
     relatedSessions: Array<{
       sessionId: string;
       lifecycleState: string;

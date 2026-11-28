@@ -88,7 +88,8 @@ extension ProvenanceSQLiteRepository {
                 eventSequence: item.eventSequence,
                 eventType: item.eventType,
                 field: "\(item.recordKind):\(item.recordID)",
-                sourceState: item.sourceState
+                sourceState: item.sourceState,
+                source: item.source == .inferred ? .inferred : nil
             )
         }
     }
@@ -208,6 +209,12 @@ extension ProvenanceSQLiteRepository {
         _ kind: ProvenanceRelatedSessionRelationshipKind
     ) -> Int {
         switch kind {
+        case .currentWorkspaceTicket:
+            return 110
+        case .objectiveTextMatch:
+            return 110
+        case .requestedArtifact:
+            return 110
         case .sameWorktree:
             return 100
         case .sessionTreeAncestor, .sessionTreeDescendant:
@@ -275,6 +282,16 @@ extension ProvenanceSQLiteRepository {
                     reason.relatedValue ?? "",
                     reason.relationshipDepth.map(String.init) ?? "",
                 ].joined(separator: "|"))
+                if [.currentWorkspaceTicket, .objectiveTextMatch, .requestedArtifact].contains(reason.kind) {
+                    parts.append("selector_observed_at|\(relatedSessionTimestampFingerprint(reason.observedAt))")
+                    for reference in reason.evidence {
+                        let fields = [reference.kind, reference.id, reference.eventSequence.map(String.init) ?? "",
+                                      reference.eventType ?? "", reference.projectionRevisionID ?? "",
+                                      reference.projectionWatermark.map(String.init) ?? "", reference.field ?? "",
+                                      reference.sourceState ?? ""]
+                        parts.append("selector_evidence|" + fields.map { Data($0.utf8).base64EncodedString() }.joined(separator: "|"))
+                    }
+                }
             }
             for field in brief.semanticFields {
                 parts.append(relatedSessionSemanticFieldFingerprint(field))
@@ -309,17 +326,21 @@ extension ProvenanceSQLiteRepository {
     func relatedSessionRequestFingerprint(
         limit: Int,
         updatedAfter: Date?,
-        exclusionLimit: Int
+        exclusionLimit: Int,
+        artifactPath: String? = nil,
+        objective: String? = nil,
+        ticket: String? = nil
     ) -> String {
-        stableIDFactory.id(
-            prefix: "related-session-request",
-            value: [
-                "schema=1",
-                "limit=\(limit)",
-                "updated_after=\(relatedSessionTimestampFingerprint(updatedAfter))",
-                "exclusion_limit=\(exclusionLimit)",
-            ].joined(separator: "\n")
-        )
+        var fields = [
+            "schema=1",
+            "limit=\(limit)",
+            "updated_after=\(relatedSessionTimestampFingerprint(updatedAfter))",
+            "exclusion_limit=\(exclusionLimit)",
+        ]
+        if let artifactPath { fields.append("artifact_path_base64=\(Data(artifactPath.utf8).base64EncodedString())") }
+        if let objective { fields.append("objective_base64=\(Data(objective.utf8).base64EncodedString())") }
+        if let ticket { fields.append("ticket_base64=\(Data(ticket.utf8).base64EncodedString())") }
+        return stableIDFactory.id(prefix: "related-session-request", value: fields.joined(separator: "\n"))
     }
 
     func relatedSessionFreshnessDate(

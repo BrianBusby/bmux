@@ -26,6 +26,9 @@ public struct ProvenanceRelatedSessionEvidenceReference: Codable, Equatable, Sen
     /// Optional availability state of the referenced source.
     public let sourceState: String?
 
+    /// Evidence claim classification, when needed to distinguish inference from observation.
+    public let source: ProvenanceSource?
+
     /// Creates a related-session evidence reference.
     public init(
         kind: String,
@@ -35,7 +38,8 @@ public struct ProvenanceRelatedSessionEvidenceReference: Codable, Equatable, Sen
         projectionRevisionID: String? = nil,
         projectionWatermark: Int? = nil,
         field: String? = nil,
-        sourceState: String? = nil
+        sourceState: String? = nil,
+        source: ProvenanceSource? = nil
     ) {
         self.kind = kind
         self.id = id
@@ -45,5 +49,6 @@ public struct ProvenanceRelatedSessionEvidenceReference: Codable, Equatable, Sen
         self.projectionWatermark = projectionWatermark
         self.field = field
         self.sourceState = sourceState
+        self.source = source
     }
 }
