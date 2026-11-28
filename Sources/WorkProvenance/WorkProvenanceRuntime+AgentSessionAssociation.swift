@@ -79,6 +79,8 @@ extension WorkProvenanceRuntime {
                 "revision": association.latestEventSequence.map(String.init) ?? "unknown"
             ])
             return projectionResult
+        case .stale, .refreshing:
+            return projectionResult
         case .notFound(_, let reason):
             let pending = Self.readiness(
                 association: association,
@@ -145,7 +147,7 @@ extension WorkProvenanceRuntime {
         readiness: ProvenanceWorkspaceCodingAgentSessionReadiness
     ) -> AgentSessionSmartSessionReadResult {
         switch smartSessionResult {
-        case .available:
+        case .available, .stale:
             return smartSessionResult
         case .notFound(_, let reason):
             let pending = Self.readiness(

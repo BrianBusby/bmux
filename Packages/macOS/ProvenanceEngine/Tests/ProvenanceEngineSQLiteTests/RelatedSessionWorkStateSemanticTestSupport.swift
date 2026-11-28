@@ -149,7 +149,8 @@ enum RelatedSessionWorkStateSemanticTestSupport {
         fixture: RelatedSessionFixture,
         into repository: ProvenanceSQLiteRepository
     ) async throws -> ProvenanceCodingAgentSessionSemanticInferenceResponse {
-        try await repository.publishCodingAgentSessionSemanticInferences(
+        let client: any ProvenanceEngineClient = repository
+        return try await client.publishCodingAgentSessionSemanticInferences(
             ProvenanceCodingAgentSessionSemanticInferenceRequest(
                 sessionID: sessionID,
                 turnLimit: turnLimit,

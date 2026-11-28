@@ -461,15 +461,20 @@ public extension ProvenanceEngineClient {
                 continue
             }
 
+            // Lifecycle management must see stale phase messages so it can retain
+            // or supersede them even when current-state reads hide their claims.
+            let readPhaseHistory = candidate.scope == .session &&
+                candidate.semanticInferenceKind == ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue
             let existing = try await semanticMessages(
                 ProvenanceSemanticMessageQueryRequest(
                     scope: candidate.scope,
                     scopeID: candidate.scopeID,
                     semanticInferenceKind: candidate.semanticInferenceKind,
                     presentationPolicyID: candidate.presentationPolicyID,
-                    limit: 1
+                    includeInactive: readPhaseHistory,
+                    limit: readPhaseHistory ? nil : 1
                 )
-            ).records.first
+            ).records.first { $0.status == .active }
 
             if let existing, existing.messageClaimMatches(candidate) {
                 activeRecords.append(existing)

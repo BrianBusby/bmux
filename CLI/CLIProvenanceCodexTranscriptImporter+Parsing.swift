@@ -154,6 +154,19 @@ extension CLIProvenanceCodexTranscriptImporter {
         return status
     }
 
+    /// Extract only an immediately awaited literal patch call at the start of an exec script.
+    /// Arbitrary JavaScript, conditionals, variables, and non-JSON string literals stay unsupported.
+    static func directExecPatch(from script: String) -> String? {
+        let pattern = #"^\s*text\(\s*await\s+tools\.apply_patch\(\s*("(?:\\.|[^"\\])*")\s*\)\s*\)\s*;"#
+        guard let expression = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]),
+              let match = expression.firstMatch(in: script, range: NSRange(script.startIndex..., in: script)),
+              let range = Range(match.range(at: 1), in: script),
+              let data = String(script[range]).data(using: .utf8),
+              let value = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? String
+        else { return nil }
+        return value
+    }
+
     static func patchFileChanges(from patch: String) -> [PatchFileChange] {
         var changes: [PatchFileChange] = []
         for line in patch.components(separatedBy: .newlines) {

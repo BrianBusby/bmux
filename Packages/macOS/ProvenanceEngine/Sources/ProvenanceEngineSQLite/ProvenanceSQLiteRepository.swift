@@ -7,6 +7,10 @@ actor ProvenanceSQLiteRepository {
     let payloadEncoder: JSONEncoder
     let payloadDecoder: JSONDecoder
     let stableIDFactory: ProvenanceStableIDFactory
+#if DEBUG
+    var replayProgressForTesting: (@Sendable () throws -> Void)?
+    var didReadFactualSessionForTesting: (@Sendable () -> Void)?
+#endif
 
     /// Opens the database and applies the supplied migrations before returning.
     ///
@@ -536,54 +540,6 @@ actor ProvenanceSQLiteRepository {
             )
         }
         return records
-    }
-
-    /// Rebuilds current-state projections by replaying the immutable event ledger in append order.
-    ///
-    /// - Parameter batchSize: Maximum number of ledger entries decoded per cursor read.
-    /// - Returns: Number of ledger events replayed into projection tables.
-    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the rebuild or stored enum data is invalid.
-    func rebuildProjectionsFromEventLedger(batchSize: Int = 1_000) throws -> Int {
-        let rowLimit = max(1, batchSize)
-        var afterSequence: Int?
-        var replayedCount = 0
-
-        try database.execute("BEGIN IMMEDIATE TRANSACTION")
-        do {
-            try clearProjectionTables()
-            while true {
-                let entries = try eventLedgerEntries(afterSequence: afterSequence, limit: rowLimit)
-                guard !entries.isEmpty else { break }
-
-                for entry in entries {
-                    try applyProjectionUpdates(
-                        from: entry.event,
-                        latestEventSequence: entry.sequence,
-                        pruneOutcomes: false
-                    )
-                    afterSequence = entry.sequence
-                    replayedCount += 1
-                }
-
-                guard entries.count == rowLimit else { break }
-            }
-            // All cross-projection citations are present only after the complete replay.
-            // Pruning during replay could retire a revision cited by a later event.
-            if try schemaVersion() >= 29 {
-                try database.execute(
-                    "UPDATE provenance_outcome_retention_state SET legacy_citations_indexed = 1 WHERE policy_version = 1"
-                )
-            }
-            try database.execute("COMMIT")
-        } catch {
-            try? database.execute("ROLLBACK")
-            throw error
-        }
-
-        if try schemaVersion() >= 29 {
-            while try pruneOutcomePayloads(dryRun: false, batchSize: 1_000).prunedRows > 0 {}
-        }
-        return replayedCount
     }
 
     /// Reads one current-state repository projection by stable ID.
@@ -1351,79 +1307,6 @@ actor ProvenanceSQLiteRepository {
         )
     }
 
-    /// Reads the factual session projection snapshot for one coding-agent session.
-    ///
-    /// - Parameter request: Factual session projection query parameters.
-    /// - Returns: Found response with revisioned factual coding-agent evidence, or `no_session` when absent.
-    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
-    func factualSessionProjection(_ request: ProvenanceFactualSessionProjectionRequest) throws -> ProvenanceFactualSessionProjectionResponse {
-        guard let session = try session(id: request.sessionID) else {
-            return ProvenanceFactualSessionProjectionResponse(
-                found: false,
-                reason: "no_session",
-                sessionID: request.sessionID,
-                snapshot: nil
-            )
-        }
-
-        let providerThreads = try codingAgentThreadIDs(sessionID: request.sessionID).compactMap {
-            try codingAgentThread(id: $0)
-        }
-        let allTurnIDs = try codingAgentTurnIDs(sessionID: request.sessionID, limit: nil)
-        let latestTurnID = allTurnIDs.last
-        let latestTurn = try latestTurnID.flatMap { try factualTurnSnapshot(turnID: $0) }
-        let priorTurns = try allTurnIDs.dropLast(latestTurnID == nil ? 0 : 1).compactMap { turnID in
-            try codingAgentTurn(id: turnID).map(ProvenanceFactualSessionProjectionTurnReference.init(turn:))
-        }
-        let turns = try codingAgentTurnIDs(
-            sessionID: request.sessionID,
-            limit: request.turnLimit
-        ).compactMap { turnID in
-            try factualTurnSnapshot(turnID: turnID)
-        }
-
-        return ProvenanceFactualSessionProjectionResponse(
-            found: true,
-            sessionID: request.sessionID,
-            snapshot: ProvenanceFactualSessionProjectionSnapshot(
-                revision: try latestEventSequence(sessionID: request.sessionID),
-                session: session,
-                providerThreadIdentities: providerThreads.map(
-                    ProvenanceFactualSessionProjectionProviderThreadIdentity.init(thread:)
-                ),
-                providerThreads: providerThreads,
-                latestTurn: latestTurn,
-                priorTurns: priorTurns,
-                turns: turns
-            )
-        )
-    }
-
-    /// Reads factual detail for one observed coding-agent turn.
-    ///
-    /// - Parameter request: Factual turn-detail query parameters.
-    /// - Returns: Found response with revisioned factual turn evidence, or `no_turn` when absent.
-    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read.
-    func factualSessionTurnDetail(_ request: ProvenanceFactualSessionTurnDetailRequest) async throws
-        -> ProvenanceFactualSessionTurnDetailResponse {
-        guard let detail = try factualTurnSnapshot(turnID: request.turnID) else {
-            return ProvenanceFactualSessionTurnDetailResponse(
-                found: false,
-                reason: "no_turn",
-                turnID: request.turnID,
-                turnDetail: nil
-            )
-        }
-
-        return ProvenanceFactualSessionTurnDetailResponse(
-            found: true,
-            turnID: request.turnID,
-            sessionID: detail.turn.sessionID,
-            revision: try latestEventSequence(sessionID: detail.turn.sessionID),
-            turnDetail: detail
-        )
-    }
-
     /// Publishes one semantic inference record and supersedes historical records atomically.
     ///
     /// - Parameter request: Semantic inference publish request.
@@ -1541,91 +1424,6 @@ actor ProvenanceSQLiteRepository {
         )
     }
 
-    /// Reads semantic message records for one scope.
-    ///
-    /// - Parameter request: Semantic message query parameters.
-    /// - Returns: Matching semantic messages in newest-first order.
-    /// - Throws: ``ProvenanceSQLiteError`` when SQLite rejects the read or stored JSON cannot be decoded.
-    func semanticMessageRecords(_ request: ProvenanceSemanticMessageQueryRequest) throws
-        -> ProvenanceSemanticMessageQueryResponse {
-        let rowLimit = request.limit.map { max(0, $0) }
-        var sql = """
-            SELECT
-                id,
-                schema_version,
-                semantic_inference_id,
-                semantic_inference_kind,
-                scope,
-                scope_id,
-                concise_phrase,
-                expanded_meaning,
-                structured_semantic_payload_json,
-                supporting_evidence_refs_json,
-                supporting_factual_revision,
-                confidence,
-                specificity,
-                presentation_producer_type,
-                presentation_producer_id,
-                presentation_producer_version,
-                presentation_policy_id,
-                presentation_policy_version,
-                locale_identifier,
-                created_at_seconds,
-                supersedes_json,
-                superseded_by,
-                status
-            FROM provenance_semantic_messages
-            WHERE scope = ?
-              AND scope_id = ?
-            """
-        if request.semanticInferenceKind != nil {
-            sql += "\n  AND semantic_inference_kind = ?"
-        }
-        if request.semanticInferenceID != nil {
-            sql += "\n  AND semantic_inference_id = ?"
-        }
-        if request.presentationPolicyID != nil {
-            sql += "\n  AND presentation_policy_id = ?"
-        }
-        if !request.includeInactive {
-            sql += "\n  AND status = 'active'"
-        }
-        sql += "\nORDER BY created_at_seconds DESC, rowid DESC"
-        if rowLimit != nil {
-            sql += "\nLIMIT ?"
-        }
-
-        let query = try database.prepare(sql)
-        defer { query.finalize() }
-
-        var bindIndex: Int32 = 1
-        try query.bind(request.scope.rawValue, at: bindIndex)
-        bindIndex += 1
-        try query.bind(request.scopeID, at: bindIndex)
-        bindIndex += 1
-        if let kind = request.semanticInferenceKind {
-            try query.bind(kind, at: bindIndex)
-            bindIndex += 1
-        }
-        if let semanticInferenceID = request.semanticInferenceID {
-            try query.bind(semanticInferenceID, at: bindIndex)
-            bindIndex += 1
-        }
-        if let presentationPolicyID = request.presentationPolicyID {
-            try query.bind(presentationPolicyID, at: bindIndex)
-            bindIndex += 1
-        }
-        if let rowLimit {
-            try query.bind(rowLimit, at: bindIndex)
-        }
-
-        var records: [ProvenanceSemanticMessageRecord] = []
-        while try query.step() {
-            records.append(try semanticMessage(from: query))
-        }
-        return ProvenanceSemanticMessageQueryResponse(records: records)
-    }
-
     private func worktree(from query: ProvenanceSQLiteStatement) -> ProvenanceWorktreeRecord? {
         guard let id = query.string(at: 0),
               let repositoryID = query.string(at: 1),
@@ -1656,7 +1454,7 @@ actor ProvenanceSQLiteRepository {
         return (query.int(at: 0), latestSequence)
     }
 
-    private func eventSequence(id: String) throws -> Int? {
+    func eventSequence(id: String) throws -> Int? {
         let query = try database.prepare("SELECT sequence FROM provenance_events WHERE id = ?")
         defer { query.finalize() }
         try query.bind(id, at: 1)
@@ -1664,7 +1462,7 @@ actor ProvenanceSQLiteRepository {
         return query.int(at: 0)
     }
 
-    private func latestEventSequence(sessionID: String) throws -> Int? {
+    func latestEventSequence(sessionID: String) throws -> Int? {
         let query = try database.prepare("SELECT MAX(sequence) FROM provenance_events WHERE session_id = ?")
         defer { query.finalize() }
         try query.bind(sessionID, at: 1)
@@ -2826,7 +2624,7 @@ actor ProvenanceSQLiteRepository {
         )
     }
 
-    private func insertEvent(_ event: ProvenanceEvent) throws {
+    @discardableResult func insertEvent(_ event: ProvenanceEvent, ignoreIDConflict: Bool = false) throws -> Bool {
         let payloadData = try payloadEncoder.encode(event.payload)
         guard let payloadJSON = String(data: payloadData, encoding: .utf8) else {
             throw ProvenanceSQLiteError.sqlite(message: "failed to encode event payload")
@@ -2858,7 +2656,7 @@ actor ProvenanceSQLiteRepository {
                 payload_json,
                 evidence_origin,
                 evidence_scope_json
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) \(ignoreIDConflict ? "ON CONFLICT(id) DO NOTHING" : "")
             """
         )
         defer { insert.finalize() }
@@ -2876,11 +2674,11 @@ actor ProvenanceSQLiteRepository {
         try insert.bind(payloadJSON, at: 11)
         try insert.bind(event.evidenceOrigin?.rawValue, at: 12)
         try insert.bind(evidenceScopeJSON, at: 13)
-
         _ = try insert.step()
+        return database.changes == 1
     }
 
-    private func applyProjectionUpdates(
+    func applyProjectionUpdates(
         from event: ProvenanceEvent, latestEventSequence: Int? = nil, pruneOutcomes: Bool = true
     ) throws {
         let payload = event.payload
@@ -3861,7 +3659,7 @@ actor ProvenanceSQLiteRepository {
         return try payloadDecoder.decode(type, from: data)
     }
 
-    private func insertSemanticInference(_ record: ProvenanceSemanticInferenceRecord) throws {
+    func insertSemanticInference(_ record: ProvenanceSemanticInferenceRecord) throws {
         let payloadJSON = try encodedSemanticJSON(
             record.payload,
             failureMessage: "failed to encode semantic inference payload"
@@ -3920,7 +3718,7 @@ actor ProvenanceSQLiteRepository {
         _ = try insert.step()
     }
 
-    private func supersedeSemanticInference(
+    func supersedeSemanticInference(
         id: String,
         replacement: ProvenanceSemanticInferenceRecord
     ) throws {
@@ -4111,7 +3909,7 @@ actor ProvenanceSQLiteRepository {
         }
     }
 
-    private func semanticMessage(
+    func semanticMessage(
         from query: ProvenanceSQLiteStatement
     ) throws -> ProvenanceSemanticMessageRecord {
         guard let id = query.string(at: 0),
@@ -5431,5 +5229,5 @@ actor ProvenanceSQLiteRepository {
         + workspaceDisplayOwnerAvatarMigrations
         + outcomeRetentionMigrations
         + workspaceDisplayPullRequestTitleMigrations
-        + workspaceAssociationIdentityTimestampMigrations
+        + workspaceAssociationIdentityTimestampMigrations + turnClaimIndexMigrations
 }

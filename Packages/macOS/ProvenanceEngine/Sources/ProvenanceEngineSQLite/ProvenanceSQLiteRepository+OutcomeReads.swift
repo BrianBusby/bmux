@@ -5,6 +5,16 @@ import ProvenanceEngineContracts
 extension ProvenanceSQLiteRepository {
     func turnOutcomeRecord(_ request: ProvenanceTurnOutcomeRequest) throws
         -> ProvenanceTurnOutcomeResponse {
+        try database.withReadSnapshotRetryingWrites { try readTurnOutcomeRecord(request) }
+    }
+
+    private func readTurnOutcomeRecord(_ request: ProvenanceTurnOutcomeRequest) throws
+        -> ProvenanceTurnOutcomeResponse {
+        if try hasConflictingTurnClaims(request.turnID) {
+            return ProvenanceTurnOutcomeResponse(
+                found: false, reason: "ownership_unresolved", turnID: request.turnID, outcome: nil
+            )
+        }
         guard try codingAgentTurn(id: request.turnID) != nil else {
             return ProvenanceTurnOutcomeResponse(
                 found: false,
@@ -103,12 +113,48 @@ extension ProvenanceSQLiteRepository {
 
     func sessionOutcomeRecord(_ request: ProvenanceSessionOutcomeRequest) throws
         -> ProvenanceSessionOutcomeResponse {
+        try database.withReadSnapshotRetryingWrites { try readSessionOutcomeRecord(request) }
+    }
+
+    private func readSessionOutcomeRecord(_ request: ProvenanceSessionOutcomeRequest) throws
+        -> ProvenanceSessionOutcomeResponse {
         guard try session(id: request.sessionID) != nil else {
             return ProvenanceSessionOutcomeResponse(
                 found: false,
                 reason: "no_session",
                 sessionID: request.sessionID,
                 outcome: nil
+            )
+        }
+
+        let claims = try unresolvedTurnClaims(sessionID: request.sessionID)
+        if !claims.ids.isEmpty {
+            if let revisionID = request.revisionID {
+                let retained = try sessionOutcomeRevisionResponse(sessionID: request.sessionID, revisionID: revisionID)
+                if let outcome = retained.outcome,
+                   outcome.completeness.fields.contains(where: { $0.reason == "ownership_unresolved" }),
+                   outcome.constituentTurns.allSatisfy({ !claims.ids.contains($0.turnID) }) {
+                    return retained
+                }
+            }
+            // Reconstruct the safe current revision instead of exposing an unsafe older aggregate.
+            let watermark = try [latestEventSequence(sessionID: request.sessionID), claims.watermark].compactMap { $0 }.max()
+            let outcome = try projectedSessionOutcome(
+                sessionID: request.sessionID, latestEventSequence: watermark, unresolvedTurnIDs: claims.ids
+            )
+            if let revisionID = request.revisionID, revisionID != outcome?.projection.revisionID {
+                return ProvenanceSessionOutcomeResponse(
+                    found: false, reason: "ownership_unresolved", sessionID: request.sessionID, outcome: nil
+                )
+            }
+            if let outcome, try !sessionOutcomeRevisionResponse(
+                sessionID: request.sessionID, revisionID: outcome.projection.revisionID
+            ).found {
+                try retainPartialSessionOutcome(outcome)
+            }
+            return ProvenanceSessionOutcomeResponse(
+                found: outcome != nil, reason: outcome == nil ? "no_session" : nil,
+                sessionID: request.sessionID, outcome: outcome
             )
         }
 

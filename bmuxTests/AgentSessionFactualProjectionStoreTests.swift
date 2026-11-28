@@ -55,8 +55,25 @@ struct AgentSessionFactualProjectionStoreTests {
         let store = AgentSessionFactualProjectionStore(client: client)
 
         #expect(await store.refreshedSnapshot(sessionID: "session-1") == .available(snapshot))
-        #expect(await store.refreshedSnapshot(sessionID: "session-1") == .available(snapshot))
+        let afterFailure = await store.refreshedSnapshot(sessionID: "session-1")
+        #expect(afterFailure != .available(snapshot))
+        #expect(store.snapshot(sessionID: "session-1") == afterFailure)
         #expect(await client.factualProjectionRequests().count == 2)
+    }
+
+    @Test
+    func staleSnapshotKeepsLastSuccessfulReadTimeAcrossFailures() async {
+        let snapshot = Self.snapshot(sessionID: "session-1", revision: 7)
+        let client = FakeProvenanceEngineClient(factualProjectionResults: [
+            .success(.init(found: true, sessionID: "session-1", snapshot: snapshot)),
+            .failure(TestError.unavailable), .failure(TestError.unavailable),
+        ])
+        let readTime = Date(timeIntervalSince1970: 100)
+        let store = AgentSessionFactualProjectionStore(client: client, now: { readTime })
+        #expect(await store.refreshedSnapshot(sessionID: "session-1") == .available(snapshot))
+        #expect(await store.refreshedSnapshot(sessionID: "session-1") == .stale(snapshot, lastSuccessfulReadAt: readTime))
+        #expect(await store.refreshedSnapshot(sessionID: "session-1") == .stale(snapshot, lastSuccessfulReadAt: readTime))
+        #expect(store.snapshot(sessionID: "session-1") == .stale(snapshot, lastSuccessfulReadAt: readTime))
     }
 
     @Test
@@ -88,6 +105,7 @@ struct AgentSessionFactualProjectionStoreTests {
         let store = AgentSessionFactualProjectionStore(client: client)
 
         #expect(await store.refreshedSnapshot(sessionID: "session-1") == .failed(sessionID: "session-1"))
+        #expect(store.snapshot(sessionID: "session-1") == .failed(sessionID: "session-1"))
     }
 
     @Test
@@ -136,21 +154,33 @@ struct AgentSessionFactualProjectionStoreTests {
                 found: true,
                 sessionID: "session-1",
                 model: olderModel
+            )),
+            .success(ProvenanceSessionWorkModelResponse(
+                found: true,
+                sessionID: "session-1",
+                model: newerModel
             ))
         ])
-        let store = AgentSessionSmartSessionStore(client: client)
+        let readTime = Date(timeIntervalSince1970: 1_800_000_300)
+        let store = AgentSessionSmartSessionStore(client: client, now: { readTime })
 
         guard case let .available(firstSnapshot) = await store.refreshedSnapshot(sessionID: "session-1"),
-              case let .available(secondSnapshot) = await store.refreshedSnapshot(sessionID: "session-1") else {
-            Issue.record("Expected available Smart Session snapshots")
+              case let .stale(secondSnapshot, lastSuccessfulReadAt) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Expected an available snapshot followed by the retained stale snapshot")
             return
         }
 
         #expect(firstSnapshot.revision.key == secondSnapshot.revision.key)
+        #expect(lastSuccessfulReadAt == readTime)
         #expect(
             secondSnapshot.workModel.revision.latestSemanticInferenceCreatedAt ==
             newerModel.revision.latestSemanticInferenceCreatedAt
         )
+        guard case let .available(recoveredSnapshot) = await store.refreshedSnapshot(sessionID: "session-1") else {
+            Issue.record("Expected an equal current read to restore availability")
+            return
+        }
+        #expect(recoveredSnapshot.revision.key == firstSnapshot.revision.key)
     }
 
     @Test
@@ -176,6 +206,21 @@ struct AgentSessionFactualProjectionStoreTests {
         #expect(currentActivity.detail == basisDetail)
         #expect(currentActivity.detail != "file_change_attribution")
         #expect(activityPayload.basis == "file_change_attribution")
+    }
+
+    @Test
+    func providerVisibleCommentaryIsPresentedAsUpdatesRatherThanBlockers() throws {
+        // Both generic commentary and provider reasoning summaries use this collection.
+        let snapshot = Self.snapshot(sessionID: "session-1", revision: 42,
+                                     reportTexts: ["Checking the catalog.", "The file contains two entries."])
+        let reports = try #require(snapshot.latestTurn).visibleReasoningSummaries
+        let japanese = AgentSessionUpdatePresentation.overviewTitle == "エージェントの報告"
+        #expect(AgentSessionUpdatePresentation.overviewTitle == (japanese ? "エージェントの報告" : "Agent updates"))
+        #expect(AgentSessionUpdatePresentation.overviewCount(reports.count) == (japanese ? "合計 2 件" : "2 total"))
+        #expect(AgentSessionUpdatePresentation.countTitle == (japanese ? "エージェントの報告" : "Agent updates"))
+        #expect(AgentSessionUpdatePresentation.detailTitle == (japanese ? "エージェントの報告" : "Agent update"))
+        #expect(AgentSessionUpdatePresentation.runTitle == (japanese ? "エージェントの報告" : "Agent updates"))
+        #expect(AgentSessionUpdatePresentation.activityBasis == (japanese ? "エージェントの報告に基づく" : "Based on an agent update"))
     }
 
     @Test
@@ -215,7 +260,8 @@ struct AgentSessionFactualProjectionStoreTests {
     private static func snapshot(
         sessionID: String,
         revision: Int,
-        priorPrompt: String? = nil
+        priorPrompt: String? = nil,
+        reportTexts: [String] = []
     ) -> ProvenanceFactualSessionProjectionSnapshot {
         let updatedAt = Date(timeIntervalSince1970: 1_800_000_000)
         let thread = ProvenanceCodingAgentThreadRecord(
@@ -308,7 +354,12 @@ struct AgentSessionFactualProjectionStoreTests {
             ),
             currentPlan: nil,
             completedCommands: [],
-            visibleReasoningSummaries: [],
+            visibleReasoningSummaries: reportTexts.enumerated().map { index, text in
+                ProvenanceCodingAgentReasoningSummaryRecord(
+                    id: "report-\(index)", sessionID: sessionID, threadID: thread.id, turnID: turn.id,
+                    provider: "codex", text: text, completedAt: updatedAt, source: .observed, confidence: .high
+                )
+            },
             fileChangeAttributions: []
         )
         return ProvenanceFactualSessionProjectionSnapshot(
