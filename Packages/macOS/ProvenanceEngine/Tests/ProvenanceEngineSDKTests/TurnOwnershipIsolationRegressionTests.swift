@@ -140,6 +140,15 @@ import Testing
                 sessionID: sessionID, revisionID: safeOutcome.projection.revisionID
             ))
             #expect(sameRevision.outcome == safeOutcome)
+            let updatedSession = ProvenanceSessionRecord(id: sessionID, agentKind: "codex", status: "active",
+                updatedAt: time.addingTimeInterval(10))
+            _ = try await client.appendEvent(.init(event: .init(id: "updated-\(sessionID)", eventType: .sessionObserved,
+                timestamp: updatedSession.updatedAt, sessionID: sessionID, source: .observed, confidence: .high,
+                payload: .init(session: updatedSession))))
+            let retainedRevision = try await client.sessionOutcome(.init(
+                sessionID: sessionID, revisionID: safeOutcome.projection.revisionID
+            ))
+            #expect(retainedRevision.outcome == safeOutcome)
         }
         let safePrompt = ProvenanceCodingAgentPromptRecord(
             id: "safe-prompt", sessionID: "session-A", turnID: "independent-session-A", provider: "codex",
