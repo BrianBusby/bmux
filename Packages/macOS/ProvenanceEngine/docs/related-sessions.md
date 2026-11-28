@@ -279,8 +279,11 @@ LLM-authored cross-session summaries.
 
 The related-session request accepts optional `artifactPath`, `ticket`, and
 `objective` selectors. When any selector is present, candidates must share an
-observed repository identity with the target; tree and other explicit links to a
-session in another repository do not override this default scope. Every supplied
+observed repository identity with the target; a valid absolute Git common
+directory links worktrees of the same repository even when their repository IDs
+and paths differ. Empty or relative common-directory values do not link work. Broad shared-artifact reasons likewise require the
+matching artifacts themselves to belong to a common repository. Tree and other explicit links to a session in another repository do not
+override this default scope. Every supplied
 selector must match. Path matching compares an exact repository-relative path
 against a candidate's recorded changed artifacts. Ticket matching compares an
 exact ID with current metadata on a linked workspace; this does not establish
@@ -291,7 +294,9 @@ shared repository through their source turn or file-change evidence. Ticket
 metadata must identify a shared repository. Facts with missing repository
 attribution are not matched; task evidence availability remains partial. Match
 observation times come from the matching source events and are unknown when
-those timestamps are unavailable, rather than from unrelated later events.
+those timestamps are unavailable, rather than from unrelated later events. Inferred
+evidence references carry `source: inferred`; they are not proof that an
+attempted change succeeded.
 
 Matches have typed reasons and source references. Direct matches sort before
 broad relationships; ties use candidate freshness and then session ID. Within

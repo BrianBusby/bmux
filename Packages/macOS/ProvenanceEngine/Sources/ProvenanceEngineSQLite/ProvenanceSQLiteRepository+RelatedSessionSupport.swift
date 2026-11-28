@@ -88,7 +88,8 @@ extension ProvenanceSQLiteRepository {
                 eventSequence: item.eventSequence,
                 eventType: item.eventType,
                 field: "\(item.recordKind):\(item.recordID)",
-                sourceState: item.sourceState
+                sourceState: item.sourceState,
+                source: item.source == .inferred ? .inferred : nil
             )
         }
     }

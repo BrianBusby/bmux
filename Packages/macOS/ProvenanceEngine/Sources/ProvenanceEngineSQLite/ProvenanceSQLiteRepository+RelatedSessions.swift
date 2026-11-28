@@ -86,7 +86,7 @@ extension ProvenanceSQLiteRepository {
                 continue
             }
 
-            var reasons = relatedSessionReasons(
+            var reasons = try relatedSessionReasons(
                 target: targetProfile,
                 candidate: candidateProfile,
                 treeContext: treeContext

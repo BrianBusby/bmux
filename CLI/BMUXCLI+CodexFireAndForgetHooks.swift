@@ -56,10 +56,7 @@ extension BMUXCLI {
             args.append("-c")
             args.append(toml)
         }
-        // NUL-TERMINATE each arg (trailing NUL after the last too) so a bash
-        // `while IFS= read -r -d '' arg` loop captures every element including
-        // the final one — a separator-only stream drops the unterminated last
-        // arg at EOF.
+        // NUL-terminate every argument, including the final one.
         var out = Data()
         for arg in args {
             out.append(Data(arg.utf8))
@@ -79,6 +76,9 @@ extension BMUXCLI {
             hookGroups.append(try codexWrapperHookGroupTOML(command: optimizerCommand, timeoutMs: 5_000))
         }
 
+        if event.agentEvent == "SessionStart" {
+            hookGroups.append(try codexWrapperHookGroupTOML(command: codexRelatedSessionGuidanceHook(hooksDir: hooksDir), timeoutMs: 5_000))
+        }
         let ff = Self.codexFireAndForgetAgentHookShellCommand(
             "bmux hooks codex \(event.bmuxSubcommand)", for: codexDef
         )

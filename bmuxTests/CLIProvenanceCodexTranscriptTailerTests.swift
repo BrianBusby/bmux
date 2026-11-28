@@ -11,6 +11,45 @@ import Testing
 
 extension CLIProvenanceCodexTranscriptImporterTests {
     @Test
+    func importsDirectNestedExecPatchWithoutTreatingConditionalCodeAsEvidence() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let url = fixture.directoryURL.appendingPathComponent("nested-patch.jsonl")
+        var lines = try Self.codexTranscriptFixtureLines()
+        var envelope = try #require(try JSONSerialization.jsonObject(with: Data(lines[6].utf8)) as? [String: Any])
+        var payload = try #require(envelope["payload"] as? [String: Any])
+        let patch = try #require(payload["input"] as? String)
+        let encoded = try JSONSerialization.data(withJSONObject: [patch])
+        let quoted = String(decoding: encoded, as: UTF8.self).dropFirst().dropLast()
+        payload["name"] = "exec"
+        payload["input"] = "text(await tools.apply_patch(\(quoted)));\ntext(await tools.exec_command({cmd: \"git diff\"}));"
+        envelope["payload"] = payload
+        lines[6] = String(decoding: try JSONSerialization.data(withJSONObject: envelope), as: UTF8.self)
+        try lines.joined(separator: "\n").appending("\n").write(to: url, atomically: true, encoding: .utf8)
+        let importer = CLIProvenanceCodexTranscriptImporter(client: client)
+        let result = try await importer.importTranscripts(path: url.path)
+        #expect(result.fileChanges == 1)
+        let projection = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
+        let attribution = try #require(projection.latestTurn?.fileChangeAttributions.first)
+        #expect(attribution.source == .inferred)
+        #expect(attribution.confidence == .low)
+
+        let otherFixture = try StoreFixture()
+        defer { otherFixture.remove() }
+        let otherClient: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: otherFixture.databaseURL)
+        let otherURL = otherFixture.directoryURL.appendingPathComponent("conditional-patch.jsonl")
+        payload["input"] = "if (false) { text(await tools.apply_patch(\(quoted))); }"
+        envelope["payload"] = payload
+        lines[6] = String(decoding: try JSONSerialization.data(withJSONObject: envelope), as: UTF8.self)
+        try lines.joined(separator: "\n").appending("\n").write(to: otherURL, atomically: true, encoding: .utf8)
+        let other = try await CLIProvenanceCodexTranscriptImporter(client: otherClient).importTranscripts(path: otherURL.path)
+        #expect(other.fileChanges == 0)
+    }
+
+    @Test
     func liveImportReadsOnlyOneBoundedChunkPerCall() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
