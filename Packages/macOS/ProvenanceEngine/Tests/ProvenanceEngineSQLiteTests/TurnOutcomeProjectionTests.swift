@@ -26,7 +26,7 @@ struct TurnOutcomeProjectionTests {
         #expect(outcome.provider == "codex")
         #expect(outcome.providerTurnID == "provider-turn-main")
         #expect(outcome.projection.projectionRuleID == "deterministic_turn_outcome")
-        #expect(outcome.projection.projectionRuleVersion == "4")
+        #expect(outcome.projection.projectionRuleVersion == "5")
         #expect(outcome.projection.sourceEvidenceWatermark == fixture.normalEvents.count)
         #expect(outcome.objective?.text == fixture.prompt.text)
         #expect(outcome.objective?.evidence.isEmpty == false)
@@ -109,7 +109,8 @@ struct TurnOutcomeProjectionTests {
         #expect(outcome.validationsAttempted.map(\.resultStatus) == ["failed"])
         #expect(outcome.blockers.map(\.text) == ["Waiting on migration decision"])
         #expect(outcome.resumePoint == nil)
-        #expect(outcome.completeness.fields.first { $0.field == "resume_point" }?.status == "not_observed")
+        #expect(outcome.completeness.fields.first { $0.field == "resume_point" }?.status == "partial")
+        #expect(outcome.completeness.fields.first { $0.field == "resume_point" }?.reason == "unverified_plan_evidence")
     }
 
     @Test

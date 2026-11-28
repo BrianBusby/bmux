@@ -116,7 +116,7 @@ struct TurnOutcomePlanEvidenceTests {
             ProvenanceSessionOutcomeRequest(sessionID: fixture.session.id)
         ).outcome)
         #expect(currentSession.actionsCompleted.isEmpty)
-        #expect(currentSession.turnOutcomes.first?.projection.projectionRuleVersion == "4")
+        #expect(currentSession.turnOutcomes.first?.projection.projectionRuleVersion == "5")
         #expect(currentSession.projection.revisionID != legacySessionID)
         let historical = try #require(try await repository.turnOutcome(ProvenanceTurnOutcomeRequest(
             turnID: fixture.turnCompleted.id, revisionID: legacyTurnID
