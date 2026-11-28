@@ -21,6 +21,9 @@ extension ProvenanceSQLiteRepository {
             )
         }
 
+#if DEBUG
+        didReadFactualSessionForTesting?()
+#endif
         if let revisionID = request.revisionID {
             return try relatedSessionRevisionResponse(
                 targetSessionID: request.targetSessionID,

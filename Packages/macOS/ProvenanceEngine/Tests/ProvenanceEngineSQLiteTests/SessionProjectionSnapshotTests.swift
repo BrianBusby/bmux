@@ -415,3 +415,59 @@ extension SessionProjectionSnapshotTests {
     }
 }
 #endif
+
+#if DEBUG
+extension SessionProjectionSnapshotTests {
+    @Test
+    func relatedSessionProjectionSurvivesConcurrentAppend() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-awareness-race-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("provenance.sqlite")
+        let reader = try ProvenanceSQLiteRepository(url: url)
+        let writer = try ProvenanceSQLiteRepository(url: url)
+        let fixture = WorkModelFixture()
+        let turn = fixture.turn(status: "started")
+        try await fixture.appendSessionThreadAndTurn(turn, into: writer)
+
+        let entered = DispatchSemaphore(value: 0)
+        let resume = DispatchSemaphore(value: 0)
+        let writerProgress = DispatchSemaphore(value: 0)
+        let resumeWriter = DispatchSemaphore(value: 0)
+        defer { resume.signal(); resumeWriter.signal() }
+        await reader.setFactualReadObserver {
+            entered.signal()
+            _ = resume.wait(timeout: .now() + 10)
+        }
+        await writer.setBusyObserver {
+            writerProgress.signal()
+            _ = resumeWriter.wait(timeout: .now() + 10)
+        }
+        let readTask = Task.detached {
+            try await reader.relatedSessions(.init(targetSessionID: fixture.session.id))
+        }
+        guard await Task.detached(operation: { Self.waitForSignal(entered) }).value else {
+            resume.signal()
+            Issue.record("Reader did not reach the interleaving point")
+            _ = try? await readTask.value
+            return
+        }
+        let writeTask = Task.detached {
+            defer { writerProgress.signal() }
+            try await fixture.append(fixture.prompt("New evidence", turnID: turn.id), into: writer)
+        }
+        guard await Task.detached(operation: { Self.waitForSignal(writerProgress) }).value else {
+            resume.signal(); resumeWriter.signal()
+            Issue.record("Writer did not reach the interleaving point")
+            _ = try? await readTask.value; _ = try? await writeTask.value
+            return
+        }
+        resume.signal()
+        let result: Result<ProvenanceRelatedSessionResponse, any Error>
+        do { result = .success(try await readTask.value) }
+        catch { result = .failure(error) }
+        resumeWriter.signal()
+        try await writeTask.value
+        #expect(try result.get().found)
+    }
+}
+#endif
