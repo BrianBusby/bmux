@@ -54,6 +54,15 @@ import Testing
             id: "plan-event-A", eventType: .codingAgentPlanUpdated, timestamp: plan.observedAt,
             sessionID: "session-A", source: .observed, confidence: .high, payload: .init(codingAgentPlanUpdate: plan)
         )))
+        let proposal = ProvenanceCodingAgentProposedPlanRecord(
+            sessionID: "session-A", provider: "codex", providerSessionID: "provider-session-A",
+            providerTurnID: providerTurnID, providerItemID: "item-A", text: "Disputed proposal", truncated: false
+        )
+        _ = try await client.appendEvent(.init(event: .init(
+            id: "proposal-A", eventType: .codingAgentProposedPlanObserved, timestamp: time,
+            sessionID: "session-A", source: .observed, evidenceOrigin: .init(rawValue: "codex-transcript"),
+            confidence: .high, payload: .init(codingAgentProposedPlan: proposal)
+        )))
         _ = try await client.publishCodingAgentSessionSemanticInferences(.init(sessionID: "session-A", createdAt: time))
         #expect(try await client.factualSessionTurnDetail(.init(turnID: turnID)).sessionID == "session-A")
         let original = try await client.turnOutcome(.init(turnID: turnID))
@@ -80,6 +89,7 @@ import Testing
             let encoded = try JSONEncoder().encode(snapshot)
             let object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
             #expect((object["unresolvedTurnIDs"] as? [String]) == [turnID])
+            #expect(!String(decoding: encoded, as: UTF8.self).contains("Disputed proposal"))
             let model = try #require(try await client.sessionWorkModel(.init(sessionID: sessionID)).model)
             let modelObject = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(model)) as? [String: Any])
             #expect((modelObject["unresolvedTurnIDs"] as? [String]) == [turnID])
