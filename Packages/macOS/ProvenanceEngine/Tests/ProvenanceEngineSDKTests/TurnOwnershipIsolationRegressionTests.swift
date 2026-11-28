@@ -48,7 +48,10 @@ import Testing
         #expect(try await client.factualSessionTurnDetail(.init(turnID: turnID)).sessionID == "session-A")
         let original = try await client.turnOutcome(.init(turnID: turnID))
         #expect(original.outcome?.objective?.evidence.contains(where: { $0.eventID == "prompt-event-A" }) == true)
+        let beforeConflict = try #require(try await client.factualSessionProjection(.init(sessionID: "session-A")).snapshot?.revision)
         try await appendTurn(sessionID: "session-B", eventID: "turn-event-B", offset: 3)
+        let afterConflict = try #require(try await client.factualSessionProjection(.init(sessionID: "session-A")).snapshot?.revision)
+        #expect(afterConflict > beforeConflict)
         for sessionID in ["session-A", "session-B"] {
             let uniqueTurn = ProvenanceCodingAgentTurnRecord(
                 id: "independent-\(sessionID)", sessionID: sessionID, provider: "codex",
@@ -67,6 +70,9 @@ import Testing
             let encoded = try JSONEncoder().encode(snapshot)
             let object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
             #expect((object["unresolvedTurnIDs"] as? [String]) == [turnID])
+            let model = try #require(try await client.sessionWorkModel(.init(sessionID: sessionID)).model)
+            let modelObject = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(model)) as? [String: Any])
+            #expect((modelObject["unresolvedTurnIDs"] as? [String]) == [turnID])
         }
         let bProjection = try await client.factualSessionProjection(.init(sessionID: "session-B"))
         // Proposed contract: ownership_unresolved distinguishes a conflict from absence.
