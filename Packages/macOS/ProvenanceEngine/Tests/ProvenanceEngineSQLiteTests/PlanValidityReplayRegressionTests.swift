@@ -42,12 +42,16 @@ import Testing
             // Preserve the last reported step as history, with explicit uncertainty.
             #expect(outcome.planItems.map(\.text) == ["Synthetic step 2"])
             #expect(outcome.planItems.map(\.status) == ["completed"])
+            #expect(outcome.planItems.map(\.evidenceValidity) == ["unverified_agent_reported"])
             #expect(outcome.actionsCompleted.isEmpty)
+            #expect(outcome.completeness.fields.first { $0.field == "resume_point" }?.reason == "unverified_plan_evidence")
             let sessionOutcome = try #require(await reopened.sessionOutcome(.init(sessionID: session.id)).outcome)
             #expect(sessionOutcome.planItems.map(\.text) == ["Synthetic step 2"])
+            #expect(sessionOutcome.planItems.map(\.evidenceValidity) == ["unverified_agent_reported"])
             let sessionAvailability = sessionOutcome.completeness.fields.first { $0.field == "plan_items" }
             #expect(sessionAvailability?.status == "partial")
             #expect(sessionAvailability?.reason == "unverified_plan_evidence")
+            #expect(sessionOutcome.completeness.fields.first { $0.field == "resume_points" }?.reason == "unverified_plan_evidence")
         }
     }
 

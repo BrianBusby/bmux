@@ -3,7 +3,7 @@ import ProvenanceEngineContracts
 
 extension ProvenanceSQLiteRepository {
     static let sessionOutcomeRuleID = "deterministic_session_outcome"
-    static let sessionOutcomeRuleVersion = "2"
+    static let sessionOutcomeRuleVersion = "3"
 
     func refreshSessionOutcomes(
         affectedBy event: ProvenanceEvent,
@@ -510,15 +510,35 @@ extension ProvenanceSQLiteRepository {
         fields.append(availability(field: "external_identities", observed: !externalIdentities.isEmpty, reason: "no_external_identity"))
         fields.append(availability(field: "provider_thread_identities", observed: !providerThreads.isEmpty, reason: "no_provider_thread"))
         fields.append(availability(field: "objectives", observed: !objectives.isEmpty, reason: "no_submitted_prompt", evidence: objectives.flatMap(\.evidence)))
-        fields.append(availability(field: "plan_items", observed: !planItems.isEmpty, reason: "no_plan_update", evidence: planItems.flatMap(\.evidence)))
+        fields.append(planItems.isEmpty
+            ? availability(field: "plan_items", observed: false, reason: "no_plan_update")
+            : ProvenanceSessionOutcomeAvailability(
+                field: "plan_items", status: "partial", reason: "unverified_plan_evidence",
+                evidence: planItems.flatMap(\.evidence)
+            ))
         fields.append(availability(field: "completed_commands", observed: !commands.isEmpty, reason: "no_completed_command", evidence: commands.flatMap { $0.command.evidence }))
         fields.append(availability(field: "changed_artifacts", observed: !changedArtifacts.isEmpty, reason: "no_file_change_attribution", evidence: changedArtifacts.flatMap { $0.artifact.evidence }))
         fields.append(availability(field: "decisions", observed: !decisions.isEmpty, reason: "no_explicit_decision_evidence", evidence: decisions.flatMap(\.evidence)))
         fields.append(availability(field: "validations_attempted", observed: !validations.isEmpty, reason: "no_supported_validation_command", evidence: validations.flatMap { $0.validation.evidence }))
-        fields.append(availability(field: "blockers", observed: !blockers.isEmpty, reason: "no_blocked_plan_item", evidence: blockers.flatMap(\.evidence)))
-        fields.append(availability(field: "unresolved_items", observed: !unresolvedItems.isEmpty, reason: "no_unresolved_plan_item", evidence: unresolvedItems.flatMap(\.evidence)))
+        fields.append(planItems.isEmpty
+            ? availability(field: "blockers", observed: false, reason: "no_blocked_plan_item")
+            : ProvenanceSessionOutcomeAvailability(
+                field: "blockers", status: "partial", reason: "unverified_plan_evidence",
+                evidence: blockers.flatMap(\.evidence)
+            ))
+        fields.append(planItems.isEmpty
+            ? availability(field: "unresolved_items", observed: false, reason: "no_unresolved_plan_item")
+            : ProvenanceSessionOutcomeAvailability(
+                field: "unresolved_items", status: "partial", reason: "unverified_plan_evidence",
+                evidence: unresolvedItems.flatMap(\.evidence)
+            ))
         fields.append(repositoryBoundaryAvailability(repositoryBoundaries))
-        fields.append(availability(field: "resume_points", observed: !resumePoints.isEmpty, reason: "no_active_or_pending_plan_item", evidence: resumePoints.flatMap(\.evidence)))
+        fields.append(planItems.isEmpty
+            ? availability(field: "resume_points", observed: false, reason: "no_active_or_pending_plan_item")
+            : ProvenanceSessionOutcomeAvailability(
+                field: "resume_points", status: "partial", reason: "unverified_plan_evidence",
+                evidence: resumePoints.flatMap(\.evidence)
+            ))
         fields.append(availability(field: "completion_state", observed: completionState != "unknown", reason: "unknown_session_status"))
         let status = fields.allSatisfy { $0.status == "observed" } ? "complete" : "partial"
         return ProvenanceSessionOutcomeCompleteness(
@@ -527,7 +547,7 @@ extension ProvenanceSQLiteRepository {
             fields: fields,
             notes: [
                 "session outcome aggregates deterministic turn outcome revisions and does not infer intent beyond accepted turn facts",
-                "plan items reconcile by normalized text with latest factual state winning",
+                "plan items reconcile by normalized text; latest agent-reported status is unverified",
                 "multiple repository or worktree boundaries are preserved as separate facts",
                 "validation attempts do not prove the entire session change is valid",
             ]

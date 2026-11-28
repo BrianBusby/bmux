@@ -15,6 +15,9 @@ struct AgentSessionPlanStepsView: View {
     var body: some View {
         let visible = AgentSessionPlanPage(steps: plan.steps, requestedPage: page)
         VStack(alignment: .leading, spacing: 6) {
+            Text(String(localized: "agentSession.factual.planUnverified", defaultValue: "Agent-reported plan history; acceptance and status unverified."))
+                .font(.system(size: 11))
+                .foregroundStyle(Color.bmuxTextTertiary)
             ForEach(visible.start..<visible.end, id: \.self) { index in
                 let step = visible.steps[index]
                 HStack(alignment: .top, spacing: 8) {

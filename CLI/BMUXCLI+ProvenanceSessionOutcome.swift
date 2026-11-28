@@ -91,7 +91,7 @@ extension BMUXCLI {
         var lines = provenanceSessionOutcomeHeaderLines(outcome, watermark: watermark)
         if let resumePoint = outcome.latestResumePoint?.text, !resumePoint.isEmpty {
             lines.append(String.localizedStringWithFormat(
-                String(localized: "cli.provenance.session.output.resumePoint", defaultValue: "Latest resume point: %@"),
+                String(localized: "cli.provenance.session.output.resumePoint", defaultValue: "Unverified agent-reported resume point: %@"),
                 resumePoint
             ))
         }

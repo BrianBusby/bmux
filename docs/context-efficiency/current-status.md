@@ -18,7 +18,9 @@ dogfood build, and hosted checks;
 older clients cannot open a database migrated to schema 32. Historical
 cross-session revisions captured before a conflict are unavailable when their
 ownership can no longer be established. Plan validity and stale activity remain
-separate open issues.
+separate open issues. The #267 candidate preserves legacy plan steps with
+unverified agent-reported labels; it cannot establish provider acceptance or
+retroactively qualify every historical revision or semantic consumer.
 
 The Codex updater/launch follow-up is recorded in
 [implementation notes](../implementation-notes/codex-update-workspace-exit.md) and

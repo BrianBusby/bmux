@@ -399,7 +399,7 @@ struct AgentSessionFactualProjectionView: View {
     private func planSummary(_ plan: ProvenanceCodingAgentPlanUpdateRecord) -> String {
         let completed = plan.steps.filter { AgentSessionFactualProjectionEvidenceRows.isPlanStepCompleted($0.status) }.count
         return String.localizedStringWithFormat(
-            String(localized: "agentSession.factual.planProgress", defaultValue: "Agent-reported complete: %d of %d steps"),
+            String(localized: "agentSession.factual.planProgress", defaultValue: "Unverified agent-reported completion: %d of %d steps"),
             completed,
             plan.steps.count
         )

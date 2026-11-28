@@ -554,3 +554,14 @@ PR #251 subsequently merged to main at `193d14d62`; its explicit-session require
 
 
 Draft PR #275 now proposes a bounded correction for persisted built-in current-activity and session-phase interpretations. A finished or displaced turn and a completed-command basis cannot establish the current activity or phase. The work model and related-session projection report those fields as unknown, and default session-phase message reads omit the invalid interpretation while explicit historical reads retain the records. Work-model revision 5 lets native and web consumers replace prior cached interpretations. Phase-message materialization reads scoped lifecycle history so stale messages can be retained or superseded without duplicate identifiers; the combined branch includes #274's recorded-evidence presentation, which does not infer live activity from completed commands. The original test-only hosted Swift package job failed during dependency download and did not prove the regression; the fixture failed locally before the correction, and a new hosted test-only run is pending. Focused replay, package, and web checks passed locally on the correction. This does not establish genuinely live activity, completeness, validity of other producer identities, or native accessibility.
+
+
+## Legacy plan evidence qualification (#267 candidate)
+
+Legacy plan updates can be recorded from a request before its acceptance is known.
+The candidate keeps the most recent reported steps as history, marks current turn
+and session outcome items as unverified, and marks plan-derived availability as
+partial. Native detail and completion counts identify this uncertainty. Older
+explicit historical revisions and other plan-derived semantic consumers are not
+retroactively qualified, and no provider acceptance is inferred. The candidate
+still requires dogfood, hosted checks, and review.

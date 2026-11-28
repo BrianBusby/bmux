@@ -243561,13 +243561,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Latest resume point: %@"
+            "value": "Unverified agent-reported resume point: %@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最新の再開地点: %@"
+            "value": "エージェント報告の再開地点（未確認）: %@"
           }
         }
       }
@@ -245426,19 +245426,50 @@
         }
       }
     },
+    "debug.factualStale.planInspect": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Inspect the reconnect logs" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "再接続のログを調べる" } }
+      }
+    },
+    "debug.factualStale.planVerify": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Verify session restoration" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "セッションの復元を確認する" } }
+      }
+    },
+    "agentSession.factual.planUnverified": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent-reported plan history; acceptance and status unverified."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エージェントが報告した計画履歴です。受理と状態は未確認です。"
+          }
+        }
+      }
+    },
     "agentSession.factual.planProgress": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Agent-reported complete: %d of %d steps"
+            "value": "Unverified agent-reported completion: %d of %d steps"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "エージェントの報告で完了: %d/%d ステップ"
+            "value": "エージェント報告の完了（未確認）: %d/%d ステップ"
           }
         }
       }
