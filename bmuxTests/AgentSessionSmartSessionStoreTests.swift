@@ -26,6 +26,10 @@ struct AgentSessionSmartSessionStoreTests {
             semanticMessageCount: 0, latestSemanticMessageCreatedAt: nil)
         #expect(newRevision.isNewerThan(oldRevision))
         #expect(!oldRevision.isNewerThan(newRevision))
+        let latestRevision = AgentSessionSmartSessionSnapshot.Revision(workModelRevision: .init(
+            schemaVersion: 5, factualRevision: 1, semanticInferenceIDs: [], latestSemanticInferenceCreatedAt: nil),
+            semanticMessageCount: 0, latestSemanticMessageCreatedAt: nil)
+        #expect(latestRevision.isNewerThan(newRevision))
     }
 
     @Test

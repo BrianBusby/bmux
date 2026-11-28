@@ -54,7 +54,7 @@ public struct ProvenanceSessionWorkModel: Codable, Equatable, Sendable {
     ///   - sessionPhase: Session-level phase field.
     ///   - basis: Source factual and semantic layers used for composition.
     public init(
-        schemaVersion: Int = 4,
+        schemaVersion: Int = 5,
         revision: ProvenanceSessionWorkModelRevision,
         identity: ProvenanceSessionWorkModelIdentity,
         thread: ProvenanceSessionWorkModelThread?,
