@@ -5,7 +5,7 @@ import ProvenanceEngineContracts
 extension ProvenanceSQLiteRepository {
     func turnOutcomeRecord(_ request: ProvenanceTurnOutcomeRequest) throws
         -> ProvenanceTurnOutcomeResponse {
-        try database.withReadSnapshot { try readTurnOutcomeRecord(request) }
+        try database.withReadSnapshotRetryingWrites { try readTurnOutcomeRecord(request) }
     }
 
     private func readTurnOutcomeRecord(_ request: ProvenanceTurnOutcomeRequest) throws
@@ -113,7 +113,7 @@ extension ProvenanceSQLiteRepository {
 
     func sessionOutcomeRecord(_ request: ProvenanceSessionOutcomeRequest) throws
         -> ProvenanceSessionOutcomeResponse {
-        try database.withReadSnapshot { try readSessionOutcomeRecord(request) }
+        try database.withReadSnapshotRetryingWrites { try readSessionOutcomeRecord(request) }
     }
 
     private func readSessionOutcomeRecord(_ request: ProvenanceSessionOutcomeRequest) throws

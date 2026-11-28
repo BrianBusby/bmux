@@ -5,6 +5,9 @@ enum ProvenanceSQLiteError: Error, Equatable, Sendable {
     /// SQLite returned an error message.
     case sqlite(message: String)
 
+    /// A read transaction cannot be upgraded after another writer committed.
+    case staleSnapshot
+
     /// The database schema is newer than this package supports.
     case unsupportedSchema(found: Int32, supported: Int32)
 
@@ -20,6 +23,8 @@ extension ProvenanceSQLiteError: CustomStringConvertible {
         switch self {
         case .sqlite(let message):
             "sqlite(message: \"\(message)\")"
+        case .staleSnapshot:
+            "sqlite stale read snapshot"
         case .unsupportedSchema(let found, let supported):
             "unsupportedSchema(found: \(found), supported: \(supported))"
         case .incompatibleDatabase(let path, let message):

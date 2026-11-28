@@ -7,7 +7,10 @@ extension ProvenanceSQLiteRepository {
 
     func artifactCollisionRecord(_ request: ProvenanceArtifactCollisionRequest) throws
         -> ProvenanceArtifactCollisionResponse {
-        try database.withReadSnapshot { try readArtifactCollisionRecord(request) }
+        if request.revisionID != nil {
+            return try database.withReadSnapshot { try readArtifactCollisionRecord(request) }
+        }
+        return try database.withWriteSnapshot { try readArtifactCollisionRecord(request) }
     }
 
     private func readArtifactCollisionRecord(_ request: ProvenanceArtifactCollisionRequest) throws

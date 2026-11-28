@@ -7,7 +7,10 @@ extension ProvenanceSQLiteRepository {
 
     func relatedSessionRecord(_ request: ProvenanceRelatedSessionRequest) throws
         -> ProvenanceRelatedSessionResponse {
-        try database.withReadSnapshot { try readRelatedSessionRecord(request) }
+        if request.revisionID != nil {
+            return try database.withReadSnapshot { try readRelatedSessionRecord(request) }
+        }
+        return try database.withWriteSnapshot { try readRelatedSessionRecord(request) }
     }
 
     private func readRelatedSessionRecord(_ request: ProvenanceRelatedSessionRequest) throws
