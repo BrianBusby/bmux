@@ -5,7 +5,7 @@ import { SmartSessionSurface } from "../react/SmartSessionSurface";
 
 test("an unavailable session does not imply a live connection", () => {
   const html = renderToStaticMarkup(React.createElement(SmartSessionSurface, { isActive: false }));
-  expect(html).toContain("Unavailable");
+  expect(html).toContain("Session data unavailable");
   expect(html).not.toContain("focus-connected-dot");
 });
 
