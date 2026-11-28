@@ -16,7 +16,7 @@ struct ProvenanceSQLiteSchemaMigrationTests {
             INSERT INTO provenance_events
               (id, schema_version, event_type, timestamp_seconds, session_id, source, confidence, payload_json)
             VALUES ('before', 1, 'fixture', 1, 'a', 'observed', 'high',
-              '{"codingAgentTurn":{"id":"turn-a"},"codingAgentPrompt":{"turnID":"turn-b"}}'),
+              '{"codingAgentTurn":{"id":"turn-a","sessionID":"session-a"},"codingAgentPrompt":{"turnID":"turn-b","sessionID":"session-b"}}'),
                    ('invalid', 1, 'fixture', 1, 'a', 'observed', 'high', '{invalid-json')
             """)
         _ = try ProvenanceSQLiteRepository(url: url)
@@ -37,6 +37,21 @@ struct ProvenanceSQLiteSchemaMigrationTests {
             #expect(try query.step())
             #expect(query.string(at: 3)?.contains("USING INDEX provenance_turn_claim_") == true,
                     Comment(rawValue: "Missing index for \(path): \(query.string(at: 3) ?? "nil")"))
+        }
+        for path in paths {
+            let parts = path.split(separator: ".")
+            let turnExpression = "json_extract(payload_json, '$.\(path)')"
+            let sessionExpression = "json_extract(payload_json, '$.\(parts[0]).sessionID')"
+            let query = try migratedDatabase.prepare("""
+                EXPLAIN QUERY PLAN SELECT id FROM provenance_events
+                WHERE json_valid(payload_json) AND \(turnExpression) IS NOT NULL
+                  AND \(sessionExpression) IS NOT NULL AND \(sessionExpression) = ?
+                """)
+            defer { query.finalize() }
+            try query.bind("session-a", at: 1)
+            #expect(try query.step())
+            #expect(query.string(at: 3)?.contains("USING INDEX provenance_turn_claim_") == true,
+                    Comment(rawValue: "Missing session index for \(path): \(query.string(at: 3) ?? "nil")"))
         }
         let existing = try database.prepare("""
             SELECT id FROM provenance_events
