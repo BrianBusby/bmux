@@ -26,7 +26,7 @@ import Testing
             try await repository.appendEvent(ProvenanceEvent(id: "event-\(plan.id)", eventType: .codingAgentPlanUpdated, timestamp: plan.observedAt, sessionID: session.id, source: .observed, evidenceOrigin: .init(rawValue: plan.id), confidence: .high, payload: .init(codingAgentPlanUpdate: plan)))
         }
         // Existing payload cannot represent requests, results, causal links, or coverage.
-        // These labels model indistinguishable legacy rows; proposed reason is not implemented.
+        // These labels model indistinguishable legacy rows with no proof of acceptance.
         // This is a second connection while the original is alive, not a process restart.
         let reopened = try ProvenanceSQLiteRepository(url: url)
         for phase in 0..<2 {
@@ -39,9 +39,15 @@ import Testing
             let availability = outcome.completeness.fields.first { $0.field == "plan_items" }
             #expect(availability?.reason == "unverified_plan_evidence")
             #expect(availability?.status == "unavailable" || availability?.status == "partial")
-            // Until a validity-bearing history exists, these unqualified items cannot be current.
-            #expect(outcome.planItems.isEmpty)
+            // Preserve the last reported step as history, with explicit uncertainty.
+            #expect(outcome.planItems.map(\.text) == ["Synthetic step 2"])
+            #expect(outcome.planItems.map(\.status) == ["completed"])
             #expect(outcome.actionsCompleted.isEmpty)
+            let sessionOutcome = try #require(await reopened.sessionOutcome(.init(sessionID: session.id)).outcome)
+            #expect(sessionOutcome.planItems.map(\.text) == ["Synthetic step 2"])
+            let sessionAvailability = sessionOutcome.completeness.fields.first { $0.field == "plan_items" }
+            #expect(sessionAvailability?.status == "partial")
+            #expect(sessionAvailability?.reason == "unverified_plan_evidence")
         }
     }
 
