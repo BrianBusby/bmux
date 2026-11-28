@@ -63,6 +63,12 @@ import Testing
                 confidence: .high, payload: .init(codingAgentTurn: turn))))
             #expect(result.eventID == eventID)
         }
+        let earlierTurn = ProvenanceCodingAgentTurnRecord(id: "earlier-turn", sessionID: "session-A", provider: "codex",
+            providerTurnID: "earlier", status: "completed", startedAt: time.addingTimeInterval(-1),
+            updatedAt: time.addingTimeInterval(-1), source: .observed, confidence: .high)
+        _ = try await client.appendEvent(.init(event: .init(id: "earlier-turn-event", eventType: .codingAgentTurnObserved,
+            timestamp: earlierTurn.updatedAt, sessionID: "session-A", source: .observed, confidence: .high,
+            payload: .init(codingAgentTurn: earlierTurn))))
         try await appendTurn(sessionID: "session-A", eventID: "turn-event-A-1", offset: 1)
         let prompt = ProvenanceCodingAgentPromptRecord(id: "prompt-A", sessionID: "session-A", turnID: turnID,
             provider: "codex", text: "Synthetic A prompt", submittedAt: time.addingTimeInterval(2),
@@ -97,6 +103,9 @@ import Testing
         try await appendTurn(sessionID: "session-B", eventID: "turn-event-B", offset: 3)
         let afterConflict = try #require(try await client.factualSessionProjection(.init(sessionID: "session-A")).snapshot?.revision)
         #expect(afterConflict > beforeConflict)
+        let afterOwnerMoved = try #require(try await client.factualSessionProjection(.init(sessionID: "session-A")).snapshot)
+        #expect(afterOwnerMoved.latestTurn == nil)
+        #expect(afterOwnerMoved.priorTurns.contains { $0.turnID == earlierTurn.id })
         for sessionID in ["session-A", "session-B"] {
             let uniqueTurn = ProvenanceCodingAgentTurnRecord(
                 id: "independent-\(sessionID)", sessionID: sessionID, provider: "codex",
