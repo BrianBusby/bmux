@@ -337,6 +337,12 @@ read-only failure before a broad query found the earlier session. The
 results, revisions and the encoded-command capture limitation. Tagged build 958
 compiled pushed runtime head `54efdaf2e`; a fresh ordinary agent on that build
 queried the cache path, found three sessions and followed a partial outcome.
+The startup guidance now asks for an unfiltered related-session query after
+an empty filtered query. Tagged build 1034 includes this mitigation, but its
+effect on the failed-attempt scenario has not been evaluated. Brian chose to
+retain only the referenced script path and exit status from encoded command
+wrappers, without storing decoded command text or output; that capture and
+both remaining ordinary-agent acceptance scenarios are still outstanding.
 
 Remaining work: resolve the formal slice gates and remaining caller limitations,
 review and deliver slice 2, and capture the slice 3 ordinary-agent decision
