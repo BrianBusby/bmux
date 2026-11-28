@@ -10,6 +10,16 @@ controlled probe, six dependent gates, and unverified native behavior. The
 baseline is active in an isolated worktree. PR #227 is merged but its
 caller-retrieval acceptance and dogfood caveats remain under observation.
 
+The ownership-isolation work in draft #257 retains independent turns and marks
+contested turn evidence unresolved. Its schema-index prerequisite is #291.
+Safe partial session outcomes retain their turn references using existing
+citation-aware revision retention. The prototype needs final review, a tagged
+dogfood build, and hosted checks;
+older clients cannot open a database migrated to schema 32. Historical
+cross-session revisions captured before a conflict are unavailable when their
+ownership can no longer be established. Plan validity and stale activity remain
+separate open issues.
+
 The Codex updater/launch follow-up is recorded in
 [implementation notes](../implementation-notes/codex-update-workspace-exit.md) and
 [the shared-session control decision](../product/shared-session-control-decision.md#codex-01610-compatibility-and-launch-resolution-october-8-2026).
@@ -146,8 +156,9 @@ and [the external record](../planning/work-brief-external.md).
 
 The cross-session context assembly experiment now tracks three sequential
 slices: current-caller retrieval, task relevance, and ordinary-agent evaluation.
-Only the first is selected; its implementation is under local verification and
-its live acceptance remains open. The later slices are not implemented.
+The first remains the formally selected slice in Project Truth; it was merged
+with documented caller limitations. Slice 2 implementation and evaluation are
+in progress on a separate branch. Slice 3 is not implemented.
 The existing explicit-ID retrieval and Smart Session awareness remain implemented.
 The Knowledge Compiler bridge is outside this work package.
 
@@ -252,12 +263,100 @@ records claim the pane. The default sandbox denied socket access without approva
 to schema 31; use isolated data while an older app is running. The older app
 rejects newer schema, so do not point it at the upgraded database. CI Project
 Truth passed; workflow guards are blocked by expired unrelated feature flags,
-which also prevent downstream checks. Human dogfood remains open.
+which also prevent downstream checks. The user approved merging PR #227;
+broader independent dogfood remains open.
 
-Remaining work: implement and verify all three slices, record a bounded output
-contract and corpus thresholds, run Project Truth gates after each slice, build
-an isolated tagged app, and capture ordinary Codex end-to-end observations. The
-new worktree is based on `6cc13bfc8`; the original checkout has unrelated edits.
+After PR #227 merged, slice 2 preparation began on `cross-session-task-relevance`.
+The [evaluation specification](cross-session-task-relevance-evaluation.md) fixes
+expected fixture IDs and thresholds before ranking work. The caller slice remains
+below validated maturity because sequential reuse with retained records still
+fails closed. Ticket facts come from current workspace display metadata linked
+to sessions; their historical validity remains unknown.
+
+Slice 2 preliminary implementation adds PE-owned exact path, exact current
+workspace ticket and literal objective selectors, combined as an intersection
+within the target's observed repository. Direct matches retain reasons and
+source references; task evidence availability is partial when coverage is
+unknown. The CLI accepts the selectors and includes match evidence. Two focused
+PE fixture tests pass, including stable limit omissions and a recorded blocker
+resolution; the broader related session suites passed 22 tests. The fixed PE
+corpus returned all six required IDs with evidence, excluded unrelated sessions,
+and verified stable limit omissions. The focused macOS CLI suite passed five
+tests, including all selectors and compact blocker chronology after an observed
+red/green regression. The fixed corpus and tagged live selector queries are recorded in the
+evaluation specification. Human acceptance and ordinary-agent decision
+scenarios remain open. Build 951 exposed a 12 KiB
+compaction issue: its path query dropped one of two matches. A red/green CLI
+regression now trims secondary detail before whole results. In isolated build
+952, a fresh ordinary Codex caller retrieved both path peers in 10,052 bytes,
+and the ticket and objective peers in 6,228 and 6,186 bytes, all with zero
+result omissions and match references. The socket required approval; the
+fixture evidence was seeded, and the repository remained clean. Slice 1's reuse and
+shared-daemon limitations still apply; the task relevance gate is not validated.
+A follow-up review found cross-repository path, ticket, and objective matches
+and misleading match observation times when a session spans repositories. PE
+now scopes each match to its recorded source repository and uses its matching
+event timestamps. Red/green regression tests cover these cases; facts without
+repository attribution remain unavailable. Isolated build 953 reran the three selectors from fresh caller
+`01a1d37a-f2ca-7cf0-ab9f-6b03872bf16b` with explicit socket approval:
+path returned both seeded peers in 10,052 bytes, ticket returned the seeded
+historical peer in 6,228 bytes, and objective returned that peer plus the prior
+live caller (whose prompt contained the literal objective) in 10,886 bytes.
+All reported zero result omissions. The seed evidence remains distinct from
+the live caller evidence; this is not an agent decision experiment.
+
+Slice 3 preliminary work adds bounded Codex startup guidance for querying task
+selectors and following session-outcome revisions. The Codex hook test suite
+passed nine tests; standalone Codex 0.162.1 startup and resume probes each
+received a fresh hook context marker. In isolated tagged build 954, an ordinary
+Codex agent independently invoked the suggested path query and retried with
+socket access. An initial fixture run had inherited the invoking terminal's
+bmux environment; it was stopped and repeated with routing variables cleared.
+The clean managed-runtime writer edited `Sources/CachePolicy.swift`, but its
+patch appeared inside a Codex `exec` call, which the importer did not recognize,
+and that writer's transcript monitor did not start because the test app was
+launched as a child of the evaluating Codex process and was treated as nested.
+A manual public-CLI import of the live transcript added 18 events but zero file
+attributions. A focused red/green fix now recognizes an
+immediately awaited literal nested patch as low-confidence inference, retaining
+that classification in compact evidence; conditional code stays unsupported.
+A subsequent isolated build 955 launched through macOS Launch Services started
+its monitor and captured live writer `01a1d39c-f6c9-7531-938e-d942c6e0c479`'s
+edit as inferred file evidence. The reader's path query nevertheless returned
+empty: the two worktrees had distinct repository IDs but a shared recorded Git
+common directory. A red/green PE regression now includes that directory in
+repository identity; malformed empty or relative values are excluded. A second
+regression scopes broad shared-artifact reasons to the repositories of the
+artifacts themselves. Both fixes pass focused PE tests; tagged end-to-end
+retesting remains pending. The earlier
+reader independently queried by path and objective, followed a session outcome
+revision, and recommended confirming coordination, but the useful cache
+rationale also came from a local file, so this does not prove retrieval improved
+the decision. Automatic capture, concurrent-work success and the failed-attempt
+scenario remain open. A separate global Codex 0.162.1
+fixture run reported IPC decoding errors when reading files; it made no edits.
+In a later Launch Services run, a fresh reader found a live writer across linked
+worktrees, followed its outcome and inspected its uncommitted patch, then chose
+to coordinate before editing. The [ordinary-agent evaluation](cross-session-ordinary-agent-evaluation.md)
+records its query and references. This single observation does not establish a
+general improvement. A later decision reader followed the outcome but obtained
+the rationale from Git history, so that case is inconclusive. A failed-attempt
+reader's path and literal-objective queries returned empty, and it repeated the
+read-only failure before a broad query found the earlier session. The
+[evaluation](cross-session-ordinary-agent-evaluation.md) records both negative
+results, revisions and the encoded-command capture limitation. Tagged build 958
+compiled pushed runtime head `54efdaf2e`; a fresh ordinary agent on that build
+queried the cache path, found three sessions and followed a partial outcome.
+The startup guidance now asks for an unfiltered related-session query after
+an empty filtered query. Tagged build 1034 includes this mitigation, but its
+effect on the failed-attempt scenario has not been evaluated. Brian chose to
+retain only the referenced script path and exit status from encoded command
+wrappers, without storing decoded command text or output; that capture and
+both remaining ordinary-agent acceptance scenarios are still outstanding.
+
+Remaining work: resolve the formal slice gates and remaining caller limitations,
+review and deliver slice 2, and capture the slice 3 ordinary-agent decision
+scenarios using live evidence. The original checkout has unrelated edits.
 
 ## Current Generated Truth
 

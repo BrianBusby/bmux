@@ -36,6 +36,7 @@ export type SmartSessionState = {
   requestId: number;
   status: SmartSessionStatus;
   snapshot?: SmartSessionSnapshot;
+  pendingSnapshot?: SmartSessionSnapshot;
   reason?: string;
   sessionId?: string;
   diagnostics?: Record<string, unknown>;
@@ -93,45 +94,48 @@ export function reduceSmartSession(state: SmartSessionState, action: SmartSessio
         ...state,
         requestId: action.requestId,
         status: "loading",
+        pendingSnapshot: state.snapshot ?? state.pendingSnapshot,
+        snapshot: undefined,
       };
     case "refreshFailed":
       return {
-        ...state,
         requestId: action.requestId,
         status: "failed",
       };
     case "refreshSucceeded": {
+      const priorSnapshot = state.snapshot ?? state.pendingSnapshot;
       if (action.result.status !== "available") {
         const failed = action.result.status === "failed" || action.result.status === "projectionFailed";
-        const priorMatches = !action.result.sessionId || action.result.sessionId === state.snapshot?.identity.sessionId;
-        const suppliedMatches = action.result.snapshot &&
-          (!action.result.sessionId || action.result.sessionId === action.result.snapshot.identity.sessionId);
-        const keepPrior = priorMatches && state.snapshot && (!suppliedMatches || !action.result.snapshot ||
-          (state.snapshot.identity.sessionId === action.result.snapshot.identity.sessionId &&
-            (compareSmartSessionRevisions(state.snapshot.revision, action.result.snapshot.revision) > 0 ||
-              (compareSmartSessionRevisions(state.snapshot.revision, action.result.snapshot.revision) === 0 &&
-                !samePrimary(state.snapshot, action.result.snapshot)))));
+        const priorMatches = !!action.result.sessionId && action.result.sessionId === priorSnapshot?.identity.sessionId;
+        const suppliedMatches = !!action.result.sessionId && action.result.snapshot &&
+          action.result.sessionId === action.result.snapshot.identity.sessionId;
+        const keepPrior = priorMatches && priorSnapshot && (!suppliedMatches || !action.result.snapshot ||
+          (priorSnapshot.identity.sessionId === action.result.snapshot.identity.sessionId &&
+            (compareSmartSessionRevisions(priorSnapshot.revision, action.result.snapshot.revision) > 0 ||
+              (compareSmartSessionRevisions(priorSnapshot.revision, action.result.snapshot.revision) === 0 &&
+                !samePrimary(priorSnapshot, action.result.snapshot)))));
         return {
           requestId: action.requestId,
           status: action.result.status,
           reason: action.result.reason,
           sessionId: action.result.sessionId,
           diagnostics: action.result.diagnostics,
-          snapshot: failed ? (keepPrior && state.snapshot ? { ...state.snapshot, semanticMessagesReadStatus: "unavailable", crossSessionAwareness: suppliedMatches && action.result.snapshot ? action.result.snapshot.crossSessionAwareness : state.snapshot.crossSessionAwareness } : suppliedMatches ? action.result.snapshot : undefined) : undefined,
-          lastSuccessfulReadAt: failed ? (keepPrior ? state.lastSuccessfulReadAt : action.result.lastSuccessfulReadAt) : undefined,
+          snapshot: failed ? (keepPrior && priorSnapshot ? { ...priorSnapshot, semanticMessagesReadStatus: "unavailable", crossSessionAwareness: suppliedMatches && action.result.snapshot ? action.result.snapshot.crossSessionAwareness : priorSnapshot.crossSessionAwareness } : suppliedMatches ? action.result.snapshot : undefined) : undefined,
+          lastSuccessfulReadAt: failed ? (keepPrior ? state.lastSuccessfulReadAt : suppliedMatches ? action.result.lastSuccessfulReadAt : undefined) : undefined,
         };
       }
 
       if (
-        state.snapshot &&
-        state.snapshot.identity.sessionId === action.result.snapshot.identity.sessionId &&
-        (compareSmartSessionRevisions(action.result.snapshot.revision, state.snapshot.revision) < 0 ||
-          (compareSmartSessionRevisions(action.result.snapshot.revision, state.snapshot.revision) === 0 &&
-            !samePrimary(action.result.snapshot, state.snapshot) && !canRecoverMissingMessages(state.snapshot, action.result.snapshot)))
+        priorSnapshot &&
+        priorSnapshot.identity.sessionId === action.result.snapshot.identity.sessionId &&
+        (compareSmartSessionRevisions(action.result.snapshot.revision, priorSnapshot.revision) < 0 ||
+          (compareSmartSessionRevisions(action.result.snapshot.revision, priorSnapshot.revision) === 0 &&
+            !samePrimary(action.result.snapshot, priorSnapshot) && !canRecoverMissingMessages(priorSnapshot, action.result.snapshot)))
       ) {
         return {
           ...state,
-          snapshot: { ...state.snapshot, semanticMessagesReadStatus: "unavailable", crossSessionAwareness: action.result.snapshot.crossSessionAwareness },
+          pendingSnapshot: undefined,
+          snapshot: { ...priorSnapshot, semanticMessagesReadStatus: "unavailable", crossSessionAwareness: action.result.snapshot.crossSessionAwareness },
           requestId: action.requestId,
           status: "failed",
         };
@@ -224,7 +228,9 @@ function turnTime(turn: SmartSessionTurnReference): number {
 export function compareSmartSessionRevisions(left: SmartSessionRevision, right: SmartSessionRevision): number {
   if (left.factualRevision == null || right.factualRevision == null) return 0;
   if (left.factualRevision !== right.factualRevision) return left.factualRevision > right.factualRevision ? 1 : -1;
-  if (left.schemaVersion !== 3 || right.schemaVersion !== 3) return 0;
+  if (left.schemaVersion == null || right.schemaVersion == null ||
+      ![3, 4].includes(left.schemaVersion) || ![3, 4].includes(right.schemaVersion)) return 0;
+  if (left.schemaVersion !== right.schemaVersion) return left.schemaVersion - right.schemaVersion;
   const leftInference = Date.parse(left.latestSemanticInferenceCreatedAt ?? "");
   const rightInference = Date.parse(right.latestSemanticInferenceCreatedAt ?? "");
   const leftHasInference = Number.isFinite(leftInference);

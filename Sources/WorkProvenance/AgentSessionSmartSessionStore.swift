@@ -177,8 +177,8 @@ final class AgentSessionSmartSessionStore {
             )
             let nextSnapshot = AgentSessionSmartSessionSnapshot(
                 workModel: workModel,
-                semanticMessages: semanticMessages ?? [],
-                semanticMessagesReadStatus: semanticMessages == nil ? "unavailable" : "available",
+                semanticMessages: semanticMessages?.records ?? [],
+                semanticMessagesReadStatus: semanticMessages?.complete == true ? "available" : "unavailable",
                 crossSessionAwareness: awareness
             )
             if let existing = snapshotsBySessionID[sessionID],
@@ -277,7 +277,7 @@ final class AgentSessionSmartSessionStore {
 
     private func presentationMessages(
         for workModel: ProvenanceSessionWorkModel
-    ) async -> [ProvenanceSemanticMessageRecord]? {
+    ) async -> (records: [ProvenanceSemanticMessageRecord], complete: Bool)? {
         do {
             return try await semanticMessages(for: workModel.basis.factualSessionProjection)
         } catch {
@@ -291,8 +291,9 @@ final class AgentSessionSmartSessionStore {
 
     private func semanticMessages(
         for factualProjection: ProvenanceFactualSessionProjectionSnapshot
-    ) async throws -> [ProvenanceSemanticMessageRecord] {
+    ) async throws -> (records: [ProvenanceSemanticMessageRecord], complete: Bool) {
         var recordsByID: [String: ProvenanceSemanticMessageRecord] = [:]
+        var complete = true
         for subject in Self.semanticMessageSubjects(for: factualProjection) {
             let response = try await client.semanticMessages(
                 ProvenanceSemanticMessageQueryRequest(
@@ -306,15 +307,20 @@ final class AgentSessionSmartSessionStore {
                 throw ReadError.inconsistentResponse
             }
             for record in response.records where record.status == .active {
+                guard factualProjection.permitsSemanticEvidence(record.supportingEvidenceRefs) else {
+                    complete = false
+                    continue
+                }
                 recordsByID[record.id] = record
             }
         }
-        return recordsByID.values.sorted {
+        let records = recordsByID.values.sorted {
             if $0.createdAt != $1.createdAt {
                 return $0.createdAt > $1.createdAt
             }
             return $0.id < $1.id
         }
+        return (records, complete)
     }
 
     private static func semanticMessageSubjects(

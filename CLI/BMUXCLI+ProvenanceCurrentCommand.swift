@@ -8,8 +8,21 @@ extension BMUXCLI {
         processEnv: [String: String], cliBundleIdentifier: String?
     ) async throws {
         let (databasePath, argsAfterDatabase) = parseOption(commandArgs, name: "--database")
-        let (limitText, remaining) = parseOption(argsAfterDatabase, name: "--limit")
+        let (limitText, argsAfterLimit) = parseOption(argsAfterDatabase, name: "--limit")
+        let (artifactPath, argsAfterArtifact) = parseOption(argsAfterLimit, name: "--artifact-path")
+        let (ticket, argsAfterTicket) = parseOption(argsAfterArtifact, name: "--ticket")
+        let (objective, remaining) = parseOption(argsAfterTicket, name: "--objective")
         guard remaining == ["--current"] else { throw CLIError(message: provenanceSessionsRelatedUsage()) }
+        if let path = artifactPath {
+            let components = path.split(separator: "/", omittingEmptySubsequences: false)
+            guard !path.isEmpty, !path.hasPrefix("/"),
+                  components.allSatisfy({ !$0.isEmpty && $0 != "." && $0 != ".." }) else {
+                throw CLIError(message: provenanceSessionsRelatedUsage())
+            }
+        }
+        guard [ticket, objective].compactMap({ $0 }).allSatisfy({ !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) else {
+            throw CLIError(message: provenanceSessionsRelatedUsage())
+        }
         if let databasePath, databasePath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             throw CLIError(message: String.localizedStringWithFormat(
                 String(localized: "cli.provenance.error.optionRequiresValue", defaultValue: "%@: %@ requires a value"),
@@ -56,7 +69,10 @@ extension BMUXCLI {
             printProvenanceCurrentUnavailable(association.reason ?? "no_canonical_association", jsonOutput: jsonOutput)
             return
         }
-        let response = try await client.relatedSessions(.init(targetSessionID: sessionID, limit: limit, exclusionLimit: 10))
+        let response = try await client.relatedSessions(.init(
+            targetSessionID: sessionID, limit: limit, exclusionLimit: 10,
+            artifactPath: artifactPath, objective: objective, ticket: ticket
+        ))
         guard provenanceCallerIdentity(client: socket, environment: processEnv) == identity else {
             printProvenanceCurrentUnavailable("caller_changed", jsonOutput: jsonOutput)
             return

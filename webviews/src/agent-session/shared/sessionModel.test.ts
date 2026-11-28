@@ -2,7 +2,7 @@ import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
 import { renderToStaticMarkup } from "react-dom/server";
-import { RelatedAwarenessNotice, SemanticReportsNotice, SmartSessionFreshnessBanner, SmartSessionSurface } from "../react/SmartSessionSurface";
+import { OwnershipNotice, RelatedAwarenessNotice, SemanticReportsNotice, SmartSessionFreshnessBanner, SmartSessionSurface } from "../react/SmartSessionSurface";
 import { expect, test } from "bun:test";
 import { makeClientId } from "./ids";
 import {
@@ -19,6 +19,7 @@ import {
   type Action,
 } from "./sessionModel";
 import {
+  compareSmartSessionRevisions,
   initialSmartSessionState,
   reduceSmartSession,
   semanticFieldForKind,
@@ -1608,14 +1609,40 @@ test("smart session labels tool-only and assistant evidence without claiming a f
   }
 });
 
-test("smart session does not label a cached snapshot available after bridge failure", () => {
+test("smart session hides earlier facts while a new association is unresolved", () => {
+  const snapshot = smartSessionSnapshot({ factualRevision: 4 });
+  const current = reduceSmartSession(initialSmartSessionState(), {
+    type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "available", snapshot },
+  });
+  const loading = reduceSmartSession(current, { type: "refreshStarted", requestId: 2 });
+  expect(loading.snapshot).toBeUndefined();
+  const failed = reduceSmartSession(loading, {
+    type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "projectionFailed" },
+  });
+  expect(failed.snapshot).toBeUndefined();
+  expect(failed.lastSuccessfulReadAt).toBeUndefined();
+});
+
+test("smart session does not trust a snapshot without a verified session association", () => {
+  const snapshot = smartSessionSnapshot({ factualRevision: 4 });
+  const failed = reduceSmartSession(initialSmartSessionState(), {
+    type: "refreshSucceeded", requestId: 1,
+    result: { schemaVersion: 1, status: "failed", snapshot, lastSuccessfulReadAt: "2026-08-17T07:05:00Z" },
+  });
+  expect(failed.snapshot).toBeUndefined();
+  expect(failed.lastSuccessfulReadAt).toBeUndefined();
+});
+
+test("smart session clears a cached snapshot after an unverified bridge failure", () => {
   const current = reduceSmartSession(initialSmartSessionState(), {
     type: "refreshSucceeded", requestId: 1,
     result: { schemaVersion: 1, status: "available", snapshot: smartSessionSnapshot({ factualRevision: 4 }) },
   });
   const failed = reduceSmartSession(current, { type: "refreshFailed", requestId: 2 });
   expect(failed.status).toBe("failed");
-  expect(failed.snapshot?.revision.factualRevision).toBe(4);
+  expect(failed.snapshot).toBeUndefined();
 });
 
 
@@ -1623,7 +1650,7 @@ test("smart session keeps failed bridge snapshots marked stale and clears not-fo
   const snapshot = smartSessionSnapshot({ factualRevision: 4 });
   const stale = reduceSmartSession(initialSmartSessionState(), {
     type: "refreshSucceeded", requestId: 1,
-    result: { schemaVersion: 1, status: "failed", snapshot, lastSuccessfulReadAt: "2026-08-17T07:05:00Z" },
+    result: { schemaVersion: 1, status: "failed", sessionId: snapshot.identity.sessionId, snapshot, lastSuccessfulReadAt: "2026-08-17T07:05:00Z" },
   });
   expect(stale.status).toBe("failed");
   expect(stale.snapshot).toEqual(snapshot);
@@ -1646,7 +1673,7 @@ test("smart session never attaches failed response to a different session", () =
 
 test("smart session visibly labels retained facts after failure", () => {
   const state = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
-    result: { schemaVersion: 1, status: "failed", snapshot: smartSessionSnapshot({ factualRevision: 4 }), lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
+    result: { schemaVersion: 1, status: "failed", sessionId: "session-1", snapshot: smartSessionSnapshot({ factualRevision: 4 }), lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
   const markup = renderToStaticMarkup(createElement(SmartSessionFreshnessBanner, { state, onRefresh: () => {} }));
   expect(markup).toContain('role="status"');
   expect(markup).toContain("Could not refresh. Showing last known session data.");
@@ -1676,8 +1703,10 @@ test("a late failed refresh cannot replace a newer successful refresh", () => {
 test("smart session retains the last read time when a later failure keeps the same snapshot", () => {
   const snapshot = smartSessionSnapshot({ factualRevision: 4 });
   const first = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
-    result: { schemaVersion: 1, status: "failed", snapshot, lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
-  const later = reduceSmartSession(first, { type: "refreshSucceeded", requestId: 2,
+    result: { schemaVersion: 1, status: "failed", sessionId: snapshot.identity.sessionId, snapshot, lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
+  const loading = reduceSmartSession(first, { type: "refreshStarted", requestId: 2 });
+  expect(loading.snapshot).toBeUndefined();
+  const later = reduceSmartSession(loading, { type: "refreshSucceeded", requestId: 2,
     result: { schemaVersion: 1, status: "projectionFailed", sessionId: snapshot.identity.sessionId } });
   expect(later.snapshot).toEqual(snapshot);
   expect(later.status).toBe("projectionFailed");
@@ -1686,7 +1715,7 @@ test("smart session retains the last read time when a later failure keeps the sa
 
 test("smart session clears read time when a failure names a different session", () => {
   const first = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
-    result: { schemaVersion: 1, status: "failed", snapshot: smartSessionSnapshot({ factualRevision: 4 }), lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
+    result: { schemaVersion: 1, status: "failed", sessionId: "session-1", snapshot: smartSessionSnapshot({ factualRevision: 4 }), lastSuccessfulReadAt: "2026-08-17T07:05:00Z" } });
   const next = reduceSmartSession(first, { type: "refreshSucceeded", requestId: 2,
     result: { schemaVersion: 1, status: "projectionFailed", sessionId: "different-session" } });
   expect(next.snapshot).toBeUndefined();
@@ -1849,7 +1878,7 @@ test("stale smart session offers an actionable refresh", async () => {
   if (!element) throw new Error("Missing test root");
   const root = createRoot(element);
   const state = reduceSmartSession(initialSmartSessionState(), { type: "refreshSucceeded", requestId: 1,
-    result: { schemaVersion: 1, status: "failed", snapshot: smartSessionSnapshot({ factualRevision: 4 }) } });
+    result: { schemaVersion: 1, status: "failed", sessionId: "session-1", snapshot: smartSessionSnapshot({ factualRevision: 4 }) } });
   const calls: string[] = [];
   try {
     await act(async () => root.render(createElement(SmartSessionFreshnessBanner, { state, onRefresh: () => calls.push("refresh") })));
@@ -2066,6 +2095,18 @@ test("loaded evidence is selectable and available through a disclosure", async (
     await act(async () => nextSessionDisclosure?.click());
     expect(nextSessionDisclosure?.getAttribute("aria-expanded")).toBe("false");
     expect(container.querySelectorAll(".focus-evidence-page li").length).toBe(0);
+    await act(async () => nextSessionDisclosure?.click());
+    const secondSession = fixture.snapshot;
+    fixture.snapshot = { ...secondSession, revision: { ...secondSession.revision, factualRevision: 3, key: "disputed" }, factual: { ...secondSession.factual, latestTurn: undefined, unresolvedTurnIds: [turn.turnId] } };
+    await act(async () => root.render(createElement(SmartSessionSurface, { context, isActive: false })));
+    await act(async () => root.render(createElement(SmartSessionSurface, { context, isActive: true })));
+    expect(container.querySelector(".focus-evidence-page")).toBeNull();
+    expect(container.textContent).toContain("session ownership is unresolved");
+    fixture.snapshot = { ...secondSession, revision: { ...secondSession.revision, factualRevision: 4, key: "resolved" } };
+    await act(async () => root.render(createElement(SmartSessionSurface, { context, isActive: false })));
+    await act(async () => root.render(createElement(SmartSessionSurface, { context, isActive: true })));
+    expect(container.querySelector(".focus-evidence-disclosure")?.getAttribute("aria-expanded")).toBe("false");
+    expect(container.querySelector(".focus-evidence-page")).toBeNull();
     const learnings = [...container.querySelectorAll<HTMLButtonElement>("[role=tab]")].find(button => button.textContent === "Learnings");
     await act(async () => learnings?.click());
     expect(container.querySelector(".focus-learnings button")).toBeNull();
@@ -2098,4 +2139,18 @@ test.each(["loading", "missingSession", "failed"])("unavailable read %s is not p
     dom.window.close();
     Object.assign(globalThis, { window: previousWindow, document: previousDocument, IS_REACT_ACT_ENVIRONMENT: false });
   }
+});
+
+test("ownership notice identifies hidden disputed turns", () => {
+  expect(renderToStaticMarkup(createElement(OwnershipNotice, { unresolvedTurnIds: ["turn-1"] })))
+    .toContain("session ownership is unresolved");
+  expect(renderToStaticMarkup(createElement(OwnershipNotice, { unresolvedTurnIds: [] }))).toBe("");
+});
+
+test("newer work model schema replaces an equal factual revision", () => {
+  const oldRevision = smartSessionSnapshot({ factualRevision: 4 }).revision;
+  const newRevision = { ...oldRevision, schemaVersion: 4 };
+  expect(compareSmartSessionRevisions(newRevision, oldRevision)).toBeGreaterThan(0);
+  expect(compareSmartSessionRevisions(oldRevision, newRevision)).toBeLessThan(0);
+  expect(compareSmartSessionRevisions({ ...newRevision, semanticInferenceIds: ["new"] }, oldRevision)).toBeGreaterThan(0);
 });

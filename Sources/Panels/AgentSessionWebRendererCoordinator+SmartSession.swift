@@ -30,6 +30,7 @@ extension AgentSessionWebRendererCoordinator {
                 localized: "agentSession.web.view.session",
                 defaultValue: "Session"
             ),
+            "smartSessionOwnershipUnresolved": String(localized: "agentSession.web.smartSession.ownershipUnresolved", defaultValue: "Some turns are hidden while their session ownership is unresolved."),
             "smartSessionReportsIncomplete": String(localized: "agentSession.web.smartSession.reportsIncomplete", defaultValue: "Additional session reports may be incomplete."),
             "smartSessionReportsUnavailable": String(localized: "agentSession.web.smartSession.reportsUnavailable", defaultValue: "Additional session reports are unavailable or unknown."),
             "smartSessionRelatedUncertain": String(localized: "agentSession.web.smartSession.relatedUncertain", defaultValue: "Related work was observed separately and may be incomplete; its current state is unknown."),
@@ -173,6 +174,11 @@ extension AgentSessionWebRendererCoordinator {
                 localized: "agentSession.web.smartSession.prompt",
                 defaultValue: "Prompt"
             ),
+            "smartSessionProposedPlans": String(localized: "agentSession.factual.proposedPlans", defaultValue: "Proposed plans"),
+            "smartSessionProposalUnavailable": String(localized: "agentSession.factual.proposalUnavailable", defaultValue: "Proposal history unavailable"),
+            "smartSessionProposalPartial": String(localized: "agentSession.factual.proposalPartial", defaultValue: "Proposal history is partial"),
+            "smartSessionProposalNone": String(localized: "agentSession.factual.proposalNone", defaultValue: "No proposal found in scanned records; source availability is unknown."),
+            "smartSessionProposalTruncated": String(localized: "agentSession.factual.proposalTruncated", defaultValue: "Proposal text was truncated."),
             "smartSessionPlan": String(
                 localized: "agentSession.web.smartSession.plan",
                 defaultValue: "Plan"

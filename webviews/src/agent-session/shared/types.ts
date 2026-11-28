@@ -28,6 +28,8 @@ export type AgentSessionTheme = {
   accentSoft: string;
   danger: string;
   shadow: string;
+  terminalFontFamily?: string;
+  terminalFontSize?: number;
 };
 
 export type AppContext = {
@@ -241,6 +243,11 @@ export type AgentSessionCopy = {
   smartSessionPhase: string;
   smartSessionPrompt: string;
   smartSessionPlan: string;
+  smartSessionProposedPlans?: string;
+  smartSessionProposalUnavailable?: string;
+  smartSessionProposalPartial?: string;
+  smartSessionProposalNone?: string;
+  smartSessionProposalTruncated?: string;
   smartSessionEvidence: string;
   smartSessionCommands: string;
   smartSessionFiles: string;
@@ -263,6 +270,7 @@ export type AgentSessionCopy = {
   smartSessionRelatedUnavailable?: string;
   smartSessionRelatedPartial?: string;
   smartSessionReportsUnavailable?: string;
+  smartSessionOwnershipUnresolved?: string;
   smartSessionReportsIncomplete?: string;
   smartSessionNoCurrentTurn?: string;
   smartSessionNoLearnings?: string;
@@ -439,6 +447,23 @@ export type SmartSessionFactual = {
   latestTurn?: SmartSessionTurn;
   priorTurns: SmartSessionTurnReference[];
   turnCount: number;
+  unresolvedTurnIds?: string[];
+  proposedPlanCoverage?: { scanWindowTruncated: boolean; omittedObservations: boolean };
+  proposedPlanObservations?: Array<{
+    id: string;
+    sequence: number;
+    timestamp: string;
+    provider: string;
+    source: string;
+    origin: string;
+    eventSchemaVersion: number;
+    confidence?: string;
+    providerSessionId?: string;
+    providerTurnId?: string;
+    providerItemId?: string;
+    text: string;
+    truncated: boolean;
+  }>;
 };
 
 export type SmartSessionTurn = {

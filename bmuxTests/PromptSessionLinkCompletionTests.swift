@@ -122,29 +122,35 @@ struct PromptSessionLinkCompletionTests {
     private func factualProjectionAfterCompletion(
         runtime: WorkProvenanceRuntime,
         stableWorkspaceID: UUID,
-        timeout: Duration = .seconds(1)
+        timeout: Duration = .seconds(30)
     ) async throws -> AgentSessionFactualProjectionReadResult {
-        let start = ContinuousClock.now
-        let deadline = start.advanced(by: timeout)
-        let progress = CompletionProgress()
         let (results, signal) = AsyncStream<Completion>.makeStream(bufferingPolicy: .bufferingOldest(1))
         defer { signal.finish() }
         var ownedProducer: Task<Void, Never>?
-        await withCheckedContinuation { entered in
+        let queuedAt = ContinuousClock.now
+        let progress = await withCheckedContinuation { (entered: CheckedContinuation<CompletionProgress, Never>) in
             ownedProducer = Task { @MainActor in
-                // Same-actor entry captures task handles before timeout cleanup can clear them.
-                entered.resume()
+                // This is a test watchdog, not a product latency requirement. Start it only
+                // after the producer is scheduled, allowing for contention in the app host.
+                let start = ContinuousClock.now
+                let progress = CompletionProgress(start: start, queuedAt: queuedAt, runtime: runtime)
+                entered.resume(returning: progress)
                 await runtime.waitForBackgroundTasks()
+                progress.backgroundFinishedAt = .now
+                progress.trackedAtBackgroundFinish = progress.currentTrackedCount(runtime)
                 guard !Task.isCancelled else { return }
                 progress.phase = "projection"
                 let projection = await runtime.agentSessionFactualProjection(stableWorkspaceID: stableWorkspaceID)
                 progress.phase = "completed"
+                progress.projectionFinishedAt = .now
                 // Record the full result before async consumption can race the deadline.
                 signal.yield(.projection(projection, .now))
                 signal.finish()
             }
         }
         let producer = try #require(ownedProducer)
+        let start = progress.start
+        let deadline = start.advanced(by: timeout)
         let completion = await withTaskGroup(of: Void.self) { group in
             defer { group.cancelAll() }
             group.addTask {
@@ -164,7 +170,8 @@ struct PromptSessionLinkCompletionTests {
         switch completion {
         case let .projection(projection, arrival):
             guard arrival < deadline else {
-                throw CompletionFailure.timedOut(phase: "projection", arrival: start.duration(to: arrival))
+                throw CompletionFailure.timedOut(phase: "projection", arrival: start.duration(to: arrival),
+                                                 diagnostics: progress.diagnostics(runtime: runtime))
             }
             return projection
         case .failed(let error):
@@ -183,10 +190,11 @@ struct PromptSessionLinkCompletionTests {
         // Stop cancels runtime work; the captured producer is still joined by the caller.
         defer { producer.cancel(); runtime.stop() }
         do {
-            // The original absolute one-second failure bound includes the full projection read.
+            // The absolute watchdog deadline includes the full projection read.
             try await ContinuousClock().sleep(until: deadline)
             signal.yield(.failed(CompletionFailure.timedOut(
-                phase: progress.phase, arrival: start.duration(to: .now)
+                phase: progress.phase, arrival: start.duration(to: .now),
+                diagnostics: progress.diagnostics(runtime: runtime)
             )))
         } catch is CancellationError {
             return
@@ -198,7 +206,37 @@ struct PromptSessionLinkCompletionTests {
 
     @MainActor
     private final class CompletionProgress {
+        let start: ContinuousClock.Instant
+        let trackedAtStart: Int?
+        let producerQueueDelay: Duration
+        var backgroundFinishedAt: ContinuousClock.Instant?
+        var trackedAtBackgroundFinish: Int?
+        var projectionFinishedAt: ContinuousClock.Instant?
         var phase = "background"
+
+        init(start: ContinuousClock.Instant, queuedAt: ContinuousClock.Instant, runtime: WorkProvenanceRuntime) {
+            self.start = start
+            producerQueueDelay = queuedAt.duration(to: start)
+            trackedAtStart = Self.trackedCount(runtime)
+        }
+
+        func diagnostics(runtime: WorkProvenanceRuntime) -> String {
+            func elapsed(_ instant: ContinuousClock.Instant?) -> String {
+                instant.map { start.duration(to: $0).description } ?? "not-observed"
+            }
+            return "producer_queue_delay=\(producerQueueDelay) background_finished=\(elapsed(backgroundFinishedAt)) " +
+                "projection_finished=\(elapsed(projectionFinishedAt)) tracked_at_start=\(trackedAtStart.map(String.init) ?? "unknown") " +
+                "tracked_at_background_finish=\(trackedAtBackgroundFinish.map(String.init) ?? "unknown") " +
+                "tracked_at_observation=\(Self.trackedCount(runtime).map(String.init) ?? "unknown")"
+        }
+
+        func currentTrackedCount(_ runtime: WorkProvenanceRuntime) -> Int? { Self.trackedCount(runtime) }
+
+        // Reflection is diagnostic only: tracked count is not a completion count.
+        private static func trackedCount(_ runtime: WorkProvenanceRuntime) -> Int? {
+            Mirror(reflecting: runtime).children.first { $0.label == "backgroundTasksByID" }
+                .flatMap { ($0.value as? [UUID: Task<Void, Never>])?.count }
+        }
     }
 
     private enum Completion: Sendable {
@@ -207,12 +245,12 @@ struct PromptSessionLinkCompletionTests {
     }
 
     private enum CompletionFailure: Error, CustomStringConvertible {
-        case timedOut(phase: String, arrival: Duration)
+        case timedOut(phase: String, arrival: Duration, diagnostics: String)
 
         var description: String {
             switch self {
-            case let .timedOut(phase, arrival):
-                "event=prompt_session_link_timeout phase=\(phase) arrival=\(arrival)"
+            case let .timedOut(phase, arrival, diagnostics):
+                "event=prompt_session_link_timeout phase=\(phase) arrival=\(arrival) \(diagnostics)"
             }
         }
     }

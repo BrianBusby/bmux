@@ -7,6 +7,8 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
     let panel: TerminalPanel
     let reader: any TerminalChatReading
     let appearance: PanelAppearance
+    let fontFamily: String
+    let fontSize: CGFloat
     var matteTheme: MatteTheme? = nil
     var presentationMode: AgentSessionFactualProjectionMode = .chat
     var onStartConnectedSession: (() async throws -> Void)? = nil
@@ -66,10 +68,13 @@ struct TerminalChatWebRenderer: NSViewRepresentable {
         }
         coordinator.onInteractInTerminal = onTerminal
         coordinator.onOpenChat = onChat
+        var chatTheme = matteTheme.map(AgentSessionWebTheme.matte) ?? .resolve(appearance: appearance)
+        chatTheme.terminalFontFamily = fontFamily
+        chatTheme.terminalFontSize = fontSize
         coordinator.bind(
             panelId: panel.id, workspaceId: panel.workspaceId, stableWorkspaceId: panel.workspaceId,
             workProvenanceRuntime: nil, rendererKind: .react, initialProviderID: .codex,
-            workingDirectory: nil, theme: matteTheme.map(AgentSessionWebTheme.matte) ?? .resolve(appearance: appearance), isFocused: false
+            workingDirectory: nil, theme: chatTheme, isFocused: false
         )
         // The surrounding pane's SwiftUI tap gesture can reassert terminal
         // focus after WebKit handles mouseDown. Reclaim panel/WebKit focus on

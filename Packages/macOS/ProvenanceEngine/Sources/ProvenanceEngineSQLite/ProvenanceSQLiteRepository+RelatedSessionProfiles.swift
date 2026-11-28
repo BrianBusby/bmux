@@ -296,6 +296,9 @@ extension ProvenanceSQLiteRepository {
         [
             "repository_id:\(repository.id)",
             "repository_path:\(repository.path)",
+            repository.commonDirectory.flatMap { path in
+                path.hasPrefix("/") ? "repository_common_directory:\(URL(fileURLWithPath: path).standardizedFileURL.path)" : nil
+            },
             repository.remoteSlug.map { "repository_remote:\($0)" },
         ].compactMap { $0 }
     }

@@ -6,6 +6,12 @@ extension ProvenanceSQLiteRepository {
         targetSessionID: String,
         revisionID: String
     ) throws -> ProvenanceRelatedSessionResponse {
+        try database.withReadSnapshot { try readRelatedSessionRevisionResponse(targetSessionID: targetSessionID, revisionID: revisionID) }
+    }
+
+    private func readRelatedSessionRevisionResponse(
+        targetSessionID: String, revisionID: String
+    ) throws -> ProvenanceRelatedSessionResponse {
         guard let projection = try relatedSessionRevision(
             targetSessionID: targetSessionID,
             revisionID: revisionID
@@ -15,6 +21,17 @@ extension ProvenanceSQLiteRepository {
                 reason: "no_revision",
                 targetSessionID: targetSessionID,
                 projection: nil
+            )
+        }
+        let sessionIDs = Set([targetSessionID] + projection.relatedSessions.map(\.sessionID) + projection.excludedCandidates.compactMap(\.sessionID))
+        for sessionID in sessionIDs {
+            let claims = try unresolvedTurnClaims(sessionID: sessionID)
+            guard !claims.ids.isEmpty else { continue }
+            if projection.projection.projectionRuleVersion == Self.relatedSessionRuleVersion,
+               let observed = projection.projection.sourceEvidenceWatermark, let disputed = claims.watermark,
+               observed >= disputed { continue }
+            return ProvenanceRelatedSessionResponse(
+                found: false, reason: "ownership_unresolved", targetSessionID: targetSessionID, projection: nil
             )
         }
         return ProvenanceRelatedSessionResponse(

@@ -6,7 +6,7 @@ extension ProvenanceSQLiteRepository {
         target: RelatedSessionProfile,
         candidate: RelatedSessionProfile,
         treeContext: RelatedSessionTreeContext
-    ) -> [ProvenanceRelatedSessionRelationshipReason] {
+    ) throws -> [ProvenanceRelatedSessionRelationshipReason] {
         var reasons: [ProvenanceRelatedSessionRelationshipReason] = []
 
         for key in target.worktreeKeys.intersection(candidate.worktreeKeys).sorted() {
@@ -64,17 +64,35 @@ extension ProvenanceSQLiteRepository {
             ))
         }
 
-        if !target.repositoryKeys.intersection(candidate.repositoryKeys).isEmpty
-            || !target.worktreeKeys.intersection(candidate.worktreeKeys).isEmpty {
+        if let targetOutcome = target.outcome, let candidateOutcome = candidate.outcome {
             for key in target.artifactKeys.intersection(candidate.artifactKeys).sorted() {
-                reasons.append(relatedSessionReason(
-                    .sharedChangedArtifact,
-                    key: key,
-                    targetEvidence: target.artifactEvidence,
-                    candidateEvidence: candidate.artifactEvidence,
-                    target: target,
-                    candidate: candidate
-                ))
+                let targetArtifacts = targetOutcome.changedArtifacts.filter { relatedSessionArtifactKey($0.artifact.path) == key }
+                let candidateArtifacts = candidateOutcome.changedArtifacts.filter { relatedSessionArtifactKey($0.artifact.path) == key }
+                let targetScoped = try targetArtifacts.map { artifact in
+                    (artifact: artifact, keys: try artifactCollisionRepositoryIdentity(
+                        artifact: artifact, outcome: targetOutcome, sessionID: target.session.id
+                    ).keys)
+                }
+                let candidateScoped = try candidateArtifacts.map { artifact in
+                    (artifact: artifact, keys: try artifactCollisionRepositoryIdentity(
+                        artifact: artifact, outcome: candidateOutcome, sessionID: candidate.session.id
+                    ).keys)
+                }
+                let targetKeys = targetScoped.reduce(into: Set<String>()) { $0.formUnion($1.keys) }
+                let candidateKeys = candidateScoped.reduce(into: Set<String>()) { $0.formUnion($1.keys) }
+                let sharedKeys = targetKeys.intersection(candidateKeys)
+                let matched = targetScoped.filter { !$0.keys.isDisjoint(with: sharedKeys) }.map(\.artifact)
+                    + candidateScoped.filter { !$0.keys.isDisjoint(with: sharedKeys) }.map(\.artifact)
+                guard !matched.isEmpty else { continue }
+                let evidence = uniqueRelatedSessionEvidence(
+                    matched.flatMap { relatedSessionEvidence($0.artifact.evidence) }
+                        + [relatedSessionEvidence(targetOutcome), relatedSessionEvidence(candidateOutcome)]
+                )
+                let observedAt = try matched.compactMap {
+                    try artifactCollisionLatestEventTimestamp($0.artifact.evidence)
+                }.max()
+                reasons.append(.init(kind: .sharedChangedArtifact, targetValue: key,
+                    relatedValue: key, evidence: evidence, observedAt: observedAt))
             }
         }
 

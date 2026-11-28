@@ -5,6 +5,7 @@ task_root="$(mktemp -d /tmp/bmux-smart-session-stale.XXXXXXXX)"
 trap 'rm -rf "$task_root"' EXIT
 mkdir -p "$task_root/package/Sources/Store" "$task_root/package/Tests/StoreTests" "$task_root/home" "$task_root/cache" "$task_root/tmp"
 cp "$repo"/Sources/WorkProvenance/AgentSessionSmartSession*.swift "$task_root/package/Sources/Store/"
+cp "$repo/Sources/WorkProvenance/AgentSessionUpdatePresentation.swift" "$task_root/package/Sources/Store/"
 cat > "$task_root/package/Sources/Store/BreadcrumbStub.swift" <<'SWIFT'
 import Foundation
 enum StartupBreadcrumbLog {
