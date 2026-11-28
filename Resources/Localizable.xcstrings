@@ -243748,13 +243748,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Resume point: %@"
+            "value": "Unverified agent-reported resume point: %@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "再開地点: %@"
+            "value": "エージェント報告の再開地点（未確認）: %@"
           }
         }
       }
