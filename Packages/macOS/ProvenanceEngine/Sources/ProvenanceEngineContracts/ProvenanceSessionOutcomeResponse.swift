@@ -17,6 +17,10 @@ public struct ProvenanceSessionOutcomeResponse: Codable, Equatable, Sendable {
     /// Session outcome, when found.
     public let outcome: ProvenanceSessionOutcome?
 
+    /// Plan-derived claims in this response are agent-reported and not verified as accepted.
+    /// A missing value in an older response must be treated as unknown.
+    public let planDerivedClaimsValidity: String?
+
     /// Creates a session-outcome response.
     public init(
         schemaVersion: Int = 1,
@@ -30,5 +34,6 @@ public struct ProvenanceSessionOutcomeResponse: Codable, Equatable, Sendable {
         self.reason = reason
         self.sessionID = sessionID
         self.outcome = outcome
+        self.planDerivedClaimsValidity = outcome == nil ? nil : "unverified_agent_reported"
     }
 }

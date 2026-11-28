@@ -562,6 +562,8 @@ Legacy plan updates can be recorded from a request before its acceptance is know
 The candidate keeps the most recent reported steps as history, marks current turn
 and session outcome items as unverified, and marks plan-derived availability as
 partial. Native detail and completion counts identify this uncertainty. Older
-explicit historical revisions and other plan-derived semantic consumers are not
-retroactively qualified, and no provider acceptance is inferred. The candidate
+explicit historical revisions retain their original content. Outcome response
+envelopes and compact related-session results label plan-derived claims as
+unverified; other semantic consumers remain unverified. No provider acceptance
+is inferred. The candidate
 still requires dogfood, hosted checks, and review.

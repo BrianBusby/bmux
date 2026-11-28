@@ -243408,13 +243408,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Blockers: %d - unresolved: %d"
+            "value": "Unverified reported blockers: %d - unresolved: %d"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ブロッカー: %d - 未解決: %d"
+            "value": "未確認の報告されたブロッカー: %d - 未解決: %d"
           }
         }
       }
@@ -243510,13 +243510,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Objectives: %d - plan items: %d"
+            "value": "Objectives: %d - unverified reported plan items: %d"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "目的: %d - 計画項目: %d"
+            "value": "目的: %d - 未確認の報告された計画項目: %d"
           }
         }
       }

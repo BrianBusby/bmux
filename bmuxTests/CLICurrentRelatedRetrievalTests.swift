@@ -193,6 +193,7 @@ struct CLICurrentRelatedRetrievalTests {
         let results = try #require(payload["results"] as? [[String: Any]])
         #expect(Set(results.compactMap { $0["session_id"] as? String }) == ["related-active", "related-closed"])
         #expect(payload["target_session_id"] as? String == sessionID)
+        #expect(payload["plan_derived_claims_validity"] as? String == "unverified_agent_reported")
         #expect(result.stdout.utf8.count <= 16 * 1024)
         for (option, value, reason) in [
             ("--artifact-path", "Sources/Flashing.swift", "requested_artifact"),
@@ -205,6 +206,7 @@ struct CLICurrentRelatedRetrievalTests {
             #expect(selected.status == 0, Comment(rawValue: selected.stderr))
             let selectedPayload = try #require(try JSONSerialization.jsonObject(with: Data(selected.stdout.utf8)) as? [String: Any])
             let selectedResults = try #require(selectedPayload["results"] as? [[String: Any]])
+            #expect(selectedPayload["plan_derived_claims_validity"] as? String == "unverified_agent_reported")
             let expected: Set<String> = option == "--artifact-path" ? ["related-active", "related-closed"] : ["related-closed"]
             #expect(Set(selectedResults.compactMap { $0["session_id"] as? String }) == expected)
             #expect(selectedPayload["briefs_omitted_for_budget"] as? Int == 0)

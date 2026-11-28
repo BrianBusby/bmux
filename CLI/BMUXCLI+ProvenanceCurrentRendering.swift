@@ -146,7 +146,7 @@ extension BMUXCLI {
         var payload: [String: Any] = [:]
         var data = Data()
         repeat {
-            payload = ["schema_version": 1, "found": true, "target_session_id": projection.targetSessionID,
+            payload = ["schema_version": 1, "found": true, "plan_derived_claims_validity": "unverified_agent_reported", "target_session_id": projection.targetSessionID,
                        "revision": projection.projection.revisionID,
                        "watermark": value(projection.projection.sourceEvidenceWatermark),
                        "completeness": projection.completeness.status,
