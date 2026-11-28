@@ -16,9 +16,11 @@ struct ProvenanceSQLiteSchemaMigrationTests {
             INSERT INTO provenance_events
               (id, schema_version, event_type, timestamp_seconds, session_id, source, confidence, payload_json)
             VALUES ('before', 1, 'fixture', 1, 'a', 'observed', 'high',
-              '{"codingAgentTurn":{"id":"turn-a"},"codingAgentPrompt":{"turnID":"turn-b"}}')
+              '{"codingAgentTurn":{"id":"turn-a"},"codingAgentPrompt":{"turnID":"turn-b"}}'),
+                   ('invalid', 1, 'fixture', 1, 'a', 'observed', 'high', '{invalid-json')
             """)
         _ = try ProvenanceSQLiteRepository(url: url)
+        let migratedDatabase = try ProvenanceSQLiteDatabase(url: url)
         let paths = [
             "codingAgentTurn.id", "codingAgentPrompt.turnID", "codingAgentPlanUpdate.turnID",
             "codingAgentCommand.turnID", "codingAgentReasoningSummary.turnID",
@@ -26,24 +28,34 @@ struct ProvenanceSQLiteSchemaMigrationTests {
         ]
         for path in paths {
             let expression = "json_extract(payload_json, '$.\(path)')"
-            let query = try database.prepare("""
+            let query = try migratedDatabase.prepare("""
                 EXPLAIN QUERY PLAN SELECT id FROM provenance_events
-                WHERE json_valid(payload_json) AND \(expression) = ?
+                WHERE json_valid(payload_json) AND \(expression) IS NOT NULL AND \(expression) = ?
                 """)
             defer { query.finalize() }
             try query.bind("turn-a", at: 1)
             #expect(try query.step())
             #expect(query.string(at: 3)?.contains("USING INDEX provenance_turn_claim_") == true,
-                    Comment(rawValue: "Missing index for \(path)"))
+                    Comment(rawValue: "Missing index for \(path): \(query.string(at: 3) ?? "nil")"))
         }
         let existing = try database.prepare("""
             SELECT id FROM provenance_events
-            WHERE json_valid(payload_json) AND json_extract(payload_json, '$.codingAgentPrompt.turnID') = ?
+            WHERE json_valid(payload_json) AND json_extract(payload_json, '$.codingAgentPrompt.turnID') IS NOT NULL AND json_extract(payload_json, '$.codingAgentPrompt.turnID') = ?
             """)
         defer { existing.finalize() }
         try existing.bind("turn-b", at: 1)
         #expect(try existing.step())
         #expect(existing.string(at: 0) == "before")
+        let oldConnectionPlan = try database.prepare("""
+            EXPLAIN QUERY PLAN SELECT id FROM provenance_events
+            WHERE json_valid(payload_json)
+              AND json_extract(payload_json, '$.codingAgentPrompt.turnID') IS NOT NULL
+              AND json_extract(payload_json, '$.codingAgentPrompt.turnID') = ?
+            """)
+        defer { oldConnectionPlan.finalize() }
+        try oldConnectionPlan.bind("turn-b", at: 1)
+        #expect(try oldConnectionPlan.step())
+        #expect(oldConnectionPlan.string(at: 3)?.contains("USING INDEX provenance_turn_claim_") == true)
         try database.execute("""
             INSERT INTO provenance_events
               (id, schema_version, event_type, timestamp_seconds, session_id, source, confidence, payload_json)
@@ -52,7 +64,7 @@ struct ProvenanceSQLiteSchemaMigrationTests {
             """)
         let added = try database.prepare("""
             SELECT id FROM provenance_events
-            WHERE json_valid(payload_json) AND json_extract(payload_json, '$.codingAgentTurn.id') = ?
+            WHERE json_valid(payload_json) AND json_extract(payload_json, '$.codingAgentTurn.id') IS NOT NULL AND json_extract(payload_json, '$.codingAgentTurn.id') = ?
             """)
         defer { added.finalize() }
         try added.bind("turn-c", at: 1)
@@ -67,7 +79,7 @@ struct ProvenanceSQLiteSchemaMigrationTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
 
-        #expect(try await repository.schemaVersion() == 31)
+        #expect(try await repository.schemaVersion() == 32)
 
         let database = try ProvenanceSQLiteDatabase(url: url)
         try Self.expectTables([
@@ -89,7 +101,7 @@ struct ProvenanceSQLiteSchemaMigrationTests {
             "provenance_outcome_revision_pins",
             "provenance_legacy_outcome_revision_ids",
         ], in: database)
-        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [31, 30, 29, 28, 27, 26, 25, 24, 23, 22])
+        #expect(try await repository.schemaMigrationRecords(limit: 10).map(\.version) == [32, 31, 30, 29, 28, 27, 26, 25, 24, 23])
     }
 
     @Test
@@ -110,8 +122,8 @@ struct ProvenanceSQLiteSchemaMigrationTests {
         let repository = try ProvenanceSQLiteRepository(url: url)
         let migratedDatabase = try ProvenanceSQLiteDatabase(url: url)
 
-        #expect(try await repository.schemaVersion() == 31)
-        #expect(try Self.firstString("SELECT value FROM provenance_metadata WHERE key = 'schema_version'", in: migratedDatabase) == "31")
+        #expect(try await repository.schemaVersion() == 32)
+        #expect(try Self.firstString("SELECT value FROM provenance_metadata WHERE key = 'schema_version'", in: migratedDatabase) == "32")
         #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_login", in: migratedDatabase))
         #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_url", in: migratedDatabase))
         #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_avatar_url", in: migratedDatabase))
@@ -136,7 +148,7 @@ struct ProvenanceSQLiteSchemaMigrationTests {
         #expect(try Self.tableExists("provenance_artifact_collision_revisions", in: migratedDatabase))
         #expect(try Self.tableExists("provenance_workspace_coding_agent_session_associations", in: migratedDatabase))
         #expect(try Self.tableExists("provenance_archived_workspaces", in: migratedDatabase))
-        #expect(try await repository.schemaMigrationRecords(limit: 3).map(\.version) == [31, 30, 29])
+        #expect(try await repository.schemaMigrationRecords(limit: 3).map(\.version) == [32, 31, 30])
     }
 
     @Test
@@ -174,7 +186,7 @@ struct ProvenanceSQLiteSchemaMigrationTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
         let migratedDatabase = try ProvenanceSQLiteDatabase(url: url)
-        #expect(try await repository.schemaVersion() == 31)
+        #expect(try await repository.schemaVersion() == 32)
         #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_avatar_url", in: migratedDatabase))
         #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_title", in: migratedDatabase))
         #expect(try Self.tableExists("provenance_archived_workspaces", in: migratedDatabase))
@@ -196,7 +208,7 @@ struct ProvenanceSQLiteSchemaMigrationTests {
 
         let repository = try ProvenanceSQLiteRepository(url: url)
         let migratedDatabase = try ProvenanceSQLiteDatabase(url: url)
-        #expect(try await repository.schemaVersion() == 31)
+        #expect(try await repository.schemaVersion() == 32)
         #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_owner_avatar_url", in: migratedDatabase))
         #expect(try Self.tableHasColumn("provenance_workspace_display", "pull_request_title", in: migratedDatabase))
         #expect(try Self.tableExists("provenance_archived_workspaces", in: migratedDatabase))
@@ -259,7 +271,7 @@ struct ProvenanceSQLiteSchemaMigrationTests {
 
         let repository = try ProvenanceSQLiteRepository(storageLocation: storageLocation)
 
-        #expect(try await repository.schemaVersion() == 31)
+        #expect(try await repository.schemaVersion() == 32)
         #expect(FileManager.default.fileExists(atPath: storageLocation.databaseURL.path))
     }
 
