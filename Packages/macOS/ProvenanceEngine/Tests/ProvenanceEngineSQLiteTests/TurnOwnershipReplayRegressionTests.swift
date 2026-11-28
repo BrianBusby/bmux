@@ -4,7 +4,7 @@ import ProvenanceEngineContracts
 import Testing
 
 /// Ownership replay contract; synthetic origins are labels, not provider attestations.
-@Suite struct PlanValidityReplayRegressionTests {
+@Suite struct TurnOwnershipReplayRegressionTests {
     @Test func conflictingTurnOwnerRemainsUnresolvedAfterReplay() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-plan-owner-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -87,6 +87,23 @@ import Testing
         let originalB = try await repository.factualSessionProjection(.init(sessionID: "session-B"))
         #expect(originalA.snapshot?.latestTurn?.turn.id == turn.id)
         #expect(originalB.snapshot?.latestTurn == nil)
+        let safeTurn = ProvenanceCodingAgentTurnRecord(
+            id: "safe-turn-A", sessionID: "session-A", provider: "codex", providerTurnID: "safe-provider-turn",
+            status: "started", startedAt: time.addingTimeInterval(2), updatedAt: time.addingTimeInterval(2),
+            source: .observed, confidence: .high
+        )
+        let safePrompt = ProvenanceCodingAgentPromptRecord(
+            id: "safe-prompt-A", sessionID: "session-A", turnID: safeTurn.id, provider: "codex",
+            text: "Independent A prompt", submittedAt: time.addingTimeInterval(2), source: .observed, confidence: .high
+        )
+        try await repository.appendEvent(.init(
+            id: "event-safe-turn-A", eventType: .codingAgentTurnObserved, timestamp: time.addingTimeInterval(2),
+            sessionID: "session-A", source: .observed, confidence: .high, payload: .init(codingAgentTurn: safeTurn)
+        ))
+        try await repository.appendEvent(.init(
+            id: "event-safe-prompt-A", eventType: .codingAgentPromptSubmitted, timestamp: safePrompt.submittedAt,
+            sessionID: "session-A", source: .observed, confidence: .high, payload: .init(codingAgentPrompt: safePrompt)
+        ))
         let prompt = ProvenanceCodingAgentPromptRecord(
             id: "child-B", sessionID: "session-B", turnID: turn.id, provider: "codex",
             text: "Synthetic B-only prompt", submittedAt: time.addingTimeInterval(1),
@@ -130,12 +147,15 @@ import Testing
                 let factual = try await reader.factualSessionProjection(.init(sessionID: sessionID))
                 #expect(factual.found)
                 #expect(factual.snapshot?.unresolvedTurnIDs == [turn.id])
-                #expect(factual.snapshot?.latestTurn == nil)
+                #expect(factual.snapshot?.latestTurn?.turn.id == (sessionID == "session-A" ? safeTurn.id : nil))
+                #expect(factual.snapshot?.latestTurn?.submittedPrompt == (sessionID == "session-A" ? safePrompt : nil))
                 #expect(factual.snapshot?.priorTurns.isEmpty == true)
                 let outcome = try await reader.sessionOutcome(.init(sessionID: sessionID))
                 #expect(outcome.found)
                 #expect(outcome.outcome?.sessionID == sessionID)
                 #expect(outcome.outcome?.completeness.fields.contains { $0.reason == "ownership_unresolved" } == true)
+                #expect(outcome.outcome?.constituentTurns.map(\.turnID) == (sessionID == "session-A" ? [safeTurn.id] : []))
+                #expect(outcome.outcome?.objectives.map(\.text) == (sessionID == "session-A" ? [safePrompt.text] : []))
             }
             let detail = try await reader.factualSessionTurnDetail(.init(turnID: turn.id))
             #expect(!detail.found)
