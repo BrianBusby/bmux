@@ -46,6 +46,11 @@ struct ActivityValidityProposedContractTests {
         #expect(phase.supportingEvidenceRefs.contains { $0.kind == "coding_agent_turn" && $0.id == firstTurn.id })
         #expect(phase.supportingEvidenceRefs.contains { $0.kind == "coding_agent_command" && $0.id == command.id })
         _ = try await client.materializeSemanticMessages(ProvenanceSemanticMessageMaterializationRequest(semanticInferenceRecords: [activity, milestones, phase], createdAt: time.addingTimeInterval(6)))
+        let repeatedPhase = try await client.materializeSemanticMessages(
+            ProvenanceSemanticMessageMaterializationRequest(semanticInferenceRecords: [phase], createdAt: time.addingTimeInterval(7))
+        )
+        #expect(repeatedPhase.publishedMessageIDs.isEmpty)
+        #expect(repeatedPhase.unchangedMessageIDs.count == 1)
 
         let completedModel = try #require(try await client.sessionWorkModel(ProvenanceSessionWorkModelRequest(sessionID: subject.id)).model)
         // Proposed: a completed operation alone cannot establish present activity or phase.
@@ -90,5 +95,20 @@ struct ActivityValidityProposedContractTests {
         #expect(phaseHistory.records.contains { $0.semanticInferenceID == phase.id })
         let otherMessages = try await secondClient.semanticMessages(ProvenanceSemanticMessageQueryRequest(scope: .session, scopeID: subject.id, limit: 1))
         #expect(otherMessages.records.map(\.semanticInferenceID) == [milestones.id])
+
+        let nextPublish = try await secondClient.publishCodingAgentSessionSemanticInferences(
+            ProvenanceCodingAgentSessionSemanticInferenceRequest(sessionID: subject.id, createdAt: time.addingTimeInterval(12))
+        )
+        let nextPhase = try #require(nextPublish.records.first { $0.kind == ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue })
+        let nextMessage = try await secondClient.materializeSemanticMessages(
+            ProvenanceSemanticMessageMaterializationRequest(semanticInferenceRecords: [nextPhase], createdAt: time.addingTimeInterval(13))
+        )
+        let updatedHistory = try await secondClient.semanticMessages(
+            ProvenanceSemanticMessageQueryRequest(scope: .session, scopeID: subject.id, semanticInferenceKind: phase.kind, includeInactive: true)
+        )
+        let oldPhaseMessage = try #require(updatedHistory.records.first { $0.semanticInferenceID == phase.id })
+        #expect(oldPhaseMessage.status == .superseded)
+        #expect(oldPhaseMessage.supersededBy == nextMessage.publishedMessageIDs.first)
+        #expect(updatedHistory.records.filter { $0.status == .active }.count == 1)
     }
 }
