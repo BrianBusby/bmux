@@ -35,6 +35,11 @@ import Testing
             revisionID: collisionSnapshot.projection.revisionID))
         #expect(!oldCollision.found)
         #expect(oldCollision.reason == "ownership_unresolved")
-        #expect(try await repository.relatedSessions(.init(targetSessionID: target.session.id)).found)
+        let currentRelated = try #require(try await repository.relatedSessions(.init(targetSessionID: target.session.id)).projection)
+        let currentCollision = try #require(try await repository.artifactCollisions(.init(targetSessionID: target.session.id)).projection)
+        #expect(try await repository.relatedSessions(.init(targetSessionID: target.session.id,
+            revisionID: currentRelated.projection.revisionID)).found)
+        #expect(try await repository.artifactCollisions(.init(targetSessionID: target.session.id,
+            revisionID: currentCollision.projection.revisionID)).found)
     }
 }
