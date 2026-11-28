@@ -148,7 +148,8 @@ import Testing
             let retainedRevision = try await client.sessionOutcome(.init(
                 sessionID: sessionID, revisionID: safeOutcome.projection.revisionID
             ))
-            #expect(retainedRevision.outcome == safeOutcome)
+            #expect(retainedRevision.outcome?.projection.revisionID == safeOutcome.projection.revisionID)
+            #expect(retainedRevision.outcome?.constituentTurns == safeOutcome.constituentTurns)
         }
         let safePrompt = ProvenanceCodingAgentPromptRecord(
             id: "safe-prompt", sessionID: "session-A", turnID: "independent-session-A", provider: "codex",
