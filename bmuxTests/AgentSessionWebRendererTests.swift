@@ -13,6 +13,29 @@ import Testing
 struct AgentSessionWebRendererTests {
 #if DEBUG
     @Test @MainActor
+    func syntheticStalePreviewUsesRestrictedNonpersistentBridge() async throws {
+        let coordinator = AgentSessionWebRendererCoordinator()
+        coordinator.debugSmartStaleFixture = SmartStaleDebugWindowController.fixture()
+        defer { coordinator.close() }
+        let webView = coordinator.ensureWebView(onPointerDown: {})
+        #expect(!webView.configuration.websiteDataStore.isPersistent)
+        let request = try AgentSessionBridgeRequest(body: ["id": "fixture", "method": "smartSession.snapshot"])
+        let response = try #require(try await coordinator.handle(request) as? [String: Any])
+        #expect(response["status"] as? String == "failed")
+        #expect(response["snapshot"] != nil)
+        #expect(response["lastSuccessfulReadAt"] != nil)
+        let providersRequest = try AgentSessionBridgeRequest(body: ["id": "providers", "method": "provider.list"])
+        let providers = try #require(try await coordinator.handle(providersRequest) as? [Any])
+        #expect(providers.isEmpty)
+        for method in ["provider.start", "provider.writeLine", "provider.stop", "app.pickFiles", "terminalChat.snapshot"] {
+            let blocked = try AgentSessionBridgeRequest(body: ["id": "blocked", "method": method])
+            await #expect(throws: AgentSessionBridgeError.self) { try await coordinator.handle(blocked) }
+        }
+        coordinator.close()
+        #expect(coordinator.webView == nil)
+    }
+
+    @Test @MainActor
     func acceptanceDarkOverrideChangesBridgeThemeAndRestores() {
         let defaults = UserDefaults.standard
         let key = "bmux.acceptance.forceDarkAppearance"

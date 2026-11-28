@@ -416,4 +416,49 @@ if ! grep -Fxq "BMUX_ZIG=$EXPECTED_DEFAULT_INSTALL_ROOT/zig" "$DEFAULT_GITHUB_EN
   exit 1
 fi
 
+# A slow response can exceed curl's timeout after delivering part of the archive.
+# The next attempt must resume it and still pass the real archive checksum.
+cat > "$BIN_DIR/curl" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+output=""
+resume=0
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --output) output="$2"; shift 2 ;;
+    --continue-at) [ "$2" = "-" ] || exit 1; resume=1; shift 2 ;;
+    *) shift ;;
+  esac
+done
+if [ ! -f "$FAKE_CURL_STATE" ]; then
+  touch "$FAKE_CURL_STATE"
+  head -c 512 "$FAKE_CURL_ARCHIVE" > "$output"
+  exit 28
+fi
+if [ "$resume" != 1 ] || [ ! -s "$output" ]; then
+  echo "partial archive was not resumed" >&2
+  exit 1
+fi
+python3 - "$FAKE_CURL_ARCHIVE" "$output" <<'PYTHON'
+from pathlib import Path
+import sys
+source, target = map(Path, sys.argv[1:])
+with target.open("ab") as handle:
+    handle.write(source.read_bytes()[target.stat().st_size:])
+PYTHON
+EOF
+chmod +x "$BIN_DIR/curl"
+RESUME_OUTPUT="$TMP_DIR/resume-output"
+if ! PATH="$BIN_DIR:/usr/bin:/bin" \
+  RUNNER_TEMP="$TMP_DIR/resume-runner" \
+  FAKE_CURL_STATE="$TMP_DIR/resume-state" FAKE_CURL_ARCHIVE="$ARCHIVE" \
+  ZIG_FORCE_LOCAL_INSTALL=1 ZIG_REQUIRED="$ZIG_REQUIRED" \
+  ZIG_EXPECTED_SHA256="$ARCHIVE_SHA256" \
+  ZIG_MIRROR_URL="https://example.invalid/$ZIG_NAME.tar.xz" \
+  "$SCRIPT" > "$RESUME_OUTPUT" 2>&1; then
+  cat "$RESUME_OUTPUT"
+  echo "FAIL: interrupted archive download was not resumed" >&2
+  exit 1
+fi
+
 echo "PASS: install-zig-ci rejects broken or wrong-version existing zig, validates sudo lib_dir, falls back locally, isolates shared /tmp extraction, honors ZIG_FORCE_LOCAL_INSTALL, and handles missing RUNNER_TEMP"

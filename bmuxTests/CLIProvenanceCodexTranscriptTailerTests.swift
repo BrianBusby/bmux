@@ -11,6 +11,45 @@ import Testing
 
 extension CLIProvenanceCodexTranscriptImporterTests {
     @Test
+    func importsDirectNestedExecPatchWithoutTreatingConditionalCodeAsEvidence() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let url = fixture.directoryURL.appendingPathComponent("nested-patch.jsonl")
+        var lines = try Self.codexTranscriptFixtureLines()
+        var envelope = try #require(try JSONSerialization.jsonObject(with: Data(lines[6].utf8)) as? [String: Any])
+        var payload = try #require(envelope["payload"] as? [String: Any])
+        let patch = try #require(payload["input"] as? String)
+        let encoded = try JSONSerialization.data(withJSONObject: [patch])
+        let quoted = String(decoding: encoded, as: UTF8.self).dropFirst().dropLast()
+        payload["name"] = "exec"
+        payload["input"] = "text(await tools.apply_patch(\(quoted)));\ntext(await tools.exec_command({cmd: \"git diff\"}));"
+        envelope["payload"] = payload
+        lines[6] = String(decoding: try JSONSerialization.data(withJSONObject: envelope), as: UTF8.self)
+        try lines.joined(separator: "\n").appending("\n").write(to: url, atomically: true, encoding: .utf8)
+        let importer = CLIProvenanceCodexTranscriptImporter(client: client)
+        let result = try await importer.importTranscripts(path: url.path)
+        #expect(result.fileChanges == 1)
+        let projection = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
+        let attribution = try #require(projection.latestTurn?.fileChangeAttributions.first)
+        #expect(attribution.source == .inferred)
+        #expect(attribution.confidence == .low)
+
+        let otherFixture = try StoreFixture()
+        defer { otherFixture.remove() }
+        let otherClient: any ProvenanceEngineContracts.ProvenanceEngineClient =
+            try ProvenanceEngineClientFactory().sqliteClient(databaseURL: otherFixture.databaseURL)
+        let otherURL = otherFixture.directoryURL.appendingPathComponent("conditional-patch.jsonl")
+        payload["input"] = "if (false) { text(await tools.apply_patch(\(quoted))); }"
+        envelope["payload"] = payload
+        lines[6] = String(decoding: try JSONSerialization.data(withJSONObject: envelope), as: UTF8.self)
+        try lines.joined(separator: "\n").appending("\n").write(to: otherURL, atomically: true, encoding: .utf8)
+        let other = try await CLIProvenanceCodexTranscriptImporter(client: otherClient).importTranscripts(path: otherURL.path)
+        #expect(other.fileChanges == 0)
+    }
+
+    @Test
     func liveImportReadsOnlyOneBoundedChunkPerCall() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
@@ -111,8 +150,9 @@ extension CLIProvenanceCodexTranscriptImporterTests {
             .importTranscripts(path: transcriptURL.path).eventsAppended == 0)
     }
 
-    @Test
-    func planRevisionSurvivesPartialLineAndTailerRestart() async throws {
+    // Opt in only to characterize the baseline; cursor receipt does not prove retained evidence or acceptance.
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["BMUX_CHARACTERIZE_UNCONFIRMED_PLAN_CALL"] == "1"))
+    func partialPlanCallTransportSurvivesTailerRestart() async throws {
         let fixture = try StoreFixture()
         defer { fixture.remove() }
         let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
@@ -128,9 +168,9 @@ extension CLIProvenanceCodexTranscriptImporterTests {
             surfaceID: "surface-1", client: client, cursorStore: cursorStore
         )
         _ = try await first.consume(at: transcriptURL)
-        let original = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
-        #expect(original.latestTurn?.currentPlan?.steps.map(\.status) == ["completed", "in_progress"])
+        let initialCursor = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
 
+        // Cursor position alone does not prove durable plan evidence or acceptance; replay checks the projection only.
         let revision = try Self.codexTranscriptLine(
             ordinal: 7, type: "response_item", timestamp: "2026-08-21T10:00:07Z",
             payload: [
@@ -147,16 +187,21 @@ extension CLIProvenanceCodexTranscriptImporterTests {
         )
         let partial = try await restarted.consume(at: transcriptURL)
         #expect(partial.importResult.retainedPartialLine)
-        let duringPartial = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
-        #expect(duringPartial.latestTurn?.currentPlan?.steps.map(\.status) == ["completed", "in_progress"])
+        let partialCursor = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
+        #expect(partialCursor.byteOffset == initialCursor.byteOffset)
 
         try Self.appendText(String(revision[split...]) + "\n", to: transcriptURL)
-        _ = try await restarted.consume(at: transcriptURL)
-        let updated = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
-        #expect(updated.latestTurn?.turn.providerTurnID == "turn-1")
-        #expect(updated.latestTurn?.currentPlan?.steps.map(\.status) == ["completed", "completed"])
-        #expect(try await CLIProvenanceCodexTranscriptImporter(client: client)
-            .importTranscripts(path: transcriptURL.path).eventsAppended == 0)
+        let completed = try await restarted.consume(at: transcriptURL)
+        #expect(!completed.importResult.retainedPartialLine)
+        let completedCursor = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
+        #expect(completedCursor.byteOffset == UInt64(try Data(contentsOf: transcriptURL).count))
+        #expect(completedCursor.byteOffset > initialCursor.byteOffset)
+        let beforeReplay = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
+        #expect(beforeReplay.latestTurn?.turn.providerTurnID == "turn-1")
+        _ = try await CLIProvenanceCodexTranscriptImporter(client: client)
+            .importTranscripts(path: transcriptURL.path)
+        let afterReplay = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
+        #expect(afterReplay == beforeReplay)
     }
 
     @Test
@@ -281,5 +326,138 @@ extension CLIProvenanceCodexTranscriptImporterTests {
         #expect(secondStatus.firstBacklogAt == firstBacklogAt)
     }
 
+
+    @Test
+    func largeLiveTranscriptSkipsOversizedAndMalformedLinesAndResumes() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let transcriptURL = fixture.directoryURL.appendingPathComponent("large-session.jsonl")
+        let cursorStore = CLIProvenanceCodexTranscriptCursorStore(
+            directoryURL: fixture.directoryURL.appendingPathComponent("cursors")
+        )
+        let lines = try Self.codexTranscriptFixtureLines()
+        let oversized = String(repeating: "x", count: CLIProvenanceCodexTranscriptImporter.liveLineLimit + 1)
+        let firstText = lines[0] + "\n" + oversized + "\nnot-json\n" + lines[1] + "\n" + lines[2]
+        try firstText.write(to: transcriptURL, atomically: true, encoding: .utf8)
+        let tailer = CLIProvenanceCodexTranscriptTailer(
+            providerSessionID: "codex-session-1", workspaceID: nil,
+            surfaceID: nil, client: client, cursorStore: cursorStore
+        )
+        var skipped = 0
+        var last: CLIProvenanceCodexTranscriptTailer.Outcome?
+        for _ in 0..<100 {
+            let outcome = try await tailer.consume(at: transcriptURL)
+            skipped += outcome.importResult.skippedLines
+            last = outcome
+            if !outcome.importResult.hasMoreData { break }
+        }
+        let first = try #require(last)
+        #expect(!first.importResult.hasMoreData)
+        #expect(first.importResult.retainedPartialLine)
+        #expect(skipped == 2)
+        let cursor = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
+        #expect(cursor.lineNumber == 4)
+        #expect(cursor.byteOffset == UInt64((lines[0] + "\n" + oversized + "\nnot-json\n" + lines[1] + "\n").utf8.count))
+        #expect(cursor.byteOffset < first.offset)
+
+        try Self.appendText("\n", to: transcriptURL)
+        let restarted = CLIProvenanceCodexTranscriptTailer(
+            providerSessionID: "codex-session-1", workspaceID: nil,
+            surfaceID: nil, client: client, cursorStore: cursorStore
+        )
+        let recovered = try await restarted.consume(at: transcriptURL)
+        #expect(recovered.importResult.fileReport.prompts == 1)
+        let finalCursor = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
+        #expect(finalCursor.lineNumber == 5)
+        #expect(finalCursor.byteOffset == UInt64(firstText.utf8.count + 1))
+        #expect(try await CLIProvenanceCodexTranscriptImporter(client: client)
+            .importTranscripts(path: transcriptURL.path).eventsAppended == 0)
+    }
+
+    @Test
+    func largeStreamCrossesChunkBoundaryAndResumesIncompleteRecord() async throws {
+        let fixture = try StoreFixture()
+        defer { fixture.remove() }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: fixture.databaseURL)
+        let transcriptURL = fixture.directoryURL.appendingPathComponent("large-stream.jsonl")
+        let cursorStore = CLIProvenanceCodexTranscriptCursorStore(
+            directoryURL: fixture.directoryURL.appendingPathComponent("cursors")
+        )
+        let lines = try Self.codexTranscriptFixtureLines()
+        let chunkSize = 64 * 1_024
+        let boundary = 82 * chunkSize
+        let ignored = "{\"type\":\"unsupported\",\"payload\":{\"padding\":\"" +
+            String(repeating: "x", count: 4_000) + "\"}}\n"
+        var text = lines[0] + "\n"
+        while text.utf8.count + ignored.utf8.count < boundary - 32 { text += ignored }
+        let padding = boundary - 10 - text.utf8.count
+        #expect(padding > 0)
+        text += String(repeating: " ", count: padding - 1) + "\n"
+        #expect(text.utf8.count == boundary - 10)
+        #expect(lines[1].utf8.count > 10)
+        text += lines[1] + "\n" + lines[2]
+        #expect(text.utf8.count > 5 * 1_024 * 1_024)
+        try text.write(to: transcriptURL, atomically: true, encoding: .utf8)
+
+        let tailer = CLIProvenanceCodexTranscriptTailer(
+            providerSessionID: "codex-session-1", workspaceID: nil,
+            surfaceID: nil, client: client, cursorStore: cursorStore
+        )
+        var last: CLIProvenanceCodexTranscriptTailer.Outcome?
+        var previousReadOffset: UInt64 = 0
+        var previousCursorOffset: UInt64 = 0
+        for _ in 0..<100 {
+            let outcome = try await tailer.consume(at: transcriptURL)
+            let persisted = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
+            #expect(outcome.offset >= previousReadOffset)
+            #expect(outcome.offset <= previousReadOffset + UInt64(chunkSize))
+            #expect(persisted.byteOffset >= previousCursorOffset)
+            #expect(persisted.byteOffset <= outcome.offset)
+            #expect(persisted.byteOffset <= previousReadOffset + UInt64(chunkSize))
+            previousReadOffset = outcome.offset
+            previousCursorOffset = persisted.byteOffset
+            last = outcome
+            if !outcome.importResult.hasMoreData { break }
+        }
+        let partial = try #require(last)
+        #expect(!partial.importResult.hasMoreData)
+        #expect(partial.importResult.retainedPartialLine)
+        let cursor = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
+        #expect(cursor.byteOffset == UInt64(text.utf8.count - lines[2].utf8.count))
+        let before = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
+        #expect(before.latestTurn == nil)
+
+        try Self.appendText("\n", to: transcriptURL)
+        let restarted = CLIProvenanceCodexTranscriptTailer(
+            providerSessionID: "codex-session-1", workspaceID: nil,
+            surfaceID: nil, client: client, cursorStore: cursorStore
+        )
+        let resumed = try await restarted.consume(at: transcriptURL)
+        #expect(resumed.importResult.fileReport.turns == 1)
+        #expect(resumed.importResult.fileReport.prompts == 1)
+        let projection = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
+        #expect(projection.latestTurn?.turn.providerTurnID == "turn-1")
+        #expect(projection.latestTurn?.submittedPrompt?.text == "Please add transcript ingestion.")
+        #expect(try await CLIProvenanceCodexTranscriptImporter(client: client)
+            .importTranscripts(path: transcriptURL.path).eventsAppended == 0)
+        let retry = try await restarted.consume(at: transcriptURL)
+        #expect(retry.importResult.fileReport.eventsAppended == 0)
+
+        let foreign = (lines[0...2].joined(separator: "\n") + "\n")
+            .replacingOccurrences(of: "codex-session-1", with: "codex-session-2")
+        let savedCursor = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
+        try foreign.write(to: transcriptURL, atomically: true, encoding: .utf8)
+        await #expect(throws: (any Error).self) { _ = try await restarted.consume(at: transcriptURL) }
+        let cursorAfterReplacement = try #require(await cursorStore.load(providerSessionID: "codex-session-1"))
+        #expect(cursorAfterReplacement.byteOffset == savedCursor.byteOffset)
+        let after = try await Self.factualProjection(client: client, sessionID: "codex-session-1")
+        #expect(after.latestTurn?.submittedPrompt?.text == projection.latestTurn?.submittedPrompt?.text)
+        let foreignProjection = try await client.factualSessionProjection(
+            ProvenanceFactualSessionProjectionRequest(sessionID: "codex-session-2")
+        )
+        #expect(!foreignProjection.found)
+        #expect(foreignProjection.snapshot == nil)
+    }
 
 }

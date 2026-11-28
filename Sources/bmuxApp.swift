@@ -583,20 +583,14 @@ struct bmuxApp: App {
                     ) {
                         BrowserProfilePopoverDebugWindowController.shared.show()
                     }
-                    Button("Debug Window Controls…") {
-                        DebugWindowControlsWindowController.shared.show()
-                    }
-                    Button(
-                        String(
-                            localized: "debug.menu.devWindowDisplay",
-                            defaultValue: "Dev Window Display…"
-                        )
-                    ) {
+                    Button("Debug Window Controls…") { DebugWindowControlsWindowController.shared.show() }
+                    Button(String(localized: "debug.menu.devWindowDisplay", defaultValue: "Dev Window Display…")) {
                         DevWindowDisplayDebugWindowController.shared.show()
                     }
-                    Button("Feed Preview…") {
-                        FeedPreviewWindowController.shared.show()
+                    Button(String(localized: "debug.factualStale.menu", defaultValue: "Factual Session Preview…")) {
+                        FactualStaleDebugWindowController.shared.show()
                     }
+                    Button("Feed Preview…") { FeedPreviewWindowController.shared.show() }
                     Button(
                         String(
                             localized: "debug.menu.feedTextEditorDebug",
@@ -642,6 +636,9 @@ struct bmuxApp: App {
                     }
                     Button("Sidebar Debug…") {
                         SidebarDebugWindowController.shared.show()
+                    }
+                    Button(String(localized: "debug.smartStale.menu", defaultValue: "Smart Session Stale Preview…")) {
+                        SmartStaleDebugWindowController.shared.show()
                     }
                     Button(
                         String(
@@ -1485,8 +1482,10 @@ private let bmuxAuxiliaryWindowIdentifiers: Set<String> = [
     "bmux.browserProfilePopoverDebug",
     "bmux.configEditor",
     "bmux.defaultTerminalRegistrationError",
+    "bmux.factualStalePreview",
     "bmux.feedButtonStyleDebug",
     "bmux.feedPreview",
+    "bmux.smartStalePreview",
     "bmux.feedTextEditorDebug",
     "bmux.fileExplorerStyleDebug",
     "bmux.folderDragIcon",

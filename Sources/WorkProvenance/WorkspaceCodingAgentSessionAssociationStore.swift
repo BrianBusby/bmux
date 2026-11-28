@@ -5,8 +5,6 @@ import ProvenanceEngineContracts
 @MainActor
 final class WorkspaceCodingAgentSessionAssociationStore {
     private let client: any ProvenanceEngineClient
-    private var associationsByWorkspaceID: [String: ProvenanceWorkspaceCodingAgentSessionAssociationRecord] = [:]
-    private var readinessByWorkspaceID: [String: ProvenanceWorkspaceCodingAgentSessionReadiness] = [:]
 
     init(client: any ProvenanceEngineClient) {
         self.client = client
@@ -24,11 +22,9 @@ final class WorkspaceCodingAgentSessionAssociationStore {
                     agentKind: agentKind
                 )
             )
-            readinessByWorkspaceID[workspaceID] = response.readiness
             guard response.found, let association = response.association else {
                 return .notFound(response.readiness)
             }
-            associationsByWorkspaceID[workspaceID] = association
             return .available(association, response.readiness)
         } catch {
             StartupBreadcrumbLog.append("workProvenance.workspaceCodingAgentSessionAssociation.refreshFailed", fields: [
@@ -36,17 +32,6 @@ final class WorkspaceCodingAgentSessionAssociationStore {
                 "agentKind": agentKind,
                 "error": String(describing: error)
             ])
-            if let association = associationsByWorkspaceID[workspaceID] {
-                let readiness = readinessByWorkspaceID[workspaceID] ?? Self.readiness(
-                    status: .available,
-                    stableWorkspaceID: stableWorkspaceID,
-                    agentKind: agentKind,
-                    association: association,
-                    reasonCode: "last_known_good_after_read_failure",
-                    retryable: true
-                )
-                return .available(association, readiness)
-            }
             return .failed(Self.readiness(
                 status: .projectionFailed,
                 stableWorkspaceID: stableWorkspaceID,
