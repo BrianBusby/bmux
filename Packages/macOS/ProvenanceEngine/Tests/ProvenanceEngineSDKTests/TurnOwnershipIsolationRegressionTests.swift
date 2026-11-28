@@ -49,6 +49,25 @@ import Testing
         let original = try await client.turnOutcome(.init(turnID: turnID))
         #expect(original.outcome?.objective?.evidence.contains(where: { $0.eventID == "prompt-event-A" }) == true)
         try await appendTurn(sessionID: "session-B", eventID: "turn-event-B", offset: 3)
+        for sessionID in ["session-A", "session-B"] {
+            let uniqueTurn = ProvenanceCodingAgentTurnRecord(
+                id: "independent-\(sessionID)", sessionID: sessionID, provider: "codex",
+                providerTurnID: "independent-\(sessionID)", status: "started",
+                startedAt: time.addingTimeInterval(4), updatedAt: time.addingTimeInterval(4),
+                source: .observed, confidence: .high
+            )
+            _ = try await client.appendEvent(.init(event: ProvenanceEvent(
+                id: "event-independent-\(sessionID)", eventType: .codingAgentTurnObserved,
+                timestamp: uniqueTurn.updatedAt, sessionID: sessionID,
+                source: .observed, confidence: .high, payload: .init(codingAgentTurn: uniqueTurn)
+            )))
+            let response = try await client.factualSessionProjection(.init(sessionID: sessionID))
+            let snapshot = try #require(response.snapshot)
+            #expect(snapshot.turns.contains { $0.turn.id == uniqueTurn.id })
+            let encoded = try JSONEncoder().encode(snapshot)
+            let object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+            #expect((object["unresolvedTurnIDs"] as? [String]) == [turnID])
+        }
         let bProjection = try await client.factualSessionProjection(.init(sessionID: "session-B"))
         // Proposed contract: ownership_unresolved distinguishes a conflict from absence.
         if let snapshot = bProjection.snapshot {
