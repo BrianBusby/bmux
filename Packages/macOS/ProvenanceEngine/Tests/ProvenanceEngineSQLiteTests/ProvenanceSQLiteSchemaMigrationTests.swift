@@ -5,6 +5,62 @@ import Testing
 @Suite
 struct ProvenanceSQLiteSchemaMigrationTests {
     @Test
+    func turnClaimIndexesCoverExistingAndNewLedgerEvents() async throws {
+        let url = Self.temporaryDatabaseURL()
+        defer { Self.removeTemporaryDatabaseDirectory(for: url) }
+        _ = try ProvenanceSQLiteRepository(
+            url: url, migrations: ProvenanceSQLiteRepository.migrations.filter { $0.version <= 31 }
+        )
+        let database = try ProvenanceSQLiteDatabase(url: url)
+        try database.execute("""
+            INSERT INTO provenance_events
+              (id, schema_version, event_type, timestamp_seconds, session_id, source, confidence, payload_json)
+            VALUES ('before', 1, 'fixture', 1, 'a', 'observed', 'high',
+              '{"codingAgentTurn":{"id":"turn-a"},"codingAgentPrompt":{"turnID":"turn-b"}}')
+            """)
+        _ = try ProvenanceSQLiteRepository(url: url)
+        let paths = [
+            "codingAgentTurn.id", "codingAgentPrompt.turnID", "codingAgentPlanUpdate.turnID",
+            "codingAgentCommand.turnID", "codingAgentReasoningSummary.turnID",
+            "codingAgentAssistantMessage.turnID", "codingAgentFileChangeAttribution.turnID",
+        ]
+        for path in paths {
+            let expression = "json_extract(payload_json, '$.\(path)')"
+            let query = try database.prepare("""
+                EXPLAIN QUERY PLAN SELECT id FROM provenance_events
+                WHERE json_valid(payload_json) AND \(expression) = ?
+                """)
+            defer { query.finalize() }
+            try query.bind("turn-a", at: 1)
+            #expect(try query.step())
+            #expect(query.string(at: 3)?.contains("USING INDEX provenance_turn_claim_") == true,
+                    Comment(rawValue: "Missing index for \(path)"))
+        }
+        let existing = try database.prepare("""
+            SELECT id FROM provenance_events
+            WHERE json_valid(payload_json) AND json_extract(payload_json, '$.codingAgentPrompt.turnID') = ?
+            """)
+        defer { existing.finalize() }
+        try existing.bind("turn-b", at: 1)
+        #expect(try existing.step())
+        #expect(existing.string(at: 0) == "before")
+        try database.execute("""
+            INSERT INTO provenance_events
+              (id, schema_version, event_type, timestamp_seconds, session_id, source, confidence, payload_json)
+            VALUES ('after', 1, 'fixture', 2, 'b', 'observed', 'high',
+              '{"codingAgentTurn":{"id":"turn-c"}}')
+            """)
+        let added = try database.prepare("""
+            SELECT id FROM provenance_events
+            WHERE json_valid(payload_json) AND json_extract(payload_json, '$.codingAgentTurn.id') = ?
+            """)
+        defer { added.finalize() }
+        try added.bind("turn-c", at: 1)
+        #expect(try added.step())
+        #expect(added.string(at: 0) == "after")
+    }
+
+    @Test
     func repositoryDefaultMigrationsBootstrapEventLedgerSchema() async throws {
         let url = Self.temporaryDatabaseURL()
         defer { Self.removeTemporaryDatabaseDirectory(for: url) }
