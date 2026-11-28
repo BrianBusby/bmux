@@ -89,6 +89,20 @@ import Testing
             #expect(!safeOutcome.turnOutcomes.contains { $0.turnID == turnID })
             #expect(safeOutcome.completeness.fields.contains { $0.reason == "ownership_unresolved" })
         }
+        let safePrompt = ProvenanceCodingAgentPromptRecord(
+            id: "safe-prompt", sessionID: "session-A", turnID: "independent-session-A", provider: "codex",
+            text: "Independent work remains visible", submittedAt: time.addingTimeInterval(5),
+            source: .observed, confidence: .high
+        )
+        _ = try await client.appendEvent(.init(event: .init(
+            id: "safe-prompt-event", eventType: .codingAgentPromptSubmitted, timestamp: safePrompt.submittedAt,
+            sessionID: "session-A", source: .observed, confidence: .high, payload: .init(codingAgentPrompt: safePrompt)
+        )))
+        _ = try await client.publishCodingAgentSessionSemanticInferences(.init(sessionID: "session-A", createdAt: time))
+        let safeModel = try #require(try await client.sessionWorkModel(.init(sessionID: "session-A")).model)
+        #expect(safeModel.currentTurn?.intent.record != nil)
+        #expect(String(decoding: try JSONEncoder().encode(safeModel.currentTurn?.intent), as: UTF8.self)
+            .contains("Independent work remains visible"))
         let bProjection = try await client.factualSessionProjection(.init(sessionID: "session-B"))
         // Proposed contract: ownership_unresolved distinguishes a conflict from absence.
         if let snapshot = bProjection.snapshot {
