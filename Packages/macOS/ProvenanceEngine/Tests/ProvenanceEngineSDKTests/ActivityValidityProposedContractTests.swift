@@ -40,11 +40,12 @@ struct ActivityValidityProposedContractTests {
         )
         let activity = try #require(publish.records.first { $0.kind == ProvenanceCodingAgentSemanticInferenceKind.currentActivity.rawValue })
         let phase = try #require(publish.records.first { $0.kind == ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue })
+        let milestones = try #require(publish.records.first { $0.kind == ProvenanceCodingAgentSemanticInferenceKind.milestones.rawValue })
         #expect(activity.supportingEvidenceRefs.contains { $0.kind == "coding_agent_command" && $0.id == command.id })
         #expect(phase.scope == .session && phase.scopeID == subject.id)
         #expect(phase.supportingEvidenceRefs.contains { $0.kind == "coding_agent_turn" && $0.id == firstTurn.id })
         #expect(phase.supportingEvidenceRefs.contains { $0.kind == "coding_agent_command" && $0.id == command.id })
-        _ = try await client.materializeSemanticMessages(ProvenanceSemanticMessageMaterializationRequest(semanticInferenceRecords: [activity, phase], createdAt: time.addingTimeInterval(6)))
+        _ = try await client.materializeSemanticMessages(ProvenanceSemanticMessageMaterializationRequest(semanticInferenceRecords: [activity, milestones, phase], createdAt: time.addingTimeInterval(6)))
 
         let completedModel = try #require(try await client.sessionWorkModel(ProvenanceSessionWorkModelRequest(sessionID: subject.id)).model)
         // Proposed: a completed operation alone cannot establish present activity or phase.
@@ -87,5 +88,7 @@ struct ActivityValidityProposedContractTests {
         // a future explicit validity field could express the same safety differently.
         #expect(currentPhaseMessages.records.isEmpty)
         #expect(phaseHistory.records.contains { $0.semanticInferenceID == phase.id })
+        let otherMessages = try await secondClient.semanticMessages(ProvenanceSemanticMessageQueryRequest(scope: .session, scopeID: subject.id, limit: 1))
+        #expect(otherMessages.records.map(\.semanticInferenceID) == [milestones.id])
     }
 }

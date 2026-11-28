@@ -369,7 +369,12 @@ struct RelatedSessionProjectionRevisionTests {
 
         #expect(brief.semanticFields.isEmpty == false)
         #expect(brief.sessionWorkModelRevision?.semanticInferenceIDs.isEmpty == false)
-        #expect(brief.semanticFields.allSatisfy { $0.record != nil })
+        #expect(brief.semanticFields.contains { $0.kind == ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue && $0.state == .unknown })
+        #expect(brief.semanticFields.contains { $0.kind == ProvenanceCodingAgentSemanticInferenceKind.currentActivity.rawValue && $0.state == .unknown })
+        #expect(brief.semanticFields.filter {
+            $0.kind != ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue &&
+                $0.kind != ProvenanceCodingAgentSemanticInferenceKind.currentActivity.rawValue
+        }.allSatisfy { $0.record != nil })
         #expect(brief.relationshipReasons.map(\.kind).contains(.sameWorktree))
         #expect(brief.relationshipReasons.allSatisfy {
             $0.kind != .sharedExternalIdentity && $0.kind != .sharedProviderThread
