@@ -138,6 +138,30 @@ struct TaskRelevanceEvidenceTests {
             $0.kind == .currentWorkspaceTicket
         })
         #expect(ticketReason.evidence.contains { $0.id == "event-ticket-display" && $0.eventSequence != nil })
+        let refreshedDisplay = ProvenanceWorkspaceDisplayRecord(
+            id: "display-ticket-exact", workspaceID: "workspace-ticket-exact", repositoryID: repo.id,
+            ticketIDs: ["EVAL-42"], observedAt: fixture.time(50), updatedAt: fixture.time(50)
+        )
+        try await fixture.append(eventID: "event-ticket-refreshed", eventType: .workspaceDisplayObserved,
+            timestamp: fixture.time(50), repositoryID: repo.id, worktreeID: nil, sessionID: nil,
+            payload: ProvenanceEventPayload(workspaceDisplay: refreshedDisplay), into: store)
+        let refreshed = try #require(try await store.relatedSessions(
+            .init(targetSessionID: "caller", ticket: "EVAL-42")
+        ).projection)
+        let refreshedReason = try #require(refreshed.relatedSessions.first?.relationshipReasons.first {
+            $0.kind == .currentWorkspaceTicket
+        })
+        #expect(refreshedReason.evidence.contains { $0.id == "event-ticket-refreshed" })
+        #expect(refreshedReason.observedAt == fixture.time(50))
+        #expect(refreshed.projection.revisionID != ticketSelected.projection.revisionID)
+        let historical = try #require(try await store.relatedSessionRevision(
+            targetSessionID: "caller", revisionID: ticketSelected.projection.revisionID
+        ))
+        let historicalReason = try #require(historical.relatedSessions.first?.relationshipReasons.first {
+            $0.kind == .currentWorkspaceTicket
+        })
+        #expect(historicalReason.evidence == ticketReason.evidence)
+        #expect(historicalReason.observedAt == ticketReason.observedAt)
         let missingTicket = try #require(try await store.relatedSessions(
             .init(targetSessionID: "caller", ticket: "EVAL-420")
         ).projection)

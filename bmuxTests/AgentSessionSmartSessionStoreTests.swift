@@ -12,32 +12,98 @@ import Testing
 @MainActor
 struct AgentSessionSmartSessionStoreTests {
     @Test
-    func concurrentRefreshesForSameSessionShareRefreshTask() async {
-        let client = SmartSessionStoreTestClient(
-            model: Self.model(sessionID: "session-1", revision: 42),
-            waitForRelease: true
-        )
-        let store = AgentSessionSmartSessionStore(client: client)
+    func proposalBridgePreservesUnknownCoverageAndSupportedEvidence() throws {
+        let old = Self.model(sessionID: "session-1", revision: 1).basis.factualSessionProjection
+        let oldPayload = AgentSessionSmartSessionSnapshot.Factual(factualProjection: old).bridgePayload
+        #expect(oldPayload["proposedPlanCoverage"] == nil)
+        let proposal = ProvenanceCodingAgentProposedPlanRecord(sessionID: "session-1", provider: "codex",
+            providerSessionID: "thread", providerTurnID: "turn", providerItemID: "item", text: "Plan", truncated: false)
+        let observed = ProvenanceFactualProposedPlanObservation(id: "evidence", sequence: 4,
+            timestamp: Date(timeIntervalSince1970: 1_800_000_000), proposal: proposal,
+            source: .observed, origin: .init(rawValue: "codex-transcript"), eventSchemaVersion: 1)
+        let inferred = ProvenanceFactualProposedPlanObservation(id: "inferred", sequence: 5,
+            timestamp: Date(timeIntervalSince1970: 1_800_000_000), proposal: proposal,
+            source: .inferred, origin: .init(rawValue: "codex-transcript"), eventSchemaVersion: 1)
+        let projection = ProvenanceFactualSessionProjectionSnapshot(revision: 5, session: old.session,
+            providerThreads: [], turns: [], proposedPlanObservations: [observed, inferred],
+            proposedPlanCoverage: .init(scanWindowTruncated: true, omittedObservations: true))
+        let payload = AgentSessionSmartSessionSnapshot.Factual(factualProjection: projection).bridgePayload
+        let coverage = try #require(payload["proposedPlanCoverage"] as? [String: Bool])
+        let observations = try #require(payload["proposedPlanObservations"] as? [[String: Any]])
+        #expect(coverage["scanWindowTruncated"] == true)
+        #expect(coverage["omittedObservations"] == true)
+        #expect(observations.count == 1)
+        #expect(observations.first?["id"] as? String == "evidence")
+        #expect(observations.first?["origin"] as? String == "codex-transcript")
+    }
 
-        async let firstResult = store.refreshedSnapshot(sessionID: "session-1")
-        await client.waitForPublishStart()
-        async let secondResult = store.refreshedSnapshot(sessionID: " session-1 ")
-        for _ in 0..<10 {
-            await Task.yield()
+    @Test
+    func proposalBridgeRejectsInvalidIdentityAndMarksCoveragePartial() throws {
+        let old = Self.model(sessionID: "session-1", revision: 1).basis.factualSessionProjection
+        let proposal = ProvenanceCodingAgentProposedPlanRecord(sessionID: "session-1", provider: "codex",
+            providerSessionID: "thread", providerTurnID: " ", providerItemID: "item", text: "Plan", truncated: false)
+        let observed = ProvenanceFactualProposedPlanObservation(id: "invalid", sequence: 2,
+            timestamp: Date(timeIntervalSince1970: 1_800_000_000), proposal: proposal,
+            source: .observed, origin: .init(rawValue: "codex-transcript"), eventSchemaVersion: 1)
+        let projection = ProvenanceFactualSessionProjectionSnapshot(revision: 2, session: old.session,
+            providerThreads: [], turns: [], proposedPlanObservations: [observed],
+            proposedPlanCoverage: .init(scanWindowTruncated: false, omittedObservations: false))
+        let payload = AgentSessionSmartSessionSnapshot.Factual(factualProjection: projection).bridgePayload
+        let coverage = try #require(payload["proposedPlanCoverage"] as? [String: Bool])
+        let observations = try #require(payload["proposedPlanObservations"] as? [[String: Any]])
+        #expect(observations.isEmpty)
+        #expect(coverage["omittedObservations"] == true)
+    }
+
+    @Test(arguments: [false, true])
+    func overlapDoesNotReportEarlierReadAsCurrent(hasCache: Bool) async {
+        let client = SmartSessionStoreTestClient(model: Self.model(sessionID: "session-1", revision: 42))
+        let readTime = Date(timeIntervalSince1970: 100)
+        let store = AgentSessionSmartSessionStore(client: client, now: { readTime })
+        var prior: AgentSessionSmartSessionSnapshot?
+        if hasCache {
+            guard case .available(let snapshot) = await store.refreshedSnapshot(sessionID: "session-1") else {
+                Issue.record("Initial read was not available")
+                return
+            }
+            prior = snapshot
         }
+        await client.holdPublish()
+        let first = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+        await client.waitForPublishStart()
+        let (started, continuation) = AsyncStream<Void>.makeStream()
+        let second = Task { @MainActor in
+            continuation.yield(())
+            return await store.refreshedSnapshot(sessionID: "session-1")
+        }
+        for await _ in started { break }
         await client.releasePublish()
-
-        let results = await (firstResult, secondResult)
-        guard case let .available(firstSnapshot) = results.0,
-              case let .available(secondSnapshot) = results.1 else {
-            Issue.record("Expected both overlapping refreshes to return the available Smart Session snapshot")
+        guard case .available(let firstSnapshot) = await first.value,
+              case .available(let secondSnapshot) = await second.value else {
+            Issue.record("Overlapping callers should converge on the follow-up")
             return
         }
+        #expect(firstSnapshot == secondSnapshot)
+        #expect(prior == nil || prior == firstSnapshot)
+        #expect(store.snapshot(sessionID: "session-1") == .available(firstSnapshot))
+        #expect(await client.sessionWorkModelRequestCount() == 2)
+    }
 
-        #expect(firstSnapshot.identity.sessionID == "session-1")
-        #expect(secondSnapshot.revision.key == firstSnapshot.revision.key)
-        #expect(await client.publishRequestCount() == 1)
-        #expect(await client.sessionWorkModelRequestCount() == 1)
+    @Test
+    func cancelledDuplicateDoesNotInvalidateActiveRead() async {
+        let client = SmartSessionStoreTestClient(model: Self.model(sessionID: "session-1", revision: 42), waitForRelease: true)
+        let store = AgentSessionSmartSessionStore(client: client)
+        let first = Task { await store.refreshedSnapshot(sessionID: "session-1") }
+        await client.waitForPublishStart()
+        let duplicate = Task { @MainActor in await store.refreshedSnapshot(sessionID: "session-1") }
+        duplicate.cancel()
+        _ = await duplicate.value
+        await client.releasePublish()
+        guard case .available(let snapshot) = await first.value else {
+            Issue.record("A cancelled duplicate invalidated the active read")
+            return
+        }
+        #expect(snapshot.revision.factualRevision == 42)
     }
 
     @Test
@@ -279,6 +345,12 @@ private actor SmartSessionStoreTestClient: ProvenanceEngineClient {
         self.models = models
         self.materializedFactualRevisions = materializedFactualRevisions
         self.isPublishReleased = !waitForRelease
+    }
+
+    func holdPublish() {
+        isPublishReleased = false
+        publishRequests.removeAll()
+        workModelRequests.removeAll()
     }
 
     func waitForPublishStart() async {
