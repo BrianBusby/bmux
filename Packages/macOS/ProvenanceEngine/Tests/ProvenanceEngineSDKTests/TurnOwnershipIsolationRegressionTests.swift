@@ -110,6 +110,10 @@ import Testing
             #expect(safeOutcome.turnOutcomes.contains { $0.turnID == uniqueTurn.id })
             #expect(!safeOutcome.turnOutcomes.contains { $0.turnID == turnID })
             #expect(safeOutcome.completeness.fields.contains { $0.reason == "ownership_unresolved" })
+            let sameRevision = try await client.sessionOutcome(.init(
+                sessionID: sessionID, revisionID: safeOutcome.projection.revisionID
+            ))
+            #expect(sameRevision.outcome == safeOutcome)
         }
         let safePrompt = ProvenanceCodingAgentPromptRecord(
             id: "safe-prompt", sessionID: "session-A", turnID: "independent-session-A", provider: "codex",
