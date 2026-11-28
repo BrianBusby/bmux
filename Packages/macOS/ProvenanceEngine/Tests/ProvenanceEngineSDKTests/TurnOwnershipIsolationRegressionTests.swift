@@ -83,9 +83,21 @@ import Testing
                 timestamp: uniqueTurn.updatedAt, sessionID: sessionID,
                 source: .observed, confidence: .high, payload: .init(codingAgentTurn: uniqueTurn)
             )))
+            let independentProposal = ProvenanceCodingAgentProposedPlanRecord(
+                sessionID: sessionID, provider: "codex", providerSessionID: "provider-\(sessionID)",
+                providerTurnID: uniqueTurn.providerTurnID, providerItemID: "independent-item",
+                text: "Independent proposal", truncated: false
+            )
+            _ = try await client.appendEvent(.init(event: .init(
+                id: "independent-proposal-\(sessionID)", eventType: .codingAgentProposedPlanObserved,
+                timestamp: time.addingTimeInterval(4), sessionID: sessionID, source: .observed,
+                evidenceOrigin: .init(rawValue: "codex-transcript"), confidence: .high,
+                payload: .init(codingAgentProposedPlan: independentProposal)
+            )))
             let response = try await client.factualSessionProjection(.init(sessionID: sessionID))
             let snapshot = try #require(response.snapshot)
             #expect(snapshot.turns.contains { $0.turn.id == uniqueTurn.id })
+            #expect(snapshot.proposedPlanObservations.contains { $0.proposal.text == "Independent proposal" })
             let encoded = try JSONEncoder().encode(snapshot)
             let object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
             #expect((object["unresolvedTurnIDs"] as? [String]) == [turnID])
