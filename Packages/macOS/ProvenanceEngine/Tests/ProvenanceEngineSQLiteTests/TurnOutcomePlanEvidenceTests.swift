@@ -19,12 +19,12 @@ struct TurnOutcomePlanEvidenceTests {
                           payload: ProvenanceEventPayload(codingAgentPlanUpdate: plan)),
         ], into: repository)
 
-        let turn = try #require(try await repository.turnOutcome(
-            ProvenanceTurnOutcomeRequest(turnID: fixture.turnCompleted.id)
-        ).outcome)
-        let session = try #require(try await repository.sessionOutcome(
-            ProvenanceSessionOutcomeRequest(sessionID: fixture.session.id)
-        ).outcome)
+        let turnResponse = try await repository.turnOutcome(ProvenanceTurnOutcomeRequest(turnID: fixture.turnCompleted.id))
+        let sessionResponse = try await repository.sessionOutcome(ProvenanceSessionOutcomeRequest(sessionID: fixture.session.id))
+        #expect(turnResponse.planDerivedClaimsValidity == "unverified_agent_reported")
+        #expect(sessionResponse.planDerivedClaimsValidity == "unverified_agent_reported")
+        let turn = try #require(turnResponse.outcome)
+        let session = try #require(sessionResponse.outcome)
         #expect(turn.planItems.map(\.status) == ["completed"])
         #expect(turn.planItems.first?.evidence.isEmpty == false)
         #expect(turn.actionsCompleted.isEmpty)
@@ -116,16 +116,26 @@ struct TurnOutcomePlanEvidenceTests {
             ProvenanceSessionOutcomeRequest(sessionID: fixture.session.id)
         ).outcome)
         #expect(currentSession.actionsCompleted.isEmpty)
-        #expect(currentSession.turnOutcomes.first?.projection.projectionRuleVersion == "4")
+        #expect(currentSession.turnOutcomes.first?.projection.projectionRuleVersion == "5")
         #expect(currentSession.projection.revisionID != legacySessionID)
-        let historical = try #require(try await repository.turnOutcome(ProvenanceTurnOutcomeRequest(
+        let historicalResponse = try await repository.turnOutcome(ProvenanceTurnOutcomeRequest(
             turnID: fixture.turnCompleted.id, revisionID: legacyTurnID
-        )).outcome)
+        ))
+        let turnEnvelope = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(historicalResponse)) as? [String: Any])
+        #expect(turnEnvelope["planDerivedClaimsValidity"] as? String == "unverified_agent_reported")
+        var oldEnvelope = turnEnvelope
+        oldEnvelope.removeValue(forKey: "planDerivedClaimsValidity")
+        let oldResponse = try JSONDecoder().decode(ProvenanceTurnOutcomeResponse.self, from: JSONSerialization.data(withJSONObject: oldEnvelope))
+        #expect(oldResponse.planDerivedClaimsValidity == nil)
+        let historical = try #require(historicalResponse.outcome)
         #expect(historical.projection.projectionRuleVersion == legacyVersion)
         #expect(historical.actionsCompleted == [oldAction])
-        let historicalSession = try #require(try await repository.sessionOutcome(ProvenanceSessionOutcomeRequest(
+        let historicalSessionResponse = try await repository.sessionOutcome(ProvenanceSessionOutcomeRequest(
             sessionID: fixture.session.id, revisionID: legacySessionID
-        )).outcome)
+        ))
+        let sessionEnvelope = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(historicalSessionResponse)) as? [String: Any])
+        #expect(sessionEnvelope["planDerivedClaimsValidity"] as? String == "unverified_agent_reported")
+        let historicalSession = try #require(historicalSessionResponse.outcome)
         #expect(historicalSession.turnOutcomes.first?.actionsCompleted == [oldAction])
     }
 

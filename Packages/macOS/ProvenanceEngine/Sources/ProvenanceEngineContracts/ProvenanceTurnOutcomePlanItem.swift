@@ -9,6 +9,9 @@ public struct ProvenanceTurnOutcomePlanItem: Codable, Equatable, Sendable {
     /// Plan step text copied from accepted evidence.
     public let text: String
 
+    /// Whether the reported plan was accepted; nil in older records means unknown.
+    public let evidenceValidity: String?
+
     /// Supporting evidence references for this plan item.
     public let evidence: [ProvenanceTurnOutcomeEvidenceReference]
 
@@ -17,11 +20,13 @@ public struct ProvenanceTurnOutcomePlanItem: Codable, Equatable, Sendable {
         id: String,
         status: String,
         text: String,
-        evidence: [ProvenanceTurnOutcomeEvidenceReference]
+        evidence: [ProvenanceTurnOutcomeEvidenceReference],
+        evidenceValidity: String? = nil
     ) {
         self.id = id
         self.status = status
         self.text = text
         self.evidence = evidence
+        self.evidenceValidity = evidenceValidity
     }
 }

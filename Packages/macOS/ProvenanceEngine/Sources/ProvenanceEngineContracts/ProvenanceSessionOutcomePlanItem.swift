@@ -23,6 +23,9 @@ public struct ProvenanceSessionOutcomePlanItem: Codable, Equatable, Sendable {
     /// Source turn-level plan item identifiers that reconciled into this item.
     public let sourcePlanItemIDs: [String]
 
+    /// Whether the reported plan was accepted; nil in older records means unknown.
+    public let evidenceValidity: String?
+
     /// Supporting evidence references for the latest factual state.
     public let evidence: [ProvenanceTurnOutcomeEvidenceReference]
 
@@ -35,7 +38,8 @@ public struct ProvenanceSessionOutcomePlanItem: Codable, Equatable, Sendable {
         latestObservedTurnID: String,
         latestTurnOutcomeRevisionID: String,
         sourcePlanItemIDs: [String],
-        evidence: [ProvenanceTurnOutcomeEvidenceReference]
+        evidence: [ProvenanceTurnOutcomeEvidenceReference],
+        evidenceValidity: String? = nil
     ) {
         self.id = id
         self.text = text
@@ -45,5 +49,6 @@ public struct ProvenanceSessionOutcomePlanItem: Codable, Equatable, Sendable {
         self.latestTurnOutcomeRevisionID = latestTurnOutcomeRevisionID
         self.sourcePlanItemIDs = sourcePlanItemIDs
         self.evidence = evidence
+        self.evidenceValidity = evidenceValidity
     }
 }

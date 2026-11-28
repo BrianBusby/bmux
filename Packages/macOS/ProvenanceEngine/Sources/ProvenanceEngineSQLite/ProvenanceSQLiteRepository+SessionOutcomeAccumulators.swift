@@ -10,6 +10,7 @@ struct SessionOutcomePlanAccumulator {
     private var latestRevisionID: String
     private var sourcePlanItemIDs: [String]
     private var latestEvidence: [ProvenanceTurnOutcomeEvidenceReference]
+    private var latestValidity: String?
 
     init(firstText: String, firstTurnID: String) {
         self.firstText = firstText
@@ -20,6 +21,7 @@ struct SessionOutcomePlanAccumulator {
         self.latestRevisionID = ""
         self.sourcePlanItemIDs = []
         self.latestEvidence = []
+        self.latestValidity = nil
     }
 
     mutating func append(_ item: ProvenanceTurnOutcomePlanItem, from outcome: ProvenanceTurnOutcome) {
@@ -32,6 +34,7 @@ struct SessionOutcomePlanAccumulator {
             sourcePlanItemIDs.append(scopedID)
         }
         latestEvidence = item.evidence
+        latestValidity = item.evidenceValidity
     }
 
     func planItem(id: String) -> ProvenanceSessionOutcomePlanItem {
@@ -43,7 +46,8 @@ struct SessionOutcomePlanAccumulator {
             latestObservedTurnID: latestTurnID,
             latestTurnOutcomeRevisionID: latestRevisionID,
             sourcePlanItemIDs: sourcePlanItemIDs,
-            evidence: latestEvidence
+            evidence: latestEvidence,
+            evidenceValidity: latestValidity
         )
     }
 }

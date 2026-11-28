@@ -3,7 +3,7 @@ import ProvenanceEngineContracts
 
 extension ProvenanceSQLiteRepository {
     static let turnOutcomeRuleID = "deterministic_turn_outcome"
-    static let turnOutcomeRuleVersion = "4"
+    static let turnOutcomeRuleVersion = "5"
     static let turnOutcomeCommandRuleVersion = "1"
 
     func refreshTurnOutcomes(
@@ -162,7 +162,8 @@ extension ProvenanceSQLiteRepository {
                     text: step.text,
                     evidence: plan.map {
                         evidenceIndex.references(kind: "coding_agent_plan_update", id: $0.id)
-                    } ?? []
+                    } ?? [],
+                    evidenceValidity: "unverified_agent_reported"
                 )
             } ?? []
         let actionsCompleted = reasoningSummaries
@@ -222,7 +223,7 @@ extension ProvenanceSQLiteRepository {
             .map {
                 ProvenanceTurnOutcomeTextFact(
                     id: "blocker:\($0.id)",
-                    kind: "blocked_plan_item",
+                    kind: "unverified_reported_blocked_plan_item",
                     text: $0.text,
                     evidence: $0.evidence
                 )
@@ -232,7 +233,7 @@ extension ProvenanceSQLiteRepository {
             .map {
                 ProvenanceTurnOutcomeTextFact(
                     id: "unresolved:\($0.id)",
-                    kind: "unresolved_plan_item",
+                    kind: "unverified_reported_unresolved_plan_item",
                     text: $0.text,
                     evidence: $0.evidence
                 )
@@ -241,7 +242,7 @@ extension ProvenanceSQLiteRepository {
             .map {
                 ProvenanceTurnOutcomeTextFact(
                     id: "resume:\($0.id)",
-                    kind: "active_plan_item",
+                    kind: "unverified_reported_active_plan_item",
                     text: $0.text,
                     evidence: $0.evidence
                 )
@@ -249,7 +250,7 @@ extension ProvenanceSQLiteRepository {
             .map {
                 ProvenanceTurnOutcomeTextFact(
                     id: "resume:\($0.id)",
-                    kind: "pending_plan_item",
+                    kind: "unverified_reported_pending_plan_item",
                     text: $0.text,
                     evidence: $0.evidence
                 )
@@ -618,12 +619,12 @@ extension ProvenanceSQLiteRepository {
                 reason: "no_submitted_prompt",
                 evidence: objective?.evidence ?? []
             ),
-            availability(
-                field: "plan_items",
-                observed: !planItems.isEmpty,
-                reason: "no_plan_update",
-                evidence: planItems.flatMap(\.evidence)
-            ),
+            planItems.isEmpty
+                ? availability(field: "plan_items", observed: false, reason: "no_plan_update", evidence: [])
+                : ProvenanceTurnOutcomeAvailability(
+                    field: "plan_items", status: "partial", reason: "unverified_plan_evidence",
+                    evidence: planItems.flatMap(\.evidence)
+                ),
             availability(
                 field: "completed_commands",
                 observed: !commands.isEmpty,
@@ -648,30 +649,30 @@ extension ProvenanceSQLiteRepository {
                 reason: "no_supported_validation_command",
                 evidence: validations.flatMap(\.evidence)
             ),
-            availability(
-                field: "blockers",
-                observed: !blockers.isEmpty,
-                reason: "no_blocked_plan_item",
-                evidence: blockers.flatMap(\.evidence)
-            ),
-            availability(
-                field: "unresolved_items",
-                observed: !unresolvedItems.isEmpty,
-                reason: "no_unresolved_plan_item",
-                evidence: unresolvedItems.flatMap(\.evidence)
-            ),
+            planItems.isEmpty
+                ? availability(field: "blockers", observed: false, reason: "no_blocked_plan_item", evidence: [])
+                : ProvenanceTurnOutcomeAvailability(
+                    field: "blockers", status: "partial", reason: "unverified_plan_evidence",
+                    evidence: blockers.flatMap(\.evidence)
+                ),
+            planItems.isEmpty
+                ? availability(field: "unresolved_items", observed: false, reason: "no_unresolved_plan_item", evidence: [])
+                : ProvenanceTurnOutcomeAvailability(
+                    field: "unresolved_items", status: "partial", reason: "unverified_plan_evidence",
+                    evidence: unresolvedItems.flatMap(\.evidence)
+                ),
             availability(
                 field: "repository_boundary",
                 observed: repositoryBoundary != nil,
                 reason: "no_repository_or_worktree_boundary",
                 evidence: repositoryBoundary?.evidence ?? []
             ),
-            availability(
-                field: "resume_point",
-                observed: resumePoint != nil,
-                reason: "no_active_or_pending_plan_item",
-                evidence: resumePoint?.evidence ?? []
-            ),
+            planItems.isEmpty
+                ? availability(field: "resume_point", observed: false, reason: "no_active_or_pending_plan_item", evidence: [])
+                : ProvenanceTurnOutcomeAvailability(
+                    field: "resume_point", status: "partial", reason: "unverified_plan_evidence",
+                    evidence: resumePoint?.evidence ?? []
+                ),
         ]
         let status = fields.allSatisfy { $0.status == "observed" } ? "complete" : "partial"
         return ProvenanceTurnOutcomeCompleteness(
@@ -679,6 +680,7 @@ extension ProvenanceSQLiteRepository {
             evaluatedThroughSequence: evaluatedThroughSequence,
             fields: fields,
             notes: [
+                "plan updates are agent-reported history; acceptance and step status are unverified",
                 "decision projection requires explicit accepted decision evidence and does not infer from prose",
                 "validation_run records are not attached unless represented by a turn-linked command in this rule version",
             ]

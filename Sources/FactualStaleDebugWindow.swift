@@ -30,7 +30,13 @@ final class FactualStaleDebugWindowController: ReleasingWindowController {
                 text: String(localized: "debug.factualStale.prompt", defaultValue: "Investigate session restoration after reconnecting."),
                 submittedAt: observedAt, source: .observed, confidence: .high
             ),
-            currentPlan: nil, completedCommands: [], visibleReasoningSummaries: [], fileChangeAttributions: []
+            currentPlan: ProvenanceCodingAgentPlanUpdateRecord(
+                id: "preview-plan", sessionID: "preview-session", turnID: turn.id, provider: "codex",
+                steps: [
+                    .init(id: "inspect", order: 0, text: String(localized: "debug.factualStale.planInspect", defaultValue: "Inspect the reconnect logs"), status: "completed"),
+                    .init(id: "verify", order: 1, text: String(localized: "debug.factualStale.planVerify", defaultValue: "Verify session restoration"), status: "in_progress")
+                ], observedAt: observedAt, source: .observed, confidence: .high
+            ), completedCommands: [], visibleReasoningSummaries: [], fileChangeAttributions: []
         )
         let snapshot = ProvenanceFactualSessionProjectionSnapshot(
             revision: 1,

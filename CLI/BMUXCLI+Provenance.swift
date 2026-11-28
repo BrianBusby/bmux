@@ -905,7 +905,7 @@ extension BMUXCLI {
         }
         if let resumePoint = outcome.resumePoint?.text, !resumePoint.isEmpty {
             lines.append(String.localizedStringWithFormat(
-                String(localized: "cli.provenance.turn.output.resumePoint", defaultValue: "Resume point: %@"),
+                String(localized: "cli.provenance.turn.output.resumePoint", defaultValue: "Unverified agent-reported resume point: %@"),
                 resumePoint
             ))
         }

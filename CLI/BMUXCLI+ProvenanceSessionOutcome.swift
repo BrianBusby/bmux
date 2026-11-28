@@ -91,7 +91,7 @@ extension BMUXCLI {
         var lines = provenanceSessionOutcomeHeaderLines(outcome, watermark: watermark)
         if let resumePoint = outcome.latestResumePoint?.text, !resumePoint.isEmpty {
             lines.append(String.localizedStringWithFormat(
-                String(localized: "cli.provenance.session.output.resumePoint", defaultValue: "Latest resume point: %@"),
+                String(localized: "cli.provenance.session.output.resumePoint", defaultValue: "Unverified agent-reported resume point: %@"),
                 resumePoint
             ))
         }
@@ -134,7 +134,7 @@ extension BMUXCLI {
                 outcome.repositoryBoundaries.count
             ),
             String.localizedStringWithFormat(
-                String(localized: "cli.provenance.session.output.objectivesPlan", defaultValue: "Objectives: %d - plan items: %d"),
+                String(localized: "cli.provenance.session.output.objectivesPlan", defaultValue: "Objectives: %d - unverified reported plan items: %d"),
                 outcome.objectives.count,
                 outcome.planItems.count
             ),
@@ -148,7 +148,7 @@ extension BMUXCLI {
                 outcome.changedArtifacts.count
             ),
             String.localizedStringWithFormat(
-                String(localized: "cli.provenance.session.output.blockersUnresolved", defaultValue: "Blockers: %d - unresolved: %d"),
+                String(localized: "cli.provenance.session.output.blockersUnresolved", defaultValue: "Unverified reported blockers: %d - unresolved: %d"),
                 outcome.blockers.count,
                 outcome.unresolvedItems.count
             ),

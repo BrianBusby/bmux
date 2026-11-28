@@ -151,12 +151,12 @@ struct OutcomeReadContentionTests {
             let result = try await repository.sessionOutcome(
                 ProvenanceSessionOutcomeRequest(sessionID: fixture.session.id)
             )
-            #expect(result.outcome?.projection.projectionRuleVersion == "2")
+            #expect(result.outcome?.projection.projectionRuleVersion == "3")
         } else {
             let result = try await repository.turnOutcome(
                 ProvenanceTurnOutcomeRequest(turnID: fixture.turnCompleted.id)
             )
-            #expect(result.outcome?.projection.projectionRuleVersion == "4")
+            #expect(result.outcome?.projection.projectionRuleVersion == "5")
         }
     }
 }

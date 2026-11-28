@@ -67,6 +67,17 @@ struct CLIProvenanceSessionOutcomeCommandTests {
         #expect((outcome["commands_completed"] as? [[String: Any]])?.count == 1)
         #expect((outcome["validations_attempted"] as? [[String: Any]])?.count == 1)
 
+        let constituentTurns = try #require(outcome["constituent_turns"] as? [[String: Any]])
+        let turnID = try #require(constituentTurns.first?["turn_id"] as? String)
+        let turnText = Self.runCLI(
+            executablePath: cliPath,
+            arguments: ["provenance", "turn", "outcome", turnID, "--database", fixture.databaseURL.path],
+            environment: environment
+        )
+        #expect(!turnText.timedOut)
+        #expect(turnText.status == 0)
+        #expect(turnText.output.contains("Unverified agent-reported resume point: Append evidence"))
+
         let missingDatabaseURL = fixture.directoryURL.appendingPathComponent("missing.sqlite")
         let missingResult = Self.runCLI(
             executablePath: cliPath,

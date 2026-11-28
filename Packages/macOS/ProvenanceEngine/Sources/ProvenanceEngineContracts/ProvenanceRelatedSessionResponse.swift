@@ -17,6 +17,10 @@ public struct ProvenanceRelatedSessionResponse: Codable, Equatable, Sendable {
     /// Related-session projection, when found.
     public let projection: ProvenanceRelatedSessionProjection?
 
+    /// Plan-derived claims in this response are agent-reported and not verified as accepted.
+    /// A missing value in an older response must be treated as unknown.
+    public let planDerivedClaimsValidity: String?
+
     /// Creates a related-session response.
     ///
     /// - Parameters:
@@ -37,5 +41,6 @@ public struct ProvenanceRelatedSessionResponse: Codable, Equatable, Sendable {
         self.reason = reason
         self.targetSessionID = targetSessionID
         self.projection = projection
+        self.planDerivedClaimsValidity = projection == nil ? nil : "unverified_agent_reported"
     }
 }
