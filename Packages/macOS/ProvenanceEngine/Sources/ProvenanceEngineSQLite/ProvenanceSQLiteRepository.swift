@@ -5314,5 +5314,5 @@ actor ProvenanceSQLiteRepository {
         + workspaceDisplayOwnerAvatarMigrations
         + outcomeRetentionMigrations
         + workspaceDisplayPullRequestTitleMigrations
-        + workspaceAssociationIdentityTimestampMigrations
+        + workspaceAssociationIdentityTimestampMigrations + turnClaimIndexMigrations
 }
