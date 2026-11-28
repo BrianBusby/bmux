@@ -41,6 +41,41 @@ extension ProvenanceSQLiteRepository {
                 ON provenance_events (json_extract(payload_json, '$.codingAgentFileChangeAttribution.turnID'))
                 WHERE json_valid(payload_json) AND json_extract(payload_json, '$.codingAgentFileChangeAttribution.turnID') IS NOT NULL
                 """,
+                """
+                CREATE INDEX provenance_turn_claim_turn_session_index
+                ON provenance_events (json_extract(payload_json, '$.codingAgentTurn.sessionID'))
+                WHERE json_valid(payload_json) AND json_extract(payload_json, '$.codingAgentTurn.id') IS NOT NULL AND json_extract(payload_json, '$.codingAgentTurn.sessionID') IS NOT NULL
+                """,
+                """
+                CREATE INDEX provenance_turn_claim_prompt_session_index
+                ON provenance_events (json_extract(payload_json, '$.codingAgentPrompt.sessionID'))
+                WHERE json_valid(payload_json) AND json_extract(payload_json, '$.codingAgentPrompt.turnID') IS NOT NULL AND json_extract(payload_json, '$.codingAgentPrompt.sessionID') IS NOT NULL
+                """,
+                """
+                CREATE INDEX provenance_turn_claim_plan_session_index
+                ON provenance_events (json_extract(payload_json, '$.codingAgentPlanUpdate.sessionID'))
+                WHERE json_valid(payload_json) AND json_extract(payload_json, '$.codingAgentPlanUpdate.turnID') IS NOT NULL AND json_extract(payload_json, '$.codingAgentPlanUpdate.sessionID') IS NOT NULL
+                """,
+                """
+                CREATE INDEX provenance_turn_claim_command_session_index
+                ON provenance_events (json_extract(payload_json, '$.codingAgentCommand.sessionID'))
+                WHERE json_valid(payload_json) AND json_extract(payload_json, '$.codingAgentCommand.turnID') IS NOT NULL AND json_extract(payload_json, '$.codingAgentCommand.sessionID') IS NOT NULL
+                """,
+                """
+                CREATE INDEX provenance_turn_claim_reasoning_session_index
+                ON provenance_events (json_extract(payload_json, '$.codingAgentReasoningSummary.sessionID'))
+                WHERE json_valid(payload_json) AND json_extract(payload_json, '$.codingAgentReasoningSummary.turnID') IS NOT NULL AND json_extract(payload_json, '$.codingAgentReasoningSummary.sessionID') IS NOT NULL
+                """,
+                """
+                CREATE INDEX provenance_turn_claim_message_session_index
+                ON provenance_events (json_extract(payload_json, '$.codingAgentAssistantMessage.sessionID'))
+                WHERE json_valid(payload_json) AND json_extract(payload_json, '$.codingAgentAssistantMessage.turnID') IS NOT NULL AND json_extract(payload_json, '$.codingAgentAssistantMessage.sessionID') IS NOT NULL
+                """,
+                """
+                CREATE INDEX provenance_turn_claim_file_change_session_index
+                ON provenance_events (json_extract(payload_json, '$.codingAgentFileChangeAttribution.sessionID'))
+                WHERE json_valid(payload_json) AND json_extract(payload_json, '$.codingAgentFileChangeAttribution.turnID') IS NOT NULL AND json_extract(payload_json, '$.codingAgentFileChangeAttribution.sessionID') IS NOT NULL
+                """,
                 "UPDATE provenance_metadata SET value = '32' WHERE key = 'schema_version'",
             ]
         ),
