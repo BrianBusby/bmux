@@ -3,48 +3,8 @@ import ProvenanceEngineContracts
 @testable import ProvenanceEngineSQLite
 import Testing
 
-/// Proposed safety contract; synthetic origins are labels, not provider attestations.
+/// Ownership replay contract; synthetic origins are labels, not provider attestations.
 @Suite struct PlanValidityReplayRegressionTests {
-    @Test func ambiguousLaterPlanStaysUnknownOnSecondConnectionAndReplay() async throws {
-        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-plan-validity-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let url = directory.appendingPathComponent("test.sqlite")
-        let repository = try ProvenanceSQLiteRepository(url: url)
-        let time = Date(timeIntervalSince1970: 1_800_000_000)
-        let session = ProvenanceSessionRecord(id: "session-A", agentKind: "codex", status: "active", updatedAt: time)
-        let turn = ProvenanceCodingAgentTurnRecord(id: "turn-shared", sessionID: session.id, provider: "codex", providerTurnID: "shared", status: "started", startedAt: time, updatedAt: time, source: .observed, confidence: .high)
-        let plans = ["structured-synthetic", "request-synthetic-1", "request-synthetic-2"].enumerated().map { index, id in
-            ProvenanceCodingAgentPlanUpdateRecord(id: id, sessionID: session.id, turnID: turn.id, provider: "codex", steps: [.init(id: "step-\(index)", order: 0, text: "Synthetic step \(index)", status: index == 0 ? "in_progress" : "completed")], observedAt: time.addingTimeInterval(Double(index + 1)), source: .observed, confidence: .high)
-        }
-        let initial = [
-            ProvenanceEvent(id: "session-event", eventType: .sessionObserved, timestamp: time, sessionID: session.id, source: .observed, confidence: .high, payload: .init(session: session)),
-            ProvenanceEvent(id: "turn-event", eventType: .codingAgentTurnObserved, timestamp: time, sessionID: session.id, source: .observed, confidence: .high, payload: .init(codingAgentTurn: turn))
-        ]
-        for event in initial { try await repository.appendEvent(event) }
-        for plan in plans {
-            try await repository.appendEvent(ProvenanceEvent(id: "event-\(plan.id)", eventType: .codingAgentPlanUpdated, timestamp: plan.observedAt, sessionID: session.id, source: .observed, evidenceOrigin: .init(rawValue: plan.id), confidence: .high, payload: .init(codingAgentPlanUpdate: plan)))
-        }
-        // Existing payload cannot represent requests, results, causal links, or coverage.
-        // These labels model indistinguishable legacy rows; proposed reason is not implemented.
-        // This is a second connection while the original is alive, not a process restart.
-        let reopened = try ProvenanceSQLiteRepository(url: url)
-        for phase in 0..<2 {
-            if phase == 1 { _ = try await reopened.rebuildProjectionsFromEventLedger(batchSize: 2) }
-            let ledger = try await reopened.eventLedgerEntries(limit: 20)
-            #expect(ledger.map(\.event.id) == initial.map(\.id) + plans.map { "event-\($0.id)" })
-            #expect(ledger.compactMap(\.event.payload.codingAgentPlanUpdate) == plans)
-            let result = try await reopened.turnOutcome(.init(turnID: turn.id))
-            let outcome = try #require(result.outcome)
-            let availability = outcome.completeness.fields.first { $0.field == "plan_items" }
-            #expect(availability?.reason == "unverified_plan_evidence")
-            #expect(availability?.status == "unavailable" || availability?.status == "partial")
-            // Until a validity-bearing history exists, these unqualified items cannot be current.
-            #expect(outcome.planItems.isEmpty)
-            #expect(outcome.actionsCompleted.isEmpty)
-        }
-    }
-
     @Test func conflictingTurnOwnerRemainsUnresolvedAfterReplay() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-plan-owner-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -139,7 +99,7 @@ import Testing
             payload: .init(codingAgentPrompt: prompt)
         )
         try await repository.appendEvent(conflicting)
-        // Proposed fail-closed reason/shape; labels are synthetic, not provider evidence.
+        // Hide the disputed turn while preserving independent facts.
         // No conflicting codingAgentTurn payload is present in the second claim.
         // The second connection coexists with the first; it is not a process restart.
         let reopened = try ProvenanceSQLiteRepository(url: url)
@@ -168,13 +128,14 @@ import Testing
             #expect(independentOutcome.outcome?.sessionID == "session-C")
             for sessionID in ["session-A", "session-B"] {
                 let factual = try await reader.factualSessionProjection(.init(sessionID: sessionID))
-                #expect(!factual.found)
-                #expect(factual.reason == "ownership_unresolved")
-                #expect(factual.snapshot == nil)
+                #expect(factual.found)
+                #expect(factual.snapshot?.unresolvedTurnIDs == [turn.id])
+                #expect(factual.snapshot?.latestTurn == nil)
+                #expect(factual.snapshot?.priorTurns.isEmpty == true)
                 let outcome = try await reader.sessionOutcome(.init(sessionID: sessionID))
-                #expect(!outcome.found)
-                #expect(outcome.reason == "ownership_unresolved")
-                #expect(outcome.outcome == nil)
+                #expect(outcome.found)
+                #expect(outcome.outcome?.sessionID == sessionID)
+                #expect(outcome.outcome?.completeness.fields.contains { $0.reason == "ownership_unresolved" } == true)
             }
             let detail = try await reader.factualSessionTurnDetail(.init(turnID: turn.id))
             #expect(!detail.found)

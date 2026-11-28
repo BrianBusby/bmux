@@ -6,6 +6,29 @@ final class ProvenanceSQLiteDatabase {
     private static let defaultBusyTimeoutMilliseconds: Int32 = 5_000
 
     private var handle: OpaquePointer?
+#if DEBUG
+    private final class BusyObserver {
+        let callback: @Sendable () -> Void
+        init(_ callback: @escaping @Sendable () -> Void) { self.callback = callback }
+    }
+    private var busyObserver: BusyObserver?
+
+    func setBusyObserverForTesting(_ observer: (@Sendable () -> Void)?) {
+        guard let handle else { return }
+        guard let observer else {
+            sqlite3_busy_timeout(handle, Self.defaultBusyTimeoutMilliseconds)
+            busyObserver = nil
+            return
+        }
+        let box = BusyObserver(observer)
+        busyObserver = box
+        sqlite3_busy_handler(handle, { context, _ in
+            guard let context else { return 0 }
+            Unmanaged<BusyObserver>.fromOpaque(context).takeUnretainedValue().callback()
+            return 1
+        }, Unmanaged.passUnretained(box).toOpaque())
+    }
+#endif
     let url: URL
 
     /// Opens or creates a SQLite database file.
@@ -59,8 +82,55 @@ final class ProvenanceSQLiteDatabase {
         let result = sqlite3_exec(handle, sql, nil, nil, &errorMessage)
         guard result == SQLITE_OK else {
             let message = errorMessage.map { String(cString: $0) } ?? self.message
+            let staleSnapshot = sqlite3_extended_errcode(handle) == (SQLITE_BUSY | (2 << 8))
             sqlite3_free(errorMessage)
+            if staleSnapshot { throw ProvenanceSQLiteError.staleSnapshot }
             throw ProvenanceSQLiteError.sqlite(message: message)
+        }
+    }
+
+    /// Keeps related reads on one SQLite snapshot. Savepoints also allow callers
+    /// already in a transaction to retain their existing transaction boundary.
+    func withReadSnapshot<T>(_ body: () throws -> T) throws -> T {
+        try execute("SAVEPOINT pe_read_snapshot")
+        do {
+            let result = try body()
+            try execute("RELEASE SAVEPOINT pe_read_snapshot")
+            return result
+        } catch {
+            let original = error
+            try execute("ROLLBACK TO SAVEPOINT pe_read_snapshot")
+            try execute("RELEASE SAVEPOINT pe_read_snapshot")
+            throw original
+        }
+    }
+
+    /// Retries the entire read under a write reservation if its snapshot becomes stale.
+    func withReadSnapshotRetryingWrites<T>(_ body: () throws -> T) throws -> T {
+        guard let handle else { throw ProvenanceSQLiteError.sqlite(message: "database is closed") }
+        // Only the outermost transaction can discard and replace its stale snapshot.
+        guard sqlite3_get_autocommit(handle) != 0 else { return try withReadSnapshot(body) }
+        do {
+            return try withReadSnapshot(body)
+        } catch ProvenanceSQLiteError.staleSnapshot {
+            return try withWriteSnapshot(body)
+        }
+    }
+
+    /// Reserves the writer before reading when a coherent projection may be persisted.
+    /// Nested callers retain the outer transaction and roll back only their own work.
+    func withWriteSnapshot<T>(_ body: () throws -> T) throws -> T {
+        guard let handle else { throw ProvenanceSQLiteError.sqlite(message: "database is closed") }
+        guard sqlite3_get_autocommit(handle) != 0 else { return try withReadSnapshot(body) }
+        try execute("BEGIN IMMEDIATE TRANSACTION")
+        do {
+            let result = try body()
+            try execute("COMMIT")
+            return result
+        } catch {
+            let original = error
+            try execute("ROLLBACK")
+            throw original
         }
     }
 
@@ -78,6 +148,24 @@ final class ProvenanceSQLiteDatabase {
             throw ProvenanceSQLiteError.sqlite(message: message)
         }
         return ProvenanceSQLiteStatement(database: handle, statement: statement)
+    }
+
+    /// Reads the immutable ledger payload without materializing an oversized value.
+    /// `nil` means that the value exceeded the caller's byte budget.
+    func boundedEventPayload(rowID: Int, maxBytes: Int) throws -> Data? {
+        guard let handle else { throw ProvenanceSQLiteError.sqlite(message: "database is closed") }
+        var blob: OpaquePointer?
+        guard sqlite3_blob_open(handle, "main", "provenance_events", "payload_json", sqlite3_int64(rowID), 0, &blob) == SQLITE_OK,
+              let blob else { throw ProvenanceSQLiteError.sqlite(message: message) }
+        defer { sqlite3_blob_close(blob) }
+        let count = Int(sqlite3_blob_bytes(blob))
+        guard count <= maxBytes else { return nil }
+        var data = Data(count: count)
+        let result = data.withUnsafeMutableBytes { bytes in
+            sqlite3_blob_read(blob, bytes.baseAddress, Int32(count), 0)
+        }
+        guard result == SQLITE_OK else { throw ProvenanceSQLiteError.sqlite(message: message) }
+        return data
     }
 
     /// SQLite `PRAGMA user_version` for the open database.

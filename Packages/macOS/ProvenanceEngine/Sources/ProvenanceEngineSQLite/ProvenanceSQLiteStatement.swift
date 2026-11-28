@@ -93,6 +93,9 @@ final class ProvenanceSQLiteStatement {
         if result == SQLITE_DONE {
             return false
         }
+        if sqlite3_extended_errcode(database) == (SQLITE_BUSY | (2 << 8)) {
+            throw ProvenanceSQLiteError.staleSnapshot
+        }
         throw ProvenanceSQLiteError.sqlite(message: message)
     }
 

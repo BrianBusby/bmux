@@ -1,7 +1,7 @@
 import Foundation
 import ProvenanceEngineContracts
 
-extension ProvenanceSQLiteRepository: ProvenanceEngineClient {
+extension ProvenanceSQLiteRepository: ProvenanceEngineClient, ProvenanceLedgerIDCandidateClient {
     private static let engineVersion = "0.1.0"
 
     func health() async throws -> ProvenanceEngineHealth {

@@ -20,6 +20,9 @@ public struct ProvenanceSessionWorkModel: Codable, Equatable, Sendable {
     /// Compact factual references for earlier turns.
     public let priorTurns: [ProvenanceFactualSessionProjectionTurnReference]
 
+    /// Turn IDs whose ownership is disputed, or nil when ownership was not assessed.
+    public let unresolvedTurnIDs: [String]?
+
     /// Session-level semantic milestone set.
     public let milestones: ProvenanceSessionWorkModelSemanticField
 
@@ -44,18 +47,20 @@ public struct ProvenanceSessionWorkModel: Codable, Equatable, Sendable {
     ///   - thread: Current provider thread and thread-level meaning.
     ///   - currentTurn: Latest turn and turn-level meaning.
     ///   - priorTurns: Compact references for earlier turns.
+    ///   - unresolvedTurnIDs: Turn IDs hidden pending ownership resolution.
     ///   - milestones: Session-level milestone field.
     ///   - blockers: Session-level blocker field.
     ///   - approachChanges: Session-level approach-change field.
     ///   - sessionPhase: Session-level phase field.
     ///   - basis: Source factual and semantic layers used for composition.
     public init(
-        schemaVersion: Int = 3,
+        schemaVersion: Int = 4,
         revision: ProvenanceSessionWorkModelRevision,
         identity: ProvenanceSessionWorkModelIdentity,
         thread: ProvenanceSessionWorkModelThread?,
         currentTurn: ProvenanceSessionWorkModelCurrentTurn?,
         priorTurns: [ProvenanceFactualSessionProjectionTurnReference],
+        unresolvedTurnIDs: [String]? = nil,
         milestones: ProvenanceSessionWorkModelSemanticField? = nil,
         blockers: ProvenanceSessionWorkModelSemanticField? = nil,
         approachChanges: ProvenanceSessionWorkModelSemanticField? = nil,
@@ -68,6 +73,7 @@ public struct ProvenanceSessionWorkModel: Codable, Equatable, Sendable {
         self.thread = thread
         self.currentTurn = currentTurn
         self.priorTurns = priorTurns
+        self.unresolvedTurnIDs = unresolvedTurnIDs
         self.milestones = milestones ?? Self.defaultMilestones(identity: identity)
         self.blockers = blockers ?? Self.defaultBlockers(identity: identity)
         self.approachChanges = approachChanges ?? Self.defaultApproachChanges(identity: identity)
@@ -88,6 +94,7 @@ public struct ProvenanceSessionWorkModel: Codable, Equatable, Sendable {
             [ProvenanceFactualSessionProjectionTurnReference].self,
             forKey: .priorTurns
         )
+        self.unresolvedTurnIDs = try container.decodeIfPresent([String].self, forKey: .unresolvedTurnIDs)
         self.milestones = try container.decodeIfPresent(
             ProvenanceSessionWorkModelSemanticField.self,
             forKey: .milestones
@@ -113,6 +120,7 @@ public struct ProvenanceSessionWorkModel: Codable, Equatable, Sendable {
         try container.encodeIfPresent(thread, forKey: .thread)
         try container.encodeIfPresent(currentTurn, forKey: .currentTurn)
         try container.encode(priorTurns, forKey: .priorTurns)
+        try container.encodeIfPresent(unresolvedTurnIDs, forKey: .unresolvedTurnIDs)
         try container.encode(milestones, forKey: .milestones)
         try container.encode(blockers, forKey: .blockers)
         try container.encode(approachChanges, forKey: .approachChanges)
@@ -163,6 +171,7 @@ public struct ProvenanceSessionWorkModel: Codable, Equatable, Sendable {
         case thread
         case currentTurn
         case priorTurns
+        case unresolvedTurnIDs
         case milestones
         case blockers
         case approachChanges

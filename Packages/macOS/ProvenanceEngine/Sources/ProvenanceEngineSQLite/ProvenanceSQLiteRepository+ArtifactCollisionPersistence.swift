@@ -6,6 +6,12 @@ extension ProvenanceSQLiteRepository {
         targetSessionID: String,
         revisionID: String
     ) throws -> ProvenanceArtifactCollisionResponse {
+        try database.withReadSnapshot { try readArtifactCollisionRevisionResponse(targetSessionID: targetSessionID, revisionID: revisionID) }
+    }
+
+    private func readArtifactCollisionRevisionResponse(
+        targetSessionID: String, revisionID: String
+    ) throws -> ProvenanceArtifactCollisionResponse {
         guard let projection = try artifactCollisionRevision(
             targetSessionID: targetSessionID,
             revisionID: revisionID
@@ -15,6 +21,17 @@ extension ProvenanceSQLiteRepository {
                 reason: "no_revision",
                 targetSessionID: targetSessionID,
                 projection: nil
+            )
+        }
+        let sessionIDs = Set([targetSessionID] + projection.candidates.flatMap { $0.participants.map(\.sessionID) } + projection.excludedCandidates.compactMap(\.sessionID))
+        for sessionID in sessionIDs {
+            let claims = try unresolvedTurnClaims(sessionID: sessionID)
+            guard !claims.ids.isEmpty else { continue }
+            if projection.projection.projectionRuleVersion == Self.artifactCollisionRuleVersion,
+               let observed = projection.projection.sourceEvidenceWatermark, let disputed = claims.watermark,
+               observed >= disputed { continue }
+            return ProvenanceArtifactCollisionResponse(
+                found: false, reason: "ownership_unresolved", targetSessionID: targetSessionID, projection: nil
             )
         }
         return ProvenanceArtifactCollisionResponse(

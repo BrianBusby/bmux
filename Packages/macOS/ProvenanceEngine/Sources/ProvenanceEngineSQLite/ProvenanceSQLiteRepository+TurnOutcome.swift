@@ -3,7 +3,7 @@ import ProvenanceEngineContracts
 
 extension ProvenanceSQLiteRepository {
     static let turnOutcomeRuleID = "deterministic_turn_outcome"
-    static let turnOutcomeRuleVersion = "2"
+    static let turnOutcomeRuleVersion = "4"
     static let turnOutcomeCommandRuleVersion = "1"
 
     func refreshTurnOutcomes(
@@ -113,24 +113,30 @@ extension ProvenanceSQLiteRepository {
     ) throws -> ProvenanceTurnOutcome? {
         guard let turn = try codingAgentTurn(id: turnID) else { return nil }
         let session = try session(id: turn.sessionID)
-        let prompt = try turnOutcomeLatestPrompt(turnID: turnID)
-        let plan = try turnOutcomeLatestPlan(turnID: turnID)
+        let prompt = try turnOutcomeLatestPrompt(sessionID: turn.sessionID, turnID: turnID)
+        let plan = try turnOutcomeLatestPlan(sessionID: turn.sessionID, turnID: turnID)
         let commands = try turnOutcomeRecordIDs(
             tableName: "provenance_coding_agent_commands",
             timeColumn: "completed_at_seconds",
-            turnID: turnID
+            sessionID: turn.sessionID, turnID: turnID
         ).compactMap { try codingAgentCommand(id: $0) }
         let reasoningSummaries = try turnOutcomeRecordIDs(
             tableName: "provenance_coding_agent_reasoning_summaries",
             timeColumn: "completed_at_seconds",
-            turnID: turnID
+            sessionID: turn.sessionID, turnID: turnID
         ).compactMap { try codingAgentReasoningSummary(id: $0) }
         let attributions = try turnOutcomeRecordIDs(
             tableName: "provenance_coding_agent_file_change_attributions",
             timeColumn: "observed_at_seconds",
-            turnID: turnID
+            sessionID: turn.sessionID, turnID: turnID
         ).compactMap { try codingAgentFileChangeAttribution(id: $0) }
-        let evidenceIndex = try turnOutcomeEvidenceIndex(sessionID: turn.sessionID, throughSequence: latestEventSequence)
+        let evidenceKeys = try turnOutcomeEvidenceKeys(
+            turn: turn, session: session, prompt: prompt, plan: plan, commands: commands,
+            reasoningSummaries: reasoningSummaries, attributions: attributions
+        )
+        let evidenceIndex = try turnOutcomeEvidenceIndex(
+            sessionID: turn.sessionID, throughSequence: latestEventSequence, keys: evidenceKeys
+        )
         let repositoryBoundary = try turnOutcomeRepositoryBoundary(
             turn: turn,
             session: session,
@@ -319,20 +325,20 @@ extension ProvenanceSQLiteRepository {
         )
     }
 
-    private func turnOutcomeLatestPrompt(turnID: String) throws -> ProvenanceCodingAgentPromptRecord? {
+    private func turnOutcomeLatestPrompt(sessionID: String, turnID: String) throws -> ProvenanceCodingAgentPromptRecord? {
         guard let id = try turnOutcomeLatestRecordID(
             tableName: "provenance_coding_agent_prompts",
             timeColumn: "submitted_at_seconds",
-            turnID: turnID
+            sessionID: sessionID, turnID: turnID
         ) else { return nil }
         return try codingAgentPrompt(id: id)
     }
 
-    private func turnOutcomeLatestPlan(turnID: String) throws -> ProvenanceCodingAgentPlanUpdateRecord? {
+    private func turnOutcomeLatestPlan(sessionID: String, turnID: String) throws -> ProvenanceCodingAgentPlanUpdateRecord? {
         guard let id = try turnOutcomeLatestRecordID(
             tableName: "provenance_coding_agent_plan_updates",
             timeColumn: "observed_at_seconds",
-            turnID: turnID
+            sessionID: sessionID, turnID: turnID
         ) else { return nil }
         return try codingAgentPlanUpdate(id: id)
     }
@@ -340,19 +346,21 @@ extension ProvenanceSQLiteRepository {
     private func turnOutcomeLatestRecordID(
         tableName: String,
         timeColumn: String,
+        sessionID: String,
         turnID: String
     ) throws -> String? {
         let query = try database.prepare(
             """
             SELECT id
             FROM \(tableName)
-            WHERE turn_id = ?
+            WHERE session_id = ? AND turn_id = ?
             ORDER BY \(timeColumn) DESC, rowid DESC
             LIMIT 1
             """
         )
         defer { query.finalize() }
-        try query.bind(turnID, at: 1)
+        try query.bind(sessionID, at: 1)
+        try query.bind(turnID, at: 2)
         guard try query.step() else { return nil }
         return query.string(at: 0)
     }
@@ -360,18 +368,20 @@ extension ProvenanceSQLiteRepository {
     private func turnOutcomeRecordIDs(
         tableName: String,
         timeColumn: String,
+        sessionID: String,
         turnID: String
     ) throws -> [String] {
         let query = try database.prepare(
             """
             SELECT id
             FROM \(tableName)
-            WHERE turn_id = ?
+            WHERE session_id = ? AND turn_id = ?
             ORDER BY \(timeColumn) ASC, rowid ASC
             """
         )
         defer { query.finalize() }
-        try query.bind(turnID, at: 1)
+        try query.bind(sessionID, at: 1)
+        try query.bind(turnID, at: 2)
         return try turnOutcomeStringIDs(from: query)
     }
 
@@ -553,7 +563,8 @@ extension ProvenanceSQLiteRepository {
         commandCwd: String?,
         evidenceIndex: TurnOutcomeEvidenceIndex
     ) throws -> ProvenanceTurnOutcomeRepositoryBoundary? {
-        let thread = try turn.threadID.flatMap { try codingAgentThread(id: $0) }
+        let observedThread = try turn.threadID.flatMap { try codingAgentThread(id: $0) }
+        let thread = observedThread.flatMap { $0.sessionID == turn.sessionID ? $0 : nil }
         let worktreeID = session?.worktreeID ?? thread?.worktreeID
         let observedWorktree: ProvenanceWorktreeRecord?
         if let worktreeID {
@@ -800,53 +811,6 @@ extension ProvenanceSQLiteRepository {
             prefix: "turn-outcome-fingerprint",
             value: parts.joined(separator: "\n")
         )
-    }
-
-    private func turnOutcomeEvidenceIndex(sessionID: String, throughSequence: Int?) throws -> TurnOutcomeEvidenceIndex {
-        let entries = try eventLedgerEntries(sessionID: sessionID, throughSequence: throughSequence)
-        guard !entries.isEmpty else { return TurnOutcomeEvidenceIndex(referencesByKey: [:]) }
-        var referencesByKey: [TurnOutcomeEvidenceKey: [ProvenanceTurnOutcomeEvidenceReference]] = [:]
-        for entry in entries {
-            func append(kind: String, id: String?) {
-                guard let id else { return }
-                let key = TurnOutcomeEvidenceKey(kind: kind, id: id)
-                referencesByKey[key, default: []].append(
-                    ProvenanceTurnOutcomeEvidenceReference(
-                        eventID: entry.event.id,
-                        eventSequence: entry.sequence,
-                        eventType: entry.event.eventType.rawValue,
-                        source: entry.event.source,
-                        evidenceOrigin: entry.event.evidenceOrigin,
-                        evidenceScope: entry.event.evidenceScope,
-                        recordKind: kind,
-                        recordID: id,
-                        interpretedByRuleVersion: Self.turnOutcomeRuleVersion,
-                        sourceState: "available"
-                    )
-                )
-            }
-            let payload = entry.event.payload
-            append(kind: "repository", id: payload.repository?.id)
-            append(kind: "worktree", id: payload.worktree?.id)
-            append(kind: "session", id: payload.session?.id)
-            append(kind: "session_relationship", id: payload.sessionRelationship?.sessionID)
-            append(kind: "work_item", id: payload.workItem?.id)
-            append(kind: "contribution", id: payload.contribution?.id)
-            append(kind: "checkpoint", id: payload.checkpoint?.id)
-            append(kind: "change_set", id: payload.changeSet?.id)
-            for fileChange in payload.fileChanges {
-                append(kind: "file_change", id: fileChange.id)
-            }
-            append(kind: "validation_run", id: payload.validationRun?.id)
-            append(kind: "coding_agent_thread", id: payload.codingAgentThread?.id)
-            append(kind: "coding_agent_turn", id: payload.codingAgentTurn?.id)
-            append(kind: "coding_agent_prompt", id: payload.codingAgentPrompt?.id)
-            append(kind: "coding_agent_plan_update", id: payload.codingAgentPlanUpdate?.id)
-            append(kind: "coding_agent_command", id: payload.codingAgentCommand?.id)
-            append(kind: "coding_agent_reasoning_summary", id: payload.codingAgentReasoningSummary?.id)
-            append(kind: "coding_agent_file_change_attribution", id: payload.codingAgentFileChangeAttribution?.id)
-        }
-        return TurnOutcomeEvidenceIndex(referencesByKey: referencesByKey)
     }
 
     func turnOutcomeLatestLedgerSequence() throws -> Int? {

@@ -5146,13 +5146,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Final output"
+            "value": "Agent output"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最終出力"
+            "value": "エージェントの出力"
           }
         }
       }
@@ -5395,6 +5395,29 @@
         }
       }
     },
+    "agentSession.factual.refreshing": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Refreshing factual session data…" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "セッションの事実データを更新しています…" } }
+      }
+    },
+    "agentSession.factual.lastSuccessfulRead": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not refresh. Last successful read: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新できませんでした。最後に読み込めた日時：%@"
+          }
+        }
+      }
+    },
     "agentSession.factual.noSession": {
       "extractionState": "manual",
       "localizations": {
@@ -5480,6 +5503,159 @@
         }
       }
     },
+    "agentSession.factual.proposalTruncated": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposal text was truncated."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提案のテキストは途中で省略されています。"
+          }
+        }
+      }
+    },
+    "agentSession.factual.proposedPlans": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposed plans"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提案されたプラン"
+          }
+        }
+      }
+    },
+    "agentSession.factual.recentObservations": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent observations"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近確認された内容"
+          }
+        }
+      }
+    },
+    "agentSession.factual.proposalSource": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出典:"
+          }
+        }
+      }
+    },
+    "agentSession.factual.proposalEvidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evidence:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "証拠:"
+          }
+        }
+      }
+    },
+    "agentSession.factual.proposalUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposal history unavailable"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提案履歴を利用できません"
+          }
+        }
+      }
+    },
+    "agentSession.factual.proposalPartial": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposal history is partial"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提案履歴は一部のみです"
+          }
+        }
+      }
+    },
+    "agentSession.factual.proposalNone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No proposal found in scanned records; source availability is unknown."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "調査した記録に提案はありません。情報源を利用できるかは不明です。"
+          }
+        }
+      }
+    },
+    "agentSession.factual.noChecklist": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No checklist data observed."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チェックリストのデータは確認されていません。"
+          }
+        }
+      }
+    },
     "agentSession.factual.priorTurns": {
       "extractionState": "manual",
       "localizations": {
@@ -5554,13 +5730,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reasoning"
+            "value": "Agent updates"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "推論"
+            "value": "エージェントの報告"
           }
         }
       }
@@ -5571,13 +5747,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reasoning summary"
+            "value": "Agent update"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "推論サマリー"
+            "value": "エージェントの報告"
           }
         }
       }
@@ -11200,6 +11376,14 @@
         }
       }
     },
+    "agentSession.web.smartSession.ownershipUnresolved": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Some turns are hidden while their session ownership is unresolved."}}, "ja": {"stringUnit": {"state": "translated", "value": "セッションの所有関係が未解決のため、一部のターンは非表示になっています。"}}}},
+    "agentSession.web.smartSession.reportsIncomplete": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Additional session reports may be incomplete."}}, "ja": {"stringUnit": {"state": "translated", "value": "追加のセッション報告は不完全な場合があります。"}}}},
+    "agentSession.web.smartSession.reportsUnavailable": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Additional session reports are unavailable or unknown."}}, "ja": {"stringUnit": {"state": "translated", "value": "追加のセッション報告は利用できないか不明です。"}}}},
+    "agentSession.web.smartSession.relatedUncertain": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Related work was observed separately and may be incomplete; its current state is unknown."}}, "ja": {"stringUnit": {"state": "translated", "value": "関連作業は別途確認されたもので、不完全な場合があります。現在の状態は不明です。"}}}},
+    "agentSession.web.smartSession.relatedPartial": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Some related-work information is incomplete or unavailable. Current state is unknown."}}, "ja": {"stringUnit": {"state": "translated", "value": "関連作業の情報の一部は不完全か利用できません。現在の状態は不明です。"}}}},
+    "agentSession.web.smartSession.relatedUnavailable": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Related work is unavailable."}}, "ja": {"stringUnit": {"state": "translated", "value": "関連作業は利用できません。"}}}},
+    "agentSession.web.smartSession.stale": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Could not refresh. Showing last known session data."}}, "ja": {"stringUnit": {"state": "translated", "value": "更新できませんでした。最後に確認できたセッションデータを表示しています。"}}}},
+    "agentSession.web.smartSession.lastRead": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Session data last read"}}, "ja": {"stringUnit": {"state": "translated", "value": "セッションデータの最終読み込み日時"}}}},
     "agentSession.web.smartSession.loading": {
       "extractionState": "manual",
       "localizations": {
@@ -11648,13 +11832,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Based on visible reasoning"
+            "value": "Based on an agent update"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "表示された推論に基づく"
+            "value": "エージェントの報告に基づく"
           }
         }
       }
@@ -11971,13 +12155,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Final output"
+            "value": "Evidence"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最終出力"
+            "value": "証拠"
           }
         }
       }
@@ -73981,6 +74165,17 @@
         }
       }
     },
+    "debug.smartStale.menu": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Smart Session Stale Preview…"}}, "ja": {"stringUnit": {"state": "translated", "value": "Smart Session の古いデータをプレビュー…"}}}},
+    "debug.smartStale.description": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Synthetic preview. Select Focus; Refresh returns the same stale sample."}}, "ja": {"stringUnit": {"state": "translated", "value": "サンプルプレビューです。「フォーカス」を選択してください。更新しても同じ古いサンプルが表示されます。"}}}},
+    "debug.smartStale.title": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Smart Session Preview — Synthetic Data"}}, "ja": {"stringUnit": {"state": "translated", "value": "Smart Session プレビュー — サンプルデータ"}}}},
+    "debug.smartStale.prompt": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Investigate session restoration after reconnecting."}}, "ja": {"stringUnit": {"state": "translated", "value": "再接続後のセッション復元を調査する。"}}}},
+    "debug.factualStale.terminalUnavailable": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Terminal unavailable in this synthetic preview."}}, "ja": {"stringUnit": {"state": "translated", "value": "このサンプルプレビューではターミナルを使用できません。"}}}},
+    "debug.factualStale.title": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Factual Session Preview — Synthetic Data"}}, "ja": {"stringUnit": {"state": "translated", "value": "セッションの事実プレビュー — サンプルデータ"}}}},
+    "debug.factualStale.menu": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Factual Session Preview…"}}, "ja": {"stringUnit": {"state": "translated", "value": "セッションの事実プレビュー…"}}}},
+    "debug.factualStale.prompt": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Investigate session restoration after reconnecting."}}, "ja": {"stringUnit": {"state": "translated", "value": "再接続後のセッション復元を調査する。"}}}},
+    "debug.factualStale.workspace": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Riverbank workspace"}}, "ja": {"stringUnit": {"state": "translated", "value": "Riverbank ワークスペース"}}}},
+    "debug.factualStale.session": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Session restoration"}}, "ja": {"stringUnit": {"state": "translated", "value": "セッションの復元"}}}},
+    "debug.factualStale.description": {"localizations": {"en": {"stringUnit": {"state": "translated", "value": "Synthetic preview; no session data is read."}}, "ja": {"stringUnit": {"state": "translated", "value": "サンプルのプレビューです。セッションデータは読み込みません。"}}}},
     "debug.menu.bonsplitTabBarDebug": {
       "localizations": {
         "en": {
@@ -107458,6 +107653,244 @@
           "stringUnit": {
             "state": "translated",
             "value": "セッション履歴"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session status: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "セッションの状態：%@"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.active": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "進行中"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.cancelled": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャンセル済み"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.closed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "終了"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.completed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ended"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "終了"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.ended": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ended"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "終了"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "失敗"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.incomplete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incomplete"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未完了"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.interrupted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interrupted"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "中断"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.running": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "実行中"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.started": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Started"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開始済み"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.stopped": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stopped"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停止"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.unrecognized": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown (%@)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不明（%@）"
+          }
+        }
+      }
+    },
+    "explorer.sessionStatus.unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不明"
           }
         }
       }
@@ -241367,13 +241800,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Codex transcript %@: cursor %llu, unread %llu bytes, skipped %d lines, failures %d"
+            "value": "Codex transcript %@: cursor %llu, unread %llu bytes, skipped-line observations %d (replay may be included), failures %d"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Codex トランスクリプト %@: カーソル %llu、未読 %llu バイト、スキップ %d 行、失敗 %d 件"
+            "value": "Codex トランスクリプト %@: カーソル %llu、未読 %llu バイト、スキップされた行の観測 %d 件（再読み込みを含む場合があります）、失敗 %d 件"
           }
         }
       }
@@ -241384,15 +241817,36 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Needs attention: retrying, stale, or more than five minutes behind"
+            "value": "Needs attention: the last report is unavailable, stale, retrying, has an error or skipped lines, or has a backlog over five minutes old"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "要確認: 再試行中、更新停止、または 5 分以上の遅延があります"
+            "value": "要確認: 最後の報告が利用できないか古い、再試行中、エラーや行のスキップ、または 5 分を超える未処理データがあります"
           }
         }
+      }
+    },
+    "cli.provenance.diagnostics.codexTranscript.noReport": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No retained monitor report for Codex transcript %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Codex トランスクリプト %@ の保存された監視報告はありません" } }
+      }
+    },
+    "cli.provenance.diagnostics.codexTranscript.reportRecent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Last monitor report: no current error or retry, skipped lines, or prolonged backlog reported" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "最後の監視報告: 現在のエラーや再試行、行のスキップ、長時間の未処理データは報告されていません" } }
+      }
+    },
+    "cli.provenance.diagnostics.codexTranscript.observationUnknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Current cursor position and observation connection are unknown" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "現在のカーソル位置と監視接続の状態は不明です" } }
       }
     },
     "cli.provenance.diagnostics.codexTranscript.healthy": {
@@ -243288,13 +243742,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance sessions related --current [--limit <1-5>] [--database <path>] [--json]\n  bmux provenance sessions collisions <pe-session-id> [--limit <count>] [--related-session-limit <count>] [--exclusion-limit <count>] [--artifact-path <repo-relative-path>] [--updated-after <timestamp>] [--stale-before <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance session outcome <session-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance import codex-transcripts [--path <path>] [--limit <count>] [--database <path>] [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]\n  bmux provenance diagnostics codex-transcript <provider-session-id> [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\nExplicit-ID provenance reads work without a live app socket. Related-session --current requires a verified caller in the live app. Artifact-collision retrieval starts from the target session's recorded changed artifacts; --artifact-path narrows those candidates only."
+            "value": "Usage:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance sessions related --current [--artifact-path <repo-relative-path>] [--ticket <id>] [--objective <text>] [--limit <1-5>] [--database <path>] [--json]\n  bmux provenance sessions collisions <pe-session-id> [--limit <count>] [--related-session-limit <count>] [--exclusion-limit <count>] [--artifact-path <repo-relative-path>] [--updated-after <timestamp>] [--stale-before <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance session outcome <session-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance import codex-transcripts [--path <path>] [--limit <count>] [--database <path>] [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]\n  bmux provenance diagnostics codex-transcript <provider-session-id> [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\nExplicit-ID provenance reads work without a live app socket. Related-session --current requires a verified caller in the live app. Artifact-collision retrieval starts from the target session's recorded changed artifacts; --artifact-path narrows those candidates only."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance sessions related --current [--limit <1-5>] [--database <path>] [--json]\n  bmux provenance sessions collisions <pe-session-id> [--limit <count>] [--related-session-limit <count>] [--exclusion-limit <count>] [--artifact-path <repo-relative-path>] [--updated-after <timestamp>] [--stale-before <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance session outcome <session-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance import codex-transcripts [--path <path>] [--limit <count>] [--database <path>] [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]\n  bmux provenance diagnostics codex-transcript <provider-session-id> [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\n明示的な ID を指定した provenance の読み取りには、稼働中のアプリソケットは不要です。related-session の --current には稼働中のアプリで確認された呼び出し元が必要です。アーティファクト衝突取得は対象セッションに記録済みの変更アーティファクトから始まり、--artifact-path はその候補だけを絞り込みます。"
+            "value": "使用方法:\n  bmux provenance explain <path> [--json]\n  bmux provenance context current [--json]\n  bmux provenance worktrees list [--json]\n  bmux provenance sessions tree <session-id> [--json]\n  bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance sessions related --current [--artifact-path <repo-relative-path>] [--ticket <id>] [--objective <text>] [--limit <1-5>] [--database <path>] [--json]\n  bmux provenance sessions collisions <pe-session-id> [--limit <count>] [--related-session-limit <count>] [--exclusion-limit <count>] [--artifact-path <repo-relative-path>] [--updated-after <timestamp>] [--stale-before <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance turn outcome <turn-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance session outcome <session-id> [--revision <revision-id>] [--database <path>] [--json]\n  bmux provenance import codex-transcripts [--path <path>] [--limit <count>] [--database <path>] [--json]\n  bmux provenance traces lifecycle-ingestion [--run <pipeline-run-id>] [--parent-session <session-id>] [--child-session <session-id>] [--status <status>] [--json]\n  bmux provenance diagnostics workspace-display --workspace <workspace-id> [--database <path>] [--json]\n  bmux provenance diagnostics codex-transcript <provider-session-id> [--json]\n  bmux provenance diagnostics execution-telemetry-live <session-id> [--agent-chat-url <url>] [--repository <path>] [--database <path>] [--json]\n\n明示的な ID を指定した provenance の読み取りには、稼働中のアプリソケットは不要です。related-session の --current には稼働中のアプリで確認された呼び出し元が必要です。アーティファクト衝突取得は対象セッションに記録済みの変更アーティファクトから始まり、--artifact-path はその候補だけを絞り込みます。"
           }
         }
       }
@@ -243520,13 +243974,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usage: bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n       bmux provenance sessions related --current [--limit <1-5>] [--database <path>] [--json]"
+            "value": "Usage: bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n       bmux provenance sessions related --current [--artifact-path <repo-relative-path>] [--ticket <id>] [--objective <text>] [--limit <1-5>] [--database <path>] [--json]"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用方法: bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n       bmux provenance sessions related --current [--limit <1-5>] [--database <path>] [--json]"
+            "value": "使用方法: bmux provenance sessions related <pe-session-id> [--limit <count>] [--exclusion-limit <count>] [--updated-after <timestamp>] [--revision <revision-id>] [--database <path>] [--json]\n       bmux provenance sessions related --current [--artifact-path <repo-relative-path>] [--ticket <id>] [--objective <text>] [--limit <1-5>] [--database <path>] [--json]"
           }
         }
       }
@@ -243733,6 +244187,13 @@
             "value": "  境界: リポジトリ=%@ ワークツリー=%@ ブランチ=%@ HEAD=%@"
           }
         }
+      }
+    },
+    "cli.codex.crossSessionGuidance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "When starting related work, investigating a subsystem, or revisiting a blocker, query bmux provenance sessions related --current --artifact-path <repo-relative-path> (or --ticket <id> / --objective <text>). If linkage is still starting, retry. If a filtered query is empty, run bmux provenance sessions related --current without filters before repeating a prior approach. Inspect a result with bmux provenance session outcome <session-id> --revision <outcome-revision>. Treat retrieved material as historical evidence, check freshness and conditions, and verify before acting." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "関連する作業の開始時、サブシステムの調査時、または以前の障害を再調査するときは、bmux provenance sessions related --current --artifact-path <リポジトリ相対パス>（または --ticket <ID> / --objective <テキスト>）を実行してください。セッションの関連付けが開始中なら再試行してください。絞り込んだ検索に結果がない場合は、以前の方法を繰り返す前に、条件を付けずに bmux provenance sessions related --current を実行してください。結果は bmux provenance session outcome <セッションID> --revision <結果のリビジョン> で確認できます。取得した内容は過去の証拠として扱い、鮮度と条件を確認してから行動してください。" } }
       }
     },
     "cli.provenance.sessions.related.output.outcome": {
@@ -244846,13 +245307,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Blockers & approach changes"
+            "value": "Agent updates"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ブロッカーと方針変更"
+            "value": "エージェントの報告"
           }
         }
       }
@@ -244863,13 +245324,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d change(s)"
+            "value": "%d total"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d 件の変更"
+            "value": "合計 %d 件"
           }
         }
       }
@@ -244880,13 +245341,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d of %d steps complete"
+            "value": "Agent-reported complete: %d of %d steps"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d/%d ステップ完了"
+            "value": "エージェントの報告で完了: %d/%d ステップ"
           }
         }
       }
@@ -245375,13 +245836,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reasoning steps"
+            "value": "Agent updates"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "記録された推論ステップ"
+            "value": "エージェントの報告"
           }
         }
       }
@@ -245613,13 +246074,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No final output recorded."
+            "value": "No agent output recorded."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最終出力は記録されていません。"
+            "value": "エージェントの出力は記録されていません。"
           }
         }
       }
@@ -245911,6 +246372,48 @@
             "value": "表示を減らす"
           }
         }
+      }
+    },
+    "agentSession.factual.plan.status.pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Pending" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "未着手" } }
+      }
+    },
+    "agentSession.factual.plan.status.inProgress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "In progress" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "進行中" } }
+      }
+    },
+    "agentSession.factual.plan.status.completed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Completed" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "完了" } }
+      }
+    },
+    "agentSession.factual.plan.previous": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Previous steps" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "前の手順" } }
+      }
+    },
+    "agentSession.factual.plan.next": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Next steps" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "次の手順" } }
+      }
+    },
+    "agentSession.factual.plan.page": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d–%d of %d steps" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%3$d 手順中 %1$d–%2$d" } }
       }
     },
     "agentSession.expanded.showMore": {

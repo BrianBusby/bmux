@@ -186,6 +186,12 @@ component_releases:
     release_status: tagged
 
 local_caveats:
+  - id: unidentified_session_lifecycle_evidence_not_retained
+    # Identity-free transitions return an error; existing fallback records are not repaired.
+    status: open
+  - id: outcome_historical_rebuild_and_mixed_writer
+    # Full rebuild drops prior outcome revisions; older writers are not fenced.
+    status: open
   - id: cross_session_identity_clock_legacy_upgrade
     status: open
   - id: work_brief_external_sources_unavailable
@@ -357,6 +363,8 @@ local_caveats:
   - id: ssh_pty_lifecycle_fixture_verification
     status: open
   - id: codex_monitor_lease_fixture_verification
+    status: open
+  - id: codex_missing_provider_session_visibility
     status: open
   - id: respawn_window_protocol_fixture_focused_gate_verification
     status: open

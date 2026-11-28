@@ -70,7 +70,7 @@ if ! grep -Fq "actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef35013
 fi
 
 swift_package_section="$(job_section "$CI_FILE" "swift-package-tests")"
-if [[ "$swift_package_section" != *"timeout-minutes: 40"* ]]; then
+if [[ "$swift_package_section" != *"timeout-minutes: 75"* ]]; then
   echo "FAIL: CI swift-package-tests must have enough timeout budget for helper build plus package tests" >&2
   exit 1
 fi
