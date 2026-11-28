@@ -10,6 +10,16 @@ controlled probe, six dependent gates, and unverified native behavior. The
 baseline is active in an isolated worktree. PR #227 is merged but its
 caller-retrieval acceptance and dogfood caveats remain under observation.
 
+The ownership-isolation work in draft #257 retains independent turns and marks
+contested turn evidence unresolved. Its schema-index prerequisite is #291.
+Safe partial session outcomes retain their turn references using existing
+citation-aware revision retention. The prototype needs final review, a tagged
+dogfood build, and hosted checks;
+older clients cannot open a database migrated to schema 32. Historical
+cross-session revisions captured before a conflict are unavailable when their
+ownership can no longer be established. Plan validity and stale activity remain
+separate open issues.
+
 The Codex updater/launch follow-up is recorded in
 [implementation notes](../implementation-notes/codex-update-workspace-exit.md) and
 [the shared-session control decision](../product/shared-session-control-decision.md#codex-01610-compatibility-and-launch-resolution-october-8-2026).

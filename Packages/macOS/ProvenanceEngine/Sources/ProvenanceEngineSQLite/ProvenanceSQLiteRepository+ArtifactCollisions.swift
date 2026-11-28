@@ -3,9 +3,14 @@ import ProvenanceEngineContracts
 
 extension ProvenanceSQLiteRepository {
     static let artifactCollisionRuleID = "deterministic_artifact_collision_awareness"
-    static let artifactCollisionRuleVersion = "1"
+    static let artifactCollisionRuleVersion = "2"
 
     func artifactCollisionRecord(_ request: ProvenanceArtifactCollisionRequest) throws
+        -> ProvenanceArtifactCollisionResponse {
+        try database.withReadSnapshot { try readArtifactCollisionRecord(request) }
+    }
+
+    private func readArtifactCollisionRecord(_ request: ProvenanceArtifactCollisionRequest) throws
         -> ProvenanceArtifactCollisionResponse {
         guard try session(id: request.targetSessionID) != nil else {
             return ProvenanceArtifactCollisionResponse(

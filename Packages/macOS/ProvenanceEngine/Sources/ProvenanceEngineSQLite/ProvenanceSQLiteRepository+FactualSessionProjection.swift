@@ -27,25 +27,45 @@ extension ProvenanceSQLiteRepository {
         let providerThreads = try codingAgentThreadIDs(sessionID: request.sessionID).compactMap {
             try codingAgentThread(id: $0)
         }
+        let claims = try unresolvedTurnClaims(sessionID: request.sessionID)
+        let unresolved = claims.ids
         let allTurnIDs = try codingAgentTurnIDs(sessionID: request.sessionID, limit: nil)
-        let latestTurnID = allTurnIDs.last
+        var latestTurnID = allTurnIDs.last.flatMap { unresolved.contains($0) ? nil : $0 }
+        let displaced = unresolved.subtracting(allTurnIDs)
+        if let candidateID = latestTurnID, !displaced.isEmpty {
+            let candidate = try codingAgentTurn(id: candidateID)
+            let displacedTime = try displacedTurnSortTime(sessionID: request.sessionID, turnIDs: displaced)
+            let candidateIsLater = candidate.flatMap { turn in
+                displacedTime.map { (turn.startedAt ?? turn.updatedAt).timeIntervalSinceReferenceDate > $0 }
+            } ?? false
+            if !candidateIsLater { latestTurnID = nil }
+        }
         let latestTurn = try latestTurnID.flatMap { try factualTurnSnapshot(turnID: $0) }
-        let priorTurns = try allTurnIDs.dropLast(latestTurnID == nil ? 0 : 1).compactMap { turnID in
+        let priorTurns = try allTurnIDs.dropLast(latestTurnID == nil ? 0 : 1).filter { !unresolved.contains($0) }.compactMap { turnID in
             try codingAgentTurn(id: turnID).map(ProvenanceFactualSessionProjectionTurnReference.init(turn:))
         }
         let turns = try codingAgentTurnIDs(
             sessionID: request.sessionID,
             limit: request.turnLimit
-        ).compactMap { turnID in
+        ).filter { !unresolved.contains($0) }.compactMap { turnID in
             try factualTurnSnapshot(turnID: turnID)
         }
 
         let proposalRead = try recentProposedPlanObservations(sessionID: request.sessionID)
+        let disputedProviderTurns = try disputedProviderTurnClaims(unresolved)
+        let proposals = proposalRead.observations.filter { observation in
+            guard let disputedProviderTurns, let providerTurnID = observation.proposal.providerTurnID else { return false }
+            return !disputedProviderTurns.contains(.init(provider: observation.proposal.provider, providerTurnID: providerTurnID))
+        }
+        let proposalCoverage = ProvenanceProposedPlanReadCoverage(
+            scanWindowTruncated: proposalRead.coverage.scanWindowTruncated,
+            omittedObservations: proposalRead.coverage.omittedObservations || proposals.count != proposalRead.observations.count
+        )
         return ProvenanceFactualSessionProjectionResponse(
             found: true,
             sessionID: request.sessionID,
             snapshot: ProvenanceFactualSessionProjectionSnapshot(
-                revision: try latestEventSequence(sessionID: request.sessionID),
+                revision: try [latestEventSequence(sessionID: request.sessionID), claims.watermark].compactMap { $0 }.max(),
                 session: session,
                 providerThreadIdentities: providerThreads.map(
                     ProvenanceFactualSessionProjectionProviderThreadIdentity.init(thread:)
@@ -54,8 +74,9 @@ extension ProvenanceSQLiteRepository {
                 latestTurn: latestTurn,
                 priorTurns: priorTurns,
                 turns: turns,
-                proposedPlanObservations: proposalRead.observations,
-                proposedPlanCoverage: proposalRead.coverage
+                unresolvedTurnIDs: unresolved.sorted(),
+                proposedPlanObservations: proposals,
+                proposedPlanCoverage: proposalCoverage
             )
         )
     }
@@ -72,6 +93,11 @@ extension ProvenanceSQLiteRepository {
 
     private func readFactualSessionTurnDetail(_ request: ProvenanceFactualSessionTurnDetailRequest) throws
         -> ProvenanceFactualSessionTurnDetailResponse {
+        if try hasConflictingTurnClaims(request.turnID) {
+            return ProvenanceFactualSessionTurnDetailResponse(
+                found: false, reason: "ownership_unresolved", turnID: request.turnID, turnDetail: nil
+            )
+        }
         guard let detail = try factualTurnSnapshot(turnID: request.turnID) else {
             return ProvenanceFactualSessionTurnDetailResponse(
                 found: false,

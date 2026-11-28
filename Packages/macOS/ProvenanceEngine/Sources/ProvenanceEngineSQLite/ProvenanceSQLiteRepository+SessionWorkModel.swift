@@ -29,11 +29,15 @@ extension ProvenanceSQLiteRepository {
             from: factualProjection,
             latestTurn: latestTurnSnapshot?.turn
         )
-        let semanticRecords = try activeSemanticRecords(
+        let allSemanticRecords = try activeSemanticRecords(
             sessionID: factualProjection.session.id,
             threadID: selectedThreadIdentity?.threadID,
             turnID: latestTurnSnapshot?.turn.id
         )
+        let semanticRecords = allSemanticRecords.filter { factualProjection.permitsSemanticEvidence($0.supportingEvidenceRefs) }
+        let omittedSemanticFields = Set(allSemanticRecords.filter {
+            !factualProjection.permitsSemanticEvidence($0.supportingEvidenceRefs)
+        }.map { SemanticFieldKey(kind: $0.kind, scope: $0.scope, scopeID: $0.scopeID) })
         let semanticRecordByField = Dictionary(
             uniqueKeysWithValues: semanticRecords.map { record in
                 (SemanticFieldKey(kind: record.kind, scope: record.scope, scopeID: record.scopeID), record)
@@ -47,7 +51,7 @@ extension ProvenanceSQLiteRepository {
                     kind: ProvenanceCodingAgentSemanticInferenceKind.threadIntent.rawValue,
                     scope: .thread,
                     scopeID: identity.threadID,
-                    records: semanticRecordByField
+                    records: semanticRecordByField, omitted: omittedSemanticFields
                 )
             )
         }
@@ -63,19 +67,19 @@ extension ProvenanceSQLiteRepository {
                     kind: ProvenanceCodingAgentSemanticInferenceKind.turnIntent.rawValue,
                     scope: .turn,
                     scopeID: turnSnapshot.turn.id,
-                    records: semanticRecordByField
+                    records: semanticRecordByField, omitted: omittedSemanticFields
                 ),
                 currentActivity: semanticField(
                     kind: ProvenanceCodingAgentSemanticInferenceKind.currentActivity.rawValue,
                     scope: .turn,
                     scopeID: turnSnapshot.turn.id,
-                    records: semanticRecordByField
+                    records: semanticRecordByField, omitted: omittedSemanticFields
                 ),
                 assistantMessages: turnSnapshot.assistantMessages
             )
         }
         let revision = ProvenanceSessionWorkModelRevision(
-            schemaVersion: 3,
+            schemaVersion: 4,
             factualRevision: factualProjection.revision,
             semanticInferenceIDs: semanticRecords.map(\.id),
             latestSemanticInferenceCreatedAt: semanticRecords.map(\.createdAt).max()
@@ -89,29 +93,30 @@ extension ProvenanceSQLiteRepository {
             thread: thread,
             currentTurn: currentTurn,
             priorTurns: factualProjection.priorTurns,
+            unresolvedTurnIDs: factualProjection.unresolvedTurnIDs,
             milestones: semanticField(
                 kind: ProvenanceCodingAgentSemanticInferenceKind.milestones.rawValue,
                 scope: .session,
                 scopeID: factualProjection.session.id,
-                records: semanticRecordByField
+                records: semanticRecordByField, omitted: omittedSemanticFields
             ),
             blockers: semanticField(
                 kind: ProvenanceCodingAgentSemanticInferenceKind.blockers.rawValue,
                 scope: .session,
                 scopeID: factualProjection.session.id,
-                records: semanticRecordByField
+                records: semanticRecordByField, omitted: omittedSemanticFields
             ),
             approachChanges: semanticField(
                 kind: ProvenanceCodingAgentSemanticInferenceKind.approachChanges.rawValue,
                 scope: .session,
                 scopeID: factualProjection.session.id,
-                records: semanticRecordByField
+                records: semanticRecordByField, omitted: omittedSemanticFields
             ),
             sessionPhase: semanticField(
                 kind: ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue,
                 scope: .session,
                 scopeID: factualProjection.session.id,
-                records: semanticRecordByField
+                records: semanticRecordByField, omitted: omittedSemanticFields
             ),
             basis: ProvenanceSessionWorkModelBasis(
                 factualSessionProjection: factualProjection,
@@ -229,7 +234,8 @@ extension ProvenanceSQLiteRepository {
         kind: String,
         scope: ProvenanceSemanticInferenceScope,
         scopeID: String?,
-        records: [SemanticFieldKey: ProvenanceSemanticInferenceRecord]
+        records: [SemanticFieldKey: ProvenanceSemanticInferenceRecord],
+        omitted: Set<SemanticFieldKey>
     ) -> ProvenanceSessionWorkModelSemanticField {
         guard let scopeID else {
             return ProvenanceSessionWorkModelSemanticField(
@@ -247,7 +253,7 @@ extension ProvenanceSQLiteRepository {
                 scope: scope,
                 scopeID: scopeID,
                 state: .unknown,
-                reason: "no_active_semantic_inference"
+                reason: omitted.contains(key) ? "ownership_unresolved" : "no_active_semantic_inference"
             )
         }
         return ProvenanceSessionWorkModelSemanticField(

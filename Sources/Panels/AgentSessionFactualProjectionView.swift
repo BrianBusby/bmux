@@ -300,6 +300,12 @@ struct AgentSessionFactualProjectionView: View {
 
     private func availableContent(_ snapshot: ProvenanceFactualSessionProjectionSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 14) {
+            if let unresolved = snapshot.unresolvedTurnIDs, !unresolved.isEmpty {
+                Text(String(localized: "agentSession.web.smartSession.ownershipUnresolved", defaultValue:
+                    "Some turns are hidden while their session ownership is unresolved."))
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.bmuxTextSecondary)
+            }
             if let turn = snapshot.latestTurn {
                 AgentSessionCurrentTurnOverview(turn: turn)
                 overviewDisclosure(

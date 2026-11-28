@@ -33,6 +33,7 @@ export function SmartSessionSurface({ context, initialView = "focus", isActive =
       h(WorkspaceHeader, { copy, workspaceName, title: currentTitle, snapshot, onInspect: setInspector, inspector }),
       h(SmartSessionFreshnessBanner, { copy, state, onRefresh: refresh }),
       snapshot ? h(SemanticReportsNotice, { copy, status: snapshot.semanticMessagesReadStatus }) : null,
+      snapshot ? h(OwnershipNotice, { copy, unresolvedTurnIds: snapshot.factual.unresolvedTurnIds }) : null,
       h(ViewTabs, { copy, view, onChange: setView }),
       h("div", { className: "focus-workbench-body" },
         view === "focus" ? h(FocusView, { copy, state, onRefresh: refresh, expandedTurnID, onExpandTurn: setExpandedTurnID, onInspect: setInspector }) :
@@ -42,6 +43,10 @@ export function SmartSessionSurface({ context, initialView = "focus", isActive =
       ),
     ),
   );
+}
+
+export function OwnershipNotice({ copy, unresolvedTurnIds }: { copy?: AgentSessionCopy; unresolvedTurnIds?: string[] }) {
+  return unresolvedTurnIds?.length ? h("p", { role: "status", className: "focus-coverage-note" }, text(copy, "smartSessionOwnershipUnresolved", "Some turns are hidden while their session ownership is unresolved.")) : null;
 }
 
 export function SmartSessionFreshnessBanner({ copy, state, onRefresh }: { copy?: AgentSessionCopy; state: SmartSessionState; onRefresh: () => void }) {

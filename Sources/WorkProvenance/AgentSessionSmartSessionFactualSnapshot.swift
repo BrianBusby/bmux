@@ -6,6 +6,7 @@ extension AgentSessionSmartSessionSnapshot {
         let latestTurn: Turn?
         let priorTurns: [TurnReference]
         let turnCount: Int
+        let unresolvedTurnIDs: [String]?
         let proposedPlanCoverage: ProvenanceProposedPlanReadCoverage?
         let proposedPlanObservations: [ProvenanceFactualProposedPlanObservation]
 
@@ -13,6 +14,7 @@ extension AgentSessionSmartSessionSnapshot {
             self.latestTurn = factualProjection.latestTurn.map(Turn.init(turnSnapshot:))
             self.priorTurns = factualProjection.priorTurns.map(TurnReference.init(reference:))
             self.turnCount = factualProjection.turns.count
+            self.unresolvedTurnIDs = factualProjection.unresolvedTurnIDs
             let trusted = factualProjection.proposedPlanObservations.filter {
                 $0.source == .observed && $0.origin?.rawValue == "codex-transcript" && $0.eventSchemaVersion == 1
                     && $0.proposal.provider == "codex" && $0.proposal.hasValidProviderIdentity
@@ -29,6 +31,7 @@ extension AgentSessionSmartSessionSnapshot {
                 "latestTurn": AgentSessionSmartSessionBridgeDictionary.optional(latestTurn?.bridgePayload),
                 "priorTurns": priorTurns.map(\.bridgePayload),
                 "turnCount": turnCount,
+                "unresolvedTurnIds": AgentSessionSmartSessionBridgeDictionary.optional(unresolvedTurnIDs),
                 "proposedPlanCoverage": AgentSessionSmartSessionBridgeDictionary.optional(proposedPlanCoverage.map {
                     ["scanWindowTruncated": $0.scanWindowTruncated, "omittedObservations": $0.omittedObservations]
                 }),
