@@ -45,6 +45,16 @@ import Testing
             id: "prompt-event-A", eventType: .codingAgentPromptSubmitted, timestamp: prompt.submittedAt,
             sessionID: "session-A", source: .observed, evidenceOrigin: .init(rawValue: "synthetic-fixture"),
             confidence: .high, payload: .init(codingAgentPrompt: prompt))))
+        let plan = ProvenanceCodingAgentPlanUpdateRecord(
+            id: "plan-A", sessionID: "session-A", turnID: turnID, provider: "codex",
+            steps: [.init(id: "step-A", order: 0, text: "Disputed plan text", status: "in_progress")],
+            observedAt: time.addingTimeInterval(2), source: .observed, confidence: .high
+        )
+        _ = try await client.appendEvent(.init(event: .init(
+            id: "plan-event-A", eventType: .codingAgentPlanUpdated, timestamp: plan.observedAt,
+            sessionID: "session-A", source: .observed, confidence: .high, payload: .init(codingAgentPlanUpdate: plan)
+        )))
+        _ = try await client.publishCodingAgentSessionSemanticInferences(.init(sessionID: "session-A", createdAt: time))
         #expect(try await client.factualSessionTurnDetail(.init(turnID: turnID)).sessionID == "session-A")
         let original = try await client.turnOutcome(.init(turnID: turnID))
         #expect(original.outcome?.objective?.evidence.contains(where: { $0.eventID == "prompt-event-A" }) == true)
@@ -73,6 +83,7 @@ import Testing
             let model = try #require(try await client.sessionWorkModel(.init(sessionID: sessionID)).model)
             let modelObject = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(model)) as? [String: Any])
             #expect((modelObject["unresolvedTurnIDs"] as? [String]) == [turnID])
+            #expect(!String(decoding: try JSONEncoder().encode(model), as: UTF8.self).contains("Disputed plan text"))
             let safeOutcome = try #require(try await client.sessionOutcome(.init(sessionID: sessionID)).outcome)
             #expect(safeOutcome.turnOutcomes.contains { $0.turnID == uniqueTurn.id })
             #expect(!safeOutcome.turnOutcomes.contains { $0.turnID == turnID })
