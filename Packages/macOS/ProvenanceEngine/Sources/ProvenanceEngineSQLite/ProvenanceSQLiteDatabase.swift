@@ -82,7 +82,9 @@ final class ProvenanceSQLiteDatabase {
         let result = sqlite3_exec(handle, sql, nil, nil, &errorMessage)
         guard result == SQLITE_OK else {
             let message = errorMessage.map { String(cString: $0) } ?? self.message
+            let staleSnapshot = sqlite3_extended_errcode(handle) == (SQLITE_BUSY | (2 << 8))
             sqlite3_free(errorMessage)
+            if staleSnapshot { throw ProvenanceSQLiteError.staleSnapshot }
             throw ProvenanceSQLiteError.sqlite(message: message)
         }
     }
@@ -99,6 +101,35 @@ final class ProvenanceSQLiteDatabase {
             let original = error
             try execute("ROLLBACK TO SAVEPOINT pe_read_snapshot")
             try execute("RELEASE SAVEPOINT pe_read_snapshot")
+            throw original
+        }
+    }
+
+    /// Retries the entire read under a write reservation if its snapshot becomes stale.
+    func withReadSnapshotRetryingWrites<T>(_ body: () throws -> T) throws -> T {
+        guard let handle else { throw ProvenanceSQLiteError.sqlite(message: "database is closed") }
+        // Only the outermost transaction can discard and replace its stale snapshot.
+        guard sqlite3_get_autocommit(handle) != 0 else { return try withReadSnapshot(body) }
+        do {
+            return try withReadSnapshot(body)
+        } catch ProvenanceSQLiteError.staleSnapshot {
+            return try withWriteSnapshot(body)
+        }
+    }
+
+    /// Reserves the writer before reading when a coherent projection may be persisted.
+    /// Nested callers retain the outer transaction and roll back only their own work.
+    func withWriteSnapshot<T>(_ body: () throws -> T) throws -> T {
+        guard let handle else { throw ProvenanceSQLiteError.sqlite(message: "database is closed") }
+        guard sqlite3_get_autocommit(handle) != 0 else { return try withReadSnapshot(body) }
+        try execute("BEGIN IMMEDIATE TRANSACTION")
+        do {
+            let result = try body()
+            try execute("COMMIT")
+            return result
+        } catch {
+            let original = error
+            try execute("ROLLBACK")
             throw original
         }
     }

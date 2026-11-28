@@ -30,6 +30,7 @@ extension AgentSessionWebRendererCoordinator {
                 localized: "agentSession.web.view.session",
                 defaultValue: "Session"
             ),
+            "smartSessionOwnershipUnresolved": String(localized: "agentSession.web.smartSession.ownershipUnresolved", defaultValue: "Some turns are hidden while their session ownership is unresolved."),
             "smartSessionReportsIncomplete": String(localized: "agentSession.web.smartSession.reportsIncomplete", defaultValue: "Additional session reports may be incomplete."),
             "smartSessionReportsUnavailable": String(localized: "agentSession.web.smartSession.reportsUnavailable", defaultValue: "Additional session reports are unavailable or unknown."),
             "smartSessionRelatedUncertain": String(localized: "agentSession.web.smartSession.relatedUncertain", defaultValue: "Related work was observed separately and may be incomplete; its current state is unknown."),

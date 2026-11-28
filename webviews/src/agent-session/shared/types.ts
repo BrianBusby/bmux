@@ -257,6 +257,7 @@ export type AgentSessionCopy = {
   smartSessionRelatedUnavailable?: string;
   smartSessionRelatedPartial?: string;
   smartSessionReportsUnavailable?: string;
+  smartSessionOwnershipUnresolved?: string;
   smartSessionReportsIncomplete?: string;
   smartSessionNoCurrentTurn?: string;
   smartSessionNoLearnings?: string;
@@ -433,6 +434,7 @@ export type SmartSessionFactual = {
   latestTurn?: SmartSessionTurn;
   priorTurns: SmartSessionTurnReference[];
   turnCount: number;
+  unresolvedTurnIds?: string[];
   proposedPlanCoverage?: { scanWindowTruncated: boolean; omittedObservations: boolean };
   proposedPlanObservations?: Array<{
     id: string;

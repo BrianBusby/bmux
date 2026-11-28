@@ -2,7 +2,7 @@ import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
 import { renderToStaticMarkup } from "react-dom/server";
-import { RelatedAwarenessNotice, SemanticReportsNotice, SmartSessionFreshnessBanner, SmartSessionSurface } from "../react/SmartSessionSurface";
+import { OwnershipNotice, RelatedAwarenessNotice, SemanticReportsNotice, SmartSessionFreshnessBanner, SmartSessionSurface } from "../react/SmartSessionSurface";
 import { expect, test } from "bun:test";
 import { makeClientId } from "./ids";
 import {
@@ -19,6 +19,7 @@ import {
   type Action,
 } from "./sessionModel";
 import {
+  compareSmartSessionRevisions,
   initialSmartSessionState,
   reduceSmartSession,
   semanticFieldForKind,
@@ -1893,4 +1894,19 @@ test("stale smart session offers an actionable refresh", async () => {
     if (previousAct) Object.defineProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT", previousAct); else Reflect.deleteProperty(globalThis, "IS_REACT_ACT_ENVIRONMENT");
     dom.window.close();
   }
+});
+
+
+test("ownership notice identifies hidden disputed turns", () => {
+  expect(renderToStaticMarkup(createElement(OwnershipNotice, { unresolvedTurnIds: ["turn-1"] })))
+    .toContain("session ownership is unresolved");
+  expect(renderToStaticMarkup(createElement(OwnershipNotice, { unresolvedTurnIds: [] }))).toBe("");
+});
+
+test("newer work model schema replaces an equal factual revision", () => {
+  const oldRevision = smartSessionSnapshot({ factualRevision: 4 }).revision;
+  const newRevision = { ...oldRevision, schemaVersion: 4 };
+  expect(compareSmartSessionRevisions(newRevision, oldRevision)).toBeGreaterThan(0);
+  expect(compareSmartSessionRevisions(oldRevision, newRevision)).toBeLessThan(0);
+  expect(compareSmartSessionRevisions({ ...newRevision, semanticInferenceIds: ["new"] }, oldRevision)).toBeGreaterThan(0);
 });

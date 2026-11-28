@@ -228,7 +228,9 @@ function turnTime(turn: SmartSessionTurnReference): number {
 export function compareSmartSessionRevisions(left: SmartSessionRevision, right: SmartSessionRevision): number {
   if (left.factualRevision == null || right.factualRevision == null) return 0;
   if (left.factualRevision !== right.factualRevision) return left.factualRevision > right.factualRevision ? 1 : -1;
-  if (left.schemaVersion !== 3 || right.schemaVersion !== 3) return 0;
+  if (left.schemaVersion == null || right.schemaVersion == null ||
+      ![3, 4].includes(left.schemaVersion) || ![3, 4].includes(right.schemaVersion)) return 0;
+  if (left.schemaVersion !== right.schemaVersion) return left.schemaVersion - right.schemaVersion;
   const leftInference = Date.parse(left.latestSemanticInferenceCreatedAt ?? "");
   const rightInference = Date.parse(right.latestSemanticInferenceCreatedAt ?? "");
   const leftHasInference = Number.isFinite(leftInference);

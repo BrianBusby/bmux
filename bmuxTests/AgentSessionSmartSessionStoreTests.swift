@@ -12,6 +12,23 @@ import Testing
 @MainActor
 struct AgentSessionSmartSessionStoreTests {
     @Test
+    func ownershipStateBridgesAndNewSchemaWinsEqualRevision() {
+        let old = Self.model(sessionID: "session-1", revision: 1).basis.factualSessionProjection
+        let projection = ProvenanceFactualSessionProjectionSnapshot(revision: 1, session: old.session,
+            providerThreads: [], turns: [], unresolvedTurnIDs: ["disputed-turn"])
+        let payload = AgentSessionSmartSessionSnapshot.Factual(factualProjection: projection).bridgePayload
+        #expect(payload["unresolvedTurnIds"] as? [String] == ["disputed-turn"])
+        let oldRevision = AgentSessionSmartSessionSnapshot.Revision(workModelRevision: .init(
+            schemaVersion: 3, factualRevision: 1, semanticInferenceIDs: [], latestSemanticInferenceCreatedAt: nil),
+            semanticMessageCount: 0, latestSemanticMessageCreatedAt: nil)
+        let newRevision = AgentSessionSmartSessionSnapshot.Revision(workModelRevision: .init(
+            schemaVersion: 4, factualRevision: 1, semanticInferenceIDs: [], latestSemanticInferenceCreatedAt: nil),
+            semanticMessageCount: 0, latestSemanticMessageCreatedAt: nil)
+        #expect(newRevision.isNewerThan(oldRevision))
+        #expect(!oldRevision.isNewerThan(newRevision))
+    }
+
+    @Test
     func proposalBridgePreservesUnknownCoverageAndSupportedEvidence() throws {
         let old = Self.model(sessionID: "session-1", revision: 1).basis.factualSessionProjection
         let oldPayload = AgentSessionSmartSessionSnapshot.Factual(factualProjection: old).bridgePayload

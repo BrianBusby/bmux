@@ -3,9 +3,17 @@ import ProvenanceEngineContracts
 
 extension ProvenanceSQLiteRepository {
     static let relatedSessionRuleID = "deterministic_related_sessions"
-    static let relatedSessionRuleVersion = "2"
+    static let relatedSessionRuleVersion = "3"
 
     func relatedSessionRecord(_ request: ProvenanceRelatedSessionRequest) throws
+        -> ProvenanceRelatedSessionResponse {
+        if request.revisionID != nil {
+            return try database.withReadSnapshot { try readRelatedSessionRecord(request) }
+        }
+        return try database.withWriteSnapshot { try readRelatedSessionRecord(request) }
+    }
+
+    private func readRelatedSessionRecord(_ request: ProvenanceRelatedSessionRequest) throws
         -> ProvenanceRelatedSessionResponse {
         guard try session(id: request.targetSessionID) != nil else {
             return ProvenanceRelatedSessionResponse(
@@ -16,6 +24,9 @@ extension ProvenanceSQLiteRepository {
             )
         }
 
+#if DEBUG
+        didReadFactualSessionForTesting?()
+#endif
         if let revisionID = request.revisionID {
             return try relatedSessionRevisionResponse(
                 targetSessionID: request.targetSessionID,

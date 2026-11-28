@@ -79,7 +79,8 @@ final class SmartStaleDebugWindowController: ReleasingWindowController {
             visibleReasoningSummaries: [], fileChangeAttributions: []
         )
         let factual = ProvenanceFactualSessionProjectionSnapshot(
-            revision: 1, session: session, providerThreads: [], latestTurn: turnSnapshot, turns: [turnSnapshot]
+            revision: 1, session: session, providerThreads: [], latestTurn: turnSnapshot, turns: [turnSnapshot],
+            unresolvedTurnIDs: ["preview-disputed-turn"]
         )
         let intent = ProvenanceSessionWorkModelSemanticField(
             kind: ProvenanceCodingAgentSemanticInferenceKind.turnIntent.rawValue,
@@ -98,6 +99,7 @@ final class SmartStaleDebugWindowController: ReleasingWindowController {
                 fileChangeAttributions: [], intent: intent, currentActivity: activity
             ),
             priorTurns: [],
+            unresolvedTurnIDs: ["preview-disputed-turn"],
             sessionPhase: ProvenanceSessionWorkModelSemanticField(
                 kind: ProvenanceCodingAgentSemanticInferenceKind.sessionPhase.rawValue,
                 scope: .session, scopeID: session.id, state: .unknown, reason: "synthetic_preview"

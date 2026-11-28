@@ -39,6 +39,15 @@ extension ProvenanceSQLiteRepository {
         try upsertLatestSessionOutcome(projected)
     }
 
+    func retainPartialSessionOutcome(_ outcome: ProvenanceSessionOutcome) throws {
+        let data = try payloadEncoder.encode(outcome.storingTurnReferencesOnly())
+        guard let json = String(data: data, encoding: .utf8) else {
+            throw ProvenanceSQLiteError.sqlite(message: "failed to encode partial session outcome")
+        }
+        try insertSessionOutcomeRevision(outcome, outcomeJSON: json)
+        try recordOutcomeCitations(sourceRevisionID: outcome.projection.revisionID, json: json)
+    }
+
     private func insertSessionOutcomeRevision(
         _ outcome: ProvenanceSessionOutcome,
         outcomeJSON: String
@@ -103,9 +112,10 @@ extension ProvenanceSQLiteRepository {
         _ = try upsert.step()
     }
 
-    private func projectedSessionOutcome(
+    func projectedSessionOutcome(
         sessionID: String,
-        latestEventSequence: Int?
+        latestEventSequence: Int?,
+        unresolvedTurnIDs: Set<String> = []
     ) throws -> ProvenanceSessionOutcome? {
         guard let session = try session(id: sessionID) else { return nil }
         let externalIdentities = try externalIdentities(sessionID: sessionID)
@@ -114,9 +124,9 @@ extension ProvenanceSQLiteRepository {
             .map(ProvenanceFactualSessionProjectionProviderThreadIdentity.init(thread:))
         let turnIDs = try sessionOutcomeOrderedTurnIDs(sessionID: sessionID)
         var turnOutcomes: [ProvenanceTurnOutcome] = []
-        var missingTurnIDs: [String] = []
+        var missingTurnIDs: [String] = unresolvedTurnIDs.sorted()
 
-        for turnID in turnIDs {
+        for turnID in turnIDs where !unresolvedTurnIDs.contains(turnID) {
             let response = try turnOutcomeRecord(ProvenanceTurnOutcomeRequest(turnID: turnID))
             if response.found, let outcome = response.outcome {
                 turnOutcomes.append(outcome)
@@ -131,7 +141,8 @@ extension ProvenanceSQLiteRepository {
             providerThreads: providerThreads,
             turnOutcomes: turnOutcomes,
             missingTurnIDs: missingTurnIDs,
-            latestEventSequence: latestEventSequence
+            latestEventSequence: latestEventSequence,
+            ownershipUnresolved: !unresolvedTurnIDs.isEmpty
         )
     }
 
@@ -141,7 +152,8 @@ extension ProvenanceSQLiteRepository {
         providerThreads: [ProvenanceFactualSessionProjectionProviderThreadIdentity],
         turnOutcomes: [ProvenanceTurnOutcome],
         missingTurnIDs: [String],
-        latestEventSequence: Int?
+        latestEventSequence: Int?,
+        ownershipUnresolved: Bool
     ) throws -> ProvenanceSessionOutcome {
         let constituentTurns = try sessionOutcomeTurnReferences(turnOutcomes)
         let objectives = turnOutcomes.compactMap { outcome in
@@ -185,7 +197,7 @@ extension ProvenanceSQLiteRepository {
         let repositoryBoundaries = sessionOutcomeRepositoryBoundaries(turnOutcomes)
         let planItems = sessionOutcomePlanItems(turnOutcomes)
         let completionState = normalizedSessionCompletionState(session.status)
-        let completeness = sessionOutcomeCompleteness(
+        let baseCompleteness = sessionOutcomeCompleteness(
             turnOutcomes: turnOutcomes,
             missingTurnIDs: missingTurnIDs,
             externalIdentities: externalIdentities,
@@ -203,6 +215,17 @@ extension ProvenanceSQLiteRepository {
             completionState: completionState,
             evaluatedThroughSequence: latestEventSequence
         )
+        let completeness = ownershipUnresolved ? ProvenanceSessionOutcomeCompleteness(
+            status: "partial", evaluatedThroughSequence: baseCompleteness.evaluatedThroughSequence,
+            fields: baseCompleteness.fields.map { field in
+                guard !["external_identities", "provider_thread_identities", "completion_state"].contains(field.field) else {
+                    return field
+                }
+                return ProvenanceSessionOutcomeAvailability(
+                    field: field.field, status: "partial", reason: "ownership_unresolved", evidence: field.evidence
+                )
+            }, notes: baseCompleteness.notes + ["one or more turn ownership claims are unresolved"]
+        ) : baseCompleteness
         let fingerprint = sessionOutcomeContentFingerprint(
             session: session,
             externalIdentities: externalIdentities,

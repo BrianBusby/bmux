@@ -40,7 +40,7 @@ final class FactualStaleDebugWindowController: ReleasingWindowController {
                 status: "active", startedAt: observedAt, updatedAt: observedAt
             ),
             providerThreadIdentities: [], providerThreads: [], latestTurn: turnSnapshot,
-            priorTurns: [], turns: [turnSnapshot]
+            priorTurns: [], turns: [turnSnapshot], unresolvedTurnIDs: ["preview-disputed-turn"]
         )
         window.contentView = NSHostingView(rootView: AgentSessionFactualProjectionView(
             result: .stale(snapshot, lastSuccessfulReadAt: observedAt),

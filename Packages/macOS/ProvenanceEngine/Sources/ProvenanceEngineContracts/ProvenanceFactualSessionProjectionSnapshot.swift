@@ -23,6 +23,9 @@ public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Se
     /// Observed turns with only evidence directly linked to each turn.
     public let turns: [ProvenanceFactualSessionProjectionTurnSnapshot]
 
+    /// Turn IDs with unresolved ownership, or nil when ownership was not assessed.
+    public let unresolvedTurnIDs: [String]?
+
     /// Recent proposal observations within a bounded ledger window. Older
     /// observations remain in the ledger; this is not exhaustive coverage.
     public let proposedPlanObservations: [ProvenanceFactualProposedPlanObservation]
@@ -38,6 +41,7 @@ public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Se
         case latestTurn
         case priorTurns
         case turns
+        case unresolvedTurnIDs
         case proposedPlanObservations
         case proposedPlanCoverage
     }
@@ -51,6 +55,7 @@ public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Se
         latestTurn: ProvenanceFactualSessionProjectionTurnSnapshot? = nil,
         priorTurns: [ProvenanceFactualSessionProjectionTurnReference] = [],
         turns: [ProvenanceFactualSessionProjectionTurnSnapshot],
+        unresolvedTurnIDs: [String]? = nil,
         proposedPlanObservations: [ProvenanceFactualProposedPlanObservation] = [],
         proposedPlanCoverage: ProvenanceProposedPlanReadCoverage? = nil
     ) {
@@ -61,6 +66,7 @@ public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Se
         self.latestTurn = latestTurn
         self.priorTurns = priorTurns
         self.turns = turns
+        self.unresolvedTurnIDs = unresolvedTurnIDs
         self.proposedPlanObservations = proposedPlanObservations
         self.proposedPlanCoverage = proposedPlanCoverage
     }
@@ -73,6 +79,7 @@ public struct ProvenanceFactualSessionProjectionSnapshot: Codable, Equatable, Se
         self.session = try container.decode(ProvenanceSessionRecord.self, forKey: .session)
         self.providerThreads = try container.decode([ProvenanceCodingAgentThreadRecord].self, forKey: .providerThreads)
         self.turns = try container.decode([ProvenanceFactualSessionProjectionTurnSnapshot].self, forKey: .turns)
+        self.unresolvedTurnIDs = try container.decodeIfPresent([String].self, forKey: .unresolvedTurnIDs)
         self.proposedPlanObservations = try container.decodeIfPresent(
             [ProvenanceFactualProposedPlanObservation].self, forKey: .proposedPlanObservations
         ) ?? []
