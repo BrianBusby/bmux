@@ -6,6 +6,32 @@ import Testing
 
 /// Synthetic ownership regression; no provider process or app is launched.
 @Suite struct TurnOwnershipIsolationRegressionTests {
+    @Test func disputedChildWithoutParentMarksProposalCoveragePartial() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("pe-child-proposal-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let client = try ProvenanceEngineClientFactory().sqliteClient(databaseURL: directory.appendingPathComponent("test.sqlite"))
+        let time = Date(timeIntervalSince1970: 1_800_000_000)
+        for id in ["A", "B"] {
+            let session = ProvenanceSessionRecord(id: id, agentKind: "codex", status: "active", updatedAt: time)
+            _ = try await client.appendEvent(.init(event: .init(id: "session-\(id)", eventType: .sessionObserved,
+                timestamp: time, sessionID: id, source: .observed, confidence: .high, payload: .init(session: session))))
+            let prompt = ProvenanceCodingAgentPromptRecord(id: "prompt-\(id)", sessionID: id, turnID: "unknown-parent",
+                provider: "codex", text: "Evidence", submittedAt: time, source: .observed, confidence: .high)
+            _ = try await client.appendEvent(.init(event: .init(id: "prompt-event-\(id)", eventType: .codingAgentPromptSubmitted,
+                timestamp: time, sessionID: id, source: .observed, confidence: .high, payload: .init(codingAgentPrompt: prompt))))
+        }
+        let proposal = ProvenanceCodingAgentProposedPlanRecord(sessionID: "A", provider: "codex",
+            providerSessionID: "provider-A", providerTurnID: "unmapped", providerItemID: "item",
+            text: "Unknown association", truncated: false)
+        _ = try await client.appendEvent(.init(event: .init(id: "proposal", eventType: .codingAgentProposedPlanObserved,
+            timestamp: time, sessionID: "A", source: .observed, evidenceOrigin: .init(rawValue: "codex-transcript"),
+            confidence: .high, payload: .init(codingAgentProposedPlan: proposal))))
+        let snapshot = try #require(try await client.factualSessionProjection(.init(sessionID: "A")).snapshot)
+        #expect(snapshot.unresolvedTurnIDs == ["unknown-parent"])
+        #expect(snapshot.proposedPlanObservations.isEmpty)
+        #expect(snapshot.proposedPlanCoverage?.omittedObservations == true)
+    }
+
     @Test func conflictingOwnerDoesNotExposeForeignPromptOrCleanTurn() async throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("pe-turn-owner-\(UUID().uuidString)", isDirectory: true)
