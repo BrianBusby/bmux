@@ -14,7 +14,7 @@ struct AgentSessionCurrentTurnOverview: View {
         let summary = turnAgentSummary(turn)
         return VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                Text(String(localized: "agentSession.factual.latestTurn", defaultValue: "Current turn"))
+                Text(String(localized: "agentSession.factual.latestTurn", defaultValue: "Latest turn"))
                     .font(.system(size: 11, weight: .medium))
                     .tracking(1.2)
                     .foregroundStyle(Color.workspaceReferenceTextTertiary)
